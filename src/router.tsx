@@ -11,6 +11,7 @@ import Equipos from "./pages/Equipos";
 import Files from "./pages/Files";
 import Login from "./pages/Login";
 import TiposDeCertificados from "./pages/TiposdeCertificado";
+import Dashboard from "./pages/Dashboard";
 
 function Router() {
   const protectedLayout = (
@@ -22,10 +23,11 @@ function Router() {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Routes>
-      <Route path="/" element={<Outlet />}>
-    <Route index element={<Navigate to="/dashboard" />} />
-  </Route>
+        <Route path="/" element={<Outlet />}>
+          <Route index element={<Navigate to="/dashboard" />} />
+        </Route>
         <Route path="/dashboard" element={protectedLayout}>
+          <Route index element={<Dashboard />} />
           <Route path="users" element={<Clientes />} />
           <Route path="customers">
             <Route index element={<Customers />} />
@@ -33,7 +35,10 @@ function Router() {
           </Route>
           <Route path="calibraciones">
             <Route path="equipos" element={<Equipos />} />
-            <Route path="tipos-de-certificado" element={<TiposDeCertificados />} />
+            <Route
+              path="tipos-de-certificado"
+              element={<TiposDeCertificados />}
+            />
             <Route path="certificados" element={<Files />} />
           </Route>
         </Route>

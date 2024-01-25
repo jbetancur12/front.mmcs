@@ -9,6 +9,7 @@ interface SearchProps<T> {
   mapOption: (data: any) => T[]; // Función para mapear los datos de la API a opciones
   getOptionLabel: (option: T) => string; // Función para obtener la etiqueta de una opción
   onClientSelection: (option: T | null) => void;
+  token: string;
 }
 
 
@@ -17,7 +18,8 @@ export default function Asynchronous<T>({
   label,
   mapOption,
   getOptionLabel,
-  onClientSelection
+  onClientSelection,
+  token
 }: SearchProps<T>) {
   const [open, setOpen] = React.useState(false);
   const [options, setOptions] = React.useState<readonly T[]>([]);
@@ -48,7 +50,15 @@ export default function Asynchronous<T>({
 
           // Establecer un nuevo debounce para la búsqueda
     debounceTimeoutRef.current = setTimeout(() => {
-      fetch(`${endpoint}?q=${inputValue}`)
+
+      const requestOptions = {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`, // Usa la prop "token" aquí
+        },
+      };
+
+      fetch(`${endpoint}?q=${inputValue}`, requestOptions)
         .then((response) => response.json())
         .then((data) => {
           if (active) {
