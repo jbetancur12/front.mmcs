@@ -372,101 +372,10 @@ const Table: React.FC = () => {
         header: "ID",
         size: 10,
         enableEditing: false,
+        id: 1,
       },
       {
-        accessorKey: "customer.nombre", //access nested data with dot notation
-        header: "Compañia",
-        size: 150,
-        enableEditing: false,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-        }),
-        type: "selectCustomerId",
-      },
-      {
-        accessorKey: "device.name", //access nested data with dot notation
-        header: "Equipo",
-        enableEditing: false,
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-        }),
-        type: "selectDeviceId",
-      },
-      {
-        accessorKey: "certificateType.name", //access nested data with dot notation
-        header: "Tipo de Certificado",
-        size: 150,
-        enableEditing: false,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-        }),
-        type: "selectCertificateTypeId",
-      },
-      {
-        accessorKey: "name", //access nested data with dot notation
-        header: "Nombre",
-        enableEditing: false,
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-        }),
-      },
-      {
-        accessorKey: "city", //access nested data with dot notation
-        header: "Ciudad",
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-        }),
-      },
-      {
-        accessorKey: "location", //access nested data with dot notation
-        header: "Ubicación",
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-        }),
-      },
-      {
-        accessorKey: "sede", //access nested data with dot notation
-        header: "Sede",
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-        }),
-      },
-      {
-        accessorKey: "activoFijo", //access nested data with dot notation
-        header: "Activo Fijo",
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-        }),
-      },
-      {
-        accessorKey: "serie", //access nested data with dot notation
-        header: "Serie",
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-        }),
-      },
-      {
-        accessorKey: "calibrationDate", //access nested data with dot notation
-        header: "Fecha de Calibración",
-        size: 250,
-
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-        }),
-        Cell: ({ cell }) => (
-          <span>{cell.getValue<string>().substring(0, 10)}</span>
-        ),
-
-        type: "date",
-      },
-      {
+        id: 12,
         accessorKey: "nextCalibrationDate", //access nested data with dot notation
         header: "Proxima Fecha de Calibración",
         size: 350,
@@ -515,6 +424,111 @@ const Table: React.FC = () => {
         type: "lastdate",
       },
       {
+        accessorKey: "customer.nombre", //access nested data with dot notation
+        header: "Compañia",
+        size: 150,
+        enableEditing: false,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+        }),
+        type: "selectCustomerId",
+        id: 2,
+      },
+      {
+        accessorKey: "device.name", //access nested data with dot notation
+        header: "Equipo",
+        enableEditing: false,
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+        }),
+        type: "selectDeviceId",
+        id: 3,
+      },
+      {
+        accessorKey: "certificateType.name", //access nested data with dot notation
+        header: "Tipo de Certificado",
+        size: 150,
+        enableEditing: false,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+        }),
+        type: "selectCertificateTypeId",
+        id: 4,
+      },
+      {
+        id: 5,
+        accessorKey: "name", //access nested data with dot notation
+        header: "Nombre",
+        enableEditing: false,
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+        }),
+      },
+      {
+        id: 6,
+        accessorKey: "city", //access nested data with dot notation
+        header: "Ciudad",
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+        }),
+      },
+      {
+        id: 7,
+        accessorKey: "location", //access nested data with dot notation
+        header: "Ubicación",
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+        }),
+      },
+      {
+        id: 8,
+        accessorKey: "sede", //access nested data with dot notation
+        header: "Sede",
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+        }),
+      },
+      {
+        id: 9,
+        accessorKey: "activoFijo", //access nested data with dot notation
+        header: "Activo Fijo",
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+        }),
+      },
+      {
+        id: 10,
+        accessorKey: "serie", //access nested data with dot notation
+        header: "Serie",
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+        }),
+      },
+      {
+        id: 11,
+        accessorKey: "calibrationDate", //access nested data with dot notation
+        header: "Fecha de Calibración",
+        size: 250,
+
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+        }),
+        Cell: ({ cell }) => (
+          <span>{cell.getValue<string>().substring(0, 10)}</span>
+        ),
+
+        type: "date",
+      },
+
+      {
+        id: 13,
         accessorKey: "filePath", //access nested data with dot notation
         header: "filePath",
         size: 150,
@@ -556,8 +570,6 @@ const Table: React.FC = () => {
           columnVisibility: { filePath: false },
         }}
         renderRowActions={({ row }) => {
-          console.log("🚀 ~ file: TableFiles.tsx:537 ~ row:", row);
-
           return (
             <Box sx={{ display: "flex", gap: "1rem" }}>
               {/* <Tooltip arrow placement="left" title="Edit">
@@ -584,14 +596,17 @@ const Table: React.FC = () => {
           );
         }}
         // <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear Equipo</button>
-        renderTopToolbarCustomActions={() => (
-          <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded "
-            onClick={() => setCreateModalOpen(true)}
-          >
-            Subir Nuevo Certificado
-          </button>
-        )}
+        renderTopToolbarCustomActions={() => {
+          if ($userStore.rol !== "admin") return;
+          return (
+            <button
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded "
+              onClick={() => setCreateModalOpen(true)}
+            >
+              Subir Nuevo Certificado
+            </button>
+          );
+        }}
       />
       <CreateNewAccountModal
         columns={columns}
@@ -712,6 +727,9 @@ export const CreateNewAccountModal = ({
     onClose();
   };
 
+  const sortedColumns = [...columns]; // Creamos una copia del array original
+  sortedColumns.sort((a, b) => a.id - b.id); // Ordenamos las columnas por su id
+
   return (
     <Dialog open={open}>
       <DialogTitle textAlign="center">Subir Nuevo Certificado</DialogTitle>
@@ -724,7 +742,7 @@ export const CreateNewAccountModal = ({
               gap: "1.5rem",
             }}
           >
-            {columns.map((column) => {
+            {sortedColumns.map((column, index) => {
               if (
                 column.accessorKey !== "id" &&
                 column.accessorKey !== "name"
@@ -733,6 +751,7 @@ export const CreateNewAccountModal = ({
                   case "date":
                     return (
                       <DatePicker
+                        key={index}
                         label={column.header}
                         name={column.accessorKey}
                         value={values[column.accessorKey]}
@@ -745,6 +764,7 @@ export const CreateNewAccountModal = ({
                     return (
                       <>
                         <DatePicker
+                          key={index}
                           label={column.header}
                           name={column.accessorKey}
                           value={values[column.accessorKey]}
@@ -801,6 +821,7 @@ export const CreateNewAccountModal = ({
                   case "selectCustomerId":
                     return (
                       <AutoComplete
+                        key={index}
                         endpoint={`${apiUrl}/customers`}
                         token={localStorage.getItem("accessToken")}
                         label="Buscar Cliente"
@@ -823,6 +844,7 @@ export const CreateNewAccountModal = ({
                   case "selectDeviceId":
                     return (
                       <AutoComplete
+                        key={index}
                         endpoint={`${apiUrl}/devices`}
                         token={localStorage.getItem("accessToken")}
                         label="Buscar Equipo"
@@ -844,6 +866,7 @@ export const CreateNewAccountModal = ({
                   case "selectCertificateTypeId":
                     return (
                       <AutoComplete
+                        key={index}
                         endpoint={`${apiUrl}/certificateTypes`}
                         token={localStorage.getItem("accessToken")}
                         label="Buscar Tipo de Certificado"
@@ -866,6 +889,7 @@ export const CreateNewAccountModal = ({
                   case "upload":
                     return (
                       <Button
+                        key={index}
                         component="label"
                         variant="contained"
                         startIcon={<CloudUpload />}
@@ -883,6 +907,7 @@ export const CreateNewAccountModal = ({
                   default:
                     return (
                       <TextField
+                        key={index}
                         label={column.header}
                         name={column.accessorKey}
                         value={values[column.accessorKey]}

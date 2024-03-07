@@ -1,7 +1,7 @@
-import Autocomplete from '@mui/material/Autocomplete';
-import CircularProgress from '@mui/material/CircularProgress';
-import TextField from '@mui/material/TextField';
-import * as React from 'react';
+import Autocomplete from "@mui/material/Autocomplete";
+import CircularProgress from "@mui/material/CircularProgress";
+import TextField from "@mui/material/TextField";
+import * as React from "react";
 
 interface SearchProps<T> {
   endpoint: string; // URL del endpoint de la API
@@ -12,49 +12,47 @@ interface SearchProps<T> {
   token: string;
 }
 
-
 export default function Asynchronous<T>({
   endpoint,
   label,
   mapOption,
   getOptionLabel,
   onClientSelection,
-  token
+  token,
 }: SearchProps<T>) {
   const [open, setOpen] = React.useState(false);
   const [options, setOptions] = React.useState<readonly T[]>([]);
-  const [inputValue, setInputValue] = React.useState('');
+  const [inputValue, setInputValue] = React.useState("");
   const [loading, setLoading] = React.useState(false);
 
   const debounceTimeoutRef = React.useRef<number | null>(null);
 
   React.useEffect(() => {
-
     let active = true;
 
     if (!open) {
       return undefined;
     }
 
-    if (inputValue === '') {
+    if (inputValue === "") {
       setOptions([]);
       return undefined;
     }
 
-     // Cancelar el debounce anterior si existe
-     if (debounceTimeoutRef.current) {
+    // Cancelar el debounce anterior si existe
+    if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
 
     setLoading(true);
 
-          // Establecer un nuevo debounce para la búsqueda
+    // Establecer un nuevo debounce para la búsqueda
+    //@ts-ignore
     debounceTimeoutRef.current = setTimeout(() => {
-
       const requestOptions = {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${token}`, // Usa la prop "token" aquí
+          Authorization: `Bearer ${token}`, // Usa la prop "token" aquí
         },
       };
 
@@ -68,7 +66,6 @@ export default function Asynchronous<T>({
           }
         });
     }, 800); // Cambia el valor del tiempo de espera según tus necesidades
-
 
     return () => {
       active = false;
@@ -104,7 +101,9 @@ export default function Asynchronous<T>({
             ...params.InputProps,
             endAdornment: (
               <React.Fragment>
-                {loading ? <CircularProgress color="inherit" size={20} /> : null}
+                {loading ? (
+                  <CircularProgress color="inherit" size={20} />
+                ) : null}
                 {params.InputProps.endAdornment}
               </React.Fragment>
             ),

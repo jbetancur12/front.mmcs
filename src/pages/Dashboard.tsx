@@ -1,5 +1,3 @@
-import { useStore } from "@nanostores/react";
-import { userStore } from "../store/userStore";
 import { useEffect, useMemo, useState } from "react";
 import { FileData } from "../Components/TableFiles";
 import axios from "axios";
@@ -10,7 +8,6 @@ import { Cancel, CheckCircle, Warning } from "@mui/icons-material";
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const Dashboard: React.FC = () => {
-  const $userStore = useStore(userStore);
   const [tableData, setTableData] = useState<FileData[]>([]);
 
   // Fetch files data
@@ -35,12 +32,56 @@ const Dashboard: React.FC = () => {
     fetchFiles();
   }, []);
 
+  //@ts-ignore
   const columns = useMemo<MRT_ColumnDef<FileData>[]>(() => [
     {
       accessorKey: "id", //access nested data with dot notation
       header: "ID",
       size: 10,
       enableEditing: false,
+    },
+    {
+      accessorKey: "nextCalibrationDate", //access nested data with dot notation
+      header: "Proxima Fecha de Calibración",
+      size: 350,
+      Cell: ({ row }) => {
+        const now = new Date();
+        const nextCalibrationDate = new Date(row.original.nextCalibrationDate);
+        const daysRemaining = differenceInDays(nextCalibrationDate, now);
+        const formattedCalibrationDate = format(
+          nextCalibrationDate,
+          "yyyy-MM-dd"
+        );
+
+        let icon;
+        if (daysRemaining > 45) {
+          icon = <CheckCircle sx={{ color: "green" }} />;
+        } else if (daysRemaining > 15) {
+          icon = <Warning sx={{ color: "orange" }} />;
+        } else {
+          icon = <Cancel sx={{ color: "red" }} />;
+        }
+
+        return (
+          <div className="flex flex-col ">
+            <div>
+              {icon}
+              <span className="ml-2">{formattedCalibrationDate}</span>
+            </div>
+            <span
+              className={`mt-2 ${
+                daysRemaining < 0 ? "text-red-500 font-bold" : ""
+              }`}
+            >
+              {daysRemaining < 0
+                ? "VENCIDO"
+                : `Días restantes: ${daysRemaining}`}
+            </span>
+          </div>
+        );
+      },
+
+      type: "lastdate",
     },
     {
       accessorKey: "customer.nombre", //access nested data with dot notation
@@ -105,49 +146,7 @@ const Dashboard: React.FC = () => {
 
       type: "date",
     },
-    {
-      accessorKey: "nextCalibrationDate", //access nested data with dot notation
-      header: "Proxima Fecha de Calibración",
-      size: 350,
-      Cell: ({ cell, row }) => {
-        const now = new Date();
-        const nextCalibrationDate = new Date(row.original.nextCalibrationDate);
-        const daysRemaining = differenceInDays(nextCalibrationDate, now);
-        const formattedCalibrationDate = format(
-          nextCalibrationDate,
-          "yyyy-MM-dd"
-        );
 
-        let icon;
-        if (daysRemaining > 45) {
-          icon = <CheckCircle sx={{ color: "green" }} />;
-        } else if (daysRemaining > 15) {
-          icon = <Warning sx={{ color: "orange" }} />;
-        } else {
-          icon = <Cancel sx={{ color: "red" }} />;
-        }
-
-        return (
-          <div className="flex flex-col ">
-            <div>
-              {icon}
-              <span className="ml-2">{formattedCalibrationDate}</span>
-            </div>
-            <span
-              className={`mt-2 ${
-                daysRemaining < 0 ? "text-red-500 font-bold" : ""
-              }`}
-            >
-              {daysRemaining < 0
-                ? "VENCIDO"
-                : `Días restantes: ${daysRemaining}`}
-            </span>
-          </div>
-        );
-      },
-
-      type: "lastdate",
-    },
     {
       accessorKey: "filePath", //access nested data with dot notation
       header: "filePath",
@@ -178,7 +177,13 @@ const Dashboard: React.FC = () => {
       enableColumnOrdering
       enableHiding={false}
       initialState={{
-        columnVisibility: { filePath: false },
+        columnVisibility: {
+          filePath: false,
+          id: false,
+          "certificateType.name": false,
+          name: false,
+          activoFijo: false,
+        },
       }}
     />
   );
