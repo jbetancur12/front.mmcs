@@ -12,6 +12,7 @@ import Files from "./pages/Files";
 import Login from "./pages/Login";
 import TiposDeCertificados from "./pages/TiposdeCertificado";
 import Dashboard from "./pages/Dashboard";
+import PasswordRecovery from "./pages/PasswordRecovery";
 
 function Router() {
   const protectedLayout = (
@@ -44,6 +45,7 @@ function Router() {
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/new-password" element={<NewPassword />} />
+        <Route path="password-recovery" element={<PasswordRecovery />} />
       </Routes>
     </LocalizationProvider>
   );

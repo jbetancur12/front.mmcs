@@ -1,31 +1,23 @@
-import axios, { AxiosError } from "axios"; // Import Axios
-import { useState } from "react";
+import axios, { AxiosError, isAxiosError } from "axios";
+import React, { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { Link } from "react-router-dom";
 import * as Yup from "yup"; // Importa Yup para la validación
-
-// Función de utilidad para verificar si un objeto es de tipo AxiosError
-function isAxiosError(obj: any): obj is AxiosError {
-  return obj instanceof Error && "isAxiosError" in obj;
-}
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-const Login: React.FC = () => {
+const PasswordRecovery: React.FC = () => {
   const [formData, setFormData] = useState({
     email: "",
-    password: "",
-    remember: false,
   });
 
-  const [error, setError] = useState<string | null>(null); // Agrega estado para manejar errores
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // Define el esquema de validación del formulario con Yup
   const validationSchema = Yup.object().shape({
     email: Yup.string()
       .email("Ingresa un correo electrónico válido")
       .required("El correo electrónico es obligatorio"),
-    password: Yup.string().required("La contraseña es obligatoria"),
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,30 +89,31 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
     const data = {
       email: formData.email,
-      contraseña: formData.password,
     };
 
     try {
       await validationSchema.validate(formData, { abortEarly: false });
 
-      const response = await axios.post(`${apiUrl}/auth/login`, data);
+      const response = await axios.post(
+        `${apiUrl}/auth/recover-password`,
+        data
+      );
 
-      if (response.status === 200) {
-        const { token } = response.data;
+      if (response.status === 201) {
         // Handle successful login
-        toast.success("Bienvenido", {
+        toast.success("Email para recuperación enviado", {
           duration: 4000,
           position: "top-center",
         });
 
         setTimeout(() => {
-          window.location.href = "/dashboard";
+          window.location.href = "/login";
+          setLoading(false);
         }, 3000);
-
-        localStorage.setItem("accessToken", token);
 
         setError(null);
       } else {
@@ -155,19 +148,16 @@ const Login: React.FC = () => {
         />
         {/* <span>Metromedics S.A.S</span> */}
       </a>
-
-      <div className="w-full max-w-xl p-6 space-y-8 sm:p-8 bg-white rounded-lg shadow dark:bg-gray-800">
+      <div className="w-full max-w-xl p-6 space-y-4 sm:p-8 bg-white rounded-lg shadow dark:bg-gray-800">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Ingresa a la plataforma{" "}
+          Restablecer Contraseña
         </h2>
+        <p>
+          Introduce tu dirección de correo electrónico y te enviaremos un código
+          de verificación para restablecer tu contraseña
+        </p>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div>
-            <label
-              htmlFor="email"
-              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-            >
-              Email
-            </label>
             <input
               type="email"
               name="email"
@@ -179,40 +169,13 @@ const Login: React.FC = () => {
               onChange={handleInputChange}
             />
           </div>
-          <div>
-            <label
-              htmlFor="password"
-              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-            >
-              Contraseña
-            </label>
-            <input
-              type="password"
-              name="password"
-              id="password"
-              placeholder="••••••••"
-              className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-              required
-              value={formData.password}
-              onChange={handleInputChange}
-            />
-          </div>
-
-          <div className="flex justify-between items-center">
-            <button
-              type="submit"
-              className="w-full px-5 py-3 text-base font-medium text-center text-white bg-primary-700 rounded-lg hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 sm:w-auto dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-            >
-              Ingresar a tu cuenta
-            </button>
-
-            <Link
-              to="/password-recovery"
-              className="text-blue-500 hover:text-blue-800"
-            >
-              Recordar Contraseña
-            </Link>
-          </div>
+          <button
+            type="submit"
+            className="w-full px-5 py-3 text-base font-medium text-center text-white bg-primary-700 rounded-lg hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 sm:w-auto dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+            disabled={loading}
+          >
+            {!loading ? "Enviar" : "Enviando..."}
+          </button>
           {error && (
             <p className="text-red-500 text-sm mt-2">{error}</p> // Mostrar el mensaje de error si existe
           )}
@@ -222,4 +185,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default PasswordRecovery;
