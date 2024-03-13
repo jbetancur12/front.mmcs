@@ -4,8 +4,9 @@ import axios from "axios";
 import MaterialReactTable, { MRT_ColumnDef } from "material-react-table";
 import { differenceInDays, format } from "date-fns";
 import { Cancel, CheckCircle, Warning } from "@mui/icons-material";
+import { api } from "../config";
 
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = api();
 
 const Dashboard: React.FC = () => {
   const [tableData, setTableData] = useState<FileData[]>([]);

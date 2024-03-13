@@ -1,4 +1,4 @@
-import { Delete, Edit, Visibility } from '@mui/icons-material';
+import { Delete, Edit, Visibility } from "@mui/icons-material";
 import {
   Box,
   Dialog,
@@ -8,19 +8,20 @@ import {
   IconButton,
   Stack,
   TextField,
-  Tooltip
-} from '@mui/material';
-import axios from 'axios';
+  Tooltip,
+} from "@mui/material";
+import axios from "axios";
 import {
   MaterialReactTable,
   type MRT_Cell,
   type MRT_ColumnDef,
   type MRT_Row,
   type MaterialReactTableProps,
-} from 'material-react-table';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import toast, { Toaster } from 'react-hot-toast';
-import { Link } from 'react-router-dom';
+} from "material-react-table";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import { Link } from "react-router-dom";
+import { api } from "../config";
 
 // Define interfaces
 export interface CustomerData {
@@ -34,17 +35,19 @@ export interface CustomerData {
   departamento: string;
   pais: string;
   active: boolean;
+  rol: string;
 }
 
-
 // API URL
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = api();
 
 // Main component
 const Table: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState<CustomerData[]>([]);
-  const [filteredTableData, setFilteredTableData] = useState<CustomerData[]>([]);
+  const [filteredTableData, setFilteredTableData] = useState<CustomerData[]>(
+    []
+  );
 
   const [validationErrors, setValidationErrors] = useState<{
     [cellId: string]: string;
@@ -56,25 +59,27 @@ const Table: React.FC = () => {
       const updatedValues = { ...customerData };
       delete updatedValues.id;
 
-      console.log("🚀 ~ file: TableCustomers.tsx:63 ~ constcustomerWithoutId:CustomerData=Object.keys ~ customerWithoutId:", updatedValues)
+      console.log(
+        "🚀 ~ file: TableCustomers.tsx:63 ~ constcustomerWithoutId:CustomerData=Object.keys ~ customerWithoutId:",
+        updatedValues
+      );
       const response = await axios.post(`${apiUrl}/customers`, updatedValues, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
 
-
       if (response.status === 201) {
-        toast.success('Cliente Creado Exitosamente!', {
+        toast.success("Cliente Creado Exitosamente!", {
           duration: 4000,
-          position: 'top-center',
+          position: "top-center",
         });
         fetchCustomers(); // Refresh data after creation
       } else {
-        console.error('Error al crear cliente');
+        console.error("Error al crear cliente");
       }
     } catch (error) {
-      console.error('Error de red:', error);
+      console.error("Error de red:", error);
     }
   };
 
@@ -83,22 +88,22 @@ const Table: React.FC = () => {
     try {
       const response = await axios.get(`${apiUrl}/customers`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
 
-
-      if (response.statusText === 'OK') {
+      if (response.statusText === "OK") {
         // @ts-ignore: Ignorar el error en esta línea
-        const filteredData = response.data.filter((customer: CustomerData) => customer.rol !== "admin");
+        const filteredData = response.data.filter(
+          (customer: CustomerData) => customer.rol !== "admin"
+        );
         setTableData(filteredData);
         setFilteredTableData(filteredData);
       }
     } catch (error) {
-      console.error('Error fetching customer data:', error);
+      console.error("Error fetching customer data:", error);
     }
   };
-
 
   // const updateCustomer = async (customerData: CustomerData) => {
 
@@ -132,31 +137,34 @@ const Table: React.FC = () => {
     setCreateModalOpen(false);
   };
 
-  const handleSaveRowEdits: MaterialReactTableProps<CustomerData>['onEditingRowSave'] =
+  const handleSaveRowEdits: MaterialReactTableProps<CustomerData>["onEditingRowSave"] =
     async ({ exitEditingMode, row, values }) => {
-
       if (!Object.keys(validationErrors).length) {
         const updatedValues = { ...values };
         delete updatedValues.id;
         try {
-          const response = await axios.put(`${apiUrl}/customers/${values.id}`, updatedValues, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
-            },
-          });
+          const response = await axios.put(
+            `${apiUrl}/customers/${values.id}`,
+            updatedValues,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+              },
+            }
+          );
 
           if (response.status === 201) {
-            toast.success('Cliente Modificado Exitosamente!', {
+            toast.success("Cliente Modificado Exitosamente!", {
               duration: 4000,
-              position: 'top-center',
+              position: "top-center",
             });
             tableData[row.index] = values;
             setTableData([...tableData]);
           } else {
-            console.error('Error al crear cliente');
+            console.error("Error al crear cliente");
           }
         } catch (error) {
-          console.error('Error de red:', error);
+          console.error("Error de red:", error);
         }
 
         exitEditingMode(); //required to exit editing mode and close modal
@@ -171,36 +179,39 @@ const Table: React.FC = () => {
     try {
       const response = await axios.delete(`${apiUrl}/customers/${id}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
 
       if (response.status === 204) {
-        toast.success('Cliente Eliminado Exitosamente!', {
+        toast.success("Cliente Eliminado Exitosamente!", {
           duration: 4000,
-          position: 'top-center',
+          position: "top-center",
         });
         filteredTableData.splice(rowIndex, 1);
         setFilteredTableData([...filteredTableData]);
       } else {
-        console.error('Error al eliminar cliente');
+        console.error("Error al eliminar cliente");
       }
     } catch (error) {
-      console.error('Error de red:', error);
+      console.error("Error de red:", error);
     }
-  }
+  };
 
   const handleDeleteRow = useCallback(
     (row: MRT_Row<CustomerData>) => {
       if (
-        !confirm(`¿ Esta seguro que desea eliminar el cliente ${row.getValue('nombre')} ?`)
+        !confirm(
+          `¿ Esta seguro que desea eliminar el cliente ${row.getValue(
+            "nombre"
+          )} ?`
+        )
       ) {
         return;
       }
-      deleteCustomer(row.index, row.getValue('id'))
-
+      deleteCustomer(row.index, row.getValue("id"));
     },
-    [filteredTableData],
+    [filteredTableData]
   );
 
   // const handleViewRow = (row) => {
@@ -209,18 +220,18 @@ const Table: React.FC = () => {
 
   const getCommonEditTextFieldProps = useCallback(
     (
-      cell: MRT_Cell<CustomerData>,
-    ): MRT_ColumnDef<CustomerData>['muiTableBodyCellEditTextFieldProps'] => {
+      cell: MRT_Cell<CustomerData>
+    ): MRT_ColumnDef<CustomerData>["muiTableBodyCellEditTextFieldProps"] => {
       return {
         error: !!validationErrors[cell.id],
         helperText: validationErrors[cell.id],
         onBlur: (event) => {
           const isValid =
-            cell.column.id === 'email'
+            cell.column.id === "email"
               ? validateEmail(event.target.value)
-              : cell.column.id === 'age'
-                ? validateAge(+event.target.value)
-                : validateRequired(event.target.value);
+              : cell.column.id === "age"
+              ? validateAge(+event.target.value)
+              : validateRequired(event.target.value);
           if (!isValid) {
             //set validation error for cell if invalid
             setValidationErrors({
@@ -237,106 +248,102 @@ const Table: React.FC = () => {
         },
       };
     },
-    [validationErrors],
+    [validationErrors]
   );
-
 
   //should be memoized or stable
   const columns = useMemo<MRT_ColumnDef<CustomerData>[]>(
     () => [
       {
-        accessorKey: 'id', //access nested data with dot notation
-        header: 'ID',
+        accessorKey: "id", //access nested data with dot notation
+        header: "ID",
         size: 10,
         enableEditing: false,
       },
       {
-        accessorKey: 'nombre', //access nested data with dot notation
-        header: 'Nombre',
+        accessorKey: "nombre", //access nested data with dot notation
+        header: "Nombre",
         size: 150,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
-          type: 'show'
+          type: "show",
         }),
       },
       {
-        accessorKey: 'identificacion',
-        header: 'Identificacion',
+        accessorKey: "identificacion",
+        header: "Identificacion",
         size: 150,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
-          type: 'show'
+          type: "show",
         }),
       },
       {
-        accessorKey: 'email', //normal accessorKey
-        header: 'Email',
+        accessorKey: "email", //normal accessorKey
+        header: "Email",
         size: 200,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
-          type: 'show',
+          type: "show",
         }),
       },
       {
-        accessorKey: 'direccion', //normal accessorKey
-        header: 'Direccion',
+        accessorKey: "direccion", //normal accessorKey
+        header: "Direccion",
         size: 200,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
-          type: 'show',
+          type: "show",
         }),
       },
       {
-        accessorKey: 'telefono', //normal accessorKey
-        header: 'Telefono',
+        accessorKey: "telefono", //normal accessorKey
+        header: "Telefono",
         size: 200,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
-          type: 'show',
+          type: "show",
         }),
       },
       {
-        accessorKey: 'ciudad', //normal accessorKey
-        header: 'Ciudad',
+        accessorKey: "ciudad", //normal accessorKey
+        header: "Ciudad",
         size: 200,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
-          type: 'show',
+          type: "show",
         }),
       },
       {
-        accessorKey: 'departamento', //normal accessorKey
-        header: 'Departamento',
+        accessorKey: "departamento", //normal accessorKey
+        header: "Departamento",
         size: 200,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
-          type: 'show',
+          type: "show",
         }),
       },
       {
-        accessorKey: 'pais', //normal accessorKey
-        header: 'Pais',
+        accessorKey: "pais", //normal accessorKey
+        header: "Pais",
         size: 200,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
-          type: 'show',
+          type: "show",
         }),
       },
-
     ],
-    [getCommonEditTextFieldProps],
+    [getCommonEditTextFieldProps]
   );
-
-
 
   return (
     <>
       <Toaster />
       <MaterialReactTable
         displayColumnDefOptions={{
-          'mrt-row-actions': {
+          "mrt-row-actions": {
             muiTableHeadCellProps: {
-              align: 'center',
+              align: "center",
             },
             size: 120,
           },
@@ -349,7 +356,7 @@ const Table: React.FC = () => {
         onEditingRowSave={handleSaveRowEdits}
         onEditingRowCancel={handleCancelRowEdits}
         renderRowActions={({ row, table }) => (
-          <Box sx={{ display: 'flex', gap: '1rem' }}>
+          <Box sx={{ display: "flex", gap: "1rem" }}>
             <Tooltip arrow placement="right" title="Ver">
               <Link to={`${row.original.id}`}>
                 <IconButton>
@@ -367,7 +374,6 @@ const Table: React.FC = () => {
                 <Delete />
               </IconButton>
             </Tooltip>
-
           </Box>
         )}
         // <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear Cliente</button>
@@ -375,7 +381,6 @@ const Table: React.FC = () => {
           <button
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded "
             onClick={() => setCreateModalOpen(true)}
-
           >
             Crear Nueva Cuenta
           </button>
@@ -407,9 +412,9 @@ export const CreateNewAccountModal = ({
 }: CreateModalProps) => {
   const [values, setValues] = useState<any>(() =>
     columns.reduce((acc, column) => {
-      acc[column.accessorKey ?? ''] = '';
+      acc[column.accessorKey ?? ""] = "";
       return acc;
-    }, {} as any),
+    }, {} as any)
   );
 
   const handleSubmit = () => {
@@ -425,28 +430,39 @@ export const CreateNewAccountModal = ({
         <form onSubmit={(e) => e.preventDefault()}>
           <Stack
             sx={{
-              width: '100%',
-              minWidth: { xs: '300px', sm: '360px', md: '400px' },
-              gap: '1.5rem',
+              width: "100%",
+              minWidth: { xs: "300px", sm: "360px", md: "400px" },
+              gap: "1.5rem",
             }}
           >
-            {columns.map((column) => (
-              (column.accessorKey !== 'id' && column.accessorKey !== 'active') && <TextField
-                key={column.accessorKey}
-                label={column.header}
-                name={column.accessorKey}
-                onChange={(e) =>
-                  setValues({ ...values, [e.target.name]: e.target.value })
-                }
-              />
-            ))}
-
+            {columns.map(
+              (column) =>
+                column.accessorKey !== "id" &&
+                column.accessorKey !== "active" && (
+                  <TextField
+                    key={column.accessorKey}
+                    label={column.header}
+                    name={column.accessorKey}
+                    onChange={(e) =>
+                      setValues({ ...values, [e.target.name]: e.target.value })
+                    }
+                  />
+                )
+            )}
           </Stack>
         </form>
       </DialogContent>
-      <DialogActions sx={{ p: '1.25rem' }}>
-        <button className="bg-gray-400 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-10" onClick={onClose} >Cancelar</button>
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleSubmit}>
+      <DialogActions sx={{ p: "1.25rem" }}>
+        <button
+          className="bg-gray-400 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-10"
+          onClick={onClose}
+        >
+          Cancelar
+        </button>
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          onClick={handleSubmit}
+        >
           Crear Cuenta
         </button>
       </DialogActions>
@@ -460,9 +476,8 @@ const validateEmail = (email: string) =>
   email
     .toLowerCase()
     .match(
-      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
     );
 const validateAge = (age: number) => age >= 18 && age <= 50;
-
 
 export default Table;

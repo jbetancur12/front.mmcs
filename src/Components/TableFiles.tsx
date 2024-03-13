@@ -85,7 +85,7 @@ export interface FileData {
 }
 
 // API URL
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = api();
 
 // Main component
 const Table: React.FC = () => {

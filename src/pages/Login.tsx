@@ -3,13 +3,13 @@ import { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { Link } from "react-router-dom";
 import * as Yup from "yup"; // Importa Yup para la validación
+import { api } from "../config";
 
 // Función de utilidad para verificar si un objeto es de tipo AxiosError
 function isAxiosError(obj: any): obj is AxiosError {
   return obj instanceof Error && "isAxiosError" in obj;
 }
-
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = api();
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({

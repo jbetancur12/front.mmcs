@@ -1,4 +1,4 @@
-import { Delete, Edit } from '@mui/icons-material';
+import { Delete, Edit } from "@mui/icons-material";
 import {
   Box,
   Dialog,
@@ -8,19 +8,20 @@ import {
   IconButton,
   Stack,
   TextField,
-  Tooltip
-} from '@mui/material';
-import axios from 'axios';
+  Tooltip,
+} from "@mui/material";
+import axios from "axios";
 import {
   MaterialReactTable,
   type MRT_Cell,
   type MRT_ColumnDef,
   type MRT_Row,
   type MaterialReactTableProps,
-} from 'material-react-table';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import toast, { Toaster } from 'react-hot-toast';
-import { useParams } from 'react-router-dom';
+} from "material-react-table";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import { useParams } from "react-router-dom";
+import { api } from "../config";
 
 // Define interfaces
 export interface UserData {
@@ -34,11 +35,11 @@ export interface UserData {
     nombre: string;
     // Otras propiedades de User
   };
+  rol: string;
 }
 
-
 // API URL
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = api();
 
 // Main component
 const Table: React.FC = () => {
@@ -56,21 +57,21 @@ const Table: React.FC = () => {
     try {
       const response = await axios.post(`${apiUrl}/auth/register`, userData, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
 
       if (response.status === 201) {
-        toast.success('Usuario Creado Exitosamente!', {
+        toast.success("Usuario Creado Exitosamente!", {
           duration: 4000,
-          position: 'top-center',
+          position: "top-center",
         });
         fetchUsers(); // Refresh data after creation
       } else {
-        console.error('Error al crear usuario');
+        console.error("Error al crear usuario");
       }
     } catch (error) {
-      console.error('Error de red:', error);
+      console.error("Error de red:", error);
     }
   };
 
@@ -79,61 +80,61 @@ const Table: React.FC = () => {
     try {
       const response = await axios.get(`${apiUrl}/customers/${id}/users`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
 
-
-      if (response.statusText === 'OK') {
+      if (response.statusText === "OK") {
         // @ts-ignore: Ignorar el error en esta línea
-        const filteredData = response.data.filter((user: UserData) => user.rol !== "admin");
+        const filteredData = response.data.filter(
+          (user: UserData) => user.rol !== "admin"
+        );
         setTableData(filteredData);
         setFilteredTableData(filteredData);
       }
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error("Error fetching user data:", error);
     }
-  },[]);
-
-
+  }, []);
 
   useEffect(() => {
-    console.log('%cTableUsersCustomer.tsx line:88 "HOLAAAAAAA"', 'color: #007acc;', "HOLAAAAAAA");
     fetchUsers();
   }, []);
 
   const handleCreateNewRow = (values: UserData) => {
-
     // @ts-ignore
-    onCreateUser({ ...values, customerId: id, contraseña: '123456' });
+    onCreateUser({ ...values, customerId: id, contraseña: "123456" });
     setCreateModalOpen(false);
   };
 
-  const handleSaveRowEdits: MaterialReactTableProps<UserData>['onEditingRowSave'] =
+  const handleSaveRowEdits: MaterialReactTableProps<UserData>["onEditingRowSave"] =
     async ({ exitEditingMode, row, values }) => {
-
       if (!Object.keys(validationErrors).length) {
         const updatedValues = { ...values };
         delete updatedValues.id;
         try {
-          const response = await axios.put(`${apiUrl}/users/${values.id}`, updatedValues, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
-            },
-          });
+          const response = await axios.put(
+            `${apiUrl}/users/${values.id}`,
+            updatedValues,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+              },
+            }
+          );
 
           if (response.status === 201) {
-            toast.success('Usuario Modificado Exitosamente!', {
+            toast.success("Usuario Modificado Exitosamente!", {
               duration: 4000,
-              position: 'top-center',
+              position: "top-center",
             });
             tableData[row.index] = values;
             setTableData([...tableData]);
           } else {
-            console.error('Error al crear usuario');
+            console.error("Error al crear usuario");
           }
         } catch (error) {
-          console.error('Error de red:', error);
+          console.error("Error de red:", error);
         }
 
         exitEditingMode(); //required to exit editing mode and close modal
@@ -148,53 +149,53 @@ const Table: React.FC = () => {
     try {
       const response = await axios.delete(`${apiUrl}/users/${id}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
 
       if (response.status === 201) {
-        toast.success('Usuario Eliminado Exitosamente!', {
+        toast.success("Usuario Eliminado Exitosamente!", {
           duration: 4000,
-          position: 'top-center',
+          position: "top-center",
         });
         tableData.splice(rowIndex, 1);
         setTableData([...tableData]);
       } else {
-        console.error('Error al crear usuario');
+        console.error("Error al crear usuario");
       }
     } catch (error) {
-      console.error('Error de red:', error);
+      console.error("Error de red:", error);
     }
-  }
+  };
 
   const handleDeleteRow = useCallback(
     (row: MRT_Row<UserData>) => {
       if (
-        !confirm(`Are you sure you want to delete ${row.getValue('nombre')}`)
+        !confirm(`Are you sure you want to delete ${row.getValue("nombre")}`)
       ) {
         return;
       }
-      deleteUser(row.index, row.getValue('id'))
+      deleteUser(row.index, row.getValue("id"));
       tableData.splice(row.index, 1);
       setTableData([...tableData]);
     },
-    [tableData],
+    [tableData]
   );
 
   const getCommonEditTextFieldProps = useCallback(
     (
-      cell: MRT_Cell<UserData>,
-    ): MRT_ColumnDef<UserData>['muiTableBodyCellEditTextFieldProps'] => {
+      cell: MRT_Cell<UserData>
+    ): MRT_ColumnDef<UserData>["muiTableBodyCellEditTextFieldProps"] => {
       return {
         error: !!validationErrors[cell.id],
         helperText: validationErrors[cell.id],
         onBlur: (event) => {
           const isValid =
-            cell.column.id === 'email'
+            cell.column.id === "email"
               ? validateEmail(event.target.value)
-              : cell.column.id === 'age'
-                ? validateAge(+event.target.value)
-                : validateRequired(event.target.value);
+              : cell.column.id === "age"
+              ? validateAge(+event.target.value)
+              : validateRequired(event.target.value);
           if (!isValid) {
             //set validation error for cell if invalid
             setValidationErrors({
@@ -211,33 +212,32 @@ const Table: React.FC = () => {
         },
       };
     },
-    [validationErrors],
+    [validationErrors]
   );
-
 
   //should be memoized or stable
   const columns = useMemo<MRT_ColumnDef<UserData>[]>(
     () => [
       {
-        accessorKey: 'id', //access nested data with dot notation
-        header: 'ID',
+        accessorKey: "id", //access nested data with dot notation
+        header: "ID",
         size: 10,
         enableEditing: false,
       },
       {
-        accessorKey: 'nombre', //access nested data with dot notation
-        header: 'Nombre',
+        accessorKey: "nombre", //access nested data with dot notation
+        header: "Nombre",
         size: 150,
-        type: 'show',
+        type: "show",
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
         }),
       },
       {
-        accessorKey: 'email', //normal accessorKey
-        header: 'Email',
+        accessorKey: "email", //normal accessorKey
+        header: "Email",
         size: 200,
-        type: 'show',
+        type: "show",
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
         }),
@@ -247,34 +247,35 @@ const Table: React.FC = () => {
         header: "Activo",
         size: 10,
         Cell: ({ cell }) => (
-          <div className={`circle ${cell.getValue() ? "bg-green-600" : "bg-orange-400"}`}
+          <div
+            className={`circle ${
+              cell.getValue() ? "bg-green-600" : "bg-orange-400"
+            }`}
             style={{
               width: "10px",
               height: "10px",
               borderRadius: "50%",
-            }} ></div>
+            }}
+          ></div>
         ),
       },
       {
         accessorKey: "customer.nombre",
         header: "Compañia",
         size: 10,
-      }
-
+      },
     ],
-    [getCommonEditTextFieldProps],
+    [getCommonEditTextFieldProps]
   );
-
-
 
   return (
     <>
       <Toaster />
       <MaterialReactTable
         displayColumnDefOptions={{
-          'mrt-row-actions': {
+          "mrt-row-actions": {
             muiTableHeadCellProps: {
-              align: 'center',
+              align: "center",
             },
             size: 120,
           },
@@ -287,7 +288,7 @@ const Table: React.FC = () => {
         onEditingRowSave={handleSaveRowEdits}
         onEditingRowCancel={handleCancelRowEdits}
         renderRowActions={({ row, table }) => (
-          <Box sx={{ display: 'flex', gap: '1rem' }}>
+          <Box sx={{ display: "flex", gap: "1rem" }}>
             <Tooltip arrow placement="left" title="Edit">
               <IconButton onClick={() => table.setEditingRow(row)}>
                 <Edit />
@@ -305,7 +306,6 @@ const Table: React.FC = () => {
           <button
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded "
             onClick={() => setCreateModalOpen(true)}
-
           >
             Crear Usuario
           </button>
@@ -338,9 +338,9 @@ export const CreateNewAccountModal = ({
   const { id } = useParams();
   const [values, setValues] = useState<any>(() =>
     columns.reduce((acc, column) => {
-      acc[column.accessorKey ?? ''] = '';
+      acc[column.accessorKey ?? ""] = "";
       return acc;
-    }, {} as any),
+    }, {} as any)
   );
 
   const handleSubmit = () => {
@@ -350,8 +350,8 @@ export const CreateNewAccountModal = ({
   };
 
   useEffect(() => {
-    setValues({ ...values, customerId: id })
-  }, [])
+    setValues({ ...values, customerId: id });
+  }, []);
 
   return (
     <Dialog open={open}>
@@ -360,22 +360,29 @@ export const CreateNewAccountModal = ({
         <form onSubmit={(e) => e.preventDefault()}>
           <Stack
             sx={{
-              width: '100%',
-              minWidth: { xs: '300px', sm: '360px', md: '400px' },
-              gap: '1.5rem',
+              width: "100%",
+              minWidth: { xs: "300px", sm: "360px", md: "400px" },
+              gap: "1.5rem",
             }}
           >
-            {columns.map((column) => (
-              // @ts-ignore
-              (column.accessorKey !== 'id' && column.accessorKey !== 'active' && column.accessorKey !== 'customer.nombre' && column.accessorKey !== 'customer.contraseña') && <TextField
-                key={column.accessorKey}
-                label={column.header}
-                name={column.accessorKey}
-                onChange={(e) =>
-                  setValues({ ...values, [e.target.name]: e.target.value })
-                }
-              />
-            ))}
+            {columns.map(
+              (column) =>
+                // @ts-ignore
+                column.accessorKey !== "id" &&
+                column.accessorKey !== "active" &&
+                column.accessorKey !== "customer.nombre" &&
+                // @ts-ignore
+                column.accessorKey !== "customer.contraseña" && (
+                  <TextField
+                    key={column.accessorKey}
+                    label={column.header}
+                    name={column.accessorKey}
+                    onChange={(e) =>
+                      setValues({ ...values, [e.target.name]: e.target.value })
+                    }
+                  />
+                )
+            )}
             <TextField
               label="Contraseña"
               name="contraseña"
@@ -400,9 +407,17 @@ export const CreateNewAccountModal = ({
           </Stack>
         </form>
       </DialogContent>
-      <DialogActions sx={{ p: '1.25rem' }}>
-        <button className="bg-gray-400 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-10" onClick={onClose} >Cancelar</button>
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleSubmit}>
+      <DialogActions sx={{ p: "1.25rem" }}>
+        <button
+          className="bg-gray-400 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-10"
+          onClick={onClose}
+        >
+          Cancelar
+        </button>
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          onClick={handleSubmit}
+        >
           Crear Usuario
         </button>
       </DialogActions>
@@ -416,9 +431,8 @@ const validateEmail = (email: string) =>
   email
     .toLowerCase()
     .match(
-      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
     );
 const validateAge = (age: number) => age >= 18 && age <= 50;
-
 
 export default Table;

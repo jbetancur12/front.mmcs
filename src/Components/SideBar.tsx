@@ -9,7 +9,6 @@ import DropdownButton from "./DropdownButton";
 
 const SideBar: React.FC = () => {
   const $userStore = useStore(userStore);
-  console.log("🚀 ~ file: SideBar.tsx:12 ~ userStore:", $userStore);
 
   // const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 

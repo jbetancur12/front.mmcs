@@ -2,9 +2,11 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import TableUsersCustomer from "../Components/TableUsersCustomer";
+import { api } from "../config";
 
 // API URL
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = api();
+console.log("🚀 ~ apiUrl:", apiUrl);
 
 // function CustomerDetail() {
 //   const { id } = useParams();
@@ -98,7 +100,7 @@ interface UserData {
   nombre: string;
   email: string;
   telefono: string;
-  image?: string;
+  avatar?: string;
 }
 
 function UserProfile() {
@@ -107,9 +109,8 @@ function UserProfile() {
     nombre: "",
     email: "",
     telefono: "",
-    image: "",
+    avatar: "",
   });
-  const [file, setFile] = useState<File | null>(null);
 
   const [image, setImage] = useState("/images/pngaaa.com-4811116.png");
   // Aquí puedes usar el valor de 'id' para cargar los detalles del cliente correspondiente
@@ -123,6 +124,7 @@ function UserProfile() {
     });
     if (response.status === 200) {
       setCustomerData(response.data);
+      setImage("http://127.0.0.1:9000/images/" + response.data.avatar);
     }
   };
 
@@ -133,63 +135,61 @@ function UserProfile() {
     // Aquí puedes implementar la lógica para cargar la imagen al servidor y actualizarla en la base de datos
     // También puedes utilizar librerías como axios para hacer la solicitud HTTP
     if (newImage) {
-      setFile(newImage);
-      // const formData = new FormData();
-      // formData.append("file", newImage as Blob);
-      // formData.append(
-      //   "userId",
-      //   id !== undefined && typeof id === "number" ? id : ""
-      // );
+      setImage(URL.createObjectURL(newImage));
+      const formData = new FormData();
+      formData.append("file", newImage as Blob);
+      formData.append(
+        "customerId",
+        id !== undefined && typeof id === "string" ? id : ""
+      );
 
-      // console.log("first", formData);
-      // try {
-      //   // Enviar la imagen al backend Express
-      //   const response = await axios.post(`${apiUrl}/customers`, formData, {
-      //     headers: {
-      //       "Content-Type": "multipart/form-data",
-      //       Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-      //     },
-      //   });
-      //   console.log("Respuesta del backend:", response.data);
+      try {
+        // Enviar la imagen al backend Express
+        const response = await axios.post(`${apiUrl}/customers`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        });
+        console.log("Respuesta del backend:", response.data);
 
-      //   // Actualizar la imagen en el estado local
-      //   setImage(URL.createObjectURL(newImage));
-      // } catch (error) {
-      //   console.error("Error al enviar la imagen al backend:", error);
-      // }
+        // Actualizar la imagen en el estado local
+      } catch (error) {
+        console.error("Error al enviar la imagen al backend:", error);
+      }
     } else {
       setImage("/images/pngaaa.com-4811116.png");
     }
   };
 
-  const handleSaveImage = async () => {
-    const formData = new FormData();
-    formData.append("file", file as Blob);
-    formData.append(
-      "customerId",
-      id !== undefined && typeof id === "string" ? id : ""
-    );
+  // const handleSaveImage = async () => {
+  //   const formData = new FormData();
+  //   formData.append("file", file as Blob);
+  //   formData.append(
+  //     "customerId",
+  //     id !== undefined && typeof id === "string" ? id : ""
+  //   );
 
-    console.log("first", Object.fromEntries(formData));
-    try {
-      // Enviar la imagen al backend Express
-      const response = await axios.post(`${apiUrl}/customers`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
-      console.log("Respuesta del backend:", response.data);
+  //   try {
+  //     // Enviar la imagen al backend Express
+  //     const response = await axios.post(`${apiUrl}/customers`, formData, {
+  //       headers: {
+  //         "Content-Type": "multipart/form-data",
+  //         Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+  //       },
+  //     });
+  //     console.log("Respuesta del backend:", response.data);
 
-      // Actualizar la imagen en el estado local
-    } catch (error) {
-      console.error("Error al enviar la imagen al backend:", error);
-    }
-  };
+  //     // Actualizar la imagen en el estado local
+  //   } catch (error) {
+  //     console.error("Error al enviar la imagen al backend:", error);
+  //   }
+  // };
 
   useEffect(() => {
     getuserInfo();
   }, []);
+
   return (
     <>
       <div className="bg-white shadow-md rounded-lg p-8 max-w-md mx-auto mt-4">
@@ -197,7 +197,7 @@ function UserProfile() {
           <div className="flex flex-col justify-center">
             <label htmlFor="imageInput">
               <img
-                src={file?.name} // Reemplaza con la URL de la imagen del usuario
+                src={image} // Reemplaza con la URL de la imagen del usuario
                 alt={`${customerData.nombre}`}
                 className="w-24 h-24 rounded-full mx-auto cursor-pointer"
               />
@@ -209,7 +209,7 @@ function UserProfile() {
               className="hidden"
               onChange={handleImageChange}
             />
-            {file && (
+            {/* {file && (
               <button
                 onClick={handleSaveImage}
                 className="flex items-center justify-center self-center mt-3 w-fit px-4 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:bg-gray-300"
@@ -230,7 +230,7 @@ function UserProfile() {
                 </svg>
                 <span>Guardar</span>
               </button>
-            )}
+            )} */}
           </div>
           <h2 className="text-2xl font-semibold mt-4">{customerData.nombre}</h2>
         </div>

@@ -2,8 +2,9 @@ import axios, { AxiosError, isAxiosError } from "axios";
 import React, { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import * as Yup from "yup"; // Importa Yup para la validación
+import { api } from "../config";
 
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = api();
 
 const PasswordRecovery: React.FC = () => {
   const [formData, setFormData] = useState({
