@@ -6,8 +6,7 @@ import { api } from "../config";
 
 // API URL
 const apiUrl = api();
-console.log("🚀 ~ apiUrl:", apiUrl);
-
+const minioUrl = import.meta.env.VITE_MINIO_URL;
 // function CustomerDetail() {
 //   const { id } = useParams();
 //   const [customerData, setCustomerData] = useState({});
@@ -124,7 +123,7 @@ function UserProfile() {
     });
     if (response.status === 200) {
       setCustomerData(response.data);
-      setImage("http://127.0.0.1:9000/images/" + response.data.avatar);
+      setImage(minioUrl + "/images/" + response.data.avatar);
     }
   };
 

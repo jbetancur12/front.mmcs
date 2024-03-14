@@ -35,6 +35,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { userStore } from "../store/userStore";
 import AutoComplete from "./AutoComplete";
+import { api } from "../config";
 
 const VisuallyHiddenInput = styled("input")`
   clip: rect(0 0 0 0);
@@ -228,8 +229,8 @@ const Table: React.FC = () => {
         },
       });
 
-      if (response.status === 201) {
-        toast.success("Equipo Eliminado Exitosamente!", {
+      if (response.status === 204) {
+        toast.success("Archivo Eliminado Exitosamente!", {
           duration: 4000,
           position: "top-center",
         });

@@ -164,7 +164,7 @@ const Table: React.FC = () => {
         },
       });
 
-      if (response.status === 201) {
+      if (response.status === 204) {
         toast.success("Equipo Eliminado Exitosamente!", {
           duration: 4000,
           position: "top-center",

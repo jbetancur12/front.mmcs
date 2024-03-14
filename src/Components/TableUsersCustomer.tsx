@@ -5,6 +5,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Hidden,
   IconButton,
   Stack,
   TextField,
@@ -152,8 +153,9 @@ const Table: React.FC = () => {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
+      console.log("🚀 ~ deleteUser ~ response:", response);
 
-      if (response.status === 201) {
+      if (response.status === 204) {
         toast.success("Usuario Eliminado Exitosamente!", {
           duration: 4000,
           position: "top-center",
@@ -383,14 +385,8 @@ export const CreateNewAccountModal = ({
                   />
                 )
             )}
-            <TextField
-              label="Contraseña"
-              name="contraseña"
-              onChange={(e) =>
-                setValues({ ...values, [e.target.name]: e.target.value })
-              }
-            />
-            <TextField
+
+            {/* <TextField
               label="Compañia"
               name="customerId"
               disabled
@@ -402,8 +398,8 @@ export const CreateNewAccountModal = ({
               name="contraseña"
               disabled
               sx={{ display: "none" }}
-              value={values.customerId}
-            />
+              value={"1234567x"}
+            /> */}
           </Stack>
         </form>
       </DialogContent>
