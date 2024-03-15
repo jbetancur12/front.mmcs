@@ -5,7 +5,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Hidden,
   IconButton,
   Stack,
   TextField,
@@ -19,6 +18,7 @@ import {
   type MRT_Row,
   type MaterialReactTableProps,
 } from "material-react-table";
+import { MRT_Localization_ES } from "material-react-table/locales/es";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useParams } from "react-router-dom";
@@ -274,6 +274,7 @@ const Table: React.FC = () => {
     <>
       <Toaster />
       <MaterialReactTable
+        localization={MRT_Localization_ES}
         displayColumnDefOptions={{
           "mrt-row-actions": {
             muiTableHeadCellProps: {

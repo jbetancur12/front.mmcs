@@ -36,6 +36,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { userStore } from "../store/userStore";
 import AutoComplete from "./AutoComplete";
 import { api } from "../config";
+import { MRT_Localization_ES } from "material-react-table/locales/es";
 
 const VisuallyHiddenInput = styled("input")`
   clip: rect(0 0 0 0);
@@ -550,6 +551,7 @@ const Table: React.FC = () => {
       <Toaster />
       {/* <Pdf/> */}
       <MaterialReactTable
+        localization={MRT_Localization_ES}
         displayColumnDefOptions={{
           "mrt-row-actions": {
             muiTableHeadCellProps: {

@@ -22,6 +22,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { api } from "../config";
+import { MRT_Localization_ES } from "material-react-table/locales/es";
 
 // Define interfaces
 export interface CustomerData {
@@ -340,6 +341,7 @@ const Table: React.FC = () => {
     <>
       <Toaster />
       <MaterialReactTable
+        localization={MRT_Localization_ES}
         displayColumnDefOptions={{
           "mrt-row-actions": {
             muiTableHeadCellProps: {

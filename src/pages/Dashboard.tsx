@@ -160,7 +160,17 @@ const Dashboard: React.FC = () => {
   ]);
 
   if (tableData.length < 1) {
-    return <div>Certificados al dia</div>;
+    return (
+      <div className="flex justify-center flex-col items-center h-screen">
+        <h2 className="text-3xl">Certificados al dia</h2>
+        <img
+          src="/images/tick.png"
+          alt="Certificados al dia"
+          width={"25%"}
+          className="px-4 mt-7"
+        />
+      </div>
+    );
   }
 
   return (

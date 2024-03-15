@@ -21,6 +21,7 @@ import {
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { api } from "../config";
+import { MRT_Localization_ES } from "material-react-table/locales/es";
 
 // Define interfaces
 export interface DeviceData {
@@ -232,13 +233,14 @@ const Table: React.FC = () => {
       {
         accessorKey: "id", //access nested data with dot notation
         header: "ID",
-        size: 10,
+        // size: 1,
+
         enableEditing: false,
       },
       {
         accessorKey: "name", //access nested data with dot notation
         header: "Nombre",
-        size: 150,
+        // size: 150,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
         }),
@@ -251,12 +253,13 @@ const Table: React.FC = () => {
     <>
       <Toaster />
       <MaterialReactTable
+        localization={MRT_Localization_ES}
         displayColumnDefOptions={{
           "mrt-row-actions": {
             muiTableHeadCellProps: {
               align: "center",
             },
-            size: 120,
+            // size: 120,
           },
         }}
         columns={columns}
@@ -266,8 +269,18 @@ const Table: React.FC = () => {
         enableEditing
         onEditingRowSave={handleSaveRowEdits}
         onEditingRowCancel={handleCancelRowEdits}
+        initialState={{
+          columnVisibility: { id: false },
+        }}
         renderRowActions={({ row, table }) => (
-          <Box sx={{ display: "flex", gap: "1rem" }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: "1rem",
+              width: 20,
+              justifyItems: "center",
+            }}
+          >
             <Tooltip arrow placement="left" title="Edit">
               <IconButton onClick={() => table.setEditingRow(row)}>
                 <Edit />
