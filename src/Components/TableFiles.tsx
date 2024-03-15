@@ -37,6 +37,7 @@ import { userStore } from "../store/userStore";
 import AutoComplete from "./AutoComplete";
 import { api } from "../config";
 import { MRT_Localization_ES } from "material-react-table/locales/es";
+import Loader from "./Loader2";
 
 const VisuallyHiddenInput = styled("input")`
   clip: rect(0 0 0 0);
@@ -94,6 +95,7 @@ const Table: React.FC = () => {
   const $userStore = useStore(userStore);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState<FileData[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const [validationErrors, setValidationErrors] = useState<{
     [cellId: string]: string;
@@ -108,6 +110,7 @@ const Table: React.FC = () => {
 
   // Create a new file
   const onCreateFile = async (fileData: FileData) => {
+    setLoading(true);
     try {
       const response = await axios.post(`${apiUrl}/files`, fileData, {
         headers: {
@@ -117,15 +120,18 @@ const Table: React.FC = () => {
       });
 
       if (response.status === 201) {
+        setLoading(false);
         toast.success("Certificado Creado Exitosamente!", {
           duration: 4000,
           position: "top-center",
         });
         fetchUsers(); // Refresh data after creation
       } else {
+        setLoading(false);
         console.error("Error al crear equipo");
       }
     } catch (error) {
+      setLoading(false);
       console.error("Error de red:", error);
     }
   };
@@ -176,10 +182,6 @@ const Table: React.FC = () => {
   }, []);
 
   const handleCreateNewRow = (values: FileData) => {
-    console.log(
-      "🚀 ~ file: TableFiles.tsx:147 ~ handleCreateNewRow ~ values:",
-      values
-    );
     onCreateFile(values);
     setCreateModalOpen(false);
   };
@@ -291,7 +293,7 @@ const Table: React.FC = () => {
   );
 
   const handleDownload = async (row: any) => {
-    const filePath = row.getValue("filePath");
+    const filePath = row.getValue(13);
 
     const partes = filePath.split("-");
     let resultado = "";
@@ -549,6 +551,7 @@ const Table: React.FC = () => {
   return (
     <>
       <Toaster />
+      <Loader loading={loading} />
       {/* <Pdf/> */}
       <MaterialReactTable
         localization={MRT_Localization_ES}

@@ -65,7 +65,7 @@ export default function Asynchronous<T>({
             setLoading(false);
           }
         });
-    }, 800); // Cambia el valor del tiempo de espera según tus necesidades
+    }, 500); // Cambia el valor del tiempo de espera según tus necesidades
 
     return () => {
       active = false;
