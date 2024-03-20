@@ -5,6 +5,7 @@ import {
   CloudUpload,
   Delete,
   FileDownload,
+  Visibility,
   Warning,
 } from "@mui/icons-material";
 import {
@@ -38,6 +39,13 @@ import AutoComplete from "./AutoComplete";
 import { api } from "../config";
 import { MRT_Localization_ES } from "material-react-table/locales/es";
 import Loader from "./Loader2";
+import { Link } from "react-router-dom";
+
+function convertirCadena(cadena) {
+  // Reemplazar espacios con guiones y convertir a minúsculas
+  const cadenaFormateada = cadena.replace(/\s+/g, "-").toLowerCase();
+  return cadenaFormateada;
+}
 
 const VisuallyHiddenInput = styled("input")`
   clip: rect(0 0 0 0);
@@ -249,10 +257,10 @@ const Table: React.FC = () => {
 
   const handleDeleteRow = useCallback(
     (row: MRT_Row<FileData>) => {
-      if (!confirm(`Are you sure you want to delete ${row.getValue("name")}`)) {
+      if (!confirm(`Are you sure you want to delete ${row.getValue(3)}`)) {
         return;
       }
-      deleteUser(row.index, row.getValue("id"));
+      deleteUser(row.index, row.getValue(1));
       tableData.splice(row.index, 1);
       setTableData([...tableData]);
     },
@@ -598,6 +606,11 @@ const Table: React.FC = () => {
                   <FileDownload />
                 </IconButton>
               </Tooltip>
+              <Tooltip arrow placement="left" title="Ver archivos">
+                <Link to={`${row.original.id}`}>
+                  <Visibility />
+                </Link>
+              </Tooltip>
             </Box>
           );
         }}
@@ -720,6 +733,7 @@ export const CreateNewAccountModal = ({
     formData.append("nextCalibrationDate", values.nextCalibrationDate);
     formData.append("pdf", file as Blob);
     formData.append("customerId", values["customer.nombre"].toString());
+    formData.append("customerName", values["customerName"]);
     formData.append(
       "certificateTypeId",
       values["certificateType.name"].toString()
@@ -842,7 +856,11 @@ export const CreateNewAccountModal = ({
                         name={column.accessorKey}
                         value={values[column.accessorKey]}
                         onClientSelection={(e) =>
-                          setValues({ ...values, [column.accessorKey]: e.id })
+                          setValues({
+                            ...values,
+                            [column.accessorKey]: e.id,
+                            customerName: convertirCadena(e.nombre),
+                          })
                         }
                       />
                     );

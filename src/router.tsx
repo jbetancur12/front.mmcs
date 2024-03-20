@@ -13,6 +13,7 @@ import Login from "./pages/Login";
 import TiposDeCertificados from "./pages/TiposdeCertificado";
 import Dashboard from "./pages/Dashboard";
 import PasswordRecovery from "./pages/PasswordRecovery";
+import Certificates from "./pages/Certificates";
 
 function Router() {
   const protectedLayout = (
@@ -40,7 +41,10 @@ function Router() {
               path="tipos-de-certificado"
               element={<TiposDeCertificados />}
             />
-            <Route path="certificados" element={<Files />} />
+            <Route path="certificados">
+              <Route index element={<Files />} />
+              <Route path=":id" element={<Certificates />} />
+            </Route>
           </Route>
         </Route>
         <Route path="/login" element={<Login />} />
