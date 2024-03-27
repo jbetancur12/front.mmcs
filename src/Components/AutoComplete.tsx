@@ -1,6 +1,6 @@
 import Autocomplete from "@mui/material/Autocomplete";
 import CircularProgress from "@mui/material/CircularProgress";
-import TextField, { TextFieldProps } from "@mui/material/TextField";
+import TextField from "@mui/material/TextField";
 import * as React from "react";
 
 interface SearchProps<T> extends React.ComponentProps<typeof TextField> {

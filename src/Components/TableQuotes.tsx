@@ -1,34 +1,16 @@
-import { Delete, Download, Edit, Print, Visibility } from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Stack,
-  TextField,
-  Tooltip,
-} from "@mui/material";
+import { Download, Print, Visibility } from "@mui/icons-material";
+import { Box, Button, Tooltip } from "@mui/material";
 import axios from "axios";
-import {
-  MaterialReactTable,
-  type MRT_Cell,
-  type MRT_ColumnDef,
-  type MRT_Row,
-  type MaterialReactTableProps,
-} from "material-react-table";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
+import { MaterialReactTable, type MRT_ColumnDef } from "material-react-table";
+import React, { useEffect, useMemo, useState } from "react";
+import { Toaster } from "react-hot-toast";
 import { api } from "../config";
 import { MRT_Localization_ES } from "material-react-table/locales/es";
 import { format } from "date-fns";
-import QuoteForm from "./QuoteForm";
+
 import { Link } from "react-router-dom";
-import { BlobProvider, PDFDownloadLink, usePDF } from "@react-pdf/renderer";
+import { BlobProvider, PDFDownloadLink } from "@react-pdf/renderer";
 import QuotePDF from "./QuotePDF";
-import DownloadPDFButton from "./Download";
 
 // Define interfaces
 export interface QuoteData {
@@ -43,6 +25,10 @@ export interface QuoteData {
   observations: string;
   customer: {
     nombre: string;
+    email: string;
+    telefono: string;
+    direccion: string;
+    ciudad: string;
   };
   createdAt: string;
 }
@@ -53,8 +39,6 @@ const apiUrl = api();
 // Main component
 const Table: React.FC = () => {
   const [tableData, setTableData] = useState<QuoteData[]>([]);
-  const [quoteData, setQuoteData] = useState<QuoteData | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
 
   // Fetch devices data
   const fetchUsers = async () => {

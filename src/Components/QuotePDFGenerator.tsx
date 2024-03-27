@@ -5,19 +5,18 @@ import "./QuotePDF.css"; // Importa tu hoja de estilos CSS personalizada
 
 import { QuoteData } from "./TableQuotes";
 
-import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
-import TextQuote from "./QuotePDF";
-import { Button } from "@mui/material";
+import { PDFViewer } from "@react-pdf/renderer";
+import QuotePDF from "./QuotePDF";
 
 interface Props {
-  quoteData: QuoteData;
+  quoteData: QuoteData | null;
 }
 
 const QuotePDFGenerator: React.FC<Props> = ({ quoteData }) => {
   return (
     <div>
       <PDFViewer width="100%" height="700" className="app">
-        <TextQuote quoteData={quoteData} />
+        <QuotePDF quoteData={quoteData} />
       </PDFViewer>
     </div>
   );

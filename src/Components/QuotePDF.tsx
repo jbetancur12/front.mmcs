@@ -3,9 +3,9 @@ import {
   Image,
   Text,
   View,
+  StyleSheet,
   Page,
   Document,
-  StyleSheet,
 } from "@react-pdf/renderer";
 import { QuoteData } from "./TableQuotes";
 import { createTw } from "react-pdf-tailwind";
@@ -171,7 +171,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
             styles.width10,
           ]}
         >
-          <Text>{quoteData.id}</Text>
+          <Text>{quoteData?.id}</Text>
         </View>
       </View>
 
@@ -189,6 +189,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
             styles.width20,
           ]}
         >
+          {/* @ts-ignore */}
           <Text>{format(new Date(quoteData.createdAt), "yyyy-MM-dd")}</Text>
         </View>
         <View
@@ -209,7 +210,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
             styles.width20,
           ]}
         >
-          <Text>{quoteData.customer.ciudad}</Text>
+          <Text>{quoteData?.customer.ciudad}</Text>
         </View>
       </View>
 
@@ -227,7 +228,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
             styles.width60,
           ]}
         >
-          <Text>{quoteData.customer.nombre}</Text>
+          <Text>{quoteData?.customer.nombre}</Text>
         </View>
         <View
           style={[
@@ -247,7 +248,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
             styles.width20,
           ]}
         >
-          <Text>{quoteData.customer.telefono}</Text>
+          <Text>{quoteData?.customer.telefono}</Text>
         </View>
       </View>
 
@@ -258,7 +259,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
           <Text>Dirección</Text>
         </View>
         <View style={[styles.descContainer, styles.width75, styles.ml4]}>
-          <Text>{quoteData.customer.direccion}</Text>
+          <Text>{quoteData?.customer.direccion}</Text>
         </View>
       </View>
     </View>
@@ -285,8 +286,8 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
   );
 
   const TableBody = () =>
-    quoteData.products.map((product: any, idx: number) => (
-      <div key={product.id}>
+    quoteData?.products.map((product: any, idx: number) => (
+      <View key={product.id}>
         <View style={{ width: "100%", flexDirection: "row" }}>
           <View style={[styles.tbody]}>
             <Text>{idx + 1}</Text>
@@ -314,7 +315,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
             </Text>
           </View>
         </View>
-      </div>
+      </View>
     ));
 
   const TableTotal = () => (
@@ -334,7 +335,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
       <View style={styles.tbody}>
         <Text>
           ${" "}
-          {quoteData.subtotal.toLocaleString("es-ES", {
+          {quoteData?.subtotal.toLocaleString("es-ES", {
             minimumFractionDigits: 2,
           })}
         </Text>
@@ -354,12 +355,12 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
         <Text> </Text>
       </View>
       <View style={styles.tbody}>
-        <Text>Descuento ({quoteData.discountRatio}%)</Text>
+        <Text>Descuento ({quoteData?.discountRatio}%)</Text>
       </View>
       <View style={styles.tbody}>
         <Text>
           ${" "}
-          {quoteData.discountTotal.toLocaleString("es-ES", {
+          {quoteData?.discountTotal.toLocaleString("es-ES", {
             minimumFractionDigits: 2,
           })}
         </Text>
@@ -384,7 +385,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
       <View style={styles.tbody}>
         <Text>
           ${" "}
-          {quoteData.taxTotal.toLocaleString("es-ES", {
+          {quoteData?.taxTotal.toLocaleString("es-ES", {
             minimumFractionDigits: 2,
           })}
         </Text>
@@ -421,7 +422,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
       <View style={styles.tbody}>
         <Text>
           ${" "}
-          {quoteData.total.toLocaleString("es-ES", {
+          {quoteData?.total.toLocaleString("es-ES", {
             minimumFractionDigits: 2,
           })}
         </Text>
@@ -429,30 +430,32 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
     </View>
   );
 
+  // Add the missing import statement
+
   const Observations = () => (
     <View style={tw("mt-10  border border-black")}>
       <Text style={tw("p-1 font-semibold bg-[#9AF18B] ")}>Observaciones:</Text>
-      <Text style={tw("border-t p-2 ")}>{quoteData.observations}</Text>
+      <Text style={tw("border-t p-2 ")}>{quoteData?.observations}</Text>
     </View>
   );
 
-  if (quoteData === null) return null;
-
   return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        <Header />
-        <InvoiceDescription />
-        <TableHead />
-        <TableBody />
-        <TableTotal />
-        <TableDiscount />
-        <TableTax />
-        <TableTotalAmount />
-        <Observations />
-        <Footer />
-      </Page>
-    </Document>
+    <>
+      <Document>
+        <Page size="A4" style={styles.page}>
+          <Header />
+          <InvoiceDescription />
+          <TableHead />
+          <TableBody />
+          <TableTotal />
+          <TableDiscount />
+          <TableTax />
+          <TableTotalAmount />
+          <Observations />
+          <Footer />
+        </Page>
+      </Document>
+    </>
   );
 };
 

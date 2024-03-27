@@ -1,21 +1,10 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import {
-  Typography,
-  Table,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Paper,
-  Box,
-  Button,
-} from "@mui/material";
+import { Box, Button } from "@mui/material";
 import { api } from "../config";
 import { ArrowBack } from "@mui/icons-material";
-import { format } from "date-fns";
+
 import QuotePDFGenerator from "../Components/QuotePDFGenerator";
 
 const apiUrl = api();
@@ -29,6 +18,10 @@ interface Product {
 interface Customer {
   id: number;
   nombre: string;
+  email: string;
+  telefono: string;
+  direccion: string;
+  ciudad: string;
 }
 
 export interface QuoteData {

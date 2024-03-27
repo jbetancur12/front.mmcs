@@ -108,8 +108,6 @@ interface UserData {
 
 type Tab = "users" | "certificates";
 
-const CertificatesList: React.FC = () => <div>Certificates List Content</div>;
-
 function UserProfile() {
   const { id } = useParams();
   const [customerData, setCustomerData] = useState<UserData>({

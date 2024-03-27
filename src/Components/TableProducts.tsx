@@ -1,28 +1,17 @@
-import { Delete, Edit } from "@mui/icons-material";
 import {
-  Box,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  IconButton,
   Stack,
   TextField,
-  Tooltip,
 } from "@mui/material";
 import axios from "axios";
-import {
-  MaterialReactTable,
-  type MRT_Cell,
-  type MRT_ColumnDef,
-  type MRT_Row,
-  type MaterialReactTableProps,
-} from "material-react-table";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
+import { MaterialReactTable, type MRT_ColumnDef } from "material-react-table";
+import React, { useEffect, useMemo, useState } from "react";
+import { Toaster } from "react-hot-toast";
 import { api } from "../config";
 import { MRT_Localization_ES } from "material-react-table/locales/es";
-import { format } from "date-fns";
 
 // Define interfaces
 export interface ProductData {
@@ -40,10 +29,6 @@ const TableProducts: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState<ProductData[]>([]);
   // const [filteredTableData, setFilteredTableData] = useState<ProductData[]>([]);
-
-  const [validationErrors, setValidationErrors] = useState<{
-    [cellId: string]: string;
-  }>({});
 
   // Create a new device
   //   const onCreateDevice = async (deviceData: ProductData) => {
@@ -117,118 +102,10 @@ const TableProducts: React.FC = () => {
     fetchUsers();
   }, []);
 
-  const handleCreateNewRow = (values: ProductData) => {
+  const handleCreateNewRow = () => {
     // onCreateDevice(values);
     setCreateModalOpen(false);
   };
-
-  const handleSaveRowEdits: MaterialReactTableProps<ProductData>["onEditingRowSave"] =
-    async ({ exitEditingMode, row, values }) => {
-      if (!Object.keys(validationErrors).length) {
-        const updatedValues = { ...values };
-        delete updatedValues.id;
-        try {
-          const response = await axios.put(
-            `${apiUrl}/devices/${values.id}`,
-            updatedValues,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-              },
-            }
-          );
-
-          if (response.status === 201) {
-            toast.success("Equipo Modificado Exitosamente!", {
-              duration: 4000,
-              position: "top-center",
-            });
-            tableData[row.index] = values;
-            setTableData([...tableData]);
-          } else {
-            console.error("Error al crear equipo");
-          }
-        } catch (error) {
-          console.error("Error de red:", error);
-        }
-
-        exitEditingMode(); //required to exit editing mode and close modal
-      }
-    };
-
-  const handleCancelRowEdits = () => {
-    setValidationErrors({});
-  };
-
-  const deleteUser = async (rowIndex: number, id: number) => {
-    try {
-      const response = await axios.delete(`${apiUrl}/devices/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
-
-      if (response.status === 204) {
-        toast.success("Equipo Eliminado Exitosamente!", {
-          duration: 4000,
-          position: "top-center",
-        });
-        tableData.splice(rowIndex, 1);
-        setTableData([...tableData]);
-      } else {
-        console.error("Error al crear equipo");
-      }
-    } catch (error) {
-      console.error("Error de red:", error);
-    }
-  };
-
-  const handleDeleteRow = useCallback(
-    (row: MRT_Row<ProductData>) => {
-      if (
-        !confirm(`Esta seguro que desea eliminar ${row.getValue("name")} ?`)
-      ) {
-        return;
-      }
-      deleteUser(row.index, row.getValue("id"));
-      tableData.splice(row.index, 1);
-      setTableData([...tableData]);
-    },
-    [tableData]
-  );
-
-  const getCommonEditTextFieldProps = useCallback(
-    (
-      cell: MRT_Cell<ProductData>
-    ): MRT_ColumnDef<ProductData>["muiTableBodyCellEditTextFieldProps"] => {
-      return {
-        error: !!validationErrors[cell.id],
-        helperText: validationErrors[cell.id],
-        onBlur: (event) => {
-          const isValid =
-            cell.column.id === "email"
-              ? validateEmail(event.target.value)
-              : cell.column.id === "age"
-              ? validateAge(+event.target.value)
-              : validateRequired(event.target.value);
-          if (!isValid) {
-            //set validation error for cell if invalid
-            setValidationErrors({
-              ...validationErrors,
-              [cell.id]: `${cell.column.columnDef.header} is required`,
-            });
-          } else {
-            //remove validation error for cell if valid
-            delete validationErrors[cell.id];
-            setValidationErrors({
-              ...validationErrors,
-            });
-          }
-        },
-      };
-    },
-    [validationErrors]
-  );
 
   //should be memoized or stable
   const columns = useMemo<MRT_ColumnDef<ProductData>[]>(
@@ -410,15 +287,5 @@ export const CreateNewAccountModal = ({
     </Dialog>
   );
 };
-
-const validateRequired = (value: string) => !!value.length;
-const validateEmail = (email: string) =>
-  !!email.length &&
-  email
-    .toLowerCase()
-    .match(
-      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-    );
-const validateAge = (age: number) => age >= 18 && age <= 50;
 
 export default TableProducts;

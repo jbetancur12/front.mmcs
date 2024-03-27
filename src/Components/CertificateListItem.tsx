@@ -1,8 +1,4 @@
-import axios, { AxiosError, AxiosResponse } from "axios";
-import toast from "react-hot-toast";
-import { api } from "../config";
 import { Link } from "react-router-dom";
-import { useState } from "react";
 
 export interface Certificate {
   id: number;

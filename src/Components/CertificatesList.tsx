@@ -1,15 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios, { AxiosError, AxiosResponse } from "axios";
-import {
-  Button,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  Paper,
-  Typography,
-} from "@mui/material";
+import { Button, Divider, List, ListItem, ListItemText } from "@mui/material";
 import { api } from "../config";
 import toast, { Toaster } from "react-hot-toast";
 import Loader from "./Loader2";
