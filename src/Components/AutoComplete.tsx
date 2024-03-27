@@ -1,15 +1,15 @@
 import Autocomplete from "@mui/material/Autocomplete";
 import CircularProgress from "@mui/material/CircularProgress";
-import TextField from "@mui/material/TextField";
+import TextField, { TextFieldProps } from "@mui/material/TextField";
 import * as React from "react";
 
-interface SearchProps<T> {
+interface SearchProps<T> extends React.ComponentProps<typeof TextField> {
   endpoint: string; // URL del endpoint de la API
   label: string; // Etiqueta del campo de entrada
   mapOption: (data: any) => T[]; // Función para mapear los datos de la API a opciones
   getOptionLabel: (option: T) => string; // Función para obtener la etiqueta de una opción
   onClientSelection: (option: T | null) => void;
-  token: string;
+  token: string | null;
 }
 
 export default function Asynchronous<T>({
@@ -19,6 +19,7 @@ export default function Asynchronous<T>({
   getOptionLabel,
   onClientSelection,
   token,
+  sx,
 }: SearchProps<T>) {
   const [open, setOpen] = React.useState(false);
   const [options, setOptions] = React.useState<readonly T[]>([]);
@@ -75,7 +76,8 @@ export default function Asynchronous<T>({
   return (
     <Autocomplete
       id="asynchronous-demo"
-      sx={{ width: 300 }}
+      sx={{ ...sx }}
+      // fullWidth
       open={open}
       onOpen={() => {
         setOpen(true);
@@ -93,23 +95,26 @@ export default function Asynchronous<T>({
       onChange={(_, newValue) => {
         onClientSelection(newValue);
       }}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          label={label}
-          InputProps={{
-            ...params.InputProps,
-            endAdornment: (
-              <React.Fragment>
-                {loading ? (
-                  <CircularProgress color="inherit" size={20} />
-                ) : null}
-                {params.InputProps.endAdornment}
-              </React.Fragment>
-            ),
-          }}
-        />
-      )}
+      renderInput={(params) => {
+        return (
+          <TextField
+            {...params}
+            label={label}
+            // fullWidth
+            InputProps={{
+              ...params.InputProps,
+              endAdornment: (
+                <React.Fragment>
+                  {loading ? (
+                    <CircularProgress color="inherit" size={20} />
+                  ) : null}
+                  {params.InputProps.endAdornment}
+                </React.Fragment>
+              ),
+            }}
+          />
+        );
+      }}
     />
   );
 }

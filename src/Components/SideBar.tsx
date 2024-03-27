@@ -66,6 +66,30 @@ const SideBar: React.FC = () => {
               </li>
 
               <li>
+                {$userStore.rol === "admin" && (
+                  <DropdownButton
+                    buttonText="Cotizaciones"
+                    rol={$userStore.rol}
+                    menuItems={[
+                      {
+                        label: "Listar Cotizaciones",
+                        url: "cotizaciones",
+                        roles: ["admin"],
+                      },
+                      {
+                        label: "Listar Productos y Servicios",
+                        url: "productos-y-servicios",
+                        roles: ["admin"],
+                      },
+
+                      // { label: "Sidebar", url: "https://flowbite-admin-dashboard.vercel.app/layouts/sidebar/" },
+                    ]}
+                    pathData="M18 1H6a3 3 0 0 0-3 3v18a1 1 0 0 0 1.707.707l2.138-2.137 1.323 1.984A1 1 0 0 0 8.9 23a.986.986 0 0 0 .806-.288L12 20.414l2.293 2.293a1 1 0 0 0 1.539-.153l1.323-1.984 2.138 2.137A1 1 0 0 0 21 22V4a3 3 0 0 0-3-3Zm1 18.586-1.293-1.293a.984.984 0 0 0-.806-.288 1 1 0 0 0-.733.44l-1.323 1.985-2.138-2.137a1 1 0 0 0-1.414 0L9.155 20.43l-1.323-1.985a1 1 0 0 0-1.539-.152L5 19.586V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1ZM13 11a1 1 0 0 1-1 1H8a1 1 0 0 1 0-2h4a1 1 0 0 1 1 1Zm0 4a1 1 0 0 1-1 1H8a1 1 0 0 1 0-2h4a1 1 0 0 1 1 1Zm4-4a1 1 0 0 1-1 1h-1a1 1 0 0 1 0-2h1a1 1 0 0 1 1 1Zm0 4a1 1 0 0 1-1 1h-1a1 1 0 0 1 0-2h1a1 1 0 0 1 1 1Zm0-9a1 1 0 0 1-1 1H8a1 1 0 0 1 0-2h8a1 1 0 0 1 1 1Z"
+                  />
+                )}
+              </li>
+
+              <li>
                 <DropdownButton
                   buttonText="Calibraciones"
                   rol={$userStore.rol}

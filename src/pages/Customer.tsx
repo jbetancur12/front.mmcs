@@ -3,6 +3,10 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import TableUsersCustomer from "../Components/TableUsersCustomer";
 import { api } from "../config";
+import {
+  Certificate,
+  CertificateListItem,
+} from "../Components/CertificateListItem";
 
 // API URL
 const apiUrl = api();
@@ -102,6 +106,10 @@ interface UserData {
   avatar?: string;
 }
 
+type Tab = "users" | "certificates";
+
+const CertificatesList: React.FC = () => <div>Certificates List Content</div>;
+
 function UserProfile() {
   const { id } = useParams();
   const [customerData, setCustomerData] = useState<UserData>({
@@ -111,6 +119,11 @@ function UserProfile() {
     avatar: "",
   });
 
+  const [activeTab, setActiveTab] = useState<Tab>("certificates");
+
+  const [certificatesData, setCertificatesData] = useState<Certificate[]>([]);
+
+  const [searchTerm, setSearchTerm] = useState("");
   const [image, setImage] = useState("/images/pngaaa.com-4811116.png");
   // Aquí puedes usar el valor de 'id' para cargar los detalles del cliente correspondiente
   // por ejemplo, hacer una solicitud a la API o acceder a tus datos.
@@ -126,6 +139,32 @@ function UserProfile() {
       setImage(minioUrl + "/images/" + response.data.avatar);
     }
   };
+
+  const getCertificateInfo = async () => {
+    const response = await axios.get(`${apiUrl}/files/customer/${id}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+      },
+    });
+
+    if (response.status === 200) {
+      setCertificatesData(response.data);
+    }
+  };
+
+  const filteredCertificates = certificatesData.filter((certificate) => {
+    const searchFields = [
+      certificate.device.name,
+      certificate.location,
+      certificate.sede,
+      certificate.activoFijo,
+      certificate.serie,
+    ];
+
+    return searchFields.some((field) =>
+      field.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   const handleImageChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -187,6 +226,7 @@ function UserProfile() {
 
   useEffect(() => {
     getuserInfo();
+    getCertificateInfo();
   }, []);
 
   return (
@@ -262,9 +302,60 @@ function UserProfile() {
           </ul>
         </div>
       </div>
-      <div className="mt-5">
-        <TableUsersCustomer />
-      </div>
+
+      <ul className="flex flex-wrap text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:border-gray-700 dark:text-gray-400 mt-8">
+        <li className="-mb-px mr-1">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              setActiveTab("certificates");
+            }}
+            className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
+              activeTab === "certificates"
+                ? "border-l border-t border-r rounded-t"
+                : "text-blue-500 hover:text-blue-800"
+            }`}
+            // aria-current={activeTab === "certificates" ? "page" : undefined}
+          >
+            Equipos
+          </a>
+        </li>
+        <li className="mr-1">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              setActiveTab("users");
+            }}
+            className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
+              activeTab === "users"
+                ? "border-l border-t border-r rounded-t"
+                : "text-blue-500 hover:text-blue-800"
+            }`}
+          >
+            Usuarios
+          </a>
+        </li>
+      </ul>
+      {activeTab === "certificates" && (
+        <>
+          <input
+            type="text"
+            placeholder="Buscar Equipo(s)..."
+            className="w-[50%] px-4 py-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 mt-4"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {filteredCertificates.map((certificate: Certificate) => (
+            <CertificateListItem
+              key={certificate.id}
+              certificate={certificate}
+            />
+          ))}
+        </>
+      )}
+      {activeTab === "users" && <TableUsersCustomer />}
     </>
   );
 }

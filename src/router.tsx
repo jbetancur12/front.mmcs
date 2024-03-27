@@ -14,6 +14,10 @@ import TiposDeCertificados from "./pages/TiposdeCertificado";
 import Dashboard from "./pages/Dashboard";
 import PasswordRecovery from "./pages/PasswordRecovery";
 import Certificates from "./pages/Certificates";
+import { Cotizaciones } from "./pages/Cotizaciones";
+import { ProductosServicios } from "./pages/ProductosServicios";
+import NewQuote from "./pages/NewQuote";
+import Quote from "./pages/Quote";
 
 function Router() {
   const protectedLayout = (
@@ -46,6 +50,15 @@ function Router() {
               <Route path=":id" element={<Certificates />} />
             </Route>
           </Route>
+          <Route path="cotizaciones">
+            <Route index element={<Cotizaciones />} />
+            <Route path="new-quote" element={<NewQuote />} />
+            <Route path=":id" element={<Quote />} />
+          </Route>
+          <Route
+            path="productos-y-servicios"
+            element={<ProductosServicios />}
+          />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/new-password" element={<NewPassword />} />

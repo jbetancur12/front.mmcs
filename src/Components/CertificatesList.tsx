@@ -142,12 +142,13 @@ function CertificatesList() {
   };
 
   return (
-    <Paper elevation={3} className="p-4 mt-8">
+    <>
+      {/* <Paper elevation={3} className="p-4 mt-8"> */}
       <Toaster />
       <Loader loading={loading} />
-      <Typography variant="h6" gutterBottom>
+      {/* <Typography variant="h6" gutterBottom>
         Certificados del Dispositivo
-      </Typography>
+      </Typography> */}
       <Divider className="mb-4" />
       <List>
         {certificates.map((certificate) => (
@@ -168,7 +169,8 @@ function CertificatesList() {
           </ListItem>
         ))}
       </List>
-    </Paper>
+      {/* </Paper> */}
+    </>
   );
 }
 

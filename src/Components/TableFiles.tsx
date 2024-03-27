@@ -41,7 +41,7 @@ import { MRT_Localization_ES } from "material-react-table/locales/es";
 import Loader from "./Loader2";
 import { Link } from "react-router-dom";
 
-function convertirCadena(cadena) {
+export function convertirCadena(cadena) {
   // Reemplazar espacios con guiones y convertir a minúsculas
   const cadenaFormateada = cadena.replace(/\s+/g, "-").toLowerCase();
   return cadenaFormateada;
