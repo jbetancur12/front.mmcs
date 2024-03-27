@@ -16,6 +16,7 @@ import {
 import { api } from "../config";
 import { ArrowBack } from "@mui/icons-material";
 import { format } from "date-fns";
+import QuotePDFGenerator from "../Components/QuotePDFGenerator";
 
 const apiUrl = api();
 
@@ -30,7 +31,7 @@ interface Customer {
   nombre: string;
 }
 
-interface QuoteData {
+export interface QuoteData {
   id: number;
   customerId: number;
   products: Product[];
@@ -86,7 +87,7 @@ const Quote = () => {
         startIcon={<ArrowBack />}
         sx={{ mb: 2 }}
       />
-      <Typography variant="h4" mb={2}>
+      {/* <Typography variant="h4" mb={2}>
         <span style={{ color: "#ff5722" }}>Cotización #{quoteData.id}</span>
       </Typography>
       <Typography variant="subtitle1">
@@ -100,7 +101,7 @@ const Quote = () => {
       <Typography variant="h6" mt={4}>
         <span style={{ color: "#ff5722" }}>Productos y/o Servicios:</span>
       </Typography>
-      <TableContainer component={Paper} mt={2}>
+      <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow style={{ backgroundColor: "#f5f5f5" }}>
@@ -170,7 +171,8 @@ const Quote = () => {
       <Typography variant="body1" mt={2}>
         <span style={{ fontWeight: "bold" }}>Observaciones:</span>{" "}
         {quoteData.observations}
-      </Typography>
+      </Typography> */}
+      <QuotePDFGenerator quoteData={quoteData} />
     </Box>
   );
 };
