@@ -17,6 +17,7 @@
     "@mui/x-date-pickers": "^6.13.0",
     "@nanostores/preact": "^0.5.0",
     "@nanostores/react": "^0.7.1",
+    "@react-pdf/renderer": "^3.4.2",
     "@table-library/react-table-library": "^4.1.7",
     "@types/react-modal": "^3.16.0",
     "axios": "^1.5.0",
@@ -29,6 +30,7 @@
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.1",
     "react-icons": "^4.11.0",
+    "react-pdf-tailwind": "^2.3.0",
     "react-router-dom": "^6.15.0",
     "tw-elements": "^1.0.0",
     "yup": "^1.2.0"

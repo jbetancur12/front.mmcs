@@ -1,4 +1,4 @@
-import { Delete, Edit, Visibility } from "@mui/icons-material";
+import { Delete, Download, Edit, Print, Visibility } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -26,6 +26,9 @@ import { MRT_Localization_ES } from "material-react-table/locales/es";
 import { format } from "date-fns";
 import QuoteForm from "./QuoteForm";
 import { Link } from "react-router-dom";
+import { BlobProvider, PDFDownloadLink, usePDF } from "@react-pdf/renderer";
+import QuotePDF from "./QuotePDF";
+import DownloadPDFButton from "./Download";
 
 // Define interfaces
 export interface QuoteData {
@@ -50,6 +53,8 @@ const apiUrl = api();
 // Main component
 const Table: React.FC = () => {
   const [tableData, setTableData] = useState<QuoteData[]>([]);
+  const [quoteData, setQuoteData] = useState<QuoteData | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   // Fetch devices data
   const fetchUsers = async () => {
@@ -147,22 +152,41 @@ const Table: React.FC = () => {
         // initialState={{
         //   columnVisibility: { id: false },
         // }}
-        renderRowActions={({ row }) => (
-          <Box
-            sx={{
-              display: "flex",
-              gap: "1rem",
-              width: 20,
-              justifyItems: "center",
-            }}
-          >
-            <Tooltip arrow placement="right" title="Ver">
-              <Link to={`${row.original.id}`}>
-                <Visibility />
-              </Link>
-            </Tooltip>
-          </Box>
-        )}
+        renderRowActions={({ row }) => {
+          return (
+            <Box
+              sx={{
+                display: "flex",
+                gap: "1rem",
+                // width: 20,
+                justifyContent: "center",
+              }}
+            >
+              <Tooltip arrow placement="right" title="Ver">
+                <Link to={`${row.original.id}`}>
+                  <Visibility />
+                </Link>
+              </Tooltip>
+              <Tooltip arrow placement="right" title="Ver">
+                <BlobProvider document={<QuotePDF quoteData={row.original} />}>
+                  {({ url }) => (
+                    <a href={url || ""} target="_blank">
+                      <Print />
+                    </a>
+                  )}
+                </BlobProvider>
+              </Tooltip>
+              <Tooltip arrow placement="right" title="descargar">
+                <PDFDownloadLink
+                  document={<QuotePDF quoteData={row.original} />}
+                  fileName={"Cotización-" + row.original.id + ".pdf"}
+                >
+                  <Download />
+                </PDFDownloadLink>
+              </Tooltip>
+            </Box>
+          );
+        }}
       />
     </>
   );
