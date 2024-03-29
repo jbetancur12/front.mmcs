@@ -1,5 +1,5 @@
-import { Download, Print, Visibility } from "@mui/icons-material";
-import { Box, Button, Tooltip } from "@mui/material";
+import { Download, Edit, Print, Visibility } from "@mui/icons-material";
+import { Box, Button, Tooltip, Typography } from "@mui/material";
 import axios from "axios";
 import { MaterialReactTable, type MRT_ColumnDef } from "material-react-table";
 import React, { useEffect, useMemo, useState } from "react";
@@ -11,6 +11,8 @@ import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { BlobProvider, PDFDownloadLink } from "@react-pdf/renderer";
 import QuotePDF from "./QuotePDF";
+import Quote from "../pages/Quote";
+import QuotePDFGenerator from "./QuotePDFGenerator";
 
 // Define interfaces
 export interface QuoteData {
@@ -68,20 +70,24 @@ const Table: React.FC = () => {
       {
         accessorKey: "id",
         header: "# Cotización",
+        size: 80,
       },
       {
         accessorKey: "customer.nombre",
         header: "Cliente",
+        size: 100,
       },
       {
         accessorKey: "createdAt",
         header: "Fecha",
+        size: 50,
         Cell: ({ row }) =>
           format(new Date(row.original.createdAt), "yyyy-MM-dd"),
       },
       {
         accessorKey: "total",
         header: "Total",
+        size: 50,
         Cell: ({ row }) =>
           new Intl.NumberFormat("es-CO", {
             style: "currency",
@@ -136,6 +142,23 @@ const Table: React.FC = () => {
         // initialState={{
         //   columnVisibility: { id: false },
         // }}
+        // renderDetailPanel={({ row }) => (
+        //   <Box
+        //   // sx={{
+        //   //   alignItems: "center",
+        //   //   display: "flex",
+        //   //   justifyContent: "space-around",
+        //   //   left: "30px",
+        //   //   maxWidth: "1000px",
+        //   //   position: "sticky",
+        //   //   width: "100%",
+        //   // }}
+        //   >
+        //     <Box sx={{ textAlign: "center" }}>
+        //       <QuotePDFGenerator quoteData={row.original} />
+        //     </Box>
+        //   </Box>
+        // )}
         renderRowActions={({ row }) => {
           return (
             <Box
@@ -167,6 +190,11 @@ const Table: React.FC = () => {
                 >
                   <Download />
                 </PDFDownloadLink>
+              </Tooltip>
+              <Tooltip arrow placement="right" title="Editar">
+                <Link to={`edit-quote/${row.original.id}`}>
+                  <Edit />
+                </Link>
               </Tooltip>
             </Box>
           );

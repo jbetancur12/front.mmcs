@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
@@ -6,7 +6,8 @@ import Box from "@mui/material/Box";
 import AutoComplete from "./AutoComplete";
 import { api } from "../config";
 import axios from "axios";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
+import { useParams } from "react-router-dom";
 
 const apiUrl = api();
 
@@ -19,9 +20,22 @@ interface Product {
 interface Customer {
   id: number;
   nombre: string;
+  email: string;
+  telefono: string;
+  direccion: string;
+  ciudad: string;
+}
+interface QuoteFormData {
+  id?: number; // Agregamos el signo de interrogación para indicar que el ID es opcional
+  customer: Customer | null;
+  products: Product[];
+  discountRatio: number;
+  taxRatio: number;
+  observations: string;
 }
 
 const QuoteForm: React.FC = () => {
+  const { id } = useParams<{ id?: string }>();
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [products, setProducts] = useState<Product[]>([
     { name: "", price: 0, quantity: 1 },
@@ -29,6 +43,36 @@ const QuoteForm: React.FC = () => {
   const [discount, setDiscount] = useState(0);
   const [taxRate, setTaxRate] = useState(19);
   const [observations, setObservations] = useState("");
+
+  const fetchQuote = async () => {
+    try {
+      const response = await axios.get<QuoteFormData>(
+        `${apiUrl}/quotes/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+
+      if (response.statusText === "OK") {
+        setCustomer(response.data.customer);
+        setProducts(response.data.products);
+        setDiscount(response.data.discountRatio);
+        setTaxRate(response.data.taxRatio);
+        setObservations(response.data.observations);
+      }
+    } catch (error) {
+      console.error("Error fetching quote data:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      // Si hay un ID en los parámetros de la URL, significa que estamos editando
+      fetchQuote();
+    }
+  }, []);
 
   const handleProductChange = (
     index: number,
@@ -76,27 +120,43 @@ const QuoteForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Aquí puedes enviar los datos del formulario
 
     try {
-      const response = await axios.post(
-        `${apiUrl}/quotes`,
-        {
-          customerId: customer?.id,
-          products,
-          taxRatio: taxRate,
-          discountRatio: discount,
-          observations,
+      const requestConfig = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        }
-      );
+      };
 
-      if (response.status === 201) {
-        toast.success("Equipo Modificado Exitosamente!", {
+      const requestData = {
+        customerId: customer?.id,
+        products,
+        taxRatio: taxRate,
+        discountRatio: discount,
+        observations,
+      };
+
+      let response;
+      let actionMessage;
+
+      if (!!id) {
+        response = await axios.put(
+          `${apiUrl}/quotes/${id}`,
+          requestData,
+          requestConfig
+        );
+        actionMessage = "modificada";
+      } else {
+        response = await axios.post(
+          `${apiUrl}/quotes`,
+          requestData,
+          requestConfig
+        );
+        actionMessage = "creada";
+      }
+
+      if (response.statusText === "OK") {
+        toast.success(`Cotización ${actionMessage} Exitosamente!`, {
           duration: 4000,
           position: "top-center",
         });
@@ -110,12 +170,14 @@ const QuoteForm: React.FC = () => {
 
   return (
     <Box sx={{ margin: "auto" }}>
+      <Toaster />
       <form onSubmit={handleSubmit}>
         <AutoComplete
           endpoint={`${apiUrl}/customers`}
           token={localStorage.getItem("accessToken")}
           label="Buscar Cliente"
-          fullWidth
+          value={customer?.nombre}
+          isEdit={!!id}
           mapOption={(data) =>
             data.map((item: any) => ({
               id: item.id,
@@ -133,6 +195,8 @@ const QuoteForm: React.FC = () => {
               endpoint={`${apiUrl}/products`}
               token={localStorage.getItem("accessToken")}
               label="Producto"
+              value={product?.name}
+              isEdit={!!id}
               mapOption={(data) =>
                 data.map((item: any) => ({
                   id: item.id,
@@ -227,7 +291,7 @@ const QuoteForm: React.FC = () => {
           Total: ${total.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
         </Typography>
         <Button type="submit" variant="contained" sx={{ mb: 2 }}>
-          Crear Cotización
+          {!!id ? "Actualizar" : "Crear"}
         </Button>
       </form>
     </Box>

@@ -1,7 +1,9 @@
+import { Edit } from "@mui/icons-material";
 import Autocomplete from "@mui/material/Autocomplete";
 import CircularProgress from "@mui/material/CircularProgress";
 import TextField from "@mui/material/TextField";
 import * as React from "react";
+import { IconButton } from "@mui/material";
 
 interface SearchProps<T> extends React.ComponentProps<typeof TextField> {
   endpoint: string; // URL del endpoint de la API
@@ -10,6 +12,8 @@ interface SearchProps<T> extends React.ComponentProps<typeof TextField> {
   getOptionLabel: (option: T) => string; // Función para obtener la etiqueta de una opción
   onClientSelection: (option: T | null) => void;
   token: string | null;
+  value?: string;
+  isEdit?: boolean;
 }
 
 export default function Asynchronous<T>({
@@ -20,16 +24,20 @@ export default function Asynchronous<T>({
   onClientSelection,
   token,
   sx,
+  value,
+  isEdit,
 }: SearchProps<T>) {
   const [open, setOpen] = React.useState(false);
   const [options, setOptions] = React.useState<readonly T[]>([]);
-  const [inputValue, setInputValue] = React.useState("");
+  const [inputValue, setInputValue] = React.useState(value);
   const [loading, setLoading] = React.useState(false);
+  const [editMode, setEditMode] = React.useState(isEdit);
 
   const debounceTimeoutRef = React.useRef<number | null>(null);
 
   React.useEffect(() => {
     let active = true;
+    console.log("===>", value);
 
     if (!open) {
       return undefined;
@@ -71,50 +79,73 @@ export default function Asynchronous<T>({
     return () => {
       active = false;
     };
-  }, [inputValue, open, endpoint, mapOption]);
+  }, [inputValue, open, endpoint, mapOption, token]);
+
+  const handleToggleEditMode = () => {
+    setEditMode((prevEditMode) => !prevEditMode);
+  };
 
   return (
-    <Autocomplete
-      id="asynchronous-demo"
-      sx={{ ...sx }}
-      // fullWidth
-      open={open}
-      onOpen={() => {
-        setOpen(true);
-      }}
-      onClose={() => {
-        setOpen(false);
-      }}
-      getOptionLabel={getOptionLabel}
-      options={options}
-      loading={loading}
-      inputValue={inputValue}
-      onInputChange={(_, newInputValue) => {
-        setInputValue(newInputValue);
-      }}
-      onChange={(_, newValue) => {
-        onClientSelection(newValue);
-      }}
-      renderInput={(params) => {
-        return (
-          <TextField
-            {...params}
-            label={label}
-            // fullWidth
-            InputProps={{
-              ...params.InputProps,
-              endAdornment: (
-                <React.Fragment>
-                  {loading ? (
-                    <CircularProgress color="inherit" size={20} />
-                  ) : null}
-                  {params.InputProps.endAdornment}
-                </React.Fragment>
-              ),
-            }}
-          />
-        );
-      }}
-    />
+    <>
+      {!editMode ? (
+        <Autocomplete
+          id="asynchronous-demo"
+          sx={{ ...sx }}
+          // fullWidth
+          open={open}
+          onOpen={() => {
+            setOpen(true);
+          }}
+          onClose={() => {
+            setOpen(false);
+          }}
+          getOptionLabel={getOptionLabel}
+          options={options}
+          loading={loading}
+          inputValue={inputValue}
+          onInputChange={(_, newInputValue) => {
+            setInputValue(newInputValue);
+          }}
+          onChange={(_, newValue) => {
+            onClientSelection(newValue);
+          }}
+          renderInput={(params) => {
+            return (
+              <TextField
+                {...params}
+                label={label}
+                // fullWidth
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <React.Fragment>
+                      {loading ? (
+                        <CircularProgress color="inherit" size={20} />
+                      ) : null}
+                      {params.InputProps.endAdornment}
+                    </React.Fragment>
+                  ),
+                }}
+              />
+            );
+          }}
+        />
+      ) : (
+        <TextField
+          sx={{ ...sx }}
+          label={label}
+          value={value}
+          fullWidth
+          InputProps={{
+            readOnly: true,
+            endAdornment: (
+              <IconButton onClick={handleToggleEditMode} size="small">
+                <Edit />
+              </IconButton>
+            ),
+          }}
+        />
+      )}
+    </>
   );
 }

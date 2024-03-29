@@ -1,7 +1,7 @@
 // Importa el tipo QuoteData adecuado
 // Importa tu componente de diseño de cotización
 
-import "./QuotePDF.css"; // Importa tu hoja de estilos CSS personalizada
+// Importa tu hoja de estilos CSS personalizada
 
 import { QuoteData } from "./TableQuotes";
 

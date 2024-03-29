@@ -53,6 +53,7 @@ function Router() {
           <Route path="cotizaciones">
             <Route index element={<Cotizaciones />} />
             <Route path="new-quote" element={<NewQuote />} />
+            <Route path="edit-quote/:id" element={<NewQuote />} />
             <Route path=":id" element={<Quote />} />
           </Route>
           <Route

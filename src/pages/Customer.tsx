@@ -181,12 +181,16 @@ function UserProfile() {
 
       try {
         // Enviar la imagen al backend Express
-        const response = await axios.post(`${apiUrl}/customers`, formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        });
+        const response = await axios.post(
+          `${apiUrl}/customers/avatar`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          }
+        );
         console.log("Respuesta del backend:", response.data);
 
         // Actualizar la imagen en el estado local

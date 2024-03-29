@@ -1,4 +1,5 @@
 import {
+  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -7,9 +8,14 @@ import {
   TextField,
 } from "@mui/material";
 import axios from "axios";
-import { MaterialReactTable, type MRT_ColumnDef } from "material-react-table";
-import React, { useEffect, useMemo, useState } from "react";
-import { Toaster } from "react-hot-toast";
+import {
+  MaterialReactTable,
+  MaterialReactTableProps,
+  MRT_Cell,
+  type MRT_ColumnDef,
+} from "material-react-table";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import { api } from "../config";
 import { MRT_Localization_ES } from "material-react-table/locales/es";
 
@@ -28,37 +34,86 @@ const apiUrl = api();
 const TableProducts: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState<ProductData[]>([]);
+  const [validationErrors, setValidationErrors] = useState<{
+    [cellId: string]: string;
+  }>({});
+  const [percentage, setPercentage] = useState("0");
+  const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
   // const [filteredTableData, setFilteredTableData] = useState<ProductData[]>([]);
 
-  // Create a new device
-  //   const onCreateDevice = async (deviceData: ProductData) => {
-  //     try {
-  //       const response = await axios.post(
-  //         `${apiUrl}/devices`,
-  //         { name: deviceData.name },
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-  //           },
-  //         }
-  //       );
+  const updateAllPrices = async () => {
+    setConfirmationDialogOpen(false);
+    const parsedPercentage = parseFloat(percentage);
+    if (!isNaN(parsedPercentage)) {
+      try {
+        // Realizar una solicitud POST al endpoint del controlador en Express
+        const response = await axios.put(apiUrl + "/products/update-prices", {
+          percentage: parsedPercentage,
+        });
 
-  //       if (response.status === 201) {
-  //         toast.success("Equipo Creado Exitosamente!", {
-  //           duration: 4000,
-  //           position: "top-center",
-  //         });
-  //         fetchUsers(); // Refresh data after creation
-  //       } else {
-  //         console.error("Error al crear equipo");
-  //       }
-  //     } catch (error) {
-  //       console.error("Error de red:", error);
-  //     }
-  //   };
+        // Verificar si la solicitud fue exitosa
+        if (response.status === 200) {
+          // Actualizar la tabla de productos con los nuevos datos recibidos del servidor
+          const updatedTableData = tableData.map((product) => ({
+            ...product,
+            price: product.price * (1 + parsedPercentage / 100),
+          }));
+          setTableData(updatedTableData);
+
+          // Mostrar un mensaje de éxito
+          toast.success(`Precios actualizados en ${parsedPercentage}%`, {
+            duration: 4000,
+            position: "top-center",
+          });
+        } else {
+          // Mostrar un mensaje de error si la solicitud no fue exitosa
+          toast.error("Error al actualizar los precios", {
+            duration: 4000,
+            position: "top-center",
+          });
+        }
+      } catch (error) {
+        // Capturar errores de red o del servidor
+        console.error("Error al actualizar precios:", error);
+        toast.error("Error al actualizar los precios", {
+          duration: 4000,
+          position: "top-center",
+        });
+      }
+    } else {
+      // Mostrar un mensaje de error si el porcentaje es inválido
+      toast.error("Porcentaje inválido", {
+        duration: 4000,
+        position: "top-center",
+      });
+    }
+  };
+
+  // Create a new device
+  const onCreateProduct = async (productData: ProductData) => {
+    try {
+      const response = await axios.post(`${apiUrl}/products`, productData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+
+      if (response.status === 201) {
+        toast.success("Producto Creado Exitosamente!", {
+          duration: 4000,
+          position: "top-center",
+        });
+        fetchProducts(); // Refresh data after creation
+      } else {
+        console.error("Error al crear equipo");
+      }
+    } catch (error) {
+      console.error("Error de red:", error);
+    }
+  };
 
   // Fetch devices data
-  const fetchUsers = async () => {
+  const fetchProducts = async () => {
     try {
       const response = await axios.get(`${apiUrl}/products`, {
         headers: {
@@ -75,10 +130,10 @@ const TableProducts: React.FC = () => {
     }
   };
 
-  // const updateUser = async (deviceData: ProductData) => {
+  // const updateUser = async (ProductData: ProductData) => {
 
   //   try {
-  //     const response = await axios.put(`${apiUrl}/devices/${deviceData.id}`, deviceData, {
+  //     const response = await axios.put(`${apiUrl}/devices/${ProductData.id}`, ProductData, {
   //       headers: {
   //         'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
   //       },
@@ -98,14 +153,80 @@ const TableProducts: React.FC = () => {
   //   }
   // }
 
+  const handleCancelRowEdits = () => {
+    setValidationErrors({});
+  };
+
+  const handleSaveRowEdits: MaterialReactTableProps<ProductData>["onEditingRowSave"] =
+    async ({ exitEditingMode, row, values }) => {
+      if (!Object.keys(validationErrors).length) {
+        const updatedValues = { ...values };
+        delete updatedValues.id;
+        try {
+          const response = await axios.put(
+            `${apiUrl}/products/${values.id}`,
+            updatedValues,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+              },
+            }
+          );
+
+          if (response.status === 200) {
+            toast.success("Producto Modificado Exitosamente!", {
+              duration: 4000,
+              position: "top-center",
+            });
+            tableData[row.index] = values;
+            setTableData([...tableData]);
+          } else {
+            console.error("Error al modificar producto");
+          }
+        } catch (error) {
+          console.error("Error de red:", error);
+        }
+
+        exitEditingMode(); //required to exit editing mode and close modal
+      }
+    };
+
   useEffect(() => {
-    fetchUsers();
+    fetchProducts();
   }, []);
 
-  const handleCreateNewRow = () => {
-    // onCreateDevice(values);
+  const handleCreateNewRow = (values: ProductData) => {
+    onCreateProduct(values);
     setCreateModalOpen(false);
   };
+
+  const getCommonEditTextFieldProps = useCallback(
+    (
+      cell: MRT_Cell<ProductData>
+    ): MRT_ColumnDef<ProductData>["muiTableBodyCellEditTextFieldProps"] => {
+      return {
+        error: !!validationErrors[cell.id],
+        helperText: validationErrors[cell.id],
+        onBlur: (event) => {
+          const isValid = validateRequired(event.target.value);
+          if (!isValid) {
+            //set validation error for cell if invalid
+            setValidationErrors({
+              ...validationErrors,
+              [cell.id]: `${cell.column.columnDef.header} is required`,
+            });
+          } else {
+            //remove validation error for cell if valid
+            delete validationErrors[cell.id];
+            setValidationErrors({
+              ...validationErrors,
+            });
+          }
+        },
+      };
+    },
+    [validationErrors]
+  );
 
   //should be memoized or stable
   const columns = useMemo<MRT_ColumnDef<ProductData>[]>(
@@ -117,6 +238,9 @@ const TableProducts: React.FC = () => {
       {
         accessorKey: "name",
         header: "Nombre",
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+        }),
       },
       //   {
       //     accessorKey: "createdAt",
@@ -132,13 +256,67 @@ const TableProducts: React.FC = () => {
             style: "currency",
             currency: "COP",
           }).format(row.original.price),
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+        }),
       },
     ],
-    [] // No hay dependencias específicas aquí
+    [getCommonEditTextFieldProps] // No hay dependencias específicas aquí
   );
 
   return (
     <>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-start",
+          marginBottom: "20px",
+        }}
+      >
+        {/* Botón para actualizar precios */}
+        <Button
+          style={{ marginRight: "10px" }}
+          variant="contained"
+          color="primary"
+          onClick={() => setConfirmationDialogOpen(true)}
+        >
+          Actualizar Precios
+        </Button>
+        <TextField
+          label="Porcentaje"
+          type="number"
+          value={percentage}
+          onChange={(e) => setPercentage(e.target.value)}
+          InputProps={{
+            inputProps: {
+              min: 0,
+            },
+          }}
+          style={{ marginRight: "10px" }}
+        />
+      </div>
+
+      <Dialog
+        open={confirmationDialogOpen}
+        onClose={() => setConfirmationDialogOpen(false)}
+      >
+        <DialogTitle>Confirmación</DialogTitle>
+        <DialogContent>
+          <p>
+            ¿Estás seguro de que deseas actualizar todos los precios en un{" "}
+            {percentage}% ?
+          </p>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmationDialogOpen(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={updateAllPrices} color="primary">
+            Aceptar
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Toaster />
       <MaterialReactTable
         enableHiding={false}
@@ -168,9 +346,9 @@ const TableProducts: React.FC = () => {
         data={tableData}
         // editingMode="modal" //default
 
-        // enableEditing
-        // onEditingRowSave={handleSaveRowEdits}
-        // onEditingRowCancel={handleCancelRowEdits}
+        enableEditing
+        onEditingRowSave={handleSaveRowEdits}
+        onEditingRowCancel={handleCancelRowEdits}
         // initialState={{
         //   columnVisibility: { id: false },
         // }}
@@ -196,14 +374,14 @@ const TableProducts: React.FC = () => {
         //   </Box>
         // )}
         // // <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear Equipo</button>
-        // renderTopToolbarCustomActions={() => (
-        //   <button
-        //     className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded "
-        //     onClick={() => setCreateModalOpen(true)}
-        //   >
-        //     Crear Nuevo Equipo
-        //   </button>
-        // )}
+        renderTopToolbarCustomActions={() => (
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded "
+            onClick={() => setCreateModalOpen(true)}
+          >
+            Crear Nuevo Producto y/o Servicio
+          </button>
+        )}
       />
       <CreateNewAccountModal
         columns={columns}
@@ -281,11 +459,13 @@ export const CreateNewAccountModal = ({
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           onClick={handleSubmit}
         >
-          Crear Equipo
+          Crear Producto
         </button>
       </DialogActions>
     </Dialog>
   );
 };
+
+const validateRequired = (value: string) => !!value.length;
 
 export default TableProducts;
