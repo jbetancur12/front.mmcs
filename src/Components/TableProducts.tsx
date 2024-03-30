@@ -18,6 +18,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { api } from "../config";
 import { MRT_Localization_ES } from "material-react-table/locales/es";
+import { id } from "date-fns/locale";
 
 // Define interfaces
 export interface ProductData {
@@ -322,6 +323,7 @@ const TableProducts: React.FC = () => {
         enableHiding={false}
         enableColumnActions={false}
         // enableColumnResizing={true}
+
         localization={MRT_Localization_ES}
         // displayColumnDefOptions={{
         //   "mrt-row-actions": {
@@ -331,6 +333,14 @@ const TableProducts: React.FC = () => {
         //     // size: 120,
         //   },
         // }}
+        initialState={{
+          sorting: [
+            {
+              id: "id",
+              desc: false,
+            },
+          ],
+        }}
         muiTableProps={{
           sx: {
             tableLayout: "fixed",

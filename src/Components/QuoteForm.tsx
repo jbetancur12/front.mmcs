@@ -7,7 +7,10 @@ import AutoComplete from "./AutoComplete";
 import { api } from "../config";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import Loader from "./Loader2";
+
+import { NumericFormat } from "react-number-format";
 
 const apiUrl = api();
 
@@ -43,6 +46,9 @@ const QuoteForm: React.FC = () => {
   const [discount, setDiscount] = useState(0);
   const [taxRate, setTaxRate] = useState(19);
   const [observations, setObservations] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
 
   const fetchQuote = async () => {
     try {
@@ -120,6 +126,7 @@ const QuoteForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
       const requestConfig = {
@@ -155,11 +162,14 @@ const QuoteForm: React.FC = () => {
         actionMessage = "creada";
       }
 
-      if (response.statusText === "OK") {
+      if (response.status === 201) {
+        setLoading(false);
         toast.success(`Cotización ${actionMessage} Exitosamente!`, {
           duration: 4000,
           position: "top-center",
         });
+        setProducts([{ name: "", price: 0, quantity: 0 }]);
+        setCustomer(null);
       } else {
         console.error("Error al crear equipo");
       }
@@ -171,6 +181,7 @@ const QuoteForm: React.FC = () => {
   return (
     <Box sx={{ margin: "auto" }}>
       <Toaster />
+      <Loader loading={loading} />
       <form onSubmit={handleSubmit}>
         <AutoComplete
           endpoint={`${apiUrl}/customers`}
@@ -211,17 +222,22 @@ const QuoteForm: React.FC = () => {
               sx={{ mr: 2, width: "100%" }}
             />
 
-            <TextField
+            <NumericFormat
               label="Precio"
               variant="outlined"
-              type="number"
+              name="price"
+              type="text"
               value={product.price}
               onChange={(e) =>
-                handleProductChange(index, "price", parseFloat(e.target.value))
+                handleProductChange(index, "price", e.target.value)
               }
               style={{ marginRight: "8px" }}
               sx={{ mr: 2, width: "100%" }}
+              thousandSeparator={true}
+              prefix="$"
+              customInput={TextField}
             />
+
             <TextField
               label="Cantidad"
               variant="outlined"

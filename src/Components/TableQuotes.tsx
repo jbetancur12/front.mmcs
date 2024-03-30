@@ -1,5 +1,5 @@
 import { Download, Edit, Print, Visibility } from "@mui/icons-material";
-import { Box, Button, Tooltip, Typography } from "@mui/material";
+import { Box, Button, Tooltip } from "@mui/material";
 import axios from "axios";
 import { MaterialReactTable, type MRT_ColumnDef } from "material-react-table";
 import React, { useEffect, useMemo, useState } from "react";
@@ -11,8 +11,7 @@ import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { BlobProvider, PDFDownloadLink } from "@react-pdf/renderer";
 import QuotePDF from "./QuotePDF";
-import Quote from "../pages/Quote";
-import QuotePDFGenerator from "./QuotePDFGenerator";
+import Loader from "./Loader2";
 
 // Define interfaces
 export interface QuoteData {
@@ -41,9 +40,11 @@ const apiUrl = api();
 // Main component
 const Table: React.FC = () => {
   const [tableData, setTableData] = useState<QuoteData[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
 
   // Fetch devices data
-  const fetchUsers = async () => {
+  const fetchQuotes = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(`${apiUrl}/quotes`, {
         headers: {
@@ -54,6 +55,7 @@ const Table: React.FC = () => {
       if (response.statusText === "OK") {
         // @ts-ignore: Ignorar el error en esta línea
         setTableData(response.data);
+        setLoading(false);
       }
     } catch (error) {
       console.error("Error fetching device data:", error);
@@ -61,7 +63,7 @@ const Table: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchQuotes();
   }, []);
 
   //should be memoized or stable
@@ -101,6 +103,7 @@ const Table: React.FC = () => {
   return (
     <>
       <Toaster />
+      <Loader loading={loading} />
       <Link to="new-quote">
         <Button variant="contained" color="primary">
           Crear Cotización
@@ -134,6 +137,14 @@ const Table: React.FC = () => {
         }}
         columns={columns}
         data={tableData}
+        initialState={{
+          sorting: [
+            {
+              id: "id",
+              desc: true,
+            },
+          ],
+        }}
         // editingMode="modal" //default
 
         // enableEditing
