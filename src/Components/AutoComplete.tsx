@@ -89,6 +89,7 @@ export default function Asynchronous<T>({
     <>
       {!editMode ? (
         <Autocomplete
+          onLoad={(e) => console.log(e)}
           id="asynchronous-demo"
           sx={{ ...sx }}
           // fullWidth

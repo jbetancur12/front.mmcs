@@ -7,10 +7,22 @@ import AutoComplete from "./AutoComplete";
 import { api } from "../config";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import Loader from "./Loader2";
-
-import { NumericFormat } from "react-number-format";
+import AsyncSelect from "react-select/async";
+import {
+  FormControl,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  SelectChangeEvent,
+  Skeleton,
+} from "@mui/material";
+import { useStore } from "@nanostores/react";
+import { userStore } from "../store/userStore";
+import { statusOptions } from "./TableQuotes";
 
 const apiUrl = api();
 
@@ -27,6 +39,7 @@ interface Customer {
   telefono: string;
   direccion: string;
   ciudad: string;
+  value: string;
 }
 interface QuoteFormData {
   id?: number; // Agregamos el signo de interrogación para indicar que el ID es opcional
@@ -35,20 +48,168 @@ interface QuoteFormData {
   discountRatio: number;
   taxRatio: number;
   observations: string;
+  comments: string[];
+  otherFields: {
+    paymentMethod: string;
+    generalConditions: string;
+    paymentConditions: string;
+    deliveryConditions: string;
+  };
+  status: {
+    status: string;
+    user: string;
+    date: Date;
+    comments: string;
+  }[];
 }
+
+interface OptionType {
+  value: string;
+  label: string;
+  price: number;
+}
+interface PaymentConditionsOptions {
+  [key: string]: string;
+}
+
+const paymentConditionsOptions: PaymentConditionsOptions = {
+  contado: "De contado",
+  credito: "Crédito",
+};
 
 const QuoteForm: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
+  const $userStore = useStore(userStore);
+
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [products, setProducts] = useState<Product[]>([
-    { name: "", price: 0, quantity: 1 },
+    { name: "Buscar Producto", price: 0, quantity: 1 },
   ]);
   const [discount, setDiscount] = useState(0);
   const [taxRate, setTaxRate] = useState(19);
   const [observations, setObservations] = useState("");
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("contado");
+  const [onlyRead, setOnlyRead] = useState(false);
+  const [status, setStatus] = useState({
+    status: "created",
+    user: $userStore.nombre,
+    date: new Date(),
+    comments: "",
+  });
 
-  const navigate = useNavigate();
+  const [comments, setComments] = useState<string[]>([
+    "Pago 100% adelantado",
+    `Forma de Pago: ${paymentConditionsOptions[paymentMethod]}`,
+    "Sujeto a disponibilidad de inventario.",
+  ]);
+  const [otherFields, setOtherFields] = useState({
+    generalConditions:
+      "Metromedics es responsable del manejo de toda la información del cliente obtenida durante la ejecución de las actividades de calibración.\nEl personal de Metromedics no está sometido a presiones comerciales, financieras o de otro tipo, tanto externas como internas que puedan influenciar el juicio técnico y transparente de los resultados obtenidos en el servicio",
+    paymentConditions: `La validez de la presente oferta es de 30 días.\nEl pago debe ser realizado en la cuenta de ahorros N° 85138050837 de banco Bancolombia, a nombre de Metromedics S.A.S.\nUna vez realizado el pago, favor enviar copia del soporte de pago a la siguiente dirrección de correo electronico,    comercial@metromedicslab.com.co\nForma de Pago es ${paymentConditionsOptions[paymentMethod]}`,
+    deliveryConditions:
+      "Tiempo de entrega: 15 días hábiles a partir de la fecha de pago.",
+  });
+  const handlePaymentChange = (e: SelectChangeEvent) => {
+    setPaymentMethod(e.target.value as string);
+  };
+
+  const handleStatus = (e: SelectChangeEvent) => {
+    setStatus({ ...status, status: e.target.value as string });
+  };
+
+  const handleOtherFields = (e: any) => {
+    setOtherFields({ ...otherFields, [e.target.name]: e.target.value });
+  };
+
+  useEffect(() => {
+    setComments([
+      "Pago 100% adelantado",
+      `Forma de Pago: ${paymentConditionsOptions[paymentMethod]}`,
+      "Sujeto a disponibilidad de inventario.",
+    ]);
+    setOtherFields({
+      ...otherFields,
+      paymentConditions: `La validez de la presente oferta es de 30 días.\nEl pago debe ser realizado en la cuenta de ahorros N° 85138050837 de banco Bancolombia, a nombre de Metromedics S.A.S.\nUna vez realizado el pago, favor enviar copia del soporte de pago a la siguiente dirrección de correo electronico,    comercial@metromedicslab.com.co\nForma de Pago es ${paymentConditionsOptions[paymentMethod]}`,
+    });
+  }, [paymentMethod]);
+
+  //#region LoadOptions
+
+  const loadOptions = async (inputValue: string): Promise<OptionType[]> => {
+    return new Promise((resolve, reject) => {
+      let timer; // Declarar el temporizador
+
+      const fetchData = async () => {
+        try {
+          const response = await axios.get(`${apiUrl}/products`, {
+            params: {
+              q: inputValue,
+            },
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          });
+          const data = response.data;
+
+          const options = data.map((item: any) => ({
+            value: item.id,
+            label: item.name,
+            price: item.price,
+          }));
+          resolve(options);
+        } catch (error) {
+          console.error("Error al cargar opciones:", error);
+          reject(error);
+        }
+      };
+
+      // Limpiar el temporizador si existe y configurar uno nuevo
+      if (timer) {
+        clearTimeout(timer);
+      }
+
+      timer = setTimeout(fetchData, 1000); // Establecer el debounce en 1000ms
+    });
+  };
+
+  const loadOptionsClient = async (
+    inputValue: string
+  ): Promise<OptionType[]> => {
+    return new Promise((resolve, reject) => {
+      let timer; // Declarar el temporizador
+
+      const fetchData = async () => {
+        try {
+          const response = await axios.get(`${apiUrl}/customers`, {
+            params: {
+              q: inputValue,
+            },
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          });
+          const data = response.data;
+
+          const options = data.map((item: any) => ({
+            value: item.id,
+            label: item.nombre,
+          }));
+          resolve(options);
+        } catch (error) {
+          console.error("Error al cargar opciones:", error);
+          reject(error);
+        }
+      };
+
+      // Limpiar el temporizador si existe y configurar uno nuevo
+      if (timer) {
+        clearTimeout(timer);
+      }
+
+      timer = setTimeout(fetchData, 1000); // Establecer el debounce en 1000ms
+    });
+  };
 
   const fetchQuote = async () => {
     try {
@@ -62,11 +223,22 @@ const QuoteForm: React.FC = () => {
       );
 
       if (response.statusText === "OK") {
-        setCustomer(response.data.customer);
-        setProducts(response.data.products);
-        setDiscount(response.data.discountRatio);
-        setTaxRate(response.data.taxRatio);
-        setObservations(response.data.observations);
+        const { data } = response;
+        setCustomer(data.customer);
+        setProducts(data.products);
+        setDiscount(data.discountRatio);
+        setTaxRate(data.taxRatio);
+        setObservations(data.observations);
+        setComments(data.comments);
+        setOtherFields(data.otherFields);
+        setPaymentMethod(data.otherFields.paymentMethod);
+        setStatus(data.status[data.status.length - 1]);
+        setOnlyRead(
+          data.status.some(
+            (status) =>
+              status.status === "accepted" || status.status === "rejected"
+          )
+        );
       }
     } catch (error) {
       console.error("Error fetching quote data:", error);
@@ -83,7 +255,7 @@ const QuoteForm: React.FC = () => {
   const handleProductChange = (
     index: number,
     field: string,
-    value: string | number | Product
+    value: string | number | OptionType | Product
   ) => {
     const updatedProducts = products.map((product, idx) => {
       if (idx === index && field !== "product") {
@@ -92,10 +264,10 @@ const QuoteForm: React.FC = () => {
           [field]: value,
         };
       } else if (idx === index && field === "product") {
-        const { name, price } = value as Product;
+        const { label, price } = value as OptionType;
         return {
           ...product,
-          name: name,
+          name: label,
           price: price,
         };
       } else {
@@ -110,6 +282,16 @@ const QuoteForm: React.FC = () => {
     setProducts([...products, { name: "", price: 0, quantity: 1 }]);
   };
 
+  const handleAddComment = () => {
+    setComments([...comments, ""]);
+  };
+
+  const handleCommentChange = (index: number, text: string) => {
+    const updatedComments = [...comments];
+    updatedComments[index] = text;
+    setComments(updatedComments);
+  };
+
   const handleRemoveProduct = (index: number) => {
     const updatedProducts = [...products];
     updatedProducts.splice(index, 1);
@@ -120,29 +302,73 @@ const QuoteForm: React.FC = () => {
     (acc, product) => acc + product.price * product.quantity,
     0
   );
-  const tax = subtotal * 0.16;
   const discountAmount = subtotal * (discount / 100); // Calcula el monto del descuento
+  const tax = (subtotal - discountAmount) * (taxRate / 100);
   const total = subtotal + tax - discountAmount; // Aplica el descuento al total
+
+  const handleUpdateStatus = async (e: any) => {
+    e.preventDefault();
+    try {
+      const response = await axios.put(
+        `${apiUrl}/quotes/${id}/status`,
+        {
+          status: {
+            status: status.status,
+            user: status.user,
+            date: new Date(),
+            comments: status.comments,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+
+      if (response.status >= 200 && response.status < 300) {
+        toast.success("Estado actualizado exitosamente!", {
+          duration: 4000,
+          position: "top-center",
+        });
+      } else {
+        throw new Error("Error al actualizar el estado");
+      }
+    } catch (error) {
+      console.error("Error de red:", error);
+      toast.error(
+        "Error al actualizar el estado. Por favor, inténtalo de nuevo."
+      );
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
+    const requestConfig = {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+      },
+    };
+
+    const requestData = {
+      customerId: customer?.value,
+      products,
+      taxRatio: taxRate,
+      discountRatio: discount,
+      observations,
+      comments,
+      otherFields: { ...otherFields, paymentMethod: paymentMethod },
+      status: {
+        status: status.status,
+        user: status.user,
+        date: new Date(),
+        comments: status.comments,
+      },
+    };
+
     try {
-      const requestConfig = {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      };
-
-      const requestData = {
-        customerId: customer?.id,
-        products,
-        taxRatio: taxRate,
-        discountRatio: discount,
-        observations,
-      };
-
       let response;
       let actionMessage;
 
@@ -162,125 +388,367 @@ const QuoteForm: React.FC = () => {
         actionMessage = "creada";
       }
 
-      if (response.status === 201) {
+      if (response.status >= 200 && response.status < 300) {
         setLoading(false);
         toast.success(`Cotización ${actionMessage} Exitosamente!`, {
           duration: 4000,
           position: "top-center",
         });
-        setProducts([{ name: "", price: 0, quantity: 0 }]);
-        setCustomer(null);
+        if (!id) {
+          setProducts([{ name: "", price: 0, quantity: 0 }]);
+          setCustomer(null);
+        } else {
+          window.location.href = "/dashboard/cotizaciones";
+        }
       } else {
-        console.error("Error al crear equipo");
+        throw new Error("Error al crear equipo");
       }
     } catch (error) {
+      setLoading(false);
       console.error("Error de red:", error);
+      toast.error(
+        "Error al crear la cotización. Por favor, inténtalo de nuevo."
+      );
     }
   };
+
+  let edit;
+
+  if (id) {
+    edit = products[0].name !== "";
+  } else {
+    edit = true;
+  }
+
+  if (id && customer === null) {
+    return <Skeleton />;
+  }
 
   return (
     <Box sx={{ margin: "auto" }}>
       <Toaster />
       <Loader loading={loading} />
+
       <form onSubmit={handleSubmit}>
-        <AutoComplete
-          endpoint={`${apiUrl}/customers`}
-          token={localStorage.getItem("accessToken")}
-          label="Buscar Cliente"
-          value={customer?.nombre}
-          isEdit={!!id}
-          mapOption={(data) =>
-            data.map((item: any) => ({
-              id: item.id,
-              nombre: item.nombre,
-            }))
-          }
-          getOptionLabel={(option: any) => option.nombre}
-          onClientSelection={(customer) => setCustomer(customer)}
-          sx={{ mb: 2, width: "400px" }}
-        />
+        {!!id && (
+          <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={3}>
+                <FormControl fullWidth>
+                  <InputLabel id="demo-simple-select-label">Estado</InputLabel>
+                  <Select
+                    labelId="status-label"
+                    id="status"
+                    label="Estado"
+                    variant="outlined"
+                    value={status.status}
+                    onChange={handleStatus}
+                    sx={{ mb: 2 }}
+                  >
+                    {Object.keys(statusOptions).map((key) => (
+                      <MenuItem key={key} value={key}>
+                        {statusOptions[key]}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={9}>
+                <TextField
+                  label="Observaciones"
+                  variant="outlined"
+                  multiline
+                  rows={1}
+                  value={status.comments}
+                  onChange={(e) =>
+                    setStatus({ ...status, comments: e.target.value })
+                  }
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid
+                item
+                xs={3}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Button
+                  type="submit"
+                  variant="contained"
+                  onClick={handleUpdateStatus}
+                >
+                  Actualizar Estado
+                </Button>
+              </Grid>
+            </Grid>
+          </Paper>
+        )}
+        <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
+          <AsyncSelect
+            isDisabled={onlyRead}
+            cacheOptions
+            // defaultOptions
 
-        {products.map((product, index) => (
-          <div key={index} style={{ display: "flex", marginBottom: "8px" }}>
-            <AutoComplete
-              endpoint={`${apiUrl}/products`}
-              token={localStorage.getItem("accessToken")}
-              label="Producto"
-              value={product?.name}
-              isEdit={!!id}
-              mapOption={(data) =>
-                data.map((item: any) => ({
-                  id: item.id,
-                  name: item.name,
-                  price: item.price,
-                }))
+            placeholder="Buscar Cliente"
+            loadOptions={loadOptionsClient}
+            onChange={(selectedOption: any) =>
+              setCustomer(selectedOption) as any
+            }
+            defaultValue={
+              id && {
+                value: customer?.id,
+                label: customer?.nombre,
               }
-              getOptionLabel={(option: any) => option.name}
-              onClientSelection={(product) => {
-                handleProductChange(index, "product", product);
-              }}
-              sx={{ mr: 2, width: "100%" }}
-            />
+            }
+            styles={{
+              container: (provided, state) => ({
+                ...provided,
+                width: "100%",
+                marginRight: 10,
+                height: 50,
+                zIndex: 1001,
+              }),
+              control: (provided, state) => ({
+                ...provided,
+                border: "1px solid #ccc",
+                borderRadius: 5,
+                height: 55,
+              }),
+              option: (provided, state) => ({
+                ...provided,
+                color: state.isSelected ? "white" : "black",
+                backgroundColor: state.isSelected ? "blue" : "white",
+              }),
+            }}
+          />
 
-            <NumericFormat
-              label="Precio"
+          {/* <AutoComplete
+            endpoint={`${apiUrl}/customers`}
+            token={localStorage.getItem("accessToken")}
+            label="Buscar Cliente"
+            value={customer?.nombre}
+            isEdit={!!id}
+            mapOption={(data) =>
+              data.map((item: any) => ({
+                id: item.id,
+                nombre: item.nombre,
+              }))
+            }
+            getOptionLabel={(option: any) => option.nombre}
+            onClientSelection={(customer) => setCustomer(customer)}
+            sx={{ mb: 2, width: "400px" }}
+          /> */}
+        </Paper>
+        <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
+          {products.length > 0 &&
+            edit &&
+            products.map((product, index) => {
+              const productName = product.name;
+
+              return (
+                <div
+                  key={index}
+                  style={{ display: "flex", marginBottom: "8px" }}
+                >
+                  <AsyncSelect
+                    cacheOptions
+                    isDisabled={onlyRead}
+                    // defaultOptions
+                    loadOptions={loadOptions}
+                    onChange={(selectedOption: any) => {
+                      handleProductChange(index, "product", selectedOption);
+                    }}
+                    placeholder="Buscar Producto"
+                    defaultValue={
+                      id && {
+                        value: index,
+                        label: productName,
+                      }
+                    }
+                    styles={{
+                      container: (provided, state) => ({
+                        ...provided,
+                        width: "100%",
+                        marginRight: 10,
+                        height: 50,
+                        zIndex: 1000,
+                      }),
+                      control: (provided, state) => ({
+                        ...provided,
+                        border: "1px solid #ccc",
+                        borderRadius: 5,
+                        height: 55,
+                      }),
+                      option: (provided, state) => ({
+                        ...provided,
+                        color: state.isSelected ? "white" : "black",
+                        backgroundColor: state.isSelected ? "blue" : "white",
+                      }),
+                    }}
+                  />
+
+                  <TextField
+                    disabled={onlyRead}
+                    label="Precio"
+                    variant="outlined"
+                    name="price"
+                    type="text"
+                    value={product.price}
+                    onChange={(e) =>
+                      handleProductChange(index, "price", e.target.value)
+                    }
+                    style={{ marginRight: "8px" }}
+                    sx={{ mr: 2, width: "100%" }}
+                    // thousandSeparator={true}
+                    // prefix="$"
+                    // customInput={TextField}
+                  />
+                  <TextField
+                    disabled={onlyRead}
+                    label="Cantidad"
+                    variant="outlined"
+                    type="number"
+                    value={product.quantity}
+                    onChange={(e) =>
+                      handleProductChange(
+                        index,
+                        "quantity",
+                        parseInt(e.target.value)
+                      )
+                    }
+                    style={{ marginRight: "8px" }}
+                    sx={{ mr: 2, width: "100%" }}
+                  />
+                  <TextField
+                    disabled={onlyRead}
+                    label="Total"
+                    variant="outlined"
+                    type="number"
+                    value={product.quantity * product.price}
+                    style={{ marginRight: "8px" }}
+                    sx={{ mr: 2, width: "100%" }}
+                    InputProps={{
+                      readOnly: true,
+                    }}
+                  />
+                  <Button
+                    disabled={onlyRead}
+                    variant="contained"
+                    color="error"
+                    onClick={() => handleRemoveProduct(index)}
+                    sx={{ mr: 1, width: "10px" }}
+                  >
+                    X
+                  </Button>
+                </div>
+              );
+            })}
+          <Button
+            variant="contained"
+            onClick={handleAddProduct}
+            sx={{ mb: 2 }}
+            disabled={onlyRead}
+          >
+            Agregar Producto
+          </Button>
+        </Paper>
+        <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
+          <TextField
+            disabled={onlyRead}
+            label="Descuento (%)"
+            variant="outlined"
+            type="number"
+            value={discount}
+            onChange={(e) => setDiscount(parseFloat(e.target.value))}
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            disabled={onlyRead}
+            label="IVA (%)"
+            variant="outlined"
+            type="number"
+            value={taxRate}
+            onChange={(e) => setTaxRate(parseInt(e.target.value))}
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+        </Paper>
+        <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
+          <Typography variant="subtitle1">
+            Subtotal: $
+            {subtotal.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+          </Typography>
+          <Typography variant="subtitle1">
+            Descuento: $
+            {discountAmount.toLocaleString("es-ES", {
+              minimumFractionDigits: 2,
+            })}{" "}
+            ({discount}%)
+          </Typography>
+          <Typography variant="subtitle1">
+            IVA ({taxRate}%): $
+            {tax.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+          </Typography>
+          <Typography variant="h6">
+            Total: $
+            {total.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+          </Typography>
+        </Paper>
+        <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
+          <FormControl>
+            <InputLabel id="demo-simple-select-label">Forma de Pago</InputLabel>
+            <Select
+              disabled={onlyRead}
+              labelId="demo-simple-select-label"
+              id="demo-simple-select"
+              label="Forma de Pago"
               variant="outlined"
-              name="price"
-              type="text"
-              value={product.price}
-              onChange={(e) =>
-                handleProductChange(index, "price", e.target.value)
-              }
-              style={{ marginRight: "8px" }}
-              sx={{ mr: 2, width: "100%" }}
-              thousandSeparator={true}
-              prefix="$"
-              customInput={TextField}
-            />
-
-            <TextField
-              label="Cantidad"
-              variant="outlined"
-              type="number"
-              value={product.quantity}
-              onChange={(e) =>
-                handleProductChange(index, "quantity", parseInt(e.target.value))
-              }
-              style={{ marginRight: "8px" }}
-              sx={{ mr: 2, width: "100%" }}
-            />
-            <Button
-              variant="contained"
-              color="error"
-              onClick={() => handleRemoveProduct(index)}
-              sx={{ mr: 2, width: "250px" }}
+              value={paymentMethod}
+              onChange={handlePaymentChange}
+              sx={{ mb: 2 }}
             >
-              Eliminar
-            </Button>
-          </div>
-        ))}
-        <Button variant="contained" onClick={handleAddProduct} sx={{ mb: 2 }}>
-          Agregar Producto
-        </Button>
-        <TextField
-          label="Descuento (%)"
-          variant="outlined"
-          type="number"
-          value={discount}
-          onChange={(e) => setDiscount(parseFloat(e.target.value))}
-          fullWidth
-          sx={{ mb: 2 }}
-        />
-        <TextField
-          label="IVA (%)"
-          variant="outlined"
-          type="number"
-          value={taxRate}
-          onChange={(e) => setTaxRate(parseInt(e.target.value))}
-          fullWidth
-          sx={{ mb: 2 }}
-        />
-        <TextField
+              {Object.keys(paymentConditionsOptions).map((key) => (
+                <MenuItem key={key} value={key}>
+                  {paymentConditionsOptions[key]}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Paper>
+        <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
+          <Typography variant="h4" component="p" sx={{ mb: 2 }}>
+            Comentarios
+          </Typography>
+
+          {comments.map((comment, index) => (
+            <TextField
+              disabled={onlyRead}
+              key={index}
+              label={`Comentario ${index + 1} `}
+              variant="outlined"
+              multiline
+              rows={1}
+              value={comment}
+              onChange={(e) => handleCommentChange(index, e.target.value)}
+              fullWidth
+              sx={{ mb: 2 }}
+            />
+          ))}
+          <Button
+            variant="contained"
+            onClick={handleAddComment}
+            sx={{ mb: 2 }}
+            disabled={onlyRead}
+          >
+            Agregar Comentario
+          </Button>
+        </Paper>
+        {/* <TextField
           label="Observaciones"
           variant="outlined"
           multiline
@@ -289,24 +757,53 @@ const QuoteForm: React.FC = () => {
           onChange={(e) => setObservations(e.target.value)}
           fullWidth
           sx={{ mb: 2 }}
-        />
-        <Typography variant="subtitle1">
-          Subtotal: $
-          {subtotal.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
-        </Typography>
-        <Typography variant="subtitle1">
-          IVA ({taxRate}%): $
-          {tax.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
-        </Typography>
-        <Typography variant="subtitle1">
-          Descuento: $
-          {discountAmount.toLocaleString("es-ES", { minimumFractionDigits: 2 })}{" "}
-          ({discount}%)
-        </Typography>
-        <Typography variant="h6">
-          Total: ${total.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
-        </Typography>
-        <Button type="submit" variant="contained" sx={{ mb: 2 }}>
+        /> */}
+        <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
+          <TextField
+            disabled={onlyRead}
+            name="generalConditions"
+            label="Condiciones Generales"
+            variant="outlined"
+            multiline
+            rows={4}
+            value={otherFields.generalConditions}
+            onChange={handleOtherFields}
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+
+          <TextField
+            disabled={onlyRead}
+            name="paymentConditions"
+            label="Condiciones de PAgo"
+            variant="outlined"
+            multiline
+            rows={4}
+            value={otherFields.paymentConditions}
+            onChange={handleOtherFields}
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+
+          <TextField
+            disabled={onlyRead}
+            name="deliveryConditions"
+            label="Condiciones de Entrega"
+            variant="outlined"
+            multiline
+            rows={1}
+            value={otherFields.deliveryConditions}
+            onChange={handleOtherFields}
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+        </Paper>
+        <Button
+          type="submit"
+          variant="contained"
+          sx={{ mb: 2 }}
+          disabled={onlyRead}
+        >
           {!!id ? "Actualizar" : "Crear"}
         </Button>
       </form>

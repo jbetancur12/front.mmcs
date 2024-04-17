@@ -59,6 +59,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
       paddingTop: 4,
       paddingLeft: 7,
       flex: 1,
+      textAlign: "center",
       //   height: 20,
       backgroundColor: "#9AF18B",
       borderColor: "whitesmoke",
@@ -75,6 +76,9 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
       borderColor: "whitesmoke",
       borderRightWidth: 1,
       borderBottomWidth: 1,
+    },
+    alignCenter: {
+      textAlign: "center",
     },
     total: {
       fontSize: 9,
@@ -103,6 +107,9 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
     width75: {
       width: "75%",
     },
+    fontBold: {
+      fontWeight: "bold",
+    },
     width10: {
       width: "10%",
     },
@@ -118,6 +125,12 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
     width40: {
       width: "40%",
     },
+    width50: {
+      width: "50%",
+    },
+    width80: {
+      width: "80%",
+    },
     bl: {},
     ml4: {
       marginLeft: 20,
@@ -126,30 +139,49 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
       marginBottom: 20,
     },
     footer: {
-      position: "absolute",
-      bottom: 30,
+      //position: "absolute",
+      // bottom: 30,
+      marginBottom: 20,
+      marginTop: 20,
       left: 0,
       right: 0,
       textAlign: "center",
 
-      fontSize: 10,
+      fontSize: 8,
+    },
+    content: {
+      flexGrow: 1, // Para que el contenido ocupe todo el espacio vertical disponible
+      marginBottom: 20,
+      // Espacio interno alrededor del contenido
     },
   });
 
   const Header = () => (
-    <View style={tw("border border-black flex  flex-row mb-10")}>
-      <View style={[styles.width30, tw("border-r")]}>
-        <Text style={[tw("border-b px-1")]}>CÓDIGO: MMCS-XX</Text>
-        <Text style={[tw("border-b  px-1")]}>VERSIÓN: X</Text>
-        <Text style={[tw("border-b  px-1")]}>FECHA: XXXX-XX-XX</Text>
-        <Text style={[tw(" px-1")]}>Página 1 de x</Text>
+    <View style={tw("border border-black flex  flex-row mb-10	")} fixed>
+      <View style={[styles.width25, tw("border-r")]}>
+        <Text style={[tw("border-b px-1 text-xs py-1")]}>
+          CÓDIGO: FOGC-MMCS-31
+        </Text>
+        <Text style={[tw("border-b  px-1 py-1 text-xs ")]}>VERSIÓN: 01</Text>
+        <Text style={[tw("border-b  px-1 text-xs py-1")]}>
+          FECHA: 2019-03-20
+        </Text>
+        <Text
+          style={[tw(" px-1 text-xs py-1")]}
+          render={({ pageNumber, totalPages }) =>
+            `Página ${pageNumber} de ${totalPages}`
+          }
+        />
       </View>
-      <View style={[styles.width40, tw("border-r flex justify-center")]}>
-        <Text style={[tw("text-center bottom-3")]}>METROMEDICS</Text>
-        <Text style={tw("border-b ")}></Text>
-        <Text style={tw("text-center top-3")}>COTIZACIÓN</Text>
+      <View style={[styles.width50, tw("border-r flex justify-center")]}>
+        <Text style={[tw("text-center top-1")]}>METROMEDICS</Text>
+        <Text style={tw("border-b mt-2")}></Text>
+        <Text style={[tw("text-center text-sm top-1"), styles.fontBold]}>
+          OFERTA COMERCIAL Y CONDICIONES DE {"\n"} SERVICIO DE VENTA DE EQUIPOS
+          E INSUMOS
+        </Text>
       </View>
-      <View style={styles.width30}>
+      <View style={styles.width25}>
         <Image style={tw("top-3 p-2")} src="/images/logo2.png"></Image>
       </View>
     </View>
@@ -161,59 +193,26 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
         <View
           style={[styles.descContainer, styles.descContainer2, styles.width25]}
         >
-          <Text>Cotización</Text>
+          <Text>Oferta N°</Text>
         </View>
-        <View
-          style={[
-            styles.descContainer,
-            styles.width75,
-            styles.ml4,
-            styles.width10,
-          ]}
-        >
-          <Text>{quoteData?.id}</Text>
-        </View>
-      </View>
-
-      <View style={tw("flex flex-row mb-4")}>
-        <View
-          style={[styles.descContainer, styles.descContainer2, styles.width30]}
-        >
-          <Text>Fecha de Elaboración</Text>
-        </View>
-        <View
-          style={[
-            styles.descContainer,
-            styles.width75,
-            styles.ml4,
-            styles.width20,
-          ]}
-        >
-          {/* @ts-ignore */}
-          <Text>{format(new Date(quoteData.createdAt), "yyyy-MM-dd")}</Text>
+        <View style={[styles.descContainer, styles.ml4, styles.width25]}>
+          <Text>VT-{quoteData?.id}</Text>
         </View>
         <View
           style={[
             styles.ml4,
             styles.descContainer,
             styles.descContainer2,
-            styles.width20,
+            styles.width25,
           ]}
         >
-          <Text>Ciudad</Text>
+          <Text>Fecha de Elaboración</Text>
         </View>
-        <View
-          style={[
-            styles.descContainer,
-            styles.width75,
-            styles.ml4,
-            styles.width20,
-          ]}
-        >
-          <Text>{quoteData?.customer.ciudad}</Text>
+        <View style={[styles.descContainer, styles.ml4, styles.width25]}>
+          {/* @ts-ignore */}
+          <Text>{format(new Date(quoteData.createdAt), "yyyy-MM-dd")}</Text>
         </View>
       </View>
-
       <View style={tw("flex flex-row mb-4")}>
         <View
           style={[styles.descContainer, styles.descContainer2, styles.width10]}
@@ -238,7 +237,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
             styles.width10,
           ]}
         >
-          <Text>Telefono</Text>
+          <Text>Nit</Text>
         </View>
         <View
           style={[
@@ -248,18 +247,60 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
             styles.width20,
           ]}
         >
-          <Text>{quoteData?.customer.telefono}</Text>
+          <Text>{quoteData?.customer.identificacion}</Text>
         </View>
       </View>
-
-      <View style={tw("flex flex-row ")}>
+      // Direccion
+      <View style={tw("flex flex-row mb-4")}>
         <View
-          style={[styles.descContainer, styles.descContainer2, styles.width25]}
+          style={[styles.descContainer, styles.descContainer2, styles.width20]}
         >
           <Text>Dirección</Text>
         </View>
-        <View style={[styles.descContainer, styles.width75, styles.ml4]}>
+        <View style={[styles.descContainer, styles.width80, styles.ml4]}>
           <Text>{quoteData?.customer.direccion}</Text>
+        </View>
+      </View>
+      // Ciudad y Telefono
+      <View style={tw("flex flex-row mb-4")}>
+        <View
+          style={[styles.descContainer, styles.descContainer2, styles.width10]}
+        >
+          <Text>Ciudad</Text>
+        </View>
+
+        <View style={[styles.descContainer, styles.width40, styles.ml4]}>
+          <Text>{quoteData?.customer.ciudad}</Text>
+        </View>
+        <View
+          style={[
+            styles.ml4,
+            styles.descContainer,
+            styles.descContainer2,
+            styles.width10,
+          ]}
+        >
+          <Text>Telefono</Text>
+        </View>
+        <View style={[styles.descContainer, styles.ml4, styles.width30]}>
+          <Text>{quoteData?.customer.telefono}</Text>
+        </View>
+      </View>
+      <View style={tw("flex flex-row mb-4")}>
+        <View
+          style={[styles.descContainer, styles.descContainer2, styles.width10]}
+        >
+          <Text>Email</Text>
+        </View>
+        <View
+          style={[
+            styles.descContainer,
+            styles.width75,
+            styles.ml4,
+            styles.width60,
+          ]}
+        >
+          <Text>{quoteData?.customer.email}</Text>
         </View>
       </View>
     </View>
@@ -271,7 +312,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
         <Text>Item</Text>
       </View>
       <View style={[styles.theader, styles.theader2]}>
-        <Text>Nombre</Text>
+        <Text>Equipo</Text>
       </View>
       <View style={styles.theader}>
         <Text>Cantidad</Text>
@@ -289,13 +330,16 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
     quoteData?.products.map((product: any, idx: number) => (
       <View key={product.id}>
         <View style={{ width: "100%", flexDirection: "row" }}>
-          <View style={[styles.tbody]}>
+          <View style={[styles.tbody, styles.alignCenter]}>
             <Text>{idx + 1}</Text>
           </View>
           <View style={[styles.tbody, styles.tbody2]}>
             <Text>{product.name}</Text>
           </View>
-          <View style={styles.tbody}>
+          <View style={[styles.tbody, styles.alignCenter]}>
+            <Text>{product.quantity}</Text>
+          </View>
+          <View style={[styles.tbody, styles.alignCenter]}>
             <Text>
               ${" "}
               {product.price.toLocaleString("es-ES", {
@@ -303,10 +347,8 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
               })}{" "}
             </Text>
           </View>
-          <View style={styles.tbody}>
-            <Text>{product.quantity}</Text>
-          </View>
-          <View style={styles.tbody}>
+
+          <View style={[styles.tbody, styles.alignCenter]}>
             <Text>
               ${" "}
               {(product.price * product.quantity).toLocaleString("es-ES", {
@@ -399,7 +441,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
         Metromedics S.A.S Nit. 900.816.433-3 Dosquebradas - Risaralda
       </Text>
       <Text style={tw("text-center")}>
-        Contactenos: 3138124282 - (606) 3256584 comercial@metromedicslab.com.co
+        Contáctenos: 3113441682 - (606) 3256584 comercial@metromedicslab.com.co
       </Text>
       <Text style={tw("text-center")}>www.metromedics.co</Text>
     </View>
@@ -433,25 +475,88 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
   // Add the missing import statement
 
   const Observations = () => (
-    <View style={tw("mt-10  border border-black")}>
-      <Text style={tw("p-1 font-semibold bg-[#9AF18B] ")}>Observaciones:</Text>
-      <Text style={tw("border-t p-2 ")}>{quoteData?.observations}</Text>
+    <View style={tw("border border-black text-sm")}>
+      <View>
+        <Text style={tw("px-1 font-semibold bg-[#9AF18B] pt-1")}>
+          Comentarios:
+        </Text>
+      </View>
+      {/* <Text style={tw("border-t p-2 min-h-28")}>{quoteData?.observations}</Text> */}
+      <View style={[tw("border-t min-h-20"), { flexDirection: "column" }]}>
+        {quoteData?.comments.map((comment: any, idx: number) => (
+          <View
+            key={idx}
+            style={{ flexDirection: "row", marginBottom: 1, marginTop: 2 }}
+          >
+            <Text style={{ marginHorizontal: 8 }}>*</Text>
+            <Text>{comment}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+
+  const GeneralConditions = () => (
+    <View style={tw("border mt-5 border-black text-sm")}>
+      <Text style={tw("px-1 py-1 font-semibold bg-[#9AF18B] ")}>
+        Condiciones Generales:
+      </Text>
+      <Text style={tw("border-t p-2 min-h-28")}>
+        Metromedics es responsable del manejo de toda la información del cliente
+        obtenida durante la ejecución de las actividades de calibración. {"\n"}
+        El personal de Metromedics no está sometido a presiones comerciales,
+        financieras o de otro tipo, tanto externas como internas que puedan
+        influenciar el juicio técnico y transparente de los resultados obtenidos
+        en el servicio.
+      </Text>
+    </View>
+  );
+
+  const PaymentConditions = () => (
+    <View style={tw("mt-5  border border-black text-sm")}>
+      <Text style={tw("p-1 font-semibold bg-[#9AF18B] ")}>
+        Condiciones de pago:
+      </Text>
+      <Text style={tw("border-t p-2 min-h-28")}>
+        {quoteData?.otherFields?.paymentConditions}
+      </Text>
+    </View>
+  );
+  const DeliveryConditions = () => (
+    <View style={tw("mt-5  border border-black text-sm")}>
+      <Text style={tw("p-1 font-semibold bg-[#9AF18B] ")}>
+        Condiciones de Entrega:
+      </Text>
+      <Text style={tw("border-t p-2 min-h-28")}>
+        Tiempo de entrega de los equipos {"      "}8 días habiles
+      </Text>
     </View>
   );
 
   return (
     <>
       <Document>
-        <Page size="A4" style={styles.page}>
+        <Page size="A4" style={styles.page} wrap={true}>
           <Header />
-          <InvoiceDescription />
-          <TableHead />
-          <TableBody />
-          <TableTotal />
-          <TableDiscount />
-          <TableTax />
-          <TableTotalAmount />
-          <Observations />
+          <View style={styles.content}>
+            <InvoiceDescription />
+            <TableHead />
+            <TableBody />
+            <TableTotal />
+            <TableDiscount />
+            <TableTax />
+            <TableTotalAmount />
+          </View>
+          <Footer />
+        </Page>
+        <Page size="A4" style={styles.page} wrap={true}>
+          <Header />
+          <View style={styles.content}>
+            <Observations />
+            <GeneralConditions />
+            <PaymentConditions />
+            <DeliveryConditions />
+          </View>
           <Footer />
         </Page>
       </Document>

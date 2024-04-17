@@ -1,7 +1,18 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios, { AxiosError, AxiosResponse } from "axios";
-import { Button, Divider, List, ListItem, ListItemText } from "@mui/material";
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+} from "@mui/material";
 import { api } from "../config";
 import toast, { Toaster } from "react-hot-toast";
 import Loader from "./Loader2";
@@ -17,8 +28,10 @@ interface Certificate {
 function CertificatesList() {
   const { id } = useParams<{ id: string }>();
   const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [certificateId, setCertificateId] = useState<number>(0);
 
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const years = certificates.map((certificate) => {
     const getYear = new Date(certificate.calibrationDate).getFullYear();
@@ -133,6 +146,42 @@ function CertificatesList() {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    try {
+      const response = await axios.delete(
+        `${apiUrl}/certificateHistory/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        toast.success("Certificado eliminado con éxito");
+        setCertificates(
+          certificates.filter((certificate) => certificate.id !== id)
+        );
+      }
+    } catch (error) {
+      console.error("Error al eliminar el certificado:", error);
+    }
+  };
+
+  const handleClickOpen = (id: number) => {
+    setOpen(true);
+    setCertificateId(id);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleConfirmDelete = () => {
+    handleDelete(certificateId);
+    handleClose();
+  };
+
   return (
     <>
       {/* <Paper elevation={3} className="p-4 mt-8"> */}
@@ -158,8 +207,33 @@ function CertificatesList() {
             >
               Descargar
             </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={() => handleClickOpen(certificate.id)}
+              sx={{ ml: 2 }}
+            >
+              Eliminar
+            </Button>
           </ListItem>
         ))}
+        <Dialog open={open} onClose={handleClose}>
+          <DialogTitle>Confirmar eliminación</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              ¿Estás seguro de que quieres eliminar este certificado? Esta
+              acción no se puede deshacer.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose} color="primary">
+              Cancelar
+            </Button>
+            <Button onClick={handleConfirmDelete} color="error">
+              Eliminar
+            </Button>
+          </DialogActions>
+        </Dialog>
       </List>
       {/* </Paper> */}
     </>

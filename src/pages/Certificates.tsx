@@ -113,7 +113,7 @@ function Certificates() {
         onClose={handleCloseModal}
         id={id}
       />
-      <ul className="flex flex-wrap text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:border-gray-700 dark:text-gray-400 mt-8">
+      {/* <ul className="flex flex-wrap text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:border-gray-700 dark:text-gray-400 mt-8">
         <li className="me-2">
           <a
             href="#"
@@ -131,8 +131,10 @@ function Certificates() {
             Seguridad Electrica
           </a>
         </li>
-      </ul>
+      </ul> */}
+      {/* <Paper elevation={1} className="p-4 mt-4"> */}
       <CertificatesList />
+      {/* </Paper> */}
     </Paper>
   );
 }

@@ -40,6 +40,12 @@ import { api } from "../config";
 import { MRT_Localization_ES } from "material-react-table/locales/es";
 import Loader from "./Loader2";
 import { Link } from "react-router-dom";
+import { Document, Page } from "@react-pdf/renderer";
+import PDFViewer from "./PDFViewer";
+import AsyncSelect from "react-select/async";
+import AnalyzeExcelComponent from "./Excel";
+
+const minioUrl = import.meta.env.VITE_MINIO_URL;
 
 export function convertirCadena(cadena) {
   // Reemplazar espacios con guiones y convertir a minúsculas
@@ -95,8 +101,34 @@ export interface FileData {
   };
 }
 
+interface ResourceOption {
+  value: string;
+  label: string;
+}
+
 // API URL
 const apiUrl = api();
+
+const styles = {
+  container: (provided, state) => ({
+    ...provided,
+    width: "100%",
+    marginRight: 10,
+    height: 50,
+    zIndex: 1000,
+  }),
+  control: (provided, state) => ({
+    ...provided,
+    border: "1px solid #ccc",
+    borderRadius: 5,
+    height: 55,
+  }),
+  option: (provided, state) => ({
+    ...provided,
+    color: state.isSelected ? "white" : "black",
+    backgroundColor: state.isSelected ? "blue" : "white",
+  }),
+};
 
 // Main component
 const Table: React.FC = () => {
@@ -558,6 +590,11 @@ const Table: React.FC = () => {
 
   return (
     <>
+      <Document
+        file={`${minioUrl}/first-bucket/1694483679897-56373cert-balanzacc-mcs-m-4624-23 (2) (1).pdf`}
+      >
+        <Page pageNumber={1} />
+      </Document>
       <Toaster />
       <Loader loading={loading} />
       {/* <Pdf/> */}
@@ -626,6 +663,19 @@ const Table: React.FC = () => {
             </button>
           );
         }}
+        renderDetailPanel={({ row }) => {
+          return (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                maxWidth: "1000px",
+              }}
+            >
+              <PDFViewer path={row.original.filePath} />
+            </Box>
+          );
+        }}
       />
       <CreateNewAccountModal
         columns={columns}
@@ -654,6 +704,10 @@ export const CreateNewAccountModal = ({
   const [file, setFile] = useState<File | null>(null);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [selectedValue, setSelectedValue] = useState("option2");
+  const [device, setDevice] = useState<any>({
+    id: "",
+    name: "",
+  });
 
   const [values, setValues] = useState<any>(() =>
     columns.reduce((acc, column) => {
@@ -661,6 +715,8 @@ export const CreateNewAccountModal = ({
       return acc;
     }, {} as any)
   );
+
+  console.log("=>", values);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -749,6 +805,39 @@ export const CreateNewAccountModal = ({
 
   const sortedColumns = [...columns]; // Creamos una copia del array original
   sortedColumns.sort((a, b) => a.id - b.id); // Ordenamos las columnas por su id
+
+  const loadOptions = async (
+    inputValue: string,
+    resource: string,
+    mapFunction: (item: any) => ResourceOption
+  ): Promise<ResourceOption[]> => {
+    return new Promise((resolve, reject) => {
+      let timer;
+      const endpoint = `${apiUrl}/${resource}`; // Construye la URL del endpoint
+      const fetchData = async () => {
+        try {
+          const response = await axios.get(endpoint, {
+            params: { q: inputValue },
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          });
+          const data = response.data;
+          const options = data.map((item: any) => mapFunction(item));
+          console.log("🚀 ~ fetchData ~ options:", options);
+          resolve(options); // Aplica la función de mapeo
+        } catch (error) {
+          console.error("Error al cargar opciones:", error);
+          reject(error);
+        }
+      };
+      if (timer) {
+        clearTimeout(timer);
+      }
+
+      timer = setTimeout(fetchData, 1000); // Establecer el debounce en 1000ms
+    });
+  };
 
   return (
     <Dialog open={open}>
@@ -867,6 +956,27 @@ export const CreateNewAccountModal = ({
 
                   case "selectDeviceId":
                     return (
+                      // <AsyncSelect
+                      //   cacheOptions
+                      //   // defaultOptions
+                      //   loadOptions={(inputValue) =>
+                      //     loadOptions(inputValue, "devices", mapDevices)
+                      //   }
+                      //   onChange={(selectedOption: any) =>
+                      //     setDevice({
+                      //       id: selectedOption.value,
+                      //       name: selectedOption.label,
+                      //     })
+                      //   }
+                      //   placeholder="Buscar Producto"
+                      //   // defaultValue={
+                      //   //   id && {
+                      //   //     value: index,
+                      //   //     label: productName,
+                      //   //   }
+                      //   // }
+                      //   styles={styles}
+                      // />
                       <AutoComplete
                         key={index}
                         endpoint={`${apiUrl}/devices`}
@@ -976,5 +1086,10 @@ const validateEmail = (email: string) =>
       /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
     );
 const validateAge = (age: number) => age >= 18 && age <= 50;
+
+const mapDevices = (option: any): ResourceOption => ({
+  value: option.id,
+  label: option.name,
+});
 
 export default Table;

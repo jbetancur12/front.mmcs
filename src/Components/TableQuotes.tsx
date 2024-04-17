@@ -1,12 +1,37 @@
-import { Download, Edit, Print, Visibility } from "@mui/icons-material";
-import { Box, Button, Tooltip } from "@mui/material";
+import {
+  CheckCircle,
+  Download,
+  Edit,
+  ErrorOutline,
+  Print,
+  Visibility,
+} from "@mui/icons-material";
+import {
+  Box,
+  Button,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  Stack,
+  Step,
+  Stepper,
+  Tooltip,
+  Typography,
+  Table as MuiTable,
+  TableHead,
+  TableCell,
+  TableRow,
+  TableBody,
+  styled,
+} from "@mui/material";
 import axios from "axios";
 import { MaterialReactTable, type MRT_ColumnDef } from "material-react-table";
 import React, { useEffect, useMemo, useState } from "react";
 import { Toaster } from "react-hot-toast";
 import { api } from "../config";
 import { MRT_Localization_ES } from "material-react-table/locales/es";
-import { format } from "date-fns";
+import { differenceInDays, differenceInMinutes, format } from "date-fns";
 
 import { Link } from "react-router-dom";
 import { BlobProvider, PDFDownloadLink } from "@react-pdf/renderer";
@@ -24,18 +49,53 @@ export interface QuoteData {
   taxTotal: number;
   discountTotal: number;
   observations: string;
+  comments: any;
+  otherFields: any;
   customer: {
     nombre: string;
     email: string;
     telefono: string;
     direccion: string;
     ciudad: string;
+    identificacion: string;
   };
   createdAt: string;
+  status: Record<string, any>;
 }
 
 // API URL
 const apiUrl = api();
+
+export const statusOptions: any = {
+  created: "Creada",
+  sent: "Enviada",
+  accepted: "Aceptada",
+  rejected: "Rechazada",
+  delivered: "Entregada",
+  canceled: "Cancelada",
+  invoiced: "Facturada",
+  paid: "Pagada",
+  pending: "Pendiente",
+  onCalibration: "En calibración",
+  onMaintenance: "En mantenimiento",
+};
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  fontWeight: "bold",
+  // backgroundColor: theme.palette.common.black,
+  // color: theme.palette.common.white,
+  border: "none", // Eliminar bordes
+  fontFamily: "Roboto",
+  lineHeight: 0.1,
+  marginBottom: 20,
+}));
+
+const StyledTableBodycell = styled(TableCell)(({ theme }) => ({
+  border: "none", // Eliminar bordes
+  fontFamily: "Roboto",
+  paddingTop: 0,
+  paddingBottom: 0,
+}));
 
 // Main component
 const Table: React.FC = () => {
@@ -73,6 +133,7 @@ const Table: React.FC = () => {
         accessorKey: "id",
         header: "# Cotización",
         size: 80,
+        Cell: ({ row }) => <Box>VT-{row.original.id}</Box>,
       },
       {
         accessorKey: "customer.nombre",
@@ -80,11 +141,37 @@ const Table: React.FC = () => {
         size: 100,
       },
       {
-        accessorKey: "createdAt",
-        header: "Fecha",
+        accessorKey: "status",
+        header: "Estado",
         size: 50,
-        Cell: ({ row }) =>
-          format(new Date(row.original.createdAt), "yyyy-MM-dd"),
+        Cell: ({ row }) => {
+          const status = row.original.status[row.original.status.length - 1];
+          const dateDifference = differenceInDays(
+            new Date(),
+            new Date(status.date)
+          );
+
+          // Verificar si el estado es "onCalibration" o "onMaintenance" y han pasado más de 10 días
+          const isOverdue =
+            (status.status === "onCalibration" ||
+              status.status === "onMaintenance") &&
+            dateDifference > 10;
+
+          return (
+            <Box
+              sx={{
+                fontWeight: "bold",
+                color: isOverdue
+                  ? "#f44336"
+                  : status.status === "delivered"
+                  ? "#4CAF50"
+                  : "inherit",
+              }}
+            >
+              {statusOptions[status.status]}
+            </Box>
+          );
+        },
       },
       {
         accessorKey: "total",
@@ -95,6 +182,13 @@ const Table: React.FC = () => {
             style: "currency",
             currency: "COP",
           }).format(row.original.total),
+      },
+      {
+        accessorKey: "createdAt",
+        header: "Fecha",
+        size: 50,
+        Cell: ({ row }) =>
+          format(new Date(row.original.createdAt), "yyyy-MM-dd"),
       },
     ],
     [] // No hay dependencias específicas aquí
@@ -133,6 +227,9 @@ const Table: React.FC = () => {
             "& .Mui-TableHeadCell-Content": {
               justifyContent: "center",
             },
+            "& .Mui-TableBodyCell-DetailPanel": {
+              background: "#d6f7cf",
+            },
           },
         }}
         columns={columns}
@@ -153,23 +250,122 @@ const Table: React.FC = () => {
         // initialState={{
         //   columnVisibility: { id: false },
         // }}
-        // renderDetailPanel={({ row }) => (
-        //   <Box
-        //   // sx={{
-        //   //   alignItems: "center",
-        //   //   display: "flex",
-        //   //   justifyContent: "space-around",
-        //   //   left: "30px",
-        //   //   maxWidth: "1000px",
-        //   //   position: "sticky",
-        //   //   width: "100%",
-        //   // }}
-        //   >
-        //     <Box sx={{ textAlign: "center" }}>
-        //       <QuotePDFGenerator quoteData={row.original} />
-        //     </Box>
-        //   </Box>
-        // )}
+        renderDetailPanel={({ row }) => {
+          return (
+            // <Box
+            //   sx={{
+            //     alignItems: "center",
+            //     display: "flex",
+            //     justifyContent: "space-around",
+            //     left: "30px",
+            //     maxWidth: "1000px",
+            //     position: "sticky",
+            //     width: "100%",
+            //   }}
+            // >
+            //   <Box sx={{ textAlign: "center" }}>
+            //     <List
+            //       sx={{
+            //         width: "100%",
+            //         maxWidth: 360,
+            //         bgcolor: "background.paper",
+            //       }}
+            //     >
+            //       {row.original.status.map((status: any, index: number) => (
+            //         <React.Fragment key={index}>
+            //           <ListItem
+            //             key={index}
+            //             sx={{
+            //               display: "flex",
+            //               flexDirection: "column",
+            //               alignItems: "center",
+            //               padding: 2,
+            //               border:
+            //                 index === row.original.status.length - 1
+            //                   ? `2px solid ${
+            //                       status.status === "delivered"
+            //                         ? "#4caf50"
+            //                         : "#3f51b5"
+            //                     }`
+            //                   : "1px solid #ccc",
+            //               borderRadius: 5,
+            //             }}
+            //           >
+            //             <Typography variant="body1" color="text.primary">
+            //               Estado: {status.status}
+            //             </Typography>
+            //             <Typography variant="body2" color="text.secondary">
+            //               Fecha: {status.date}
+            //             </Typography>
+            //             <Typography variant="body2" color="text.secondary">
+            //               Usuario: {status.user}
+            //             </Typography>
+            //           </ListItem>
+            //           {index < row.original.status.length - 1 && <Divider />}
+            //         </React.Fragment>
+            //       ))}
+            //     </List>
+            //   </Box>
+            // </Box>
+            <MuiTable
+              sx={{
+                width: "550px",
+                border: "none",
+
+                borderRadius: "5px",
+                padding: "10px",
+                fontFamily: "Roboto",
+              }}
+              size="small"
+            >
+              <TableHead>
+                <TableRow>
+                  <StyledTableCell>Fecha</StyledTableCell>
+                  <StyledTableCell>Estado</StyledTableCell>
+                  <StyledTableCell>Usuario</StyledTableCell>
+                  <StyledTableCell>Observaciones</StyledTableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {row.original.status.map((status: any, index: number) => {
+                  const dateDifference = differenceInDays(
+                    new Date(),
+                    new Date(status.date)
+                  );
+
+                  // Verificar si el estado es "onCalibration" o "onMaintenance" y han pasado más de 10 días
+                  const isOverdue =
+                    (status.status === "onCalibration" ||
+                      status.status === "onMaintenance") &&
+                    dateDifference > 1;
+                  return (
+                    <TableRow
+                      key={index}
+                      sx={{
+                        background: isOverdue
+                          ? "#f44336"
+                          : status.status === "delivered"
+                          ? "#4CAF50"
+                          : "inherit",
+                      }}
+                    >
+                      <StyledTableBodycell component="th" scope="row">
+                        {format(new Date(status.date), "yyyy-MM-dd HH:mm")}
+                      </StyledTableBodycell>
+                      <StyledTableBodycell>
+                        {statusOptions[status.status]}
+                      </StyledTableBodycell>
+                      <StyledTableBodycell>{status.user}</StyledTableBodycell>
+                      <StyledTableBodycell>
+                        {status.comments}
+                      </StyledTableBodycell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </MuiTable>
+          );
+        }}
         renderRowActions={({ row }) => {
           return (
             <Box

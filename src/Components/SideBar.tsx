@@ -114,11 +114,62 @@ const SideBar: React.FC = () => {
                   pathData="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"
                 />
               </li>
-              {/* 
+
               <li>
-                <a
-                  href="https://flowbite-admin-dashboard.vercel.app/settings/"
-                  className="flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700 "
+                <DropdownButton
+                  buttonText="Perfiles"
+                  rol={$userStore.rol}
+                  menuItems={[
+                    {
+                      label: "Crear Perfil",
+                      url: "profiles/new",
+                      roles: ["admin"],
+                    },
+                    {
+                      label: "Perfiles",
+                      url: "profiles",
+                      roles: ["admin"],
+                    },
+
+                    // { label: "Sidebar", url: "https://flowbite-admin-dashboard.vercel.app/layouts/sidebar/" },
+                  ]}
+                  pathData="M10 12c3.785 0 6.958 2.214 7.784 6H2.216c.826-3.786 3.999-6 7.784-6M6 6c0-2.206 1.794-4 4-4s4 1.794 4 4-1.794 4-4 4-4-1.794-4-4m7.758 4.673A5.983 5.983 0 0 0 16 6a6 6 0 1 0-9.758 4.673C2.583 12.048 0 15.445 0 20h20c0-4.555-2.583-7.952-6.242-9.327"
+                />
+              </li>
+              <li>
+                <Link
+                  to="trazabilidad"
+                  className="flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700"
+                >
+                  <svg
+                    className="w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                    <g
+                      id="SVGRepo_tracerCarrier"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    ></g>
+                    <g id="SVGRepo_iconCarrier">
+                      {" "}
+                      <path
+                        fillRule="evenodd"
+                        d="M11,16 L4,16 C2.92670537,16 2,15.2056811 2,14.1428571 L2,9.85714286 C2,8.79431889 2.92670537,8 4,8 L11,8 L11,2 L13,2 L13,8 L20,8 C21.0732946,8 22,8.79431889 22,9.85714286 L22,14.1428571 C22,15.2056811 21.0732946,16 20,16 L13,16 L13,22 L11,22 L11,16 Z M4,10 L4,14 L20,14 L20,10 L4,10 Z"
+                      ></path>{" "}
+                    </g>
+                  </svg>
+                  <span className="ml-3" sidebar-toggle-item="">
+                    Trazabilidad
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="settings"
+                  className="flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700"
                 >
                   <svg
                     className="w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"
@@ -136,8 +187,8 @@ const SideBar: React.FC = () => {
                   <span className="ml-3" sidebar-toggle-item="">
                     Settings
                   </span>
-                </a>
-              </li> */}
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

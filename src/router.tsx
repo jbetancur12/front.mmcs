@@ -18,6 +18,12 @@ import { Cotizaciones } from "./pages/Cotizaciones";
 import { ProductosServicios } from "./pages/ProductosServicios";
 import NewQuote from "./pages/NewQuote";
 import Quote from "./pages/Quote";
+import { Settings } from "./pages/Settings";
+import Profiles from "./pages/Profiles";
+import NewProfiles from "./pages/NewProfiles";
+import Profile from "./pages/Profile";
+import Traceability from "./pages/Traceability";
+import AnalyzeExcelComponent from "./pages/AnalyzeExcelComponent";
 
 function Router() {
   const protectedLayout = (
@@ -56,6 +62,13 @@ function Router() {
             <Route path="edit-quote/:id" element={<NewQuote />} />
             <Route path=":id" element={<Quote />} />
           </Route>
+          <Route path="profiles">
+            <Route index element={<Profiles />} />
+            <Route path="new" element={<NewProfiles />} />
+            <Route path=":id" element={<Profile />} />
+          </Route>
+          <Route path="settings" element={<Settings />} />
+          <Route path="trazabilidad" element={<Traceability />} />
           <Route
             path="productos-y-servicios"
             element={<ProductosServicios />}
@@ -64,6 +77,7 @@ function Router() {
         <Route path="/login" element={<Login />} />
         <Route path="/new-password" element={<NewPassword />} />
         <Route path="password-recovery" element={<PasswordRecovery />} />
+        <Route path="/analisis-excel" element={<AnalyzeExcelComponent />} />
       </Routes>
     </LocalizationProvider>
   );
