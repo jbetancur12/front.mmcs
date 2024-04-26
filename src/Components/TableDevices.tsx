@@ -22,11 +22,21 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { api } from "../config";
 import { MRT_Localization_ES } from "material-react-table/locales/es";
+import AsyncSelect from "react-select/async";
+
+import { loadOptions, mapOptions } from "../utils/loadOptions";
+import { RepositoryData } from "./Repository";
+import { styles } from "./ExcelManipulation/Utils";
 
 // Define interfaces
 export interface DeviceData {
   id: number;
   name: string;
+  magnitude: string;
+  repository: {
+    id: number;
+    name: string;
+  };
 }
 
 // API URL
@@ -36,6 +46,9 @@ const apiUrl = api();
 const Table: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState<DeviceData[]>([]);
+  const [_format, setFormat] = useState<{ labe: string; value: string } | null>(
+    null
+  );
   // const [filteredTableData, setFilteredTableData] = useState<DeviceData[]>([]);
 
   const [validationErrors, setValidationErrors] = useState<{
@@ -47,7 +60,11 @@ const Table: React.FC = () => {
     try {
       const response = await axios.post(
         `${apiUrl}/devices`,
-        { name: deviceData.name },
+        {
+          name: deviceData.name,
+          repository: deviceData.repository,
+          magnitude: deviceData.magnitude,
+        },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -245,6 +262,34 @@ const Table: React.FC = () => {
           ...getCommonEditTextFieldProps(cell),
         }),
       },
+      {
+        accessorKey: "magnitude",
+        header: "Magnitud",
+        // size: 150,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell),
+        }),
+      },
+      {
+        accessorKey: "repository.name",
+        header: "Formato",
+
+        Edit: () => (
+          <AsyncSelect
+            cacheOptions
+            // defaultOptions
+
+            placeholder="Buscar Formato"
+            loadOptions={(inputValue) =>
+              loadOptions<RepositoryData>(inputValue, "repositories", (item) =>
+                mapOptions(item, "id", "name")
+              )
+            }
+            onChange={(selectedOption: any) => setFormat(selectedOption) as any}
+            styles={styles(false)}
+          />
+        ),
+      },
     ],
     [getCommonEditTextFieldProps]
   );
@@ -334,6 +379,8 @@ export const CreateNewAccountModal = ({
     }, {} as any)
   );
 
+  console.log(values);
+
   const handleSubmit = () => {
     //put your validation logic here
     onSubmit(values);
@@ -353,17 +400,62 @@ export const CreateNewAccountModal = ({
             }}
           >
             {columns.map(
-              (column) =>
-                column.accessorKey !== "id" && (
-                  <TextField
-                    key={column.accessorKey}
-                    label={column.header}
-                    name={column.accessorKey}
-                    onChange={(e) =>
-                      setValues({ ...values, [e.target.name]: e.target.value })
-                    }
-                  />
-                )
+              (column) => {
+                if (column.accessorKey === "id") {
+                  return null;
+                }
+                if (column.accessorKey === "repository.name") {
+                  return (
+                    <AsyncSelect
+                      cacheOptions
+                      // defaultOptions
+                      placeholder="Buscar Formato"
+                      loadOptions={(inputValue) =>
+                        loadOptions<RepositoryData>(
+                          inputValue,
+                          "repositories",
+                          (item) => mapOptions(item, "id", "name")
+                        )
+                      }
+                      onChange={(selectedOption: any) =>
+                        setValues({
+                          ...values,
+                          repository: {
+                            id: selectedOption.value,
+                            name: selectedOption.label,
+                          },
+                        }) as any
+                      }
+                      styles={styles(false)}
+                    />
+                  );
+                } else {
+                  return (
+                    <TextField
+                      key={column.accessorKey}
+                      label={column.header}
+                      name={column.accessorKey}
+                      onChange={(e) =>
+                        setValues({
+                          ...values,
+                          [e.target.name]: e.target.value,
+                        })
+                      }
+                    />
+                  );
+                }
+              }
+
+              // column.accessorKey !== "id" && (
+              //   <TextField
+              //     key={column.accessorKey}
+              //     label={column.header}
+              //     name={column.accessorKey}
+              //     onChange={(e) =>
+              //       setValues({ ...values, [e.target.name]: e.target.value })
+              //     }
+              //   />
+              // )
             )}
           </Stack>
         </form>

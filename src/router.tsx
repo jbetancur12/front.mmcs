@@ -24,6 +24,10 @@ import NewProfiles from "./pages/NewProfiles";
 import Profile from "./pages/Profile";
 import Traceability from "./pages/Traceability";
 import AnalyzeExcelComponent from "./pages/AnalyzeExcelComponent";
+import ExcelManipulation from "./Components/ExcelManipulation/ExcelManipulation";
+import Repository from "./pages/Repository";
+import ScriptGenerator from "./Components/ScriptGenerator";
+import Gotemberg from "./Components/Gotemberg";
 
 function Router() {
   const protectedLayout = (
@@ -56,12 +60,17 @@ function Router() {
               <Route path=":id" element={<Certificates />} />
             </Route>
           </Route>
+          <Route path="analisis-excel" element={<AnalyzeExcelComponent />} />
+          <Route path="report" element={<ExcelManipulation />} />
           <Route path="cotizaciones">
             <Route index element={<Cotizaciones />} />
             <Route path="new-quote" element={<NewQuote />} />
             <Route path="edit-quote/:id" element={<NewQuote />} />
             <Route path=":id" element={<Quote />} />
           </Route>
+          <Route path="repositorio" element={<Repository />} />
+          <Route path="script" element={<ScriptGenerator />} />
+          <Route path="pdf" element={<Gotemberg />} />
           <Route path="profiles">
             <Route index element={<Profiles />} />
             <Route path="new" element={<NewProfiles />} />
@@ -77,7 +86,6 @@ function Router() {
         <Route path="/login" element={<Login />} />
         <Route path="/new-password" element={<NewPassword />} />
         <Route path="password-recovery" element={<PasswordRecovery />} />
-        <Route path="/analisis-excel" element={<AnalyzeExcelComponent />} />
       </Routes>
     </LocalizationProvider>
   );

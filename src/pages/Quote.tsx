@@ -6,39 +6,40 @@ import { api } from "../config";
 import { ArrowBack } from "@mui/icons-material";
 
 import QuotePDFGenerator from "../Components/QuotePDFGenerator";
+import { QuoteData } from "../Components/TableQuotes";
 
 const apiUrl = api();
 
-interface Product {
-  name: string;
-  price: number;
-  quantity: number;
-}
+// interface Product {
+//   name: string;
+//   price: number;
+//   quantity: number;
+// }
 
-interface Customer {
-  id: number;
-  nombre: string;
-  email: string;
-  telefono: string;
-  direccion: string;
-  ciudad: string;
-}
+// interface Customer {
+//   id: number;
+//   nombre: string;
+//   email: string;
+//   telefono: string;
+//   direccion: string;
+//   ciudad: string;
+// }
 
-export interface QuoteData {
-  id: number;
-  customerId: number;
-  products: Product[];
-  subtotal: number;
-  discountRatio: number;
-  total: number;
-  taxRatio: number;
-  taxTotal: number;
-  discountTotal: number;
-  observations: string;
-  createdAt: string;
-  updatedAt: string;
-  customer: Customer;
-}
+// export interface QuoteData {
+//   id: number;
+//   customerId: number;
+//   products: Product[];
+//   subtotal: number;
+//   discountRatio: number;
+//   total: number;
+//   taxRatio: number;
+//   taxTotal: number;
+//   discountTotal: number;
+//   observations: string;
+//   createdAt: string;
+//   updatedAt: string;
+//   customer: Customer;
+// }
 
 const Quote = () => {
   const [quoteData, setQuoteData] = useState<QuoteData | null>(null);
@@ -80,91 +81,7 @@ const Quote = () => {
         startIcon={<ArrowBack />}
         sx={{ mb: 2 }}
       />
-      {/* <Typography variant="h4" mb={2}>
-        <span style={{ color: "#ff5722" }}>Cotización #{quoteData.id}</span>
-      </Typography>
-      <Typography variant="subtitle1">
-        <span style={{ fontWeight: "bold" }}>Fecha:</span>{" "}
-        {format(new Date(quoteData.createdAt), "yyyy-MM-dd")}
-      </Typography>
-      <Typography variant="subtitle1">
-        <span style={{ fontWeight: "bold" }}>Cliente:</span>{" "}
-        {quoteData.customer.nombre}
-      </Typography>
-      <Typography variant="h6" mt={4}>
-        <span style={{ color: "#ff5722" }}>Productos y/o Servicios:</span>
-      </Typography>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow style={{ backgroundColor: "#f5f5f5" }}>
-              <TableCell style={{ fontWeight: "bold" }}>Nombre</TableCell>
-              <TableCell align="right" style={{ fontWeight: "bold" }}>
-                Precio
-              </TableCell>
-              <TableCell align="right" style={{ fontWeight: "bold" }}>
-                Cantidad
-              </TableCell>
-              <TableCell align="right" style={{ fontWeight: "bold" }}>
-                Total
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {quoteData.products.map((product, index) => (
-              <TableRow key={index}>
-                <TableCell>{product.name}</TableCell>
-                <TableCell align="right">
-                  $
-                  {product.price.toLocaleString("es-ES", {
-                    minimumFractionDigits: 2,
-                  })}
-                </TableCell>
-                <TableCell align="right">{product.quantity}</TableCell>
-                <TableCell align="right">
-                  $
-                  {(product.price * product.quantity).toLocaleString("es-ES", {
-                    minimumFractionDigits: 2,
-                  })}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <Typography variant="subtitle1" mt={4}>
-        <span style={{ fontWeight: "bold" }}>Resumen:</span>
-      </Typography>
-      <Typography variant="body1">
-        <span style={{ fontWeight: "bold" }}>Subtotal:</span> $
-        {quoteData.subtotal.toLocaleString("es-ES", {
-          minimumFractionDigits: 2,
-        })}
-      </Typography>
-      <Typography variant="body1">
-        <span style={{ fontWeight: "bold" }}>Descuento:</span>{" "}
-        {quoteData.discountRatio}% ($
-        {quoteData.discountTotal.toLocaleString("es-ES", {
-          minimumFractionDigits: 2,
-        })}
-        )
-      </Typography>
-      <Typography variant="body1">
-        <span style={{ fontWeight: "bold" }}>IVA:</span> {quoteData.taxRatio}%
-        ($
-        {quoteData.taxTotal.toLocaleString("es-ES", {
-          minimumFractionDigits: 2,
-        })}
-        )
-      </Typography>
-      <Typography variant="h6">
-        <span style={{ color: "#ff5722", fontWeight: "bold" }}>Total:</span> $
-        {quoteData.total.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
-      </Typography>
-      <Typography variant="body1" mt={2}>
-        <span style={{ fontWeight: "bold" }}>Observaciones:</span>{" "}
-        {quoteData.observations}
-      </Typography> */}
+
       <QuotePDFGenerator quoteData={quoteData} />
     </Box>
   );

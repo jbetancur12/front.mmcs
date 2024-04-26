@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { userStore } from "../../store/userStore";
 import { api } from "../../config";
+import toast from "react-hot-toast";
 
 interface RequireAuthProps {
   children: React.ReactNode;
@@ -41,11 +42,13 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
         userStore.set(userData.user);
         setLoading(false);
       } catch (error) {
-        console.error("Error al obtener los datos del usuario:", error);
         setLoading(false);
         setError("No se pudo validar el token"); // Mensaje de error informativo
         setAuthenticationError(true);
-        navigate("/login"); // Redirigir al usuario a la página de inicio de sesión en caso de error
+        toast("Su sesión se cerrar en 10 segundos");
+        setTimeout(() => {
+          navigate("/login");
+        }, 10000); // Mostrar un mensaje de error al usuario
       }
     };
 

@@ -115,7 +115,7 @@ const SideBar: React.FC = () => {
                 />
               </li>
 
-              <li>
+              {/* <li>
                 <DropdownButton
                   buttonText="Perfiles"
                   rol={$userStore.rol}
@@ -135,8 +135,8 @@ const SideBar: React.FC = () => {
                   ]}
                   pathData="M10 12c3.785 0 6.958 2.214 7.784 6H2.216c.826-3.786 3.999-6 7.784-6M6 6c0-2.206 1.794-4 4-4s4 1.794 4 4-1.794 4-4 4-4-1.794-4-4m7.758 4.673A5.983 5.983 0 0 0 16 6a6 6 0 1 0-9.758 4.673C2.583 12.048 0 15.445 0 20h20c0-4.555-2.583-7.952-6.242-9.327"
                 />
-              </li>
-              <li>
+              </li> */}
+              {/* <li>
                 <Link
                   to="trazabilidad"
                   className="flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700"
@@ -165,8 +165,36 @@ const SideBar: React.FC = () => {
                     Trazabilidad
                   </span>
                 </Link>
-              </li>
+              </li> */}
               <li>
+                {/* <Link
+                  to="repositorio"
+                  className="flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700"
+                >
+                  <svg
+                    className="w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M13.5 8H4m0-2v13a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1h-5.032a1 1 0 0 1-.768-.36l-1.9-2.28a1 1 0 0 0-.768-.36H5a1 1 0 0 0-1 1Z"
+                    />
+                  </svg>
+
+                  <span className="ml-3" sidebar-toggle-item="">
+                    Repositorio
+                  </span>
+                </Link> */}
+              </li>
+              {/* <li>
                 <Link
                   to="settings"
                   className="flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700"
@@ -188,7 +216,7 @@ const SideBar: React.FC = () => {
                     Settings
                   </span>
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </div>
         </div>

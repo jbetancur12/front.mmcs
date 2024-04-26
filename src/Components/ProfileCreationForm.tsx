@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import {
-  TextField,
-  Button,
-  Container,
-  Typography,
-  Avatar,
-} from "@mui/material";
+import { TextField, Button, Container, Avatar } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import axios from "axios";
 import { api } from "../config";

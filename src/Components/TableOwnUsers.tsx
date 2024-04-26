@@ -180,20 +180,34 @@ const TableOwnUsers: React.FC = () => {
       {
         accessorKey: "rol",
         header: "Rol",
-        Edit: ({ cell }) => {
-          let value = cell.renderValue();
-          return (
-            <Select
-              defaultValue={cell.renderValue()}
-              onChange={(e) => (value = e.target.value)}
-              fullWidth
-            >
-              <MenuItem value="admin">Administrador</MenuItem>
-              <MenuItem value="metrologist">Metrologista</MenuItem>
-              <MenuItem value="secretary">Secretario</MenuItem>
-            </Select>
-          );
-        },
+        Edit: ({ cell }) => (
+          <Select
+            defaultValue={cell.renderValue()}
+            onChange={(e) => {
+              const newValue = e.target.value;
+              console.log("Nuevo valor seleccionado:", newValue);
+            }}
+            fullWidth
+          >
+            <MenuItem value="admin">Administrador</MenuItem>
+            <MenuItem value="metrologist">Metrologista</MenuItem>
+            <MenuItem value="secretary">Secretario</MenuItem>
+          </Select>
+        ),
+        // Edit: ({ cell }) => {
+        //   let value = cell.renderValue();
+        //   return (
+        //     <Select
+        //       defaultValue={cell.renderValue()}
+        //       onChange={(e) => (value = e.target.value)}
+        //       fullWidth
+        //     >
+        //       <MenuItem value="admin">Administrador</MenuItem>
+        //       <MenuItem value="metrologist">Metrologista</MenuItem>
+        //       <MenuItem value="secretary">Secretario</MenuItem>
+        //     </Select>
+        //   );
+        // },
       },
     ],
     [getCommonEditTextFieldProps] // No hay dependencias específicas aquí

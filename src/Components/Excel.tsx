@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import * as XLSX from "xlsx";
 
 const AnalyzeExcelComponent: React.FC = () => {
-  const [file, setFile] = useState<File | null>(null);
+  const [, setFile] = useState<File | null>(null);
   const [data, setData] = useState<any[]>([]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {

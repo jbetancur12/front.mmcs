@@ -1,29 +1,14 @@
-import {
-  CheckCircle,
-  Download,
-  Edit,
-  ErrorOutline,
-  Print,
-  Visibility,
-} from "@mui/icons-material";
+import { Download, Edit, Print, Visibility } from "@mui/icons-material";
 import {
   Box,
   Button,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  Stack,
-  Step,
-  Stepper,
-  Tooltip,
-  Typography,
-  Table as MuiTable,
   TableHead,
   TableCell,
   TableRow,
   TableBody,
   styled,
+  Table as MuiTable,
+  Tooltip,
 } from "@mui/material";
 import axios from "axios";
 import { MaterialReactTable, type MRT_ColumnDef } from "material-react-table";
@@ -31,7 +16,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Toaster } from "react-hot-toast";
 import { api } from "../config";
 import { MRT_Localization_ES } from "material-react-table/locales/es";
-import { differenceInDays, differenceInMinutes, format } from "date-fns";
+import { differenceInDays, format } from "date-fns";
 
 import { Link } from "react-router-dom";
 import { BlobProvider, PDFDownloadLink } from "@react-pdf/renderer";
@@ -80,7 +65,7 @@ export const statusOptions: any = {
   onMaintenance: "En mantenimiento",
 };
 
-const StyledTableCell = styled(TableCell)(({ theme }) => ({
+const StyledTableCell = styled(TableCell)(() => ({
   fontWeight: "bold",
   // backgroundColor: theme.palette.common.black,
   // color: theme.palette.common.white,
@@ -90,7 +75,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   marginBottom: 20,
 }));
 
-const StyledTableBodycell = styled(TableCell)(({ theme }) => ({
+const StyledTableBodycell = styled(TableCell)(() => ({
   border: "none", // Eliminar bordes
   fontFamily: "Roboto",
   paddingTop: 0,

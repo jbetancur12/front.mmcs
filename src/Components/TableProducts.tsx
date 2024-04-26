@@ -18,6 +18,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { api } from "../config";
 import { MRT_Localization_ES } from "material-react-table/locales/es";
+import { NumericFormatCustom } from "./NumericFormatCustom";
 
 // Define interfaces
 export interface ProductData {
@@ -34,6 +35,7 @@ const apiUrl = api();
 const TableProducts: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [tableData, setTableData] = useState<ProductData[]>([]);
+  const [price, setPrice] = useState(0);
   const [validationErrors, setValidationErrors] = useState<{
     [cellId: string]: string;
   }>({});
@@ -162,7 +164,10 @@ const TableProducts: React.FC = () => {
   const handleSaveRowEdits: MaterialReactTableProps<ProductData>["onEditingRowSave"] =
     async ({ exitEditingMode, row, values }) => {
       if (!Object.keys(validationErrors).length) {
-        const updatedValues = { ...values };
+        const updatedValues = {
+          ...values,
+          price: price > 0 ? price : values.price,
+        };
         delete updatedValues.id;
         try {
           const response = await axios.put(
@@ -180,7 +185,7 @@ const TableProducts: React.FC = () => {
               duration: 4000,
               position: "top-center",
             });
-            tableData[row.index] = values;
+            tableData[row.index] = { ...values, ...updatedValues };
             setTableData([...tableData]);
           } else {
             console.error("Error al modificar producto");
@@ -261,6 +266,15 @@ const TableProducts: React.FC = () => {
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
         }),
+        Edit: ({ row }) => (
+          <TextField
+            value={row.getValue("price")}
+            onChange={(e) => setPrice(parseFloat(e.target.value))}
+            InputProps={{
+              inputComponent: NumericFormatCustom as any,
+            }}
+          />
+        ),
       },
     ],
     [getCommonEditTextFieldProps] // No hay dependencias específicas aquí
@@ -394,7 +408,7 @@ const TableProducts: React.FC = () => {
           </button>
         )}
       />
-      <CreateNewAccountModal
+      <CreateNewProductModal
         columns={columns}
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
@@ -412,7 +426,7 @@ interface CreateModalProps {
 }
 
 //example of creating a mui dialog modal for creating new rows
-export const CreateNewAccountModal = ({
+export const CreateNewProductModal = ({
   open,
   columns,
   onClose,
@@ -443,19 +457,44 @@ export const CreateNewAccountModal = ({
               gap: "1.5rem",
             }}
           >
-            {columns.map(
-              (column) =>
-                column.accessorKey !== "id" && (
-                  <TextField
-                    key={column.accessorKey}
-                    label={column.header}
-                    name={column.accessorKey}
-                    onChange={(e) =>
-                      setValues({ ...values, [e.target.name]: e.target.value })
-                    }
-                  />
-                )
-            )}
+            {columns.map((column) => {
+              if (column.accessorKey !== "id") {
+                switch (column.accessorKey) {
+                  case "price":
+                    return (
+                      <TextField
+                        key={column.accessorKey}
+                        label="Precio"
+                        name={column.accessorKey}
+                        onChange={(e) =>
+                          setValues({
+                            ...values,
+                            [e.target.name]: e.target.value,
+                          })
+                        }
+                        InputProps={{
+                          inputComponent: NumericFormatCustom as any,
+                        }}
+                      />
+                    );
+
+                  default:
+                    return (
+                      <TextField
+                        key={column.accessorKey}
+                        label={column.header}
+                        name={column.accessorKey}
+                        onChange={(e) =>
+                          setValues({
+                            ...values,
+                            [e.target.name]: e.target.value,
+                          })
+                        }
+                      />
+                    );
+                }
+              }
+            })}
           </Stack>
         </form>
       </DialogContent>

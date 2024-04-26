@@ -15,6 +15,8 @@ interface Props {
   quoteData: QuoteData | null;
 }
 
+const mainColor = "#4472C4";
+
 const QuotePDF: React.FC<Props> = ({ quoteData }) => {
   const tw = createTw({
     theme: {
@@ -61,7 +63,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
       flex: 1,
       textAlign: "center",
       //   height: 20,
-      backgroundColor: "#9AF18B",
+      backgroundColor: mainColor,
       borderColor: "whitesmoke",
       borderRightWidth: 1,
       borderBottomWidth: 1,
@@ -99,7 +101,11 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
       borderBottomWidth: 1,
     },
     descContainer2: {
-      backgroundColor: "#9AF18B",
+      backgroundColor: mainColor,
+    },
+    widthLogo: {
+      width: 60,
+      marginLeft: 30,
     },
     width25: {
       width: "25%",
@@ -176,13 +182,19 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
       <View style={[styles.width50, tw("border-r flex justify-center")]}>
         <Text style={[tw("text-center top-1")]}>METROMEDICS</Text>
         <Text style={tw("border-b mt-2")}></Text>
-        <Text style={[tw("text-center text-sm top-1"), styles.fontBold]}>
+        {/* <Text style={[tw("text-center text-sm top-1"), styles.fontBold]}>
           OFERTA COMERCIAL Y CONDICIONES DE {"\n"} SERVICIO DE VENTA DE EQUIPOS
           E INSUMOS
+        </Text> */}
+        <Text style={[tw("text-center text-sm top-1"), styles.fontBold]}>
+          OFERTA COMERCIAL
         </Text>
       </View>
       <View style={styles.width25}>
-        <Image style={tw("top-3 p-2")} src="/images/logo2.png"></Image>
+        <Image
+          style={[tw("top-1  p-2"), styles.widthLogo]}
+          src="/images/logo3.jpeg"
+        ></Image>
       </View>
     </View>
   );
@@ -327,38 +339,42 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
   );
 
   const TableBody = () =>
-    quoteData?.products.map((product: any, idx: number) => (
-      <View key={product.id}>
-        <View style={{ width: "100%", flexDirection: "row" }}>
-          <View style={[styles.tbody, styles.alignCenter]}>
-            <Text>{idx + 1}</Text>
-          </View>
-          <View style={[styles.tbody, styles.tbody2]}>
-            <Text>{product.name}</Text>
-          </View>
-          <View style={[styles.tbody, styles.alignCenter]}>
-            <Text>{product.quantity}</Text>
-          </View>
-          <View style={[styles.tbody, styles.alignCenter]}>
-            <Text>
-              ${" "}
-              {product.price.toLocaleString("es-ES", {
-                minimumFractionDigits: 2,
-              })}{" "}
-            </Text>
-          </View>
+    quoteData?.products.map((product: any, idx: number) => {
+      const { id, name, quantity, price } = product;
+      const total = quantity * price;
+      return (
+        <View key={id}>
+          <View style={{ width: "100%", flexDirection: "row" }}>
+            <View style={[styles.tbody, styles.alignCenter]}>
+              <Text>{idx + 1}</Text>
+            </View>
+            <View style={[styles.tbody, styles.tbody2]}>
+              <Text>{name}</Text>
+            </View>
+            <View style={[styles.tbody, styles.alignCenter]}>
+              <Text>{quantity}</Text>
+            </View>
+            <View style={[styles.tbody, styles.alignCenter]}>
+              <Text>
+                ${" "}
+                {price.toLocaleString("es-ES", {
+                  minimumFractionDigits: 2,
+                })}{" "}
+              </Text>
+            </View>
 
-          <View style={[styles.tbody, styles.alignCenter]}>
-            <Text>
-              ${" "}
-              {(product.price * product.quantity).toLocaleString("es-ES", {
-                minimumFractionDigits: 2,
-              })}
-            </Text>
+            <View style={[styles.tbody, styles.alignCenter]}>
+              <Text>
+                ${" "}
+                {total.toLocaleString("es-ES", {
+                  minimumFractionDigits: 2,
+                })}{" "}
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
-    ));
+      );
+    });
 
   const TableTotal = () => (
     <View style={{ width: "100%", flexDirection: "row" }}>
@@ -477,7 +493,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
   const Observations = () => (
     <View style={tw("border border-black text-sm")}>
       <View>
-        <Text style={tw("px-1 font-semibold bg-[#9AF18B] pt-1")}>
+        <Text style={tw(`px-1 pt-1 font-semibold bg-[${mainColor}]`)}>
           Comentarios:
         </Text>
       </View>
@@ -498,7 +514,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
 
   const GeneralConditions = () => (
     <View style={tw("border mt-5 border-black text-sm")}>
-      <Text style={tw("px-1 py-1 font-semibold bg-[#9AF18B] ")}>
+      <Text style={tw(`px-1 py-1 font-semibold bg-[${mainColor}]`)}>
         Condiciones Generales:
       </Text>
       <Text style={tw("border-t p-2 min-h-28")}>
@@ -514,7 +530,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
 
   const PaymentConditions = () => (
     <View style={tw("mt-5  border border-black text-sm")}>
-      <Text style={tw("p-1 font-semibold bg-[#9AF18B] ")}>
+      <Text style={tw(`p-1 font-semibold bg-[${mainColor}]`)}>
         Condiciones de pago:
       </Text>
       <Text style={tw("border-t p-2 min-h-28")}>
@@ -524,7 +540,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
   );
   const DeliveryConditions = () => (
     <View style={tw("mt-5  border border-black text-sm")}>
-      <Text style={tw("p-1 font-semibold bg-[#9AF18B] ")}>
+      <Text style={tw(`p-1 font-semibold bg-[${mainColor}]`)}>
         Condiciones de Entrega:
       </Text>
       <Text style={tw("border-t p-2 min-h-28")}>

@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
-import { Box, Button, Input, Paper, Stack, TextField } from "@mui/material";
+import { Box, Button, Stack, TextField } from "@mui/material";
 import AsyncSelect from "react-select/async";
 import { api } from "../config";
 import axios from "axios";
 import { DatePicker } from "@mui/x-date-pickers";
+import toast, { Toaster } from "react-hot-toast";
+import { set } from "date-fns";
 // Importa los componentes de MUI
 
 const apiUrl = api();
 
-interface ResourceOption {
+export interface ResourceOption {
   value: string;
   label: string;
 }
@@ -19,18 +21,20 @@ const AnalyzeExcelComponent: React.FC = () => {
   const [data, setData] = useState<any[]>([]);
   const [city, setCity] = useState<string>("");
   const [location, setLocation] = useState<string>("");
-  const [headquarters, setHeadquartes] = useState<string>("");
+  const [headquarters, setHeadquartes] = useState<string>();
   const [fixedAsset, setFixedAsset] = useState<string>("");
   const [serialNumber, setSerialNumber] = useState<string>("");
   const [certificateDate, setCertificateDate] = useState<Date | null>(null);
-
+  const [missedData, setMissedData] = useState<{
+    device: string;
+    customer: string;
+  }>({ device: "", customer: "" });
   const [device, setDevice] = useState<ResourceOption | null>(null);
   const [customer, setCustomer] = useState<ResourceOption | null>(null);
   const [typeOfCertificate, setTypeOfCertificate] = useState<{
     id: string;
     name: string;
   } | null>({ id: "3", name: "Calibración" });
-
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const validateFields = () => {
@@ -89,7 +93,7 @@ const AnalyzeExcelComponent: React.FC = () => {
           });
           const data = response.data;
           const options = data.map((item: any) => mapFunction(item));
-          console.log("🚀 ~ fetchData ~ options:", options);
+
           resolve(options); // Aplica la función de mapeo
         } catch (error) {
           console.error("Error al cargar opciones:", error);
@@ -115,12 +119,13 @@ const AnalyzeExcelComponent: React.FC = () => {
         if (e.target) {
           const binaryString = e.target.result as string; // Asegúrate de que sea de tipo string
           const workbook = XLSX.read(binaryString, { type: "binary" });
-          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+          const worksheet = workbook.Sheets["CC"];
           const jsonData = XLSX.utils.sheet_to_json(worksheet, {
             header: 1,
             raw: false,
             dateNF: "yyyy-mm-dd",
           });
+          console.log(jsonData);
 
           setData(jsonData);
         }
@@ -133,15 +138,18 @@ const AnalyzeExcelComponent: React.FC = () => {
     // Aquí puedes analizar las celdas necesarias
     // Por ejemplo, obtener el valor de una celda específica
     if (data.length > 0) {
-      console.log(data);
-      setSerialNumber(data[3][1]);
-      setCity(data[7][1]);
-      setFixedAsset(data[5][1]);
-      setHeadquartes(data[6][1]);
-      findDevice(data[0][1]);
-      findCustomer(data[8][1]);
-      console.log(data[9][1]);
-      setCertificateDate(new Date(data[9][1]));
+      setSerialNumber(data[17][2]);
+
+      setCity(data[34][2]);
+
+      setFixedAsset(data[19][2]);
+
+      setLocation(data[21][2]);
+      setHeadquartes("Sin Información");
+
+      findDevice(data[11][2]);
+      findCustomer(data[30][2]);
+      setCertificateDate(new Date(data[40][2]));
     }
   };
 
@@ -161,9 +169,15 @@ const AnalyzeExcelComponent: React.FC = () => {
           label: devices[0].name,
         };
         setDevice(deviceData);
+        return;
+      } else {
+        toast.error("Instrumento no encontrado");
+        setMissedData({ ...missedData, device: name });
+        return;
       }
     } catch (error) {
       console.error("Error al buscar dispositivo:", error);
+      toast.error("Instrumento no encontrado");
     }
   };
 
@@ -176,13 +190,20 @@ const AnalyzeExcelComponent: React.FC = () => {
         },
       });
       const customers = response.data;
+
       if (customers.length > 0) {
         // setDevice({ id: customers[0].id, name: customers[0].name });
         const customerData = {
           value: customers[0].id,
           label: customers[0].nombre,
         };
+
         setCustomer(customerData);
+        return;
+      } else {
+        setMissedData({ ...missedData, customer: name });
+        toast.error("Cliente no encontrado");
+        return;
       }
     } catch (error) {
       console.error("Error al buscar dispositivo:", error);
@@ -200,6 +221,12 @@ const AnalyzeExcelComponent: React.FC = () => {
 
     setValidationError(null);
 
+    // const dateFormated = new Date(
+    //   format(certificateDate as Date, "yyyy-MM-dd")
+    // );
+
+    // const nextCalibrationDate = addYears(dateFormated, 1);
+
     const nextCalibrationDate = certificateDate?.setMonth(
       certificateDate.getMonth() + 12
     );
@@ -216,7 +243,6 @@ const AnalyzeExcelComponent: React.FC = () => {
       certificateTypeId: typeOfCertificate?.id,
       name: file?.name.replace(/\.[^/.]+$/, ".pdf"),
     };
-    console.log("🚀 ~ onSubmit ~ data:", data);
 
     try {
       const response = await axios.post(`${apiUrl}/files/raw`, data, {
@@ -224,7 +250,6 @@ const AnalyzeExcelComponent: React.FC = () => {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
-      console.log("🚀 ~ onSubmit ~ response:", response);
     } catch (error) {
       console.error("Error al enviar datos:", error);
     }
@@ -237,6 +262,7 @@ const AnalyzeExcelComponent: React.FC = () => {
         margin: "0 auto",
       }}
     >
+      <Toaster />
       <Stack direction="column" spacing={2} mb={3} mt={3}>
         {/* <TextField type="file" /> */}
         <label htmlFor="upload-photo">
@@ -246,7 +272,7 @@ const AnalyzeExcelComponent: React.FC = () => {
             name="upload-photo"
             type="file"
             onChange={handleFileUpload}
-            accept=".xls, .xlsx"
+            accept=".xls, .xlsx, .xlsm"
           />
 
           <Button color="secondary" variant="contained" component="span">
@@ -274,6 +300,7 @@ const AnalyzeExcelComponent: React.FC = () => {
           styles={styles}
           value={customer}
         />
+        <p className="text-red-500">{missedData.customer}</p>
         <AsyncSelect
           cacheOptions
           // defaultOptions
@@ -291,6 +318,7 @@ const AnalyzeExcelComponent: React.FC = () => {
           placeholder="Buscar Equipo"
           styles={styles}
         />
+        <p className="text-red-500">{missedData.device}</p>
         <AsyncSelect
           cacheOptions
           // defaultOptions
@@ -346,6 +374,7 @@ const AnalyzeExcelComponent: React.FC = () => {
           onChange={(e) => setSerialNumber(e.target.value)}
         />
         <DatePicker
+          label="Fecha de Certificación"
           value={certificateDate}
           onChange={(newValue) => setCertificateDate(newValue)}
         />

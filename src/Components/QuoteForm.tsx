@@ -3,7 +3,7 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import AutoComplete from "./AutoComplete";
+
 import { api } from "../config";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
@@ -23,6 +23,8 @@ import {
 import { useStore } from "@nanostores/react";
 import { userStore } from "../store/userStore";
 import { statusOptions } from "./TableQuotes";
+import { NumericFormatCustom } from "./NumericFormatCustom";
+import { styles } from "./ExcelManipulation/Utils";
 
 const apiUrl = api();
 
@@ -32,7 +34,7 @@ interface Product {
   quantity: number;
 }
 
-interface Customer {
+export interface Customer {
   id: number;
   nombre: string;
   email: string;
@@ -428,6 +430,9 @@ const QuoteForm: React.FC = () => {
     <Box sx={{ margin: "auto" }}>
       <Toaster />
       <Loader loading={loading} />
+      <Typography variant="h4" component="h1" sx={{ mb: 2 }}>
+        {!!id ? `Cotización VT-${id}` : "Nueva Cotización"}
+      </Typography>
 
       <form onSubmit={handleSubmit}>
         {!!id && (
@@ -504,26 +509,7 @@ const QuoteForm: React.FC = () => {
                 label: customer?.nombre,
               }
             }
-            styles={{
-              container: (provided, state) => ({
-                ...provided,
-                width: "100%",
-                marginRight: 10,
-                height: 50,
-                zIndex: 1001,
-              }),
-              control: (provided, state) => ({
-                ...provided,
-                border: "1px solid #ccc",
-                borderRadius: 5,
-                height: 55,
-              }),
-              option: (provided, state) => ({
-                ...provided,
-                color: state.isSelected ? "white" : "black",
-                backgroundColor: state.isSelected ? "blue" : "white",
-              }),
-            }}
+            styles={styles(false)}
           />
 
           {/* <AutoComplete
@@ -557,7 +543,6 @@ const QuoteForm: React.FC = () => {
                   <AsyncSelect
                     cacheOptions
                     isDisabled={onlyRead}
-                    // defaultOptions
                     loadOptions={loadOptions}
                     onChange={(selectedOption: any) => {
                       handleProductChange(index, "product", selectedOption);
@@ -569,26 +554,8 @@ const QuoteForm: React.FC = () => {
                         label: productName,
                       }
                     }
-                    styles={{
-                      container: (provided, state) => ({
-                        ...provided,
-                        width: "100%",
-                        marginRight: 10,
-                        height: 50,
-                        zIndex: 1000,
-                      }),
-                      control: (provided, state) => ({
-                        ...provided,
-                        border: "1px solid #ccc",
-                        borderRadius: 5,
-                        height: 55,
-                      }),
-                      option: (provided, state) => ({
-                        ...provided,
-                        color: state.isSelected ? "white" : "black",
-                        backgroundColor: state.isSelected ? "blue" : "white",
-                      }),
-                    }}
+                    classNamePrefix="react-select"
+                    styles={styles(false)}
                   />
 
                   <TextField
@@ -596,12 +563,14 @@ const QuoteForm: React.FC = () => {
                     label="Precio"
                     variant="outlined"
                     name="price"
-                    type="text"
                     value={product.price}
                     onChange={(e) =>
                       handleProductChange(index, "price", e.target.value)
                     }
-                    style={{ marginRight: "8px" }}
+                    InputProps={{
+                      inputComponent: NumericFormatCustom as any,
+                    }}
+                    style={{ marginRight: "8px", flex: 1 }}
                     sx={{ mr: 2, width: "100%" }}
                     // thousandSeparator={true}
                     // prefix="$"
@@ -620,19 +589,19 @@ const QuoteForm: React.FC = () => {
                         parseInt(e.target.value)
                       )
                     }
-                    style={{ marginRight: "8px" }}
+                    style={{ marginRight: "8px", flex: 0.5 }}
                     sx={{ mr: 2, width: "100%" }}
                   />
                   <TextField
                     disabled={onlyRead}
                     label="Total"
                     variant="outlined"
-                    type="number"
                     value={product.quantity * product.price}
-                    style={{ marginRight: "8px" }}
+                    style={{ marginRight: "8px", flex: 1 }}
                     sx={{ mr: 2, width: "100%" }}
                     InputProps={{
                       readOnly: true,
+                      inputComponent: NumericFormatCustom as any,
                     }}
                   />
                   <Button
@@ -726,18 +695,43 @@ const QuoteForm: React.FC = () => {
           </Typography>
 
           {comments.map((comment, index) => (
-            <TextField
-              disabled={onlyRead}
-              key={index}
-              label={`Comentario ${index + 1} `}
-              variant="outlined"
-              multiline
-              rows={1}
-              value={comment}
-              onChange={(e) => handleCommentChange(index, e.target.value)}
-              fullWidth
-              sx={{ mb: 2 }}
-            />
+            <Grid
+              container
+              spacing={2}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <Grid item xs={11} width="100%">
+                <TextField
+                  disabled={onlyRead}
+                  key={index}
+                  label={`Comentario ${index + 1} `}
+                  variant="outlined"
+                  multiline
+                  rows={1}
+                  value={comment}
+                  onChange={(e) => handleCommentChange(index, e.target.value)}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={1}>
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={() => {
+                    const updatedComments = [...comments];
+                    updatedComments.splice(index, 1);
+                    setComments(updatedComments);
+                  }}
+                  sx={{ mb: 2 }}
+                >
+                  X
+                </Button>
+              </Grid>
+            </Grid>
           ))}
           <Button
             variant="contained"
@@ -775,7 +769,7 @@ const QuoteForm: React.FC = () => {
           <TextField
             disabled={onlyRead}
             name="paymentConditions"
-            label="Condiciones de PAgo"
+            label="Condiciones de Pago"
             variant="outlined"
             multiline
             rows={4}
