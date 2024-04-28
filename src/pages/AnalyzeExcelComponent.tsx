@@ -1,22 +1,39 @@
 import React, { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
-import { Box, Button, Stack, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  IconButton,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import AsyncSelect from "react-select/async";
 import { api } from "../config";
 import axios from "axios";
 import { DatePicker } from "@mui/x-date-pickers";
 import toast, { Toaster } from "react-hot-toast";
-import { set } from "date-fns";
+
+import { Add, CloudUpload } from "@mui/icons-material";
+import ModalCustomer from "../Components/ModalCustomer";
+import { AnalyzeExcelComponentProps } from "../Components/ExcelManipulation/Types";
+import { ResourceOption } from "../utils/loadOptions";
+import { styles } from "../Components/ExcelManipulation/Utils";
+import ModalDevice from "../Components/ModalDevice";
+import { VisuallyHiddenInput } from "../Components/TableFiles";
 // Importa los componentes de MUI
 
 const apiUrl = api();
 
-export interface ResourceOption {
-  value: string;
-  label: string;
-}
-
-const AnalyzeExcelComponent: React.FC = () => {
+const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
+  dataReceived,
+  hideUpload,
+  selectedFile,
+  isFile,
+  setFileNames,
+  fileNames,
+}) => {
+  console.log(dataReceived);
   const [file, setFile] = useState<File | null>(null);
   const [data, setData] = useState<any[]>([]);
   const [city, setCity] = useState<string>("");
@@ -36,6 +53,8 @@ const AnalyzeExcelComponent: React.FC = () => {
     name: string;
   } | null>({ id: "3", name: "Calibración" });
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [openModalCustomer, setOpenModalCustomer] = useState(false);
+  const [openModalDevice, setOpenModalDevice] = useState(false);
 
   const validateFields = () => {
     if (
@@ -55,25 +74,9 @@ const AnalyzeExcelComponent: React.FC = () => {
     return true;
   };
 
-  const styles = {
-    container: (provided: any) => ({
-      ...provided,
-      width: "100%",
-      marginRight: 10,
-      height: 50,
-    }),
-    control: (provided: any) => ({
-      ...provided,
-      border: "1px solid #ccc",
-      borderRadius: 5,
-      height: 55,
-    }),
-    option: (provided: any, state: any) => ({
-      ...provided,
-      color: state.isSelected ? "white" : "black",
-      backgroundColor: state.isSelected ? "blue" : "white",
-    }),
-  };
+  useEffect(() => {
+    setData(dataReceived as any[]);
+  }, [dataReceived]);
 
   const loadOptions = async (
     inputValue: string,
@@ -125,7 +128,6 @@ const AnalyzeExcelComponent: React.FC = () => {
             raw: false,
             dateNF: "yyyy-mm-dd",
           });
-          console.log(jsonData);
 
           setData(jsonData);
         }
@@ -134,7 +136,17 @@ const AnalyzeExcelComponent: React.FC = () => {
     }
   };
 
-  const analyzeCells = () => {
+  const dataReturned = (data: any) => {
+    setCustomer({ value: data.id, label: data.nombre });
+    setMissedData({ ...missedData, customer: "" });
+  };
+
+  const dataReturnedDevice = (data: any) => {
+    setDevice({ value: data.id, label: data.name });
+    setMissedData({ ...missedData, device: "" });
+  };
+
+  const analyzeCells = async () => {
     // Aquí puedes analizar las celdas necesarias
     // Por ejemplo, obtener el valor de una celda específica
     if (data.length > 0) {
@@ -147,41 +159,40 @@ const AnalyzeExcelComponent: React.FC = () => {
       setLocation(data[21][2]);
       setHeadquartes("Sin Información");
 
-      findDevice(data[11][2]);
-      findCustomer(data[30][2]);
+      // findDevice(data[11][2]),
+      //   findCustomer(data[30][2]),
+
+      const results: any = await findCustomerAndDevice(
+        data[30][2],
+        data[11][2]
+      );
+
+      const missed = { device: "", customer: "" };
+
+      if (results[0].value.length > 0) {
+        setCustomer({
+          value: results[0].value[0].id,
+          label: results[0].value[0].nombre,
+        });
+      } else {
+        missed.customer = data[30][2];
+      }
+      if (results[1].value.length > 0) {
+        setDevice({
+          value: results[1].value[0].id,
+          label: results[1].value[0].name,
+        });
+      } else {
+        missed.device = data[11][2];
+      }
+
+      setMissedData(missed);
+
       setCertificateDate(new Date(data[40][2]));
     }
   };
 
-  const findDevice = async (name: string) => {
-    try {
-      const response = await axios.get(`${apiUrl}/devices`, {
-        params: { q: name },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
-      const devices = response.data;
-      if (devices.length > 0) {
-        // setDevice({ id: devices[0].id, name: devices[0].name });
-        const deviceData = {
-          value: devices[0].id,
-          label: devices[0].name,
-        };
-        setDevice(deviceData);
-        return;
-      } else {
-        toast.error("Instrumento no encontrado");
-        setMissedData({ ...missedData, device: name });
-        return;
-      }
-    } catch (error) {
-      console.error("Error al buscar dispositivo:", error);
-      toast.error("Instrumento no encontrado");
-    }
-  };
-
-  const findCustomer = async (name: string) => {
+  const fetchCustomer = async (name: string) => {
     try {
       const response = await axios.get(`${apiUrl}/customers`, {
         params: { q: name },
@@ -191,22 +202,38 @@ const AnalyzeExcelComponent: React.FC = () => {
       });
       const customers = response.data;
 
-      if (customers.length > 0) {
-        // setDevice({ id: customers[0].id, name: customers[0].name });
-        const customerData = {
-          value: customers[0].id,
-          label: customers[0].nombre,
-        };
-
-        setCustomer(customerData);
-        return;
-      } else {
-        setMissedData({ ...missedData, customer: name });
-        toast.error("Cliente no encontrado");
-        return;
-      }
+      return customers;
     } catch (error) {
-      console.error("Error al buscar dispositivo:", error);
+      console.error("Error while searching for device:", error);
+      return [];
+    }
+  };
+
+  const fetchDevice = async (name: string) => {
+    try {
+      const response = await axios.get(`${apiUrl}/devices`, {
+        params: { q: name },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+      const devices = response.data;
+      return devices;
+    } catch (error) {
+      console.error("Error while searching for device:", error);
+      return [];
+    }
+  };
+
+  const findCustomerAndDevice = async (customer: string, device: string) => {
+    try {
+      const results = await Promise.allSettled([
+        fetchCustomer(customer),
+        fetchDevice(device),
+      ]);
+      return results;
+    } catch (error) {
+      console.error("Error while searching for device:", error);
     }
   };
 
@@ -230,6 +257,7 @@ const AnalyzeExcelComponent: React.FC = () => {
     const nextCalibrationDate = certificateDate?.setMonth(
       certificateDate.getMonth() + 12
     );
+
     const data = {
       city,
       sede: headquarters,
@@ -241,7 +269,7 @@ const AnalyzeExcelComponent: React.FC = () => {
       customerId: customer?.value,
       deviceId: device?.value,
       certificateTypeId: typeOfCertificate?.id,
-      name: file?.name.replace(/\.[^/.]+$/, ".pdf"),
+      name: selectedFile || file?.name.replace(/\.[^/.]+$/, ".pdf"),
     };
 
     try {
@@ -250,6 +278,24 @@ const AnalyzeExcelComponent: React.FC = () => {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },
       });
+
+      if (response.status >= 200 && response.status < 300) {
+        if (setFileNames && fileNames && selectedFile) {
+          setFileNames(fileNames.filter((name) => name !== selectedFile));
+        }
+        setCity("");
+        setLocation("");
+        setHeadquartes("");
+        setFixedAsset("");
+        setSerialNumber("");
+        setCertificateDate(null);
+        setMissedData({ device: "", customer: "" });
+        setDevice(null);
+        setCustomer(null);
+        setTypeOfCertificate({ id: "3", name: "Calibración" });
+        setValidationError(null);
+        toast.success("Datos enviados correctamente");
+      }
     } catch (error) {
       console.error("Error al enviar datos:", error);
     }
@@ -262,23 +308,39 @@ const AnalyzeExcelComponent: React.FC = () => {
         margin: "0 auto",
       }}
     >
+      <ModalCustomer
+        open={openModalCustomer}
+        onClose={setOpenModalCustomer}
+        name={missedData.customer}
+        dataReturned={dataReturned}
+      />
+      <ModalDevice
+        open={openModalDevice}
+        onClose={setOpenModalDevice}
+        name={missedData.device}
+        dataReturned={dataReturnedDevice}
+      />
       <Toaster />
       <Stack direction="column" spacing={2} mb={3} mt={3}>
         {/* <TextField type="file" /> */}
-        <label htmlFor="upload-photo">
-          <input
-            style={{ display: "none" }}
-            id="upload-photo"
-            name="upload-photo"
-            type="file"
-            onChange={handleFileUpload}
-            accept=".xls, .xlsx, .xlsm"
-          />
+        {!hideUpload && (
+          <label htmlFor="upload-photo">
+            <input
+              style={{ display: "none" }}
+              id="upload-photo"
+              name="upload-photo"
+              type="file"
+              onChange={handleFileUpload}
+              accept=".xls, .xlsx, .xlsm"
+            />
 
-          <Button color="secondary" variant="contained" component="span">
-            Subir Archivo
-          </Button>
-        </label>
+            <Button color="secondary" variant="contained" component="span">
+              Subir Archivo
+            </Button>
+          </label>
+        )}
+
+        {hideUpload && <Typography>{selectedFile}</Typography>}
 
         {/* <Button variant="contained" onClick={analyzeCells} color="primary">
           Analizar Celdas
@@ -291,16 +353,20 @@ const AnalyzeExcelComponent: React.FC = () => {
           }
           onChange={(selectedOption: any) => setCustomer(selectedOption)}
           placeholder="Buscar Cliente"
-          // defaultValue={
-          //   id && {
-          //     value: index,
-          //     label: productName,
-          //   }
-          // }
-          styles={styles}
+          styles={styles(!(!!validationError && !customer))}
           value={customer}
         />
-        <p className="text-red-500">{missedData.customer}</p>
+        {missedData.customer && !customer && (
+          <div className="flex items-center justify-evenly">
+            <p className="text-red-500">{missedData.customer}</p>
+            <IconButton
+              aria-label="delete"
+              onClick={() => setOpenModalCustomer(true)}
+            >
+              <Add />
+            </IconButton>
+          </div>
+        )}
         <AsyncSelect
           cacheOptions
           // defaultOptions
@@ -316,9 +382,19 @@ const AnalyzeExcelComponent: React.FC = () => {
           onChange={(selectedOption: any) => setDevice(selectedOption)}
           value={device}
           placeholder="Buscar Equipo"
-          styles={styles}
+          styles={styles(!(!!validationError && !device))}
         />
-        <p className="text-red-500">{missedData.device}</p>
+        {missedData.device && !device && (
+          <div className="flex items-center justify-evenly">
+            <p className="text-red-500">{missedData.device}</p>
+            <IconButton
+              aria-label="delete"
+              onClick={() => setOpenModalDevice(true)}
+            >
+              <Add />
+            </IconButton>
+          </div>
+        )}
         <AsyncSelect
           cacheOptions
           // defaultOptions
@@ -336,9 +412,10 @@ const AnalyzeExcelComponent: React.FC = () => {
             value: typeOfCertificate?.id,
             label: typeOfCertificate?.name,
           }}
-          styles={styles}
+          styles={styles(!(!!validationError && !typeOfCertificate))}
         />
         <TextField
+          error={!!validationError && !city}
           label="Ciudad"
           variant="outlined"
           fullWidth
@@ -346,6 +423,7 @@ const AnalyzeExcelComponent: React.FC = () => {
           onChange={(e) => setCity(e.target.value)}
         />
         <TextField
+          error={!!validationError && !location}
           label="Ubicación"
           variant="outlined"
           fullWidth
@@ -353,6 +431,7 @@ const AnalyzeExcelComponent: React.FC = () => {
           onChange={(e) => setLocation(e.target.value)}
         />
         <TextField
+          error={!!validationError && !headquarters}
           label="Sede"
           variant="outlined"
           fullWidth
@@ -360,6 +439,7 @@ const AnalyzeExcelComponent: React.FC = () => {
           onChange={(e) => setHeadquartes(e.target.value)}
         />
         <TextField
+          error={!!validationError && !fixedAsset}
           label="Activo Fijo"
           variant="outlined"
           fullWidth
@@ -367,6 +447,7 @@ const AnalyzeExcelComponent: React.FC = () => {
           onChange={(e) => setFixedAsset(e.target.value)}
         />
         <TextField
+          error={!!validationError && !serialNumber}
           label="Serie"
           variant="outlined"
           fullWidth
@@ -377,7 +458,32 @@ const AnalyzeExcelComponent: React.FC = () => {
           label="Fecha de Certificación"
           value={certificateDate}
           onChange={(newValue) => setCertificateDate(newValue)}
+          sx={{
+            "& .MuiInputBase-root": {
+              border:
+                !!validationError && !certificateDate
+                  ? "1px #d32f2f solid"
+                  : "none",
+            },
+            "& .MuiFormLabel-root": {
+              color: !!validationError && !certificateDate ? "#d32f2f" : "none",
+            },
+          }}
         />
+        {isFile && (
+          <Button
+            component="label"
+            variant="contained"
+            startIcon={<CloudUpload />}
+            //onChange={handleFileChange}
+            style={{
+              textTransform: "none",
+            }}
+          >
+            {/* {selectedFileName ? selectedFileName : "Cargar Archivo"} */}
+            <VisuallyHiddenInput type="file" accept=".pdf" />
+          </Button>
+        )}
         {validationError && (
           <div style={{ color: "red" }}>{validationError}</div>
         )}

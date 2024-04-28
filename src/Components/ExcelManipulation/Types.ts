@@ -14,6 +14,16 @@ export interface RepositoryData {
     department: string;
     address: string;
   }
+
+  export interface AnalyzeExcelComponentProps {
+    dataReceived?: any[];
+    hideUpload?: boolean;
+    fileNames?: string[];
+    selectedFile?: string | null;
+    isFile: boolean;
+    setFileNames?: React.Dispatch<React.SetStateAction<string[]>>;
+  }
+  
   
   export interface ResourceOptionDevice extends ResourceOption {
     repositoryPath: string;

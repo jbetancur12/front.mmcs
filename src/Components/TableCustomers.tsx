@@ -60,10 +60,6 @@ const Table: React.FC = () => {
       const updatedValues = { ...customerData };
       delete updatedValues.id;
 
-      console.log(
-        "🚀 ~ file: TableCustomers.tsx:63 ~ constcustomerWithoutId:CustomerData=Object.keys ~ customerWithoutId:",
-        updatedValues
-      );
       const response = await axios.post(`${apiUrl}/customers`, updatedValues, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,

@@ -28,6 +28,7 @@ import ExcelManipulation from "./Components/ExcelManipulation/ExcelManipulation"
 import Repository from "./pages/Repository";
 import ScriptGenerator from "./Components/ScriptGenerator";
 import Gotemberg from "./Components/Gotemberg";
+import Zip from "./pages/Zip";
 
 function Router() {
   const protectedLayout = (
@@ -61,6 +62,7 @@ function Router() {
             </Route>
           </Route>
           <Route path="analisis-excel" element={<AnalyzeExcelComponent />} />
+          <Route path="zip" element={<Zip />} />
           <Route path="report" element={<ExcelManipulation />} />
           <Route path="cotizaciones">
             <Route index element={<Cotizaciones />} />
