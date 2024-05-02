@@ -55,7 +55,8 @@
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "npx prettier --write"
+      "npx prettier --write",
+      "ts-standard --fix"
     ]
   },
   "devDependencies": {
