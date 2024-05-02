@@ -1,50 +1,50 @@
-import axios, { AxiosError } from "axios"; // Import Axios
-import { useState } from "react";
+import axios, { AxiosError } from 'axios' // Import Axios
+import { useState } from 'react'
 
-import { Link } from "react-router-dom";
-import * as Yup from "yup"; // Importa Yup para la validación
-import { api } from "../config";
-import { Toast } from "../Components/ExcelManipulation/Utils";
+import { Link } from 'react-router-dom'
+import * as Yup from 'yup' // Importa Yup para la validación
+import { api } from '../config'
+import { Toast } from '../Components/ExcelManipulation/Utils'
 
 // Función de utilidad para verificar si un objeto es de tipo AxiosError
 function isAxiosError(obj: any): obj is AxiosError {
-  return obj instanceof Error && "isAxiosError" in obj;
+  return obj instanceof Error && 'isAxiosError' in obj
 }
-const apiUrl = api();
+const apiUrl = api()
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    remember: false,
-  });
+    email: '',
+    password: '',
+    remember: false
+  })
 
-  const [error, setError] = useState<string | null>(null); // Agrega estado para manejar errores
+  const [error, setError] = useState<string | null>(null) // Agrega estado para manejar errores
 
   // Define el esquema de validación del formulario con Yup
   const validationSchema = Yup.object().shape({
     email: Yup.string()
-      .email("Ingresa un correo electrónico válido")
-      .required("El correo electrónico es obligatorio"),
-    password: Yup.string().required("La contraseña es obligatoria"),
-  });
+      .email('Ingresa un correo electrónico válido')
+      .required('El correo electrónico es obligatorio'),
+    password: Yup.string().required('La contraseña es obligatoria')
+  })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type, checked } = e.target
     setFormData({
       ...formData,
-      [name]: type === "checkbox" ? checked : value,
-    });
-  };
+      [name]: type === 'checkbox' ? checked : value
+    })
+  }
 
   function handleValidationOrNetworkError(error: AxiosError | Error) {
     if (error instanceof Yup.ValidationError) {
-      const errorMessage = error.errors[0];
-      setError(errorMessage);
+      const errorMessage = error.errors[0]
+      setError(errorMessage)
     } else {
       // Verificar si error es de tipo AxiosError antes de acceder a response
       if (isAxiosError(error) && error.response) {
-        handleNetworkError(error);
+        handleNetworkError(error)
       } else {
         // Manejar otros tipos de errores aquí
       }
@@ -52,130 +52,130 @@ const Login: React.FC = () => {
   }
 
   function handleNetworkError(error: AxiosError) {
-    console.error("An error occurred:", error);
+    console.error('An error occurred:', error)
 
     if (error.response) {
       switch (error.response.status) {
         case 401:
           setError(
-            "Credenciales incorrectas. Por favor, verifica tus credenciales."
-          );
-          break;
+            'Credenciales incorrectas. Por favor, verifica tus credenciales.'
+          )
+          break
         case 400:
-          const responseData = error.response.data;
+          const responseData = error.response.data
 
           if (
             responseData &&
-            typeof responseData === "object" &&
-            "message" in responseData
+            typeof responseData === 'object' &&
+            'message' in responseData
           ) {
-            const message = responseData.message;
-            if (message === "You are not verified") {
-              setError("La cuenta aún no ha sido activada");
+            const message = responseData.message
+            if (message === 'You are not verified') {
+              setError('La cuenta aún no ha sido activada')
             } else {
               setError(
-                "Error de inicio de sesión. Por favor, inténtalo de nuevo más tarde."
-              );
+                'Error de inicio de sesión. Por favor, inténtalo de nuevo más tarde.'
+              )
             }
           } else {
             setError(
-              "Error de inicio de sesión. Por favor, inténtalo de nuevo más tarde."
-            );
+              'Error de inicio de sesión. Por favor, inténtalo de nuevo más tarde.'
+            )
           }
-          break;
+          break
         default:
           setError(
-            "Ocurrió un error durante el inicio de sesión. Por favor, inténtalo de nuevo más tarde."
-          );
-          break;
+            'Ocurrió un error durante el inicio de sesión. Por favor, inténtalo de nuevo más tarde.'
+          )
+          break
       }
     } else {
       setError(
-        "Ocurrió un error de red. Por favor, verifica tu conexión e inténtalo de nuevo."
-      );
+        'Ocurrió un error de red. Por favor, verifica tu conexión e inténtalo de nuevo.'
+      )
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     const data = {
       email: formData.email,
-      contraseña: formData.password,
-    };
+      contraseña: formData.password
+    }
 
     try {
-      await validationSchema.validate(formData, { abortEarly: false });
+      await validationSchema.validate(formData, { abortEarly: false })
 
-      const response = await axios.post(`${apiUrl}/auth/login`, data);
+      const response = await axios.post(`${apiUrl}/auth/login`, data)
 
       if (response.status === 200) {
-        const { token } = response.data;
+        const { token } = response.data
         // Handle successful login
         // toast.success("Bienvenido", {
         //   duration: 4000,
         //   position: "top-center",
         // });
 
-        Toast.fire("Bienvenido", "", "success");
+        Toast.fire('Bienvenido', '', 'success')
 
         setTimeout(() => {
-          window.location.href = "/dashboard";
-        }, 3000);
+          window.location.href = '/dashboard'
+        }, 3000)
 
-        localStorage.setItem("accessToken", token);
+        localStorage.setItem('accessToken', token)
 
-        setError(null);
+        setError(null)
       } else {
         // Handle login error
         if (response.status === 401) {
           setError(
-            "Credenciales incorrectas. Por favor, verifica tus credenciales."
-          );
+            'Credenciales incorrectas. Por favor, verifica tus credenciales.'
+          )
         } else {
           setError(
-            "Error de inicio de sesión. Por favor, inténtalo de nuevo más tarde."
-          );
+            'Error de inicio de sesión. Por favor, inténtalo de nuevo más tarde.'
+          )
         }
       }
     } catch (error: any) {
       // Handle network error or other exceptions
-      handleValidationOrNetworkError(error);
+      handleValidationOrNetworkError(error)
     }
-  };
+  }
 
   return (
-    <div className="flex flex-col items-center justify-center px-6 pt-8 mx-auto md:h-screen pt:mt-0 dark:bg-gray-900">
+    <div className='flex flex-col items-center justify-center px-6 pt-8 mx-auto md:h-screen pt:mt-0 dark:bg-gray-900'>
       <a
-        href="/"
-        className="flex items-center justify-center mb-8 text-2xl font-semibold lg:mb-10 dark:text-white"
+        href='/'
+        className='flex items-center justify-center mb-8 text-2xl font-semibold lg:mb-10 dark:text-white'
       >
         <img
-          src="/images/logo2.png"
-          className="mr-4 h-11"
-          alt="Metromedics Logo Logo"
+          src='/images/logo2.png'
+          className='mr-4 h-11'
+          alt='Metromedics Logo Logo'
         />
         {/* <span>Metromedics S.A.S</span> */}
       </a>
 
-      <div className="w-full max-w-xl p-6 space-y-8 sm:p-8 bg-white rounded-lg shadow dark:bg-gray-800">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Ingresa a la plataforma{" "}
+      <div className='w-full max-w-xl p-6 space-y-8 sm:p-8 bg-white rounded-lg shadow dark:bg-gray-800'>
+        <h2 className='text-2xl font-bold text-gray-900 dark:text-white'>
+          Ingresa a la plataforma{' '}
         </h2>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className='mt-8 space-y-6' onSubmit={handleSubmit}>
           <div>
             <label
-              htmlFor="email"
-              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+              htmlFor='email'
+              className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
             >
               Email
             </label>
             <input
-              type="email"
-              name="email"
-              id="email"
-              className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-              placeholder="name@company.com"
+              type='email'
+              name='email'
+              id='email'
+              className='bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
+              placeholder='name@company.com'
               required
               value={formData.email}
               onChange={handleInputChange}
@@ -183,45 +183,45 @@ const Login: React.FC = () => {
           </div>
           <div>
             <label
-              htmlFor="password"
-              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+              htmlFor='password'
+              className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
             >
               Contraseña
             </label>
             <input
-              type="password"
-              name="password"
-              id="password"
-              placeholder="••••••••"
-              className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+              type='password'
+              name='password'
+              id='password'
+              placeholder='••••••••'
+              className='bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
               required
               value={formData.password}
               onChange={handleInputChange}
             />
           </div>
 
-          <div className="flex justify-between items-center">
+          <div className='flex justify-between items-center'>
             <button
-              type="submit"
-              className="w-full px-5 py-3 text-base font-medium text-center text-white bg-primary-700 rounded-lg hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 sm:w-auto dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+              type='submit'
+              className='w-full px-5 py-3 text-base font-medium text-center text-white bg-primary-700 rounded-lg hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 sm:w-auto dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800'
             >
               Ingresar a tu cuenta
             </button>
 
             <Link
-              to="/password-recovery"
-              className="text-blue-500 hover:text-blue-800"
+              to='/password-recovery'
+              className='text-blue-500 hover:text-blue-800'
             >
               Recordar Contraseña
             </Link>
           </div>
           {error && (
-            <p className="text-red-500 text-sm mt-2">{error}</p> // Mostrar el mensaje de error si existe
+            <p className='text-red-500 text-sm mt-2'>{error}</p> // Mostrar el mensaje de error si existe
           )}
         </form>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Login;
+export default Login

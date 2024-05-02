@@ -1,349 +1,349 @@
-import XlsxPopulate from "xlsx-populate";
-import { populateCell } from "./Utils";
+import XlsxPopulate from 'xlsx-populate'
+import { populateCell } from './Utils'
 
 export const populateExcel = async (excelBlob: Blob, data: any) => {
-  const { formData, rows } = data;
+  const { formData, rows } = data
 
-  const workbook = await XlsxPopulate.fromDataAsync(excelBlob);
+  const workbook = await XlsxPopulate.fromDataAsync(excelBlob)
 
-  const sheet = workbook.sheet(0);
+  const sheet = workbook.sheet(0)
 
-  populateCell(sheet, "B5", formData.brand, false, formData.decimalPlaces);
-  populateCell(sheet, "B6", formData.model, false, formData.decimalPlaces);
-  populateCell(sheet, "B7", formData.serie, false, formData.decimalPlaces);
-  populateCell(sheet, "B8", formData.inventory, false, formData.decimalPlaces);
-  populateCell(sheet, "B9", formData.location, false, formData.decimalPlaces);
+  populateCell(sheet, 'B5', formData.brand, false, formData.decimalPlaces)
+  populateCell(sheet, 'B6', formData.model, false, formData.decimalPlaces)
+  populateCell(sheet, 'B7', formData.serie, false, formData.decimalPlaces)
+  populateCell(sheet, 'B8', formData.inventory, false, formData.decimalPlaces)
+  populateCell(sheet, 'B9', formData.location, false, formData.decimalPlaces)
   populateCell(
     sheet,
-    "B10",
+    'B10',
     `( ${formData.measurementRange} ) ${formData.unit}`,
     false,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "F4",
+    'F4',
     formData.customer?.label,
     false,
     formData.decimalPlaces
-  );
-  populateCell(sheet, "F5", formData.address, false, formData.decimalPlaces);
+  )
+  populateCell(sheet, 'F5', formData.address, false, formData.decimalPlaces)
   populateCell(
     sheet,
-    "F6",
+    'F6',
     `${formData.city} - ${formData.department}`,
     false,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "F7",
+    'F7',
     formData.verificationDate,
     false,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "F8",
+    'F8',
     formData.receptionDate,
     false,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "F9",
+    'F9',
     formData.calibrationDate,
     false,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "C16",
+    'C16',
     Number(formData.decimalPlaces),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "F4",
+    'F4',
     formData.customer?.label,
     false,
     formData.decimalPlaces
-  );
-  populateCell(sheet, "F5", formData.address, false, formData.decimalPlaces);
+  )
+  populateCell(sheet, 'F5', formData.address, false, formData.decimalPlaces)
   populateCell(
     sheet,
-    "F6",
+    'F6',
     `${formData.city} - ${formData.department}`,
     false,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "F7",
+    'F7',
     formData.verificationDate,
     false,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "F8",
+    'F8',
     formData.receptionDate,
     false,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "F9",
+    'F9',
     formData.calibrationDate,
     false,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "C16",
+    'C16',
     Number(formData.decimalPlaces),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "C17",
+    'C17',
     Number(formData.exactitudValue),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "C18",
+    'C18',
     Number(formData.exactitudUnitValue),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "F16",
+    'F16',
     Number(formData.decimalPlacesPatron),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "F17",
+    'F17',
     Number(formData.exactitudPatron),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "F18",
+    'F18',
     Number(formData.exactitudUnitPatron),
     true,
     formData.decimalPlaces
-  );
-  populateCell(sheet, "K4", formData.name, false, formData.decimalPlaces);
+  )
+  populateCell(sheet, 'K4', formData.name, false, formData.decimalPlaces)
   populateCell(
     sheet,
-    "K5",
+    'K5',
     Number(formData.initialTemperature),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "K6",
+    'K6',
     Number(formData.initialHumidity),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "K7",
+    'K7',
     Number(formData.finalTemperature),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "K8",
+    'K8',
     Number(formData.finalHumidity),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "B22",
+    'B22',
     Number(rows[0].point),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "B23",
+    'B23',
     Number(rows[1].point),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "B24",
+    'B24',
     Number(rows[2].point),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "C22",
+    'C22',
     Number(rows[0].first),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "D22",
+    'D22',
     Number(rows[0].second),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "E22",
+    'E22',
     Number(rows[0].third),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "F22",
+    'F22',
     Number(rows[0].fourth),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "G22",
+    'G22',
     Number(rows[0].fifth),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "H22",
+    'H22',
     Number(rows[0].sixth),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "I22",
+    'I22',
     Number(rows[0].average),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "C23",
+    'C23',
     Number(rows[1].first),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "D23",
+    'D23',
     Number(rows[1].second),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "E23",
+    'E23',
     Number(rows[1].third),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "F23",
+    'F23',
     Number(rows[1].fourth),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "G23",
+    'G23',
     Number(rows[1].fifth),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "H23",
+    'H23',
     Number(rows[1].sixth),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "I23",
+    'I23',
     Number(rows[1].average),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "C24",
+    'C24',
     Number(rows[2].first),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "D24",
+    'D24',
     Number(rows[2].second),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "E24",
+    'E24',
     Number(rows[2].third),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "F24",
+    'F24',
     Number(rows[2].fourth),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "H24",
+    'H24',
     Number(rows[2].sixth),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "I24",
+    'I24',
     Number(rows[2].average),
     true,
     formData.decimalPlaces
-  );
+  )
   populateCell(
     sheet,
-    "G24",
+    'G24',
     Number(rows[2].fifth),
     true,
     formData.decimalPlaces
-  );
+  )
 
-  const wbout = await workbook.outputAsync();
+  const wbout = await workbook.outputAsync()
 
   const blob = new Blob([wbout], {
-    type: "application/octet-stream",
-  });
+    type: 'application/octet-stream'
+  })
 
-  return blob;
-};
+  return blob
+}

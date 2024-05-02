@@ -1,14 +1,14 @@
-import { useStore } from "@nanostores/react";
+import { useStore } from '@nanostores/react'
 // import { useState } from "react";
 // import { BiSolidFactory } from "react-icons/bi";
-import { FaHospitalUser } from "react-icons/fa";
+import { FaHospitalUser } from 'react-icons/fa'
 
-import { Link } from "react-router-dom";
-import { userStore } from "../store/userStore";
-import DropdownButton from "./DropdownButton";
+import { Link } from 'react-router-dom'
+import { userStore } from '../store/userStore'
+import DropdownButton from './DropdownButton'
 
 const SideBar: React.FC = () => {
-  const $userStore = useStore(userStore);
+  const $userStore = useStore(userStore)
 
   // const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -18,42 +18,42 @@ const SideBar: React.FC = () => {
 
   return (
     <aside
-      id="sidebar"
-      className="fixed top-0 left-0 z-20 flex flex-col flex-shrink-0 hidden w-64 h-full pt-16 font-normal duration-75 lg:flex transition-width"
-      aria-label="Sidebar"
+      id='sidebar'
+      className='fixed top-0 left-0 z-20 flex flex-col flex-shrink-0 hidden w-64 h-full pt-16 font-normal duration-75 lg:flex transition-width'
+      aria-label='Sidebar'
     >
-      <div className="relative flex flex-col flex-1 min-h-0 pt-0 bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700">
-        <div className="flex flex-col flex-1 pt-5 pb-4 overflow-y-auto">
-          <div className="flex-1 px-3 space-y-1 bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-            <ul className="pb-2 space-y-2">
+      <div className='relative flex flex-col flex-1 min-h-0 pt-0 bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700'>
+        <div className='flex flex-col flex-1 pt-5 pb-4 overflow-y-auto'>
+          <div className='flex-1 px-3 space-y-1 bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700'>
+            <ul className='pb-2 space-y-2'>
               <li>
                 <a
-                  href="/dashboard"
-                  className="flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700"
+                  href='/dashboard'
+                  className='flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700'
                 >
                   <svg
-                    className="w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                    xmlns="http://www.w3.org/2000/svg"
+                    className='w-6 h-6 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white'
+                    fill='currentColor'
+                    viewBox='0 0 20 20'
+                    xmlns='http://www.w3.org/2000/svg'
                   >
-                    <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"></path>
-                    <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"></path>
+                    <path d='M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z'></path>
+                    <path d='M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z'></path>
                   </svg>
-                  <span className="ml-3" sidebar-toggle-item="">
+                  <span className='ml-3' sidebar-toggle-item=''>
                     Dashboard
                   </span>
                 </a>
               </li>
               <li>
-                {$userStore.rol === "admin" && (
+                {$userStore.rol === 'admin' && (
                   <>
                     <Link
-                      to="customers"
-                      className="flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700"
+                      to='customers'
+                      className='flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700'
                     >
-                      <FaHospitalUser className="w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white" />
-                      <span className="ml-3" sidebar-toggle-item="">
+                      <FaHospitalUser className='w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white' />
+                      <span className='ml-3' sidebar-toggle-item=''>
                         Empresas
                       </span>
                     </Link>
@@ -66,52 +66,52 @@ const SideBar: React.FC = () => {
               </li>
 
               <li>
-                {$userStore.rol === "admin" && (
+                {$userStore.rol === 'admin' && (
                   <DropdownButton
-                    buttonText="Cotizaciones"
+                    buttonText='Cotizaciones'
                     rol={$userStore.rol}
                     menuItems={[
                       {
-                        label: "Listar Cotizaciones",
-                        url: "cotizaciones",
-                        roles: ["admin"],
+                        label: 'Listar Cotizaciones',
+                        url: 'cotizaciones',
+                        roles: ['admin']
                       },
                       {
-                        label: "Listar Productos y Servicios",
-                        url: "productos-y-servicios",
-                        roles: ["admin"],
-                      },
+                        label: 'Listar Productos y Servicios',
+                        url: 'productos-y-servicios',
+                        roles: ['admin']
+                      }
 
                       // { label: "Sidebar", url: "https://flowbite-admin-dashboard.vercel.app/layouts/sidebar/" },
                     ]}
-                    pathData="M18 1H6a3 3 0 0 0-3 3v18a1 1 0 0 0 1.707.707l2.138-2.137 1.323 1.984A1 1 0 0 0 8.9 23a.986.986 0 0 0 .806-.288L12 20.414l2.293 2.293a1 1 0 0 0 1.539-.153l1.323-1.984 2.138 2.137A1 1 0 0 0 21 22V4a3 3 0 0 0-3-3Zm1 18.586-1.293-1.293a.984.984 0 0 0-.806-.288 1 1 0 0 0-.733.44l-1.323 1.985-2.138-2.137a1 1 0 0 0-1.414 0L9.155 20.43l-1.323-1.985a1 1 0 0 0-1.539-.152L5 19.586V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1ZM13 11a1 1 0 0 1-1 1H8a1 1 0 0 1 0-2h4a1 1 0 0 1 1 1Zm0 4a1 1 0 0 1-1 1H8a1 1 0 0 1 0-2h4a1 1 0 0 1 1 1Zm4-4a1 1 0 0 1-1 1h-1a1 1 0 0 1 0-2h1a1 1 0 0 1 1 1Zm0 4a1 1 0 0 1-1 1h-1a1 1 0 0 1 0-2h1a1 1 0 0 1 1 1Zm0-9a1 1 0 0 1-1 1H8a1 1 0 0 1 0-2h8a1 1 0 0 1 1 1Z"
+                    pathData='M18 1H6a3 3 0 0 0-3 3v18a1 1 0 0 0 1.707.707l2.138-2.137 1.323 1.984A1 1 0 0 0 8.9 23a.986.986 0 0 0 .806-.288L12 20.414l2.293 2.293a1 1 0 0 0 1.539-.153l1.323-1.984 2.138 2.137A1 1 0 0 0 21 22V4a3 3 0 0 0-3-3Zm1 18.586-1.293-1.293a.984.984 0 0 0-.806-.288 1 1 0 0 0-.733.44l-1.323 1.985-2.138-2.137a1 1 0 0 0-1.414 0L9.155 20.43l-1.323-1.985a1 1 0 0 0-1.539-.152L5 19.586V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1ZM13 11a1 1 0 0 1-1 1H8a1 1 0 0 1 0-2h4a1 1 0 0 1 1 1Zm0 4a1 1 0 0 1-1 1H8a1 1 0 0 1 0-2h4a1 1 0 0 1 1 1Zm4-4a1 1 0 0 1-1 1h-1a1 1 0 0 1 0-2h1a1 1 0 0 1 1 1Zm0 4a1 1 0 0 1-1 1h-1a1 1 0 0 1 0-2h1a1 1 0 0 1 1 1Zm0-9a1 1 0 0 1-1 1H8a1 1 0 0 1 0-2h8a1 1 0 0 1 1 1Z'
                   />
                 )}
               </li>
 
               <li>
                 <DropdownButton
-                  buttonText="Calibraciones"
+                  buttonText='Calibraciones'
                   rol={$userStore.rol}
                   menuItems={[
                     {
-                      label: "Equipos",
-                      url: "calibraciones/equipos",
-                      roles: ["admin"],
+                      label: 'Equipos',
+                      url: 'calibraciones/equipos',
+                      roles: ['admin']
                     },
                     {
-                      label: "Tipos de Certificado",
-                      url: "calibraciones/tipos-de-certificado",
-                      roles: ["admin"],
+                      label: 'Tipos de Certificado',
+                      url: 'calibraciones/tipos-de-certificado',
+                      roles: ['admin']
                     },
                     {
-                      label: "Certificados",
-                      url: "calibraciones/certificados",
-                      roles: ["admin", "user"],
-                    },
+                      label: 'Certificados',
+                      url: 'calibraciones/certificados',
+                      roles: ['admin', 'user']
+                    }
                     // { label: "Sidebar", url: "https://flowbite-admin-dashboard.vercel.app/layouts/sidebar/" },
                   ]}
-                  pathData="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"
+                  pathData='M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z'
                 />
               </li>
 
@@ -222,7 +222,7 @@ const SideBar: React.FC = () => {
         </div>
       </div>
     </aside>
-  );
-};
+  )
+}
 
-export default SideBar;
+export default SideBar

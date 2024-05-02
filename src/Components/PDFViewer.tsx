@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
-import * as minioExports from "minio";
-import { Document, Page, pdfjs } from "react-pdf";
-import "react-pdf/dist/Page/TextLayer.css";
-import "react-pdf/dist/Page/AnnotationLayer.css";
+import { useState, useEffect } from 'react'
+import * as minioExports from 'minio'
+import { Document, Page, pdfjs } from 'react-pdf'
+import 'react-pdf/dist/Page/TextLayer.css'
+import 'react-pdf/dist/Page/AnnotationLayer.css'
 
 // let minioClient = null;
 
@@ -24,33 +24,33 @@ import "react-pdf/dist/Page/AnnotationLayer.css";
 // }
 
 const minioClient = new minioExports.Client({
-  endPoint: import.meta.env.VITE_MINIO_ENDPOINT || "localhost",
-  port: import.meta.env.VITE_ENV === "development" ? 9000 : undefined,
-  useSSL: import.meta.env.VITE_MINIO_USESSL === "true",
+  endPoint: import.meta.env.VITE_MINIO_ENDPOINT || 'localhost',
+  port: import.meta.env.VITE_ENV === 'development' ? 9000 : undefined,
+  useSSL: import.meta.env.VITE_MINIO_USESSL === 'true',
   accessKey: import.meta.env.VITE_MINIO_ACCESSKEY,
-  secretKey: import.meta.env.VITE_MINIO_SECRETKEY,
-});
+  secretKey: import.meta.env.VITE_MINIO_SECRETKEY
+})
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.js",
+  'pdfjs-dist/build/pdf.worker.min.js',
   import.meta.url
-).toString();
+).toString()
 
 const PDFViewer = ({
   path,
-  bucket = "first-bucket",
-  view = "preview",
+  bucket = 'first-bucket',
+  view = 'preview'
 }: {
-  path: string;
-  bucket: string;
-  view: "preview" | "default";
+  path: string
+  bucket: string
+  view: 'preview' | 'default'
 }) => {
-  const [_numPages, setNumPages] = useState<number>(1);
-  const [pageNumber, _setPageNumber] = useState<number>(1);
-  const [pdfData, setPdfData] = useState<string | null>(null);
+  const [_numPages, setNumPages] = useState<number>(1)
+  const [pageNumber, _setPageNumber] = useState<number>(1)
+  const [pdfData, setPdfData] = useState<string | null>(null)
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
-    setNumPages(numPages);
+    setNumPages(numPages)
   }
 
   useEffect(() => {
@@ -61,23 +61,23 @@ const PDFViewer = ({
 
         function (err: Error | null, dataStream: any) {
           if (err) {
-            console.error(err);
-            return;
+            console.error(err)
+            return
           }
 
-          const chunks: Uint8Array[] = [];
-          dataStream.on("data", (chunk: Uint8Array) => chunks.push(chunk));
-          dataStream.on("end", () => {
-            const pdfBlob = new Blob(chunks, { type: "application/pdf" });
-            const pdfUrl = URL.createObjectURL(pdfBlob);
+          const chunks: Uint8Array[] = []
+          dataStream.on('data', (chunk: Uint8Array) => chunks.push(chunk))
+          dataStream.on('end', () => {
+            const pdfBlob = new Blob(chunks, { type: 'application/pdf' })
+            const pdfUrl = URL.createObjectURL(pdfBlob)
 
-            setPdfData(pdfUrl);
-          });
+            setPdfData(pdfUrl)
+          })
         }
-      );
-    };
-    getBucket();
-  }, [path]);
+      )
+    }
+    getBucket()
+  }, [path])
 
   // function changePage(offset: number) {
   //   setPageNumber((prevPageNumber) => prevPageNumber + offset);
@@ -93,7 +93,7 @@ const PDFViewer = ({
 
   return (
     <>
-      {view === "preview" && pdfData && (
+      {view === 'preview' && pdfData && (
         <Document file={pdfData} onLoadSuccess={onDocumentLoadSuccess}>
           <Page pageNumber={pageNumber} />
         </Document>
@@ -106,15 +106,15 @@ const PDFViewer = ({
           type="application/pdf"
         ></embed>
       )} */}
-      {view === "default" && pdfData && (
+      {view === 'default' && pdfData && (
         <object
           data={pdfData}
-          type="application/pdf"
-          width="100%"
-          height="500px"
+          type='application/pdf'
+          width='100%'
+          height='500px'
         >
           <br />
-          <a href={pdfData} id="enlaceDescargarPdf" download="ReactJS.pdf">
+          <a href={pdfData} id='enlaceDescargarPdf' download='ReactJS.pdf'>
             Tu dispositivo no puede visualizar los PDF, da click aquí para
             descargarlo
           </a>
@@ -136,7 +136,7 @@ const PDFViewer = ({
         </button>
       </div> */}
     </>
-  );
-};
+  )
+}
 
-export default PDFViewer;
+export default PDFViewer

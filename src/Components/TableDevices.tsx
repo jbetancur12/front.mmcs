@@ -1,4 +1,4 @@
-import { Delete, Edit } from "@mui/icons-material";
+import { Delete, Edit } from '@mui/icons-material'
 import {
   Box,
   Dialog,
@@ -8,52 +8,52 @@ import {
   IconButton,
   Stack,
   TextField,
-  Tooltip,
-} from "@mui/material";
-import axios from "axios";
+  Tooltip
+} from '@mui/material'
+import axios from 'axios'
 import {
   MaterialReactTable,
   type MRT_Cell,
   type MRT_ColumnDef,
   type MRT_Row,
-  type MaterialReactTableProps,
-} from "material-react-table";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+  type MaterialReactTableProps
+} from 'material-react-table'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { api } from "../config";
-import { MRT_Localization_ES } from "material-react-table/locales/es";
-import AsyncSelect from "react-select/async";
+import { api } from '../config'
+import { MRT_Localization_ES } from 'material-react-table/locales/es'
+import AsyncSelect from 'react-select/async'
 
-import { loadOptions, mapOptions } from "../utils/loadOptions";
-import { RepositoryData } from "./Repository";
-import { bigToast, styles } from "./ExcelManipulation/Utils";
+import { loadOptions, mapOptions } from '../utils/loadOptions'
+import { RepositoryData } from './Repository'
+import { bigToast, styles } from './ExcelManipulation/Utils'
 
 // Define interfaces
 export interface DeviceData {
-  id: number;
-  name: string;
-  magnitude: string;
+  id: number
+  name: string
+  magnitude: string
   repository: {
-    id: number;
-    name: string;
-  };
+    id: number
+    name: string
+  }
 }
 
 // API URL
-const apiUrl = api();
+const apiUrl = api()
 
 // Main component
 const Table: React.FC = () => {
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [tableData, setTableData] = useState<DeviceData[]>([]);
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [tableData, setTableData] = useState<DeviceData[]>([])
   const [_format, setFormat] = useState<{ labe: string; value: string } | null>(
     null
-  );
+  )
   // const [filteredTableData, setFilteredTableData] = useState<DeviceData[]>([]);
 
   const [validationErrors, setValidationErrors] = useState<{
-    [cellId: string]: string;
-  }>({});
+    [cellId: string]: string
+  }>({})
 
   // Create a new device
   const onCreateDevice = async (deviceData: DeviceData) => {
@@ -63,243 +63,243 @@ const Table: React.FC = () => {
         {
           name: deviceData.name,
           repository: deviceData.repository,
-          magnitude: deviceData.magnitude,
+          magnitude: deviceData.magnitude
         },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+          }
         }
-      );
+      )
 
       if (response.status === 201) {
-        bigToast("Equipo Creado Exitosamente!", "success");
-        fetchUsers(); // Refresh data after creation
+        bigToast('Equipo Creado Exitosamente!', 'success')
+        fetchUsers() // Refresh data after creation
       } else {
-        console.error("Error al crear equipo");
+        console.error('Error al crear equipo')
       }
     } catch (error) {
-      console.error("Error de red:", error);
+      console.error('Error de red:', error)
     }
-  };
+  }
 
   // Fetch devices data
   const fetchUsers = async () => {
     try {
       const response = await axios.get(`${apiUrl}/devices`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      })
 
-      if (response.statusText === "OK") {
+      if (response.statusText === 'OK') {
         // @ts-ignore: Ignorar el error en esta línea
-        setTableData(response.data);
+        setTableData(response.data)
       }
     } catch (error) {
-      console.error("Error fetching device data:", error);
+      console.error('Error fetching device data:', error)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    fetchUsers()
+  }, [])
 
   const handleCreateNewRow = (values: DeviceData) => {
-    onCreateDevice(values);
-    setCreateModalOpen(false);
-  };
+    onCreateDevice(values)
+    setCreateModalOpen(false)
+  }
 
-  const handleSaveRowEdits: MaterialReactTableProps<DeviceData>["onEditingRowSave"] =
+  const handleSaveRowEdits: MaterialReactTableProps<DeviceData>['onEditingRowSave'] =
     async ({ exitEditingMode, row, values }) => {
       if (!Object.keys(validationErrors).length) {
-        const updatedValues = { ...values };
-        delete updatedValues.id;
+        const updatedValues = { ...values }
+        delete updatedValues.id
         try {
           const response = await axios.put(
             `${apiUrl}/devices/${values.id}`,
             updatedValues,
             {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-              },
+                Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+              }
             }
-          );
+          )
 
           if (response.status === 201) {
-            bigToast("Equipo Modificado Exitosamente!", "success");
-            tableData[row.index] = values;
-            setTableData([...tableData]);
+            bigToast('Equipo Modificado Exitosamente!', 'success')
+            tableData[row.index] = values
+            setTableData([...tableData])
           } else {
-            console.error("Error al crear equipo");
+            console.error('Error al crear equipo')
           }
         } catch (error) {
-          console.error("Error de red:", error);
+          console.error('Error de red:', error)
         }
 
-        exitEditingMode(); //required to exit editing mode and close modal
+        exitEditingMode() //required to exit editing mode and close modal
       }
-    };
+    }
 
   const handleCancelRowEdits = () => {
-    setValidationErrors({});
-  };
+    setValidationErrors({})
+  }
 
   const deleteUser = async (rowIndex: number, id: number) => {
     try {
       const response = await axios.delete(`${apiUrl}/devices/${id}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      })
 
       if (response.status === 204) {
-        bigToast("Equipo Eliminado Exitosamente!", "success");
-        tableData.splice(rowIndex, 1);
-        setTableData([...tableData]);
+        bigToast('Equipo Eliminado Exitosamente!', 'success')
+        tableData.splice(rowIndex, 1)
+        setTableData([...tableData])
       } else {
-        console.error("Error al crear equipo");
+        console.error('Error al crear equipo')
       }
     } catch (error) {
-      console.error("Error de red:", error);
+      console.error('Error de red:', error)
     }
-  };
+  }
 
   const handleDeleteRow = useCallback(
     (row: MRT_Row<DeviceData>) => {
       if (
-        !confirm(`Esta seguro que desea eliminar ${row.getValue("name")} ?`)
+        !confirm(`Esta seguro que desea eliminar ${row.getValue('name')} ?`)
       ) {
-        return;
+        return
       }
-      deleteUser(row.index, row.getValue("id"));
-      tableData.splice(row.index, 1);
-      setTableData([...tableData]);
+      deleteUser(row.index, row.getValue('id'))
+      tableData.splice(row.index, 1)
+      setTableData([...tableData])
     },
     [tableData]
-  );
+  )
 
   const getCommonEditTextFieldProps = useCallback(
     (
       cell: MRT_Cell<DeviceData>
-    ): MRT_ColumnDef<DeviceData>["muiTableBodyCellEditTextFieldProps"] => {
+    ): MRT_ColumnDef<DeviceData>['muiTableBodyCellEditTextFieldProps'] => {
       return {
         error: !!validationErrors[cell.id],
         helperText: validationErrors[cell.id],
         onBlur: (event) => {
           const isValid =
-            cell.column.id === "email"
+            cell.column.id === 'email'
               ? validateEmail(event.target.value)
-              : cell.column.id === "age"
-              ? validateAge(+event.target.value)
-              : validateRequired(event.target.value);
+              : cell.column.id === 'age'
+                ? validateAge(+event.target.value)
+                : validateRequired(event.target.value)
           if (!isValid) {
             //set validation error for cell if invalid
             setValidationErrors({
               ...validationErrors,
-              [cell.id]: `${cell.column.columnDef.header} is required`,
-            });
+              [cell.id]: `${cell.column.columnDef.header} is required`
+            })
           } else {
             //remove validation error for cell if valid
-            delete validationErrors[cell.id];
+            delete validationErrors[cell.id]
             setValidationErrors({
-              ...validationErrors,
-            });
+              ...validationErrors
+            })
           }
-        },
-      };
+        }
+      }
     },
     [validationErrors]
-  );
+  )
 
   //should be memoized or stable
   const columns = useMemo<MRT_ColumnDef<DeviceData>[]>(
     () => [
       {
-        accessorKey: "id", //access nested data with dot notation
-        header: "ID",
+        accessorKey: 'id', //access nested data with dot notation
+        header: 'ID',
         // size: 1,
 
-        enableEditing: false,
+        enableEditing: false
       },
       {
-        accessorKey: "name", //access nested data with dot notation
-        header: "Nombre",
+        accessorKey: 'name', //access nested data with dot notation
+        header: 'Nombre',
         // size: 150,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-        }),
+          ...getCommonEditTextFieldProps(cell)
+        })
       },
       {
-        accessorKey: "magnitude",
-        header: "Magnitud",
+        accessorKey: 'magnitude',
+        header: 'Magnitud',
         // size: 150,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-        }),
+          ...getCommonEditTextFieldProps(cell)
+        })
       },
       {
-        accessorKey: "repository.name",
-        header: "Formato",
+        accessorKey: 'repository.name',
+        header: 'Formato',
 
         Edit: () => (
           <AsyncSelect
             cacheOptions
             // defaultOptions
 
-            placeholder="Buscar Formato"
+            placeholder='Buscar Formato'
             loadOptions={(inputValue) =>
-              loadOptions<RepositoryData>(inputValue, "repositories", (item) =>
-                mapOptions(item, "id", "name")
+              loadOptions<RepositoryData>(inputValue, 'repositories', (item) =>
+                mapOptions(item, 'id', 'name')
               )
             }
             onChange={(selectedOption: any) => setFormat(selectedOption) as any}
             styles={styles(false)}
           />
-        ),
-      },
+        )
+      }
     ],
     [getCommonEditTextFieldProps]
-  );
+  )
 
   return (
     <>
       <MaterialReactTable
         localization={MRT_Localization_ES}
         displayColumnDefOptions={{
-          "mrt-row-actions": {
+          'mrt-row-actions': {
             muiTableHeadCellProps: {
-              align: "center",
-            },
+              align: 'center'
+            }
             // size: 120,
-          },
+          }
         }}
         columns={columns}
         data={tableData}
-        editingMode="modal" //default
+        editingMode='modal' //default
         enableColumnOrdering
         enableEditing
         onEditingRowSave={handleSaveRowEdits}
         onEditingRowCancel={handleCancelRowEdits}
         initialState={{
-          columnVisibility: { id: false },
+          columnVisibility: { id: false }
         }}
         renderRowActions={({ row, table }) => (
           <Box
             sx={{
-              display: "flex",
-              gap: "1rem",
+              display: 'flex',
+              gap: '1rem',
               width: 20,
-              justifyItems: "center",
+              justifyItems: 'center'
             }}
           >
-            <Tooltip arrow placement="left" title="Edit">
+            <Tooltip arrow placement='left' title='Edit'>
               <IconButton onClick={() => table.setEditingRow(row)}>
                 <Edit />
               </IconButton>
             </Tooltip>
-            <Tooltip arrow placement="right" title="Delete">
-              <IconButton color="error" onClick={() => handleDeleteRow(row)}>
+            <Tooltip arrow placement='right' title='Delete'>
+              <IconButton color='error' onClick={() => handleDeleteRow(row)}>
                 <Delete />
               </IconButton>
             </Tooltip>
@@ -308,7 +308,7 @@ const Table: React.FC = () => {
         // <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear Equipo</button>
         renderTopToolbarCustomActions={() => (
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded "
+            className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded '
             onClick={() => setCreateModalOpen(true)}
           >
             Crear Nuevo Equipo
@@ -322,14 +322,14 @@ const Table: React.FC = () => {
         onSubmit={handleCreateNewRow}
       />
     </>
-  );
-};
+  )
+}
 
 interface CreateModalProps {
-  columns: MRT_ColumnDef<DeviceData>[];
-  onClose: () => void;
-  onSubmit: (values: DeviceData) => void;
-  open: boolean;
+  columns: MRT_ColumnDef<DeviceData>[]
+  onClose: () => void
+  onSubmit: (values: DeviceData) => void
+  open: boolean
 }
 
 //example of creating a mui dialog modal for creating new rows
@@ -337,51 +337,51 @@ export const CreateNewAccountModal = ({
   open,
   columns,
   onClose,
-  onSubmit,
+  onSubmit
 }: CreateModalProps) => {
   const [values, setValues] = useState<any>(() =>
     columns.reduce((acc, column) => {
-      acc[column.accessorKey ?? ""] = "";
-      return acc;
+      acc[column.accessorKey ?? ''] = ''
+      return acc
     }, {} as any)
-  );
+  )
 
-  console.log(values);
+  console.log(values)
 
   const handleSubmit = () => {
     //put your validation logic here
-    onSubmit(values);
-    onClose();
-  };
+    onSubmit(values)
+    onClose()
+  }
 
   return (
     <Dialog open={open}>
-      <DialogTitle textAlign="center">Crear Nuevo Equipo</DialogTitle>
+      <DialogTitle textAlign='center'>Crear Nuevo Equipo</DialogTitle>
       <DialogContent>
         <form onSubmit={(e) => e.preventDefault()}>
           <Stack
             sx={{
-              width: "100%",
-              minWidth: { xs: "300px", sm: "360px", md: "400px" },
-              gap: "1.5rem",
+              width: '100%',
+              minWidth: { xs: '300px', sm: '360px', md: '400px' },
+              gap: '1.5rem'
             }}
           >
             {columns.map(
               (column) => {
-                if (column.accessorKey === "id") {
-                  return null;
+                if (column.accessorKey === 'id') {
+                  return null
                 }
-                if (column.accessorKey === "repository.name") {
+                if (column.accessorKey === 'repository.name') {
                   return (
                     <AsyncSelect
                       cacheOptions
                       // defaultOptions
-                      placeholder="Buscar Formato"
+                      placeholder='Buscar Formato'
                       loadOptions={(inputValue) =>
                         loadOptions<RepositoryData>(
                           inputValue,
-                          "repositories",
-                          (item) => mapOptions(item, "id", "name")
+                          'repositories',
+                          (item) => mapOptions(item, 'id', 'name')
                         )
                       }
                       onChange={(selectedOption: any) =>
@@ -389,13 +389,13 @@ export const CreateNewAccountModal = ({
                           ...values,
                           repository: {
                             id: selectedOption.value,
-                            name: selectedOption.label,
-                          },
+                            name: selectedOption.label
+                          }
                         }) as any
                       }
                       styles={styles(false)}
                     />
-                  );
+                  )
                 } else {
                   return (
                     <TextField
@@ -405,11 +405,11 @@ export const CreateNewAccountModal = ({
                       onChange={(e) =>
                         setValues({
                           ...values,
-                          [e.target.name]: e.target.value,
+                          [e.target.name]: e.target.value
                         })
                       }
                     />
-                  );
+                  )
                 }
               }
 
@@ -427,32 +427,32 @@ export const CreateNewAccountModal = ({
           </Stack>
         </form>
       </DialogContent>
-      <DialogActions sx={{ p: "1.25rem" }}>
+      <DialogActions sx={{ p: '1.25rem' }}>
         <button
-          className="bg-gray-400 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-10"
+          className='bg-gray-400 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-10'
           onClick={onClose}
         >
           Cancelar
         </button>
         <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
           onClick={handleSubmit}
         >
           Crear Equipo
         </button>
       </DialogActions>
     </Dialog>
-  );
-};
+  )
+}
 
-const validateRequired = (value: string) => !!value.length;
+const validateRequired = (value: string) => !!value.length
 const validateEmail = (email: string) =>
   !!email.length &&
   email
     .toLowerCase()
     .match(
       /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-    );
-const validateAge = (age: number) => age >= 18 && age <= 50;
+    )
+const validateAge = (age: number) => age >= 18 && age <= 50
 
-export default Table;
+export default Table

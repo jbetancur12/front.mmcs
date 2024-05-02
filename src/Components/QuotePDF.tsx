@@ -1,35 +1,35 @@
-import React from "react";
+import React from 'react'
 import {
   Image,
   Text,
   View,
   StyleSheet,
   Page,
-  Document,
-} from "@react-pdf/renderer";
-import { QuoteData } from "./TableQuotes";
-import { createTw } from "react-pdf-tailwind";
-import { format } from "date-fns";
+  Document
+} from '@react-pdf/renderer'
+import { QuoteData } from './TableQuotes'
+import { createTw } from 'react-pdf-tailwind'
+import { format } from 'date-fns'
 
 interface Props {
-  quoteData: QuoteData | null;
+  quoteData: QuoteData | null
 }
 
-const mainColor = "#4472C4";
+const mainColor = '#4472C4'
 
 const QuotePDF: React.FC<Props> = ({ quoteData }) => {
   const tw = createTw({
     theme: {
       fontFamily: {
-        sans: ["Comic Sans"],
+        sans: ['Comic Sans']
       },
       extend: {
         colors: {
-          custom: "#bada55",
-        },
-      },
-    },
-  });
+          custom: '#bada55'
+        }
+      }
+    }
+  })
 
   const styles = StyleSheet.create({
     page: {
@@ -38,35 +38,35 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
       paddingLeft: 40,
       paddingRight: 40,
       lineHeight: 1.5,
-      flexDirection: "column",
+      flexDirection: 'column'
     },
     spaceBetween: {
       flex: 1,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      color: "#3E3E3E",
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      color: '#3E3E3E'
     },
-    titleContainer: { flexDirection: "row", marginTop: 24 },
+    titleContainer: { flexDirection: 'row', marginTop: 24 },
     logo: { width: 90 },
-    reportTitle: { fontSize: 16, textAlign: "center" },
-    addressTitle: { fontSize: 11, fontStyle: "bold" },
-    invoice: { fontWeight: "bold", fontSize: 20 },
-    invoiceNumber: { fontSize: 11, fontWeight: "bold" },
+    reportTitle: { fontSize: 16, textAlign: 'center' },
+    addressTitle: { fontSize: 11, fontStyle: 'bold' },
+    invoice: { fontWeight: 'bold', fontSize: 20 },
+    invoiceNumber: { fontSize: 11, fontWeight: 'bold' },
     address: { fontWeight: 400, fontSize: 10 },
     theader: {
       marginTop: 20,
       fontSize: 10,
-      fontStyle: "bold",
+      fontStyle: 'bold',
       paddingTop: 4,
       paddingLeft: 7,
       flex: 1,
-      textAlign: "center",
+      textAlign: 'center',
       //   height: 20,
       backgroundColor: mainColor,
-      borderColor: "whitesmoke",
+      borderColor: 'whitesmoke',
       borderRightWidth: 1,
-      borderBottomWidth: 1,
+      borderBottomWidth: 1
     },
 
     theader2: { flex: 2, borderRightWidth: 0, borderBottomWidth: 1 },
@@ -75,18 +75,18 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
       paddingTop: 4,
       paddingLeft: 7,
       flex: 1,
-      borderColor: "whitesmoke",
+      borderColor: 'whitesmoke',
       borderRightWidth: 1,
-      borderBottomWidth: 1,
+      borderBottomWidth: 1
     },
     alignCenter: {
-      textAlign: "center",
+      textAlign: 'center'
     },
     total: {
       fontSize: 9,
       paddingTop: 4,
       paddingLeft: 7,
-      flex: 1.5,
+      flex: 1.5
       //   borderColor: "whitesmoke",
       //   borderBottomWidth: 1,
     },
@@ -96,53 +96,53 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
       fontSize: 10,
       paddingTop: 4,
       paddingLeft: 7,
-      borderColor: "whitesmoke",
+      borderColor: 'whitesmoke',
       borderRightWidth: 1,
-      borderBottomWidth: 1,
+      borderBottomWidth: 1
     },
     descContainer2: {
-      backgroundColor: mainColor,
+      backgroundColor: mainColor
     },
     widthLogo: {
       width: 60,
-      marginLeft: 30,
+      marginLeft: 30
     },
     width25: {
-      width: "25%",
+      width: '25%'
     },
     width75: {
-      width: "75%",
+      width: '75%'
     },
     fontBold: {
-      fontWeight: "bold",
+      fontWeight: 'bold'
     },
     width10: {
-      width: "10%",
+      width: '10%'
     },
     width20: {
-      width: "20%",
+      width: '20%'
     },
     width60: {
-      width: "60%",
+      width: '60%'
     },
     width30: {
-      width: "30%",
+      width: '30%'
     },
     width40: {
-      width: "40%",
+      width: '40%'
     },
     width50: {
-      width: "50%",
+      width: '50%'
     },
     width80: {
-      width: "80%",
+      width: '80%'
     },
     bl: {},
     ml4: {
-      marginLeft: 20,
+      marginLeft: 20
     },
     mb20: {
-      marginBottom: 20,
+      marginBottom: 20
     },
     footer: {
       //position: "absolute",
@@ -151,57 +151,57 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
       marginTop: 20,
       left: 0,
       right: 0,
-      textAlign: "center",
+      textAlign: 'center',
 
-      fontSize: 8,
+      fontSize: 8
     },
     content: {
       flexGrow: 1, // Para que el contenido ocupe todo el espacio vertical disponible
-      marginBottom: 20,
+      marginBottom: 20
       // Espacio interno alrededor del contenido
-    },
-  });
+    }
+  })
 
   const Header = () => (
-    <View style={tw("border border-black flex  flex-row mb-10	")} fixed>
-      <View style={[styles.width25, tw("border-r")]}>
-        <Text style={[tw("border-b px-1 text-xs py-1")]}>
+    <View style={tw('border border-black flex  flex-row mb-10	')} fixed>
+      <View style={[styles.width25, tw('border-r')]}>
+        <Text style={[tw('border-b px-1 text-xs py-1')]}>
           CÓDIGO: FOGC-MMCS-31
         </Text>
-        <Text style={[tw("border-b  px-1 py-1 text-xs ")]}>VERSIÓN: 01</Text>
-        <Text style={[tw("border-b  px-1 text-xs py-1")]}>
+        <Text style={[tw('border-b  px-1 py-1 text-xs ')]}>VERSIÓN: 01</Text>
+        <Text style={[tw('border-b  px-1 text-xs py-1')]}>
           FECHA: 2019-03-20
         </Text>
         <Text
-          style={[tw(" px-1 text-xs py-1")]}
+          style={[tw(' px-1 text-xs py-1')]}
           render={({ pageNumber, totalPages }) =>
             `Página ${pageNumber} de ${totalPages}`
           }
         />
       </View>
-      <View style={[styles.width50, tw("border-r flex justify-center")]}>
-        <Text style={[tw("text-center top-1")]}>METROMEDICS</Text>
-        <Text style={tw("border-b mt-2")}></Text>
+      <View style={[styles.width50, tw('border-r flex justify-center')]}>
+        <Text style={[tw('text-center top-1')]}>METROMEDICS</Text>
+        <Text style={tw('border-b mt-2')}></Text>
         {/* <Text style={[tw("text-center text-sm top-1"), styles.fontBold]}>
           OFERTA COMERCIAL Y CONDICIONES DE {"\n"} SERVICIO DE VENTA DE EQUIPOS
           E INSUMOS
         </Text> */}
-        <Text style={[tw("text-center text-sm top-1"), styles.fontBold]}>
+        <Text style={[tw('text-center text-sm top-1'), styles.fontBold]}>
           OFERTA COMERCIAL
         </Text>
       </View>
       <View style={styles.width25}>
         <Image
-          style={[tw("top-1  p-2"), styles.widthLogo]}
-          src="/images/logo3.jpeg"
+          style={[tw('top-1  p-2'), styles.widthLogo]}
+          src='/images/logo3.jpeg'
         ></Image>
       </View>
     </View>
-  );
+  )
 
   const InvoiceDescription = () => (
-    <View style={tw("")}>
-      <View style={tw("flex flex-row mb-4 ")}>
+    <View style={tw('')}>
+      <View style={tw('flex flex-row mb-4 ')}>
         <View
           style={[styles.descContainer, styles.descContainer2, styles.width25]}
         >
@@ -215,17 +215,17 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
             styles.ml4,
             styles.descContainer,
             styles.descContainer2,
-            styles.width25,
+            styles.width25
           ]}
         >
           <Text>Fecha de Elaboración</Text>
         </View>
         <View style={[styles.descContainer, styles.ml4, styles.width25]}>
           {/* @ts-ignore */}
-          <Text>{format(new Date(quoteData.createdAt), "yyyy-MM-dd")}</Text>
+          <Text>{format(new Date(quoteData.createdAt), 'yyyy-MM-dd')}</Text>
         </View>
       </View>
-      <View style={tw("flex flex-row mb-4")}>
+      <View style={tw('flex flex-row mb-4')}>
         <View
           style={[styles.descContainer, styles.descContainer2, styles.width10]}
         >
@@ -236,7 +236,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
             styles.descContainer,
             styles.width75,
             styles.ml4,
-            styles.width60,
+            styles.width60
           ]}
         >
           <Text>{quoteData?.customer.nombre}</Text>
@@ -246,7 +246,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
             styles.ml4,
             styles.descContainer,
             styles.descContainer2,
-            styles.width10,
+            styles.width10
           ]}
         >
           <Text>Nit</Text>
@@ -256,14 +256,14 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
             styles.descContainer,
             styles.width75,
             styles.ml4,
-            styles.width20,
+            styles.width20
           ]}
         >
           <Text>{quoteData?.customer.identificacion}</Text>
         </View>
       </View>
       // Direccion
-      <View style={tw("flex flex-row mb-4")}>
+      <View style={tw('flex flex-row mb-4')}>
         <View
           style={[styles.descContainer, styles.descContainer2, styles.width20]}
         >
@@ -274,7 +274,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
         </View>
       </View>
       // Ciudad y Telefono
-      <View style={tw("flex flex-row mb-4")}>
+      <View style={tw('flex flex-row mb-4')}>
         <View
           style={[styles.descContainer, styles.descContainer2, styles.width10]}
         >
@@ -289,7 +289,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
             styles.ml4,
             styles.descContainer,
             styles.descContainer2,
-            styles.width10,
+            styles.width10
           ]}
         >
           <Text>Telefono</Text>
@@ -298,7 +298,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
           <Text>{quoteData?.customer.telefono}</Text>
         </View>
       </View>
-      <View style={tw("flex flex-row mb-4")}>
+      <View style={tw('flex flex-row mb-4')}>
         <View
           style={[styles.descContainer, styles.descContainer2, styles.width10]}
         >
@@ -309,17 +309,17 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
             styles.descContainer,
             styles.width75,
             styles.ml4,
-            styles.width60,
+            styles.width60
           ]}
         >
           <Text>{quoteData?.customer.email}</Text>
         </View>
       </View>
     </View>
-  );
+  )
 
   const TableHead = () => (
-    <View style={{ width: "100%", flexDirection: "row", marginTop: 10 }}>
+    <View style={{ width: '100%', flexDirection: 'row', marginTop: 10 }}>
       <View style={[styles.theader]}>
         <Text>Item</Text>
       </View>
@@ -336,15 +336,15 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
         <Text>Total</Text>
       </View>
     </View>
-  );
+  )
 
   const TableBody = () =>
     quoteData?.products.map((product: any, idx: number) => {
-      const { id, name, quantity, price } = product;
-      const total = quantity * price;
+      const { id, name, quantity, price } = product
+      const total = quantity * price
       return (
         <View key={id}>
-          <View style={{ width: "100%", flexDirection: "row" }}>
+          <View style={{ width: '100%', flexDirection: 'row' }}>
             <View style={[styles.tbody, styles.alignCenter]}>
               <Text>{idx + 1}</Text>
             </View>
@@ -356,28 +356,28 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
             </View>
             <View style={[styles.tbody, styles.alignCenter]}>
               <Text>
-                ${" "}
-                {price.toLocaleString("es-ES", {
-                  minimumFractionDigits: 2,
-                })}{" "}
+                ${' '}
+                {price.toLocaleString('es-ES', {
+                  minimumFractionDigits: 2
+                })}{' '}
               </Text>
             </View>
 
             <View style={[styles.tbody, styles.alignCenter]}>
               <Text>
-                ${" "}
-                {total.toLocaleString("es-ES", {
-                  minimumFractionDigits: 2,
-                })}{" "}
+                ${' '}
+                {total.toLocaleString('es-ES', {
+                  minimumFractionDigits: 2
+                })}{' '}
               </Text>
             </View>
           </View>
         </View>
-      );
-    });
+      )
+    })
 
   const TableTotal = () => (
-    <View style={{ width: "100%", flexDirection: "row" }}>
+    <View style={{ width: '100%', flexDirection: 'row' }}>
       <View style={styles.total}>
         <Text></Text>
       </View>
@@ -392,17 +392,17 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
       </View>
       <View style={styles.tbody}>
         <Text>
-          ${" "}
-          {quoteData?.subtotal.toLocaleString("es-ES", {
-            minimumFractionDigits: 2,
+          ${' '}
+          {quoteData?.subtotal.toLocaleString('es-ES', {
+            minimumFractionDigits: 2
           })}
         </Text>
       </View>
     </View>
-  );
+  )
 
   const TableDiscount = () => (
-    <View style={{ width: "100%", flexDirection: "row" }}>
+    <View style={{ width: '100%', flexDirection: 'row' }}>
       <View style={styles.total}>
         <Text></Text>
       </View>
@@ -417,17 +417,17 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
       </View>
       <View style={styles.tbody}>
         <Text>
-          ${" "}
-          {quoteData?.discountTotal.toLocaleString("es-ES", {
-            minimumFractionDigits: 2,
+          ${' '}
+          {quoteData?.discountTotal.toLocaleString('es-ES', {
+            minimumFractionDigits: 2
           })}
         </Text>
       </View>
     </View>
-  );
+  )
 
   const TableTax = () => (
-    <View style={{ width: "100%", flexDirection: "row" }}>
+    <View style={{ width: '100%', flexDirection: 'row' }}>
       <View style={styles.total}>
         <Text></Text>
       </View>
@@ -442,29 +442,29 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
       </View>
       <View style={styles.tbody}>
         <Text>
-          ${" "}
-          {quoteData?.taxTotal.toLocaleString("es-ES", {
-            minimumFractionDigits: 2,
+          ${' '}
+          {quoteData?.taxTotal.toLocaleString('es-ES', {
+            minimumFractionDigits: 2
           })}
         </Text>
       </View>
     </View>
-  );
+  )
 
   const Footer = () => (
     <View style={styles.footer} fixed>
-      <Text style={tw("text-center")}>
+      <Text style={tw('text-center')}>
         Metromedics S.A.S Nit. 900.816.433-3 Dosquebradas - Risaralda
       </Text>
-      <Text style={tw("text-center")}>
+      <Text style={tw('text-center')}>
         Contáctenos: 3113441682 - (606) 3256584 comercial@metromedicslab.com.co
       </Text>
-      <Text style={tw("text-center")}>www.metromedics.co</Text>
+      <Text style={tw('text-center')}>www.metromedics.co</Text>
     </View>
-  );
+  )
 
   const TableTotalAmount = () => (
-    <View style={{ width: "100%", flexDirection: "row" }}>
+    <View style={{ width: '100%', flexDirection: 'row' }}>
       <View style={styles.total}>
         <Text></Text>
       </View>
@@ -479,30 +479,30 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
       </View>
       <View style={styles.tbody}>
         <Text>
-          ${" "}
-          {quoteData?.total.toLocaleString("es-ES", {
-            minimumFractionDigits: 2,
+          ${' '}
+          {quoteData?.total.toLocaleString('es-ES', {
+            minimumFractionDigits: 2
           })}
         </Text>
       </View>
     </View>
-  );
+  )
 
   // Add the missing import statement
 
   const Observations = () => (
-    <View style={tw("border border-black text-sm")}>
+    <View style={tw('border border-black text-sm')}>
       <View>
         <Text style={tw(`px-1 pt-1 font-semibold bg-[${mainColor}]`)}>
           Comentarios:
         </Text>
       </View>
       {/* <Text style={tw("border-t p-2 min-h-28")}>{quoteData?.observations}</Text> */}
-      <View style={[tw("border-t min-h-20"), { flexDirection: "column" }]}>
+      <View style={[tw('border-t min-h-20'), { flexDirection: 'column' }]}>
         {quoteData?.comments.map((comment: any, idx: number) => (
           <View
             key={idx}
-            style={{ flexDirection: "row", marginBottom: 1, marginTop: 2 }}
+            style={{ flexDirection: 'row', marginBottom: 1, marginTop: 2 }}
           >
             <Text style={{ marginHorizontal: 8 }}>*</Text>
             <Text>{comment}</Text>
@@ -510,49 +510,49 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
         ))}
       </View>
     </View>
-  );
+  )
 
   const GeneralConditions = () => (
-    <View style={tw("border mt-5 border-black text-sm")}>
+    <View style={tw('border mt-5 border-black text-sm')}>
       <Text style={tw(`px-1 py-1 font-semibold bg-[${mainColor}]`)}>
         Condiciones Generales:
       </Text>
-      <Text style={tw("border-t p-2 min-h-28")}>
+      <Text style={tw('border-t p-2 min-h-28')}>
         Metromedics es responsable del manejo de toda la información del cliente
-        obtenida durante la ejecución de las actividades de calibración. {"\n"}
+        obtenida durante la ejecución de las actividades de calibración. {'\n'}
         El personal de Metromedics no está sometido a presiones comerciales,
         financieras o de otro tipo, tanto externas como internas que puedan
         influenciar el juicio técnico y transparente de los resultados obtenidos
         en el servicio.
       </Text>
     </View>
-  );
+  )
 
   const PaymentConditions = () => (
-    <View style={tw("mt-5  border border-black text-sm")}>
+    <View style={tw('mt-5  border border-black text-sm')}>
       <Text style={tw(`p-1 font-semibold bg-[${mainColor}]`)}>
         Condiciones de pago:
       </Text>
-      <Text style={tw("border-t p-2 min-h-28")}>
+      <Text style={tw('border-t p-2 min-h-28')}>
         {quoteData?.otherFields?.paymentConditions}
       </Text>
     </View>
-  );
+  )
   const DeliveryConditions = () => (
-    <View style={tw("mt-5  border border-black text-sm")}>
+    <View style={tw('mt-5  border border-black text-sm')}>
       <Text style={tw(`p-1 font-semibold bg-[${mainColor}]`)}>
         Condiciones de Entrega:
       </Text>
-      <Text style={tw("border-t p-2 min-h-28")}>
-        Tiempo de entrega de los equipos {"      "}8 días habiles
+      <Text style={tw('border-t p-2 min-h-28')}>
+        Tiempo de entrega de los equipos {'      '}8 días habiles
       </Text>
     </View>
-  );
+  )
 
   return (
     <>
       <Document>
-        <Page size="A4" style={styles.page} wrap={true}>
+        <Page size='A4' style={styles.page} wrap={true}>
           <Header />
           <View style={styles.content}>
             <InvoiceDescription />
@@ -565,7 +565,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
           </View>
           <Footer />
         </Page>
-        <Page size="A4" style={styles.page} wrap={true}>
+        <Page size='A4' style={styles.page} wrap={true}>
           <Header />
           <View style={styles.content}>
             <Observations />
@@ -577,7 +577,7 @@ const QuotePDF: React.FC<Props> = ({ quoteData }) => {
         </Page>
       </Document>
     </>
-  );
-};
+  )
+}
 
-export default QuotePDF;
+export default QuotePDF

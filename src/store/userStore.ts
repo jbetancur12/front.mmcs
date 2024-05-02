@@ -1,8 +1,8 @@
-import { atom } from 'nanostores';
+import { atom } from 'nanostores'
 
 interface UserData {
-  nombre: string;
-  email: string;
+  nombre: string
+  email: string
   rol: string
 }
 
@@ -10,4 +10,4 @@ export const userStore = atom<UserData>({
   nombre: '',
   email: '',
   rol: ''
-});
+})

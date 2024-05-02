@@ -1,14 +1,14 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
-import { Box, Button } from "@mui/material";
-import { api } from "../config";
-import { ArrowBack } from "@mui/icons-material";
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import axios from 'axios'
+import { Box, Button } from '@mui/material'
+import { api } from '../config'
+import { ArrowBack } from '@mui/icons-material'
 
-import QuotePDFGenerator from "../Components/QuotePDFGenerator";
-import { QuoteData } from "../Components/TableQuotes";
+import QuotePDFGenerator from '../Components/QuotePDFGenerator'
+import { QuoteData } from '../Components/TableQuotes'
 
-const apiUrl = api();
+const apiUrl = api()
 
 // interface Product {
 //   name: string;
@@ -42,41 +42,41 @@ const apiUrl = api();
 // }
 
 const Quote = () => {
-  const [quoteData, setQuoteData] = useState<QuoteData | null>(null);
-  const { id } = useParams<{ id: string }>();
+  const [quoteData, setQuoteData] = useState<QuoteData | null>(null)
+  const { id } = useParams<{ id: string }>()
 
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   const handleGoBack = () => {
-    navigate(-1); // Regresa a la página anterior en el historial de navegación
-  };
+    navigate(-1) // Regresa a la página anterior en el historial de navegación
+  }
 
   useEffect(() => {
     const fetchQuote = async () => {
       try {
         const response = await axios.get<QuoteData>(`${apiUrl}/quotes/${id}`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        });
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+          }
+        })
 
-        if (response.statusText === "OK") {
-          setQuoteData(response.data);
+        if (response.statusText === 'OK') {
+          setQuoteData(response.data)
         }
       } catch (error) {
-        console.error("Error fetching quote data:", error);
+        console.error('Error fetching quote data:', error)
       }
-    };
+    }
 
-    fetchQuote();
-  }, [id]);
+    fetchQuote()
+  }, [id])
 
-  if (!quoteData) return <div>Loading...</div>;
+  if (!quoteData) return <div>Loading...</div>
 
   return (
     <Box p={4}>
       <Button
-        variant="contained"
+        variant='contained'
         onClick={handleGoBack}
         startIcon={<ArrowBack />}
         sx={{ mb: 2 }}
@@ -84,7 +84,7 @@ const Quote = () => {
 
       <QuotePDFGenerator quoteData={quoteData} />
     </Box>
-  );
-};
+  )
+}
 
-export default Quote;
+export default Quote

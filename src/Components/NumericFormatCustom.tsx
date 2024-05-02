@@ -1,15 +1,15 @@
-import { NumericFormat, NumericFormatProps } from "react-number-format";
-import { IMaskInput } from "react-imask";
+import { NumericFormat, NumericFormatProps } from 'react-number-format'
+import { IMaskInput } from 'react-imask'
 
-import * as React from "react";
+import * as React from 'react'
 interface CustomProps {
-  onChange: (event: { target: { name: string; value: string } }) => void;
-  name: string;
+  onChange: (event: { target: { name: string; value: string } }) => void
+  name: string
 }
 
 export const TextMaskCustom = React.forwardRef<HTMLInputElement, CustomProps>(
   function TextMaskCustom(props, ref) {
-    const { onChange, ...other } = props;
+    const { onChange, ...other } = props
 
     return (
       <IMaskInput
@@ -24,15 +24,15 @@ export const TextMaskCustom = React.forwardRef<HTMLInputElement, CustomProps>(
         }
         overwrite
       />
-    );
+    )
   }
-);
+)
 
 export const NumericFormatCustom = React.forwardRef<
   NumericFormatProps,
   CustomProps
 >(function NumericFormatCustom(props, ref) {
-  const { onChange, ...other } = props;
+  const { onChange, ...other } = props
 
   return (
     <NumericFormat
@@ -42,13 +42,13 @@ export const NumericFormatCustom = React.forwardRef<
         onChange({
           target: {
             name: props.name,
-            value: values.value,
-          },
-        });
+            value: values.value
+          }
+        })
       }}
       thousandSeparator
       valueIsNumericString
-      prefix="$"
+      prefix='$'
     />
-  );
-});
+  )
+})

@@ -7,39 +7,39 @@ import {
   MenuItem,
   Select,
   Stack,
-  TextField,
-} from "@mui/material";
-import axios from "axios";
+  TextField
+} from '@mui/material'
+import axios from 'axios'
 import {
   MaterialReactTable,
   MaterialReactTableProps,
   MRT_Cell,
-  type MRT_ColumnDef,
-} from "material-react-table";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
-import { api } from "../config";
-import { MRT_Localization_ES } from "material-react-table/locales/es";
+  type MRT_ColumnDef
+} from 'material-react-table'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import toast, { Toaster } from 'react-hot-toast'
+import { api } from '../config'
+import { MRT_Localization_ES } from 'material-react-table/locales/es'
 
 // Define interfaces
 export interface UserData {
-  id: number;
-  nombre: string;
-  rol: string;
-  email: number;
-  createdAt: string;
+  id: number
+  nombre: string
+  rol: string
+  email: number
+  createdAt: string
 }
 
 // API URL
-const apiUrl = api();
+const apiUrl = api()
 
 // Main component
 const TableOwnUsers: React.FC = () => {
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [tableData, setTableData] = useState<UserData[]>([]);
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [tableData, setTableData] = useState<UserData[]>([])
   const [validationErrors, setValidationErrors] = useState<{
-    [cellId: string]: string;
-  }>({});
+    [cellId: string]: string
+  }>({})
 
   // const [filteredTableData, setFilteredTableData] = useState<UserData[]>([]);
 
@@ -50,18 +50,18 @@ const TableOwnUsers: React.FC = () => {
     try {
       const response = await axios.get(`${apiUrl}/users/own-users`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      })
 
-      if (response.statusText === "OK") {
+      if (response.statusText === 'OK') {
         // @ts-ignore: Ignorar el error en esta línea
-        setTableData(response.data);
+        setTableData(response.data)
       }
     } catch (error) {
-      console.error("Error fetching device data:", error);
+      console.error('Error fetching device data:', error)
     }
-  };
+  }
 
   // const updateUser = async (UserData: UserData) => {
 
@@ -87,113 +87,113 @@ const TableOwnUsers: React.FC = () => {
   // }
 
   const handleCancelRowEdits = () => {
-    setValidationErrors({});
-  };
+    setValidationErrors({})
+  }
 
-  const handleSaveRowEdits: MaterialReactTableProps<UserData>["onEditingRowSave"] =
+  const handleSaveRowEdits: MaterialReactTableProps<UserData>['onEditingRowSave'] =
     async ({ exitEditingMode, row, values }) => {
       if (!Object.keys(validationErrors).length) {
-        const updatedValues = { ...values };
-        delete updatedValues.id;
+        const updatedValues = { ...values }
+        delete updatedValues.id
         try {
           const response = await axios.put(
             `${apiUrl}/products/${values.id}`,
             updatedValues,
             {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-              },
+                Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+              }
             }
-          );
+          )
 
           if (response.status === 200) {
-            toast.success("Producto Modificado Exitosamente!", {
+            toast.success('Producto Modificado Exitosamente!', {
               duration: 4000,
-              position: "top-center",
-            });
-            tableData[row.index] = values;
-            setTableData([...tableData]);
+              position: 'top-center'
+            })
+            tableData[row.index] = values
+            setTableData([...tableData])
           } else {
-            console.error("Error al modificar producto");
+            console.error('Error al modificar producto')
           }
         } catch (error) {
-          console.error("Error de red:", error);
+          console.error('Error de red:', error)
         }
 
-        exitEditingMode(); //required to exit editing mode and close modal
+        exitEditingMode() //required to exit editing mode and close modal
       }
-    };
+    }
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    fetchUsers()
+  }, [])
 
   const getCommonEditTextFieldProps = useCallback(
     (
       cell: MRT_Cell<UserData>
-    ): MRT_ColumnDef<UserData>["muiTableBodyCellEditTextFieldProps"] => {
+    ): MRT_ColumnDef<UserData>['muiTableBodyCellEditTextFieldProps'] => {
       return {
         error: !!validationErrors[cell.id],
         helperText: validationErrors[cell.id],
         onBlur: (event) => {
-          const isValid = validateRequired(event.target.value);
+          const isValid = validateRequired(event.target.value)
           if (!isValid) {
             //set validation error for cell if invalid
             setValidationErrors({
               ...validationErrors,
-              [cell.id]: `${cell.column.columnDef.header} is required`,
-            });
+              [cell.id]: `${cell.column.columnDef.header} is required`
+            })
           } else {
             //remove validation error for cell if valid
-            delete validationErrors[cell.id];
+            delete validationErrors[cell.id]
             setValidationErrors({
-              ...validationErrors,
-            });
+              ...validationErrors
+            })
           }
-        },
-      };
+        }
+      }
     },
     [validationErrors]
-  );
+  )
 
   //should be memoized or stable
   const columns = useMemo<MRT_ColumnDef<UserData>[]>(
     () => [
       {
-        accessorKey: "id",
-        header: "ID",
+        accessorKey: 'id',
+        header: 'ID'
       },
       {
-        accessorKey: "nombre",
-        header: "Nombre",
+        accessorKey: 'nombre',
+        header: 'Nombre',
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-        }),
+          ...getCommonEditTextFieldProps(cell)
+        })
       },
       {
-        accessorKey: "email",
-        header: "Email",
+        accessorKey: 'email',
+        header: 'Email',
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-        }),
+          ...getCommonEditTextFieldProps(cell)
+        })
       },
       {
-        accessorKey: "rol",
-        header: "Rol",
+        accessorKey: 'rol',
+        header: 'Rol',
         Edit: ({ cell }) => (
           <Select
             defaultValue={cell.renderValue()}
             onChange={(e) => {
-              const newValue = e.target.value;
-              console.log("Nuevo valor seleccionado:", newValue);
+              const newValue = e.target.value
+              console.log('Nuevo valor seleccionado:', newValue)
             }}
             fullWidth
           >
-            <MenuItem value="admin">Administrador</MenuItem>
-            <MenuItem value="metrologist">Metrologista</MenuItem>
-            <MenuItem value="secretary">Secretario</MenuItem>
+            <MenuItem value='admin'>Administrador</MenuItem>
+            <MenuItem value='metrologist'>Metrologista</MenuItem>
+            <MenuItem value='secretary'>Secretario</MenuItem>
           </Select>
-        ),
+        )
         // Edit: ({ cell }) => {
         //   let value = cell.renderValue();
         //   return (
@@ -208,42 +208,42 @@ const TableOwnUsers: React.FC = () => {
         //     </Select>
         //   );
         // },
-      },
+      }
     ],
     [getCommonEditTextFieldProps] // No hay dependencias específicas aquí
-  );
+  )
 
   const onCreateUser = async (productData: UserData) => {
     try {
       const response = await axios.post(
         `${apiUrl}/auth/register`,
-        { ...productData, contraseña: "password" },
+        { ...productData, contraseña: 'password' },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+          }
         }
-      );
+      )
 
       if (response.status === 201) {
-        toast.success("Producto Creado Exitosamente!", {
+        toast.success('Producto Creado Exitosamente!', {
           duration: 4000,
-          position: "top-center",
-        });
-        setTableData([...tableData, response.data]);
+          position: 'top-center'
+        })
+        setTableData([...tableData, response.data])
         // Refresh data after creation
       } else {
-        console.error("Error al crear equipo");
+        console.error('Error al crear equipo')
       }
     } catch (error) {
-      console.error("Error de red:", error);
+      console.error('Error de red:', error)
     }
-  };
+  }
 
   const handleCreateNewRow = (values: UserData) => {
-    onCreateUser(values);
-    setCreateModalOpen(false);
-  };
+    onCreateUser(values)
+    setCreateModalOpen(false)
+  }
 
   return (
     <>
@@ -285,25 +285,25 @@ const TableOwnUsers: React.FC = () => {
         initialState={{
           sorting: [
             {
-              id: "id",
-              desc: false,
-            },
-          ],
+              id: 'id',
+              desc: false
+            }
+          ]
         }}
         muiTableProps={{
           sx: {
-            tableLayout: "fixed",
-            "& .MuiTableCell-root": {
-              textAlign: "center",
+            tableLayout: 'fixed',
+            '& .MuiTableCell-root': {
+              textAlign: 'center'
             },
-            "& .Mui-TableHeadCell-Content": {
-              justifyContent: "center",
-            },
-          },
+            '& .Mui-TableHeadCell-Content': {
+              justifyContent: 'center'
+            }
+          }
         }}
         columns={columns}
         data={tableData}
-        editingMode="modal" //default
+        editingMode='modal' //default
         enableEditing
         onEditingRowSave={handleSaveRowEdits}
         onEditingRowCancel={handleCancelRowEdits}
@@ -334,7 +334,7 @@ const TableOwnUsers: React.FC = () => {
         // // <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear Equipo</button>
         renderTopToolbarCustomActions={() => (
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded "
+            className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded '
             onClick={() => setCreateModalOpen(true)}
           >
             Crear Nuevo Usuario
@@ -348,67 +348,67 @@ const TableOwnUsers: React.FC = () => {
         onSubmit={handleCreateNewRow}
       />
     </>
-  );
-};
+  )
+}
 
 interface CreateModalProps {
-  columns: MRT_ColumnDef<UserData>[];
-  onClose: () => void;
-  onSubmit: (values: UserData) => void;
-  open: boolean;
+  columns: MRT_ColumnDef<UserData>[]
+  onClose: () => void
+  onSubmit: (values: UserData) => void
+  open: boolean
 }
 
 export const CreateNewAccountModal = ({
   open,
   columns,
   onClose,
-  onSubmit,
+  onSubmit
 }: CreateModalProps) => {
   const [values, setValues] = useState<any>(() =>
     columns.reduce((acc, column) => {
-      acc[column.accessorKey ?? ""] = "";
-      return acc;
+      acc[column.accessorKey ?? ''] = ''
+      return acc
     }, {} as any)
-  );
+  )
 
   const handleSubmit = () => {
     // Coloca aquí tu lógica de validación si es necesario
-    onSubmit(values);
-    onClose();
-  };
+    onSubmit(values)
+    onClose()
+  }
 
   return (
     <Dialog open={open}>
-      <DialogTitle textAlign="center">Crear Nuevo Equipo</DialogTitle>
+      <DialogTitle textAlign='center'>Crear Nuevo Equipo</DialogTitle>
       <DialogContent>
         <form onSubmit={(e) => e.preventDefault()}>
           <Stack
             sx={{
-              width: "100%",
-              minWidth: { xs: "300px", sm: "360px", md: "400px" },
-              gap: "1.5rem",
+              width: '100%',
+              minWidth: { xs: '300px', sm: '360px', md: '400px' },
+              gap: '1.5rem'
             }}
           >
             {columns.map((column) => (
               <React.Fragment key={column.accessorKey}>
-                {column.accessorKey !== "id" && (
+                {column.accessorKey !== 'id' && (
                   <>
-                    {column.accessorKey === "rol" ? (
+                    {column.accessorKey === 'rol' ? (
                       <Select
                         value={values[column.accessorKey]}
                         name={column.accessorKey}
                         onChange={(e) =>
                           setValues({
                             ...values,
-                            [e.target.name]: e.target.value,
+                            [e.target.name]: e.target.value
                           })
                         }
                         label={column.header}
                         fullWidth
                       >
-                        <MenuItem value="admin">Administrador</MenuItem>
-                        <MenuItem value="metrologist">Metrologista</MenuItem>
-                        <MenuItem value="secretary">Secretario</MenuItem>
+                        <MenuItem value='admin'>Administrador</MenuItem>
+                        <MenuItem value='metrologist'>Metrologista</MenuItem>
+                        <MenuItem value='secretary'>Secretario</MenuItem>
                       </Select>
                     ) : (
                       <TextField
@@ -417,7 +417,7 @@ export const CreateNewAccountModal = ({
                         onChange={(e) =>
                           setValues({
                             ...values,
-                            [e.target.name]: e.target.value,
+                            [e.target.name]: e.target.value
                           })
                         }
                       />
@@ -429,22 +429,22 @@ export const CreateNewAccountModal = ({
           </Stack>
         </form>
       </DialogContent>
-      <DialogActions sx={{ p: "1.25rem" }}>
+      <DialogActions sx={{ p: '1.25rem' }}>
         <Button
-          variant="contained"
+          variant='contained'
           onClick={onClose}
-          sx={{ backgroundColor: "#ccc", marginRight: "10px" }}
+          sx={{ backgroundColor: '#ccc', marginRight: '10px' }}
         >
           Cancelar
         </Button>
-        <Button variant="contained" color="primary" onClick={handleSubmit}>
+        <Button variant='contained' color='primary' onClick={handleSubmit}>
           Crear Producto
         </Button>
       </DialogActions>
     </Dialog>
-  );
-};
+  )
+}
 
-const validateRequired = (value: string) => !!value.length;
+const validateRequired = (value: string) => !!value.length
 
-export default TableOwnUsers;
+export default TableOwnUsers

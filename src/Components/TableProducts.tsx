@@ -5,54 +5,54 @@ import {
   DialogContent,
   DialogTitle,
   Stack,
-  TextField,
-} from "@mui/material";
-import axios from "axios";
+  TextField
+} from '@mui/material'
+import axios from 'axios'
 import {
   MaterialReactTable,
   MaterialReactTableProps,
   MRT_Cell,
-  type MRT_ColumnDef,
-} from "material-react-table";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+  type MRT_ColumnDef
+} from 'material-react-table'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { api } from "../config";
-import { MRT_Localization_ES } from "material-react-table/locales/es";
-import { NumericFormatCustom } from "./NumericFormatCustom";
-import { bigToast } from "./ExcelManipulation/Utils";
+import { api } from '../config'
+import { MRT_Localization_ES } from 'material-react-table/locales/es'
+import { NumericFormatCustom } from './NumericFormatCustom'
+import { bigToast } from './ExcelManipulation/Utils'
 
 // Define interfaces
 export interface ProductData {
-  id: number;
-  name: string;
-  price: number;
-  createdAt: string;
+  id: number
+  name: string
+  price: number
+  createdAt: string
 }
 
 // API URL
-const apiUrl = api();
+const apiUrl = api()
 
 // Main component
 const TableProducts: React.FC = () => {
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [tableData, setTableData] = useState<ProductData[]>([]);
-  const [price, setPrice] = useState(0);
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [tableData, setTableData] = useState<ProductData[]>([])
+  const [price, setPrice] = useState(0)
   const [validationErrors, setValidationErrors] = useState<{
-    [cellId: string]: string;
-  }>({});
-  const [percentage, setPercentage] = useState("0");
-  const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
+    [cellId: string]: string
+  }>({})
+  const [percentage, setPercentage] = useState('0')
+  const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false)
   // const [filteredTableData, setFilteredTableData] = useState<ProductData[]>([]);
 
   const updateAllPrices = async () => {
-    setConfirmationDialogOpen(false);
-    const parsedPercentage = parseFloat(percentage);
+    setConfirmationDialogOpen(false)
+    const parsedPercentage = parseFloat(percentage)
     if (!isNaN(parsedPercentage)) {
       try {
         // Realizar una solicitud POST al endpoint del controlador en Express
-        const response = await axios.put(apiUrl + "/products/update-prices", {
-          percentage: parsedPercentage,
-        });
+        const response = await axios.put(apiUrl + '/products/update-prices', {
+          percentage: parsedPercentage
+        })
 
         // Verificar si la solicitud fue exitosa
         if (response.status === 200) {
@@ -61,156 +61,156 @@ const TableProducts: React.FC = () => {
             ...product,
             price: parseFloat(
               (product.price * (1 + parsedPercentage / 100)).toFixed(2)
-            ),
-          }));
-          setTableData(updatedTableData);
+            )
+          }))
+          setTableData(updatedTableData)
 
           // Mostrar un mensaje de éxito
 
-          bigToast("Precios Actualizados Exitosamente!", "success");
+          bigToast('Precios Actualizados Exitosamente!', 'success')
         } else {
           // Mostrar un mensaje de error si la solicitud no fue exitosa
-          bigToast("Error al actualizar los precios", "error");
+          bigToast('Error al actualizar los precios', 'error')
         }
       } catch (error) {
         // Capturar errores de red o del servidor
 
-        bigToast("Error al actualizar los precios", "error");
+        bigToast('Error al actualizar los precios', 'error')
       }
     } else {
       // Mostrar un mensaje de error si el porcentaje es inválido
 
-      bigToast("Porcentaje inválido", "error");
+      bigToast('Porcentaje inválido', 'error')
     }
-  };
+  }
 
   // Create a new device
   const onCreateProduct = async (productData: ProductData) => {
     try {
       const response = await axios.post(`${apiUrl}/products`, productData, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      })
 
       if (response.status === 201) {
-        bigToast("Producto Creado Exitosamente!", "success");
-        fetchProducts(); // Refresh data after creation
+        bigToast('Producto Creado Exitosamente!', 'success')
+        fetchProducts() // Refresh data after creation
       } else {
-        console.error("Error al crear equipo");
+        console.error('Error al crear equipo')
       }
     } catch (error) {
-      console.error("Error de red:", error);
+      console.error('Error de red:', error)
     }
-  };
+  }
 
   // Fetch devices data
   const fetchProducts = async () => {
     try {
       const response = await axios.get(`${apiUrl}/products`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      })
 
-      if (response.statusText === "OK") {
+      if (response.statusText === 'OK') {
         // @ts-ignore: Ignorar el error en esta línea
-        setTableData(response.data);
+        setTableData(response.data)
       }
     } catch (error) {
-      console.error("Error fetching device data:", error);
+      console.error('Error fetching device data:', error)
     }
-  };
+  }
 
   const handleCancelRowEdits = () => {
-    setValidationErrors({});
-  };
+    setValidationErrors({})
+  }
 
-  const handleSaveRowEdits: MaterialReactTableProps<ProductData>["onEditingRowSave"] =
+  const handleSaveRowEdits: MaterialReactTableProps<ProductData>['onEditingRowSave'] =
     async ({ exitEditingMode, row, values }) => {
       if (!Object.keys(validationErrors).length) {
         const updatedValues = {
           ...values,
-          price: price > 0 ? price : values.price,
-        };
-        delete updatedValues.id;
+          price: price > 0 ? price : values.price
+        }
+        delete updatedValues.id
         try {
           const response = await axios.put(
             `${apiUrl}/products/${values.id}`,
             updatedValues,
             {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-              },
+                Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+              }
             }
-          );
+          )
 
           if (response.status === 200) {
-            bigToast("Producto Modificado Exitosamente!", "success");
-            tableData[row.index] = { ...values, ...updatedValues };
-            setTableData([...tableData]);
+            bigToast('Producto Modificado Exitosamente!', 'success')
+            tableData[row.index] = { ...values, ...updatedValues }
+            setTableData([...tableData])
           } else {
-            bigToast("Error al modificar producto", "error");
-            console.error("Error al modificar producto");
+            bigToast('Error al modificar producto', 'error')
+            console.error('Error al modificar producto')
           }
         } catch (error) {
-          console.error("Error de red:", error);
+          console.error('Error de red:', error)
         }
 
-        exitEditingMode(); //required to exit editing mode and close modal
+        exitEditingMode() //required to exit editing mode and close modal
       }
-    };
+    }
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    fetchProducts()
+  }, [])
 
   const handleCreateNewRow = (values: ProductData) => {
-    onCreateProduct(values);
-    setCreateModalOpen(false);
-  };
+    onCreateProduct(values)
+    setCreateModalOpen(false)
+  }
 
   const getCommonEditTextFieldProps = useCallback(
     (
       cell: MRT_Cell<ProductData>
-    ): MRT_ColumnDef<ProductData>["muiTableBodyCellEditTextFieldProps"] => {
+    ): MRT_ColumnDef<ProductData>['muiTableBodyCellEditTextFieldProps'] => {
       return {
         error: !!validationErrors[cell.id],
         helperText: validationErrors[cell.id],
         onBlur: (event) => {
-          const isValid = validateRequired(event.target.value);
+          const isValid = validateRequired(event.target.value)
           if (!isValid) {
             //set validation error for cell if invalid
             setValidationErrors({
               ...validationErrors,
-              [cell.id]: `${cell.column.columnDef.header} is required`,
-            });
+              [cell.id]: `${cell.column.columnDef.header} is required`
+            })
           } else {
             //remove validation error for cell if valid
-            delete validationErrors[cell.id];
+            delete validationErrors[cell.id]
             setValidationErrors({
-              ...validationErrors,
-            });
+              ...validationErrors
+            })
           }
-        },
-      };
+        }
+      }
     },
     [validationErrors]
-  );
+  )
 
   //should be memoized or stable
   const columns = useMemo<MRT_ColumnDef<ProductData>[]>(
     () => [
       {
-        accessorKey: "id",
-        header: "ID",
+        accessorKey: 'id',
+        header: 'ID'
       },
       {
-        accessorKey: "name",
-        header: "Nombre",
+        accessorKey: 'name',
+        header: 'Nombre',
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
-        }),
+          ...getCommonEditTextFieldProps(cell)
+        })
       },
       //   {
       //     accessorKey: "createdAt",
@@ -219,60 +219,60 @@ const TableProducts: React.FC = () => {
       //       format(new Date(row.original.createdAt), "yyyy-MM-dd"),
       //   },
       {
-        accessorKey: "price",
-        header: "Precio",
+        accessorKey: 'price',
+        header: 'Precio',
         Cell: ({ row }) =>
-          new Intl.NumberFormat("es-CO", {
-            style: "currency",
-            currency: "COP",
+          new Intl.NumberFormat('es-CO', {
+            style: 'currency',
+            currency: 'COP'
           }).format(row.original.price),
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell),
+          ...getCommonEditTextFieldProps(cell)
         }),
         Edit: ({ row }) => (
           <TextField
-            value={row.getValue("price")}
+            value={row.getValue('price')}
             onChange={(e) => setPrice(parseFloat(e.target.value))}
             InputProps={{
-              inputComponent: NumericFormatCustom as any,
+              inputComponent: NumericFormatCustom as any
             }}
           />
-        ),
-      },
+        )
+      }
     ],
     [getCommonEditTextFieldProps] // No hay dependencias específicas aquí
-  );
+  )
 
   return (
     <>
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-start",
-          marginBottom: "20px",
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          marginBottom: '20px'
         }}
       >
         {/* Botón para actualizar precios */}
         <Button
-          style={{ marginRight: "10px" }}
-          variant="contained"
-          color="primary"
+          style={{ marginRight: '10px' }}
+          variant='contained'
+          color='primary'
           onClick={() => setConfirmationDialogOpen(true)}
         >
           Actualizar Precios
         </Button>
         <TextField
-          label="Porcentaje"
-          type="number"
+          label='Porcentaje'
+          type='number'
           value={percentage}
           onChange={(e) => setPercentage(e.target.value)}
           InputProps={{
             inputProps: {
-              min: 0,
-            },
+              min: 0
+            }
           }}
-          style={{ marginRight: "10px" }}
+          style={{ marginRight: '10px' }}
         />
       </div>
 
@@ -283,7 +283,7 @@ const TableProducts: React.FC = () => {
         <DialogTitle>Confirmación</DialogTitle>
         <DialogContent>
           <p>
-            ¿Estás seguro de que deseas actualizar todos los precios en un{" "}
+            ¿Estás seguro de que deseas actualizar todos los precios en un{' '}
             {percentage}% ?
           </p>
         </DialogContent>
@@ -291,7 +291,7 @@ const TableProducts: React.FC = () => {
           <Button onClick={() => setConfirmationDialogOpen(false)}>
             Cancelar
           </Button>
-          <Button onClick={updateAllPrices} color="primary">
+          <Button onClick={updateAllPrices} color='primary'>
             Aceptar
           </Button>
         </DialogActions>
@@ -314,21 +314,21 @@ const TableProducts: React.FC = () => {
         initialState={{
           sorting: [
             {
-              id: "id",
-              desc: false,
-            },
-          ],
+              id: 'id',
+              desc: false
+            }
+          ]
         }}
         muiTableProps={{
           sx: {
-            tableLayout: "fixed",
-            "& .MuiTableCell-root": {
-              textAlign: "center",
+            tableLayout: 'fixed',
+            '& .MuiTableCell-root': {
+              textAlign: 'center'
             },
-            "& .Mui-TableHeadCell-Content": {
-              justifyContent: "center",
-            },
-          },
+            '& .Mui-TableHeadCell-Content': {
+              justifyContent: 'center'
+            }
+          }
         }}
         columns={columns}
         data={tableData}
@@ -364,7 +364,7 @@ const TableProducts: React.FC = () => {
         // // <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear Equipo</button>
         renderTopToolbarCustomActions={() => (
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded "
+            className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded '
             onClick={() => setCreateModalOpen(true)}
           >
             Crear Nuevo Producto y/o Servicio
@@ -378,14 +378,14 @@ const TableProducts: React.FC = () => {
         onSubmit={handleCreateNewRow}
       />
     </>
-  );
-};
+  )
+}
 
 interface CreateModalProps {
-  columns: MRT_ColumnDef<ProductData>[];
-  onClose: () => void;
-  onSubmit: (values: ProductData) => void;
-  open: boolean;
+  columns: MRT_ColumnDef<ProductData>[]
+  onClose: () => void
+  onSubmit: (values: ProductData) => void
+  open: boolean
 }
 
 //example of creating a mui dialog modal for creating new rows
@@ -393,53 +393,53 @@ export const CreateNewProductModal = ({
   open,
   columns,
   onClose,
-  onSubmit,
+  onSubmit
 }: CreateModalProps) => {
   const [values, setValues] = useState<any>(() =>
     columns.reduce((acc, column) => {
-      acc[column.accessorKey ?? ""] = "";
-      return acc;
+      acc[column.accessorKey ?? ''] = ''
+      return acc
     }, {} as any)
-  );
+  )
 
   const handleSubmit = () => {
     //put your validation logic here
-    onSubmit(values);
-    onClose();
-  };
+    onSubmit(values)
+    onClose()
+  }
 
   return (
     <Dialog open={open}>
-      <DialogTitle textAlign="center">Crear Nuevo Equipo</DialogTitle>
+      <DialogTitle textAlign='center'>Crear Nuevo Equipo</DialogTitle>
       <DialogContent>
         <form onSubmit={(e) => e.preventDefault()}>
           <Stack
             sx={{
-              width: "100%",
-              minWidth: { xs: "300px", sm: "360px", md: "400px" },
-              gap: "1.5rem",
+              width: '100%',
+              minWidth: { xs: '300px', sm: '360px', md: '400px' },
+              gap: '1.5rem'
             }}
           >
             {columns.map((column) => {
-              if (column.accessorKey !== "id") {
+              if (column.accessorKey !== 'id') {
                 switch (column.accessorKey) {
-                  case "price":
+                  case 'price':
                     return (
                       <TextField
                         key={column.accessorKey}
-                        label="Precio"
+                        label='Precio'
                         name={column.accessorKey}
                         onChange={(e) =>
                           setValues({
                             ...values,
-                            [e.target.name]: e.target.value,
+                            [e.target.name]: e.target.value
                           })
                         }
                         InputProps={{
-                          inputComponent: NumericFormatCustom as any,
+                          inputComponent: NumericFormatCustom as any
                         }}
                       />
-                    );
+                    )
 
                   default:
                     return (
@@ -450,35 +450,35 @@ export const CreateNewProductModal = ({
                         onChange={(e) =>
                           setValues({
                             ...values,
-                            [e.target.name]: e.target.value,
+                            [e.target.name]: e.target.value
                           })
                         }
                       />
-                    );
+                    )
                 }
               }
             })}
           </Stack>
         </form>
       </DialogContent>
-      <DialogActions sx={{ p: "1.25rem" }}>
+      <DialogActions sx={{ p: '1.25rem' }}>
         <button
-          className="bg-gray-400 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-10"
+          className='bg-gray-400 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-10'
           onClick={onClose}
         >
           Cancelar
         </button>
         <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
           onClick={handleSubmit}
         >
           Crear Producto
         </button>
       </DialogActions>
     </Dialog>
-  );
-};
+  )
+}
 
-const validateRequired = (value: string) => !!value.length;
+const validateRequired = (value: string) => !!value.length
 
-export default TableProducts;
+export default TableProducts

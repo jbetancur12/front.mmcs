@@ -1,7 +1,7 @@
-import ProfileCreationForm from "../Components/ProfileCreationForm";
+import ProfileCreationForm from '../Components/ProfileCreationForm'
 
 const NewProfiles = () => {
-  return <ProfileCreationForm />;
-};
+  return <ProfileCreationForm />
+}
 
-export default NewProfiles;
+export default NewProfiles

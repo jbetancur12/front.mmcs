@@ -1,5 +1,5 @@
-import TableQuotes from "../Components/TableQuotes";
+import TableQuotes from '../Components/TableQuotes'
 
 export const Cotizaciones = () => {
-  return <TableQuotes />;
-};
+  return <TableQuotes />
+}

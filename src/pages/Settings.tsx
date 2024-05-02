@@ -1,5 +1,5 @@
-import TableOwnUsers from "../Components/TableOwnUsers";
+import TableOwnUsers from '../Components/TableOwnUsers'
 
 export const Settings = () => {
-  return <TableOwnUsers />;
-};
+  return <TableOwnUsers />
+}

@@ -1,79 +1,79 @@
-import { useParams } from "react-router-dom";
-import { api } from "../config";
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { Box, Button, Divider, Paper, Typography } from "@mui/material";
-import CertificatesList from "../Components/CertificatesList";
-import UpdateCertificateModal from "../Components/UpdateCertificateModal";
-import { userStore } from "../store/userStore";
-import { useStore } from "@nanostores/react";
+import { useParams } from 'react-router-dom'
+import { api } from '../config'
+import axios from 'axios'
+import { useEffect, useState } from 'react'
+import { Box, Button, Divider, Paper, Typography } from '@mui/material'
+import CertificatesList from '../Components/CertificatesList'
+import UpdateCertificateModal from '../Components/UpdateCertificateModal'
+import { userStore } from '../store/userStore'
+import { useStore } from '@nanostores/react'
 
-const apiUrl = api();
+const apiUrl = api()
 
 interface DeviceDetailsProps {
-  id: number;
-  name: string;
-  city: string;
-  location: string;
-  sede: string;
-  activoFijo: string;
-  serie: string;
-  calibrationDate: string;
-  nextCalibrationDate: string;
-  filePath: string;
-  customerId: number;
-  deviceId: number;
-  device: any;
-  customer: any;
-  certificateTypeId: number;
-  createdAt: string;
-  updatedAt: string;
+  id: number
+  name: string
+  city: string
+  location: string
+  sede: string
+  activoFijo: string
+  serie: string
+  calibrationDate: string
+  nextCalibrationDate: string
+  filePath: string
+  customerId: number
+  deviceId: number
+  device: any
+  customer: any
+  certificateTypeId: number
+  createdAt: string
+  updatedAt: string
 }
 
 function Certificates() {
-  const { id } = useParams<{ id: string }>();
-  const $userStore = useStore(userStore);
+  const { id } = useParams<{ id: string }>()
+  const $userStore = useStore(userStore)
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [certificateData, setCertificateData] =
-    useState<DeviceDetailsProps | null>(null);
+    useState<DeviceDetailsProps | null>(null)
 
   const getCertificateInfo = async () => {
     const response = await axios.get(`${apiUrl}/files/${id}`, {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-      },
-    });
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    })
     if (response.status === 200) {
-      setCertificateData(response.data);
+      setCertificateData(response.data)
     }
-  };
+  }
 
   useEffect(() => {
-    getCertificateInfo();
-  }, [id]);
+    getCertificateInfo()
+  }, [id])
 
   const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
+    setIsModalOpen(true)
+  }
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
+    setIsModalOpen(false)
+  }
 
   return (
-    <Paper elevation={3} className="p-4">
-      <Box display="flex" alignItems="center" justifyContent="space-between">
-        <Typography variant="h6" gutterBottom>
+    <Paper elevation={3} className='p-4'>
+      <Box display='flex' alignItems='center' justifyContent='space-between'>
+        <Typography variant='h6' gutterBottom>
           Detalles del Equipo
         </Typography>
-        {$userStore.rol == "admin" && (
-          <Button variant="contained" color="primary" onClick={handleOpenModal}>
+        {$userStore.rol == 'admin' && (
+          <Button variant='contained' color='primary' onClick={handleOpenModal}>
             Actualizar Certificado
           </Button>
         )}
       </Box>
-      <Divider className="mb-4" />
+      <Divider className='mb-4' />
       {certificateData && (
         <>
           <Typography>
@@ -98,16 +98,16 @@ function Certificates() {
             <strong>Serie:</strong> {certificateData.serie}
           </Typography>
           <Typography>
-            <strong>Ultima Fecha de Calibración:</strong>{" "}
+            <strong>Ultima Fecha de Calibración:</strong>{' '}
             {new Date(certificateData.calibrationDate).toLocaleDateString()}
           </Typography>
           <Typography>
-            <strong>Próxima Fecha de Calibración:</strong>{" "}
+            <strong>Próxima Fecha de Calibración:</strong>{' '}
             {new Date(certificateData.nextCalibrationDate).toLocaleDateString()}
           </Typography>
         </>
       )}
-      <Divider className="mb-4" />
+      <Divider className='mb-4' />
       <UpdateCertificateModal
         open={isModalOpen}
         onClose={handleCloseModal}
@@ -136,7 +136,7 @@ function Certificates() {
       <CertificatesList />
       {/* </Paper> */}
     </Paper>
-  );
+  )
 }
 
-export default Certificates;
+export default Certificates

@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from "react";
-import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
+import React, { useEffect, useState } from 'react'
+import TextField from '@mui/material/TextField'
+import Button from '@mui/material/Button'
+import Typography from '@mui/material/Typography'
+import Box from '@mui/material/Box'
 
-import { api } from "../config";
-import axios from "axios";
-import toast, { Toaster } from "react-hot-toast";
-import { useParams } from "react-router-dom";
-import Loader from "./Loader2";
-import AsyncSelect from "react-select/async";
+import { api } from '../config'
+import axios from 'axios'
+import toast, { Toaster } from 'react-hot-toast'
+import { useParams } from 'react-router-dom'
+import Loader from './Loader2'
+import AsyncSelect from 'react-select/async'
 import {
   FormControl,
   Grid,
@@ -18,200 +18,200 @@ import {
   Paper,
   Select,
   SelectChangeEvent,
-  Skeleton,
-} from "@mui/material";
-import { useStore } from "@nanostores/react";
-import { userStore } from "../store/userStore";
-import { statusOptions } from "./TableQuotes";
-import { NumericFormatCustom } from "./NumericFormatCustom";
-import { styles } from "./ExcelManipulation/Utils";
+  Skeleton
+} from '@mui/material'
+import { useStore } from '@nanostores/react'
+import { userStore } from '../store/userStore'
+import { statusOptions } from './TableQuotes'
+import { NumericFormatCustom } from './NumericFormatCustom'
+import { styles } from './ExcelManipulation/Utils'
 
-const apiUrl = api();
+const apiUrl = api()
 
 interface Product {
-  name: string;
-  price: number;
-  quantity: number;
+  name: string
+  price: number
+  quantity: number
 }
 
 export interface Customer {
-  id: number;
-  nombre: string;
-  email: string;
-  telefono: string;
-  direccion: string;
-  ciudad: string;
-  value: string;
+  id: number
+  nombre: string
+  email: string
+  telefono: string
+  direccion: string
+  ciudad: string
+  value: string
 }
 interface QuoteFormData {
-  id?: number; // Agregamos el signo de interrogación para indicar que el ID es opcional
-  customer: Customer | null;
-  products: Product[];
-  discountRatio: number;
-  taxRatio: number;
-  observations: string;
-  comments: string[];
+  id?: number // Agregamos el signo de interrogación para indicar que el ID es opcional
+  customer: Customer | null
+  products: Product[]
+  discountRatio: number
+  taxRatio: number
+  observations: string
+  comments: string[]
   otherFields: {
-    paymentMethod: string;
-    generalConditions: string;
-    paymentConditions: string;
-    deliveryConditions: string;
-  };
+    paymentMethod: string
+    generalConditions: string
+    paymentConditions: string
+    deliveryConditions: string
+  }
   status: {
-    status: string;
-    user: string;
-    date: Date;
-    comments: string;
-  }[];
+    status: string
+    user: string
+    date: Date
+    comments: string
+  }[]
 }
 
 interface OptionType {
-  value: string;
-  label: string;
-  price: number;
+  value: string
+  label: string
+  price: number
 }
 interface PaymentConditionsOptions {
-  [key: string]: string;
+  [key: string]: string
 }
 
 const paymentConditionsOptions: PaymentConditionsOptions = {
-  contado: "De contado",
-  credito: "Crédito",
-};
+  contado: 'De contado',
+  credito: 'Crédito'
+}
 
 const QuoteForm: React.FC = () => {
-  const { id } = useParams<{ id?: string }>();
-  const $userStore = useStore(userStore);
+  const { id } = useParams<{ id?: string }>()
+  const $userStore = useStore(userStore)
 
-  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [customer, setCustomer] = useState<Customer | null>(null)
   const [products, setProducts] = useState<Product[]>([
-    { name: "Buscar Producto", price: 0, quantity: 1 },
-  ]);
-  const [discount, setDiscount] = useState(0);
-  const [taxRate, setTaxRate] = useState(19);
-  const [observations, setObservations] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("contado");
-  const [onlyRead, setOnlyRead] = useState(false);
+    { name: 'Buscar Producto', price: 0, quantity: 1 }
+  ])
+  const [discount, setDiscount] = useState(0)
+  const [taxRate, setTaxRate] = useState(19)
+  const [observations, setObservations] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState('contado')
+  const [onlyRead, setOnlyRead] = useState(false)
   const [status, setStatus] = useState({
-    status: "created",
+    status: 'created',
     user: $userStore.nombre,
     date: new Date(),
-    comments: "",
-  });
+    comments: ''
+  })
 
   const [comments, setComments] = useState<string[]>([
-    "Pago 100% adelantado",
+    'Pago 100% adelantado',
     `Forma de Pago: ${paymentConditionsOptions[paymentMethod]}`,
-    "Sujeto a disponibilidad de inventario.",
-  ]);
+    'Sujeto a disponibilidad de inventario.'
+  ])
   const [otherFields, setOtherFields] = useState({
     generalConditions:
-      "Metromedics es responsable del manejo de toda la información del cliente obtenida durante la ejecución de las actividades de calibración.\nEl personal de Metromedics no está sometido a presiones comerciales, financieras o de otro tipo, tanto externas como internas que puedan influenciar el juicio técnico y transparente de los resultados obtenidos en el servicio",
+      'Metromedics es responsable del manejo de toda la información del cliente obtenida durante la ejecución de las actividades de calibración.\nEl personal de Metromedics no está sometido a presiones comerciales, financieras o de otro tipo, tanto externas como internas que puedan influenciar el juicio técnico y transparente de los resultados obtenidos en el servicio',
     paymentConditions: `La validez de la presente oferta es de 30 días.\nEl pago debe ser realizado en la cuenta de ahorros N° 85138050837 de banco Bancolombia, a nombre de Metromedics S.A.S.\nUna vez realizado el pago, favor enviar copia del soporte de pago a la siguiente dirrección de correo electronico,    comercial@metromedicslab.com.co\nForma de Pago es ${paymentConditionsOptions[paymentMethod]}`,
     deliveryConditions:
-      "Tiempo de entrega: 15 días hábiles a partir de la fecha de pago.",
-  });
+      'Tiempo de entrega: 15 días hábiles a partir de la fecha de pago.'
+  })
   const handlePaymentChange = (e: SelectChangeEvent) => {
-    setPaymentMethod(e.target.value as string);
-  };
+    setPaymentMethod(e.target.value as string)
+  }
 
   const handleStatus = (e: SelectChangeEvent) => {
-    setStatus({ ...status, status: e.target.value as string });
-  };
+    setStatus({ ...status, status: e.target.value as string })
+  }
 
   const handleOtherFields = (e: any) => {
-    setOtherFields({ ...otherFields, [e.target.name]: e.target.value });
-  };
+    setOtherFields({ ...otherFields, [e.target.name]: e.target.value })
+  }
 
   useEffect(() => {
     setComments([
-      "Pago 100% adelantado",
+      'Pago 100% adelantado',
       `Forma de Pago: ${paymentConditionsOptions[paymentMethod]}`,
-      "Sujeto a disponibilidad de inventario.",
-    ]);
+      'Sujeto a disponibilidad de inventario.'
+    ])
     setOtherFields({
       ...otherFields,
-      paymentConditions: `La validez de la presente oferta es de 30 días.\nEl pago debe ser realizado en la cuenta de ahorros N° 85138050837 de banco Bancolombia, a nombre de Metromedics S.A.S.\nUna vez realizado el pago, favor enviar copia del soporte de pago a la siguiente dirrección de correo electronico,    comercial@metromedicslab.com.co\nForma de Pago es ${paymentConditionsOptions[paymentMethod]}`,
-    });
-  }, [paymentMethod]);
+      paymentConditions: `La validez de la presente oferta es de 30 días.\nEl pago debe ser realizado en la cuenta de ahorros N° 85138050837 de banco Bancolombia, a nombre de Metromedics S.A.S.\nUna vez realizado el pago, favor enviar copia del soporte de pago a la siguiente dirrección de correo electronico,    comercial@metromedicslab.com.co\nForma de Pago es ${paymentConditionsOptions[paymentMethod]}`
+    })
+  }, [paymentMethod])
 
   //#region LoadOptions
 
   const loadOptions = async (inputValue: string): Promise<OptionType[]> => {
     return new Promise((resolve, reject) => {
-      let timer; // Declarar el temporizador
+      let timer // Declarar el temporizador
 
       const fetchData = async () => {
         try {
           const response = await axios.get(`${apiUrl}/products`, {
             params: {
-              q: inputValue,
+              q: inputValue
             },
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-            },
-          });
-          const data = response.data;
+              Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+            }
+          })
+          const data = response.data
 
           const options = data.map((item: any) => ({
             value: item.id,
             label: item.name,
-            price: item.price,
-          }));
-          resolve(options);
+            price: item.price
+          }))
+          resolve(options)
         } catch (error) {
-          console.error("Error al cargar opciones:", error);
-          reject(error);
+          console.error('Error al cargar opciones:', error)
+          reject(error)
         }
-      };
+      }
 
       // Limpiar el temporizador si existe y configurar uno nuevo
       if (timer) {
-        clearTimeout(timer);
+        clearTimeout(timer)
       }
 
-      timer = setTimeout(fetchData, 1000); // Establecer el debounce en 1000ms
-    });
-  };
+      timer = setTimeout(fetchData, 1000) // Establecer el debounce en 1000ms
+    })
+  }
 
   const loadOptionsClient = async (
     inputValue: string
   ): Promise<OptionType[]> => {
     return new Promise((resolve, reject) => {
-      let timer; // Declarar el temporizador
+      let timer // Declarar el temporizador
 
       const fetchData = async () => {
         try {
           const response = await axios.get(`${apiUrl}/customers`, {
             params: {
-              q: inputValue,
+              q: inputValue
             },
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-            },
-          });
-          const data = response.data;
+              Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+            }
+          })
+          const data = response.data
 
           const options = data.map((item: any) => ({
             value: item.id,
-            label: item.nombre,
-          }));
-          resolve(options);
+            label: item.nombre
+          }))
+          resolve(options)
         } catch (error) {
-          console.error("Error al cargar opciones:", error);
-          reject(error);
+          console.error('Error al cargar opciones:', error)
+          reject(error)
         }
-      };
+      }
 
       // Limpiar el temporizador si existe y configurar uno nuevo
       if (timer) {
-        clearTimeout(timer);
+        clearTimeout(timer)
       }
 
-      timer = setTimeout(fetchData, 1000); // Establecer el debounce en 1000ms
-    });
-  };
+      timer = setTimeout(fetchData, 1000) // Establecer el debounce en 1000ms
+    })
+  }
 
   const fetchQuote = async () => {
     try {
@@ -219,40 +219,40 @@ const QuoteForm: React.FC = () => {
         `${apiUrl}/quotes/${id}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+          }
         }
-      );
+      )
 
-      if (response.statusText === "OK") {
-        const { data } = response;
-        setCustomer(data.customer);
-        setProducts(data.products);
-        setDiscount(data.discountRatio);
-        setTaxRate(data.taxRatio);
-        setObservations(data.observations);
-        setComments(data.comments);
-        setOtherFields(data.otherFields);
-        setPaymentMethod(data.otherFields.paymentMethod);
-        setStatus(data.status[data.status.length - 1]);
+      if (response.statusText === 'OK') {
+        const { data } = response
+        setCustomer(data.customer)
+        setProducts(data.products)
+        setDiscount(data.discountRatio)
+        setTaxRate(data.taxRatio)
+        setObservations(data.observations)
+        setComments(data.comments)
+        setOtherFields(data.otherFields)
+        setPaymentMethod(data.otherFields.paymentMethod)
+        setStatus(data.status[data.status.length - 1])
         setOnlyRead(
           data.status.some(
             (status) =>
-              status.status === "accepted" || status.status === "rejected"
+              status.status === 'accepted' || status.status === 'rejected'
           )
-        );
+        )
       }
     } catch (error) {
-      console.error("Error fetching quote data:", error);
+      console.error('Error fetching quote data:', error)
     }
-  };
+  }
 
   useEffect(() => {
     if (id) {
       // Si hay un ID en los parámetros de la URL, significa que estamos editando
-      fetchQuote();
+      fetchQuote()
     }
-  }, []);
+  }, [])
 
   const handleProductChange = (
     index: number,
@@ -260,56 +260,56 @@ const QuoteForm: React.FC = () => {
     value: string | number | OptionType | Product
   ) => {
     const updatedProducts = products.map((product, idx) => {
-      if (idx === index && field !== "product") {
+      if (idx === index && field !== 'product') {
         return {
           ...product,
-          [field]: value,
-        };
-      } else if (idx === index && field === "product") {
-        const { label, price } = value as OptionType;
+          [field]: value
+        }
+      } else if (idx === index && field === 'product') {
+        const { label, price } = value as OptionType
         return {
           ...product,
           name: label,
-          price: price,
-        };
+          price: price
+        }
       } else {
-        return product;
+        return product
       }
-    });
+    })
 
-    setProducts(updatedProducts);
-  };
+    setProducts(updatedProducts)
+  }
 
   const handleAddProduct = () => {
-    setProducts([...products, { name: "", price: 0, quantity: 1 }]);
-  };
+    setProducts([...products, { name: '', price: 0, quantity: 1 }])
+  }
 
   const handleAddComment = () => {
-    setComments([...comments, ""]);
-  };
+    setComments([...comments, ''])
+  }
 
   const handleCommentChange = (index: number, text: string) => {
-    const updatedComments = [...comments];
-    updatedComments[index] = text;
-    setComments(updatedComments);
-  };
+    const updatedComments = [...comments]
+    updatedComments[index] = text
+    setComments(updatedComments)
+  }
 
   const handleRemoveProduct = (index: number) => {
-    const updatedProducts = [...products];
-    updatedProducts.splice(index, 1);
-    setProducts(updatedProducts);
-  };
+    const updatedProducts = [...products]
+    updatedProducts.splice(index, 1)
+    setProducts(updatedProducts)
+  }
 
   const subtotal = products.reduce(
     (acc, product) => acc + product.price * product.quantity,
     0
-  );
-  const discountAmount = subtotal * (discount / 100); // Calcula el monto del descuento
-  const tax = (subtotal - discountAmount) * (taxRate / 100);
-  const total = subtotal + tax - discountAmount; // Aplica el descuento al total
+  )
+  const discountAmount = subtotal * (discount / 100) // Calcula el monto del descuento
+  const tax = (subtotal - discountAmount) * (taxRate / 100)
+  const total = subtotal + tax - discountAmount // Aplica el descuento al total
 
   const handleUpdateStatus = async (e: any) => {
-    e.preventDefault();
+    e.preventDefault()
     try {
       const response = await axios.put(
         `${apiUrl}/quotes/${id}/status`,
@@ -318,41 +318,41 @@ const QuoteForm: React.FC = () => {
             status: status.status,
             user: status.user,
             date: new Date(),
-            comments: status.comments,
-          },
+            comments: status.comments
+          }
         },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+          }
         }
-      );
+      )
 
       if (response.status >= 200 && response.status < 300) {
-        toast.success("Estado actualizado exitosamente!", {
+        toast.success('Estado actualizado exitosamente!', {
           duration: 4000,
-          position: "top-center",
-        });
+          position: 'top-center'
+        })
       } else {
-        throw new Error("Error al actualizar el estado");
+        throw new Error('Error al actualizar el estado')
       }
     } catch (error) {
-      console.error("Error de red:", error);
+      console.error('Error de red:', error)
       toast.error(
-        "Error al actualizar el estado. Por favor, inténtalo de nuevo."
-      );
+        'Error al actualizar el estado. Por favor, inténtalo de nuevo.'
+      )
     }
-  };
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault()
+    setLoading(true)
 
     const requestConfig = {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-      },
-    };
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    }
 
     const requestData = {
       customerId: customer?.value,
@@ -366,72 +366,72 @@ const QuoteForm: React.FC = () => {
         status: status.status,
         user: status.user,
         date: new Date(),
-        comments: status.comments,
-      },
-    };
+        comments: status.comments
+      }
+    }
 
     try {
-      let response;
-      let actionMessage;
+      let response
+      let actionMessage
 
       if (!!id) {
         response = await axios.put(
           `${apiUrl}/quotes/${id}`,
           requestData,
           requestConfig
-        );
-        actionMessage = "modificada";
+        )
+        actionMessage = 'modificada'
       } else {
         response = await axios.post(
           `${apiUrl}/quotes`,
           requestData,
           requestConfig
-        );
-        actionMessage = "creada";
+        )
+        actionMessage = 'creada'
       }
 
       if (response.status >= 200 && response.status < 300) {
-        setLoading(false);
+        setLoading(false)
         toast.success(`Cotización ${actionMessage} Exitosamente!`, {
           duration: 4000,
-          position: "top-center",
-        });
+          position: 'top-center'
+        })
         if (!id) {
-          setProducts([{ name: "", price: 0, quantity: 0 }]);
-          setCustomer(null);
+          setProducts([{ name: '', price: 0, quantity: 0 }])
+          setCustomer(null)
         } else {
-          window.location.href = "/dashboard/cotizaciones";
+          window.location.href = '/dashboard/cotizaciones'
         }
       } else {
-        throw new Error("Error al crear equipo");
+        throw new Error('Error al crear equipo')
       }
     } catch (error) {
-      setLoading(false);
-      console.error("Error de red:", error);
+      setLoading(false)
+      console.error('Error de red:', error)
       toast.error(
-        "Error al crear la cotización. Por favor, inténtalo de nuevo."
-      );
+        'Error al crear la cotización. Por favor, inténtalo de nuevo.'
+      )
     }
-  };
+  }
 
-  let edit;
+  let edit
 
   if (id) {
-    edit = products[0].name !== "";
+    edit = products[0].name !== ''
   } else {
-    edit = true;
+    edit = true
   }
 
   if (id && customer === null) {
-    return <Skeleton />;
+    return <Skeleton />
   }
 
   return (
-    <Box sx={{ margin: "auto" }}>
+    <Box sx={{ margin: 'auto' }}>
       <Toaster />
       <Loader loading={loading} />
-      <Typography variant="h4" component="h1" sx={{ mb: 2 }}>
-        {!!id ? `Cotización VT-${id}` : "Nueva Cotización"}
+      <Typography variant='h4' component='h1' sx={{ mb: 2 }}>
+        {!!id ? `Cotización VT-${id}` : 'Nueva Cotización'}
       </Typography>
 
       <form onSubmit={handleSubmit}>
@@ -440,12 +440,12 @@ const QuoteForm: React.FC = () => {
             <Grid container spacing={2}>
               <Grid item xs={3}>
                 <FormControl fullWidth>
-                  <InputLabel id="demo-simple-select-label">Estado</InputLabel>
+                  <InputLabel id='demo-simple-select-label'>Estado</InputLabel>
                   <Select
-                    labelId="status-label"
-                    id="status"
-                    label="Estado"
-                    variant="outlined"
+                    labelId='status-label'
+                    id='status'
+                    label='Estado'
+                    variant='outlined'
                     value={status.status}
                     onChange={handleStatus}
                     sx={{ mb: 2 }}
@@ -460,8 +460,8 @@ const QuoteForm: React.FC = () => {
               </Grid>
               <Grid item xs={9}>
                 <TextField
-                  label="Observaciones"
-                  variant="outlined"
+                  label='Observaciones'
+                  variant='outlined'
                   multiline
                   rows={1}
                   value={status.comments}
@@ -476,14 +476,14 @@ const QuoteForm: React.FC = () => {
                 item
                 xs={3}
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
               >
                 <Button
-                  type="submit"
-                  variant="contained"
+                  type='submit'
+                  variant='contained'
                   onClick={handleUpdateStatus}
                 >
                   Actualizar Estado
@@ -498,7 +498,7 @@ const QuoteForm: React.FC = () => {
             cacheOptions
             // defaultOptions
 
-            placeholder="Buscar Cliente"
+            placeholder='Buscar Cliente'
             loadOptions={loadOptionsClient}
             onChange={(selectedOption: any) =>
               setCustomer(selectedOption) as any
@@ -506,7 +506,7 @@ const QuoteForm: React.FC = () => {
             defaultValue={
               id && {
                 value: customer?.id,
-                label: customer?.nombre,
+                label: customer?.nombre
               }
             }
             styles={styles(false)}
@@ -533,91 +533,91 @@ const QuoteForm: React.FC = () => {
           {products.length > 0 &&
             edit &&
             products.map((product, index) => {
-              const productName = product.name;
+              const productName = product.name
 
               return (
                 <div
                   key={index}
-                  style={{ display: "flex", marginBottom: "8px" }}
+                  style={{ display: 'flex', marginBottom: '8px' }}
                 >
                   <AsyncSelect
                     cacheOptions
                     isDisabled={onlyRead}
                     loadOptions={loadOptions}
                     onChange={(selectedOption: any) => {
-                      handleProductChange(index, "product", selectedOption);
+                      handleProductChange(index, 'product', selectedOption)
                     }}
-                    placeholder="Buscar Producto"
+                    placeholder='Buscar Producto'
                     defaultValue={
                       id && {
                         value: index,
-                        label: productName,
+                        label: productName
                       }
                     }
-                    classNamePrefix="react-select"
+                    classNamePrefix='react-select'
                     styles={styles(false)}
                   />
 
                   <TextField
                     disabled={onlyRead}
-                    label="Precio"
-                    variant="outlined"
-                    name="price"
+                    label='Precio'
+                    variant='outlined'
+                    name='price'
                     value={product.price}
                     onChange={(e) =>
-                      handleProductChange(index, "price", e.target.value)
+                      handleProductChange(index, 'price', e.target.value)
                     }
                     InputProps={{
-                      inputComponent: NumericFormatCustom as any,
+                      inputComponent: NumericFormatCustom as any
                     }}
-                    style={{ marginRight: "8px", flex: 1 }}
-                    sx={{ mr: 2, width: "100%" }}
+                    style={{ marginRight: '8px', flex: 1 }}
+                    sx={{ mr: 2, width: '100%' }}
                     // thousandSeparator={true}
                     // prefix="$"
                     // customInput={TextField}
                   />
                   <TextField
                     disabled={onlyRead}
-                    label="Cantidad"
-                    variant="outlined"
-                    type="number"
+                    label='Cantidad'
+                    variant='outlined'
+                    type='number'
                     value={product.quantity}
                     onChange={(e) =>
                       handleProductChange(
                         index,
-                        "quantity",
+                        'quantity',
                         parseInt(e.target.value)
                       )
                     }
-                    style={{ marginRight: "8px", flex: 0.5 }}
-                    sx={{ mr: 2, width: "100%" }}
+                    style={{ marginRight: '8px', flex: 0.5 }}
+                    sx={{ mr: 2, width: '100%' }}
                   />
                   <TextField
                     disabled={onlyRead}
-                    label="Total"
-                    variant="outlined"
+                    label='Total'
+                    variant='outlined'
                     value={product.quantity * product.price}
-                    style={{ marginRight: "8px", flex: 1 }}
-                    sx={{ mr: 2, width: "100%" }}
+                    style={{ marginRight: '8px', flex: 1 }}
+                    sx={{ mr: 2, width: '100%' }}
                     InputProps={{
                       readOnly: true,
-                      inputComponent: NumericFormatCustom as any,
+                      inputComponent: NumericFormatCustom as any
                     }}
                   />
                   <Button
                     disabled={onlyRead}
-                    variant="contained"
-                    color="error"
+                    variant='contained'
+                    color='error'
                     onClick={() => handleRemoveProduct(index)}
-                    sx={{ mr: 1, width: "10px" }}
+                    sx={{ mr: 1, width: '10px' }}
                   >
                     X
                   </Button>
                 </div>
-              );
+              )
             })}
           <Button
-            variant="contained"
+            variant='contained'
             onClick={handleAddProduct}
             sx={{ mb: 2 }}
             disabled={onlyRead}
@@ -628,9 +628,9 @@ const QuoteForm: React.FC = () => {
         <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
           <TextField
             disabled={onlyRead}
-            label="Descuento (%)"
-            variant="outlined"
-            type="number"
+            label='Descuento (%)'
+            variant='outlined'
+            type='number'
             value={discount}
             onChange={(e) => setDiscount(parseFloat(e.target.value))}
             fullWidth
@@ -638,9 +638,9 @@ const QuoteForm: React.FC = () => {
           />
           <TextField
             disabled={onlyRead}
-            label="IVA (%)"
-            variant="outlined"
-            type="number"
+            label='IVA (%)'
+            variant='outlined'
+            type='number'
             value={taxRate}
             onChange={(e) => setTaxRate(parseInt(e.target.value))}
             fullWidth
@@ -648,35 +648,35 @@ const QuoteForm: React.FC = () => {
           />
         </Paper>
         <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
-          <Typography variant="subtitle1">
+          <Typography variant='subtitle1'>
             Subtotal: $
-            {subtotal.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+            {subtotal.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
           </Typography>
-          <Typography variant="subtitle1">
+          <Typography variant='subtitle1'>
             Descuento: $
-            {discountAmount.toLocaleString("es-ES", {
-              minimumFractionDigits: 2,
-            })}{" "}
+            {discountAmount.toLocaleString('es-ES', {
+              minimumFractionDigits: 2
+            })}{' '}
             ({discount}%)
           </Typography>
-          <Typography variant="subtitle1">
+          <Typography variant='subtitle1'>
             IVA ({taxRate}%): $
-            {tax.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+            {tax.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
           </Typography>
-          <Typography variant="h6">
+          <Typography variant='h6'>
             Total: $
-            {total.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+            {total.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
           </Typography>
         </Paper>
         <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
           <FormControl>
-            <InputLabel id="demo-simple-select-label">Forma de Pago</InputLabel>
+            <InputLabel id='demo-simple-select-label'>Forma de Pago</InputLabel>
             <Select
               disabled={onlyRead}
-              labelId="demo-simple-select-label"
-              id="demo-simple-select"
-              label="Forma de Pago"
-              variant="outlined"
+              labelId='demo-simple-select-label'
+              id='demo-simple-select'
+              label='Forma de Pago'
+              variant='outlined'
               value={paymentMethod}
               onChange={handlePaymentChange}
               sx={{ mb: 2 }}
@@ -690,7 +690,7 @@ const QuoteForm: React.FC = () => {
           </FormControl>
         </Paper>
         <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
-          <Typography variant="h4" component="p" sx={{ mb: 2 }}>
+          <Typography variant='h4' component='p' sx={{ mb: 2 }}>
             Comentarios
           </Typography>
 
@@ -699,16 +699,16 @@ const QuoteForm: React.FC = () => {
               container
               spacing={2}
               sx={{
-                display: "flex",
-                alignItems: "center",
+                display: 'flex',
+                alignItems: 'center'
               }}
             >
-              <Grid item xs={11} width="100%">
+              <Grid item xs={11} width='100%'>
                 <TextField
                   disabled={onlyRead}
                   key={index}
                   label={`Comentario ${index + 1} `}
-                  variant="outlined"
+                  variant='outlined'
                   multiline
                   rows={1}
                   value={comment}
@@ -719,12 +719,12 @@ const QuoteForm: React.FC = () => {
               </Grid>
               <Grid item xs={1}>
                 <Button
-                  variant="contained"
-                  color="error"
+                  variant='contained'
+                  color='error'
                   onClick={() => {
-                    const updatedComments = [...comments];
-                    updatedComments.splice(index, 1);
-                    setComments(updatedComments);
+                    const updatedComments = [...comments]
+                    updatedComments.splice(index, 1)
+                    setComments(updatedComments)
                   }}
                   sx={{ mb: 2 }}
                 >
@@ -734,7 +734,7 @@ const QuoteForm: React.FC = () => {
             </Grid>
           ))}
           <Button
-            variant="contained"
+            variant='contained'
             onClick={handleAddComment}
             sx={{ mb: 2 }}
             disabled={onlyRead}
@@ -755,9 +755,9 @@ const QuoteForm: React.FC = () => {
         <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
           <TextField
             disabled={onlyRead}
-            name="generalConditions"
-            label="Condiciones Generales"
-            variant="outlined"
+            name='generalConditions'
+            label='Condiciones Generales'
+            variant='outlined'
             multiline
             rows={4}
             value={otherFields.generalConditions}
@@ -768,9 +768,9 @@ const QuoteForm: React.FC = () => {
 
           <TextField
             disabled={onlyRead}
-            name="paymentConditions"
-            label="Condiciones de Pago"
-            variant="outlined"
+            name='paymentConditions'
+            label='Condiciones de Pago'
+            variant='outlined'
             multiline
             rows={4}
             value={otherFields.paymentConditions}
@@ -781,9 +781,9 @@ const QuoteForm: React.FC = () => {
 
           <TextField
             disabled={onlyRead}
-            name="deliveryConditions"
-            label="Condiciones de Entrega"
-            variant="outlined"
+            name='deliveryConditions'
+            label='Condiciones de Entrega'
+            variant='outlined'
             multiline
             rows={1}
             value={otherFields.deliveryConditions}
@@ -793,16 +793,16 @@ const QuoteForm: React.FC = () => {
           />
         </Paper>
         <Button
-          type="submit"
-          variant="contained"
+          type='submit'
+          variant='contained'
           sx={{ mb: 2 }}
           disabled={onlyRead}
         >
-          {!!id ? "Actualizar" : "Crear"}
+          {!!id ? 'Actualizar' : 'Crear'}
         </Button>
       </form>
     </Box>
-  );
-};
+  )
+}
 
-export default QuoteForm;
+export default QuoteForm

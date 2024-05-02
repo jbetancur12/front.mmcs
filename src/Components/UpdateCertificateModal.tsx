@@ -1,22 +1,22 @@
-import React, { useState } from "react";
-import { Button, Modal, Box } from "@mui/material";
-import { CloudUpload } from "@mui/icons-material";
-import { styled } from "@mui/material/styles";
-import axios from "axios";
-import { DatePicker } from "@mui/x-date-pickers";
-import { api } from "../config";
-import toast, { Toaster } from "react-hot-toast";
-import Loader from "./Loader2";
+import React, { useState } from 'react'
+import { Button, Modal, Box } from '@mui/material'
+import { CloudUpload } from '@mui/icons-material'
+import { styled } from '@mui/material/styles'
+import axios from 'axios'
+import { DatePicker } from '@mui/x-date-pickers'
+import { api } from '../config'
+import toast, { Toaster } from 'react-hot-toast'
+import Loader from './Loader2'
 
 interface UpdateCertificateModalProps {
-  open: boolean;
-  onClose: () => void;
-  id?: string;
+  open: boolean
+  onClose: () => void
+  id?: string
 }
 
-const apiUrl = api();
+const apiUrl = api()
 
-const VisuallyHiddenInput = styled("input")`
+const VisuallyHiddenInput = styled('input')`
   clip: rect(0 0 0 0);
   clip-path: inset(50%);
   height: 1px;
@@ -26,145 +26,145 @@ const VisuallyHiddenInput = styled("input")`
   left: 0;
   white-space: nowrap;
   width: 1px;
-`;
+`
 
 const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
   open,
   onClose,
-  id,
+  id
 }) => {
-  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
-  const [previousDate, setPreviousDate] = useState("");
-  const [nextDate, setNextDate] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
+  const [previousDate, setPreviousDate] = useState('')
+  const [nextDate, setNextDate] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0];
+    const selectedFile = event.target.files?.[0]
     if (selectedFile) {
-      setFile(selectedFile);
-      setSelectedFileName(selectedFile.name);
+      setFile(selectedFile)
+      setSelectedFileName(selectedFile.name)
     }
-  };
+  }
 
   const handleChangeCalibrationDate = (date: Date | null) => {
-    let newDate = date;
+    let newDate = date
     if (newDate) {
-      setPreviousDate(newDate.toISOString());
-      newDate.setFullYear(newDate.getFullYear() + 1);
-      setNextDate(newDate.toISOString());
+      setPreviousDate(newDate.toISOString())
+      newDate.setFullYear(newDate.getFullYear() + 1)
+      setNextDate(newDate.toISOString())
     }
-  };
+  }
 
   const handleSave = async () => {
     try {
       // Aquí puedes realizar la solicitud HTTP a tu API para guardar los datos
-      const formData = new FormData();
-      formData.append("pdf", file as Blob);
-      formData.append("calibrationDate", previousDate);
-      formData.append("nextCalibrationDate", nextDate);
-      formData.append("id", id as string);
+      const formData = new FormData()
+      formData.append('pdf', file as Blob)
+      formData.append('calibrationDate', previousDate)
+      formData.append('nextCalibrationDate', nextDate)
+      formData.append('id', id as string)
 
-      setLoading(true);
+      setLoading(true)
       const response = await axios.put(`${apiUrl}/files`, formData, {
         headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      })
       if (response.status === 201) {
-        setLoading(false);
-        toast.success("Certificado Actualizado Exitosamente!", {
+        setLoading(false)
+        toast.success('Certificado Actualizado Exitosamente!', {
           duration: 4000,
-          position: "top-center",
-        });
+          position: 'top-center'
+        })
       }
 
-      onClose();
+      onClose()
     } catch (error) {
-      setLoading(false);
-      console.error("Error al guardar los datos del certificado:", error);
+      setLoading(false)
+      console.error('Error al guardar los datos del certificado:', error)
       // Puedes mostrar un mensaje de error al usuario si lo deseas
     }
-  };
+  }
   return (
     <Modal open={open} onClose={onClose}>
       <Box
         sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
           width: 400,
-          bgcolor: "background.paper",
-          border: "2px solid #000",
+          bgcolor: 'background.paper',
+          border: '2px solid #000',
           boxShadow: 24,
           p: 4,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "1rem",
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '1rem'
         }}
       >
         <Toaster />
         <Loader loading={loading} />
         <Box>
           <DatePicker
-            label="Fecha de Calibración"
+            label='Fecha de Calibración'
             value={new Date(previousDate)}
             onChange={handleChangeCalibrationDate}
           />
         </Box>
         <Box>
           <DatePicker
-            label="Fecha de Calibración"
+            label='Fecha de Calibración'
             value={new Date(nextDate)}
             onChange={(e) => setNextDate(new Date(e as Date).toISOString())}
           />
         </Box>
         <Box>
           <Button
-            component="label"
-            variant="contained"
+            component='label'
+            variant='contained'
             startIcon={<CloudUpload />}
-            href="#file-upload"
+            href='#file-upload'
             //@ts-ignore
             onChange={handleFileChange}
             style={{
-              textTransform: "none",
+              textTransform: 'none'
             }}
           >
-            {selectedFileName ? selectedFileName : "Cargar Archivo"}
-            <VisuallyHiddenInput type="file" accept=".pdf" />
+            {selectedFileName ? selectedFileName : 'Cargar Archivo'}
+            <VisuallyHiddenInput type='file' accept='.pdf' />
           </Button>
         </Box>
         <Box
           sx={{
-            marginTop: "1rem",
-            display: "flex",
-            justifyContent: "flex-end",
+            marginTop: '1rem',
+            display: 'flex',
+            justifyContent: 'flex-end'
           }}
         >
           <Button
-            variant="contained"
-            color="primary"
+            variant='contained'
+            color='primary'
             onClick={handleSave}
-            sx={{ marginLeft: "0.5rem" }}
+            sx={{ marginLeft: '0.5rem' }}
           >
             Guardar
           </Button>
           <Button
-            variant="outlined"
-            color="secondary"
+            variant='outlined'
+            color='secondary'
             onClick={onClose}
-            sx={{ marginLeft: "0.5rem" }}
+            sx={{ marginLeft: '0.5rem' }}
           >
             Cancelar
           </Button>
         </Box>
       </Box>
     </Modal>
-  );
-};
+  )
+}
 
-export default UpdateCertificateModal;
+export default UpdateCertificateModal

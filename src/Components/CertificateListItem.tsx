@@ -1,54 +1,54 @@
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom'
 
 export interface Certificate {
-  id: number;
-  name: string;
-  city: string;
-  location: string;
-  sede: string;
-  activoFijo: string;
-  serie: string;
-  calibrationDate: string;
-  nextCalibrationDate: string;
-  filePath: string;
-  customerId: number;
-  deviceId: number;
-  certificateTypeId: number;
-  createdAt: string;
-  updatedAt: string;
+  id: number
+  name: string
+  city: string
+  location: string
+  sede: string
+  activoFijo: string
+  serie: string
+  calibrationDate: string
+  nextCalibrationDate: string
+  filePath: string
+  customerId: number
+  deviceId: number
+  certificateTypeId: number
+  createdAt: string
+  updatedAt: string
   device: {
-    id: number;
-    name: string;
-    createdAt: string;
-    updatedAt: string;
-  };
+    id: number
+    name: string
+    createdAt: string
+    updatedAt: string
+  }
 }
 
 interface CertificateListItemProps {
-  certificate: Certificate;
+  certificate: Certificate
 }
 
 export const CertificateListItem: React.FC<CertificateListItemProps> = ({
-  certificate,
+  certificate
 }) => {
   return (
-    <div className="flex items-center justify-between p-4 border-b border-gray-200">
+    <div className='flex items-center justify-between p-4 border-b border-gray-200'>
       <div>
         <Link to={`/dashboard/calibraciones/certificados/${certificate.id}`}>
-          <h3 className="text-lg font-semibold">{certificate.device.name}</h3>
+          <h3 className='text-lg font-semibold'>{certificate.device.name}</h3>
 
           {/* <p className="text-gray-500">Equipo: {certificate.device.name}</p> */}
-          <p className="text-gray-500">Ciudad: {certificate.city}</p>
-          <p className="text-gray-500">Ubicación: {certificate.location}</p>
-          <p className="text-gray-500">Sede: {certificate.sede}</p>
-          <p className="text-gray-500">Activo Fijo: {certificate.activoFijo}</p>
-          <p className="text-gray-500">Serie: {certificate.serie}</p>
-          <p className="text-gray-500">
-            Fecha de Calibración:{" "}
+          <p className='text-gray-500'>Ciudad: {certificate.city}</p>
+          <p className='text-gray-500'>Ubicación: {certificate.location}</p>
+          <p className='text-gray-500'>Sede: {certificate.sede}</p>
+          <p className='text-gray-500'>Activo Fijo: {certificate.activoFijo}</p>
+          <p className='text-gray-500'>Serie: {certificate.serie}</p>
+          <p className='text-gray-500'>
+            Fecha de Calibración:{' '}
             {new Date(certificate.calibrationDate).toLocaleDateString()}
           </p>
-          <p className="text-gray-500">
-            Proxima Fecha de Calibración:{" "}
+          <p className='text-gray-500'>
+            Proxima Fecha de Calibración:{' '}
             {new Date(certificate.nextCalibrationDate).toLocaleDateString()}
           </p>
         </Link>
@@ -60,5 +60,5 @@ export const CertificateListItem: React.FC<CertificateListItemProps> = ({
         Download
       </button> */}
     </div>
-  );
-};
+  )
+}

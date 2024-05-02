@@ -1,7 +1,7 @@
-import RepositoryComponent from "../Components/Repository";
+import RepositoryComponent from '../Components/Repository'
 
 const Repository = () => {
-  return <RepositoryComponent />;
-};
+  return <RepositoryComponent />
+}
 
-export default Repository;
+export default Repository
