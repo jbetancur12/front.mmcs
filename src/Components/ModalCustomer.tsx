@@ -1,8 +1,7 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Modal, Box, TextField, Button, Typography } from "@mui/material";
 import axios from "axios";
-import { apiUrl } from "./ExcelManipulation/Utils";
-import toast, { Toaster } from "react-hot-toast";
+import { apiUrl, bigToast } from "./ExcelManipulation/Utils";
 
 interface ModalCustomerProps {
   open: boolean;
@@ -77,10 +76,7 @@ const ModalCustomer: React.FC<ModalCustomerProps> = ({
       });
 
       if (response.status === 201) {
-        toast.success("Cliente Creado Exitosamente!", {
-          duration: 4000,
-          position: "top-center",
-        });
+        bigToast("Cliente Creado Exitosamente!", "success");
         dataReturned(response.data);
         onClose(false);
       } else {
@@ -105,7 +101,6 @@ const ModalCustomer: React.FC<ModalCustomerProps> = ({
         p: 4,
       }}
     >
-      <Toaster />
       <Typography variant="h5" component="div">
         Crear Cliente
       </Typography>

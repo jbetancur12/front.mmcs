@@ -1,9 +1,10 @@
 import axios, { AxiosError } from "axios"; // Import Axios
 import { useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
+
 import { Link } from "react-router-dom";
 import * as Yup from "yup"; // Importa Yup para la validación
 import { api } from "../config";
+import { Toast } from "../Components/ExcelManipulation/Utils";
 
 // Función de utilidad para verificar si un objeto es de tipo AxiosError
 function isAxiosError(obj: any): obj is AxiosError {
@@ -111,10 +112,12 @@ const Login: React.FC = () => {
       if (response.status === 200) {
         const { token } = response.data;
         // Handle successful login
-        toast.success("Bienvenido", {
-          duration: 4000,
-          position: "top-center",
-        });
+        // toast.success("Bienvenido", {
+        //   duration: 4000,
+        //   position: "top-center",
+        // });
+
+        Toast.fire("Bienvenido", "", "success");
 
         setTimeout(() => {
           window.location.href = "/dashboard";
@@ -143,7 +146,6 @@ const Login: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-center px-6 pt-8 mx-auto md:h-screen pt:mt-0 dark:bg-gray-900">
-      <Toaster />
       <a
         href="/"
         className="flex items-center justify-center mb-8 text-2xl font-semibold lg:mb-10 dark:text-white"

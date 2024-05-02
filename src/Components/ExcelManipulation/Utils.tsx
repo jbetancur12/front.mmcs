@@ -2,6 +2,8 @@ import XlsxPopulate from "xlsx-populate";
 import { RepositoryData, ResourceOption } from "./Types";
 import { api } from "../../config";
 import axios from "axios";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 
 export const apiUrl = api();
 
@@ -181,3 +183,29 @@ export const styles = (error: boolean) => {
     }),
   };
 };
+
+export const MySwal = withReactContent(Swal);
+
+export const Toast = MySwal.mixin({
+  toast: true,
+  position: "top",
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.onmouseenter = Swal.stopTimer;
+    toast.onmouseleave = Swal.resumeTimer;
+  },
+});
+
+export const bigToast = (
+  title: string,
+  icon: "success" | "error" | "question" | "warning" | "info"
+) =>
+  MySwal.fire({
+    icon,
+    title,
+    timer: 1500,
+    showConfirmButton: false,
+    timerProgressBar: true,
+  });

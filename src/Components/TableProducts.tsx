@@ -15,10 +15,11 @@ import {
   type MRT_ColumnDef,
 } from "material-react-table";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
+
 import { api } from "../config";
 import { MRT_Localization_ES } from "material-react-table/locales/es";
 import { NumericFormatCustom } from "./NumericFormatCustom";
+import { bigToast } from "./ExcelManipulation/Utils";
 
 // Define interfaces
 export interface ProductData {
@@ -65,31 +66,21 @@ const TableProducts: React.FC = () => {
           setTableData(updatedTableData);
 
           // Mostrar un mensaje de éxito
-          toast.success(`Precios actualizados en ${parsedPercentage}%`, {
-            duration: 4000,
-            position: "top-center",
-          });
+
+          bigToast("Precios Actualizados Exitosamente!", "success");
         } else {
           // Mostrar un mensaje de error si la solicitud no fue exitosa
-          toast.error("Error al actualizar los precios", {
-            duration: 4000,
-            position: "top-center",
-          });
+          bigToast("Error al actualizar los precios", "error");
         }
       } catch (error) {
         // Capturar errores de red o del servidor
-        console.error("Error al actualizar precios:", error);
-        toast.error("Error al actualizar los precios", {
-          duration: 4000,
-          position: "top-center",
-        });
+
+        bigToast("Error al actualizar los precios", "error");
       }
     } else {
       // Mostrar un mensaje de error si el porcentaje es inválido
-      toast.error("Porcentaje inválido", {
-        duration: 4000,
-        position: "top-center",
-      });
+
+      bigToast("Porcentaje inválido", "error");
     }
   };
 
@@ -103,10 +94,7 @@ const TableProducts: React.FC = () => {
       });
 
       if (response.status === 201) {
-        toast.success("Producto Creado Exitosamente!", {
-          duration: 4000,
-          position: "top-center",
-        });
+        bigToast("Producto Creado Exitosamente!", "success");
         fetchProducts(); // Refresh data after creation
       } else {
         console.error("Error al crear equipo");
@@ -134,29 +122,6 @@ const TableProducts: React.FC = () => {
     }
   };
 
-  // const updateUser = async (ProductData: ProductData) => {
-
-  //   try {
-  //     const response = await axios.put(`${apiUrl}/devices/${ProductData.id}`, ProductData, {
-  //       headers: {
-  //         'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
-  //       },
-  //     });
-
-  //     if (response.status === 201) {
-  //       toast.success('Equipo Modificado Exitosamente!', {
-  //         duration: 4000,
-  //         position: 'top-center',
-  //       });
-  //       ; // Refresh data after creation
-  //     } else {
-  //       console.error('Error al crear equipo');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error de red:', error);
-  //   }
-  // }
-
   const handleCancelRowEdits = () => {
     setValidationErrors({});
   };
@@ -181,13 +146,11 @@ const TableProducts: React.FC = () => {
           );
 
           if (response.status === 200) {
-            toast.success("Producto Modificado Exitosamente!", {
-              duration: 4000,
-              position: "top-center",
-            });
+            bigToast("Producto Modificado Exitosamente!", "success");
             tableData[row.index] = { ...values, ...updatedValues };
             setTableData([...tableData]);
           } else {
+            bigToast("Error al modificar producto", "error");
             console.error("Error al modificar producto");
           }
         } catch (error) {
@@ -333,7 +296,7 @@ const TableProducts: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      <Toaster />
+
       <MaterialReactTable
         enableHiding={false}
         enableColumnActions={false}

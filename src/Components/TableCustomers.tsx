@@ -19,10 +19,11 @@ import {
   type MaterialReactTableProps,
 } from "material-react-table";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
+
 import { Link } from "react-router-dom";
 import { api } from "../config";
 import { MRT_Localization_ES } from "material-react-table/locales/es";
+import { bigToast, MySwal } from "./ExcelManipulation/Utils";
 
 // Define interfaces
 export interface CustomerData {
@@ -66,11 +67,8 @@ const Table: React.FC = () => {
         },
       });
 
-      if (response.status === 201) {
-        toast.success("Cliente Creado Exitosamente!", {
-          duration: 4000,
-          position: "top-center",
-        });
+      if (response.status >= 200 && response.status < 300) {
+        bigToast("Cliente Creado Exitosamente!", "success");
         fetchCustomers(); // Refresh data after creation
       } else {
         console.error("Error al crear cliente");
@@ -151,10 +149,7 @@ const Table: React.FC = () => {
           );
 
           if (response.status === 201) {
-            toast.success("Cliente Modificado Exitosamente!", {
-              duration: 4000,
-              position: "top-center",
-            });
+            bigToast("Cliente Modificado Exitosamente!", "success");
             tableData[row.index] = values;
             setTableData([...tableData]);
           } else {
@@ -181,10 +176,7 @@ const Table: React.FC = () => {
       });
 
       if (response.status === 204) {
-        toast.success("Cliente Eliminado Exitosamente!", {
-          duration: 4000,
-          position: "top-center",
-        });
+        bigToast("Cliente Eliminado Exitosamente!", "success");
         filteredTableData.splice(rowIndex, 1);
         setFilteredTableData([...filteredTableData]);
       } else {
@@ -197,16 +189,19 @@ const Table: React.FC = () => {
 
   const handleDeleteRow = useCallback(
     (row: MRT_Row<CustomerData>) => {
-      if (
-        !confirm(
-          `¿ Esta seguro que desea eliminar el cliente ${row.getValue(
-            "nombre"
-          )} ?`
-        )
-      ) {
-        return;
-      }
-      deleteCustomer(row.index, row.getValue("id"));
+      MySwal.fire({
+        title: `¿ Esta seguro que desea eliminar el cliente ${row.getValue(
+          "nombre"
+        )} ?`,
+        text: "No podrá recuperar esta información una vez eliminada",
+        showCancelButton: true,
+        confirmButtonText: "Si",
+      }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        if (result.isConfirmed) {
+          deleteCustomer(row.index, row.getValue("id"));
+        }
+      });
     },
     [filteredTableData]
   );
@@ -335,7 +330,6 @@ const Table: React.FC = () => {
 
   return (
     <>
-      <Toaster />
       <MaterialReactTable
         localization={MRT_Localization_ES}
         displayColumnDefOptions={{

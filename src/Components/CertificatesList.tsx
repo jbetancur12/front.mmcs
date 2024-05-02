@@ -14,8 +14,9 @@ import {
   ListItemText,
 } from "@mui/material";
 import { api } from "../config";
-import toast, { Toaster } from "react-hot-toast";
+
 import Loader from "./Loader2";
+import { bigToast } from "./ExcelManipulation/Utils";
 
 const apiUrl = api();
 
@@ -116,31 +117,21 @@ function CertificatesList() {
         const axiosError = error as AxiosError;
         if (axiosError.response) {
           // La solicitud recibió una respuesta del servidor
-          toast.error(
+
+          bigToast(
             `Error al descargar el archivo: ${axiosError.response.statusText}`,
-            {
-              duration: 4000,
-              position: "top-center",
-            }
+            "error"
           );
         } else {
-          // La solicitud no recibió una respuesta del servidor
-          toast.error(
-            `Error de red al descargar el archivo: ${axiosError.message}`,
-            {
-              duration: 4000,
-              position: "top-center",
-            }
+          bigToast(
+            `Error al descargar el archivo: ${axiosError.message}`,
+            "error"
           );
         }
       } else {
-        // Manejo de otros errores
-        toast.error(
+        bigToast(
           `Error desconocido al descargar el archivo: ${error.message}`,
-          {
-            duration: 4000,
-            position: "top-center",
-          }
+          "error"
         );
       }
     }
@@ -158,7 +149,7 @@ function CertificatesList() {
       );
 
       if (response.status === 200) {
-        toast.success("Certificado eliminado con éxito");
+        bigToast("Certificado eliminado con éxito", "success");
         setCertificates(
           certificates.filter((certificate) => certificate.id !== id)
         );
@@ -185,7 +176,7 @@ function CertificatesList() {
   return (
     <>
       {/* <Paper elevation={3} className="p-4 mt-8"> */}
-      <Toaster />
+
       <Loader loading={loading} />
       {/* <Typography variant="h6" gutterBottom>
         Certificados del Dispositivo

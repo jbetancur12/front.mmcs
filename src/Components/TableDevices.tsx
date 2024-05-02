@@ -19,14 +19,14 @@ import {
   type MaterialReactTableProps,
 } from "material-react-table";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
+
 import { api } from "../config";
 import { MRT_Localization_ES } from "material-react-table/locales/es";
 import AsyncSelect from "react-select/async";
 
 import { loadOptions, mapOptions } from "../utils/loadOptions";
 import { RepositoryData } from "./Repository";
-import { styles } from "./ExcelManipulation/Utils";
+import { bigToast, styles } from "./ExcelManipulation/Utils";
 
 // Define interfaces
 export interface DeviceData {
@@ -73,10 +73,7 @@ const Table: React.FC = () => {
       );
 
       if (response.status === 201) {
-        toast.success("Equipo Creado Exitosamente!", {
-          duration: 4000,
-          position: "top-center",
-        });
+        bigToast("Equipo Creado Exitosamente!", "success");
         fetchUsers(); // Refresh data after creation
       } else {
         console.error("Error al crear equipo");
@@ -104,29 +101,6 @@ const Table: React.FC = () => {
     }
   };
 
-  // const updateUser = async (deviceData: DeviceData) => {
-
-  //   try {
-  //     const response = await axios.put(`${apiUrl}/devices/${deviceData.id}`, deviceData, {
-  //       headers: {
-  //         'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
-  //       },
-  //     });
-
-  //     if (response.status === 201) {
-  //       toast.success('Equipo Modificado Exitosamente!', {
-  //         duration: 4000,
-  //         position: 'top-center',
-  //       });
-  //       ; // Refresh data after creation
-  //     } else {
-  //       console.error('Error al crear equipo');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error de red:', error);
-  //   }
-  // }
-
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -153,10 +127,7 @@ const Table: React.FC = () => {
           );
 
           if (response.status === 201) {
-            toast.success("Equipo Modificado Exitosamente!", {
-              duration: 4000,
-              position: "top-center",
-            });
+            bigToast("Equipo Modificado Exitosamente!", "success");
             tableData[row.index] = values;
             setTableData([...tableData]);
           } else {
@@ -183,10 +154,7 @@ const Table: React.FC = () => {
       });
 
       if (response.status === 204) {
-        toast.success("Equipo Eliminado Exitosamente!", {
-          duration: 4000,
-          position: "top-center",
-        });
+        bigToast("Equipo Eliminado Exitosamente!", "success");
         tableData.splice(rowIndex, 1);
         setTableData([...tableData]);
       } else {
@@ -296,7 +264,6 @@ const Table: React.FC = () => {
 
   return (
     <>
-      <Toaster />
       <MaterialReactTable
         localization={MRT_Localization_ES}
         displayColumnDefOptions={{

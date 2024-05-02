@@ -1,18 +1,9 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
-import {
-  Modal,
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Select,
-  MenuItem,
-  SelectChangeEvent,
-} from "@mui/material";
+import { Modal, Box, TextField, Button, Typography } from "@mui/material";
 import AsyncSelect from "react-select/async";
 import axios from "axios";
-import { apiUrl, styles } from "./ExcelManipulation/Utils";
-import toast, { Toaster } from "react-hot-toast";
+import { apiUrl, bigToast, styles } from "./ExcelManipulation/Utils";
+
 import { loadOptions, mapOptions } from "../utils/loadOptions";
 import { RepositoryData } from "./ExcelManipulation/Types";
 
@@ -80,10 +71,7 @@ const ModalDevice: React.FC<ModalDeviceProps> = ({
       });
 
       if (response.status === 201) {
-        toast.success("Cliente Creado Exitosamente!", {
-          duration: 4000,
-          position: "top-center",
-        });
+        bigToast("Cliente Creado Exitosamente!", "success");
         dataReturned(response.data);
         onClose(false);
       } else {
@@ -108,7 +96,6 @@ const ModalDevice: React.FC<ModalDeviceProps> = ({
         p: 4,
       }}
     >
-      <Toaster />
       <Typography variant="h5" component="div">
         Crear Cliente
       </Typography>

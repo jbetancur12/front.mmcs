@@ -1,7 +1,8 @@
 import axios from "axios";
 import React, { useState } from "react";
-import { toast, Toaster } from "react-hot-toast";
+
 import { api } from "../config";
+import { Toast } from "./ExcelManipulation/Utils";
 // import * as Yup from 'yup'; // Importa Yup para la validación
 
 const apiUrl = api();
@@ -44,16 +45,12 @@ const PasswordGeneratorForm: React.FC = () => {
         window.location.href = "/login";
       }
     } else {
-      toast.error("Las contraseñas no coinciden", {
-        duration: 4000,
-        position: "top-center",
-      });
+      Toast.fire("Las contraseñas no coinciden", "", "error");
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-center px-6 pt-8 mx-auto md:h-screen pt:mt-0 dark:bg-gray-900">
-      <Toaster />
       <div className="w-full max-w-xl p-6 space-y-8 sm:p-8 bg-white rounded-lg shadow dark:bg-gray-800">
         <h2 className="text-2xl font-semibold mb-4">Generar Contraseña</h2>
 

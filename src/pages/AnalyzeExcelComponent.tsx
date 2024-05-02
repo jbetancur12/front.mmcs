@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 import {
   Box,
   Button,
@@ -12,13 +14,12 @@ import AsyncSelect from "react-select/async";
 import { api } from "../config";
 import axios from "axios";
 import { DatePicker } from "@mui/x-date-pickers";
-import toast, { Toaster } from "react-hot-toast";
 
 import { Add, CloudUpload } from "@mui/icons-material";
 import ModalCustomer from "../Components/ModalCustomer";
 import { AnalyzeExcelComponentProps } from "../Components/ExcelManipulation/Types";
 import { ResourceOption } from "../utils/loadOptions";
-import { styles } from "../Components/ExcelManipulation/Utils";
+import { bigToast, styles } from "../Components/ExcelManipulation/Utils";
 import ModalDevice from "../Components/ModalDevice";
 import { VisuallyHiddenInput } from "../Components/TableFiles";
 // Importa los componentes de MUI
@@ -149,7 +150,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   const analyzeCells = async () => {
     // Aquí puedes analizar las celdas necesarias
     // Por ejemplo, obtener el valor de una celda específica
-    if (data.length > 0) {
+    if (data?.length > 0) {
       setSerialNumber(data[17][2]);
 
       setCity(data[34][2]);
@@ -241,18 +242,40 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     analyzeCells();
   }, [data]);
 
+  const resetForm = () => {
+    setCity("");
+    setLocation("");
+    setHeadquartes("");
+    setFixedAsset("");
+    setSerialNumber("");
+    setCertificateDate(null);
+    setMissedData({ device: "", customer: "" });
+    setDevice(null);
+    setCustomer(null);
+    setTypeOfCertificate({ id: "3", name: "Calibración" });
+    setValidationError(null);
+  };
+
+  const removeSelectedFile = () => {
+    if (setFileNames && fileNames && selectedFile) {
+      setFileNames(fileNames.filter((name) => name !== selectedFile));
+    }
+  };
+
+  const postData = async (data: any) => {
+    return await axios.post(`${apiUrl}/files/raw`, data, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+      },
+    });
+  };
+
   const onSubmit = async () => {
     if (!validateFields()) {
       return;
     }
 
     setValidationError(null);
-
-    // const dateFormated = new Date(
-    //   format(certificateDate as Date, "yyyy-MM-dd")
-    // );
-
-    // const nextCalibrationDate = addYears(dateFormated, 1);
 
     const nextCalibrationDate = certificateDate?.setMonth(
       certificateDate.getMonth() + 12
@@ -269,38 +292,66 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
       customerId: customer?.value,
       deviceId: device?.value,
       certificateTypeId: typeOfCertificate?.id,
-      name: selectedFile || file?.name.replace(/\.[^/.]+$/, ".pdf"),
+      name:
+        selectedFile?.replace(/\.[^/.]+$/, ".pdf") ||
+        file?.name.replace(/\.[^/.]+$/, ".pdf"),
+      replace: false,
     };
 
     try {
-      const response = await axios.post(`${apiUrl}/files/raw`, data, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+      const response = await postData(data);
 
       if (response.status >= 200 && response.status < 300) {
-        if (setFileNames && fileNames && selectedFile) {
-          setFileNames(fileNames.filter((name) => name !== selectedFile));
-        }
-        setCity("");
-        setLocation("");
-        setHeadquartes("");
-        setFixedAsset("");
-        setSerialNumber("");
-        setCertificateDate(null);
-        setMissedData({ device: "", customer: "" });
-        setDevice(null);
-        setCustomer(null);
-        setTypeOfCertificate({ id: "3", name: "Calibración" });
-        setValidationError(null);
-        toast.success("Datos enviados correctamente");
+        removeSelectedFile();
+        resetForm();
+
+        bigToast("Datos enviados correctamente", "success");
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error.response.status === 409) {
+        const MySwal = withReactContent(Swal);
+        MySwal.fire({
+          title: <p>{error.response.data.message}</p>,
+          text: "¿Qué deseas hacer con el archivo?",
+          icon: "warning",
+          input: "radio",
+          showCancelButton: true,
+          inputValue: "update",
+          inputValidator: (value) => {
+            if (!value) {
+              return "Necsitas Escoger una opción!";
+            }
+          },
+          inputOptions: {
+            update: "Actualizar",
+            create: "Crear",
+          },
+        }).then(async (obj) => {
+          const response = await postData({
+            ...data,
+            replace: obj.value === "create",
+            update: obj.value === "update",
+          });
+
+          if (response.status >= 200 && response.status < 300) {
+            removeSelectedFile();
+            resetForm();
+            // MySwal.fire(
+            //   obj.value === "create" ? "Creado" : "Actualizado",
+            //   "",
+            //   "success"
+            // );
+
+            bigToast(
+              obj.value === "create" ? "Archivo Creado" : "Archivo Actualizado",
+              "success"
+            );
+          }
+        });
+      }
       console.error("Error al enviar datos:", error);
     }
   };
-
   return (
     <Box
       sx={{
@@ -320,7 +371,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
         name={missedData.device}
         dataReturned={dataReturnedDevice}
       />
-      <Toaster />
+
       <Stack direction="column" spacing={2} mb={3} mt={3}>
         {/* <TextField type="file" /> */}
         {!hideUpload && (

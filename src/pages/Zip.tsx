@@ -17,9 +17,8 @@ import {
   Tooltip,
 } from "@mui/material";
 import AnalyzeExcelComponent from "./AnalyzeExcelComponent";
-import ModalCustomer from "../Components/ModalCustomer";
+
 import { Check, Close, CloudUpload, Search } from "@mui/icons-material";
-import { set } from "date-fns";
 
 const Zip = () => {
   const [file, setFile] = useState<File | null>(null);
