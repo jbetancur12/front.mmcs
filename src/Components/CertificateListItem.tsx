@@ -34,7 +34,7 @@ export const CertificateListItem: React.FC<CertificateListItemProps> = ({
   return (
     <div className='flex items-center justify-between p-4 border-b border-gray-200'>
       <div>
-        <Link to={`/dashboard/calibraciones/certificados/${certificate.id}`}>
+        <Link to={`/calibraciones/certificados/${certificate.id}`}>
           <h3 className='text-lg font-semibold'>{certificate.device.name}</h3>
 
           {/* <p className="text-gray-500">Equipo: {certificate.device.name}</p> */}

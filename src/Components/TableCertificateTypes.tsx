@@ -1,6 +1,7 @@
 import { Delete, Edit } from '@mui/icons-material'
 import {
   Box,
+  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -284,12 +285,16 @@ const Table: React.FC = () => {
         )}
         // <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear Equipo</button>
         renderTopToolbarCustomActions={() => (
-          <button
-            className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded '
+          <Button
+            variant='contained'
             onClick={() => setCreateModalOpen(true)}
+            sx={{
+              fontWeight: 'bold',
+              color: '#DCFCE7'
+            }}
           >
             Crear Nuevo Tipo de Certificado
-          </button>
+          </Button>
         )}
       />
       <CreateNewAccountModal

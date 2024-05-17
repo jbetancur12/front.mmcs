@@ -1,6 +1,7 @@
 import { Delete, Edit } from '@mui/icons-material'
 import {
   Box,
+  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -307,12 +308,16 @@ const Table: React.FC = () => {
         )}
         // <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear Equipo</button>
         renderTopToolbarCustomActions={() => (
-          <button
-            className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded '
+          <Button
+            variant='contained'
             onClick={() => setCreateModalOpen(true)}
+            sx={{
+              fontWeight: 'bold',
+              color: '#DCFCE7'
+            }}
           >
             Crear Nuevo Equipo
-          </button>
+          </Button>
         )}
       />
       <CreateNewAccountModal
@@ -372,30 +377,32 @@ export const CreateNewAccountModal = ({
                   return null
                 }
                 if (column.accessorKey === 'repository.name') {
-                  return (
-                    <AsyncSelect
-                      cacheOptions
-                      // defaultOptions
-                      placeholder='Buscar Formato'
-                      loadOptions={(inputValue) =>
-                        loadOptions<RepositoryData>(
-                          inputValue,
-                          'repositories',
-                          (item) => mapOptions(item, 'id', 'name')
-                        )
-                      }
-                      onChange={(selectedOption: any) =>
-                        setValues({
-                          ...values,
-                          repository: {
-                            id: selectedOption.value,
-                            name: selectedOption.label
-                          }
-                        }) as any
-                      }
-                      styles={styles(false)}
-                    />
-                  )
+                  return null
+                  // return (
+                  //   <AsyncSelect
+                  //     key={column.accessorKey}
+                  //     cacheOptions
+                  //     // defaultOptions
+                  //     placeholder='Buscar Formato'
+                  //     loadOptions={(inputValue) =>
+                  //       loadOptions<RepositoryData>(
+                  //         inputValue,
+                  //         'repositories',
+                  //         (item) => mapOptions(item, 'id', 'name')
+                  //       )
+                  //     }
+                  //     onChange={(selectedOption: any) =>
+                  //       setValues({
+                  //         ...values,
+                  //         repository: {
+                  //           id: selectedOption.value,
+                  //           name: selectedOption.label
+                  //         }
+                  //       }) as any
+                  //     }
+                  //     styles={styles(false)}
+                  //   />
+                  // )
                 } else {
                   return (
                     <TextField

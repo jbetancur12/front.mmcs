@@ -35,6 +35,8 @@ import {
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import { userStore } from '../store/userStore'
+import { certificateTypeStore } from '../store/certificateTypeStore'
+import { deviceStore } from '../store/deviceStore'
 import AutoComplete from './AutoComplete'
 import { api } from '../config'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
@@ -44,6 +46,16 @@ import { Document, Page } from '@react-pdf/renderer'
 import PDFViewer from './PDFViewer'
 import AsyncSelect from 'react-select/async'
 import AnalyzeExcelComponent from './Excel'
+import { RepositoryData } from './Repository'
+import { loadOptions, mapOptions } from '../utils/loadOptions'
+import {
+  bigToast,
+  limitArraySize,
+  limitArraySizeCustomer,
+  limitArraySizeDevice,
+  styles
+} from './ExcelManipulation/Utils'
+import { customerStore } from '../store/customerStore'
 
 const minioUrl = import.meta.env.VITE_MINIO_URL
 
@@ -109,27 +121,6 @@ interface ResourceOption {
 // API URL
 const apiUrl = api()
 
-const styles = {
-  container: (provided, state) => ({
-    ...provided,
-    width: '100%',
-    marginRight: 10,
-    height: 50,
-    zIndex: 1000
-  }),
-  control: (provided, state) => ({
-    ...provided,
-    border: '1px solid #ccc',
-    borderRadius: 5,
-    height: 55
-  }),
-  option: (provided, state) => ({
-    ...provided,
-    color: state.isSelected ? 'white' : 'black',
-    backgroundColor: state.isSelected ? 'blue' : 'white'
-  })
-}
-
 // Main component
 const Table: React.FC = () => {
   const $userStore = useStore(userStore)
@@ -161,17 +152,17 @@ const Table: React.FC = () => {
 
       if (response.status === 201) {
         setLoading(false)
-        toast.success('Certificado Creado Exitosamente!', {
-          duration: 4000,
-          position: 'top-center'
-        })
+
+        bigToast('Certificado Creado Exitosamente!', 'success')
         fetchUsers() // Refresh data after creation
       } else {
         setLoading(false)
+        bigToast('Error al crear equipo', 'error')
         console.error('Error al crear equipo')
       }
     } catch (error) {
       setLoading(false)
+      bigToast('Error al crear equipo', 'error')
       console.error('Error de red:', error)
     }
   }
@@ -653,12 +644,16 @@ const Table: React.FC = () => {
         renderTopToolbarCustomActions={() => {
           if ($userStore.rol !== 'admin') return
           return (
-            <button
-              className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded '
+            <Button
               onClick={() => setCreateModalOpen(true)}
+              variant='contained'
+              sx={{
+                fontWeight: 'bold',
+                color: '#DCFCE7'
+              }}
             >
               Subir Nuevo Certificado
-            </button>
+            </Button>
           )
         }}
         renderDetailPanel={({ row }) => {
@@ -699,6 +694,9 @@ export const CreateNewAccountModal = ({
   onClose,
   onSubmit
 }: CreateModalProps) => {
+  const $certificateTypeStore = useStore(certificateTypeStore)
+  const $deviceStore = useStore(deviceStore)
+  const $customerStore = useStore(customerStore)
   const [file, setFile] = useState<File | null>(null)
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
   const [selectedValue, setSelectedValue] = useState('option2')
@@ -713,8 +711,6 @@ export const CreateNewAccountModal = ({
       return acc
     }, {} as any)
   )
-
-  console.log('=>', values)
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0]
@@ -804,42 +800,49 @@ export const CreateNewAccountModal = ({
   const sortedColumns = [...columns] // Creamos una copia del array original
   sortedColumns.sort((a, b) => a.id - b.id) // Ordenamos las columnas por su id
 
-  const loadOptions = async (
-    inputValue: string,
-    resource: string,
-    mapFunction: (item: any) => ResourceOption
-  ): Promise<ResourceOption[]> => {
-    return new Promise((resolve, reject) => {
-      let timer
-      const endpoint = `${apiUrl}/${resource}` // Construye la URL del endpoint
-      const fetchData = async () => {
-        try {
-          const response = await axios.get(endpoint, {
-            params: { q: inputValue },
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-            }
-          })
-          const data = response.data
-          const options = data.map((item: any) => mapFunction(item))
-          console.log('🚀 ~ fetchData ~ options:', options)
-          resolve(options) // Aplica la función de mapeo
-        } catch (error) {
-          console.error('Error al cargar opciones:', error)
-          reject(error)
-        }
-      }
-      if (timer) {
-        clearTimeout(timer)
-      }
+  // const loadOptions = async (
+  //   inputValue: string,
+  //   resource: string,
+  //   mapFunction: (item: any) => ResourceOption
+  // ): Promise<ResourceOption[]> => {
+  //   return new Promise((resolve, reject) => {
+  //     let timer
+  //     const endpoint = `${apiUrl}/${resource}` // Construye la URL del endpoint
+  //     const fetchData = async () => {
+  //       try {
+  //         const response = await axios.get(endpoint, {
+  //           params: { q: inputValue },
+  //           headers: {
+  //             Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+  //           }
+  //         })
+  //         const data = response.data
+  //         const options = data.map((item: any) => mapFunction(item))
+  //         console.log('🚀 ~ fetchData ~ options:', options)
+  //         resolve(options) // Aplica la función de mapeo
+  //       } catch (error) {
+  //         console.error('Error al cargar opciones:', error)
+  //         reject(error)
+  //       }
+  //     }
+  //     if (timer) {
+  //       clearTimeout(timer)
+  //     }
 
-      timer = setTimeout(fetchData, 1000) // Establecer el debounce en 1000ms
-    })
-  }
+  //     timer = setTimeout(fetchData, 1000) // Establecer el debounce en 1000ms
+  //   })
+  // }
 
   return (
     <Dialog open={open}>
-      <DialogTitle textAlign='center'>Subir Nuevo Certificado</DialogTitle>
+      <DialogTitle
+        textAlign='center'
+        sx={{
+          fontWeight: 'bold'
+        }}
+      >
+        Subir Nuevo Certificado
+      </DialogTitle>
       <DialogContent>
         <form onSubmit={(e) => e.preventDefault()}>
           <Stack
@@ -927,28 +930,55 @@ export const CreateNewAccountModal = ({
                     )
                   case 'selectCustomerId':
                     return (
-                      <AutoComplete
+                      // <AutoComplete
+                      //   key={index}
+                      //   endpoint={`${apiUrl}/customers`}
+                      //   token={localStorage.getItem('accessToken')}
+                      //   label='Buscar Cliente'
+                      //   mapOption={(data) =>
+                      //     data.map((item) => ({
+                      //       id: item.id,
+                      //       nombre: item.nombre
+                      //     }))
+                      //   }
+                      //   //isOptionEqualToValue={(option, value) => option.id === value.id}
+                      //   getOptionLabel={(option) => option.nombre}
+                      //   name={column.accessorKey}
+                      //   value={values[column.accessorKey]}
+                      //   onClientSelection={(e) =>
+                      //     setValues({
+                      //       ...values,
+                      //       [column.accessorKey]: e.id,
+                      //       customerName: convertirCadena(e.nombre)
+                      //     })
+                      //   }
+                      // />
+                      <AsyncSelect
                         key={index}
-                        endpoint={`${apiUrl}/customers`}
-                        token={localStorage.getItem('accessToken')}
-                        label='Buscar Cliente'
-                        mapOption={(data) =>
-                          data.map((item) => ({
-                            id: item.id,
-                            nombre: item.nombre
-                          }))
+                        cacheOptions
+                        // defaultOptions
+
+                        placeholder='Buscar Cliente'
+                        loadOptions={(inputValue) =>
+                          loadOptions<RepositoryData>(
+                            inputValue,
+                            'customers',
+                            (item) => mapOptions(item, 'id', 'nombre')
+                          )
                         }
-                        //isOptionEqualToValue={(option, value) => option.id === value.id}
-                        getOptionLabel={(option) => option.nombre}
-                        name={column.accessorKey}
-                        value={values[column.accessorKey]}
-                        onClientSelection={(e) =>
+                        onChange={(selectedOption: any) => {
+                          const opt = {
+                            value: selectedOption.value,
+                            label: selectedOption.label
+                          }
+                          limitArraySizeCustomer($customerStore, opt)
                           setValues({
                             ...values,
-                            [column.accessorKey]: e.id,
-                            customerName: convertirCadena(e.nombre)
+                            [column.accessorKey]: selectedOption.value
                           })
-                        }
+                        }}
+                        defaultOptions={$customerStore}
+                        styles={styles(true)}
                       />
                     )
 
@@ -975,46 +1005,101 @@ export const CreateNewAccountModal = ({
                       //   // }
                       //   styles={styles}
                       // />
-                      <AutoComplete
+                      // <AutoComplete
+                      //   key={index}
+                      //   endpoint={`${apiUrl}/devices`}
+                      //   token={localStorage.getItem('accessToken')}
+                      //   label='Buscar Equipo'
+                      //   mapOption={(data) =>
+                      //     data.map((item: any) => ({
+                      //       id: item.id,
+                      //       name: item.name
+                      //     }))
+                      //   }
+                      //   getOptionLabel={(option) => option.name}
+                      //   name={column.accessorKey}
+                      //   value={values[column.accessorKey]}
+                      //   onClientSelection={(e) =>
+                      //     setValues({ ...values, [column.accessorKey]: e.id })
+                      //   }
+                      // />
+                      <AsyncSelect
                         key={index}
-                        endpoint={`${apiUrl}/devices`}
-                        token={localStorage.getItem('accessToken')}
-                        label='Buscar Equipo'
-                        mapOption={(data) =>
-                          data.map((item: any) => ({
-                            id: item.id,
-                            name: item.name
-                          }))
+                        cacheOptions
+                        // defaultOptions
+
+                        placeholder='Buscar Equipo'
+                        loadOptions={(inputValue) =>
+                          loadOptions<RepositoryData>(
+                            inputValue,
+                            'devices',
+                            (item) => mapOptions(item, 'id', 'name')
+                          )
                         }
-                        getOptionLabel={(option) => option.name}
-                        name={column.accessorKey}
-                        value={values[column.accessorKey]}
-                        onClientSelection={(e) =>
-                          setValues({ ...values, [column.accessorKey]: e.id })
-                        }
+                        onChange={(selectedOption: any) => {
+                          const opt = {
+                            value: selectedOption.value,
+                            label: selectedOption.label
+                          }
+                          limitArraySizeDevice($deviceStore, opt)
+                          setValues({
+                            ...values,
+                            [column.accessorKey]: selectedOption.value
+                          })
+                        }}
+                        defaultOptions={$deviceStore}
+                        styles={styles(true)}
                       />
                     )
 
                   case 'selectCertificateTypeId':
                     return (
-                      <AutoComplete
+                      // <AutoComplete
+                      //   key={index}
+                      //   endpoint={`${apiUrl}/certificateTypes`}
+                      //   token={localStorage.getItem('accessToken')}
+                      //   label='Buscar Tipo de Certificado'
+                      //   mapOption={(data) =>
+                      //     data.map((item: any) => ({
+                      //       id: item.id,
+                      //       name: item.name
+                      //     }))
+                      //   }
+                      //   //isOptionEqualToValue={(option, value) => option?.id?.toString() === (value?.id ?? value)?.toString()}
+                      //   getOptionLabel={(option) => option.name}
+                      //   name={column.accessorKey}
+                      //   value={values[column.accessorKey]}
+                      //   onClientSelection={(e) =>
+                      //     setValues({ ...values, [column.accessorKey]: e.id })
+                      //   }
+                      // />
+
+                      <AsyncSelect
                         key={index}
-                        endpoint={`${apiUrl}/certificateTypes`}
-                        token={localStorage.getItem('accessToken')}
-                        label='Buscar Tipo de Certificado'
-                        mapOption={(data) =>
-                          data.map((item: any) => ({
-                            id: item.id,
-                            name: item.name
-                          }))
+                        cacheOptions
+                        // defaultOptions
+
+                        placeholder='Buscar Tipo Certificado'
+                        loadOptions={(inputValue) =>
+                          loadOptions<RepositoryData>(
+                            inputValue,
+                            'certificateTypes',
+                            (item) => mapOptions(item, 'id', 'name')
+                          )
                         }
-                        //isOptionEqualToValue={(option, value) => option?.id?.toString() === (value?.id ?? value)?.toString()}
-                        getOptionLabel={(option) => option.name}
-                        name={column.accessorKey}
-                        value={values[column.accessorKey]}
-                        onClientSelection={(e) =>
-                          setValues({ ...values, [column.accessorKey]: e.id })
-                        }
+                        onChange={(selectedOption: any) => {
+                          const opt = {
+                            value: selectedOption.value,
+                            label: selectedOption.label
+                          }
+                          limitArraySize($certificateTypeStore, opt)
+                          setValues({
+                            ...values,
+                            [column.accessorKey]: selectedOption.value
+                          })
+                        }}
+                        defaultOptions={$certificateTypeStore}
+                        styles={styles(true)}
                       />
                     )
 
@@ -1028,7 +1113,9 @@ export const CreateNewAccountModal = ({
                         href='#file-upload'
                         onChange={handleFileChange}
                         style={{
-                          textTransform: 'none'
+                          textTransform: 'none',
+                          fontWeight: 'bold',
+                          color: '#DCFCE7'
                         }}
                       >
                         {selectedFileName ? selectedFileName : 'Cargar Archivo'}
@@ -1064,12 +1151,16 @@ export const CreateNewAccountModal = ({
         >
           Cancelar
         </button>
-        <button
-          className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+        <Button
+          variant='contained'
           onClick={handleSubmit}
+          sx={{
+            fontWeight: 'bold',
+            color: '#DCFCE7'
+          }}
         >
           Subir Certificado
-        </button>
+        </Button>
       </DialogActions>
     </Dialog>
   )

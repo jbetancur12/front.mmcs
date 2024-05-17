@@ -149,7 +149,7 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
             variant='contained'
             color='primary'
             onClick={handleSave}
-            sx={{ marginLeft: '0.5rem' }}
+            sx={{ marginLeft: '0.5rem', fontWeight: 'bold', color: '#DCFCE7' }}
           >
             Guardar
           </Button>

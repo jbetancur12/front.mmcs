@@ -1,6 +1,7 @@
 import { Delete, Edit } from '@mui/icons-material'
 import {
   Box,
+  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -20,9 +21,10 @@ import {
 } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import toast, { Toaster } from 'react-hot-toast'
+
 import { useParams } from 'react-router-dom'
 import { api } from '../config'
+import { bigToast } from './ExcelManipulation/Utils'
 
 // Define interfaces
 export interface UserData {
@@ -62,17 +64,16 @@ const Table: React.FC = () => {
         }
       })
 
-      if (response.status === 201) {
-        toast.success('Usuario Creado Exitosamente!', {
-          duration: 4000,
-          position: 'top-center'
-        })
+      if (response.status >= 200 && response.status < 300) {
+        bigToast('Usuario Creado Exitosamente!', 'success')
         fetchUsers() // Refresh data after creation
       } else {
         console.error('Error al crear usuario')
+        bigToast('Error al crear usuario', 'error')
       }
     } catch (error) {
       console.error('Error de red:', error)
+      bigToast('Error al crear usuario', 'error')
     }
   }
 
@@ -125,10 +126,7 @@ const Table: React.FC = () => {
           )
 
           if (response.status === 201) {
-            toast.success('Usuario Modificado Exitosamente!', {
-              duration: 4000,
-              position: 'top-center'
-            })
+            bigToast('Usuario Modificado Exitosamente!', 'success')
             tableData[row.index] = values
             setTableData([...tableData])
           } else {
@@ -156,10 +154,7 @@ const Table: React.FC = () => {
       console.log('🚀 ~ deleteUser ~ response:', response)
 
       if (response.status === 204) {
-        toast.success('Usuario Eliminado Exitosamente!', {
-          duration: 4000,
-          position: 'top-center'
-        })
+        bigToast('Usuario Eliminado Exitosamente!', 'success')
         tableData.splice(rowIndex, 1)
         setTableData([...tableData])
       } else {
@@ -272,7 +267,6 @@ const Table: React.FC = () => {
 
   return (
     <>
-      <Toaster />
       <MaterialReactTable
         localization={MRT_Localization_ES}
         displayColumnDefOptions={{
@@ -306,12 +300,16 @@ const Table: React.FC = () => {
         )}
         // <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear Usuario</button>
         renderTopToolbarCustomActions={() => (
-          <button
-            className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded '
+          <Button
+            variant='contained'
             onClick={() => setCreateModalOpen(true)}
+            sx={{
+              fontWeight: 'bold',
+              color: '#DCFCE7'
+            }}
           >
             Crear Usuario
-          </button>
+          </Button>
         )}
       />
       <CreateNewAccountModal

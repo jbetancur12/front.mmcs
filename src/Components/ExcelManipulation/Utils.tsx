@@ -4,8 +4,71 @@ import { api } from '../../config'
 import axios from 'axios'
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
+import { certificateTypeStore } from '../../store/certificateTypeStore'
+import { deviceStore } from '../../store/deviceStore'
+import { customerStore } from '../../store/customerStore'
 
 export const apiUrl = api()
+
+export const limitArraySize = (arra: any, newItem: any) => {
+  // Verificar si el nuevo item ya existe en el array
+  const isDuplicate = arra.some(
+    (item: any) => item.value === newItem.value && item.label === newItem.label
+  )
+
+  let arr
+  if (!isDuplicate) {
+    if (arra.length < 2) {
+      arr = [...arra, newItem]
+    } else {
+      arr = [...arra.slice(1), newItem]
+    }
+  } else {
+    arr = arra // No se agrega el nuevo elemento si ya existe
+  }
+
+  certificateTypeStore.set(arr)
+}
+
+export const limitArraySizeDevice = (arra: any, newItem: any) => {
+  // Verificar si el nuevo item ya existe en el array
+  const isDuplicate = arra.some(
+    (item: any) => item.value === newItem.value && item.label === newItem.label
+  )
+
+  let arr
+  if (!isDuplicate) {
+    if (arra.length < 2) {
+      arr = [...arra, newItem]
+    } else {
+      arr = [...arra.slice(1), newItem]
+    }
+  } else {
+    arr = arra // No se agrega el nuevo elemento si ya existe
+  }
+
+  deviceStore.set(arr)
+}
+
+export const limitArraySizeCustomer = (arra: any, newItem: any) => {
+  // Verificar si el nuevo item ya existe en el array
+  const isDuplicate = arra.some(
+    (item: any) => item.value === newItem.value && item.label === newItem.label
+  )
+
+  let arr
+  if (!isDuplicate) {
+    if (arra.length < 2) {
+      arr = [...arra, newItem]
+    } else {
+      arr = [...arra.slice(1), newItem]
+    }
+  } else {
+    arr = arra // No se agrega el nuevo elemento si ya existe
+  }
+
+  customerStore.set(arr)
+}
 
 export const decimalPlaces = (num: number) => {
   const decimalPart = num.toString().split('.')[1]
@@ -176,6 +239,10 @@ export const styles = (error: boolean) => {
       ...provided,
       color: state.isSelected ? 'white' : 'black',
       backgroundColor: state.isSelected ? 'blue' : 'white'
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      zIndex: 1000
     }),
     placeholder: (provided: any) => ({
       ...provided,

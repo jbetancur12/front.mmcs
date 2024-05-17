@@ -540,23 +540,25 @@ const QuoteForm: React.FC = () => {
                   key={index}
                   style={{ display: 'flex', marginBottom: '8px' }}
                 >
-                  <AsyncSelect
-                    cacheOptions
-                    isDisabled={onlyRead}
-                    loadOptions={loadOptions}
-                    onChange={(selectedOption: any) => {
-                      handleProductChange(index, 'product', selectedOption)
-                    }}
-                    placeholder='Buscar Producto'
-                    defaultValue={
-                      id && {
-                        value: index,
-                        label: productName
+                  <div style={{ marginRight: '10px', width: '50%' }}>
+                    <AsyncSelect
+                      cacheOptions
+                      isDisabled={onlyRead}
+                      loadOptions={loadOptions}
+                      onChange={(selectedOption: any) => {
+                        handleProductChange(index, 'product', selectedOption)
+                      }}
+                      placeholder='Buscar Producto'
+                      defaultValue={
+                        id && {
+                          value: index,
+                          label: productName
+                        }
                       }
-                    }
-                    classNamePrefix='react-select'
-                    styles={styles(false)}
-                  />
+                      classNamePrefix='react-select'
+                      styles={styles(false)}
+                    />
+                  </div>
 
                   <TextField
                     disabled={onlyRead}

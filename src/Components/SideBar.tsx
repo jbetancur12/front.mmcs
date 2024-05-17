@@ -3,12 +3,15 @@ import { useStore } from '@nanostores/react'
 // import { BiSolidFactory } from "react-icons/bi";
 import { FaHospitalUser } from 'react-icons/fa'
 
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { userStore } from '../store/userStore'
 import DropdownButton from './DropdownButton'
 
+// ...
+
 const SideBar: React.FC = () => {
   const $userStore = useStore(userStore)
+  let { pathname } = useLocation()
 
   // const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -26,9 +29,9 @@ const SideBar: React.FC = () => {
         <div className='flex flex-col flex-1 pt-5 pb-4 overflow-y-auto'>
           <div className='flex-1 px-3 space-y-1 bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700'>
             <ul className='pb-2 space-y-2'>
-              <li>
+              <li className={pathname === '/' ? 'bg-green-100' : ''}>
                 <a
-                  href='/dashboard'
+                  href='/'
                   className='flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700'
                 >
                   <svg
@@ -45,7 +48,7 @@ const SideBar: React.FC = () => {
                   </span>
                 </a>
               </li>
-              <li>
+              <li className={pathname === '/customers' ? 'bg-green-100' : ''}>
                 {$userStore.rol === 'admin' && (
                   <>
                     <Link
@@ -70,6 +73,7 @@ const SideBar: React.FC = () => {
                   <DropdownButton
                     buttonText='Cotizaciones'
                     rol={$userStore.rol}
+                    currentPath={pathname}
                     menuItems={[
                       {
                         label: 'Listar Cotizaciones',
@@ -93,6 +97,7 @@ const SideBar: React.FC = () => {
                 <DropdownButton
                   buttonText='Calibraciones'
                   rol={$userStore.rol}
+                  currentPath={pathname}
                   menuItems={[
                     {
                       label: 'Equipos',
@@ -109,6 +114,11 @@ const SideBar: React.FC = () => {
                       url: 'calibraciones/certificados',
                       roles: ['admin', 'user']
                     }
+                    // {
+                    //   label: 'Subir Excel',
+                    //   url: 'calibraciones/subir-excel',
+                    //   roles: ['admin']
+                    // }
                     // { label: "Sidebar", url: "https://flowbite-admin-dashboard.vercel.app/layouts/sidebar/" },
                   ]}
                   pathData='M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z'

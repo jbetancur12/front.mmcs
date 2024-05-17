@@ -184,7 +184,14 @@ const Table: React.FC = () => {
       <Toaster />
       <Loader loading={loading} />
       <Link to='new-quote'>
-        <Button variant='contained' color='primary'>
+        <Button
+          variant='contained'
+          sx={{
+            fontWeight: 'bold',
+            color: '#DCFCE7',
+            marginBottom: '1rem'
+          }}
+        >
           Crear Cotización
         </Button>
       </Link>

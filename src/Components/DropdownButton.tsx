@@ -6,13 +6,15 @@ interface DropdownButtonProps {
   menuItems: { label: string; url: string; roles: string[] }[]
   pathData: string
   rol: string
+  currentPath: string
 }
 
 const DropdownButton: React.FC<DropdownButtonProps> = ({
   buttonText,
   menuItems,
   pathData,
-  rol
+  rol,
+  currentPath
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
@@ -60,7 +62,10 @@ const DropdownButton: React.FC<DropdownButtonProps> = ({
         {menuItems
           .filter((item) => item.roles.includes(rol)) // Filtrar elementos basados en los roles permitidos
           .map((item) => (
-            <li key={item.label}>
+            <li
+              key={item.label}
+              className={currentPath === `/${item.url}` ? 'bg-green-100' : ''}
+            >
               <Link
                 to={item.url}
                 className='flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700'

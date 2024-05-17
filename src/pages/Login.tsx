@@ -1,10 +1,11 @@
 import axios, { AxiosError } from 'axios' // Import Axios
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import * as Yup from 'yup' // Importa Yup para la validación
 import { api } from '../config'
 import { Toast } from '../Components/ExcelManipulation/Utils'
+import { usePostHog } from 'posthog-js/react'
 
 // Función de utilidad para verificar si un objeto es de tipo AxiosError
 function isAxiosError(obj: any): obj is AxiosError {
@@ -13,6 +14,10 @@ function isAxiosError(obj: any): obj is AxiosError {
 const apiUrl = api()
 
 const Login: React.FC = () => {
+  const posthog = usePostHog()
+  const navigate = useNavigate()
+  const [_loading, setLoading] = useState(true)
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -120,11 +125,14 @@ const Login: React.FC = () => {
         Toast.fire('Bienvenido', '', 'success')
 
         setTimeout(() => {
-          window.location.href = '/dashboard'
+          window.location.href = '/'
         }, 3000)
 
         localStorage.setItem('accessToken', token)
-
+        posthog?.capture('clicked_log_in')
+        posthog?.identify(response.data.user.id, {
+          email: response.data.user.email
+        })
         setError(null)
       } else {
         // Handle login error
@@ -141,9 +149,41 @@ const Login: React.FC = () => {
     } catch (error: any) {
       // Handle network error or other exceptions
       handleValidationOrNetworkError(error)
+      Toast.fire('Error', error.message, 'error')
     }
   }
 
+  // useEffect(() => {
+  //   if (localStorage.getItem('accessToken')) window.location.href = '/'
+  // }, [])
+
+  useEffect(() => {
+    const validateToken = async () => {
+      try {
+        const token = localStorage.getItem('accessToken')
+        if (!token) {
+          throw new Error('Token no encontrado')
+        }
+
+        const response = await fetch(`${apiUrl}/auth/validateToken`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+
+        if (response.ok) {
+          navigate('/')
+        }
+      } catch (error) {
+        Toast.fire('Error', 'No se pudo validar el token', 'error')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    validateToken()
+  }, [])
   return (
     <div className='flex flex-col items-center justify-center px-6 pt-8 mx-auto md:h-screen pt:mt-0 dark:bg-gray-900'>
       <a
@@ -152,7 +192,7 @@ const Login: React.FC = () => {
       >
         <img
           src='/images/logo2.png'
-          className='mr-4 h-11'
+          className='mr-4 h-28'
           alt='Metromedics Logo Logo'
         />
         {/* <span>Metromedics S.A.S</span> */}

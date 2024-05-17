@@ -1,6 +1,8 @@
 import { useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import axios, { AxiosError, AxiosResponse } from 'axios'
+import { useStore } from '@nanostores/react'
+import { userStore } from '../store/userStore'
 import {
   Button,
   Dialog,
@@ -33,6 +35,8 @@ function CertificatesList() {
 
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
+
+  const $userStore = useStore(userStore)
 
   const years = certificates.map((certificate) => {
     const getYear = new Date(certificate.calibrationDate).getFullYear()
@@ -198,14 +202,16 @@ function CertificatesList() {
             >
               Descargar
             </Button>
-            <Button
-              variant='outlined'
-              color='error'
-              onClick={() => handleClickOpen(certificate.id)}
-              sx={{ ml: 2 }}
-            >
-              Eliminar
-            </Button>
+            {$userStore.rol == 'admin' && (
+              <Button
+                variant='outlined'
+                color='error'
+                onClick={() => handleClickOpen(certificate.id)}
+                sx={{ ml: 2 }}
+              >
+                Eliminar
+              </Button>
+            )}
           </ListItem>
         ))}
         <Dialog open={open} onClose={handleClose}>

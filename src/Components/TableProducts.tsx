@@ -255,7 +255,7 @@ const TableProducts: React.FC = () => {
       >
         {/* Botón para actualizar precios */}
         <Button
-          style={{ marginRight: '10px' }}
+          style={{ marginRight: '10px', fontWeight: 'bold', color: '#DCFCE7' }}
           variant='contained'
           color='primary'
           onClick={() => setConfirmationDialogOpen(true)}
@@ -363,12 +363,16 @@ const TableProducts: React.FC = () => {
         // )}
         // // <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear Equipo</button>
         renderTopToolbarCustomActions={() => (
-          <button
-            className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded '
+          <Button
+            variant='contained'
             onClick={() => setCreateModalOpen(true)}
+            sx={{
+              fontWeight: 'bold',
+              color: '#DCFCE7'
+            }}
           >
             Crear Nuevo Producto y/o Servicio
-          </button>
+          </Button>
         )}
       />
       <CreateNewProductModal

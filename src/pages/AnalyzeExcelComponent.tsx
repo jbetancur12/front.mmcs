@@ -15,13 +15,15 @@ import { api } from '../config'
 import axios from 'axios'
 import { DatePicker } from '@mui/x-date-pickers'
 
-import { Add, CloudUpload } from '@mui/icons-material'
+import { Add, CloudUpload, Warning } from '@mui/icons-material'
 import ModalCustomer from '../Components/ModalCustomer'
 import { AnalyzeExcelComponentProps } from '../Components/ExcelManipulation/Types'
 import { ResourceOption } from '../utils/loadOptions'
 import { bigToast, styles } from '../Components/ExcelManipulation/Utils'
 import ModalDevice from '../Components/ModalDevice'
 import { VisuallyHiddenInput } from '../Components/TableFiles'
+import XlsxPopulate from 'xlsx-populate'
+
 // Importa los componentes de MUI
 
 const apiUrl = api()
@@ -34,12 +36,13 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   setFileNames,
   fileNames
 }) => {
-  console.log(dataReceived)
   const [file, setFile] = useState<File | null>(null)
+  const [filePdf, setFilePdf] = useState<File | null>(null)
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
   const [data, setData] = useState<any[]>([])
   const [city, setCity] = useState<string>('')
   const [location, setLocation] = useState<string>('')
-  const [headquarters, setHeadquartes] = useState<string>()
+  const [headquarters, setHeadquartes] = useState<string>('Sin Información')
   const [fixedAsset, setFixedAsset] = useState<string>('')
   const [serialNumber, setSerialNumber] = useState<string>('')
   const [certificateDate, setCertificateDate] = useState<Date | null>(null)
@@ -67,7 +70,8 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
       !certificateDate ||
       !customer ||
       !device ||
-      !typeOfCertificate
+      !typeOfCertificate ||
+      !filePdf
     ) {
       setValidationError('Todos los campos son obligatorios')
       return false
@@ -112,6 +116,14 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     })
   }
 
+  const readEx = async (file: File) => {
+    const wsx = await XlsxPopulate.fromDataAsync(file, {
+      password: '123456'
+    }).then((workbook) => {
+      console.log('🚀 ~ handleFileUpload ~ workbook:', workbook.sheet('CC'))
+    })
+  }
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       const uploadedFile = event.target.files[0]
@@ -122,8 +134,15 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
       reader.onload = (e) => {
         if (e.target) {
           const binaryString = e.target.result as string // Asegúrate de que sea de tipo string
-          const workbook = XLSX.read(binaryString, { type: 'binary' })
+
+          readEx(uploadedFile)
+          const workbook = XLSX.read(binaryString, {
+            type: 'binary',
+            password: '123456'
+          })
+          console.log('🚀 ~ handleFileUpload ~ workbook:', workbook)
           const worksheet = workbook.Sheets['CC']
+
           const jsonData = XLSX.utils.sheet_to_json(worksheet, {
             header: 1,
             raw: false,
@@ -147,24 +166,60 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     setMissedData({ ...missedData, device: '' })
   }
 
+  const FIELD_INDEX = 0
+  const VALUE_INDEX = 2
+  const CUSTOMER_INDEX = 30
+  const DEVICE_INDEX = 11
+
+  const setFieldValue = (field: string, value: any) => {
+    switch (field) {
+      case 'Instrumento:':
+        return value
+      case 'Solicitante:':
+        return value
+      case 'Código Interno:':
+        setFixedAsset(value)
+        break
+      case 'Ubicación:':
+        setLocation(value)
+        break
+      case 'Ciudad/Pais:':
+        setCity(value)
+        break
+      case 'Fecha de expedición:':
+        setCertificateDate(new Date(value))
+        break
+      case 'Serie:':
+        setSerialNumber(value)
+        break
+      default:
+        break
+    }
+  }
+
   const analyzeCells = async () => {
-    // Aquí puedes analizar las celdas necesarias
-    // Por ejemplo, obtener el valor de una celda específica
     if (data?.length > 0) {
-      setSerialNumber(data[17][2])
+      let device = ''
+      let customer = ''
 
-      setCity(data[34][2])
+      for (let i = 0; i <= 50; i++) {
+        let subArray = data[i]
+        let field = subArray[FIELD_INDEX]
+        let value = subArray[VALUE_INDEX]
 
-      setFixedAsset(data[19][2])
+        if (field === 'Instrumento:' || field === 'Solicitante:') {
+          let result = setFieldValue(field, value)
+          if (field === 'Instrumento:') {
+            device = result
+          } else {
+            customer = result
+          }
+        } else {
+          setFieldValue(field, value)
+        }
+      }
 
-      setLocation(data[21][2])
-      setHeadquartes('Sin Información')
-
-      // findDevice(data[11][2]),
-      //   findCustomer(data[30][2]),
-
-      const results: any = await findCustomerAndDevice(data[30][2], data[11][2])
-
+      const results: any = await findCustomerAndDevice(customer, device)
       const missed = { device: '', customer: '' }
 
       if (results[0].value.length > 0) {
@@ -173,20 +228,19 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
           label: results[0].value[0].nombre
         })
       } else {
-        missed.customer = data[30][2]
+        missed.customer = data[CUSTOMER_INDEX][VALUE_INDEX]
       }
+
       if (results[1].value.length > 0) {
         setDevice({
           value: results[1].value[0].id,
           label: results[1].value[0].name
         })
       } else {
-        missed.device = data[11][2]
+        missed.device = data[DEVICE_INDEX][VALUE_INDEX]
       }
 
       setMissedData(missed)
-
-      setCertificateDate(new Date(data[40][2]))
     }
   }
 
@@ -242,7 +296,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   const resetForm = () => {
     setCity('')
     setLocation('')
-    setHeadquartes('')
+    setHeadquartes('Sin Información')
     setFixedAsset('')
     setSerialNumber('')
     setCertificateDate(null)
@@ -265,6 +319,15 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
         Authorization: `Bearer ${localStorage.getItem('accessToken')}`
       }
     })
+  }
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0]
+
+    if (selectedFile) {
+      setFilePdf(selectedFile)
+      setSelectedFileName(selectedFile.name)
+    }
   }
 
   const onSubmit = async () => {
@@ -316,7 +379,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
           inputValue: 'update',
           inputValidator: (value) => {
             if (!value) {
-              return 'Necsitas Escoger una opción!'
+              return 'Necesitas Escoger una opción!'
             }
           },
           inputOptions: {
@@ -432,17 +495,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
           placeholder='Buscar Equipo'
           styles={styles(!(!!validationError && !device))}
         />
-        {missedData.device && !device && (
-          <div className='flex items-center justify-evenly'>
-            <p className='text-red-500'>{missedData.device}</p>
-            <IconButton
-              aria-label='delete'
-              onClick={() => setOpenModalDevice(true)}
-            >
-              <Add />
-            </IconButton>
-          </div>
-        )}
+
         <AsyncSelect
           cacheOptions
           // defaultOptions
@@ -523,19 +576,27 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
             component='label'
             variant='contained'
             startIcon={<CloudUpload />}
-            //onChange={handleFileChange}
-            style={{
-              textTransform: 'none'
-            }}
+            color={!!validationError && !filePdf ? 'error' : 'primary'}
           >
-            {/* {selectedFileName ? selectedFileName : "Cargar Archivo"} */}
-            <VisuallyHiddenInput type='file' accept='.pdf' />
+            {selectedFileName ? selectedFileName : 'Cargar Archivo'}
+            <VisuallyHiddenInput
+              type='file'
+              accept='.pdf'
+              onChange={handleFileChange}
+            />
           </Button>
         )}
         {validationError && (
-          <div style={{ color: 'red' }}>{validationError}</div>
+          <Box display={'flex'} justifyContent={'center'}>
+            <Typography color='error' variant='caption'>
+              <span style={{ marginRight: 15 }}>
+                <Warning />
+              </span>
+              {validationError}
+            </Typography>
+          </Box>
         )}
-        <Button variant='contained' onClick={onSubmit} color='primary'>
+        <Button variant='contained' onClick={onSubmit}>
           Enviar
         </Button>
       </Stack>
