@@ -24,6 +24,9 @@ jobs:
       - name: Build app
         run: npm run build
 
+      - name: Show Port
+        run: echo ${{ secrets.VPS_PORT }}
+
       - name: Set up environment variables
         run: |
           echo "VITE_PUBLIC_URL=${{ secrets.VITE_PUBLIC_URL }}" >> $GITHUB_ENV
@@ -43,6 +46,7 @@ jobs:
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
-          port: 22
+          key: ${{ secrets.VPS_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_PORT }}
           source: dist/
           target: /var/www/app.metromedics.co/html/
