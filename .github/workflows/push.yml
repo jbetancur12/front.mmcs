@@ -24,9 +24,6 @@ jobs:
       - name: Build app
         run: npm run build
 
-      - name: Show Port
-        run: echo ${{ secrets.VPS_PORT }}
-
       - name: Set up environment variables
         run: |
           echo "VITE_PUBLIC_URL=${{ secrets.VITE_PUBLIC_URL }}" >> $GITHUB_ENV
