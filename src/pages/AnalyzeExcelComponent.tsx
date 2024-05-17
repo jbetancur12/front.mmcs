@@ -117,7 +117,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   }
 
   const readEx = async (file: File) => {
-    const wsx = await XlsxPopulate.fromDataAsync(file, {
+    await XlsxPopulate.fromDataAsync(file, {
       password: '123456'
     }).then((workbook) => {
       console.log('🚀 ~ handleFileUpload ~ workbook:', workbook.sheet('CC'))
