@@ -1,0 +1,48 @@
+name: Deploy App to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build app
+        run: npm run build
+
+      - name: Set up environment variables
+        env:
+          VITE_PUBLIC_URL: ${{ secrets.VITE_PUBLIC_URL }}
+          VITE_API_URL_PROD: ${{ secrets.VITE_API_URL_PROD }}
+          VITE_API_URL_DEV: ${{ secrets.VITE_API_URL_DEV }}
+          VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
+          VITE_POSTHOG_HOST: ${{ secrets.VITE_POSTHOG_HOST }}
+          VITE_ENV: ${{ secrets.VITE_ENV }}
+          VITE_MINIO_URL: ${{ secrets.VITE_MINIO_URL }}
+          VITE_MINIO_ENDPOINT: ${{ secrets.VITE_MINIO_ENDPOINT }}
+          VITE_MINIO_ACCESSKEY: ${{ secrets.VITE_MINIO_ACCESSKEY }}
+          VITE_MINIO_SECRETKEY: ${{ secrets.VITE_MINIO_SECRETKEY }}
+          VITE_MINIO_USESSL: ${{ secrets.VITE_MINIO_USESSL }}
+
+      - name: Deploy to VPS
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_PRIVATE_KEY }}
+          source: dist/
+          target: /var/www/app.metromedics.co/html/
