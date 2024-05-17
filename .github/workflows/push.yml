@@ -25,18 +25,18 @@ jobs:
         run: npm run build
 
       - name: Set up environment variables
-        env:
-          VITE_PUBLIC_URL: ${{ secrets.VITE_PUBLIC_URL }}
-          VITE_API_URL_PROD: ${{ secrets.VITE_API_URL_PROD }}
-          VITE_API_URL_DEV: ${{ secrets.VITE_API_URL_DEV }}
-          VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
-          VITE_POSTHOG_HOST: ${{ secrets.VITE_POSTHOG_HOST }}
-          VITE_ENV: ${{ secrets.VITE_ENV }}
-          VITE_MINIO_URL: ${{ secrets.VITE_MINIO_URL }}
-          VITE_MINIO_ENDPOINT: ${{ secrets.VITE_MINIO_ENDPOINT }}
-          VITE_MINIO_ACCESSKEY: ${{ secrets.VITE_MINIO_ACCESSKEY }}
-          VITE_MINIO_SECRETKEY: ${{ secrets.VITE_MINIO_SECRETKEY }}
-          VITE_MINIO_USESSL: ${{ secrets.VITE_MINIO_USESSL }}
+        run: |
+          echo "VITE_PUBLIC_URL=${{ secrets.VITE_PUBLIC_URL }}" >> $GITHUB_ENV
+          echo "VITE_API_URL_PROD=${{ secrets.VITE_API_URL_PROD }}" >> $GITHUB_ENV
+          echo "VITE_API_URL_DEV=${{ secrets.VITE_API_URL_DEV }}" >> $GITHUB_ENV
+          echo "VITE_POSTHOG_KEY=${{ secrets.VITE_POSTHOG_KEY }}" >> $GITHUB_ENV
+          echo "VITE_POSTHOG_HOST=${{ secrets.VITE_POSTHOG_HOST }}" >> $GITHUB_ENV
+          echo "VITE_ENV=${{ secrets.VITE_ENV }}" >> $GITHUB_ENV
+          echo "VITE_MINIO_URL=${{ secrets.VITE_MINIO_URL }}" >> $GITHUB_ENV
+          echo "VITE_MINIO_ENDPOINT=${{ secrets.VITE_MINIO_ENDPOINT }}" >> $GITHUB_ENV
+          echo "VITE_MINIO_ACCESSKEY=${{ secrets.VITE_MINIO_ACCESSKEY }}" >> $GITHUB_ENV
+          echo "VITE_MINIO_SECRETKEY=${{ secrets.VITE_MINIO_SECRETKEY }}" >> $GITHUB_ENV
+          echo "VITE_MINIO_USESSL=${{ secrets.VITE_MINIO_USESSL }}" >> $GITHUB_ENV
 
       - name: Deploy to VPS
         uses: appleboy/scp-action@master
