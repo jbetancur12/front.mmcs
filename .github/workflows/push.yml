@@ -45,5 +45,5 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_PRIVATE_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          source: dist/
+          source: dist/*
           target: /var/www/app.metromedics.co/html/
