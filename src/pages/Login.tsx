@@ -228,7 +228,7 @@ const Login: React.FC = () => {
             >
               Contraseña
             </label>
-            <span>------------------</span>
+            <span>------------------:</span>
             <input
               type='password'
               name='password'
