@@ -56,12 +56,12 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   }, [])
 
   // Verificar si el usuario está autenticado después de que se haya establecido el $userStore
-  if (!Object.keys($userStore).length || authenticationError) {
-    // Utiliza navigate para redirigir al usuario a la página de inicio de sesión
-    navigate('/login')
+  // if (!Object.keys($userStore).length || authenticationError) {
+  //   // Utiliza navigate para redirigir al usuario a la página de inicio de sesión
+  //   navigate('/login')
 
-    return null
-  }
+  //   return null
+  // }
 
   if (loading) {
     return (
