@@ -12,10 +12,10 @@ interface RequireAuthProps {
 const apiUrl = api()
 
 const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
-  const $userStore = useStore(userStore)
+  // const $userStore = useStore(userStore)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [authenticationError, setAuthenticationError] = useState(false) // Nueva variable de estado
+  // const [authenticationError, setAuthenticationError] = useState(false) // Nueva variable de estado
 
   const navigate = useNavigate()
 
@@ -44,7 +44,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
       } catch (error) {
         setLoading(false)
         setError('No se pudo validar el token') // Mensaje de error informativo
-        setAuthenticationError(true)
+        // setAuthenticationError(true)
         toast('Su sesión se cerrar en 10 segundos')
         setTimeout(() => {
           navigate('/login')
