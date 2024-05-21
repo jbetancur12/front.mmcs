@@ -14,7 +14,7 @@ interface ModalDeviceProps {
   dataReturned: (data: any) => void
 }
 
-const formFields = ['name', 'magnitude', 'repository']
+const formFields = ['name', 'magnitude', 'repository', 'certificateTemplate']
 
 const ModalDevice: React.FC<ModalDeviceProps> = ({
   open,
@@ -100,15 +100,36 @@ const ModalDevice: React.FC<ModalDeviceProps> = ({
         Crear Cliente
       </Typography>
       {formFields.map((field) =>
-        field === 'repository' ? (
+        // field === 'repository' ? (
+        //   <AsyncSelect
+        //     key={field}
+        //     cacheOptions
+        //     // defaultOptions
+
+        //     placeholder='Buscar Formato'
+        //     loadOptions={(inputValue) =>
+        //       loadOptions<RepositoryData>(inputValue, 'repositories', (item) =>
+        //         mapOptions(item, 'id', 'name')
+        //       )
+        //     }
+        //     onChange={(selectedOption: any) =>
+        //       setFormValues({
+        //         ...formValues,
+        //         repository: selectedOption
+        //       }) as any
+        //     }
+        //     styles={styles(false)}
+        //   />
+        // )
+        field === 'certificateTemplate' ? (
           <AsyncSelect
             key={field}
             cacheOptions
             // defaultOptions
 
-            placeholder='Buscar Formato'
+            placeholder='Buscar Plantilla de Certificado'
             loadOptions={(inputValue) =>
-              loadOptions<RepositoryData>(inputValue, 'repositories', (item) =>
+              loadOptions<RepositoryData>(inputValue, 'templates', (item) =>
                 mapOptions(item, 'id', 'name')
               )
             }

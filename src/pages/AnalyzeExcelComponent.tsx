@@ -23,6 +23,7 @@ import { bigToast, styles } from '../Components/ExcelManipulation/Utils'
 import ModalDevice from '../Components/ModalDevice'
 import { VisuallyHiddenInput } from '../Components/TableFiles'
 import XlsxPopulate from 'xlsx-populate'
+import { TemplateData } from '../Components/Templates'
 
 // Importa los componentes de MUI
 
@@ -40,6 +41,9 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   const [filePdf, setFilePdf] = useState<File | null>(null)
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
   const [data, setData] = useState<any[]>([])
+  const [data2, setData2] = useState<CertificateTemplateData>(
+    {} as CertificateTemplateData
+  )
   const [city, setCity] = useState<string>('')
   const [location, setLocation] = useState<string>('')
   const [headquarters, setHeadquartes] = useState<string>('Sin Información')
@@ -50,7 +54,10 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     device: string
     customer: string
   }>({ device: '', customer: '' })
-  const [device, setDevice] = useState<ResourceOption | null>(null)
+  const [missedData2, setMissedData2] = useState<{
+    customer: string
+  }>({ customer: '' })
+  const [device, setDevice] = useState<DeviceOption | null>(null)
   const [customer, setCustomer] = useState<ResourceOption | null>(null)
   const [typeOfCertificate, setTypeOfCertificate] = useState<{
     id: string
@@ -86,7 +93,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   const loadOptions = async (
     inputValue: string,
     resource: string,
-    mapFunction: (item: any) => ResourceOption
+    mapFunction: (item: any) => ResourceOption | DeviceOption
   ): Promise<ResourceOption[]> => {
     return new Promise((resolve, reject) => {
       let timer
@@ -116,11 +123,106 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     })
   }
 
-  const readEx = async (file: File) => {
-    await XlsxPopulate.fromDataAsync(file, {
-      password: '123456'
+  // const readExcel = async (file: File) => {
+  //   await XlsxPopulate.fromDataAsync(file, {
+  //     password: 'metrologia2024'
+  //   }).then((workbook) => {
+  //     const city = workbook
+  //       .sheet('CERTIFICADO')
+  //       .cell(device?.certificateTemplate.city as string)
+  //       .value()
+
+  //     const location = workbook
+  //       .sheet('CERTIFICADO')
+  //       .cell(device?.certificateTemplate.location as string)
+  //       .value()
+
+  //     const sede = workbook
+  //       .sheet('CERTIFICADO')
+  //       .cell(device?.certificateTemplate.sede as string)
+
+  //     const activoFijo = workbook
+  //       .sheet('CERTIFICADO')
+  //       .cell(device?.certificateTemplate.activoFijo as string)
+
+  //     const serie = workbook
+  //       .sheet('CERTIFICADO')
+  //       .cell(device?.certificateTemplate.serie as string)
+
+  //     const calibrationDate = workbook
+  //       .sheet('CERTIFICADO')
+  //       .cell(device?.certificateTemplate.calibrationDate as string)
+  //       .value()
+
+  //     const solicitante = workbook
+  //       .sheet('CERTIFICADO')
+  //       .cell(device?.certificateTemplate.solicitante as string)
+  //       .value()
+
+  //     const info = {
+  //       city,
+  //       location,
+  //       sede,
+  //       activoFijo,
+  //       serie,
+  //       calibrationDate,
+  //       solicitante
+  //     }
+  //     return info
+  //   })
+  // }
+
+  const readExcel = async (file: File) => {
+    if (!device) {
+      throw new Error('Device is null')
+    }
+
+    const getValueFromCell = (
+      workbook: any,
+      field: keyof typeof device.certificateTemplate
+    ) => {
+      // ANCHOR // ! Probando buscar entre celdas
+      const sheet = workbook.sheet('CERTIFICADO')
+      for (let row = 8; row <= 14; row++) {
+        const cell = sheet.cell(`A${row}`)
+        const cellValue: string = cell.value()
+        if (cellValue && cellValue.includes('Instrumento')) {
+          for (let col of ['B', 'C', 'D']) {
+            const value = sheet.cell(`${col}${row}`)
+            if (value.value()) {
+              device.certificateTemplate['instrumento'] = `${col}${row}`
+              break
+            }
+          }
+        }
+      }
+      // ! Fin de prueba
+
+      return workbook
+        .sheet('CERTIFICADO')
+        .cell(device.certificateTemplate[field])
+        .value()
+    }
+
+    return await XlsxPopulate.fromDataAsync(file, {
+      password: 'metrologia2024'
     }).then((workbook) => {
-      console.log('🚀 ~ handleFileUpload ~ workbook:', workbook.sheet('CC'))
+      const fields: (keyof typeof device.certificateTemplate)[] = [
+        'city',
+        'location',
+        'sede',
+        'activoFijo',
+        'serie',
+        'calibrationDate',
+        'solicitante',
+        'instrumento'
+      ]
+      const info = fields.reduce((acc, field) => {
+        acc[field] = getValueFromCell(workbook, field)
+        return acc
+      }, {} as any)
+
+      return info
     })
   }
 
@@ -131,25 +233,27 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
       setFile(uploadedFile)
 
       const reader = new FileReader()
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         if (e.target) {
-          const binaryString = e.target.result as string // Asegúrate de que sea de tipo string
+          // const binaryString = e.target.result as string // Asegúrate de que sea de tipo string
 
-          readEx(uploadedFile)
-          const workbook = XLSX.read(binaryString, {
-            type: 'binary',
-            password: '123456'
-          })
-          console.log('🚀 ~ handleFileUpload ~ workbook:', workbook)
-          const worksheet = workbook.Sheets['CC']
+          const cells = await readExcel(uploadedFile)
+          console.log('🚀 ~ reader.onload= ~ cells:', cells)
+          setData2(cells)
+          // const workbook = XLSX.read(binaryString, {
+          //   type: 'binary',
+          //   password: '123456'
+          // })
 
-          const jsonData = XLSX.utils.sheet_to_json(worksheet, {
-            header: 1,
-            raw: false,
-            dateNF: 'yyyy-mm-dd'
-          })
+          // const worksheet = workbook.Sheets['CC']
 
-          setData(jsonData)
+          // const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+          //   header: 1,
+          //   raw: false,
+          //   dateNF: 'yyyy-mm-dd'
+          // })
+
+          // setData(jsonData)
         }
       }
       reader.readAsBinaryString(uploadedFile)
@@ -162,87 +266,118 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   }
 
   const dataReturnedDevice = (data: any) => {
-    setDevice({ value: data.id, label: data.name })
+    setDevice({
+      value: data.id,
+      label: data.name,
+      certificateTemplate: data.certificateTemplate
+    })
     setMissedData({ ...missedData, device: '' })
   }
 
-  const FIELD_INDEX = 0
-  const VALUE_INDEX = 2
-  const CUSTOMER_INDEX = 30
-  const DEVICE_INDEX = 11
+  // const FIELD_INDEX = 0
+  // const VALUE_INDEX = 2
+  // const CUSTOMER_INDEX = 30
+  // const DEVICE_INDEX = 11
 
-  const setFieldValue = (field: string, value: any) => {
-    switch (field) {
-      case 'Instrumento:':
-        return value
-      case 'Solicitante:':
-        return value
-      case 'Código Interno:':
-        setFixedAsset(value)
-        break
-      case 'Ubicación:':
-        setLocation(value)
-        break
-      case 'Ciudad/Pais:':
-        setCity(value)
-        break
-      case 'Fecha de expedición:':
-        setCertificateDate(new Date(value))
-        break
-      case 'Serie:':
-        setSerialNumber(value)
-        break
-      default:
-        break
-    }
-  }
+  // const setFieldValue = (field: string, value: any) => {
+  //   switch (field) {
+  //     case 'Instrumento:':
+  //       return value
+  //     case 'Solicitante:':
+  //       return value
+  //     case 'Código Interno:':
+  //       setFixedAsset(value)
+  //       break
+  //     case 'Ubicación:':
+  //       setLocation(value)
+  //       break
+  //     case 'Ciudad/Pais:':
+  //       setCity(value)
+  //       break
+  //     case 'Fecha de expedición:':
+  //       setCertificateDate(new Date(value))
+  //       break
+  //     case 'Serie:':
+  //       setSerialNumber(value)
+  //       break
+  //     default:
+  //       break
+  //   }
+  // }
 
-  const analyzeCells = async () => {
-    if (data?.length > 0) {
-      let device = ''
+  const analyzeCells2 = async () => {
+    if (Object.keys(data2).length > 0) {
       let customer = ''
+      setCity(data2.city)
+      setLocation(data2.location)
+      setHeadquartes(data2.sede)
+      setFixedAsset(data2.activoFijo)
+      setSerialNumber(data2.serie)
+      setCertificateDate(new Date(data2.calibrationDate))
+      customer = data2.solicitante
+      const results: any = await fetchCustomer(customer)
+      const missed = { customer: '' }
 
-      for (let i = 0; i <= 50; i++) {
-        let subArray = data[i]
-        let field = subArray[FIELD_INDEX]
-        let value = subArray[VALUE_INDEX]
-
-        if (field === 'Instrumento:' || field === 'Solicitante:') {
-          let result = setFieldValue(field, value)
-          if (field === 'Instrumento:') {
-            device = result
-          } else {
-            customer = result
-          }
-        } else {
-          setFieldValue(field, value)
-        }
-      }
-
-      const results: any = await findCustomerAndDevice(customer, device)
-      const missed = { device: '', customer: '' }
-
-      if (results[0].value.length > 0) {
+      if (results.length > 0) {
         setCustomer({
-          value: results[0].value[0].id,
-          label: results[0].value[0].nombre
+          value: results[0].id,
+          label: results[0].nombre
         })
       } else {
-        missed.customer = data[CUSTOMER_INDEX][VALUE_INDEX]
+        missed.customer = data2.solicitante
       }
 
-      if (results[1].value.length > 0) {
-        setDevice({
-          value: results[1].value[0].id,
-          label: results[1].value[0].name
-        })
-      } else {
-        missed.device = data[DEVICE_INDEX][VALUE_INDEX]
-      }
-
-      setMissedData(missed)
+      setMissedData2(missed)
     }
   }
+
+  // const analyzeCells = async () => {
+  //   if (data?.length > 0) {
+  //     let device = ''
+  //     let customer = ''
+
+  //     for (let i = 0; i <= 50; i++) {
+  //       let subArray = data[i]
+  //       let field = subArray[FIELD_INDEX]
+  //       let value = subArray[VALUE_INDEX]
+
+  //       if (field === 'Instrumento:' || field === 'Solicitante:') {
+  //         let result = setFieldValue(field, value)
+  //         if (field === 'Instrumento:') {
+  //           device = result
+  //         } else {
+  //           customer = result
+  //         }
+  //       } else {
+  //         setFieldValue(field, value)
+  //       }
+  //     }
+
+  //     const results: any = await findCustomerAndDevice(customer, device)
+  //     const missed = { device: '', customer: '' }
+
+  //     if (results[0].value.length > 0) {
+  //       setCustomer({
+  //         value: results[0].value[0].id,
+  //         label: results[0].value[0].nombre
+  //       })
+  //     } else {
+  //       missed.customer = data[CUSTOMER_INDEX][VALUE_INDEX]
+  //     }
+
+  //     if (results[1].value.length > 0) {
+  //       setDevice({
+  //         value: results[1].value[0].id,
+  //         label: results[1].value[0].name,
+  //         certificateTemplate: results[1].value[0].certificateTemplate
+  //       })
+  //     } else {
+  //       missed.device = data[DEVICE_INDEX][VALUE_INDEX]
+  //     }
+
+  //     setMissedData(missed)
+  //   }
+  // }
 
   const fetchCustomer = async (name: string) => {
     try {
@@ -277,21 +412,21 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     }
   }
 
-  const findCustomerAndDevice = async (customer: string, device: string) => {
-    try {
-      const results = await Promise.allSettled([
-        fetchCustomer(customer),
-        fetchDevice(device)
-      ])
-      return results
-    } catch (error) {
-      console.error('Error while searching for device:', error)
-    }
-  }
+  // const findCustomerAndDevice = async (customer: string, device: string) => {
+  //   try {
+  //     const results = await Promise.allSettled([
+  //       fetchCustomer(customer),
+  //       fetchDevice(device)
+  //     ])
+  //     return results
+  //   } catch (error) {
+  //     console.error('Error while searching for device:', error)
+  //   }
+  // }
 
   useEffect(() => {
-    analyzeCells()
-  }, [data])
+    analyzeCells2()
+  }, [data2])
 
   const resetForm = () => {
     setCity('')
@@ -301,6 +436,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     setSerialNumber('')
     setCertificateDate(null)
     setMissedData({ device: '', customer: '' })
+    setMissedData2({ customer: '' })
     setDevice(null)
     setCustomer(null)
     setTypeOfCertificate({ id: '3', name: 'Calibración' })
@@ -412,6 +548,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
       console.error('Error al enviar datos:', error)
     }
   }
+
   return (
     <Box
       sx={{
@@ -422,19 +559,36 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
       <ModalCustomer
         open={openModalCustomer}
         onClose={setOpenModalCustomer}
-        name={missedData.customer}
+        name={missedData2.customer}
         dataReturned={dataReturned}
       />
-      <ModalDevice
+      {/* <ModalDevice
         open={openModalDevice}
         onClose={setOpenModalDevice}
         name={missedData.device}
         dataReturned={dataReturnedDevice}
-      />
+      /> */}
 
       <Stack direction='column' spacing={2} mb={3} mt={3}>
         {/* <TextField type="file" /> */}
-        {!hideUpload && (
+        <AsyncSelect
+          cacheOptions
+          // defaultOptions
+          loadOptions={(inputValue) =>
+            loadOptions(inputValue, 'devices', mapDevices)
+          }
+          // onChange={(selectedOption: any) =>
+          //   setDevice({
+          //     id: selectedOption.value,
+          //     name: selectedOption.label,
+          //   })
+          // }
+          onChange={(selectedOption: any) => setDevice(selectedOption)}
+          value={device}
+          placeholder='Buscar Equipo'
+          styles={styles(!(!!validationError && !device))}
+        />
+        {!!device && !hideUpload && (
           <label htmlFor='upload-photo'>
             <input
               style={{ display: 'none' }}
@@ -467,9 +621,9 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
           styles={styles(!(!!validationError && !customer))}
           value={customer}
         />
-        {missedData.customer && !customer && (
+        {missedData2.customer && !customer && (
           <div className='flex items-center justify-evenly'>
-            <p className='text-red-500'>{missedData.customer}</p>
+            <p className='text-red-500'>{missedData2.customer}</p>
             <IconButton
               aria-label='delete'
               onClick={() => setOpenModalCustomer(true)}
@@ -478,23 +632,6 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
             </IconButton>
           </div>
         )}
-        <AsyncSelect
-          cacheOptions
-          // defaultOptions
-          loadOptions={(inputValue) =>
-            loadOptions(inputValue, 'devices', mapDevices)
-          }
-          // onChange={(selectedOption: any) =>
-          //   setDevice({
-          //     id: selectedOption.value,
-          //     name: selectedOption.label,
-          //   })
-          // }
-          onChange={(selectedOption: any) => setDevice(selectedOption)}
-          value={device}
-          placeholder='Buscar Equipo'
-          styles={styles(!(!!validationError && !device))}
-        />
 
         <AsyncSelect
           cacheOptions
@@ -604,14 +741,30 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   )
 }
 
-const mapDevices = (option: any): ResourceOption => ({
+const mapDevices = (option: any): DeviceOption => ({
   value: option.id,
-  label: option.name
+  label: option.name,
+  certificateTemplate: option.certificateTemplate
 })
 
 const mapCustomers = (option: any): ResourceOption => ({
   value: option.id,
   label: option.nombre
 })
+
+interface DeviceOption extends ResourceOption {
+  certificateTemplate: CertificateTemplateData
+}
+
+interface CertificateTemplateData {
+  location: string
+  city: string
+  solicitante: string
+  activoFijo: string
+  calibrationDate: string
+  sede: string
+  serie: string
+  instrumento: string
+}
 
 export default AnalyzeExcelComponent

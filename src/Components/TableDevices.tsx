@@ -28,6 +28,7 @@ import AsyncSelect from 'react-select/async'
 import { loadOptions, mapOptions } from '../utils/loadOptions'
 import { RepositoryData } from './Repository'
 import { bigToast, styles } from './ExcelManipulation/Utils'
+import { TemplatesData } from './Templates'
 
 // Define interfaces
 export interface DeviceData {
@@ -35,6 +36,10 @@ export interface DeviceData {
   name: string
   magnitude: string
   repository: {
+    id: number
+    name: string
+  }
+  certificateTemplate: {
     id: number
     name: string
   }
@@ -64,7 +69,8 @@ const Table: React.FC = () => {
         {
           name: deviceData.name,
           repository: deviceData.repository,
-          magnitude: deviceData.magnitude
+          magnitude: deviceData.magnitude,
+          certificateTemplate: deviceData.certificateTemplate
         },
         {
           headers: {
@@ -240,17 +246,17 @@ const Table: React.FC = () => {
         })
       },
       {
-        accessorKey: 'repository.name',
-        header: 'Formato',
+        accessorKey: 'certificateTemplate.name',
+        header: 'Plantilla de Certificado',
 
         Edit: () => (
           <AsyncSelect
             cacheOptions
             // defaultOptions
 
-            placeholder='Buscar Formato'
+            placeholder='Buscar Plantilla de Certificado'
             loadOptions={(inputValue) =>
-              loadOptions<RepositoryData>(inputValue, 'repositories', (item) =>
+              loadOptions<TemplatesData>(inputValue, 'templates', (item) =>
                 mapOptions(item, 'id', 'name')
               )
             }
@@ -259,6 +265,27 @@ const Table: React.FC = () => {
           />
         )
       }
+
+      // {
+      //   accessorKey: 'repository.name',
+      //   header: 'Formato',
+
+      //   Edit: () => (
+      //     <AsyncSelect
+      //       cacheOptions
+      //       // defaultOptions
+
+      //       placeholder='Buscar Formato'
+      //       loadOptions={(inputValue) =>
+      //         loadOptions<RepositoryData>(inputValue, 'repositories', (item) =>
+      //           mapOptions(item, 'id', 'name')
+      //         )
+      //       }
+      //       onChange={(selectedOption: any) => setFormat(selectedOption) as any}
+      //       styles={styles(false)}
+      //     />
+      //   )
+      // }
     ],
     [getCommonEditTextFieldProps]
   )
@@ -320,7 +347,7 @@ const Table: React.FC = () => {
           </Button>
         )}
       />
-      <CreateNewAccountModal
+      <CreateNewDeviceModal
         columns={columns}
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
@@ -338,7 +365,7 @@ interface CreateModalProps {
 }
 
 //example of creating a mui dialog modal for creating new rows
-export const CreateNewAccountModal = ({
+export const CreateNewDeviceModal = ({
   open,
   columns,
   onClose,
@@ -351,10 +378,9 @@ export const CreateNewAccountModal = ({
     }, {} as any)
   )
 
-  console.log(values)
-
   const handleSubmit = () => {
     //put your validation logic here
+
     onSubmit(values)
     onClose()
   }
@@ -375,6 +401,33 @@ export const CreateNewAccountModal = ({
               (column) => {
                 if (column.accessorKey === 'id') {
                   return null
+                }
+                if (column.accessorKey === 'certificateTemplate.name') {
+                  return (
+                    <AsyncSelect
+                      key={column.accessorKey}
+                      cacheOptions
+                      // defaultOptions
+                      placeholder='Buscar Plantilla de Certificado'
+                      loadOptions={(inputValue) =>
+                        loadOptions<TemplatesData>(
+                          inputValue,
+                          'templates',
+                          (item) => mapOptions(item, 'id', 'name')
+                        )
+                      }
+                      onChange={(selectedOption: any) =>
+                        setValues({
+                          ...values,
+                          certificateTemplate: {
+                            id: selectedOption.value,
+                            name: selectedOption.label
+                          }
+                        }) as any
+                      }
+                      styles={styles(true)}
+                    />
+                  )
                 }
                 if (column.accessorKey === 'repository.name') {
                   return null

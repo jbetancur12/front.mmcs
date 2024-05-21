@@ -414,7 +414,7 @@ export const CreateNewProductModal = ({
 
   return (
     <Dialog open={open}>
-      <DialogTitle textAlign='center'>Crear Nuevo Equipo</DialogTitle>
+      <DialogTitle textAlign='center'>Crear Nuevo Producto</DialogTitle>
       <DialogContent>
         <form onSubmit={(e) => e.preventDefault()}>
           <Stack
