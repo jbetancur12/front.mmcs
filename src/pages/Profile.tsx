@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useParams } from 'react-router-dom'
+
 import { Typography, IconButton, TextField, Button } from '@mui/material'
 import { Edit, Save } from '@mui/icons-material'
 import { api } from '../config'
 import PDFViewer from '../Components/PDFViewer'
 import IMGViewer from '../Components/IMGViewer'
 import toast, { Toaster } from 'react-hot-toast'
+import { userStore } from '../store/userStore'
+import { useStore } from '@nanostores/react'
 
 interface Profile {
   id: number
@@ -15,11 +18,14 @@ interface Profile {
   description: string
   avatarUrl: string
   cvUrl: string
+  phone: string
+  email: string
 }
 
 const apiUrl = api()
 
 const Profile: React.FC = () => {
+  const $userStore = useStore(userStore)
   const { id: idProfile } = useParams()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isEditing, setIsEditing] = useState<boolean>(false)
@@ -105,6 +111,12 @@ const Profile: React.FC = () => {
     }
   }
 
+  const handleClick = () => {
+    if ($userStore.rol === 'admin') {
+      document.getElementById('avatarInput')?.click()
+    }
+  }
+
   const handleImageChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -162,18 +174,31 @@ const Profile: React.FC = () => {
           <Typography variant='h5' color='textSecondary' gutterBottom>
             {isEditing ? (
               <TextField
-                name='profession'
-                label='Profesión'
-                value={editedProfile?.profession || ''}
+                name='phone'
+                label='Telefono'
+                value={editedProfile?.phone || ''}
                 onChange={handleInputChange}
                 sx={{ mb: 2, width: '400px' }}
               />
             ) : (
-              profile.profession
+              profile.phone
+            )}
+          </Typography>
+          <Typography variant='h5' color='textSecondary' gutterBottom>
+            {isEditing ? (
+              <TextField
+                name='email'
+                label='Email'
+                value={editedProfile?.email || ''}
+                onChange={handleInputChange}
+                sx={{ mb: 2, width: '400px' }}
+              />
+            ) : (
+              profile.email
             )}
           </Typography>
         </div>
-        {!isEditing && (
+        {$userStore.rol === 'admin' && !isEditing && (
           <IconButton
             color='primary'
             aria-label='Editar'
@@ -195,10 +220,7 @@ const Profile: React.FC = () => {
         )}
       </div>
       <div className='md:flex md:items-center md:justify-center md:w-3/4 mb-10'>
-        <div
-          className=''
-          onClick={() => document.getElementById('avatarInput')?.click()}
-        >
+        <div className='' onClick={handleClick}>
           <IMGViewer bucket='images' path={image} />
           <input
             id='avatarInput'
@@ -226,18 +248,20 @@ const Profile: React.FC = () => {
           </Typography>
         </div>
       </div>
-      <Button
-        variant='outlined'
-        sx={{
-          mb: 4,
-          marginLeft: 'auto',
-          marginRight: 'auto',
-          display: 'block'
-        }}
-        onClick={() => document.getElementById('cvInput')?.click()}
-      >
-        Actualizar CV
-      </Button>
+      {$userStore.rol === 'admin' && !isEditing && (
+        <Button
+          variant='outlined'
+          sx={{
+            mb: 4,
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            display: 'block'
+          }}
+          onClick={() => document.getElementById('cvInput')?.click()}
+        >
+          Actualizar CV
+        </Button>
+      )}
       <input
         id='cvInput'
         type='file'
@@ -246,7 +270,7 @@ const Profile: React.FC = () => {
         onChange={handleCVChange}
       />
       {/* @ts-ignore */}
-      <PDFViewer bucket='cvs' path={selectedCV} view='default' />
+      <PDFViewer bucket='cvs' path={selectedCV} view='preview' />
     </div>
   )
 }

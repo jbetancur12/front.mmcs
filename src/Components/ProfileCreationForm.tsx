@@ -9,14 +9,18 @@ const apiUrl = api()
 
 const initialState = {
   name: '',
-  profession: '',
+  phone: '',
+  email: '',
   description: '',
   cv: null as File | null,
   avatar: null as File | null,
   avatarUrl: ''
 }
+interface Profile {
+  onSave: () => void
+}
 
-const ProfileCreationForm: React.FC = () => {
+const ProfileCreationForm: React.FC<Profile> = ({ onSave }) => {
   const [formData, setFormData] = useState(initialState)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,7 +55,7 @@ const ProfileCreationForm: React.FC = () => {
 
     const formDataToSend = new FormData()
     formDataToSend.append('name', formData.name)
-    formDataToSend.append('profession', formData.profession)
+    formDataToSend.append('phone', formData.phone)
     formDataToSend.append('description', formData.description)
     formDataToSend.append('cv', formData.cv as Blob)
     formDataToSend.append('avatar', formData.avatar as Blob)
@@ -67,8 +71,10 @@ const ProfileCreationForm: React.FC = () => {
       if (response.status === 200) {
         toast.success('Perfil creado con éxito')
         setFormData(initialState)
+        onSave()
       } else {
         toast.error('Error al crear el perfil')
+        onSave()
       }
     } catch (error) {
       console.error('Error al enviar la solicitud:', error)
@@ -108,9 +114,17 @@ const ProfileCreationForm: React.FC = () => {
         />
         <TextField
           fullWidth
-          label='Profesión'
-          name='profession'
-          value={formData.profession}
+          label='Telefono'
+          name='phone'
+          value={formData.phone}
+          onChange={handleInputChange}
+          sx={{ mb: 4 }}
+        />
+        <TextField
+          fullWidth
+          label='Email'
+          name='email'
+          value={formData.email}
           onChange={handleInputChange}
           sx={{ mb: 4 }}
         />
@@ -141,9 +155,18 @@ const ProfileCreationForm: React.FC = () => {
             <span>Subir CV (PDF)</span>
           </label>
         </Button>
-        <Button type='submit' variant='contained' fullWidth>
-          Crear Perfil
-        </Button>
+        <div className='flex justify-end mb-3'>
+          <Button type='submit' variant='contained'>
+            Crear Perfil
+          </Button>
+          <Button
+            variant='contained'
+            onClick={onSave}
+            sx={{ marginLeft: '0.5rem', fontWeight: 'bold', color: '#DCFCE7' }}
+          >
+            Cancelar
+          </Button>
+        </div>
       </form>
     </Container>
   )

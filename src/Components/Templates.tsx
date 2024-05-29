@@ -1,11 +1,13 @@
 import axios from 'axios'
-
-import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
-import React, { useEffect, useMemo, useState } from 'react'
-import { api } from '../config'
-import toast, { Toaster } from 'react-hot-toast'
-import Loader from './Loader2'
+import MaterialReactTable, {
+  MRT_Cell,
+  MRT_ColumnDef,
+  MaterialReactTableProps
+} from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { api } from '../config'
+import Loader from './Loader2'
 import {
   Box,
   Button,
@@ -16,12 +18,13 @@ import {
   Stack,
   TextField
 } from '@mui/material'
-import { Delete } from '@mui/icons-material'
+import { Delete, Edit } from '@mui/icons-material'
 import { bigToast } from './ExcelManipulation/Utils'
 
 export interface TemplateData {
   name: string
   description: string
+  password: string
   city: string
   location: string
   sede: string
@@ -44,58 +47,106 @@ const Templates = () => {
   const [loading, setLoading] = useState<boolean>(false)
   const [createModalOpen, setCreateModalOpen] = useState(false)
 
+  const [validationErrors, setValidationErrors] = useState<{
+    [cellId: string]: string
+  }>({})
+
+  const getCommonEditTextFieldProps = useCallback(
+    (
+      cell: MRT_Cell<TemplatesData>
+    ): MRT_ColumnDef<TemplatesData>['muiTableBodyCellEditTextFieldProps'] => {
+      return {
+        error: !!validationErrors[cell.id],
+        helperText: validationErrors[cell.id],
+        onBlur: () => {
+          delete validationErrors[cell.id]
+          setValidationErrors({
+            ...validationErrors
+          })
+        }
+      }
+    },
+    [validationErrors]
+  )
+
+  const handleCancelRowEdits = () => {
+    setValidationErrors({})
+  }
+
   const columns = useMemo<MRT_ColumnDef<TemplatesData>[]>(
     () => [
-      {
-        accessorKey: 'id',
-        header: 'Id',
-        size: 80
-      },
+      { accessorKey: 'id', header: 'Id', size: 80 },
       {
         accessorKey: 'name',
         header: 'Nombre',
-        size: 100
+        size: 100,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell)
+        })
       },
       {
         accessorKey: 'description',
         header: 'Descripción',
-        size: 100
+        size: 100,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell)
+        })
       },
-
       {
         accessorKey: 'city',
-        header: 'Ciuadad',
-        size: 50
+        header: 'Ciudad',
+        size: 50,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell)
+        })
       },
       {
         accessorKey: 'location',
         header: 'Ubicación',
-        size: 50
+        size: 50,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell)
+        })
       },
       {
         accessorKey: 'sede',
         header: 'Sede',
-        size: 50
+        size: 50,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell)
+        })
       },
       {
         accessorKey: 'activoFijo',
         header: 'Activo Fijo',
-        size: 50
+        size: 50,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell)
+        })
       },
       {
         accessorKey: 'serie',
         header: 'Serie',
-        size: 50
+        size: 50,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell)
+        })
       },
       {
         accessorKey: 'solicitante',
         header: 'Solicitante',
-        size: 50
+        size: 50,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell)
+        })
       },
       {
         accessorKey: 'instrumento',
         header: 'Instrumento',
-        size: 50
+        size: 50,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+          ...getCommonEditTextFieldProps(cell)
+        })
       },
       {
         accessorKey: 'calibrationDate',
@@ -103,7 +154,7 @@ const Templates = () => {
         size: 50
       }
     ],
-    [] // No hay dependencias específicas aquí
+    [getCommonEditTextFieldProps]
   )
 
   const fetchTemplates = async () => {
@@ -114,9 +165,7 @@ const Templates = () => {
           Authorization: `Bearer ${localStorage.getItem('accessToken')}`
         }
       })
-
-      if (response.statusText === 'OK') {
-        // @ts-ignore: Ignorar el error en esta línea
+      if (response.status === 200) {
         setTableData(response.data)
         setLoading(false)
       }
@@ -135,22 +184,25 @@ const Templates = () => {
     setCreateModalOpen(false)
   }
 
-  const onCreateTemplates = async (repostoryData: TemplateData) => {
+  const onCreateTemplates = async (templateData: TemplateData) => {
     try {
-      const response = await axios.post(`${apiUrl}/templates`, repostoryData, {
+      const response = await axios.post(`${apiUrl}/templates`, templateData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('accessToken')}`
         }
       })
-
       if (response.status >= 200 && response.status < 300) {
-        bigToast('Plantilla creada Exitosamente!', 'success')
+        bigToast('Plantilla creada exitosamente!', 'success')
         fetchTemplates()
       } else {
         bigToast('Error al crear plantilla', 'error')
       }
     } catch (error: any) {
-      bigToast(error.response.data.error, 'error')
+      if (error.response.status === 409) {
+        bigToast(error.response.data.message, 'error')
+      } else {
+        bigToast(error.response?.data?.error || 'Error desconocido', 'error')
+      }
     }
   }
 
@@ -159,25 +211,17 @@ const Templates = () => {
       const shouldDelete = window.confirm(
         '¿Estás seguro de que deseas eliminar este archivo?'
       )
-
       if (shouldDelete) {
         const response = await axios.delete(`${apiUrl}/templates/${id}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('accessToken')}`
           }
         })
-
         if (response.status >= 200 && response.status < 300) {
-          toast.success('Archivo eliminado Exitosamente!', {
-            duration: 4000,
-            position: 'top-center'
-          })
+          bigToast('Archivo eliminado exitosamente!', 'success')
           fetchTemplates()
         } else {
-          toast.error('Error al eliminar archivo', {
-            duration: 4000,
-            position: 'top-center'
-          })
+          bigToast('Error al eliminar archivo', 'error')
         }
       }
     } catch (error) {
@@ -185,39 +229,67 @@ const Templates = () => {
     }
   }
 
+  const handleUpdateSubmit: MaterialReactTableProps<TemplatesData>['onEditingRowSave'] =
+    async ({ exitEditingMode, row, values }) => {
+      if (!Object.keys(validationErrors).length) {
+        const updatedValues = { ...values }
+        delete updatedValues.id
+        try {
+          const response = await axios.put(
+            `${apiUrl}/templates/${values.id}`,
+            updatedValues,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+              }
+            }
+          )
+
+          if (response.status === 201) {
+            bigToast('Plantilla modificada exitosamente!', 'success')
+            tableData[row.index] = values
+            setTableData([...tableData])
+          } else {
+            console.error('Error al modificar la plantilla')
+          }
+        } catch (error) {
+          console.error('Error de red:', error)
+        }
+
+        exitEditingMode() //required to exit editing mode and close modal
+      }
+    }
+
   return (
     <>
-      <Toaster />
       <Loader loading={loading} />
       <MaterialReactTable
         columns={columns}
         data={tableData}
         localization={MRT_Localization_ES}
-        enableRowActions={true}
+        enableRowActions
+        editingMode='modal'
+        enableEditing
+        onEditingRowSave={handleUpdateSubmit}
+        onEditingRowCancel={handleCancelRowEdits}
         renderTopToolbarCustomActions={() => (
           <button
-            className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded '
+            className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
             onClick={() => setCreateModalOpen(true)}
           >
             Crear Nueva Plantilla
           </button>
         )}
-        renderRowActions={({ row }) => {
-          return (
-            <Box
-              sx={{
-                display: 'flex',
-                gap: '1rem',
-                // width: 20,
-                justifyContent: 'center'
-              }}
-            >
-              <Button onClick={() => handleDelete(row.original.id)}>
-                <Delete />
-              </Button>
-            </Box>
-          )
-        }}
+        renderRowActions={({ row, table }) => (
+          <Box sx={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+            <Button onClick={() => handleDelete(row.original.id)} color='error'>
+              <Delete />
+            </Button>
+            <Button onClick={() => table.setEditingRow(row)} color='inherit'>
+              <Edit />
+            </Button>
+          </Box>
+        )}
       />
       <CreateNewTemplatesModal
         columns={columns}
@@ -236,7 +308,7 @@ interface CreateModalProps {
   open: boolean
 }
 
-export const CreateNewTemplatesModal = ({
+const CreateNewTemplatesModal = ({
   open,
   columns,
   onClose,
@@ -251,8 +323,6 @@ export const CreateNewTemplatesModal = ({
 
   const handleSubmit = () => {
     const { id, ...objetoSinId } = values
-
-    //@ts-ignore
     onSubmit(objetoSinId)
     onClose()
   }
@@ -269,22 +339,19 @@ export const CreateNewTemplatesModal = ({
               gap: '1.5rem'
             }}
           >
-            {columns.map((column) => (
-              <React.Fragment key={column.accessorKey}>
-                {column.accessorKey !== 'id' && (
+            {columns.map(
+              (column) =>
+                column.accessorKey !== 'id' && (
                   <TextField
+                    key={column.accessorKey}
                     label={column.header}
                     name={column.accessorKey}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setValues({
-                        ...values,
-                        [e.target.name]: e.target.value
-                      })
+                      setValues({ ...values, [e.target.name]: e.target.value })
                     }
                   />
-                )}
-              </React.Fragment>
-            ))}
+                )
+            )}
           </Stack>
         </form>
       </DialogContent>

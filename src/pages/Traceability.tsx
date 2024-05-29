@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import {
+  Box,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Divider,
+  IconButton,
   List,
   ListItem,
   ListItemText,
@@ -15,12 +17,15 @@ import {
 } from '@mui/material'
 import axios from 'axios'
 import { api } from '../config.js'
-import { CloudUpload } from '@mui/icons-material'
+import { CloudUpload, Visibility, VisibilityOff } from '@mui/icons-material'
 import toast, { Toaster } from 'react-hot-toast'
+import { bigToast } from '../Components/ExcelManipulation/Utils.js'
+import PDFViewer from '../Components/PDFViewer.js'
 
 interface Traceability {
   id: number
   name: string
+  filePath: string
   createdAt: string
 }
 
@@ -36,6 +41,9 @@ const Traceability = () => {
   const [openModal, setOpenModal] = useState(false)
   const [formData, setFormData] = useState(initialState)
   const [searchTerm, setSearchTerm] = useState('')
+  const [visiblePDFs, setVisiblePDFs] = useState<{ [key: number]: boolean }>({})
+  const [updateFile, setUpdateFile] = useState<File | null>(null)
+  const [updateId, setUpdateId] = useState<number | null>(null)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -81,6 +89,15 @@ const Traceability = () => {
     }
   }
 
+  const handleUpdateFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0]
+      if (file.type === 'application/pdf') {
+        setUpdateFile(file)
+      }
+    }
+  }
+
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
 
@@ -107,6 +124,76 @@ const Traceability = () => {
     }
   }
 
+  const handleUpdate = async (id: number) => {
+    setUpdateId(id)
+  }
+
+  const handleUpdateSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+
+    if (!updateFile || updateId === null) {
+      toast.error('Por favor selecciona un archivo PDF para actualizar.')
+      return
+    }
+
+    const formDataToSend = new FormData()
+    formDataToSend.append('file', updateFile)
+
+    try {
+      const response = await axios.put(
+        `${apiUrl}/traceabilities/${updateId}`,
+        formDataToSend,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+          }
+        }
+      )
+      bigToast('PDF actualizado con éxito', 'success')
+      setTraceabilities(
+        traceabilities.map((traceability) =>
+          traceability.id === updateId ? response.data : traceability
+        )
+      )
+      setUpdateId(null)
+      setUpdateFile(null)
+    } catch (error) {
+      console.error('Error al actualizar el PDF:', error)
+      bigToast('Error al actualizar el PDF', 'error')
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!confirm(`¿Estás seguro de que deseas eliminar esta trazabilidad?`)) {
+      return
+    }
+    try {
+      const response = await axios.delete(`${apiUrl}/traceabilities/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      })
+
+      if (response.status >= 200 && response.status < 300) {
+        bigToast('Trazabilidad eliminada con éxito', 'success')
+        setTraceabilities(
+          traceabilities.filter((traceability) => traceability.id !== id)
+        )
+      }
+    } catch (error) {
+      console.error('Error al eliminar la trazabilidad:', error)
+      bigToast('Error al eliminar la trazabilidad', 'error')
+    }
+  }
+
+  const togglePDFVisibility = (id: number) => {
+    setVisiblePDFs((prev) => ({
+      ...prev,
+      [id]: !prev[id]
+    }))
+  }
+
   const filteredTraceabilities = traceabilities.filter((traceability) =>
     traceability.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
@@ -129,31 +216,55 @@ const Traceability = () => {
         Crear Trazabilidad
       </Button>
       <List>
-        {filteredTraceabilities.map((traceability, index) => (
-          <div key={index}>
+        {filteredTraceabilities.map((traceability) => (
+          <div key={traceability.id}>
             <ListItem
               disablePadding
               sx={{
                 display: 'flex',
                 justifyContent: 'space-between',
-
                 mt: 2,
                 mb: 2
               }}
             >
-              <ListItemText primary={traceability.name} />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <IconButton
+                  onClick={() => togglePDFVisibility(traceability.id)}
+                >
+                  {visiblePDFs[traceability.id] ? (
+                    <VisibilityOff />
+                  ) : (
+                    <Visibility />
+                  )}
+                </IconButton>
+                <ListItemText primary={traceability.name} />
+              </Box>
               <div className='flex gap-4'>
-                <Button variant='contained' color='primary'>
-                  Descargar
-                </Button>
-                <Button variant='contained' color='primary'>
+                <Button
+                  variant='contained'
+                  color='primary'
+                  onClick={() => handleUpdate(traceability.id)}
+                >
                   Actualizar PDF
                 </Button>
-                <Button variant='contained' color='error'>
+                <Button
+                  variant='contained'
+                  color='error'
+                  onClick={() => handleDelete(traceability.id)}
+                >
                   Eliminar
                 </Button>
               </div>
             </ListItem>
+            {visiblePDFs[traceability.id] && (
+              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <PDFViewer
+                  path={traceability.filePath}
+                  bucket='traceabilities'
+                  view='preview'
+                />
+              </Box>
+            )}
             <Divider />
           </div>
         ))}
@@ -193,6 +304,42 @@ const Traceability = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      {updateId !== null && (
+        <Dialog open={updateId !== null} onClose={() => setUpdateId(null)}>
+          <DialogTitle>Actualizar PDF de Trazabilidad</DialogTitle>
+          <DialogContent>
+            <Button variant='outlined' sx={{ mb: 4 }}>
+              <input
+                type='file'
+                accept='.pdf'
+                id='updateFile'
+                name='updateFile'
+                onChange={handleUpdateFileChange}
+                className='hidden'
+              />
+              <label
+                htmlFor='updateFile'
+                className='flex items-center cursor-pointer'
+              >
+                <CloudUpload sx={{ mr: 1 }} />
+                <span>Subir nuevo PDF</span>
+              </label>
+            </Button>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setUpdateId(null)} color='primary'>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleUpdateSubmit}
+              color='primary'
+              variant='contained'
+            >
+              Actualizar
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </Paper>
   )
 }

@@ -26,7 +26,7 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import AsyncSelect from 'react-select/async'
 
 import { loadOptions, mapOptions } from '../utils/loadOptions'
-import { RepositoryData } from './Repository'
+
 import { bigToast, styles } from './ExcelManipulation/Utils'
 import { TemplatesData } from './Templates'
 
@@ -52,7 +52,7 @@ const apiUrl = api()
 const Table: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<DeviceData[]>([])
-  const [_format, setFormat] = useState<{ labe: string; value: string } | null>(
+  const [format, setFormat] = useState<{ labe: string; value: string } | null>(
     null
   )
   // const [filteredTableData, setFilteredTableData] = useState<DeviceData[]>([]);
@@ -110,7 +110,7 @@ const Table: React.FC = () => {
 
   useEffect(() => {
     fetchUsers()
-  }, [])
+  }, [tableData])
 
   const handleCreateNewRow = (values: DeviceData) => {
     onCreateDevice(values)
@@ -120,7 +120,11 @@ const Table: React.FC = () => {
   const handleSaveRowEdits: MaterialReactTableProps<DeviceData>['onEditingRowSave'] =
     async ({ exitEditingMode, row, values }) => {
       if (!Object.keys(validationErrors).length) {
-        const updatedValues = { ...values }
+        const updatedValues = {
+          ...values,
+          certificateTemplateId: format?.value
+        }
+
         delete updatedValues.id
         try {
           const response = await axios.put(
@@ -133,10 +137,13 @@ const Table: React.FC = () => {
             }
           )
 
-          if (response.status === 201) {
+          if (response.status >= 200 && response.status < 300) {
             bigToast('Equipo Modificado Exitosamente!', 'success')
-            tableData[row.index] = values
-            setTableData([...tableData])
+
+            const updatedTableData = [...tableData]
+            updatedTableData[row.index] = { ...response.data }
+
+            setTableData(updatedTableData)
           } else {
             console.error('Error al crear equipo')
           }

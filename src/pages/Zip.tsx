@@ -14,11 +14,20 @@ import {
   Box,
   IconButton,
   Button,
-  Tooltip
+  Tooltip,
+  Divider
 } from '@mui/material'
 import AnalyzeExcelComponent from './AnalyzeExcelComponent'
 
-import { Check, Close, CloudUpload, Search } from '@mui/icons-material'
+import {
+  Check,
+  Close,
+  CloudUpload,
+  Search,
+  Settings
+} from '@mui/icons-material'
+
+import ModalPasswordForm from '../Components/ModalPasswordForm'
 
 const Zip = () => {
   const [file, setFile] = useState<File | null>(null)
@@ -26,6 +35,8 @@ const Zip = () => {
   const [selectedFile, setSelectedFile] = useState<string | null>(null)
   const [value, setValue] = React.useState('file')
   const [data, setData] = useState<any[]>([])
+  const [openModalSettings, setOpenModalSettings] = useState(false)
+  const [wbPasswords, setWbPasswords] = useState<string[]>([])
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setValue((event.target as HTMLInputElement).value)
@@ -91,25 +102,54 @@ const Zip = () => {
     }
   }
 
+  const handleOpenModalSettings = () => {
+    setOpenModalSettings(true)
+  }
+
+  const handleCloseModalSettings = () => {
+    setOpenModalSettings(false)
+  }
+
   return (
     <Box height={'100vh'}>
-      <FormControl>
-        <FormLabel id='demo-radio-buttons-group-label'>Procesar</FormLabel>
-        <RadioGroup
-          aria-labelledby='demo-radio-buttons-group-label'
-          defaultValue='female'
-          name='radio-buttons-group'
-          value={value}
-          onChange={handleChange}
-        >
-          <FormControlLabel
-            value='directory'
-            control={<Radio />}
-            label='Directorio'
-          />
-          <FormControlLabel value='file' control={<Radio />} label='Archivo' />
-        </RadioGroup>
-      </FormControl>
+      <ModalPasswordForm
+        open={openModalSettings}
+        onClose={handleCloseModalSettings}
+        wbPasswords={wbPasswords}
+        setWbPasswords={setWbPasswords}
+      />
+      <Box
+        display={'flex'}
+        justifyContent={'space-around'}
+        alignItems={'center'}
+      >
+        <FormControl>
+          <FormLabel id='demo-radio-buttons-group-label'>Procesar</FormLabel>
+          <RadioGroup
+            aria-labelledby='demo-radio-buttons-group-label'
+            defaultValue='female'
+            name='radio-buttons-group'
+            value={value}
+            onChange={handleChange}
+          >
+            <FormControlLabel
+              value='directory'
+              control={<Radio />}
+              label='Directorio'
+              disabled
+            />
+            <FormControlLabel
+              value='file'
+              control={<Radio />}
+              label='Archivo'
+            />
+          </RadioGroup>
+        </FormControl>
+        <IconButton onClick={handleOpenModalSettings}>
+          <Settings />
+        </IconButton>
+      </Box>
+      <Divider />
       {value === 'directory' && (
         <Box
           sx={{
@@ -194,6 +234,7 @@ const Zip = () => {
                 selectedFile={selectedFile}
                 setFileNames={setFileNames}
                 isFile={false}
+                wbPasswords={wbPasswords}
               />
             )}
           </Stack>
@@ -203,6 +244,7 @@ const Zip = () => {
         <AnalyzeExcelComponent
           hideUpload={fileNames.length > 0}
           isFile={true}
+          wbPasswords={wbPasswords}
         />
       )}
     </Box>

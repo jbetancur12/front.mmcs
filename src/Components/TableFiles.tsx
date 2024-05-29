@@ -670,7 +670,7 @@ const Table: React.FC = () => {
           )
         }}
       />
-      <CreateNewAccountModal
+      <CreateNewFileModal
         columns={columns}
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
@@ -688,7 +688,7 @@ interface CreateModalProps {
 }
 
 //example of creating a mui dialog modal for creating new rows
-export const CreateNewAccountModal = ({
+export const CreateNewFileModal = ({
   open,
   columns,
   onClose,
@@ -717,12 +717,6 @@ export const CreateNewAccountModal = ({
     if (selectedFile) {
       setFile(selectedFile)
       setSelectedFileName(selectedFile.name)
-    }
-  }
-
-  function logFormData(formData: any) {
-    for (const [key, value] of formData.entries()) {
-      console.log(`${key}:`, value)
     }
   }
 
@@ -788,10 +782,13 @@ export const CreateNewAccountModal = ({
       'certificateTypeId',
       values['certificateType.name'].toString()
     )
-    formData.append('deviceId', values['device.name'].toString())
-
-    // .toISOString().split('T')[0]
-    logFormData(formData)
+    formData.append(
+      'deviceId',
+      values['device.name'].toString()
+    )(
+      // .toISOString().split('T')[0]
+      formData
+    )
 
     onSubmit(formData)
     onClose()

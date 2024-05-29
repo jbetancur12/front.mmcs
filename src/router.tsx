@@ -20,7 +20,7 @@ import NewQuote from './pages/NewQuote'
 import Quote from './pages/Quote'
 import { Settings } from './pages/Settings'
 import Profiles from './pages/Profiles'
-import NewProfiles from './pages/NewProfiles'
+
 import Profile from './pages/Profile'
 import Traceability from './pages/Traceability'
 
@@ -53,6 +53,7 @@ function Router() {
             <Route path=':id' element={<Customer />} />
           </Route>
           <Route path='calibraciones'>
+            <Route path='templates' element={<Templates />} />
             <Route path='equipos' element={<Equipos />} />
             <Route
               path='tipos-de-certificado'
@@ -70,7 +71,7 @@ function Router() {
           <Route path='repositorio' element={<Repository />} />
           <Route path='script' element={<ScriptGenerator />} />
           <Route path='pdf' element={<Gotemberg />} />
-          <Route path='templates' element={<Templates />} />
+
           <Route path='cotizaciones'>
             <Route index element={<Cotizaciones />} />
             <Route path='new-quote' element={<NewQuote />} />
@@ -79,7 +80,6 @@ function Router() {
           </Route>
           <Route path='profiles'>
             <Route index element={<Profiles />} />
-            <Route path='new' element={<NewProfiles />} />
             <Route path=':id' element={<Profile />} />
           </Route>
           <Route path='settings' element={<Settings />} />

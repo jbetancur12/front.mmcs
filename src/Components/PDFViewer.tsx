@@ -3,25 +3,7 @@ import * as minioExports from 'minio'
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/TextLayer.css'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
-
-// let minioClient = null;
-
-// if (import.meta.env.VITE_ENV === "development") {
-//   minioClient = new minioExports.Client({
-//     endPoint: import.meta.env.VITE_MINIO_ENDPOINT || "localhost",
-//     port: 9000,
-//     useSSL: import.meta.env.VITE_MINIO_USESSL === "true" ? true : false,
-//     accessKey: import.meta.env.VITE_MINIO_ACCESSKEY,
-//     secretKey: import.meta.env.VITE_MINIO_SECRETKEY,
-//   });
-// } else {
-//   minioClient = new minioExports.Client({
-//     endPoint: import.meta.env.VITE_MINIO_ENDPOINT || "localhost",
-//     useSSL: import.meta.env.VITE_MINIO_USESSL === "true" ? true : false,
-//     accessKey: import.meta.env.VITE_MINIO_ACCESSKEY,
-//     secretKey: import.meta.env.VITE_MINIO_SECRETKEY,
-//   });
-// }
+import { Box, Button, Typography } from '@mui/material'
 
 const minioClient = new minioExports.Client({
   endPoint: import.meta.env.VITE_MINIO_ENDPOINT || 'localhost',
@@ -45,8 +27,8 @@ const PDFViewer = ({
   bucket: string
   view: 'preview' | 'default'
 }) => {
-  const [_numPages, setNumPages] = useState<number>(1)
-  const [pageNumber, _setPageNumber] = useState<number>(1)
+  const [numPages, setNumPages] = useState<number>(1)
+  const [pageNumber, setPageNumber] = useState<number>(1)
   const [pdfData, setPdfData] = useState<string | null>(null)
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
@@ -79,33 +61,60 @@ const PDFViewer = ({
     getBucket()
   }, [path])
 
-  // function changePage(offset: number) {
-  //   setPageNumber((prevPageNumber) => prevPageNumber + offset);
-  // }
-
-  // function previousPage() {
-  //   changePage(-1);
-  // }
-
-  // function nextPage() {
-  //   changePage(1);
-  // }
+  const changePage = (
+    offset: number,
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    event.preventDefault()
+    setPageNumber((prevPageNumber) => prevPageNumber + offset)
+  }
 
   return (
     <>
       {view === 'preview' && pdfData && (
-        <Document file={pdfData} onLoadSuccess={onDocumentLoadSuccess}>
-          <Page pageNumber={pageNumber} />
-        </Document>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center'
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              marginTop: 2,
+              marginBottom: 2
+            }}
+          >
+            <Button
+              variant='contained'
+              color='primary'
+              disabled={pageNumber <= 1}
+              onClick={(event) => changePage(-1, event)}
+              sx={{ marginRight: 2 }}
+            >
+              Anterior
+            </Button>
+            <Button
+              variant='contained'
+              color='primary'
+              disabled={pageNumber >= numPages}
+              onClick={(event) => changePage(1, event)}
+            >
+              Siguiente
+            </Button>
+          </Box>
+          <Box sx={{ marginBottom: 4 }}>
+            <Document file={pdfData} onLoadSuccess={onDocumentLoadSuccess}>
+              <Page scale={1.5} pageNumber={pageNumber} />
+            </Document>
+          </Box>
+          <Typography variant='body1'>
+            Página {pageNumber} de {numPages}
+          </Typography>
+        </Box>
       )}
-      {/* {pdfData && (
-        <embed
-          src={pdfData}
-          width="100%"
-          height="500"
-          type="application/pdf"
-        ></embed>
-      )} */}
       {view === 'default' && pdfData && (
         <object
           data={pdfData}
@@ -120,21 +129,6 @@ const PDFViewer = ({
           </a>
         </object>
       )}
-      {/* <div>
-        <p>
-          Page {pageNumber || (numPages ? 1 : "--")} of {numPages || "--"}
-        </p>
-        <button type="button" disabled={pageNumber <= 1} onClick={previousPage}>
-          Previous
-        </button>
-        <button
-          type="button"
-          disabled={pageNumber >= numPages}
-          onClick={nextPage}
-        >
-          Next
-        </button>
-      </div> */}
     </>
   )
 }

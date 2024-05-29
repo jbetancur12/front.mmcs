@@ -5,22 +5,25 @@ import axios from 'axios'
 import { apiUrl, bigToast, styles } from './ExcelManipulation/Utils'
 
 import { loadOptions, mapOptions } from '../utils/loadOptions'
-import { RepositoryData } from './ExcelManipulation/Types'
+
+import { CertificateTemplateData } from '../pages/AnalyzeExcelComponent'
 
 interface ModalDeviceProps {
   open: boolean
   onClose: Dispatch<SetStateAction<boolean>>
   name: string
   dataReturned: (data: any) => void
+  resetForm: () => void
 }
 
-const formFields = ['name', 'magnitude', 'repository', 'certificateTemplate']
+const formFields = ['name', 'magnitude', 'certificateTemplate']
 
 const ModalDevice: React.FC<ModalDeviceProps> = ({
   open,
   onClose,
   name,
-  dataReturned
+  dataReturned,
+  resetForm
 }) => {
   const [formValues, setFormValues] = useState<
     Record<string, string | boolean>
@@ -57,6 +60,7 @@ const ModalDevice: React.FC<ModalDeviceProps> = ({
       }),
       {}
     )
+
     setErrors(newErrors)
 
     if (Object.values(newErrors).some((error) => error)) {
@@ -73,6 +77,7 @@ const ModalDevice: React.FC<ModalDeviceProps> = ({
       if (response.status === 201) {
         bigToast('Cliente Creado Exitosamente!', 'success')
         dataReturned(response.data)
+        resetForm()
         onClose(false)
       } else {
         console.error('Error al crear cliente')
@@ -97,7 +102,7 @@ const ModalDevice: React.FC<ModalDeviceProps> = ({
       }}
     >
       <Typography variant='h5' component='div'>
-        Crear Cliente
+        Crear Equipo
       </Typography>
       {formFields.map((field) =>
         // field === 'repository' ? (
@@ -129,14 +134,16 @@ const ModalDevice: React.FC<ModalDeviceProps> = ({
 
             placeholder='Buscar Plantilla de Certificado'
             loadOptions={(inputValue) =>
-              loadOptions<RepositoryData>(inputValue, 'templates', (item) =>
-                mapOptions(item, 'id', 'name')
+              loadOptions<CertificateTemplateData>(
+                inputValue,
+                'templates',
+                (item) => mapOptions(item, 'id', 'name')
               )
             }
             onChange={(selectedOption: any) =>
               setFormValues({
                 ...formValues,
-                repository: selectedOption
+                certificateTemplate: selectedOption
               }) as any
             }
             styles={styles(false)}

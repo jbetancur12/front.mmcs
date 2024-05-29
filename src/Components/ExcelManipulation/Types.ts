@@ -22,6 +22,7 @@ export interface AnalyzeExcelComponentProps {
   selectedFile?: string | null
   isFile: boolean
   setFileNames?: React.Dispatch<React.SetStateAction<string[]>>
+  wbPasswords: string[]
 }
 
 export interface ResourceOptionDevice extends ResourceOption {

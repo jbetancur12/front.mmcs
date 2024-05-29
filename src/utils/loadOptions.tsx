@@ -49,3 +49,9 @@ export const mapOptions = (
   value: option[valueProperty], // Utiliza la propiedad especificada como valor
   label: option[labelProperty] // Utiliza la propiedad especificada como etiqueta
 })
+
+export function logFormData(formData: any) {
+  for (const [key, value] of formData.entries()) {
+    console.log(`${key}:`, value)
+  }
+}
