@@ -797,39 +797,6 @@ export const CreateNewFileModal = ({
   const sortedColumns = [...columns] // Creamos una copia del array original
   sortedColumns.sort((a, b) => a.id - b.id) // Ordenamos las columnas por su id
 
-  // const loadOptions = async (
-  //   inputValue: string,
-  //   resource: string,
-  //   mapFunction: (item: any) => ResourceOption
-  // ): Promise<ResourceOption[]> => {
-  //   return new Promise((resolve, reject) => {
-  //     let timer
-  //     const endpoint = `${apiUrl}/${resource}` // Construye la URL del endpoint
-  //     const fetchData = async () => {
-  //       try {
-  //         const response = await axios.get(endpoint, {
-  //           params: { q: inputValue },
-  //           headers: {
-  //             Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-  //           }
-  //         })
-  //         const data = response.data
-  //         const options = data.map((item: any) => mapFunction(item))
-  //         console.log('🚀 ~ fetchData ~ options:', options)
-  //         resolve(options) // Aplica la función de mapeo
-  //       } catch (error) {
-  //         console.error('Error al cargar opciones:', error)
-  //         reject(error)
-  //       }
-  //     }
-  //     if (timer) {
-  //       clearTimeout(timer)
-  //     }
-
-  //     timer = setTimeout(fetchData, 1000) // Establecer el debounce en 1000ms
-  //   })
-  // }
-
   return (
     <Dialog open={open}>
       <DialogTitle

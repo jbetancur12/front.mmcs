@@ -37,7 +37,6 @@ export default function Asynchronous<T>({
 
   React.useEffect(() => {
     let active = true
-    console.log('===>', value)
 
     if (!open) {
       return undefined
@@ -89,7 +88,6 @@ export default function Asynchronous<T>({
     <>
       {!editMode ? (
         <Autocomplete
-          onLoad={(e) => console.log(e)}
           id='asynchronous-demo'
           sx={{ ...sx }}
           // fullWidth

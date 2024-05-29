@@ -205,10 +205,6 @@ const Table: React.FC = () => {
     [filteredTableData]
   )
 
-  // const handleViewRow = (row) => {
-  //   console.log('%cTableCustomers.tsx line:187 row', 'color: #007acc;', row);
-  // }
-
   const getCommonEditTextFieldProps = useCallback(
     (
       cell: MRT_Cell<CustomerData>

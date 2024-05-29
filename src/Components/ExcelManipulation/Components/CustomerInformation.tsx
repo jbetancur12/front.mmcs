@@ -9,7 +9,6 @@ const CustomerInformation = ({
   formData,
   error
 }: ComponentsCertificateProps) => {
-  console.log(formData.customer)
   return (
     <Paper elevation={3} style={{ padding: 20 }}>
       <Stack spacing={2}>

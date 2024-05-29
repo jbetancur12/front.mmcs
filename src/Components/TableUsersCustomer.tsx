@@ -151,7 +151,6 @@ const Table: React.FC = () => {
           Authorization: `Bearer ${localStorage.getItem('accessToken')}`
         }
       })
-      console.log('🚀 ~ deleteUser ~ response:', response)
 
       if (response.status === 204) {
         bigToast('Usuario Eliminado Exitosamente!', 'success')

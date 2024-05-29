@@ -54,7 +54,7 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
           }
         }
       )
-      console.log('Settings updated:', response)
+
       bigToast('Contraseñas creadas con éxito', 'success')
       onCloseModal()
     } catch (error) {
@@ -119,7 +119,7 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
           }
         }
       )
-      console.log('Settings updated:', response)
+
       bigToast('Contraseñas actualizadas con éxito', 'success')
       setShowUpdateButton(false)
     } catch (error) {

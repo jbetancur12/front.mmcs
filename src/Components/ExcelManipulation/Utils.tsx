@@ -87,7 +87,6 @@ export const populateCell = (
 ) => {
   sheet.cell(cell).value(value)
   if (isNumberFormat && typeof value === 'number') {
-    console.log('Format', numberFormat(referenceNumber))
     sheet.cell(cell).style('numberFormat', numberFormat(referenceNumber))
   }
 }

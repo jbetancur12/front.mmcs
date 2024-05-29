@@ -185,7 +185,6 @@ const TableOwnUsers: React.FC = () => {
             defaultValue={cell.renderValue()}
             onChange={(e) => {
               const newValue = e.target.value
-              console.log('Nuevo valor seleccionado:', newValue)
             }}
             fullWidth
           >

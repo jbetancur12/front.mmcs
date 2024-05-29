@@ -8,7 +8,6 @@ interface ModalProfileProps {
 
 const ModalProfile: React.FC<ModalProfileProps> = ({ open, onClose }) => {
   const handleClose = () => {
-    console.log('====>')
     onClose()
   }
   return (

@@ -101,7 +101,7 @@ const Profile: React.FC = () => {
           }
         }
       )
-      console.log('Respuesta del backend:', response.data)
+
       setSelectedCV(response.data.profile.cvUrl)
       toast.success('Hoja de Vida actualizada con éxito')
 
@@ -138,7 +138,7 @@ const Profile: React.FC = () => {
             }
           }
         )
-        console.log('Respuesta del backend:', response.data)
+
         setImage(response.data.profile.avatarUrl)
         toast.success('Imagen actualizada con éxito')
 

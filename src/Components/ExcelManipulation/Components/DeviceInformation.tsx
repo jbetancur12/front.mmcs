@@ -10,7 +10,6 @@ const DeviceInformation = ({
   formData,
   error
 }: ComponentsCertificateProps) => {
-  console.log(formData.measurementOperation)
   return (
     <Paper elevation={3} style={{ padding: 20 }}>
       <Typography variant='h6'>Información Del Equipo</Typography>

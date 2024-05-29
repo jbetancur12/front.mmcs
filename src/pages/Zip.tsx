@@ -86,7 +86,7 @@ const Zip = () => {
               raw: false,
               dateNF: 'yyyy-mm-dd'
             })
-            console.log('🚀 ~ zipObject.async ~ jsonData:', jsonData)
+
             setData(jsonData)
 
             // Remove processed file from list

@@ -47,8 +47,6 @@ function CertificatesList() {
     return self.indexOf(value) === index
   })
 
-  console.log(uniqueYears.sort((a, b) => b - a))
-
   useEffect(() => {
     const getCertificates = async () => {
       try {

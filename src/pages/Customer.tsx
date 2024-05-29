@@ -191,7 +191,6 @@ function UserProfile() {
             }
           }
         )
-        console.log('Respuesta del backend:', response.data)
 
         // Actualizar la imagen en el estado local
       } catch (error) {
@@ -201,30 +200,6 @@ function UserProfile() {
       setImage('/images/pngaaa.com-4811116.png')
     }
   }
-
-  // const handleSaveImage = async () => {
-  //   const formData = new FormData();
-  //   formData.append("file", file as Blob);
-  //   formData.append(
-  //     "customerId",
-  //     id !== undefined && typeof id === "string" ? id : ""
-  //   );
-
-  //   try {
-  //     // Enviar la imagen al backend Express
-  //     const response = await axios.post(`${apiUrl}/customers`, formData, {
-  //       headers: {
-  //         "Content-Type": "multipart/form-data",
-  //         Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-  //       },
-  //     });
-  //     console.log("Respuesta del backend:", response.data);
-
-  //     // Actualizar la imagen en el estado local
-  //   } catch (error) {
-  //     console.error("Error al enviar la imagen al backend:", error);
-  //   }
-  // };
 
   useEffect(() => {
     getuserInfo()

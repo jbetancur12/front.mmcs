@@ -192,13 +192,10 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
             typeof cellValue === 'string' &&
             cellValue.includes('Instrumento')
           ) {
-            console.log('eNTROOO')
             for (let col of ['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']) {
               const value = sheet.cell(`${col}${row}`)
-              console.log('🚀 ~ readExcel ~ value:', value)
+
               if (value.value()) {
-                console.log(`${col}${row}`)
-                console.log(value.value())
                 //device.certificateTemplate['instrumento'] = `${col}${row}`
                 const result = await fetchDevice(value.value() as string)
                 if (result.length > 0) {
@@ -214,14 +211,6 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
                     field: keyof typeof cerTemplate
                   ) => {
                     if (field === 'calibrationDate') {
-                      console.log(
-                        XlsxPopulate.numberToDate(
-                          workbook
-                            .sheet(sheetName)
-                            .cell(cerTemplate[field])
-                            .value()
-                        )
-                      )
                       return XlsxPopulate.numberToDate(
                         workbook
                           .sheet(sheetName)
@@ -483,14 +472,6 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     appendIfNotNull('name', data.name)
     appendIfNotNull('replace', data.replace)
     appendIfNotNull('update', data.update)
-
-    // function logFormData(formData: any) {
-    //   for (const [key, value] of formData.entries()) {
-    //     console.log(`${key}:`, value)
-    //   }
-    // }
-
-    // logFormData(formData)
 
     try {
       const response = await postData(formData)

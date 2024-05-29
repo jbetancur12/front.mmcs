@@ -10,7 +10,7 @@ const AnalyzeExcelComponent: React.FC = () => {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       const uploadedFile = event.target.files[0]
-      console.log('🚀 ~ handleFileUpload ~ e.target:', event.target.files[0])
+
       setFile(uploadedFile)
 
       const reader = new FileReader()
@@ -32,10 +32,8 @@ const AnalyzeExcelComponent: React.FC = () => {
     // Aquí puedes analizar las celdas necesarias
     // Por ejemplo, obtener el valor de una celda específica
     if (data.length > 0) {
-      console.log('🚀 ~ analyzeCells ~ data:', data)
       const firstRow = data[0]
       const cellValue = firstRow['A18'] // Reemplaza 'Nombre de la Celda' por el nombre de la celda que quieres analizar
-      console.log('Valor de la celda:', cellValue)
     }
   }
 

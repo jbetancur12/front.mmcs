@@ -277,8 +277,6 @@ const ExcelManipulation: React.FC = () => {
     }
   ]
 
-  console.log(error)
-
   return (
     <Stack spacing={2} marginBottom={10}>
       <Toaster />
