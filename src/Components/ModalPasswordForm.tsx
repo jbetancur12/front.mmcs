@@ -45,7 +45,7 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
     const passwordValues = passwords.map((password) => password.password)
 
     try {
-      const response = await axios.post(
+      await axios.post(
         `${apiUrl}/settings`,
         { passwords: passwordValues },
         {
@@ -110,7 +110,7 @@ const ModalPasswordForm: React.FC<ModalPasswordFormProps> = ({
 
   const handleUpdate = async () => {
     try {
-      const response = await axios.put(
+      await axios.put(
         `${apiUrl}/settings`,
         { passwords: wbPasswords },
         {

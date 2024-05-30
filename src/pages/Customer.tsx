@@ -181,16 +181,12 @@ function UserProfile() {
 
       try {
         // Enviar la imagen al backend Express
-        const response = await axios.post(
-          `${apiUrl}/customers/avatar`,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-            }
+        await axios.post(`${apiUrl}/customers/avatar`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
           }
-        )
+        })
 
         // Actualizar la imagen en el estado local
       } catch (error) {

@@ -38,14 +38,14 @@ function CertificatesList() {
 
   const $userStore = useStore(userStore)
 
-  const years = certificates.map((certificate) => {
-    const getYear = new Date(certificate.calibrationDate).getFullYear()
-    return getYear
-  })
+  // const years = certificates.map((certificate) => {
+  //   const getYear = new Date(certificate.calibrationDate).getFullYear()
+  //   return getYear
+  // })
 
-  const uniqueYears = years.filter((value, index, self) => {
-    return self.indexOf(value) === index
-  })
+  // const uniqueYears = years.filter((value, index, self) => {
+  //   return self.indexOf(value) === index
+  // })
 
   useEffect(() => {
     const getCertificates = async () => {

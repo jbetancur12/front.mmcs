@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx'
 
 const AnalyzeExcelComponent: React.FC = () => {
   const [, setFile] = useState<File | null>(null)
-  const [data, setData] = useState<any[]>([])
+  const [_data, setData] = useState<any[]>([])
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -31,10 +31,10 @@ const AnalyzeExcelComponent: React.FC = () => {
   const analyzeCells = () => {
     // Aquí puedes analizar las celdas necesarias
     // Por ejemplo, obtener el valor de una celda específica
-    if (data.length > 0) {
-      const firstRow = data[0]
-      const cellValue = firstRow['A18'] // Reemplaza 'Nombre de la Celda' por el nombre de la celda que quieres analizar
-    }
+    // if (data.length > 0) {
+    //   const firstRow = data[0]
+    //   const cellValue = firstRow['A18'] // Reemplaza 'Nombre de la Celda' por el nombre de la celda que quieres analizar
+    // }
   }
 
   return (

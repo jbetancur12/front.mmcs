@@ -183,8 +183,8 @@ const TableOwnUsers: React.FC = () => {
         Edit: ({ cell }) => (
           <Select
             defaultValue={cell.renderValue()}
-            onChange={(e) => {
-              const newValue = e.target.value
+            onChange={() => {
+              // const newValue = e.target.value
             }}
             fullWidth
           >
