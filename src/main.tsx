@@ -15,7 +15,11 @@ const options = {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <PostHogProvider
-      apiKey={import.meta.env.VITE_POSTHOG_KEY}
+      apiKey={
+        import.meta.env.VITE_ENV === 'production'
+          ? import.meta.env.VITE_POSTHOG_KEY
+          : ''
+      }
       options={options}
     >
       <BrowserRouter>

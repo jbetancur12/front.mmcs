@@ -129,15 +129,25 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   }
 
   const readExcel = async (file: File) => {
-    const passwords = ['', ...wbPasswords] // Replace with your passwords
+    const passwords = [...wbPasswords] // Replace with your passwords
     let workbook: any
 
-    for (const password of passwords) {
-      try {
-        workbook = await XlsxPopulate.fromDataAsync(file, { password })
-        break
-      } catch (error) {
-        console.log(`Failed to open file with password: ${password}`)
+    try {
+      // Primero intenta abrir el archivo sin contraseña
+      console.log('Abriendo...')
+      workbook = await XlsxPopulate.fromDataAsync(file)
+      console.log('===>', workbook)
+    } catch (initialError) {
+      console.log('Error: ', initialError)
+      console.log('Failed to open file without password, trying passwords...')
+
+      for (const password of passwords) {
+        try {
+          workbook = await XlsxPopulate.fromDataAsync(file, { password })
+          break
+        } catch (error) {
+          console.log(`Failed to open file with password: ${password}`)
+        }
       }
     }
 
@@ -198,14 +208,17 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
               if (value.value()) {
                 //device.certificateTemplate['instrumento'] = `${col}${row}`
                 const result = await fetchDevice(value.value() as string)
+
                 if (result.length > 0) {
                   setDevice({
                     value: result[0].id,
                     label: result[0].name,
                     certificateTemplate: result[0].certificateTemplate
                   })
+
                   const cerTemplate: CertificateTemplateData =
                     result[0].certificateTemplate
+
                   const getValueFromCell = (
                     workbook: any,
                     field: keyof typeof cerTemplate
@@ -214,15 +227,16 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
                       return XlsxPopulate.numberToDate(
                         workbook
                           .sheet(sheetName)
-                          .cell(cerTemplate[field])
+                          .cell(cerTemplate[field].toUpperCase())
                           .value()
                       )
                     }
                     return workbook
                       .sheet(sheetName)
-                      .cell(cerTemplate[field])
+                      .cell(cerTemplate[field].toUpperCase())
                       .value()
                   }
+
                   const fields: (keyof typeof cerTemplate)[] = [
                     'city',
                     'location',
@@ -238,6 +252,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
                     acc[field] = getValueFromCell(workbook, field)
                     return acc
                   }, {} as any)
+
                   return info
                 } else {
                   setLoading(false)
@@ -246,6 +261,8 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
                     device: value.value() as string
                   })
                 }
+
+                break // Se sale del bucle for
               }
             }
           }
@@ -474,6 +491,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     appendIfNotNull('update', data.update)
 
     try {
+      setLoading(true)
       const response = await postData(formData)
 
       if (response.status >= 200 && response.status < 300) {
@@ -545,6 +563,8 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
         })
       }
       console.error('Error al enviar datos:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -747,7 +767,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
             </Typography>
           </Box>
         )}
-        <Button variant='contained' onClick={onSubmit}>
+        <Button variant='contained' onClick={onSubmit} disabled={loading}>
           Enviar
         </Button>
       </Stack>

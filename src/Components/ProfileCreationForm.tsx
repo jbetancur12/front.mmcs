@@ -22,6 +22,7 @@ interface Profile {
 
 const ProfileCreationForm: React.FC<Profile> = ({ onSave }) => {
   const [formData, setFormData] = useState(initialState)
+  const [loading, setLoading] = useState(false)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -61,6 +62,7 @@ const ProfileCreationForm: React.FC<Profile> = ({ onSave }) => {
     formDataToSend.append('avatar', formData.avatar as Blob)
 
     try {
+      setLoading(true)
       const response = await axios.post(`${apiUrl}/profiles`, formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -78,6 +80,8 @@ const ProfileCreationForm: React.FC<Profile> = ({ onSave }) => {
       }
     } catch (error) {
       console.error('Error al enviar la solicitud:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -156,7 +160,7 @@ const ProfileCreationForm: React.FC<Profile> = ({ onSave }) => {
           </label>
         </Button>
         <div className='flex justify-end mb-3'>
-          <Button type='submit' variant='contained'>
+          <Button type='submit' variant='contained' disabled={loading}>
             Crear Perfil
           </Button>
           <Button

@@ -766,32 +766,32 @@ export const CreateNewFileModal = ({
   const handleSubmit = () => {
     //put your validation logic here
 
-    const formData = new FormData()
-    formData.append('name', values.name)
-    formData.append('city', values.city)
-    formData.append('location', values.location)
-    formData.append('sede', values.sede)
-    formData.append('activoFijo', values.activoFijo)
-    formData.append('serie', values.serie)
-    formData.append('calibrationDate', values.calibrationDate)
-    formData.append('nextCalibrationDate', values.nextCalibrationDate)
-    formData.append('pdf', file as Blob)
-    formData.append('customerId', values['customer.nombre'].toString())
-    formData.append('customerName', values['customerName'])
-    formData.append(
-      'certificateTypeId',
-      values['certificateType.name'].toString()
-    )
-    formData.append(
-      'deviceId',
-      values['device.name'].toString()
-    )(
-      // .toISOString().split('T')[0]
-      formData
-    )
+    try {
+      const formData = new FormData()
+      formData.append('name', values.name)
+      formData.append('city', values.city)
+      formData.append('location', values.location)
+      formData.append('sede', values.sede)
+      formData.append('activoFijo', values.activoFijo)
+      formData.append('serie', values.serie)
+      formData.append('calibrationDate', values.calibrationDate)
+      formData.append('nextCalibrationDate', values.nextCalibrationDate)
+      formData.append('pdf', file as Blob)
+      formData.append('customerId', values['customer.nombre'].toString())
+      formData.append('customerName', values['customerName'])
+      formData.append(
+        'certificateTypeId',
+        values['certificateType.name'].toString()
+      )
 
-    onSubmit(formData)
-    onClose()
+      formData.append('deviceId', values['device.name'].toString())
+
+      onSubmit(formData)
+      onClose()
+    } catch (error) {
+      bigToast('Error al crear equipo', 'error')
+      console.error('Error de red:', error)
+    }
   }
 
   const sortedColumns = [...columns] // Creamos una copia del array original
@@ -836,9 +836,8 @@ export const CreateNewFileModal = ({
                     )
                   case 'lastdate':
                     return (
-                      <>
+                      <div key={index}>
                         <DatePicker
-                          key={index}
                           label={column.header}
                           name={column.accessorKey}
                           value={values[column.accessorKey]}
@@ -890,7 +889,7 @@ export const CreateNewFileModal = ({
                             </label>
                           </div>
                         </div>
-                      </>
+                      </div>
                     )
                   case 'selectCustomerId':
                     return (

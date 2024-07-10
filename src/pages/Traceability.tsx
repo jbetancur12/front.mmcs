@@ -21,6 +21,8 @@ import { CloudUpload, Visibility, VisibilityOff } from '@mui/icons-material'
 import toast, { Toaster } from 'react-hot-toast'
 import { bigToast } from '../Components/ExcelManipulation/Utils.js'
 import PDFViewer from '../Components/PDFViewer.js'
+import { userStore } from '../store/userStore.js'
+import { useStore } from '@nanostores/react'
 
 interface Traceability {
   id: number
@@ -37,6 +39,7 @@ const initialState = {
 }
 
 const Traceability = () => {
+  const $userStore = useStore(userStore)
   const [traceabilities, setTraceabilities] = useState<Traceability[]>([])
   const [openModal, setOpenModal] = useState(false)
   const [formData, setFormData] = useState(initialState)
@@ -212,9 +215,11 @@ const Traceability = () => {
         fullWidth
         sx={{ mb: 2 }}
       />
-      <Button variant='contained' color='primary' onClick={handleOpenModal}>
-        Crear Trazabilidad
-      </Button>
+      {$userStore.rol === 'admin' && (
+        <Button variant='contained' color='primary' onClick={handleOpenModal}>
+          Crear Trazabilidad
+        </Button>
+      )}
       <List>
         {filteredTraceabilities.map((traceability) => (
           <div key={traceability.id}>
@@ -240,20 +245,24 @@ const Traceability = () => {
                 <ListItemText primary={traceability.name} />
               </Box>
               <div className='flex gap-4'>
-                <Button
-                  variant='contained'
-                  color='primary'
-                  onClick={() => handleUpdate(traceability.id)}
-                >
-                  Actualizar PDF
-                </Button>
-                <Button
-                  variant='contained'
-                  color='error'
-                  onClick={() => handleDelete(traceability.id)}
-                >
-                  Eliminar
-                </Button>
+                {$userStore.rol === 'admin' && (
+                  <Button
+                    variant='contained'
+                    color='primary'
+                    onClick={() => handleUpdate(traceability.id)}
+                  >
+                    Actualizar PDF
+                  </Button>
+                )}
+                {$userStore.rol === 'admin' && (
+                  <Button
+                    variant='contained'
+                    color='error'
+                    onClick={() => handleDelete(traceability.id)}
+                  >
+                    Eliminar
+                  </Button>
+                )}
               </div>
             </ListItem>
             {visiblePDFs[traceability.id] && (
