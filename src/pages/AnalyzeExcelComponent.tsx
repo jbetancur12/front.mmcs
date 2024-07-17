@@ -178,8 +178,14 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     // ANCHOR // ! Probando buscar entre celdas
 
     try {
-      let sheet = workbook.sheet('CERTIFICADO')
-      let sheetName = 'CERTIFICADO'
+      let sheet = null
+      let sheetName: string | null = null
+      workbook.sheets().forEach((ws: any) => {
+        if (ws.name().toLowerCase() === 'certificado' && !ws.hidden()) {
+          sheet = workbook.sheet(ws.name())
+          sheetName = ws.name() as string
+        }
+      })
       if (!sheet) {
         sheet = workbook.sheet('CC')
         sheetName = 'CC'
@@ -193,7 +199,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
           'The workbook does not contain a sheet named CERTIFICADO or CC'
         )
       } else {
-        for (let row = 8; row <= 14; row++) {
+        for (let row = 8; row <= 17; row++) {
           const cell = sheet.cell(`A${row}`)
           const cellValue = cell.value()
 
@@ -206,6 +212,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
               const value = sheet.cell(`${col}${row}`)
 
               if (value.value()) {
+                console.log(value.value(), row, col)
                 //device.certificateTemplate['instrumento'] = `${col}${row}`
                 const result = await fetchDevice(value.value() as string)
 

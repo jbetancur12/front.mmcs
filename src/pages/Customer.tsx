@@ -7,6 +7,7 @@ import {
   Certificate,
   CertificateListItem
 } from '../Components/CertificateListItem'
+import { bigToast } from '../Components/ExcelManipulation/Utils'
 
 // API URL
 const apiUrl = api()
@@ -163,6 +164,34 @@ function UserProfile() {
       field.toLowerCase().includes(searchTerm.toLowerCase())
     )
   })
+
+  const handleDelete = async (id: number) => {
+    const isConfirmed = window.confirm(
+      '¿Estás seguro de que deseas eliminar este certificado? Esta acción no se puede deshacer.'
+    )
+
+    if (!isConfirmed) {
+      return
+    }
+
+    try {
+      const response = await axios.delete(`${apiUrl}/files/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      })
+
+      if (response.status >= 200 && response.status < 300) {
+        bigToast('Equipo eliminado con éxito', 'success')
+        setCertificatesData(
+          certificatesData.filter((certificate) => certificate.id !== id)
+        )
+      }
+    } catch (error) {
+      console.error('Error al eliminar el equipo:', error)
+      bigToast('Error al eliminar el equipo', 'error')
+    }
+  }
 
   const handleImageChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -324,6 +353,7 @@ function UserProfile() {
             <CertificateListItem
               key={certificate.id}
               certificate={certificate}
+              onDelete={handleDelete}
             />
           ))}
         </>
