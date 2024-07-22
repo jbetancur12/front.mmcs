@@ -19,7 +19,7 @@ const SideBar: React.FC = () => {
   // const toggleDropdown = () => {
   //   setIsDropdownOpen(!isDropdownOpen);
   // };
-  console.log('euquiera', $userStore)
+
   return (
     <aside
       id='sidebar'
