@@ -55,3 +55,8 @@ export function logFormData(formData: any) {
     console.log(`${key}:`, value)
   }
 }
+
+export const capitalize = (str: string) => {
+  if (typeof str !== 'string') return str
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+}
