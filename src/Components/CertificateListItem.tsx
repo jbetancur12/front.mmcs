@@ -1,7 +1,21 @@
 import { Link } from 'react-router-dom'
 import { userStore } from '../store/userStore'
 import { useStore } from '@nanostores/react'
-import { capitalize } from '@mui/material'
+import {
+  Button,
+  ButtonBase,
+  capitalize,
+  List,
+  ListItem,
+  Typography
+} from '@mui/material'
+import { useState } from 'react'
+import ModalHq from './ModalHq'
+import { api } from '../config'
+import axios from 'axios'
+import { bigToast } from './ExcelManipulation/Utils'
+
+const apiUrl = api()
 
 export interface Certificate {
   id: number
@@ -31,34 +45,76 @@ export interface Certificate {
 interface CertificateListItemProps {
   certificate: Certificate
   onDelete: (id: number) => void
+  sedes: string[]
 }
 
 export const CertificateListItem: React.FC<CertificateListItemProps> = ({
   certificate,
-  onDelete
+  onDelete,
+  sedes
 }) => {
   const $userStore = useStore(userStore)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedCertificate, setSelectedCertificate] =
+    useState<Certificate | null>(certificate)
+
+  const handleModalOpen = () => {
+    setIsModalOpen(true)
+  }
+
+  const handleModalClose = () => {
+    setIsModalOpen(false)
+  }
+
+  const onSedeClick = async (sede: string) => {
+    try {
+      const response = await axios.put(
+        `${apiUrl}/files/headquarter/${certificate.id}`,
+        {
+          headquarter: sede
+        }
+      )
+      if (response.status === 200) {
+        bigToast(
+          'Sede actualizada con éxito, Actualice la página para ver los cambios',
+          'success'
+        )
+        setSelectedCertificate(response.data)
+        handleModalClose()
+      }
+    } catch (error) {}
+  }
+
+  if (!selectedCertificate) return null
   return (
     <div className='flex items-center justify-between p-4 border-b border-gray-200'>
       <div>
-        <Link to={`/calibraciones/certificados/${certificate.id}`}>
-          <h3 className='text-lg font-semibold'>{certificate.device.name}</h3>
+        <Link to={`/calibraciones/certificados/${selectedCertificate.id}`}>
+          <h3 className='text-lg font-semibold'>
+            {selectedCertificate.device.name}
+          </h3>
 
-          <p className='text-gray-500'>Ciudad: {certificate.city}</p>
+          <p className='text-gray-500'>Ciudad: {selectedCertificate.city}</p>
           <p className='text-gray-500'>
-            Sede: {certificate.headquarter.toUpperCase()}
+            Sede: {selectedCertificate.headquarter.toUpperCase()}
           </p>
-          <p className='text-gray-500'>Ubicación: {certificate.location}</p>
-          <p className='text-gray-500'>Dirección: {certificate.sede}</p>
-          <p className='text-gray-500'>Activo Fijo: {certificate.activoFijo}</p>
-          <p className='text-gray-500'>Serie: {certificate.serie}</p>
+          <p className='text-gray-500'>
+            Ubicación: {selectedCertificate.location}
+          </p>
+          <p className='text-gray-500'>Dirección: {selectedCertificate.sede}</p>
+          <p className='text-gray-500'>
+            Activo Fijo: {selectedCertificate.activoFijo}
+          </p>
+          <p className='text-gray-500'>Serie: {selectedCertificate.serie}</p>
           <p className='text-gray-500'>
             Fecha de Calibración:{' '}
-            {new Date(certificate.calibrationDate).toLocaleDateString()}
+            {new Date(selectedCertificate.calibrationDate).toLocaleDateString()}
           </p>
           <p className='text-gray-500'>
             Proxima Fecha de Calibración:{' '}
-            {new Date(certificate.nextCalibrationDate).toLocaleDateString()}
+            {new Date(
+              selectedCertificate.nextCalibrationDate
+            ).toLocaleDateString()}
           </p>
         </Link>
       </div>
@@ -67,7 +123,7 @@ export const CertificateListItem: React.FC<CertificateListItemProps> = ({
           <div className='flex items-center'>
             <button
               className='mr-4 px-4 py-2 bg-green-500 text-white font-semibold rounded hover:bg-green-600'
-              onClick={() => onDelete(certificate.id)}
+              onClick={handleModalOpen}
             >
               Cambiar de Sede
             </button>
@@ -78,6 +134,48 @@ export const CertificateListItem: React.FC<CertificateListItemProps> = ({
               Eliminar
             </button>
           </div>
+          {isModalOpen && (
+            <ModalHq onClose={handleModalClose} open={isModalOpen}>
+              <Typography
+                id='modal-title'
+                variant='h6'
+                component='h2'
+                gutterBottom
+              >
+                Lista de Sedes
+              </Typography>
+              <List id='modal-description'>
+                {sedes.map((sede, index) => (
+                  <ButtonBase
+                    key={index}
+                    sx={{ width: '100%' }}
+                    onClick={() => onSedeClick(sede)}
+                  >
+                    <ListItem
+                      key={index}
+                      sx={{
+                        '&:hover': {
+                          backgroundColor: 'lightgreen',
+                          borderRadius: '5px'
+                        }
+                      }}
+                    >
+                      {capitalize(sede)}
+                    </ListItem>
+                  </ButtonBase>
+                ))}
+              </List>
+              {/* <Button
+                onClick={handleModalClose}
+                variant='contained'
+                color='primary'
+                sx={{ mt: 2 }}
+                fullWidth
+              >
+                Cerrar
+              </Button> */}
+            </ModalHq>
+          )}
         </>
       )}
     </div>

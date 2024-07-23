@@ -161,6 +161,24 @@ function UserProfile() {
     getCertificateInfo()
   }, [])
 
+  const handleAddSede = async (newSede: string) => {
+    try {
+      const response = await axios.put(`${apiUrl}/customers/${id}/sedes`, {
+        nuevaSede: newSede
+      })
+
+      if (response.status === 200) {
+        bigToast('Sede agregada con éxito', 'success')
+        setCustomerData({
+          ...customerData,
+          sede: [...customerData.sede, newSede]
+        })
+      }
+    } catch (error) {
+      console.error('Error al agregar sede:', error)
+    }
+  }
+
   return (
     <div>
       <div className='bg-white shadow-md rounded-lg p-8 max-w-md mx-auto mt-4'>
@@ -278,13 +296,19 @@ function UserProfile() {
               key={certificate.id}
               certificate={certificate}
               onDelete={handleDelete}
+              sedes={customerData.sede}
             />
           ))}
         </Paper>
       )}
       {activeTab === 'users' && <TableUsersCustomer />}
       {activeTab === 'headquarters' && (
-        <Headquarters hqs={groupedByHQ} onDelete={handleDelete} />
+        <Headquarters
+          hqs={groupedByHQ}
+          sedes={customerData.sede}
+          onDelete={handleDelete}
+          onAddSede={handleAddSede}
+        />
       )}
     </div>
   )
