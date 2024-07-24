@@ -32,10 +32,9 @@ const Headquarters: React.FC<HeadquartersProps> = ({
   sedes,
   onAddSede
 }) => {
-  const [selectedSede, setSelectedSede] = React.useState<null | Record<
-    string,
-    Certificate
-  >>(null)
+  const [selectedSede, setSelectedSede] = React.useState<null | Certificate[]>(
+    null
+  )
 
   const [isAdding, setIsAdding] = React.useState(false)
   const [newSede, setNewSede] = React.useState('')

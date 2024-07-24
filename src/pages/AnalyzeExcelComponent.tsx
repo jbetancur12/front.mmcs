@@ -6,6 +6,7 @@ import {
   Box,
   Button,
   IconButton,
+  Paper,
   Stack,
   TextField,
   Typography
@@ -25,6 +26,7 @@ import { VisuallyHiddenInput } from '../Components/TableFiles'
 import XlsxPopulate from 'xlsx-populate'
 import Loader from '../Components/Loader2'
 import { addMonths, set } from 'date-fns'
+import Select from 'react-select'
 
 // Importa los componentes de MUI
 
@@ -63,7 +65,12 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     customer: string
   }>({ device: '', customer: '' })
   const [device, setDevice] = useState<DeviceOption | null>(null)
-  const [customer, setCustomer] = useState<ResourceOption | null>(null)
+  const [customer, setCustomer] = useState<ResourceCustomerOption | null>(null)
+  const [hq, setHq] = useState<{
+    value: string
+    label: string
+  } | null | null>(null)
+
   const [typeOfCertificate, setTypeOfCertificate] = useState<{
     id: string
     name: string
@@ -83,7 +90,8 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
       !customer ||
       !device ||
       !typeOfCertificate ||
-      !filePdf
+      !filePdf ||
+      !hq
     ) {
       setValidationError('Todos los campos son obligatorios')
       return false
@@ -311,7 +319,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   }
 
   const dataReturned = (data: any) => {
-    setCustomer({ value: data.id, label: data.nombre })
+    setCustomer({ value: data.id, label: data.nombre, sedes: data.sede })
     setMissedData({ ...missedData, customer: '' })
   }
 
@@ -340,7 +348,8 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
       if (results.length > 0) {
         setCustomer({
           value: results[0].id,
-          label: results[0].nombre
+          label: results[0].nombre,
+          sedes: results[0].sede
         })
       } else {
         missed.customer = data2.solicitante
@@ -400,6 +409,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     setDevice(null)
     setCustomer(null)
     setTypeOfCertificate({ id: '3', name: 'Calibración' })
+    setHq(null)
     setValidationError(null)
     setFile(null)
   }
@@ -455,6 +465,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
       customerId: customer?.value,
       deviceId: device?.value,
       certificateTypeId: typeOfCertificate?.id,
+      headquarter: hq?.value,
       name:
         selectedFile?.replace(/\.[^/.]+$/, '.pdf') ||
         file?.name.replace(/\.[^/.]+$/, '.pdf'),
@@ -496,6 +507,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
     appendIfNotNull('name', data.name)
     appendIfNotNull('replace', data.replace)
     appendIfNotNull('update', data.update)
+    appendIfNotNull('headquarter', data.headquarter)
 
     try {
       setLoading(true)
@@ -693,6 +705,22 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
           }}
           styles={styles(!(!!validationError && !typeOfCertificate))}
         />
+        <Select
+          value={hq}
+          options={customer?.sedes.map((item) => ({
+            value: item, // valor en minúsculas
+            label: item.toUpperCase() // etiqueta con el mismo texto
+          }))}
+          styles={styles(!(!!validationError && !hq))}
+          placeholder='Seleccionar Sede'
+          onChange={(selectedOption: any) =>
+            setHq({
+              value: selectedOption.value,
+              label: selectedOption.label
+            })
+          }
+        />
+
         <TextField
           error={!!validationError && !city}
           label='Ciudad'
@@ -711,7 +739,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
         />
         <TextField
           error={!!validationError && !headquarters}
-          label='Sede'
+          label='Direccion'
           variant='outlined'
           fullWidth
           value={headquarters}
@@ -788,13 +816,18 @@ const mapDevices = (option: any): DeviceOption => ({
   certificateTemplate: option.certificateTemplate
 })
 
-const mapCustomers = (option: any): ResourceOption => ({
+const mapCustomers = (option: any): ResourceCustomerOption => ({
   value: option.id,
-  label: option.nombre
+  label: option.nombre,
+  sedes: option.sede
 })
 
 interface DeviceOption extends ResourceOption {
   certificateTemplate: CertificateTemplateData
+}
+
+interface ResourceCustomerOption extends ResourceOption {
+  sedes: string[]
 }
 
 export interface CertificateTemplateData {
