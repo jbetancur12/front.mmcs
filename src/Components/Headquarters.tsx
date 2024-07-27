@@ -1,5 +1,5 @@
 import React from 'react'
-import { capitalize } from '../utils/loadOptions'
+
 import {
   List,
   ListItem,
@@ -10,14 +10,15 @@ import {
   ButtonBase,
   ListItemIcon,
   Button,
-  TextField,
-  Typography
+  TextField
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CircleIcon from '@mui/icons-material/Circle'
 import AddIcon from '@mui/icons-material/Add'
 import { Certificate } from './CertificateListItem'
 import SelectedHq from './SelectedHq'
+import { useStore } from '@nanostores/react'
+import { userStore } from '../store/userStore'
 
 interface HeadquartersProps {
   hqs: { [key: string]: any }
@@ -35,6 +36,8 @@ const Headquarters: React.FC<HeadquartersProps> = ({
   const [selectedSede, setSelectedSede] = React.useState<null | Certificate[]>(
     null
   )
+
+  const $userStore = useStore(userStore)
 
   const [isAdding, setIsAdding] = React.useState(false)
   const [newSede, setNewSede] = React.useState('')
@@ -74,40 +77,44 @@ const Headquarters: React.FC<HeadquartersProps> = ({
       {!selectedSede ? (
         <>
           <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
-            {!isAdding ? (
-              <Button
-                variant='contained'
-                sx={{ mb: 2 }}
-                onClick={handleAddClick}
-              >
-                <AddIcon />
-              </Button>
-            ) : (
-              <Box sx={{ mb: 2 }}>
-                <TextField
-                  label='Nueva Sede'
-                  variant='outlined'
-                  fullWidth
-                  value={newSede}
-                  onChange={(e) => setNewSede(e.target.value)}
-                  sx={{ mb: 1 }}
-                />
-                <Button
-                  variant='contained'
-                  color='primary'
-                  onClick={handleSubmit}
-                  sx={{ mr: 1 }}
-                >
-                  Agregar
-                </Button>
-                <Button
-                  variant='outlined'
-                  color='secondary'
-                  onClick={handleCancel}
-                >
-                  Cancelar
-                </Button>
-              </Box>
+            {$userStore.rol === 'admin' && (
+              <>
+                {!isAdding ? (
+                  <Button
+                    variant='contained'
+                    sx={{ mb: 2 }}
+                    onClick={handleAddClick}
+                  >
+                    <AddIcon />
+                  </Button>
+                ) : (
+                  <Box sx={{ mb: 2 }}>
+                    <TextField
+                      label='Nueva Sede'
+                      variant='outlined'
+                      fullWidth
+                      value={newSede}
+                      onChange={(e) => setNewSede(e.target.value)}
+                      sx={{ mb: 1 }}
+                    />
+                    <Button
+                      variant='contained'
+                      color='primary'
+                      onClick={handleSubmit}
+                      sx={{ mr: 1 }}
+                    >
+                      Agregar
+                    </Button>
+                    <Button
+                      variant='outlined'
+                      color='secondary'
+                      onClick={handleCancel}
+                    >
+                      Cancelar
+                    </Button>
+                  </Box>
+                )}
+              </>
             )}
             <List sx={{ flexGrow: 1, overflowY: 'auto', width: '200px' }}>
               {sedes.map((sede, index) => (

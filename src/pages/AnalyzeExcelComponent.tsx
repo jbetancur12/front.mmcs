@@ -6,7 +6,6 @@ import {
   Box,
   Button,
   IconButton,
-  Paper,
   Stack,
   TextField,
   Typography

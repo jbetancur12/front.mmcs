@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import { userStore } from '../store/userStore'
 import { useStore } from '@nanostores/react'
 import {
-  Button,
   ButtonBase,
   capitalize,
   List,

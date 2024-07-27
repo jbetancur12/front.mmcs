@@ -1,5 +1,5 @@
 import React from 'react'
-import { Modal, Box, Typography, Button, Paper } from '@mui/material'
+import { Modal, Button, Paper } from '@mui/material'
 
 type ModalProps = {
   onClose: () => void

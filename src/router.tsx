@@ -31,6 +31,9 @@ import Gotemberg from './Components/Gotemberg'
 import Zip from './pages/Zip'
 import Templates from './pages/Templates'
 import NotFound from './pages/NotFound'
+import Datasheets from './pages/Datasheets'
+import DatasheetsList from './Components/DataSheet/ListDataSheet'
+import DataSheetDetail from './Components/DataSheet/DataSheetDetails'
 
 function Router() {
   const protectedLayout = (
@@ -47,6 +50,10 @@ function Router() {
         </Route> */}
         <Route path='/' element={protectedLayout}>
           <Route index element={<Dashboard />} />
+          <Route path='datasheets'>
+            <Route index element={<DatasheetsList />} />
+            <Route path=':id' element={<DataSheetDetail />} />
+          </Route>
           <Route path='users' element={<Clientes />} />
           <Route path='customers'>
             <Route index element={<Customers />} />
