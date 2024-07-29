@@ -1,4 +1,4 @@
-import { Delete, Edit, Visibility } from '@mui/icons-material'
+import { Delete, Edit, Engineering, Visibility } from '@mui/icons-material'
 import {
   Box,
   Button,
@@ -37,6 +37,15 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { bigToast, MySwal } from '../ExcelManipulation/Utils'
 
 // Define interfaces
+
+export interface CalibrationHistory {
+  id: number
+  date: string
+  internalCode: string
+  activity: string
+  comments: string
+  verifiedBy: string
+}
 export interface DataSheetData {
   id?: number
   pictureUrl: string
@@ -69,6 +78,7 @@ export interface DataSheetData {
   maintenanceCycle: number
   calibrationProvider: string
   calibrationCycle: number
+  calibrationHistories: CalibrationHistory[]
 }
 
 // API URL
@@ -475,10 +485,18 @@ const ListDataSheet: React.FC = () => {
           <Box sx={{ display: 'flex', gap: '1rem' }}>
             <Tooltip arrow placement='right' title='Ver'>
               <Link to={`${row.original.id}`}>
-                <IconButton
-                  onClick={() => navigate(`/datasheets/${row.original.id}`)}
-                >
+                <IconButton>
                   <Visibility />
+                </IconButton>
+              </Link>
+            </Tooltip>
+            <Tooltip arrow placement='right' title='Inspection/Maintenance'>
+              <Link
+                to={`${row.original.id}/inspection-maintenance`}
+                // sx={{ color: 'blue' }}
+              >
+                <IconButton>
+                  <Engineering />
                 </IconButton>
               </Link>
             </Tooltip>

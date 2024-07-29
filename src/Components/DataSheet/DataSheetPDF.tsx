@@ -1,15 +1,16 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Document,
   Image,
+  Link,
   Page,
   PDFViewer,
   StyleSheet,
   Text,
   View
 } from '@react-pdf/renderer'
-import { DataSheetData } from './ListDataSheet'
-import { format } from 'date-fns'
+import { CalibrationHistory, DataSheetData } from './ListDataSheet'
+import { format, set } from 'date-fns'
 import { createTw } from 'react-pdf-tailwind'
 
 interface Props {
@@ -17,7 +18,13 @@ interface Props {
 }
 const mainColor = '#9CF08B'
 
+const truncateText = (text: string, maxLength: number) => {
+  if (text.length <= maxLength) return text
+  return text.slice(0, maxLength) + '...'
+}
+
 const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
+  let calibrationHistories: CalibrationHistory[] = []
   const tw = createTw({
     theme: {
       // fontFamily: {
@@ -31,7 +38,49 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
     }
   })
 
+  if (dataSheet && dataSheet.calibrationHistories.length > 0) {
+    calibrationHistories = dataSheet.calibrationHistories
+  }
+
   const styles = StyleSheet.create({
+    names: {
+      fontFamily: 'Helvetica-Bold',
+      fontWeight: 900,
+      textTransform: 'uppercase'
+    },
+    number: {
+      width: '5%'
+    },
+    date: {
+      width: '15%'
+    },
+    code: {
+      width: '21%'
+    },
+    activity: {
+      width: '20%'
+    },
+    comments: {
+      width: '30%'
+    },
+    verifier: {
+      width: '17%'
+    },
+    cell: {
+      border: '1px solid black',
+      padding: 4,
+      margin: 1,
+      textOverflow: 'ellipsis',
+      overflow: 'hidden',
+      whiteSpace: 'nowrap'
+    },
+    row1: {
+      flexDirection: 'row',
+      marginVertical: 1
+    },
+    font: {
+      fontSize: 8.5
+    },
     page: {
       fontSize: 11,
       paddingTop: 20,
@@ -98,13 +147,13 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
     columnR: {
       // borderWidth: 1,
       // borderColor: 'red',
-      flex: 0.2,
+      flex: 0.3,
       flexDirection: 'column'
     },
     columnC: {
       // borderWidth: 1,
       // borderColor: 'red',
-      marginLeft: 10,
+
       flex: 0.4,
       flexDirection: 'column'
     },
@@ -362,11 +411,13 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
               <Text style={styles.value}>{dataSheet.resolution}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.label}>Software/Firmware:</Text>
+              <Text style={styles.label}>Softw/Firmw:</Text>
               <Text style={styles.value}>{dataSheet.softwareFirmware}</Text>
             </View>
           </View>
-          <View style={styles.columnR}></View>
+          <View style={styles.columnR}>
+            <Image src={'/images/tick.png'} />
+          </View>
         </View>
       </View>
     </View>
@@ -527,12 +578,47 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
     <View style={tw('text-sm')}>
       <Text
         style={[
-          tw(`px-1 py-1 font-semibold bg-[${mainColor}] text-center font-bold`),
+          tw(
+            `mb-2 px-1 py-1 font-semibold bg-[${mainColor}] text-center font-bold`
+          ),
           styles.bold
         ]}
       >
-        HISTORICO DE CALIBRACIÓNES Y MANTENIMIENTO
+        HISTORICO DE CALIBRACIONES Y MANTENIMIENTO
       </Text>
+      <View style={tw('flex-row')}>
+        <Text style={[styles.cell, styles.number, styles.names]}>N°</Text>
+        <Text style={[styles.cell, styles.date, styles.names]}>Fecha</Text>
+        <Text style={[styles.cell, styles.code, styles.names]}>
+          Código Interno
+        </Text>
+        <Text style={[styles.cell, styles.activity, styles.names]}>
+          Actividad
+        </Text>
+        <Text style={[styles.cell, styles.comments, styles.names]}>
+          Comentarios
+        </Text>
+        <Text style={[styles.cell, styles.verifier, styles.names]}>
+          Verificador
+        </Text>
+      </View>
+      {calibrationHistories.map((history, index) => (
+        <View key={index} style={[tw('flex-row my-2 '), styles.row1]}>
+          <Text style={[styles.cell, styles.number]}>{index + 1}</Text>
+
+          <Text style={[styles.cell, styles.date]}>
+            {new Date(history.date).toLocaleDateString()}
+          </Text>
+          <Text style={[styles.cell, styles.code]}>{history.internalCode}</Text>
+          <Text style={[styles.cell, styles.activity]}>{history.activity}</Text>
+          <Text style={[styles.cell, styles.comments]}>
+            {truncateText(history.comments, 26)}{' '}
+          </Text>
+          <Text style={[styles.cell, styles.verifier]}>
+            {truncateText(history.verifiedBy, 13)}
+          </Text>
+        </View>
+      ))}
     </View>
   )
 
