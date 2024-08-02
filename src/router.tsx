@@ -36,6 +36,10 @@ import DatasheetsList from './Components/DataSheet/ListDataSheet'
 import DataSheetDetail from './Components/DataSheet/DataSheetDetails'
 import InspectionMaintenance from './Components/DataSheet/InspectionMaintenance'
 import InspectionMaintenanceForm from './Components/DataSheet/InspectionMaintenanceForm'
+import InspectionPDF from './Components/DataSheet/InspectionPDFBridge'
+import CalibrationForm from './Components/DataSheet/CalibrationForm'
+import CalibrationProgramPDF from './Components/DataSheet/CalibrationProgramPDF'
+import CalibrationSchedulePDF from './Components/DataSheet/MaintenanceSchedulePDF'
 
 function Router() {
   const protectedLayout = (
@@ -52,16 +56,29 @@ function Router() {
         </Route> */}
         <Route path='/' element={protectedLayout}>
           <Route index element={<Dashboard />} />
-          <Route
-            path='new-maintenance'
-            element={<InspectionMaintenanceForm />}
-          />
           <Route path='datasheets'>
             <Route index element={<DatasheetsList />} />
+            <Route
+              path=':id/new-maintenance'
+              element={<InspectionMaintenanceForm />}
+            />
+            <Route
+              path='calibration-program'
+              element={<CalibrationProgramPDF />}
+            />
+            <Route
+              path='calibration-schedule'
+              element={<CalibrationSchedulePDF />}
+            />
+            <Route path=':id/new-calibration' element={<CalibrationForm />} />
             <Route path=':id' element={<DataSheetDetail />} />
             <Route
               path=':id/inspection-maintenance'
               element={<InspectionMaintenance />}
+            />
+            <Route
+              path=':id/inspection-maintenance/:id'
+              element={<InspectionPDF />}
             />
           </Route>
           <Route path='users' element={<Clientes />} />

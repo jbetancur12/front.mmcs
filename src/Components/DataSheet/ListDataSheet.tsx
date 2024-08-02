@@ -1,4 +1,11 @@
-import { Delete, Edit, Engineering, Visibility } from '@mui/icons-material'
+import {
+  Delete,
+  Edit,
+  Engineering,
+  Event,
+  PrecisionManufacturing,
+  Visibility
+} from '@mui/icons-material'
 import {
   Box,
   Button,
@@ -513,16 +520,36 @@ const ListDataSheet: React.FC = () => {
           </Box>
         )}
         renderTopToolbarCustomActions={() => (
-          <Button
-            variant='contained'
-            onClick={() => setCreateModalOpen(true)}
-            sx={{
-              fontWeight: 'bold',
-              color: '#DCFCE7'
-            }}
-          >
-            Crear Nueva Hoja de Datos
-          </Button>
+          <Box display='flex' alignItems='center' sx={{ gap: 2 }}>
+            <Button
+              variant='contained'
+              onClick={() => setCreateModalOpen(true)}
+              sx={{
+                fontWeight: 'bold',
+                color: '#DCFCE7',
+                '&.MuiButtonBase-root': {
+                  marginRight: '30px'
+                }
+              }}
+            >
+              Crear Nueva Hoja de Vida
+            </Button>
+            <Divider orientation='vertical' flexItem />
+            <Tooltip arrow placement='right' title='Programa de Calibración'>
+              <Link to='calibration-program'>
+                <IconButton>
+                  <PrecisionManufacturing />
+                </IconButton>
+              </Link>
+            </Tooltip>
+            <Link to='calibration-schedule'>
+              <Tooltip arrow placement='right' title='Programa de Calibración'>
+                <IconButton>
+                  <Event />
+                </IconButton>
+              </Tooltip>
+            </Link>
+          </Box>
         )}
       />
       <CreateNewDataSheetModal

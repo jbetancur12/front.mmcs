@@ -6,7 +6,12 @@ import {
   Paper,
   Divider,
   Button,
-  Box
+  Box,
+  MenuItem,
+  Select,
+  FormHelperText,
+  InputLabel,
+  FormControl
 } from '@mui/material'
 import { useFormik } from 'formik'
 import * as yup from 'yup'
@@ -18,7 +23,7 @@ import { InspectionHistoryData } from './InspectionMaintenance'
 
 // Definir los tipos para los valores del formulario
 export interface InspectionMaintenanceData {
-  equipmentId: string
+  equipmentId: string | number
   date: string
   estadoCondicionesAmbientales: string
   estadoSuperficieExterna: string
@@ -43,7 +48,7 @@ export interface InspectionMaintenanceData {
 }
 
 // Definir los tipos para la información básica del equipo
-interface EquipmentInfo {
+export interface EquipmentInfo {
   equipmentName: string
   internalCode: string
   brand: string
@@ -111,17 +116,14 @@ const validationSchema = yup.object().shape({
 interface InspectionMaintenanceFormProps {
   tableData: InspectionHistoryData[]
   type: 'maintenance' | 'calibration'
+  id: string | number
 }
 
 const InspectionMaintenanceDataForm: React.FC = () => {
-  const { id } = useParams<{ id: string }>()
   const location = useLocation()
   const apiUrl = api()
   const navigate = useNavigate()
-
-  const { tableData, type } = location.state as InspectionMaintenanceFormProps
-
-  console.log(tableData)
+  const { tableData, id } = location.state as InspectionMaintenanceFormProps
 
   const [equipmentInfo, setEquipmentInfo] = useState<EquipmentInfo | null>(null)
 
@@ -152,12 +154,15 @@ const InspectionMaintenanceDataForm: React.FC = () => {
     }
   }, [id, apiUrl])
 
-  const options = ['Bueno', 'Malo', 'Regular']
+  const options = ['Bueno', 'Malo', 'No Aplica']
+
+  const today = new Date()
+  const formattedDate = today.toISOString().split('T')[0]
 
   const formik = useFormik<InspectionMaintenanceData>({
     initialValues: {
       equipmentId: id || '',
-      date: '',
+      date: formattedDate,
       estadoCondicionesAmbientales: '',
       estadoSuperficieExterna: '',
       estadoConexionElectrica: '',
@@ -183,8 +188,8 @@ const InspectionMaintenanceDataForm: React.FC = () => {
     onSubmit: async (values, { resetForm }) => {
       try {
         const response = await axios.post(
-          `${apiUrl}/inspectionMaintenanceData`,
-          values,
+          `${apiUrl}/inspectionMaintenance`,
+          { ...values, name: 'Mantenimiento' },
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('accessToken')}`
@@ -195,6 +200,7 @@ const InspectionMaintenanceDataForm: React.FC = () => {
         if (response.status >= 200 && response.status < 300) {
           bigToast('Mantenimiento/Inspección enviada correctamente', 'success')
           resetForm()
+          navigate(-1)
         } else {
           bigToast('Error al enviar mantenimiento/inspección', 'error')
         }
@@ -204,6 +210,31 @@ const InspectionMaintenanceDataForm: React.FC = () => {
       }
     }
   })
+
+  const fieldLabels: { [key in keyof InspectionMaintenanceData]: string } = {
+    equipmentId: 'ID del equipo',
+    date: 'Fecha',
+    estadoCondicionesAmbientales: 'Estado de Condiciones Ambientales',
+    estadoSuperficieExterna: 'Estado de Superficie Externa',
+    estadoConexionElectrica: 'Estado de Conexión Eléctrica',
+    estadoCambioDePoder: 'Estado de Cambio de Poder',
+    voltaje: 'Voltaje',
+    verificarFusibles: 'Verificar Fusibles',
+    tarjetasElectronicas: 'Tarjetas Electrónicas',
+    conexionesYSoldaduras: 'Conexiones y Soldaduras',
+    estadoValvulaAireComprimido: 'Estado de Válvula de Aire Comprimido',
+    limpiezaFiltros: 'Limpieza de Filtros',
+    lubricacionRodamientos: 'Lubricación de Rodamientos',
+    sujecionTornillos: 'Sujeción de Tornillos',
+    limpiezaSensoresOLentes: 'Limpieza de Sensores o Lentes',
+    bandasDeTraccionOMovimiento: 'Bandas de Tracción o Movimiento',
+    estadoManguerasDeAire: 'Estado de Mangueras de Aire',
+    funcionamientoSensores: 'Funcionamiento de Sensores',
+    comprobacionOperacion: 'Comprobación de Operación',
+    conclusion: 'Conclusión',
+    comentarios: 'Comentarios',
+    elaboradoPor: 'Elaborado Por'
+  }
 
   return (
     <>
@@ -264,6 +295,7 @@ const InspectionMaintenanceDataForm: React.FC = () => {
                 <TextField
                   label='ID del equipo'
                   name='equipmentId'
+                  disabled={true}
                   value={formik.values.equipmentId}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
@@ -310,14 +342,56 @@ const InspectionMaintenanceDataForm: React.FC = () => {
                 'bandasDeTraccionOMovimiento',
                 'estadoManguerasDeAire',
                 'funcionamientoSensores',
-                'comprobacionOperacion',
-                'conclusion',
-                'comentarios',
-                'elaboradoPor'
+                'comprobacionOperacion'
               ].map((field) => (
                 <Grid item xs={12} md={6} key={field}>
+                  <FormControl
+                    fullWidth
+                    error={
+                      formik.touched[
+                        field as keyof InspectionMaintenanceData
+                      ] &&
+                      Boolean(
+                        formik.errors[field as keyof InspectionMaintenanceData]
+                      )
+                    }
+                  >
+                    <InputLabel>
+                      {fieldLabels[field as keyof InspectionMaintenanceData]}
+                    </InputLabel>
+                    <Select
+                      label={
+                        fieldLabels[field as keyof InspectionMaintenanceData]
+                      }
+                      name={field}
+                      value={
+                        formik.values[field as keyof InspectionMaintenanceData]
+                      }
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                    >
+                      {options.map((option) => (
+                        <MenuItem key={option} value={option}>
+                          {option}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    <FormHelperText>
+                      {formik.touched[
+                        field as keyof InspectionMaintenanceData
+                      ] &&
+                        formik.errors[field as keyof InspectionMaintenanceData]}
+                    </FormHelperText>
+                  </FormControl>
+                </Grid>
+              ))}
+
+              {['conclusion', 'comentarios', 'elaboradoPor'].map((field) => (
+                <Grid item xs={12} md={6} key={field}>
                   <TextField
-                    label={field}
+                    label={
+                      fieldLabels[field as keyof InspectionMaintenanceData]
+                    }
                     name={field}
                     value={
                       formik.values[field as keyof InspectionMaintenanceData]

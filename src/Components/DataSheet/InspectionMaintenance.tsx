@@ -2,29 +2,33 @@ import React, { useEffect, useMemo, useState } from 'react'
 import {
   Box,
   Button,
-  Divider,
   Grid,
+  IconButton,
   Paper,
   Stack,
-  TextField,
+  Tooltip,
   Typography
 } from '@mui/material'
-import { Outlet, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../config'
 import axios from 'axios'
 import { bigToast } from '../ExcelManipulation/Utils'
 
-import * as yup from 'yup'
 import { format } from 'date-fns'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
-import { equal } from 'assert'
+import { Visibility } from '@mui/icons-material'
 
 const apiUrl = api()
 
 export interface InspectionHistoryData {
   id: number
+  equipmentName: string
   date: string
+  brand: string
+  serialNumber: string
+  model: string
+  serviceType: string
   internalCode: string
   activity: string
   comments: string
@@ -35,7 +39,8 @@ export interface InspectionHistoryData {
 const InspectionMaintenance: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [tableData, setTableData] = useState<InspectionHistoryData[]>([])
+  const [tableData, setTableData] = useState<InspectionHistoryData | null>(null)
+
   const [filteredTableData, setFilteredTableData] = useState<
     InspectionHistoryData[]
   >([])
@@ -114,48 +119,127 @@ const InspectionMaintenance: React.FC = () => {
 
   const handleAddMaintenance = () => {
     // Lógica para agregar mantenimiento
-    navigate('/new-maintenance', { state: { tableData, type: 'maintenance' } })
+    navigate('/dataSheets/' + id + '/new-maintenance', {
+      state: { tableData, type: 'maintenance', id: id }
+    })
   }
 
   const handleAddCalibration = () => {
     // Lógica para agregar calibración
-    bigToast('Agregar calibración no implementado aún.', 'error')
+    navigate('/dataSheets/' + id + '/new-calibration', {
+      state: { tableData, type: 'calibration', id: id }
+    })
+  }
+
+  const ActionsButtons = ({ id }: { id: number }) => {
+    return (
+      <Stack direction='row' spacing={2} marginBottom={2}>
+        <Tooltip arrow placement='right' title='Ver'>
+          <Link to={`${id}`}>
+            <IconButton>
+              <Visibility />
+            </IconButton>
+          </Link>
+        </Tooltip>
+      </Stack>
+    )
   }
 
   return (
     <Box>
-      <Stack direction='row' spacing={2} marginBottom={2}>
-        <Button
-          variant='contained'
-          color='primary'
-          onClick={() => navigate(-1)}
-        >
-          Volver
-        </Button>
-        <Button
-          variant='contained'
-          color='primary'
-          onClick={handleAddMaintenance}
-        >
-          Agregar Mantenimiento
-        </Button>
-        <Button
-          variant='contained'
-          color='secondary'
-          onClick={handleAddCalibration}
-        >
-          Agregar Calibración
-        </Button>
-      </Stack>
+      <Box
+        sx={{
+          display: 'flex',
+          gap: '2rem',
+          mb: 5,
+          justifyContent: 'space-between'
+        }}
+      >
+        <Stack direction='row' spacing={2} marginBottom={2}>
+          <Button
+            variant='contained'
+            color='primary'
+            onClick={() => navigate(-1)}
+          >
+            Volver
+          </Button>
+          <Button
+            variant='contained'
+            color='primary'
+            onClick={handleAddMaintenance}
+          >
+            Agregar Mantenimiento
+          </Button>
+          <Button
+            variant='contained'
+            color='secondary'
+            onClick={handleAddCalibration}
+          >
+            Agregar Calibración
+          </Button>
+        </Stack>
+        <Stack direction='row' spacing={2} marginBottom={2}>
+          <Button
+            variant='contained'
+            color='primary'
+            onClick={() => navigate(-1)}
+          >
+            Cronograma de Calibración
+          </Button>
+        </Stack>
+      </Box>
+
+      <Paper elevation={3} sx={{ p: 2, width: '100%', mb: 2 }}>
+        {tableData && (
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <Typography>
+                <strong>Nombre:</strong> {tableData.equipmentName}
+              </Typography>
+            </Grid>
+            <Grid item xs={6}>
+              <Typography>
+                <strong>Marca:</strong> {tableData.serialNumber}
+              </Typography>
+            </Grid>
+            <Grid item xs={6}>
+              <Typography>
+                <strong>Marca:</strong> {tableData.brand}
+              </Typography>
+            </Grid>
+            <Grid item xs={6}>
+              <Typography>
+                <strong>Código Interno:</strong> {tableData.internalCode}
+              </Typography>
+            </Grid>
+            <Grid item xs={6}>
+              <Typography>
+                <strong>Modelo:</strong> {tableData.model}
+              </Typography>
+            </Grid>
+            <Grid item xs={6}>
+              <Typography>
+                <strong>Tipo de Servicio:</strong> {tableData.serviceType}
+              </Typography>
+            </Grid>
+          </Grid>
+        )}
+      </Paper>
+
       <MaterialReactTable
         columns={columns}
         data={filteredTableData}
         localization={MRT_Localization_ES}
         enableColumnOrdering
-        enableEditing
         initialState={{
           columnVisibility: { id: false, equipmentId: false }
         }}
+        enableEditing
+        renderRowActions={({ row }) => (
+          <Box sx={{ display: 'flex', gap: '1rem' }}>
+            <ActionsButtons id={row.original.id} />
+          </Box>
+        )}
       />
     </Box>
   )
