@@ -12,6 +12,9 @@ import {
 import { CalibrationHistory, DataSheetData } from './ListDataSheet'
 import { format, set } from 'date-fns'
 import { createTw } from 'react-pdf-tailwind'
+import { IconButton } from '@mui/material'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import { useNavigate } from 'react-router-dom'
 
 interface Props {
   dataSheet: DataSheetData | null
@@ -25,6 +28,7 @@ const truncateText = (text: string, maxLength: number) => {
 
 const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
   let calibrationHistories: CalibrationHistory[] = []
+  const navigate = useNavigate()
   const tw = createTw({
     theme: {
       // fontFamily: {
@@ -265,7 +269,7 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
     }
   })
 
-  if (!dataSheet) return null
+  if (!dataSheet) return <div>Loading...</div>
 
   const Header = () => (
     <View style={tw('border border-black flex  flex-row mb-10	')} fixed>
@@ -623,30 +627,36 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
   )
 
   return (
-    <PDFViewer width='100%' height='1000' className='app'>
-      <Document>
-        <Page size='A4' style={styles.page} wrap={true}>
-          <Header />
-          <View style={styles.content}>
-            <GeneralSpecifications />
-            <StorageAndOperationConditions />
-            <TransportationConditions />
-            <Maintenance />
-            <Calibration />
-          </View>
-          <Footer />
+    <div>
+      <IconButton onClick={() => navigate(-1)} sx={{ mb: 2 }}>
+        <ArrowBackIcon />
+      </IconButton>
 
-          {/* Add additional fields as necessary */}
-        </Page>
-        <Page size='A4' style={styles.page} wrap={true}>
-          <Header />
-          <View style={styles.content}>
-            <MaintenanceAndCalibrationHistoric />
-          </View>
-          <Footer />
-        </Page>
-      </Document>
-    </PDFViewer>
+      <PDFViewer width='100%' height='1000' className='app'>
+        <Document>
+          <Page size='A4' style={styles.page} wrap={true}>
+            <Header />
+            <View style={styles.content}>
+              <GeneralSpecifications />
+              <StorageAndOperationConditions />
+              <TransportationConditions />
+              <Maintenance />
+              <Calibration />
+            </View>
+            <Footer />
+
+            {/* Add additional fields as necessary */}
+          </Page>
+          <Page size='A4' style={styles.page} wrap={true}>
+            <Header />
+            <View style={styles.content}>
+              <MaintenanceAndCalibrationHistoric />
+            </View>
+            <Footer />
+          </Page>
+        </Document>
+      </PDFViewer>
+    </div>
   )
 }
 

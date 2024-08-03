@@ -15,6 +15,9 @@ import { createTw } from 'react-pdf-tailwind'
 import { api } from '../../config'
 
 import { differenceInDays, parseISO } from 'date-fns'
+import { IconButton } from '@mui/material'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import { useNavigate } from 'react-router-dom'
 
 interface CalibrationProgram {
   id: number
@@ -39,6 +42,7 @@ export interface DataSheet {
 const mainColor = '#9CF08B'
 const apiUrl = api()
 const CalibrationProgramPDF = () => {
+  const navigate = useNavigate()
   const [dataSheets, setDataSheets] = useState<Record<any, any> | null>(null)
 
   const tw = createTw({
@@ -386,20 +390,30 @@ const CalibrationProgramPDF = () => {
     })
 
   return (
-    <PDFViewer width='100%' height='1000' className='app'>
-      <Document>
-        <Page size='A4' style={styles.page} wrap={true} orientation='landscape'>
-          <Header />
-          <ContentHeadLines />
-          {dataSheets && (
-            <View style={styles.content}>
-              <ContentRows />
-            </View>
-          )}
-          <Footer />
-        </Page>
-      </Document>
-    </PDFViewer>
+    <div>
+      <IconButton onClick={() => navigate(-1)} sx={{ mb: 2 }}>
+        <ArrowBackIcon />
+      </IconButton>
+      <PDFViewer width='100%' height='1000' className='app'>
+        <Document>
+          <Page
+            size='A4'
+            style={styles.page}
+            wrap={true}
+            orientation='landscape'
+          >
+            <Header />
+            <ContentHeadLines />
+            {dataSheets && (
+              <View style={styles.content}>
+                <ContentRows />
+              </View>
+            )}
+            <Footer />
+          </Page>
+        </Document>
+      </PDFViewer>
+    </div>
   )
 }
 

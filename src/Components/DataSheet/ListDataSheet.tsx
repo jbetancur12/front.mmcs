@@ -285,12 +285,7 @@ const ListDataSheet: React.FC = () => {
         size: 10,
         enableEditing: false
       },
-      {
-        accessorKey: 'pictureUrl',
-        header: 'URL de la Imagen',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
+
       {
         accessorKey: 'internalCode',
         header: 'Código Interno',
@@ -321,150 +316,38 @@ const ListDataSheet: React.FC = () => {
         size: 150,
         muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
       },
-      {
-        accessorKey: 'supplier',
-        header: 'Proveedor',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'manual',
-        header: 'Manual',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'magnitude',
-        header: 'Magnitud',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'units',
-        header: 'Unidades',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'receivedDate',
-        header: 'Fecha de Recepción',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'inServiceDate',
-        header: 'Fecha en Servicio',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'location',
-        header: 'Ubicación',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'serviceType',
-        header: 'Tipo de Servicio',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
+
+      // {
+      //   accessorKey: 'serviceType',
+      //   header: 'Tipo de Servicio',
+      //   size: 150,
+      //   muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      // },
       {
         accessorKey: 'equipmentStatus',
         header: 'Estado del Equipo',
         size: 150,
         muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'operationRange',
-        header: 'Rango de Operación',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'accuracy',
-        header: 'Exactitud',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'resolution',
-        header: 'Resolución',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'softwareFirmware',
-        header: 'Software/Firmware',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'storageTemperature',
-        header: 'Temperatura de Almacenamiento',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'storageHumidity',
-        header: 'Humedad de Almacenamiento',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'operationTemperature',
-        header: 'Temperatura de Operación',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'operationHumidity',
-        header: 'Humedad de Operación',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'storageOperationComment',
-        header: 'Comentario de Almacenamiento/Operación',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'transportConditionsComment',
-        header: 'Comentario de Condiciones de Transporte',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'insuredValue',
-        header: 'Valor Asegurado',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'maintenanceProvider',
-        header: 'Proveedor de Mantenimiento',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'maintenanceCycle',
-        header: 'Ciclo de Mantenimiento',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'calibrationProvider',
-        header: 'Proveedor de Calibración',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
-      {
-        accessorKey: 'calibrationCycle',
-        header: 'Ciclo de Calibración',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
       }
+
+      // {
+      //   accessorKey: 'maintenanceCycle',
+      //   header: 'Ciclo de Mantenimiento',
+      //   size: 150,
+      //   muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      // },
+      // {
+      //   accessorKey: 'calibrationProvider',
+      //   header: 'Proveedor de Calibración',
+      //   size: 150,
+      //   muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      // },
+      // {
+      //   accessorKey: 'calibrationCycle',
+      //   header: 'Ciclo de Calibración',
+      //   size: 150,
+      //   muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      // }
     ],
     [getCommonEditTextFieldProps]
   )
@@ -473,6 +356,9 @@ const ListDataSheet: React.FC = () => {
     <>
       <MaterialReactTable
         localization={MRT_Localization_ES}
+        initialState={{
+          columnVisibility: { id: false, pictureUrl: false }
+        }}
         displayColumnDefOptions={{
           'mrt-row-actions': {
             muiTableHeadCellProps: {
@@ -543,7 +429,11 @@ const ListDataSheet: React.FC = () => {
               </Link>
             </Tooltip>
             <Link to='calibration-schedule'>
-              <Tooltip arrow placement='right' title='Programa de Calibración'>
+              <Tooltip
+                arrow
+                placement='right'
+                title='Cronograma de Mantenimiento'
+              >
                 <IconButton>
                   <Event />
                 </IconButton>

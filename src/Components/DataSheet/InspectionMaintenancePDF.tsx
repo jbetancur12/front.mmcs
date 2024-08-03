@@ -12,6 +12,9 @@ import {
   EquipmentInfo,
   InspectionMaintenanceData
 } from './InspectionMaintenanceForm'
+import { IconButton } from '@mui/material'
+import { useNavigate } from 'react-router-dom'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 
 const mainColor = '#9CF08B'
 
@@ -25,6 +28,7 @@ interface Props {
 }
 
 const InspectionMaintenancePDF: React.FC<Props> = ({ data }) => {
+  const navigate = useNavigate()
   const tw = createTw({
     theme: {
       // fontFamily: {
@@ -392,19 +396,25 @@ const InspectionMaintenancePDF: React.FC<Props> = ({ data }) => {
   if (!data) return <div>Loading...</div>
 
   return (
-    <PDFViewer width='100%' height='1000' className='app'>
-      <Document>
-        <Page size='A4' style={styles.page} wrap={true}>
-          <Header />
-          <View style={styles.content}>
-            <EqipmentIdentification />
-            <Inspection />
-            <Brief />
-          </View>
-          <Footer />
-        </Page>
-      </Document>
-    </PDFViewer>
+    <div>
+      <IconButton onClick={() => navigate(-1)} sx={{ mb: 2 }}>
+        <ArrowBackIcon />
+      </IconButton>
+
+      <PDFViewer width='100%' height='1000' className='app'>
+        <Document>
+          <Page size='A4' style={styles.page} wrap={true}>
+            <Header />
+            <View style={styles.content}>
+              <EqipmentIdentification />
+              <Inspection />
+              <Brief />
+            </View>
+            <Footer />
+          </Page>
+        </Document>
+      </PDFViewer>
+    </div>
   )
 }
 

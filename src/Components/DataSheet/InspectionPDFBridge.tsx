@@ -3,13 +3,15 @@ import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { api } from '../../config'
 import InspectionMaintenancePDF from './InspectionMaintenancePDF'
-import { Box, Typography } from '@mui/material'
+import { Box, Icon, IconButton, Typography } from '@mui/material'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import { useNavigate } from 'react-router-dom'
 
 const apiUrl = api()
 
 const InspectionPDFBridge: React.FC = () => {
   const { id } = useParams<{ id: string }>()
-
+  const navigate = useNavigate()
   const [data, setData] = useState<any>(null)
   const [activity, setActivity] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -67,23 +69,29 @@ const InspectionPDFBridge: React.FC = () => {
 
   if (activity === 'Calibración') {
     return (
-      <Box
-        sx={{
-          padding: 2,
-          border: '2px solid green',
-          borderRadius: 2,
-          backgroundColor: '##e6ffe6',
-          textAlign: 'center'
-        }}
-      >
-        <Typography
-          variant='h4'
-          component='div'
-          sx={{ fontWeight: 'bold', color: 'green' }}
+      <div>
+        <IconButton onClick={() => navigate(-1)} sx={{ mb: 2 }}>
+          <ArrowBackIcon />
+        </IconButton>
+
+        <Box
+          sx={{
+            padding: 2,
+            border: '2px solid green',
+            borderRadius: 2,
+            backgroundColor: '##e6ffe6',
+            textAlign: 'center'
+          }}
         >
-          Buscar certificado de calibración en las trazabilidades
-        </Typography>
-      </Box>
+          <Typography
+            variant='h4'
+            component='div'
+            sx={{ fontWeight: 'bold', color: 'green' }}
+          >
+            Buscar certificado de calibración en las trazabilidades
+          </Typography>
+        </Box>
+      </div>
     )
   }
 

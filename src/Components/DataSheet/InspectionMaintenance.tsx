@@ -12,7 +12,7 @@ import {
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../config'
 import axios from 'axios'
-import { bigToast } from '../ExcelManipulation/Utils'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 
 import { format } from 'date-fns'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
@@ -156,13 +156,9 @@ const InspectionMaintenance: React.FC = () => {
         }}
       >
         <Stack direction='row' spacing={2} marginBottom={2}>
-          <Button
-            variant='contained'
-            color='primary'
-            onClick={() => navigate(-1)}
-          >
-            Volver
-          </Button>
+          <IconButton onClick={() => navigate(-1)} sx={{ mb: 2 }}>
+            <ArrowBackIcon />
+          </IconButton>
           <Button
             variant='contained'
             color='primary'
@@ -176,15 +172,6 @@ const InspectionMaintenance: React.FC = () => {
             onClick={handleAddCalibration}
           >
             Agregar Calibración
-          </Button>
-        </Stack>
-        <Stack direction='row' spacing={2} marginBottom={2}>
-          <Button
-            variant='contained'
-            color='primary'
-            onClick={() => navigate(-1)}
-          >
-            Cronograma de Calibración
           </Button>
         </Stack>
       </Box>

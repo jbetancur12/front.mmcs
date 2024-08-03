@@ -12,10 +12,14 @@ import { useEffect, useState } from 'react'
 import { createTw } from 'react-pdf-tailwind'
 import { api } from '../../config'
 import { getMonth, parseISO } from 'date-fns'
+import { IconButton } from '@mui/material'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import { useNavigate } from 'react-router-dom'
 
 const mainColor = '#9CF08B'
 const apiUrl = api()
 const MaintenanceSchedulePDF = () => {
+  const navigate = useNavigate()
   const [dataSheets, setDataSheets] = useState<Record<any, any> | null>(null)
   const tw = createTw({
     theme: {
@@ -327,7 +331,7 @@ const MaintenanceSchedulePDF = () => {
   const ContentRows = () => {
     return (
       dataSheets &&
-      dataSheets.map((item, index) => {
+      dataSheets.map((item: any, index: number) => {
         const { dataSheet, date } = item
         const monthIndex = getMonth(parseISO(date)) // Obtiene el índice del mes (0 para Enero, 11 para Diciembre)
 
@@ -359,18 +363,23 @@ const MaintenanceSchedulePDF = () => {
   }
 
   return (
-    <PDFViewer width='100%' height='1000' className='app'>
-      <Document>
-        <Page size='A4' style={styles.page} wrap={true}>
-          <Header />
-          <View style={styles.content}>
-            <ContentHeadLines />
-            <ContentRows />
-          </View>
-          <Footer />
-        </Page>
-      </Document>
-    </PDFViewer>
+    <div>
+      <IconButton onClick={() => navigate(-1)} sx={{ mb: 2 }}>
+        <ArrowBackIcon />
+      </IconButton>
+      <PDFViewer width='100%' height='1000' className='app'>
+        <Document>
+          <Page size='A4' style={styles.page} wrap={true}>
+            <Header />
+            <View style={styles.content}>
+              <ContentHeadLines />
+              <ContentRows />
+            </View>
+            <Footer />
+          </Page>
+        </Document>
+      </PDFViewer>
+    </div>
   )
 }
 
