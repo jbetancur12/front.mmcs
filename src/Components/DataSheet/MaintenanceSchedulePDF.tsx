@@ -368,7 +368,7 @@ const MaintenanceSchedulePDF = () => {
         <ArrowBackIcon />
       </IconButton>
       <PDFViewer width='100%' height='1000' className='app'>
-        <Document>
+        <Document title='Cronograma de mantenimiento' author='Metromedics'>
           <Page size='A4' style={styles.page} wrap={true}>
             <Header />
             <View style={styles.content}>

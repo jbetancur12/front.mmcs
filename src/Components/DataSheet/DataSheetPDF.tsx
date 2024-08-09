@@ -266,6 +266,15 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
     columnRight: {
       flex: 0.4,
       flexDirection: 'row'
+    },
+    watermark: {
+      position: 'absolute',
+      top: '40%', // Ajustar para centrar verticalmente
+      left: '50%', // Ajustar para centrar horizontalmente
+      transform: 'rotate(-45deg) translate(-50%, -50%)',
+      fontSize: 70,
+      color: 'rgba(150, 150, 150, 0.3)', // Color gris claro con transparencia
+      zIndex: 9999 // Asegura que la marca de agua esté en el fondo
     }
   })
 
@@ -633,7 +642,10 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
       </IconButton>
 
       <PDFViewer width='100%' height='1000' className='app'>
-        <Document>
+        <Document
+          title={`Hoja de Vida - ${dataSheet.equipmentName} - ${dataSheet.internalCode}`}
+          author='Metromedics'
+        >
           <Page size='A4' style={styles.page} wrap={true}>
             <Header />
             <View style={styles.content}>

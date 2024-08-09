@@ -7,6 +7,7 @@ import { BiSolidReport } from 'react-icons/bi'
 import { Link, useLocation } from 'react-router-dom'
 import { userStore } from '../store/userStore'
 import DropdownButton from './DropdownButton'
+import { Assignment } from '@mui/icons-material'
 
 // ...
 
@@ -133,7 +134,7 @@ const SideBar: React.FC = () => {
                   to='datasheets'
                   className='flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700'
                 >
-                  <BiSolidReport className='w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white' />
+                  <Assignment className='w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white' />
                   <span className='ml-3' sidebar-toggle-item=''>
                     Hojas de Vida
                   </span>
