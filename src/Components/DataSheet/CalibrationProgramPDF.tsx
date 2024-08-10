@@ -395,7 +395,7 @@ const CalibrationProgramPDF = () => {
         <ArrowBackIcon />
       </IconButton>
       <PDFViewer width='100%' height='1000' className='app'>
-        <Document title='Programa de Calibración' author='Metromedics'>
+        <Document>
           <Page
             size='A4'
             style={styles.page}

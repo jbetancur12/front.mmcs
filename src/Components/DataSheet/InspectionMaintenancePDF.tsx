@@ -402,14 +402,7 @@ const InspectionMaintenancePDF: React.FC<Props> = ({ data }) => {
       </IconButton>
 
       <PDFViewer width='100%' height='1000' className='app'>
-        <Document
-          title={`Reporte de mantenimiento - ${data?.dataSheet.equipmentName} - ${data?.dataSheet.internalCode}`}
-          author='Metromedics'
-          producer='Metromedics'
-          creator='Metromedics'
-          language='es'
-          keywords='Metromedics, Equipo, Mantenimiento, Inspección'
-        >
+        <Document>
           <Page size='A4' style={styles.page} wrap={true}>
             <Header />
             <View style={styles.content}>

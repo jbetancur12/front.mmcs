@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Document,
   Image,
@@ -15,6 +15,15 @@ import { createTw } from 'react-pdf-tailwind'
 import { IconButton } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { useNavigate } from 'react-router-dom'
+import * as minioExports from 'minio'
+
+const minioClient = new minioExports.Client({
+  endPoint: import.meta.env.VITE_MINIO_ENDPOINT || 'localhost',
+  port: import.meta.env.VITE_ENV === 'development' ? 9000 : undefined,
+  useSSL: import.meta.env.VITE_MINIO_USESSL === 'true',
+  accessKey: import.meta.env.VITE_MINIO_ACCESSKEY,
+  secretKey: import.meta.env.VITE_MINIO_SECRETKEY
+})
 
 interface Props {
   dataSheet: DataSheetData | null
@@ -27,6 +36,7 @@ const truncateText = (text: string, maxLength: number) => {
 }
 
 const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
+  const [imageUrl, setImageUrl] = useState<string>('')
   let calibrationHistories: CalibrationHistory[] = []
   const navigate = useNavigate()
   const tw = createTw({
@@ -41,6 +51,31 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
       }
     }
   })
+
+  console.log(imageUrl)
+
+  useEffect(() => {
+    // Nombre de tu archivo de imagen en el bucket
+
+    const getImageFromBucket = async (picture: any) => {
+      try {
+        const objectStream = await minioClient.getObject('images', picture)
+        const chunks: Uint8Array[] = []
+
+        objectStream.on('data', (chunk: Uint8Array) => chunks.push(chunk))
+        objectStream.on('end', () => {
+          const imageBlob = new Blob(chunks, { type: 'image/jpeg' }) // Cambia el tipo de imagen según corresponda (jpeg, png, etc.)
+          const imageUrl = URL.createObjectURL(imageBlob)
+          setImageUrl(imageUrl)
+        })
+      } catch (error) {
+        console.error('Error al obtener la imagen del bucket:', error)
+      }
+    }
+    if (dataSheet?.pictureUrl) {
+      getImageFromBucket(dataSheet.pictureUrl)
+    }
+  }, [dataSheet?.pictureUrl])
 
   if (dataSheet && dataSheet.calibrationHistories.length > 0) {
     calibrationHistories = dataSheet.calibrationHistories
@@ -266,15 +301,6 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
     columnRight: {
       flex: 0.4,
       flexDirection: 'row'
-    },
-    watermark: {
-      position: 'absolute',
-      top: '40%', // Ajustar para centrar verticalmente
-      left: '50%', // Ajustar para centrar horizontalmente
-      transform: 'rotate(-45deg) translate(-50%, -50%)',
-      fontSize: 70,
-      color: 'rgba(150, 150, 150, 0.3)', // Color gris claro con transparencia
-      zIndex: 9999 // Asegura que la marca de agua esté en el fondo
     }
   })
 
@@ -366,7 +392,7 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
               <Text style={styles.value}>{dataSheet.model}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.label}>Número de Serie:</Text>
+              <Text style={styles.label}>Número Serie:</Text>
               <Text style={styles.value}>{dataSheet.serialNumber}</Text>
             </View>
             <View style={styles.row}>
@@ -428,8 +454,22 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
               <Text style={styles.value}>{dataSheet.softwareFirmware}</Text>
             </View>
           </View>
-          <View style={styles.columnR}>
-            <Image src={'/images/tick.png'} />
+          <View
+            style={[
+              styles.columnR,
+              {
+                marginLeft: 10,
+                height: '60%',
+                marginTop: '30px',
+                marginBottom: 'auto'
+              }
+            ]}
+          >
+            {imageUrl ? (
+              <Image src={imageUrl} />
+            ) : (
+              <Image src={'/images/no-img.jpg'} />
+            )}
           </View>
         </View>
       </View>
@@ -642,10 +682,7 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
       </IconButton>
 
       <PDFViewer width='100%' height='1000' className='app'>
-        <Document
-          title={`Hoja de Vida - ${dataSheet.equipmentName} - ${dataSheet.internalCode}`}
-          author='Metromedics'
-        >
+        <Document>
           <Page size='A4' style={styles.page} wrap={true}>
             <Header />
             <View style={styles.content}>

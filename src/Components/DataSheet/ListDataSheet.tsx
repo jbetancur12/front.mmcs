@@ -3,6 +3,7 @@ import {
   Edit,
   Engineering,
   Event,
+  Inventory,
   PrecisionManufacturing,
   Visibility
 } from '@mui/icons-material'
@@ -23,7 +24,8 @@ import {
   Typography,
   Switch,
   FormControlLabel,
-  TextFieldProps
+  TextFieldProps,
+  Avatar
 } from '@mui/material'
 import axios from 'axios'
 import {
@@ -42,6 +44,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../config'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { bigToast, MySwal } from '../ExcelManipulation/Utils'
+import { logFormData } from '../../utils/loadOptions'
 
 // Define interfaces
 
@@ -93,10 +96,7 @@ const apiUrl = api()
 
 // Validation Schema
 const validationSchema = yup.object({
-  pictureUrl: yup
-    .string()
-    .url('Ingrese una URL válida')
-    .required('URL de la imagen es obligatoria'),
+  picture: yup.mixed().required('La imagen es obligatoria'),
   internalCode: yup.string().required('Código interno es obligatorio'),
   equipmentName: yup.string().required('Nombre del equipo es obligatorio'),
   brand: yup.string().required('Marca es obligatoria'),
@@ -285,7 +285,12 @@ const ListDataSheet: React.FC = () => {
         size: 10,
         enableEditing: false
       },
-
+      {
+        accessorKey: 'pictureUrl',
+        header: 'URL de la Imagen',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
       {
         accessorKey: 'internalCode',
         header: 'Código Interno',
@@ -317,37 +322,150 @@ const ListDataSheet: React.FC = () => {
         muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
       },
 
-      // {
-      //   accessorKey: 'serviceType',
-      //   header: 'Tipo de Servicio',
-      //   size: 150,
-      //   muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      // },
+      {
+        accessorKey: 'supplier',
+        header: 'Proveedor',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'manual',
+        header: 'Manual',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'magnitude',
+        header: 'Magnitud',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'units',
+        header: 'Unidades',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'receivedDate',
+        header: 'Fecha de Recepción',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'inServiceDate',
+        header: 'Fecha en Servicio',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'location',
+        header: 'Ubicación',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'serviceType',
+        header: 'Tipo de Servicio',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
       {
         accessorKey: 'equipmentStatus',
         header: 'Estado del Equipo',
         size: 150,
         muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'operationRange',
+        header: 'Rango de Operación',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'accuracy',
+        header: 'Exactitud',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'resolution',
+        header: 'Resolución',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'softwareFirmware',
+        header: 'Software/Firmware',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'storageTemperature',
+        header: 'Temperatura de Almacenamiento',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'storageHumidity',
+        header: 'Humedad de Almacenamiento',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'operationTemperature',
+        header: 'Temperatura de Operación',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'operationHumidity',
+        header: 'Humedad de Operación',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'storageOperationComment',
+        header: 'Comentario de Almacenamiento/Operación',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'transportConditionsComment',
+        header: 'Comentario de Condiciones de Transporte',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'insuredValue',
+        header: 'Valor Asegurado',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'maintenanceProvider',
+        header: 'Proveedor de Mantenimiento',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'maintenanceCycle',
+        header: 'Ciclo de Mantenimiento',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'calibrationProvider',
+        header: 'Proveedor de Calibración',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'calibrationCycle',
+        header: 'Ciclo de Calibración',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
       }
-
-      // {
-      //   accessorKey: 'maintenanceCycle',
-      //   header: 'Ciclo de Mantenimiento',
-      //   size: 150,
-      //   muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      // },
-      // {
-      //   accessorKey: 'calibrationProvider',
-      //   header: 'Proveedor de Calibración',
-      //   size: 150,
-      //   muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      // },
-      // {
-      //   accessorKey: 'calibrationCycle',
-      //   header: 'Ciclo de Calibración',
-      //   size: 150,
-      //   muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      // }
     ],
     [getCommonEditTextFieldProps]
   )
@@ -357,7 +475,34 @@ const ListDataSheet: React.FC = () => {
       <MaterialReactTable
         localization={MRT_Localization_ES}
         initialState={{
-          columnVisibility: { id: false, pictureUrl: false }
+          columnVisibility: {
+            id: false,
+            pictureUrl: false,
+            supplier: false,
+            manual: false,
+            magnitude: false,
+            units: false,
+            receivedDate: false,
+            inServiceDate: false,
+            location: false,
+            serviceType: false,
+            equipmentStatus: false,
+            operationRange: false,
+            accuracy: false,
+            resolution: false,
+            softwareFirmware: false,
+            storageTemperature: false,
+            storageHumidity: false,
+            operationTemperature: false,
+            operationHumidity: false,
+            storageOperationComment: false,
+            transportConditionsComment: false,
+            insuredValue: false,
+            maintenanceProvider: false,
+            // maintenanceCycle: false,
+            calibrationProvider: false
+            // calibrationCycle: false
+          }
         }}
         displayColumnDefOptions={{
           'mrt-row-actions': {
@@ -421,6 +566,13 @@ const ListDataSheet: React.FC = () => {
               Crear Nueva Hoja de Vida
             </Button>
             <Divider orientation='vertical' flexItem />
+            <Tooltip arrow placement='right' title='Inventario'>
+              <Link to='inventory' state={tableData}>
+                <IconButton>
+                  <Inventory />
+                </IconButton>
+              </Link>
+            </Tooltip>
             <Tooltip arrow placement='right' title='Programa de Calibración'>
               <Link to='calibration-program'>
                 <IconButton>
@@ -469,7 +621,7 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
   const apiUrl = api()
   const formik = useFormik({
     initialValues: {
-      pictureUrl: '',
+      picture: null as File | null,
       internalCode: '',
       equipmentName: '',
       brand: '',
@@ -502,9 +654,15 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
     },
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm }) => {
+      const formData = new FormData()
+      Object.keys(values).forEach((key) => {
+        formData.append(key, (values as any)[key])
+      })
+
       try {
-        const response = await axios.post(`${apiUrl}/dataSheet`, values, {
+        const response = await axios.post(`${apiUrl}/dataSheet`, formData, {
           headers: {
+            'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${localStorage.getItem('accessToken')}`
           }
         })
@@ -533,7 +691,40 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
             {columns.map(
               (column) =>
                 column.accessorKey &&
-                column.accessorKey !== 'id' && (
+                column.accessorKey !== 'id' &&
+                (column.accessorKey === 'pictureUrl' ? (
+                  <Grid item xs={12} key={column.accessorKey}>
+                    <div className='flex items-center justify-center mb-4'>
+                      <label htmlFor='fileInput' className='cursor-pointer'>
+                        <Avatar
+                          alt='Foto de equipo'
+                          src={
+                            formik.values.picture
+                              ? URL.createObjectURL(formik.values.picture)
+                              : ''
+                          } // Mostramos la foto de perfil seleccionada
+                          sx={{ width: 100, height: 100, mb: 2 }}
+                        />
+                      </label>
+                      <input
+                        id='fileInput'
+                        type='file'
+                        accept='image/*'
+                        onChange={(event) => {
+                          const file = (event.currentTarget as HTMLInputElement)
+                            .files?.[0]
+                          formik.setFieldValue('picture', file)
+                        }}
+                        className='hidden'
+                      />
+                    </div>
+                    {formik.touched.picture && formik.errors.picture && (
+                      <div className='text-red-500 flex items-center justify-center text-sm'>
+                        {formik.errors.picture}
+                      </div>
+                    )}
+                  </Grid>
+                ) : (
                   <Grid item xs={12} md={6} key={column.accessorKey}>
                     {column.accessorKey === 'manual' ? (
                       <FormControlLabel
@@ -589,11 +780,12 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
                       />
                     )}
                   </Grid>
-                )
+                ))
             )}
           </Grid>
         </form>
       </DialogContent>
+
       <DialogActions sx={{ p: '1.25rem' }}>
         <Button variant='contained' color='secondary' onClick={onClose}>
           Cancelar

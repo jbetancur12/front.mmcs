@@ -1,3 +1,5 @@
+import { createTw } from 'react-pdf-tailwind'
+import { api } from '../../config'
 import {
   Document,
   Image,
@@ -7,20 +9,18 @@ import {
   Text,
   View
 } from '@react-pdf/renderer'
-import axios from 'axios'
-import { useEffect, useState } from 'react'
-import { createTw } from 'react-pdf-tailwind'
-import { api } from '../../config'
-import { getMonth, parseISO } from 'date-fns'
 import { IconButton } from '@mui/material'
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'
-import { useNavigate } from 'react-router-dom'
+import { ArrowBack } from '@mui/icons-material'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { DataSheetData } from './ListDataSheet'
 
 const mainColor = '#9CF08B'
 const apiUrl = api()
-const MaintenanceSchedulePDF = () => {
+
+const InventoryPDF = () => {
   const navigate = useNavigate()
-  const [dataSheets, setDataSheets] = useState<Record<any, any> | null>(null)
+  const state = useLocation().state as { dataSheet: DataSheetData[] }
+  console.log(state)
   const tw = createTw({
     theme: {
       extend: {
@@ -41,13 +41,12 @@ const MaintenanceSchedulePDF = () => {
     table: {
       width: '100%',
       borderCollapse: 'collapse',
-      marginBottom: 2
+      marginBottom: 10
     },
     tableHeader: {
       flexDirection: 'row',
       backgroundColor: mainColor,
-      color: '#000',
-      fontSize: 9
+      color: '#000'
     },
     tableCell: {
       border: '1px solid black',
@@ -55,17 +54,6 @@ const MaintenanceSchedulePDF = () => {
       textAlign: 'center',
       fontWeight: 'bold',
       flex: 1,
-      minHeight: 30,
-      alignItems: 'center',
-      justifyContent: 'center',
-      display: 'flex'
-    },
-    tableCellMonth: {
-      border: '1px solid black',
-      //   padding: 5,
-      textAlign: 'center',
-      fontWeight: 'bold',
-      flex: 0.2,
       minHeight: 30,
       alignItems: 'center',
       justifyContent: 'center',
@@ -85,7 +73,7 @@ const MaintenanceSchedulePDF = () => {
       display: 'flex'
     },
     column1: {
-      flexBasis: '50%', // Cambia a 33.33% para tres columnas, 25% para cuatro columnas, etc.
+      flexBasis: '50%', // Cambia a 33.34% para tres columnas, 25% para cuatro columnas, etc.
       padding: 1
     },
     row1: {
@@ -97,8 +85,9 @@ const MaintenanceSchedulePDF = () => {
     },
     names: {
       fontFamily: 'Helvetica-Bold',
-      fontWeight: 900,
-      textTransform: 'uppercase'
+      fontWeight: 200
+
+      // textTransform: 'uppercase'
     },
     cell: {
       border: '1px solid black',
@@ -158,10 +147,15 @@ const MaintenanceSchedulePDF = () => {
       marginBottom: 10
     },
     row: {
-      flexDirection: 'row',
-      marginBottom: 5,
-      justifyContent: 'space-between',
-      gap: 20
+      border: '1px solid black',
+      padding: '3 1 0 4',
+      margin: '0 2',
+      fontSize: 9,
+      // fontWeight: 'bold',
+
+      // // alignItems: 'center',
+
+      display: 'flex'
     },
     columnL: {
       flex: 1,
@@ -217,37 +211,13 @@ const MaintenanceSchedulePDF = () => {
     }
   })
 
-  const fetchMaintenanceProgram = async () => {
-    try {
-      const response = await axios.get(
-        `${apiUrl}/inspectionMaintenance/maintenance-schedule`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        }
-      )
-
-      if (response.statusText === 'OK') {
-        console.log(response.data)
-        setDataSheets(response.data)
-      }
-    } catch (error) {
-      console.error('Error fetching dataSheet data:', error)
-    }
-  }
-
-  useEffect(() => {
-    fetchMaintenanceProgram()
-  }, [])
-
   const Header = () => (
     <View style={tw('border border-black flex flex-row mb-10')} fixed>
       <View style={[styles.width25, tw('border-r'), styles.bold]}>
         <Text style={[tw('border-b px-1 text-xs py-1')]}>
-          CÓDIGO: FOT-MMCS-11
+          CÓDIGO: FOT-MMCS-01
         </Text>
-        <Text style={[tw('border-b px-1 py-1 text-xs ')]}>VERSIÓN: 02</Text>
+        <Text style={[tw('border-b px-1 py-1 text-xs ')]}>VERSIÓN: 03</Text>
         <Text style={[tw('border-b px-1 text-xs py-1')]}>
           FECHA: 2017-12-05
         </Text>
@@ -268,7 +238,7 @@ const MaintenanceSchedulePDF = () => {
         <Text style={[tw('text-center top-1')]}>METROMEDICS</Text>
         <Text style={tw('border-b mt-2')}></Text>
         <Text style={[tw('text-center text-sm top-1'), styles.bold]}>
-          CRONOGRAMA DE MANTENIMIENTO
+          INVENTARIO METROLOGICO
         </Text>
       </View>
       <View style={styles.width25}>
@@ -279,6 +249,56 @@ const MaintenanceSchedulePDF = () => {
       </View>
     </View>
   )
+
+  const Content = () => (
+    <View style={tw('text-sm')}>
+      <View style={tw('flex-row')}>
+        <Text style={[styles.cell, styles.names, { width: '4%' }]}>N°</Text>
+
+        <Text style={[styles.cell, styles.names, { width: '15%' }]}>
+          Código Interno
+        </Text>
+        <Text style={[styles.cell, styles.names, { width: '20%' }]}>
+          Nombre Equipo
+        </Text>
+        <Text style={[styles.cell, styles.names, { width: '10%' }]}>Marca</Text>
+        <Text style={[styles.cell, styles.names, { width: '15%' }]}>
+          Modelo
+        </Text>
+        <Text style={[styles.cell, styles.names, { width: '15%' }]}>
+          N° Serie
+        </Text>
+        <Text style={[styles.cell, styles.names, { width: '25%' }]}>Tipo</Text>
+      </View>
+      {state.map((equipment: any, index: number) => (
+        <View key={index} style={[tw('flex-row my-2 '), styles.row1]}>
+          <Text style={[styles.row, styles.names, { width: '4%' }]}>
+            {index + 1}
+          </Text>
+
+          <Text style={[styles.row, styles.names, { width: '15%' }]}>
+            {equipment.internalCode}
+          </Text>
+          <Text style={[styles.row, styles.names, { width: '20%' }]}>
+            {equipment.equipmentName}
+          </Text>
+          <Text style={[styles.row, styles.names, { width: '10%' }]}>
+            {equipment.brand}
+          </Text>
+          <Text style={[styles.row, styles.names, { width: '15%' }]}>
+            {equipment.model}
+          </Text>
+          <Text style={[styles.row, styles.names, { width: '15%' }]}>
+            {equipment.serialNumber}
+          </Text>
+          <Text style={[styles.row, styles.names, { width: '25%' }]}>
+            {equipment.serviceType}
+          </Text>
+        </View>
+      ))}
+    </View>
+  )
+
   const Footer = () => (
     <View style={[styles.footer, styles.bold]} fixed>
       <Text style={tw('text-center')}>
@@ -290,91 +310,21 @@ const MaintenanceSchedulePDF = () => {
       <Text style={tw('text-center')}>www.metromedics.co</Text>
     </View>
   )
-
-  const ContentHeadLines = () => (
-    <View style={styles.table}>
-      <View style={[styles.tableHeader, styles.bold]}>
-        <View style={styles.tableCellMonth}>
-          <Text>Nº</Text>
-        </View>
-        <View style={styles.tableCell}>
-          <Text>Nombre Equipo</Text>
-        </View>
-        <View style={[styles.tableCell, { flex: 0.7 }]}>
-          <Text>Código Interno</Text>
-        </View>
-        <View style={[styles.tableCell, { flex: 0.85 }]}>
-          <Text>Proveedor servicio</Text>
-        </View>
-        {[
-          'Ene',
-          'Feb',
-          'Mar',
-          'Abr',
-          'May',
-          'Jun',
-          'Jul',
-          'Ago',
-          'Sep',
-          'Oct',
-          'Nov',
-          'Dic'
-        ].map((month, index) => (
-          <View key={index} style={styles.tableCellMonth}>
-            <Text>{month}</Text>
-          </View>
-        ))}
-      </View>
-    </View>
-  )
-
-  const ContentRows = () => {
-    return (
-      dataSheets &&
-      dataSheets.map((item: any, index: number) => {
-        const { dataSheet, date } = item
-        const monthIndex = getMonth(parseISO(date)) // Obtiene el índice del mes (0 para Enero, 11 para Diciembre)
-
-        return (
-          <View key={index} style={styles.table} wrap={true}>
-            <View style={styles.tableRow}>
-              <View style={[styles.tableCellRow, { flex: 0.1 }]}>
-                <Text>{index + 1}</Text>
-              </View>
-              <View style={styles.tableCellRow}>
-                <Text>{dataSheet.equipmentName}</Text>
-              </View>
-              <View style={[styles.tableCellRow, { flex: 0.7 }]}>
-                <Text>{dataSheet.internalCode}</Text>
-              </View>
-              <View style={[styles.tableCellRow, { flex: 0.85 }]}>
-                <Text>{dataSheet.calibrationProvider}</Text>
-              </View>
-              {Array.from({ length: 12 }).map((_, i) => (
-                <View key={i} style={styles.tableCellMonth}>
-                  <Text>{i === monthIndex ? 'X' : ''}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )
-      })
-    )
-  }
-
   return (
     <div>
       <IconButton onClick={() => navigate(-1)} sx={{ mb: 2 }}>
-        <ArrowBackIcon />
+        <ArrowBack />
       </IconButton>
       <PDFViewer width='100%' height='1000' className='app'>
         <Document>
-          <Page size='A4' style={styles.page} wrap={true}>
+          <Page
+            size='A4'
+            style={styles.page}
+            wrap={true}
+            orientation='landscape'
+          >
             <Header />
-            <View style={styles.content}>
-              <ContentHeadLines />
-              <ContentRows />
-            </View>
+            <Content />
             <Footer />
           </Page>
         </Document>
@@ -383,4 +333,4 @@ const MaintenanceSchedulePDF = () => {
   )
 }
 
-export default MaintenanceSchedulePDF
+export default InventoryPDF

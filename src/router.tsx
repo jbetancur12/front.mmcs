@@ -40,6 +40,7 @@ import InspectionPDF from './Components/DataSheet/InspectionPDFBridge'
 import CalibrationForm from './Components/DataSheet/CalibrationForm'
 import CalibrationProgramPDF from './Components/DataSheet/CalibrationProgramPDF'
 import CalibrationSchedulePDF from './Components/DataSheet/MaintenanceSchedulePDF'
+import InventoryPDF from './Components/DataSheet/InventoryPDF'
 
 function Router() {
   const protectedLayout = (
@@ -62,6 +63,7 @@ function Router() {
               path=':id/new-maintenance'
               element={<InspectionMaintenanceForm />}
             />
+            <Route path='inventory' element={<InventoryPDF />} />
             <Route
               path='calibration-program'
               element={<CalibrationProgramPDF />}

@@ -7,7 +7,7 @@ import { BiSolidReport } from 'react-icons/bi'
 import { Link, useLocation } from 'react-router-dom'
 import { userStore } from '../store/userStore'
 import DropdownButton from './DropdownButton'
-import { Assignment } from '@mui/icons-material'
+import { Assignment, Science } from '@mui/icons-material'
 
 // ...
 
@@ -138,6 +138,7 @@ const SideBar: React.FC = () => {
                   <span className='ml-3' sidebar-toggle-item=''>
                     Hojas de Vida
                   </span>
+                  <Science className='w-5 h-5 ml-4 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white' />
                 </Link>
               </li>
 
