@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { api } from '../../config'
 import InspectionMaintenancePDF from './InspectionMaintenancePDF'
-import { Box, Icon, IconButton, Typography } from '@mui/material'
+import { Box, IconButton, Typography } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { useNavigate } from 'react-router-dom'
 

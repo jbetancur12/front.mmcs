@@ -11,13 +11,12 @@ import {
   Box,
   Button,
   Divider,
-  FormControl,
   Grid,
-  InputLabel,
   Paper,
   TextField,
   Typography
 } from '@mui/material'
+import { addMonths } from 'date-fns'
 
 export interface CalibrationData {
   equipmentId: string | number
@@ -54,7 +53,7 @@ const apiUrl = api()
 const CalibrationForm = () => {
   const location = useLocation()
   const navigate = useNavigate()
-  const { tableData, id } = location.state as CalibrationFormProps
+  const { id } = location.state as CalibrationFormProps
 
   const [equipmentInfo, setEquipmentInfo] = useState<EquipmentInfo | null>(null)
 
@@ -73,7 +72,8 @@ const CalibrationForm = () => {
           brand: response.data.brand,
           model: response.data.model,
           serviceType: response.data.serviceType,
-          serialNumber: response.data.serialNumber
+          serialNumber: response.data.serialNumber,
+          calibrationCycle: response.data.calibrationCycle
         })
       } catch (error) {
         console.error('Error al obtener la información del equipo:', error)
@@ -97,6 +97,7 @@ const CalibrationForm = () => {
     },
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm }) => {
+      console.log('Calibracion')
       try {
         const response = await axios.post(
           `${apiUrl}/calibration`,
@@ -139,7 +140,7 @@ const CalibrationForm = () => {
       <Button
         variant='contained'
         color='secondary'
-        onClick={() => navigate(-1)}
+        onClick={() => navigate(`/datasheets/${id}/inspection-maintenance`)}
         sx={{ ml: 0, mb: 2 }}
       >
         Volver
@@ -204,7 +205,13 @@ const CalibrationForm = () => {
                   label='Próxima Fecha de Calibración'
                   type='date'
                   name='nextCalibrationDate'
-                  value={formik.values.nextCalibrationDate}
+                  value={
+                    formik.values.calibrationDate
+                      ? addMonths(new Date(formik.values.calibrationDate), 12)
+                          .toISOString()
+                          .split('T')[0]
+                      : ''
+                  }
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={formik.touched.date && Boolean(formik.errors.date)}

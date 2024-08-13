@@ -3,9 +3,11 @@ import {
   Edit,
   Engineering,
   Event,
+  ExitToApp,
   Inventory,
   PrecisionManufacturing,
-  Visibility
+  Visibility,
+  Warning
 } from '@mui/icons-material'
 import {
   Box,
@@ -15,13 +17,10 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  Stack,
   TextField,
   Tooltip,
   Grid,
-  Paper,
   Divider,
-  Typography,
   Switch,
   FormControlLabel,
   TextFieldProps,
@@ -40,11 +39,10 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useFormik } from 'formik'
 import * as yup from 'yup'
 
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { api } from '../../config'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { bigToast, MySwal } from '../ExcelManipulation/Utils'
-import { logFormData } from '../../utils/loadOptions'
 
 // Define interfaces
 
@@ -58,6 +56,7 @@ export interface CalibrationHistory {
 }
 export interface DataSheetData {
   id?: number
+  status: string
   pictureUrl: string
   internalCode: string
   equipmentName: string
@@ -89,6 +88,8 @@ export interface DataSheetData {
   calibrationProvider: string
   calibrationCycle: number
   calibrationHistories: CalibrationHistory[]
+  isCalibrationDueSoon: boolean
+  isInspectionDueSoon: boolean
 }
 
 // API URL
@@ -148,7 +149,6 @@ const validationSchema = yup.object({
 
 // Main component
 const ListDataSheet: React.FC = () => {
-  const navigate = useNavigate()
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<DataSheetData[]>([])
   const [filteredTableData, setFilteredTableData] = useState<DataSheetData[]>(
@@ -290,6 +290,59 @@ const ListDataSheet: React.FC = () => {
         header: 'URL de la Imagen',
         size: 150,
         muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
+      {
+        accessorKey: 'status',
+        header: 'Estado',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps,
+        Cell: ({ cell, row }) => {
+          const isDue =
+            row.original.isInspectionDueSoon ||
+            row.original.isCalibrationDueSoon
+
+          let isDueMessage = ''
+          if (
+            row.original.isInspectionDueSoon &&
+            row.original.isCalibrationDueSoon
+          ) {
+            isDueMessage =
+              'Calibración y mantenimiento vencidos o prontos a vencer'
+          } else if (row.original.isCalibrationDueSoon) {
+            isDueMessage = 'Calibración vencida o pronta a vencer'
+          } else {
+            isDueMessage = 'Mantenimiento vencido o pronto a vencer'
+          }
+          const status = cell.getValue<string>()
+          const color =
+            status === 'available'
+              ? 'green'
+              : status === 'busy'
+                ? 'red'
+                : 'gray'
+
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: '50%',
+                  backgroundColor: color,
+                  marginRight: 8
+                }}
+              />
+              {isDue && (
+                <>
+                  <Divider orientation='vertical' flexItem />
+                  <Tooltip title={isDueMessage}>
+                    <Warning sx={{ color: 'red' }} />
+                  </Tooltip>
+                </>
+              )}
+            </div>
+          )
+        }
       },
       {
         accessorKey: 'internalCode',
@@ -535,6 +588,16 @@ const ListDataSheet: React.FC = () => {
               >
                 <IconButton>
                   <Engineering />
+                </IconButton>
+              </Link>
+            </Tooltip>
+            <Tooltip arrow placement='right' title='In/Out'>
+              <Link
+                to={`${row.original.id}/in-out`}
+                // sx={{ color: 'blue' }}
+              >
+                <IconButton>
+                  <ExitToApp />
                 </IconButton>
               </Link>
             </Tooltip>

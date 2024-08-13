@@ -41,6 +41,9 @@ import CalibrationForm from './Components/DataSheet/CalibrationForm'
 import CalibrationProgramPDF from './Components/DataSheet/CalibrationProgramPDF'
 import CalibrationSchedulePDF from './Components/DataSheet/MaintenanceSchedulePDF'
 import InventoryPDF from './Components/DataSheet/InventoryPDF'
+import EquipmentInOut from './Components/DataSheet/EquipmentInOutForm'
+import EquipmentInOutPDF from './Components/DataSheet/EquipmentInOutPDF'
+import EquipmentInOutTable from './Components/DataSheet/EquipmentInOutTable'
 
 function Router() {
   const protectedLayout = (
@@ -68,12 +71,15 @@ function Router() {
               path='calibration-program'
               element={<CalibrationProgramPDF />}
             />
+            <Route path=':id/in-out-report' element={<EquipmentInOutPDF />} />
+            <Route path=':id/in-out-table' element={<EquipmentInOutTable />} />
             <Route
               path='calibration-schedule'
               element={<CalibrationSchedulePDF />}
             />
             <Route path=':id/new-calibration' element={<CalibrationForm />} />
             <Route path=':id' element={<DataSheetDetail />} />
+            <Route path=':id/in-out' element={<EquipmentInOut />} />
             <Route
               path=':id/inspection-maintenance'
               element={<InspectionMaintenance />}

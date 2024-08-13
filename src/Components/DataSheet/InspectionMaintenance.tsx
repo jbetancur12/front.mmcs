@@ -156,7 +156,7 @@ const InspectionMaintenance: React.FC = () => {
         }}
       >
         <Stack direction='row' spacing={2} marginBottom={2}>
-          <IconButton onClick={() => navigate(-1)} sx={{ mb: 2 }}>
+          <IconButton onClick={() => navigate('/datasheets')} sx={{ mb: 2 }}>
             <ArrowBackIcon />
           </IconButton>
           <Button

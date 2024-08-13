@@ -1,5 +1,5 @@
 import { createTw } from 'react-pdf-tailwind'
-import { api } from '../../config'
+
 import {
   Document,
   Image,
@@ -15,12 +15,12 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { DataSheetData } from './ListDataSheet'
 
 const mainColor = '#9CF08B'
-const apiUrl = api()
 
 const InventoryPDF = () => {
   const navigate = useNavigate()
-  const state = useLocation().state as { dataSheet: DataSheetData[] }
-  console.log(state)
+
+  const state = useLocation().state as DataSheetData[]
+
   const tw = createTw({
     theme: {
       extend: {

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import {
   Document,
   Image,
-  Link,
   Page,
   PDFViewer,
   StyleSheet,
@@ -10,7 +9,7 @@ import {
   View
 } from '@react-pdf/renderer'
 import { CalibrationHistory, DataSheetData } from './ListDataSheet'
-import { format, set } from 'date-fns'
+import { format } from 'date-fns'
 import { createTw } from 'react-pdf-tailwind'
 import { IconButton } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
@@ -677,7 +676,7 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
 
   return (
     <div>
-      <IconButton onClick={() => navigate(-1)} sx={{ mb: 2 }}>
+      <IconButton onClick={() => navigate(`/datasheets`)} sx={{ mb: 2 }}>
         <ArrowBackIcon />
       </IconButton>
 

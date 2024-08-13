@@ -18,7 +18,7 @@ import * as yup from 'yup'
 import axios from 'axios'
 import { api } from '../../config'
 import { bigToast } from '../ExcelManipulation/Utils'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { InspectionHistoryData } from './InspectionMaintenance'
 
 // Definir los tipos para los valores del formulario
@@ -55,6 +55,7 @@ export interface EquipmentInfo {
   model: string
   serviceType: string
   serialNumber: string
+  calibrationCycle: string
 }
 
 // Definir el esquema de validación con yup
@@ -123,7 +124,7 @@ const InspectionMaintenanceDataForm: React.FC = () => {
   const location = useLocation()
   const apiUrl = api()
   const navigate = useNavigate()
-  const { tableData, id } = location.state as InspectionMaintenanceFormProps
+  const { id } = location.state as InspectionMaintenanceFormProps
 
   const [equipmentInfo, setEquipmentInfo] = useState<EquipmentInfo | null>(null)
 
@@ -142,7 +143,8 @@ const InspectionMaintenanceDataForm: React.FC = () => {
           brand: response.data.brand,
           model: response.data.model,
           serviceType: response.data.serviceType,
-          serialNumber: response.data.serialNumber
+          serialNumber: response.data.serialNumber,
+          calibrationCycle: response.data.calibrationCycle
         })
       } catch (error) {
         console.error('Error al obtener la información del equipo:', error)
@@ -200,7 +202,7 @@ const InspectionMaintenanceDataForm: React.FC = () => {
         if (response.status >= 200 && response.status < 300) {
           bigToast('Mantenimiento/Inspección enviada correctamente', 'success')
           resetForm()
-          navigate(-1)
+          navigate(`datasheets/${1}/inspection-maintenance`)
         } else {
           bigToast('Error al enviar mantenimiento/inspección', 'error')
         }
