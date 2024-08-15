@@ -21,7 +21,7 @@ import { bigToast } from '../Components/ExcelManipulation/Utils'
 import { userStore } from '../store/userStore'
 import { useStore } from '@nanostores/react'
 
-interface Profile {
+export interface Profile {
   id: number
   name: string
   photo: string

@@ -20,6 +20,9 @@ import { api } from '../../config'
 import { bigToast } from '../ExcelManipulation/Utils'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { InspectionHistoryData } from './InspectionMaintenance'
+import AsyncSelect from 'react-select/async'
+import Profile from '../../pages/Profile'
+import { loadOptions, mapOptions } from '../../utils/loadOptions'
 
 // Definir los tipos para los valores del formulario
 export interface InspectionMaintenanceData {
@@ -388,36 +391,78 @@ const InspectionMaintenanceDataForm: React.FC = () => {
                 </Grid>
               ))}
 
-              {['conclusion', 'comentarios', 'elaboradoPor'].map((field) => (
-                <Grid item xs={12} md={6} key={field}>
-                  <TextField
-                    label={
-                      fieldLabels[field as keyof InspectionMaintenanceData]
-                    }
-                    name={field}
-                    value={
-                      formik.values[field as keyof InspectionMaintenanceData]
-                    }
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={
-                      formik.touched[
-                        field as keyof InspectionMaintenanceData
-                      ] &&
-                      Boolean(
+              {['conclusion', 'comentarios', 'elaboradoPor'].map((field) => {
+                if (field === 'elaboradoPor') {
+                  return (
+                    <Grid item xs={12} md={6} key={field}>
+                      <AsyncSelect
+                        cacheOptions
+                        defaultOptions
+                        placeholder='Buscar Perfil'
+                        loadOptions={(inputValue) =>
+                          loadOptions<Profile>(inputValue, 'profiles', (item) =>
+                            mapOptions(item, 'id', 'name')
+                          )
+                        }
+                        onChange={(selectedOption: any) => {
+                          console.log(selectedOption)
+                          formik.setFieldValue(
+                            'elaboradoPor',
+                            selectedOption ? selectedOption.label : ''
+                          )
+                        }}
+                        value={
+                          formik.values.elaboradoPor
+                            ? {
+                                value: formik.values.elaboradoPor,
+                                label: formik.values.elaboradoPor
+                              }
+                            : null
+                        }
+                        styles={{
+                          control: (provided: any) => ({
+                            ...provided,
+                            minHeight: '40px', // Altura mínima del control
+                            height: '55px' // Altura total del control
+                          })
+                        }}
+                      />
+                    </Grid>
+                  )
+                }
+                return (
+                  <Grid item xs={12} md={6} key={field}>
+                    <TextField
+                      label={
+                        fieldLabels[field as keyof InspectionMaintenanceData]
+                      }
+                      name={field}
+                      value={
+                        formik.values[field as keyof InspectionMaintenanceData]
+                      }
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={
+                        formik.touched[
+                          field as keyof InspectionMaintenanceData
+                        ] &&
+                        Boolean(
+                          formik.errors[
+                            field as keyof InspectionMaintenanceData
+                          ]
+                        )
+                      }
+                      helperText={
+                        formik.touched[
+                          field as keyof InspectionMaintenanceData
+                        ] &&
                         formik.errors[field as keyof InspectionMaintenanceData]
-                      )
-                    }
-                    helperText={
-                      formik.touched[
-                        field as keyof InspectionMaintenanceData
-                      ] &&
-                      formik.errors[field as keyof InspectionMaintenanceData]
-                    }
-                    fullWidth
-                  />
-                </Grid>
-              ))}
+                      }
+                      fullWidth
+                    />
+                  </Grid>
+                )
+              })}
 
               <Grid item xs={12}>
                 <Button variant='contained' color='primary' type='submit'>

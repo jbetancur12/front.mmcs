@@ -43,6 +43,9 @@ import { Link } from 'react-router-dom'
 import { api } from '../../config'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { bigToast, MySwal } from '../ExcelManipulation/Utils'
+import withReactContent from 'sweetalert2-react-content'
+import Swal from 'sweetalert2'
+import { createRoot } from 'react-dom/client'
 
 // Define interfaces
 
@@ -149,6 +152,8 @@ const validationSchema = yup.object({
 
 // Main component
 const ListDataSheet: React.FC = () => {
+  const MySwal = withReactContent(Swal)
+
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<DataSheetData[]>([])
   const [filteredTableData, setFilteredTableData] = useState<DataSheetData[]>(
@@ -285,15 +290,16 @@ const ListDataSheet: React.FC = () => {
         size: 10,
         enableEditing: false
       },
-      {
-        accessorKey: 'pictureUrl',
-        header: 'URL de la Imagen',
-        size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      },
+      // {
+      //   accessorKey: 'pictureUrl',
+      //   header: 'URL de la Imagen',
+      //   size: 150,
+      //   muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      // },
       {
         accessorKey: 'status',
         header: 'Estado',
+        enableEditing: false,
         size: 150,
         muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps,
         Cell: ({ cell, row }) => {
@@ -522,6 +528,41 @@ const ListDataSheet: React.FC = () => {
     ],
     [getCommonEditTextFieldProps]
   )
+  const handleUpload = async ({
+    id,
+    image
+  }: {
+    id: number | undefined
+    image: File | null
+  }) => {
+    if (!image) {
+      return
+    }
+    const formData = new FormData()
+    formData.append('picture', image)
+    try {
+      const response = await axios.put(
+        `${apiUrl}/dataSheet/${id}/update-image`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+          }
+        }
+      )
+
+      if (response.status >= 200 && response.status < 300) {
+        bigToast('Foto subida correctamente', 'success')
+        // setImage(response.data.dataSheet.pictureUrl)
+      } else {
+        bigToast('Error al subir la foto', 'error')
+      }
+    } catch (error) {
+      console.error('Error al subir la foto:', error)
+      bigToast('Error al subir la foto', 'error')
+    }
+  }
 
   return (
     <>
@@ -602,10 +643,104 @@ const ListDataSheet: React.FC = () => {
               </Link>
             </Tooltip>
             <Tooltip arrow placement='left' title='Edit'>
-              <IconButton onClick={() => table.setEditingRow(row)}>
+              <IconButton
+                onClick={() => {
+                  MySwal.fire({
+                    title: 'Seleccione una opción',
+                    showCancelButton: true,
+                    confirmButtonText: 'Editar Imagen',
+                    cancelButtonText: 'Editar Otras Opciones'
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      let imageFile: File | null = null
+                      // Lógica para abrir el modal de edición de imagen
+                      MySwal.fire({
+                        title: 'Editar Imagen',
+                        html: `
+                          <div id="mui-file-input">
+                            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                              <label for="imageInput" style="cursor: pointer;">
+                                <img
+                                  id="avatarImage"
+                                  alt="Foto de equipo"
+                                  src="/images/no-img.jpg"
+                                  style="width: 100px; height: 100px; margin-bottom: 8px;"
+                                />
+                              </label>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                id="imageInput"
+                                style="display: none;"
+                              />
+                            </div>
+                          </div>
+                        `,
+                        didOpen: () => {
+                          const imageInput = document.getElementById(
+                            'imageInput'
+                          ) as HTMLInputElement
+                          const avatarImage = document.getElementById(
+                            'avatarImage'
+                          ) as HTMLImageElement
+
+                          if (imageInput && avatarImage) {
+                            imageInput.addEventListener('change', function (e) {
+                              const target = e.target as HTMLInputElement
+
+                              if (target.files && target.files.length > 0) {
+                                imageFile = target.files[0]
+
+                                // Crear un URL para la imagen seleccionada
+                                const newImageUrl =
+                                  URL.createObjectURL(imageFile)
+
+                                // Actualizar el src del avatar
+                                avatarImage.src = newImageUrl
+
+                                // Aquí podrías realizar otras acciones como actualizar el estado o almacenar la imagen
+                              }
+                            })
+                          } else {
+                            console.error(
+                              "No se pudo encontrar el elemento 'imageInput' o 'avatarImage'."
+                            )
+                          }
+                        },
+                        showCancelButton: true,
+                        confirmButtonText: 'Actualizar',
+                        cancelButtonText: 'Cancelar',
+                        preConfirm: () => {
+                          if (!imageFile) {
+                            MySwal.showValidationMessage(
+                              'Por favor selecciona una imagen antes de actualizar.'
+                            )
+                            return false // Previene la resolución de la promesa
+                          }
+                          return new Promise((resolve) => {
+                            if (imageFile) {
+                              // Subir la imagen seleccionada a la API
+                              handleUpload({
+                                id: row.original.id,
+                                image: imageFile
+                              }).then(() => resolve(undefined)) // Resolviendo con undefined
+                            } else {
+                              resolve(undefined) // Resolviendo con undefined
+                            }
+                          })
+                        }
+                      })
+                    } else if (result.dismiss === Swal.DismissReason.cancel) {
+                      // Lógica para abrir el modo de edición de la tabla
+                      table.setEditingRow(row)
+                    }
+                  })
+                }}
+              >
                 <Edit />
               </IconButton>
             </Tooltip>
+
             <Tooltip arrow placement='right' title='Delete'>
               <IconButton color='error' onClick={() => handleDeleteRow(row)}>
                 <Delete />
@@ -713,7 +848,8 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
       maintenanceProvider: '',
       maintenanceCycle: '',
       calibrationProvider: '',
-      calibrationCycle: ''
+      calibrationCycle: '',
+      status: 'available'
     },
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm }) => {
@@ -801,6 +937,42 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
                           />
                         }
                         label='Tiene Manual'
+                      />
+                    ) : column.accessorKey === 'status' ? (
+                      <TextField
+                        disabled
+                        label={column.header}
+                        name={column.accessorKey}
+                        value='available'
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={
+                          formik.touched[
+                            column.accessorKey as keyof typeof formik.values
+                          ] &&
+                          Boolean(
+                            formik.errors[
+                              column.accessorKey as keyof typeof formik.errors
+                            ]
+                          )
+                        }
+                        helperText={
+                          formik.touched[
+                            column.accessorKey as keyof typeof formik.values
+                          ] &&
+                          formik.errors[
+                            column.accessorKey as keyof typeof formik.errors
+                          ]
+                        }
+                        fullWidth
+                        InputLabelProps={
+                          column.accessorKey.includes('Date')
+                            ? { shrink: true }
+                            : undefined
+                        }
+                        type={
+                          column.accessorKey.includes('Date') ? 'date' : 'text'
+                        }
                       />
                     ) : (
                       <TextField

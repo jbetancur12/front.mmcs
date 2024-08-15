@@ -229,7 +229,6 @@ const MaintenanceSchedulePDF = () => {
       )
 
       if (response.statusText === 'OK') {
-        console.log(response.data)
         setDataSheets(response.data)
       }
     } catch (error) {
@@ -240,6 +239,10 @@ const MaintenanceSchedulePDF = () => {
   useEffect(() => {
     fetchMaintenanceProgram()
   }, [])
+
+  if (!dataSheets) {
+    return <div>Loading...</div>
+  }
 
   const Header = () => (
     <View style={tw('border border-black flex flex-row mb-10')} fixed>
@@ -327,15 +330,19 @@ const MaintenanceSchedulePDF = () => {
       </View>
     </View>
   )
-
+  // const sortedDataSheets = dataSheets
+  // .map(item => ({
+  //   ...item,
+  //   monthIndex: item.maintenanceCycle - 1
+  // }))
+  // .sort((a, b) => a.monthIndex - b.monthIndex);
   const ContentRows = () => {
     return (
       dataSheets &&
       dataSheets.map((item: any, index: number) => {
-        const { dataSheet } = item
         // const monthIndex = getMonth(parseISO(date)) // Obtiene el índice del mes (0 para Enero, 11 para Diciembre)
 
-        const monthIndex = item.dataSheet.maintenanceCycle - 1
+        const monthIndex = item.maintenanceCycle - 1
 
         return (
           <View key={index} style={styles.table} wrap={true}>
@@ -344,13 +351,13 @@ const MaintenanceSchedulePDF = () => {
                 <Text>{index + 1}</Text>
               </View>
               <View style={styles.tableCellRow}>
-                <Text>{dataSheet.equipmentName}</Text>
+                <Text>{item.equipmentName}</Text>
               </View>
               <View style={[styles.tableCellRow, { flex: 0.7 }]}>
-                <Text>{dataSheet.internalCode}</Text>
+                <Text>{item.internalCode}</Text>
               </View>
               <View style={[styles.tableCellRow, { flex: 0.85 }]}>
-                <Text>{dataSheet.calibrationProvider}</Text>
+                <Text>{item.calibrationProvider}</Text>
               </View>
               {Array.from({ length: 12 }).map((_, i) => (
                 <View key={i} style={styles.tableCellMonth}>

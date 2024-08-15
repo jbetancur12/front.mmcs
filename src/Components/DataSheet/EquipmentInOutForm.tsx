@@ -22,6 +22,10 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../config'
 import axios from 'axios'
 import { ArrowBack, Download, TableChart } from '@mui/icons-material'
+import AsyncSelect from 'react-select/async'
+import { loadOptions, mapOptions } from '../../utils/loadOptions'
+
+import { Profile } from '../../pages/Profiles'
 
 // Interfaz para los valores del formulario
 interface EquipmentFormValues {
@@ -54,7 +58,8 @@ const validationSchema = Yup.object({
   operationalInTest: Yup.string().required(
     'La prueba operativa de entrada es obligatoria'
   ),
-  observations: Yup.string(),
+  observationsOut: Yup.string(),
+  observationsIn: Yup.string(),
   registeredBy: Yup.string().required('El registro por es obligatorio')
 })
 
@@ -65,6 +70,8 @@ const EquipmentForm: React.FC = () => {
   const navigate = useNavigate()
   const [isEquipmentOut, setIsEquipmentOut] = useState<boolean>(false)
   const [lastRecord, setLastRecord] = useState<Record<any, any>>({})
+
+  console.log('===>', lastRecord)
 
   const fetchEquipmentStatus = async () => {
     try {
@@ -307,19 +314,38 @@ const EquipmentForm: React.FC = () => {
                     />
                   </Grid>
                   <Grid item xs={12}>
-                    <Field
-                      name='registeredBy'
-                      as={TextField}
-                      label='Registrado Por'
-                      variant='outlined'
-                      fullWidth
-                      error={Boolean(
-                        touched.registeredBy && errors.registeredBy
-                      )}
-                      helperText={touched.registeredBy && errors.registeredBy}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
+                    <AsyncSelect
+                      cacheOptions
+                      defaultOptions
+                      placeholder='Buscar Perfil'
+                      loadOptions={(inputValue) =>
+                        loadOptions<Profile>(inputValue, 'profiles', (item) =>
+                          mapOptions(item, 'id', 'name')
+                        )
+                      }
+                      onChange={(selectedOption: any) => {
+                        console.log(selectedOption)
+                        // Actualiza el valor de registeredBy en Formik
+                        setFieldValue(
+                          'registeredBy',
+                          selectedOption ? selectedOption.label : ''
+                        )
+                      }}
+                      // onBlur={() => setFieldTouched('registeredBy', true)}
+                      value={
+                        values.registeredBy
+                          ? {
+                              value: values.registeredBy,
+                              label: values.registeredBy
+                            }
+                          : null
+                      }
                     />
+                    {touched.registeredBy && errors.registeredBy ? (
+                      <FormHelperText error>
+                        {errors.registeredBy}
+                      </FormHelperText>
+                    ) : null}
                   </Grid>
                 </>
               )}
@@ -469,7 +495,25 @@ const EquipmentForm: React.FC = () => {
           </Box>
         </Grid>
       )}
-      {!isEquipmentOut && (
+      {!lastRecord && (
+        <Grid item xs={12} mt={2}>
+          <Box sx={{ p: 2, border: '1px solid #ddd', borderRadius: 1 }}>
+            <Typography variant='h5' gutterBottom>
+              Información Ultima Entrada
+            </Typography>
+            <Typography>
+              <strong>Fecha de Entrada:</strong> Sin Información
+            </Typography>
+            <Typography>
+              <strong>Motivo de Salida:</strong> Sin Información
+            </Typography>
+            <Typography>
+              <strong>Inspeccion Visual:</strong> Sin Información
+            </Typography>
+          </Box>
+        </Grid>
+      )}
+      {!isEquipmentOut && lastRecord && (
         <Grid item xs={12} mt={2}>
           <Box sx={{ p: 2, border: '1px solid #ddd', borderRadius: 1 }}>
             <Typography variant='h5' gutterBottom>
@@ -492,7 +536,7 @@ const EquipmentForm: React.FC = () => {
                 {lastRecord.operationalInTest}
               </Typography>
               <Typography>
-                <strong>Observaciones de salida:</strong>{' '}
+                <strong>Observaciones de entrada:</strong>{' '}
                 {lastRecord.observationsIn}
               </Typography>
               <Typography>
