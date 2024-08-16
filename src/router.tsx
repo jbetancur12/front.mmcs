@@ -44,6 +44,7 @@ import InventoryPDF from './Components/DataSheet/InventoryPDF'
 import EquipmentInOut from './Components/DataSheet/EquipmentInOutForm'
 import EquipmentInOutPDF from './Components/DataSheet/EquipmentInOutPDF'
 import EquipmentInOutTable from './Components/DataSheet/EquipmentInOutTable'
+import Fleet from './pages/Fleet'
 
 function Router() {
   const protectedLayout = (
@@ -60,6 +61,7 @@ function Router() {
         </Route> */}
         <Route path='/' element={protectedLayout}>
           <Route index element={<Dashboard />} />
+          <Route path='fleet' element={<Fleet />} />
           <Route path='datasheets'>
             <Route index element={<DatasheetsList />} />
             <Route
