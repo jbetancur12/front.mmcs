@@ -46,6 +46,7 @@
     "react-number-format": "^5.3.4",
     "react-pdf": "^7.7.1",
     "react-pdf-tailwind": "^2.3.0",
+    "react-query": "^3.39.3",
     "react-router-dom": "^6.15.0",
     "react-select": "^5.8.0",
     "sweetalert2": "^11.10.8",

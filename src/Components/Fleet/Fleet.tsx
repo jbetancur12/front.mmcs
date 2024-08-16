@@ -1,139 +1,99 @@
-import axios from 'axios'
 import React, { useCallback, useMemo, useState } from 'react'
-import { api } from '../../config'
+import { useQuery, useMutation, useQueryClient } from 'react-query'
+import axios from 'axios'
 import MaterialReactTable, {
-  MaterialReactTableProps,
   MRT_Cell,
   MRT_ColumnDef,
   MRT_Row
 } from 'material-react-table'
 import { bigToast, MySwal } from '../ExcelManipulation/Utils'
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Stack,
-  TextField,
-  TextFieldProps,
-  Tooltip
-} from '@mui/material'
+import { Box, Button, IconButton, TextFieldProps, Tooltip } from '@mui/material'
 import { Delete, Edit } from '@mui/icons-material'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
+import { api } from '../../config'
+
+import GenericFormModal from './GenericFormModal'
+import { fetchVehicles, Vehicle, vehicleFields } from './vehicleUtils'
 
 const apiUrl = api()
 
-export interface Vehicle {
-  id?: number
-  licensePlate: string
-  make: string
-  model: string
-  year: number
-  currentMileage: number
-  fuelType: string
-  status: string
-}
-
 const Fleet = () => {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const queryClient = useQueryClient()
+  const { data: vehicles = [] } = useQuery('vehicles', fetchVehicles)
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [validationErrors, setValidationErrors] = useState<{
-    [cellId: string]: string
+    [key: string]: string | undefined
   }>({})
 
-  const fetchVehicles = useCallback(async () => {
-    try {
-      const response = await axios.get(`${apiUrl}/vehicles`, {
+  const saveRowEdits = useMutation(
+    async (updatedVehicle: Vehicle) => {
+      const { id, ...values } = updatedVehicle
+      const { status } = await axios.put(`${apiUrl}/vehicles/${id}`, values, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('accessToken')}`
         }
       })
-      if (response.status === 200) {
-        setVehicles(response.data)
-      }
-    } catch (error) {
-      console.error('Error fetching vehicles:', error)
-    }
-  }, [])
-
-  React.useEffect(() => {
-    fetchVehicles()
-  }, [fetchVehicles])
-
-  const handleSaveRowEdits: MaterialReactTableProps<Vehicle>['onEditingRowSave'] =
-    async ({ exitEditingMode, row, values }) => {
-      if (!Object.keys(validationErrors).length) {
-        try {
-          const { id, ...updatedValues } = values
-          const response = await axios.put(
-            `${apiUrl}/vehicles/${id}`,
-            updatedValues,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-              }
-            }
-          )
-
-          if (response.status === 200) {
-            bigToast('Hoja de Datos Modificada Exitosamente!', 'success')
-            const updatedVehicles = [...vehicles]
-            updatedVehicles[row.index] = values
-            setVehicles(updatedVehicles)
-          } else {
-            console.error('Error al modificar la hoja de datos')
-          }
-        } catch (error) {
-          console.error('Error de red:', error)
-        }
-        exitEditingMode()
-      }
-    }
-
-  const handleCancelRowEdits = useCallback(() => {
-    setValidationErrors({})
-  }, [])
-
-  const deleteVehicle = useCallback(
-    async (rowIndex: number, id: number) => {
-      try {
-        const response = await axios.delete(`${apiUrl}/vehicles/${id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        })
-
-        if (response.status === 204) {
-          bigToast('Hoja de Datos Eliminada Exitosamente!', 'success')
-          const updatedVehicles = vehicles.filter(
-            (_, index) => index !== rowIndex
-          )
-          setVehicles(updatedVehicles)
-        } else {
-          console.error('Error al eliminar la hoja de datos')
-        }
-      } catch (error) {
-        console.error('Error de red:', error)
+      if (status !== 200) {
+        throw new Error('Error al modificar la hoja de datos')
       }
     },
-    [vehicles]
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('vehicles')
+        bigToast('Hoja de Datos Modificada Exitosamente!', 'success')
+      }
+    }
+  )
+
+  const deleteVehicle = useMutation(
+    async (id: number) => {
+      const { status } = await axios.delete(`${apiUrl}/vehicles/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      })
+      if (status !== 204) {
+        throw new Error('Error al eliminar la hoja de datos')
+      }
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('vehicles')
+        bigToast('Hoja de Datos Eliminada Exitosamente!', 'success')
+      }
+    }
+  )
+
+  const handleSaveRowEdits = useCallback(
+    async ({
+      exitEditingMode,
+      row,
+      values
+    }: {
+      exitEditingMode: () => void
+      row: MRT_Row<Vehicle>
+      values: Vehicle
+    }) => {
+      try {
+        await saveRowEdits.mutateAsync(values)
+        exitEditingMode()
+      } catch (error) {
+        console.error('Error al guardar la edición:', error)
+      }
+    },
+    [saveRowEdits]
   )
 
   const handleDeleteRow = useCallback(
     (row: MRT_Row<Vehicle>) => {
       MySwal.fire({
-        title: `¿Está seguro que desea eliminar la hoja de datos ${row.getValue(
-          'licensePlate'
-        )}?`,
+        title: `¿Está seguro que desea eliminar la hoja de datos ${row.getValue('licensePlate')}?`,
         text: 'No podrá recuperar esta información una vez eliminada',
         showCancelButton: true,
         confirmButtonText: 'Sí'
       }).then((result) => {
         if (result.isConfirmed) {
-          deleteVehicle(row.index, row.getValue('id'))
+          deleteVehicle.mutate(row.getValue('id'))
         }
       })
     },
@@ -164,12 +124,7 @@ const Fleet = () => {
 
   const columns = useMemo<MRT_ColumnDef<Vehicle>[]>(
     () => [
-      {
-        accessorKey: 'id',
-        header: 'ID',
-        size: 10,
-        enableEditing: false
-      },
+      { accessorKey: 'id', header: 'ID', size: 10, enableEditing: false },
       {
         accessorKey: 'licensePlate',
         header: 'Número de Identificación',
@@ -225,12 +180,8 @@ const Fleet = () => {
       editingMode='modal'
       enableEditing
       onEditingRowSave={handleSaveRowEdits}
-      onEditingRowCancel={handleCancelRowEdits}
-      initialState={{
-        columnVisibility: {
-          id: false
-        }
-      }}
+      onEditingRowCancel={() => setValidationErrors({})}
+      initialState={{ columnVisibility: { id: false } }}
       renderRowActions={({ row, table }) => (
         <Box sx={{ display: 'flex', gap: '1rem' }}>
           <Tooltip arrow placement='right' title='Editar'>
@@ -250,86 +201,41 @@ const Fleet = () => {
           <Button
             variant='contained'
             onClick={() => setCreateModalOpen(true)}
-            sx={{
-              fontWeight: 'bold',
-              color: '#DCFCE7'
-            }}
+            sx={{ fontWeight: 'bold', color: '#DCFCE7' }}
           >
             Crear Nuevo Vehículo
           </Button>
-          <CreateNewVehicleModal
-            columns={columns}
+          <GenericFormModal
             open={createModalOpen}
+            fields={vehicleFields}
             onClose={() => setCreateModalOpen(false)}
-            onSubmit={(newVehicle) => {
-              // Lógica para manejar la creación de un nuevo vehículo
-              setVehicles([...vehicles, newVehicle])
+            onSubmit={async (values: Record<string, any>) => {
+              const vehicle: Vehicle = {
+                licensePlate: values['licensePlate'],
+                make: values['make'],
+                model: values['model'],
+                year: Number(values['year']),
+                currentMileage: Number(values['currentMileage']),
+                fuelType: values['fuelType'],
+                status: values['status']
+              }
+              try {
+                await axios.post(`${apiUrl}/vehicles`, vehicle, {
+                  headers: {
+                    Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+                  }
+                })
+                queryClient.invalidateQueries('vehicles')
+                setCreateModalOpen(false)
+              } catch (error) {
+                console.error('Error al crear el vehículo:', error)
+              }
             }}
+            submitButtonText='Crear Vehículo'
           />
         </>
       )}
     />
-  )
-}
-
-interface CreateModalProps {
-  columns: MRT_ColumnDef<Vehicle>[]
-  onClose: () => void
-  onSubmit: (values: Vehicle) => void
-  open: boolean
-}
-
-const CreateNewVehicleModal: React.FC<CreateModalProps> = ({
-  open,
-  columns,
-  onClose,
-  onSubmit
-}) => {
-  const initialValues = useMemo(
-    () =>
-      columns.reduce(
-        (acc, column) => ({
-          ...acc,
-          [column.accessorKey || '']: ''
-        }),
-        {}
-      ),
-    [columns]
-  )
-
-  const [values, setValues] = useState<typeof initialValues>(initialValues)
-
-  const handleSubmit = () => {
-    onSubmit(values as Vehicle)
-    onClose()
-  }
-
-  return (
-    <Dialog open={open}>
-      <DialogTitle textAlign='center'>Crear Nuevo Vehículo</DialogTitle>
-      <DialogContent>
-        <form onSubmit={(e) => e.preventDefault()}>
-          <Stack sx={{ gap: '1.5rem', width: '100%', minWidth: '300px' }}>
-            {columns.map((column) => (
-              <TextField
-                key={column.accessorKey}
-                label={column.header}
-                name={column.accessorKey}
-                onChange={(e) =>
-                  setValues({ ...values, [e.target.name]: e.target.value })
-                }
-              />
-            ))}
-          </Stack>
-        </form>
-      </DialogContent>
-      <DialogActions sx={{ p: '1.25rem' }}>
-        <Button onClick={onClose}>Cancelar</Button>
-        <Button color='secondary' onClick={handleSubmit} variant='contained'>
-          Crear Nuevo Vehículo
-        </Button>
-      </DialogActions>
-    </Dialog>
   )
 }
 

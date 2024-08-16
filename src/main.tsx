@@ -8,9 +8,13 @@ import { theme } from './theme.tsx'
 
 import { PostHogProvider } from 'posthog-js/react'
 
+import { QueryClient, QueryClientProvider } from 'react-query'
+
 const options = {
   api_host: import.meta.env.VITE_POSTHOG_HOST
 }
+
+const queryClient = new QueryClient()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -22,11 +26,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       }
       options={options}
     >
-      <BrowserRouter>
-        <ThemeProvider theme={theme}>
-          <Router />
-        </ThemeProvider>
-      </BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <ThemeProvider theme={theme}>
+            <Router />
+          </ThemeProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
     </PostHogProvider>
   </React.StrictMode>
 )
