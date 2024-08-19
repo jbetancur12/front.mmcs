@@ -47,4 +47,12 @@ export interface Inspection {
   lightsCondition: string
   comments?: string
   inspectionDate: string
+  inspectorName: string
+}
+
+export interface InspectionHistory extends Inspection {
+  trip: {
+    purpose: string
+  }
+  summary: string
 }

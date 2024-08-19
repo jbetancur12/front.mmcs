@@ -216,6 +216,10 @@ const Fleet = () => {
               <IconButton onClick={() => handleTrip(row.original)}>
                 <Commute />
               </IconButton>
+            </Link>
+          </Tooltip>
+          <Tooltip arrow placement='right' title='Viajes'>
+            <Link to={`${row.original.id}/inspections`}>
               <IconButton onClick={() => handleTrip(row.original)}>
                 <Summarize />
               </IconButton>

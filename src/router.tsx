@@ -217,6 +217,8 @@ import TripsTable from './Components/Fleet/Trips'
 import Templates from './pages/Templates'
 import { Cotizaciones } from './pages/Cotizaciones'
 import NewTrip from './Components/Fleet/NewTrip'
+import InspectionsTable from './Components/Fleet/InspectionTable'
+import InspectionSummary from './Components/Fleet/InspectionSummary'
 
 function Router() {
   const protectedLayout = (
@@ -236,6 +238,10 @@ function Router() {
           <Route path='fleet'>
             <Route index element={<Fleet />} />
             <Route path=':id/documents' element={<Documents />} />
+            <Route path=':id/inspections'>
+              <Route index element={<InspectionsTable />} />
+              <Route path=':inspectionId' element={<InspectionSummary />} />
+            </Route>
             <Route path=':id/trip' element={<TripsTable />} />
             <Route path=':id/trip/new' element={<NewTrip />} />
           </Route>
