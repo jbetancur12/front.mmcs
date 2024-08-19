@@ -4,17 +4,6 @@ import { api } from '../../config'
 
 export const apiUrl = api() // Ajusta la URL según tu configuración
 
-export interface Vehicle {
-  id?: number
-  licensePlate: string
-  make: string
-  model: string
-  year: number
-  currentMileage: number
-  fuelType: string
-  status: string
-}
-
 export const fetchVehicles = async () => {
   const { data } = await axios.get(`${apiUrl}/vehicles`, {
     headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }

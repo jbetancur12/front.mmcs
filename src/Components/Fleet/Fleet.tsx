@@ -8,12 +8,22 @@ import MaterialReactTable, {
 } from 'material-react-table'
 import { bigToast, MySwal } from '../ExcelManipulation/Utils'
 import { Box, Button, IconButton, TextFieldProps, Tooltip } from '@mui/material'
-import { Delete, Edit } from '@mui/icons-material'
+import {
+  Commute,
+  Delete,
+  Edit,
+  Summarize,
+  TripOrigin,
+  Visibility
+} from '@mui/icons-material'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { api } from '../../config'
 
 import GenericFormModal from './GenericFormModal'
-import { fetchVehicles, Vehicle, vehicleFields } from './vehicleUtils'
+import { fetchVehicles, vehicleFields } from './vehicleUtils'
+import { Link, useNavigate } from 'react-router-dom'
+import { Vehicle } from './types'
+import { vehicleStore } from '../../store/vehicleStore'
 
 const apiUrl = api()
 
@@ -24,6 +34,7 @@ const Fleet = () => {
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string | undefined
   }>({})
+  const navigate = useNavigate()
 
   const saveRowEdits = useMutation(
     async (updatedVehicle: Vehicle) => {
@@ -171,6 +182,15 @@ const Fleet = () => {
     [getCommonEditTextFieldProps]
   )
 
+  const handleTrip = (vehicle: Vehicle) => {
+    if (vehicle && vehicle.id) {
+      vehicleStore.set(vehicle)
+      navigate(`${vehicle.id}/trip`)
+    } else {
+      bigToast('No se ha seleccionado un vehículo', 'error')
+    }
+  }
+
   return (
     <MaterialReactTable
       columns={columns}
@@ -184,6 +204,23 @@ const Fleet = () => {
       initialState={{ columnVisibility: { id: false } }}
       renderRowActions={({ row, table }) => (
         <Box sx={{ display: 'flex', gap: '1rem' }}>
+          <Tooltip arrow placement='right' title='Documentos'>
+            <Link to={`${row.original.id}/documents`}>
+              <IconButton>
+                <Visibility />
+              </IconButton>
+            </Link>
+          </Tooltip>
+          <Tooltip arrow placement='right' title='Viajes'>
+            <Link to={`${row.original.id}/trip`}>
+              <IconButton onClick={() => handleTrip(row.original)}>
+                <Commute />
+              </IconButton>
+              <IconButton onClick={() => handleTrip(row.original)}>
+                <Summarize />
+              </IconButton>
+            </Link>
+          </Tooltip>
           <Tooltip arrow placement='right' title='Editar'>
             <IconButton onClick={() => table.setEditingRow(row)}>
               <Edit />
