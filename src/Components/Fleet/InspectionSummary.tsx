@@ -2,9 +2,6 @@ import React from 'react'
 import { Box, Typography } from '@mui/material'
 import { CheckCircle, Warning, Error } from '@mui/icons-material'
 import { InspectionHistory } from './types'
-import { useLocation } from 'react-router-dom'
-import { tr } from 'date-fns/locale'
-import { triggerAsyncId } from 'async_hooks'
 import { format } from 'date-fns'
 
 // Función para determinar el ícono basado en el estado
@@ -23,10 +20,13 @@ const getConditionIcon = (condition: string) => {
 }
 
 // Componente para mostrar el resumen de la inspección
-const InspectionSummary = () => {
-  const location = useLocation()
-  const { inspection } = location.state as { inspection: InspectionHistory }
+interface InspectionSummaryProps {
+  inspection: InspectionHistory
+}
 
+const InspectionSummary: React.FC<InspectionSummaryProps> = ({
+  inspection
+}) => {
   const {
     tireCondition,
     brakeCondition,
@@ -36,7 +36,6 @@ const InspectionSummary = () => {
     trip,
     inspectionDate,
     inspectorName
-    // Otros campos que quieras mostrar
   } = inspection
 
   // Combinar las condiciones en un solo estado

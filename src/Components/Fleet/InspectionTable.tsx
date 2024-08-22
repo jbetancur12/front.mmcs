@@ -1,16 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
-import MaterialReactTable, {
-  MRT_ColumnDef,
-  MRT_Row
-} from 'material-react-table'
-import { Box, IconButton, Tooltip, Typography } from '@mui/material'
+import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
+import { Box, IconButton, Tooltip, Typography, Modal } from '@mui/material'
 import { api } from '../../config'
-import { useNavigate, useParams } from 'react-router-dom'
-
+import { useParams } from 'react-router-dom'
 import { InspectionHistory } from './types'
 import { format } from 'date-fns'
 import { CheckCircle, Error, Visibility, Warning } from '@mui/icons-material'
+import InspectionSummary from './InspectionSummary'
 
 const apiUrl = api()
 
@@ -44,9 +41,11 @@ const getConditionIcon = (condition: string) => {
 
 const InspectionsTable = () => {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const [inspections, setInspections] = useState<InspectionHistory[]>([])
   const [loading, setLoading] = useState<boolean>(true)
+  const [selectedInspection, setSelectedInspection] =
+    useState<InspectionHistory | null>(null)
+  const [openModal, setOpenModal] = useState<boolean>(false)
 
   useEffect(() => {
     const loadInspections = async () => {
@@ -85,11 +84,10 @@ const InspectionsTable = () => {
         size: 150
       },
       {
-        accessorKey: 'summary', // Este será el nuevo campo que resumirá el estado
+        accessorKey: 'summary',
         header: 'Estado General',
         size: 150,
         Cell: ({ row }) => {
-          // Aquí defines cómo combinar los valores de las condiciones
           const {
             tireCondition,
             brakeCondition,
@@ -97,7 +95,6 @@ const InspectionsTable = () => {
             lightsCondition
           } = row.original
 
-          // Combinar las condiciones en un solo estado
           const conditions = [
             tireCondition,
             brakeCondition,
@@ -127,8 +124,9 @@ const InspectionsTable = () => {
     []
   )
 
-  const handleInpectionVisibility = async (inspection: InspectionHistory) => {
-    navigate(`${inspection.id}`, { state: { inspection } })
+  const handleInpectionVisibility = (inspection: InspectionHistory) => {
+    setSelectedInspection(inspection)
+    setOpenModal(true)
   }
 
   return (
@@ -139,27 +137,47 @@ const InspectionsTable = () => {
       {loading ? (
         <Typography variant='body1'>Cargando...</Typography>
       ) : (
-        <MaterialReactTable
-          columns={columns}
-          data={inspections}
-          enableColumnOrdering
-          enableSorting
-          enablePagination={false}
-          enableColumnFilters={false}
-          enableEditing={true}
-          initialState={{ columnVisibility: { id: false } }} // Oculta columnas no deseadas
-          renderRowActions={({ row }) => (
-            <Box sx={{ display: 'flex', gap: '1rem' }}>
-              <Tooltip arrow placement='right' title='Ver'>
-                <IconButton
-                  onClick={() => handleInpectionVisibility(row.original)}
-                >
-                  <Visibility />
-                </IconButton>
-              </Tooltip>
+        <>
+          <MaterialReactTable
+            columns={columns}
+            data={inspections}
+            enableColumnOrdering
+            enableSorting
+            enablePagination={false}
+            enableColumnFilters={false}
+            enableEditing={true}
+            initialState={{ columnVisibility: { id: false } }} // Oculta columnas no deseadas
+            renderRowActions={({ row }) => (
+              <Box sx={{ display: 'flex', gap: '1rem' }}>
+                <Tooltip arrow placement='right' title='Ver'>
+                  <IconButton
+                    onClick={() => handleInpectionVisibility(row.original)}
+                  >
+                    <Visibility />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            )}
+          />
+          <Modal open={openModal} onClose={() => setOpenModal(false)}>
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 400,
+                bgcolor: 'background.paper',
+                boxShadow: 24,
+                p: 4
+              }}
+            >
+              {selectedInspection && (
+                <InspectionSummary inspection={selectedInspection} />
+              )}
             </Box>
-          )}
-        />
+          </Modal>
+        </>
       )}
     </Box>
   )
