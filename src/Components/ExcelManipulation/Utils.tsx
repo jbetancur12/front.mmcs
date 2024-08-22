@@ -240,8 +240,7 @@ export const styles = (error: boolean) => {
       backgroundColor: state.isSelected ? 'blue' : 'white'
     }),
     menu: (provided: any) => ({
-      ...provided,
-      zIndex: 1000
+      ...provided
     }),
     placeholder: (provided: any) => ({
       ...provided,
@@ -258,6 +257,7 @@ export const Toast = MySwal.mixin({
   showConfirmButton: false,
   timer: 3000,
   timerProgressBar: true,
+
   didOpen: (toast) => {
     toast.onmouseenter = Swal.stopTimer
     toast.onmouseleave = Swal.resumeTimer
@@ -273,5 +273,8 @@ export const bigToast = (
     title,
     timer: 1500,
     showConfirmButton: false,
-    timerProgressBar: true
+    timerProgressBar: true,
+    customClass: {
+      container: 'zIndex'
+    }
   })

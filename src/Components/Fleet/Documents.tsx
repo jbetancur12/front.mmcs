@@ -12,36 +12,34 @@ import {
   TextField,
   Tooltip,
   IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
   Card,
   CardContent,
   Typography,
   CardActions,
   Grid,
-  Divider
+  Divider,
+  Box
 } from '@mui/material'
-import { Delete, Download, Edit } from '@mui/icons-material'
+import { Delete, Download, Edit, Warning } from '@mui/icons-material'
 import {
   fetchDocuments,
   addDocument,
   updateDocument,
   deleteDocument
 } from './documentUtils'
-import { Document } from './types'
+import { Document, Reminder, ReminderResponse } from './types'
 import { useParams } from 'react-router-dom'
-import { format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 
 const Documents: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const vehicleId = parseInt(id as string, 10)
 
-  const { data: documents = [], refetch } = useQuery(
-    ['documents', vehicleId],
-    () => fetchDocuments(vehicleId)
-  )
+  // Query para obtener documentos y recordatorios
+  const {
+    data: { documents = [], reminders = [], currentMileage = 0 } = {},
+    refetch
+  } = useQuery(['documents', vehicleId], () => fetchDocuments(vehicleId))
 
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(
     null
@@ -109,10 +107,11 @@ const Documents: React.FC = () => {
       </Button>
 
       <Stack spacing={2} marginTop={2}>
+        <Typography variant='h5'>Documentos</Typography>
         <Grid container spacing={2}>
           {documents.map((doc: Document) => (
-            <Grid item xs={12} md={2}>
-              <Card key={doc.id}>
+            <Grid item xs={12} md={2} key={doc.id}>
+              <Card>
                 <CardContent>
                   <Typography variant='h6'>
                     {doc.documentType} - {doc.documentNumber}
@@ -120,7 +119,7 @@ const Documents: React.FC = () => {
                   <Typography color='textSecondary'>
                     Expira:{' '}
                     {doc.expirationDate
-                      ? format(parseInt(doc.expirationDate), 'yyyy-MM-dd')
+                      ? format(parseISO(doc.expirationDate), 'yyyy-MM-dd')
                       : 'No especificado'}
                   </Typography>
                 </CardContent>
@@ -145,6 +144,91 @@ const Documents: React.FC = () => {
                     </IconButton>
                   </Tooltip>
                 </CardActions>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+
+        <Typography variant='h5' marginTop={4}>
+          Recordatorios Próximos
+        </Typography>
+        <Grid container spacing={2}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              backgroundColor: '#506F69', // Verde brillante
+              padding: '16px',
+              borderRadius: '8px',
+              margin: 'auto',
+              boxShadow: '0px 4px 8px rgba(0,0,0,0.3)' // Sombra para un efecto retro
+            }}
+          >
+            <Typography
+              variant='h6'
+              sx={{
+                fontWeight: 'bold',
+                fontFamily: 'Orbitron, monospace',
+                textAlign: 'center',
+                margin: 'auto',
+                color: '#000000' // Color del texto, asegúrate de que contraste con el fondo
+              }}
+            >
+              {currentMileage.toLocaleString('es-CO', {
+                style: 'unit',
+                unit: 'kilometer'
+              })}
+            </Typography>
+            <Typography
+              variant='h6'
+              sx={{
+                fontWeight: 'bold',
+                fontFamily: 'Orbitron, monospace',
+                textAlign: 'center',
+                margin: 'auto',
+                color: '#000000' // Color del texto
+              }}
+            >
+              {new Date().toLocaleString('es-CO', {
+                month: '2-digit',
+                day: 'numeric',
+                year: 'numeric'
+              })}
+            </Typography>
+            {reminders.length > 0 && (
+              <IconButton
+                sx={{
+                  color: '#FFC107' // Color del ícono, elige uno que contraste
+                }}
+              >
+                <Warning />
+              </IconButton>
+            )}
+          </Box>
+          {reminders.map((reminder: ReminderResponse) => (
+            <Grid item xs={12} md={12} key={reminder.id} padding={2}>
+              <Card>
+                <CardContent>
+                  <Typography variant='h6'>
+                    {reminder.interventionType.name}
+                  </Typography>
+                  <Typography color='textSecondary'>
+                    Kilometros:{' '}
+                    {reminder.dueMileage
+                      ? reminder.dueMileage.toLocaleString('es-CO', {
+                          style: 'unit',
+                          unit: 'kilometer'
+                        })
+                      : 'No especificado'}
+                  </Typography>
+                  <Typography color='textSecondary'>
+                    Fecha de vencimiento:{' '}
+                    {reminder.dueDate
+                      ? format(parseISO(reminder.dueDate), 'yyyy-MM-dd')
+                      : 'No especificado'}
+                  </Typography>
+                </CardContent>
               </Card>
             </Grid>
           ))}
@@ -182,18 +266,14 @@ const Documents: React.FC = () => {
               label='Número de Documento'
               value={documentNumber}
               onChange={(e) => setDocumentNumber(e.target.value)}
-              InputLabelProps={{
-                shrink: true
-              }}
+              InputLabelProps={{ shrink: true }}
             />
             <TextField
               label='Fecha de Expiración'
               value={documentExpirationDate}
               type='date'
               onChange={(e) => setDocumentExpirationDate(e.target.value)}
-              InputLabelProps={{
-                shrink: true
-              }}
+              InputLabelProps={{ shrink: true }}
             />
           </Stack>
         </DialogContent>

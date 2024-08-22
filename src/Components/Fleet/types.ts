@@ -16,6 +16,7 @@ export interface Vehicle {
   currentMileage: number
   fuelType: string
   status: string
+  upcomingReminders: Reminder[]
 }
 
 // Trip.ts
@@ -55,4 +56,37 @@ export interface InspectionHistory extends Inspection {
     purpose: string
   }
   summary: string
+}
+
+export interface MaintenanceRecord {
+  id: number
+  vehicleId: number
+  interventionTypeId: number | string
+  date: string
+  mileage: number
+  description: string
+  cost: number
+  serviceProvider: string
+  interventionTypes: InterventionType[]
+}
+
+export interface InterventionType {
+  id?: number
+  name: string
+  description: string
+  requiresReminder: boolean
+}
+
+export interface Reminder {
+  months: number
+  mileage: number
+}
+
+export interface ReminderResponse {
+  id: number
+  vehicleId: number
+  interventionTypeId: number
+  dueDate: string
+  dueMileage: number
+  interventionType: InterventionType
 }

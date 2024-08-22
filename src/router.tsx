@@ -220,6 +220,9 @@ import NewTrip from './Components/Fleet/NewTrip'
 import InspectionsTable from './Components/Fleet/InspectionTable'
 import InspectionSummary from './Components/Fleet/InspectionSummary'
 
+import MaintenanceRecords from './Components/Fleet/MaintenanceRecords'
+import InterventionTypes from './Components/Fleet/InterventionTypes'
+
 function Router() {
   const protectedLayout = (
     <RequireAuth>
@@ -237,6 +240,7 @@ function Router() {
           {/*//! Gestión de flota */}
           <Route path='fleet'>
             <Route index element={<Fleet />} />
+            <Route path='interventions' element={<InterventionTypes />} />
             <Route path=':id/documents' element={<Documents />} />
             <Route path=':id/inspections'>
               <Route index element={<InspectionsTable />} />
@@ -244,6 +248,7 @@ function Router() {
             </Route>
             <Route path=':id/trip' element={<TripsTable />} />
             <Route path=':id/trip/new' element={<NewTrip />} />
+            <Route path=':id/interventions' element={<MaintenanceRecords />} />
           </Route>
 
           {/* Hojas de datos */}

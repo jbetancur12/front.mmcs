@@ -7,8 +7,16 @@ import MaterialReactTable, {
   MRT_Row
 } from 'material-react-table'
 import { bigToast, MySwal } from '../ExcelManipulation/Utils'
-import { Box, Button, IconButton, TextFieldProps, Tooltip } from '@mui/material'
 import {
+  Box,
+  Button,
+  Divider,
+  IconButton,
+  TextFieldProps,
+  Tooltip
+} from '@mui/material'
+import {
+  BuildCircle,
   Commute,
   Delete,
   Edit,
@@ -207,7 +215,12 @@ const Fleet = () => {
           <Tooltip arrow placement='right' title='Documentos'>
             <Link to={`${row.original.id}/documents`}>
               <IconButton>
-                <Visibility />
+                <Visibility
+                  sx={{
+                    color:
+                      row.original.upcomingReminders.length > 0 ? 'red' : ''
+                  }}
+                />
               </IconButton>
             </Link>
           </Tooltip>
@@ -218,13 +231,21 @@ const Fleet = () => {
               </IconButton>
             </Link>
           </Tooltip>
-          <Tooltip arrow placement='right' title='Viajes'>
+          <Tooltip arrow placement='right' title='Inspecciones'>
             <Link to={`${row.original.id}/inspections`}>
               <IconButton onClick={() => handleTrip(row.original)}>
                 <Summarize />
               </IconButton>
             </Link>
           </Tooltip>
+          <Tooltip arrow placement='right' title='Intervenciones'>
+            <Link to={`${row.original.id}/interventions`}>
+              <IconButton>
+                <BuildCircle />
+              </IconButton>
+            </Link>
+          </Tooltip>
+          <Divider orientation='vertical' flexItem />
           <Tooltip arrow placement='right' title='Editar'>
             <IconButton onClick={() => table.setEditingRow(row)}>
               <Edit />
@@ -258,7 +279,8 @@ const Fleet = () => {
                 year: Number(values['year']),
                 currentMileage: Number(values['currentMileage']),
                 fuelType: values['fuelType'],
-                status: values['status']
+                status: values['status'],
+                upcomingReminders: values['upcomingReminders']
               }
               try {
                 await axios.post(`${apiUrl}/vehicles`, vehicle, {

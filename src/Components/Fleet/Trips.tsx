@@ -29,10 +29,6 @@ import { useStore } from '@nanostores/react'
 
 const apiUrl = api()
 
-interface LocationState {
-  vehicle: Vehicle
-}
-
 // Tipos e interfaces para los datos de Trip
 
 const fetchTrips = async (vehicleId: number): Promise<TripsResponse> => {
@@ -258,8 +254,19 @@ const TripsTable = () => {
           <Typography variant='h4' sx={{ fontWeight: 'bold', marginY: 1 }}>
             {$vehicleStore?.licensePlate}
           </Typography>
+
+          <Typography
+            variant='h6'
+            sx={{ fontWeight: 'bold', fontFamily: 'Orbitron, monospace' }}
+          >
+            {$vehicleStore?.currentMileage.toLocaleString('es-CO', {
+              style: 'unit',
+              unit: 'kilometer'
+            })}{' '}
+          </Typography>
         </Box>
       </Box>
+
       {!lastTrip?.endDate && lastTrip?.startDate && (
         <Card sx={{ maxWidth: 345, mb: 2, margin: '50px auto' }}>
           <CardContent>

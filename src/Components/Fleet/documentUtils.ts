@@ -17,7 +17,11 @@ export const fetchDocuments = async (
       }
     }
   )
-  return data
+  return {
+    documents: data.documents,
+    reminders: data.reminders,
+    currentMileage: data.currentMileage
+  }
 }
 
 // Add Document
