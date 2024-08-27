@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import axios from 'axios'
 import MaterialReactTable, {
@@ -17,12 +17,12 @@ import {
   Tooltip,
   Typography
 } from '@mui/material'
-import { Delete } from '@mui/icons-material'
+import { ArrowBack, Delete } from '@mui/icons-material'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { api } from '../../config'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { Trip, TripsResponse, Vehicle } from './types'
+import { Trip, TripsResponse } from './types'
 import { format } from 'date-fns'
 import { vehicleStore } from '../../store/vehicleStore'
 import { useStore } from '@nanostores/react'
@@ -227,6 +227,9 @@ const TripsTable = () => {
 
   return (
     <>
+      <IconButton onClick={() => navigate('/fleet')} sx={{ mr: 2 }}>
+        <ArrowBack />
+      </IconButton>
       <Box
         sx={{
           display: 'flex',
@@ -330,7 +333,7 @@ const TripsTable = () => {
         onEditingRowSave={handleSaveRowEdits}
         onEditingRowCancel={() => setValidationErrors({})}
         initialState={{ columnVisibility: { id: false, vehicleId: false } }}
-        renderRowActions={({ row, table }) => (
+        renderRowActions={({ row }) => (
           <Box sx={{ display: 'flex', gap: '1rem' }}>
             {/* <Tooltip arrow placement='right' title='Inspección'>
               <Link to={`/trips/${row.original.id}/inspection`}>

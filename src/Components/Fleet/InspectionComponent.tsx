@@ -1,5 +1,5 @@
 import React from 'react'
-import { TextField, MenuItem, Stack, Grid } from '@mui/material'
+import { TextField, MenuItem, Grid } from '@mui/material'
 import { Inspection } from './types'
 
 interface InspectionComponentProps {

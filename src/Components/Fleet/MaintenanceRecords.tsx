@@ -1,14 +1,14 @@
 import React, { useState } from 'react'
-import { Box, Button, Divider, IconButton, Typography } from '@mui/material'
+import { Box, Button, IconButton, Stack, Typography } from '@mui/material'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import { MaintenanceRecord, InterventionType } from './types'
 import { api } from '../../config'
 import axios from 'axios'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useQuery, useQueryClient } from 'react-query'
+import { useQuery } from 'react-query'
 import AddMaintenanceRecordModal from './AddMaintenanceRecordModal'
 import { format } from 'date-fns'
-import { Plumbing } from '@mui/icons-material'
+import { ArrowBack, Plumbing } from '@mui/icons-material'
 
 const apiUrl = api()
 
@@ -37,7 +37,7 @@ const fetchInterventionTypes = async (): Promise<InterventionType[]> => {
 
 const MaintenanceRecords: React.FC = () => {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
+
   const { id } = useParams<{ id: string }>()
 
   const { data: records, refetch } = useQuery<MaintenanceRecord[]>(
@@ -70,7 +70,7 @@ const MaintenanceRecords: React.FC = () => {
     // }
   ]
 
-  const handleSave = (newRecord: MaintenanceRecord) => {
+  const handleSave = () => {
     // Refetch the maintenance records to update the table
     refetch()
     setIsAddModalOpen(false)
@@ -78,9 +78,15 @@ const MaintenanceRecords: React.FC = () => {
 
   return (
     <Box sx={{ padding: 2 }}>
-      <Typography variant='h6' gutterBottom>
-        Historial de Mantenimiento
-      </Typography>
+      <Stack direction='row' spacing={2} mb={2}>
+        <IconButton onClick={() => navigate('/fleet')} sx={{ mr: 2 }}>
+          <ArrowBack />
+        </IconButton>
+        <Typography variant='h4' gutterBottom>
+          Historial de Mantenimiento
+        </Typography>
+      </Stack>
+
       <Box
         sx={{
           display: 'flex',

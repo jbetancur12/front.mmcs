@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from 'react-query'
+import { useQuery, useMutation } from 'react-query'
 import {
   Button,
   Dialog,
@@ -20,19 +20,20 @@ import {
   Divider,
   Box
 } from '@mui/material'
-import { Delete, Download, Edit, Warning } from '@mui/icons-material'
+import { ArrowBack, Delete, Download, Edit, Warning } from '@mui/icons-material'
 import {
   fetchDocuments,
   addDocument,
   updateDocument,
   deleteDocument
 } from './documentUtils'
-import { Document, Reminder, ReminderResponse } from './types'
-import { useParams } from 'react-router-dom'
+import { Document, ReminderResponse } from './types'
+import { useNavigate, useParams } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
 
 const Documents: React.FC = () => {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const vehicleId = parseInt(id as string, 10)
 
   // Query para obtener documentos y recordatorios
@@ -102,6 +103,9 @@ const Documents: React.FC = () => {
 
   return (
     <div>
+      <IconButton onClick={() => navigate('/fleet')} sx={{ mr: 2 }}>
+        <ArrowBack />
+      </IconButton>
       <Button variant='contained' onClick={() => handleOpen()}>
         Agregar Documento
       </Button>

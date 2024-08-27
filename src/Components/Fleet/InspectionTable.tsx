@@ -1,12 +1,25 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
-import { Box, IconButton, Tooltip, Typography, Modal } from '@mui/material'
+import {
+  Box,
+  IconButton,
+  Tooltip,
+  Typography,
+  Modal,
+  Stack
+} from '@mui/material'
 import { api } from '../../config'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { InspectionHistory } from './types'
 import { format } from 'date-fns'
-import { CheckCircle, Error, Visibility, Warning } from '@mui/icons-material'
+import {
+  ArrowBack,
+  CheckCircle,
+  Error,
+  Visibility,
+  Warning
+} from '@mui/icons-material'
 import InspectionSummary from './InspectionSummary'
 
 const apiUrl = api()
@@ -41,6 +54,7 @@ const getConditionIcon = (condition: string) => {
 
 const InspectionsTable = () => {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const [inspections, setInspections] = useState<InspectionHistory[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [selectedInspection, setSelectedInspection] =
@@ -131,9 +145,14 @@ const InspectionsTable = () => {
 
   return (
     <Box sx={{ p: 2 }}>
-      <Typography variant='h4' gutterBottom>
-        Reportes de Inspección
-      </Typography>
+      <Stack direction='row' spacing={2} mb={2}>
+        <IconButton onClick={() => navigate('/fleet')} sx={{ mr: 2 }}>
+          <ArrowBack />
+        </IconButton>
+        <Typography variant='h4' gutterBottom>
+          Reportes de Inspección
+        </Typography>
+      </Stack>
       {loading ? (
         <Typography variant='body1'>Cargando...</Typography>
       ) : (

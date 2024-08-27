@@ -7,13 +7,7 @@ import { BiSolidReport } from 'react-icons/bi'
 import { Link, useLocation } from 'react-router-dom'
 import { userStore } from '../store/userStore'
 import DropdownButton from './DropdownButton'
-import {
-  Assignment,
-  CarCrash,
-  CarRental,
-  CarRepair,
-  Science
-} from '@mui/icons-material'
+import { Assignment, CarRepair, Science } from '@mui/icons-material'
 
 // ...
 

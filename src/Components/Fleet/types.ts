@@ -9,6 +9,8 @@ export interface Document {
 
 export interface Vehicle {
   id?: number
+  vin: string
+  purchaseDate: string
   licensePlate: string
   make: string
   model: string
@@ -29,6 +31,7 @@ export interface Trip {
   endDate?: string | null
   purpose?: string
   driver: string
+  tripStatus: string
 }
 
 export interface TripsResponse {

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import axios from 'axios'
 import MaterialReactTable, {
@@ -21,23 +21,54 @@ import {
   Delete,
   Edit,
   Summarize,
-  TripOrigin,
   Visibility
 } from '@mui/icons-material'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { api } from '../../config'
+import * as yup from 'yup'
 
 import GenericFormModal from './GenericFormModal'
-import { fetchVehicles, vehicleFields } from './vehicleUtils'
+import { addVehicle, fetchVehicles, vehicleFields } from './vehicleUtils'
 import { Link, useNavigate } from 'react-router-dom'
 import { Vehicle } from './types'
 import { vehicleStore } from '../../store/vehicleStore'
+import { useFormik } from 'formik'
+
+const validationSchema = yup.object().shape({
+  vin: yup.string().required('Número de Identificación es obligatorio'),
+  licensePlate: yup
+    .string()
+    .matches(
+      /^[A-Z]{3}-\d{2}[A-Z0-9]$/,
+      'El formato debe ser ABC-123 o ABC-12J'
+    )
+    .required('Número de Identificación es obligatorio'),
+  make: yup.string().required('Marca es obligatoria'),
+  purchaseDate: yup
+    .string()
+    .matches(
+      /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/,
+      'El formato debe ser dd-mm-yyyy'
+    )
+    .required('Fecha de Compra es obligatoria'),
+  model: yup.string().required('Modelo es obligatorio'),
+  year: yup
+    .number()
+    .required('Año es obligatorio')
+    .min(1991, 'El año debe ser mayor a 1990'),
+  currentMileage: yup
+    .number()
+    .required('Kilómetros es obligatorio')
+    .moreThan(0, 'El kilómetros debe ser mayor a 0'),
+  fuelType: yup.string().required('Tipo de Combustible es obligatorio'),
+  status: yup.string().required('Estado es obligatorio')
+})
 
 const apiUrl = api()
 
 const Fleet = () => {
   const queryClient = useQueryClient()
-  const { data: vehicles = [] } = useQuery('vehicles', fetchVehicles)
+  const { data: vehicles = [], refetch } = useQuery('vehicles', fetchVehicles)
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string | undefined
@@ -83,10 +114,23 @@ const Fleet = () => {
     }
   )
 
+  const { mutate: createVehicle } = useMutation(addVehicle, {
+    onSuccess: () => {
+      queryClient.invalidateQueries('vehicles')
+      bigToast('Vehículo Creado Exitosamente!', 'success')
+      setCreateModalOpen(false)
+      refetch()
+    },
+    onError: (error) => {
+      console.error('Error al crear el vehículo:', error)
+      bigToast('Error al crear el vehículo', 'error')
+    }
+  })
+
   const handleSaveRowEdits = useCallback(
     async ({
       exitEditingMode,
-      row,
+
       values
     }: {
       exitEditingMode: () => void
@@ -199,6 +243,26 @@ const Fleet = () => {
     }
   }
 
+  const formik = useFormik<Vehicle>({
+    initialValues: {
+      purchaseDate: '',
+      vin: '',
+      licensePlate: '',
+      make: '',
+      model: '',
+      year: 0,
+      currentMileage: 0,
+      fuelType: '',
+      status: '',
+      upcomingReminders: []
+    },
+    validationSchema: validationSchema,
+    onSubmit: async (values, { resetForm }) => {
+      createVehicle(values)
+      resetForm()
+    }
+  })
+
   return (
     <MaterialReactTable
       columns={columns}
@@ -270,31 +334,12 @@ const Fleet = () => {
           <GenericFormModal
             open={createModalOpen}
             fields={vehicleFields}
-            onClose={() => setCreateModalOpen(false)}
-            onSubmit={async (values: Record<string, any>) => {
-              const vehicle: Vehicle = {
-                licensePlate: values['licensePlate'],
-                make: values['make'],
-                model: values['model'],
-                year: Number(values['year']),
-                currentMileage: Number(values['currentMileage']),
-                fuelType: values['fuelType'],
-                status: values['status'],
-                upcomingReminders: values['upcomingReminders']
-              }
-              try {
-                await axios.post(`${apiUrl}/vehicles`, vehicle, {
-                  headers: {
-                    Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-                  }
-                })
-                queryClient.invalidateQueries('vehicles')
-                setCreateModalOpen(false)
-              } catch (error) {
-                console.error('Error al crear el vehículo:', error)
-              }
+            onClose={() => {
+              setCreateModalOpen(false)
+              formik.resetForm()
             }}
             submitButtonText='Crear Vehículo'
+            formik={formik}
           />
         </>
       )}

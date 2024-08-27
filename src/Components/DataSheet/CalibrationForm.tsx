@@ -97,7 +97,6 @@ const CalibrationForm = () => {
     },
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm }) => {
-      console.log('Calibracion')
       try {
         const response = await axios.post(
           `${apiUrl}/calibration`,

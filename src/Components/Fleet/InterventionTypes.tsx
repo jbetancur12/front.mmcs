@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import axios from 'axios'
 import {
@@ -9,15 +9,25 @@ import {
   Typography,
   Box,
   IconButton,
-  Grid
+  Grid,
+  Stack
 } from '@mui/material'
-import { Edit, Delete } from '@mui/icons-material'
+import { Edit, Delete, ArrowBack } from '@mui/icons-material'
 import { api } from '../../config'
 import { useNavigate } from 'react-router-dom'
 import { InterventionType } from './types'
 import GenericFormModal, { FieldConfig } from './GenericFormModal'
+import { useFormik } from 'formik'
+import * as yup from 'yup'
+import { bigToast } from '../ExcelManipulation/Utils'
 
 const apiUrl = api()
+
+const validationSchema = yup.object().shape({
+  name: yup.string().required('Nombre es obligatorio'),
+  requiresReminder: yup.boolean(),
+  description: yup.string().required('Descripción es obligatoria')
+})
 
 const fetchInterventionTypes = async (): Promise<InterventionType[]> => {
   const { data } = await axios.get(`${apiUrl}/interventionType`, {
@@ -38,6 +48,19 @@ const InterventionTypes = () => {
     'interventionType',
     fetchInterventionTypes
   )
+
+  const formik = useFormik<InterventionType>({
+    initialValues: {
+      name: '',
+      requiresReminder: false,
+      description: ''
+    },
+    validationSchema: validationSchema,
+    onSubmit: async (values, { resetForm }) => {
+      handleFormSubmit(values)
+      resetForm()
+    }
+  })
 
   const createOrUpdateInterventionType = useMutation(
     async (newData: InterventionType) => {
@@ -65,6 +88,7 @@ const InterventionTypes = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries('interventionType')
+        bigToast('Tipo de Intervención Creado Exitosamente!', 'success')
         setModalOpen(false)
       }
     }
@@ -105,6 +129,7 @@ const InterventionTypes = () => {
     const typeToEdit = interventionTypes.find((type) => type.id === id)
     if (typeToEdit) {
       setCurrentType(typeToEdit)
+      formik.setValues(typeToEdit)
       setModalOpen(true)
     }
   }
@@ -147,7 +172,13 @@ const InterventionTypes = () => {
   return (
     <Box sx={{ padding: 2 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant='h4'>Tipos de Intervención</Typography>
+        <Stack direction='row' spacing={2} mb={2}>
+          <IconButton onClick={() => navigate(-1)}>
+            <ArrowBack />
+          </IconButton>
+          <Typography variant='h4'>Tipos de Intervención</Typography>
+        </Stack>
+
         <Button variant='contained' onClick={handleAddNew}>
           Agregar Nuevo
         </Button>
@@ -202,9 +233,8 @@ const InterventionTypes = () => {
         open={modalOpen}
         fields={fields}
         onClose={() => setModalOpen(false)}
-        onSubmit={handleFormSubmit}
+        formik={formik}
         submitButtonText={currentType ? 'Actualizar' : 'Crear'}
-        initialValues={currentType ? { ...currentType } : {}}
       />
     </Box>
   )

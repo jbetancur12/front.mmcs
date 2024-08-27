@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React from 'react'
 import {
   Dialog,
   DialogActions,
@@ -12,8 +12,10 @@ import {
   MenuItem,
   TextField,
   Checkbox,
-  FormControlLabel
+  FormControlLabel,
+  FormHelperText
 } from '@mui/material'
+import { FormikProps } from 'formik'
 
 export interface FieldConfig {
   accessorKey: string
@@ -26,66 +28,56 @@ interface GenericFormModalProps {
   open: boolean
   fields: FieldConfig[]
   onClose: () => void
-  onSubmit: (values: Record<string, any>) => void
+  // onSubmit: (values: Record<string, any>) => void
   submitButtonText: string
-  initialValues?: Record<string, any>
+
+  formik: FormikProps<any>
 }
 
 const GenericFormModal: React.FC<GenericFormModalProps> = ({
   open,
   fields,
   onClose,
-  onSubmit,
+
   submitButtonText,
-  initialValues = {}
+
+  formik
 }) => {
-  // const initialValues = useMemo(
-  //   () =>
-  //     fields.reduce(
-  //       (acc, field) => ({
-  //         ...acc,
-  //         [field.accessorKey]: field.type === 'checkbox' ? false : ''
-  //       }),
-  //       {}
-  //     ),
-  //   [fields]
-  // )
-
-  const [values, setValues] = useState<Record<string, any>>(initialValues)
-
-  useEffect(() => {
-    if (JSON.stringify(values) !== JSON.stringify(initialValues)) {
-      setValues(initialValues)
-    }
-  }, [initialValues])
-
-  const handleSubmit = async () => {
-    try {
-      await onSubmit(values)
-      onClose()
-    } catch (error) {
-      console.error('Error al enviar el formulario:', error)
-    }
-  }
-
   return (
     <Dialog open={open}>
-      <DialogTitle textAlign='center'>Formulario</DialogTitle>
-      <DialogContent>
-        <form onSubmit={(e) => e.preventDefault()}>
+      <form onSubmit={formik?.handleSubmit}>
+        <DialogTitle textAlign='center'>Formulario</DialogTitle>
+        <DialogContent sx={{ width: '100%', padding: '1rem' }}>
           <Stack sx={{ gap: '1.5rem', width: '100%', minWidth: '300px' }}>
             {fields.map((field) => (
               <FormControl key={field.accessorKey} fullWidth>
-                {field.type === 'select' ? (
+                {field.type === 'text' || field.type === 'number' ? (
+                  <TextField
+                    label={field.header}
+                    name={field.accessorKey}
+                    type={field.type}
+                    value={formik.values[field.accessorKey]}
+                    onChange={formik.handleChange}
+                    error={
+                      formik.touched[field.accessorKey] &&
+                      Boolean(formik.errors[field.accessorKey])
+                    }
+                    helperText={
+                      formik.touched[field.accessorKey] &&
+                      (formik.errors[field.accessorKey] as React.ReactNode)
+                    }
+                  />
+                ) : field.type === 'select' ? (
                   <>
                     <InputLabel>{field.header}</InputLabel>
                     <Select
-                      value={values[field.accessorKey] || ''}
-                      onChange={(e) =>
-                        setValues({
-                          ...values,
-                          [field.accessorKey]: e.target.value
-                        })
+                      label={field.header}
+                      name={field.accessorKey}
+                      value={formik.values[field.accessorKey]}
+                      onChange={formik.handleChange}
+                      error={
+                        formik.touched[field.accessorKey] &&
+                        Boolean(formik.errors[field.accessorKey])
                       }
                     >
                       {field.options?.map((option) => (
@@ -94,46 +86,34 @@ const GenericFormModal: React.FC<GenericFormModalProps> = ({
                         </MenuItem>
                       ))}
                     </Select>
+                    <FormHelperText>
+                      {formik.touched[field.accessorKey] &&
+                        (formik.errors[field.accessorKey] as React.ReactNode)}
+                    </FormHelperText>
                   </>
-                ) : field.type === 'checkbox' ? (
+                ) : (
                   <FormControlLabel
                     control={
                       <Checkbox
-                        checked={values[field.accessorKey] || false}
-                        onChange={(e) =>
-                          setValues({
-                            ...values,
-                            [field.accessorKey]: e.target.checked
-                          })
-                        }
+                        name={field.accessorKey}
+                        checked={formik.values[field.accessorKey]}
+                        onChange={formik.handleChange}
                       />
                     }
                     label={field.header}
-                  />
-                ) : (
-                  <TextField
-                    label={field.header}
-                    type={field.type}
-                    value={values[field.accessorKey] || ''}
-                    onChange={(e) =>
-                      setValues({
-                        ...values,
-                        [field.accessorKey]: e.target.value
-                      })
-                    }
                   />
                 )}
               </FormControl>
             ))}
           </Stack>
-        </form>
-      </DialogContent>
-      <DialogActions sx={{ p: '1.25rem' }}>
-        <Button onClick={onClose}>Cancelar</Button>
-        <Button color='secondary' onClick={handleSubmit} variant='contained'>
-          {submitButtonText}
-        </Button>
-      </DialogActions>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose}>Cancelar</Button>
+          <Button type='submit' variant='contained' color='primary'>
+            {submitButtonText}
+          </Button>
+        </DialogActions>
+      </form>
     </Dialog>
   )
 }

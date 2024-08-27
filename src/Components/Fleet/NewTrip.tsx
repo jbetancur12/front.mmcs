@@ -6,17 +6,15 @@ import {
   Grid,
   Typography,
   Container,
-  Box
+  Box,
+  Stack,
+  IconButton
 } from '@mui/material'
 import { Inspection, Trip, TripsResponse } from './types'
-import {
-  addTrip,
-  addTripWithInspection,
-  updateTrip,
-  updateTripWithInspection
-} from './tripUtils'
+import { addTripWithInspection, updateTripWithInspection } from './tripUtils'
 import InspectionComponent from './InspectionComponent'
 import { bigToast } from '../ExcelManipulation/Utils'
+import { ArrowBack } from '@mui/icons-material'
 
 const NewTrip = () => {
   const location = useLocation()
@@ -47,11 +45,6 @@ const NewTrip = () => {
     }
   }, [lastTrip])
 
-  useEffect(() => {
-    // Google Analytics
-    console.log(location)
-  }, [location])
-
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
     if (trip && inspection) {
@@ -80,9 +73,18 @@ const NewTrip = () => {
 
   return (
     <Container>
-      <Typography variant='h4' gutterBottom>
-        {vehicleIsBusy ? 'Edit Trip' : 'New Trip'}
-      </Typography>
+      <Stack direction='row' spacing={2} mb={2}>
+        <IconButton
+          onClick={() => navigate('/fleet/' + trip?.vehicleId + '/trip')}
+          sx={{ mr: 2 }}
+        >
+          <ArrowBack />
+        </IconButton>
+        <Typography variant='h4' gutterBottom>
+          {vehicleIsBusy ? 'Edit Trip' : 'New Trip'}
+        </Typography>
+      </Stack>
+
       <form onSubmit={handleSubmit}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>

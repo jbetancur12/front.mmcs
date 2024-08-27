@@ -42,10 +42,9 @@ import * as yup from 'yup'
 import { Link } from 'react-router-dom'
 import { api } from '../../config'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
-import { bigToast, MySwal } from '../ExcelManipulation/Utils'
+import { bigToast } from '../ExcelManipulation/Utils'
 import withReactContent from 'sweetalert2-react-content'
 import Swal from 'sweetalert2'
-import { createRoot } from 'react-dom/client'
 
 // Define interfaces
 
