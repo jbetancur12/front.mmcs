@@ -13,14 +13,15 @@ import {
   TextField,
   Checkbox,
   FormControlLabel,
-  FormHelperText
+  FormHelperText,
+  Avatar
 } from '@mui/material'
 import { FormikProps } from 'formik'
 
 export interface FieldConfig {
   accessorKey: string
   header: string
-  type: 'text' | 'number' | 'select' | 'checkbox' // Added 'checkbox' type
+  type: 'text' | 'number' | 'select' | 'checkbox' | 'image' | 'date' // Added 'image' type
   options?: string[]
 }
 
@@ -28,9 +29,7 @@ interface GenericFormModalProps {
   open: boolean
   fields: FieldConfig[]
   onClose: () => void
-  // onSubmit: (values: Record<string, any>) => void
   submitButtonText: string
-
   formik: FormikProps<any>
 }
 
@@ -38,15 +37,13 @@ const GenericFormModal: React.FC<GenericFormModalProps> = ({
   open,
   fields,
   onClose,
-
   submitButtonText,
-
   formik
 }) => {
   return (
     <Dialog open={open}>
       <form onSubmit={formik?.handleSubmit}>
-        <DialogTitle textAlign='center'>Formulario</DialogTitle>
+        <DialogTitle textAlign='center'>Crear Vehiculo</DialogTitle>
         <DialogContent sx={{ width: '100%', padding: '1rem' }}>
           <Stack sx={{ gap: '1.5rem', width: '100%', minWidth: '300px' }}>
             {fields.map((field) => (
@@ -91,6 +88,63 @@ const GenericFormModal: React.FC<GenericFormModalProps> = ({
                         (formik.errors[field.accessorKey] as React.ReactNode)}
                     </FormHelperText>
                   </>
+                ) : field.type === 'image' ? (
+                  <>
+                    <div className='flex items-center justify-center mb-4'>
+                      <label htmlFor='avatarInput' className='cursor-pointer'>
+                        <Avatar
+                          alt='Foto de perfil'
+                          src={
+                            formik.values[field.accessorKey]
+                              ? URL.createObjectURL(
+                                  formik.values[field.accessorKey]
+                                )
+                              : '/images/no-img.jpg'
+                          } // Mostramos la foto de perfil seleccionada
+                          sx={{ width: 100, height: 100, mb: 2 }}
+                        />
+                      </label>
+                      {/* {formik.touched[field.accessorKey] &&
+                        formik.errors[field.accessorKey] && (
+                          <FormHelperText error>
+                            {
+                              formik.errors[
+                                field.accessorKey
+                              ] as React.ReactNode
+                            }
+                          </FormHelperText>
+                        )} */}
+                      <input
+                        id='avatarInput'
+                        type='file'
+                        accept='image/*'
+                        onChange={(event) => {
+                          const file = event.currentTarget.files?.[0]
+                          console.log(field.accessorKey)
+                          if (file) {
+                            formik.setFieldValue(field.accessorKey, file)
+                          }
+                        }}
+                        className='hidden'
+                      />
+                    </div>
+                  </>
+                ) : field.type === 'date' ? (
+                  <TextField
+                    label={field.header}
+                    name={field.accessorKey}
+                    type={field.type}
+                    value={formik.values[field.accessorKey]}
+                    onChange={formik.handleChange}
+                    error={
+                      formik.touched[field.accessorKey] &&
+                      Boolean(formik.errors[field.accessorKey])
+                    }
+                    helperText={
+                      formik.touched[field.accessorKey] &&
+                      (formik.errors[field.accessorKey] as React.ReactNode)
+                    }
+                  />
                 ) : (
                   <FormControlLabel
                     control={

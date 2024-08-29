@@ -9,7 +9,7 @@ import {
 } from '../Components/CertificateListItem'
 import { bigToast } from '../Components/ExcelManipulation/Utils'
 import Headquarters from '../Components/Headquarters'
-import { Paper } from '@mui/material'
+import { Divider, Paper, Typography } from '@mui/material'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
 
@@ -296,6 +296,10 @@ function UserProfile() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+          <Typography variant='subtitle2' gutterBottom>
+            Total Equipos: {filteredCertificates.length}
+          </Typography>
+          <Divider />
           {filteredCertificates.map((certificate: Certificate) => (
             <CertificateListItem
               key={certificate.id}

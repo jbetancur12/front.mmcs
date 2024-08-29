@@ -1,6 +1,6 @@
 import { useStore } from '@nanostores/react'
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { userStore } from '../../store/userStore'
 import { api } from '../../config'
 import toast from 'react-hot-toast'
@@ -18,6 +18,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   const [authenticationError, setAuthenticationError] = useState(false) // Nueva variable de estado
 
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     const validateToken = async () => {
@@ -43,9 +44,10 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
         setLoading(false)
       } catch (error) {
         setLoading(false)
+        sessionStorage.setItem('lastLocation', location.pathname)
         setError('No se pudo validar el token') // Mensaje de error informativo
         setAuthenticationError(true)
-        toast('Su sesión se cerrar en 10 segundos')
+        toast('Su sesión se cerrara en 10 segundos')
         setTimeout(() => {
           navigate('/login')
         }, 10000) // Mostrar un mensaje de error al usuario

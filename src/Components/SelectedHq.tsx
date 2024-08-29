@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Certificate, CertificateListItem } from './CertificateListItem'
+import { Divider, Typography } from '@mui/material'
 
 interface SelectedHqProps {
   certificates: Certificate[]
@@ -35,6 +36,10 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
+      <Typography variant='subtitle2' gutterBottom>
+        Total Equipos: {filteredCertificates.length}
+      </Typography>
+      <Divider />
       <ul>
         {filteredCertificates.map((certificate: Certificate) => (
           <CertificateListItem

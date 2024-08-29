@@ -19,6 +19,23 @@ export interface Vehicle {
   fuelType: string
   status: string
   upcomingReminders: Reminder[]
+  pictureUrl: File | null
+  transitLicense: string
+  displacement: number
+  color: string
+  serviceType: string
+  vehicleClass: string
+  bodyType: string
+  capacity: number
+  engineNumber: string
+  chasisNumber: string
+  power: number
+  declarationImportation: string
+  doors: number
+  trafficAuthority: string
+  importationDate: string
+  registrationDate: string
+  expeditionDate: string
 }
 
 // Trip.ts
@@ -52,6 +69,8 @@ export interface Inspection {
   comments?: string
   inspectionDate: string
   inspectorName: string
+  safetyEquipment?: string
+  generalConditions?: string
 }
 
 export interface InspectionHistory extends Inspection {
@@ -71,6 +90,7 @@ export interface MaintenanceRecord {
   cost: number
   serviceProvider: string
   interventionTypes: InterventionType[]
+  interventionType: InterventionType
 }
 
 export interface InterventionType {

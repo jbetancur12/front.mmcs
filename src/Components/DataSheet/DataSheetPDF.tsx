@@ -51,8 +51,6 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
     }
   })
 
-  console.log(imageUrl)
-
   useEffect(() => {
     // Nombre de tu archivo de imagen en el bucket
 

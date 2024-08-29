@@ -12,5 +12,22 @@ export const vehicleStore = atom<Vehicle>({
   currentMileage: 0,
   fuelType: '',
   status: '',
-  upcomingReminders: []
+  upcomingReminders: [],
+  pictureUrl: null,
+  transitLicense: '',
+  displacement: 0,
+  color: '',
+  serviceType: '',
+  vehicleClass: '',
+  bodyType: '',
+  capacity: 0,
+  engineNumber: '',
+  chasisNumber: '',
+  power: 0,
+  declarationImportation: '',
+  doors: 0,
+  trafficAuthority: '',
+  importationDate: '',
+  registrationDate: '',
+  expeditionDate: ''
 })

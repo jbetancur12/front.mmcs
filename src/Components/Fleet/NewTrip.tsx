@@ -91,12 +91,13 @@ const NewTrip = () => {
             <TextField
               label='Start Mileage'
               type='number'
+              name='startMileage'
               fullWidth
-              value={trip?.startMileage}
+              value={trip?.startMileage || ''}
               onChange={(e) =>
                 setTrip((prev) => ({
                   ...prev!,
-                  startMileage: Number(e.target.value)
+                  [e.target.name]: Number(e.target.value)
                 }))
               }
               disabled={vehicleIsBusy} // Disable if editing existing trip
@@ -106,12 +107,13 @@ const NewTrip = () => {
             <TextField
               label='End Mileage'
               type='number'
+              name='endMileage'
               fullWidth
               value={trip?.endMileage || ''}
               onChange={(e) =>
                 setTrip((prev) => ({
                   ...prev!,
-                  endMileage: Number(e.target.value)
+                  [e.target.name]: Number(e.target.value)
                 }))
               }
               disabled={!vehicleIsBusy} // Disable if endDate is not provided
@@ -121,13 +123,14 @@ const NewTrip = () => {
             <TextField
               label='Start Date'
               type='date'
+              name='startDate'
               fullWidth
               InputLabelProps={{ shrink: true }}
               value={formatDate(trip?.startDate || '')}
               onChange={(e) =>
                 setTrip((prev) => ({
                   ...prev!,
-                  startDate: e.target.value
+                  [e.target.name]: e.target.value
                 }))
               }
               disabled={vehicleIsBusy} // Disable if editing existing trip
@@ -137,13 +140,14 @@ const NewTrip = () => {
             <TextField
               label='End Date'
               type='date'
+              name='endDate'
               fullWidth
               InputLabelProps={{ shrink: true }}
               value={formatDate(trip?.endDate || '')}
               onChange={(e) =>
                 setTrip((prev) => ({
                   ...prev!,
-                  endDate: e.target.value
+                  [e.target.name]: e.target.value
                 }))
               }
               disabled={!vehicleIsBusy} // Disable if endDate is not provided
@@ -153,12 +157,13 @@ const NewTrip = () => {
             <TextField
               label='Propósito'
               type='text'
+              name='purpose'
               fullWidth
               value={trip?.purpose || ''}
               onChange={(e) =>
                 setTrip((prev) => ({
                   ...prev!,
-                  purpose: e.target.value
+                  [e.target.name]: e.target.value
                 }))
               }
               disabled={vehicleIsBusy} // Disable if endDate is not provided
@@ -167,12 +172,13 @@ const NewTrip = () => {
           <Grid item xs={12} md={6}>
             <TextField
               label='Conductor'
+              name='driver'
               fullWidth
               value={trip?.driver || ''}
               onChange={(e) =>
                 setTrip((prev) => ({
-                  ...prev!,
-                  driver: e.target.value
+                  ...prev!!,
+                  [e.target.name]: e.target.value
                 }))
               }
               disabled={vehicleIsBusy}
@@ -180,6 +186,9 @@ const NewTrip = () => {
           </Grid>
         </Grid>
         <Box sx={{ mt: 2 }}>
+          <Typography variant='h5' sx={{ mb: 2, textAlign: 'center' }}>
+            Inspección
+          </Typography>
           <InspectionComponent
             inspection={inspection}
             setInspection={setInspection}

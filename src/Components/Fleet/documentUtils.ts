@@ -20,7 +20,8 @@ export const fetchDocuments = async (
   return {
     documents: data.documents,
     reminders: data.reminders,
-    currentMileage: data.currentMileage
+    currentMileage: data.currentMileage,
+    vehicleData: data.vehicleData
   }
 }
 

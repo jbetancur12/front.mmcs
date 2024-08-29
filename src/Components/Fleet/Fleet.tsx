@@ -35,6 +35,7 @@ import { vehicleStore } from '../../store/vehicleStore'
 import { useFormik } from 'formik'
 
 const validationSchema = yup.object().shape({
+  pictureUrl: yup.mixed().required('Imagen es obligatoria'),
   vin: yup.string().required('Número de Identificación es obligatorio'),
   licensePlate: yup
     .string()
@@ -61,7 +62,57 @@ const validationSchema = yup.object().shape({
     .required('Kilómetros es obligatorio')
     .moreThan(0, 'El kilómetros debe ser mayor a 0'),
   fuelType: yup.string().required('Tipo de Combustible es obligatorio'),
-  status: yup.string().required('Estado es obligatorio')
+  status: yup.string().required('Estado es obligatorio'),
+  transitLicense: yup.string().required('Lincencia de Transito es obligatorio'),
+  displacement: yup
+    .number()
+    .required('Cilindraje es obligatorio')
+    .moreThan(0, 'El cilindraje debe ser mayor a 0'),
+  color: yup.string().required('Color es obligatorio'),
+  serviceType: yup.string().required('Tipo de Servicio es obligatorio'),
+  vehicleClass: yup.string().required('Clase es obligatorio'),
+  bodyType: yup.string().required('Tipo de Carroceria es obligatorio'),
+  capacity: yup
+    .number()
+    .required('Capacidad es obligatorio')
+    .moreThan(0, 'La capacidad debe ser mayor a 0'),
+  engineNumber: yup.string().required('Número de Motor es obligatorio'),
+  chasisNumber: yup.string().required('Número de Chasis es obligatorio'),
+  power: yup
+    .number()
+    .required('Potencia es obligatorio')
+    .moreThan(0, 'La potencia debe ser mayor a 0'),
+  declarationImportation: yup
+    .string()
+    .required('Declaración de Importación es obligatorio'),
+  doors: yup
+    .number()
+    .required('Numero de puertas es obligatorio')
+    .moreThan(0, 'Las puertas deben ser mayores a 0'),
+  trafficAuthority: yup
+    .string()
+    .required('Autoridad de Tráfico es obligatorio'),
+  importationDate: yup
+    .string()
+    .matches(
+      /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/,
+      'El formato debe ser dd-mm-yyyy'
+    )
+    .required('Fecha de Importación es obligatoria'),
+  registrationDate: yup
+    .string()
+    .matches(
+      /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/,
+      'El formato debe ser dd-mm-yyyy'
+    )
+    .required('Fecha de Registro es obligatoria'),
+  expeditionDate: yup
+    .string()
+    .matches(
+      /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/,
+      'El formato debe ser dd-mm-yyyy'
+    )
+    .required('Fecha de Expedición es obligatoria')
 })
 
 const apiUrl = api()
@@ -245,6 +296,7 @@ const Fleet = () => {
 
   const formik = useFormik<Vehicle>({
     initialValues: {
+      pictureUrl: null,
       purchaseDate: '',
       vin: '',
       licensePlate: '',
@@ -254,12 +306,32 @@ const Fleet = () => {
       currentMileage: 0,
       fuelType: '',
       status: '',
-      upcomingReminders: []
+      upcomingReminders: [],
+      transitLicense: '',
+      displacement: 0,
+      color: '',
+      serviceType: '',
+      vehicleClass: '',
+      bodyType: '',
+      capacity: 0,
+      engineNumber: '',
+      chasisNumber: '',
+      power: 0,
+      declarationImportation: '',
+      doors: 0,
+      trafficAuthority: '',
+      importationDate: '',
+      registrationDate: '',
+      expeditionDate: ''
     },
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm }) => {
-      createVehicle(values)
-      resetForm()
+      try {
+        await createVehicle(values)
+        resetForm()
+      } catch (error) {
+        console.error('Error al crear el vehículo:', error)
+      }
     }
   })
 

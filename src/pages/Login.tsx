@@ -123,9 +123,10 @@ const Login: React.FC = () => {
         // });
 
         Toast.fire('Bienvenido', '', 'success')
+        const lastLocation = sessionStorage.getItem('lastLocation') || '/'
 
         setTimeout(() => {
-          window.location.href = '/'
+          window.location.href = lastLocation
         }, 3000)
 
         localStorage.setItem('accessToken', token)
@@ -176,7 +177,8 @@ const Login: React.FC = () => {
           navigate('/')
         }
       } catch (error) {
-        Toast.fire('Error', 'No se pudo validar el token', 'error')
+        // Toast.fire('Error', 'No se pudo validar el token', 'error')
+        console.error('Error al validar el token:', error)
       } finally {
         setLoading(false)
       }

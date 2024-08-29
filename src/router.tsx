@@ -221,6 +221,7 @@ import InspectionsTable from './Components/Fleet/InspectionTable'
 
 import MaintenanceRecords from './Components/Fleet/MaintenanceRecords'
 import InterventionTypes from './Components/Fleet/InterventionTypes'
+import VehicleDataSheetPDF from './Components/Fleet/VehicleDataSheetPDF'
 
 function Router() {
   const protectedLayout = (
@@ -241,6 +242,7 @@ function Router() {
             <Route index element={<Fleet />} />
             <Route path='interventions' element={<InterventionTypes />} />
             <Route path=':id/documents' element={<Documents />} />
+            <Route path=':id/data-sheet' element={<VehicleDataSheetPDF />} />
             <Route path=':id/inspections'>
               <Route index element={<InspectionsTable />} />
             </Route>

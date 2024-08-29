@@ -26,16 +26,16 @@ const InspectionComponent: React.FC<InspectionComponentProps> = ({
             }))
           }
         >
-          <MenuItem value='Good'>Good</MenuItem>
-          <MenuItem value='Fair'>Fair</MenuItem>
-          <MenuItem value='Poor'>Poor</MenuItem>
+          <MenuItem value='Bueno'>Bueno</MenuItem>
+          <MenuItem value='Regular'>Regular</MenuItem>
+          <MenuItem value='Pobre'>Pobre</MenuItem>
         </TextField>
       </Grid>
       <Grid item xs={12} md={6}>
         <TextField
           fullWidth
           select
-          label='Condición de Brazos'
+          label='Condición de Frenos'
           value={inspection?.brakeCondition || ''}
           onChange={(e) =>
             setInspection((prev) => ({
@@ -44,9 +44,9 @@ const InspectionComponent: React.FC<InspectionComponentProps> = ({
             }))
           }
         >
-          <MenuItem value='Good'>Good</MenuItem>
-          <MenuItem value='Fair'>Fair</MenuItem>
-          <MenuItem value='Poor'>Poor</MenuItem>
+          <MenuItem value='Bueno'>Bueno</MenuItem>
+          <MenuItem value='Regular'>Regular</MenuItem>
+          <MenuItem value='Pobre'>Pobre</MenuItem>
         </TextField>
       </Grid>
       <Grid item xs={12} md={6}>
@@ -62,9 +62,9 @@ const InspectionComponent: React.FC<InspectionComponentProps> = ({
             }))
           }
         >
-          <MenuItem value='Good'>Good</MenuItem>
-          <MenuItem value='Fair'>Fair</MenuItem>
-          <MenuItem value='Low'>Low</MenuItem>
+          <MenuItem value='Bueno'>Bueno</MenuItem>
+          <MenuItem value='Regular'>Regular</MenuItem>
+          <MenuItem value='Bajo'>Bajo</MenuItem>
         </TextField>
       </Grid>
       <Grid item xs={12} md={6}>
@@ -80,9 +80,46 @@ const InspectionComponent: React.FC<InspectionComponentProps> = ({
             }))
           }
         >
-          <MenuItem value='Good'>Good</MenuItem>
-          <MenuItem value='Fair'>Fair</MenuItem>
-          <MenuItem value='Poor'>Poor</MenuItem>
+          <MenuItem value='Bueno'>Bueno</MenuItem>
+          <MenuItem value='Regular'>Regular</MenuItem>
+          <MenuItem value='Pobre'>Pobre</MenuItem>
+        </TextField>
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <TextField
+          fullWidth
+          select
+          label='Equipo de Seguridad'
+          value={inspection?.safetyEquipment || ''}
+          onChange={(e) =>
+            setInspection((prev) => ({
+              ...prev!,
+              safetyEquipment: e.target.value
+            }))
+          }
+        >
+          <MenuItem value='Bueno'>Bueno</MenuItem>
+          <MenuItem value='Regular'>Regular</MenuItem>
+          <MenuItem value='Pobre'>Pobre</MenuItem>
+          <MenuItem value='N/A'>N/A</MenuItem>
+        </TextField>
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <TextField
+          fullWidth
+          select
+          label='Condiciones Generales'
+          value={inspection?.generalConditions || ''}
+          onChange={(e) =>
+            setInspection((prev) => ({
+              ...prev!,
+              generalConditions: e.target.value
+            }))
+          }
+        >
+          <MenuItem value='Bueno'>Bueno</MenuItem>
+          <MenuItem value='Regular'>Regular</MenuItem>
+          <MenuItem value='Pobre'>Pobre</MenuItem>
         </TextField>
       </Grid>
       <Grid item xs={12}>

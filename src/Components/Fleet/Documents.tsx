@@ -38,7 +38,12 @@ const Documents: React.FC = () => {
 
   // Query para obtener documentos y recordatorios
   const {
-    data: { documents = [], reminders = [], currentMileage = 0 } = {},
+    data: {
+      documents = [],
+      reminders = [],
+      currentMileage = 0,
+      vehicleData
+    } = {},
     refetch
   } = useQuery(['documents', vehicleId], () => fetchDocuments(vehicleId))
 
@@ -109,6 +114,44 @@ const Documents: React.FC = () => {
       <Button variant='contained' onClick={() => handleOpen()}>
         Agregar Documento
       </Button>
+
+      <Box sx={{ p: 2 }}>
+        <Typography variant='h5' sx={{ mb: 2 }}>
+          Hoja de Vida del Vehiculo
+        </Typography>
+        {vehicleData && (
+          <Card
+            sx={{
+              maxWidth: 345,
+              mb: 2,
+              textAlign: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <CardContent>
+              <Typography variant='h6'>
+                {vehicleData.make} - {vehicleData.model}
+              </Typography>
+              <Typography color='textSecondary'>
+                Año: {vehicleData.year}
+              </Typography>
+            </CardContent>
+            <CardActions sx={{ justifyContent: 'center' }}>
+              <Button
+                variant='contained'
+                color='primary'
+                onClick={() =>
+                  navigate(`/fleet/${id}/data-sheet`, {
+                    state: { vehicleData, documents }
+                  })
+                }
+              >
+                Descargar Hoja de Vida
+              </Button>
+            </CardActions>
+          </Card>
+        )}
+      </Box>
 
       <Stack spacing={2} marginTop={2}>
         <Typography variant='h5'>Documentos</Typography>
