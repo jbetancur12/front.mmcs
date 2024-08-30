@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import TableUsersCustomer from '../Components/TableUsersCustomer'
 import { api } from '../config'
 import {
@@ -9,10 +9,11 @@ import {
 } from '../Components/CertificateListItem'
 import { bigToast } from '../Components/ExcelManipulation/Utils'
 import Headquarters from '../Components/Headquarters'
-import { Divider, Paper, Typography } from '@mui/material'
+import { Divider, IconButton, Paper, Typography } from '@mui/material'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
 import CalibrationTimeline from '../Components/CalibrationTimeline'
+import { ArrowBack } from '@mui/icons-material'
 
 // API URL
 const apiUrl = api()
@@ -34,6 +35,7 @@ type Tab = 'users' | 'certificates' | 'headquarters' | 'calibrationTimeLine'
 function UserProfile() {
   const { id } = useParams()
   const $userStore = useStore(userStore)
+  const navigate = useNavigate()
   const [customerData, setCustomerData] = useState<UserData>({
     nombre: '',
     email: '',
@@ -185,6 +187,9 @@ function UserProfile() {
 
   return (
     <div>
+      <IconButton onClick={() => navigate('/customers')} sx={{ mb: 2 }}>
+        <ArrowBack />
+      </IconButton>
       <div className='bg-white shadow-md rounded-lg p-8 max-w-md mx-auto mt-4'>
         <div className='text-center'>
           <div className='flex flex-col justify-center'>

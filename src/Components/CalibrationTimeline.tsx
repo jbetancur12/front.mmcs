@@ -388,9 +388,28 @@ import {
   TableContainer,
   TableHead,
   TableRow
+  // Button
 } from '@mui/material'
 import axios from 'axios'
 import { api } from '../config'
+// import jsPDF from 'jspdf'
+// import html2canvas from 'html2canvas'
+
+// const printToPDF = async (elementId: string) => {
+//   const element = document.getElementById(elementId)
+//   if (element) {
+//     const canvas = await html2canvas(element)
+
+//     const imgData = canvas.toDataURL('image/png')
+//     const pdf = new jsPDF({
+//       orientation: 'l', // Portrait
+//       unit: 'px',
+//       format: [canvas.width, canvas.height]
+//     })
+//     pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height)
+//     pdf.save('calibration-timeline.pdf')
+//   }
+// }
 
 // Define los tipos de datos
 interface Device {
@@ -514,94 +533,115 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
 
   return (
     <Box width='100%' mt={2}>
-      <Paper>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  sx={{
-                    fontWeight: 'bold',
-                    backgroundColor: '#9CF08B',
-                    color: '#000'
-                  }}
-                >
-                  Equipo
-                </TableCell>
-                {timeline.map((entry, index) => (
+      {/* <Button
+        variant='contained'
+        color='primary'
+        onClick={() => printToPDF('calibration-timeline')}
+      >
+        Exportar a PDF
+      </Button> */}
+      <Box id='calibration-timeline'>
+        <Paper>
+          <TableContainer sx={{ maxHeight: 600 }}>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
                   <TableCell
-                    key={index}
                     sx={{
                       fontWeight: 'bold',
-                      backgroundColor:
-                        entry.month === currentMonth &&
-                        entry.year === currentYear
-                          ? '#9CF08B30'
-                          : '#9CF08B',
-                      color: '#000'
+                      backgroundColor: '#9CF08B',
+                      color: '#000',
+                      position: 'sticky',
+                      left: 0,
+                      zIndex: 1 // Asegura que esté encima de las celdas
                     }}
                   >
-                    {entry.label}
+                    Equipo
                   </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {devices.map((device) => (
-                <TableRow key={device.deviceId}>
-                  <TableCell>{device.deviceName}</TableCell>
-                  {timeline.map((entry, index) => {
-                    const isCalibration =
-                      entry.month === device.calibrationMonth &&
-                      entry.year === device.calibrationYear
-                    const isNextCalibration =
-                      entry.month === device.nextCalibrationMonth &&
-                      entry.year === device.nextCalibrationYear
-
-                    return (
-                      <TableCell
-                        key={index}
-                        sx={{
-                          backgroundColor:
-                            entry.month === currentMonth &&
-                            entry.year === currentYear
-                              ? '#9CF08B30'
-                              : '#fff',
-                          borderLeft:
-                            entry.month === currentMonth &&
-                            entry.year === currentYear
-                              ? 'solid 2px #9CF08B80'
-                              : 'none',
-                          borderRight:
-                            entry.month === currentMonth &&
-                            entry.year === currentYear
-                              ? 'solid 2px #9CF08B80'
-                              : 'none'
-                        }}
-                      >
-                        {isCalibration && (
-                          <Chip
-                            label='Calibración'
-                            size='small'
-                            color='primary'
-                          />
-                        )}
-                        {isNextCalibration && (
-                          <Chip
-                            label='Próxima'
-                            size='small'
-                            color='secondary'
-                          />
-                        )}
-                      </TableCell>
-                    )
-                  })}
+                  {timeline.map((entry, index) => (
+                    <TableCell
+                      key={index}
+                      sx={{
+                        fontWeight: 'bold',
+                        backgroundColor:
+                          entry.month === currentMonth &&
+                          entry.year === currentYear
+                            ? '#9CF08B30'
+                            : '#9CF08B',
+                        color: '#000'
+                      }}
+                    >
+                      {entry.label}
+                    </TableCell>
+                  ))}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+              </TableHead>
+              <TableBody>
+                {devices.map((device) => (
+                  <TableRow key={device.deviceId}>
+                    <TableCell
+                      sx={{
+                        position: 'sticky',
+                        left: 0,
+                        backgroundColor: '#fff'
+                        // zIndex: 1 // Asegura que esté encima de las celdas
+                      }}
+                    >
+                      {device.deviceName}
+                    </TableCell>
+                    {timeline.map((entry, index) => {
+                      const isCalibration =
+                        entry.month === device.calibrationMonth &&
+                        entry.year === device.calibrationYear
+                      const isNextCalibration =
+                        entry.month === device.nextCalibrationMonth &&
+                        entry.year === device.nextCalibrationYear
+
+                      return (
+                        <TableCell
+                          key={index}
+                          sx={{
+                            backgroundColor:
+                              entry.month === currentMonth &&
+                              entry.year === currentYear
+                                ? '#9CF08B30'
+                                : '#fff',
+                            borderLeft:
+                              entry.month === currentMonth &&
+                              entry.year === currentYear
+                                ? 'solid 2px #9CF08B80'
+                                : 'none',
+                            borderRight:
+                              entry.month === currentMonth &&
+                              entry.year === currentYear
+                                ? 'solid 2px #9CF08B80'
+                                : 'none'
+                          }}
+                        >
+                          {isCalibration && (
+                            <Chip
+                              label='Calibración'
+                              size='small'
+                              color='primary'
+                            />
+                          )}
+                          {isNextCalibration && (
+                            <Chip
+                              label='Próxima'
+                              size='small'
+                              color='secondary'
+                            />
+                          )}
+                        </TableCell>
+                      )
+                    })}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      </Box>
     </Box>
   )
 }
