@@ -222,6 +222,7 @@ import InspectionsTable from './Components/Fleet/InspectionTable'
 import MaintenanceRecords from './Components/Fleet/MaintenanceRecords'
 import InterventionTypes from './Components/Fleet/InterventionTypes'
 import VehicleDataSheetPDF from './Components/Fleet/VehicleDataSheetPDF'
+import CalibrationTimeline from './Components/CalibrationTimeline'
 
 function Router() {
   const protectedLayout = (
@@ -287,6 +288,7 @@ function Router() {
           <Route path='customers'>
             <Route index element={<Customers />} />
             <Route path=':id' element={<Customer />} />
+            <Route path=':id/schedule' element={<CalibrationTimeline />} />
           </Route>
 
           {/* Calibraciones */}

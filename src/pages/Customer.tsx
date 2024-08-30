@@ -12,6 +12,7 @@ import Headquarters from '../Components/Headquarters'
 import { Divider, Paper, Typography } from '@mui/material'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
+import CalibrationTimeline from '../Components/CalibrationTimeline'
 
 // API URL
 const apiUrl = api()
@@ -28,7 +29,7 @@ interface GroupedCertificates {
   [key: string]: Certificate[]
 }
 
-type Tab = 'users' | 'certificates' | 'headquarters'
+type Tab = 'users' | 'certificates' | 'headquarters' | 'calibrationTimeLine'
 
 function UserProfile() {
   const { id } = useParams()
@@ -268,6 +269,22 @@ function UserProfile() {
             Sedes
           </a>
         </li>
+        <li className='mr-1'>
+          <a
+            href='#'
+            onClick={(e) => {
+              e.preventDefault()
+              setActiveTab('calibrationTimeLine')
+            }}
+            className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
+              activeTab === 'headquarters'
+                ? 'border-l border-t border-r rounded-t'
+                : 'text-blue-500 hover:text-blue-800'
+            }`}
+          >
+            Programación
+          </a>
+        </li>
         {$userStore.rol === 'admin' && (
           <li className='mr-1'>
             <a
@@ -318,6 +335,9 @@ function UserProfile() {
           onDelete={handleDelete}
           onAddSede={handleAddSede}
         />
+      )}
+      {activeTab === 'calibrationTimeLine' && (
+        <CalibrationTimeline customerId={id} />
       )}
     </div>
   )
