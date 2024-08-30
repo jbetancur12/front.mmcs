@@ -71,8 +71,6 @@ const EquipmentForm: React.FC = () => {
   const [isEquipmentOut, setIsEquipmentOut] = useState<boolean>(false)
   const [lastRecord, setLastRecord] = useState<Record<any, any>>({})
 
-  console.log('===>', lastRecord)
-
   const fetchEquipmentStatus = async () => {
     try {
       const response = await axios.get(`${apiUrl}/dataSheet/${id}/status`, {
@@ -107,7 +105,7 @@ const EquipmentForm: React.FC = () => {
       const method = !isEquipmentOut ? 'post' : 'put'
       setIsEquipmentOut(!isEquipmentOut)
 
-      await axios({
+      const response = await axios({
         method,
         url: endpoint,
         data: {
@@ -119,7 +117,9 @@ const EquipmentForm: React.FC = () => {
         }
       })
 
-      console.log('Formulario enviado:', values)
+      if (method === 'post') {
+        setLastRecord(response.data)
+      }
     } catch (error) {
       console.error('Error al enviar el formulario:', error)
     }
@@ -462,33 +462,33 @@ const EquipmentForm: React.FC = () => {
           </Form>
         )}
       </Formik>
-      {isEquipmentOut && (
+      {isEquipmentOut && lastRecord && (
         <Grid item xs={12} mt={2}>
           <Box sx={{ p: 2, border: '1px solid #ddd', borderRadius: 1 }}>
             <Typography variant='h5' gutterBottom>
               Información de Salida
             </Typography>
             <>
-              <Typography>
+              <Typography variant='body1'>
                 <strong>Fecha de Salida:</strong>{' '}
                 {new Date(lastRecord.outDate).toLocaleDateString()}
               </Typography>
-              <Typography>
+              <Typography variant='body2'>
                 <strong>Motivo de Salida:</strong> {lastRecord.outReason}
               </Typography>
-              <Typography>
+              <Typography variant='body1'>
                 <strong>Inspeccion Visual:</strong>{' '}
                 {lastRecord.visualOutInspection}
               </Typography>
-              <Typography>
+              <Typography variant='body2'>
                 <strong>Prueba de Operación:</strong>{' '}
                 {lastRecord.operationalOutTest}
               </Typography>
-              <Typography>
+              <Typography variant='body1'>
                 <strong>Observaciones de salida:</strong>{' '}
                 {lastRecord.observationsOut}
               </Typography>
-              <Typography>
+              <Typography variant='body2'>
                 <strong>Registrado Por:</strong> {lastRecord.registeredBy}
               </Typography>
             </>
@@ -501,13 +501,13 @@ const EquipmentForm: React.FC = () => {
             <Typography variant='h5' gutterBottom>
               Información Ultima Entrada
             </Typography>
-            <Typography>
+            <Typography variant='body1'>
               <strong>Fecha de Entrada:</strong> Sin Información
             </Typography>
-            <Typography>
+            <Typography variant='body1'>
               <strong>Motivo de Salida:</strong> Sin Información
             </Typography>
-            <Typography>
+            <Typography variant='body1'>
               <strong>Inspeccion Visual:</strong> Sin Información
             </Typography>
           </Box>
@@ -520,12 +520,12 @@ const EquipmentForm: React.FC = () => {
               Información Ultima Entrada
             </Typography>
             <>
-              <Typography>
+              <Typography variant='body1'>
                 <strong>Fecha de Entrada:</strong>{' '}
                 {new Date(lastRecord.inDate).toLocaleDateString()}
-                <Typography>
-                  <strong>Motivo de Salida:</strong> {lastRecord.outReason}
-                </Typography>
+              </Typography>
+              <Typography>
+                <strong>Motivo de Salida:</strong> {lastRecord.outReason}
               </Typography>
               <Typography>
                 <strong>Inspeccion Visual:</strong>{' '}

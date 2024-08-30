@@ -205,7 +205,7 @@ const InspectionMaintenanceDataForm: React.FC = () => {
         if (response.status >= 200 && response.status < 300) {
           bigToast('Mantenimiento/Inspección enviada correctamente', 'success')
           resetForm()
-          navigate(`datasheets/${1}/inspection-maintenance`)
+          navigate(`/datasheets/${1}/inspection-maintenance`)
         } else {
           bigToast('Error al enviar mantenimiento/inspección', 'error')
         }

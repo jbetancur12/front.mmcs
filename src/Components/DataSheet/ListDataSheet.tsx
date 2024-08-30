@@ -289,12 +289,12 @@ const ListDataSheet: React.FC = () => {
         size: 10,
         enableEditing: false
       },
-      // {
-      //   accessorKey: 'pictureUrl',
-      //   header: 'URL de la Imagen',
-      //   size: 150,
-      //   muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
-      // },
+      {
+        accessorKey: 'pictureUrl',
+        header: 'URL de la Imagen',
+        size: 150,
+        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+      },
       {
         accessorKey: 'status',
         header: 'Estado',

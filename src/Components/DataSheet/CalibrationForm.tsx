@@ -191,7 +191,15 @@ const CalibrationForm = () => {
                   type='date'
                   name='calibrationDate'
                   value={formik.values.calibrationDate}
-                  onChange={formik.handleChange}
+                  onChange={() => {
+                    formik.handleChange(formik.values.calibrationDate)
+                    formik.values.nextCalibrationDate = addMonths(
+                      new Date(formik.values.calibrationDate),
+                      12
+                    )
+                      .toISOString()
+                      .split('T')[0]
+                  }}
                   onBlur={formik.handleBlur}
                   error={formik.touched.date && Boolean(formik.errors.date)}
                   helperText={formik.touched.date && formik.errors.date}
