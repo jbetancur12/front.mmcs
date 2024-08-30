@@ -2,13 +2,36 @@ import { useParams } from 'react-router-dom'
 import { api } from '../config'
 import axios from 'axios'
 import { useEffect, useState } from 'react'
-import { Box, Button, Divider, Paper, Typography } from '@mui/material'
+import {
+  Box,
+  Button,
+  Divider,
+  IconButton,
+  Paper,
+  Stack,
+  Typography
+} from '@mui/material'
 import CertificatesList from '../Components/CertificatesList'
 import UpdateCertificateModal from '../Components/UpdateCertificateModal'
 import { userStore } from '../store/userStore'
 import { useStore } from '@nanostores/react'
+import { Edit } from '@mui/icons-material'
+import Swal from 'sweetalert2'
+import withReactContent from 'sweetalert2-react-content'
 
 const apiUrl = api()
+
+const fieldLabels: { [key: string]: string } = {
+  compania: 'Compañía',
+  equipo: 'Equipo',
+  city: 'Ciudad',
+  location: 'Ubicación',
+  sede: 'Sede',
+  activoFijo: 'Activo Fijo',
+  serie: 'Serie',
+  ultimaFechaCalibracion: 'Última Fecha de Calibración',
+  proximaFechaCalibracion: 'Próxima Fecha de Calibración'
+}
 
 interface DeviceDetailsProps {
   id: number
@@ -33,6 +56,7 @@ interface DeviceDetailsProps {
 function Certificates() {
   const { id } = useParams<{ id: string }>()
   const $userStore = useStore(userStore)
+  const MySwal = withReactContent(Swal)
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [certificateData, setCertificateData] =
@@ -61,6 +85,53 @@ function Certificates() {
     setIsModalOpen(false)
   }
 
+  const handleEdit = async (field: string) => {
+    const fieldLabel = fieldLabels[field] || field
+    const result = await MySwal.fire({
+      title: 'Actualizar Información',
+      text: `Ingresa el nuevo valor para ${fieldLabel}`,
+      input: 'text',
+      inputPlaceholder: `Nuevo valor para ${fieldLabel}`,
+      showCancelButton: true,
+      confirmButtonText: 'Actualizar',
+      cancelButtonText: 'Cancelar'
+    })
+
+    if (result.isConfirmed) {
+      const newValue = result.value
+
+      try {
+        const response = await axios.put(
+          `${apiUrl}/files/${id}`,
+          {
+            [field]: newValue
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+            }
+          }
+        )
+
+        if (response.status === 200) {
+          MySwal.fire(
+            'Actualizado',
+            `El campo ${fieldLabel} ha sido actualizado exitosamente`,
+            'success'
+          )
+          // Aquí podrías recargar la información si es necesario
+          getCertificateInfo()
+        }
+      } catch (error) {
+        MySwal.fire(
+          'Error',
+          `No se pudo actualizar el campo ${fieldLabel}`,
+          'error'
+        )
+      }
+    }
+  }
+
   return (
     <Paper elevation={3} className='p-4'>
       <Box display='flex' alignItems='center' justifyContent='space-between'>
@@ -68,43 +139,98 @@ function Certificates() {
           Detalles del Equipo
         </Typography>
         {$userStore.rol == 'admin' && (
-          <Button variant='contained' color='primary' onClick={handleOpenModal}>
-            Actualizar Certificado
-          </Button>
+          <Stack direction='row' spacing={2} mb={2}>
+            <Button
+              variant='contained'
+              color='primary'
+              onClick={handleOpenModal}
+            >
+              Actualizar Certificado
+            </Button>
+          </Stack>
         )}
       </Box>
       <Divider className='mb-4' />
       {certificateData && (
         <>
-          <Typography>
-            <strong>Compañia:</strong> {certificateData.customer.nombre}
-          </Typography>
-          <Typography>
-            <strong>Equipo:</strong> {certificateData.device.name}
-          </Typography>
-          <Typography>
-            <strong>Ciudad:</strong> {certificateData.city}
-          </Typography>
-          <Typography>
-            <strong>Ubicación:</strong> {certificateData.location}
-          </Typography>
-          <Typography>
-            <strong>Sede:</strong> {certificateData.sede}
-          </Typography>
-          <Typography>
-            <strong>Activo Fijo:</strong> {certificateData.activoFijo}
-          </Typography>
-          <Typography>
-            <strong>Serie:</strong> {certificateData.serie}
-          </Typography>
-          <Typography>
-            <strong>Ultima Fecha de Calibración:</strong>{' '}
-            {new Date(certificateData.calibrationDate).toLocaleDateString()}
-          </Typography>
-          <Typography>
-            <strong>Próxima Fecha de Calibración:</strong>{' '}
-            {new Date(certificateData.nextCalibrationDate).toLocaleDateString()}
-          </Typography>
+          <Box display='flex' alignItems='center' mb={1}>
+            {$userStore.rol == 'admin' && <Box ml={3.5} />}
+            <Typography flex={1}>
+              <strong>Compañía:</strong> {certificateData.customer.nombre}
+            </Typography>
+          </Box>
+          <Box display='flex' alignItems='center' mb={1}>
+            {$userStore.rol == 'admin' && <Box ml={3.5} />}
+            <Typography flex={1}>
+              <strong>Equipo:</strong> {certificateData.device.name}
+            </Typography>
+          </Box>
+          <Box display='flex' alignItems='center' mb={1}>
+            {$userStore.rol == 'admin' && (
+              <IconButton size='small' onClick={() => handleEdit('city')}>
+                <Edit fontSize='small' />
+              </IconButton>
+            )}
+            <Typography flex={1}>
+              <strong>Ciudad:</strong> {certificateData.city}
+            </Typography>
+          </Box>
+          <Box display='flex' alignItems='center' mb={1}>
+            {$userStore.rol == 'admin' && (
+              <IconButton size='small' onClick={() => handleEdit('location')}>
+                <Edit fontSize='small' />
+              </IconButton>
+            )}
+            <Typography flex={1}>
+              <strong>Ubicación:</strong> {certificateData.location}
+            </Typography>
+          </Box>
+          <Box display='flex' alignItems='center' mb={1}>
+            {$userStore.rol == 'admin' && (
+              <IconButton size='small' onClick={() => handleEdit('sede')}>
+                <Edit fontSize='small' />
+              </IconButton>
+            )}
+            <Typography flex={1}>
+              <strong>Sede:</strong> {certificateData.sede}
+            </Typography>
+          </Box>
+          <Box display='flex' alignItems='center' mb={1}>
+            {$userStore.rol == 'admin' && (
+              <IconButton size='small' onClick={() => handleEdit('activoFijo')}>
+                <Edit fontSize='small' />
+              </IconButton>
+            )}
+            <Typography flex={1}>
+              <strong>Activo Fijo:</strong> {certificateData.activoFijo}
+            </Typography>
+          </Box>
+          <Box display='flex' alignItems='center' mb={1}>
+            {$userStore.rol == 'admin' && (
+              <IconButton size='small' onClick={() => handleEdit('serie')}>
+                <Edit fontSize='small' />
+              </IconButton>
+            )}
+            <Typography flex={1}>
+              <strong>Serie:</strong> {certificateData.serie}
+            </Typography>
+          </Box>
+          <Box display='flex' alignItems='center' mb={1}>
+            {$userStore.rol == 'admin' && <Box ml={3.5} />}
+            <Typography flex={1}>
+              <strong>Última Fecha de Calibración:</strong>{' '}
+              {new Date(certificateData.calibrationDate).toLocaleDateString()}
+            </Typography>
+          </Box>
+          <Box display='flex' alignItems='center' mb={1}>
+            {$userStore.rol == 'admin' && <Box ml={3.5} />}
+            <Typography flex={1}>
+              <strong>Próxima Fecha de Calibración:</strong>{' '}
+              {new Date(
+                certificateData.nextCalibrationDate
+              ).toLocaleDateString()}
+            </Typography>
+          </Box>
         </>
       )}
       <Divider className='mb-4' />
@@ -113,28 +239,7 @@ function Certificates() {
         onClose={handleCloseModal}
         id={id}
       />
-      {/* <ul className="flex flex-wrap text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:border-gray-700 dark:text-gray-400 mt-8">
-        <li className="me-2">
-          <a
-            href="#"
-            aria-current="page"
-            className="inline-block p-4 text-blue-600 bg-gray-100 rounded-t-lg active dark:bg-gray-800 dark:text-blue-500"
-          >
-            Calibración
-          </a>
-        </li>
-        <li className="me-2">
-          <a
-            href="#"
-            className="inline-block p-4 rounded-t-lg hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:text-gray-300"
-          >
-            Seguridad Electrica
-          </a>
-        </li>
-      </ul> */}
-      {/* <Paper elevation={1} className="p-4 mt-4"> */}
       <CertificatesList />
-      {/* </Paper> */}
     </Paper>
   )
 }

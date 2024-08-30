@@ -2,6 +2,7 @@ import { useStore } from '@nanostores/react'
 // import { useState } from "react";
 // import { BiSolidFactory } from "react-icons/bi";
 import { FaHospitalUser, FaUser } from 'react-icons/fa'
+import { MdMicrowave } from 'react-icons/md'
 import { BiSolidReport } from 'react-icons/bi'
 
 import { Link, useLocation } from 'react-router-dom'
@@ -100,7 +101,7 @@ const SideBar: React.FC = () => {
                     to={`customers/${$userStore.customer.id}`}
                     className='flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700'
                   >
-                    <FaUser className='w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white' />
+                    <MdMicrowave className='w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white' />
                     <span className='ml-3' sidebar-toggle-item=''>
                       Equipos
                     </span>
@@ -181,15 +182,17 @@ const SideBar: React.FC = () => {
               </li>
 
               <li>
-                <Link
-                  to='fleet'
-                  className='flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700'
-                >
-                  <CarRepair className='w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white' />
-                  <span className='ml-3' sidebar-toggle-item=''>
-                    Flota
-                  </span>
-                </Link>
+                {$userStore.rol === 'admin' && (
+                  <Link
+                    to='fleet'
+                    className='flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700'
+                  >
+                    <CarRepair className='w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white' />
+                    <span className='ml-3' sidebar-toggle-item=''>
+                      Flota
+                    </span>
+                  </Link>
+                )}
               </li>
 
               {/* <li>
