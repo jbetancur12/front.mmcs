@@ -147,18 +147,11 @@ const InspectionMaintenance: React.FC = () => {
         )
         return // No renderiza el botón
       } else {
-        navigate(`2/${id}`)
+        navigate(`${id}`)
       }
     }
     return (
       <Stack direction='row' spacing={2} marginBottom={2}>
-        <Tooltip arrow placement='right' title='Ver'>
-          <Link to={`${id}`}>
-            <IconButton>
-              <Visibility />
-            </IconButton>
-          </Link>
-        </Tooltip>
         <Tooltip arrow placement='right' title='Ver 2'>
           <IconButton onClick={handleClick}>
             <Visibility />

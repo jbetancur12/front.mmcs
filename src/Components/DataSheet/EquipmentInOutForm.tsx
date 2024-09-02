@@ -149,11 +149,6 @@ const EquipmentForm: React.FC = () => {
           >
             <Download />
           </IconButton>
-          <IconButton
-            onClick={() => navigate('/dataSheets/' + id + '/in-out-report2')}
-          >
-            <Download />
-          </IconButton>
         </div>
       </Box>
       <Typography variant='h4' gutterBottom>

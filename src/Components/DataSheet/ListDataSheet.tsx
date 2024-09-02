@@ -771,22 +771,8 @@ const ListDataSheet: React.FC = () => {
                 </IconButton>
               </Link>
             </Tooltip>
-            <Tooltip arrow placement='right' title='Inventario2'>
-              <Link to='inventory2'>
-                <IconButton>
-                  <Inventory />
-                </IconButton>
-              </Link>
-            </Tooltip>
             <Tooltip arrow placement='right' title='Programa de Calibración'>
               <Link to='calibration-program'>
-                <IconButton>
-                  <PrecisionManufacturing />
-                </IconButton>
-              </Link>
-            </Tooltip>
-            <Tooltip arrow placement='right' title='Programa de Calibración 2'>
-              <Link to='calibration-program2'>
                 <IconButton>
                   <PrecisionManufacturing />
                 </IconButton>
@@ -798,17 +784,6 @@ const ListDataSheet: React.FC = () => {
               title='Cronograma de Mantenimiento'
             >
               <Link to='calibration-schedule'>
-                <IconButton>
-                  <Event />
-                </IconButton>
-              </Link>
-            </Tooltip>
-            <Tooltip
-              arrow
-              placement='right'
-              title='Cronograma de Mantenimiento 2'
-            >
-              <Link to='maintenance-schedule2'>
                 <IconButton>
                   <Event />
                 </IconButton>
