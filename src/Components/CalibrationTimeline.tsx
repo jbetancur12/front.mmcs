@@ -387,11 +387,15 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  Stack,
+  Button,
+  CircularProgress
   // Button
 } from '@mui/material'
 import axios from 'axios'
 import { api } from '../config'
+import { useNavigate } from 'react-router-dom'
 // import jsPDF from 'jspdf'
 // import html2canvas from 'html2canvas'
 
@@ -415,6 +419,8 @@ import { api } from '../config'
 interface Device {
   deviceId: number
   deviceName: string
+  serialNumber: string
+  location: string
   calibrationMonth: number
   nextCalibrationMonth: number
   calibrationYear: number
@@ -432,18 +438,18 @@ interface DataResponse {
 
 // Función para generar los nombres de los meses
 const getMonthNames = (): string[] => [
-  'Enero',
-  'Febrero',
-  'Marzo',
-  'Abril',
-  'Mayo',
-  'Junio',
-  'Julio',
-  'Agosto',
-  'Septiembre',
-  'Octubre',
-  'Noviembre',
-  'Diciembre'
+  'Ene',
+  'Feb',
+  'Mar',
+  'Abr',
+  'May',
+  'Jun',
+  'Jul',
+  'Ago',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dic'
 ]
 
 // Calcula el cronograma de calibración
@@ -459,7 +465,7 @@ const createTimeline = (data: DataResponse) => {
     months.push({
       month: currentMonth,
       year: currentYear,
-      label: `${monthNames[currentMonth - 1]} ${currentYear}`
+      label: `${monthNames[currentMonth - 1]} <br/> ${currentYear}`
     })
 
     currentMonth++
@@ -479,6 +485,7 @@ interface Props {
 const apiUrl = api()
 
 const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
+  const navigate = useNavigate()
   const [timeline, setTimeline] = useState<
     { month: number; year: number; label: string }[] | null
   >(null)
@@ -520,7 +527,20 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
   }, [customerId])
 
   if (loading) {
-    return <Typography>Loading...</Typography>
+    return (
+      <Box
+        display='flex'
+        justifyContent='center'
+        alignItems='center'
+        height='100vh'
+        flexDirection='column'
+      >
+        <CircularProgress />
+        <Typography variant='h6' sx={{ mt: 2, color: 'text.secondary' }}>
+          Cargando...
+        </Typography>
+      </Box>
+    )
   }
 
   if (error) {
@@ -533,15 +553,31 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
 
   return (
     <Box width='100%' mt={2}>
-      {/* <Button
+      <Button
         variant='contained'
         color='primary'
-        onClick={() => printToPDF('calibration-timeline')}
+        onClick={() => navigate('schedule/pdf')}
       >
         Exportar a PDF
-      </Button> */}
+      </Button>
       <Box id='calibration-timeline'>
         <Paper>
+          <Stack
+            spacing={2}
+            direction='row'
+            sx={{
+              mb: 2,
+              mt: 2
+              // border: '1px solid #000',
+              // width: 450,
+              // padding: 2
+            }}
+          >
+            <Chip label='X' size='small' color='primary' sx={{ width: 25 }} />
+            <span>Calibración</span>
+            <Chip label='X' size='small' color='warning' sx={{ width: 25 }} />
+            <span>Proxima Calibración</span>
+          </Stack>
           <TableContainer sx={{ maxHeight: 600 }}>
             <Table stickyHeader>
               <TableHead>
@@ -553,10 +589,33 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
                       color: '#000',
                       position: 'sticky',
                       left: 0,
+                      textAlign: 'center',
                       zIndex: 1 // Asegura que esté encima de las celdas
                     }}
                   >
                     Equipo
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      fontWeight: 'bold',
+                      backgroundColor: '#9CF08B',
+                      color: '#000',
+                      textAlign: 'center'
+                      // Asegura que esté encima de las celdas
+                    }}
+                  >
+                    Serie
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      fontWeight: 'bold',
+                      backgroundColor: '#9CF08B',
+                      color: '#000',
+                      textAlign: 'center'
+                      // Asegura que esté encima de las celdas
+                    }}
+                  >
+                    Ubicación
                   </TableCell>
                   {timeline.map((entry, index) => (
                     <TableCell
@@ -568,10 +627,11 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
                           entry.year === currentYear
                             ? '#9CF08B30'
                             : '#9CF08B',
-                        color: '#000'
+                        color: '#000',
+                        textAlign: 'center'
                       }}
                     >
-                      {entry.label}
+                      <span dangerouslySetInnerHTML={{ __html: entry.label }} />
                     </TableCell>
                   ))}
                 </TableRow>
@@ -588,6 +648,12 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
                       }}
                     >
                       {device.deviceName}
+                    </TableCell>
+                    <TableCell sx={{ textAlign: 'center' }}>
+                      {device.serialNumber}
+                    </TableCell>
+                    <TableCell sx={{ textAlign: 'center' }}>
+                      {device.location}
                     </TableCell>
                     {timeline.map((entry, index) => {
                       const isCalibration =
@@ -619,18 +685,10 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
                           }}
                         >
                           {isCalibration && (
-                            <Chip
-                              label='Calibración'
-                              size='small'
-                              color='primary'
-                            />
+                            <Chip label='X' size='small' color='primary' />
                           )}
                           {isNextCalibration && (
-                            <Chip
-                              label='Próxima'
-                              size='small'
-                              color='secondary'
-                            />
+                            <Chip label='X' size='small' color='warning' />
                           )}
                         </TableCell>
                       )

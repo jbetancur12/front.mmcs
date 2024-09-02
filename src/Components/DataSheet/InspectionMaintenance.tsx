@@ -18,6 +18,7 @@ import { format } from 'date-fns'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Visibility } from '@mui/icons-material'
+import { bigToast } from '../ExcelManipulation/Utils'
 
 const apiUrl = api()
 
@@ -131,7 +132,24 @@ const InspectionMaintenance: React.FC = () => {
     })
   }
 
-  const ActionsButtons = ({ id }: { id: number }) => {
+  const ActionsButtons = ({
+    id,
+    activity
+  }: {
+    id: number
+    activity: string
+  }) => {
+    const handleClick = () => {
+      if (activity === 'Calibración') {
+        bigToast(
+          'Buscar certificado de calibración en las trazabilidades',
+          'success'
+        )
+        return // No renderiza el botón
+      } else {
+        navigate(`2/${id}`)
+      }
+    }
     return (
       <Stack direction='row' spacing={2} marginBottom={2}>
         <Tooltip arrow placement='right' title='Ver'>
@@ -140,6 +158,11 @@ const InspectionMaintenance: React.FC = () => {
               <Visibility />
             </IconButton>
           </Link>
+        </Tooltip>
+        <Tooltip arrow placement='right' title='Ver 2'>
+          <IconButton onClick={handleClick}>
+            <Visibility />
+          </IconButton>
         </Tooltip>
       </Stack>
     )
@@ -224,7 +247,10 @@ const InspectionMaintenance: React.FC = () => {
         enableEditing
         renderRowActions={({ row }) => (
           <Box sx={{ display: 'flex', gap: '1rem' }}>
-            <ActionsButtons id={row.original.id} />
+            <ActionsButtons
+              id={row.original.id}
+              activity={row.original.activity}
+            />
           </Box>
         )}
       />

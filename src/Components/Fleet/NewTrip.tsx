@@ -45,24 +45,29 @@ const NewTrip = () => {
     }
   }, [lastTrip])
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     if (trip && inspection) {
-      if (vehicleIsBusy) {
-        updateTripWithInspection(trip, {
-          ...inspection,
-          inspectionType: 'Inspección de Entrada'
-        })
-        bigToast('Viaje Actualizado Exitosamente!', 'success')
-      } else {
-        addTripWithInspection(trip, {
-          ...inspection,
-          inspectionType: 'Inspección de Salida'
-        })
-        bigToast('Viaje Creado Exitosamente!', 'success')
-      }
+      try {
+        if (vehicleIsBusy) {
+          await updateTripWithInspection(trip, {
+            ...inspection,
+            inspectionType: 'Inspección de Entrada'
+          })
+          bigToast('Viaje Actualizado Exitosamente!', 'success')
+        } else {
+          await addTripWithInspection(trip, {
+            ...inspection,
+            inspectionType: 'Inspección de Salida'
+          })
+          bigToast('Viaje Creado Exitosamente!', 'success')
+        }
 
-      navigate(-1)
+        navigate(-1)
+      } catch (error: any) {
+        console.log(error)
+        bigToast(error.error, 'error')
+      }
     }
   }
 

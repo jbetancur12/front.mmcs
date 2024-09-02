@@ -4,7 +4,6 @@ import { useStore } from '@nanostores/react'
 import {
   ButtonBase,
   capitalize,
-  Icon,
   IconButton,
   List,
   ListItem,

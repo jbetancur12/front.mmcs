@@ -12,7 +12,7 @@ import {
   EquipmentInfo,
   InspectionMaintenanceData
 } from './InspectionMaintenanceForm'
-import { IconButton } from '@mui/material'
+import { Box, CircularProgress, IconButton, Typography } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 
@@ -393,7 +393,22 @@ const InspectionMaintenancePDF: React.FC<Props> = ({ data }) => {
     </View>
   )
 
-  if (!data) return <div>Loading...</div>
+  if (!data) {
+    return (
+      <Box
+        display='flex'
+        justifyContent='center'
+        alignItems='center'
+        height='100vh'
+        flexDirection='column'
+      >
+        <CircularProgress />
+        <Typography variant='h6' sx={{ mt: 2, color: 'text.secondary' }}>
+          Generando PDF...
+        </Typography>
+      </Box>
+    )
+  }
 
   return (
     <div>

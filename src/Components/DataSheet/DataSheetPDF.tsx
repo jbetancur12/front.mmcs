@@ -11,7 +11,7 @@ import {
 import { CalibrationHistory, DataSheetData } from './ListDataSheet'
 import { format } from 'date-fns'
 import { createTw } from 'react-pdf-tailwind'
-import { IconButton } from '@mui/material'
+import { Box, CircularProgress, IconButton, Typography } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { useNavigate } from 'react-router-dom'
 import * as minioExports from 'minio'
@@ -301,7 +301,22 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
     }
   })
 
-  if (!dataSheet) return <div>Loading...</div>
+  if (!dataSheet) {
+    return (
+      <Box
+        display='flex'
+        justifyContent='center'
+        alignItems='center'
+        height='100vh'
+        flexDirection='column'
+      >
+        <CircularProgress />
+        <Typography variant='h6' sx={{ mt: 2, color: 'text.secondary' }}>
+          Generando PDF...
+        </Typography>
+      </Box>
+    )
+  }
 
   const Header = () => (
     <View style={tw('border border-black flex  flex-row mb-10	')} fixed>

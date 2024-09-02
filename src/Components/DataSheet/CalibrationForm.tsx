@@ -134,6 +134,18 @@ const CalibrationForm = () => {
     elaboratedBy: 'Elaborado por'
   }
 
+  useEffect(() => {
+    if (formik.values.calibrationDate) {
+      const parsedDate = new Date(formik.values.calibrationDate)
+      if (!isNaN(parsedDate.getTime())) {
+        formik.setFieldValue(
+          'nextCalibrationDate',
+          addMonths(parsedDate, 12).toISOString()
+        )
+      }
+    }
+  }, [formik.values.calibrationDate])
+
   return (
     <Paper elevation={3} sx={{ p: 4, mt: 4 }} style={{ width: '100%' }}>
       <Button
@@ -191,15 +203,7 @@ const CalibrationForm = () => {
                   type='date'
                   name='calibrationDate'
                   value={formik.values.calibrationDate}
-                  onChange={() => {
-                    formik.handleChange(formik.values.calibrationDate)
-                    formik.values.nextCalibrationDate = addMonths(
-                      new Date(formik.values.calibrationDate),
-                      12
-                    )
-                      .toISOString()
-                      .split('T')[0]
-                  }}
+                  onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={formik.touched.date && Boolean(formik.errors.date)}
                   helperText={formik.touched.date && formik.errors.date}

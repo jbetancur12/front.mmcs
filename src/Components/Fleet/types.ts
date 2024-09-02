@@ -5,6 +5,7 @@ export interface Document {
   description?: string
   issuedDate?: string
   expirationDate?: string
+  fileUrl?: string
 }
 
 export interface Vehicle {

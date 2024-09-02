@@ -223,6 +223,10 @@ import MaintenanceRecords from './Components/Fleet/MaintenanceRecords'
 import InterventionTypes from './Components/Fleet/InterventionTypes'
 import VehicleDataSheetPDF from './Components/Fleet/VehicleDataSheetPDF'
 import CalibrationTimeline from './Components/CalibrationTimeline'
+import { DocumentViewPDF } from './Components/Fleet/DocumentViewPDF'
+import { CalibrationTimelinePDF } from './Components/Fleet/CalibrationTimelinePDF'
+
+import PDFViewer from './Components/DataSheet/PDFViewer'
 
 function Router() {
   const protectedLayout = (
@@ -243,6 +247,7 @@ function Router() {
             <Route index element={<Fleet />} />
             <Route path='interventions' element={<InterventionTypes />} />
             <Route path=':id/documents' element={<Documents />} />
+            <Route path=':id/documents/:id' element={<DocumentViewPDF />} />
             <Route path=':id/data-sheet' element={<VehicleDataSheetPDF />} />
             <Route path=':id/inspections'>
               <Route index element={<InspectionsTable />} />
@@ -260,15 +265,28 @@ function Router() {
               element={<InspectionMaintenanceForm />}
             />
             <Route path='inventory' element={<InventoryPDF />} />
+            <Route path='inventory2' element={<PDFViewer path='inventory' />} />
             <Route
               path='calibration-program'
               element={<CalibrationProgramPDF />}
             />
+            <Route
+              path='calibration-program2'
+              element={<PDFViewer path='calibration-program' />}
+            />
             <Route path=':id/in-out-report' element={<EquipmentInOutPDF />} />
+            <Route
+              path=':id/in-out-report2'
+              element={<PDFViewer path='device-in-out' />}
+            />
             <Route path=':id/in-out-table' element={<EquipmentInOutTable />} />
             <Route
               path='calibration-schedule'
               element={<CalibrationSchedulePDF />}
+            />
+            <Route
+              path='maintenance-schedule2'
+              element={<PDFViewer path='maintenance-schedule' />}
             />
             <Route path=':id/new-calibration' element={<CalibrationForm />} />
             <Route path=':id' element={<DataSheetDetail />} />
@@ -281,6 +299,10 @@ function Router() {
               path=':id/inspection-maintenance/:id'
               element={<InspectionPDF />}
             />
+            <Route
+              path=':id/inspection-maintenance/2/:id'
+              element={<PDFViewer path='inspection-maintenance' />}
+            />
           </Route>
 
           {/* Clientes y usuarios */}
@@ -289,6 +311,10 @@ function Router() {
             <Route index element={<Customers />} />
             <Route path=':id' element={<Customer />} />
             <Route path=':id/schedule' element={<CalibrationTimeline />} />
+            <Route
+              path=':id/schedule/pdf'
+              element={<CalibrationTimelinePDF />}
+            />
           </Route>
 
           {/* Calibraciones */}

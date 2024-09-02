@@ -28,17 +28,23 @@ export const fetchDocuments = async (
 // Add Document
 export const addDocument = async (
   vehicleId: number | string | undefined,
-  document: Document
+  document: FormData
 ) => {
   await axios.post(`${apiUrl}/vehicles/${vehicleId}/documents`, document, {
-    headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+      'Content-Type': 'multipart/form-data'
+    }
   })
 }
 
 // Update Document
 export const updateDocument = async (document: Document) => {
   await axios.put(`${apiUrl}/document/${document.id}`, document, {
-    headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+      'Content-Type': 'multipart/form-data'
+    }
   })
 }
 

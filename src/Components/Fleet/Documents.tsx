@@ -20,7 +20,14 @@ import {
   Divider,
   Box
 } from '@mui/material'
-import { ArrowBack, Delete, Download, Edit, Warning } from '@mui/icons-material'
+import {
+  ArrowBack,
+  CloudUpload,
+  Delete,
+  Download,
+  Edit,
+  Warning
+} from '@mui/icons-material'
 import {
   fetchDocuments,
   addDocument,
@@ -30,6 +37,7 @@ import {
 import { Document, ReminderResponse } from './types'
 import { useNavigate, useParams } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
+import { VisuallyHiddenInput } from '../TableFiles'
 
 const Documents: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -55,10 +63,15 @@ const Documents: React.FC = () => {
   const [documentExpirationDate, setDocumentExpirationDate] = useState('')
   const [documentNumber, setDocumentNumber] = useState('')
   const [open, setOpen] = useState(false)
+  const [pdfFile, setPdfFile] = useState<File | null>(null) // Estado para el archivo PDF
+  const [pdfName, setPDfName] = useState<string>('')
 
   const addOrUpdateDocument = useMutation(
-    (doc: Document) =>
-      doc.id ? updateDocument(doc) : addDocument(vehicleId, doc),
+    ({ doc, isUpdate }: { doc: FormData | Document; isUpdate: boolean }) => {
+      return isUpdate
+        ? updateDocument(doc as Document)
+        : addDocument(vehicleId, doc as FormData)
+    },
     {
       onSuccess: () => {
         refetch()
@@ -90,12 +103,14 @@ const Documents: React.FC = () => {
       setDocumentExpirationDate('')
       setDocumentNumber('')
     }
+    setPdfFile(null) // Reinicia el archivo PDF seleccionado
     setOpen(true)
   }
 
   const handleClose = () => setOpen(false)
 
   const handleSave = () => {
+    console.log('data')
     const doc: Document = {
       id: selectedDocument?.id,
       documentType:
@@ -103,7 +118,26 @@ const Documents: React.FC = () => {
       expirationDate: documentExpirationDate,
       documentNumber: documentNumber
     }
-    addOrUpdateDocument.mutate(doc)
+
+    // Aquí puedes enviar el archivo PDF junto con los datos del documento
+    if (pdfFile) {
+      const formData = new FormData()
+      formData.append('document', JSON.stringify(doc))
+      formData.append('pdf', pdfFile)
+      // Envía formData al backend para manejar la carga del PDF
+      addOrUpdateDocument.mutate({
+        doc: formData,
+        isUpdate: !!selectedDocument?.id
+      })
+    }
+  }
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null
+    if (file) {
+      setPdfFile(file)
+      setPDfName(file.name)
+    }
   }
 
   return (
@@ -172,7 +206,7 @@ const Documents: React.FC = () => {
                 </CardContent>
                 <CardActions style={{ justifyContent: 'center' }}>
                   <Tooltip title='Descargar'>
-                    <IconButton>
+                    <IconButton onClick={() => navigate(`${doc.fileUrl}`)}>
                       <Download />
                     </IconButton>
                   </Tooltip>
@@ -276,6 +310,18 @@ const Documents: React.FC = () => {
                       : 'No especificado'}
                   </Typography>
                 </CardContent>
+                <CardActions style={{ justifyContent: 'center' }}>
+                  <Tooltip title='Editar'>
+                    <IconButton onClick={() => handleOpen()}>
+                      <Edit />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title='Eliminar'>
+                    <IconButton color='error' onClick={() => {}}>
+                      <Delete />
+                    </IconButton>
+                  </Tooltip>
+                </CardActions>
               </Card>
             </Grid>
           ))}
@@ -284,18 +330,14 @@ const Documents: React.FC = () => {
 
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>
-          {selectedDocument ? 'Editar Documento' : 'Agregar Documento'}
+          {selectedDocument ? 'Editar' : 'Agregar'} Documento
         </DialogTitle>
         <DialogContent>
-          <Stack spacing={2}>
+          <Stack spacing={2} marginTop={2}>
             <Select
+              label='Tipo de Documento'
               value={documentTypeSelect}
-              onChange={(e) => {
-                const value = e.target.value as string
-                setDocumentTypeSelect(value)
-                setDocumentType(value)
-                if (value !== 'Other') setDocumentType('')
-              }}
+              onChange={(e) => setDocumentTypeSelect(e.target.value as string)}
             >
               <MenuItem value='SOAT'>SOAT</MenuItem>
               <MenuItem value='RTM'>RTM</MenuItem>
@@ -304,7 +346,7 @@ const Documents: React.FC = () => {
             </Select>
             {documentTypeSelect === 'Other' && (
               <TextField
-                label='Otro Documento'
+                label='Especificar tipo de documento'
                 value={documentType}
                 onChange={(e) => setDocumentType(e.target.value)}
               />
@@ -313,21 +355,40 @@ const Documents: React.FC = () => {
               label='Número de Documento'
               value={documentNumber}
               onChange={(e) => setDocumentNumber(e.target.value)}
-              InputLabelProps={{ shrink: true }}
             />
             <TextField
-              label='Fecha de Expiración'
-              value={documentExpirationDate}
+              label='Fecha de Vencimiento'
               type='date'
+              value={documentExpirationDate}
               onChange={(e) => setDocumentExpirationDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
+              InputLabelProps={{
+                shrink: true
+              }}
             />
+            <Button
+              component='label'
+              variant='contained'
+              startIcon={<CloudUpload />}
+              href='#file-upload'
+              style={{
+                textTransform: 'none',
+                fontWeight: 'bold',
+                color: '#DCFCE7'
+              }}
+            >
+              {pdfName ? pdfName : 'Cargar Archivo'}
+              <VisuallyHiddenInput
+                type='file'
+                accept='.pdf'
+                onChange={handleFileChange}
+              />
+            </Button>
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancelar</Button>
-          <Button onClick={handleSave} variant='contained' color='primary'>
-            {selectedDocument ? 'Guardar Cambios' : 'Agregar Documento'}
+          <Button onClick={handleSave} variant='contained'>
+            Guardar
           </Button>
         </DialogActions>
       </Dialog>
