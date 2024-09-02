@@ -13,10 +13,7 @@ const minioClient = new minioExports.Client({
   secretKey: import.meta.env.VITE_MINIO_SECRETKEY
 })
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.js',
-  import.meta.url
-).toString()
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
 
 const PDFViewer = ({
   path,
@@ -124,8 +121,8 @@ const PDFViewer = ({
         >
           <br />
           <a href={pdfData} id='enlaceDescargarPdf' download='ReactJS.pdf'>
-            Tu dispositivo no puede visualizar los PDF, da click aquí para
-            descargarlo
+            No es posible visualizar el PDF en dispositios moviles, da click
+            aquí para descargarlo
           </a>
         </object>
       )}

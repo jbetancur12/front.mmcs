@@ -77,13 +77,19 @@ const PDFViewer = ({ path }: PDFViewerProps) => {
         title='PDF'
         name='PDF'
       >
-        <br />
-        <p>
-          Tu dispositivo no puede visualizar los PDF,
-          <a href={pdfData} id='enlaceDescargarPdf' download={`data.pdf`}>
-            da click aquí para descargarlo.
-          </a>
-        </p>
+        <div className='flex flex-col items-center justify-center'>
+          <p className='text-gray-600 text-lg mt-4'>
+            No es posible visualizar el PDF en dispositios moviles.
+            <a
+              href={pdfData}
+              id='enlaceDescargarPdf'
+              download={`data.pdf`}
+              className='text-blue-600 underline hover:text-blue-800 ml-2'
+            >
+              Haz clic aquí para descargarlo.
+            </a>
+          </p>
+        </div>
       </object>
     </>
   )
