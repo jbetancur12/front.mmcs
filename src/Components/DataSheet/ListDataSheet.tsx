@@ -45,6 +45,7 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { bigToast } from '../ExcelManipulation/Utils'
 import withReactContent from 'sweetalert2-react-content'
 import Swal from 'sweetalert2'
+import { customAxios } from '@utils/api'
 
 // Define interfaces
 
@@ -166,11 +167,7 @@ const ListDataSheet: React.FC = () => {
   // Fetch dataSheets data
   const fetchDataSheets = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/dataSheet`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await customAxios.get(`/dataSheet`)
 
       if (response.statusText === 'OK') {
         setTableData(response.data)
@@ -191,8 +188,8 @@ const ListDataSheet: React.FC = () => {
         const updatedValues = { ...values }
         delete updatedValues.id
         try {
-          const response = await axios.put(
-            `${apiUrl}/dataSheet/${values.id}`,
+          const response = await customAxios.put(
+            `/dataSheet/${values.id}`,
             updatedValues,
             {
               headers: {
@@ -222,11 +219,7 @@ const ListDataSheet: React.FC = () => {
 
   const deleteDataSheet = async (rowIndex: number, id: number) => {
     try {
-      const response = await axios.delete(`${apiUrl}/dataSheet/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await customAxios.delete(`/dataSheet/${id}`)
 
       if (response.status === 204) {
         bigToast('Hoja de Datos Eliminada Exitosamente!', 'success')
@@ -540,8 +533,8 @@ const ListDataSheet: React.FC = () => {
     const formData = new FormData()
     formData.append('picture', image)
     try {
-      const response = await axios.put(
-        `${apiUrl}/dataSheet/${id}/update-image`,
+      const response = await customAxios.put(
+        `/dataSheet/${id}/update-image`,
         formData,
         {
           headers: {
@@ -859,7 +852,7 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
       })
 
       try {
-        const response = await axios.post(`${apiUrl}/dataSheet`, formData, {
+        const response = await customAxios.post(`/dataSheet`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${localStorage.getItem('accessToken')}`

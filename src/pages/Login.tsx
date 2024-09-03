@@ -3,20 +3,24 @@ import { useEffect, useState } from 'react'
 
 import { Link, useNavigate } from 'react-router-dom'
 import * as Yup from 'yup' // Importa Yup para la validación
-import { api } from '../config'
+
 import { Toast } from '../Components/ExcelManipulation/Utils'
 import { usePostHog } from 'posthog-js/react'
+import { useCookies } from 'react-cookie'
+import { api } from '../config'
 
 // Función de utilidad para verificar si un objeto es de tipo AxiosError
 function isAxiosError(obj: any): obj is AxiosError {
   return obj instanceof Error && 'isAxiosError' in obj
 }
+
 const apiUrl = api()
 
 const Login: React.FC = () => {
   const posthog = usePostHog()
   const navigate = useNavigate()
   const [_loading, setLoading] = useState(true)
+  const [_, setCookie, __] = useCookies(['refreshToken'])
 
   const [formData, setFormData] = useState({
     email: '',
@@ -36,6 +40,7 @@ const Login: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
+
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? checked : value
@@ -115,7 +120,7 @@ const Login: React.FC = () => {
       const response = await axios.post(`${apiUrl}/auth/login`, data)
 
       if (response.status === 200) {
-        const { token } = response.data
+        const { token, refreshToken } = response.data
         // Handle successful login
         // toast.success("Bienvenido", {
         //   duration: 4000,
@@ -130,6 +135,7 @@ const Login: React.FC = () => {
         }, 3000)
 
         localStorage.setItem('accessToken', token)
+        setCookie('refreshToken', refreshToken, { path: '/' })
         posthog?.capture('clicked_log_in')
         posthog?.identify(response.data.user.id, {
           email: response.data.user.email
@@ -166,7 +172,7 @@ const Login: React.FC = () => {
           throw new Error('Token no encontrado')
         }
 
-        const response = await fetch(`${apiUrl}/auth/validateToken`, {
+        const response = await fetch(`/auth/validateToken`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`
@@ -221,6 +227,7 @@ const Login: React.FC = () => {
               required
               value={formData.email}
               onChange={handleInputChange}
+              autoComplete='email'
             />
           </div>
           <div>
@@ -240,6 +247,7 @@ const Login: React.FC = () => {
               required
               value={formData.password}
               onChange={handleInputChange}
+              autoComplete='password'
             />
           </div>
 
