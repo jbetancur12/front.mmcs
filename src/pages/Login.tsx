@@ -6,7 +6,7 @@ import * as Yup from 'yup' // Importa Yup para la validación
 
 import { Toast } from '../Components/ExcelManipulation/Utils'
 import { usePostHog } from 'posthog-js/react'
-import { useCookies } from 'react-cookie'
+
 import { api } from '../config'
 
 // Función de utilidad para verificar si un objeto es de tipo AxiosError
@@ -20,7 +20,6 @@ const Login: React.FC = () => {
   const posthog = usePostHog()
   const navigate = useNavigate()
   const [_loading, setLoading] = useState(true)
-  const [_, setCookie, __] = useCookies(['refreshToken'])
 
   const [formData, setFormData] = useState({
     email: '',
@@ -120,7 +119,7 @@ const Login: React.FC = () => {
       const response = await axios.post(`${apiUrl}/auth/login`, data)
 
       if (response.status === 200) {
-        const { token, refreshToken } = response.data
+        const { token } = response.data
         // Handle successful login
         // toast.success("Bienvenido", {
         //   duration: 4000,
@@ -135,7 +134,7 @@ const Login: React.FC = () => {
         }, 3000)
 
         localStorage.setItem('accessToken', token)
-        setCookie('refreshToken', refreshToken, { path: '/' })
+
         posthog?.capture('clicked_log_in')
         posthog?.identify(response.data.user.id, {
           email: response.data.user.email
@@ -172,7 +171,7 @@ const Login: React.FC = () => {
           throw new Error('Token no encontrado')
         }
 
-        const response = await fetch(`/auth/validateToken`, {
+        const response = await fetch(`${apiUrl}/auth/validateToken`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`
