@@ -26,7 +26,7 @@ import {
   TextFieldProps,
   Avatar
 } from '@mui/material'
-import axios from 'axios'
+
 import {
   MaterialReactTable,
   type MRT_Cell,
@@ -40,12 +40,12 @@ import { useFormik } from 'formik'
 import * as yup from 'yup'
 
 import { Link } from 'react-router-dom'
-import { api } from '../../config'
+
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { bigToast } from '../ExcelManipulation/Utils'
 import withReactContent from 'sweetalert2-react-content'
 import Swal from 'sweetalert2'
-import { customAxios } from '@utils/api'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 // Define interfaces
 
@@ -96,7 +96,6 @@ export interface DataSheetData {
 }
 
 // API URL
-const apiUrl = api()
 
 // Validation Schema
 const validationSchema = yup.object({
@@ -153,6 +152,7 @@ const validationSchema = yup.object({
 // Main component
 const ListDataSheet: React.FC = () => {
   const MySwal = withReactContent(Swal)
+  const axiosPrivate = useAxiosPrivate()
 
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<DataSheetData[]>([])
@@ -167,7 +167,7 @@ const ListDataSheet: React.FC = () => {
   // Fetch dataSheets data
   const fetchDataSheets = async () => {
     try {
-      const response = await customAxios.get(`/dataSheet`)
+      const response = await axiosPrivate.get(`/dataSheet`)
 
       if (response.statusText === 'OK') {
         setTableData(response.data)
@@ -188,14 +188,10 @@ const ListDataSheet: React.FC = () => {
         const updatedValues = { ...values }
         delete updatedValues.id
         try {
-          const response = await customAxios.put(
+          const response = await axiosPrivate.put(
             `/dataSheet/${values.id}`,
             updatedValues,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-              }
-            }
+            {}
           )
 
           if (response.status === 200) {
@@ -219,7 +215,7 @@ const ListDataSheet: React.FC = () => {
 
   const deleteDataSheet = async (rowIndex: number, id: number) => {
     try {
-      const response = await customAxios.delete(`/dataSheet/${id}`)
+      const response = await axiosPrivate.delete(`/dataSheet/${id}`)
 
       if (response.status === 204) {
         bigToast('Hoja de Datos Eliminada Exitosamente!', 'success')
@@ -533,13 +529,12 @@ const ListDataSheet: React.FC = () => {
     const formData = new FormData()
     formData.append('picture', image)
     try {
-      const response = await customAxios.put(
+      const response = await axiosPrivate.put(
         `/dataSheet/${id}/update-image`,
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+            'Content-Type': 'multipart/form-data'
           }
         }
       )
@@ -776,7 +771,7 @@ const ListDataSheet: React.FC = () => {
               placement='right'
               title='Cronograma de Mantenimiento'
             >
-              <Link to='calibration-schedule'>
+              <Link to='maintenance-schedule'>
                 <IconButton>
                   <Event />
                 </IconButton>
@@ -809,7 +804,7 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
   onClose,
   onSubmit
 }) => {
-  const apiUrl = api()
+  const axiosPrivate = useAxiosPrivate()
   const formik = useFormik({
     initialValues: {
       picture: null as File | null,
@@ -852,10 +847,9 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
       })
 
       try {
-        const response = await customAxios.post(`/dataSheet`, formData, {
+        const response = await axiosPrivate.post(`/dataSheet`, formData, {
           headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+            'Content-Type': 'multipart/form-data'
           }
         })
 

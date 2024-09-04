@@ -2,36 +2,28 @@ import React, { useState } from 'react'
 import { Box, Button, IconButton, Stack, Typography } from '@mui/material'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import { MaintenanceRecord, InterventionType } from './types'
-import { api } from '../../config'
-import axios from 'axios'
+
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from 'react-query'
 import AddMaintenanceRecordModal from './AddMaintenanceRecordModal'
 import { format } from 'date-fns'
 import { ArrowBack, Plumbing } from '@mui/icons-material'
-
-const apiUrl = api()
+import useAxiosPrivate from '@utils/use-axios-private'
 
 const fetchMaintenanceRecords = async (
   vehicleId: number
 ): Promise<MaintenanceRecord[]> => {
-  const { data } = await axios.get(
-    `${apiUrl}/maintenanceRecord?vehicleId=${vehicleId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-      }
-    }
+  const axiosPrivate = useAxiosPrivate()
+  const { data } = await axiosPrivate.get(
+    `/maintenanceRecord?vehicleId=${vehicleId}`,
+    {}
   )
   return data
 }
 
 const fetchInterventionTypes = async (): Promise<InterventionType[]> => {
-  const { data } = await axios.get(`${apiUrl}/interventionType`, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-    }
-  })
+  const axiosPrivate = useAxiosPrivate()
+  const { data } = await axiosPrivate.get(`/interventionType`, {})
   return data
 }
 

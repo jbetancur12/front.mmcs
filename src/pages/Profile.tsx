@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react'
-import axios from 'axios'
+
 import { useParams } from 'react-router-dom'
 
 import { Typography, IconButton, TextField, Button } from '@mui/material'
 import { Edit, Save } from '@mui/icons-material'
-import { api } from '../config'
+
 import PDFViewer from '../Components/PDFViewer'
 import IMGViewer from '../Components/IMGViewer'
 import toast, { Toaster } from 'react-hot-toast'
 import { userStore } from '../store/userStore'
 import { useStore } from '@nanostores/react'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 interface Profile {
   id: number
@@ -22,9 +23,8 @@ interface Profile {
   email: string
 }
 
-const apiUrl = api()
-
 const Profile: React.FC = () => {
+  const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
   const { id: idProfile } = useParams()
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -36,11 +36,7 @@ const Profile: React.FC = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axios.get(`${apiUrl}/profiles/${idProfile}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        })
+        const response = await axiosPrivate.get(`/profiles/${idProfile}`, {})
 
         const { cvUrl, avatarUrl, createdAt, updatedAt, id, ...profileData } =
           response.data
@@ -63,11 +59,7 @@ const Profile: React.FC = () => {
 
   const handleSaveClick = async () => {
     try {
-      await axios.put(`${apiUrl}/profiles/${idProfile}`, editedProfile, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      await axiosPrivate.put(`/profiles/${idProfile}`, editedProfile, {})
       setProfile(editedProfile)
       setIsEditing(false)
       toast.success('Perfil actualizado con éxito')
@@ -91,13 +83,12 @@ const Profile: React.FC = () => {
     formData.append('cv', file as Blob)
     try {
       // Enviar la imagen al backend Express
-      const response = await axios.post(
-        `${apiUrl}/profiles/${idProfile}/cv`,
+      const response = await axiosPrivate.post(
+        `/profiles/${idProfile}/cv`,
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+            'Content-Type': 'multipart/form-data'
           }
         }
       )
@@ -128,13 +119,12 @@ const Profile: React.FC = () => {
 
       try {
         // Enviar la imagen al backend Express
-        const response = await axios.post(
-          `${apiUrl}/profiles/${idProfile}/avatar`,
+        const response = await axiosPrivate.post(
+          `/profiles/${idProfile}/avatar`,
           formData,
           {
             headers: {
-              'Content-Type': 'multipart/form-data',
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+              'Content-Type': 'multipart/form-data'
             }
           }
         )

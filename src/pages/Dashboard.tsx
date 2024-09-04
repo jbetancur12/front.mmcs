@@ -1,29 +1,22 @@
 import { useEffect, useMemo, useState } from 'react'
 import { FileData } from '../Components/TableFiles'
-import axios from 'axios'
+
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import { differenceInDays, format } from 'date-fns'
 import { Cancel, CheckCircle, Warning } from '@mui/icons-material'
-import { api } from '../config'
-
-const apiUrl = api()
+import useAxiosPrivate from '@utils/use-axios-private'
 
 const Dashboard: React.FC = () => {
+  const axiosPrivate = useAxiosPrivate()
   const [tableData, setTableData] = useState<FileData[]>([])
 
   // Fetch files data
   const fetchFiles = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/files/next-to-expire`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.get(`/files/next-to-expire`)
 
-      if (response.statusText === 'OK') {
-        // @ts-ignore: Ignorar el error en esta línea
-        setTableData(response.data)
-      }
+      // @ts-ignore: Ignorar el error en esta línea
+      setTableData(response.data)
     } catch (error) {
       console.error('Error fetching file data:', error)
     }

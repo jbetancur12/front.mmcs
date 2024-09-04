@@ -1,52 +1,55 @@
-import axios from 'axios'
+import useAxiosPrivate from '@utils/use-axios-private'
 import { FieldConfig } from './GenericFormModal'
-import { api } from '../../config'
+
 import { Vehicle } from './types'
+import { useMutation, useQuery } from 'react-query'
 
-export const apiUrl = api() // Ajusta la URL según tu configuración
+export const useVehicles = () => {
+  const axiosPrivate = useAxiosPrivate()
 
-export const fetchVehicles = async () => {
-  const { data } = await axios.get(`${apiUrl}/vehicles`, {
-    headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+  return useQuery('vehicles', async () => {
+    const { data } = await axiosPrivate.get('/vehicles')
+    return data
   })
-  return data
 }
 
-export const addVehicle = async (vehicle: Vehicle) => {
-  console.log(vehicle)
-  const formData = new FormData()
-  formData.append('picture', vehicle.pictureUrl as File)
-  formData.append('vin', vehicle.vin)
-  formData.append('licensePlate', vehicle.licensePlate)
-  formData.append('make', vehicle.make)
-  formData.append('model', vehicle.model)
-  formData.append('year', vehicle.year + '')
-  formData.append('currentMileage', vehicle.currentMileage + '')
-  formData.append('fuelType', vehicle.fuelType)
-  formData.append('status', vehicle.status)
-  formData.append('purchaseDate', vehicle.purchaseDate)
-  formData.append('transitLicense', vehicle.transitLicense)
-  formData.append('displacement', vehicle.displacement + '')
-  formData.append('color', vehicle.color)
-  formData.append('serviceType', vehicle.serviceType.toLocaleLowerCase())
-  formData.append('vehicleClass', vehicle.vehicleClass)
-  formData.append('bodyType', vehicle.bodyType)
-  formData.append('capacity', vehicle.capacity + '')
-  formData.append('engineNumber', vehicle.engineNumber)
-  formData.append('chasisNumber', vehicle.chasisNumber)
-  formData.append('power', vehicle.power + '')
-  formData.append('declarationImportation', vehicle.declarationImportation)
-  formData.append('doors', vehicle.doors + '')
-  formData.append('trafficAuthority', vehicle.trafficAuthority)
-  formData.append('importationDate', vehicle.importationDate)
-  formData.append('registrationDate', vehicle.registrationDate)
-  formData.append('expeditionDate', vehicle.expeditionDate)
+export const useAddVehicle = () => {
+  const axiosPrivate = useAxiosPrivate()
 
-  await axios.post(`${apiUrl}/vehicles`, formData, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-      'Content-Type': 'multipart/form-data'
-    }
+  return useMutation(async (vehicle: Vehicle) => {
+    const formData = new FormData()
+    formData.append('picture', vehicle.pictureUrl as File)
+    formData.append('vin', vehicle.vin)
+    formData.append('licensePlate', vehicle.licensePlate)
+    formData.append('make', vehicle.make)
+    formData.append('model', vehicle.model)
+    formData.append('year', vehicle.year + '')
+    formData.append('currentMileage', vehicle.currentMileage + '')
+    formData.append('fuelType', vehicle.fuelType)
+    formData.append('status', vehicle.status)
+    formData.append('purchaseDate', vehicle.purchaseDate)
+    formData.append('transitLicense', vehicle.transitLicense)
+    formData.append('displacement', vehicle.displacement + '')
+    formData.append('color', vehicle.color)
+    formData.append('serviceType', vehicle.serviceType.toLocaleLowerCase())
+    formData.append('vehicleClass', vehicle.vehicleClass)
+    formData.append('bodyType', vehicle.bodyType)
+    formData.append('capacity', vehicle.capacity + '')
+    formData.append('engineNumber', vehicle.engineNumber)
+    formData.append('chasisNumber', vehicle.chasisNumber)
+    formData.append('power', vehicle.power + '')
+    formData.append('declarationImportation', vehicle.declarationImportation)
+    formData.append('doors', vehicle.doors + '')
+    formData.append('trafficAuthority', vehicle.trafficAuthority)
+    formData.append('importationDate', vehicle.importationDate)
+    formData.append('registrationDate', vehicle.registrationDate)
+    formData.append('expeditionDate', vehicle.expeditionDate)
+
+    await axiosPrivate.post('/vehicles', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
   })
 }
 

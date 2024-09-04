@@ -2,19 +2,17 @@ import React, { useState } from 'react'
 import { Button, Modal, Box } from '@mui/material'
 import { CloudUpload } from '@mui/icons-material'
 import { styled } from '@mui/material/styles'
-import axios from 'axios'
-import { DatePicker } from '@mui/x-date-pickers'
-import { api } from '../config'
+
 import toast, { Toaster } from 'react-hot-toast'
 import Loader from './Loader2'
+import { DatePicker } from '@mui/x-date-pickers'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 interface UpdateCertificateModalProps {
   open: boolean
   onClose: () => void
   id?: string
 }
-
-const apiUrl = api()
 
 const VisuallyHiddenInput = styled('input')`
   clip: rect(0 0 0 0);
@@ -33,6 +31,7 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
   onClose,
   id
 }) => {
+  const axiosPrivate = useAxiosPrivate()
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
   const [previousDate, setPreviousDate] = useState('')
   const [nextDate, setNextDate] = useState('')
@@ -66,10 +65,9 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
       formData.append('id', id as string)
 
       setLoading(true)
-      const response = await axios.put(`${apiUrl}/files`, formData, {
+      const response = await axiosPrivate.put(`/files`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+          'Content-Type': 'multipart/form-data'
         }
       })
       if (response.status === 201) {

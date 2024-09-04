@@ -7,7 +7,7 @@ import {
   Stack,
   TextField
 } from '@mui/material'
-import axios from 'axios'
+
 import {
   MaterialReactTable,
   MaterialReactTableProps,
@@ -16,10 +16,10 @@ import {
 } from 'material-react-table'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { api } from '../config'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { NumericFormatCustom } from './NumericFormatCustom'
 import { bigToast } from './ExcelManipulation/Utils'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 // Define interfaces
 export interface ProductData {
@@ -30,10 +30,10 @@ export interface ProductData {
 }
 
 // API URL
-const apiUrl = api()
 
 // Main component
 const TableProducts: React.FC = () => {
+  const axiosPrivate = useAxiosPrivate()
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<ProductData[]>([])
   const [price, setPrice] = useState(0)
@@ -50,7 +50,7 @@ const TableProducts: React.FC = () => {
     if (!isNaN(parsedPercentage)) {
       try {
         // Realizar una solicitud POST al endpoint del controlador en Express
-        const response = await axios.put(apiUrl + '/products/update-prices', {
+        const response = await axiosPrivate.put('/products/update-prices', {
           percentage: parsedPercentage
         })
 
@@ -87,11 +87,7 @@ const TableProducts: React.FC = () => {
   // Create a new device
   const onCreateProduct = async (productData: ProductData) => {
     try {
-      const response = await axios.post(`${apiUrl}/products`, productData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.post(`/products`, productData, {})
 
       if (response.status === 201) {
         bigToast('Producto Creado Exitosamente!', 'success')
@@ -107,11 +103,7 @@ const TableProducts: React.FC = () => {
   // Fetch devices data
   const fetchProducts = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/products`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.get(`/products`, {})
 
       if (response.statusText === 'OK') {
         // @ts-ignore: Ignorar el error en esta línea
@@ -135,14 +127,10 @@ const TableProducts: React.FC = () => {
         }
         delete updatedValues.id
         try {
-          const response = await axios.put(
-            `${apiUrl}/products/${values.id}`,
+          const response = await axiosPrivate.put(
+            `/products/${values.id}`,
             updatedValues,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-              }
-            }
+            {}
           )
 
           if (response.status === 200) {

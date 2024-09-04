@@ -11,7 +11,7 @@ import {
   TextField,
   Tooltip
 } from '@mui/material'
-import axios from 'axios'
+
 import {
   MaterialReactTable,
   type MRT_Cell,
@@ -22,9 +22,10 @@ import {
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { Link } from 'react-router-dom'
-import { api } from '../config'
+
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { bigToast, MySwal } from './ExcelManipulation/Utils'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 // Define interfaces
 export interface CustomerData {
@@ -42,10 +43,10 @@ export interface CustomerData {
 }
 
 // API URL
-const apiUrl = api()
 
 // Main component
 const Table: React.FC = () => {
+  const axiosPrivate = useAxiosPrivate()
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<CustomerData[]>([])
   const [filteredTableData, setFilteredTableData] = useState<CustomerData[]>([])
@@ -60,11 +61,7 @@ const Table: React.FC = () => {
       const updatedValues = { ...customerData }
       delete updatedValues.id
 
-      const response = await axios.post(`${apiUrl}/customers`, updatedValues, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.post(`/customers`, updatedValues, {})
 
       if (response.status >= 200 && response.status < 300) {
         bigToast('Cliente Creado Exitosamente!', 'success')
@@ -80,11 +77,7 @@ const Table: React.FC = () => {
   // Fetch customers data
   const fetchCustomers = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/customers`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.get(`/customers`, {})
 
       if (response.statusText === 'OK') {
         // @ts-ignore: Ignorar el error en esta línea
@@ -102,7 +95,7 @@ const Table: React.FC = () => {
   // const updateCustomer = async (customerData: CustomerData) => {
 
   //   try {
-  //     const response = await axios.put(`${apiUrl}/customers/${customerData.id}`, customerData, {
+  //     const response = await axiosPrivate.put(`/customers/${customerData.id}`, customerData, {
   //       headers: {
   //         'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
   //       },
@@ -137,14 +130,10 @@ const Table: React.FC = () => {
         const updatedValues = { ...values }
         delete updatedValues.id
         try {
-          const response = await axios.put(
-            `${apiUrl}/customers/${values.id}`,
+          const response = await axiosPrivate.put(
+            `/customers/${values.id}`,
             updatedValues,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-              }
-            }
+            {}
           )
 
           if (response.status === 201) {
@@ -168,11 +157,7 @@ const Table: React.FC = () => {
 
   const deleteCustomer = async (rowIndex: number, id: number) => {
     try {
-      const response = await axios.delete(`${apiUrl}/customers/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.delete(`/customers/${id}`, {})
 
       if (response.status === 204) {
         bigToast('Cliente Eliminado Exitosamente!', 'success')

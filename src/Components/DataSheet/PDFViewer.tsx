@@ -1,17 +1,16 @@
 import { ArrowBack } from '@mui/icons-material'
 import { Box, CircularProgress, IconButton, Typography } from '@mui/material'
-import axios from 'axios'
+import useAxiosPrivate from '@utils/use-axios-private'
+
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { api } from '../../config'
 
 interface PDFViewerProps {
   path: string
 }
 
-const apiUrl = api()
-
 const PDFViewer = ({ path }: PDFViewerProps) => {
+  const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id: string }>()
   const [pdfData, setPdfData] = useState<string | null>(null)
   const navigate = useNavigate()
@@ -22,15 +21,9 @@ const PDFViewer = ({ path }: PDFViewerProps) => {
     const fetchPDF = async () => {
       try {
         // Realiza la solicitud al endpoint para obtener el PDF
-        const response = await axios.get(
-          `${apiUrl}/reports/${path}/${params}`,
-          {
-            responseType: 'arraybuffer', // Especifica que esperamos un archivo binario
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-            }
-          }
-        )
+        const response = await axiosPrivate.get(`/reports/${path}/${params}`, {
+          responseType: 'arraybuffer' // Especifica que esperamos un archivo binario
+        })
 
         // Convierte el archivo binario a una cadena base64
         const base64PDF = Buffer.from(response.data, 'binary').toString(

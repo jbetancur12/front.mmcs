@@ -19,13 +19,14 @@ import * as Yup from 'yup'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 
 import { useNavigate, useParams } from 'react-router-dom'
-import { api } from '../../config'
-import axios from 'axios'
+
 import { ArrowBack, Download, TableChart } from '@mui/icons-material'
 import AsyncSelect from 'react-select/async'
 import { loadOptions, mapOptions } from '../../utils/loadOptions'
 
 import { Profile } from '../../pages/Profiles'
+import axios from 'axios'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 // Interfaz para los valores del formulario
 interface EquipmentFormValues {
@@ -63,9 +64,8 @@ const validationSchema = Yup.object({
   registeredBy: Yup.string().required('El registro por es obligatorio')
 })
 
-const apiUrl = api()
-
 const EquipmentForm: React.FC = () => {
+  const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [isEquipmentOut, setIsEquipmentOut] = useState<boolean>(false)
@@ -73,11 +73,7 @@ const EquipmentForm: React.FC = () => {
 
   const fetchEquipmentStatus = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/dataSheet/${id}/status`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.get(`/dataSheet/${id}/status`, {})
 
       if (response.statusText === 'OK') {
         if (response.data.status === 'busy') {
@@ -101,7 +97,7 @@ const EquipmentForm: React.FC = () => {
 
   const handleSubmit = async (values: EquipmentFormValues) => {
     try {
-      const endpoint = `${apiUrl}/equipmentInOut`
+      const endpoint = `/equipmentInOut`
       const method = !isEquipmentOut ? 'post' : 'put'
       setIsEquipmentOut(!isEquipmentOut)
 
@@ -111,9 +107,6 @@ const EquipmentForm: React.FC = () => {
         data: {
           ...values,
           equipmentId: id
-        },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
         }
       })
 

@@ -11,8 +11,7 @@ import {
   Typography
 } from '@mui/material'
 import AsyncSelect from 'react-select/async'
-import { api } from '../config'
-import axios from 'axios'
+
 import { DatePicker } from '@mui/x-date-pickers'
 
 import { Add, CloudUpload, Warning } from '@mui/icons-material'
@@ -26,10 +25,9 @@ import XlsxPopulate from 'xlsx-populate'
 import Loader from '../Components/Loader2'
 import { addMonths, set } from 'date-fns'
 import Select from 'react-select'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 // Importa los componentes de MUI
-
-const apiUrl = api()
 
 const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   dataReceived,
@@ -40,6 +38,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   fileNames,
   wbPasswords
 }) => {
+  const axiosPrivate = useAxiosPrivate()
   const [file, setFile] = useState<File | null>(null)
   const [filePdf, setFilePdf] = useState<File | null>(null)
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
@@ -109,14 +108,11 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   ): Promise<ResourceOption[]> => {
     return new Promise((resolve, reject) => {
       let timer
-      const endpoint = `${apiUrl}/${resource}` // Construye la URL del endpoint
+      const endpoint = `/${resource}` // Construye la URL del endpoint
       const fetchData = async () => {
         try {
-          const response = await axios.get(endpoint, {
-            params: { q: inputValue },
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-            }
+          const response = await axiosPrivate.get(endpoint, {
+            params: { q: inputValue }
           })
           const data = response.data
           const options = data.map((item: any) => mapFunction(item))
@@ -361,11 +357,8 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
 
   const fetchCustomer = async (name: string) => {
     try {
-      const response = await axios.get(`${apiUrl}/customers`, {
-        params: { q: name },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
+      const response = await axiosPrivate.get(`/customers`, {
+        params: { q: name }
       })
       const customers = response.data
 
@@ -378,11 +371,8 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
 
   const fetchDevice = async (name: string) => {
     try {
-      const response = await axios.get(`${apiUrl}/devices`, {
-        params: { q: name },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
+      const response = await axiosPrivate.get(`/devices`, {
+        params: { q: name }
       })
       const devices = response.data
       return devices
@@ -424,10 +414,9 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
 
   const postData = async (data: FormData) => {
     //logFormData(data)
-    return await axios.post(`${apiUrl}/files/raw`, data, {
+    return await axiosPrivate.post(`/files/raw`, data, {
       headers: {
-        'Content-Type': 'multipart/form-data',
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+        'Content-Type': 'multipart/form-data'
       }
     })
   }

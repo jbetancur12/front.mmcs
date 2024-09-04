@@ -15,14 +15,14 @@ import {
   TextField,
   Typography
 } from '@mui/material'
-import axios from 'axios'
-import { api } from '../config.js'
+
 import { CloudUpload, Visibility, VisibilityOff } from '@mui/icons-material'
 import toast, { Toaster } from 'react-hot-toast'
 import { bigToast } from '../Components/ExcelManipulation/Utils.js'
 import PDFViewer from '../Components/PDFViewer.js'
 import { userStore } from '../store/userStore.js'
 import { useStore } from '@nanostores/react'
+import useAxiosPrivate from '@utils/use-axios-private.js'
 
 interface Traceability {
   id: number
@@ -31,14 +31,13 @@ interface Traceability {
   createdAt: string
 }
 
-const apiUrl = api()
-
 const initialState = {
   name: '',
   file: null as File | null
 }
 
 const Traceability = () => {
+  const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
   const [traceabilities, setTraceabilities] = useState<Traceability[]>([])
   const [openModal, setOpenModal] = useState(false)
@@ -58,11 +57,7 @@ const Traceability = () => {
   useEffect(() => {
     const fetchProfiles = async () => {
       try {
-        const response = await axios.get(`${apiUrl}/traceabilities`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        })
+        const response = await axiosPrivate.get(`/traceabilities`, {})
         setTraceabilities(response.data)
       } catch (error) {
         console.error('Error al cargar los perfiles:', error)
@@ -109,13 +104,12 @@ const Traceability = () => {
     formDataToSend.append('file', formData.file as Blob)
 
     try {
-      const response = await axios.post(
-        `${apiUrl}/traceabilities`,
+      const response = await axiosPrivate.post(
+        `/traceabilities`,
         formDataToSend,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+            'Content-Type': 'multipart/form-data'
           }
         }
       )
@@ -143,13 +137,12 @@ const Traceability = () => {
     formDataToSend.append('file', updateFile)
 
     try {
-      const response = await axios.put(
-        `${apiUrl}/traceabilities/${updateId}`,
+      const response = await axiosPrivate.put(
+        `/traceabilities/${updateId}`,
         formDataToSend,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+            'Content-Type': 'multipart/form-data'
           }
         }
       )
@@ -172,11 +165,7 @@ const Traceability = () => {
       return
     }
     try {
-      const response = await axios.delete(`${apiUrl}/traceabilities/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.delete(`/traceabilities/${id}`, {})
 
       if (response.status >= 200 && response.status < 300) {
         bigToast('Trazabilidad eliminada con éxito', 'success')

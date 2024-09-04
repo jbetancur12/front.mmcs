@@ -1,8 +1,8 @@
 import * as yup from 'yup'
-import { api } from '../../config'
+
 import { InspectionHistoryData } from './InspectionMaintenance'
 import { useLocation, useNavigate } from 'react-router-dom'
-import axios from 'axios'
+
 import { useEffect, useState } from 'react'
 import { EquipmentInfo } from './InspectionMaintenanceForm'
 import { bigToast } from '../ExcelManipulation/Utils'
@@ -17,6 +17,7 @@ import {
   Typography
 } from '@mui/material'
 import { addMonths } from 'date-fns'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 export interface CalibrationData {
   equipmentId: string | number
@@ -48,9 +49,8 @@ const validationSchema = yup.object().shape({
   elaboratedBy: yup.string().required('Elaborado por es obligatorio')
 })
 
-const apiUrl = api()
-
 const CalibrationForm = () => {
+  const axiosPrivate = useAxiosPrivate()
   const location = useLocation()
   const navigate = useNavigate()
   const { id } = location.state as CalibrationFormProps
@@ -61,11 +61,7 @@ const CalibrationForm = () => {
     // Obtener la información básica del equipo
     const fetchEquipmentInfo = async () => {
       try {
-        const response = await axios.get(`${apiUrl}/dataSheet/${id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        })
+        const response = await axiosPrivate.get(`/dataSheet/${id}`, {})
         setEquipmentInfo({
           equipmentName: response.data.equipmentName,
           internalCode: response.data.internalCode,
@@ -83,7 +79,7 @@ const CalibrationForm = () => {
     if (id) {
       fetchEquipmentInfo()
     }
-  }, [id, apiUrl])
+  }, [id])
 
   const formik = useFormik<CalibrationData>({
     initialValues: {
@@ -98,14 +94,10 @@ const CalibrationForm = () => {
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm }) => {
       try {
-        const response = await axios.post(
-          `${apiUrl}/calibration`,
+        const response = await axiosPrivate.post(
+          `/calibration`,
           { ...values, name: 'Calibración' },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-            }
-          }
+          {}
         )
 
         if (response.status >= 200 && response.status < 300) {

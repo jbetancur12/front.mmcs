@@ -1,6 +1,5 @@
 import { useParams } from 'react-router-dom'
-import { api } from '../config'
-import axios from 'axios'
+
 import { useEffect, useState } from 'react'
 import {
   Box,
@@ -18,8 +17,7 @@ import { useStore } from '@nanostores/react'
 import { Edit } from '@mui/icons-material'
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
-
-const apiUrl = api()
+import useAxiosPrivate from '@utils/use-axios-private'
 
 const fieldLabels: { [key: string]: string } = {
   compania: 'Compañía',
@@ -54,6 +52,7 @@ interface DeviceDetailsProps {
 }
 
 function Certificates() {
+  const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id: string }>()
   const $userStore = useStore(userStore)
   const MySwal = withReactContent(Swal)
@@ -63,11 +62,7 @@ function Certificates() {
     useState<DeviceDetailsProps | null>(null)
 
   const getCertificateInfo = async () => {
-    const response = await axios.get(`${apiUrl}/files/${id}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-      }
-    })
+    const response = await axiosPrivate.get(`/files/${id}`, {})
     if (response.status === 200) {
       setCertificateData(response.data)
     }
@@ -101,16 +96,12 @@ function Certificates() {
       const newValue = result.value
 
       try {
-        const response = await axios.put(
-          `${apiUrl}/files/${id}`,
+        const response = await axiosPrivate.put(
+          `/files/${id}`,
           {
             [field]: newValue
           },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-            }
-          }
+          {}
         )
 
         if (response.status === 200) {

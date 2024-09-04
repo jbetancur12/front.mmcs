@@ -4,8 +4,6 @@ import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 
-import { api } from '../config'
-import axios from 'axios'
 import toast, { Toaster } from 'react-hot-toast'
 import { useParams } from 'react-router-dom'
 import Loader from './Loader2'
@@ -25,8 +23,7 @@ import { userStore } from '../store/userStore'
 import { statusOptions } from './TableQuotes'
 import { NumericFormatCustom } from './NumericFormatCustom'
 import { styles } from './ExcelManipulation/Utils'
-
-const apiUrl = api()
+import useAxiosPrivate from '@utils/use-axios-private'
 
 interface Product {
   name: string
@@ -80,6 +77,7 @@ const paymentConditionsOptions: PaymentConditionsOptions = {
 }
 
 const QuoteForm: React.FC = () => {
+  const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id?: string }>()
   const $userStore = useStore(userStore)
 
@@ -144,12 +142,9 @@ const QuoteForm: React.FC = () => {
 
       const fetchData = async () => {
         try {
-          const response = await axios.get(`${apiUrl}/products`, {
+          const response = await axiosPrivate.get(`/products`, {
             params: {
               q: inputValue
-            },
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`
             }
           })
           const data = response.data
@@ -183,12 +178,9 @@ const QuoteForm: React.FC = () => {
 
       const fetchData = async () => {
         try {
-          const response = await axios.get(`${apiUrl}/customers`, {
+          const response = await axiosPrivate.get(`/customers`, {
             params: {
               q: inputValue
-            },
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`
             }
           })
           const data = response.data
@@ -215,13 +207,9 @@ const QuoteForm: React.FC = () => {
 
   const fetchQuote = async () => {
     try {
-      const response = await axios.get<QuoteFormData>(
-        `${apiUrl}/quotes/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        }
+      const response = await axiosPrivate.get<QuoteFormData>(
+        `/quotes/${id}`,
+        {}
       )
 
       if (response.statusText === 'OK') {
@@ -311,8 +299,8 @@ const QuoteForm: React.FC = () => {
   const handleUpdateStatus = async (e: any) => {
     e.preventDefault()
     try {
-      const response = await axios.put(
-        `${apiUrl}/quotes/${id}/status`,
+      const response = await axiosPrivate.put(
+        `/quotes/${id}/status`,
         {
           status: {
             status: status.status,
@@ -321,11 +309,7 @@ const QuoteForm: React.FC = () => {
             comments: status.comments
           }
         },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        }
+        {}
       )
 
       if (response.status >= 200 && response.status < 300) {
@@ -348,11 +332,7 @@ const QuoteForm: React.FC = () => {
     e.preventDefault()
     setLoading(true)
 
-    const requestConfig = {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-      }
-    }
+    const requestConfig = {}
 
     const requestData = {
       customerId: customer?.value,
@@ -375,15 +355,15 @@ const QuoteForm: React.FC = () => {
       let actionMessage
 
       if (!!id) {
-        response = await axios.put(
-          `${apiUrl}/quotes/${id}`,
+        response = await axiosPrivate.put(
+          `/quotes/${id}`,
           requestData,
           requestConfig
         )
         actionMessage = 'modificada'
       } else {
-        response = await axios.post(
-          `${apiUrl}/quotes`,
+        response = await axiosPrivate.post(
+          `/quotes`,
           requestData,
           requestConfig
         )
@@ -513,7 +493,7 @@ const QuoteForm: React.FC = () => {
           />
 
           {/* <AutoComplete
-            endpoint={`${apiUrl}/customers`}
+            endpoint={`/customers`}
             token={localStorage.getItem("accessToken")}
             label="Buscar Cliente"
             value={customer?.nombre}

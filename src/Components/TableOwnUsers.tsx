@@ -9,7 +9,7 @@ import {
   Stack,
   TextField
 } from '@mui/material'
-import axios from 'axios'
+
 import {
   MaterialReactTable,
   MaterialReactTableProps,
@@ -18,8 +18,9 @@ import {
 } from 'material-react-table'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
-import { api } from '../config'
+
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 // Define interfaces
 export interface UserData {
@@ -31,10 +32,10 @@ export interface UserData {
 }
 
 // API URL
-const apiUrl = api()
 
 // Main component
 const TableOwnUsers: React.FC = () => {
+  const axiosPrivate = useAxiosPrivate()
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<UserData[]>([])
   const [validationErrors, setValidationErrors] = useState<{
@@ -48,11 +49,7 @@ const TableOwnUsers: React.FC = () => {
   // Fetch devices data
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/users/own-users`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.get(`/users/own-users`, {})
 
       if (response.statusText === 'OK') {
         // @ts-ignore: Ignorar el error en esta línea
@@ -66,7 +63,7 @@ const TableOwnUsers: React.FC = () => {
   // const updateUser = async (UserData: UserData) => {
 
   //   try {
-  //     const response = await axios.put(`${apiUrl}/devices/${UserData.id}`, UserData, {
+  //     const response = await axiosPrivate.put(`/devices/${UserData.id}`, UserData, {
   //       headers: {
   //         'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
   //       },
@@ -96,14 +93,10 @@ const TableOwnUsers: React.FC = () => {
         const updatedValues = { ...values }
         delete updatedValues.id
         try {
-          const response = await axios.put(
-            `${apiUrl}/products/${values.id}`,
+          const response = await axiosPrivate.put(
+            `/products/${values.id}`,
             updatedValues,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-              }
-            }
+            {}
           )
 
           if (response.status === 200) {
@@ -214,14 +207,10 @@ const TableOwnUsers: React.FC = () => {
 
   const onCreateUser = async (productData: UserData) => {
     try {
-      const response = await axios.post(
-        `${apiUrl}/auth/register`,
+      const response = await axiosPrivate.post(
+        `/auth/register`,
         { ...productData, contraseña: 'password' },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        }
+        {}
       )
 
       if (response.status === 201) {

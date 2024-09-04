@@ -1,8 +1,9 @@
-import axios, { AxiosError, isAxiosError } from 'axios'
+import { axiosPublic } from '@utils/api'
+import { AxiosError, isAxiosError } from 'axios'
 import React, { useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
+import { api } from 'src/config'
 import * as Yup from 'yup' // Importa Yup para la validación
-import { api } from '../config'
 
 const apiUrl = api()
 
@@ -99,7 +100,10 @@ const PasswordRecovery: React.FC = () => {
     try {
       await validationSchema.validate(formData, { abortEarly: false })
 
-      const response = await axios.post(`${apiUrl}/auth/recover-password`, data)
+      const response = await axiosPublic.post(
+        `${apiUrl}/auth/recover-password`,
+        data
+      )
 
       if (response.status === 201) {
         // Handle successful login

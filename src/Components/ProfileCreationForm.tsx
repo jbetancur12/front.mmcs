@@ -1,11 +1,9 @@
 import React, { useState } from 'react'
 import { TextField, Button, Container, Avatar } from '@mui/material'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
-import axios from 'axios'
-import { api } from '../config'
-import toast, { Toaster } from 'react-hot-toast'
 
-const apiUrl = api()
+import toast, { Toaster } from 'react-hot-toast'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 const initialState = {
   name: '',
@@ -21,6 +19,7 @@ interface Profile {
 }
 
 const ProfileCreationForm: React.FC<Profile> = ({ onSave }) => {
+  const axiosPrivate = useAxiosPrivate()
   const [formData, setFormData] = useState(initialState)
   const [loading, setLoading] = useState(false)
 
@@ -63,10 +62,9 @@ const ProfileCreationForm: React.FC<Profile> = ({ onSave }) => {
 
     try {
       setLoading(true)
-      const response = await axios.post(`${apiUrl}/profiles`, formDataToSend, {
+      const response = await axiosPrivate.post(`/profiles`, formDataToSend, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+          'Content-Type': 'multipart/form-data'
         }
       })
 

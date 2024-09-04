@@ -1,11 +1,8 @@
-import axios from 'axios'
 import React, { useState } from 'react'
 
-import { api } from '../config'
 import { Toast } from './ExcelManipulation/Utils'
+import { axiosPublic } from '@utils/api'
 // import * as Yup from 'yup'; // Importa Yup para la validación
-
-const apiUrl = api()
 
 const PasswordGeneratorForm: React.FC = () => {
   const queryString = window.location.search
@@ -35,8 +32,8 @@ const PasswordGeneratorForm: React.FC = () => {
     e.preventDefault()
 
     if (formData.password === formData.confirmPassword) {
-      const response = await axios.put(
-        `${apiUrl}/auth/new-password/?code=${code}`,
+      const response = await axiosPublic.put(
+        `/auth/new-password/?code=${code}`,
         {
           password: formData.password
         }

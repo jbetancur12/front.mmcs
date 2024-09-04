@@ -1,8 +1,6 @@
-import axios from 'axios'
-import { api } from '../../config'
+import useAxiosPrivate from '@utils/use-axios-private'
 import { Trip } from './types'
-
-const apiUrl = api()
+import { isAxiosError } from 'axios'
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
@@ -12,60 +10,54 @@ const formatDate = (dateString: string) => {
 
 // Add Trip
 export const addTrip = async (trip: Trip) => {
-  await axios.post(`${apiUrl}/trip`, trip, {
-    headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
-  })
+  const axiosPrivate = useAxiosPrivate()
+  await axiosPrivate.post(`/trip`, trip)
 }
 
 // Update Trip
 export const updateTrip = async (trip: Trip) => {
-  await axios.put(`${apiUrl}/trip/${trip.id}`, trip, {
-    headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
-  })
+  const axiosPrivate = useAxiosPrivate()
+  await axiosPrivate.put(`/trip/${trip.id}`, trip)
 }
 
 export const addTripWithInspection = async (trip: Trip, inspection: any) => {
   try {
+    const axiosPrivate = useAxiosPrivate()
     const formattedStartDate = trip.startDate
       ? formatDate(trip.startDate)
       : null
     const formattedEndDate = trip.endDate ? formatDate(trip.endDate) : null
     const { driver, startMileage, endMileage, purpose, vehicleId } = trip
 
-    const response = await axios.post(
-      `${apiUrl}/trip/with-inspection`,
-      {
-        tripData: {
-          driver,
-          startMileage,
-          endMileage,
-          purpose,
-          vehicleId,
-          startDate: formattedStartDate,
-          endDate: formattedEndDate
-        },
-        inspectionData: {
-          ...inspection,
-          vehicleId: trip.vehicleId,
-          inspectorName: trip.driver,
-          inspectionDate: formattedStartDate
-        }
+    const response = await axiosPrivate.post(`/trip/with-inspection`, {
+      tripData: {
+        driver,
+        startMileage,
+        endMileage,
+        purpose,
+        vehicleId,
+        startDate: formattedStartDate,
+        endDate: formattedEndDate
       },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
+      inspectionData: {
+        ...inspection,
+        vehicleId,
+        inspectorName: driver,
+        inspectionDate: formattedStartDate
       }
-    )
+    })
 
-    return response // Devuelve la respuesta para poder manejarla en el componente
+    return response.data // Devuelve solo los datos de la respuesta
   } catch (error) {
     // Maneja el error de manera adecuada
-    if (axios.isAxiosError(error)) {
+    if (isAxiosError(error)) {
       console.error('Error response:', error.response?.data)
       return Promise.reject(error.response?.data || 'An error occurred')
+    } else if (error instanceof Error) {
+      console.error('Unexpected error:', error.message)
+      return Promise.reject(error.message || 'An unexpected error occurred')
     } else {
-      console.error('Unexpected error:', error)
+      console.error('Unexpected non-error:', error)
       return Promise.reject('An unexpected error occurred')
     }
   }
@@ -73,12 +65,13 @@ export const addTripWithInspection = async (trip: Trip, inspection: any) => {
 
 // Update Trip with Inspection
 export const updateTripWithInspection = async (trip: Trip, inspection: any) => {
+  const axiosPrivate = useAxiosPrivate()
   const formattedStartDate = trip.startDate ? formatDate(trip.startDate) : null
   const formattedEndDate = trip.endDate ? formatDate(trip.endDate) : null
   const { driver, startMileage, endMileage, purpose, vehicleId } = trip
   try {
-    const response = await axios.put(
-      `${apiUrl}/trip/${trip.id}/with-inspection`,
+    const response = await axiosPrivate.put(
+      `/trip/${trip.id}/with-inspection`,
       {
         tripData: {
           id: trip.id,
@@ -97,21 +90,20 @@ export const updateTripWithInspection = async (trip: Trip, inspection: any) => {
           inspectionDate: formattedEndDate
         }
       },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      }
+      {}
     )
 
     return response
   } catch (error) {
     // Maneja el error de manera adecuada
-    if (axios.isAxiosError(error)) {
+    if (isAxiosError(error)) {
       console.error('Error response:', error.response?.data)
       return Promise.reject(error.response?.data || 'An error occurred')
+    } else if (error instanceof Error) {
+      console.error('Unexpected error:', error.message)
+      return Promise.reject(error.message || 'An unexpected error occurred')
     } else {
-      console.error('Unexpected error:', error)
+      console.error('Unexpected non-error:', error)
       return Promise.reject('An unexpected error occurred')
     }
   }

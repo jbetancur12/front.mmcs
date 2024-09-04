@@ -1,14 +1,12 @@
 import XlsxPopulate from 'xlsx-populate'
 import { RepositoryData, ResourceOption } from './Types'
-import { api } from '../../config'
-import axios from 'axios'
+
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 import { certificateTypeStore } from '../../store/certificateTypeStore'
 import { deviceStore } from '../../store/deviceStore'
 import { customerStore } from '../../store/customerStore'
-
-export const apiUrl = api()
+import useAxiosPrivate from '@utils/use-axios-private'
 
 export const limitArraySize = (arra: any, newItem: any) => {
   // Verificar si el nuevo item ya existe en el array
@@ -101,16 +99,14 @@ export const loadOptions = async (
   resource: string,
   mapFunction: (item: any) => ResourceOption
 ): Promise<ResourceOption[]> => {
+  const axiosPrivate = useAxiosPrivate()
   return new Promise((resolve, reject) => {
     let timer
-    const endpoint = `${apiUrl}/${resource}` // Construye la URL del endpoint
+    const endpoint = `/${resource}` // Construye la URL del endpoint
     const fetchData = async () => {
       try {
-        const response = await axios.get(endpoint, {
-          params: { q: inputValue },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
+        const response = await axiosPrivate.get(endpoint, {
+          params: { q: inputValue }
         })
         const data = response.data
         const options = data.map((item: any) => mapFunction(item))

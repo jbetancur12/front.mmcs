@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import axios from 'axios'
+
 import { Box, Button } from '@mui/material'
-import { api } from '../config'
+
 import { ArrowBack } from '@mui/icons-material'
 
 import QuotePDFGenerator from '../Components/QuotePDFGenerator'
 import { QuoteData } from '../Components/TableQuotes'
-
-const apiUrl = api()
+import useAxiosPrivate from '@utils/use-axios-private'
 
 // interface Product {
 //   name: string;
@@ -42,6 +41,7 @@ const apiUrl = api()
 // }
 
 const Quote = () => {
+  const axiosPrivate = useAxiosPrivate()
   const [quoteData, setQuoteData] = useState<QuoteData | null>(null)
   const { id } = useParams<{ id: string }>()
 
@@ -54,11 +54,7 @@ const Quote = () => {
   useEffect(() => {
     const fetchQuote = async () => {
       try {
-        const response = await axios.get<QuoteData>(`${apiUrl}/quotes/${id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        })
+        const response = await axiosPrivate.get<QuoteData>(`/quotes/${id}`, {})
 
         if (response.statusText === 'OK') {
           setQuoteData(response.data)

@@ -11,9 +11,9 @@ import {
 } from '@mui/material'
 import { useFormik } from 'formik'
 import * as yup from 'yup'
-import axios from 'axios'
-import { api } from '../../config'
+
 import { bigToast } from '../ExcelManipulation/Utils'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 // Definir el esquema de validación con yup
 const validationSchema = yup.object({
@@ -71,7 +71,7 @@ const validationSchema = yup.object({
 })
 
 const EquipmentLifeCycleForm: React.FC = () => {
-  const apiUrl = api()
+  const axiosPrivate = useAxiosPrivate()
   const formik = useFormik({
     initialValues: {
       pictureUrl: '',
@@ -108,11 +108,7 @@ const EquipmentLifeCycleForm: React.FC = () => {
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm }) => {
       try {
-        const response = await axios.post(`${apiUrl}/dataSheet`, values, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        })
+        const response = await axiosPrivate.post(`/dataSheet`, values, {})
 
         if (response.status >= 200 && response.status < 300) {
           // Se ha enviado correctamente la hoja de vida

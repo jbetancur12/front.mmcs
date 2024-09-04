@@ -1,8 +1,7 @@
-import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import TableUsersCustomer from '../Components/TableUsersCustomer'
-import { api } from '../config'
+
 import {
   Certificate,
   CertificateListItem
@@ -14,9 +13,10 @@ import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
 import CalibrationTimeline from '../Components/CalibrationTimeline'
 import { ArrowBack } from '@mui/icons-material'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 // API URL
-const apiUrl = api()
+
 const minioUrl = import.meta.env.VITE_MINIO_URL
 
 interface UserData {
@@ -33,6 +33,7 @@ interface GroupedCertificates {
 type Tab = 'users' | 'certificates' | 'headquarters' | 'calibrationTimeLine'
 
 function UserProfile() {
+  const axiosPrivate = useAxiosPrivate()
   const { id } = useParams()
   const $userStore = useStore(userStore)
   const navigate = useNavigate()
@@ -54,11 +55,7 @@ function UserProfile() {
   // por ejemplo, hacer una solicitud a la API o acceder a tus datos.
 
   const getuserInfo = async () => {
-    const response = await axios.get(`${apiUrl}/customers/${id}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-      }
-    })
+    const response = await axiosPrivate.get(`/customers/${id}`, {})
     if (response.status === 200) {
       setCustomerData(response.data)
       setImage(minioUrl + '/images/' + response.data.avatar)
@@ -66,11 +63,7 @@ function UserProfile() {
   }
 
   const getCertificateInfo = async () => {
-    const response = await axios.get(`${apiUrl}/files/customer/${id}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-      }
-    })
+    const response = await axiosPrivate.get(`/files/customer/${id}`, {})
 
     if (response.status === 200) {
       setCertificatesData(response.data)
@@ -111,11 +104,7 @@ function UserProfile() {
     }
 
     try {
-      const response = await axios.delete(`${apiUrl}/files/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.delete(`/files/${id}`, {})
 
       if (response.status >= 200 && response.status < 300) {
         bigToast('Equipo eliminado con éxito', 'success')
@@ -146,10 +135,9 @@ function UserProfile() {
 
       try {
         // Enviar la imagen al backend Express
-        await axios.post(`${apiUrl}/customers/avatar`, formData, {
+        await axiosPrivate.post(`/customers/avatar`, formData, {
           headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+            'Content-Type': 'multipart/form-data'
           }
         })
 
@@ -169,7 +157,7 @@ function UserProfile() {
 
   const handleAddSede = async (newSede: string) => {
     try {
-      const response = await axios.put(`${apiUrl}/customers/${id}/sedes`, {
+      const response = await axiosPrivate.put(`/customers/${id}/sedes`, {
         nuevaSede: newSede
       })
 

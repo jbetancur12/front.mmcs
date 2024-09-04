@@ -1,5 +1,5 @@
-import axios, { AxiosError } from 'axios' // Import Axios
-import { useEffect, useState } from 'react'
+import { AxiosError } from 'axios' // Import Axios
+import { useState } from 'react'
 
 import { Link, useNavigate } from 'react-router-dom'
 import * as Yup from 'yup' // Importa Yup para la validación
@@ -7,14 +7,14 @@ import * as Yup from 'yup' // Importa Yup para la validación
 import { Toast } from '../Components/ExcelManipulation/Utils'
 import { usePostHog } from 'posthog-js/react'
 
-import { api } from '../config'
+import { userStore } from 'src/store/userStore'
+import { axiosPublic } from '@utils/api'
+import Cookies from 'js-cookie'
 
 // Función de utilidad para verificar si un objeto es de tipo AxiosError
 function isAxiosError(obj: any): obj is AxiosError {
   return obj instanceof Error && 'isAxiosError' in obj
 }
-
-const apiUrl = api()
 
 const Login: React.FC = () => {
   const posthog = usePostHog()
@@ -116,10 +116,18 @@ const Login: React.FC = () => {
     try {
       await validationSchema.validate(formData, { abortEarly: false })
 
-      const response = await axios.post(`${apiUrl}/auth/login`, data)
+      const response = await axiosPublic
+        .post(`/auth/login`, data, {
+          withCredentials: true // Permite enviar cookies con la solicitud
+        })
+        .finally(() => {
+          setLoading(false)
+        })
 
       if (response.status === 200) {
         const { token } = response.data
+        Cookies.set('expiresIn', response.data.expiresIn)
+        userStore.set(response.data.user)
         // Handle successful login
         // toast.success("Bienvenido", {
         //   duration: 4000,
@@ -129,9 +137,7 @@ const Login: React.FC = () => {
         Toast.fire('Bienvenido', '', 'success')
         const lastLocation = sessionStorage.getItem('lastLocation') || '/'
 
-        setTimeout(() => {
-          window.location.href = lastLocation
-        }, 3000)
+        navigate(lastLocation)
 
         localStorage.setItem('accessToken', token)
 
@@ -163,34 +169,6 @@ const Login: React.FC = () => {
   //   if (localStorage.getItem('accessToken')) window.location.href = '/'
   // }, [])
 
-  useEffect(() => {
-    const validateToken = async () => {
-      try {
-        const token = localStorage.getItem('accessToken')
-        if (!token) {
-          throw new Error('Token no encontrado')
-        }
-
-        const response = await fetch(`${apiUrl}/auth/validateToken`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        })
-
-        if (response.ok) {
-          navigate('/')
-        }
-      } catch (error) {
-        // Toast.fire('Error', 'No se pudo validar el token', 'error')
-        console.error('Error al validar el token:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    validateToken()
-  }, [])
   return (
     <div className='flex flex-col items-center justify-center px-6 pt-8 mx-auto md:h-screen pt:mt-0 dark:bg-gray-900'>
       <a

@@ -1,12 +1,13 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { Modal, Box, TextField, Button, Typography } from '@mui/material'
 import AsyncSelect from 'react-select/async'
-import axios from 'axios'
-import { apiUrl, bigToast, styles } from './ExcelManipulation/Utils'
+
+import { bigToast, styles } from './ExcelManipulation/Utils'
 
 import { loadOptions, mapOptions } from '../utils/loadOptions'
 
 import { CertificateTemplateData } from '../pages/AnalyzeExcelComponent'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 interface ModalDeviceProps {
   open: boolean
@@ -25,6 +26,7 @@ const ModalDevice: React.FC<ModalDeviceProps> = ({
   dataReturned,
   resetForm
 }) => {
+  const axiosPrivate = useAxiosPrivate()
   const [formValues, setFormValues] = useState<
     Record<string, string | boolean>
   >(formFields.reduce((obj, field) => ({ ...obj, [field]: '' }), {}))
@@ -68,11 +70,7 @@ const ModalDevice: React.FC<ModalDeviceProps> = ({
     }
 
     try {
-      const response = await axios.post(`${apiUrl}/devices`, formValues, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.post(`/devices`, formValues, {})
 
       if (response.status === 201) {
         bigToast('Cliente Creado Exitosamente!', 'success')

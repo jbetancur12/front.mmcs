@@ -1,28 +1,21 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import axios from 'axios'
-
-import { api } from '../../config'
 
 import { DataSheetData } from './ListDataSheet'
 import DataSheetPDF from './DataSheetPDF'
-
-const apiUrl = api()
+import useAxiosPrivate from '@utils/use-axios-private'
 
 const DataSheetDetail: React.FC = () => {
+  const axiosPrivate = useAxiosPrivate()
   const [dataSheet, setDataSheet] = useState<DataSheetData | null>(null)
   const { id } = useParams<{ id: string }>()
 
   useEffect(() => {
     const fetchDataSheet = async () => {
       try {
-        const response = await axios.get<DataSheetData>(
-          `${apiUrl}/dataSheet/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-            }
-          }
+        const response = await axiosPrivate.get<DataSheetData>(
+          `/dataSheet/${id}`,
+          {}
         )
 
         if (response.statusText === 'OK') {

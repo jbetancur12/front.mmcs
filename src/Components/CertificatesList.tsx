@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import axios, { AxiosError, AxiosResponse } from 'axios'
+import { AxiosError, AxiosResponse, isAxiosError } from 'axios'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
 import {
@@ -15,12 +15,10 @@ import {
   ListItem,
   ListItemText
 } from '@mui/material'
-import { api } from '../config'
 
 import Loader from './Loader2'
 import { bigToast } from './ExcelManipulation/Utils'
-
-const apiUrl = api()
+import useAxiosPrivate from '@utils/use-axios-private'
 
 interface Certificate {
   id: number
@@ -29,6 +27,7 @@ interface Certificate {
 }
 
 function CertificatesList() {
+  const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id: string }>()
   const [certificates, setCertificates] = useState<Certificate[]>([])
   const [certificateId, setCertificateId] = useState<number>(0)
@@ -51,13 +50,9 @@ function CertificatesList() {
     const getCertificates = async () => {
       try {
         setLoading(true)
-        const response = await axios.get<Certificate[]>(
-          `${apiUrl}/certificateHistory/certificate/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-            }
-          }
+        const response = await axiosPrivate.get<Certificate[]>(
+          `/certificateHistory/certificate/${id}`,
+          {}
         )
 
         if (response.status === 200) {
@@ -86,12 +81,9 @@ function CertificatesList() {
     }
 
     try {
-      const response: AxiosResponse<Blob> = await axios.get(
-        `${apiUrl}/files/download/${filePath}`,
+      const response: AxiosResponse<Blob> = await axiosPrivate.get(
+        `/files/download/${filePath}`,
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          },
           responseType: 'blob' // Indicar que esperamos una respuesta binaria
         }
       )
@@ -114,7 +106,7 @@ function CertificatesList() {
         document.body.removeChild(link)
       }
     } catch (error: any) {
-      if (axios.isAxiosError(error)) {
+      if (isAxiosError(error)) {
         // Manejo de errores de Axios
         const axiosError = error as AxiosError
         if (axiosError.response) {
@@ -141,13 +133,9 @@ function CertificatesList() {
 
   const handleDelete = async (id: number) => {
     try {
-      const response = await axios.delete(
-        `${apiUrl}/certificateHistory/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        }
+      const response = await axiosPrivate.delete(
+        `/certificateHistory/${id}`,
+        {}
       )
 
       if (response.status === 200) {

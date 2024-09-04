@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
-import axios from 'axios'
+
 import MaterialReactTable, {
   MRT_Cell,
   MRT_ColumnDef,
@@ -19,35 +19,34 @@ import {
 } from '@mui/material'
 import { ArrowBack, Delete } from '@mui/icons-material'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
-import { api } from '../../config'
+
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { Trip, TripsResponse } from './types'
 import { format } from 'date-fns'
 import { vehicleStore } from '../../store/vehicleStore'
 import { useStore } from '@nanostores/react'
-
-const apiUrl = api()
+import useAxiosPrivate from '@utils/use-axios-private'
 
 // Tipos e interfaces para los datos de Trip
 
-const fetchTrips = async (vehicleId: number): Promise<TripsResponse> => {
-  const { data } = await axios.get(`${apiUrl}/trip?vehicleId=${vehicleId}`, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-    }
-  })
+const fetchTrips = async (
+  vehicleId: number,
+  axiosPrivate: any
+): Promise<TripsResponse> => {
+  const { data } = await axiosPrivate.get(`/trip?vehicleId=${vehicleId}`)
   return data
 }
 
 const TripsTable = () => {
+  const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
   const $vehicleStore = useStore(vehicleStore)
 
   const { id } = useParams<{ id: string }>()
   const { data } = useQuery<TripsResponse>(
     ['trips', id],
-    () => fetchTrips(Number(id)),
+    () => fetchTrips(Number(id), axiosPrivate),
     {
       enabled: !!id // Solo ejecuta la query si el id está disponible
     }
@@ -64,11 +63,7 @@ const TripsTable = () => {
   const saveRowEdits = useMutation(
     async (updatedTrip: Trip) => {
       const { id, ...values } = updatedTrip
-      const { status } = await axios.put(`${apiUrl}/trip/${id}`, values, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const { status } = await axiosPrivate.put(`/trip/${id}`, values, {})
       if (status !== 200) {
         throw new Error('Error al modificar el viaje')
       }
@@ -83,11 +78,7 @@ const TripsTable = () => {
 
   const deleteTrip = useMutation(
     async (id: number) => {
-      const { status } = await axios.delete(`${apiUrl}/trip/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const { status } = await axiosPrivate.delete(`/trip/${id}`, {})
       if (status !== 204) {
         throw new Error('Error al eliminar el viaje')
       }

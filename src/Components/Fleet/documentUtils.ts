@@ -1,21 +1,15 @@
-import axios from 'axios'
-import { api } from '../../config'
+import useAxiosPrivate from '@utils/use-axios-private'
 import { Document } from './types'
 // Adjust path as needed
-
-const apiUrl = api()
 
 // Fetch Documents
 export const fetchDocuments = async (
   vehicleId: number | string | undefined
 ) => {
-  const { data } = await axios.get(
-    `${apiUrl}/vehicles/${vehicleId}/documents`,
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-      }
-    }
+  const axiosPrivate = useAxiosPrivate()
+  const { data } = await axiosPrivate.get(
+    `/vehicles/${vehicleId}/documents`,
+    {}
   )
   return {
     documents: data.documents,
@@ -30,9 +24,9 @@ export const addDocument = async (
   vehicleId: number | string | undefined,
   document: FormData
 ) => {
-  await axios.post(`${apiUrl}/vehicles/${vehicleId}/documents`, document, {
+  const axiosPrivate = useAxiosPrivate()
+  await axiosPrivate.post(`/vehicles/${vehicleId}/documents`, document, {
     headers: {
-      Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
       'Content-Type': 'multipart/form-data'
     }
   })
@@ -40,9 +34,9 @@ export const addDocument = async (
 
 // Update Document
 export const updateDocument = async (document: Document) => {
-  await axios.put(`${apiUrl}/document/${document.id}`, document, {
+  const axiosPrivate = useAxiosPrivate()
+  await axiosPrivate.put(`/document/${document.id}`, document, {
     headers: {
-      Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
       'Content-Type': 'multipart/form-data'
     }
   })
@@ -53,12 +47,9 @@ export const deleteDocument = async (
   vehicleId: number | string | undefined,
   documentId: number
 ) => {
-  await axios.delete(
-    `${apiUrl}/vehicles/${vehicleId}/documents/${documentId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-      }
-    }
+  const axiosPrivate = useAxiosPrivate()
+  await axiosPrivate.delete(
+    `/vehicles/${vehicleId}/documents/${documentId}`,
+    {}
   )
 }

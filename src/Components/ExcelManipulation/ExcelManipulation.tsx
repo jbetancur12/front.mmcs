@@ -8,8 +8,7 @@ import {
 } from '@mui/material'
 import React, { useState } from 'react'
 import * as Minio from 'minio'
-import axios from 'axios'
-import { api } from '../../config'
+
 import toast, { Toaster } from 'react-hot-toast'
 import Loader from '../Loader2'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
@@ -25,8 +24,7 @@ import DeviceInformation from './Components/DeviceInformation'
 import CustomerInformation from './Components/CustomerInformation'
 import InitialConditions from './Components/InitialConditions'
 import ResolutionAndExactitude from './Components/ResolutionAndExactitude'
-
-const apiUrl = api()
+import useAxiosPrivate from '@utils/use-axios-private'
 
 const minioClient = new Minio.Client({
   endPoint: import.meta.env.VITE_MINIO_ENDPOINT || 'localhost',
@@ -37,6 +35,7 @@ const minioClient = new Minio.Client({
 })
 
 const ExcelManipulation: React.FC = () => {
+  const axiosPrivate = useAxiosPrivate()
   const [formData, setFormData] = useState(initialFormData)
   const [error, setError] = useState(false)
 
@@ -109,10 +108,9 @@ const ExcelManipulation: React.FC = () => {
             )
 
             try {
-              await axios.post(`${apiUrl}/utils/upload`, formDataFile, {
+              await axiosPrivate.post(`/utils/upload`, formDataFile, {
                 headers: {
-                  'Content-Type': 'multipart/form-data',
-                  Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+                  'Content-Type': 'multipart/form-data'
                 }
               })
               toast.success('Certificado creado correctamente')

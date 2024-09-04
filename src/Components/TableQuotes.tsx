@@ -10,11 +10,11 @@ import {
   Table as MuiTable,
   Tooltip
 } from '@mui/material'
-import axios from 'axios'
+
 import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
 import React, { useEffect, useMemo, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
-import { api } from '../config'
+
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { differenceInDays, format } from 'date-fns'
 
@@ -22,6 +22,7 @@ import { Link } from 'react-router-dom'
 import { BlobProvider, PDFDownloadLink } from '@react-pdf/renderer'
 import QuotePDF from './QuotePDF'
 import Loader from './Loader2'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 // Define interfaces
 export interface QuoteData {
@@ -49,7 +50,6 @@ export interface QuoteData {
 }
 
 // API URL
-const apiUrl = api()
 
 export const statusOptions: any = {
   created: 'Creada',
@@ -84,6 +84,7 @@ const StyledTableBodycell = styled(TableCell)(() => ({
 
 // Main component
 const Table: React.FC = () => {
+  const axiosPrivate = useAxiosPrivate()
   const [tableData, setTableData] = useState<QuoteData[]>([])
   const [loading, setLoading] = useState<boolean>(false)
 
@@ -91,11 +92,7 @@ const Table: React.FC = () => {
   const fetchQuotes = async () => {
     setLoading(true)
     try {
-      const response = await axios.get(`${apiUrl}/quotes`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.get(`/quotes`, {})
 
       if (response.statusText === 'OK') {
         // @ts-ignore: Ignorar el error en esta línea

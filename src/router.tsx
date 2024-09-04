@@ -1,7 +1,7 @@
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { Route, Routes } from 'react-router-dom'
-import RequireAuth from './Components/Authentication/RequireAuth'
+
 import Layout from './Components/Layout'
 
 // Páginas principales
@@ -70,8 +70,11 @@ import { DocumentViewPDF } from './Components/Fleet/DocumentViewPDF'
 import { CalibrationTimelinePDF } from './Components/Fleet/CalibrationTimelinePDF'
 
 import PDFViewer from './Components/DataSheet/PDFViewer'
+import useSessionTimeoutWarning from '@utils/use-expiry-time'
+import RequireAuth from './Components/Authentication/RequireAuth'
 
 function Router() {
+  useSessionTimeoutWarning({ expirationTimeInMinutes: 1 })
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Routes>
@@ -86,7 +89,8 @@ function Router() {
           path='/'
           element={
             <RequireAuth>
-              <Layout />
+              {' '}
+              <Layout />{' '}
             </RequireAuth>
           }
         >

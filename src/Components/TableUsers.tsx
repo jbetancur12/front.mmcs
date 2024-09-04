@@ -11,7 +11,8 @@ import {
   TextField,
   Tooltip
 } from '@mui/material'
-import axios from 'axios'
+import useAxiosPrivate from '@utils/use-axios-private'
+
 import {
   MaterialReactTable,
   type MRT_Cell,
@@ -21,7 +22,6 @@ import {
 } from 'material-react-table'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
-import { api } from '../config'
 
 // Define interfaces
 export interface UserData {
@@ -35,10 +35,10 @@ export interface UserData {
 }
 
 // API URL
-const apiUrl = api()
 
 // Main component
 const Table: React.FC = () => {
+  const axiosPrivate = useAxiosPrivate()
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<UserData[]>([])
   const [filteredTableData, setFilteredTableData] = useState<UserData[]>([])
@@ -50,11 +50,7 @@ const Table: React.FC = () => {
   // Create a new user
   const onCreateUser = async (userData: UserData) => {
     try {
-      const response = await axios.post(`${apiUrl}/auth/register`, userData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.post(`/auth/register`, userData, {})
 
       if (response.status === 201) {
         toast.success('Usuario Creado Exitosamente!', {
@@ -73,11 +69,7 @@ const Table: React.FC = () => {
   // Fetch users data
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/users`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.get(`/users`, {})
 
       if (response.statusText === 'OK') {
         // @ts-ignore: Ignorar el error en esta línea
@@ -95,7 +87,7 @@ const Table: React.FC = () => {
   // const updateUser = async (userData: UserData) => {
 
   //   try {
-  //     const response = await axios.put(`${apiUrl}/users/${userData.id}`, userData, {
+  //     const response = await axiosPrivate.put(`/users/${userData.id}`, userData, {
   //       headers: {
   //         'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
   //       },
@@ -130,14 +122,10 @@ const Table: React.FC = () => {
         const updatedValues = { ...values }
         delete updatedValues.id
         try {
-          const response = await axios.put(
-            `${apiUrl}/users/${values.id}`,
+          const response = await axiosPrivate.put(
+            `/users/${values.id}`,
             updatedValues,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-              }
-            }
+            {}
           )
 
           if (response.status === 201) {
@@ -164,11 +152,7 @@ const Table: React.FC = () => {
 
   const deleteUser = async (rowIndex: number, id: number) => {
     try {
-      const response = await axios.delete(`${apiUrl}/users/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.delete(`/users/${id}`, {})
 
       if (response.status === 201) {
         toast.success('Usuario Eliminado Exitosamente!', {

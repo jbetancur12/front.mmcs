@@ -11,7 +11,7 @@ import {
   TextField,
   Tooltip
 } from '@mui/material'
-import axios from 'axios'
+
 import {
   MaterialReactTable,
   type MRT_Cell,
@@ -21,8 +21,9 @@ import {
 } from 'material-react-table'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
-import { api } from '../config'
+
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 // Define interfaces
 export interface CertificateTypeData {
@@ -31,10 +32,10 @@ export interface CertificateTypeData {
 }
 
 // API URL
-const apiUrl = api()
 
 // Main component
 const Table: React.FC = () => {
+  const axiosPrivate = useAxiosPrivate()
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<CertificateTypeData[]>([])
   // const [filteredTableData, setFilteredTableData] = useState<CertificateTypeData[]>([]);
@@ -48,14 +49,10 @@ const Table: React.FC = () => {
     certificateTypeData: CertificateTypeData
   ) => {
     try {
-      const response = await axios.post(
-        `${apiUrl}/certificateTypes`,
+      const response = await axiosPrivate.post(
+        `/certificateTypes`,
         { name: certificateTypeData.name },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        }
+        {}
       )
 
       if (response.status === 201) {
@@ -75,11 +72,7 @@ const Table: React.FC = () => {
   // Fetch certificateTypes data
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/certificateTypes`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.get(`/certificateTypes`, {})
 
       if (response.statusText === 'OK') {
         // @ts-ignore: Ignorar el error en esta línea
@@ -93,7 +86,7 @@ const Table: React.FC = () => {
   // const updateUser = async (certificateTypeData: CertificateTypeData) => {
 
   //   try {
-  //     const response = await axios.put(`${apiUrl}/certificateTypes/${certificateTypeData.id}`, certificateTypeData, {
+  //     const response = await axiosPrivate.put(`/certificateTypes/${certificateTypeData.id}`, certificateTypeData, {
   //       headers: {
   //         'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
   //       },
@@ -128,14 +121,10 @@ const Table: React.FC = () => {
         const updatedValues = { ...values }
         delete updatedValues.id
         try {
-          const response = await axios.put(
-            `${apiUrl}/certificateTypes/${values.id}`,
+          const response = await axiosPrivate.put(
+            `/certificateTypes/${values.id}`,
             updatedValues,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-              }
-            }
+            {}
           )
 
           if (response.status === 201) {
@@ -162,11 +151,7 @@ const Table: React.FC = () => {
 
   const deleteUser = async (rowIndex: number, id: number) => {
     try {
-      const response = await axios.delete(`${apiUrl}/certificateTypes/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.delete(`/certificateTypes/${id}`, {})
 
       if (response.status === 201) {
         toast.success('Equipo Eliminado Exitosamente!', {

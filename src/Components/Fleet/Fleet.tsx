@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from 'react-query'
-import axios from 'axios'
+import { useMutation, useQueryClient } from 'react-query'
+
 import MaterialReactTable, {
   MRT_Cell,
   MRT_ColumnDef,
@@ -24,15 +24,16 @@ import {
   Visibility
 } from '@mui/icons-material'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
-import { api } from '../../config'
+
 import * as yup from 'yup'
 
 import GenericFormModal from './GenericFormModal'
-import { addVehicle, fetchVehicles, vehicleFields } from './vehicleUtils'
+import { useAddVehicle, useVehicles, vehicleFields } from './vehicleUtils'
 import { Link, useNavigate } from 'react-router-dom'
 import { Vehicle } from './types'
 import { vehicleStore } from '../../store/vehicleStore'
 import { useFormik } from 'formik'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 const validationSchema = yup.object().shape({
   pictureUrl: yup.mixed().required('Imagen es obligatoria'),
@@ -115,11 +116,10 @@ const validationSchema = yup.object().shape({
     .required('Fecha de Expedición es obligatoria')
 })
 
-const apiUrl = api()
-
 const Fleet = () => {
+  const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
-  const { data: vehicles = [], refetch } = useQuery('vehicles', fetchVehicles)
+  const { data: vehicles = [], refetch } = useVehicles()
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string | undefined
@@ -129,11 +129,7 @@ const Fleet = () => {
   const saveRowEdits = useMutation(
     async (updatedVehicle: Vehicle) => {
       const { id, ...values } = updatedVehicle
-      const { status } = await axios.put(`${apiUrl}/vehicles/${id}`, values, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const { status } = await axiosPrivate.put(`/vehicles/${id}`, values, {})
       if (status !== 200) {
         throw new Error('Error al modificar la hoja de datos')
       }
@@ -148,11 +144,7 @@ const Fleet = () => {
 
   const deleteVehicle = useMutation(
     async (id: number) => {
-      const { status } = await axios.delete(`${apiUrl}/vehicles/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const { status } = await axiosPrivate.delete(`/vehicles/${id}`, {})
       if (status !== 204) {
         throw new Error('Error al eliminar la hoja de datos')
       }
@@ -165,18 +157,7 @@ const Fleet = () => {
     }
   )
 
-  const { mutate: createVehicle } = useMutation(addVehicle, {
-    onSuccess: () => {
-      queryClient.invalidateQueries('vehicles')
-      bigToast('Vehículo Creado Exitosamente!', 'success')
-      setCreateModalOpen(false)
-      refetch()
-    },
-    onError: (error) => {
-      console.error('Error al crear el vehículo:', error)
-      bigToast('Error al crear el vehículo', 'error')
-    }
-  })
+  const { mutate: createVehicle } = useAddVehicle()
 
   const handleSaveRowEdits = useCallback(
     async ({
@@ -327,7 +308,18 @@ const Fleet = () => {
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm }) => {
       try {
-        await createVehicle(values)
+        await createVehicle(values, {
+          onSuccess: () => {
+            queryClient.invalidateQueries('vehicles')
+            bigToast('Vehículo Creado Exitosamente!', 'success')
+            setCreateModalOpen(false)
+            refetch()
+          },
+          onError: (error) => {
+            console.error('Error al crear el vehículo:', error)
+            bigToast('Error al crear el vehículo', 'error')
+          }
+        })
         resetForm()
       } catch (error) {
         console.error('Error al crear el vehículo:', error)

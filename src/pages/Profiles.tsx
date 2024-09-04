@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import axios from 'axios'
-import { api } from '../config'
+
 import * as minioExports from 'minio'
 import {
   Button,
@@ -20,6 +19,7 @@ import ModalProfile from '../Components/ModalProfile'
 import { bigToast } from '../Components/ExcelManipulation/Utils'
 import { userStore } from '../store/userStore'
 import { useStore } from '@nanostores/react'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 export interface Profile {
   id: number
@@ -31,8 +31,6 @@ export interface Profile {
   imageProfile: string
 }
 
-const apiUrl = api()
-
 const minioClient = new minioExports.Client({
   endPoint: import.meta.env.VITE_MINIO_ENDPOINT || 'localhost',
   port: import.meta.env.VITE_ENV === 'development' ? 9000 : undefined,
@@ -42,6 +40,7 @@ const minioClient = new minioExports.Client({
 })
 
 const Profiles: React.FC = () => {
+  const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
   const $userStore = useStore(userStore)
   const [profiles, setProfiles] = useState<Profile[]>([])
@@ -75,11 +74,7 @@ const Profiles: React.FC = () => {
   }
   const fetchProfiles = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/profiles`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.get(`/profiles`, {})
 
       if (response.data.length > 0) {
         const pro = await getBucket(response.data)
@@ -98,11 +93,7 @@ const Profiles: React.FC = () => {
     if (!confirm(`Esta seguro que desea eliminarel perfil ?`)) {
       return
     }
-    const response = await axios.delete(`${apiUrl}/profiles/${id}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-      }
-    })
+    const response = await axiosPrivate.delete(`/profiles/${id}`, {})
 
     if (response.status === 204) {
       bigToast('Perfil eliminado con éxito', 'success')

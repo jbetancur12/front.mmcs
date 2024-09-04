@@ -9,9 +9,8 @@ import {
   Tooltip,
   Typography
 } from '@mui/material'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { api } from '../../config'
-import axios from 'axios'
+import { useNavigate, useParams } from 'react-router-dom'
+
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 
 import { format } from 'date-fns'
@@ -19,8 +18,7 @@ import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Visibility } from '@mui/icons-material'
 import { bigToast } from '../ExcelManipulation/Utils'
-
-const apiUrl = api()
+import useAxiosPrivate from '@utils/use-axios-private'
 
 export interface InspectionHistoryData {
   id: number
@@ -38,6 +36,7 @@ export interface InspectionHistoryData {
 }
 
 const InspectionMaintenance: React.FC = () => {
+  const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [tableData, setTableData] = useState<InspectionHistoryData | null>(null)
@@ -48,11 +47,7 @@ const InspectionMaintenance: React.FC = () => {
 
   const fetchReports = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/dataSheet/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.get(`/dataSheet/${id}`, {})
 
       if (response.statusText === 'OK') {
         setTableData(response.data)

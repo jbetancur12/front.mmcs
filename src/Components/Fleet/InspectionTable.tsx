@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import axios from 'axios'
+
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import {
   Box,
@@ -9,7 +9,7 @@ import {
   Modal,
   Stack
 } from '@mui/material'
-import { api } from '../../config'
+
 import { useNavigate, useParams } from 'react-router-dom'
 import { InspectionHistory } from './types'
 import { format } from 'date-fns'
@@ -21,19 +21,15 @@ import {
   Warning
 } from '@mui/icons-material'
 import InspectionSummary from './InspectionSummary'
-
-const apiUrl = api()
+import useAxiosPrivate from '@utils/use-axios-private'
 
 const fetchInspections = async (
   vehicleId: number
 ): Promise<InspectionHistory[]> => {
-  const { data } = await axios.get(
-    `${apiUrl}/vehicles/${vehicleId}/inspections`,
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-      }
-    }
+  const axiosPrivate = useAxiosPrivate()
+  const { data } = await axiosPrivate.get(
+    `/vehicles/${vehicleId}/inspections`,
+    {}
   )
   return data
 }

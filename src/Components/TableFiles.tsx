@@ -38,7 +38,7 @@ import { userStore } from '../store/userStore'
 import { certificateTypeStore } from '../store/certificateTypeStore'
 import { deviceStore } from '../store/deviceStore'
 import AutoComplete from './AutoComplete'
-import { api } from '../config'
+
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import Loader from './Loader2'
 import { Link } from 'react-router-dom'
@@ -56,6 +56,7 @@ import {
   styles
 } from './ExcelManipulation/Utils'
 import { customerStore } from '../store/customerStore'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 const minioUrl = import.meta.env.VITE_MINIO_URL
 
@@ -119,10 +120,10 @@ interface ResourceOption {
 }
 
 // API URL
-const apiUrl = api()
 
 // Main component
 const Table: React.FC = () => {
+  const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<FileData[]>([])
@@ -143,10 +144,9 @@ const Table: React.FC = () => {
   const onCreateFile = async (fileData: FileData) => {
     setLoading(true)
     try {
-      const response = await axios.post(`${apiUrl}/files`, fileData, {
+      const response = await axiosPrivate.post(`/files`, fileData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+          'Content-Type': 'multipart/form-data'
         }
       })
 
@@ -170,11 +170,7 @@ const Table: React.FC = () => {
   // Fetch files data
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/files`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.get(`/files`, {})
 
       if (response.statusText === 'OK') {
         // @ts-ignore: Ignorar el error en esta línea
@@ -188,7 +184,7 @@ const Table: React.FC = () => {
   // const updateUser = async (fileData: FileData) => {
 
   //   try {
-  //     const response = await axios.put(`${apiUrl}/files/${fileData.id}`, fileData, {
+  //     const response = await axiosPrivate.put(`/files/${fileData.id}`, fileData, {
   //       headers: {
   //         'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
   //       },
@@ -223,14 +219,10 @@ const Table: React.FC = () => {
         const updatedValues = { ...values }
         delete updatedValues.id
         try {
-          const response = await axios.put(
-            `${apiUrl}/files/${values.id}`,
+          const response = await axiosPrivate.put(
+            `/files/${values.id}`,
             updatedValues,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-              }
-            }
+            {}
           )
 
           if (response.status === 201) {
@@ -257,11 +249,7 @@ const Table: React.FC = () => {
 
   const deleteUser = async (rowIndex: number, id: number) => {
     try {
-      const response = await axios.delete(`${apiUrl}/files/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.delete(`/files/${id}`, {})
 
       if (response.status === 204) {
         toast.success('Archivo Eliminado Exitosamente!', {
@@ -336,12 +324,9 @@ const Table: React.FC = () => {
     }
 
     try {
-      const response: AxiosResponse<Blob> = await axios.get(
-        `${apiUrl}/files/download/${filePath}`,
+      const response: AxiosResponse<Blob> = await axiosPrivate.get(
+        `/files/download/${filePath}`,
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          },
           responseType: 'blob' // Indicar que esperamos una respuesta binaria
         }
       )
@@ -364,7 +349,7 @@ const Table: React.FC = () => {
         document.body.removeChild(link)
       }
     } catch (error: any) {
-      if (axios.isAxiosError(error)) {
+      if (axiosPrivate.isAxiosError(error)) {
         // Manejo de errores de Axios
         const axiosError = error as AxiosError
         if (axiosError.response) {
@@ -895,7 +880,7 @@ export const CreateNewFileModal = ({
                     return (
                       // <AutoComplete
                       //   key={index}
-                      //   endpoint={`${apiUrl}/customers`}
+                      //   endpoint={`/customers`}
                       //   token={localStorage.getItem('accessToken')}
                       //   label='Buscar Cliente'
                       //   mapOption={(data) =>
@@ -970,7 +955,7 @@ export const CreateNewFileModal = ({
                       // />
                       // <AutoComplete
                       //   key={index}
-                      //   endpoint={`${apiUrl}/devices`}
+                      //   endpoint={`/devices`}
                       //   token={localStorage.getItem('accessToken')}
                       //   label='Buscar Equipo'
                       //   mapOption={(data) =>
@@ -1019,7 +1004,7 @@ export const CreateNewFileModal = ({
                     return (
                       // <AutoComplete
                       //   key={index}
-                      //   endpoint={`${apiUrl}/certificateTypes`}
+                      //   endpoint={`/certificateTypes`}
                       //   token={localStorage.getItem('accessToken')}
                       //   label='Buscar Tipo de Certificado'
                       //   mapOption={(data) =>

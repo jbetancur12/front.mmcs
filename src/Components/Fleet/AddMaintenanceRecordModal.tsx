@@ -11,12 +11,11 @@ import {
   InputLabel
 } from '@mui/material'
 import { InterventionType, MaintenanceRecord, Reminder } from './types'
-import axios from 'axios'
-import { api } from '../../config'
+
 import { addMonths } from 'date-fns'
 import { bigToast } from '../ExcelManipulation/Utils'
-
-const apiUrl = api()
+import { AxiosError, isAxiosError } from 'axios'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 interface AddMaintenanceRecordModalProps {
   isOpen: boolean
@@ -33,6 +32,7 @@ const AddMaintenanceRecordModal: React.FC<AddMaintenanceRecordModalProps> = ({
   interventionTypes,
   vehicleId
 }) => {
+  const axiosPrivate = useAxiosPrivate()
   const [formData, setFormData] = useState<Partial<MaintenanceRecord>>({})
   const [reminder, setReminder] = useState<Partial<Reminder>>({})
   const [selectedInterventionType, setSelectedInterventionType] = useState<
@@ -89,28 +89,38 @@ const AddMaintenanceRecordModal: React.FC<AddMaintenanceRecordModalProps> = ({
     }
 
     try {
-      const { data } = await axios.post(
-        `${apiUrl}/maintenanceRecord`,
+      const { data } = await axiosPrivate.post(
+        `/maintenanceRecord`,
         newRecord,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        }
+        {}
       )
       onSave(data) // Actualizar el estado con el nuevo registro
       onClose() // Cerrar el modal
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        // El error es de Axios
-        if (error.response && error.response.data) {
-          bigToast(error.response.data.error, 'error')
+      if (isAxiosError(error)) {
+        // Use isAxiosError to check if the error is an Axios error
+        const axiosError = error as AxiosError
+        if (axiosError.response) {
+          bigToast(
+            `Error al descargar el archivo: ${axiosError.response.statusText}`,
+            'error'
+          )
         } else {
-          bigToast('Ocurrió un error inesperado', 'error')
+          bigToast(
+            `Error al descargar el archivo: ${axiosError.message}`,
+            'error'
+          )
         }
+      } else if (error instanceof Error) {
+        bigToast(
+          `Error desconocido al descargar el archivo: ${error.message}`,
+          'error'
+        )
       } else {
-        // El error no es de Axios
-        bigToast('Ocurrió un error desconocido', 'error')
+        bigToast(
+          'Ocurrió un error desconocido al descargar el archivo.',
+          'error'
+        )
       }
     }
   }

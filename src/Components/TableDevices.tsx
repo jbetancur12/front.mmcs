@@ -11,7 +11,7 @@ import {
   TextField,
   Tooltip
 } from '@mui/material'
-import axios from 'axios'
+
 import {
   MaterialReactTable,
   type MRT_Cell,
@@ -21,7 +21,6 @@ import {
 } from 'material-react-table'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { api } from '../config'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import AsyncSelect from 'react-select/async'
 
@@ -29,6 +28,7 @@ import { loadOptions, mapOptions } from '../utils/loadOptions'
 
 import { bigToast, styles } from './ExcelManipulation/Utils'
 import { TemplatesData } from './Templates'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 // Define interfaces
 export interface DeviceData {
@@ -46,10 +46,10 @@ export interface DeviceData {
 }
 
 // API URL
-const apiUrl = api()
 
 // Main component
 const Table: React.FC = () => {
+  const axiosPrivate = useAxiosPrivate()
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<DeviceData[]>([])
   const [format, setFormat] = useState<{ labe: string; value: string } | null>(
@@ -64,19 +64,15 @@ const Table: React.FC = () => {
   // Create a new device
   const onCreateDevice = async (deviceData: DeviceData) => {
     try {
-      const response = await axios.post(
-        `${apiUrl}/devices`,
+      const response = await axiosPrivate.post(
+        `/devices`,
         {
           name: deviceData.name,
           repository: deviceData.repository,
           magnitude: deviceData.magnitude,
           certificateTemplate: deviceData.certificateTemplate
         },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        }
+        {}
       )
 
       if (response.status === 201) {
@@ -93,11 +89,7 @@ const Table: React.FC = () => {
   // Fetch devices data
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/devices`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.get(`/devices`, {})
 
       if (response.statusText === 'OK') {
         // @ts-ignore: Ignorar el error en esta línea
@@ -127,14 +119,10 @@ const Table: React.FC = () => {
 
         delete updatedValues.id
         try {
-          const response = await axios.put(
-            `${apiUrl}/devices/${values.id}`,
+          const response = await axiosPrivate.put(
+            `/devices/${values.id}`,
             updatedValues,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-              }
-            }
+            {}
           )
 
           if (response.status >= 200 && response.status < 300) {
@@ -161,11 +149,7 @@ const Table: React.FC = () => {
 
   const deleteUser = async (rowIndex: number, id: number) => {
     try {
-      const response = await axios.delete(`${apiUrl}/devices/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.delete(`/devices/${id}`, {})
 
       if (response.status === 204) {
         bigToast('Equipo Eliminado Exitosamente!', 'success')

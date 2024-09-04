@@ -1,12 +1,25 @@
+import { axiosPublic } from '@utils/api'
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
+import { bigToast, Toast } from '../ExcelManipulation/Utils'
 
 const LogoutButton: React.FC = () => {
-  const handleLogout = () => {
+  const navigate = useNavigate()
+  const handleLogout = async () => {
     // Borra el token del localStorage
-    localStorage.removeItem('accessToken')
+    const response = await axiosPublic.post('/auth/logout', {
+      withCredentials: true
+    })
 
+    if (response.status !== 200) {
+      throw new Error('Error al cerrar sesión')
+      bigToast('Error al cerrar sesión', 'error')
+    }
+    Toast.fire('Sesión cerrada exitosamente', '', 'success')
+
+    localStorage.removeItem('accessToken')
     // Redirige al usuario a la página de inicio de sesión
-    window.location.href = '/login' // Cambia '/login' por la ruta de tu página de inicio de sesión
+    navigate('/login') // Cambia '/login' por la ruta de tu página de inicio de sesión
   }
 
   return (

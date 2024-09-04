@@ -1,4 +1,3 @@
-import axios from 'axios'
 import MaterialReactTable, {
   MRT_Cell,
   MRT_ColumnDef,
@@ -6,7 +5,6 @@ import MaterialReactTable, {
 } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { api } from '../config'
 import Loader from './Loader2'
 import {
   Box,
@@ -20,6 +18,7 @@ import {
 } from '@mui/material'
 import { Delete, Edit } from '@mui/icons-material'
 import { bigToast } from './ExcelManipulation/Utils'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 export interface TemplateData {
   name: string
@@ -40,9 +39,8 @@ export interface TemplatesData extends TemplateData {
   created_at: Date
 }
 
-const apiUrl = api()
-
 const Templates = () => {
+  const axiosPrivate = useAxiosPrivate()
   const [tableData, setTableData] = useState<TemplatesData[]>([])
   const [loading, setLoading] = useState<boolean>(false)
   const [createModalOpen, setCreateModalOpen] = useState(false)
@@ -160,11 +158,7 @@ const Templates = () => {
   const fetchTemplates = async () => {
     setLoading(true)
     try {
-      const response = await axios.get(`${apiUrl}/templates`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.get(`/templates`, {})
       if (response.status === 200) {
         setTableData(response.data)
         setLoading(false)
@@ -186,11 +180,7 @@ const Templates = () => {
 
   const onCreateTemplates = async (templateData: TemplateData) => {
     try {
-      const response = await axios.post(`${apiUrl}/templates`, templateData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.post(`/templates`, templateData, {})
       if (response.status >= 200 && response.status < 300) {
         bigToast('Plantilla creada exitosamente!', 'success')
         fetchTemplates()
@@ -212,11 +202,7 @@ const Templates = () => {
         '¿Estás seguro de que deseas eliminar este archivo?'
       )
       if (shouldDelete) {
-        const response = await axios.delete(`${apiUrl}/templates/${id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        })
+        const response = await axiosPrivate.delete(`/templates/${id}`, {})
         if (response.status >= 200 && response.status < 300) {
           bigToast('Archivo eliminado exitosamente!', 'success')
           fetchTemplates()
@@ -235,14 +221,10 @@ const Templates = () => {
         const updatedValues = { ...values }
         delete updatedValues.id
         try {
-          const response = await axios.put(
-            `${apiUrl}/templates/${values.id}`,
+          const response = await axiosPrivate.put(
+            `/templates/${values.id}`,
             updatedValues,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-              }
-            }
+            {}
           )
 
           if (response.status === 201) {

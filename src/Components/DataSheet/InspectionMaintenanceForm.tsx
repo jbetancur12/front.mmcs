@@ -15,14 +15,14 @@ import {
 } from '@mui/material'
 import { useFormik } from 'formik'
 import * as yup from 'yup'
-import axios from 'axios'
-import { api } from '../../config'
+
 import { bigToast } from '../ExcelManipulation/Utils'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { InspectionHistoryData } from './InspectionMaintenance'
 import AsyncSelect from 'react-select/async'
 import Profile from '../../pages/Profile'
 import { loadOptions, mapOptions } from '../../utils/loadOptions'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 // Definir los tipos para los valores del formulario
 export interface InspectionMaintenanceData {
@@ -124,8 +124,9 @@ interface InspectionMaintenanceFormProps {
 }
 
 const InspectionMaintenanceDataForm: React.FC = () => {
+  const axiosPrivate = useAxiosPrivate()
   const location = useLocation()
-  const apiUrl = api()
+
   const navigate = useNavigate()
   const { id } = location.state as InspectionMaintenanceFormProps
 
@@ -135,11 +136,7 @@ const InspectionMaintenanceDataForm: React.FC = () => {
     // Obtener la información básica del equipo
     const fetchEquipmentInfo = async () => {
       try {
-        const response = await axios.get(`${apiUrl}/dataSheet/${id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        })
+        const response = await axiosPrivate.get(`/dataSheet/${id}`, {})
         setEquipmentInfo({
           equipmentName: response.data.equipmentName,
           internalCode: response.data.internalCode,
@@ -157,7 +154,7 @@ const InspectionMaintenanceDataForm: React.FC = () => {
     if (id) {
       fetchEquipmentInfo()
     }
-  }, [id, apiUrl])
+  }, [id])
 
   const options = ['Bueno', 'Malo', 'No Aplica']
 
@@ -192,14 +189,10 @@ const InspectionMaintenanceDataForm: React.FC = () => {
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm }) => {
       try {
-        const response = await axios.post(
-          `${apiUrl}/inspectionMaintenance`,
+        const response = await axiosPrivate.post(
+          `/inspectionMaintenance`,
           { ...values, name: 'Mantenimiento' },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-            }
-          }
+          {}
         )
 
         if (response.status >= 200 && response.status < 300) {

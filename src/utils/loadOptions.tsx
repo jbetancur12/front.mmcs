@@ -1,7 +1,4 @@
-import axios from 'axios'
-import { api } from '../config'
-
-const apiUrl = api()
+import { axiosPrivate } from './api'
 
 export const loadOptions = async <T,>(
   inputValue: string,
@@ -10,14 +7,11 @@ export const loadOptions = async <T,>(
 ): Promise<T[]> => {
   return new Promise((resolve, reject) => {
     let timer
-    const endpoint = `${apiUrl}/${resource}` // Construir la URL del endpoint
+    const endpoint = `/${resource}` // Construir la URL del endpoint
     const fetchData = async () => {
       try {
-        const response = await axios.get(endpoint, {
-          params: { q: inputValue },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
+        const response = await axiosPrivate.get(endpoint, {
+          params: { q: inputValue }
         })
         const data = response.data
         const options = data.map((item: any) => mapFunction(item))

@@ -1,8 +1,7 @@
-import axios from 'axios'
 import { format } from 'date-fns'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import React, { useEffect, useMemo, useState } from 'react'
-import { api } from '../config'
+
 import toast, { Toaster } from 'react-hot-toast'
 import Loader from './Loader2'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
@@ -21,7 +20,7 @@ import { CloudUpload, Delete, Download, Visibility } from '@mui/icons-material'
 
 import * as Minio from 'minio'
 import XlsxPopulate from 'xlsx-populate'
-
+import useAxiosPrivate from '@utils/use-axios-private'
 const minioClient = new Minio.Client({
   endPoint: import.meta.env.VITE_MINIO_ENDPOINT || 'localhost',
   port: import.meta.env.VITE_ENV === 'development' ? 9000 : undefined,
@@ -30,6 +29,7 @@ const minioClient = new Minio.Client({
   secretKey: import.meta.env.VITE_MINIO_SECRETKEY
 })
 
+console.log(await minioClient.listBuckets())
 export interface FileData {
   name: string
   title: string
@@ -44,9 +44,8 @@ export interface RepositoryData extends FileData {
   created_at: Date
 }
 
-const apiUrl = api()
-
 const Repository = () => {
+  const axiosPrivate = useAxiosPrivate()
   const [tableData, setTableData] = useState<RepositoryData[]>([])
   const [loading, setLoading] = useState<boolean>(false)
   const [createModalOpen, setCreateModalOpen] = useState(false)
@@ -97,11 +96,7 @@ const Repository = () => {
   const fetchRepositories = async () => {
     setLoading(true)
     try {
-      const response = await axios.get(`${apiUrl}/repositories`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.get(`/repositories`, {})
 
       if (response.statusText === 'OK') {
         // @ts-ignore: Ignorar el error en esta línea
@@ -124,14 +119,10 @@ const Repository = () => {
 
   const onCreateRepository = async (repostoryData: FileData) => {
     try {
-      const response = await axios.post(
-        `${apiUrl}/repositories`,
+      const response = await axiosPrivate.post(
+        `/repositories`,
         repostoryData,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        }
+        {}
       )
 
       if (response.status >= 200 && response.status < 300) {
@@ -260,11 +251,7 @@ const Repository = () => {
       )
 
       if (shouldDelete) {
-        const response = await axios.delete(`${apiUrl}/repositories/${id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        })
+        const response = await axiosPrivate.delete(`/repositories/${id}`, {})
 
         if (response.status >= 200 && response.status < 300) {
           toast.success('Archivo eliminado Exitosamente!', {
@@ -385,26 +372,6 @@ export const CreateNewRepositoryModal = ({
     //@ts-ignore
     onSubmit(formData)
     onClose()
-
-    // axios
-    //   .post(`${apiUrl}/repositories`, formData, {
-    //     headers: {
-    //       Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-    //     },
-    //   })
-    //   .then((response) => {
-    //     if (response.status === 201) {
-    //       toast.success("Archivo subido Exitosamente!", {
-    //         duration: 4000,
-    //         position: "top-center",
-    //       });
-    //       onSubmit(response.data);
-    //       onClose();
-    //     }
-    //   })
-    //   .catch((error) => {
-    //     console.error("Error al subir archivo", error);
-    //   });
   }
 
   return (

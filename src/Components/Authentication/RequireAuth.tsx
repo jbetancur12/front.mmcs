@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { userStore } from '../../store/userStore'
 import { api } from '../../config'
 import toast from 'react-hot-toast'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 interface RequireAuthProps {
   children: React.ReactNode
@@ -12,9 +13,9 @@ interface RequireAuthProps {
 const apiUrl = api()
 
 const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
+  const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
   const [authenticationError, setAuthenticationError] = useState(false) // Nueva variable de estado
 
   const navigate = useNavigate()
@@ -28,29 +29,24 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
           throw new Error('Token no encontrado')
         }
 
-        const response = await fetch(`${apiUrl}/auth/validateToken`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        })
+        const response = await axiosPrivate.get(`${apiUrl}/auth/validateToken`)
 
-        if (!response.ok) {
+        if (!(response.status === 200)) {
           throw new Error('Token no válido')
         }
 
-        const userData = await response.json()
+        const userData = await response.data
         userStore.set(userData.user)
-        setLoading(false)
       } catch (error) {
-        setLoading(false)
         sessionStorage.setItem('lastLocation', location.pathname)
-        setError('No se pudo validar el token') // Mensaje de error informativo
+
         setAuthenticationError(true)
         toast('Su sesión se cerrara en 10 segundos')
         setTimeout(() => {
           navigate('/login')
         }, 10000) // Mostrar un mensaje de error al usuario
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -78,10 +74,6 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
         </div>
       </div>
     )
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>
   }
 
   return children

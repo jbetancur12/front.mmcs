@@ -11,12 +11,10 @@ import {
 } from '@mui/material'
 import { useState } from 'react'
 import ModalHq from './ModalHq'
-import { api } from '../config'
-import axios from 'axios'
+
 import { bigToast } from './ExcelManipulation/Utils'
 import { ArrowBack } from '@mui/icons-material'
-
-const apiUrl = api()
+import useAxiosPrivate from '@utils/use-axios-private'
 
 export interface Certificate {
   id: number
@@ -54,6 +52,7 @@ export const CertificateListItem: React.FC<CertificateListItemProps> = ({
   onDelete,
   sedes
 }) => {
+  const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
   const navigate = useNavigate()
   const { id } = useParams()
@@ -71,8 +70,8 @@ export const CertificateListItem: React.FC<CertificateListItemProps> = ({
 
   const onSedeClick = async (sede: string) => {
     try {
-      const response = await axios.put(
-        `${apiUrl}/files/headquarter/${certificate.id}`,
+      const response = await axiosPrivate.put(
+        `/files/headquarter/${certificate.id}`,
         {
           headquarter: sede
         }

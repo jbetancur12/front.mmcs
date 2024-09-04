@@ -1,13 +1,12 @@
 import { ArrowBack } from '@mui/icons-material'
 import { Box, CircularProgress, IconButton, Typography } from '@mui/material'
-import axios from 'axios'
+import useAxiosPrivate from '@utils/use-axios-private'
+
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { api } from '../../config'
-
-const apiUrl = api()
 
 export const CalibrationTimelinePDF = () => {
+  const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id: string }>()
   const [pdfData, setPdfData] = useState<string | null>(null)
   const navigate = useNavigate()
@@ -16,8 +15,8 @@ export const CalibrationTimelinePDF = () => {
     const fetchPDF = async () => {
       try {
         // Realiza la solicitud al endpoint para obtener el PDF
-        const response = await axios.get(
-          `${apiUrl}/files/customer/${id}/generate-pdf`,
+        const response = await axiosPrivate.get(
+          `/files/customer/${id}/generate-pdf`,
           {
             responseType: 'arraybuffer' // Especifica que esperamos un archivo binario
           }

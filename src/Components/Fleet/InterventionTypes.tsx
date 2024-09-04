@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
-import axios from 'axios'
+
 import {
   Card,
   CardContent,
@@ -13,15 +13,14 @@ import {
   Stack
 } from '@mui/material'
 import { Edit, Delete, ArrowBack } from '@mui/icons-material'
-import { api } from '../../config'
+
 import { useNavigate } from 'react-router-dom'
 import { InterventionType } from './types'
 import GenericFormModal, { FieldConfig } from './GenericFormModal'
 import { useFormik } from 'formik'
 import * as yup from 'yup'
 import { bigToast } from '../ExcelManipulation/Utils'
-
-const apiUrl = api()
+import useAxiosPrivate from '@utils/use-axios-private'
 
 const validationSchema = yup.object().shape({
   name: yup.string().required('Nombre es obligatorio'),
@@ -30,11 +29,8 @@ const validationSchema = yup.object().shape({
 })
 
 const fetchInterventionTypes = async (): Promise<InterventionType[]> => {
-  const { data } = await axios.get(`${apiUrl}/interventionType`, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-    }
-  })
+  const axiosPrivate = useAxiosPrivate()
+  const { data } = await axiosPrivate.get(`/interventionType`, {})
   return data
 }
 
@@ -64,25 +60,18 @@ const InterventionTypes = () => {
 
   const createOrUpdateInterventionType = useMutation(
     async (newData: InterventionType) => {
+      const axiosPrivate = useAxiosPrivate()
       if (currentType) {
         // Update existing type
-        await axios.put(
-          `${apiUrl}/interventionType/${currentType.id}`,
+        await axiosPrivate.put(
+          `/interventionType/${currentType.id}`,
           newData,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-            }
-          }
+          {}
         )
       } else {
         // Create new type
 
-        await axios.post(`${apiUrl}/interventionType`, newData, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        })
+        await axiosPrivate.post(`/interventionType`, newData, {})
       }
     },
     {
@@ -96,13 +85,10 @@ const InterventionTypes = () => {
 
   const deleteInterventionType = useMutation(
     async (id: number) => {
-      const { status } = await axios.delete(
-        `${apiUrl}/interventionType/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        }
+      const axiosPrivate = useAxiosPrivate()
+      const { status } = await axiosPrivate.delete(
+        `/interventionType/${id}`,
+        {}
       )
       if (status !== 204) {
         throw new Error('Error al eliminar el tipo de intervención')

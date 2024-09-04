@@ -1,7 +1,8 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { Modal, Box, TextField, Button, Typography } from '@mui/material'
-import axios from 'axios'
-import { apiUrl, bigToast } from './ExcelManipulation/Utils'
+
+import { bigToast } from './ExcelManipulation/Utils'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 interface ModalCustomerProps {
   open: boolean
@@ -27,6 +28,7 @@ const ModalCustomer: React.FC<ModalCustomerProps> = ({
   name,
   dataReturned
 }) => {
+  const axiosPrivate = useAxiosPrivate()
   const [formValues, setFormValues] = useState<
     Record<string, string | boolean>
   >(formFields.reduce((obj, field) => ({ ...obj, [field]: '' }), {}))
@@ -69,11 +71,7 @@ const ModalCustomer: React.FC<ModalCustomerProps> = ({
     }
 
     try {
-      const response = await axios.post(`${apiUrl}/customers`, formValues, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      })
+      const response = await axiosPrivate.post(`/customers`, formValues, {})
 
       if (response.status === 201) {
         bigToast('Cliente Creado Exitosamente!', 'success')

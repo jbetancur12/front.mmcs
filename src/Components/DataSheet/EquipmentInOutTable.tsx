@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import { api } from '../../config'
+
 import { useNavigate, useParams } from 'react-router-dom'
-import axios from 'axios'
+
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Box, Grid, IconButton, Typography } from '@mui/material'
 import { format } from 'date-fns'
 import { ArrowBack } from '@mui/icons-material'
-
-const apiUrl = api()
+import useAxiosPrivate from '@utils/use-axios-private'
 
 interface EquipmentInOutRecord {
   id: number
@@ -28,6 +27,7 @@ interface EquipmentInOutRecord {
 }
 
 const EquipmentInOutTable = () => {
+  const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [equipmentInfo, setEquipmentInfo] = useState<{
@@ -38,13 +38,9 @@ const EquipmentInOutTable = () => {
 
   const fetchInOutReport = async () => {
     try {
-      const response = await axios.get(
-        `${apiUrl}/dataSheet/${id}/in-out-report`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        }
+      const response = await axiosPrivate.get(
+        `/dataSheet/${id}/in-out-report`,
+        {}
       )
 
       if (response.status === 200) {

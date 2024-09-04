@@ -14,9 +14,9 @@ import { useEffect, useState } from 'react'
 import { createTw } from 'react-pdf-tailwind'
 import { useLocation, useNavigate } from 'react-router-dom'
 import * as minioExports from 'minio'
-import { api } from '../../config'
-import axios from 'axios'
+
 import { MaintenanceRecord, Document as DocumentType } from './types'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 const minioClient = new minioExports.Client({
   endPoint: import.meta.env.VITE_MINIO_ENDPOINT || 'localhost',
@@ -26,9 +26,8 @@ const minioClient = new minioExports.Client({
   secretKey: import.meta.env.VITE_MINIO_SECRETKEY
 })
 
-const apiUrl = api()
-
 const VehicleDataSheetPDF = () => {
+  const axiosPrivate = useAxiosPrivate()
   const { state } = useLocation()
   const navigate = useNavigate()
   const [imageUrl, setImageUrl] = useState<string>('')
@@ -172,13 +171,9 @@ const VehicleDataSheetPDF = () => {
 
   const getMaintenanceRecords = async () => {
     try {
-      const response = await axios.get(
-        `${apiUrl}/maintenanceRecord?vehicleId=${vehicleData.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-          }
-        }
+      const response = await axiosPrivate.get(
+        `/maintenanceRecord?vehicleId=${vehicleData.id}`,
+        {}
       )
       if (response.status === 200) {
         setMaintenanceRecords(response.data)
