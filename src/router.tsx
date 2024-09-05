@@ -158,7 +158,7 @@ function Router() {
             <Route path=':id/schedule' element={<CalibrationTimeline />} />
             <Route
               path=':id/schedule/pdf'
-              element={<CalibrationTimelinePDF />}
+              element={<PDFViewer path='calibration-schedule' />}
             />
           </Route>
 

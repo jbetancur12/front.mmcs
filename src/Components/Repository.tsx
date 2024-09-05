@@ -29,7 +29,6 @@ const minioClient = new Minio.Client({
   secretKey: import.meta.env.VITE_MINIO_SECRETKEY
 })
 
-console.log(await minioClient.listBuckets())
 export interface FileData {
   name: string
   title: string

@@ -8,12 +8,20 @@ import {
 } from '../Components/CertificateListItem'
 import { bigToast } from '../Components/ExcelManipulation/Utils'
 import Headquarters from '../Components/Headquarters'
-import { Divider, IconButton, Paper, Typography } from '@mui/material'
+import {
+  Box,
+  CircularProgress,
+  Divider,
+  IconButton,
+  Paper,
+  Typography
+} from '@mui/material'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
 import CalibrationTimeline from '../Components/CalibrationTimeline'
 import { ArrowBack } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { useQuery } from 'react-query'
 
 // API URL
 
@@ -48,6 +56,17 @@ function UserProfile() {
   const [activeTab, setActiveTab] = useState<Tab>('certificates')
 
   const [certificatesData, setCertificatesData] = useState<Certificate[]>([])
+
+  const {
+    data: certificatesDatax = [],
+    isLoading,
+    isFetched
+  } = useQuery('certificates-data', async () => {
+    const { data } = await axiosPrivate.get(`/files/customer/${id}`)
+    return data
+  })
+
+  console.log(isFetched)
 
   const [searchTerm, setSearchTerm] = useState('')
   const [image, setImage] = useState('/images/pngaaa.com-4811116.png')
@@ -310,14 +329,30 @@ function UserProfile() {
             Total Equipos: {filteredCertificates.length}
           </Typography>
           <Divider />
-          {filteredCertificates.map((certificate: Certificate) => (
-            <CertificateListItem
-              key={certificate.id}
-              certificate={certificate}
-              onDelete={handleDelete}
-              sedes={customerData.sede}
-            />
-          ))}
+          {false ? (
+            <Box
+              display='flex'
+              justifyContent='center'
+              alignItems='center'
+              mt={2}
+              // height='100vh'
+              flexDirection='column'
+            >
+              <CircularProgress />
+              <Typography variant='h6' sx={{ mt: 2, color: 'text.secondary' }}>
+                Cargando Información...
+              </Typography>
+            </Box>
+          ) : (
+            filteredCertificates.map((certificate: Certificate) => (
+              <CertificateListItem
+                key={certificate.id}
+                certificate={certificate}
+                onDelete={handleDelete}
+                sedes={customerData.sede}
+              />
+            ))
+          )}
         </Paper>
       )}
       {activeTab === 'users' && <TableUsersCustomer />}
