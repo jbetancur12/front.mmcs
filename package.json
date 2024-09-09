@@ -93,11 +93,6 @@
     "vite-plugin-node-stdlib-browser": "^0.2.1",
     "vite-tsconfig-paths": "^5.0.1"
   },
-  "husky": {
-    "hooks": {
-      "prepare-commit-msg": "exec < /dev/tty && node_modules/.bin/cz --hook || true"
-    }
-  },
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
