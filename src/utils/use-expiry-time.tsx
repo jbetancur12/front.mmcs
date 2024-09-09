@@ -20,6 +20,8 @@ const useSessionTimeoutWarning = ({
 
     const timeLeft = expirationTime - Date.now()
 
+    console.log(timeLeft)
+
     if (timeLeft <= 0) return
 
     // Configura el tiempo para mostrar la advertencia

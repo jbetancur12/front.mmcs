@@ -67,7 +67,6 @@ import InterventionTypes from './Components/Fleet/InterventionTypes'
 import VehicleDataSheetPDF from './Components/Fleet/VehicleDataSheetPDF'
 import CalibrationTimeline from './Components/CalibrationTimeline'
 import { DocumentViewPDF } from './Components/Fleet/DocumentViewPDF'
-import { CalibrationTimelinePDF } from './Components/Fleet/CalibrationTimelinePDF'
 
 import PDFViewer from './Components/DataSheet/PDFViewer'
 import useSessionTimeoutWarning from '@utils/use-expiry-time'
@@ -79,22 +78,22 @@ function Router() {
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Routes>
         {/* Rutas públicas */}
-        <Route path='profiles'>
-          <Route index element={<Profiles />} />
-          <Route path=':id' element={<Profile />} />
-        </Route>
 
         {/* Rutas protegidas */}
         <Route
           path='/'
           element={
             <RequireAuth>
-              {' '}
-              <Layout />{' '}
+              <Layout />
             </RequireAuth>
           }
         >
           <Route index element={<Dashboard />} />
+
+          <Route path='profiles'>
+            <Route index element={<Profiles />} />
+            <Route path=':id' element={<Profile />} />
+          </Route>
 
           {/*//! Gestión de flota */}
           <Route path='fleet'>

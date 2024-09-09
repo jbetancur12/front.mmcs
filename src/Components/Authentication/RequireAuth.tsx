@@ -1,9 +1,6 @@
-import { useStore } from '@nanostores/react'
 import React, { useEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
 import { userStore } from '../../store/userStore'
 import { api } from '../../config'
-import toast from 'react-hot-toast'
 import useAxiosPrivate from '@utils/use-axios-private'
 
 interface RequireAuthProps {
@@ -14,12 +11,7 @@ const apiUrl = api()
 
 const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   const axiosPrivate = useAxiosPrivate()
-  const $userStore = useStore(userStore)
   const [loading, setLoading] = useState(true)
-  const [authenticationError, setAuthenticationError] = useState(false) // Nueva variable de estado
-
-  const navigate = useNavigate()
-  const location = useLocation()
 
   useEffect(() => {
     const validateToken = async () => {
@@ -35,16 +27,12 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
           throw new Error('Token no válido')
         }
 
+        console.log('Entro aca')
+
         const userData = await response.data
         userStore.set(userData.user)
       } catch (error) {
-        sessionStorage.setItem('lastLocation', location.pathname)
-
-        setAuthenticationError(true)
-        toast('Su sesión se cerrara en 10 segundos')
-        setTimeout(() => {
-          navigate('/login')
-        }, 10000) // Mostrar un mensaje de error al usuario
+        console.log('Error al validar el token:', error)
       } finally {
         setLoading(false)
       }
@@ -52,14 +40,6 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
 
     validateToken()
   }, [])
-
-  // Verificar si el usuario está autenticado después de que se haya establecido el $userStore
-  if (!Object.keys($userStore).length || authenticationError) {
-    // Utiliza navigate para redirigir al usuario a la página de inicio de sesión
-    navigate('/login')
-
-    return null
-  }
 
   if (loading) {
     return (

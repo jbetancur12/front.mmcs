@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 import { useEffect, useState } from 'react'
 import {
@@ -14,7 +14,7 @@ import CertificatesList from '../Components/CertificatesList'
 import UpdateCertificateModal from '../Components/UpdateCertificateModal'
 import { userStore } from '../store/userStore'
 import { useStore } from '@nanostores/react'
-import { Edit } from '@mui/icons-material'
+import { ArrowBack, Edit } from '@mui/icons-material'
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -53,6 +53,7 @@ interface DeviceDetailsProps {
 
 function Certificates() {
   const axiosPrivate = useAxiosPrivate()
+  const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const $userStore = useStore(userStore)
   const MySwal = withReactContent(Swal)
@@ -125,6 +126,9 @@ function Certificates() {
 
   return (
     <Paper elevation={3} className='p-4'>
+      <IconButton onClick={() => navigate(-1)}>
+        <ArrowBack />
+      </IconButton>
       <Box display='flex' alignItems='center' justifyContent='space-between'>
         <Typography variant='h6' gutterBottom>
           Detalles del Equipo

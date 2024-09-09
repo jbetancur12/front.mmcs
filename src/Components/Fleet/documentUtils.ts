@@ -1,12 +1,11 @@
-import useAxiosPrivate from '@utils/use-axios-private'
-import { Document } from './types'
+import { AxiosInstance } from 'axios'
 // Adjust path as needed
 
 // Fetch Documents
 export const fetchDocuments = async (
-  vehicleId: number | string | undefined
+  vehicleId: number | string | undefined,
+  axiosPrivate: AxiosInstance
 ) => {
-  const axiosPrivate = useAxiosPrivate()
   const { data } = await axiosPrivate.get(
     `/vehicles/${vehicleId}/documents`,
     {}
@@ -22,9 +21,9 @@ export const fetchDocuments = async (
 // Add Document
 export const addDocument = async (
   vehicleId: number | string | undefined,
-  document: FormData
+  document: FormData,
+  axiosPrivate: AxiosInstance
 ) => {
-  const axiosPrivate = useAxiosPrivate()
   await axiosPrivate.post(`/vehicles/${vehicleId}/documents`, document, {
     headers: {
       'Content-Type': 'multipart/form-data'
@@ -33,9 +32,13 @@ export const addDocument = async (
 }
 
 // Update Document
-export const updateDocument = async (document: Document) => {
-  const axiosPrivate = useAxiosPrivate()
-  await axiosPrivate.put(`/document/${document.id}`, document, {
+export const updateDocument = async (
+  document: FormData,
+  axiosPrivate: AxiosInstance
+) => {
+  const id = JSON.parse(document.get('document') as string).id
+
+  await axiosPrivate.put(`/document/${id}`, document, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
@@ -44,12 +47,8 @@ export const updateDocument = async (document: Document) => {
 
 // Delete Document
 export const deleteDocument = async (
-  vehicleId: number | string | undefined,
-  documentId: number
+  documentId: number,
+  axiosPrivate: AxiosInstance
 ) => {
-  const axiosPrivate = useAxiosPrivate()
-  await axiosPrivate.delete(
-    `/vehicles/${vehicleId}/documents/${documentId}`,
-    {}
-  )
+  await axiosPrivate.delete(`/document/${documentId}`, {})
 }

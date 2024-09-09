@@ -1,10 +1,9 @@
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { userStore } from '../store/userStore'
 import { useStore } from '@nanostores/react'
 import {
   ButtonBase,
   capitalize,
-  IconButton,
   List,
   ListItem,
   Typography
@@ -13,7 +12,6 @@ import { useState } from 'react'
 import ModalHq from './ModalHq'
 
 import { bigToast } from './ExcelManipulation/Utils'
-import { ArrowBack } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
 
 export interface Certificate {
@@ -54,8 +52,6 @@ export const CertificateListItem: React.FC<CertificateListItemProps> = ({
 }) => {
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
-  const navigate = useNavigate()
-  const { id } = useParams()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedCertificate, setSelectedCertificate] =
     useState<Certificate | null>(certificate)
@@ -90,9 +86,6 @@ export const CertificateListItem: React.FC<CertificateListItemProps> = ({
   if (!selectedCertificate) return null
   return (
     <>
-      <IconButton onClick={() => navigate(`/customers/${id}`)}>
-        <ArrowBack />
-      </IconButton>
       <div className='flex items-center justify-between p-4 border-b border-gray-200'>
         <div>
           <Link to={`/calibraciones/certificados/${selectedCertificate.id}`}>

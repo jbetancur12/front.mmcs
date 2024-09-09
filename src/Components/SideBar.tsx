@@ -34,8 +34,8 @@ const SideBar: React.FC = () => {
           <div className='flex-1 px-3 space-y-1 bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700'>
             <ul className='pb-2 space-y-2'>
               <li className={pathname === '/' ? 'bg-green-100' : ''}>
-                <a
-                  href='/'
+                <Link
+                  to='/'
                   className='flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700'
                 >
                   <svg
@@ -50,7 +50,7 @@ const SideBar: React.FC = () => {
                   <span className='ml-3' sidebar-toggle-item=''>
                     Dashboard
                   </span>
-                </a>
+                </Link>
               </li>
               <li className={pathname === '/customers' ? 'bg-green-100' : ''}>
                 {$userStore.rol === 'admin' && (
@@ -131,18 +131,20 @@ const SideBar: React.FC = () => {
                   </span>
                 </Link>
               </li>
-              <li>
-                <Link
-                  to='datasheets'
-                  className='flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700'
-                >
-                  <Assignment className='w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white' />
-                  <span className='ml-3' sidebar-toggle-item=''>
-                    Hojas de Vida
-                  </span>
-                  <Science className='w-5 h-5 ml-4 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white' />
-                </Link>
-              </li>
+              {$userStore.rol === 'admin' && (
+                <li>
+                  <Link
+                    to='datasheets'
+                    className='flex items-center p-2 text-base text-gray-900 rounded-lg hover:bg-gray-100 group dark:text-gray-200 dark:hover:bg-gray-700'
+                  >
+                    <Assignment className='w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white' />
+                    <span className='ml-3' sidebar-toggle-item=''>
+                      Hojas de Vida
+                    </span>
+                    <Science className='w-5 h-5 ml-4 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white' />
+                  </Link>
+                </li>
+              )}
 
               <li>
                 <DropdownButton

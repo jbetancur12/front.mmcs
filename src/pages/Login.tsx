@@ -1,5 +1,5 @@
 import { AxiosError } from 'axios' // Import Axios
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Link, useNavigate } from 'react-router-dom'
 import * as Yup from 'yup' // Importa Yup para la validación
@@ -165,9 +165,9 @@ const Login: React.FC = () => {
     }
   }
 
-  // useEffect(() => {
-  //   if (localStorage.getItem('accessToken')) window.location.href = '/'
-  // }, [])
+  useEffect(() => {
+    if (localStorage.getItem('accessToken')) navigate('/')
+  }, [])
 
   return (
     <div className='flex flex-col items-center justify-center px-6 pt-8 mx-auto md:h-screen pt:mt-0 dark:bg-gray-900'>

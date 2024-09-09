@@ -38,8 +38,11 @@ import { Document, ReminderResponse } from './types'
 import { useNavigate, useParams } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
 import { VisuallyHiddenInput } from '../TableFiles'
+import useAxiosPrivate from '@utils/use-axios-private'
+import { MySwal } from '../ExcelManipulation/Utils'
 
 const Documents: React.FC = () => {
+  const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const vehicleId = parseInt(id as string, 10)
@@ -53,7 +56,9 @@ const Documents: React.FC = () => {
       vehicleData
     } = {},
     refetch
-  } = useQuery(['documents', vehicleId], () => fetchDocuments(vehicleId))
+  } = useQuery(['documents', vehicleId], () =>
+    fetchDocuments(vehicleId, axiosPrivate)
+  )
 
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(
     null
@@ -67,10 +72,10 @@ const Documents: React.FC = () => {
   const [pdfName, setPDfName] = useState<string>('')
 
   const addOrUpdateDocument = useMutation(
-    ({ doc, isUpdate }: { doc: FormData | Document; isUpdate: boolean }) => {
+    ({ doc, isUpdate }: { doc: FormData; isUpdate: boolean }) => {
       return isUpdate
-        ? updateDocument(doc as Document)
-        : addDocument(vehicleId, doc as FormData)
+        ? updateDocument(doc as FormData, axiosPrivate)
+        : addDocument(vehicleId, doc as FormData, axiosPrivate)
     },
     {
       onSuccess: () => {
@@ -81,7 +86,7 @@ const Documents: React.FC = () => {
   )
 
   const deleteDoc = useMutation(
-    (docId: number) => deleteDocument(vehicleId, docId),
+    (docId: number) => deleteDocument(docId, axiosPrivate),
     {
       onSuccess: () => {
         refetch()
@@ -110,7 +115,6 @@ const Documents: React.FC = () => {
   const handleClose = () => setOpen(false)
 
   const handleSave = () => {
-    console.log('data')
     const doc: Document = {
       id: selectedDocument?.id,
       documentType:
@@ -122,6 +126,7 @@ const Documents: React.FC = () => {
     // Aquí puedes enviar el archivo PDF junto con los datos del documento
     if (pdfFile) {
       const formData = new FormData()
+
       formData.append('document', JSON.stringify(doc))
       formData.append('pdf', pdfFile)
       // Envía formData al backend para manejar la carga del PDF
@@ -219,7 +224,19 @@ const Documents: React.FC = () => {
                   <Tooltip title='Eliminar'>
                     <IconButton
                       color='error'
-                      onClick={() => deleteDoc.mutate(doc.id!)}
+                      onClick={() => {
+                        MySwal.fire({
+                          title: `¿ Esta seguro que desea eliminar el documento ?`,
+                          text: 'No podrá recuperar esta información una vez eliminada',
+                          showCancelButton: true,
+                          confirmButtonText: 'Si'
+                        }).then((result) => {
+                          /* Read more about isConfirmed, isDenied below */
+                          if (result.isConfirmed) {
+                            deleteDoc.mutate(doc.id!)
+                          }
+                        })
+                      }}
                     >
                       <Delete />
                     </IconButton>

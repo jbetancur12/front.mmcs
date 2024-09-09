@@ -21,7 +21,7 @@ import { userStore } from '../store/userStore'
 import CalibrationTimeline from '../Components/CalibrationTimeline'
 import { ArrowBack } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { useQuery } from 'react-query'
+import { useQuery, useQueryClient } from 'react-query'
 
 // API URL
 
@@ -38,6 +38,14 @@ interface GroupedCertificates {
   [key: string]: Certificate[]
 }
 
+interface ApiResponse {
+  totalFiles: number
+  totalPages: number
+  currentPage: number
+  files: Certificate[]
+  foundFields: string[]
+}
+
 type Tab = 'users' | 'certificates' | 'headquarters' | 'calibrationTimeLine'
 
 function UserProfile() {
@@ -45,6 +53,7 @@ function UserProfile() {
   const { id } = useParams()
   const $userStore = useStore(userStore)
   const navigate = useNavigate()
+  const queryClient = useQueryClient() // Initialize query client
   const [customerData, setCustomerData] = useState<UserData>({
     nombre: '',
     email: '',
@@ -55,21 +64,37 @@ function UserProfile() {
 
   const [activeTab, setActiveTab] = useState<Tab>('certificates')
 
-  const [certificatesData, setCertificatesData] = useState<Certificate[]>([])
-
-  const {
-    data: certificatesDatax = [],
-    isLoading,
-    isFetched
-  } = useQuery('certificates-data', async () => {
-    const { data } = await axiosPrivate.get(`/files/customer/${id}`)
-    return data
-  })
-
-  console.log(isFetched)
-
   const [searchTerm, setSearchTerm] = useState('')
   const [image, setImage] = useState('/images/pngaaa.com-4811116.png')
+  const [currentPage, setCurrentPage] = useState(1)
+
+  // Fetch customer data
+  useQuery<UserData>(
+    ['customer-data', id],
+    async () => {
+      const response = await axiosPrivate.get(`/customers/${id}`)
+      return response.data
+    },
+    {
+      onSuccess: (data) => {
+        setCustomerData(data)
+      }
+    }
+  )
+
+  // Fetch certificates data using useQuery
+  const { data: apiResponse, refetch } = useQuery<ApiResponse>(
+    ['certificates-data', id, searchTerm, currentPage],
+    async () => {
+      const response = await axiosPrivate.get(`/files/customer/${id}`, {
+        params: { search: searchTerm, page: currentPage }
+      })
+      return response.data
+    }
+  )
+
+  const certificatesData = apiResponse?.files || []
+
   // Aquí puedes usar el valor de 'id' para cargar los detalles del cliente correspondiente
   // por ejemplo, hacer una solicitud a la API o acceder a tus datos.
 
@@ -78,14 +103,6 @@ function UserProfile() {
     if (response.status === 200) {
       setCustomerData(response.data)
       setImage(minioUrl + '/images/' + response.data.avatar)
-    }
-  }
-
-  const getCertificateInfo = async () => {
-    const response = await axiosPrivate.get(`/files/customer/${id}`, {})
-
-    if (response.status === 200) {
-      setCertificatesData(response.data)
     }
   }
 
@@ -99,20 +116,6 @@ function UserProfile() {
       return acc
     }, {})
 
-  const filteredCertificates = certificatesData.filter((certificate) => {
-    const searchFields = [
-      certificate.device.name,
-      certificate.location,
-      certificate.sede,
-      certificate.activoFijo,
-      certificate.serie
-    ]
-
-    return searchFields.some((field) =>
-      field.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  })
-
   const handleDelete = async (id: number) => {
     const isConfirmed = window.confirm(
       '¿Estás seguro de que deseas eliminar este certificado? Esta acción no se puede deshacer.'
@@ -123,17 +126,17 @@ function UserProfile() {
     }
 
     try {
-      const response = await axiosPrivate.delete(`/files/${id}`, {})
+      const response = await axiosPrivate.delete(`/files/${id}`)
 
       if (response.status >= 200 && response.status < 300) {
-        bigToast('Equipo eliminado con éxito', 'success')
-        setCertificatesData(
-          certificatesData.filter((certificate) => certificate.id !== id)
-        )
+        bigToast('Certificado eliminado con éxito', 'success')
+        refetch()
+        // Invalidate and refetch the certificates query to update the UI
+        queryClient.invalidateQueries(['certificates-data', id])
       }
     } catch (error) {
-      console.error('Error al eliminar el equipo:', error)
-      bigToast('Error al eliminar el equipo', 'error')
+      console.error('Error al eliminar el certificado:', error)
+      bigToast('Error al eliminar el certificado', 'error')
     }
   }
 
@@ -171,7 +174,6 @@ function UserProfile() {
 
   useEffect(() => {
     getuserInfo()
-    getCertificateInfo()
   }, [])
 
   const handleAddSede = async (newSede: string) => {
@@ -189,6 +191,18 @@ function UserProfile() {
       }
     } catch (error) {
       console.error('Error al agregar sede:', error)
+    }
+  }
+
+  const handlePageChange = (direction: string) => {
+    if (direction === 'prev' && currentPage > 1) {
+      setCurrentPage(currentPage - 1)
+    } else if (
+      direction === 'next' &&
+      apiResponse &&
+      currentPage < apiResponse?.totalPages
+    ) {
+      setCurrentPage(currentPage + 1)
     }
   }
 
@@ -323,11 +337,19 @@ function UserProfile() {
             placeholder='Buscar Equipo(s)...'
             className='w-[50%] px-4 py-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 mt-4'
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value)
+              setCurrentPage(1)
+            }}
           />
           <Typography variant='subtitle2' gutterBottom>
-            Total Equipos: {filteredCertificates.length}
+            Total Equipos: {apiResponse?.totalFiles}
           </Typography>
+          {apiResponse && searchTerm && apiResponse?.totalFiles > 0 && (
+            <Typography variant='subtitle2' gutterBottom>
+              Resultados por : {apiResponse?.foundFields.join(', ')}
+            </Typography>
+          )}
           <Divider />
           {false ? (
             <Box
@@ -344,14 +366,37 @@ function UserProfile() {
               </Typography>
             </Box>
           ) : (
-            filteredCertificates.map((certificate: Certificate) => (
-              <CertificateListItem
-                key={certificate.id}
-                certificate={certificate}
-                onDelete={handleDelete}
-                sedes={customerData.sede}
-              />
-            ))
+            <>
+              {certificatesData.map((certificate: Certificate) => (
+                <CertificateListItem
+                  key={certificate.id}
+                  certificate={certificate}
+                  onDelete={handleDelete}
+                  sedes={customerData.sede}
+                />
+              ))}
+              <div className='flex justify-between items-center p-4'>
+                <button
+                  onClick={() => handlePageChange('prev')}
+                  disabled={currentPage === 1}
+                  className='bg-gray-300 text-gray-700 px-4 py-2 rounded disabled:opacity-50'
+                >
+                  Anterior
+                </button>
+                <div className='text-center'>
+                  <p className='text-lg font-semibold'>
+                    Página {currentPage} de {apiResponse?.totalPages}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handlePageChange('next')}
+                  disabled={currentPage === apiResponse?.totalPages}
+                  className='bg-gray-300 text-gray-700 px-4 py-2 rounded disabled:opacity-50'
+                >
+                  Siguiente
+                </button>
+              </div>
+            </>
           )}
         </Paper>
       )}

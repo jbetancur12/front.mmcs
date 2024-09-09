@@ -101,7 +101,7 @@ const EquipmentForm: React.FC = () => {
       const method = !isEquipmentOut ? 'post' : 'put'
       setIsEquipmentOut(!isEquipmentOut)
 
-      const response = await axios({
+      const response = await axiosPrivate({
         method,
         url: endpoint,
         data: {
@@ -110,7 +110,7 @@ const EquipmentForm: React.FC = () => {
         }
       })
 
-      if (method === 'post') {
+      if (method === 'post' && response.status === 201) {
         setLastRecord(response.data)
       }
     } catch (error) {
