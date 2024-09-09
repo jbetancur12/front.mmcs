@@ -25,7 +25,6 @@ import AsyncSelect from 'react-select/async'
 import { loadOptions, mapOptions } from '../../utils/loadOptions'
 
 import { Profile } from '../../pages/Profiles'
-import axios from 'axios'
 import useAxiosPrivate from '@utils/use-axios-private'
 
 // Interfaz para los valores del formulario
