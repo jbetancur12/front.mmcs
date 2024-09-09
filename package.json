@@ -61,6 +61,8 @@
     ]
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.4.1",
+    "@commitlint/config-conventional": "^19.4.1",
     "@eslint/js": "^9.1.1",
     "@types/node": "^20.14.11",
     "@types/react": "^18.2.15",
@@ -90,6 +92,11 @@
     "vite-plugin-node-polyfills": "^0.22.0",
     "vite-plugin-node-stdlib-browser": "^0.2.1",
     "vite-tsconfig-paths": "^5.0.1"
+  },
+  "husky": {
+    "hooks": {
+      "prepare-commit-msg": "exec < /dev/tty && node_modules/.bin/cz --hook || true"
+    }
   },
   "config": {
     "commitizen": {
