@@ -24,7 +24,12 @@ import {
   Switch,
   FormControlLabel,
   TextFieldProps,
-  Avatar
+  Avatar,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText
 } from '@mui/material'
 
 import {
@@ -100,7 +105,10 @@ export interface DataSheetData {
 // Validation Schema
 const validationSchema = yup.object({
   picture: yup.mixed().required('La imagen es obligatoria'),
-  internalCode: yup.string().required('Código interno es obligatorio'),
+  internalCode: yup
+    .string()
+    .required('Código interno es obligatorio')
+    .default('Automatico'),
   equipmentName: yup.string().required('Nombre del equipo es obligatorio'),
   brand: yup.string().required('Marca es obligatoria'),
   model: yup.string().required('Modelo es obligatorio'),
@@ -341,6 +349,7 @@ const ListDataSheet: React.FC = () => {
       {
         accessorKey: 'internalCode',
         header: 'Código Interno',
+        enableEditing: false,
         size: 150,
         muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
       },
@@ -808,7 +817,7 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
   const formik = useFormik({
     initialValues: {
       picture: null as File | null,
-      internalCode: '',
+      internalCode: 'Automático', // Este valor es solo para visualización y no será enviado al backend
       equipmentName: '',
       brand: '',
       model: '',
@@ -841,6 +850,8 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
     },
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm }) => {
+      // Excluir internalCode
+
       const formData = new FormData()
       Object.keys(values).forEach((key) => {
         formData.append(key, (values as any)[key])
@@ -910,6 +921,16 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
                       </div>
                     )}
                   </Grid>
+                ) : column.accessorKey === 'internalCode' ? (
+                  <Grid item xs={12} md={6} key={column.accessorKey}>
+                    <TextField
+                      label={column.header}
+                      name={column.accessorKey}
+                      value='Automático'
+                      disabled
+                      fullWidth
+                    />
+                  </Grid>
                 ) : (
                   <Grid item xs={12} md={6} key={column.accessorKey}>
                     {column.accessorKey === 'manual' ? (
@@ -961,6 +982,65 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
                           column.accessorKey.includes('Date') ? 'date' : 'text'
                         }
                       />
+                    ) : column.accessorKey === 'serviceType' ? ( // Handle generic field
+                      <Grid item xs={12} md={12} key={column.accessorKey}>
+                        <FormControl fullWidth>
+                          <InputLabel>{column.header}</InputLabel>
+                          <Select
+                            name={column.accessorKey}
+                            value={
+                              formik.values[
+                                column.accessorKey as keyof typeof formik.values
+                              ]
+                            }
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={
+                              formik.touched[
+                                column.accessorKey as keyof typeof formik.values
+                              ] &&
+                              Boolean(
+                                formik.errors[
+                                  column.accessorKey as keyof typeof formik.errors
+                                ]
+                              )
+                            }
+                          >
+                            <MenuItem value='Patrón Acreditación'>
+                              Patrón Acreditación
+                            </MenuItem>
+                            <MenuItem value='Patrón Trazabilidad'>
+                              Patrón Trazabilidad
+                            </MenuItem>
+                            <MenuItem value='Patrón Primario'>
+                              Patrón Primario
+                            </MenuItem>
+                            <MenuItem value='Patrón Secundario'>
+                              Patrón Secundario
+                            </MenuItem>
+                            <MenuItem value='Auxiliar Acreditación'>
+                              Auxiliar Acreditación
+                            </MenuItem>
+                            <MenuItem value='Auxiliar Trazabilidad'>
+                              Auxiliar Trazabilidad
+                            </MenuItem>
+                            <MenuItem value='Instrumento Retenido'>
+                              Instrumento Retenido
+                            </MenuItem>
+                            <MenuItem value='Equipo de Prestamo'>
+                              Equipo de Prestamo
+                            </MenuItem>
+                          </Select>
+                          <FormHelperText>
+                            {formik.touched[
+                              column.accessorKey as keyof typeof formik.values
+                            ] &&
+                              formik.errors[
+                                column.accessorKey as keyof typeof formik.values
+                              ]}
+                          </FormHelperText>
+                        </FormControl>
+                      </Grid>
                     ) : (
                       <TextField
                         label={column.header}
