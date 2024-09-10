@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Nombre del archivo de registro de errores
-error_log="C:\Users\Jorge Betancur\Desktop\IOT\error.log"
+error_log="error.log"
 
 # Función para mostrar los errores
 show_errors() {
@@ -12,103 +12,57 @@ show_errors() {
   fi
 }
 
-# Función para imprimir un mensaje en color verde
-print_green() {
-  git_echo=$(which echo)
-  $git_echo -e "\e[32m$1\e[0m"
-}
-# Mostrar un mensaje antes de conectarse al equipo remoto
-echo "Conectándose al equipo remoto..."
-echo
+# Verificar que la carpeta 'dist' existe
+if [ ! -d "dist" ]; then
+  echo "La carpeta 'dist' no existe. Asegúrate de que el build se haya generado correctamente."
+  exit 1
+fi
 
+# Copiar la carpeta al servidor remoto
+echo "Copiando la carpeta 'dist' al servidor remoto..."
+scp -r "dist" metromedics@209.97.156.169:/home/metromedics/mmcs/frontend 2>>"$error_log"
+if [ $? -ne 0 ]; then
+  echo "Error al copiar la carpeta 'dist' al servidor remoto."
+  show_errors
+  exit 1
+fi
 
-
-# Ejecutar 'yarn build' para generar el archivo 'build'
-echo "Ejecutando 'npm run build'..."
-npm run build
-
-# Obtener la fecha y hora actual en el formato deseado
-timestamp=$(date +"%m%d%Y-%H%M%S")
-
-# Mostrar un mensaje antes de renombrar la carpeta 'build'
-echo "Renombrando la carpeta 'build'  a 'build$timestamp'..."
-echo
-
-# Renombrar la carpeta 'build' con el formato 'buildMMDDYYYY-hhmmss'
-mv dist "build$timestamp"
-echo
-
-# Mostrar un mensaje antes de copiar la carpeta renombrada 
-echo "Copiando la carpeta renombrada..."
-echo
-
-# Copiar la carpeta renombrada al equipo remoto
-scp -r "build$timestamp" metromedics@209.97.156.169:/home/metromedics/mmcs/frontend
-echo
-
-# Mostrar un mensaje antes de conectarse al equipo remoto nuevamente
-echo "Conectándose al equipo remoto..."
-echo
-
-
-
-# Conectarse al equipo remoto
-ssh -T metromedics@209.97.156.169 "bash -s" "$timestamp" << 'EOF'
-
-  # Navegar al directorio 'cloud-smaf/frontend'
-  echo "Navegando al directorio 'cloud-smaf/frontend'..."
-  cd mmcs/frontend/
-  echo
-
-  # Copiar el contenido de la carpeta renombrada (build$1) al directorio de producción en el servidor web
-  echo "Copiando el contenido de la carpeta renombrada (build$1) al directorio de producción... $1"
-  sudo cp -r build$1/* /var/www/app.metromedics.co/html/
-  echo
-
-  directorios=$(find . -maxdepth 1 -type d ! -path .)
-
-# Ordenar los directorios por fecha de modificación (más reciente primero)
-directorios_ordenados=$(printf '%s\n' "$directorios" | sort -r)
-
-# Contador para llevar la cuenta de los directorios eliminados
-contador=0
-
-# Iterar sobre los directorios ordenados
-for d in $directorios_ordenados; do
-  # Verificar si el contador es mayor a 2
-  if [ $contador -gt 1 ]; then
-    # Eliminar el directorio y su contenido
-    rm -rf "$d"
-    echo "Directorio eliminado: $d"
+# Conectarse al servidor remoto y mover archivos al directorio de producción
+echo "Conectándose al servidor remoto y moviendo archivos..."
+ssh metromedics@209.97.156.169 << 'EOF'
+  set -x
+  cd /home/metromedics/mmcs/frontend
+  
+  # Obtener la fecha y hora actual
+  timestamp=$(date +"%Y%m%d-%H%M%S")
+  mv dist "build$timestamp"
+  
+  # Verificar el resultado del mv
+  if [ $? -ne 0 ]; then
+    echo "Error al mover la carpeta 'dist' al directorio de producción." >&2
+    exit 1
   fi
 
-  # Incrementar el contador
-  contador=$((contador + 1))
-done
+  cp -r "build$timestamp"/* /var/www/app.metromedics.co/html/
+  
+  # Verificar el resultado del cp
+  if [ $? -ne 0 ]; then
+    echo "Error al copiar los archivos al directorio de producción." >&2
+    exit 1
+  fi
 
-  # Salir del equipo remoto
-  exit
+  # Conservar solo las dos carpetas más recientes en el directorio /home/metromedics/mmcs/frontend
+  cd /home/metromedics/mmcs/frontend
+  # Listar los directorios ordenados por fecha de modificación (más reciente primero) y eliminar los que no sean los dos más recientes
+  dirs_to_delete=$(ls -dt */ | awk 'NR>2')
+  
+  # Eliminar los directorios que no se deben conservar
+  if [ -n "$dirs_to_delete" ]; then
+    echo "Eliminando directorios antiguos..."
+    rm -rf $dirs_to_delete
+  fi
 
 EOF
 
-# Mostrar los errores capturados
+# Mostrar errores
 show_errors
-echo
-
-# Obtener la ruta completa de la carpeta actual
-current_folder=$(pwd)
-
-# Iterar sobre los directorios dentro de la carpeta actual y eliminarlos
-for dir in "$current_folder"/*/; do
-    if [[ -d "$dir" ]]; then
-        echo "Eliminando directorio: $dir"
-        rm -rf "$dir"
-    fi
-done
-
-# Mostrar un mensaje al final del script
-# Mostrar un mensaje al final del script
-echo "¡El script ha finalizado!"
-
-# Mantener el terminal abierto
-read -p "Presiona Enter para salir..."

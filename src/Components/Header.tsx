@@ -14,6 +14,7 @@ function Header() {
   }
 
   useEffect(() => {
+    console.log('Hola')
     if (menuRef.current) {
       const width = menuRef.current.offsetWidth
       setMenuWidth(width)

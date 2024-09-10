@@ -71,6 +71,7 @@ import { DocumentViewPDF } from './Components/Fleet/DocumentViewPDF'
 import PDFViewer from './Components/DataSheet/PDFViewer'
 import useSessionTimeoutWarning from '@utils/use-expiry-time'
 import RequireAuth from './Components/Authentication/RequireAuth'
+import EquipmentAlertsPage from './Components/DataSheet/EquipmentAlertPage'
 
 function Router() {
   useSessionTimeoutWarning({ expirationTimeInMinutes: 1 })
@@ -117,7 +118,7 @@ function Router() {
               path=':id/new-maintenance'
               element={<InspectionMaintenanceForm />}
             />
-
+            <Route path='alerts' element={<EquipmentAlertsPage />} />
             <Route path='inventory' element={<PDFViewer path='inventory' />} />
 
             <Route

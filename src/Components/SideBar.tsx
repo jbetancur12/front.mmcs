@@ -8,7 +8,7 @@ import { BiSolidReport } from 'react-icons/bi'
 import { Link, useLocation } from 'react-router-dom'
 import { userStore } from '../store/userStore'
 import DropdownButton from './DropdownButton'
-import { Assignment, CarRepair, Science } from '@mui/icons-material'
+import { CarRepair } from '@mui/icons-material'
 
 // ...
 
@@ -131,7 +131,7 @@ const SideBar: React.FC = () => {
                   </span>
                 </Link>
               </li>
-              {$userStore.rol === 'admin' && (
+              {/* {$userStore.rol === 'admin' && (
                 <li>
                   <Link
                     to='datasheets'
@@ -144,7 +144,30 @@ const SideBar: React.FC = () => {
                     <Science className='w-5 h-5 ml-4 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white' />
                   </Link>
                 </li>
-              )}
+              )} */}
+
+              <li>
+                <DropdownButton
+                  buttonText='Hojas de Vida'
+                  rol={$userStore.rol}
+                  currentPath={pathname}
+                  menuItems={[
+                    {
+                      label: 'Inventario',
+                      url: 'datasheets',
+                      roles: ['admin']
+                    },
+                    {
+                      label: 'Alertas',
+                      url: 'datasheets/alerts',
+                      roles: ['admin']
+                    }
+
+                    // { label: "Sidebar", url: "https://flowbite-admin-dashboard.vercel.app/layouts/sidebar/" },
+                  ]}
+                  pathData='M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H8v-2h6v2zm3-4H8v-2h8v2zm0-4H8V7h8v2z'
+                />
+              </li>
 
               <li>
                 <DropdownButton
