@@ -119,6 +119,10 @@ function Router() {
               element={<InspectionMaintenanceForm />}
             />
             <Route path='alerts' element={<EquipmentAlertsPage />} />
+            <Route
+              path='inventory-leasing'
+              element={<PDFViewer path='inventory-leasing' />}
+            />
             <Route path='inventory' element={<PDFViewer path='inventory' />} />
 
             <Route

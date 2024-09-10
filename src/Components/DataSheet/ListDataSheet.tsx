@@ -6,6 +6,7 @@ import {
   ExitToApp,
   Inventory,
   PrecisionManufacturing,
+  SyncAlt,
   Visibility,
   Warning
 } from '@mui/icons-material'
@@ -783,6 +784,14 @@ const ListDataSheet: React.FC = () => {
               <Link to='maintenance-schedule'>
                 <IconButton>
                   <Event />
+                </IconButton>
+              </Link>
+            </Tooltip>
+            <Divider orientation='vertical' flexItem />
+            <Tooltip arrow placement='right' title='Inventario Prestamo'>
+              <Link to='inventory-leasing'>
+                <IconButton>
+                  <SyncAlt />
                 </IconButton>
               </Link>
             </Tooltip>
