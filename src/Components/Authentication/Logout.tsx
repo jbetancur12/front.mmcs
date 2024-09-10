@@ -7,13 +7,17 @@ const LogoutButton: React.FC = () => {
   const navigate = useNavigate()
   const handleLogout = async () => {
     // Borra el token del localStorage
-    const response = await axiosPublic.post('/auth/logout', {
-      withCredentials: true
-    })
+    const response = await axiosPublic.post(
+      '/auth/logout',
+      {},
+      {
+        withCredentials: true
+      }
+    )
 
     if (response.status !== 200) {
-      throw new Error('Error al cerrar sesión')
       bigToast('Error al cerrar sesión', 'error')
+      throw new Error('Error al cerrar sesión')
     }
     Toast.fire('Sesión cerrada exitosamente', '', 'success')
 

@@ -67,6 +67,8 @@ function UserProfile() {
   const [searchTerm, setSearchTerm] = useState('')
   const [image, setImage] = useState('/images/pngaaa.com-4811116.png')
   const [currentPage, setCurrentPage] = useState(1)
+  const [hasPermission, setHasPermission] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   // Fetch customer data
   useQuery<UserData>(
@@ -176,6 +178,29 @@ function UserProfile() {
     getuserInfo()
   }, [])
 
+  useEffect(() => {
+    const checkPermission = async () => {
+      try {
+        if ($userStore.rol === 'admin' || id === $userStore.customer.id + '') {
+          setHasPermission(true)
+        } else {
+          setHasPermission(false)
+
+          navigate(-1) // Redirige a una página de acceso denegado o similar
+        }
+      } catch (error) {
+        navigate(-1) // Redirige en caso de error
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkPermission()
+    return () => {
+      setLoading(true)
+    }
+  }, [id, $userStore.rol, $userStore.customer, navigate])
+
   const handleAddSede = async (newSede: string) => {
     try {
       const response = await axiosPrivate.put(`/customers/${id}/sedes`, {
@@ -204,6 +229,14 @@ function UserProfile() {
     ) {
       setCurrentPage(currentPage + 1)
     }
+  }
+
+  if (loading) {
+    return <Typography variant='h6'>Cargando...</Typography>
+  }
+
+  if (!hasPermission) {
+    return <Typography variant='h6'>No tienes permisos suficientes</Typography>
   }
 
   return (

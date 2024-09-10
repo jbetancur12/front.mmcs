@@ -1,5 +1,7 @@
 import TableQuotes from '../Components/TableQuotes'
 
-export const Cotizaciones = () => {
+const Cotizaciones = () => {
   return <TableQuotes />
 }
+
+export default Cotizaciones

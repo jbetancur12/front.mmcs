@@ -1,5 +1,7 @@
 import TableOwnUsers from '../Components/TableOwnUsers'
 
-export const Settings = () => {
+const Settings = () => {
   return <TableOwnUsers />
 }
+
+export default Settings

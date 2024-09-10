@@ -13,7 +13,7 @@ function Header() {
   const [menuWidth, setMenuWidth] = useState<number | null>(null)
   const [hasAlert, setHasAlert] = useState<EquipmentData[]>([])
   const menuRef = useRef<HTMLDivElement | null>(null)
-  console.log('Hola ...')
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
   }

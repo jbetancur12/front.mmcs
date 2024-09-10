@@ -1,5 +1,6 @@
 import TableProducts from '../Components/TableProducts'
-
-export const ProductosServicios = () => {
+const ProductosServicios = () => {
   return <TableProducts />
 }
+
+export default ProductosServicios

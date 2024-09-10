@@ -12,7 +12,7 @@ const minioClient = new minioExports.Client({
   secretKey: import.meta.env.VITE_MINIO_SECRETKEY
 })
 
-export const DocumentViewPDF = () => {
+const DocumentViewPDF = () => {
   const { id } = useParams<{ id: string }>()
   const [pdfData, setPdfData] = useState<string | null>(null)
   const navigate = useNavigate()
@@ -80,3 +80,5 @@ export const DocumentViewPDF = () => {
     )
   }
 }
+
+export default DocumentViewPDF

@@ -27,8 +27,6 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
           throw new Error('Token no válido')
         }
 
-        console.log('Entro aca')
-
         const userData = await response.data
         userStore.set(userData.user)
       } catch (error) {
