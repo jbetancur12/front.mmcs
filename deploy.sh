@@ -12,11 +12,17 @@ show_errors() {
   fi
 }
 
+echo "Ejecutando 'build'..."
+npm run build
+echo
+
 # Verificar que la carpeta 'dist' existe
 if [ ! -d "dist" ]; then
   echo "La carpeta 'dist' no existe. Asegúrate de que el build se haya generado correctamente."
   exit 1
 fi
+
+
 
 # Copiar la carpeta al servidor remoto
 echo "Copiando la carpeta 'dist' al servidor remoto..."
