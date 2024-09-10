@@ -27,7 +27,7 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Conectarse al servidor remoto y mover archivos al directorio de producción
+# Conectarse al servidor remoto y mover archivos al directorio de producción.
 echo "Conectándose al servidor remoto y moviendo archivos..."
 ssh metromedics@209.97.156.169 << 'EOF'
   set -x
