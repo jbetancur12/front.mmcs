@@ -149,12 +149,12 @@ const SideBar: React.FC = () => {
               {$userStore.rol === 'admin' && (
                 <li>
                   <DropdownButton
-                    buttonText='Hojas de Vida'
+                    buttonText='Inventario'
                     rol={$userStore.rol}
                     currentPath={pathname}
                     menuItems={[
                       {
-                        label: 'Inventario',
+                        label: 'Hoja de Vida',
                         url: 'datasheets',
                         roles: ['admin']
                       },

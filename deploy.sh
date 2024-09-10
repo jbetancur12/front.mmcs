@@ -43,7 +43,7 @@ ssh metromedics@209.97.156.169 << 'EOF'
     exit 1
   fi
 
-  cp -r "build$timestamp"/* /var/www/app.metromedics.co/html/
+  sudo cp -r "build$timestamp"/* /var/www/app.metromedics.co/html/
   
   # Verificar el resultado del cp
   if [ $? -ne 0 ]; then
