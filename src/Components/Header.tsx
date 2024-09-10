@@ -2,11 +2,16 @@ import { useStore } from '@nanostores/react'
 import { useEffect, useRef, useState } from 'react'
 import { userStore } from '../store/userStore'
 import LogoutButton from './Authentication/Logout'
+import useAxiosPrivate from '@utils/use-axios-private'
+import { EquipmentData } from './DataSheet/EquipmentAlertPage'
+import { Link } from 'react-router-dom'
 
 function Header() {
+  const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [menuWidth, setMenuWidth] = useState<number | null>(null)
+  const [hasAlert, setHasAlert] = useState<EquipmentData[]>([])
   const menuRef = useRef<HTMLDivElement | null>(null)
 
   const toggleMenu = () => {
@@ -14,12 +19,33 @@ function Header() {
   }
 
   useEffect(() => {
-    console.log('Hola')
     if (menuRef.current) {
       const width = menuRef.current.offsetWidth
       setMenuWidth(width)
     }
   }, [isMenuOpen])
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const response = await axiosPrivate('/dataSheet') // Endpoint que devuelve si hay alertas
+
+        setHasAlert(response.data)
+      } catch (error) {
+        console.error('Error fetching alerts:', error)
+      }
+    }
+
+    fetchAlerts()
+  }, [axiosPrivate])
+
+  const calibrationDueSoon =
+    hasAlert && hasAlert.filter((equipment) => equipment.isCalibrationDueSoon)
+  const inspectionDueSoon =
+    hasAlert && hasAlert.filter((equipment) => equipment.isInspectionDueSoon)
+
+  const hasAlerts =
+    hasAlert && (calibrationDueSoon.length > 0 || inspectionDueSoon.length > 0)
 
   return (
     <nav className='fixed z-30 w-full bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700'>
@@ -66,16 +92,26 @@ function Header() {
             </a>
           </div>
           <div className='flex items-center'>
-            <button className='p-2 text-gray-500 rounded-lg hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700'>
-              <svg
-                className='w-6 h-6'
-                fill='currentColor'
-                viewBox='0 0 20 20'
-                xmlns='http://www.w3.org/2000/svg'
-              >
-                <path d='M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z'></path>
-              </svg>
-            </button>
+            {$userStore.rol === 'admin' && (
+              <Link to={'/datasheets/alerts'}>
+                <button
+                  className={
+                    hasAlerts && $userStore.rol === 'admin'
+                      ? 'p-2 text-red-500 rounded-lg hover:text-red-900 hover:bg-red-100 dark:text-red-400 dark:hover:text-white dark:hover:bg-red-700'
+                      : 'p-2 text-gray-500 rounded-lg hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700'
+                  }
+                >
+                  <svg
+                    className='w-6 h-6'
+                    fill='currentColor'
+                    viewBox='0 0 20 20'
+                    xmlns='http://www.w3.org/2000/svg'
+                  >
+                    <path d='M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z'></path>
+                  </svg>
+                </button>
+              </Link>
+            )}
             <button
               type='button'
               data-dropdown-toggle='apps-dropdown'

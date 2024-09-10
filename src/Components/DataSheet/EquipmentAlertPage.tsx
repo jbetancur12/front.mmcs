@@ -4,7 +4,7 @@ import { Warning as WarningIcon, Info as InfoIcon } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { Link } from 'react-router-dom'
 
-type EquipmentData = {
+export type EquipmentData = {
   id: number
   internalCode: string
   equipmentName: string
