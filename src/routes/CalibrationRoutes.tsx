@@ -18,7 +18,7 @@ const CalibrationRoutes = (role: string) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['admin']}
+            roles={['admin', 'metrologist']}
           />
         }
       >

@@ -395,8 +395,7 @@ export const CreateNewAccountModal = ({
                         fullWidth
                       >
                         <MenuItem value='admin'>Administrador</MenuItem>
-                        <MenuItem value='metrologist'>Metrologista</MenuItem>
-                        <MenuItem value='secretary'>Secretario</MenuItem>
+                        <MenuItem value='metrologist'>Metrologo</MenuItem>
                       </Select>
                     ) : (
                       <TextField

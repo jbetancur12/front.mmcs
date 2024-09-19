@@ -37,6 +37,7 @@ export interface Vehicle {
   importationDate: string
   registrationDate: string
   expeditionDate: string
+  customerId: number | null
 }
 
 // Trip.ts

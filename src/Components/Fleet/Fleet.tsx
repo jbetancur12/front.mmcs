@@ -34,6 +34,8 @@ import { Vehicle } from './types'
 import { vehicleStore } from '../../store/vehicleStore'
 import { useFormik } from 'formik'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { useStore } from '@nanostores/react'
+import { userStore } from 'src/store/userStore'
 
 const validationSchema = yup.object().shape({
   pictureUrl: yup.mixed().required('Imagen es obligatoria'),
@@ -118,8 +120,12 @@ const validationSchema = yup.object().shape({
 
 const Fleet = () => {
   const axiosPrivate = useAxiosPrivate()
+  const $userStore = useStore(userStore)
+  const customerId = $userStore.customer?.id || null
   const queryClient = useQueryClient()
-  const { data: vehicles = [], refetch } = useVehicles()
+  const { data: vehicles = [], refetch } = useVehicles({
+    customerId: customerId
+  })
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string | undefined
@@ -170,7 +176,7 @@ const Fleet = () => {
       values: Vehicle
     }) => {
       try {
-        await saveRowEdits.mutateAsync(values)
+        await saveRowEdits.mutateAsync({ ...values, customerId: customerId })
         exitEditingMode()
       } catch (error) {
         console.error('Error al guardar la edición:', error)
@@ -303,23 +309,29 @@ const Fleet = () => {
       trafficAuthority: '',
       importationDate: '',
       registrationDate: '',
-      expeditionDate: ''
+      expeditionDate: '',
+      customerId: customerId
     },
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm }) => {
+      const newValues = { ...values, customerId: customerId }
+      console.log('🚀 ~ onSubmit: ~ values:', newValues)
       try {
-        await createVehicle(values, {
-          onSuccess: () => {
-            queryClient.invalidateQueries('vehicles')
-            bigToast('Vehículo Creado Exitosamente!', 'success')
-            setCreateModalOpen(false)
-            refetch()
-          },
-          onError: (error) => {
-            console.error('Error al crear el vehículo:', error)
-            bigToast('Error al crear el vehículo', 'error')
+        await createVehicle(
+          { ...values, customerId: customerId },
+          {
+            onSuccess: () => {
+              queryClient.invalidateQueries('vehicles')
+              bigToast('Vehículo Creado Exitosamente!', 'success')
+              setCreateModalOpen(false)
+              refetch()
+            },
+            onError: (error) => {
+              console.error('Error al crear el vehículo:', error)
+              bigToast('Error al crear el vehículo', 'error')
+            }
           }
-        })
+        )
         resetForm()
       } catch (error) {
         console.error('Error al crear el vehículo:', error)

@@ -4,11 +4,18 @@ import { FieldConfig } from './GenericFormModal'
 import { Vehicle } from './types'
 import { useMutation, useQuery } from 'react-query'
 
-export const useVehicles = () => {
+interface VehicleQueryParams {
+  customerId?: number | null
+}
+
+export const useVehicles = (queryParams: VehicleQueryParams = {}) => {
+  console.log(queryParams)
   const axiosPrivate = useAxiosPrivate()
 
-  return useQuery('vehicles', async () => {
-    const { data } = await axiosPrivate.get('/vehicles')
+  return useQuery(['vehicles', queryParams], async () => {
+    const { data } = await axiosPrivate.get('/vehicles', {
+      params: queryParams
+    })
     return data
   })
 }
@@ -44,6 +51,7 @@ export const useAddVehicle = () => {
     formData.append('importationDate', vehicle.importationDate)
     formData.append('registrationDate', vehicle.registrationDate)
     formData.append('expeditionDate', vehicle.expeditionDate)
+    formData.append('customerId', vehicle.customerId + '')
 
     await axiosPrivate.post('/vehicles', formData, {
       headers: {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { userStore } from '../../store/userStore'
 import { api } from '../../config'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { useNavigate } from 'react-router-dom'
 
 interface RequireAuthProps {
   children: React.ReactNode
@@ -11,6 +12,7 @@ const apiUrl = api()
 
 const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   const axiosPrivate = useAxiosPrivate()
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -36,7 +38,11 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
       }
     }
 
-    validateToken()
+    if (localStorage.getItem('accessToken')) {
+      validateToken()
+    } else {
+      navigate('/login')
+    }
   }, [])
 
   if (loading) {

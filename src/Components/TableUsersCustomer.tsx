@@ -7,6 +7,9 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
   Stack,
   TextField,
   Tooltip
@@ -26,6 +29,17 @@ import { useParams } from 'react-router-dom'
 
 import { bigToast } from './ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
+
+const roles = [
+  {
+    label: 'User',
+    value: 'user'
+  },
+  {
+    label: 'Flota',
+    value: 'fleet'
+  }
+]
 
 // Define interfaces
 export interface UserData {
@@ -104,6 +118,7 @@ const Table: React.FC = () => {
 
   const handleSaveRowEdits: MaterialReactTableProps<UserData>['onEditingRowSave'] =
     async ({ exitEditingMode, row, values }) => {
+      console.log(values)
       if (!Object.keys(validationErrors).length) {
         const updatedValues = { ...values }
         delete updatedValues.id
@@ -114,7 +129,7 @@ const Table: React.FC = () => {
             {}
           )
 
-          if (response.status === 201) {
+          if (response.status === 200) {
             bigToast('Usuario Modificado Exitosamente!', 'success')
             tableData[row.index] = values
             setTableData([...tableData])
@@ -210,9 +225,11 @@ const Table: React.FC = () => {
         header: 'Nombre',
         size: 150,
         type: 'show',
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-          ...getCommonEditTextFieldProps(cell)
-        })
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => {
+          return {
+            ...getCommonEditTextFieldProps(cell)
+          }
+        }
       },
       {
         accessorKey: 'email', //normal accessorKey
@@ -226,6 +243,7 @@ const Table: React.FC = () => {
       {
         accessorKey: 'active',
         header: 'Activo',
+        enableEditing: false,
         size: 10,
         Cell: ({ cell }) => (
           <div
@@ -238,7 +256,54 @@ const Table: React.FC = () => {
               borderRadius: '50%'
             }}
           ></div>
-        )
+        ),
+        Edit: () => null
+      },
+      {
+        accessorKey: 'rol',
+        header: 'Rol',
+        size: 10,
+
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => {
+          return {
+            ...getCommonEditTextFieldProps(cell),
+            select: true, //change to select for a dropdown
+            children: roles.map((state) => (
+              <MenuItem key={state.value} value={state.value}>
+                {state.label}
+              </MenuItem>
+            ))
+          }
+        }
+
+        // Edit: ({ cell, table }) => {
+        //   const handleChange = (event: SelectChangeEvent<string>) => {
+        //     const newValue = event.target.value
+        //     table.setEditingRow((prevRow) => {
+        //       // Asegúrate de que `prevRow` sea del tipo correcto
+        //       if (prevRow) {
+        //         return {
+        //           ...prevRow,
+        //           original: {
+        //             ...prevRow.original,
+        //             rol: newValue
+        //           }
+        //         }
+        //       }
+        //     })
+        //   }
+
+        //   return (
+        //     <Select
+        //       value={cell.getValue() as string}
+        //       onChange={handleChange}
+        //       fullWidth
+        //     >
+        //       <MenuItem value='user'>User</MenuItem>
+        //       <MenuItem value='fleet'>Flota</MenuItem>
+        //     </Select>
+        //   )
+        // }
       },
       {
         accessorKey: 'customer.nombre',
@@ -314,91 +379,92 @@ interface CreateModalProps {
 }
 
 //example of creating a mui dialog modal for creating new rows
-export const CreateNewAccountModal = ({
+const CreateNewAccountModal = ({
   open,
   columns,
   onClose,
   onSubmit
 }: CreateModalProps) => {
   const { id } = useParams()
-  const [values, setValues] = useState<any>(() =>
+  const [values, setValues] = useState(() =>
     columns.reduce((acc, column) => {
       acc[column.accessorKey ?? ''] = ''
       return acc
     }, {} as any)
   )
 
+  const [errors, setErrors] = useState<{ [key: string]: string }>({})
+
+  const validateFields = () => {
+    const newErrors: { [key: string]: string } = {}
+    if (!values.nombre) newErrors.nombre = 'Nombre es requerido'
+    if (!values.email) newErrors.email = 'Email es requerido'
+    if (!values.rol) newErrors.rol = 'Rol es requerido'
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleSubmit = () => {
-    //put your validation logic here
-    onSubmit(values)
-    onClose()
+    if (validateFields()) {
+      onSubmit(values)
+      onClose()
+    }
   }
 
   useEffect(() => {
     setValues({ ...values, customerId: id })
-  }, [])
+  }, [id])
 
   return (
     <Dialog open={open}>
       <DialogTitle textAlign='center'>Crear Nueva Cuenta</DialogTitle>
       <DialogContent>
         <form onSubmit={(e) => e.preventDefault()}>
-          <Stack
-            sx={{
-              width: '100%',
-              minWidth: { xs: '300px', sm: '360px', md: '400px' },
-              gap: '1.5rem'
-            }}
-          >
-            {columns.map(
-              (column) =>
-                // @ts-ignore
-                column.accessorKey !== 'id' &&
-                column.accessorKey !== 'active' &&
-                column.accessorKey !== 'customer.nombre' &&
-                // @ts-ignore
-                column.accessorKey !== 'customer.contraseña' && (
+          <Stack sx={{ width: '100%', gap: '1.5rem' }}>
+            {columns.map((column) => {
+              const excludedKeys = ['id', 'active', 'customer.nombre']
+              if (!excludedKeys.includes(column.accessorKey as string)) {
+                return column.accessorKey === 'rol' ? (
+                  <Select
+                    key={column.accessorKey}
+                    label={column.header}
+                    value={values.rol || ''}
+                    error={!!errors.rol}
+                    onChange={(e) =>
+                      setValues({ ...values, rol: e.target.value })
+                    }
+                    fullWidth
+                  >
+                    <MenuItem value='user'>User</MenuItem>
+                    <MenuItem value='fleet'>Flota</MenuItem>
+                  </Select>
+                ) : (
                   <TextField
                     key={column.accessorKey}
                     label={column.header}
                     name={column.accessorKey}
+                    value={values[column.accessorKey as string] || ''}
+                    error={!!errors[column.accessorKey as string]}
+                    helperText={errors[column.accessorKey as string]}
                     onChange={(e) =>
                       setValues({ ...values, [e.target.name]: e.target.value })
                     }
+                    fullWidth
                   />
                 )
-            )}
-
-            {/* <TextField
-              label="Compañia"
-              name="customerId"
-              disabled
-              sx={{ display: "none" }}
-              value={values.customerId}
-            />
-            <TextField
-              label="Contraseña"
-              name="contraseña"
-              disabled
-              sx={{ display: "none" }}
-              value={"1234567x"}
-            /> */}
+              }
+              return null
+            })}
           </Stack>
         </form>
       </DialogContent>
       <DialogActions sx={{ p: '1.25rem' }}>
-        <button
-          className='bg-gray-400 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-10'
-          onClick={onClose}
-        >
+        <Button onClick={onClose} color='inherit'>
           Cancelar
-        </button>
-        <button
-          className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
-          onClick={handleSubmit}
-        >
-          Crear Usuario
-        </button>
+        </Button>
+        <Button onClick={handleSubmit} variant='contained'>
+          Crear
+        </Button>
       </DialogActions>
     </Dialog>
   )
