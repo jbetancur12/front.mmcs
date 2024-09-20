@@ -5,15 +5,26 @@ import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import { differenceInDays, format } from 'date-fns'
 import { Cancel, CheckCircle, Warning } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { useStore } from '@nanostores/react'
+import { userStore } from 'src/store/userStore'
 
 const Dashboard: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
+  const $userStore = useStore(userStore)
   const [tableData, setTableData] = useState<FileData[]>([])
 
   // Fetch files data
   const fetchFiles = async () => {
+    let customerId: null | number = null
+    if ($userStore.customer?.id) {
+      customerId = $userStore.customer.id
+    }
     try {
-      const response = await axiosPrivate.get(`/files/next-to-expire`)
+      const response = await axiosPrivate.get(`/files/next-to-expire`, {
+        params: {
+          customerId: customerId
+        }
+      })
 
       // @ts-ignore: Ignorar el error en esta línea
       setTableData(response.data)

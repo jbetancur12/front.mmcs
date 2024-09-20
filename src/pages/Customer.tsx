@@ -22,6 +22,7 @@ import CalibrationTimeline from '../Components/CalibrationTimeline'
 import { ArrowBack } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useQuery, useQueryClient } from 'react-query'
+import Modules from 'src/Components/Modules'
 
 // API URL
 
@@ -46,7 +47,12 @@ interface ApiResponse {
   foundFields: string[]
 }
 
-type Tab = 'users' | 'certificates' | 'headquarters' | 'calibrationTimeLine'
+type Tab =
+  | 'users'
+  | 'certificates'
+  | 'headquarters'
+  | 'calibrationTimeLine'
+  | 'modules'
 
 function UserProfile() {
   const axiosPrivate = useAxiosPrivate()
@@ -345,22 +351,40 @@ function UserProfile() {
           </a>
         </li>
         {$userStore.rol === 'admin' && (
-          <li className='mr-1'>
-            <a
-              href='#'
-              onClick={(e) => {
-                e.preventDefault()
-                setActiveTab('users')
-              }}
-              className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
-                activeTab === 'users'
-                  ? 'border-l border-t border-r rounded-t'
-                  : 'text-blue-500 hover:text-blue-800'
-              }`}
-            >
-              Usuarios
-            </a>
-          </li>
+          <>
+            <li className='mr-1'>
+              <a
+                href='#'
+                onClick={(e) => {
+                  e.preventDefault()
+                  setActiveTab('users')
+                }}
+                className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
+                  activeTab === 'users'
+                    ? 'border-l border-t border-r rounded-t'
+                    : 'text-blue-500 hover:text-blue-800'
+                }`}
+              >
+                Usuarios
+              </a>
+            </li>
+            <li>
+              <a
+                href='#'
+                onClick={(e) => {
+                  e.preventDefault()
+                  setActiveTab('modules')
+                }}
+                className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
+                  activeTab === 'modules'
+                    ? 'border-l border-t border-r rounded-t'
+                    : 'text-blue-500 hover:text-blue-800'
+                }`}
+              >
+                Modulos
+              </a>
+            </li>
+          </>
         )}
       </ul>
       {activeTab === 'certificates' && (
@@ -445,6 +469,7 @@ function UserProfile() {
       {activeTab === 'calibrationTimeLine' && (
         <CalibrationTimeline customerId={id} />
       )}
+      {activeTab === 'modules' && <Modules customerId={id} />}
     </div>
   )
 }

@@ -29,5 +29,6 @@ export const vehicleStore = atom<Vehicle>({
   trafficAuthority: '',
   importationDate: '',
   registrationDate: '',
-  expeditionDate: ''
+  expeditionDate: '',
+  customerId: 0
 })

@@ -9,7 +9,6 @@ import {
   IconButton,
   MenuItem,
   Select,
-  SelectChangeEvent,
   Stack,
   TextField,
   Tooltip
