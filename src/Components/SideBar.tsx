@@ -47,7 +47,7 @@ const sidebarItems = ($userStore: UserData) => [
     label: 'Empresas',
     to: '/customers',
     icon: <FaHospitalUser className={iconClass} />,
-    roles: ['admin'],
+    roles: ['admin', 'metrologist'],
     moduleName: 'Basic'
   },
 
@@ -163,7 +163,7 @@ const SideBar = () => {
 
   return (
     <aside className='fixed top-0 left-0 z-20 flex flex-col flex-shrink-0 hidden w-64 h-full pt-16 font-normal duration-75 lg:flex transition-width'>
-      <div className='relative flex flex-col flex-1 min-h-0 pt-0 bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700'>
+      <div className='relative flex flex-col flex-1 min-h-0  bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700 pt-5'>
         <div className='flex-1 px-3 space-y-1 bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700'>
           <ul className='space-y-2'>
             {/* Mapear los ítems combinados del sidebar */}

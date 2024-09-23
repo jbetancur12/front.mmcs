@@ -188,7 +188,7 @@ function CertificatesList() {
             >
               Descargar
             </Button>
-            {$userStore.rol == 'admin' && (
+            {['admin', 'metrologist'].includes($userStore.rol) && (
               <Button
                 variant='outlined'
                 color='error'

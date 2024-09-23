@@ -1,7 +1,11 @@
 import TableOwnUsers from '../Components/TableOwnUsers'
 
 const Settings = () => {
-  return <TableOwnUsers />
+  return (
+    <>
+      <TableOwnUsers />
+    </>
+  )
 }
 
 export default Settings

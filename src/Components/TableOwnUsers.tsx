@@ -21,6 +21,8 @@ import toast, { Toaster } from 'react-hot-toast'
 
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { bigToast } from './ExcelManipulation/Utils'
+import { Axios, AxiosError } from 'axios'
 
 // Define interfaces
 export interface UserData {
@@ -214,17 +216,22 @@ const TableOwnUsers: React.FC = () => {
       )
 
       if (response.status === 201) {
-        toast.success('Producto Creado Exitosamente!', {
-          duration: 4000,
-          position: 'top-center'
-        })
+        bigToast('Usuario Creado Exitosamente!', 'success')
         setTableData([...tableData, response.data])
         // Refresh data after creation
       } else {
         console.error('Error al crear equipo')
       }
     } catch (error) {
-      console.error('Error de red:', error)
+      if (error instanceof AxiosError) {
+        bigToast(
+          'Error al crear el usuario: ' + error.response?.data?.error,
+          'error'
+        )
+      } else {
+        bigToast('Error al crear el usuario: ', 'error')
+        console.error('Error de red:', error)
+      }
     }
   }
 

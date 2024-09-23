@@ -121,7 +121,7 @@ export const CertificateListItem: React.FC<CertificateListItemProps> = ({
             </p>
           </Link>
         </div>
-        {$userStore.rol === 'admin' && (
+        {['admin', 'metrologist'].includes($userStore.rol) && (
           <>
             <div className='flex items-center'>
               <button

@@ -8,6 +8,7 @@ const Customer = lazy(() => import('../pages/Customer'))
 const PDFViewer = lazy(() => import('../Components/DataSheet/PDFViewer'))
 
 const CustomerRoutes = (role: string) => {
+  console.log('🚀 ~ CustomerRoutes ~ role:', role)
   return (
     <>
       <Route
@@ -15,7 +16,7 @@ const CustomerRoutes = (role: string) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['admin']}
+            roles={['admin', 'metrologist']}
           />
         }
       >

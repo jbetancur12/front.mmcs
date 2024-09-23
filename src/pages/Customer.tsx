@@ -187,7 +187,10 @@ function UserProfile() {
   useEffect(() => {
     const checkPermission = async () => {
       try {
-        if ($userStore.rol === 'admin' || id === $userStore.customer.id + '') {
+        if (
+          ['admin', 'metrologist'].includes($userStore.rol) ||
+          id === $userStore.customer.id + ''
+        ) {
           setHasPermission(true)
         } else {
           setHasPermission(false)
@@ -350,7 +353,7 @@ function UserProfile() {
             Programación
           </a>
         </li>
-        {$userStore.rol === 'admin' && (
+        {['admin', 'metrologist'].includes($userStore.rol) && (
           <>
             <li className='mr-1'>
               <a

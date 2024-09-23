@@ -133,7 +133,7 @@ function Certificates() {
         <Typography variant='h6' gutterBottom>
           Detalles del Equipo
         </Typography>
-        {$userStore.rol == 'admin' && (
+        {['admin', 'metrologist'].includes($userStore.rol) && (
           <Stack direction='row' spacing={2} mb={2}>
             <Button
               variant='contained'
@@ -149,19 +149,23 @@ function Certificates() {
       {certificateData && (
         <>
           <Box display='flex' alignItems='center' mb={1}>
-            {$userStore.rol == 'admin' && <Box ml={3.5} />}
+            {['admin', 'metrologist'].includes($userStore.rol) && (
+              <Box ml={3.5} />
+            )}
             <Typography flex={1}>
               <strong>Compañía:</strong> {certificateData.customer.nombre}
             </Typography>
           </Box>
           <Box display='flex' alignItems='center' mb={1}>
-            {$userStore.rol == 'admin' && <Box ml={3.5} />}
+            {['admin', 'metrologist'].includes($userStore.rol) && (
+              <Box ml={3.5} />
+            )}
             <Typography flex={1}>
               <strong>Equipo:</strong> {certificateData.device.name}
             </Typography>
           </Box>
           <Box display='flex' alignItems='center' mb={1}>
-            {$userStore.rol == 'admin' && (
+            {['admin', 'metrologist'].includes($userStore.rol) && (
               <IconButton size='small' onClick={() => handleEdit('city')}>
                 <Edit fontSize='small' />
               </IconButton>
@@ -171,7 +175,7 @@ function Certificates() {
             </Typography>
           </Box>
           <Box display='flex' alignItems='center' mb={1}>
-            {$userStore.rol == 'admin' && (
+            {['admin', 'metrologist'].includes($userStore.rol) && (
               <IconButton size='small' onClick={() => handleEdit('location')}>
                 <Edit fontSize='small' />
               </IconButton>
@@ -181,7 +185,7 @@ function Certificates() {
             </Typography>
           </Box>
           <Box display='flex' alignItems='center' mb={1}>
-            {$userStore.rol == 'admin' && (
+            {['admin', 'metrologist'].includes($userStore.rol) && (
               <IconButton size='small' onClick={() => handleEdit('sede')}>
                 <Edit fontSize='small' />
               </IconButton>
@@ -191,7 +195,7 @@ function Certificates() {
             </Typography>
           </Box>
           <Box display='flex' alignItems='center' mb={1}>
-            {$userStore.rol == 'admin' && (
+            {['admin', 'metrologist'].includes($userStore.rol) && (
               <IconButton size='small' onClick={() => handleEdit('activoFijo')}>
                 <Edit fontSize='small' />
               </IconButton>
@@ -201,7 +205,7 @@ function Certificates() {
             </Typography>
           </Box>
           <Box display='flex' alignItems='center' mb={1}>
-            {$userStore.rol == 'admin' && (
+            {['admin', 'metrologist'].includes($userStore.rol) && (
               <IconButton size='small' onClick={() => handleEdit('serie')}>
                 <Edit fontSize='small' />
               </IconButton>
@@ -211,14 +215,18 @@ function Certificates() {
             </Typography>
           </Box>
           <Box display='flex' alignItems='center' mb={1}>
-            {$userStore.rol == 'admin' && <Box ml={3.5} />}
+            {['admin', 'metrologist'].includes($userStore.rol) && (
+              <Box ml={3.5} />
+            )}
             <Typography flex={1}>
               <strong>Última Fecha de Calibración:</strong>{' '}
               {new Date(certificateData.calibrationDate).toLocaleDateString()}
             </Typography>
           </Box>
           <Box display='flex' alignItems='center' mb={1}>
-            {$userStore.rol == 'admin' && <Box ml={3.5} />}
+            {['admin', 'metrologist'].includes($userStore.rol) && (
+              <Box ml={3.5} />
+            )}
             <Typography flex={1}>
               <strong>Próxima Fecha de Calibración:</strong>{' '}
               {new Date(
