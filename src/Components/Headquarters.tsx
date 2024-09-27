@@ -36,6 +36,9 @@ const Headquarters: React.FC<HeadquartersProps> = ({
   const [selectedSede, setSelectedSede] = React.useState<null | Certificate[]>(
     null
   )
+  const [selectedSedeString, setSelectedSedeString] = React.useState<
+    null | string
+  >(null)
 
   const $userStore = useStore(userStore)
 
@@ -44,6 +47,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
 
   const onSedeClick = (sede: string) => {
     setSelectedSede(hqs[sede])
+    setSelectedSedeString(sede)
   }
 
   const handleAddClick = () => {
@@ -147,9 +151,9 @@ const Headquarters: React.FC<HeadquartersProps> = ({
             <ArrowBackIcon />
           </IconButton>
           <SelectedHq
-            certificates={selectedSede}
             onDelete={onDelete}
             sedes={sedes}
+            selectedSede={selectedSedeString}
           />
         </Box>
       )}

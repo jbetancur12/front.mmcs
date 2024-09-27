@@ -39,7 +39,7 @@ interface GroupedCertificates {
   [key: string]: Certificate[]
 }
 
-interface ApiResponse {
+export interface ApiResponse {
   totalFiles: number
   totalPages: number
   currentPage: number

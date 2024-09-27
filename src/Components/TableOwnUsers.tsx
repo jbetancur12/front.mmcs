@@ -22,7 +22,7 @@ import toast, { Toaster } from 'react-hot-toast'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { bigToast } from './ExcelManipulation/Utils'
-import { Axios, AxiosError } from 'axios'
+import { AxiosError } from 'axios'
 
 // Define interfaces
 export interface UserData {
