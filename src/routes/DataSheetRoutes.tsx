@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
+import DevicesOnLoan from 'src/Components/DataSheet/DevicesOnLoan'
 const DatasheetsList = lazy(
   () => import('../Components/DataSheet/ListDataSheet')
 )
@@ -50,6 +51,7 @@ const DataSheetRoutes = (role: string) => {
             path='inventory-leasing'
             element={<PDFViewer path='inventory-leasing' />}
           />
+          <Route path='devices-on-loan' element={<DevicesOnLoan />} />
           <Route path='inventory' element={<PDFViewer path='inventory' />} />
           <Route
             path='calibration-program'

@@ -1,4 +1,5 @@
 import {
+  CallMissedOutgoing,
   Delete,
   Edit,
   Engineering,
@@ -792,6 +793,13 @@ const ListDataSheet: React.FC = () => {
               <Link to='inventory-leasing'>
                 <IconButton>
                   <SyncAlt />
+                </IconButton>
+              </Link>
+            </Tooltip>
+            <Tooltip arrow placement='right' title='Equipos en Prestamo'>
+              <Link to='devices-on-loan'>
+                <IconButton>
+                  <CallMissedOutgoing />
                 </IconButton>
               </Link>
             </Tooltip>
