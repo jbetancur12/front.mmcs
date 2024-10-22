@@ -1,6 +1,7 @@
 import useAxiosPrivate from '@utils/use-axios-private'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import React, { useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 interface Device {
   id: number
@@ -27,6 +28,7 @@ interface EquipmentInOut {
 const DevicesOnLoan = () => {
   const [data, setData] = React.useState<Device[]>([])
   const axiosPrivate = useAxiosPrivate()
+  const navigate = useNavigate()
 
   const getDevicesOnLoan = async () => {
     const response = await axiosPrivate.get(`/reports/devices-on-loan`)
@@ -48,6 +50,12 @@ const DevicesOnLoan = () => {
   const columns = useMemo<MRT_ColumnDef<Device>[]>(
     () => [
       {
+        accessorKey: 'id',
+        header: 'ID',
+        size: 10,
+        enableEditing: false
+      },
+      {
         accessorKey: 'equipmentName',
         header: 'Nombre del Equipo',
         size: 150
@@ -66,6 +74,10 @@ const DevicesOnLoan = () => {
     []
   )
 
+  const handleRowClick = (row: Device) => {
+    navigate(`/datasheets/${row.id}/in-out`) // Navigate to a details page, using row.id
+  }
+
   return (
     <MaterialReactTable
       displayColumnDefOptions={{
@@ -82,13 +94,13 @@ const DevicesOnLoan = () => {
       enableHiding={false}
       initialState={{
         columnVisibility: {
-          filePath: false,
-          id: false,
-          'certificateType.name': false,
-          name: false,
-          activoFijo: false
+          id: false
         }
       }}
+      muiTableBodyRowProps={({ row }) => ({
+        onClick: () => handleRowClick(row.original), // Navigate on row click
+        sx: { cursor: 'pointer' } // Change cursor to pointer for visual feedback
+      })}
     />
   )
 }
