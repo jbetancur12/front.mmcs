@@ -222,7 +222,7 @@ function CertificatesList() {
                 </Button>
               )}
             </ListItem>
-            {preview && <PDFViewer path={certificatePath} />}
+            {preview && <PDFViewer path={certificatePath} buttons={false} />}
           </>
         ))}
         <Dialog open={open} onClose={handleClose}>

@@ -18,13 +18,14 @@ pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@$
 const PDFViewer = ({
   path,
   bucket = 'first-bucket',
-  view = 'preview'
+  view = 'preview',
+  buttons = true
 }: {
   path: string
   bucket?: string
   view?: 'preview' | 'default'
+  buttons?: boolean
 }) => {
-  console.log('🚀 ~ path:', path)
   const [numPages, setNumPages] = useState<number>(1)
   const [pageNumber, setPageNumber] = useState<number>(1)
   const [pdfData, setPdfData] = useState<string | null>(null)
@@ -77,32 +78,34 @@ const PDFViewer = ({
             alignItems: 'center'
           }}
         >
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              marginTop: 2,
-              marginBottom: 2
-            }}
-          >
-            <Button
-              variant='contained'
-              color='primary'
-              disabled={pageNumber <= 1}
-              onClick={(event) => changePage(-1, event)}
-              sx={{ marginRight: 2 }}
+          {buttons && (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginTop: 2,
+                marginBottom: 2
+              }}
             >
-              Anterior
-            </Button>
-            <Button
-              variant='contained'
-              color='primary'
-              disabled={pageNumber >= numPages}
-              onClick={(event) => changePage(1, event)}
-            >
-              Siguiente
-            </Button>
-          </Box>
+              <Button
+                variant='contained'
+                color='primary'
+                disabled={pageNumber <= 1}
+                onClick={(event) => changePage(-1, event)}
+                sx={{ marginRight: 2 }}
+              >
+                Anterior
+              </Button>
+              <Button
+                variant='contained'
+                color='primary'
+                disabled={pageNumber >= numPages}
+                onClick={(event) => changePage(1, event)}
+              >
+                Siguiente
+              </Button>
+            </Box>
+          )}
           <Box sx={{ marginBottom: 4 }}>
             <Document file={pdfData} onLoadSuccess={onDocumentLoadSuccess}>
               <Page scale={1.5} pageNumber={pageNumber} />
