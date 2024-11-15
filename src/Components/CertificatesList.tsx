@@ -11,6 +11,7 @@ import {
   DialogContentText,
   DialogTitle,
   Divider,
+  IconButton,
   List,
   ListItem,
   ListItemText
@@ -19,6 +20,8 @@ import {
 import Loader from './Loader2'
 import { bigToast } from './ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { Visibility, VisibilityOff } from '@mui/icons-material'
+import PDFViewer from './PDFViewer'
 
 interface Certificate {
   id: number
@@ -31,6 +34,8 @@ function CertificatesList() {
   const { id } = useParams<{ id: string }>()
   const [certificates, setCertificates] = useState<Certificate[]>([])
   const [certificateId, setCertificateId] = useState<number>(0)
+  const [preview, setPreview] = useState<boolean>(false)
+  const [certificatePath, setCertificatePath] = useState<string>('')
 
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
@@ -163,6 +168,16 @@ function CertificatesList() {
     handleClose()
   }
 
+  const handlePreview = (certificate: Certificate) => {
+    if (!preview) {
+      setPreview(true)
+      setCertificatePath(certificate.filePath)
+    } else {
+      setPreview(false)
+      setCertificatePath('')
+    }
+  }
+
   return (
     <>
       {/* <Paper elevation={3} className="p-4 mt-8"> */}
@@ -174,31 +189,41 @@ function CertificatesList() {
       <Divider className='mb-4' />
       <List>
         {certificates.map((certificate) => (
-          <ListItem key={certificate.id}>
-            <ListItemText
-              primary={certificate.filePath}
-              secondary={`Fecha de Calibración: ${new Date(
-                certificate.calibrationDate
-              ).toLocaleDateString()}`}
-            />
-            <Button
-              variant='outlined'
-              color='primary'
-              onClick={() => handleDownload(certificate.filePath)}
-            >
-              Descargar
-            </Button>
-            {['admin', 'metrologist'].includes($userStore.rol) && (
+          <>
+            <ListItem key={certificate.id}>
+              <IconButton
+                sx={{ mr: 3 }}
+                onClick={() => handlePreview(certificate)}
+              >
+                {!preview ? <Visibility /> : <VisibilityOff />}
+              </IconButton>
+
+              <ListItemText
+                primary={certificate.filePath}
+                secondary={`Fecha de Calibración: ${new Date(
+                  certificate.calibrationDate
+                ).toLocaleDateString()}`}
+              />
               <Button
                 variant='outlined'
-                color='error'
-                onClick={() => handleClickOpen(certificate.id)}
-                sx={{ ml: 2 }}
+                color='primary'
+                onClick={() => handleDownload(certificate.filePath)}
               >
-                Eliminar
+                Descargar
               </Button>
-            )}
-          </ListItem>
+              {['admin', 'metrologist'].includes($userStore.rol) && (
+                <Button
+                  variant='outlined'
+                  color='error'
+                  onClick={() => handleClickOpen(certificate.id)}
+                  sx={{ ml: 2 }}
+                >
+                  Eliminar
+                </Button>
+              )}
+            </ListItem>
+            {preview && <PDFViewer path={certificatePath} />}
+          </>
         ))}
         <Dialog open={open} onClose={handleClose}>
           <DialogTitle>Confirmar eliminación</DialogTitle>

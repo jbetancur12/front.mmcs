@@ -21,9 +21,10 @@ const PDFViewer = ({
   view = 'preview'
 }: {
   path: string
-  bucket: string
-  view: 'preview' | 'default'
+  bucket?: string
+  view?: 'preview' | 'default'
 }) => {
+  console.log('🚀 ~ path:', path)
   const [numPages, setNumPages] = useState<number>(1)
   const [pageNumber, setPageNumber] = useState<number>(1)
   const [pdfData, setPdfData] = useState<string | null>(null)
