@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import TableUsersCustomer from '../Components/TableUsersCustomer'
 
 import {
@@ -13,13 +13,15 @@ import {
   CircularProgress,
   Divider,
   IconButton,
+  InputAdornment,
   Paper,
+  TextField,
   Typography
 } from '@mui/material'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
 import CalibrationTimeline from '../Components/CalibrationTimeline'
-import { ArrowBack } from '@mui/icons-material'
+import { ArrowBack, Clear } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useQuery, useQueryClient } from 'react-query'
 import Modules from 'src/Components/Modules'
@@ -55,6 +57,7 @@ type Tab =
   | 'modules'
 
 function UserProfile() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const axiosPrivate = useAxiosPrivate()
   const { id } = useParams()
   const $userStore = useStore(userStore)
@@ -69,8 +72,7 @@ function UserProfile() {
   })
 
   const [activeTab, setActiveTab] = useState<Tab>('certificates')
-
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('query') || '')
   const [image, setImage] = useState('/images/pngaaa.com-4811116.png')
   const [currentPage, setCurrentPage] = useState(1)
   const [hasPermission, setHasPermission] = useState(false)
@@ -179,6 +181,15 @@ function UserProfile() {
       setImage('/images/pngaaa.com-4811116.png')
     }
   }
+
+  useEffect(() => {
+    if (searchTerm) {
+      setSearchParams({ query: searchTerm })
+    } else {
+      searchParams.delete('query')
+      setSearchParams(searchParams)
+    }
+  }, [searchTerm])
 
   useEffect(() => {
     getuserInfo()
@@ -392,16 +403,31 @@ function UserProfile() {
       </ul>
       {activeTab === 'certificates' && (
         <Paper elevation={3} sx={{ p: 2 }}>
-          <input
-            type='text'
+          <TextField
+            sx={{ width: '90%', mb: 2 }}
+            variant='outlined'
             placeholder='Buscar Equipo(s)...'
-            className='w-[50%] px-4 py-2 mb-4 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 mt-4'
+            fullWidth
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value)
               setCurrentPage(1)
             }}
+            InputProps={{
+              endAdornment: searchTerm && (
+                <InputAdornment position='end'>
+                  <IconButton
+                    aria-label='clear search'
+                    onClick={() => setSearchTerm('')}
+                    edge='end'
+                  >
+                    <Clear />
+                  </IconButton>
+                </InputAdornment>
+              )
+            }}
           />
+
           <Typography variant='subtitle2' gutterBottom>
             Total Equipos: {apiResponse?.totalFiles}
           </Typography>
