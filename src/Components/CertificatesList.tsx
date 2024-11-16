@@ -34,7 +34,7 @@ function CertificatesList() {
   const { id } = useParams<{ id: string }>()
   const [certificates, setCertificates] = useState<Certificate[]>([])
   const [certificateId, setCertificateId] = useState<number>(0)
-  const [preview, setPreview] = useState<boolean>(false)
+  const [previewId, setPreviewId] = useState<number | null>(null)
   const [certificatePath, setCertificatePath] = useState<string>('')
 
   const [loading, setLoading] = useState(false)
@@ -169,12 +169,12 @@ function CertificatesList() {
   }
 
   const handlePreview = (certificate: Certificate) => {
-    if (!preview) {
-      setPreview(true)
-      setCertificatePath(certificate.filePath)
-    } else {
-      setPreview(false)
+    if (previewId === certificate.id) {
+      setPreviewId(null) // Cerrar el preview si ya estaba abierto
       setCertificatePath('')
+    } else {
+      setPreviewId(certificate.id) // Abrir el preview para este certificado
+      setCertificatePath(certificate.filePath)
     }
   }
 
@@ -189,13 +189,17 @@ function CertificatesList() {
       <Divider className='mb-4' />
       <List>
         {certificates.map((certificate) => (
-          <>
-            <ListItem key={certificate.id}>
+          <div key={certificate.id}>
+            <ListItem>
               <IconButton
                 sx={{ mr: 3 }}
                 onClick={() => handlePreview(certificate)}
               >
-                {!preview ? <Visibility /> : <VisibilityOff />}
+                {previewId === certificate.id ? (
+                  <VisibilityOff />
+                ) : (
+                  <Visibility />
+                )}
               </IconButton>
 
               <ListItemText
@@ -222,8 +226,10 @@ function CertificatesList() {
                 </Button>
               )}
             </ListItem>
-            {preview && <PDFViewer path={certificatePath} buttons={false} />}
-          </>
+            {previewId === certificate.id && (
+              <PDFViewer path={certificatePath} buttons={false} />
+            )}
+          </div>
         ))}
         <Dialog open={open} onClose={handleClose}>
           <DialogTitle>Confirmar eliminación</DialogTitle>
