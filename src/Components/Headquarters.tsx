@@ -1,5 +1,4 @@
 import React from 'react'
-
 import {
   List,
   ListItem,
@@ -20,12 +19,11 @@ import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
 
 interface HeadquartersProps {
-  // hqs: { [key: string]: any }
   setSelectedSede: (sede: string | null) => void
   selectedSede: string | null
   onDelete: (id: number) => void
   sedes: string[]
-  onAddSede: (newSede: string) => void // Callback function to handle adding new sede
+  onAddSede: (newSede: string) => void
 }
 
 const Headquarters: React.FC<HeadquartersProps> = ({
@@ -35,15 +33,10 @@ const Headquarters: React.FC<HeadquartersProps> = ({
   sedes,
   onAddSede
 }) => {
-  // const [selectedSede, setSelectedSede] = React.useState<null | Certificate[]>(
-  //   null
-  // )
   const [selectedSedeString, setSelectedSedeString] = React.useState<
-    null | string
+    string | null
   >(null)
-
   const $userStore = useStore(userStore)
-
   const [isAdding, setIsAdding] = React.useState(false)
   const [newSede, setNewSede] = React.useState('')
 
@@ -52,9 +45,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
     setSelectedSedeString(sede)
   }
 
-  const handleAddClick = () => {
-    setIsAdding(true)
-  }
+  const handleAddClick = () => setIsAdding(true)
 
   const handleCancel = () => {
     setIsAdding(false)
@@ -81,72 +72,66 @@ const Headquarters: React.FC<HeadquartersProps> = ({
       }}
     >
       {!selectedSede ? (
-        <>
-          <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
-            {$userStore.rol === 'admin' && (
-              <>
-                {!isAdding ? (
+        <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
+          {$userStore.rol === 'admin' && (
+            <Box sx={{ mb: 2 }}>
+              {!isAdding ? (
+                <Button variant='contained' onClick={handleAddClick}>
+                  <AddIcon />
+                </Button>
+              ) : (
+                <Box>
+                  <TextField
+                    label='Nueva Sede'
+                    variant='outlined'
+                    fullWidth
+                    value={newSede}
+                    onChange={(e) => setNewSede(e.target.value)}
+                    sx={{ mb: 1 }}
+                  />
                   <Button
                     variant='contained'
-                    sx={{ mb: 2 }}
-                    onClick={handleAddClick}
+                    color='primary'
+                    onClick={handleSubmit}
+                    sx={{ mr: 1 }}
                   >
-                    <AddIcon />
+                    Agregar
                   </Button>
-                ) : (
-                  <Box sx={{ mb: 2 }}>
-                    <TextField
-                      label='Nueva Sede'
-                      variant='outlined'
-                      fullWidth
-                      value={newSede}
-                      onChange={(e) => setNewSede(e.target.value)}
-                      sx={{ mb: 1 }}
-                    />
-                    <Button
-                      variant='contained'
-                      color='primary'
-                      onClick={handleSubmit}
-                      sx={{ mr: 1 }}
-                    >
-                      Agregar
-                    </Button>
-                    <Button
-                      variant='outlined'
-                      color='secondary'
-                      onClick={handleCancel}
-                    >
-                      Cancelar
-                    </Button>
-                  </Box>
-                )}
-              </>
-            )}
-            <List sx={{ flexGrow: 1, overflowY: 'auto', width: '200px' }}>
-              {sedes.map((sede, index) => (
-                <ButtonBase
-                  key={index}
-                  sx={{ width: '100%' }}
-                  onClick={() => onSedeClick(sede)}
-                >
-                  <ListItem
-                    sx={{
-                      '&:hover': {
-                        backgroundColor: 'lightgreen',
-                        borderRadius: '5px'
-                      }
-                    }}
+                  <Button
+                    variant='outlined'
+                    color='secondary'
+                    onClick={handleCancel}
                   >
-                    <ListItemIcon>
-                      <CircleIcon sx={{ fontSize: 10 }} />
-                    </ListItemIcon>
-                    <ListItemText primary={sede.toUpperCase()} />
-                  </ListItem>
-                </ButtonBase>
-              ))}
-            </List>
-          </Box>
-        </>
+                    Cancelar
+                  </Button>
+                </Box>
+              )}
+            </Box>
+          )}
+          <List sx={{ flexGrow: 1, overflowY: 'auto', width: '200px' }}>
+            {sedes.map((sede, index) => (
+              <ButtonBase
+                key={index}
+                sx={{ width: '100%' }}
+                onClick={() => onSedeClick(sede)}
+              >
+                <ListItem
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: 'lightgreen',
+                      borderRadius: '5px'
+                    }
+                  }}
+                >
+                  <ListItemIcon>
+                    <CircleIcon sx={{ fontSize: 10 }} />
+                  </ListItemIcon>
+                  <ListItemText primary={sede.toUpperCase()} />
+                </ListItem>
+              </ButtonBase>
+            ))}
+          </List>
+        </Box>
       ) : (
         <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
           <IconButton onClick={() => setSelectedSede(null)} sx={{ mb: 2 }}>

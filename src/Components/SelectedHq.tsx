@@ -17,6 +17,7 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
   sedes,
   selectedSede
 }) => {
+  console.log('🚀 ~ selectedSede:', selectedSede)
   const { id } = useParams()
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)

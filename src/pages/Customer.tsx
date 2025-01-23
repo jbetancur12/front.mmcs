@@ -37,9 +37,6 @@ interface UserData {
   avatar?: string
   sede: string[]
 }
-interface GroupedCertificates {
-  [key: string]: Certificate[]
-}
 
 export interface ApiResponse {
   totalFiles: number
@@ -116,16 +113,6 @@ function UserProfile() {
       setImage(minioUrl + '/images/' + response.data.avatar)
     }
   }
-
-  const groupedByHQ: GroupedCertificates =
-    certificatesData.reduce<GroupedCertificates>((acc, item: Certificate) => {
-      const { headquarter } = item
-      if (!acc[headquarter]) {
-        acc[headquarter] = []
-      }
-      acc[headquarter].push(item)
-      return acc
-    }, {})
 
   const handleDelete = async (id: number) => {
     const isConfirmed = window.confirm(
