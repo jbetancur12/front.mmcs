@@ -15,27 +15,29 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CircleIcon from '@mui/icons-material/Circle'
 import AddIcon from '@mui/icons-material/Add'
-import { Certificate } from './CertificateListItem'
 import SelectedHq from './SelectedHq'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
 
 interface HeadquartersProps {
-  hqs: { [key: string]: any }
+  // hqs: { [key: string]: any }
+  setSelectedSede: (sede: string | null) => void
+  selectedSede: string | null
   onDelete: (id: number) => void
   sedes: string[]
   onAddSede: (newSede: string) => void // Callback function to handle adding new sede
 }
 
 const Headquarters: React.FC<HeadquartersProps> = ({
-  hqs,
+  setSelectedSede,
+  selectedSede,
   onDelete,
   sedes,
   onAddSede
 }) => {
-  const [selectedSede, setSelectedSede] = React.useState<null | Certificate[]>(
-    null
-  )
+  // const [selectedSede, setSelectedSede] = React.useState<null | Certificate[]>(
+  //   null
+  // )
   const [selectedSedeString, setSelectedSedeString] = React.useState<
     null | string
   >(null)
@@ -46,7 +48,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
   const [newSede, setNewSede] = React.useState('')
 
   const onSedeClick = (sede: string) => {
-    setSelectedSede(hqs[sede])
+    setSelectedSede(sede)
     setSelectedSedeString(sede)
   }
 

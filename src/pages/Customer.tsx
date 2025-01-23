@@ -77,6 +77,7 @@ function UserProfile() {
   const [currentPage, setCurrentPage] = useState(1)
   const [hasPermission, setHasPermission] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [selectedSede, setSelectedSede] = useState<string | null>('')
 
   // Fetch customer data
   useQuery<UserData>(
@@ -489,7 +490,8 @@ function UserProfile() {
       {activeTab === 'users' && <TableUsersCustomer />}
       {activeTab === 'headquarters' && (
         <Headquarters
-          hqs={groupedByHQ}
+          setSelectedSede={setSelectedSede}
+          selectedSede={selectedSede}
           sedes={customerData.sede}
           onDelete={handleDelete}
           onAddSede={handleAddSede}
