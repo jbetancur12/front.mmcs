@@ -19,9 +19,11 @@ const LogoutButton: React.FC = () => {
       bigToast('Error al cerrar sesión', 'error')
       throw new Error('Error al cerrar sesión')
     }
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('columnFiltersCustomers') // Limpiar filtros
+    localStorage.removeItem('columnFiltersHV') // Limpiar filtros
     Toast.fire('Sesión cerrada exitosamente', '', 'success')
 
-    localStorage.removeItem('accessToken')
     // Redirige al usuario a la página de inicio de sesión
     navigate('/login') // Cambia '/login' por la ruta de tu página de inicio de sesión
   }

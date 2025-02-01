@@ -12,7 +12,10 @@ import {
   TableRow,
   Stack,
   Button,
-  CircularProgress
+  CircularProgress,
+  Tooltip,
+  Menu,
+  MenuItem
   // Button
 } from '@mui/material'
 
@@ -55,6 +58,7 @@ interface DataResponse {
   totalMonths: number
   startYear: number
   endYear: number
+  headquarters: string[]
   devices: Device[]
 }
 
@@ -113,6 +117,22 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
   const [devices, setDevices] = useState<Device[] | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
+  const [headquarters, setHeadquarters] = useState<string[]>([])
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleClose = () => {
+    setAnchorEl(null)
+  }
+
+  const handleMenuItemClick = (headquarter: string) => {
+    handleClose()
+    navigate(`schedule/pdf?headquarter=${headquarter}`)
+  }
 
   const now = new Date()
   const currentMonth = now.getMonth() + 1
@@ -129,6 +149,7 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
         )
         const data = response.data
         setTimeline(createTimeline(data))
+        setHeadquarters(data.headquarters)
         setDevices(data.devices)
       } catch (error) {
         console.error('Error fetching data:', error)
@@ -170,13 +191,31 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
 
   return (
     <Box width='100%' mt={2}>
-      <Button
-        variant='contained'
-        color='primary'
-        onClick={() => navigate('schedule/pdf')}
-      >
-        Exportar a PDF
-      </Button>
+      <Tooltip arrow placement='right' title='Exportar a PDF'>
+        <div>
+          <Button
+            variant='contained'
+            color='primary'
+            onClick={handleClick} // Abre el menú desplegable
+          >
+            Exportar a PDF
+          </Button>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+          >
+            {headquarters.map((headquarter) => (
+              <MenuItem
+                key={headquarter}
+                onClick={() => handleMenuItemClick(headquarter)}
+              >
+                {headquarter}
+              </MenuItem>
+            ))}
+          </Menu>
+        </div>
+      </Tooltip>
       <Box id='calibration-timeline'>
         <Paper>
           <Stack

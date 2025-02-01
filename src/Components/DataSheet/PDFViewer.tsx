@@ -3,7 +3,7 @@ import { Box, CircularProgress, IconButton, Typography } from '@mui/material'
 import useAxiosPrivate from '@utils/use-axios-private'
 
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 interface PDFViewerProps {
   path: string
@@ -12,16 +12,20 @@ interface PDFViewerProps {
 const PDFViewer = ({ path }: PDFViewerProps) => {
   const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id: string }>()
+  const location = useLocation()
   const [pdfData, setPdfData] = useState<string | null>(null)
   const navigate = useNavigate()
+  const searchParams = new URLSearchParams(location.search)
 
   const params = id ? id : ''
+  const headquarter = searchParams.get('headquarter') || ''
 
   useEffect(() => {
     const fetchPDF = async () => {
       try {
         // Realiza la solicitud al endpoint para obtener el PDF
         const response = await axiosPrivate.get(`/reports/${path}/${params}`, {
+          params: { headquarter },
           responseType: 'arraybuffer' // Especifica que esperamos un archivo binario
         })
 
@@ -36,7 +40,7 @@ const PDFViewer = ({ path }: PDFViewerProps) => {
     }
 
     fetchPDF()
-  }, [])
+  }, [headquarter])
 
   if (!pdfData) {
     return (

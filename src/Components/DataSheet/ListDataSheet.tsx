@@ -31,10 +31,12 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  FormHelperText
+  FormHelperText,
+  Menu
 } from '@mui/material'
 
 import {
+  MRT_ColumnFiltersState,
   MaterialReactTable,
   type MRT_Cell,
   type MRT_ColumnDef,
@@ -159,8 +161,51 @@ const validationSchema = yup.object({
   calibrationCycle: yup.number().required('Ciclo de calibración es obligatorio')
 })
 
+const menuOptions = [
+  {
+    value: 'Patrón Acreditación',
+    text: 'Patrón Acreditación',
+    route: 'patron-acreditacion'
+  },
+  {
+    value: 'Patrón Trazabilidad',
+    text: 'Patrón Trazabilidad',
+    route: 'patron-trazabilidad'
+  },
+  {
+    value: 'Patrón Primario',
+    text: 'Patrón Primario',
+    route: 'patron-primario'
+  },
+  {
+    value: 'Patrón Secundario',
+    text: 'Patrón Secundario',
+    route: 'patron-secundario'
+  },
+  {
+    value: 'Auxiliar Acreditación',
+    text: 'Auxiliar Acreditación',
+    route: 'auxiliar-acreditacion'
+  },
+  {
+    value: 'Auxiliar Trazabilidad',
+    text: 'Auxiliar Trazabilidad',
+    route: 'auxiliar-trazabilidad'
+  },
+  {
+    value: 'Instrumento Retenido',
+    text: 'Instrumento Retenido',
+    route: 'instrumento-retenido'
+  }
+]
+
 // Main component
 const ListDataSheet: React.FC = () => {
+  const [inventoryAnchorEl, setInventoryAnchorEl] =
+    useState<null | HTMLElement>(null)
+  const [scheduleAnchorEl, setScheduleAnchorEl] = useState<null | HTMLElement>(
+    null
+  )
   const MySwal = withReactContent(Swal)
   const axiosPrivate = useAxiosPrivate()
 
@@ -168,6 +213,13 @@ const ListDataSheet: React.FC = () => {
   const [tableData, setTableData] = useState<DataSheetData[]>([])
   const [filteredTableData, setFilteredTableData] = useState<DataSheetData[]>(
     []
+  )
+  const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>(
+    () => {
+      // Restaurar los filtros desde el localStorage al inicializar
+      const savedFilters = localStorage.getItem('columnFiltersHV')
+      return savedFilters ? JSON.parse(savedFilters) : []
+    }
   )
 
   const [validationErrors, setValidationErrors] = useState<{
@@ -189,8 +241,30 @@ const ListDataSheet: React.FC = () => {
   }
 
   useEffect(() => {
+    const savedFilters = localStorage.getItem('columnFiltersHV')
+    if (savedFilters) {
+      setColumnFilters(JSON.parse(savedFilters))
+    }
     fetchDataSheets()
   }, [])
+
+  useEffect(() => {
+    // Guardar los filtros en el localStorage cada vez que cambien
+    localStorage.setItem('columnFiltersHV', JSON.stringify(columnFilters))
+  }, [columnFilters])
+
+  const handleInventoryClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setInventoryAnchorEl(event.currentTarget)
+  }
+
+  const handleScheduleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setScheduleAnchorEl(event.currentTarget)
+  }
+
+  const handleClose = () => {
+    setInventoryAnchorEl(null)
+    setScheduleAnchorEl(null)
+  }
 
   const handleSaveRowEdits: MaterialReactTableProps<DataSheetData>['onEditingRowSave'] =
     async ({ exitEditingMode, row, values }) => {
@@ -565,6 +639,8 @@ const ListDataSheet: React.FC = () => {
   return (
     <>
       <MaterialReactTable
+        onColumnFiltersChange={setColumnFilters} //hoist internal columnFilters state to your state
+        state={{ columnFilters }}
         localization={MRT_Localization_ES}
         initialState={{
           columnVisibility: {
@@ -764,11 +840,37 @@ const ListDataSheet: React.FC = () => {
             </Button>
             <Divider orientation='vertical' flexItem />
             <Tooltip arrow placement='right' title='Inventario'>
-              <Link to='inventory' state={tableData}>
-                <IconButton>
+              <div>
+                <IconButton onClick={handleInventoryClick}>
                   <Inventory />
                 </IconButton>
-              </Link>
+                <Menu
+                  anchorEl={inventoryAnchorEl}
+                  open={Boolean(inventoryAnchorEl)}
+                  onClose={handleClose}
+                >
+                  {[
+                    ...[
+                      {
+                        value: 'Inventario General',
+                        text: 'Inventario General',
+                        route: 'inventory'
+                      }
+                    ],
+                    ...menuOptions
+                  ].map((option) => (
+                    <MenuItem
+                      key={option.value}
+                      onClick={() => handleClose()}
+                      component={Link}
+                      to={`inventory/${option.route === 'inventory' ? '' : option.route}`}
+                      state={tableData}
+                    >
+                      {option.text}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </div>
             </Tooltip>
             <Tooltip arrow placement='right' title='Programa de Calibración'>
               <Link to='calibration-program'>
@@ -782,11 +884,37 @@ const ListDataSheet: React.FC = () => {
               placement='right'
               title='Cronograma de Mantenimiento'
             >
-              <Link to='maintenance-schedule'>
-                <IconButton>
+              <div>
+                <IconButton onClick={handleScheduleClick}>
                   <Event />
                 </IconButton>
-              </Link>
+                <Menu
+                  anchorEl={scheduleAnchorEl}
+                  open={Boolean(scheduleAnchorEl)}
+                  onClose={handleClose}
+                >
+                  {[
+                    ...[
+                      {
+                        value: 'Cronograma General',
+                        text: 'Cronograma General',
+                        route: 'maintenance-schedule'
+                      }
+                    ],
+                    ...menuOptions
+                  ].map((option) => (
+                    <MenuItem
+                      key={option.value}
+                      onClick={() => handleClose()}
+                      component={Link}
+                      to={`maintenance-schedule/${option.route === 'maintenance-schedule' ? '' : option.route}`}
+                      state={tableData}
+                    >
+                      {option.text}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </div>
             </Tooltip>
             <Divider orientation='vertical' flexItem />
             <Tooltip arrow placement='right' title='Inventario Prestamo'>

@@ -70,9 +70,11 @@ const useAxiosPrivate = () => {
             return axiosPrivate(previousRequest)
           } catch (refreshError) {
             // Token inválido o expirado
+            localStorage.removeItem('accessToken')
+            localStorage.removeItem('columnFiltersCustomers') // Limpiar filtros
+            localStorage.removeItem('columnFiltersHV') // Limpiar filtros
             Toast.fire('Sesión expirada', '', 'error')
             setTimeout(() => {
-              localStorage.removeItem('accessToken')
               navigate('/login')
             }, 2000)
             return Promise.reject(refreshError)
@@ -82,8 +84,10 @@ const useAxiosPrivate = () => {
         if (error.response?.status === 401) {
           // Token inválido o expirado
           Toast.fire('Sesión expirada', '', 'error')
+          localStorage.removeItem('accessToken')
+          localStorage.removeItem('columnFiltersCustomers') // Limpiar filtros
+          localStorage.removeItem('columnFiltersHV') // Limpiar filtros
           setTimeout(() => {
-            localStorage.removeItem('accessToken')
             navigate('/login')
           }, 2000)
         }

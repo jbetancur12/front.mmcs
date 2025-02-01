@@ -13,6 +13,7 @@ import {
 } from '@mui/material'
 
 import {
+  MRT_ColumnFiltersState,
   MaterialReactTable,
   type MRT_Cell,
   type MRT_ColumnDef,
@@ -54,6 +55,14 @@ const Table: React.FC = () => {
   const [validationErrors, setValidationErrors] = useState<{
     [cellId: string]: string
   }>({})
+
+  const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>(
+    () => {
+      // Restaurar los filtros desde el localStorage al inicializar
+      const savedFilters = localStorage.getItem('columnFiltersCustomers')
+      return savedFilters ? JSON.parse(savedFilters) : []
+    }
+  )
 
   // Create a new customer
   const onCreateCustomer = async (customerData: CustomerData) => {
@@ -117,7 +126,19 @@ const Table: React.FC = () => {
 
   useEffect(() => {
     fetchCustomers()
+    const savedFilters = localStorage.getItem('columnFiltersCustomers')
+    if (savedFilters) {
+      setColumnFilters(JSON.parse(savedFilters))
+    }
   }, [])
+
+  useEffect(() => {
+    // Guardar los filtros en el localStorage cada vez que cambien
+    localStorage.setItem(
+      'columnFiltersCustomers',
+      JSON.stringify(columnFilters)
+    )
+  }, [columnFilters])
 
   const handleCreateNewRow = (values: CustomerData) => {
     onCreateCustomer(values)
@@ -235,6 +256,7 @@ const Table: React.FC = () => {
       {
         accessorKey: 'nombre', //access nested data with dot notation
         header: 'Nombre',
+
         size: 150,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell),
@@ -311,6 +333,9 @@ const Table: React.FC = () => {
   return (
     <>
       <MaterialReactTable
+        //turn off client-side filtering
+        onColumnFiltersChange={setColumnFilters} //hoist internal columnFilters state to your state
+        state={{ columnFilters }}
         localization={MRT_Localization_ES}
         displayColumnDefOptions={{
           'mrt-row-actions': {

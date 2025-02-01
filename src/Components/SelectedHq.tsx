@@ -52,7 +52,6 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
 
   return (
     <div>
-      Hola
       <input
         type='text'
         placeholder='Buscar Equipo(s)...'
