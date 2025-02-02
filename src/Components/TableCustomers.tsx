@@ -59,7 +59,7 @@ const Table: React.FC = () => {
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>(
     () => {
       // Restaurar los filtros desde el localStorage al inicializar
-      const savedFilters = localStorage.getItem('columnFiltersCustomers')
+      const savedFilters = sessionStorage.getItem('columnFiltersCustomers')
       return savedFilters ? JSON.parse(savedFilters) : []
     }
   )
@@ -126,7 +126,7 @@ const Table: React.FC = () => {
 
   useEffect(() => {
     fetchCustomers()
-    const savedFilters = localStorage.getItem('columnFiltersCustomers')
+    const savedFilters = sessionStorage.getItem('columnFiltersCustomers')
     if (savedFilters) {
       setColumnFilters(JSON.parse(savedFilters))
     }
