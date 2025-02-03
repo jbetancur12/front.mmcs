@@ -68,7 +68,20 @@ function UserProfile() {
     sede: []
   })
 
-  const [activeTab, setActiveTab] = useState<Tab>('certificates')
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    const tabParam = searchParams.get('tab')
+    const validTabs: Tab[] = [
+      'users',
+      'certificates',
+      'headquarters',
+      'calibrationTimeLine',
+      'modules'
+    ]
+    return validTabs.includes(tabParam as Tab)
+      ? (tabParam as Tab)
+      : 'certificates'
+  })
+
   const [searchTerm, setSearchTerm] = useState(searchParams.get('query') || '')
   const [image, setImage] = useState('/images/pngaaa.com-4811116.png')
   const [currentPage, setCurrentPage] = useState(1)
@@ -239,6 +252,13 @@ function UserProfile() {
     }
   }
 
+  const handleTabChange = (tab: Tab) => {
+    const newSearchParams = new URLSearchParams(searchParams)
+    newSearchParams.set('tab', tab)
+    setSearchParams(newSearchParams)
+    setActiveTab(tab)
+  }
+
   if (loading) {
     return <Typography variant='h6'>Cargando...</Typography>
   }
@@ -308,7 +328,7 @@ function UserProfile() {
             href='#'
             onClick={(e) => {
               e.preventDefault()
-              setActiveTab('certificates')
+              handleTabChange('certificates')
             }}
             className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
               activeTab === 'certificates'
@@ -325,7 +345,7 @@ function UserProfile() {
             href='#'
             onClick={(e) => {
               e.preventDefault()
-              setActiveTab('headquarters')
+              handleTabChange('headquarters')
             }}
             className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
               activeTab === 'headquarters'
@@ -341,7 +361,7 @@ function UserProfile() {
             href='#'
             onClick={(e) => {
               e.preventDefault()
-              setActiveTab('calibrationTimeLine')
+              handleTabChange('calibrationTimeLine')
             }}
             className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
               activeTab === 'headquarters'
@@ -359,7 +379,7 @@ function UserProfile() {
                 href='#'
                 onClick={(e) => {
                   e.preventDefault()
-                  setActiveTab('users')
+                  handleTabChange('users')
                 }}
                 className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
                   activeTab === 'users'
@@ -375,7 +395,7 @@ function UserProfile() {
                 href='#'
                 onClick={(e) => {
                   e.preventDefault()
-                  setActiveTab('modules')
+                  handleTabChange('modules')
                 }}
                 className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
                   activeTab === 'modules'
