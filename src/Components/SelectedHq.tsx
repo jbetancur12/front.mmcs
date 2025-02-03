@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Certificate, CertificateListItem } from './CertificateListItem'
 import { Divider, Typography } from '@mui/material'
 import { useQuery } from 'react-query'
@@ -17,10 +17,32 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
   sedes,
   selectedSede
 }) => {
-  console.log('🚀 ~ selectedSede:', selectedSede)
   const { id } = useParams()
-  const [searchTerm, setSearchTerm] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
+
+  // Recuperar el estado inicial desde sessionStorage
+  const [searchTerm, setSearchTerm] = useState(
+    sessionStorage.getItem('searchTerm') || ''
+  )
+  const [currentPage, setCurrentPage] = useState(
+    parseInt(sessionStorage.getItem('currentPage') || '1', 10)
+  )
+
+  // Guardar el estado en sessionStorage cuando cambie
+  useEffect(() => {
+    sessionStorage.setItem('searchTerm', searchTerm)
+  }, [searchTerm])
+
+  useEffect(() => {
+    sessionStorage.setItem('currentPage', currentPage.toString())
+  }, [currentPage])
+
+  // // Limpiar sessionStorage cuando el componente se desmonte (opcional)
+  // useEffect(() => {
+  //   return () => {
+  //     sessionStorage.removeItem('searchTerm');
+  //     sessionStorage.removeItem('currentPage');
+  //   };
+  // }, []);
 
   const { data: apiResponse } = useQuery<ApiResponse>(
     ['certificates-data', id, searchTerm, selectedSede, currentPage],
@@ -70,7 +92,6 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
             certificate={certificate}
             onDelete={onDelete}
             sedes={sedes}
-            // onSelectedSede={onSelectedSede}
           />
         ))}
         <div className='flex justify-between items-center p-4'>
