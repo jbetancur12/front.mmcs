@@ -27,6 +27,7 @@ export interface CalibrationData {
   certificateNumber: string
   comments: string
   elaboratedBy: string
+  calibrationCycle: string | null
 }
 
 interface CalibrationFormProps {
@@ -46,7 +47,12 @@ const validationSchema = yup.object().shape({
     .string()
     .required('Número de certificado es obligatorio'),
   comments: yup.string().nullable(),
-  elaboratedBy: yup.string().required('Elaborado por es obligatorio')
+  elaboratedBy: yup.string().required('Elaborado por es obligatorio'),
+  calibrationCycle: yup
+    .number()
+    .typeError('El ciclo debe ser un número')
+    .required('Ciclo de calibración es requerido')
+    .min(1, 'El ciclo debe ser al menos 1 mes')
 })
 
 const CalibrationForm = () => {
@@ -81,6 +87,16 @@ const CalibrationForm = () => {
     }
   }, [id])
 
+  // Actualizar valores del formulario cuando cambia equipmentInfo
+  useEffect(() => {
+    if (equipmentInfo) {
+      formik.setFieldValue(
+        'calibrationCycle',
+        equipmentInfo.calibrationCycle || ''
+      )
+    }
+  }, [equipmentInfo])
+
   const formik = useFormik<CalibrationData>({
     initialValues: {
       equipmentId: id || '',
@@ -89,7 +105,8 @@ const CalibrationForm = () => {
       nextCalibrationDate: '',
       comments: '',
       elaboratedBy: '',
-      certificateNumber: ''
+      certificateNumber: '',
+      calibrationCycle: equipmentInfo?.calibrationCycle || ''
     },
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm }) => {
@@ -123,20 +140,22 @@ const CalibrationForm = () => {
     nextCalibrationDate: 'Fecha de próxima calibración',
     certificateNumber: 'Número de Certificado',
     comments: 'Comentarios',
-    elaboratedBy: 'Elaborado por'
+    elaboratedBy: 'Elaborado por',
+    calibrationCycle: 'Ciclo de calibración'
   }
 
   useEffect(() => {
-    if (formik.values.calibrationDate) {
+    if (formik.values.calibrationDate && equipmentInfo?.calibrationCycle) {
       const parsedDate = new Date(formik.values.calibrationDate)
       if (!isNaN(parsedDate.getTime())) {
+        const cycleMonths = Number(equipmentInfo.calibrationCycle)
         formik.setFieldValue(
           'nextCalibrationDate',
-          addMonths(parsedDate, 12).toISOString()
+          addMonths(parsedDate, cycleMonths).toISOString()
         )
       }
     }
-  }, [formik.values.calibrationDate])
+  }, [formik.values.calibrationDate, equipmentInfo?.calibrationCycle])
 
   return (
     <Paper elevation={3} sx={{ p: 4, mt: 4 }} style={{ width: '100%' }}>
@@ -238,6 +257,27 @@ const CalibrationForm = () => {
                   helperText={formik.touched.date && formik.errors.date}
                   fullWidth
                   InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label='Ciclo de Calibración'
+                  type='number'
+                  name='calibrationCycle'
+                  value={formik.values.calibrationCycle}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={
+                    formik.touched.calibrationCycle &&
+                    Boolean(formik.errors.calibrationCycle)
+                  }
+                  helperText={
+                    formik.touched.calibrationCycle &&
+                    formik.errors.calibrationCycle
+                  }
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                  disabled // Si es un campo de solo lectura
                 />
               </Grid>
               {['comments', 'elaboratedBy'].map((field) => (
