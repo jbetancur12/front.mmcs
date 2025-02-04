@@ -6,6 +6,7 @@ import {
   Event,
   ExitToApp,
   Inventory,
+  MoreVert,
   PrecisionManufacturing,
   SyncAlt,
   Visibility,
@@ -30,9 +31,10 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem,
+  MenuItem as MuiMenuItem,
   FormHelperText,
-  Menu
+  Menu,
+  ListItemIcon
 } from '@mui/material'
 
 import {
@@ -56,7 +58,7 @@ import withReactContent from 'sweetalert2-react-content'
 import Swal from 'sweetalert2'
 import useAxiosPrivate from '@utils/use-axios-private'
 
-// Define interfaces
+// Interfaces y tipos
 
 export interface CalibrationHistory {
   id: number
@@ -203,15 +205,11 @@ const menuOptions = [
 const ListDataSheet: React.FC = () => {
   const [inventoryAnchorEl, setInventoryAnchorEl] =
     useState<null | HTMLElement>(null)
-
   const [calibrationAnchorEl, setCalibrationAnchorEl] =
     useState<null | HTMLElement>(null)
-
   const [scheduleAnchorEl, setScheduleAnchorEl] = useState<null | HTMLElement>(
     null
   )
-  const MySwal = withReactContent(Swal)
-  const axiosPrivate = useAxiosPrivate()
 
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<DataSheetData[]>([])
@@ -225,24 +223,14 @@ const ListDataSheet: React.FC = () => {
       return savedFilters ? JSON.parse(savedFilters) : []
     }
   )
-
   const [validationErrors, setValidationErrors] = useState<{
     [cellId: string]: string
   }>({})
 
-  // Fetch dataSheets data
-  const fetchDataSheets = async () => {
-    try {
-      const response = await axiosPrivate.get(`/dataSheet`)
+  const MySwal = withReactContent(Swal)
+  const axiosPrivate = useAxiosPrivate()
 
-      if (response.statusText === 'OK') {
-        setTableData(response.data)
-        setFilteredTableData(response.data)
-      }
-    } catch (error) {
-      console.error('Error fetching dataSheet data:', error)
-    }
-  }
+  // Efectos
 
   useEffect(() => {
     const savedFilters = localStorage.getItem('columnFiltersHV')
@@ -256,6 +244,19 @@ const ListDataSheet: React.FC = () => {
     // Guardar los filtros en el localStorage cada vez que cambien
     localStorage.setItem('columnFiltersHV', JSON.stringify(columnFilters))
   }, [columnFilters])
+
+  const fetchDataSheets = async () => {
+    try {
+      const response = await axiosPrivate.get(`/dataSheet`)
+
+      if (response.statusText === 'OK') {
+        setTableData(response.data)
+        setFilteredTableData(response.data)
+      }
+    } catch (error) {
+      console.error('Error fetching dataSheet data:', error)
+    }
+  }
 
   const handleInventoryClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setInventoryAnchorEl(event.currentTarget)
@@ -339,6 +340,40 @@ const ListDataSheet: React.FC = () => {
     },
     [filteredTableData]
   )
+  const handleUpload = async ({
+    id,
+    image
+  }: {
+    id: number | undefined
+    image: File | null
+  }) => {
+    if (!image) {
+      return
+    }
+    const formData = new FormData()
+    formData.append('picture', image)
+    try {
+      const response = await axiosPrivate.put(
+        `/dataSheet/${id}/update-image`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      )
+
+      if (response.status >= 200 && response.status < 300) {
+        bigToast('Foto subida correctamente', 'success')
+        // setImage(response.data.dataSheet.pictureUrl)
+      } else {
+        bigToast('Error al subir la foto', 'error')
+      }
+    } catch (error) {
+      console.error('Error al subir la foto:', error)
+      bigToast('Error al subir la foto', 'error')
+    }
+  }
 
   const getCommonEditTextFieldProps = useCallback(
     ({ cell }: { cell: MRT_Cell<DataSheetData> }): TextFieldProps => ({
@@ -612,39 +647,260 @@ const ListDataSheet: React.FC = () => {
     ],
     [getCommonEditTextFieldProps]
   )
-  const handleUpload = async ({
-    id,
-    image
-  }: {
-    id: number | undefined
-    image: File | null
-  }) => {
-    if (!image) {
-      return
-    }
-    const formData = new FormData()
-    formData.append('picture', image)
-    try {
-      const response = await axiosPrivate.put(
-        `/dataSheet/${id}/update-image`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      )
 
-      if (response.status >= 200 && response.status < 300) {
-        bigToast('Foto subida correctamente', 'success')
-        // setImage(response.data.dataSheet.pictureUrl)
-      } else {
-        bigToast('Error al subir la foto', 'error')
-      }
-    } catch (error) {
-      console.error('Error al subir la foto:', error)
-      bigToast('Error al subir la foto', 'error')
+  // const RowActions = ({ row }: { row: any }) => (
+  //   // <Box sx={{ display: 'flex', gap: '1rem' }}>
+  //   <div>
+  //     <IconButton onClick={(e) => handleActionMenuOpen(e, row)}>
+  //       <MoreVert />
+  //     </IconButton>
+  //     <Menu
+  //       anchorEl={actionAnchorEl}
+  //       open={Boolean(actionAnchorEl)}
+  //       onClose={handleActionMenuClose}
+  //       disablePortal
+  //       sx={{
+  //         position: 'absolute'
+  //       }}
+  //       slotProps={{
+  //         paper: {
+  //           sx: {
+  //             boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)'
+  //           }
+  //         }
+  //       }}
+  //     >
+  //       {currentRow && [
+  //         <MuiMenuItem
+  //           key='view'
+  //           component={Link}
+  //           to={`${currentRow.original.id}`}
+  //           onClick={handleActionMenuClose}
+  //         >
+  //           <ListItemIcon>
+  //             <Visibility fontSize='small' />
+  //           </ListItemIcon>
+  //           Ver
+  //         </MuiMenuItem>,
+
+  //         <MuiMenuItem
+  //           key='inspection'
+  //           component={Link}
+  //           to={`${currentRow.original.id}/inspection-maintenance`}
+  //           onClick={handleActionMenuClose}
+  //         >
+  //           <ListItemIcon>
+  //             <Engineering fontSize='small' />
+  //           </ListItemIcon>
+  //           Inspection/Maintenance
+  //         </MuiMenuItem>,
+
+  //         <MuiMenuItem
+  //           key='in-out'
+  //           component={Link}
+  //           to={`${currentRow.original.id}/in-out`}
+  //           onClick={handleActionMenuClose}
+  //         >
+  //           <ListItemIcon>
+  //             <ExitToApp fontSize='small' />
+  //           </ListItemIcon>
+  //           In/Out
+  //         </MuiMenuItem>
+  //       ]}
+  //     </Menu>
+  //   </div>
+  // )
+
+  const RowActions = ({ row, table }: { row: any; table: any }) => {
+    const [localAnchorEl, setLocalAnchorEl] = useState<null | HTMLElement>(null)
+
+    const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+      event.stopPropagation()
+      setLocalAnchorEl(event.currentTarget)
     }
+
+    const handleMenuClose = () => {
+      setLocalAnchorEl(null)
+    }
+
+    return (
+      <Box sx={{ position: 'relative' }}>
+        <IconButton onClick={handleMenuOpen}>
+          <MoreVert />
+        </IconButton>
+
+        <Menu
+          anchorEl={localAnchorEl}
+          open={Boolean(localAnchorEl)}
+          onClose={handleMenuClose}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'right'
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'left'
+          }}
+          slotProps={{
+            paper: {
+              sx: {
+                boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                border: '1px solid rgba(0, 0, 0, 0.12)',
+                minWidth: '200px'
+              }
+            }
+          }}
+          disablePortal
+        >
+          <MuiMenuItem
+            component={Link}
+            to={`${row.original.id}`}
+            onClick={handleMenuClose}
+          >
+            <ListItemIcon>
+              <Visibility fontSize='small' />
+            </ListItemIcon>
+            Ver
+          </MuiMenuItem>
+
+          <MuiMenuItem
+            component={Link}
+            to={`${row.original.id}/inspection-maintenance`}
+            onClick={handleMenuClose}
+          >
+            <ListItemIcon>
+              <Engineering fontSize='small' />
+            </ListItemIcon>
+            Inspection/Maintenance
+          </MuiMenuItem>
+
+          <MuiMenuItem
+            component={Link}
+            to={`${row.original.id}/in-out`}
+            onClick={handleMenuClose}
+          >
+            <ListItemIcon>
+              <ExitToApp fontSize='small' />
+            </ListItemIcon>
+            In/Out
+          </MuiMenuItem>
+
+          <Divider />
+
+          <MuiMenuItem
+            onClick={() => {
+              handleMenuClose()
+              MySwal.fire({
+                title: 'Seleccione una opción',
+                showCancelButton: true,
+                confirmButtonText: 'Editar Imagen',
+                cancelButtonText: 'Editar Otras Opciones'
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  let imageFile: File | null = null
+                  // Lógica para abrir el modal de edición de imagen
+                  MySwal.fire({
+                    title: 'Editar Imagen',
+                    html: `
+                      <div id="mui-file-input">
+                        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                          <label for="imageInput" style="cursor: pointer;">
+                            <img
+                              id="avatarImage"
+                              alt="Foto de equipo"
+                              src="/images/no-img.jpg"
+                              style="width: 100px; height: 100px; margin-bottom: 8px;"
+                            />
+                          </label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            id="imageInput"
+                            style="display: none;"
+                          />
+                        </div>
+                      </div>
+                    `,
+                    didOpen: () => {
+                      const imageInput = document.getElementById(
+                        'imageInput'
+                      ) as HTMLInputElement
+                      const avatarImage = document.getElementById(
+                        'avatarImage'
+                      ) as HTMLImageElement
+
+                      if (imageInput && avatarImage) {
+                        imageInput.addEventListener('change', function (e) {
+                          const target = e.target as HTMLInputElement
+
+                          if (target.files && target.files.length > 0) {
+                            imageFile = target.files[0]
+
+                            // Crear un URL para la imagen seleccionada
+                            const newImageUrl = URL.createObjectURL(imageFile)
+
+                            // Actualizar el src del avatar
+                            avatarImage.src = newImageUrl
+
+                            // Aquí podrías realizar otras acciones como actualizar el estado o almacenar la imagen
+                          }
+                        })
+                      } else {
+                        console.error(
+                          "No se pudo encontrar el elemento 'imageInput' o 'avatarImage'."
+                        )
+                      }
+                    },
+                    showCancelButton: true,
+                    confirmButtonText: 'Actualizar',
+                    cancelButtonText: 'Cancelar',
+                    preConfirm: () => {
+                      if (!imageFile) {
+                        MySwal.showValidationMessage(
+                          'Por favor selecciona una imagen antes de actualizar.'
+                        )
+                        return false // Previene la resolución de la promesa
+                      }
+                      return new Promise((resolve) => {
+                        if (imageFile) {
+                          // Subir la imagen seleccionada a la API
+                          handleUpload({
+                            id: row.original.id,
+                            image: imageFile
+                          }).then(() => resolve(undefined)) // Resolviendo con undefined
+                        } else {
+                          resolve(undefined) // Resolviendo con undefined
+                        }
+                      })
+                    }
+                  })
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                  // Lógica para abrir el modo de edición de la tabla
+                  table.setEditingRow(row)
+                }
+              })
+            }}
+          >
+            <ListItemIcon>
+              <Edit fontSize='small' />
+            </ListItemIcon>
+            Editar
+          </MuiMenuItem>
+
+          <MuiMenuItem
+            onClick={() => {
+              handleDeleteRow(row)
+              handleMenuClose()
+            }}
+          >
+            <ListItemIcon>
+              <Delete fontSize='small' />
+            </ListItemIcon>
+            Eliminar
+          </MuiMenuItem>
+        </Menu>
+      </Box>
+    )
   }
 
   return (
@@ -699,143 +955,14 @@ const ListDataSheet: React.FC = () => {
         onEditingRowSave={handleSaveRowEdits}
         onEditingRowCancel={handleCancelRowEdits}
         renderRowActions={({ row, table }) => (
-          <Box sx={{ display: 'flex', gap: '1rem' }}>
-            <Tooltip arrow placement='right' title='Ver'>
-              <Link to={`${row.original.id}`}>
-                <IconButton>
-                  <Visibility />
-                </IconButton>
-              </Link>
-            </Tooltip>
-            <Tooltip arrow placement='right' title='Inspection/Maintenance'>
-              <Link
-                to={`${row.original.id}/inspection-maintenance`}
-                // sx={{ color: 'blue' }}
-              >
-                <IconButton>
-                  <Engineering />
-                </IconButton>
-              </Link>
-            </Tooltip>
-            <Tooltip arrow placement='right' title='In/Out'>
-              <Link
-                to={`${row.original.id}/in-out`}
-                // sx={{ color: 'blue' }}
-              >
-                <IconButton>
-                  <ExitToApp />
-                </IconButton>
-              </Link>
-            </Tooltip>
-            <Divider orientation='vertical' flexItem />
-            <Tooltip arrow placement='left' title='Edit'>
-              <IconButton
-                onClick={() => {
-                  MySwal.fire({
-                    title: 'Seleccione una opción',
-                    showCancelButton: true,
-                    confirmButtonText: 'Editar Imagen',
-                    cancelButtonText: 'Editar Otras Opciones'
-                  }).then((result) => {
-                    if (result.isConfirmed) {
-                      let imageFile: File | null = null
-                      // Lógica para abrir el modal de edición de imagen
-                      MySwal.fire({
-                        title: 'Editar Imagen',
-                        html: `
-                          <div id="mui-file-input">
-                            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
-                              <label for="imageInput" style="cursor: pointer;">
-                                <img
-                                  id="avatarImage"
-                                  alt="Foto de equipo"
-                                  src="/images/no-img.jpg"
-                                  style="width: 100px; height: 100px; margin-bottom: 8px;"
-                                />
-                              </label>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                id="imageInput"
-                                style="display: none;"
-                              />
-                            </div>
-                          </div>
-                        `,
-                        didOpen: () => {
-                          const imageInput = document.getElementById(
-                            'imageInput'
-                          ) as HTMLInputElement
-                          const avatarImage = document.getElementById(
-                            'avatarImage'
-                          ) as HTMLImageElement
-
-                          if (imageInput && avatarImage) {
-                            imageInput.addEventListener('change', function (e) {
-                              const target = e.target as HTMLInputElement
-
-                              if (target.files && target.files.length > 0) {
-                                imageFile = target.files[0]
-
-                                // Crear un URL para la imagen seleccionada
-                                const newImageUrl =
-                                  URL.createObjectURL(imageFile)
-
-                                // Actualizar el src del avatar
-                                avatarImage.src = newImageUrl
-
-                                // Aquí podrías realizar otras acciones como actualizar el estado o almacenar la imagen
-                              }
-                            })
-                          } else {
-                            console.error(
-                              "No se pudo encontrar el elemento 'imageInput' o 'avatarImage'."
-                            )
-                          }
-                        },
-                        showCancelButton: true,
-                        confirmButtonText: 'Actualizar',
-                        cancelButtonText: 'Cancelar',
-                        preConfirm: () => {
-                          if (!imageFile) {
-                            MySwal.showValidationMessage(
-                              'Por favor selecciona una imagen antes de actualizar.'
-                            )
-                            return false // Previene la resolución de la promesa
-                          }
-                          return new Promise((resolve) => {
-                            if (imageFile) {
-                              // Subir la imagen seleccionada a la API
-                              handleUpload({
-                                id: row.original.id,
-                                image: imageFile
-                              }).then(() => resolve(undefined)) // Resolviendo con undefined
-                            } else {
-                              resolve(undefined) // Resolviendo con undefined
-                            }
-                          })
-                        }
-                      })
-                    } else if (result.dismiss === Swal.DismissReason.cancel) {
-                      // Lógica para abrir el modo de edición de la tabla
-                      table.setEditingRow(row)
-                    }
-                  })
-                }}
-              >
-                <Edit />
-              </IconButton>
-            </Tooltip>
-
-            <Tooltip arrow placement='right' title='Delete'>
-              <IconButton color='error' onClick={() => handleDeleteRow(row)}>
-                <Delete />
-              </IconButton>
-            </Tooltip>
-          </Box>
+          <RowActions row={row} table={table} />
         )}
         renderTopToolbarCustomActions={() => (
-          <Box display='flex' alignItems='center' sx={{ gap: 2 }}>
+          <Box
+            display='flex'
+            alignItems='center'
+            sx={{ gap: 2, position: 'relative' }}
+          >
             <Button
               variant='contained'
               onClick={() => setCreateModalOpen(true)}
@@ -870,7 +997,7 @@ const ListDataSheet: React.FC = () => {
                     ],
                     ...menuOptions
                   ].map((option) => (
-                    <MenuItem
+                    <MuiMenuItem
                       key={option.value}
                       onClick={() => handleClose()}
                       component={Link}
@@ -878,7 +1005,7 @@ const ListDataSheet: React.FC = () => {
                       state={tableData}
                     >
                       {option.text}
-                    </MenuItem>
+                    </MuiMenuItem>
                   ))}
                 </Menu>
               </div>
@@ -903,7 +1030,7 @@ const ListDataSheet: React.FC = () => {
                     ],
                     ...menuOptions
                   ].map((option) => (
-                    <MenuItem
+                    <MuiMenuItem
                       key={option.value}
                       onClick={() => handleClose()}
                       component={Link}
@@ -911,7 +1038,7 @@ const ListDataSheet: React.FC = () => {
                       state={tableData}
                     >
                       {option.text}
-                    </MenuItem>
+                    </MuiMenuItem>
                   ))}
                 </Menu>
               </div>
@@ -940,7 +1067,7 @@ const ListDataSheet: React.FC = () => {
                     ],
                     ...menuOptions
                   ].map((option) => (
-                    <MenuItem
+                    <MuiMenuItem
                       key={option.value}
                       onClick={() => handleClose()}
                       component={Link}
@@ -948,7 +1075,7 @@ const ListDataSheet: React.FC = () => {
                       state={tableData}
                     >
                       {option.text}
-                    </MenuItem>
+                    </MuiMenuItem>
                   ))}
                 </Menu>
               </div>
@@ -971,6 +1098,7 @@ const ListDataSheet: React.FC = () => {
           </Box>
         )}
       />
+
       <CreateNewDataSheetModal
         columns={columns}
         open={createModalOpen}
@@ -1188,30 +1316,30 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
                               )
                             }
                           >
-                            <MenuItem value='Patrón Acreditación'>
+                            <MuiMenuItem value='Patrón Acreditación'>
                               Patrón Acreditación
-                            </MenuItem>
-                            <MenuItem value='Patrón Trazabilidad'>
+                            </MuiMenuItem>
+                            <MuiMenuItem value='Patrón Trazabilidad'>
                               Patrón Trazabilidad
-                            </MenuItem>
-                            <MenuItem value='Patrón Primario'>
+                            </MuiMenuItem>
+                            <MuiMenuItem value='Patrón Primario'>
                               Patrón Primario
-                            </MenuItem>
-                            <MenuItem value='Patrón Secundario'>
+                            </MuiMenuItem>
+                            <MuiMenuItem value='Patrón Secundario'>
                               Patrón Secundario
-                            </MenuItem>
-                            <MenuItem value='Auxiliar Acreditación'>
+                            </MuiMenuItem>
+                            <MuiMenuItem value='Auxiliar Acreditación'>
                               Auxiliar Acreditación
-                            </MenuItem>
-                            <MenuItem value='Auxiliar Trazabilidad'>
+                            </MuiMenuItem>
+                            <MuiMenuItem value='Auxiliar Trazabilidad'>
                               Auxiliar Trazabilidad
-                            </MenuItem>
-                            <MenuItem value='Instrumento Retenido'>
+                            </MuiMenuItem>
+                            <MuiMenuItem value='Instrumento Retenido'>
                               Instrumento Retenido
-                            </MenuItem>
-                            <MenuItem value='Equipo de Prestamo'>
+                            </MuiMenuItem>
+                            <MuiMenuItem value='Equipo de Prestamo'>
                               Equipo de Prestamo
-                            </MenuItem>
+                            </MuiMenuItem>
                           </Select>
                           <FormHelperText>
                             {formik.touched[
