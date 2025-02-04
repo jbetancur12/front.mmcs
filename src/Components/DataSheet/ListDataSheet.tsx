@@ -203,6 +203,10 @@ const menuOptions = [
 const ListDataSheet: React.FC = () => {
   const [inventoryAnchorEl, setInventoryAnchorEl] =
     useState<null | HTMLElement>(null)
+
+  const [calibrationAnchorEl, setCalibrationAnchorEl] =
+    useState<null | HTMLElement>(null)
+
   const [scheduleAnchorEl, setScheduleAnchorEl] = useState<null | HTMLElement>(
     null
   )
@@ -257,12 +261,19 @@ const ListDataSheet: React.FC = () => {
     setInventoryAnchorEl(event.currentTarget)
   }
 
+  const handleCalibrationClick = (
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    setCalibrationAnchorEl(event.currentTarget)
+  }
+
   const handleScheduleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setScheduleAnchorEl(event.currentTarget)
   }
 
   const handleClose = () => {
     setInventoryAnchorEl(null)
+    setCalibrationAnchorEl(null)
     setScheduleAnchorEl(null)
   }
 
@@ -873,11 +884,37 @@ const ListDataSheet: React.FC = () => {
               </div>
             </Tooltip>
             <Tooltip arrow placement='right' title='Programa de Calibración'>
-              <Link to='calibration-program'>
-                <IconButton>
+              <div>
+                <IconButton onClick={handleCalibrationClick}>
                   <PrecisionManufacturing />
                 </IconButton>
-              </Link>
+                <Menu
+                  anchorEl={calibrationAnchorEl}
+                  open={Boolean(calibrationAnchorEl)}
+                  onClose={handleClose}
+                >
+                  {[
+                    ...[
+                      {
+                        value: 'Cronograma General',
+                        text: 'Cronograma General',
+                        route: 'calibration-program'
+                      }
+                    ],
+                    ...menuOptions
+                  ].map((option) => (
+                    <MenuItem
+                      key={option.value}
+                      onClick={() => handleClose()}
+                      component={Link}
+                      to={`calibration-program/${option.route === 'calibration-program' ? '' : option.route}`}
+                      state={tableData}
+                    >
+                      {option.text}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </div>
             </Tooltip>
             <Tooltip
               arrow

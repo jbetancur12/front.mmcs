@@ -57,7 +57,7 @@ const DataSheetRoutes = (role: string) => {
             element={<PDFViewer path='inventory' />}
           />
           <Route
-            path='calibration-program'
+            path='calibration-program/:id?'
             element={<PDFViewer path='calibration-program' />}
           />
           <Route
