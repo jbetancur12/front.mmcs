@@ -210,7 +210,10 @@ const CalibrationForm = () => {
                   name='nextCalibrationDate'
                   value={
                     formik.values.calibrationDate
-                      ? addMonths(new Date(formik.values.calibrationDate), 12)
+                      ? addMonths(
+                          new Date(formik.values.calibrationDate),
+                          Number(equipmentInfo.calibrationCycle)
+                        )
                           .toISOString()
                           .split('T')[0]
                       : ''
