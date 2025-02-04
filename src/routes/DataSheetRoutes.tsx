@@ -66,7 +66,7 @@ const DataSheetRoutes = (role: string) => {
           />
           <Route path=':id/in-out-table' element={<EquipmentInOutTable />} />
           <Route
-            path='maintenance-schedule/:id'
+            path='maintenance-schedule/:id?'
             element={<PDFViewer path='maintenance-schedule' />}
           />
           <Route path=':id/new-calibration' element={<CalibrationForm />} />
