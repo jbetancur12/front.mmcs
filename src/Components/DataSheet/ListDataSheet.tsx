@@ -415,23 +415,36 @@ const ListDataSheet: React.FC = () => {
       {
         accessorKey: 'pictureUrl',
         header: 'URL de la Imagen',
+        enableEditing: false,
         size: 150,
         muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
       },
       {
         accessorKey: 'invoiceUrl',
         header: 'Factura',
+        size: 20,
+        enableEditing: false,
+        enableColumnDragging: false,
+        enableGlobalFilter: false,
+        enableColumnActions: false,
         Cell: ({ cell }) =>
           cell.getValue() ? (
-            <CheckCircle color='success' />
+            <div style={{ textAlign: 'center' }}>
+              <CheckCircle color='success' />
+            </div>
           ) : (
-            <Cancel color='error' />
+            <div style={{ textAlign: 'center' }}>
+              <Cancel color='error' />
+            </div>
           )
       },
       {
         accessorKey: 'status',
         header: 'Estado',
         enableEditing: false,
+        enableColumnDragging: false,
+        enableGlobalFilter: false,
+        enableColumnActions: false,
         size: 150,
         muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps,
         Cell: ({ cell, row }) => {
@@ -964,106 +977,6 @@ const ListDataSheet: React.FC = () => {
             Editar
           </MuiMenuItem>
 
-          {/* <MuiMenuItem
-            onClick={() => {
-              handleMenuClose()
-              MySwal.fire({
-                title: 'Seleccione una opción',
-                showCancelButton: true,
-                confirmButtonText: 'Editar Imagen',
-                cancelButtonText: 'Editar Otras Opciones'
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  let imageFile: File | null = null
-                  // Lógica para abrir el modal de edición de imagen
-                  MySwal.fire({
-                    title: 'Editar Imagen',
-                    html: `
-                      <div id="mui-file-input">
-                        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
-                          <label for="imageInput" style="cursor: pointer;">
-                            <img
-                              id="avatarImage"
-                              alt="Foto de equipo"
-                              src="/images/no-img.jpg"
-                              style="width: 100px; height: 100px; margin-bottom: 8px;"
-                            />
-                          </label>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            id="imageInput"
-                            style="display: none;"
-                          />
-                        </div>
-                      </div>
-                    `,
-                    didOpen: () => {
-                      const imageInput = document.getElementById(
-                        'imageInput'
-                      ) as HTMLInputElement
-                      const avatarImage = document.getElementById(
-                        'avatarImage'
-                      ) as HTMLImageElement
-
-                      if (imageInput && avatarImage) {
-                        imageInput.addEventListener('change', function (e) {
-                          const target = e.target as HTMLInputElement
-
-                          if (target.files && target.files.length > 0) {
-                            imageFile = target.files[0]
-
-                            // Crear un URL para la imagen seleccionada
-                            const newImageUrl = URL.createObjectURL(imageFile)
-
-                            // Actualizar el src del avatar
-                            avatarImage.src = newImageUrl
-
-                            // Aquí podrías realizar otras acciones como actualizar el estado o almacenar la imagen
-                          }
-                        })
-                      } else {
-                        console.error(
-                          "No se pudo encontrar el elemento 'imageInput' o 'avatarImage'."
-                        )
-                      }
-                    },
-                    showCancelButton: true,
-                    confirmButtonText: 'Actualizar',
-                    cancelButtonText: 'Cancelar',
-                    preConfirm: () => {
-                      if (!imageFile) {
-                        MySwal.showValidationMessage(
-                          'Por favor selecciona una imagen antes de actualizar.'
-                        )
-                        return false // Previene la resolución de la promesa
-                      }
-                      return new Promise((resolve) => {
-                        if (imageFile) {
-                          // Subir la imagen seleccionada a la API
-                          handleUpload({
-                            id: row.original.id,
-                            image: imageFile
-                          }).then(() => resolve(undefined)) // Resolviendo con undefined
-                        } else {
-                          resolve(undefined) // Resolviendo con undefined
-                        }
-                      })
-                    }
-                  })
-                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                  // Lógica para abrir el modo de edición de la tabla
-                  table.setEditingRow(row)
-                }
-              })
-            }}
-          >
-            <ListItemIcon>
-              <Edit fontSize='small' />
-            </ListItemIcon>
-            Editar
-          </MuiMenuItem> */}
-
           <MuiMenuItem
             onClick={() => {
               handleDeleteRow(row)
@@ -1118,10 +1031,12 @@ const ListDataSheet: React.FC = () => {
         }}
         displayColumnDefOptions={{
           'mrt-row-actions': {
+            header: '',
             muiTableHeadCellProps: {
               align: 'center'
             },
-            size: 120
+
+            size: 10
           }
         }}
         columns={columns}
