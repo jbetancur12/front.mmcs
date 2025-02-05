@@ -1,6 +1,9 @@
 import {
   CallMissedOutgoing,
+  Cancel,
+  CheckCircle,
   Delete,
+  Download,
   Edit,
   Engineering,
   Event,
@@ -104,6 +107,7 @@ export interface DataSheetData {
   calibrationHistories: CalibrationHistory[]
   isCalibrationDueSoon: boolean
   isInspectionDueSoon: boolean
+  invoiceUrl: string
 }
 
 // API URL
@@ -415,6 +419,16 @@ const ListDataSheet: React.FC = () => {
         muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
       },
       {
+        accessorKey: 'invoiceUrl',
+        header: 'Factura',
+        Cell: ({ cell }) =>
+          cell.getValue() ? (
+            <CheckCircle color='success' />
+          ) : (
+            <Cancel color='error' />
+          )
+      },
+      {
         accessorKey: 'status',
         header: 'Estado',
         enableEditing: false,
@@ -648,68 +662,25 @@ const ListDataSheet: React.FC = () => {
     [getCommonEditTextFieldProps]
   )
 
-  // const RowActions = ({ row }: { row: any }) => (
-  //   // <Box sx={{ display: 'flex', gap: '1rem' }}>
-  //   <div>
-  //     <IconButton onClick={(e) => handleActionMenuOpen(e, row)}>
-  //       <MoreVert />
-  //     </IconButton>
-  //     <Menu
-  //       anchorEl={actionAnchorEl}
-  //       open={Boolean(actionAnchorEl)}
-  //       onClose={handleActionMenuClose}
-  //       disablePortal
-  //       sx={{
-  //         position: 'absolute'
-  //       }}
-  //       slotProps={{
-  //         paper: {
-  //           sx: {
-  //             boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)'
-  //           }
-  //         }
-  //       }}
-  //     >
-  //       {currentRow && [
-  //         <MuiMenuItem
-  //           key='view'
-  //           component={Link}
-  //           to={`${currentRow.original.id}`}
-  //           onClick={handleActionMenuClose}
-  //         >
-  //           <ListItemIcon>
-  //             <Visibility fontSize='small' />
-  //           </ListItemIcon>
-  //           Ver
-  //         </MuiMenuItem>,
+  const handleUploadPdf = async (id: number, pdfFile: File) => {
+    const formData = new FormData()
+    formData.append('invoice', pdfFile)
 
-  //         <MuiMenuItem
-  //           key='inspection'
-  //           component={Link}
-  //           to={`${currentRow.original.id}/inspection-maintenance`}
-  //           onClick={handleActionMenuClose}
-  //         >
-  //           <ListItemIcon>
-  //             <Engineering fontSize='small' />
-  //           </ListItemIcon>
-  //           Inspection/Maintenance
-  //         </MuiMenuItem>,
+    try {
+      const response = await axiosPrivate.put(
+        `/dataSheet/${id}/update-invoice`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      )
 
-  //         <MuiMenuItem
-  //           key='in-out'
-  //           component={Link}
-  //           to={`${currentRow.original.id}/in-out`}
-  //           onClick={handleActionMenuClose}
-  //         >
-  //           <ListItemIcon>
-  //             <ExitToApp fontSize='small' />
-  //           </ListItemIcon>
-  //           In/Out
-  //         </MuiMenuItem>
-  //       ]}
-  //     </Menu>
-  //   </div>
-  // )
+      if (response.status === 200) {
+        bigToast('PDF subido exitosamente', 'success')
+        // Actualizar estado si es necesario
+      }
+    } catch (error) {
+      bigToast('Error subiendo PDF', 'error')
+    }
+  }
 
   const RowActions = ({ row, table }: { row: any; table: any }) => {
     const [localAnchorEl, setLocalAnchorEl] = useState<null | HTMLElement>(null)
@@ -721,6 +692,28 @@ const ListDataSheet: React.FC = () => {
 
     const handleMenuClose = () => {
       setLocalAnchorEl(null)
+    }
+
+    const handleDownloadPdf = async (id: number) => {
+      try {
+        const response = await axiosPrivate.get(
+          `/dataSheet/download-invoice/${id}`,
+          {
+            responseType: 'blob' // Importante para manejar archivos binarios
+          }
+        )
+
+        // Crear un blob con la respuesta
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', `factura-${id}.pdf`) // Nombre del archivo
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link) // Eliminar el enlace después de la descarga
+      } catch (error) {
+        bigToast('Error descargando la factura', 'error')
+      }
     }
 
     return (
@@ -785,9 +778,193 @@ const ListDataSheet: React.FC = () => {
             In/Out
           </MuiMenuItem>
 
+          {row.original.invoiceUrl && (
+            <MuiMenuItem
+              onClick={() => {
+                handleMenuClose()
+                handleDownloadPdf(row.original.id)
+              }}
+            >
+              <ListItemIcon>
+                <Download fontSize='small' />
+              </ListItemIcon>
+              Descargar Factura
+            </MuiMenuItem>
+          )}
+
           <Divider />
 
           <MuiMenuItem
+            onClick={() => {
+              handleMenuClose()
+              MySwal.fire({
+                title: 'Seleccione una opción',
+                showCancelButton: true,
+                confirmButtonText: 'Editar Imagen',
+                cancelButtonText: 'Editar Otras Opciones',
+                showDenyButton: true, // Nuevo botón
+                denyButtonText: 'Subir Factura PDF',
+                denyButtonColor: '#3085d6'
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  let imageFile: File | null = null
+                  // Lógica para abrir el modal de edición de imagen
+                  MySwal.fire({
+                    title: 'Editar Imagen',
+                    html: `
+                      <div id="mui-file-input">
+                        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                          <label for="imageInput" style="cursor: pointer;">
+                            <img
+                              id="avatarImage"
+                              alt="Foto de equipo"
+                              src="/images/no-img.jpg"
+                              style="width: 100px; height: 100px; margin-bottom: 8px;"
+                            />
+                          </label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            id="imageInput"
+                            style="display: none;"
+                          />
+                        </div>
+                      </div>
+                    `,
+                    didOpen: () => {
+                      const imageInput = document.getElementById(
+                        'imageInput'
+                      ) as HTMLInputElement
+                      const avatarImage = document.getElementById(
+                        'avatarImage'
+                      ) as HTMLImageElement
+
+                      if (imageInput && avatarImage) {
+                        imageInput.addEventListener('change', function (e) {
+                          const target = e.target as HTMLInputElement
+
+                          if (target.files && target.files.length > 0) {
+                            imageFile = target.files[0]
+
+                            // Crear un URL para la imagen seleccionada
+                            const newImageUrl = URL.createObjectURL(imageFile)
+
+                            // Actualizar el src del avatar
+                            avatarImage.src = newImageUrl
+
+                            // Aquí podrías realizar otras acciones como actualizar el estado o almacenar la imagen
+                          }
+                        })
+                      } else {
+                        console.error(
+                          "No se pudo encontrar el elemento 'imageInput' o 'avatarImage'."
+                        )
+                      }
+                    },
+                    showCancelButton: true,
+                    confirmButtonText: 'Actualizar',
+                    cancelButtonText: 'Cancelar',
+                    preConfirm: () => {
+                      if (!imageFile) {
+                        MySwal.showValidationMessage(
+                          'Por favor selecciona una imagen antes de actualizar.'
+                        )
+                        return false // Previene la resolución de la promesa
+                      }
+                      return new Promise((resolve) => {
+                        if (imageFile) {
+                          // Subir la imagen seleccionada a la API
+                          handleUpload({
+                            id: row.original.id,
+                            image: imageFile
+                          }).then(() => resolve(undefined)) // Resolviendo con undefined
+                        } else {
+                          resolve(undefined) // Resolviendo con undefined
+                        }
+                      })
+                    }
+                  })
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                  table.setEditingRow(row)
+                } else if (result.isDenied) {
+                  let pdfFile: File | null = null
+
+                  MySwal.fire({
+                    title: 'Subir Factura PDF',
+                    html: `
+            <input type="file" 
+                   id="pdfInput" 
+                   accept="application/pdf" 
+                   style="display: none;"
+            >
+            <label for="pdfInput" 
+                   style="cursor: pointer;
+                          padding: 10px;
+                          border: 2px dashed #ccc;
+                          display: block;
+                          text-align: center;">
+              📁 Seleccionar archivo PDF
+            </label>
+            <div id="fileName" 
+             style="color: #666; 
+                    font-size: 0.9em;
+                    text-align: center;
+                    word-break: break-all;">
+          Ningún archivo seleccionado
+        </div>
+          `,
+                    didOpen: () => {
+                      const pdfInput = document.getElementById(
+                        'pdfInput'
+                      ) as HTMLInputElement
+                      const fileNameDiv = document.getElementById('fileName')
+                      pdfInput.addEventListener('change', (e) => {
+                        const target = e.target as HTMLInputElement
+                        if (target.files?.length) {
+                          pdfFile = target.files[0]
+                          if (fileNameDiv) {
+                            fileNameDiv.textContent = pdfFile.name
+                            fileNameDiv.style.color = '#2e7d32' // Color verde para indicar selección
+                            fileNameDiv.style.fontWeight = '500'
+                          }
+                        } else {
+                          if (fileNameDiv) {
+                            fileNameDiv.textContent =
+                              'Ningún archivo seleccionado'
+                            fileNameDiv.style.color = '#666'
+                            fileNameDiv.style.fontWeight = 'normal'
+                          }
+                        }
+                      })
+                    },
+                    preConfirm: () => {
+                      if (!pdfFile) {
+                        MySwal.showValidationMessage(
+                          'Debe seleccionar un archivo PDF'
+                        )
+                        return false
+                      }
+                      if (pdfFile?.type !== 'application/pdf') {
+                        MySwal.showValidationMessage(
+                          'Solo se permiten archivos PDF'
+                        )
+                        return false
+                      }
+                      // Lógica para subir el PDF
+                      return handleUploadPdf(row.original.id, pdfFile)
+                    }
+                  })
+                }
+              })
+            }}
+          >
+            <ListItemIcon>
+              <Edit fontSize='small' />
+            </ListItemIcon>
+            Editar
+          </MuiMenuItem>
+
+          {/* <MuiMenuItem
             onClick={() => {
               handleMenuClose()
               MySwal.fire({
@@ -885,7 +1062,7 @@ const ListDataSheet: React.FC = () => {
               <Edit fontSize='small' />
             </ListItemIcon>
             Editar
-          </MuiMenuItem>
+          </MuiMenuItem> */}
 
           <MuiMenuItem
             onClick={() => {
