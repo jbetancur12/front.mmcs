@@ -60,6 +60,8 @@ import { bigToast } from '../ExcelManipulation/Utils'
 import withReactContent from 'sweetalert2-react-content'
 import Swal from 'sweetalert2'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { DatePicker } from '@mui/x-date-pickers'
+import { format, parseISO } from 'date-fns'
 
 // Interfaces y tipos
 
@@ -286,6 +288,14 @@ const ListDataSheet: React.FC = () => {
     async ({ exitEditingMode, row, values }) => {
       if (!Object.keys(validationErrors).length) {
         const updatedValues = { ...values }
+
+        if (updatedValues.insuredValue) {
+          updatedValues.insuredValue = parseInt(
+            updatedValues.insuredValue.replace(/[\s$.]/g, ''), // Eliminar espacios, puntos y $
+            10
+          )
+        }
+
         delete updatedValues.id
         try {
           const response = await axiosPrivate.put(
@@ -400,6 +410,11 @@ const ListDataSheet: React.FC = () => {
     }),
     [validationErrors]
   )
+  const formatter = new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0
+  })
 
   const validateRequired = (value: string) => !!value.length
 
@@ -566,34 +581,6 @@ const ListDataSheet: React.FC = () => {
             />
           )
         }
-
-        // Edit: ({ cell, row, column, table }) => {
-        //   return (
-        //     <FormControlLabel
-        //       control={
-        //         <Switch
-        //           checked={cell.getValue<boolean>()}
-        //           onChange={(event) => {
-        //             table.options.meta?.updateData(
-        //               row.index,
-        //               column.id,
-        //               event.target.checked
-        //             )
-        //           }}
-        //           color='primary'
-        //         />
-        //       }
-        //       label='Tiene Manual'
-        //       labelPlacement='start'
-        //       sx={{
-        //         marginLeft: 0,
-        //         '& .MuiFormControlLabel-label': {
-        //           marginLeft: '8px'
-        //         }
-        //       }}
-        //     />
-        //   )
-        // }
       },
       {
         accessorKey: 'magnitude',
@@ -765,7 +752,46 @@ const ListDataSheet: React.FC = () => {
         accessorKey: 'insuredValue',
         header: 'Valor Asegurado',
         size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+        muiTableBodyCellEditTextFieldProps: ({
+          cell,
+          row,
+          column,
+          table
+        }): TextFieldProps => {
+          // Se obtiene el valor original (se espera que sea un número)
+          const rawValue = cell.getValue() as number | null | undefined
+          // Se formatea el valor a moneda colombiana (ejemplo: $1.234.567)
+          const formattedValue =
+            typeof rawValue === 'number' ? formatter.format(rawValue) : ''
+
+          return {
+            // Usamos type 'text' para permitir mostrar el formato de moneda
+            type: 'text',
+            value: formattedValue,
+            onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+              // Se remueven los caracteres que no son dígitos para obtener el número puro
+              const numericString = event.target.value.replace(/[^0-9]/g, '')
+              // Convertir a número; si no hay valor, se asigna 0 (o puedes asignar null según convenga)
+              const numericValue = numericString
+                ? parseInt(numericString, 10)
+                : 0
+              // Actualizar el cache de edición de la fila
+              row._valuesCache[column.id] = numericValue
+
+              // Notificar a la tabla el cambio en la fila en edición
+              table.setEditingRow({ ...row })
+            },
+            onBlur: () => {
+              // Asegurar que al perder el foco, el valor enviado sea un número puro
+              const cleanedValue = parseInt(
+                row._valuesCache[column.id] as string,
+                10
+              )
+
+              row._valuesCache[column.id] = cleanedValue || 0
+            }
+          }
+        }
       },
       {
         accessorKey: 'maintenanceProvider',
@@ -1407,10 +1433,11 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
       <DialogContent>
         <form onSubmit={formik.handleSubmit}>
           <Grid container spacing={3}>
-            {columns.map(
+            {/* {columns.map(
               (column) =>
                 column.accessorKey &&
                 column.accessorKey !== 'id' &&
+                column.accessorKey !== 'invoiceUrl' &&
                 (column.accessorKey === 'pictureUrl' ? (
                   <Grid item xs={12} key={column.accessorKey}>
                     <div className='flex items-center justify-center mb-4'>
@@ -1568,11 +1595,26 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
                         label={column.header}
                         name={column.accessorKey}
                         value={
-                          formik.values[
-                            column.accessorKey as keyof typeof formik.values
-                          ]
+                          column.accessorKey === 'insuredValue'
+                            ? `$ ${new Intl.NumberFormat('es-CO').format(
+                                Number(formik.values.insuredValue) || 0
+                              )}`
+                            : formik.values[
+                                column.accessorKey as keyof typeof formik.values
+                              ]
                         }
-                        onChange={formik.handleChange}
+                        onChange={(e) => {
+                          if (column.accessorKey === 'insuredValue') {
+                            // Eliminar caracteres no numéricos antes de actualizar el valor
+                            const rawValue = e.target.value.replace(
+                              /[^0-9]/g,
+                              ''
+                            )
+                            formik.setFieldValue(column.accessorKey, rawValue)
+                          } else {
+                            formik.handleChange(e)
+                          }
+                        }}
                         onBlur={formik.handleBlur}
                         error={
                           formik.touched[
@@ -1593,19 +1635,240 @@ export const CreateNewDataSheetModal: React.FC<CreateModalProps> = ({
                           ]
                         }
                         fullWidth
-                        InputLabelProps={
-                          column.accessorKey.includes('Date')
-                            ? { shrink: true }
-                            : undefined
-                        }
-                        type={
-                          column.accessorKey.includes('Date') ? 'date' : 'text'
-                        }
                       />
                     )}
                   </Grid>
                 ))
-            )}
+            )} */}
+            {columns
+              .filter(
+                (column) =>
+                  column.accessorKey &&
+                  column.accessorKey !== 'id' &&
+                  column.accessorKey !== 'invoiceUrl' &&
+                  column.accessorKey !== 'internalCode' &&
+                  column.accessorKey !== 'status'
+              )
+              .map((column) =>
+                column.accessorKey === 'pictureUrl' ? (
+                  <Grid item xs={12} key={column.accessorKey}>
+                    <div className='flex items-center justify-center mb-4'>
+                      <label htmlFor='fileInput' className='cursor-pointer'>
+                        <Avatar
+                          alt='Foto de equipo'
+                          src={
+                            formik.values.picture
+                              ? URL.createObjectURL(formik.values.picture)
+                              : ''
+                          }
+                          sx={{ width: 100, height: 100, mb: 2 }}
+                        />
+                      </label>
+                      <input
+                        id='fileInput'
+                        type='file'
+                        accept='image/*'
+                        onChange={(event) => {
+                          const file = (event.currentTarget as HTMLInputElement)
+                            .files?.[0]
+                          formik.setFieldValue('picture', file)
+                        }}
+                        className='hidden'
+                      />
+                    </div>
+                    {formik.touched.picture && formik.errors.picture && (
+                      <div className='text-red-500 flex items-center justify-center text-sm'>
+                        {formik.errors.picture}
+                      </div>
+                    )}
+                  </Grid>
+                ) : column.accessorKey === 'manual' ? (
+                  <Grid item xs={12} md={6} key={column.accessorKey}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={formik.values.manual}
+                          onChange={formik.handleChange}
+                          name='manual'
+                          onBlur={formik.handleBlur}
+                          color='primary'
+                        />
+                      }
+                      label='Tiene Manual'
+                    />
+                  </Grid>
+                ) : column.accessorKey === 'receivedDate' ||
+                  column.accessorKey === 'inServiceDate' ? (
+                  <Grid item xs={12} md={6} key={column.accessorKey}>
+                    <DatePicker
+                      label={column.header}
+                      value={
+                        formik.values[column.accessorKey]
+                          ? parseISO(formik.values[column.accessorKey])
+                          : null
+                      }
+                      onChange={(newValue) => {
+                        formik.setFieldValue(
+                          column.accessorKey as string,
+                          newValue ? format(newValue, 'yyyy-MM-dd') : ''
+                        )
+                      }}
+                      slotProps={{
+                        textField: {
+                          error:
+                            formik.touched[column.accessorKey] &&
+                            Boolean(formik.errors[column.accessorKey]),
+                          helperText:
+                            formik.touched[column.accessorKey] &&
+                            formik.errors[column.accessorKey],
+                          fullWidth: true
+                        }
+                      }}
+                    />
+                  </Grid>
+                ) : column.accessorKey === 'serviceType' ? (
+                  <Grid item xs={12} md={6} key={column.accessorKey}>
+                    <FormControl fullWidth>
+                      <InputLabel>{column.header}</InputLabel>
+                      <Select
+                        name={column.accessorKey}
+                        value={
+                          formik.values[
+                            column.accessorKey as keyof typeof formik.values
+                          ]
+                        }
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={
+                          formik.touched[
+                            column.accessorKey as keyof typeof formik.values
+                          ] &&
+                          Boolean(
+                            formik.errors[
+                              column.accessorKey as keyof typeof formik.errors
+                            ]
+                          )
+                        }
+                      >
+                        <MuiMenuItem value='Patrón Acreditación'>
+                          Patrón Acreditación
+                        </MuiMenuItem>
+                        <MuiMenuItem value='Patrón Trazabilidad'>
+                          Patrón Trazabilidad
+                        </MuiMenuItem>
+                        <MuiMenuItem value='Patrón Primario'>
+                          Patrón Primario
+                        </MuiMenuItem>
+                        <MuiMenuItem value='Patrón Secundario'>
+                          Patrón Secundario
+                        </MuiMenuItem>
+                        <MuiMenuItem value='Auxiliar Acreditación'>
+                          Auxiliar Acreditación
+                        </MuiMenuItem>
+                        <MuiMenuItem value='Auxiliar Trazabilidad'>
+                          Auxiliar Trazabilidad
+                        </MuiMenuItem>
+                        <MuiMenuItem value='Instrumento Retenido'>
+                          Instrumento Retenido
+                        </MuiMenuItem>
+                        <MuiMenuItem value='Equipo de Prestamo'>
+                          Equipo de Prestamo
+                        </MuiMenuItem>
+                      </Select>
+                      <FormHelperText>
+                        {formik.touched[
+                          column.accessorKey as keyof typeof formik.values
+                        ] &&
+                          formik.errors[
+                            column.accessorKey as keyof typeof formik.values
+                          ]}
+                      </FormHelperText>
+                    </FormControl>
+                  </Grid>
+                ) : column.accessorKey === 'status' ? (
+                  <Grid item xs={12} key={column.accessorKey}>
+                    <TextField
+                      disabled
+                      label={column.header}
+                      name={column.accessorKey}
+                      value='available' // Puedes cambiar este valor si es necesario
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={
+                        formik.touched[
+                          column.accessorKey as keyof typeof formik.values
+                        ] &&
+                        Boolean(
+                          formik.errors[
+                            column.accessorKey as keyof typeof formik.errors
+                          ]
+                        )
+                      }
+                      helperText={
+                        formik.touched[
+                          column.accessorKey as keyof typeof formik.values
+                        ] &&
+                        formik.errors[
+                          column.accessorKey as keyof typeof formik.errors
+                        ]
+                      }
+                      fullWidth
+                      InputLabelProps={
+                        column.accessorKey.includes('Date')
+                          ? { shrink: true }
+                          : undefined
+                      }
+                      type={
+                        column.accessorKey.includes('Date') ? 'date' : 'text'
+                      }
+                    />
+                  </Grid>
+                ) : (
+                  <Grid item xs={12} md={6} key={column.accessorKey}>
+                    <TextField
+                      label={column.header}
+                      name={column.accessorKey}
+                      value={
+                        column.accessorKey === 'insuredValue'
+                          ? `$ ${new Intl.NumberFormat('es-CO').format(
+                              Number(formik.values.insuredValue) || 0
+                            )}`
+                          : formik.values[
+                              column.accessorKey as keyof typeof formik.values
+                            ]
+                      }
+                      onChange={(e) => {
+                        if (column.accessorKey === 'insuredValue') {
+                          const rawValue = e.target.value.replace(/[^0-9]/g, '')
+                          formik.setFieldValue(column.accessorKey, rawValue)
+                        } else {
+                          formik.handleChange(e)
+                        }
+                      }}
+                      onBlur={formik.handleBlur}
+                      error={
+                        formik.touched[
+                          column.accessorKey as keyof typeof formik.values
+                        ] &&
+                        Boolean(
+                          formik.errors[
+                            column.accessorKey as keyof typeof formik.errors
+                          ]
+                        )
+                      }
+                      helperText={
+                        formik.touched[
+                          column.accessorKey as keyof typeof formik.values
+                        ] &&
+                        formik.errors[
+                          column.accessorKey as keyof typeof formik.errors
+                        ]
+                      }
+                      fullWidth
+                    />
+                  </Grid>
+                )
+              )}
           </Grid>
         </form>
       </DialogContent>
