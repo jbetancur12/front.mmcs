@@ -573,7 +573,32 @@ const ListDataSheet: React.FC = () => {
         accessorKey: 'serviceType',
         header: 'Tipo de Servicio',
         size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+        Edit: ({ cell, row, column, table }) => {
+          // Función para manejar el cambio del select y actualizar el valor de la celda
+          const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+            // Actualizar el valor en el cache de edición de la fila
+            row._valuesCache[column.id] = event.target.value
+
+            // Actualizar el estado de edición en la tabla
+            table.setEditingRow({ ...row })
+          }
+
+          return (
+            <TextField
+              fullWidth
+              select
+              label='Tipo de Servicio'
+              value={cell.getValue()?.toString() || ''}
+              onChange={handleChange}
+            >
+              {menuOptions.map((option) => (
+                <MuiMenuItem key={option.value} value={option.value}>
+                  {option.text}
+                </MuiMenuItem>
+              ))}
+            </TextField>
+          )
+        }
       },
       {
         accessorKey: 'equipmentStatus',

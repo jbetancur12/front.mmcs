@@ -60,7 +60,7 @@ ssh metromedics@209.97.156.169 << 'EOF'
   # Conservar solo las dos carpetas más recientes en el directorio /home/metromedics/mmcs/frontend
   cd /home/metromedics/mmcs/frontend
   # Listar los directorios ordenados por fecha de modificación (más reciente primero) y eliminar los que no sean los dos más recientes
-  dirs_to_delete=$(ls -dt */ | awk 'NR>2')
+  dirs_to_delete=$(ls -dt */ | awk 'NR>5')
   
   # Eliminar los directorios que no se deben conservar
   if [ -n "$dirs_to_delete" ]; then
