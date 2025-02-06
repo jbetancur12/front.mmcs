@@ -585,6 +585,7 @@ const ListDataSheet: React.FC = () => {
 
           return (
             <TextField
+              variant='standard'
               fullWidth
               select
               label='Tipo de Servicio'
