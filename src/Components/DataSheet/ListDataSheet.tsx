@@ -410,14 +410,15 @@ const ListDataSheet: React.FC = () => {
         accessorKey: 'id',
         header: 'ID',
         size: 10,
-        enableEditing: false
+        enableEditing: false,
+        Edit: () => null
       },
       {
         accessorKey: 'pictureUrl',
         header: 'URL de la Imagen',
         enableEditing: false,
         size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+        Edit: () => null
       },
       {
         accessorKey: 'invoiceUrl',
@@ -427,6 +428,7 @@ const ListDataSheet: React.FC = () => {
         enableColumnDragging: false,
         enableGlobalFilter: false,
         enableColumnActions: false,
+        Edit: () => null,
         Cell: ({ cell }) =>
           cell.getValue() ? (
             <div style={{ textAlign: 'center' }}>
@@ -446,7 +448,8 @@ const ListDataSheet: React.FC = () => {
         enableGlobalFilter: false,
         enableColumnActions: false,
         size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps,
+        Edit: () => null,
+
         Cell: ({ cell, row }) => {
           const isDue =
             row.original.isInspectionDueSoon ||
@@ -537,7 +540,60 @@ const ListDataSheet: React.FC = () => {
         accessorKey: 'manual',
         header: 'Manual',
         size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+        Edit: ({ cell, row, column, table }) => {
+          // Función que se ejecuta al cambiar el estado del checkbox
+          const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+            const newValue = event.target.checked
+
+            // Actualiza el valor en el cache de edición de la fila
+            row._valuesCache[column.id] = newValue
+
+            // Actualiza el estado de edición en la tabla
+            table.setEditingRow({ ...row })
+          }
+
+          return (
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={!!cell.getValue()} // Asegura que se trate el valor como booleano
+                  onChange={handleChange}
+                  name='manual'
+                  color='primary'
+                />
+              }
+              label='Manual'
+            />
+          )
+        }
+
+        // Edit: ({ cell, row, column, table }) => {
+        //   return (
+        //     <FormControlLabel
+        //       control={
+        //         <Switch
+        //           checked={cell.getValue<boolean>()}
+        //           onChange={(event) => {
+        //             table.options.meta?.updateData(
+        //               row.index,
+        //               column.id,
+        //               event.target.checked
+        //             )
+        //           }}
+        //           color='primary'
+        //         />
+        //       }
+        //       label='Tiene Manual'
+        //       labelPlacement='start'
+        //       sx={{
+        //         marginLeft: 0,
+        //         '& .MuiFormControlLabel-label': {
+        //           marginLeft: '8px'
+        //         }
+        //       }}
+        //     />
+        //   )
+        // }
       },
       {
         accessorKey: 'magnitude',
@@ -555,13 +611,51 @@ const ListDataSheet: React.FC = () => {
         accessorKey: 'receivedDate',
         header: 'Fecha de Recepción',
         size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+        muiTableBodyCellEditTextFieldProps: ({ cell, row, column, table }) => {
+          // Se obtiene el valor original, que se espera sea un string ISO
+          const rawValue: string = cell.getValue() as string
+          // Se formatea el valor a "YYYY-MM-DD"
+          const formattedValue: string = rawValue
+            ? new Date(rawValue).toISOString().split('T')[0]
+            : ''
+
+          return {
+            type: 'date',
+            InputLabelProps: { shrink: true },
+            value: formattedValue,
+            // Actualizamos el cache de edición y el estado de la fila al cambiar el valor
+            onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+              // El nuevo valor ya vendrá en formato "YYYY-MM-DD"
+              row._valuesCache[column.id] = event.target.value
+              table.setEditingRow({ ...row })
+            }
+          }
+        }
       },
       {
         accessorKey: 'inServiceDate',
         header: 'Fecha en Servicio',
         size: 150,
-        muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
+        muiTableBodyCellEditTextFieldProps: ({ cell, row, column, table }) => {
+          // Se obtiene el valor original, que se espera sea un string ISO
+          const rawValue: string = cell.getValue() as string
+          // Se formatea el valor a "YYYY-MM-DD"
+          const formattedValue: string = rawValue
+            ? new Date(rawValue).toISOString().split('T')[0]
+            : ''
+
+          return {
+            type: 'date',
+            InputLabelProps: { shrink: true },
+            value: formattedValue,
+            // Actualizamos el cache de edición y el estado de la fila al cambiar el valor
+            onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+              // El nuevo valor ya vendrá en formato "YYYY-MM-DD"
+              row._valuesCache[column.id] = event.target.value
+              table.setEditingRow({ ...row })
+            }
+          }
+        }
       },
       {
         accessorKey: 'location',
