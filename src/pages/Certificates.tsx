@@ -8,6 +8,7 @@ import {
   IconButton,
   Paper,
   Stack,
+  TextField,
   Typography
 } from '@mui/material'
 import CertificatesList from '../Components/CertificatesList'
@@ -18,6 +19,10 @@ import { ArrowBack, Edit } from '@mui/icons-material'
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { createRoot } from 'react-dom/client'
+import { addYears, format } from 'date-fns'
 
 const fieldLabels: { [key: string]: string } = {
   compania: 'Compañía',
@@ -27,8 +32,8 @@ const fieldLabels: { [key: string]: string } = {
   sede: 'Sede',
   activoFijo: 'Activo Fijo',
   serie: 'Serie',
-  ultimaFechaCalibracion: 'Última Fecha de Calibración',
-  proximaFechaCalibracion: 'Próxima Fecha de Calibración'
+  calibrationDate: 'Última Fecha de Calibración',
+  nextCalibrationDate: 'Próxima Fecha de Calibración'
 }
 
 interface DeviceDetailsProps {
@@ -83,43 +88,129 @@ function Certificates() {
 
   const handleEdit = async (field: string) => {
     const fieldLabel = fieldLabels[field] || field
-    const result = await MySwal.fire({
-      title: 'Actualizar Información',
-      text: `Ingresa el nuevo valor para ${fieldLabel}`,
-      input: 'text',
-      inputPlaceholder: `Nuevo valor para ${fieldLabel}`,
-      showCancelButton: true,
-      confirmButtonText: 'Actualizar',
-      cancelButtonText: 'Cancelar'
-    })
 
-    if (result.isConfirmed) {
-      const newValue = result.value
+    if (field === 'calibrationDate' || field === 'nextCalibrationDate') {
+      // Si el campo es una fecha, usamos DatePicker
+      let selectedDate: Date | null = null
 
-      try {
-        const response = await axiosPrivate.put(
-          `/files/${id}`,
-          {
-            [field]: newValue
-          },
-          {}
-        )
+      const result = await MySwal.fire({
+        title: 'Actualizar Información',
+        html: `
+          <div id="datepicker-container"></div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Actualizar',
+        cancelButtonText: 'Cancelar',
+        didOpen: () => {
+          const container = document.getElementById('datepicker-container')
+          if (container) {
+            const PickerComponent = () => {
+              const [value, setValue] = useState<Date | null>(null)
+              return (
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <DatePicker
+                    value={value}
+                    onChange={(newValue) => {
+                      setValue(newValue)
+                      selectedDate = newValue
+                    }}
+                    slots={{ textField: TextField }}
+                    slotProps={{
+                      textField: {
+                        variant: 'outlined',
+                        fullWidth: true
+                      },
+                      popper: {
+                        // Deshabilita el portal para que el popper se renderice
+                        // dentro del mismo árbol DOM del modal
+                        disablePortal: false,
+                        style: { zIndex: 100000 }
+                      }
+                    }}
+                  />
+                </LocalizationProvider>
+              )
+            }
 
-        if (response.status === 200) {
-          MySwal.fire(
-            'Actualizado',
-            `El campo ${fieldLabel} ha sido actualizado exitosamente`,
-            'success'
-          )
-          // Aquí podrías recargar la información si es necesario
-          getCertificateInfo()
+            const root = createRoot(container)
+            root.render(<PickerComponent />)
+          }
+        },
+        preConfirm: () => {
+          if (!selectedDate) {
+            Swal.showValidationMessage('Debes seleccionar una fecha')
+            return false
+          }
+          return selectedDate
         }
-      } catch (error) {
-        MySwal.fire(
-          'Error',
-          `No se pudo actualizar el campo ${fieldLabel}`,
-          'error'
-        )
+      })
+
+      if (result.isConfirmed) {
+        const newValue = result.value // Formatear fecha YYYY-MM-DD
+        if (newValue) {
+          const payload: any = { [field]: newValue }
+          if (field === 'calibrationDate') {
+            const nextCalibrationDate = format(
+              addYears(new Date(newValue), 1),
+              'yyyy-MM-dd'
+            )
+            payload.nextCalibrationDate = nextCalibrationDate
+          }
+          try {
+            const response = await axiosPrivate.put(`/files/${id}`, payload)
+
+            if (response.status === 200) {
+              MySwal.fire(
+                'Actualizado',
+                `El campo ${fieldLabel} ha sido actualizado exitosamente`,
+                'success'
+              )
+              getCertificateInfo()
+            }
+          } catch (error) {
+            MySwal.fire(
+              'Error',
+              `No se pudo actualizar el campo ${fieldLabel}`,
+              'error'
+            )
+          }
+        }
+      }
+    } else {
+      // Para otros campos, usar un input de texto normal
+      const result = await MySwal.fire({
+        title: 'Actualizar Información',
+        text: `Ingresa el nuevo valor para ${fieldLabel}`,
+        input: 'text',
+        inputPlaceholder: `Nuevo valor para ${fieldLabel}`,
+        showCancelButton: true,
+        confirmButtonText: 'Actualizar',
+        cancelButtonText: 'Cancelar'
+      })
+
+      if (result.isConfirmed) {
+        const newValue = result.value
+
+        try {
+          const response = await axiosPrivate.put(`/files/${id}`, {
+            [field]: newValue
+          })
+
+          if (response.status === 200) {
+            MySwal.fire(
+              'Actualizado',
+              `El campo ${fieldLabel} ha sido actualizado exitosamente`,
+              'success'
+            )
+            getCertificateInfo()
+          }
+        } catch (error) {
+          MySwal.fire(
+            'Error',
+            `No se pudo actualizar el campo ${fieldLabel}`,
+            'error'
+          )
+        }
       }
     }
   }
@@ -216,7 +307,12 @@ function Certificates() {
           </Box>
           <Box display='flex' alignItems='center' mb={1}>
             {['admin', 'metrologist'].includes($userStore.rol) && (
-              <Box ml={3.5} />
+              <IconButton
+                size='small'
+                onClick={() => handleEdit('calibrationDate')}
+              >
+                <Edit fontSize='small' />
+              </IconButton>
             )}
             <Typography flex={1}>
               <strong>Última Fecha de Calibración:</strong>{' '}
