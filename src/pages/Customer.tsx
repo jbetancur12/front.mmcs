@@ -224,7 +224,7 @@ function UserProfile() {
 
   const handleAddSede = async (newSede: string) => {
     try {
-      const response = await axiosPrivate.put(`/customers/${id}/sedes`, {
+      const response = await axiosPrivate.post(`/customers/${id}/sedes`, {
         nuevaSede: newSede
       })
 
@@ -257,6 +257,28 @@ function UserProfile() {
     newSearchParams.set('tab', tab)
     setSearchParams(newSearchParams)
     setActiveTab(tab)
+  }
+
+  const handleEditSede = async (oldSede: string, newSede: string) => {
+    try {
+      // Llama a la API para actualizar la sede (ajusta la URL y payload según tu backend)
+      const response = await axiosPrivate.put(`/customers/${id}/sedes`, {
+        oldSede,
+        newSede
+      })
+
+      if (response.status === 200) {
+        bigToast('Sede actualizada con éxito', 'success')
+        // Actualiza el estado local, reemplazando la sede antigua por la nueva
+        setCustomerData((prevData) => ({
+          ...prevData,
+          sede: prevData.sede.map((sede) => (sede === oldSede ? newSede : sede))
+        }))
+      }
+    } catch (error) {
+      console.error('Error al actualizar sede:', error)
+      bigToast('Error al actualizar sede', 'error')
+    }
   }
 
   if (loading) {
@@ -502,6 +524,7 @@ function UserProfile() {
           sedes={customerData.sede}
           onDelete={handleDelete}
           onAddSede={handleAddSede}
+          onEditSede={handleEditSede}
         />
       )}
       {activeTab === 'calibrationTimeLine' && (

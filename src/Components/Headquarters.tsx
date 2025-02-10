@@ -14,6 +14,10 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CircleIcon from '@mui/icons-material/Circle'
 import AddIcon from '@mui/icons-material/Add'
+import EditIcon from '@mui/icons-material/Edit'
+import CheckIcon from '@mui/icons-material/Check'
+import CancelIcon from '@mui/icons-material/Cancel'
+
 import SelectedHq from './SelectedHq'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
@@ -24,6 +28,7 @@ interface HeadquartersProps {
   onDelete: (id: number) => void
   sedes: string[]
   onAddSede: (newSede: string) => void
+  onEditSede: (oldSede: string, newSede: string) => void
 }
 
 const Headquarters: React.FC<HeadquartersProps> = ({
@@ -31,7 +36,8 @@ const Headquarters: React.FC<HeadquartersProps> = ({
   selectedSede,
   onDelete,
   sedes,
-  onAddSede
+  onAddSede,
+  onEditSede
 }) => {
   const [selectedSedeString, setSelectedSedeString] = React.useState<
     string | null
@@ -40,6 +46,10 @@ const Headquarters: React.FC<HeadquartersProps> = ({
   const [isAdding, setIsAdding] = React.useState(false)
   const [newSede, setNewSede] = React.useState('')
 
+  // Estados para la edición en línea
+  const [editingIndex, setEditingIndex] = React.useState<number | null>(null)
+  const [editingValue, setEditingValue] = React.useState<string>('')
+
   const onSedeClick = (sede: string) => {
     setSelectedSede(sede)
     setSelectedSedeString(sede)
@@ -47,17 +57,34 @@ const Headquarters: React.FC<HeadquartersProps> = ({
 
   const handleAddClick = () => setIsAdding(true)
 
-  const handleCancel = () => {
+  const handleCancelAdd = () => {
     setIsAdding(false)
     setNewSede('')
   }
 
-  const handleSubmit = () => {
+  const handleSubmitAdd = () => {
     if (newSede.trim()) {
       onAddSede(newSede.trim())
       setNewSede('')
       setIsAdding(false)
     }
+  }
+
+  const handleEditClick = (index: number, sede: string) => {
+    // Al hacer clic en el botón de editar, se activa el modo edición para ese índice
+    setEditingIndex(index)
+    setEditingValue(sede)
+  }
+
+  const handleEditSave = (index: number) => {
+    const oldSede = sedes[index]
+    // Llamamos a la función onEditSede para propagar el cambio
+    onEditSede(oldSede, editingValue)
+    setEditingIndex(null)
+  }
+
+  const handleEditCancel = () => {
+    setEditingIndex(null)
   }
 
   return (
@@ -92,7 +119,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
                   <Button
                     variant='contained'
                     color='primary'
-                    onClick={handleSubmit}
+                    onClick={handleSubmitAdd}
                     sx={{ mr: 1 }}
                   >
                     Agregar
@@ -100,7 +127,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
                   <Button
                     variant='outlined'
                     color='secondary'
-                    onClick={handleCancel}
+                    onClick={handleCancelAdd}
                   >
                     Cancelar
                   </Button>
@@ -108,26 +135,93 @@ const Headquarters: React.FC<HeadquartersProps> = ({
               )}
             </Box>
           )}
-          <List sx={{ flexGrow: 1, overflowY: 'auto', width: '200px' }}>
+          <List sx={{ flexGrow: 1, overflowY: 'auto', width: '400px' }}>
             {sedes.map((sede, index) => (
-              <ButtonBase
-                key={index}
-                sx={{ width: '100%' }}
-                onClick={() => onSedeClick(sede)}
-              >
-                <ListItem
-                  sx={{
-                    '&:hover': {
-                      backgroundColor: 'lightgreen',
-                      borderRadius: '5px'
+              <ButtonBase key={index} sx={{ width: '100%' }}>
+                {editingIndex === index ? (
+                  // Modo edición: sin efecto hover
+                  <ListItem
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      position: 'relative'
+                    }}
+                  >
+                    <ListItemIcon>
+                      <CircleIcon sx={{ fontSize: 10 }} />
+                    </ListItemIcon>
+                    {/* Contenedor que ocupa el ancho completo */}
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-end',
+                        width: 'auto'
+                      }}
+                    >
+                      <TextField
+                        value={editingValue}
+                        onChange={(e) => setEditingValue(e.target.value)}
+                        autoFocus
+                        variant='standard'
+                        // Calcula el ancho: mínimo 200px y, de lo contrario, un factor multiplicado por la cantidad de caracteres
+                        InputProps={{
+                          style: {
+                            width: `${Math.max(200, editingValue.length * 10)}px`
+                          }
+                        }}
+                      />
+                      {/* Contenedor de botones: siempre a la derecha */}
+                      <Box
+                        sx={{ ml: 2, display: 'flex', gap: 1, flexShrink: 0 }}
+                      >
+                        <IconButton
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEditSave(index)
+                          }}
+                        >
+                          <CheckIcon fontSize='small' />
+                        </IconButton>
+                        <IconButton
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEditCancel()
+                          }}
+                        >
+                          <CancelIcon fontSize='small' />
+                        </IconButton>
+                      </Box>
+                    </Box>
+                  </ListItem>
+                ) : (
+                  // Modo visualización: se aplica el efecto hover
+                  <ListItem
+                    sx={{
+                      '&:hover': {
+                        backgroundColor: 'lightgreen',
+                        borderRadius: '5px'
+                      }
+                    }}
+                    onClick={() => onSedeClick(sede)}
+                    secondaryAction={
+                      <IconButton
+                        edge='end'
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleEditClick(index, sede)
+                        }}
+                      >
+                        <EditIcon fontSize='small' />
+                      </IconButton>
                     }
-                  }}
-                >
-                  <ListItemIcon>
-                    <CircleIcon sx={{ fontSize: 10 }} />
-                  </ListItemIcon>
-                  <ListItemText primary={sede.toUpperCase()} />
-                </ListItem>
+                  >
+                    <ListItemIcon>
+                      <CircleIcon sx={{ fontSize: 10 }} />
+                    </ListItemIcon>
+                    <ListItemText primary={sede.toUpperCase()} />
+                  </ListItem>
+                )}
               </ButtonBase>
             ))}
           </List>
