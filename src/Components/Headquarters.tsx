@@ -205,15 +205,17 @@ const Headquarters: React.FC<HeadquartersProps> = ({
                     }}
                     onClick={() => onSedeClick(sede)}
                     secondaryAction={
-                      <IconButton
-                        edge='end'
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleEditClick(index, sede)
-                        }}
-                      >
-                        <EditIcon fontSize='small' />
-                      </IconButton>
+                      $userStore.rol === 'admin' && (
+                        <IconButton
+                          edge='end'
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEditClick(index, sede)
+                          }}
+                        >
+                          <EditIcon fontSize='small' />
+                        </IconButton>
+                      )
                     }
                   >
                     <ListItemIcon>
