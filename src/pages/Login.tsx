@@ -125,9 +125,16 @@ const Login: React.FC = () => {
         })
 
       if (response.status === 200) {
-        const { token } = response.data
-        Cookies.set('expiresIn', response.data.expiresIn)
-        userStore.set(response.data.user)
+        const { token, expiresIn, user } = response.data
+        const expirationDate = new Date(expiresIn)
+        Cookies.set('expiresIn', expiresIn.toString(), {
+          expires: expirationDate, // Fecha de expiración real
+          secure: true,
+          sameSite: 'strict',
+          path: '/'
+        })
+
+        userStore.set(user)
         // Handle successful login
         // toast.success("Bienvenido", {
         //   duration: 4000,

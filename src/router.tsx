@@ -23,7 +23,7 @@ import ProfileRoutes from './routes/ProfileRoutes'
 import { Box, CircularProgress, Typography } from '@mui/material'
 
 function Router() {
-  useSessionTimeoutWarning({ expirationTimeInMinutes: 1 })
+  // useSessionTimeoutWarning({ warningMinutesBefore: 5 })
   const $userStore = useStore(userStore)
 
   return (

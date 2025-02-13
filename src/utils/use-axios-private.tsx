@@ -7,7 +7,7 @@ import type {
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { axiosPrivate } from './api'
+import { axiosPrivate, axiosPublic } from './api'
 import useRefreshToken from './use-refresh-token'
 import { Toast } from 'src/Components/ExcelManipulation/Utils'
 
@@ -69,27 +69,45 @@ const useAxiosPrivate = () => {
             previousRequest.headers['Authorization'] = `Bearer ${newToken}`
             return axiosPrivate(previousRequest)
           } catch (refreshError) {
-            // Token inválido o expirado
-            localStorage.removeItem('accessToken')
-            localStorage.removeItem('columnFiltersCustomers') // Limpiar filtros
-            localStorage.removeItem('columnFiltersHV') // Limpiar filtros
+            try {
+              await axiosPublic.post(
+                '/auth/logout',
+                {},
+                {
+                  withCredentials: true
+                }
+              )
+            } catch (logoutError) {
+              console.error('Error al cerrar sesión:', logoutError)
+            }
+            localStorage.clear()
+            sessionStorage.clear()
+
             Toast.fire('Sesión expirada', '', 'error')
-            setTimeout(() => {
-              navigate('/login')
-            }, 2000)
+            navigate('/login', { replace: true })
+
             return Promise.reject(refreshError)
           }
         }
 
         if (error.response?.status === 401) {
-          // Token inválido o expirado
+          try {
+            await axiosPublic.post(
+              '/auth/logout',
+              {},
+              {
+                withCredentials: true
+              }
+            )
+          } catch (logoutError) {
+            console.error('Error al cerrar sesión:', logoutError)
+          }
+
+          localStorage.clear()
+          sessionStorage.clear()
+
           Toast.fire('Sesión expirada', '', 'error')
-          localStorage.removeItem('accessToken')
-          localStorage.removeItem('columnFiltersCustomers') // Limpiar filtros
-          localStorage.removeItem('columnFiltersHV') // Limpiar filtros
-          setTimeout(() => {
-            navigate('/login')
-          }, 2000)
+          navigate('/login', { replace: true })
         }
 
         return Promise.reject(error)
