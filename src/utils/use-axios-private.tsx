@@ -4,10 +4,10 @@ import type {
   AxiosRequestHeaders,
   InternalAxiosRequestConfig
 } from 'axios'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { axiosPrivate, axiosPublic } from './api'
+import { axiosPrivate } from './api'
 import useRefreshToken from './use-refresh-token'
 import { Toast } from 'src/Components/ExcelManipulation/Utils'
 
@@ -16,11 +16,7 @@ const onRequest = (
 ): InternalAxiosRequestConfig => {
   const token = localStorage.getItem('accessToken')
 
-  // if (!config.headers) {
-  //   config.headers = {} as AxiosRequestHeaders
-  // }
-
-  if (!config.headers['Authorization']) {
+  if (token && !config.headers['Authorization']) {
     config.headers['Authorization'] = `Bearer ${token}`
   }
   return config
@@ -37,8 +33,7 @@ const onRequestError = (error: AxiosError): Promise<never> => {
 const useAxiosPrivate = () => {
   const refresh = useRefreshToken()
   const navigate = useNavigate()
-
-  let sent = false
+  const sent = useRef(false) // Usar useRef para mantener el estado
 
   useEffect(() => {
     const requestIntercept = axiosPrivate.interceptors.request.use(
@@ -49,37 +44,29 @@ const useAxiosPrivate = () => {
     const responseIntercept = axiosPrivate.interceptors.response.use(
       onResponse,
       async (error: AxiosError): Promise<AxiosResponse | Promise<never>> => {
-        if (!error.config) {
-          throw new Error('Config must be existing...')
+        const originalConfig = error.config
+
+        if (!originalConfig) {
+          return Promise.reject(error)
         }
 
-        const previousRequest = error.config
-
-        if (error.response?.status === 403 && !sent) {
-          sent = true
+        // Manejar error 403 (token expirado)
+        if (error.response?.status === 403 && !sent.current) {
+          sent.current = true
           try {
             const newToken = await refresh()
-
             localStorage.setItem('accessToken', newToken)
 
-            if (!previousRequest.headers) {
-              previousRequest.headers = {} as AxiosRequestHeaders
-            }
-
-            previousRequest.headers['Authorization'] = `Bearer ${newToken}`
-            return axiosPrivate(previousRequest)
+            originalConfig.headers.Authorization = `Bearer ${newToken}`
+            return axiosPrivate(originalConfig)
           } catch (refreshError) {
+            // Eliminar refresh token del backend y limpiar frontend
             try {
-              await axiosPublic.post(
-                '/auth/logout',
-                {},
-                {
-                  withCredentials: true
-                }
-              )
+              await axiosPrivate.post('/auth/logout')
             } catch (logoutError) {
               console.error('Error al cerrar sesión:', logoutError)
             }
+
             localStorage.clear()
             sessionStorage.clear()
 
@@ -87,18 +74,15 @@ const useAxiosPrivate = () => {
             navigate('/login', { replace: true })
 
             return Promise.reject(refreshError)
+          } finally {
+            sent.current = false
           }
         }
 
+        // Manejar error 401 (no autorizado)
         if (error.response?.status === 401) {
           try {
-            await axiosPublic.post(
-              '/auth/logout',
-              {},
-              {
-                withCredentials: true
-              }
-            )
+            await axiosPrivate.post('/auth/logout')
           } catch (logoutError) {
             console.error('Error al cerrar sesión:', logoutError)
           }
