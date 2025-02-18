@@ -1,4 +1,11 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+if [ "$BRANCH" != "main" ] && [ "$BRANCH" != "staging" ]; then
+  echo "Skipping deploy on branch $BRANCH"
+  exit 0
+fi
+
 sh ./deploy.sh

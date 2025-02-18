@@ -1,7 +1,7 @@
 import type {
   AxiosError,
   AxiosResponse,
-  AxiosRequestHeaders,
+  // AxiosRequestHeaders,
   InternalAxiosRequestConfig
 } from 'axios'
 import { useEffect, useRef } from 'react'
