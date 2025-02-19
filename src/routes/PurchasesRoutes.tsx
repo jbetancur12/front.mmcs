@@ -1,9 +1,13 @@
 import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
+import PDFViewer from 'src/Components/DataSheet/PDFViewer'
+
 import SuppliersTable from 'src/pages/SuppliersTable'
 
-const Suppliers = lazy(() => import('../pages/Suppliers'))
+const SuppliersSelection = lazy(
+  () => import('src/pages/Purchases/SupplierSelection')
+)
 
 const SupplierRoutes = (role: string) => {
   return (
@@ -17,9 +21,14 @@ const SupplierRoutes = (role: string) => {
           />
         }
       >
-        <Route path='suppliers'>
-          <Route index element={<Suppliers />} />
-          <Route path='table' element={<SuppliersTable />} />
+        <Route path='purchases'>
+          <Route path='supplier-selection' element={<SuppliersSelection />} />
+
+          <Route
+            path='supplier-selection/:id'
+            element={<PDFViewer path='fog-mmcs-10' />}
+          />
+          <Route path='suppliers' element={<SuppliersTable />} />
         </Route>
       </Route>
     </>

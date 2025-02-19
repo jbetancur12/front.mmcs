@@ -21,42 +21,8 @@ import { useState, useEffect } from 'react'
 import useAxiosPrivate from '@utils/use-axios-private'
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
-
-interface Criterion {
-  id: number
-  category: string
-  name: string
-  baseScore: number
-  type: 'Juridical' | 'Natural' | 'Both'
-  requiresWhich?: boolean
-}
-
-interface SupplierFormData {
-  name: string
-  taxId: string
-  phone: string
-  mobile: string
-  email: string
-  address: string
-  city: string
-  contactName?: string
-  position?: string
-  state?: string
-  accountType: string
-  accountNumber: string
-  bankName: string
-  product: string
-}
-
-interface FormState {
-  supplierData: SupplierFormData
-  providerType: 'Juridical' | 'Natural' | ''
-  selections: Record<string, number[]>
-  scores: Record<string, number>
-  totalScore: number
-
-  whichAnswers: Record<string, string>
-}
+import SuppliersSelection from '../../pages/Purchases/SupplierSelection'
+import { Criterion, FormState } from 'src/pages/Purchases/Types'
 
 const initialSupplierData = {
   name: '',
@@ -72,7 +38,7 @@ const initialSupplierData = {
   product: ''
 }
 
-const SupplierEvaluationForm = () => {
+const SupplierSelectionForm = () => {
   const MySwal = withReactContent(Swal)
   const axiosPrivate = useAxiosPrivate()
   const [criteria, setCriteria] = useState<Criterion[]>([])
@@ -174,29 +140,7 @@ const SupplierEvaluationForm = () => {
         )
       }
     }
-    // Actualiza selección
-    // if (
-    //   ['PRECIO', 'TIEMPO DE ENTREGA', 'GARANTIA', 'EXPERIENCIA'].includes(
-    //     category
-    //   )
-    // ) {
-    //   // Estas categorías son tipo "radio" (solo un item)
-    //   newSelections[category] = isChecked ? [criterion.id] : []
-    // } else {
-    //   // Estas categorías aceptan múltiples checks
-    //   newSelections[category] = newSelections[category] || []
-    //   if (isChecked) {
-    //     // Agrega el ID si no estaba
-    //     if (!newSelections[category].includes(criterion.id)) {
-    //       newSelections[category].push(criterion.id)
-    //     }
-    //   } else {
-    //     // Remueve el ID si estaba
-    //     newSelections[category] = newSelections[category].filter(
-    //       (id) => id !== criterion.id
-    //     )
-    //   }
-    // }
+
     if (criterion.requiresWhich && !isChecked) {
       newWhichAnswers[criterion.id] = ''
     }
@@ -265,72 +209,8 @@ const SupplierEvaluationForm = () => {
       }
     }
 
-    // if (totalScore < 61) {
-    //   setError(
-    //     'El proveedor no cumple con la puntuación mínima requerida (61 puntos)'
-    //   )
-    //   return false
-    // }
-
     return true
   }
-
-  //   const handleSubmit = async (e: React.FormEvent) => {
-  //     e.preventDefault()
-  //     if (!validateForm()) return
-
-  //     try {
-  //       // 1) Crear proveedor
-  //       const supplierResponse = await axiosPrivate.post(
-  //         '/suppliers',
-  //         formState.supplierData
-  //       )
-
-  //       // 2) Crear evaluación
-  //       const evaluationResponse = await axiosPrivate.post(
-  //         '/suppliers/selection-suppliers',
-  //         {
-  //           supplierId: supplierResponse.data.id,
-  //           selectionSupplierDate: new Date().toISOString(),
-  //           finalDecision: formState.totalScore >= 81 ? 'EXCELLENT' : 'APPROVED'
-  //         }
-  //       )
-
-  //       // 3) Crear detalles de evaluación
-  //       const details = Object.values(formState.selections)
-  //         .flat()
-  //         .map((id) => {
-  //           const foundCriterion = criteria.find((c) => c.id === id)
-  //           return {
-  //             selectionSupplierId: evaluationResponse.data.id,
-  //             selectionSupplierSubItemId: id,
-  //             answer: true,
-  //             // En lugar de un solo "which", guardamos el que corresponda a cada criterio
-  //             which: formState.whichAnswers[id] || null,
-  //             actualScore: foundCriterion?.baseScore || 0
-  //           }
-  //         })
-
-  //       await axiosPrivate.post(
-  //         '/suppliers/selection-supplier-details/bulk',
-  //         details
-  //       )
-
-  //       alert('Proveedor y evaluación creados exitosamente')
-
-  //       // Reiniciar
-  //       setFormState({
-  //         supplierData: initialSupplierData,
-  //         providerType: '',
-  //         selections: {},
-  //         scores: {},
-  //         totalScore: 0,
-  //         whichAnswers: {}
-  //       })
-  //     } catch (error) {
-  //       setError('Error guardando la información')
-  //     }
-  //   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -418,6 +298,7 @@ const SupplierEvaluationForm = () => {
 
   return (
     <Box component='form' onSubmit={handleSubmit} sx={{ p: 3 }}>
+      <SuppliersSelection />
       <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <Typography variant='h4' gutterBottom>
           Nuevo Proveedor
@@ -487,8 +368,8 @@ const SupplierEvaluationForm = () => {
                       <TextField
                         fullWidth
                         label='Celular'
-                        name='mobile'
-                        value={formState.supplierData.mobile || ''}
+                        name='phone'
+                        value={formState.supplierData.phone || ''}
                         onChange={handleSupplierInputChange}
                       />
                     </Grid>
@@ -779,6 +660,7 @@ const SupplierEvaluationForm = () => {
                           )}
 
                           {/* Si está en CALIDAD, requiereWhich y está seleccionado, renderiza "Cuál" */}
+
                           {criterion.requiresWhich &&
                             category === 'CALIDAD' &&
                             isSelected && (
@@ -840,4 +722,4 @@ const SupplierEvaluationForm = () => {
   )
 }
 
-export default SupplierEvaluationForm
+export default SupplierSelectionForm

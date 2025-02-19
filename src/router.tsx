@@ -20,7 +20,7 @@ import CalibrationRoutes from './routes/CalibrationRoutes'
 import CustomerRoutes from './routes/CustomerRoutes'
 import OtherRoutes from './routes/OtherRoutes'
 import ProfileRoutes from './routes/ProfileRoutes'
-import SupplierRoutes from './routes/SupplierRoutes'
+import PuchasesRoutes from './routes/PurchasesRoutes'
 import { Box, CircularProgress, Typography } from '@mui/material'
 
 function Router() {
@@ -64,7 +64,7 @@ function Router() {
             {CalibrationRoutes($userStore.rol)}
             {CustomerRoutes($userStore.rol)}
             {ProfileRoutes($userStore.rol)}
-            {SupplierRoutes($userStore.rol)}
+            {PuchasesRoutes($userStore.rol)}
             {OtherRoutes($userStore.rol)}
           </Route>
         </Routes>
