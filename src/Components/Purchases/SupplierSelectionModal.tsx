@@ -24,14 +24,10 @@ import {
   Checkbox
 } from '@mui/material'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import withReactContent from 'sweetalert2-react-content'
 import useAxiosPrivate from '@utils/use-axios-private'
-import {
-  FormState,
-  SupplierFormData,
-  Criterion
-} from 'src/pages/Purchases/Types'
+import { FormState, Criterion } from 'src/pages/Purchases/Types'
 import Swal from 'sweetalert2'
 
 interface SupplierSelectionModalProps {
