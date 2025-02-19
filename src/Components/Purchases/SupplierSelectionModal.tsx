@@ -49,7 +49,8 @@ const initialSupplierData = {
   accountType: '',
   accountNumber: '',
   bankName: '',
-  product: ''
+  product: '',
+  purchaseType: 1
 }
 
 const SupplierSelectionModal = ({
@@ -449,6 +450,20 @@ const SupplierSelectionModal = ({
                         <Grid item xs={12} md={6}>
                           <TextField
                             fullWidth
+                            label='Compra Tipo'
+                            name='purchaseType'
+                            value={formState.supplierData.purchaseType}
+                            onChange={handleSupplierInputChange}
+                            select
+                            required
+                          >
+                            <MenuItem value={1}>1</MenuItem>
+                            <MenuItem value={2}>2</MenuItem>
+                          </TextField>
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <TextField
+                            fullWidth
                             label='Banco'
                             name='bankName'
                             value={formState.supplierData.bankName}
@@ -463,8 +478,12 @@ const SupplierSelectionModal = ({
                             name='accountType'
                             value={formState.supplierData.accountType}
                             onChange={handleSupplierInputChange}
+                            select
                             required
-                          />
+                          >
+                            <MenuItem value='Ahorros'>Ahorros</MenuItem>
+                            <MenuItem value='Corriente'>Corriente</MenuItem>
+                          </TextField>
                         </Grid>
                         <Grid item xs={12} md={6}>
                           <TextField
@@ -572,6 +591,20 @@ const SupplierSelectionModal = ({
                         <Grid item xs={12} md={6}>
                           <TextField
                             fullWidth
+                            label='Compra Tipo'
+                            name='purchaseType'
+                            value={formState.supplierData.purchaseType}
+                            onChange={handleSupplierInputChange}
+                            select
+                            required
+                          >
+                            <MenuItem value={1}>1</MenuItem>
+                            <MenuItem value={2}>2</MenuItem>
+                          </TextField>
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <TextField
+                            fullWidth
                             label='Banco'
                             name='bankName'
                             value={formState.supplierData.bankName}
@@ -586,8 +619,12 @@ const SupplierSelectionModal = ({
                             name='accountType'
                             value={formState.supplierData.accountType}
                             onChange={handleSupplierInputChange}
+                            select
                             required
-                          />
+                          >
+                            <MenuItem value='Ahorros'>Ahorros</MenuItem>
+                            <MenuItem value='Corriente'>Corriente</MenuItem>
+                          </TextField>
                         </Grid>
                         <Grid item xs={12} md={6}>
                           <TextField
@@ -733,9 +770,7 @@ const SupplierSelectionModal = ({
                     fullWidth
                     disabled={formState.totalScore < 0}
                   >
-                    {formState.totalScore >= 0
-                      ? 'Evaluar Proveedor'
-                      : 'No Cumple Requisitos'}
+                    {isSubmitting ? <CircularProgress size={24} /> : 'Evaluar'}
                   </Button>
                 </Paper>
               </>
@@ -745,13 +780,6 @@ const SupplierSelectionModal = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Cancelar</Button>
-        <Button
-          type='submit'
-          variant='contained'
-          disabled={formState.totalScore < 0}
-        >
-          {isSubmitting ? <CircularProgress size={24} /> : 'Guardar'}
-        </Button>
       </DialogActions>
     </Dialog>
   )

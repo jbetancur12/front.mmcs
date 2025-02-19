@@ -1205,10 +1205,14 @@ const ListDataSheet: React.FC = () => {
               variant='contained'
               onClick={() => setCreateModalOpen(true)}
               sx={{
+                backgroundColor: '#9CF08B',
                 fontWeight: 'bold',
-                color: '#DCFCE7',
+                color: '#2D4A27',
                 '&.MuiButtonBase-root': {
                   marginRight: '30px'
+                },
+                '&:hover': {
+                  backgroundColor: '#6DC662' // Azul más oscuro en hover
                 }
               }}
             >

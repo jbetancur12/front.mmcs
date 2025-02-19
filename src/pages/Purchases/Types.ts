@@ -22,6 +22,7 @@ export interface SupplierFormData {
   accountNumber: string
   bankName: string
   product: string
+  purchaseType: number
 }
 
 export interface FormState {

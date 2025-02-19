@@ -379,8 +379,11 @@ const Table: React.FC = () => {
             variant='contained'
             onClick={() => setCreateModalOpen(true)}
             sx={{
-              fontWeight: 'bold',
-              color: '#DCFCE7'
+              backgroundColor: '#9CF08B',
+              color: '#000',
+              '&:hover': {
+                backgroundColor: '#6DC662' // Azul más oscuro en hover
+              }
             }}
           >
             Crear Nueva Cuenta

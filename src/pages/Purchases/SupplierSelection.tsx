@@ -165,6 +165,14 @@ const SuppliersSelection: React.FC = () => {
             variant='contained'
             onClick={() => setModalOpen(true)}
             startIcon={<Add />}
+            sx={{
+              backgroundColor: '#9CF08B',
+              fontWeight: 'bold',
+              color: '#2D4A27',
+              '&:hover': {
+                backgroundColor: '#6DC662' // Azul más oscuro en hover
+              }
+            }}
           >
             Nuevo Proveedor
           </Button>

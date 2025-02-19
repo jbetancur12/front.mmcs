@@ -29,6 +29,10 @@ const SupplierRoutes = (role: string) => {
             element={<PDFViewer path='fog-mmcs-10' />}
           />
           <Route path='suppliers' element={<SuppliersTable />} />
+          <Route
+            path='suppliers/report'
+            element={<PDFViewer path='fog-mmcs-11' />}
+          />
         </Route>
       </Route>
     </>

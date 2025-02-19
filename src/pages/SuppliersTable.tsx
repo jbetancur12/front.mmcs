@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
-import { Typography } from '@mui/material'
+import { Button, Typography } from '@mui/material'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { useNavigate } from 'react-router-dom'
+import { Visibility } from '@mui/icons-material'
 
 // Definir el tipo para los proveedores
 interface Supplier {
@@ -16,22 +18,28 @@ interface Supplier {
 
 const SuppliersTable: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
+  const navigate = useNavigate()
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
+    let isMounted = true
     const fetchSuppliers = async () => {
       try {
         const response = await axiosPrivate.get<Supplier[]>('/suppliers')
-        setSuppliers(response.data)
+        if (isMounted) setSuppliers(response.data)
       } catch (error) {
-        console.error('Error fetching suppliers', error)
+        if (isMounted) console.error('Error fetching suppliers', error)
       } finally {
-        setLoading(false)
+        if (isMounted) setLoading(false)
       }
     }
 
     fetchSuppliers()
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   // Definir las columnas de la tabla
@@ -63,6 +71,26 @@ const SuppliersTable: React.FC = () => {
         columns={columns}
         data={suppliers}
         state={{ isLoading: loading }}
+        renderTopToolbarCustomActions={() => (
+          <Button
+            variant='contained'
+            onClick={() => navigate(`report`)}
+            startIcon={<Visibility />}
+            sx={{
+              backgroundColor: '#9CF08B',
+              fontWeight: 'bold',
+              color: '#2D4A27',
+              '&:hover': {
+                backgroundColor: '#6DC662' // Azul más oscuro en hover
+              }
+            }}
+          >
+            Ver en PDF
+          </Button>
+        )}
+        muiTableBodyCellProps={{
+          sx: { textAlign: 'left' }
+        }}
       />
     </>
   )
