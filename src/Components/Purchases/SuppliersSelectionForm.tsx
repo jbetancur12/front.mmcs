@@ -35,7 +35,8 @@ const initialSupplierData = {
   accountType: '',
   accountNumber: '',
   bankName: '',
-  product: ''
+  product: '',
+  purchaseType: 1
 }
 
 const SupplierSelectionForm = () => {

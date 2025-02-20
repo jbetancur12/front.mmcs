@@ -1,3 +1,5 @@
+import { PurchaseRequestStatus } from './Enums'
+
 export interface Criterion {
   id: number
   category: string
@@ -68,4 +70,43 @@ export interface SelectionSupplier {
   createdAt: string
   updatedAt: string
   supplier: Supplier
+}
+
+export interface PurchaseRequestItem {
+  id: number
+  item: string
+  quantity: number
+  description: string
+  motive: string
+  supplierId: number
+  purchaseRequestId: number
+  createdAt: Date
+  updatedAt: Date
+
+  // // Relaciones (opcionales para nested loading)
+  // suggestedProvider?: Provider;
+  // purchaseRequest?: PurchaseRequest;
+}
+
+export interface Approver {
+  id: number
+  nombre: string
+  email: string
+}
+
+export interface PurchaseRequest {
+  id: number
+  elaborationDate: Date
+  applicantName: string
+  applicantPosition: string
+  requirements: string[]
+  status: PurchaseRequestStatus
+  rejectionReason?: string // Opcional cuando no está rechazada
+  approvalDate?: Date
+  approver?: Approver
+  createdAt: Date
+  updatedAt: Date
+
+  // Relación (opcional para nested loading)
+  items?: PurchaseRequestItem[]
 }

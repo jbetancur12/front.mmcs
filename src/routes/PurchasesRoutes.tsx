@@ -3,7 +3,10 @@ import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
 import PDFViewer from 'src/Components/DataSheet/PDFViewer'
 
-import SuppliersTable from 'src/pages/SuppliersTable'
+const SuppliersTable = lazy(() => import('src/pages/SuppliersTable'))
+const PurchaseRequest = lazy(
+  () => import('src/pages/Purchases/PurchaseRequest')
+)
 
 const SuppliersSelection = lazy(
   () => import('src/pages/Purchases/SupplierSelection')
@@ -32,6 +35,11 @@ const SupplierRoutes = (role: string) => {
           <Route
             path='suppliers/report'
             element={<PDFViewer path='fog-mmcs-11' />}
+          />
+          <Route path='requests' element={<PurchaseRequest />} />
+          <Route
+            path='requests/:id'
+            element={<PDFViewer path='fog-mmcs-12' />}
           />
         </Route>
       </Route>
