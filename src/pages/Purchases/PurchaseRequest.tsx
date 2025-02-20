@@ -11,13 +11,16 @@ import { format } from 'date-fns'
 
 import RenderRowActions from 'src/Components/Purchases/RenderRowActions'
 import { useQuery, useQueryClient } from 'react-query'
+import Swal from 'sweetalert2'
 
 // Función para obtener las solicitudes de compra
 const fetchPurchaseRequests = async (
   axiosPrivate: ReturnType<typeof useAxiosPrivate>
 ) => {
-  const { data } =
-    await axiosPrivate.get<IPurchaseRequest[]>('/purchaseRequests')
+  const { data } = await axiosPrivate.get<{
+    count: number
+    purchaseRequests: IPurchaseRequest[]
+  }>('/purchaseRequests')
   return data
 }
 
@@ -25,10 +28,12 @@ const PurchaseRequest: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
   // Uso de react-query para obtener los datos
-  const { data: purchaseRequests = [], isLoading } = useQuery(
-    'purchaseRequests',
-    () => fetchPurchaseRequests(axiosPrivate)
+  const { data, isLoading } = useQuery('purchaseRequests', () =>
+    fetchPurchaseRequests(axiosPrivate)
   )
+
+  const purchaseRequests = data?.purchaseRequests ?? []
+  const totalRecords = data?.count ?? 0
 
   const [modalOpen, setModalOpen] = useState(false)
   const [providers, setProviders] = useState<any[]>([])
@@ -47,6 +52,50 @@ const PurchaseRequest: React.FC = () => {
 
   const handleSuccess = () => {
     queryClient.invalidateQueries('purchaseRequests')
+  }
+
+  // Función para mostrar el popup de configuración del número inicial
+  const showInitialSetupPopup = async () => {
+    const { value: initialId } = await Swal.fire({
+      title: 'Configurar número inicial',
+      input: 'number',
+      inputAttributes: {
+        min: '1'
+      },
+      inputPlaceholder: 'Ingrese el número inicial (ej. 1000)',
+      showCancelButton: true,
+      confirmButtonText: 'Guardar'
+    })
+
+    if (initialId) {
+      try {
+        await axiosPrivate.post('/purchaseRequests/set-initial-id', {
+          initialId
+        })
+        Swal.fire(
+          '¡Configurado!',
+          'El número inicial ha sido establecido.',
+          'success'
+        )
+        // Actualiza la query para refrescar el count si es necesario
+        queryClient.invalidateQueries('purchaseRequests')
+        // Abre el modal para crear la solicitud
+        setModalOpen(true)
+      } catch (error) {
+        Swal.fire('Error', 'No se pudo establecer el número inicial.', 'error')
+      }
+    }
+  }
+
+  // Función para manejar la apertura del modal
+  const handleOpenModal = () => {
+    if (totalRecords === 0) {
+      // Si no hay registros, se solicita configurar el número inicial
+      showInitialSetupPopup()
+    } else {
+      // Si ya existen registros, abre el modal normalmente
+      setModalOpen(true)
+    }
   }
 
   // Definir las columnas de la tabla
@@ -174,7 +223,7 @@ const PurchaseRequest: React.FC = () => {
         renderTopToolbarCustomActions={() => (
           <Button
             variant='contained'
-            onClick={() => setModalOpen(true)}
+            onClick={handleOpenModal}
             startIcon={<Add />}
             sx={{
               backgroundColor: '#9CF08B',

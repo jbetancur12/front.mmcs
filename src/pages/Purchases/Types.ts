@@ -74,7 +74,6 @@ export interface SelectionSupplier {
 
 export interface PurchaseRequestItem {
   id: number
-  item: string
   quantity: number
   description: string
   motive: string

@@ -47,7 +47,6 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
   const [currentItem, setCurrentItem] = React.useState<
     Partial<PurchaseRequestItem>
   >({
-    item: '',
     quantity: 1,
     description: '',
     motive: '',
@@ -106,7 +105,6 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
       items: []
     })
     setCurrentItem({
-      item: '',
       quantity: 1,
       description: '',
       motive: '',
@@ -129,7 +127,6 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
 
   const addItem = () => {
     if (
-      currentItem.item &&
       currentItem.description &&
       currentItem.motive &&
       currentItem.supplierId
@@ -139,7 +136,6 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
         items: [...(prev.items || []), currentItem as PurchaseRequestItem]
       }))
       setCurrentItem({
-        item: '',
         quantity: 1,
         description: '',
         motive: '',
@@ -216,24 +212,10 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
               </Typography>
 
               <Grid container spacing={2}>
-                <Grid item xs={3}>
-                  <TextField
-                    fullWidth
-                    label='Item *'
-                    value={currentItem.item}
-                    onChange={(e) =>
-                      setCurrentItem((prev) => ({
-                        ...prev,
-                        item: e.target.value
-                      }))
-                    }
-                  />
-                </Grid>
-
                 <Grid item xs={2}>
                   <TextField
                     fullWidth
-                    label='Cantidad *'
+                    label='Cant *'
                     type='number'
                     value={currentItem.quantity}
                     onChange={(e) =>
@@ -245,7 +227,7 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                   />
                 </Grid>
 
-                <Grid item xs={3}>
+                <Grid item xs={4}>
                   <TextField
                     fullWidth
                     label='Descripción *'
@@ -259,7 +241,7 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                   />
                 </Grid>
 
-                <Grid item xs={2}>
+                <Grid item xs={3}>
                   <TextField
                     fullWidth
                     label='Motivo *'
@@ -273,7 +255,7 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                   />
                 </Grid>
 
-                <Grid item xs={2}>
+                <Grid item xs={3}>
                   <FormControl fullWidth>
                     <InputLabel>Proveedor *</InputLabel>
                     <Select
@@ -301,7 +283,6 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                     onClick={addItem}
                     startIcon={<Add />}
                     disabled={
-                      !currentItem.item ||
                       !currentItem.description ||
                       !currentItem.motive ||
                       !currentItem.supplierId
@@ -328,8 +309,7 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                     }}
                   >
                     <Box sx={{ flex: 1 }}>
-                      <strong>{item.item}</strong> (Cant: {item.quantity})
-                      <div>{item.description}</div>
+                      (Cant: {item.quantity})<div>{item.description}</div>
                       <div>Motivo: {item.motive}</div>
                       <div>
                         Proveedor:{' '}
