@@ -113,7 +113,6 @@ const RenderRowActions = ({
 
   return (
     <Stack direction='row' spacing={1}>
-      {/* Botón de Visibilidad: siempre se muestra */}
       <Tooltip title='Ver'>
         <Link to={`${row.original.id}`}>
           <IconButton>
