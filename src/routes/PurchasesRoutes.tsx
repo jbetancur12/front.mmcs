@@ -22,7 +22,7 @@ const SupplierRoutes = (role: string) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['*']}
+            roles={['admin', 'comp_analyst', 'comp_supervisor']}
           />
         }
       >

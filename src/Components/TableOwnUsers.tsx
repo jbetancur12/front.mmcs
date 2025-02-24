@@ -185,7 +185,8 @@ const TableOwnUsers: React.FC = () => {
           >
             <MenuItem value='admin'>Administrador</MenuItem>
             <MenuItem value='metrologist'>Metrologista</MenuItem>
-            <MenuItem value='secretary'>Secretario</MenuItem>
+            <MenuItem value='comp_analyst'>Analista de Compras</MenuItem>
+            <MenuItem value='comp_supervisor'>Supervisor de Compras</MenuItem>
           </Select>
         )
         // Edit: ({ cell }) => {
@@ -403,6 +404,12 @@ export const CreateNewAccountModal = ({
                       >
                         <MenuItem value='admin'>Administrador</MenuItem>
                         <MenuItem value='metrologist'>Metrologo</MenuItem>
+                        <MenuItem value='comp_analyst'>
+                          Analista de Compras
+                        </MenuItem>
+                        <MenuItem value='comp_supervisor'>
+                          Supervisor de Compras
+                        </MenuItem>
                       </Select>
                     ) : (
                       <TextField

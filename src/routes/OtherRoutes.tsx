@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
+import WelcomeScreen from 'src/pages/Welcome' // Asegúrate de tener este componente
 
 const Dashboard = lazy(() => import('../pages/Dashboard'))
 const Settings = lazy(() => import('../pages/Settings'))
@@ -16,43 +17,29 @@ const Gotemberg = lazy(() => import('../Components/Gotemberg'))
 const OtherRoutes = (role: string) => {
   return (
     <>
-      {/* Shared routes */}
+      {/* Rutas protegidas para Admin; si el usuario no es admin, fallback a /welcome */}
       <Route
         element={
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['*']}
+            roles={['admin']}
+            fallbackRoute={true} // Si no es admin, redirige a /welcome
           />
         }
       >
         <Route index element={<Dashboard />} />
-      </Route>
-
-      {/* Admin routes */}
-
-      <Route
-        element={
-          <ProtectedRoute
-            roles={['admin']}
-            isAuthenticated={localStorage.getItem('accessToken') !== null}
-            userRole={role}
-          />
-        }
-      >
-        {/* Hojas de datos */}
         <Route path='settings' element={<Settings />} />
-
-        {/* Clientes y usuarios */}
         <Route path='users' element={<Clientes />} />
-
-        {/* Rutas adicionales */}
         <Route path='/zip' element={<Zip />} />
         <Route path='/repository' element={<Repository />} />
         <Route path='/excel-manipulation' element={<ExcelManipulation />} />
         <Route path='/pdf-script' element={<ScriptGenerator />} />
         <Route path='/gotemberg' element={<Gotemberg />} />
       </Route>
+
+      {/* Ruta de bienvenida para usuarios que no son admin */}
+      <Route path='/welcome' element={<WelcomeScreen />} />
     </>
   )
 }

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
+import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Button, Typography } from '@mui/material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useNavigate } from 'react-router-dom'
@@ -68,6 +69,7 @@ const SuppliersTable: React.FC = () => {
       </Typography>
 
       <MaterialReactTable
+        localization={MRT_Localization_ES}
         columns={columns}
         data={suppliers}
         state={{ isLoading: loading }}

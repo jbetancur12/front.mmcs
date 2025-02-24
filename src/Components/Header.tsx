@@ -26,18 +26,18 @@ function Header() {
   }, [isMenuOpen])
 
   useEffect(() => {
-    const fetchAlerts = async () => {
-      try {
-        const response = await axiosPrivate('/dataSheet') // Endpoint que devuelve si hay alertas
-
-        setHasAlert(response.data)
-      } catch (error) {
-        console.error('Error fetching alerts:', error)
+    if ($userStore.rol === 'admin') {
+      const fetchAlerts = async () => {
+        try {
+          const response = await axiosPrivate('/dataSheet') // Endpoint que devuelve si hay alertas
+          setHasAlert(response.data)
+        } catch (error) {
+          console.error('Error fetching alerts:', error)
+        }
       }
+      fetchAlerts()
     }
-
-    fetchAlerts()
-  }, [axiosPrivate])
+  }, [axiosPrivate, $userStore.rol])
 
   const calibrationDueSoon =
     hasAlert && hasAlert.filter((equipment) => equipment.isCalibrationDueSoon)

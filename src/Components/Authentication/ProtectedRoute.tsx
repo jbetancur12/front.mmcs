@@ -7,6 +7,7 @@ interface ProtectedRouteProps {
   roles: string[] // Roles permitidos para la ruta, puede incluir '*'
   redirectPath?: string
   unauthorizedPath?: string
+  fallbackRoute?: boolean
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
@@ -14,20 +15,24 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   userRole,
   roles,
   redirectPath = '/login',
-  unauthorizedPath = '/not-authorized'
+  unauthorizedPath = '/not-authorized',
+  fallbackRoute = false
 }) => {
   if (!isAuthenticated) {
-    // Si el usuario no está autenticado, redirigir al login
+    // Si el usuario no está autenticado, redirige al login.
     return <Navigate to={redirectPath} replace />
   }
 
-  // Verificar si el array de roles contiene '*' o si el rol del usuario está permitido
+  // Verifica si el rol del usuario está permitido
   if (!roles.includes('*') && !roles.includes(userRole)) {
-    // Si no tiene el rol necesario, redirigir a "No autorizado"
+    // Si el usuario no tiene el rol requerido, se evalúa fallbackRoute.
+    if (fallbackRoute) {
+      return <Navigate to='/welcome' replace />
+    }
     return <Navigate to={unauthorizedPath} replace />
   }
 
-  // Si está autenticado y tiene los permisos necesarios, renderiza el contenido
+  // Si está autenticado y tiene permisos, se renderiza el contenido.
   return <Outlet />
 }
 
