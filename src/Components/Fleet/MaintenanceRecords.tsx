@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { Box, Button, IconButton, Stack, Typography } from '@mui/material'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import { MaintenanceRecord, InterventionType } from './types'
@@ -10,35 +10,36 @@ import { format } from 'date-fns'
 import { ArrowBack, Plumbing } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
 
-const fetchMaintenanceRecords = async (
-  vehicleId: number
-): Promise<MaintenanceRecord[]> => {
-  const axiosPrivate = useAxiosPrivate()
-  const { data } = await axiosPrivate.get(
-    `/maintenanceRecord?vehicleId=${vehicleId}`,
-    {}
-  )
-  return data
-}
-
-const fetchInterventionTypes = async (): Promise<InterventionType[]> => {
-  const axiosPrivate = useAxiosPrivate()
-  const { data } = await axiosPrivate.get(`/interventionType`, {})
-  return data
-}
-
 const MaintenanceRecords: React.FC = () => {
   const navigate = useNavigate()
-
   const { id } = useParams<{ id: string }>()
+  const axiosPrivate = useAxiosPrivate()
 
-  const { data: records, refetch } = useQuery<MaintenanceRecord[]>(
+  const fetchMaintenanceRecords = useCallback(async (): Promise<
+    MaintenanceRecord[]
+  > => {
+    const { data } = await axiosPrivate.get(
+      `/maintenanceRecord?vehicleId=${id}`
+    )
+    return data
+  }, [axiosPrivate, id])
+
+  const fetchInterventionTypes = useCallback(async (): Promise<
+    InterventionType[]
+  > => {
+    const { data } = await axiosPrivate.get(`/interventionType`)
+    return data
+  }, [axiosPrivate])
+
+  const { data: records, refetch } = useQuery(
     ['maintenanceRecords', id],
-    () => fetchMaintenanceRecords(Number(id)),
-    { enabled: !!id }
+    fetchMaintenanceRecords,
+    {
+      enabled: !!id
+    }
   )
 
-  const { data: interventionTypes } = useQuery<InterventionType[]>(
+  const { data: interventionTypes } = useQuery(
     'interventionType',
     fetchInterventionTypes
   )
@@ -67,6 +68,8 @@ const MaintenanceRecords: React.FC = () => {
     refetch()
     setIsAddModalOpen(false)
   }
+
+  console.log(interventionTypes)
 
   return (
     <Box sx={{ padding: 2 }}>

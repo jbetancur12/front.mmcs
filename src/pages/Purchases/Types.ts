@@ -77,10 +77,12 @@ export interface PurchaseRequestItem {
   quantity: number
   description: string
   motive: string
-  supplierId: number
+  supplierIds: number[]
   purchaseRequestId: number
   createdAt: Date
   updatedAt: Date
+  suppliers?: Supplier[]
+  procesed?: boolean
 
   // // Relaciones (opcionales para nested loading)
   // suggestedProvider?: Provider;
@@ -108,4 +110,27 @@ export interface PurchaseRequest {
 
   // Relación (opcional para nested loading)
   items?: PurchaseRequestItem[]
+}
+
+export interface PurchaseOrder {
+  code: string
+  requestDate: string
+  deliveryDate: string
+  deliveryPlace: string
+  paymentMethod: string
+  installments: string
+  freight: string
+  observations: string
+  totalBeforeVAT: number
+  requeriments: string[]
+  vat: number
+  retefuente: number
+  retecree: number
+  discount: number
+  total: number
+}
+
+export interface PurchaseOrderData extends PurchaseOrder {
+  id: number
+  supplier: Supplier
 }

@@ -1,4 +1,10 @@
-import { Autorenew, Cancel, CheckCircle, Visibility } from '@mui/icons-material'
+import {
+  Autorenew,
+  Cancel,
+  CheckCircle,
+  ShoppingCart,
+  Visibility
+} from '@mui/icons-material'
 import { IconButton, Tooltip, Stack, Divider } from '@mui/material'
 import { useStore } from '@nanostores/react'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -7,6 +13,9 @@ import { Link } from 'react-router-dom'
 import { PurchaseRequestStatus } from 'src/pages/Purchases/Enums'
 import { userStore } from 'src/store/userStore'
 import Swal from 'sweetalert2'
+import GenerateOrderModal from './GenerateOrderModal'
+import { useState } from 'react'
+import { PurchaseRequestItem } from 'src/pages/Purchases/Types'
 
 const RenderRowActions = ({
   row,
@@ -18,6 +27,12 @@ const RenderRowActions = ({
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
   const status = row.original.status as PurchaseRequestStatus
+
+  const [orderModalOpen, setOrderModalOpen] = useState(false)
+
+  const handleOpenOrderModal = () => {
+    setOrderModalOpen(true)
+  }
 
   const mutation = useMutation(
     async ({
@@ -87,6 +102,15 @@ const RenderRowActions = ({
     }
   }
 
+  const isAllowed = row.original.approved && row.original.preApproved
+  console.log('🚀 ~ isAllowed:', isAllowed)
+
+  const items: PurchaseRequestItem[] = row.original.items || []
+  const allProcessed = items.length > 0 && items.every((item) => item.procesed)
+  const allUnprocessed =
+    items.length > 0 && items.every((item) => !item.procesed)
+  const mixedState = items.length > 0 && !allProcessed && !allUnprocessed
+
   return (
     <Stack direction='row' spacing={1}>
       {/* Botón de Visibilidad: siempre se muestra */}
@@ -97,6 +121,20 @@ const RenderRowActions = ({
           </IconButton>
         </Link>
       </Tooltip>
+      <IconButton
+        onClick={handleOpenOrderModal}
+        title='Generar Orden'
+        color={!isAllowed ? 'default' : mixedState ? 'warning' : 'default'}
+        disabled={!isAllowed || allProcessed}
+      >
+        <ShoppingCart />
+      </IconButton>
+      <GenerateOrderModal
+        open={orderModalOpen}
+        onClose={() => setOrderModalOpen(false)}
+        purchaseRequest={row.original} // se pasa la solicitud de compra seleccionada
+        onSuccess={() => queryClient.invalidateQueries('purchaseRequests')}
+      />
 
       {/* Si la solicitud no está rechazada, se muestran las demás acciones */}
       {status !== PurchaseRequestStatus.Rejected && (

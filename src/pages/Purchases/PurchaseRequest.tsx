@@ -36,7 +36,7 @@ const PurchaseRequest: React.FC = () => {
   const totalRecords = data?.count ?? 0
 
   const [modalOpen, setModalOpen] = useState(false)
-  const [providers, setProviders] = useState<any[]>([])
+  const [_, setProviders] = useState<any[]>([])
 
   useEffect(() => {
     const fetchProviders = async () => {
@@ -246,7 +246,7 @@ const PurchaseRequest: React.FC = () => {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onSuccess={handleSuccess}
-        providers={providers}
+        //providers={providers}
       />
     </>
   )

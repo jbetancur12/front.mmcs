@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
-
 import {
   Card,
   CardContent,
@@ -13,7 +12,6 @@ import {
   Stack
 } from '@mui/material'
 import { Edit, Delete, ArrowBack } from '@mui/icons-material'
-
 import { useNavigate } from 'react-router-dom'
 import { InterventionType } from './types'
 import GenericFormModal, { FieldConfig } from './GenericFormModal'
@@ -21,6 +19,10 @@ import { useFormik } from 'formik'
 import * as yup from 'yup'
 import { bigToast } from '../ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
+import Swal from 'sweetalert2'
+import withReactContent from 'sweetalert2-react-content'
+
+const MySwal = withReactContent(Swal)
 
 const validationSchema = yup.object().shape({
   name: yup.string().required('Nombre es obligatorio'),
@@ -30,13 +32,15 @@ const validationSchema = yup.object().shape({
 
 const fetchInterventionTypes = async (): Promise<InterventionType[]> => {
   const axiosPrivate = useAxiosPrivate()
-  const { data } = await axiosPrivate.get(`/interventionType`, {})
+  const { data } = await axiosPrivate.get(`/interventionType`)
   return data
 }
 
 const InterventionTypes = () => {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const axiosPrivate = useAxiosPrivate()
+
   const [modalOpen, setModalOpen] = useState(false)
   const [currentType, setCurrentType] = useState<InterventionType | null>(null)
 
@@ -45,68 +49,63 @@ const InterventionTypes = () => {
     fetchInterventionTypes
   )
 
-  const formik = useFormik<InterventionType>({
-    initialValues: {
-      name: '',
-      requiresReminder: false,
-      description: ''
-    },
-    validationSchema: validationSchema,
-    onSubmit: async (values, { resetForm }) => {
-      handleFormSubmit(values)
-      resetForm()
-    }
-  })
-
   const createOrUpdateInterventionType = useMutation(
     async (newData: InterventionType) => {
-      const axiosPrivate = useAxiosPrivate()
-      if (currentType) {
-        // Update existing type
-        await axiosPrivate.put(
-          `/interventionType/${currentType.id}`,
-          newData,
-          {}
-        )
-      } else {
-        // Create new type
-
-        await axiosPrivate.post(`/interventionType`, newData, {})
-      }
+      return currentType
+        ? axiosPrivate.put(`/interventionType/${currentType.id}`, newData)
+        : axiosPrivate.post(`/interventionType`, newData)
     },
     {
       onSuccess: () => {
         queryClient.invalidateQueries('interventionType')
-        bigToast('Tipo de Intervención Creado Exitosamente!', 'success')
+        bigToast(
+          currentType
+            ? 'Tipo de Intervención Actualizado Exitosamente!'
+            : 'Tipo de Intervención Creado Exitosamente!',
+          'success'
+        )
         setModalOpen(false)
+      },
+      onError: (error: any) => {
+        bigToast(
+          `Error: ${error.response?.data?.message || error.message}`,
+          'error'
+        )
       }
     }
   )
 
   const deleteInterventionType = useMutation(
     async (id: number) => {
-      const axiosPrivate = useAxiosPrivate()
-      const { status } = await axiosPrivate.delete(
-        `/interventionType/${id}`,
-        {}
-      )
-      if (status !== 204) {
+      const { status } = await axiosPrivate.delete(`/interventionType/${id}`)
+      if (status !== 204)
         throw new Error('Error al eliminar el tipo de intervención')
-      }
     },
     {
       onSuccess: () => {
         queryClient.invalidateQueries('interventionType')
+        bigToast('Tipo de Intervención Eliminado Exitosamente!', 'success')
+      },
+      onError: (error: any) => {
+        bigToast(
+          `Error: ${error.response?.data?.message || error.message}`,
+          'error'
+        )
       }
     }
   )
 
-  const handleDelete = (id: number) => {
-    if (
-      window.confirm(
-        '¿Está seguro que desea eliminar este tipo de intervención?'
-      )
-    ) {
+  const handleDelete = async (id: number) => {
+    const result = await MySwal.fire({
+      title: '¿Eliminar Tipo de Intervención?',
+      text: 'Esta acción no se puede deshacer',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    })
+
+    if (result.isConfirmed) {
       deleteInterventionType.mutate(id)
     }
   }
@@ -126,20 +125,31 @@ const InterventionTypes = () => {
   }
 
   const handleFormSubmit = (values: Record<string, any>) => {
-    // Crear el objeto base sin el id
     const payload: Omit<InterventionType, 'id'> = {
       name: values.name,
       requiresReminder: values.requiresReminder,
       description: values.description
     }
 
-    // Agregar el id solo si existe
     if (currentType?.id !== undefined) {
       createOrUpdateInterventionType.mutate({ ...payload, id: currentType.id })
     } else {
       createOrUpdateInterventionType.mutate(payload)
     }
   }
+
+  const formik = useFormik<InterventionType>({
+    initialValues: {
+      name: '',
+      requiresReminder: false,
+      description: ''
+    },
+    validationSchema: validationSchema,
+    onSubmit: async (values, { resetForm }) => {
+      handleFormSubmit(values)
+      resetForm()
+    }
+  })
 
   const fields: FieldConfig[] = [
     { accessorKey: 'name', header: 'Nombre', type: 'text' },
@@ -190,22 +200,12 @@ const InterventionTypes = () => {
                 </Typography>
               </CardContent>
               <CardActions>
-                <IconButton
-                  onClick={() => {
-                    if (type.id !== undefined) {
-                      handleEdit(type.id)
-                    }
-                  }}
-                >
+                <IconButton onClick={() => handleEdit(type.id as number)}>
                   <Edit />
                 </IconButton>
                 <IconButton
                   color='error'
-                  onClick={() => {
-                    if (type.id !== undefined) {
-                      handleDelete(type.id)
-                    }
-                  }}
+                  onClick={() => handleDelete(type.id as number)}
                 >
                   <Delete />
                 </IconButton>

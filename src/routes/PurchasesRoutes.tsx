@@ -12,6 +12,8 @@ const SuppliersSelection = lazy(
   () => import('src/pages/Purchases/SupplierSelection')
 )
 
+const PurchaseOrders = lazy(() => import('src/pages/Purchases/PurchaseOrders'))
+
 const SupplierRoutes = (role: string) => {
   return (
     <>
@@ -41,6 +43,8 @@ const SupplierRoutes = (role: string) => {
             path='requests/:id'
             element={<PDFViewer path='fog-mmcs-12' />}
           />
+          <Route path='orders' element={<PurchaseOrders />} />
+          <Route path='orders/:id' element={<PDFViewer path='fog-mmcs-13' />} />
         </Route>
       </Route>
     </>

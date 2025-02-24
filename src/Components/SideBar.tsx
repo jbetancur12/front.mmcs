@@ -89,6 +89,11 @@ const sidebarItems = ($userStore: UserData) => [
         label: 'Solicitudes de Compra',
         url: 'purchases/requests',
         roles: ['admin']
+      },
+      {
+        label: 'Ordenes de Compra',
+        url: 'purchases/orders',
+        roles: ['admin']
       }
     ]
   },
