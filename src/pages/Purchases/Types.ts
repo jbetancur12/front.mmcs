@@ -122,15 +122,25 @@ export interface PurchaseOrder {
   freight: string
   observations: string
   totalBeforeVAT: number
-  requeriments: string[]
+  requirements: string[]
   vat: number
   retefuente: number
   retecree: number
   discount: number
   total: number
+  purchaseRequestId: number
+}
+
+interface PurchaseOrderItem {
+  id: number
+  purchaseRequestItem: {
+    description: string
+    quantity: number
+  }
 }
 
 export interface PurchaseOrderData extends PurchaseOrder {
   id: number
   supplier: Supplier
+  items: PurchaseOrderItem[]
 }

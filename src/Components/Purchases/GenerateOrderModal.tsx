@@ -47,7 +47,9 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
 }) => {
   const axiosPrivate = useAxiosPrivate()
   purchaseRequest.requirements
-  const [orderData, setOrderData] = useState<PurchaseOrder>({
+  const [orderData, setOrderData] = useState<
+    Omit<PurchaseOrder, 'purchaseRequestId'>
+  >({
     code: '',
     requestDate: new Date().toISOString().slice(0, 10),
     deliveryDate: new Date().toISOString().slice(0, 10),
@@ -62,7 +64,7 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
     retecree: 0,
     discount: 0,
     total: 0,
-    requeriments: purchaseRequest.requirements || []
+    requirements: purchaseRequest.requirements || ['No hay requerimientos']
   })
   const [selectedSupplier, setSelectedSupplier] = useState<string>('')
   const [assignedItems, setAssignedItems] = useState<AssignedItem[]>([])

@@ -23,7 +23,7 @@ const OtherRoutes = (role: string) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['admin']}
+            roles={['admin', 'user']}
             fallbackRoute={true} // Si no es admin, redirige a /welcome
           />
         }

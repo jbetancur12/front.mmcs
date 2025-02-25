@@ -94,6 +94,11 @@ const sidebarItems = ($userStore: UserData) => [
         label: 'Ordenes de Compra',
         url: 'purchases/orders',
         roles: ['admin', 'comp_analyst', 'comp_supervisor']
+      },
+      {
+        label: 'Verificaciones',
+        url: 'purchases/verifications',
+        roles: ['admin', 'comp_analyst', 'comp_supervisor']
       }
     ]
   },

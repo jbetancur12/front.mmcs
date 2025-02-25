@@ -103,7 +103,6 @@ const RenderRowActions = ({
   }
 
   const isAllowed = row.original.approved && row.original.preApproved
-  console.log('🚀 ~ isAllowed:', isAllowed)
 
   const items: PurchaseRequestItem[] = row.original.items || []
   const allProcessed = items.length > 0 && items.every((item) => item.procesed)

@@ -1,15 +1,14 @@
-import React from 'react'
+import React, { useState } from 'react'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import { IconButton, Stack, Tooltip, Typography } from '@mui/material'
+import { Visibility, Add, CheckCircle, Cancel } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { Visibility } from '@mui/icons-material'
 import { PurchaseOrderData as IPurchaseOrder } from './Types'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
-// import { PurchaseOrderStatus } from './Enums'
 import { format } from 'date-fns'
-
-import { useQuery } from 'react-query'
+import { useQuery, useQueryClient } from 'react-query'
 import { Link } from 'react-router-dom'
+import CreatePurchaseVerificationModal from 'src/Components/Purchases/PurchaseVerificationModal'
 
 // Función para obtener las órdenes de compra
 const fetchPurchaseOrders = async (
@@ -21,15 +20,19 @@ const fetchPurchaseOrders = async (
 
 const PurchaseOrders: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient() //
   const { data, isLoading } = useQuery('purchaseOrders', () =>
     fetchPurchaseOrders(axiosPrivate)
   )
+  const [modalOpen, setModalOpen] = useState(false)
+  const [selectedPurchaseOrder, setSelectedPurchaseOrder] =
+    useState<IPurchaseOrder | null>(null)
 
   const purchaseOrders = data ?? []
 
   // Definir las columnas de la tabla
   const columns: MRT_ColumnDef<IPurchaseOrder>[] = [
-    { accessorKey: 'code', header: 'Codigo' },
+    { accessorKey: 'code', header: 'Código' },
     {
       accessorKey: 'requestDate',
       header: 'Fecha de Orden',
@@ -39,81 +42,8 @@ const PurchaseOrders: React.FC = () => {
       }
     },
     { accessorKey: 'supplier.name', header: 'Proveedor' },
-    { accessorKey: 'supplier.phone', header: 'Telefono' },
-    { accessorKey: 'paymentMethod', header: 'Metodo de Pago' },
-    // {
-    //   accessorKey: 'status',
-    //   header: 'Estado',
-    //   Cell: ({ cell }) => {
-    //     const status = cell.getValue() as PurchaseOrderStatus
-    //     let color: 'warning' | 'success' | 'error'
-    //     let estilo
-
-    //     switch (status) {
-    //       case PurchaseOrderStatus.Pending:
-    //         color = 'warning'
-    //         estilo = {
-    //           backgroundColor: '#fff3e0',
-    //           color: '#ef6c00',
-    //           fontWeight: 600,
-    //           borderRadius: '12px',
-    //           padding: '4px 12px'
-    //         }
-    //         break
-    //       case PurchaseOrderStatus.Approved:
-    //         color = 'success'
-    //         estilo = {
-    //           backgroundColor: '#e8f5e9',
-    //           color: '#2e7d32',
-    //           fontWeight: 600,
-    //           borderRadius: '12px',
-    //           padding: '4px 12px'
-    //         }
-    //         break
-    //       case PurchaseOrderStatus.Rejected:
-    //         color = 'error'
-    //         estilo = {
-    //           backgroundColor: '#ffebee',
-    //           color: '#c62828',
-    //           fontWeight: 600,
-    //           borderRadius: '12px',
-    //           padding: '4px 12px'
-    //         }
-    //         break
-    //       default:
-    //         throw new Error(`Estado desconocido: ${status}`)
-    //     }
-
-    //     const chipElement = (
-    //       <Chip
-    //         label={status.toUpperCase()}
-    //         color={color}
-    //         sx={estilo}
-    //         icon={
-    //           {
-    //             [PurchaseOrderStatus.Pending]: <AccessTime fontSize='small' />,
-    //             [PurchaseOrderStatus.Approved]: (
-    //               <CheckCircle fontSize='small' />
-    //             ),
-    //             [PurchaseOrderStatus.Rejected]: <Cancel fontSize='small' />
-    //           }[status]
-    //         }
-    //       />
-    //     )
-
-    //     if (status === PurchaseOrderStatus.Rejected) {
-    //       const rejectionReason = cell.row.original.rejectionReason
-    //       return (
-    //         <Tooltip arrow title={rejectionReason || 'Sin motivo de rechazo'}>
-    //           {chipElement}
-    //         </Tooltip>
-    //       )
-    //     }
-
-    //     return chipElement
-    //   }
-    // },
-
+    { accessorKey: 'supplier.phone', header: 'Teléfono' },
+    { accessorKey: 'paymentMethod', header: 'Método de Pago' },
     {
       accessorKey: 'total',
       header: 'Total',
@@ -123,13 +53,25 @@ const PurchaseOrders: React.FC = () => {
           ? new Intl.NumberFormat('es-CO', {
               style: 'currency',
               currency: 'COP'
-              //   minimumFractionDigits: 2,
-              //   maximumFractionDigits: 2
             }).format(total)
           : 'N/A'
       }
     }
   ]
+
+  // Función para abrir el modal con la orden seleccionada
+  const openVerificationModal = (purchaseOrder: IPurchaseOrder) => {
+    setSelectedPurchaseOrder(purchaseOrder)
+    setModalOpen(true)
+  }
+
+  // Manejo del éxito en la creación de la verificación
+  const handleVerificationSuccess = () => {
+    // Aquí podrías refrescar los datos o mostrar una notificación
+    queryClient.invalidateQueries('purchaseOrders')
+    setModalOpen(false)
+    setSelectedPurchaseOrder(null)
+  }
 
   return (
     <>
@@ -143,27 +85,66 @@ const PurchaseOrders: React.FC = () => {
         state={{ isLoading }}
         localization={MRT_Localization_ES}
         enableRowActions={true}
-        renderRowActions={({ row }) => <RenderRowActions row={row} />}
+        renderRowActions={({ row }) => (
+          <RenderRowActions
+            row={row}
+            openVerificationModal={openVerificationModal}
+          />
+        )}
         muiTableBodyCellProps={{
           sx: { textAlign: 'left' }
         }}
       />
+
+      {selectedPurchaseOrder && (
+        <CreatePurchaseVerificationModal
+          open={modalOpen}
+          onClose={() => {
+            setModalOpen(false)
+            setSelectedPurchaseOrder(null)
+          }}
+          onSuccess={handleVerificationSuccess}
+          purchaseOrder={selectedPurchaseOrder}
+        />
+      )}
     </>
   )
 }
 
 export default PurchaseOrders
 
-const RenderRowActions = ({ row }: { row: any }) => {
+interface RenderRowActionsProps {
+  row: any
+  openVerificationModal: (purchaseOrder: IPurchaseOrder) => void
+}
+
+const RenderRowActions: React.FC<RenderRowActionsProps> = ({
+  row,
+  openVerificationModal
+}) => {
+  const isVerified = row.original.verified
   return (
-    <Stack direction='row' spacing={1}>
-      {/* Botón de Visibilidad: siempre se muestra */}
+    <Stack direction='row' spacing={1} alignItems='center'>
+      {isVerified ? <CheckCircle color='success' /> : <Cancel color='error' />}
       <Tooltip title='Ver'>
         <Link to={`${row.original.id}`}>
           <IconButton>
             <Visibility />
           </IconButton>
         </Link>
+      </Tooltip>
+      <Tooltip
+        title={isVerified ? 'Verificación creada' : 'Crear Verificación'}
+      >
+        {/* El span es necesario para que el tooltip funcione en un botón deshabilitado */}
+        <span>
+          <IconButton
+            onClick={() => openVerificationModal(row.original)}
+            disabled={isVerified}
+          >
+            <Add />
+          </IconButton>
+        </span>
       </Tooltip>
     </Stack>
   )
