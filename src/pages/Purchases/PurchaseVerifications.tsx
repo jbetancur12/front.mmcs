@@ -227,25 +227,7 @@ const PurchaseVerificationsTable: React.FC = () => {
         )
       },
       /* Visualización resumida cuando no se edita */
-      Cell: ({ cell }) => {
-        const rawItems = cell.getValue()
-        const items: PurchaseVerificationItem[] = Array.isArray(rawItems)
-          ? rawItems
-          : []
-        return (
-          <div>
-            {items.map((item, index) => (
-              <div key={item.id || index}>
-                <Typography variant='caption'>
-                  Item {index + 1}: {item.sensorialInspection},{' '}
-                  {item.technicalVerification}, {item.devliveryTime},{' '}
-                  {item.quality}
-                </Typography>
-              </div>
-            ))}
-          </div>
-        )
-      }
+      Cell: ({ cell }) => null
     }
   ]
 
@@ -289,6 +271,12 @@ const PurchaseVerificationsTable: React.FC = () => {
         enablePagination
         enableSorting
         enableRowActions
+        initialState={{
+          columnVisibility: {
+            id: false,
+            items: false
+          }
+        }}
         muiTableBodyCellProps={{
           sx: { textAlign: 'left' }
         }}
