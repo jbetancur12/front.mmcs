@@ -49,6 +49,10 @@ const SupplierRoutes = (role: string) => {
           <Route path='orders' element={<PurchaseOrders />} />
           <Route path='orders/:id' element={<PDFViewer path='fog-mmcs-13' />} />
           <Route path='verifications' element={<PurchaseVerifications />} />
+          <Route
+            path='verifications/:id'
+            element={<PDFViewer path='fog-mmcs-14' />}
+          />
         </Route>
       </Route>
     </>

@@ -100,6 +100,7 @@ export interface PurchaseRequest {
   elaborationDate: Date
   applicantName: string
   applicantPosition: string
+  purchaseCode: string
   requirements: string[]
   status: PurchaseRequestStatus
   rejectionReason?: string // Opcional cuando no está rechazada
@@ -129,6 +130,7 @@ export interface PurchaseOrder {
   discount: number
   total: number
   purchaseRequestId: number
+  purchaseRequest: PurchaseRequest
 }
 
 interface PurchaseOrderItem {
@@ -143,4 +145,30 @@ export interface PurchaseOrderData extends PurchaseOrder {
   id: number
   supplier: Supplier
   items: PurchaseOrderItem[]
+}
+
+export interface PurchaseVerification {
+  id: number
+  receivedDate: string
+  invoiceNumber: string
+  observations: string
+  techicalVerification: string
+  purchaseOrderId: number
+  purchaseRequestId: number
+  createdAt: string
+  updatedAt: string
+  purchaseOrder: PurchaseOrder
+  items: PurchaseVerificationItem[]
+}
+
+export interface PurchaseVerificationItem {
+  id?: number
+  purchaseVerificationId?: number
+  purchaseOrderItemId: number
+  sensorialInspection: string
+  technicalVerification: string
+  devliveryTime: string
+  quality: string
+  meetsRequirements: boolean
+  orderItem: PurchaseOrderItem
 }

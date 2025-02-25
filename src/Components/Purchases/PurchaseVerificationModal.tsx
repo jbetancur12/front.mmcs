@@ -13,16 +13,10 @@ import {
   Typography
 } from '@mui/material'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { PurchaseOrderData } from 'src/pages/Purchases/Types'
-
-interface PurchaseVerificationItem {
-  purchaseOrderItemId: number
-  sensorialInspection: string
-  technicalVerification: string
-  devliveryTime: string
-  quality: string
-  meetsRequirements: boolean
-}
+import {
+  PurchaseOrderData,
+  PurchaseVerificationItem
+} from 'src/pages/Purchases/Types'
 
 export interface PurchaseVerificationData {
   receivedDate: string
@@ -30,7 +24,7 @@ export interface PurchaseVerificationData {
   observations?: string
   purchaseOrderId: number
   purchaseRequestId: number
-  items: PurchaseVerificationItem[]
+  items: Omit<PurchaseVerificationItem, 'orderItem'>[]
   technicalVerification: string
 }
 

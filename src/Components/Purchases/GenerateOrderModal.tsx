@@ -48,7 +48,7 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
   const axiosPrivate = useAxiosPrivate()
   purchaseRequest.requirements
   const [orderData, setOrderData] = useState<
-    Omit<PurchaseOrder, 'purchaseRequestId'>
+    Omit<PurchaseOrder, 'purchaseRequestId' | 'purchaseRequest'>
   >({
     code: '',
     requestDate: new Date().toISOString().slice(0, 10),
