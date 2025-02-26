@@ -100,7 +100,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
     >
       {!selectedSede ? (
         <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
-          {$userStore.rol === 'admin' && (
+          {$userStore.rol.some((role) => ['admin'].includes(role)) && (
             <Box sx={{ mb: 2 }}>
               {!isAdding ? (
                 <Button variant='contained' onClick={handleAddClick}>
@@ -137,7 +137,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
           )}
           <List sx={{ flexGrow: 1, overflowY: 'auto', width: '400px' }}>
             {sedes.map((sede, index) => (
-              <ButtonBase key={index} sx={{ width: '100%' }}>
+              <ButtonBase key={index} sx={{ width: '100%' }} component='div'>
                 {editingIndex === index ? (
                   // Modo edición: sin efecto hover
                   <ListItem
@@ -205,7 +205,9 @@ const Headquarters: React.FC<HeadquartersProps> = ({
                     }}
                     onClick={() => onSedeClick(sede)}
                     secondaryAction={
-                      $userStore.rol === 'admin' && (
+                      $userStore.rol.some((role) =>
+                        ['admin'].includes(role)
+                      ) && (
                         <IconButton
                           edge='end'
                           onClick={(e) => {

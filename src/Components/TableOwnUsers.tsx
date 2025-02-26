@@ -1,11 +1,11 @@
 import {
+  Autocomplete,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  MenuItem,
-  Select,
   Stack,
   TextField
 } from '@mui/material'
@@ -23,20 +23,38 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { bigToast } from './ExcelManipulation/Utils'
 import { AxiosError } from 'axios'
+import { axiosPrivate } from '@utils/api'
+import { useQuery } from 'react-query'
 
 // Define interfaces
+
+interface Role {
+  id: number
+  name: string
+  description: string
+}
 export interface UserData {
   id: number
   nombre: string
-  rol: string
+  roles: Role[]
   email: number
   createdAt: string
+}
+
+const fetchRoles = async () => {
+  const { data } = await axiosPrivate.get('/roles')
+  return data
 }
 
 // API URL
 
 // Main component
 const TableOwnUsers: React.FC = () => {
+  const {
+    data: roles,
+    isLoading: loadingRoles
+    // error
+  } = useQuery('roles', fetchRoles)
   const axiosPrivate = useAxiosPrivate()
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<UserData[]>([])
@@ -92,17 +110,18 @@ const TableOwnUsers: React.FC = () => {
   const handleSaveRowEdits: MaterialReactTableProps<UserData>['onEditingRowSave'] =
     async ({ exitEditingMode, row, values }) => {
       if (!Object.keys(validationErrors).length) {
-        const updatedValues = { ...values }
+        const updatedValues = { ...values, roles: row.original.roles }
         delete updatedValues.id
+        console.log('🚀 ~ updatedValues:', updatedValues)
         try {
           const response = await axiosPrivate.put(
-            `/products/${values.id}`,
+            `/users/own/${values.id}`,
             updatedValues,
             {}
           )
 
           if (response.status === 200) {
-            toast.success('Producto Modificado Exitosamente!', {
+            toast.success('Usuario Modificado Exitosamente!', {
               duration: 4000,
               position: 'top-center'
             })
@@ -156,7 +175,8 @@ const TableOwnUsers: React.FC = () => {
     () => [
       {
         accessorKey: 'id',
-        header: 'ID'
+        header: 'ID',
+        enableEditing: false
       },
       {
         accessorKey: 'nombre',
@@ -173,36 +193,67 @@ const TableOwnUsers: React.FC = () => {
         })
       },
       {
-        accessorKey: 'rol',
+        accessorKey: 'roles',
         header: 'Rol',
-        Edit: ({ cell }) => (
-          <Select
-            defaultValue={cell.renderValue()}
-            onChange={() => {
-              // const newValue = e.target.value
-            }}
-            fullWidth
-          >
-            <MenuItem value='admin'>Administrador</MenuItem>
-            <MenuItem value='metrologist'>Metrologista</MenuItem>
-            <MenuItem value='comp_analyst'>Analista de Compras</MenuItem>
-            <MenuItem value='comp_supervisor'>Supervisor de Compras</MenuItem>
-          </Select>
-        )
-        // Edit: ({ cell }) => {
-        //   let value = cell.renderValue();
-        //   return (
-        //     <Select
-        //       defaultValue={cell.renderValue()}
-        //       onChange={(e) => (value = e.target.value)}
-        //       fullWidth
-        //     >
-        //       <MenuItem value="admin">Administrador</MenuItem>
-        //       <MenuItem value="metrologist">Metrologista</MenuItem>
-        //       <MenuItem value="secretary">Secretario</MenuItem>
-        //     </Select>
-        //   );
-        // },
+        Cell: ({ cell }) => {
+          const roles = cell.getValue<Role[]>() // Obtén los roles desde la celda
+          return roles.map((role) => role.description).join(', ') // Muestra los nombres de los roles
+        },
+        Edit: ({ cell }) => {
+          // Obtén la lista de roles desde la fila original
+          return (
+            <Autocomplete
+              multiple
+              options={roles ?? []} // Array de roles obtenido desde la API
+              autoComplete={false}
+              freeSolo
+              getOptionLabel={(option) => {
+                if (typeof option === 'string') {
+                  return option
+                }
+                return option.description // Muestra la descripción en el input
+              }}
+              defaultValue={cell.getValue<Role[]>()}
+              onChange={(_, newValues) => {
+                const updatedRoles = newValues.map((v) => {
+                  if (typeof v === 'string') {
+                    return { id: 0, name: v, description: v } // Crear un objeto Role temporal
+                  }
+                  return v
+                })
+                cell.row.original.roles = updatedRoles
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label='Roles'
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingRoles ? (
+                          <CircularProgress color='inherit' size={20} />
+                        ) : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    )
+                  }}
+                />
+              )}
+              filterOptions={(options, state) => {
+                return options.filter(
+                  (option) =>
+                    typeof option !== 'string' &&
+                    option.description
+                      .toLowerCase()
+                      .includes(state.inputValue.toLowerCase())
+                )
+              }}
+              noOptionsText='No se encontraron roles'
+              fullWidth
+            />
+          )
+        }
       }
     ],
     [getCommonEditTextFieldProps] // No hay dependencias específicas aquí
@@ -342,6 +393,8 @@ const TableOwnUsers: React.FC = () => {
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         onSubmit={handleCreateNewRow}
+        rolesList={roles}
+        loadingRoles={loadingRoles}
       />
     </>
   )
@@ -352,23 +405,32 @@ interface CreateModalProps {
   onClose: () => void
   onSubmit: (values: UserData) => void
   open: boolean
+  rolesList?: Role[] // Roles disponibles desde la tabla `roles`
+  loadingRoles: boolean
 }
 
-export const CreateNewAccountModal = ({
+const CreateNewAccountModal = ({
   open,
   columns,
   onClose,
-  onSubmit
+  onSubmit,
+  rolesList,
+  loadingRoles
 }: CreateModalProps) => {
+  // Inicializamos el estado de los valores. Para el campo 'rol' se asigna un array vacío.
   const [values, setValues] = useState<any>(() =>
     columns.reduce((acc, column) => {
-      acc[column.accessorKey ?? ''] = ''
+      if (column.accessorKey === 'roles') {
+        acc[column.accessorKey] = []
+      } else {
+        acc[column.accessorKey ?? ''] = ''
+      }
       return acc
     }, {} as any)
   )
 
   const handleSubmit = () => {
-    // Coloca aquí tu lógica de validación si es necesario
+    // Aquí puedes agregar lógica de validación si es necesario.
     onSubmit(values)
     onClose()
   }
@@ -389,28 +451,61 @@ export const CreateNewAccountModal = ({
               <React.Fragment key={column.accessorKey}>
                 {column.accessorKey !== 'id' && (
                   <>
-                    {column.accessorKey === 'rol' ? (
-                      <Select
-                        value={values[column.accessorKey]}
-                        name={column.accessorKey}
-                        onChange={(e) =>
-                          setValues({
-                            ...values,
-                            [e.target.name]: e.target.value
-                          })
-                        }
-                        label={column.header}
+                    {column.accessorKey === 'roles' ? (
+                      <Autocomplete
+                        multiple
+                        options={rolesList ?? []} // Array de roles obtenido desde la API
+                        autoComplete={false}
+                        freeSolo
+                        getOptionLabel={(option) => {
+                          if (typeof option === 'string') {
+                            return option
+                          }
+                          return option.description // Muestra la descripción en el input
+                        }} // Muestra la descripción en el input
+                        loading={loadingRoles}
+                        onChange={(_, newValues) => {
+                          setValues((prev: any) => ({
+                            ...prev,
+                            // Almacena, por ejemplo, los IDs de los roles seleccionados
+                            rol: newValues.map((v) => {
+                              if (typeof v === 'string') {
+                                return v
+                              }
+                              return v.name
+                            })
+                          }))
+                        }}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label='Roles'
+                            InputProps={{
+                              ...params.InputProps,
+                              endAdornment: (
+                                <>
+                                  {loadingRoles ? (
+                                    <CircularProgress
+                                      color='inherit'
+                                      size={20}
+                                    />
+                                  ) : null}
+                                  {params.InputProps.endAdornment}
+                                </>
+                              )
+                            }}
+                          />
+                        )}
+                        filterOptions={(options, state) => {
+                          return options.filter((option) =>
+                            option.description
+                              .toLowerCase()
+                              .includes(state.inputValue.toLowerCase())
+                          )
+                        }}
+                        noOptionsText='No se encontraron roles'
                         fullWidth
-                      >
-                        <MenuItem value='admin'>Administrador</MenuItem>
-                        <MenuItem value='metrologist'>Metrologo</MenuItem>
-                        <MenuItem value='comp_analyst'>
-                          Analista de Compras
-                        </MenuItem>
-                        <MenuItem value='comp_supervisor'>
-                          Supervisor de Compras
-                        </MenuItem>
-                      </Select>
+                      />
                     ) : (
                       <TextField
                         label={column.header}

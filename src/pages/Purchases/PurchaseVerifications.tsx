@@ -227,7 +227,7 @@ const PurchaseVerificationsTable: React.FC = () => {
         )
       },
       /* Visualización resumida cuando no se edita */
-      Cell: ({ cell }) => null
+      Cell: () => null
     }
   ]
 

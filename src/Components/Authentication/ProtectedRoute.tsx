@@ -3,7 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom'
 
 interface ProtectedRouteProps {
   isAuthenticated: boolean
-  userRole: string // El rol del usuario autenticado
+  userRole: string[] // El rol del usuario autenticado
   roles: string[] // Roles permitidos para la ruta, puede incluir '*'
   redirectPath?: string
   unauthorizedPath?: string
@@ -24,7 +24,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Verifica si el rol del usuario está permitido
-  if (!roles.includes('*') && !roles.includes(userRole)) {
+  if (!roles.includes('*') && !userRole.some((role) => roles.includes(role))) {
     // Si el usuario no tiene el rol requerido, se evalúa fallbackRoute.
     if (fallbackRoute) {
       return <Navigate to='/welcome' replace />

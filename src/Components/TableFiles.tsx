@@ -602,7 +602,7 @@ const Table: React.FC = () => {
                 <Edit />
               </IconButton>
             </Tooltip> */}
-              {$userStore.rol === 'admin' && (
+              {$userStore.rol.some((role) => ['admin'].includes(role)) && (
                 <Tooltip arrow placement='right' title='Delete'>
                   <IconButton
                     color='error'
@@ -627,8 +627,7 @@ const Table: React.FC = () => {
         }}
         // <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear Equipo</button>
         renderTopToolbarCustomActions={() => {
-          if ($userStore.rol !== 'admin' && $userStore.rol !== 'metrologist')
-            return
+          if ($userStore.rol.some((role) => ['admin'].includes(role))) return
           return (
             <Button
               onClick={() => setCreateModalOpen(true)}

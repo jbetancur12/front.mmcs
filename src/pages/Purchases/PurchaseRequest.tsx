@@ -12,6 +12,7 @@ import { format } from 'date-fns'
 import RenderRowActions from 'src/Components/Purchases/RenderRowActions'
 import { useQuery, useQueryClient } from 'react-query'
 import Swal from 'sweetalert2'
+import { useHasRole } from '@utils/functions'
 
 // Función para obtener las solicitudes de compra
 const fetchPurchaseRequests = async (
@@ -27,6 +28,7 @@ const fetchPurchaseRequests = async (
 const PurchaseRequest: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
+  const allowCreationRequest = useHasRole(['admin', 'comp_requester'])
   // Uso de react-query para obtener los datos
   const { data, isLoading } = useQuery('purchaseRequests', () =>
     fetchPurchaseRequests(axiosPrivate)
@@ -220,23 +222,25 @@ const PurchaseRequest: React.FC = () => {
         renderRowActions={({ row }) => (
           <RenderRowActions row={row} queryClient={queryClient} />
         )}
-        renderTopToolbarCustomActions={() => (
-          <Button
-            variant='contained'
-            onClick={handleOpenModal}
-            startIcon={<Add />}
-            sx={{
-              backgroundColor: '#9CF08B',
-              fontWeight: 'bold',
-              color: '#2D4A27',
-              '&:hover': {
-                backgroundColor: '#6DC662' // Azul más oscuro en hover
-              }
-            }}
-          >
-            Nuevo Solicitud de Compra
-          </Button>
-        )}
+        renderTopToolbarCustomActions={() =>
+          allowCreationRequest && (
+            <Button
+              variant='contained'
+              onClick={handleOpenModal}
+              startIcon={<Add />}
+              sx={{
+                backgroundColor: '#9CF08B',
+                fontWeight: 'bold',
+                color: '#2D4A27',
+                '&:hover': {
+                  backgroundColor: '#6DC662' // Azul más oscuro en hover
+                }
+              }}
+            >
+              Nuevo Solicitud de Compra
+            </Button>
+          )
+        }
         muiTableBodyCellProps={{
           sx: { textAlign: 'left' }
         }}

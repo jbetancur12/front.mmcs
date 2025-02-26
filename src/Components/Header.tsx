@@ -26,7 +26,9 @@ function Header() {
   }, [isMenuOpen])
 
   useEffect(() => {
-    if ($userStore.rol === 'admin') {
+    if (
+      $userStore.rol.some((role) => ['admin', 'metrologist'].includes(role))
+    ) {
       const fetchAlerts = async () => {
         try {
           const response = await axiosPrivate('/dataSheet') // Endpoint que devuelve si hay alertas
@@ -92,11 +94,16 @@ function Header() {
             </a>
           </div>
           <div className='flex items-center'>
-            {$userStore.rol === 'admin' && (
+            {$userStore.rol.some((role) =>
+              ['admin', 'metrologist'].includes(role)
+            ) && (
               <Link to={'/datasheets/alerts'}>
                 <button
                   className={
-                    hasAlerts && $userStore.rol === 'admin'
+                    hasAlerts &&
+                    $userStore.rol.some((role) =>
+                      ['admin', 'metrologist'].includes(role)
+                    )
                       ? 'p-2 text-red-500 rounded-lg hover:text-red-900 hover:bg-red-100 dark:text-red-400 dark:hover:text-white dark:hover:bg-red-700'
                       : 'p-2 text-gray-500 rounded-lg hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700'
                   }

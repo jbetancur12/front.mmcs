@@ -22,7 +22,7 @@ const VehicleDataSheetPDF = lazy(
   () => import('../Components/Fleet/VehicleDataSheetPDF')
 )
 
-const FleetRoutes = (role: string) => {
+const FleetRoutes = (role: string[]) => {
   return (
     <>
       <Route

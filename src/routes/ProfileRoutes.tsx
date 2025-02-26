@@ -5,7 +5,7 @@ import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
 const Profiles = lazy(() => import('../pages/Profiles'))
 const Profile = lazy(() => import('../pages/Profile'))
 
-const ProfileRoutes = (role: string) => {
+const ProfileRoutes = (role: string[]) => {
   return (
     <>
       <Route

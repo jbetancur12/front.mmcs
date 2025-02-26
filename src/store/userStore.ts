@@ -12,7 +12,7 @@ export interface Module {
 export interface UserData {
   nombre: string
   email: string
-  rol: string
+  rol: string[]
   customer: {
     id: number
     nombre: string
@@ -24,7 +24,7 @@ export interface UserData {
 export const userStore = atom<UserData>({
   nombre: '',
   email: '',
-  rol: '',
+  rol: [''],
   customer: {
     id: 0,
     nombre: '',

@@ -103,7 +103,7 @@ const Profile: React.FC = () => {
   }
 
   const handleClick = () => {
-    if ($userStore.rol === 'admin') {
+    if ($userStore.rol.some((role) => ['admin'].includes(role))) {
       document.getElementById('avatarInput')?.click()
     }
   }
@@ -188,16 +188,17 @@ const Profile: React.FC = () => {
             )}
           </Typography>
         </div>
-        {$userStore.rol === 'admin' && !isEditing && (
-          <IconButton
-            color='primary'
-            aria-label='Editar'
-            component='span'
-            onClick={handleEditClick}
-          >
-            <Edit />
-          </IconButton>
-        )}
+        {$userStore.rol.some((role) => ['admin'].includes(role)) &&
+          !isEditing && (
+            <IconButton
+              color='primary'
+              aria-label='Editar'
+              component='span'
+              onClick={handleEditClick}
+            >
+              <Edit />
+            </IconButton>
+          )}
         {isEditing && (
           <IconButton
             color='primary'
@@ -238,20 +239,21 @@ const Profile: React.FC = () => {
           </Typography>
         </div>
       </div>
-      {$userStore.rol === 'admin' && !isEditing && (
-        <Button
-          variant='outlined'
-          sx={{
-            mb: 4,
-            marginLeft: 'auto',
-            marginRight: 'auto',
-            display: 'block'
-          }}
-          onClick={() => document.getElementById('cvInput')?.click()}
-        >
-          Actualizar CV
-        </Button>
-      )}
+      {$userStore.rol.some((role) => ['admin'].includes(role)) &&
+        !isEditing && (
+          <Button
+            variant='outlined'
+            sx={{
+              mb: 4,
+              marginLeft: 'auto',
+              marginRight: 'auto',
+              display: 'block'
+            }}
+            onClick={() => document.getElementById('cvInput')?.click()}
+          >
+            Actualizar CV
+          </Button>
+        )}
       <input
         id='cvInput'
         type='file'

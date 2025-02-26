@@ -5,7 +5,7 @@ interface DropdownButtonProps {
   buttonText: string
   menuItems: { label: string; url: string; roles: string[] }[]
   pathData: string
-  rol: string
+  rol: string[]
   currentPath: string
 }
 
@@ -61,7 +61,7 @@ const DropdownButton: React.FC<DropdownButtonProps> = ({
       </button>
       <ul className={`${isDropdownOpen ? 'block' : 'hidden'} py-2 space-y-2`}>
         {menuItems
-          .filter((item) => item.roles.includes(rol)) // Filtrar elementos basados en los roles permitidos
+          .filter((item) => item.roles.some((role) => rol.includes(role))) // Filtrar elementos basados en los roles permitidos
           .map((item) => (
             <li
               key={item.label}

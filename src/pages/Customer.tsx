@@ -200,7 +200,9 @@ function UserProfile() {
     const checkPermission = async () => {
       try {
         if (
-          ['admin', 'metrologist'].includes($userStore.rol) ||
+          $userStore.rol.some((role) =>
+            ['admin', 'metrologist'].includes(role)
+          ) ||
           id === $userStore.customer.id + ''
         ) {
           setHasPermission(true)
@@ -394,7 +396,9 @@ function UserProfile() {
             Programación
           </a>
         </li>
-        {['admin', 'metrologist'].includes($userStore.rol) && (
+        {$userStore.rol.some((role) =>
+          ['admin', 'metrologist'].includes(role)
+        ) && (
           <>
             <li className='mr-1'>
               <a

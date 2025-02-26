@@ -106,6 +106,8 @@ export interface PurchaseRequest {
   rejectionReason?: string // Opcional cuando no está rechazada
   approvalDate?: Date
   approver?: Approver
+  preApproved?: boolean
+  approved?: boolean
   createdAt: Date
   updatedAt: Date
 

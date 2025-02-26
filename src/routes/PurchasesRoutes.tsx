@@ -17,7 +17,7 @@ const PurchaseVerifications = lazy(
   () => import('src/pages/Purchases/PurchaseVerifications')
 )
 
-const SupplierRoutes = (role: string) => {
+const SupplierRoutes = (role: string[]) => {
   return (
     <>
       <Route
@@ -25,7 +25,7 @@ const SupplierRoutes = (role: string) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['admin', 'comp_analyst', 'comp_supervisor']}
+            roles={['admin', 'comp_requester', 'comp_supervisor']}
           />
         }
       >

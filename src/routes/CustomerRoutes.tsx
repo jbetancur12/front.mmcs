@@ -10,7 +10,7 @@ const DashboardCustomer = lazy(
   () => import('../Components/Dashboard/DashboardCustomer')
 )
 
-const CustomerRoutes = (role: string) => {
+const CustomerRoutes = (role: string[]) => {
   return (
     <>
       <Route
@@ -18,7 +18,7 @@ const CustomerRoutes = (role: string) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['admin', 'metrologist']}
+            roles={['admin', 'metrologist', 'user']}
           />
         }
       >
@@ -31,7 +31,7 @@ const CustomerRoutes = (role: string) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['*']}
+            roles={['admin', 'user']}
           />
         }
       >

@@ -12,11 +12,12 @@ const iconClass =
   'w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white'
 
 // Helper para verificar si un módulo debe ser visible
-const canViewModule = (roles: string[], userRole: string) => {
-  return roles.includes(userRole)
+const canViewModule = (roles: string[], userRole: string[]) => {
+  return userRole.some((role) => roles.includes(role))
 }
 
 const getLinkToCustomer = (to: string, $userStore: UserData) => {
+  console.log('🚀 ~ getLinkToCustomer ~ $userStore:', $userStore)
   if (!$userStore.customer) {
     return '/' // Ruta predeterminada para usuarios sin cliente
   } else {
@@ -70,7 +71,7 @@ const sidebarItems = ($userStore: UserData) => [
   {
     type: 'dropdown',
     buttonText: 'Compras',
-    roles: ['admin', 'comp_analyst', 'comp_supervisor'],
+    roles: ['admin', 'comp_requester', 'comp_supervisor'],
     moduleName: 'Basic',
     pathData:
       'M3 3h2l1 5h13l1-5h2v2h-2l-1 5h-14l-1-5h-2zm4 8h10l1.5 7h-13zm1.5 9a1.5 1.5 0 1 1 3 0 1.5 1.5 0 1 1-3 0zm7 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 1 1-3 0z',
@@ -78,27 +79,27 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Selección de Proveedores',
         url: 'purchases/supplier-selection',
-        roles: ['admin', 'comp_analyst', 'comp_supervisor']
+        roles: ['admin', 'comp_requester', 'comp_supervisor']
       },
       {
         label: 'Lista de Proveedores',
         url: 'purchases/suppliers',
-        roles: ['admin', 'comp_analyst', 'comp_supervisor']
+        roles: ['admin', 'comp_requester', 'comp_supervisor']
       },
       {
         label: 'Solicitudes de Compra',
         url: 'purchases/requests',
-        roles: ['admin', 'comp_analyst', 'comp_supervisor']
+        roles: ['admin', 'comp_requester', 'comp_supervisor']
       },
       {
         label: 'Ordenes de Compra',
         url: 'purchases/orders',
-        roles: ['admin', 'comp_analyst', 'comp_supervisor']
+        roles: ['admin', 'comp_requester', 'comp_supervisor']
       },
       {
         label: 'Verificaciones',
         url: 'purchases/verifications',
-        roles: ['admin', 'comp_analyst', 'comp_supervisor']
+        roles: ['admin', 'comp_requester', 'comp_supervisor']
       }
     ]
   },
@@ -188,6 +189,7 @@ const sidebarItems = ($userStore: UserData) => [
 
 const SideBar = () => {
   const $userStore = useStore(userStore)
+
   const { pathname } = useLocation()
 
   const hasModuleAccess = (moduleName: string) => {

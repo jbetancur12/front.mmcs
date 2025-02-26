@@ -8,25 +8,30 @@ import {
 import { IconButton, Tooltip, Stack, Divider } from '@mui/material'
 import { useStore } from '@nanostores/react'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { useMutation } from 'react-query'
+import { QueryClient, useMutation } from 'react-query'
 import { Link } from 'react-router-dom'
 import { PurchaseRequestStatus } from 'src/pages/Purchases/Enums'
 import { userStore } from 'src/store/userStore'
 import Swal from 'sweetalert2'
 import GenerateOrderModal from './GenerateOrderModal'
 import { useState } from 'react'
-import { PurchaseRequestItem } from 'src/pages/Purchases/Types'
+import { PurchaseRequest, PurchaseRequestItem } from 'src/pages/Purchases/Types'
+import { useHasRole } from '@utils/functions'
 
-const RenderRowActions = ({
-  row,
-  queryClient
-}: {
-  row: any
-  queryClient: any
-}) => {
+type RenderRowActionsProps = {
+  row: { original: PurchaseRequest }
+  queryClient: QueryClient
+}
+
+const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
+  console.log('🚀 ~ RenderRowActions ~ $userStore:', $userStore)
   const status = row.original.status as PurchaseRequestStatus
+  const allowActions = {
+    creationOrder: useHasRole(['admin', 'comp_requester']),
+    approval: useHasRole(['admin', 'comp_approver'])
+  }
 
   const [orderModalOpen, setOrderModalOpen] = useState(false)
 
@@ -119,14 +124,16 @@ const RenderRowActions = ({
           </IconButton>
         </Link>
       </Tooltip>
-      <IconButton
-        onClick={handleOpenOrderModal}
-        title='Generar Orden'
-        color={!isAllowed ? 'default' : mixedState ? 'warning' : 'default'}
-        disabled={!isAllowed || allProcessed}
-      >
-        <ShoppingCart />
-      </IconButton>
+      {allowActions.creationOrder && (
+        <IconButton
+          onClick={handleOpenOrderModal}
+          title='Generar Orden'
+          color={!isAllowed ? 'default' : mixedState ? 'warning' : 'default'}
+          disabled={!isAllowed || allProcessed}
+        >
+          <ShoppingCart />
+        </IconButton>
+      )}
       <GenerateOrderModal
         open={orderModalOpen}
         onClose={() => setOrderModalOpen(false)}
@@ -135,7 +142,7 @@ const RenderRowActions = ({
       />
 
       {/* Si la solicitud no está rechazada, se muestran las demás acciones */}
-      {status !== PurchaseRequestStatus.Rejected && (
+      {allowActions.approval && status !== PurchaseRequestStatus.Rejected && (
         <>
           <Divider orientation='vertical' flexItem />
           {status === PurchaseRequestStatus.Pending && (

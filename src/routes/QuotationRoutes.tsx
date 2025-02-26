@@ -7,7 +7,7 @@ const ProductosServicios = lazy(() => import('../pages/ProductosServicios'))
 const NewQuote = lazy(() => import('../pages/NewQuote'))
 const Quote = lazy(() => import('../pages/Quote'))
 
-const QuotationRoutes = (role: string) => {
+const QuotationRoutes = (role: string[]) => {
   return (
     <>
       <Route

@@ -28,7 +28,7 @@ const EquipmentAlertsPage = lazy(
 )
 const PDFViewer = lazy(() => import('../Components/DataSheet/PDFViewer'))
 
-const DataSheetRoutes = (role: string) => {
+const DataSheetRoutes = (role: string[]) => {
   return (
     <>
       <Route

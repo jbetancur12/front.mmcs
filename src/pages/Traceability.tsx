@@ -204,7 +204,7 @@ const Traceability = () => {
         fullWidth
         sx={{ mb: 2 }}
       />
-      {$userStore.rol === 'admin' && (
+      {$userStore.rol.some((role) => ['admin'].includes(role)) && (
         <Button variant='contained' color='primary' onClick={handleOpenModal}>
           Crear Trazabilidad
         </Button>
@@ -234,7 +234,7 @@ const Traceability = () => {
                 <ListItemText primary={traceability.name} />
               </Box>
               <div className='flex gap-4'>
-                {$userStore.rol === 'admin' && (
+                {$userStore.rol.some((role) => ['admin'].includes(role)) && (
                   <Button
                     variant='contained'
                     color='primary'
@@ -243,7 +243,7 @@ const Traceability = () => {
                     Actualizar PDF
                   </Button>
                 )}
-                {$userStore.rol === 'admin' && (
+                {$userStore.rol.some((role) => ['admin'].includes(role)) && (
                   <Button
                     variant='contained'
                     color='error'

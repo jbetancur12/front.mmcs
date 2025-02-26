@@ -14,7 +14,7 @@ const ExcelManipulation = lazy(
 const ScriptGenerator = lazy(() => import('../Components/ScriptGenerator'))
 const Gotemberg = lazy(() => import('../Components/Gotemberg'))
 
-const OtherRoutes = (role: string) => {
+const OtherRoutes = (role: string[]) => {
   return (
     <>
       {/* Rutas protegidas para Admin; si el usuario no es admin, fallback a /welcome. */}

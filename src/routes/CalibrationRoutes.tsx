@@ -10,7 +10,7 @@ const Files = lazy(() => import('../pages/Files'))
 const Certificates = lazy(() => import('../pages/Certificates'))
 const Traceability = lazy(() => import('../pages/Traceability'))
 
-const CalibrationRoutes = (role: string) => {
+const CalibrationRoutes = (role: string[]) => {
   return (
     <>
       <Route

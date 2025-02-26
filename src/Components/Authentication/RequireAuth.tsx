@@ -7,6 +7,10 @@ import { useNavigate } from 'react-router-dom'
 interface RequireAuthProps {
   children: React.ReactNode
 }
+interface Role {
+  name: string
+  // agrega otros campos si es necesario
+}
 
 const apiUrl = api()
 
@@ -29,8 +33,13 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
           throw new Error('Token no válido')
         }
 
-        const userData = await response.data
-        userStore.set(userData.user)
+        const { ...user } = await response.data
+
+        const formattedUser = {
+          ...user,
+          rol: user.roles.map((role: Role) => role.name)
+        }
+        userStore.set(formattedUser)
       } catch (error) {
         console.log('Error al validar el token:', error)
       } finally {

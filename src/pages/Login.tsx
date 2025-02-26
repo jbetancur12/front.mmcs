@@ -126,6 +126,7 @@ const Login: React.FC = () => {
 
       if (response.status === 200) {
         const { token, expiresIn, user } = response.data
+
         const expirationDate = new Date(expiresIn)
         Cookies.set('expiresIn', expiresIn.toString(), {
           expires: expirationDate, // Fecha de expiración real

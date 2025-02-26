@@ -117,7 +117,7 @@ const Profiles: React.FC = () => {
         Listado de Metrologos
       </Typography>
       <div className=' '>
-        {$userStore.rol === 'admin' && (
+        {$userStore.rol.some((role) => ['admin'].includes(role)) && (
           <Button
             variant='contained'
             onClick={handleOpenModal}
@@ -137,7 +137,9 @@ const Profiles: React.FC = () => {
                 <TableCell>Teléfono</TableCell>
                 <TableCell>Email</TableCell>
 
-                {$userStore.rol === 'admin' && <TableCell></TableCell>}
+                {$userStore.rol.some((role) => ['admin'].includes(role)) && (
+                  <TableCell></TableCell>
+                )}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -183,13 +185,14 @@ const Profiles: React.FC = () => {
                   <TableCell>{profile.phone}</TableCell>
                   <TableCell>{profile.email}</TableCell>
 
-                  {$userStore && $userStore.rol === 'admin' && (
-                    <TableCell>
-                      <IconButton onClick={() => handleEliminar(profile.id)}>
-                        <Delete />
-                      </IconButton>
-                    </TableCell>
-                  )}
+                  {$userStore &&
+                    $userStore.rol.some((role) => ['admin'].includes(role)) && (
+                      <TableCell>
+                        <IconButton onClick={() => handleEliminar(profile.id)}>
+                          <Delete />
+                        </IconButton>
+                      </TableCell>
+                    )}
                 </TableRow>
               ))}
             </TableBody>
