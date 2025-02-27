@@ -38,7 +38,8 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
   const [formData, setFormData] = React.useState<Partial<IPurchaseRequest>>({
     status: PurchaseRequestStatus.Pending,
     requirements: [],
-    items: []
+    items: [],
+    elaborationDate: new Date(new Date().getTime() - 5 * 60 * 60 * 1000)
   })
 
   const [currentItem, setCurrentItem] = React.useState<
@@ -128,7 +129,8 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
     setFormData({
       status: PurchaseRequestStatus.Pending,
       requirements: [],
-      items: []
+      items: [],
+      elaborationDate: new Date(new Date().getTime() - 5 * 60 * 60 * 1000)
     })
     setCurrentItem({
       quantity: 1,
@@ -210,6 +212,11 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                   })
                 }
               }}
+              inputProps={{
+                max: new Date(new Date().getTime() - 5 * 60 * 60 * 1000)
+                  .toISOString()
+                  .split('T')[0] // Deshabilitar días futuros
+              }} // Deshabilitar días futuros
             />
           </Grid>
 

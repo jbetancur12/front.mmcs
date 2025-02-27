@@ -293,8 +293,8 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {devices.map((device) => (
-                  <TableRow key={device.deviceId}>
+                {devices.map((device, deviceIndex) => (
+                  <TableRow key={`${device.deviceId}-${deviceIndex}`}>
                     <TableCell
                       sx={{
                         position: 'sticky',
@@ -321,7 +321,7 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
 
                       return (
                         <TableCell
-                          key={index}
+                          key={`${device.deviceId}-${index}`} // Combina deviceId e index para una clave única
                           sx={{
                             backgroundColor:
                               entry.month === currentMonth &&

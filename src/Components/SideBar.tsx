@@ -17,7 +17,6 @@ const canViewModule = (roles: string[], userRole: string[]) => {
 }
 
 const getLinkToCustomer = (to: string, $userStore: UserData) => {
-  console.log('🚀 ~ getLinkToCustomer ~ $userStore:', $userStore)
   if (!$userStore.customer) {
     return '/' // Ruta predeterminada para usuarios sin cliente
   } else {

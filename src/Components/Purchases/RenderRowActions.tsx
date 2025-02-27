@@ -2,10 +2,19 @@ import {
   Autorenew,
   Cancel,
   CheckCircle,
+  Description,
   ShoppingCart,
+  UploadFile,
   Visibility
 } from '@mui/icons-material'
-import { IconButton, Tooltip, Stack, Divider } from '@mui/material'
+import {
+  IconButton,
+  Tooltip,
+  Stack,
+  Divider,
+  Menu,
+  MenuItem
+} from '@mui/material'
 import { useStore } from '@nanostores/react'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { QueryClient, useMutation } from 'react-query'
@@ -17,6 +26,8 @@ import GenerateOrderModal from './GenerateOrderModal'
 import { useState } from 'react'
 import { PurchaseRequest, PurchaseRequestItem } from 'src/pages/Purchases/Types'
 import { useHasRole } from '@utils/functions'
+import UploadQuotationModal from './UploadQuotationModal'
+import ViewQuotationsModal from './ViewQuotationsModal'
 
 type RenderRowActionsProps = {
   row: { original: PurchaseRequest }
@@ -26,7 +37,7 @@ type RenderRowActionsProps = {
 const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
-  console.log('🚀 ~ RenderRowActions ~ $userStore:', $userStore)
+
   const status = row.original.status as PurchaseRequestStatus
   const allowActions = {
     creationOrder: useHasRole(['admin', 'comp_requester']),
@@ -34,9 +45,37 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
   }
 
   const [orderModalOpen, setOrderModalOpen] = useState(false)
+  const [uploadModalOpen, setUploadModalOpen] = useState(false)
+  const [viewModalOpen, setViewModalOpen] = useState(false)
+  const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null)
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [viewAnchorEl, setViewAnchorEl] = useState<null | HTMLElement>(null)
 
   const handleOpenOrderModal = () => {
     setOrderModalOpen(true)
+  }
+
+  const handleOpenUploadModal = (supplierId: string) => {
+    setSelectedSupplier(supplierId)
+    setUploadModalOpen(true)
+  }
+
+  const handleOpenViewModal = (supplierId: string) => {
+    setSelectedSupplier(supplierId)
+    setViewModalOpen(true)
+  }
+
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleViewMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setViewAnchorEl(event.currentTarget)
+  }
+
+  const handleMenuClose = () => {
+    setAnchorEl(null)
+    setViewAnchorEl(null)
   }
 
   const mutation = useMutation(
@@ -115,6 +154,16 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
     items.length > 0 && items.every((item) => !item.procesed)
   const mixedState = items.length > 0 && !allProcessed && !allUnprocessed
 
+  const uniqueSuppliers = Array.from(
+    new Set(
+      items.flatMap((item) => item.suppliers?.map((supplier) => supplier.id))
+    )
+  ).map((id) =>
+    items
+      .flatMap((item) => item.suppliers)
+      .find((supplier) => supplier?.id === id)
+  )
+
   return (
     <Stack direction='row' spacing={1}>
       <Tooltip title='Ver'>
@@ -124,6 +173,70 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
           </IconButton>
         </Link>
       </Tooltip>
+      {/* Botones para subir y ver cotizaciones */}
+      <Tooltip title='Subir Cotización'>
+        <IconButton onClick={handleMenuClick} color='primary'>
+          <UploadFile />
+        </IconButton>
+      </Tooltip>
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        {uniqueSuppliers.map(
+          (supplier) =>
+            supplier && (
+              <MenuItem
+                key={supplier?.id}
+                onClick={() => {
+                  handleOpenUploadModal(supplier.id.toString())
+                  handleMenuClose()
+                }}
+              >
+                {supplier?.name}
+              </MenuItem>
+            )
+        )}
+      </Menu>
+      <Tooltip title='Ver Cotizaciones'>
+        <IconButton onClick={handleViewMenuClick} color='primary'>
+          <Description />
+        </IconButton>
+      </Tooltip>
+      <Menu
+        anchorEl={viewAnchorEl}
+        open={Boolean(viewAnchorEl)}
+        onClose={handleMenuClose}
+      >
+        {uniqueSuppliers.map(
+          (supplier) =>
+            supplier && (
+              <MenuItem
+                key={supplier?.id}
+                onClick={() => {
+                  handleOpenViewModal(supplier.id.toString())
+                  handleMenuClose()
+                }}
+              >
+                {supplier?.name}
+              </MenuItem>
+            )
+        )}
+      </Menu>
+      <UploadQuotationModal
+        open={uploadModalOpen}
+        onClose={() => setUploadModalOpen(false)}
+        supplierId={selectedSupplier}
+        purchaseRequestId={row.original.id}
+        onSuccess={() => queryClient.invalidateQueries('purchaseRequests')}
+      />
+      <ViewQuotationsModal
+        open={viewModalOpen}
+        onClose={() => setViewModalOpen(false)}
+        purchaseRequestId={row.original.id}
+        supplierId={selectedSupplier} // Pasar el ID del proveedor seleccionado
+      />
       {allowActions.creationOrder && (
         <IconButton
           onClick={handleOpenOrderModal}

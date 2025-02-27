@@ -59,7 +59,6 @@ const PDFViewer = ({ path }: PDFViewerProps) => {
 
     fetchPDF()
   }, [headquarter, params, path, axiosPrivate])
-  console.log(pdfData)
 
   if (!pdfData) {
     return (
