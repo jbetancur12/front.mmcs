@@ -110,6 +110,7 @@ export interface PurchaseRequest {
   approved?: boolean
   createdAt: Date
   updatedAt: Date
+  quotations: any[]
 
   // Relación (opcional para nested loading)
   items?: PurchaseRequestItem[]

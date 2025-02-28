@@ -10,7 +10,8 @@ import {
   Checkbox,
   FormControlLabel,
   Box,
-  Typography
+  Typography,
+  MenuItem
 } from '@mui/material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import {
@@ -189,13 +190,19 @@ const CreatePurchaseVerificationModal: React.FC<
               {/* Columna derecha: checkbox de cumplimiento */}
               <Grid item xs={4}>
                 <TextField
+                  select
                   label='Verificación Tecnica'
                   fullWidth
                   value={formData.technicalVerification || ''}
                   onChange={(e) =>
                     handleChange('technicalVerification', e.target.value)
                   }
-                />
+                >
+                  <MenuItem value={'Bueno'}>Bueno</MenuItem>
+                  <MenuItem value={'Regular'}>Regular</MenuItem>
+                  <MenuItem value={'Malo'}>Malo</MenuItem>
+                  <MenuItem value={'No Aplica'}>No Aplica</MenuItem>
+                </TextField>
               </Grid>
             </Grid>
           </Grid>
@@ -222,6 +229,7 @@ const CreatePurchaseVerificationModal: React.FC<
                 <Grid container spacing={2} sx={{ mt: 1 }}>
                   <Grid item xs={12} sm={3}>
                     <TextField
+                      select
                       label='Inspección Sensorial *'
                       fullWidth
                       value={item.sensorialInspection}
@@ -232,10 +240,16 @@ const CreatePurchaseVerificationModal: React.FC<
                           e.target.value
                         )
                       }
-                    />
+                    >
+                      <MenuItem value={'Bueno'}>Bueno</MenuItem>
+                      <MenuItem value={'Regular'}>Regular</MenuItem>
+                      <MenuItem value={'Malo'}>Malo</MenuItem>
+                      <MenuItem value={'No Aplica'}>No Aplica</MenuItem>
+                    </TextField>
                   </Grid>
                   <Grid item xs={12} sm={3} alignContent={'center'}>
                     <TextField
+                      select
                       label='Verificación Técnica *'
                       fullWidth
                       value={item.technicalVerification}
@@ -246,27 +260,44 @@ const CreatePurchaseVerificationModal: React.FC<
                           e.target.value
                         )
                       }
-                    />
+                    >
+                      <MenuItem value={'Bueno'}>Bueno</MenuItem>
+                      <MenuItem value={'Regular'}>Regular</MenuItem>
+                      <MenuItem value={'Malo'}>Malo</MenuItem>
+                      <MenuItem value={'No Aplica'}>No Aplica</MenuItem>
+                    </TextField>
                   </Grid>
                   <Grid item xs={12} sm={3}>
                     <TextField
+                      select
                       label='Tiempo de Entrega *'
                       fullWidth
                       value={item.devliveryTime}
                       onChange={(e) =>
                         handleItemChange(index, 'devliveryTime', e.target.value)
                       }
-                    />
+                    >
+                      <MenuItem value={'Bueno'}>Bueno</MenuItem>
+                      <MenuItem value={'Regular'}>Regular</MenuItem>
+                      <MenuItem value={'Malo'}>Malo</MenuItem>
+                      <MenuItem value={'No Aplica'}>No Aplica</MenuItem>
+                    </TextField>
                   </Grid>
                   <Grid item xs={12} sm={3}>
                     <TextField
+                      select
                       label='Calidad *'
                       fullWidth
                       value={item.quality}
                       onChange={(e) =>
                         handleItemChange(index, 'quality', e.target.value)
                       }
-                    />
+                    >
+                      <MenuItem value={'Bueno'}>Bueno</MenuItem>
+                      <MenuItem value={'Regular'}>Regular</MenuItem>
+                      <MenuItem value={'Malo'}>Malo</MenuItem>
+                      <MenuItem value={'No Aplica'}>No Aplica</MenuItem>
+                    </TextField>
                   </Grid>
                   <Grid item xs={12}>
                     <FormControlLabel

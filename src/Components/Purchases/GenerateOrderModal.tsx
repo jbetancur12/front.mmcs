@@ -23,6 +23,7 @@ import {
   PurchaseRequest,
   PurchaseOrder
 } from 'src/pages/Purchases/Types'
+import { NumericFormat } from 'react-number-format'
 
 interface AssignedItem {
   purchaseRequestItemId: string
@@ -30,6 +31,7 @@ interface AssignedItem {
   quantity: number
   unitValue: string
   total: number
+  applyIVA: boolean
 }
 
 interface GenerateOrderModalProps {
@@ -149,7 +151,8 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
           description: item.description,
           quantity: item.quantity,
           unitValue: '',
-          total: 0
+          total: 0,
+          applyIVA: true
         }))
       setAssignedItems(itemsForSupplier)
     } else {
@@ -170,15 +173,21 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
   const handleItemChange = (
     index: number,
     field: keyof AssignedItem,
-    value: string
+    value: string | boolean
   ) => {
     setAssignedItems((prevItems) => {
       const newItems = [...prevItems]
       newItems[index] = { ...newItems[index], [field]: value }
       if (field === 'unitValue') {
         const quantity = newItems[index].quantity
-        const unitValue = parseFloat(value) || 0
+        const unitValue = parseFloat(newItems[index].unitValue) || 0
         newItems[index].total = unitValue * quantity
+      }
+      if (field === 'applyIVA') {
+        const unitValue = parseFloat(newItems[index].unitValue) || 0
+        const quantity = newItems[index].quantity
+        const total = unitValue * quantity
+        newItems[index].total = (value as boolean) ? total * 1.19 : total
       }
       const overallTotal = newItems.reduce(
         (sum, item) => sum + (parseFloat(item.total.toString()) || 0),
@@ -199,12 +208,24 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
 
   useEffect(() => {
     const totalBefore = assignedItems.reduce(
-      (sum, item) => sum + (parseFloat(item.total.toString()) || 0),
+      (sum, item) =>
+        sum + (parseFloat(item.unitValue.toString()) || 0) * item.quantity,
+      0
+    )
+    const totalVAT = assignedItems.reduce(
+      (sum, item) =>
+        sum +
+        (parseFloat(item.unitValue) || 0) *
+          item.quantity *
+          (item.applyIVA ? 0.19 : 0),
       0
     )
     setOrderData((prev) => ({
       ...prev,
-      totalBeforeVAT: totalBefore
+      totalBeforeVAT: totalBefore,
+      vat: totalVAT,
+      total:
+        totalBefore + totalVAT - prev.retefuente - prev.retecree - prev.discount
     }))
   }, [assignedItems])
 
@@ -232,14 +253,6 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
     ivaPercentage
   ])
 
-  const handleApplyIVAChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setApplyIVA(e.target.checked)
-  }
-
-  const handleIvaPercentageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setIvaPercentage(e.target.value)
-  }
-
   return (
     <Modal open={open} onClose={onClose}>
       <div
@@ -252,7 +265,8 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
           padding: '2rem',
           borderRadius: '8px',
           maxHeight: '90vh',
-          overflowY: 'auto'
+          overflowY: 'auto',
+          width: '70vw'
         }}
       >
         <Typography variant='h6' gutterBottom>
@@ -380,16 +394,47 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
                     <TableCell>{item.description}</TableCell>
                     <TableCell>{item.quantity}</TableCell>
                     <TableCell>
-                      <TextField
-                        type='number'
+                      <NumericFormat
                         value={item.unitValue}
-                        onChange={(e) =>
-                          handleItemChange(index, 'unitValue', e.target.value)
-                        }
+                        thousandSeparator={true}
+                        prefix={'$'}
+                        customInput={TextField}
+                        onValueChange={(values) => {
+                          const { value } = values
+                          handleItemChange(index, 'unitValue', value)
+                        }}
                       />
                     </TableCell>
                     <TableCell>
-                      <TextField type='number' value={item.total} disabled />
+                      <NumericFormat
+                        value={item.total}
+                        thousandSeparator={true}
+                        prefix={'$'}
+                        customInput={TextField}
+                        onValueChange={(values) => {
+                          const { value } = values
+                          handleItemChange(index, 'total', value)
+                        }}
+                        disabled
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={item.applyIVA}
+                            onChange={(e) =>
+                              handleItemChange(
+                                index,
+                                'applyIVA',
+                                e.target.checked
+                              )
+                            }
+                            color='primary'
+                          />
+                        }
+                        label='IVA'
+                      />
                     </TableCell>
                     <TableCell>
                       <Button
@@ -423,16 +468,17 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
                 />
               </Grid>
               <Grid item xs={6}>
-                <TextField
+                <NumericFormat
                   label='Total antes de IVA'
-                  name='totalBeforeVAT'
-                  fullWidth
-                  margin='normal'
                   value={orderData.totalBeforeVAT.toString()}
-                  InputProps={{ readOnly: true }}
+                  thousandSeparator={true}
+                  prefix={'$'}
+                  customInput={TextField}
+                  fullWidth
+                  inputProps={{ readOnly: true }}
                 />
               </Grid>
-              <Grid item xs={6} alignContent={'center'}>
+              {/* <Grid item xs={6} alignContent={'center'}>
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -455,63 +501,69 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
                     onChange={handleIvaPercentageChange}
                   />
                 </Grid>
-              )}
+              )} */}
               <Grid item xs={6}>
-                <TextField
+                <NumericFormat
                   label='IVA (valor)'
                   name='vat'
-                  fullWidth
-                  margin='normal'
                   value={orderData.vat}
-                  InputProps={{ readOnly: true }}
+                  thousandSeparator={true}
+                  prefix={'$'}
+                  customInput={TextField}
+                  fullWidth
+                  inputProps={{ readOnly: true }}
                 />
               </Grid>
               <Grid item xs={6}>
-                <TextField
+                <NumericFormat
                   label='ReteFuente'
                   name='retefuente'
-                  type='number'
-                  fullWidth
-                  margin='normal'
                   value={orderData.retefuente.toString()}
-                  onChange={(e) =>
+                  thousandSeparator={true}
+                  prefix={'$'}
+                  customInput={TextField}
+                  fullWidth
+                  onValueChange={(values) => {
+                    const { value } = values
                     setOrderData((prev) => ({
                       ...prev,
-                      retefuente: Number(e.target.value)
+                      retefuente: Number(value)
                     }))
-                  }
+                  }}
                 />
               </Grid>
               <Grid item xs={6}>
-                <TextField
+                <NumericFormat
                   label='ReteCree'
-                  name='retecree'
-                  type='number'
-                  fullWidth
-                  margin='normal'
                   value={orderData.retecree.toString()}
-                  onChange={(e) =>
+                  thousandSeparator={true}
+                  prefix={'$'}
+                  customInput={TextField}
+                  fullWidth
+                  onValueChange={(values) => {
+                    const { value } = values
                     setOrderData((prev) => ({
                       ...prev,
-                      retecree: Number(e.target.value)
+                      retecree: Number(value)
                     }))
-                  }
+                  }}
                 />
               </Grid>
               <Grid item xs={6}>
-                <TextField
+                <NumericFormat
                   label='Descuento'
-                  name='discount'
-                  type='number'
-                  fullWidth
-                  margin='normal'
                   value={orderData.discount.toString()}
-                  onChange={(e) =>
+                  thousandSeparator={true}
+                  prefix={'$'}
+                  customInput={TextField}
+                  fullWidth
+                  onValueChange={(values) => {
+                    const { value } = values
                     setOrderData((prev) => ({
                       ...prev,
-                      discount: Number(e.target.value)
+                      discount: Number(value)
                     }))
-                  }
+                  }}
                 />
               </Grid>
 

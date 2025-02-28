@@ -12,9 +12,10 @@ import {
   Box,
   Typography,
   Autocomplete,
-  CircularProgress
+  CircularProgress,
+  MenuItem
 } from '@mui/material'
-import { Add, Close, Delete } from '@mui/icons-material'
+import { Add, Close, Delete, Edit } from '@mui/icons-material'
 import {
   PurchaseRequest as IPurchaseRequest,
   PurchaseRequestItem
@@ -22,6 +23,12 @@ import {
 import useAxiosPrivate from '@utils/use-axios-private'
 import { PurchaseRequestStatus } from 'src/pages/Purchases/Enums'
 import { debounce } from 'lodash'
+import {
+  calibrationServiceRequirements,
+  equipmentPurchaseRequirements,
+  proficiencyTestingServiceRequirements,
+  internalAuditServiceRequirements
+} from 'src/utils/requirements'
 
 interface CreatePurchaseRequestModalProps {
   open: boolean
@@ -59,6 +66,13 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
 
   const [newRequirement, setNewRequirement] = React.useState('')
   const [error, setError] = React.useState('')
+  const [requirementType, setRequirementType] = React.useState('')
+
+  const [editingRequirementIndex, setEditingRequirementIndex] = React.useState<
+    number | null
+  >(null)
+  const [editingRequirementValue, setEditingRequirementValue] =
+    React.useState<string>('')
 
   // Función debounce para búsquedas
   const fetchProviders = React.useCallback(
@@ -92,6 +106,56 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
     fetchProviders(value)
   }
 
+  const handleRequirementTypeChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const type = event.target.value
+    setRequirementType(type)
+
+    let requirements: string[] = []
+    switch (type) {
+      case 'calibration':
+        requirements = calibrationServiceRequirements
+        break
+      case 'equipment':
+        requirements = equipmentPurchaseRequirements
+        break
+      case 'proficiency':
+        requirements = proficiencyTestingServiceRequirements
+        break
+      case 'audit':
+        requirements = internalAuditServiceRequirements
+        break
+      default:
+        requirements = []
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      requirements
+    }))
+  }
+  const handleEditRequirement = (index: number) => {
+    if (formData.requirements) {
+      setEditingRequirementIndex(index)
+      setEditingRequirementValue(formData.requirements[index])
+    }
+  }
+
+  const handleSaveRequirement = () => {
+    if (editingRequirementIndex !== null) {
+      setFormData((prev) => {
+        const updatedRequirements = [...(prev.requirements || [])]
+        updatedRequirements[editingRequirementIndex] = editingRequirementValue
+        return {
+          ...prev,
+          requirements: updatedRequirements
+        }
+      })
+      setEditingRequirementIndex(null)
+      setEditingRequirementValue('')
+    }
+  }
   const handleSubmit = async () => {
     try {
       if (
@@ -140,6 +204,7 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
     })
     setNewRequirement('')
     setError('')
+    setRequirementType('')
     onClose()
   }
 
@@ -241,6 +306,8 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
               }
             />
           </Grid>
+
+          {/* Select para tipo de requerimientos */}
 
           {/* Sección de ítems */}
           <Grid item xs={12}>
@@ -398,6 +465,23 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
 
           <Grid item xs={12}>
             <Box sx={{ border: '1px solid #ddd', p: 2, borderRadius: 1 }}>
+              <Grid item xs={12} md={4} sx={{ mb: 2 }}>
+                <TextField
+                  select
+                  fullWidth
+                  label='Tipo de Requerimientos'
+                  value={requirementType}
+                  onChange={handleRequirementTypeChange}
+                >
+                  <MenuItem value='calibration'>
+                    Servicios de Calibración
+                  </MenuItem>
+                  <MenuItem value='equipment'>Compra de Equipos</MenuItem>
+                  <MenuItem value='proficiency'>Ensayos de Aptitud</MenuItem>
+                  <MenuItem value='audit'>Auditoría Interna</MenuItem>
+                  <MenuItem value='others'>Otros</MenuItem>
+                </TextField>
+              </Grid>
               <TextField
                 fullWidth
                 label='Agregar Requisito'
@@ -432,15 +516,39 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                       justifyContent: 'space-between',
                       flexDirection: 'columns',
                       py: 1,
+                      width: '100%',
                       borderBottom:
                         index < (formData.requirements?.length ?? 0) - 1
                           ? '1px solid #eee'
                           : 'none'
                     }}
                   >
-                    <Typography variant='body2' sx={{ flexGrow: 1 }}>
-                      • {req}
-                    </Typography>
+                    {editingRequirementIndex === index ? (
+                      <TextField
+                        multiline
+                        fullWidth
+                        value={editingRequirementValue}
+                        onChange={(e) =>
+                          setEditingRequirementValue(e.target.value)
+                        }
+                        onBlur={handleSaveRequirement}
+                        onKeyPress={(e) =>
+                          e.key === 'Enter' && handleSaveRequirement()
+                        }
+                        sx={{ flexGrow: 1 }}
+                      />
+                    ) : (
+                      <Typography variant='body2' sx={{ flexGrow: 1 }}>
+                        • {req}
+                      </Typography>
+                    )}
+
+                    <IconButton
+                      size='small'
+                      onClick={() => handleEditRequirement(index)}
+                    >
+                      <Edit fontSize='small' />
+                    </IconButton>
 
                     <IconButton
                       size='small'

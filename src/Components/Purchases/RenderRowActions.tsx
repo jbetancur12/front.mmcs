@@ -23,7 +23,7 @@ import { PurchaseRequestStatus } from 'src/pages/Purchases/Enums'
 import { userStore } from 'src/store/userStore'
 import Swal from 'sweetalert2'
 import GenerateOrderModal from './GenerateOrderModal'
-import { useState } from 'react'
+
 import { PurchaseRequest, PurchaseRequestItem } from 'src/pages/Purchases/Types'
 import { useHasRole } from '@utils/functions'
 import UploadQuotationModal from './UploadQuotationModal'
@@ -63,6 +63,11 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
   const handleOpenViewModal = (supplierId: string) => {
     setSelectedSupplier(supplierId)
     setViewModalOpen(true)
+  }
+
+  const handleCloseViewModal = () => {
+    setViewModalOpen(false)
+    setSelectedSupplier(null)
   }
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -164,6 +169,10 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
       .find((supplier) => supplier?.id === id)
   )
 
+  const supplierIds = row.original.quotations.map((quotation: any) =>
+    quotation.supplierId.toString()
+  )
+
   return (
     <Stack direction='row' spacing={1}>
       <Tooltip title='Ver'>
@@ -193,6 +202,17 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
                   handleOpenUploadModal(supplier.id.toString())
                   handleMenuClose()
                 }}
+                style={{
+                  fontWeight: supplierIds.includes(supplier.id.toString())
+                    ? 'bold'
+                    : 'normal'
+                }}
+                disabled={
+                  !!row.original.quotations.find(
+                    (quotation) =>
+                      quotation.supplierId === supplier.id && quotation.accepted
+                  )
+                }
               >
                 {supplier?.name}
               </MenuItem>
@@ -200,7 +220,10 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
         )}
       </Menu>
       <Tooltip title='Ver Cotizaciones'>
-        <IconButton onClick={handleViewMenuClick} color='primary'>
+        <IconButton
+          onClick={handleViewMenuClick}
+          color={row.original.quotations.length > 0 ? 'secondary' : 'primary'}
+        >
           <Description />
         </IconButton>
       </Tooltip>
@@ -218,6 +241,11 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
                   handleOpenViewModal(supplier.id.toString())
                   handleMenuClose()
                 }}
+                style={{
+                  fontWeight: supplierIds.includes(supplier.id.toString())
+                    ? 'bold'
+                    : 'normal'
+                }}
               >
                 {supplier?.name}
               </MenuItem>
@@ -231,12 +259,17 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
         purchaseRequestId={row.original.id}
         onSuccess={() => queryClient.invalidateQueries('purchaseRequests')}
       />
-      <ViewQuotationsModal
-        open={viewModalOpen}
-        onClose={() => setViewModalOpen(false)}
-        purchaseRequestId={row.original.id}
-        supplierId={selectedSupplier} // Pasar el ID del proveedor seleccionado
-      />
+      {selectedSupplier && (
+        <ViewQuotationsModal
+          open={viewModalOpen}
+          onClose={handleCloseViewModal}
+          purchaseRequestId={row.original.id}
+          supplierId={selectedSupplier} // Pasar el ID del proveedor seleccionado
+          quotation={row.original.quotations.find(
+            (quotation) => quotation.supplierId.toString() === selectedSupplier
+          )}
+        />
+      )}
       {allowActions.creationOrder && (
         <IconButton
           onClick={handleOpenOrderModal}
