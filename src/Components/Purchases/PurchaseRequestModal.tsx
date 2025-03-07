@@ -13,7 +13,8 @@ import {
   Typography,
   Autocomplete,
   CircularProgress,
-  MenuItem
+  MenuItem,
+  Chip
 } from '@mui/material'
 import { Add, Close, Delete, Edit } from '@mui/icons-material'
 import {
@@ -94,11 +95,11 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
   )
 
   // Cargar proveedores al abrir el modal
-  React.useEffect(() => {
-    if (open) {
-      fetchProviders('')
-    }
-  }, [open])
+  // React.useEffect(() => {
+  //   if (open) {
+  //     fetchProviders('')
+  //   }
+  // }, [open])
 
   // Manejar cambio de búsqueda
   const handleSearchChange = (value: string) => {
@@ -364,6 +365,12 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                   <Autocomplete
                     multiple
                     options={providers}
+                    // value={providers.filter((provider) =>
+                    //   currentItem.supplierIds?.includes(provider.id)
+                    // )}
+                    isOptionEqualToValue={(option, value) =>
+                      option.id === value.id
+                    }
                     autoComplete={false}
                     getOptionLabel={(option) => option.name}
                     loading={loadingProviders}
@@ -391,6 +398,17 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                         }}
                       />
                     )}
+                    renderTags={(
+                      value,
+                      getTagProps // ¡Este prop faltaba!
+                    ) =>
+                      value.map((option, index) => {
+                        const { key, ...tagProps } = getTagProps({ index })
+                        return (
+                          <Chip key={key} label={option.name} {...tagProps} />
+                        )
+                      })
+                    }
                     filterOptions={(x) => x}
                     noOptionsText={
                       initialLoad

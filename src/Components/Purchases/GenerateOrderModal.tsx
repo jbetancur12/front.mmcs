@@ -74,8 +74,8 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
   const [_, setPendingItems] = useState<PurchaseRequestItem[]>([
     ...(purchaseRequest.items || [])
   ])
-  const [applyIVA, setApplyIVA] = useState<boolean>(true)
-  const [ivaPercentage, setIvaPercentage] = useState<string>('19')
+  const [applyIVA] = useState<boolean>(true)
+  const [ivaPercentage] = useState<string>('19')
 
   const handleSubmitOrder = async () => {
     const payload = {
@@ -187,7 +187,7 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
         const unitValue = parseFloat(newItems[index].unitValue) || 0
         const quantity = newItems[index].quantity
         const total = unitValue * quantity
-        newItems[index].total = (value as boolean) ? total * 1.19 : total
+        newItems[index].total = total
       }
       const overallTotal = newItems.reduce(
         (sum, item) => sum + (parseFloat(item.total.toString()) || 0),
@@ -290,7 +290,7 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
               ))}
             </TextField>
           </Grid>
-          <Grid item xs={6}>
+          {/* <Grid item xs={6}>
             <TextField
               label='Código'
               name='code'
@@ -299,7 +299,7 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
               value={orderData.code}
               onChange={handleOrderChange}
             />
-          </Grid>
+          </Grid> */}
           {/* Fila 2: Fechas */}
           <Grid item xs={6}>
             <TextField
@@ -457,8 +457,8 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
               <Grid item xs={12}>
                 <TextField
                   multiline
-                  rows={2}
-                  maxRows={4}
+                  minRows={2}
+                  maxRows={6}
                   label='Observaciones'
                   name='observations'
                   fullWidth
@@ -569,7 +569,11 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
 
               <Grid item xs={12}>
                 <Typography variant='subtitle1'>
-                  Total Final: {orderData.total.toFixed(2)}
+                  Total Final:{' '}
+                  {new Intl.NumberFormat('es-CO', {
+                    style: 'currency',
+                    currency: 'COP'
+                  }).format(orderData.total)}
                 </Typography>
               </Grid>
             </Grid>

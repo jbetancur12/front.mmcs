@@ -62,8 +62,6 @@ const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
     }
   }
 
-  console.log(modules)
-
   return (
     <div className='p-4'>
       <Typography variant='h4' gutterBottom>

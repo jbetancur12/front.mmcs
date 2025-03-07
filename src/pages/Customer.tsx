@@ -396,9 +396,7 @@ function UserProfile() {
             Programación
           </a>
         </li>
-        {$userStore.rol.some((role) =>
-          ['admin', 'metrologist'].includes(role)
-        ) && (
+        {$userStore.rol.some((role) => ['admin'].includes(role)) && (
           <>
             <li className='mr-1'>
               <a

@@ -28,6 +28,7 @@ import { PurchaseRequest, PurchaseRequestItem } from 'src/pages/Purchases/Types'
 import { useHasRole } from '@utils/functions'
 import UploadQuotationModal from './UploadQuotationModal'
 import ViewQuotationsModal from './ViewQuotationsModal'
+import { useState } from 'react'
 
 type RenderRowActionsProps = {
   row: { original: PurchaseRequest }
@@ -48,6 +49,9 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const [viewModalOpen, setViewModalOpen] = useState(false)
   const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null)
+  const [selectedSupplierName, setSelectedSupplierName] = useState<
+    string | null
+  >(null)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [viewAnchorEl, setViewAnchorEl] = useState<null | HTMLElement>(null)
 
@@ -55,8 +59,9 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
     setOrderModalOpen(true)
   }
 
-  const handleOpenUploadModal = (supplierId: string) => {
+  const handleOpenUploadModal = (supplierId: string, supplierName: string) => {
     setSelectedSupplier(supplierId)
+    setSelectedSupplierName(supplierName)
     setUploadModalOpen(true)
   }
 
@@ -68,6 +73,7 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
   const handleCloseViewModal = () => {
     setViewModalOpen(false)
     setSelectedSupplier(null)
+    queryClient.invalidateQueries('purchaseRequests')
   }
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -151,7 +157,10 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
     }
   }
 
-  const isAllowed = row.original.approved && row.original.preApproved
+  const isAllowed =
+    row.original.approved &&
+    row.original.preApproved &&
+    row.original.quotations.some((quotation) => quotation.accepted)
 
   const items: PurchaseRequestItem[] = row.original.items || []
   const allProcessed = items.length > 0 && items.every((item) => item.procesed)
@@ -199,7 +208,7 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
               <MenuItem
                 key={supplier?.id}
                 onClick={() => {
-                  handleOpenUploadModal(supplier.id.toString())
+                  handleOpenUploadModal(supplier.id.toString(), supplier.name)
                   handleMenuClose()
                 }}
                 style={{
@@ -256,7 +265,9 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
         open={uploadModalOpen}
         onClose={() => setUploadModalOpen(false)}
         supplierId={selectedSupplier}
+        supplierName={selectedSupplierName}
         purchaseRequestId={row.original.id}
+        purchaseRequestCode={row.original.purchaseCode}
         onSuccess={() => queryClient.invalidateQueries('purchaseRequests')}
       />
       {selectedSupplier && (

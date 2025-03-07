@@ -125,6 +125,7 @@ interface ResourceOption {
 const Table: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
+
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<FileData[]>([])
   const [loading, setLoading] = useState(false)
@@ -627,7 +628,12 @@ const Table: React.FC = () => {
         }}
         // <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear Equipo</button>
         renderTopToolbarCustomActions={() => {
-          if ($userStore.rol.some((role) => ['admin'].includes(role))) return
+          if (
+            $userStore.rol.some(
+              (role) => !['admin', 'metrologist'].includes(role)
+            )
+          )
+            return
           return (
             <Button
               onClick={() => setCreateModalOpen(true)}

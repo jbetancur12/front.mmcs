@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
@@ -24,6 +24,7 @@ import { statusOptions } from './TableQuotes'
 import { NumericFormatCustom } from './NumericFormatCustom'
 import { styles } from './ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { debounce } from 'lodash'
 
 interface Product {
   name: string
@@ -82,6 +83,7 @@ const QuoteForm: React.FC = () => {
   const $userStore = useStore(userStore)
 
   const [customer, setCustomer] = useState<Customer | null>(null)
+
   const [products, setProducts] = useState<Product[]>([
     { name: 'Buscar Producto', price: 0, quantity: 1 }
   ])
@@ -136,81 +138,48 @@ const QuoteForm: React.FC = () => {
 
   //#region LoadOptions
 
-  const loadOptions = async (inputValue: string): Promise<OptionType[]> => {
-    return new Promise((resolve, reject) => {
-      let timer // Declarar el temporizador
-
-      const fetchData = async () => {
-        try {
-          const response = await axiosPrivate.get(`/products`, {
-            params: {
-              q: inputValue
-            }
-          })
-          const data = response.data
-
-          const options = data.map((item: any) => ({
-            value: item.id,
-            label: item.name,
-            price: item.price
-          }))
-          resolve(options)
-        } catch (error) {
-          console.error('Error al cargar opciones:', error)
-          reject(error)
-        }
+  const loadOptions = useCallback(
+    debounce(async (inputValue: string) => {
+      try {
+        const response = await axiosPrivate.get(`/products`, {
+          params: { q: inputValue }
+        })
+        const data = response.data
+        return data.map((item: any) => ({
+          value: item.id,
+          label: item.name,
+          price: item.price
+        }))
+      } catch (error) {
+        console.error('Error al cargar opciones:', error)
+        throw error
       }
+    }, 1000),
+    []
+  )
 
-      // Limpiar el temporizador si existe y configurar uno nuevo
-      if (timer) {
-        clearTimeout(timer)
+  const loadOptionsClient = useCallback(
+    debounce(async (inputValue: string) => {
+      try {
+        const response = await axiosPrivate.get(`/customers`, {
+          params: { q: inputValue }
+        })
+        const data = response.data
+        return data.map((item: any) => ({
+          value: item.id,
+          label: item.nombre
+        }))
+      } catch (error) {
+        console.error('Error al cargar opciones:', error)
+        throw error
       }
-
-      timer = setTimeout(fetchData, 1000) // Establecer el debounce en 1000ms
-    })
-  }
-
-  const loadOptionsClient = async (
-    inputValue: string
-  ): Promise<OptionType[]> => {
-    return new Promise((resolve, reject) => {
-      let timer // Declarar el temporizador
-
-      const fetchData = async () => {
-        try {
-          const response = await axiosPrivate.get(`/customers`, {
-            params: {
-              q: inputValue
-            }
-          })
-          const data = response.data
-
-          const options = data.map((item: any) => ({
-            value: item.id,
-            label: item.nombre
-          }))
-          resolve(options)
-        } catch (error) {
-          console.error('Error al cargar opciones:', error)
-          reject(error)
-        }
-      }
-
-      // Limpiar el temporizador si existe y configurar uno nuevo
-      if (timer) {
-        clearTimeout(timer)
-      }
-
-      timer = setTimeout(fetchData, 1000) // Establecer el debounce en 1000ms
-    })
-  }
+    }, 1000),
+    []
+  )
 
   const fetchQuote = async () => {
     try {
-      const response = await axiosPrivate.get<QuoteFormData>(
-        `/quotes/${id}`,
-        {}
-      )
+      const response = await axiosPrivate.get<QuoteFormData>(`/quotes/${id}`)
 
       if (response.statusText === 'OK') {
         const { data } = response
@@ -237,10 +206,9 @@ const QuoteForm: React.FC = () => {
 
   useEffect(() => {
     if (id) {
-      // Si hay un ID en los parámetros de la URL, significa que estamos editando
       fetchQuote()
     }
-  }, [])
+  }, [id])
 
   const handleProductChange = (
     index: number,
@@ -330,6 +298,14 @@ const QuoteForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!customer) {
+      toast.error('Por favor, selecciona un cliente.')
+      return
+    }
+    if (products.length === 0 || products.some((product) => !product.name)) {
+      toast.error('Por favor, agrega al menos un producto.')
+      return
+    }
     setLoading(true)
 
     const requestConfig = {}
@@ -394,13 +370,7 @@ const QuoteForm: React.FC = () => {
     }
   }
 
-  let edit
-
-  if (id) {
-    edit = products[0].name !== ''
-  } else {
-    edit = true
-  }
+  let edit = id ? products[0].name !== '' : true
 
   if (id && customer === null) {
     return <Skeleton />
@@ -489,25 +459,8 @@ const QuoteForm: React.FC = () => {
                 label: customer?.nombre
               }
             }
-            styles={styles(false)}
+            styles={styles(!!customer)}
           />
-
-          {/* <AutoComplete
-            endpoint={`/customers`}
-            token={localStorage.getItem("accessToken")}
-            label="Buscar Cliente"
-            value={customer?.nombre}
-            isEdit={!!id}
-            mapOption={(data) =>
-              data.map((item: any) => ({
-                id: item.id,
-                nombre: item.nombre,
-              }))
-            }
-            getOptionLabel={(option: any) => option.nombre}
-            onClientSelection={(customer) => setCustomer(customer)}
-            sx={{ mb: 2, width: "400px" }}
-          /> */}
         </Paper>
         <Paper elevation={3} sx={{ p: 2, mb: 2 }}>
           {products.length > 0 &&
@@ -536,7 +489,7 @@ const QuoteForm: React.FC = () => {
                         }
                       }
                       classNamePrefix='react-select'
-                      styles={styles(false)}
+                      styles={styles(!!productName)}
                     />
                   </div>
 

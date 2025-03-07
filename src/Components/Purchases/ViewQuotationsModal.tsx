@@ -9,6 +9,7 @@ import {
 } from '@mui/material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import Swal from 'sweetalert2'
+import { useMutation } from 'react-query'
 
 interface ViewQuotationsModalProps {
   open: boolean
@@ -78,6 +79,31 @@ const ViewQuotationsModal: React.FC<ViewQuotationsModalProps> = ({
     }
   }
 
+  const acceptQuotationMutation = useMutation(
+    async () => {
+      return await axiosPrivate.post('/purchaseQuotations/accept', {
+        purchaseRequestId,
+        supplierId
+      })
+    },
+    {
+      onSuccess: () => {
+        Swal.fire('Aceptado', 'La cotización ha sido aceptada.', 'success')
+        setIsAccepted(true)
+        onClose()
+      },
+      onError: (error) => {
+        console.error('Error accepting quotation:', error)
+        setErrorMessage('Ocurrió un error al aceptar la cotización.')
+        Swal.fire(
+          'Error',
+          'Ocurrió un error al aceptar la cotización.',
+          'error'
+        )
+      }
+    }
+  )
+
   const handleAcceptQuotation = async () => {
     const result = await Swal.fire({
       title: '¿Estás seguro?',
@@ -89,22 +115,7 @@ const ViewQuotationsModal: React.FC<ViewQuotationsModalProps> = ({
     })
 
     if (result.isConfirmed) {
-      try {
-        await axiosPrivate.post('/purchaseQuotations/accept', {
-          purchaseRequestId,
-          supplierId
-        })
-        Swal.fire('Aceptado', 'La cotización ha sido aceptada.', 'success')
-        onClose()
-      } catch (error) {
-        console.error('Error accepting quotation:', error)
-        setErrorMessage('Ocurrió un error al aceptar la cotización.')
-        Swal.fire(
-          'Error',
-          'Ocurrió un error al aceptar la cotización.',
-          'error'
-        )
-      }
+      acceptQuotationMutation.mutate()
     }
   }
 

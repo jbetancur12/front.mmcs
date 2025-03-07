@@ -203,7 +203,13 @@ const PurchaseRequest: React.FC = () => {
     },
     {
       accessorKey: 'approver.nombre',
-      header: 'Aprobado por'
+      header: 'Aprobado por',
+      Cell: ({ cell }) => {
+        const approver = cell.row.original.approver
+        const approverName =
+          approver && approver.nombre ? approver.nombre : 'N/A'
+        return approverName
+      }
     }
   ]
 

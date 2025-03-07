@@ -1,4 +1,4 @@
-import { Download, Edit, Print, Visibility } from '@mui/icons-material'
+import { Autorenew, Edit, Visibility } from '@mui/icons-material'
 import {
   Box,
   Button,
@@ -8,21 +8,24 @@ import {
   TableBody,
   styled,
   Table as MuiTable,
-  Tooltip
+  Tooltip,
+  Divider,
+  IconButton
 } from '@mui/material'
 
 import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
 import React, { useEffect, useMemo, useState } from 'react'
-import { Toaster } from 'react-hot-toast'
+import toast, { Toaster } from 'react-hot-toast'
 
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { differenceInDays, format } from 'date-fns'
 
 import { Link } from 'react-router-dom'
-import { BlobProvider, PDFDownloadLink } from '@react-pdf/renderer'
-import QuotePDF from './QuotePDF'
 import Loader from './Loader2'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { useStore } from '@nanostores/react'
+import { userStore } from 'src/store/userStore'
+import StatusUpdateModal from './Quotations/StatusUpdateModal'
 
 // Define interfaces
 export interface QuoteData {
@@ -51,7 +54,7 @@ export interface QuoteData {
 
 // API URL
 
-export const statusOptions: any = {
+export const statusOptions: Record<string, string> = {
   created: 'Creada',
   sent: 'Enviada',
   accepted: 'Aceptada',
@@ -62,7 +65,23 @@ export const statusOptions: any = {
   paid: 'Pagada',
   pending: 'Pendiente',
   onCalibration: 'En calibración',
-  onMaintenance: 'En mantenimiento'
+  onMaintenance: 'En mantenimiento',
+  completed: 'Realizado'
+}
+
+export const statusTransitions: Record<string, string[]> = {
+  created: ['sent'],
+  sent: ['accepted', 'rejected', 'pending'],
+  accepted: ['onCalibration', 'onMaintenance'],
+  rejected: [],
+  delivered: [],
+  canceled: [],
+  invoiced: ['paid'],
+  paid: [],
+  pending: [],
+  onCalibration: ['completed'],
+  onMaintenance: ['completed'],
+  completed: ['invoiced', 'paid', 'delivered']
 }
 
 const StyledTableCell = styled(TableCell)(() => ({
@@ -85,8 +104,11 @@ const StyledTableBodycell = styled(TableCell)(() => ({
 // Main component
 const Table: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
+  const $userStore = useStore(userStore)
   const [tableData, setTableData] = useState<QuoteData[]>([])
   const [loading, setLoading] = useState<boolean>(false)
+  const [openModal, setOpenModal] = useState(false)
+  const [selectedQuote, setSelectedQuote] = useState<QuoteData | null>(null)
 
   // Fetch devices data
   const fetchQuotes = async () => {
@@ -107,6 +129,39 @@ const Table: React.FC = () => {
   useEffect(() => {
     fetchQuotes()
   }, [])
+
+  // Función para actualizar el estado
+  const updateStatus = async (
+    id: number,
+    newStatus: string,
+    comments: string
+  ) => {
+    try {
+      const response = await axiosPrivate.put(`/quotes/${id}/status`, {
+        status: {
+          status: newStatus,
+          user: $userStore.nombre,
+          date: new Date(),
+          comments: comments
+        }
+      })
+
+      if (response.status >= 200 && response.status < 300) {
+        toast.success('Estado actualizado exitosamente!', {
+          duration: 4000,
+          position: 'top-center'
+        })
+        fetchQuotes() // Refrescar la tabla después de actualizar el estado
+      } else {
+        throw new Error('Error al actualizar el estado')
+      }
+    } catch (error) {
+      console.error('Error de red:', error)
+      toast.error(
+        'Error al actualizar el estado. Por favor, inténtalo de nuevo.'
+      )
+    }
+  }
 
   //should be memoized or stable
   const columns = useMemo<MRT_ColumnDef<QuoteData>[]>(
@@ -176,6 +231,12 @@ const Table: React.FC = () => {
     [] // No hay dependencias específicas aquí
   )
 
+  const handleUpdateStatus = (newStatus: string, comments: string) => {
+    if (selectedQuote) {
+      updateStatus(selectedQuote.id, newStatus, comments)
+    }
+  }
+
   return (
     <>
       <Toaster />
@@ -241,61 +302,6 @@ const Table: React.FC = () => {
         // }}
         renderDetailPanel={({ row }) => {
           return (
-            // <Box
-            //   sx={{
-            //     alignItems: "center",
-            //     display: "flex",
-            //     justifyContent: "space-around",
-            //     left: "30px",
-            //     maxWidth: "1000px",
-            //     position: "sticky",
-            //     width: "100%",
-            //   }}
-            // >
-            //   <Box sx={{ textAlign: "center" }}>
-            //     <List
-            //       sx={{
-            //         width: "100%",
-            //         maxWidth: 360,
-            //         bgcolor: "background.paper",
-            //       }}
-            //     >
-            //       {row.original.status.map((status: any, index: number) => (
-            //         <React.Fragment key={index}>
-            //           <ListItem
-            //             key={index}
-            //             sx={{
-            //               display: "flex",
-            //               flexDirection: "column",
-            //               alignItems: "center",
-            //               padding: 2,
-            //               border:
-            //                 index === row.original.status.length - 1
-            //                   ? `2px solid ${
-            //                       status.status === "delivered"
-            //                         ? "#4caf50"
-            //                         : "#3f51b5"
-            //                     }`
-            //                   : "1px solid #ccc",
-            //               borderRadius: 5,
-            //             }}
-            //           >
-            //             <Typography variant="body1" color="text.primary">
-            //               Estado: {status.status}
-            //             </Typography>
-            //             <Typography variant="body2" color="text.secondary">
-            //               Fecha: {status.date}
-            //             </Typography>
-            //             <Typography variant="body2" color="text.secondary">
-            //               Usuario: {status.user}
-            //             </Typography>
-            //           </ListItem>
-            //           {index < row.original.status.length - 1 && <Divider />}
-            //         </React.Fragment>
-            //       ))}
-            //     </List>
-            //   </Box>
-            // </Box>
             <MuiTable
               sx={{
                 width: '550px',
@@ -370,31 +376,30 @@ const Table: React.FC = () => {
                   <Visibility />
                 </Link>
               </Tooltip>
-              <Tooltip arrow placement='right' title='Ver'>
-                <BlobProvider document={<QuotePDF quoteData={row.original} />}>
-                  {({ url }) => (
-                    <a href={url || ''} target='_blank'>
-                      <Print />
-                    </a>
-                  )}
-                </BlobProvider>
-              </Tooltip>
-              <Tooltip arrow placement='right' title='descargar'>
-                <PDFDownloadLink
-                  document={<QuotePDF quoteData={row.original} />}
-                  fileName={'Cotización-' + row.original.id + '.pdf'}
-                >
-                  <Download />
-                </PDFDownloadLink>
-              </Tooltip>
+
               <Tooltip arrow placement='right' title='Editar'>
                 <Link to={`edit-quote/${row.original.id}`}>
                   <Edit />
                 </Link>
               </Tooltip>
+              <Divider orientation='vertical' flexItem />
+              <IconButton
+                onClick={() => {
+                  setSelectedQuote(row.original)
+                  setOpenModal(true)
+                }}
+              >
+                <Autorenew />
+              </IconButton>
             </Box>
           )
         }}
+      />
+      <StatusUpdateModal
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        quote={selectedQuote}
+        onUpdate={handleUpdateStatus}
       />
     </>
   )

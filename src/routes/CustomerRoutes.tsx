@@ -31,7 +31,7 @@ const CustomerRoutes = (role: string[]) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['admin', 'user']}
+            roles={['admin', 'user', 'metrologist']}
           />
         }
       >
