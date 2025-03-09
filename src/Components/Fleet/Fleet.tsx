@@ -314,8 +314,6 @@ const Fleet = () => {
     },
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm }) => {
-      const newValues = { ...values, customerId: customerId }
-      console.log('🚀 ~ onSubmit: ~ values:', newValues)
       try {
         await createVehicle(
           { ...values, customerId: customerId },

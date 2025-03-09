@@ -1,7 +1,8 @@
-import QuoteForm from '../Components/QuoteForm'
+// import QuoteForm from '../Components/QuoteForm'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@mui/material'
 import { ArrowBack } from '@mui/icons-material'
+import QuoteForm from 'src/Components/Quotations/QuoteForm'
 
 const NewQuote = () => {
   const navigate = useNavigate()

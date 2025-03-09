@@ -9,7 +9,6 @@ interface VehicleQueryParams {
 }
 
 export const useVehicles = (queryParams: VehicleQueryParams = {}) => {
-  console.log(queryParams)
   const axiosPrivate = useAxiosPrivate()
 
   return useQuery(['vehicles', queryParams], async () => {

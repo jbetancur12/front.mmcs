@@ -316,7 +316,6 @@ const EquipmentForm: React.FC = () => {
                         )
                       }
                       onChange={(selectedOption: any) => {
-                        console.log(selectedOption)
                         // Actualiza el valor de registeredBy en Formik
                         setFieldValue(
                           'registeredBy',

@@ -137,9 +137,8 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
 
     try {
       // Primero intenta abrir el archivo sin contraseña
-      console.log('Abriendo...')
+
       workbook = await XlsxPopulate.fromDataAsync(file)
-      console.log('===>', workbook)
     } catch (initialError) {
       console.log('Error: ', initialError)
       console.log('Failed to open file without password, trying passwords...')
@@ -215,7 +214,6 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
               const value = sheet.cell(`${col}${row}`)
 
               if (value.value()) {
-                console.log(value.value(), row, col)
                 //device.certificateTemplate['instrumento'] = `${col}${row}`
                 const result = await fetchDevice(value.value() as string)
 

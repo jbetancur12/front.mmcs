@@ -117,7 +117,6 @@ const Table: React.FC = () => {
 
   const handleSaveRowEdits: MaterialReactTableProps<UserData>['onEditingRowSave'] =
     async ({ exitEditingMode, row, values }) => {
-      console.log(values)
       if (!Object.keys(validationErrors).length) {
         const updatedValues = { ...values }
         delete updatedValues.id

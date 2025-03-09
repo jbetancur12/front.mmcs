@@ -44,11 +44,10 @@ export const mapOptions = (
   label: option[labelProperty] // Utiliza la propiedad especificada como etiqueta
 })
 
-export function logFormData(formData: any) {
-  for (const [key, value] of formData.entries()) {
-    console.log(`${key}:`, value)
-  }
-}
+// export function logFormData(formData: any) {
+//   for (const [key, value] of formData.entries()) {
+//   }
+// }
 
 export const capitalize = (str: string) => {
   if (typeof str !== 'string') return str

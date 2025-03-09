@@ -39,16 +39,17 @@ export const NumericFormatCustom = React.forwardRef<
       {...other}
       getInputRef={ref}
       onValueChange={(values) => {
-        onChange({
+        onChange?.({
           target: {
             name: props.name,
             value: values.value
           }
         })
       }}
-      thousandSeparator
+      thousandSeparator='.'
+      decimalSeparator=','
       valueIsNumericString
-      prefix='$'
+      suffix={props.name?.includes('Ratio') ? '%' : ''} // Agregar sufijo %
     />
   )
 })

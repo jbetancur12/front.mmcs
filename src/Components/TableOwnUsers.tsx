@@ -112,7 +112,7 @@ const TableOwnUsers: React.FC = () => {
       if (!Object.keys(validationErrors).length) {
         const updatedValues = { ...values, roles: row.original.roles }
         delete updatedValues.id
-        console.log('🚀 ~ updatedValues:', updatedValues)
+
         try {
           const response = await axiosPrivate.put(
             `/users/own/${values.id}`,

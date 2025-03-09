@@ -120,7 +120,7 @@ const GenericFormModal: React.FC<GenericFormModalProps> = ({
                         accept='image/*'
                         onChange={(event) => {
                           const file = event.currentTarget.files?.[0]
-                          console.log(field.accessorKey)
+
                           if (file) {
                             formik.setFieldValue(field.accessorKey, file)
                           }

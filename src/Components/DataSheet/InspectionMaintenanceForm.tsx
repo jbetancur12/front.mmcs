@@ -398,7 +398,6 @@ const InspectionMaintenanceDataForm: React.FC = () => {
                           )
                         }
                         onChange={(selectedOption: any) => {
-                          console.log(selectedOption)
                           formik.setFieldValue(
                             'elaboradoPor',
                             selectedOption ? selectedOption.label : ''

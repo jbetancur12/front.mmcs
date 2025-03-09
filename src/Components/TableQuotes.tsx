@@ -18,7 +18,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
-import { differenceInDays, format } from 'date-fns'
+import { differenceInDays, format, isValid } from 'date-fns'
 
 import { Link } from 'react-router-dom'
 import Loader from './Loader2'
@@ -323,10 +323,9 @@ const Table: React.FC = () => {
               </TableHead>
               <TableBody>
                 {row.original.status.map((status: any, index: number) => {
-                  const dateDifference = differenceInDays(
-                    new Date(),
-                    new Date(status.date)
-                  )
+                  const date = new Date(status.date)
+
+                  const dateDifference = differenceInDays(new Date(), date)
 
                   // Verificar si el estado es "onCalibration" o "onMaintenance" y han pasado más de 10 días
                   const isOverdue =
@@ -345,7 +344,9 @@ const Table: React.FC = () => {
                       }}
                     >
                       <StyledTableBodycell component='th' scope='row'>
-                        {format(new Date(status.date), 'yyyy-MM-dd HH:mm')}
+                        {isValid(date)
+                          ? format(date, 'yyyy-MM-dd HH:mm')
+                          : 'Fecha inválida'}
                       </StyledTableBodycell>
                       <StyledTableBodycell>
                         {statusOptions[status.status]}

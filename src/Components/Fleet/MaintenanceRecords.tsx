@@ -69,8 +69,6 @@ const MaintenanceRecords: React.FC = () => {
     setIsAddModalOpen(false)
   }
 
-  console.log(interventionTypes)
-
   return (
     <Box sx={{ padding: 2 }}>
       <Stack direction='row' spacing={2} mb={2}>

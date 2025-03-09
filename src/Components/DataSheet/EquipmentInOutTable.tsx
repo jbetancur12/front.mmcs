@@ -44,8 +44,6 @@ const EquipmentInOutTable = () => {
       )
 
       if (response.status === 200) {
-        console.log('Response data:', response.data)
-
         setEquipmentInfo({
           equipmentName: response.data.equipmentName,
           internalCode: response.data.internalCode
