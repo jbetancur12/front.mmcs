@@ -36,7 +36,7 @@ import {
   QuoteFormData,
   StatusKey
 } from './types'
-import { statusOptions, paymentConditionsOptions } from './constants'
+import { statusOptions, paymentConditionsOptions, texts } from './constants'
 import { styles } from '../ExcelManipulation/Utils'
 import { NumericFormatCustom } from '../NumericFormatCustom'
 
@@ -70,11 +70,13 @@ const QuoteForm: React.FC = () => {
     'Sujeto a disponibilidad de inventario.'
   ])
   const [otherFields, setOtherFields] = useState({
-    generalConditions:
-      'Metromedics es responsable del manejo de toda la información del cliente obtenida durante la ejecución de las actividades de calibración.\nEl personal de Metromedics no está sometido a presiones comerciales, financieras o de otro tipo, tanto externas como internas que puedan influenciar el juicio técnico y transparente de los resultados obtenidos en el servicio',
-    paymentConditions: `La validez de la presente oferta es de 30 días.\nEl pago debe ser realizado en la cuenta de ahorros N° 85138050837 de banco Bancolombia, a nombre de Metromedics S.A.S.\nUna vez realizado el pago, favor enviar copia del soporte de pago a la siguiente dirrección de correo electronico,    comercial@metromedicslab.com.co\nForma de Pago es ${paymentConditionsOptions[paymentMethod]}`,
-    deliveryConditions:
-      'Tiempo de entrega: 15 días hábiles a partir de la fecha de pago.'
+    generalConditions: texts(quoteType).generalConditions,
+    paymentConditions: texts(quoteType, paymentMethod).paymentConditions,
+    deliveryConditions: texts().deliveryConditions,
+    maintenanceConditionsInLab: texts().maintenanceConditionsInLab,
+    maintenanceConditionsInInSitu: texts().maintenanceConditionsInInSitu,
+    methodsUsed: texts().methodsUsed,
+    capacityAndResources: texts(quoteType).capacityAndResources
   })
 
   const loadOptions = useCallback(
@@ -171,6 +173,20 @@ const QuoteForm: React.FC = () => {
       console.error('Error fetching quote data:', error)
     }
   }, [axiosPrivate, id])
+
+  useEffect(() => {
+    setOtherFields({
+      generalConditions: texts(quoteType, paymentMethod).generalConditions,
+      paymentConditions: texts(quoteType, paymentMethod).paymentConditions,
+      deliveryConditions: texts(quoteType, paymentMethod).deliveryConditions,
+      maintenanceConditionsInLab: texts(quoteType, paymentMethod)
+        .maintenanceConditionsInLab,
+      maintenanceConditionsInInSitu: texts(quoteType, paymentMethod)
+        .maintenanceConditionsInInSitu,
+      methodsUsed: texts(quoteType, paymentMethod).methodsUsed,
+      capacityAndResources: texts(quoteType, paymentMethod).capacityAndResources
+    })
+  }, [quoteType, paymentMethod]) // <-- Aquí la magia de la actualización
 
   useEffect(() => {
     if (id) fetchQuote()
@@ -289,12 +305,6 @@ const QuoteForm: React.FC = () => {
             `Forma de Pago: ${paymentConditionsOptions['contado']}`,
             'Sujeto a disponibilidad de inventario.'
           ])
-          setOtherFields({
-            generalConditions:
-              'Metromedics es responsable del manejo de toda la información...',
-            paymentConditions: `La validez de la presente oferta es...`,
-            deliveryConditions: 'Tiempo de entrega: 15 días hábiles...'
-          })
           setStatus({
             status: 'created',
             user: $userStore.nombre,
@@ -431,6 +441,7 @@ const QuoteForm: React.FC = () => {
 
         <ConditionsSection
           otherFields={otherFields}
+          quoteType={quoteType}
           handleOtherFields={(e) =>
             setOtherFields({ ...otherFields, [e.target.name]: e.target.value })
           }

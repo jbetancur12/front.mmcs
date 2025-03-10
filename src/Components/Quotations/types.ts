@@ -32,6 +32,10 @@ export interface QuoteFormData {
     generalConditions: string
     paymentConditions: string
     deliveryConditions: string
+    maintenanceConditionsInLab: string
+    maintenanceConditionsInInSitu: string
+    methodsUsed: string
+    capacityAndResources: string
   }
   status: {
     status: StatusKey // Usar el tipo StatusKey aquí
