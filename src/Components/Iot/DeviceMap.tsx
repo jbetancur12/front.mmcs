@@ -332,11 +332,11 @@ const DeviceIotMap = () => {
         </Box>
       </Drawer>
 
-      {/* <GraphDrawer
+      <GraphDrawer
         deviceId={graphDeviceId}
         open={graphDeviceId !== null}
         onClose={() => setGraphDeviceId(null)}
-      /> */}
+      />
 
       <Box
         sx={{ flexGrow: 1, position: 'relative', ml: isSidebarOpen ? 8 : 0 }}

@@ -15,14 +15,15 @@ import {
 } from '@mui/material'
 import { Close as CloseIcon } from '@mui/icons-material'
 import {
-  VictoryChart,
-  VictoryLine,
-  VictoryTheme,
-  VictoryAxis,
-  VictoryLegend,
-  VictoryVoronoiContainer,
-  VictoryTooltip
-} from 'victory'
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts'
 
 import TemperatureChart from './TemperatureChart'
 import { useStore } from '@nanostores/react'
@@ -35,16 +36,14 @@ interface GraphDrawerProps {
 }
 
 interface DataPoint {
-  x: Date
-  y: number
-  series: 'temperature' | 'humidity'
-  rawY?: number
+  timestamp: Date
+  temperature: number
+  humidity: number
 }
 
 const GraphDrawer = ({ deviceId, open, onClose }: GraphDrawerProps) => {
   const axiosPrivate = useAxiosPrivate()
   const realTimeData = useStore($realTimeData)
-  console.log('🚀 ~ GraphDrawer ~ realTimeData:', realTimeData)
   const [visibleSeries, setVisibleSeries] = useState({
     temperature: true,
     humidity: true
@@ -77,25 +76,17 @@ const GraphDrawer = ({ deviceId, open, onClose }: GraphDrawerProps) => {
     { enabled: !!deviceId }
   )
 
-  // Mapea los datos para la temperatura (sin transformación)
-  const temperatureData = useMemo(() => {
+  // Combina los datos de temperatura y humedad en un único arreglo
+  const combinedData = useMemo((): {
+    timestamp: number
+    temperature: number
+    humidity: number
+  }[] => {
     return graphData
       ? graphData.map((dp: any) => ({
-          x: new Date(dp.timestamp),
-          y: dp.avg_temperature,
-          series: 'temperature'
-        }))
-      : []
-  }, [graphData])
-
-  // Mapea los datos de humedad y guarda el valor original en rawY
-  const humidityData = useMemo(() => {
-    return graphData
-      ? graphData.map((dp: any) => ({
-          x: new Date(dp.timestamp),
-          y: dp.avg_humidity,
-          rawY: dp.avg_humidity,
-          series: 'humidity'
+          timestamp: new Date(dp.timestamp).getTime(), // usamos timestamp numérico para el eje X
+          temperature: dp.avg_temperature,
+          humidity: dp.avg_humidity
         }))
       : []
   }, [graphData])
@@ -130,7 +121,7 @@ const GraphDrawer = ({ deviceId, open, onClose }: GraphDrawerProps) => {
     }
   }, [graphData])
 
-  // Si se tienen datos, definimos el dominio para la temperatura y para la humedad
+  // Dominio para los ejes
   const tempDomain: [number, number] = useMemo(() => {
     if (!aggregateStats) return [0, 1]
     return [aggregateStats.minTemp, aggregateStats.maxTemp]
@@ -141,20 +132,44 @@ const GraphDrawer = ({ deviceId, open, onClose }: GraphDrawerProps) => {
     return [aggregateStats.minHum, aggregateStats.maxHum]
   }, [aggregateStats])
 
-  // Función para escalar el valor de humedad al dominio de temperatura
-  const scaleHumidity = (h: number) => {
-    const [hMin, hMax] = humDomain
-    const [tMin, tMax] = tempDomain
-    return ((h - hMin) / (hMax - hMin)) * (tMax - tMin) + tMin
+  // Función para formatear el tooltip
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const date = new Date(label)
+      return (
+        <Box
+          sx={{
+            backgroundColor: 'white',
+            border: '1px solid #ccc',
+            padding: 5
+          }}
+        >
+          <Typography variant='caption'>{`${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`}</Typography>
+          {payload.map((pl: any) => (
+            <Typography
+              key={pl.dataKey}
+              variant='caption'
+              sx={{ color: pl.color }}
+            >
+              {pl.dataKey === 'temperature'
+                ? `Temp: ${pl.value.toFixed(2)}°C`
+                : `Hum: ${pl.value.toFixed(2)}%`}
+            </Typography>
+          ))}
+        </Box>
+      )
+    }
+    return null
   }
 
-  // Transforma los datos de humedad para graficarlos en el mismo dominio que la temperatura
-  const humidityScaledData = useMemo((): DataPoint[] => {
-    return humidityData.map((d: DataPoint) => ({
-      ...d,
-      y: scaleHumidity(d.y)
+  // Función para manejar el clic en la leyenda y alternar la visibilidad de las series
+  const handleLegendClick = (o: any) => {
+    const { dataKey } = o
+    setVisibleSeries((prev) => ({
+      ...prev,
+      [dataKey]: !prev[dataKey]
     }))
-  }, [humidityData, tempDomain, humDomain])
+  }
 
   return (
     <Drawer
@@ -184,149 +199,72 @@ const GraphDrawer = ({ deviceId, open, onClose }: GraphDrawerProps) => {
           <Typography>Error al cargar los datos.</Typography>
         ) : (
           <>
-            {/* Gráfico combinado con tooltip y doble eje */}
-            <Box
-              sx={{
-                maxWidth: '100%',
-                overflowX: 'auto',
-                mb: 2,
-                height: '400px'
-              }}
-            >
-              <VictoryChart
-                theme={VictoryTheme.material}
-                scale={{ x: 'time' }}
-                padding={{ top: 20, bottom: 40, left: 40, right: 60 }}
-                height={200}
-                width={800}
-                domain={{ y: tempDomain }}
-                containerComponent={
-                  <VictoryVoronoiContainer
-                    labels={({ datum }) => {
-                      if (datum.series === 'temperature') {
-                        return `Temp: ${datum.y.toFixed(2)}°C`
-                      }
-                      if (datum.series === 'humidity') {
-                        // Muestra el valor original (no escalado)
-                        return `Hum: ${datum.rawY.toFixed(2)}%`
-                      }
-                      return ''
+            {/* Gráfico combinado con dos ejes y tooltip */}
+            <Box sx={{ width: '100%', height: 400, mb: 2 }}>
+              <ResponsiveContainer>
+                <LineChart data={combinedData}>
+                  <CartesianGrid strokeDasharray='3 3' />
+                  <XAxis
+                    dataKey='timestamp'
+                    type='number'
+                    domain={['dataMin', 'dataMax']}
+                    tickFormatter={(tick) => {
+                      const date = new Date(tick)
+                      return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
                     }}
-                    labelComponent={
-                      <VictoryTooltip
-                        cornerRadius={0}
-                        flyoutStyle={{ fill: 'white', padding: 5 }}
-                        style={{ fontSize: 10 }} // Tamaño de fuente más pequeño
-                      />
-                    }
                   />
-                }
-              >
-                <VictoryAxis
-                  style={{
-                    tickLabels: {
-                      fontSize: 8,
-                      padding: 5
-                    }
-                  }}
-                  tickFormat={(t) =>
-                    `${t.getHours()}:${t
-                      .getMinutes()
-                      .toString()
-                      .padStart(2, '0')}`
-                  }
-                />
-                {/* Eje izquierdo para la temperatura */}
-                <VictoryAxis
-                  dependentAxis
-                  style={{
-                    tickLabels: {
-                      fontSize: 8,
-                      padding: 5
-                    }
-                  }}
-                />
-                {/* Eje derecho para la humedad */}
-                <VictoryAxis
-                  dependentAxis
-                  offsetX={740} // Ajusta según el ancho del gráfico
-                  style={{
-                    axis: { stroke: '#2196F3' },
-                    ticks: { padding: 5, fontSize: 8 },
-                    tickLabels: { fill: '#2196F3', fontSize: 8, padding: 5 }
-                  }}
-                  tickFormat={(t) => {
-                    // Inversa la escala para mostrar el valor real de humedad
-                    const [tMin, tMax] = tempDomain
-                    const [hMin, hMax] = humDomain
-                    const humValue =
-                      ((t - tMin) / (tMax - tMin)) * (hMax - hMin) + hMin
-                    return humValue.toFixed(0)
-                  }}
-                />
-                <VictoryLine
-                  data={visibleSeries.temperature ? temperatureData : []}
-                  style={{
-                    data: {
-                      stroke: '#F44336',
-                      strokeWidth: 0.3,
-                      opacity: visibleSeries.temperature ? 1 : 0.3
-                    }
-                  }}
-                />
-                <VictoryLine
-                  data={visibleSeries.humidity ? humidityScaledData : []}
-                  style={{
-                    data: {
-                      stroke: '#2196F3',
-                      strokeWidth: 0.3,
-                      opacity: visibleSeries.humidity ? 1 : 0.3
-                    }
-                  }}
-                />
-                <VictoryLegend
-                  x={250}
-                  y={10}
-                  orientation='horizontal'
-                  gutter={10}
-                  style={{
-                    labels: { fontSize: 8, cursor: 'pointer' } // Tamaño de fuente más pequeño
-                  }}
-                  data={[
-                    {
-                      name: 'Temperatura (°C)',
-                      symbol: {
-                        fill: visibleSeries.temperature ? '#F44336' : '#cccccc'
-                      }
-                    },
-                    {
-                      name: 'Humedad (%)',
-                      symbol: {
-                        fill: visibleSeries.humidity ? '#2196F3' : '#cccccc'
-                      }
-                    }
-                  ]}
-                  events={[
-                    {
-                      target: 'data',
-                      eventHandlers: {
-                        onClick: (_: any, props: any) => {
-                          const series = props.datum.name.includes(
-                            'Temperatura'
-                          )
-                            ? 'temperature'
-                            : 'humidity'
-                          setVisibleSeries((prev) => ({
-                            ...prev,
-                            [series]: !prev[series]
-                          }))
-                          return []
-                        }
-                      }
-                    }
-                  ]}
-                />
-              </VictoryChart>
+                  <YAxis
+                    yAxisId='left'
+                    domain={tempDomain}
+                    tick={{ fontSize: 10 }}
+                    label={{
+                      value: '°C',
+                      angle: -90,
+                      position: 'insideLeft',
+                      fontSize: 10
+                    }}
+                  />
+                  <YAxis
+                    yAxisId='right'
+                    orientation='right'
+                    domain={humDomain}
+                    tick={{ fontSize: 10 }}
+                    label={{
+                      value: '%',
+                      angle: 90,
+                      position: 'insideRight',
+                      fontSize: 10
+                    }}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend
+                    onClick={handleLegendClick}
+                    wrapperStyle={{ fontSize: 10 }}
+                  />
+                  {visibleSeries.temperature && (
+                    <Line
+                      yAxisId='left'
+                      type='monotone'
+                      dataKey='temperature'
+                      stroke='#F44336'
+                      strokeWidth={1.5}
+                      dot={false}
+                      activeDot={{ r: 2 }}
+                    />
+                  )}
+                  {visibleSeries.humidity && (
+                    <Line
+                      yAxisId='right'
+                      type='monotone'
+                      dataKey='humidity'
+                      stroke='#2196F3'
+                      strokeWidth={1.5}
+                      dot={false}
+                      activeDot={{ r: 2 }}
+                    />
+                  )}
+                </LineChart>
+              </ResponsiveContainer>
             </Box>
 
             {/* Tabla con estadísticas agregadas */}
@@ -334,30 +272,6 @@ const GraphDrawer = ({ deviceId, open, onClose }: GraphDrawerProps) => {
               <Box sx={{ mt: 2 }}>
                 <Grid container spacing={2}>
                   <Grid item xs={4}>
-                    {/* <Gauge
-                      width={100}
-                      height={100}
-                      value={
-                        realTimeData['LILYGO-ColdChain'].length &&
-                        Number(
-                          realTimeData['LILYGO-ColdChain'][
-                            realTimeData['LILYGO-ColdChain'].length - 1
-                          ].data.sen.t
-                        )
-                      }
-                    />
-                    <Gauge
-                      width={100}
-                      height={100}
-                      value={
-                        realTimeData['LILYGO-ColdChain'].length &&
-                        Number(
-                          realTimeData['LILYGO-ColdChain'][
-                            realTimeData['LILYGO-ColdChain'].length - 1
-                          ].data.sen.h
-                        )
-                      }
-                    /> */}
                     <Typography variant='subtitle1' sx={{ mb: 1 }}>
                       Estadísticas agregadas
                     </Typography>
@@ -413,7 +327,6 @@ const GraphDrawer = ({ deviceId, open, onClose }: GraphDrawerProps) => {
                             .map((payload) => payload.data)}
                         />
                       </Box>
-
                       {/* Gráfico de Humedad */}
                       <Box sx={{ height: 300, width: '100%' }}>
                         <TemperatureChart
