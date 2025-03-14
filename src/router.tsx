@@ -21,6 +21,7 @@ import CustomerRoutes from './routes/CustomerRoutes'
 import OtherRoutes from './routes/OtherRoutes'
 import ProfileRoutes from './routes/ProfileRoutes'
 import PuchasesRoutes from './routes/PurchasesRoutes'
+import IotRoutes from './routes/IotRoutes'
 import { Box, CircularProgress, Typography } from '@mui/material'
 
 function Router() {
@@ -65,6 +66,7 @@ function Router() {
             {CustomerRoutes($userStore.rol)}
             {ProfileRoutes($userStore.rol)}
             {PuchasesRoutes($userStore.rol)}
+            {IotRoutes($userStore.rol)}
             {OtherRoutes($userStore.rol)}
           </Route>
         </Routes>
