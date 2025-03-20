@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { DataPayload, SensorData } from 'src/Components/Iot/types'
+import { DataPayload } from 'src/Components/Iot/types'
 import {
   addRealTimeData,
   updateDeviceIotLocation,

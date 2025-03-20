@@ -87,7 +87,8 @@ const transformDevice = (device: any) => {
     customer: device.customer,
     isOnline: device.isOnline,
     src: device.src,
-    sensorData: device.sensorData // Asegúrate de tener este campo o ajusta según corresponda
+    sensorData: device.sensorData, // Asegúrate de tener este campo o ajusta según corresponda
+    deviceIotConfigs: device.deviceIotConfigs
   }
 }
 
@@ -135,22 +136,16 @@ const DeviceIotMap = () => {
   const [graphDeviceId, setGraphDeviceId] = useState<number | string | null>(
     null
   )
+  const [deviceName, setDeviceName] = useState<string>('')
 
   const DefaultIcon = L.icon({
     iconUrl: '/images/location.png',
     iconSize: [25, 41]
   })
 
-  const onlineIcon = createSvgIcon('#4CAF50') // verde para online
-  const offlineIcon = createSvgIcon('#F44336') // rojo para offline
-
   L.Marker.prototype.options.icon = DefaultIcon
 
-  const {
-    data: devicesFromApi,
-    isLoading,
-    error
-  } = useQuery(
+  const { data: devicesFromApi } = useQuery(
     'devices',
     async () => {
       const response = await axiosPrivate.get('/devicesIot')
@@ -322,7 +317,12 @@ const DeviceIotMap = () => {
                   <IconButton onClick={() => setSelectedDeviceId(device.id)}>
                     <MyLocation />
                   </IconButton>
-                  <IconButton onClick={() => setGraphDeviceId(device.id)}>
+                  <IconButton
+                    onClick={() => {
+                      setGraphDeviceId(device.id)
+                      setDeviceName(device.name)
+                    }}
+                  >
                     <BarChart />
                   </IconButton>
                 </Box>
@@ -334,8 +334,10 @@ const DeviceIotMap = () => {
 
       <GraphDrawer
         deviceId={graphDeviceId}
+        deviceName={deviceName}
         open={graphDeviceId !== null}
         onClose={() => setGraphDeviceId(null)}
+        devicesFromApi={devicesFromApi}
       />
 
       <Box

@@ -9,16 +9,6 @@ import AddDeviceModal from 'src/Components/Iot/AddDeviceIotModal'
 import { DeviceIot } from 'src/Components/Iot/types'
 import { loadDevices } from 'src/store/deviceIotStore'
 
-interface Device {
-  id: number
-  imei: string
-  name: string
-  customerName?: string
-  lastLocation?: any // Ajusta el tipo según tus necesidades
-  lastSeen?: string
-  isOnline: boolean
-}
-
 const transformDevice = (device: any) => {
   const [lng, lat] = device.lastLocation.coordinates
   return {
