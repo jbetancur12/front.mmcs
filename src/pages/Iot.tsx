@@ -1,7 +1,8 @@
 import { Grid } from '@mui/material'
 
 import useWebSocket from '@utils/useWebSocket'
-import DeviceIotMap from 'src/Components/Iot/DeviceMap'
+// import DeviceIotMap from 'src/Components/Iot/DeviceMap'
+import DeviceIotMap from 'src/Components/Iot/DeviceIotMap/index'
 
 const Iot = () => {
   useWebSocket()

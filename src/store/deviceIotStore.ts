@@ -1,5 +1,10 @@
 import { atom, action } from 'nanostores'
-import { DataPayload, SData, type DeviceIot } from '../Components/Iot/types'
+import {
+  DataPayload,
+  DeviceIotConfig,
+  SData,
+  type DeviceIot
+} from '../Components/Iot/types'
 
 // Atoms para el estado
 export const $devicesIot = atom<DeviceIot[]>([])
@@ -69,5 +74,24 @@ export const loadDevices = action(
   'loadDevices',
   (store, devicesIot: DeviceIot[]) => {
     store.set(devicesIot)
+  }
+)
+
+export const updateDeviceConfig = action(
+  $devicesIot,
+  'updateDeviceConfig',
+  (store, updatedConfig: DeviceIotConfig) => {
+    const devices = store.get().map((device) => {
+      if (device.id === updatedConfig.deviceIotId) {
+        return {
+          ...device,
+          deviceIotConfigs: device.deviceIotConfigs.map((config) =>
+            config.id === updatedConfig.id ? updatedConfig : config
+          )
+        }
+      }
+      return device
+    })
+    store.set(devices)
   }
 )

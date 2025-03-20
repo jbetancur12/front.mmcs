@@ -1,4 +1,5 @@
 import { Customer } from '../Quotations/types'
+import { AlarmThreshold, WarningThreshold } from './GraphDrawer/types'
 
 export interface SData {
   h: string
@@ -19,6 +20,20 @@ export interface DeviceIot {
   isOnline: boolean
   sensorData: SData
   src: 'main' | 'bat'
+  deviceIotConfigs: DeviceIotConfig[]
+}
+
+export interface DeviceIotConfig {
+  id: number | string
+  deviceIotId: number | string
+  sensorType: string
+  absoluteMin: number
+  absoluteMax: number
+  okMin: number
+  okMax: number
+  alarmThresholds: AlarmThreshold[]
+  warningThresholds: WarningThreshold[]
+  // ... otras propiedades según tu API
 }
 
 export interface SensorData {

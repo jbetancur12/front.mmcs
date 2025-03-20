@@ -130,7 +130,7 @@ const MainChart = ({
       <ResponsiveContainer>
         <LineChart data={graphData}>
           <CartesianGrid strokeDasharray='3 3' />
-          {!visibleSeries.temperature && temperatureAlarms?.above && (
+          {visibleSeries.temperature && temperatureAlarms?.above && (
             <ReferenceLine
               y={temperatureAlarms.above}
               yAxisId='left'
@@ -143,7 +143,7 @@ const MainChart = ({
               }}
             />
           )}
-          {!visibleSeries.temperature && temperatureAlarms?.below && (
+          {visibleSeries.temperature && temperatureAlarms?.below && (
             <ReferenceLine
               y={temperatureAlarms.below}
               yAxisId='left'
@@ -158,7 +158,7 @@ const MainChart = ({
           )}
 
           {/* Líneas de referencia para humedad */}
-          {!visibleSeries.humidity && humidityAlarms?.above && (
+          {visibleSeries.humidity && humidityAlarms?.above && (
             <ReferenceLine
               y={humidityAlarms.above}
               yAxisId='right'
@@ -171,7 +171,7 @@ const MainChart = ({
               }}
             />
           )}
-          {!visibleSeries.humidity && humidityAlarms?.below && (
+          {visibleSeries.humidity && humidityAlarms?.below && (
             <ReferenceLine
               y={humidityAlarms.below}
               yAxisId='right'
@@ -215,11 +215,11 @@ const MainChart = ({
             type='monotone'
             dataKey='temperature'
             stroke='#F44336'
-            hide={visibleSeries.temperature}
+            hide={!visibleSeries.temperature}
             strokeWidth={1.5}
             dot={false}
             activeDot={{ r: 2 }}
-            strokeOpacity={visibleSeries.temperature ? 0 : 1}
+            strokeOpacity={visibleSeries.temperature ? 1 : 0}
           />
           <Line
             yAxisId='right'
@@ -229,8 +229,8 @@ const MainChart = ({
             strokeWidth={1.5}
             dot={false}
             activeDot={{ r: 2 }}
-            hide={visibleSeries.humidity}
-            strokeOpacity={visibleSeries.humidity ? 0 : 1}
+            hide={!visibleSeries.humidity}
+            strokeOpacity={visibleSeries.humidity ? 1 : 0}
           />
         </LineChart>
       </ResponsiveContainer>
