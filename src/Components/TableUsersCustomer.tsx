@@ -28,17 +28,7 @@ import { useParams } from 'react-router-dom'
 
 import { bigToast } from './ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
-
-const roles = [
-  {
-    label: 'User',
-    value: 'user'
-  },
-  {
-    label: 'Flota',
-    value: 'fleet'
-  }
-]
+import ResetPasswordModal from './ResetPasswordModal'
 
 // Define interfaces
 export interface UserData {
@@ -63,6 +53,8 @@ const Table: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<UserData[]>([])
   const [filteredTableData, setFilteredTableData] = useState<UserData[]>([])
+  const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false)
+  const [selectedUser, _setSelectedUser] = useState<UserData | null>(null)
   const { id } = useParams()
 
   const [validationErrors, setValidationErrors] = useState<{
@@ -84,6 +76,23 @@ const Table: React.FC = () => {
     } catch (error) {
       console.error('Error de red:', error)
       bigToast('Error al crear usuario', 'error')
+    }
+  }
+
+  const handleResetPassword = async (userId: number, newPassword: string) => {
+    try {
+      const response = await axiosPrivate.put(`/auth/${userId}/password`, {
+        newPassword
+      })
+
+      if (response.status === 200) {
+        bigToast('Contraseña actualizada exitosamente!', 'success')
+      } else {
+        bigToast('Error al actualizar la contraseña', 'error')
+      }
+    } catch (error) {
+      console.error('Error de red:', error)
+      bigToast('Error al actualizar la contraseña', 'error')
     }
   }
 
@@ -258,52 +267,6 @@ const Table: React.FC = () => {
         Edit: () => null
       },
       {
-        accessorKey: 'rol',
-        header: 'Rol',
-        size: 10,
-
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => {
-          return {
-            ...getCommonEditTextFieldProps(cell),
-            select: true, //change to select for a dropdown
-            children: roles.map((state) => (
-              <MenuItem key={state.value} value={state.value}>
-                {state.label}
-              </MenuItem>
-            ))
-          }
-        }
-
-        // Edit: ({ cell, table }) => {
-        //   const handleChange = (event: SelectChangeEvent<string>) => {
-        //     const newValue = event.target.value
-        //     table.setEditingRow((prevRow) => {
-        //       // Asegúrate de que `prevRow` sea del tipo correcto
-        //       if (prevRow) {
-        //         return {
-        //           ...prevRow,
-        //           original: {
-        //             ...prevRow.original,
-        //             rol: newValue
-        //           }
-        //         }
-        //       }
-        //     })
-        //   }
-
-        //   return (
-        //     <Select
-        //       value={cell.getValue() as string}
-        //       onChange={handleChange}
-        //       fullWidth
-        //     >
-        //       <MenuItem value='user'>User</MenuItem>
-        //       <MenuItem value='fleet'>Flota</MenuItem>
-        //     </Select>
-        //   )
-        // }
-      },
-      {
         accessorKey: 'customer.nombre',
         header: 'Compañia',
         size: 10
@@ -338,6 +301,16 @@ const Table: React.FC = () => {
                 <Edit />
               </IconButton>
             </Tooltip>
+            {/* <Tooltip arrow placement='left' title='Restablecer contraseña'>
+              <IconButton
+                onClick={() => {
+                  setSelectedUser(row.original)
+                  setResetPasswordModalOpen(true)
+                }}
+              >
+                <VpnKey />
+              </IconButton>
+            </Tooltip> */}
             <Tooltip arrow placement='right' title='Delete'>
               <IconButton color='error' onClick={() => handleDeleteRow(row)}>
                 <Delete />
@@ -364,6 +337,12 @@ const Table: React.FC = () => {
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         onSubmit={handleCreateNewRow}
+      />
+      <ResetPasswordModal
+        open={resetPasswordModalOpen}
+        onClose={() => setResetPasswordModalOpen(false)}
+        onSubmit={handleResetPassword}
+        user={selectedUser}
       />
     </>
   )

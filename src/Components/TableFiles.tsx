@@ -152,19 +152,46 @@ const Table: React.FC = () => {
       })
 
       if (response.status === 201) {
-        setLoading(false)
-
-        bigToast('Certificado Creado Exitosamente!', 'success')
+        bigToast(
+          response.data.message || 'Certificado creado exitosamente!',
+          'success'
+        )
         fetchUsers() // Refresh data after creation
       } else {
-        setLoading(false)
-        bigToast('Error al crear equipo', 'error')
-        console.error('Error al crear equipo')
+        // Manejar otros códigos de estado no exitosos
+        const errorMessage =
+          response.data?.error || 'Error desconocido al crear certificado'
+        bigToast(errorMessage, 'error')
+        console.error('Error del servidor:', response.data)
       }
-    } catch (error) {
+    } catch (error: any) {
+      let errorMessage = 'Error de red: No se pudo conectar al servidor'
+
+      // Manejar errores de Axios con respuesta del servidor
+      if (error.response) {
+        // Extraer mensaje de error del backend
+        errorMessage = error.response.data?.error || 'Error en el servidor'
+
+        // Mensajes específicos basados en códigos de estado
+        switch (error.response.status) {
+          case 400:
+            errorMessage = errorMessage || 'Datos de entrada inválidos'
+            break
+          case 409:
+            errorMessage = errorMessage || 'El archivo ya existe en el sistema'
+            break
+          case 500:
+            errorMessage = errorMessage || 'Error interno del servidor'
+            break
+        }
+      } else if (error.request) {
+        errorMessage = 'El servidor no respondió'
+      }
+
+      bigToast(errorMessage, 'error')
+      console.error('Error detallado:', error)
+    } finally {
       setLoading(false)
-      bigToast('Error al crear equipo', 'error')
-      console.error('Error de red:', error)
     }
   }
 
