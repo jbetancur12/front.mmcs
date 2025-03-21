@@ -34,7 +34,7 @@ export const ConfigTab = ({
   const handleSuccess = async () => {
     try {
       await onConfigUpdated()
-
+      onResetSelection()
       Swal.fire({
         title: '¡Configuración actualizada!',
         text: 'Los cambios se han aplicado correctamente',

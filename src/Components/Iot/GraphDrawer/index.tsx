@@ -81,6 +81,7 @@ const GraphDrawer = ({
       const updatedDevices = deviceDetails.map((device: DeviceIot) =>
         device.id === deviceId ? updatedDevice[0] : device
       )
+
       loadDevices(updatedDevices)
 
       // 3. Si usas React Query

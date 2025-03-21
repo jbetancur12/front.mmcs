@@ -18,7 +18,6 @@ export const DeviceMapController = ({
 
   useEffect(() => {
     if (devices.length > 0) {
-      console.log('🚀 ~ useEffect ~ devices:', devices)
       const bounds = L.latLngBounds(
         devices.map((d) => [d.lastLocation.lat, d.lastLocation.lng])
       )
