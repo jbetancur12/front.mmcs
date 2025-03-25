@@ -30,7 +30,7 @@ const MarkerComponent = memo(
     return (
       <Marker
         position={[device.lastLocation.lat, device.lastLocation.lng]}
-        icon={createDeviceIcon(device.src, device.isOnline)}
+        icon={createDeviceIcon(device.src, device.isOnline, device.isInAlarm)}
         eventHandlers={{
           click: () => {
             // Maneja clics específicos en el marcador

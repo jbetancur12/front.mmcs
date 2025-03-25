@@ -32,6 +32,19 @@ export const updateDeviceIotStatus = action(
   }
 )
 
+export const updateDeviceAlarmStatus = action(
+  $devicesIot,
+  'updateDeviceAlarmStatus',
+  (store, deviceIotId: string, isInAlarm: boolean) => {
+    const devices = store
+      .get()
+      .map((device) =>
+        device.name === deviceIotId ? { ...device, isInAlarm } : device
+      )
+    store.set(devices)
+  }
+)
+
 export const updateDeviceIotLocation = action(
   $devicesIot,
   'updateDeviceLocation',

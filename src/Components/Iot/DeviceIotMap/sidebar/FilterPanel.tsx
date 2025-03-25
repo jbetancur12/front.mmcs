@@ -66,7 +66,42 @@ export const FilterPanel = ({
 
     <Box sx={{ mb: 3 }}>
       <Typography variant='subtitle1'>Fuente de poder:</Typography>
-      {/* Checkboxes para main y bat */}
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={filterState.powerSources.has('main')}
+            onChange={() =>
+              onFilterChange(
+                'powerSources',
+                new Set(
+                  filterState.powerSources.has('main')
+                    ? [...filterState.powerSources].filter((s) => s !== 'main')
+                    : [...filterState.powerSources, 'main']
+                )
+              )
+            }
+          />
+        }
+        label='Corriente principal'
+      />
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={filterState.powerSources.has('bat')}
+            onChange={() =>
+              onFilterChange(
+                'powerSources',
+                new Set(
+                  filterState.powerSources.has('bat')
+                    ? [...filterState.powerSources].filter((s) => s !== 'bat')
+                    : [...filterState.powerSources, 'bat']
+                )
+              )
+            }
+          />
+        }
+        label='Batería'
+      />
     </Box>
   </>
 )

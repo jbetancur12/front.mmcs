@@ -9,7 +9,7 @@ export const MapControls = ({
   isSidebarOpen: boolean
   onToggleSidebar: () => void
 }) => (
-  <Box sx={{ position: 'absolute', top: 80, left: 12, zIndex: 1000 }}>
+  <Box sx={{ position: 'absolute', top: 120, left: 22, zIndex: 1000 }}>
     {!isSidebarOpen && (
       <IconButton
         sx={{

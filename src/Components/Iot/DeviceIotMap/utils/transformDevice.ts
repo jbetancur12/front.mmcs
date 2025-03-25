@@ -1,7 +1,8 @@
 // components/DeviceIotMap/utils/transformDevice.ts
+import { DeviceIot } from '../../types'
 import { Device } from '../types'
 
-export const transformDevice = (device: any): Device => {
+export const transformDevice = (device: any): DeviceIot => {
   const [lng, lat] = device.lastLocation.coordinates
   return {
     id: device.id,
@@ -14,6 +15,7 @@ export const transformDevice = (device: any): Device => {
     isOnline: device.isOnline,
     src: device.src,
     sensorData: device.sensorData,
-    deviceIotConfigs: device.deviceIotConfigs
+    deviceIotConfigs: device.deviceIotConfigs,
+    isInAlarm: device.isInAlarm
   }
 }

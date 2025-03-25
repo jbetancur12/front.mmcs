@@ -21,6 +21,7 @@ export interface DeviceIot {
   sensorData: SData
   src: 'main' | 'bat'
   deviceIotConfigs: DeviceIotConfig[]
+  isInAlarm: boolean
 }
 
 export interface DeviceIotConfig {

@@ -7,3 +7,18 @@
 .swal2-container {
   z-index: 1500;
 }
+
+/* En tu archivo de estilos principal */
+.custom-marker-icon.blinking {
+  animation: alarm-blink 1s infinite;
+}
+
+@keyframes alarm-blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+.alarm-dot {
+  filter: drop-shadow(0 0 2px white);
+}

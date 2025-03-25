@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { DataPayload } from 'src/Components/Iot/types'
 import {
   addRealTimeData,
+  updateDeviceAlarmStatus,
   updateDeviceIotLocation,
   updateDeviceIotStatus
 } from 'src/store/deviceIotStore'
@@ -20,10 +21,11 @@ const useWebSocket = () => {
         // Parseamos el mensaje recibido asumiendo que es JSON
 
         const message = JSON.parse(event.data)
+
         const type = message.type // Aquí se obtiene el tipo del mensaje
 
         // updateDeviceIotStatus(deviceIotId, 'online');
-        if (type === 'data') {
+        if (type === 'REAL_TIME_DATA') {
           // Se asume que el payload para sensor data tiene esta estructura:
           // { type: "data", data: { dev, gps, ts, sen } }
           const data: DataPayload = message
@@ -37,10 +39,13 @@ const useWebSocket = () => {
           addRealTimeData(data)
           updateDeviceIotStatus(deviceIotId, 'online', true, src)
         }
+        if (type === 'ALARM_UPDATE') {
+          updateDeviceAlarmStatus(message.data.deviceId, message.data.isInAlarm)
+        }
         if (type === 'power') {
           const data = message
         }
-        if (type === 'status') {
+        if (type === 'DEVICE_STATUS') {
           const statusData = message.data
           if (
             statusData.offlineDeviceIds &&

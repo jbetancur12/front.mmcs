@@ -22,6 +22,7 @@ import GraphDrawer from '../GraphDrawer'
 
 const DeviceIotMap = () => {
   const devices = useStore($devicesIot)
+  console.log('🚀 ~ DeviceIotMap ~ devices:', devices)
 
   const axiosPrivate = useAxiosPrivate()
   const { handleMapRef, isSidebarOpen, toggleSidebar } = useMapSetup()
