@@ -2,7 +2,8 @@
   "compilerOptions": {
     "baseUrl": ".", // This should point to the root of your project
     "paths": {
-      "@utils/*": ["src/utils/*"] // This should map to the correct directory
+      "@utils/*": ["src/utils/*"], // This should map to the correct directory
+      "@stores/*": ["src/store/*"],
     },
     "target": "ES2020",
     "useDefineForClassFields": true,
