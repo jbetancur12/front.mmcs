@@ -3,7 +3,7 @@ import { axiosPrivate } from './api'
 export const loadOptions = async <T,>(
   inputValue: string,
   resource: string,
-  mapFunction: (item: any) => ResourceOption
+  mapFunction: (item: T) => ResourceOption
 ): Promise<T[]> => {
   return new Promise((resolve, reject) => {
     let timer
@@ -35,6 +35,30 @@ export interface ResourceOption {
   label: string // Tipo adecuado para la etiqueta
 }
 
+export interface CustomerOption extends ResourceOption {
+  sede: string // Tipo adecuado para la sede
+}
+
+export const genericMapOptions = (
+  option: any,
+  valueProperty: string, // Propiedad a usar como value
+  labelProperty: string, // Propiedad a usar como label
+  extraMappings?: { [key: string]: string } // Propiedades extra a mapear: { nuevaPropiedad: 'nombreEnOption' }
+): { value: any; label: any; [key: string]: any } => {
+  const base: { value: any; label: any; [key: string]: any } = {
+    value: option[valueProperty],
+    label: option[labelProperty]
+  }
+
+  if (extraMappings) {
+    Object.keys(extraMappings).forEach((key) => {
+      base[key] = option[extraMappings[key]]
+    })
+  }
+
+  return base
+}
+
 export const mapOptions = (
   option: any,
   valueProperty: string, // Nombre de la propiedad a utilizar como valor
@@ -42,6 +66,17 @@ export const mapOptions = (
 ): ResourceOption => ({
   value: option[valueProperty], // Utiliza la propiedad especificada como valor
   label: option[labelProperty] // Utiliza la propiedad especificada como etiqueta
+})
+
+export const mapOptionsCustomer = (
+  option: any,
+  valueProperty: string, // Nombre de la propiedad a utilizar como valor
+  labelProperty: string, // Nombre de la propiedad a utilizar como etiqueta
+  sedeProperty: string // Nombre de la propiedad a utilizar como sede
+): CustomerOption => ({
+  value: option[valueProperty], // Utiliza la propiedad especificada como valor
+  label: option[labelProperty], // Utiliza la propiedad especificada como etiqueta
+  sede: option[sedeProperty] // Utiliza la propiedad especificada como sede
 })
 
 // export function logFormData(formData: any) {
