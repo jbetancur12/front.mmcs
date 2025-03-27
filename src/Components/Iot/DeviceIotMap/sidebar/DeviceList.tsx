@@ -1,15 +1,8 @@
 // components/DeviceIotMap/sidebar/DeviceList.tsx
-import { List, Box } from '@mui/material'
+import { List } from '@mui/material'
 
-import { Device } from '../types'
 import { DeviceListItem } from './DeviceListItem'
 import { DeviceIot } from '../../types'
-
-interface DeviceListProps {
-  devices: DeviceIot[]
-  onCenterDevice: (device: DeviceIot) => void
-  onShowDeviceGraph: (device: DeviceIot) => void
-}
 
 export const DeviceList = ({
   devices,

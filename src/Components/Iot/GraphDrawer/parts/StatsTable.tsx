@@ -7,7 +7,6 @@ import {
   TableBody,
   Box
 } from '@mui/material'
-import { Typography } from '@mui/material'
 
 interface StatsTableProps {
   stats: {

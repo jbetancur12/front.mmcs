@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import { $realTimeData, loadDevices } from 'src/store/deviceIotStore'
-import { Drawer, Box, Tabs, Tab, Skeleton, Typography } from '@mui/material'
+import { Drawer, Box, Tabs, Tab } from '@mui/material'
 import useAxiosPrivate from '@utils/use-axios-private'
 
 import { DrawerHeader } from './parts/Header'
@@ -13,7 +13,7 @@ import { useDeviceData } from './hooks/useDeviceData'
 import { useAlarms } from './hooks/useAlarms'
 import { useSensorConfig } from './hooks/useSensorConfig'
 import { aggregateStats, getGaugeConfig } from './helpers'
-import { GraphDrawerProps, RangeOption, SensorType } from './types'
+import { GraphDrawerProps, RangeOption } from './types'
 import { RANGE_OPTIONS } from 'src/Components/Iot/constants'
 import { useQueryClient } from 'react-query'
 import { DeviceIot } from '../types'
@@ -41,9 +41,7 @@ const GraphDrawer = ({
     combinedData,
     graphData,
     isLoading,
-    error,
-    startDateStr,
-    endDateStr
+    error
   } = useDeviceData(deviceId, selectedRange)
 
   const {

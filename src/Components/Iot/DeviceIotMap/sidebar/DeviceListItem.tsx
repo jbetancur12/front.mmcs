@@ -1,7 +1,7 @@
 // components/DeviceIotMap/sidebar/DeviceListItem.tsx
 import { ListItem, ListItemText, IconButton, Box } from '@mui/material'
 import { MyLocation, BarChart } from '@mui/icons-material'
-import { Device } from '../types'
+
 import { DeviceIot } from '../../types'
 
 export const DeviceListItem = ({

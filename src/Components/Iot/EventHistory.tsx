@@ -13,11 +13,10 @@ import {
   Alert,
   Chip,
   IconButton,
-  Modal,
-  DialogContent
+  Modal
 } from '@mui/material'
 import { format } from 'date-fns'
-import { ExpandLess, ExpandMore } from '@mui/icons-material'
+import { ExpandMore } from '@mui/icons-material'
 import {
   LineChart,
   Line,

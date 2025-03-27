@@ -43,7 +43,6 @@ const useWebSocket = () => {
           updateDeviceAlarmStatus(message.data.deviceId, message.data.isInAlarm)
         }
         if (type === 'power') {
-          const data = message
         }
         if (type === 'DEVICE_STATUS') {
           const statusData = message.data

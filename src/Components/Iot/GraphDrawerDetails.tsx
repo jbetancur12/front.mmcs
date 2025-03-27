@@ -116,34 +116,34 @@ const GraphDrawer = ({
     }
   )
 
-  const handleSelectSensorType = (sensorType: ModuleConfig['sensorType']) => {
-    const existingConfig = currentDevice?.deviceIotConfigs?.find(
-      (c: any) => c.sensorType === sensorType
-    )
+  // const handleSelectSensorType = (sensorType: ModuleConfig['sensorType']) => {
+  //   const existingConfig = currentDevice?.deviceIotConfigs?.find(
+  //     (c: any) => c.sensorType === sensorType
+  //   )
 
-    setSelectedSensorType(sensorType)
+  //   setSelectedSensorType(sensorType)
 
-    if (existingConfig) {
-      setSelectedConfig({
-        ...existingConfig,
-        absoluteMin: Number(existingConfig.absoluteMin),
-        absoluteMax: Number(existingConfig.absoluteMax),
-        okMin: Number(existingConfig.okMin),
-        okMax: Number(existingConfig.okMax)
-      })
-    } else {
-      setSelectedConfig({
-        deviceIotId: Number(deviceId),
-        sensorType,
-        absoluteMin: sensorType === 'TEMPERATURA' ? 20 : 50,
-        absoluteMax: sensorType === 'TEMPERATURA' ? 30 : 80,
-        okMin: sensorType === 'TEMPERATURA' ? 20 : 50,
-        okMax: sensorType === 'TEMPERATURA' ? 25 : 60,
-        alarmThresholds: [],
-        warningThresholds: []
-      })
-    }
-  }
+  //   if (existingConfig) {
+  //     setSelectedConfig({
+  //       ...existingConfig,
+  //       absoluteMin: Number(existingConfig.absoluteMin),
+  //       absoluteMax: Number(existingConfig.absoluteMax),
+  //       okMin: Number(existingConfig.okMin),
+  //       okMax: Number(existingConfig.okMax)
+  //     })
+  //   } else {
+  //     setSelectedConfig({
+  //       deviceIotId: Number(deviceId),
+  //       sensorType,
+  //       absoluteMin: sensorType === 'TEMPERATURA' ? 20 : 50,
+  //       absoluteMax: sensorType === 'TEMPERATURA' ? 30 : 80,
+  //       okMin: sensorType === 'TEMPERATURA' ? 20 : 50,
+  //       okMax: sensorType === 'TEMPERATURA' ? 25 : 60,
+  //       alarmThresholds: [],
+  //       warningThresholds: []
+  //     })
+  //   }
+  // }
 
   const extractAlarms = (deviceData: any) => {
     const temperatureConfig = deviceData?.deviceIotConfigs?.find(

@@ -5,7 +5,7 @@ import { ConfigButton } from '../parts/ConfigButton'
 import { SensorType } from '../types'
 import { ArrowBack } from '@mui/icons-material'
 import ModuleConfigForm from 'src/Components/Iot/ModuleConfigForm'
-import { useQueryClient } from 'react-query'
+
 import Swal from 'sweetalert2'
 
 interface ConfigTabProps {
@@ -28,7 +28,6 @@ export const ConfigTab = ({
   selectedConfig,
   onSelectSensorType,
   onResetSelection,
-  onSuccess,
   onConfigUpdated
 }: ConfigTabProps) => {
   const handleSuccess = async () => {

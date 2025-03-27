@@ -7,9 +7,9 @@ import { DeviceSidebar } from './sidebar'
 
 import { $devicesIot, loadDevices } from 'src/store/deviceIotStore'
 import { DEFAULT_MAP_CENTER, MAP_STYLE } from './constants'
-import { Device } from './types'
+
 import { useMapSetup } from './hooks/useMapSetup'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useDeviceData } from './hooks/useDeviceData'
 import { MapControls } from './parts/MapControls'
 import { DeviceMapController } from './parts/DeviceMapController'

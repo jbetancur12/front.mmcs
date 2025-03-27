@@ -1,5 +1,5 @@
 // components/DeviceGraphs/GraphDrawer/tabs/SummaryTab.tsx
-import { Grid, Paper, Typography, Box } from '@mui/material'
+import { Grid, Paper, Typography } from '@mui/material'
 import { SensorGauge } from '../parts/SensorGauge'
 
 import { GaugeConfig } from '../types'

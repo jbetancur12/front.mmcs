@@ -1,7 +1,7 @@
 // components/DeviceIotMap/sidebar/index.tsx
 import { Drawer, Box, IconButton, Typography } from '@mui/material'
 import { Close as CloseIcon } from '@mui/icons-material'
-import { Device, FilterState } from '../types'
+import { FilterState } from '../types'
 import { SIDEBAR_WIDTH } from '../constants'
 import { FilterPanel } from './FilterPanel'
 import { DeviceList } from './DeviceList'

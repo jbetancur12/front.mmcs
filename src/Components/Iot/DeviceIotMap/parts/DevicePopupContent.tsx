@@ -1,6 +1,6 @@
 // components/DeviceIotMap/parts/DevicePopupContent.tsx
 import { Card, CardContent, Typography, Box } from '@mui/material'
-import { Device } from '../types'
+
 import { DeviceIot } from '../../types'
 
 export const DevicePopupContent = ({ device }: { device: DeviceIot }) => (

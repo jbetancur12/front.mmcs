@@ -1,6 +1,6 @@
 // components/DeviceIotMap/hooks/useDeviceData.ts
 import { useState, useMemo } from 'react'
-import { Device, FilterState } from '../types'
+import { FilterState } from '../types'
 import { DeviceIot } from '../../types'
 
 export const useDeviceData = (devices: DeviceIot[]) => {
