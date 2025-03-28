@@ -16,6 +16,7 @@ export interface DeviceIot {
   }
   lastSeen: Date
   status: 'online' | 'offline'
+  customerId: string | number
   customer: Customer | null
   isOnline: boolean
   sensorData: SData

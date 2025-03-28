@@ -19,7 +19,7 @@ import { DatePicker } from '@mui/x-date-pickers'
 import { CloudUpload } from '@mui/icons-material'
 import AsyncSelect from 'react-select/async'
 import { useStore } from '@nanostores/react'
-import { FileData, SelectOption } from '../types/fileTypes'
+import { FileData } from '../types/fileTypes'
 import { handleCreateFile } from './CreateFileModalHandlers'
 import { customerStore } from '@stores/customerStore'
 import { deviceStore } from '@stores/deviceStore'
@@ -34,6 +34,7 @@ import {
   limitArraySizeCustomer,
   limitArraySizeDevice
 } from '../utils/limitArraySizes'
+import { SelectOption } from 'src/types'
 
 interface CreateFileModalProps {
   open: boolean

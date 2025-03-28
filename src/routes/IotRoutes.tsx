@@ -2,8 +2,8 @@ import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
 
-const Iot = lazy(() => import('../pages/Iot'))
-const IotTable = lazy(() => import('../pages/IotTable'))
+const Iot = lazy(() => import('../pages/Iot/Iot'))
+const DeviceList = lazy(() => import('../pages/Iot/DeviceList'))
 
 const IotRoutes = (role: string[]) => {
   return (
@@ -13,12 +13,12 @@ const IotRoutes = (role: string[]) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['*']}
+            roles={['admin', 'user']}
           />
         }
       >
         <Route path='iot'>
-          <Route index element={<IotTable />} />
+          <Route index element={<DeviceList />} />
           <Route path='map' element={<Iot />} />
         </Route>
       </Route>

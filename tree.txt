@@ -1,0 +1,69 @@
+Folder PATH listing
+Volume serial number is 663B-686C
+C:\USERS\JORGE BETANCUR\DOCUMENTS\VITE\METROMEDICS\SRC\COMPONENTS\IOT
+ª   AddDeviceIotModal.tsx
+ª   constants.ts
+ª   DeviceIotListSidebar.tsx
+ª   DeviceMap.tsx
+ª   EventHistory.tsx
+ª   Gauge.tsx
+ª   GaugeChart.tsx
+ª   GraphDrawerDetails.tsx
+ª   helpers.ts
+ª   MainChart.tsx
+ª   ModuleConfigForm.tsx
+ª   TemperatureChart.tsx
+ª   types.ts
+ª   
++---components
++---Details
+ª       Layout.tsx
+ª       
++---DeviceIotMap
+ª   ª   constants.ts
+ª   ª   index.tsx
+ª   ª   types.ts
+ª   ª   
+ª   +---hooks
+ª   ª       useDeviceData.ts
+ª   ª       useMapSetup.ts
+ª   ª       
+ª   +---parts
+ª   ª       DeviceMapController.tsx
+ª   ª       DeviceMarkers.tsx
+ª   ª       DevicePopupContent.tsx
+ª   ª       MapControls.tsx
+ª   ª       
+ª   +---sidebar
+ª   ª       DeviceList.tsx
+ª   ª       DeviceListItem.tsx
+ª   ª       FilterPanel.tsx
+ª   ª       index.tsx
+ª   ª       
+ª   +---utils
+ª           createDeviceIcon.ts
+ª           transformDevice.ts
+ª           
++---GraphDrawer
+    ª   helpers.ts
+    ª   index.tsx
+    ª   types.ts
+    ª   
+    +---hooks
+    ª       useAlarms.ts
+    ª       useDeviceData.ts
+    ª       useSensorConfig.ts
+    ª       
+    +---parts
+    ª       ConfigButton.tsx
+    ª       Header.tsx
+    ª       RangeSelector.tsx
+    ª       SensorGauge.tsx
+    ª       StatsTable.tsx
+    ª       
+    +---tabs
+            ConfigTab.tsx
+            EventsTab.tsx
+            HistoryTab.tsx
+            SummaryTab.tsx
+            

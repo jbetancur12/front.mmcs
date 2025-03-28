@@ -19,11 +19,11 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { useQuery } from 'react-query'
 import { transformDevice } from './utils/transformDevice'
 import GraphDrawer from '../GraphDrawer'
+import { userStore } from '@stores/userStore'
 
 const DeviceIotMap = () => {
   const devices = useStore($devicesIot)
-  console.log('🚀 ~ DeviceIotMap ~ devices:', devices)
-
+  const $user = useStore(userStore)
   const axiosPrivate = useAxiosPrivate()
   const { handleMapRef, isSidebarOpen, toggleSidebar } = useMapSetup()
   const { filteredDevices, filterState, handleFilterChange } =
@@ -35,7 +35,7 @@ const DeviceIotMap = () => {
   const [deviceName, setDeviceName] = useState<string>('')
 
   const { data: apiDevices } = useQuery(
-    'devices',
+    ['devices', $user?.customer?.id],
     async () => {
       const response = await axiosPrivate.get('/devicesIot')
       const transformed = response.data.map(transformDevice)

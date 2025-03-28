@@ -11,6 +11,7 @@ export const transformDevice = (device: any): DeviceIot => {
     lastSeen: new Date(device.lastSeen),
     status: device.isOnline ? 'online' : 'offline',
     customer: device.customer,
+    customerId: device.customerId,
     isOnline: device.isOnline,
     src: device.src,
     sensorData: device.sensorData,

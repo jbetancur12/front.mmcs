@@ -47,11 +47,6 @@ export interface ResourceOption {
   label: string
 }
 
-export interface SelectOption {
-  value: string
-  label: string
-}
-
 export interface DeviceData {
   id: string
   name: string
