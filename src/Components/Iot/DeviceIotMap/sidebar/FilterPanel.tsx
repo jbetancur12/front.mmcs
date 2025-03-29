@@ -4,9 +4,12 @@ import {
   TextField,
   FormControlLabel,
   Checkbox,
-  Typography
+  Typography,
+  InputAdornment,
+  Chip
 } from '@mui/material'
 import { FilterState } from '../types'
+import { Search } from '@mui/icons-material'
 
 export const FilterPanel = ({
   filterState,
@@ -15,22 +18,40 @@ export const FilterPanel = ({
   filterState: FilterState
   onFilterChange: (type: keyof FilterState, value: any) => void
 }) => (
-  <>
-    <TextField
-      fullWidth
-      label='Buscar dispositivos'
-      value={filterState.searchQuery}
-      onChange={(e) => onFilterChange('searchQuery', e.target.value)}
-      sx={{ mb: 3 }}
-    />
+  <Box className='mt-4'>
+    <Box className='relative'>
+      <TextField
+        fullWidth
+        size='small'
+        placeholder='Buscar dispositivos'
+        value={filterState.searchQuery}
+        onChange={(e) => onFilterChange('searchQuery', e.target.value)}
+        sx={{ mb: 3 }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position='start'>
+              <Search fontSize='small' />
+            </InputAdornment>
+          )
+        }}
+      />
+    </Box>
 
     <Box sx={{ mb: 3 }}>
-      <Typography variant='subtitle1'>Estado:</Typography>
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={filterState.statuses.has('online')}
-            onChange={() =>
+      <Box sx={{ mb: 2 }}>
+        <Box
+          sx={{
+            fontSize: '0.875rem',
+            color: 'text.secondary',
+            mb: 1
+          }}
+        >
+          Estado:
+        </Box>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          <Chip
+            label='Online'
+            onClick={() =>
               onFilterChange(
                 'statuses',
                 new Set(
@@ -40,15 +61,17 @@ export const FilterPanel = ({
                 )
               )
             }
+            color={filterState.statuses.has('online') ? 'primary' : 'default'}
+            variant={filterState.statuses.has('online') ? 'filled' : 'outlined'}
+            size='small'
+            sx={{
+              '& .MuiChip-label': { fontSize: '0.75rem' },
+              height: '24px'
+            }}
           />
-        }
-        label='Online'
-      />
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={filterState.statuses.has('offline')}
-            onChange={() =>
+          <Chip
+            label='Offline'
+            onClick={() =>
               onFilterChange(
                 'statuses',
                 new Set(
@@ -58,19 +81,35 @@ export const FilterPanel = ({
                 )
               )
             }
+            color={filterState.statuses.has('offline') ? 'primary' : 'default'}
+            variant={
+              filterState.statuses.has('offline') ? 'filled' : 'outlined'
+            }
+            size='small'
+            sx={{
+              '& .MuiChip-label': { fontSize: '0.75rem' },
+              height: '24px'
+            }}
           />
-        }
-        label='Offline'
-      />
+        </Box>
+      </Box>
     </Box>
 
     <Box sx={{ mb: 3 }}>
-      <Typography variant='subtitle1'>Fuente de poder:</Typography>
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={filterState.powerSources.has('main')}
-            onChange={() =>
+      <Box sx={{ mb: 2 }}>
+        <Box
+          sx={{
+            fontSize: '0.875rem',
+            color: 'text.secondary',
+            mb: 1
+          }}
+        >
+          Fuente de poder:
+        </Box>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          <Chip
+            label='Corriente principal'
+            onClick={() =>
               onFilterChange(
                 'powerSources',
                 new Set(
@@ -80,15 +119,19 @@ export const FilterPanel = ({
                 )
               )
             }
+            color={filterState.powerSources.has('main') ? 'primary' : 'default'}
+            variant={
+              filterState.powerSources.has('main') ? 'filled' : 'outlined'
+            }
+            size='small'
+            sx={{
+              '& .MuiChip-label': { fontSize: '0.75rem' },
+              height: '24px'
+            }}
           />
-        }
-        label='Corriente principal'
-      />
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={filterState.powerSources.has('bat')}
-            onChange={() =>
+          <Chip
+            label='Batería'
+            onClick={() =>
               onFilterChange(
                 'powerSources',
                 new Set(
@@ -98,10 +141,18 @@ export const FilterPanel = ({
                 )
               )
             }
+            color={filterState.powerSources.has('bat') ? 'primary' : 'default'}
+            variant={
+              filterState.powerSources.has('bat') ? 'filled' : 'outlined'
+            }
+            size='small'
+            sx={{
+              '& .MuiChip-label': { fontSize: '0.75rem' },
+              height: '24px'
+            }}
           />
-        }
-        label='Batería'
-      />
+        </Box>
+      </Box>
     </Box>
-  </>
+  </Box>
 )

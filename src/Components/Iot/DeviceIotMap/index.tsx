@@ -20,6 +20,7 @@ import { useQuery } from 'react-query'
 import { transformDevice } from './utils/transformDevice'
 import GraphDrawer from '../GraphDrawer'
 import { userStore } from '@stores/userStore'
+import DeviceClusters from './parts/DeviceClusters'
 
 const DeviceIotMap = () => {
   const devices = useStore($devicesIot)
@@ -105,12 +106,22 @@ const DeviceIotMap = () => {
             devices={devices}
             selectedDevice={selectedDevice}
           />
-          <DeviceMarkers
+          {/* <DeviceMarkers
             devices={filteredDevices}
             onSelect={(device) => {
               setSelectedDevice(device)
               // Lógica adicional al seleccionar dispositivo
             }}
+            isSelected={selectedDevice?.id === graphDeviceId}
+          /> */}
+
+          <DeviceClusters
+            devices={filteredDevices}
+            onSelect={(device) => {
+              setSelectedDevice(device)
+              // Lógica adicional al seleccionar dispositivo
+            }}
+            isSelected={selectedDevice?.id === graphDeviceId}
           />
         </MapContainer>
       </Box>

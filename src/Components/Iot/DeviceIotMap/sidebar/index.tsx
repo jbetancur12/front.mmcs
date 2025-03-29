@@ -1,6 +1,6 @@
 // components/DeviceIotMap/sidebar/index.tsx
-import { Drawer, Box, IconButton, Typography } from '@mui/material'
-import { Close as CloseIcon } from '@mui/icons-material'
+import { Drawer, Box, IconButton, Typography, useTheme } from '@mui/material'
+import { ChevronLeft, Close as CloseIcon } from '@mui/icons-material'
 import { FilterState } from '../types'
 import { SIDEBAR_WIDTH } from '../constants'
 import { FilterPanel } from './FilterPanel'
@@ -23,33 +23,52 @@ export const DeviceSidebar = ({
   onFilterChange: (type: keyof FilterState, value: any) => void
   onSelectDevice: (device: DeviceIot) => void
   handleShowDeviceGraph: (device: DeviceIot) => void
-}) => (
-  <Drawer
-    variant='persistent'
-    open={isOpen}
-    sx={{
-      width: SIDEBAR_WIDTH,
-      '& .MuiDrawer-paper': {
+}) => {
+  const theme = useTheme()
+  return (
+    <Drawer
+      variant='persistent'
+      open={isOpen}
+      sx={{
         width: SIDEBAR_WIDTH,
-        mt: 8
-      }
-    }}
-  >
-    <Box sx={{ p: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant='h6'>Dispositivos</Typography>
-        <IconButton onClick={onClose}>
-          <CloseIcon />
-        </IconButton>
+        '& .MuiDrawer-paper': {
+          width: SIDEBAR_WIDTH,
+          mt: 8
+        }
+      }}
+    >
+      <Box className='h-full flex flex-col bg-white'>
+        <Box className='p-4 border-b border-gray-200'>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: theme.spacing(1, 2),
+              backgroundColor: 'primary.main',
+              color: 'primary.contrastText'
+            }}
+          >
+            <Typography variant='h6' sx={{ fontWeight: 'bold' }}>
+              IoT Devices
+            </Typography>
+            <IconButton color='inherit' onClick={onClose} edge='end'>
+              <ChevronLeft />
+            </IconButton>
+          </Box>
+
+          <FilterPanel
+            filterState={filterState}
+            onFilterChange={onFilterChange}
+          />
+
+          <DeviceList
+            devices={devices}
+            onSelectDevice={onSelectDevice}
+            handleShowDeviceGraph={handleShowDeviceGraph}
+          />
+        </Box>
       </Box>
-
-      <FilterPanel filterState={filterState} onFilterChange={onFilterChange} />
-
-      <DeviceList
-        devices={devices}
-        onSelectDevice={onSelectDevice}
-        handleShowDeviceGraph={handleShowDeviceGraph}
-      />
-    </Box>
-  </Drawer>
-)
+    </Drawer>
+  )
+}

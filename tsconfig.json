@@ -26,7 +26,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["vite/client", "node"]
+    "types": ["vite/client", "node", "leaflet",
+      ]
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
