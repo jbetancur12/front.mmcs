@@ -1,27 +1,16 @@
+import { Typography, Box, Chip, Button } from '@mui/material'
 import {
-  Paper,
-  Typography,
-  IconButton,
-  Box,
-  Divider,
-  Chip,
-  Button
-} from '@mui/material'
-import {
-  Close,
   Thermostat,
   WaterDrop,
   Battery5Bar,
-  Update,
-  Opacity,
   Info,
   Warning
 } from '@mui/icons-material'
 
-import { format, formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 import { DeviceIot } from '../../types'
-import { AlarmSeverity, DeviceStatus } from '../constants'
-import { getStatusColor, getStatusInfo } from '../utils/common'
+import { AlarmSeverity } from '../constants'
+import { getStatusColor } from '../utils/common'
 
 interface DevicePopupProps {
   device: DeviceIot
@@ -59,8 +48,6 @@ const DevicePopup = ({ device, onViewDetails }: DevicePopupProps) => {
   const highestSeverity = getHighestSeverity()
 
   // Determine status color and text
-
-  const statusInfo = getStatusInfo(device.status)
 
   return (
     <Box sx={{ minWidth: 200, p: 1 }}>

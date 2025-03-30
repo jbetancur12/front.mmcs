@@ -1,6 +1,6 @@
 // components/DeviceIotMap/sidebar/index.tsx
 import { Drawer, Box, IconButton, Typography, useTheme } from '@mui/material'
-import { ChevronLeft, Close as CloseIcon } from '@mui/icons-material'
+import { ChevronLeft } from '@mui/icons-material'
 import { FilterState } from '../types'
 import { SIDEBAR_WIDTH } from '../constants'
 import { FilterPanel } from './FilterPanel'

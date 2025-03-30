@@ -1,13 +1,5 @@
 // components/DeviceIotMap/sidebar/FilterPanel.tsx
-import {
-  Box,
-  TextField,
-  FormControlLabel,
-  Checkbox,
-  Typography,
-  InputAdornment,
-  Chip
-} from '@mui/material'
+import { Box, TextField, InputAdornment, Chip } from '@mui/material'
 import { FilterState } from '../types'
 import { Search } from '@mui/icons-material'
 

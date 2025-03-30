@@ -22,6 +22,7 @@ export const transformDevice = (device: any): DeviceIot => {
     },
     src: device.src === 'bat' ? 'bat' : 'main',
     deviceIotConfigs: (device.deviceIotConfigs as DeviceIotConfig[]) || [],
-    isInAlarm: device.isInAlarm || false
+    isInAlarm: device.isInAlarm || false,
+    alarms: device.alarms
   }
 }

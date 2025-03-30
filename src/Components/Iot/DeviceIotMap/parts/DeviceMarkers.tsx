@@ -4,7 +4,7 @@ import { useMapEvents } from 'react-leaflet'
 import { memo } from 'react'
 
 import DevicePopupContent from './DevicePopupContent'
-import { createDeviceIcon } from '../utils/createDeviceIcon'
+
 import { DeviceIot } from '../../types'
 import { DeviceStatus } from '../constants'
 import { Sensors } from '@mui/icons-material'

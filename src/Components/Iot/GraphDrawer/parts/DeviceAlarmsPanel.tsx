@@ -13,7 +13,6 @@ import {
   Chip,
   Button,
   Tooltip,
-  CircularProgress,
   Tabs,
   Tab
 } from '@mui/material'
@@ -44,7 +43,7 @@ const DeviceAlarmsPanel: React.FC<DeviceAlarmsPanelProps> = ({ deviceId }) => {
   const [tabValue, setTabValue] = useState(0)
   const queryClient = useQueryClient()
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue)
   }
 

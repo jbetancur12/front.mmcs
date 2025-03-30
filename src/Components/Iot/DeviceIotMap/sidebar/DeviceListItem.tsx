@@ -1,8 +1,5 @@
 import {
   Box,
-  Typography,
-  Button,
-  Paper,
   Tooltip,
   Chip,
   ListItemText,
@@ -14,16 +11,13 @@ import {
   BatteryFull,
   DeviceHub,
   Info,
-  MyLocation,
-  Power,
-  PowerOff,
   ReportProblem,
   Thermostat,
   Warning,
   WaterDrop
 } from '@mui/icons-material'
 import { DeviceIot } from '../../types'
-import { AlarmSeverity, DeviceStatus, PowerSource } from '../constants'
+import { AlarmSeverity } from '../constants'
 import { format } from 'date-fns'
 import { getPowerSourceIcon, getStatusColor } from '../utils/common'
 
@@ -33,11 +27,7 @@ interface DeviceListItemProps {
   handleShowDeviceGraph: (device: DeviceIot) => void
 }
 
-const DeviceListItem = ({
-  device,
-  onSelect,
-  handleShowDeviceGraph
-}: DeviceListItemProps) => {
+const DeviceListItem = ({ device, onSelect }: DeviceListItemProps) => {
   // Determine status color and icon
 
   const hasActiveAlarms = device.isInAlarm
@@ -64,19 +54,6 @@ const DeviceListItem = ({
   }
 
   const highestSeverity = getHighestSeverity()
-
-  const getStatusInfo = (status: string) => {
-    switch (status) {
-      case DeviceStatus.ONLINE:
-        return { color: '#4caf50', text: 'Online' }
-      case DeviceStatus.OFFLINE:
-        return { color: '#f44336', text: 'Offline' }
-      case DeviceStatus.LOW_BATTERY:
-        return { color: '#ff9800', text: 'Low Battery' }
-      default:
-        return { color: '#757575', text: 'Unknown' }
-    }
-  }
 
   const getDeviceIcon = () => {
     if (hasActiveAlarms) {

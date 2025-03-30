@@ -20,7 +20,7 @@ import { useQuery } from 'react-query'
 import { transformDevice } from './utils/transformDevice'
 import GraphDrawer from '../GraphDrawer/index.tsx'
 import { userStore } from '@stores/userStore'
-import DeviceClusters from './parts/DeviceClusters'
+
 import MarkerClusterGroup from 'react-leaflet-cluster'
 
 const DeviceIotMap = () => {
@@ -124,15 +124,6 @@ const DeviceIotMap = () => {
               onViewDetails={handleShowDeviceGraph}
             />
           </MarkerClusterGroup>
-
-          {/* <DeviceClusters
-            devices={filteredDevices}
-            onSelect={(device) => {
-              setSelectedDevice(device)
-              // Lógica adicional al seleccionar dispositivo
-            }}
-            isSelected={selectedDevice?.id === graphDeviceId}
-          /> */}
         </MapContainer>
       </Box>
     </>
