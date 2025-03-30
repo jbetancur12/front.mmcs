@@ -29,3 +29,18 @@ export interface MapControlsProps {
   isSidebarOpen: boolean
   onToggleSidebar: () => void
 }
+
+export type DeviceAlarm = {
+  id: number
+  deviceId: number
+  name: string
+  description?: string
+  metric: string // temperature, humidity, battery, etc.
+  condition: string // above, below, equal
+  threshold: number
+  enabled: boolean // Si el usuario activó/desactivó la alarma
+  active: boolean // Si la alarma está actualmente disparada
+  severity: 'info' | 'warning' | 'critical'
+  createdAt: Date
+  lastTriggered?: Date | null // Puede ser null si aún no se ha disparado
+}

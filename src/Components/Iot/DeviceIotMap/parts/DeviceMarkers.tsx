@@ -15,17 +15,20 @@ interface DeviceMarkersProps {
   devices: DeviceIot[]
   onSelect: (device: DeviceIot) => void
   isSelected: boolean
+  onViewDetails: (device: DeviceIot) => void
 }
 
 const MarkerComponent = memo(
   ({
     device,
     onSelect,
-    isSelected
+    isSelected,
+    onViewDetails
   }: {
     device: DeviceIot
     onSelect: (device: DeviceIot) => void
     isSelected: boolean
+    onViewDetails: (device: DeviceIot) => void
   }) => {
     const getMarkerColor = (status: string, isInAlarm: boolean) => {
       if (isInAlarm) {
@@ -94,7 +97,7 @@ const MarkerComponent = memo(
         }}
       >
         <Popup>
-          <DevicePopupContent device={device} />
+          <DevicePopupContent device={device} onViewDetails={onViewDetails} />
         </Popup>
       </Marker>
     )
@@ -104,7 +107,8 @@ const MarkerComponent = memo(
 export const DeviceMarkers = ({
   devices,
   onSelect,
-  isSelected
+  isSelected,
+  onViewDetails
 }: DeviceMarkersProps) => {
   return (
     <>
@@ -114,6 +118,7 @@ export const DeviceMarkers = ({
           device={device}
           onSelect={onSelect}
           isSelected={isSelected}
+          onViewDetails={onViewDetails}
         />
       ))}
     </>

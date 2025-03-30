@@ -1,23 +1,45 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
-import { $realTimeData, loadDevices } from 'src/store/deviceIotStore'
+import { $latestRealTimeData, $realTimeData } from 'src/store/deviceIotStore'
 import { Drawer, Box, Tabs, Tab } from '@mui/material'
-import useAxiosPrivate from '@utils/use-axios-private'
 
 import { DrawerHeader } from './parts/Header'
-import { SummaryTab } from './tabs/SummaryTab'
+
 import { HistoryTab } from './tabs/HistoryTab'
-import { ConfigTab } from './tabs/ConfigTab'
-import { EventsTab } from './tabs/EventsTab'
+
 import { useDeviceData } from './hooks/useDeviceData'
 import { useAlarms } from './hooks/useAlarms'
-import { useSensorConfig } from './hooks/useSensorConfig'
+
 import { aggregateStats, getGaugeConfig } from './helpers'
 import { GraphDrawerProps, RangeOption } from './types'
 import { RANGE_OPTIONS } from 'src/Components/Iot/constants'
-import { useQueryClient } from 'react-query'
-import { DeviceIot } from '../types'
-import { transformDevice } from '../DeviceIotMap/utils/transformDevice'
+
+import { Alarm, Assessment, Info } from '@mui/icons-material'
+import { DeviceDetailPanel } from './tabs/DeviceDetailPanel'
+import DeviceAlarmsPanel from './parts/DeviceAlarmsPanel'
+
+interface TabPanelProps {
+  children?: React.ReactNode
+  index: number
+  value: number
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props
+
+  return (
+    <div
+      role='tabpanel'
+      hidden={value !== index}
+      id={`device-tabpanel-${index}`}
+      aria-labelledby={`device-tab-${index}`}
+      {...other}
+      style={{ width: '100%' }}
+    >
+      {value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
+    </div>
+  )
+}
 
 const GraphDrawer = ({
   deviceId,
@@ -26,14 +48,14 @@ const GraphDrawer = ({
   deviceName,
   devicesFromApi: deviceDetails
 }: GraphDrawerProps) => {
-  const axiosPrivate = useAxiosPrivate()
-  const queryClient = useQueryClient()
-  const [needsRefresh, setNeedsRefresh] = useState(false)
   const realTimeData = useStore($realTimeData)
-  const [selectedTab, setSelectedTab] = useState<string>('resumen')
+
+  const latestRealTimeData = useStore($latestRealTimeData)
+
   const [selectedRange, setSelectedRange] = useState<RangeOption>(
     RANGE_OPTIONS[0]
   )
+  const [tabValue, setTabValue] = useState(0)
 
   const {
     visibleSeries,
@@ -44,57 +66,20 @@ const GraphDrawer = ({
     error
   } = useDeviceData(deviceId, selectedRange)
 
-  const {
-    selectedConfig,
-    selectedSensorType,
-    handleSelectSensorType,
-    resetConfig
-  } = useSensorConfig(deviceId)
-
-  const realTimeDataFlat = useMemo(
-    () =>
-      Object.entries(realTimeData).flatMap(([_, values]) =>
-        values.map((payload) => ({
-          ...payload.data,
-          timestamp: payload.timestamp
-        }))
-      ),
-    [realTimeData]
-  )
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue)
+  }
 
   const stats = useMemo(() => aggregateStats(graphData), [graphData])
 
   const lilygoData = realTimeData?.[deviceName] || []
   const lastEntry = lilygoData[lilygoData.length - 1] || null
   const status = lastEntry ? 'Online' : 'Offline'
-
-  const handleConfigUpdated = async () => {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      // 1. Actualizar datos mediante API
-      const response = await axiosPrivate.get(`/devicesIot/${deviceId}`)
-      const updatedDevice = [response.data].map(transformDevice)
-
-      // 2. Actualizar estado global (nanostores)
-      const updatedDevices = deviceDetails.map((device: DeviceIot) =>
-        device.id === deviceId ? updatedDevice[0] : device
-      )
-
-      loadDevices(updatedDevices)
-
-      // 3. Si usas React Query
-      queryClient.invalidateQueries(['devices', deviceId])
-
-      // 4. Forzar actualización local
-      setNeedsRefresh((prev) => !prev)
-    } catch (error) {
-      console.error('Error actualizando dispositivo:', error)
-    }
-  }
+  const deviceLastData = latestRealTimeData?.[deviceName] || []
 
   const currentDevice = useMemo(() => {
     return deviceDetails?.find((device: any) => device.id === deviceId)
-  }, [deviceDetails, deviceId, needsRefresh]) //
+  }, [deviceDetails, deviceId]) //
 
   const tempConfig = useMemo(
     () => getGaugeConfig(currentDevice?.deviceIotConfigs, 'TEMPERATURA'),
@@ -123,30 +108,48 @@ const GraphDrawer = ({
         />
 
         <Tabs
-          value={selectedTab}
-          onChange={(_, newValue) => setSelectedTab(newValue)}
+          value={tabValue}
+          onChange={handleTabChange}
           variant='fullWidth'
           sx={{ borderBottom: 1, borderColor: 'divider' }}
         >
-          <Tab label='Resumen' value='resumen' />
-          <Tab label='Histórico' value='historico' />
-          <Tab label='Configuración' value='configuracion' />
+          <Tab
+            icon={<Info />}
+            label='Detalles'
+            id='device-tab-0'
+            aria-controls='device-tabpanel-0'
+          />
+          <Tab
+            icon={<Assessment />}
+            label='Historial'
+            id='device-tab-2'
+            aria-controls='device-tabpanel-2'
+          />
+
+          <Tab
+            icon={<Alarm />}
+            label='Alarmas'
+            id='device-tab-3'
+            aria-controls='device-tabpanel-3'
+          />
           <Tab label='Eventos' value='eventos' />
         </Tabs>
 
         <Box sx={{ p: 3 }}>
-          {selectedTab === 'resumen' && (
-            <SummaryTab
-              realTimeDataFlat={realTimeDataFlat}
+          <TabPanel value={tabValue} index={0}>
+            <DeviceDetailPanel
+              device={currentDevice}
+              deviceName={deviceName}
+              deviceLastData={deviceLastData}
               lastEntry={lastEntry}
               tempConfig={tempConfig}
               humConfig={humConfig}
               lastTemperature={lastEntry?.data?.sen.t || 0}
               lastHumidity={lastEntry?.data?.sen.h || 0}
             />
-          )}
+          </TabPanel>
 
-          {selectedTab === 'historico' && (
+          <TabPanel value={tabValue} index={1}>
             <HistoryTab
               combinedData={combinedData}
               visibleSeries={visibleSeries}
@@ -164,35 +167,11 @@ const GraphDrawer = ({
               isLoading={isLoading}
               error={error}
             />
-          )}
+          </TabPanel>
 
-          {selectedTab === 'configuracion' && (
-            <ConfigTab
-              onConfigUpdated={handleConfigUpdated}
-              selectedSensorType={selectedSensorType}
-              sensorTypes={['TEMPERATURA', 'HUMEDAD', 'PRESION', 'OTRO']}
-              currentDevice={currentDevice}
-              deviceId={deviceId}
-              selectedConfig={selectedConfig}
-              onSelectSensorType={(type) =>
-                handleSelectSensorType(
-                  type,
-                  currentDevice?.deviceIotConfigs?.find(
-                    (c: any) => c.sensorType === type
-                  )
-                )
-              }
-              onResetSelection={resetConfig}
-              onSuccess={() => {
-                resetConfig()
-                // Aquí deberías agregar lógica para actualizar los datos del dispositivo
-              }}
-            />
-          )}
-
-          {selectedTab === 'eventos' && deviceId && (
-            <EventsTab deviceId={deviceId.toString()} />
-          )}
+          <TabPanel value={tabValue} index={2}>
+            {deviceId && <DeviceAlarmsPanel deviceId={deviceId as number} />}
+          </TabPanel>
         </Box>
       </Box>
     </Drawer>

@@ -26,7 +26,7 @@ import {
   MyLocation,
   BarChart
 } from '@mui/icons-material'
-import GraphDrawer from './GraphDrawer'
+import GraphDrawer from './GraphDrawer/index.tsx.bak'
 // import GraphDrawer from './GraphDrawer'
 
 const createSvgIcon = (color: string) => {

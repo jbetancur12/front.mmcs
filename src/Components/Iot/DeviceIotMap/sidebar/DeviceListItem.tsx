@@ -1,14 +1,31 @@
-import { Box, Typography, Button, Paper, Tooltip } from '@mui/material'
 import {
+  Box,
+  Typography,
+  Button,
+  Paper,
+  Tooltip,
+  Chip,
+  ListItemText,
+  Avatar,
+  Badge,
+  ListItemButton
+} from '@mui/material'
+import {
+  BatteryFull,
+  DeviceHub,
+  Info,
   MyLocation,
   Power,
   PowerOff,
+  ReportProblem,
   Thermostat,
+  Warning,
   WaterDrop
 } from '@mui/icons-material'
 import { DeviceIot } from '../../types'
-import { DeviceStatus, PowerSource } from '../constants'
+import { AlarmSeverity, DeviceStatus, PowerSource } from '../constants'
 import { format } from 'date-fns'
+import { getPowerSourceIcon, getStatusColor } from '../utils/common'
 
 interface DeviceListItemProps {
   device: DeviceIot
@@ -22,6 +39,32 @@ const DeviceListItem = ({
   handleShowDeviceGraph
 }: DeviceListItemProps) => {
   // Determine status color and icon
+
+  const hasActiveAlarms = device.isInAlarm
+
+  const activeAlarms = device?.alarms.filter(
+    (alarm) => alarm.enabled === true && alarm.active === true
+  )
+
+  const getHighestSeverity = () => {
+    if (!activeAlarms || activeAlarms.length === 0) return null
+
+    let highestSeverity = null
+    for (const alarm of activeAlarms) {
+      if (
+        !highestSeverity ||
+        alarm.severity === AlarmSeverity.CRITICAL ||
+        (highestSeverity !== AlarmSeverity.CRITICAL &&
+          alarm.severity === AlarmSeverity.WARNING)
+      ) {
+        highestSeverity = alarm.severity
+      }
+    }
+    return highestSeverity
+  }
+
+  const highestSeverity = getHighestSeverity()
+
   const getStatusInfo = (status: string) => {
     switch (status) {
       case DeviceStatus.ONLINE:
@@ -35,122 +78,317 @@ const DeviceListItem = ({
     }
   }
 
-  const statusInfo = getStatusInfo(device.status)
-  const isOffline = device.status === DeviceStatus.OFFLINE
-
-  const getPowerSourceIcon = () => {
-    if (!device.src) return null
-    return device.src === PowerSource.MAIN ? (
-      <Tooltip title='Connected to Main Power'>
-        <Power color='primary' fontSize='small' />
-      </Tooltip>
-    ) : (
-      <Tooltip title='Running on Battery'>
-        <PowerOff color='action' fontSize='small' />
-      </Tooltip>
-    )
+  const getDeviceIcon = () => {
+    if (hasActiveAlarms) {
+      switch (highestSeverity) {
+        case AlarmSeverity.INFO:
+          return <Info color='info' />
+        case AlarmSeverity.WARNING:
+          return <ReportProblem color='warning' />
+        case AlarmSeverity.CRITICAL:
+          return <ReportProblem color='error' />
+        default:
+          return <ReportProblem color='error' />
+      }
+    }
+    return <DeviceHub />
   }
 
   return (
-    <Paper
-      className='device-item mb-2 p-3 rounded-lg'
-      onClick={() => handleShowDeviceGraph(device)}
-      elevation={1}
+    <ListItemButton
+      onClick={() => onSelect(device)}
       sx={{
-        transition: 'background-color 0.2s',
-        '&:hover': { bgcolor: 'rgba(25, 118, 210, 0.05)' },
-        cursor: 'pointer'
+        borderBottom: '1px solid',
+        borderColor: 'divider',
+        py: 1.5,
+        '&:hover': {
+          backgroundColor: 'action.hover'
+        },
+        ...(hasActiveAlarms && {
+          backgroundColor:
+            highestSeverity === AlarmSeverity.CRITICAL
+              ? 'error.light'
+              : highestSeverity === AlarmSeverity.WARNING
+                ? 'warning.light'
+                : highestSeverity === AlarmSeverity.INFO
+                  ? 'info.light'
+                  : 'error.light',
+          '&:hover': {
+            backgroundColor:
+              highestSeverity === AlarmSeverity.CRITICAL
+                ? 'error.main'
+                : highestSeverity === AlarmSeverity.WARNING
+                  ? 'warning.main'
+                  : highestSeverity === AlarmSeverity.INFO
+                    ? 'info.main'
+                    : 'error.main'
+          },
+          animation: 'pulse 2s infinite',
+          '@keyframes pulse': {
+            '0%': {
+              backgroundColor:
+                highestSeverity === AlarmSeverity.CRITICAL
+                  ? 'rgba(255, 0, 0, 0.05)'
+                  : highestSeverity === AlarmSeverity.WARNING
+                    ? 'rgba(255, 200, 0, 0.05)'
+                    : highestSeverity === AlarmSeverity.INFO
+                      ? 'rgba(0, 100, 255, 0.05)'
+                      : 'rgba(255, 0, 0, 0.05)'
+            },
+            '50%': {
+              backgroundColor:
+                highestSeverity === AlarmSeverity.CRITICAL
+                  ? 'rgba(255, 0, 0, 0.15)'
+                  : highestSeverity === AlarmSeverity.WARNING
+                    ? 'rgba(255, 200, 0, 0.15)'
+                    : highestSeverity === AlarmSeverity.INFO
+                      ? 'rgba(0, 100, 255, 0.15)'
+                      : 'rgba(255, 0, 0, 0.15)'
+            },
+            '100%': {
+              backgroundColor:
+                highestSeverity === AlarmSeverity.CRITICAL
+                  ? 'rgba(255, 0, 0, 0.05)'
+                  : highestSeverity === AlarmSeverity.WARNING
+                    ? 'rgba(255, 200, 0, 0.05)'
+                    : highestSeverity === AlarmSeverity.INFO
+                      ? 'rgba(0, 100, 255, 0.05)'
+                      : 'rgba(255, 0, 0, 0.05)'
+            }
+          }
+        })
       }}
     >
-      <Box className='flex justify-between items-center'>
-        <Box>
-          <Typography
-            variant='subtitle1'
-            component='h3'
-            className='font-medium'
+      <Box sx={{ mr: 2 }}>
+        <Badge
+          overlap='circular'
+          badgeContent={
+            hasActiveAlarms ? (
+              <Tooltip title='¡Este dispositivo tiene alarmas activas!'>
+                <Warning
+                  color={
+                    highestSeverity === AlarmSeverity.CRITICAL
+                      ? 'error'
+                      : highestSeverity === AlarmSeverity.WARNING
+                        ? 'warning'
+                        : highestSeverity === AlarmSeverity.INFO
+                          ? 'info'
+                          : 'error'
+                  }
+                  fontSize='small'
+                />
+              </Tooltip>
+            ) : null
+          }
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right'
+          }}
+        >
+          <Avatar
+            sx={{
+              bgcolor: hasActiveAlarms
+                ? highestSeverity === AlarmSeverity.CRITICAL
+                  ? 'error.main'
+                  : highestSeverity === AlarmSeverity.WARNING
+                    ? 'warning.main'
+                    : highestSeverity === AlarmSeverity.INFO
+                      ? 'info.main'
+                      : 'error.main'
+                : 'primary.light',
+              color: hasActiveAlarms ? 'white' : 'primary.dark',
+              ...(hasActiveAlarms && {
+                border: '2px solid',
+                borderColor:
+                  highestSeverity === AlarmSeverity.CRITICAL
+                    ? 'error.dark'
+                    : highestSeverity === AlarmSeverity.WARNING
+                      ? 'warning.dark'
+                      : highestSeverity === AlarmSeverity.INFO
+                        ? 'info.dark'
+                        : 'error.dark'
+              })
+            }}
           >
-            {device.name}
-          </Typography>
-          {/* <Typography variant="body2" className="text-gray-600">
-            {device.location}
-          </Typography> */}
-        </Box>
-        <Box className='flex items-center'>
+            {getDeviceIcon()}
+          </Avatar>
+        </Badge>
+      </Box>
+      <ListItemText
+        primary={
           <Box
-            component='span'
-            className='inline-block w-3 h-3 rounded-full mr-2'
-            sx={{ bgcolor: statusInfo.color }}
-          />
-          <Typography variant='body2'>{statusInfo.text}</Typography>
-        </Box>
-      </Box>
-
-      <Box className='mt-2 flex justify-between'>
-        <Box className='flex items-center'>
-          <Thermostat
-            className='mr-1'
-            fontSize='small'
-            color={isOffline ? 'disabled' : 'primary'}
-          />
-          <Typography
-            variant='body2'
-            color={isOffline ? 'textSecondary' : 'textPrimary'}
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 0.5
+            }}
           >
-            {device.sensorData && device.sensorData.t !== null
-              ? `${device.sensorData.t}°C`
-              : '--°C'}
-          </Typography>
-        </Box>
+            <Box
+              component='div'
+              sx={{
+                fontSize: '1rem',
+                fontWeight: hasActiveAlarms ? 'bold' : 'medium',
+                color: hasActiveAlarms
+                  ? highestSeverity === AlarmSeverity.CRITICAL
+                    ? 'error.main'
+                    : highestSeverity === AlarmSeverity.WARNING
+                      ? 'warning.main'
+                      : highestSeverity === AlarmSeverity.INFO
+                        ? 'info.main'
+                        : 'error.main'
+                  : 'inherit',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <Box component='span'>{device.name}</Box>
+            </Box>
+            <Chip
+              label={hasActiveAlarms ? 'ALARMA' : device.status}
+              size='small'
+              color={
+                getStatusColor(
+                  device.status,
+                  hasActiveAlarms,
+                  highestSeverity
+                ) as any
+              }
+              icon={hasActiveAlarms ? <Warning fontSize='small' /> : undefined}
+              sx={
+                hasActiveAlarms
+                  ? {
+                      animation: 'blink 1s infinite',
+                      '@keyframes blink': {
+                        '0%': { opacity: 0.7 },
+                        '50%': { opacity: 1 },
+                        '100%': { opacity: 0.7 }
+                      }
+                    }
+                  : {}
+              }
+            />
+          </Box>
+        }
+        secondary={
+          <>
+            <Box className='mt-2 flex justify-between'>
+              <Box className='flex items-center'>
+                <Thermostat
+                  className='mr-1'
+                  sx={{
+                    mr: 0.5,
+                    fontSize: 16,
+                    color:
+                      hasActiveAlarms &&
+                      activeAlarms.some(
+                        (alarm: any) => alarm.metric === 'temperature'
+                      )
+                        ? 'error.main'
+                        : 'inherit'
+                  }}
+                />
+                <Box
+                  component='span'
+                  sx={{
+                    color:
+                      hasActiveAlarms &&
+                      activeAlarms.some(
+                        (alarm: any) => alarm.metric === 'temperature'
+                      )
+                        ? 'error.main'
+                        : 'text.secondary',
+                    fontWeight:
+                      hasActiveAlarms &&
+                      activeAlarms.some(
+                        (alarm: any) => alarm.metric === 'temperature'
+                      )
+                        ? 'bold'
+                        : 'normal',
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  {device.sensorData && device.sensorData.t !== null
+                    ? `${device.sensorData.t}°C`
+                    : '--°C'}
+                </Box>
+              </Box>
 
-        <Box className='flex items-center'>
-          <WaterDrop
-            className='mr-1'
-            fontSize='small'
-            color={isOffline ? 'disabled' : 'primary'}
-          />
-          <Typography
-            variant='body2'
-            color={isOffline ? 'textSecondary' : 'textPrimary'}
-          >
-            {device.sensorData && device.sensorData.h !== null
-              ? `${device.sensorData.h}%`
-              : '--%'}
-          </Typography>
-        </Box>
-
-        <Button
-          startIcon={<MyLocation fontSize='small' />}
-          onClick={(e) => {
-            e.stopPropagation() // Prevenir propagación del evento
-            onSelect(device)
-          }}
-          size='small'
-          sx={{
-            minWidth: 'auto',
-            color: 'primary.main',
-            '&:hover': { color: 'primary.dark' }
-          }}
-        >
-          Center
-        </Button>
-      </Box>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mt: 0.5
-        }}
-      >
-        <Box
-          component='span'
-          sx={{ color: 'text.secondary', fontSize: '0.75rem' }}
-        >
-          Last updated: {format(new Date(device.lastSeen), 'MMM dd, HH:mm')}
-        </Box>
-        {getPowerSourceIcon()}
-      </Box>
-    </Paper>
+              <Box className='flex items-center'>
+                <WaterDrop
+                  fontSize='small'
+                  sx={{
+                    mr: 0.5,
+                    fontSize: 16,
+                    color:
+                      hasActiveAlarms &&
+                      activeAlarms.some(
+                        (alarm: any) => alarm.metric === 'humidity'
+                      )
+                        ? 'error.main'
+                        : 'inherit'
+                  }}
+                />
+                <Box
+                  component='span'
+                  sx={{
+                    color:
+                      hasActiveAlarms &&
+                      activeAlarms.some(
+                        (alarm: any) => alarm.metric === 'humidity'
+                      )
+                        ? 'error.main'
+                        : 'text.secondary',
+                    fontWeight:
+                      hasActiveAlarms &&
+                      activeAlarms.some(
+                        (alarm: any) => alarm.metric === 'humidity'
+                      )
+                        ? 'bold'
+                        : 'normal',
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  {device.sensorData && device.sensorData.h !== null
+                    ? `${device.sensorData.h}%`
+                    : '--%'}
+                </Box>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                {<BatteryFull color='success' fontSize='small' />}
+                <Box
+                  component='span'
+                  sx={{
+                    ml: 0.5,
+                    color: 'text.secondary',
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  100%
+                </Box>
+              </Box>
+            </Box>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mt: 0.5
+              }}
+            >
+              <Box
+                component='span'
+                sx={{ color: 'text.secondary', fontSize: '0.75rem' }}
+              >
+                Last updated:{' '}
+                {format(new Date(device.lastSeen), 'MMM dd, HH:mm')}
+              </Box>
+              {getPowerSourceIcon(device)}
+            </Box>
+          </>
+        }
+      />
+    </ListItemButton>
   )
 }
 

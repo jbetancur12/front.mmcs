@@ -18,9 +18,10 @@ import { DeviceIot } from '../types'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useQuery } from 'react-query'
 import { transformDevice } from './utils/transformDevice'
-import GraphDrawer from '../GraphDrawer'
+import GraphDrawer from '../GraphDrawer/index.tsx'
 import { userStore } from '@stores/userStore'
 import DeviceClusters from './parts/DeviceClusters'
+import MarkerClusterGroup from 'react-leaflet-cluster'
 
 const DeviceIotMap = () => {
   const devices = useStore($devicesIot)
@@ -106,7 +107,25 @@ const DeviceIotMap = () => {
             devices={devices}
             selectedDevice={selectedDevice}
           />
-          {/* <DeviceMarkers
+
+          <MarkerClusterGroup
+            chunkedLoading
+            spiderfyOnMaxZoom={true}
+            showCoverageOnHover={false}
+            maxClusterRadius={40}
+          >
+            <DeviceMarkers
+              devices={filteredDevices}
+              onSelect={(device) => {
+                setSelectedDevice(device)
+                // Lógica adicional al seleccionar dispositivo
+              }}
+              isSelected={selectedDevice?.id === graphDeviceId}
+              onViewDetails={handleShowDeviceGraph}
+            />
+          </MarkerClusterGroup>
+
+          {/* <DeviceClusters
             devices={filteredDevices}
             onSelect={(device) => {
               setSelectedDevice(device)
@@ -114,15 +133,6 @@ const DeviceIotMap = () => {
             }}
             isSelected={selectedDevice?.id === graphDeviceId}
           /> */}
-
-          <DeviceClusters
-            devices={filteredDevices}
-            onSelect={(device) => {
-              setSelectedDevice(device)
-              // Lógica adicional al seleccionar dispositivo
-            }}
-            isSelected={selectedDevice?.id === graphDeviceId}
-          />
         </MapContainer>
       </Box>
     </>

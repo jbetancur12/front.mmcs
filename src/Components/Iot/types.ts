@@ -1,4 +1,5 @@
 import { Customer } from '../Quotations/types'
+import { DeviceAlarm } from './DeviceIotMap/types'
 import { AlarmThreshold, WarningThreshold } from './GraphDrawer/types'
 
 export interface SData {
@@ -23,6 +24,7 @@ export interface DeviceIot {
   src: 'main' | 'bat'
   deviceIotConfigs: DeviceIotConfig[]
   isInAlarm: boolean
+  alarms: DeviceAlarm[]
 }
 
 export interface DeviceIotConfig {

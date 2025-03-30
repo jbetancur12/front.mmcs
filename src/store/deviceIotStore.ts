@@ -9,6 +9,7 @@ import {
 // Atoms para el estado
 export const $devicesIot = atom<DeviceIot[]>([])
 export const $realTimeData = atom<Record<string, DataPayload[]>>({})
+export const $latestRealTimeData = atom<Record<string, DataPayload[]>>({})
 
 // Acciones
 export const updateDeviceIotStatus = action(
@@ -78,6 +79,18 @@ export const addRealTimeData = action(
     store.set({
       ...current,
       [deviceIotId]: [...(current[deviceIotId] || []).slice(-50), data]
+    })
+  }
+)
+
+export const setLatestRealTimeData = action(
+  $latestRealTimeData,
+  'setLatestRealTimeData',
+  (store, data: DataPayload) => {
+    const deviceIotId = data.data.dev
+    store.set({
+      ...store.get(),
+      [deviceIotId]: [data] // Solo almacena el último valor
     })
   }
 )

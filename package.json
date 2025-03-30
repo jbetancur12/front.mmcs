@@ -48,6 +48,7 @@
     "react-icons": "^4.11.0",
     "react-imask": "^7.6.0",
     "react-leaflet": "^4.2.1",
+    "react-leaflet-cluster": "^2.1.0",
     "react-number-format": "^5.3.4",
     "react-pdf": "^7.7.1",
     "react-pdf-tailwind": "^2.3.0",

@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { DataPayload } from 'src/Components/Iot/types'
 import {
   addRealTimeData,
+  setLatestRealTimeData,
   updateDeviceAlarmStatus,
   updateDeviceIotLocation,
   updateDeviceIotStatus
@@ -37,10 +38,17 @@ const useWebSocket = () => {
 
           updateDeviceIotLocation(deviceIotId, gps, timestamp, sen)
           addRealTimeData(data)
+          setLatestRealTimeData(data)
           updateDeviceIotStatus(deviceIotId, 'online', true, src)
         }
         if (type === 'ALARM_UPDATE') {
           updateDeviceAlarmStatus(message.data.deviceId, message.data.isInAlarm)
+        }
+        if (type === 'ALARM_TRIGGERED') {
+          console.log('Alarm triggered:', message.data)
+        }
+        if (type === 'DEVICE_STATUS_UPDATE') {
+          console.log('DEVICE_STATUS_UPDATE:', message.data)
         }
         if (type === 'power') {
         }
