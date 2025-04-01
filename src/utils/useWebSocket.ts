@@ -3,6 +3,7 @@ import { DeviceAlarm } from 'src/Components/Iot/DeviceIotMap/types'
 import { DataPayload } from 'src/Components/Iot/types'
 import {
   addRealTimeData,
+  hasAlarms,
   setLatestRealTimeData,
   updateDeviceAlarms,
   updateDeviceAlarmStatus,
@@ -32,7 +33,7 @@ const useWebSocket = () => {
           // Se asume que el payload para sensor data tiene esta estructura:
           // { type: "data", data: { dev, gps, ts, sen } }
           const data: DataPayload = message
-          console.log(data)
+
           const deviceIotId = data.data.dev
           const gps = data.data.gps // Ejemplo: [lat, lng]
           const timestamp = data.data.ts // Ejemplo: timestamp en segundos
@@ -63,9 +64,13 @@ const useWebSocket = () => {
           )
 
           updateDeviceAlarms(deviceId, formattedAlarms)
+          if (message.data.alarms.length > 0) {
+            hasAlarms(true)
+          } else {
+            hasAlarms(false)
+          }
         }
-        if (type === 'DEVICE_STATUS_UPDATE') {
-          //console.log('DEVICE_STATUS_UPDATE:', message.data)
+        if (type === 'ALARM_STATUS_UPDATE') {
         }
         if (type === 'power') {
         }

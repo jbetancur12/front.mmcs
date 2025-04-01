@@ -11,6 +11,7 @@ import { DeviceAlarm } from 'src/Components/Iot/DeviceIotMap/types'
 export const $devicesIot = atom<DeviceIot[]>([])
 export const $realTimeData = atom<Record<string, DataPayload[]>>({})
 export const $latestRealTimeData = atom<Record<string, DataPayload[]>>({})
+export const $hasAlarms = atom<boolean>(false)
 
 // Acciones
 export const updateDeviceIotStatus = action(
@@ -140,6 +141,14 @@ export const setLatestRealTimeData = action(
       ...store.get(),
       [deviceIotId]: [data] // Solo almacena el último valor
     })
+  }
+)
+
+export const hasAlarms = action(
+  $hasAlarms,
+  'hasAlarms',
+  (store, data: boolean) => {
+    store.set(data)
   }
 )
 

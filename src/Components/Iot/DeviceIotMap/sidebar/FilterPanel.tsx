@@ -1,7 +1,70 @@
 // components/DeviceIotMap/sidebar/FilterPanel.tsx
-import { Box, TextField, InputAdornment, Chip } from '@mui/material'
+import { Box, TextField, InputAdornment, Chip, Stack } from '@mui/material'
 import { FilterState } from '../types'
 import { Search } from '@mui/icons-material'
+
+const FilterSection = ({
+  label,
+  options,
+  selected,
+  onChange,
+  allLabel = 'Todos'
+}: {
+  label: string
+  options: string[]
+  selected: Set<string>
+  onChange: (values: Set<string>) => void
+  allLabel?: string
+}) => {
+  const allSelected = options.every((opt) => selected.has(opt))
+
+  const handleToggle = (value: string) => {
+    const newSet = new Set(selected)
+    newSet.has(value) ? newSet.delete(value) : newSet.add(value)
+    onChange(newSet)
+  }
+
+  const handleToggleAll = () => {
+    onChange(allSelected ? new Set() : new Set(options))
+  }
+
+  return (
+    <Box mb={2}>
+      <Box
+        sx={{
+          fontSize: '0.875rem',
+          color: 'text.secondary',
+          mb: 1
+        }}
+      >
+        {label}
+      </Box>
+      <Stack direction='row' flexWrap='wrap' gap={1}>
+        <Chip
+          label={allLabel}
+          size='small'
+          variant={allSelected ? 'filled' : 'outlined'}
+          color={allSelected ? 'primary' : 'default'}
+          onClick={handleToggleAll}
+        />
+        {options.map((option) => (
+          <Chip
+            key={option}
+            label={option}
+            onClick={() => handleToggle(option)}
+            color={selected.has(option) ? 'primary' : 'default'}
+            variant={selected.has(option) ? 'filled' : 'outlined'}
+            size='small'
+            sx={{
+              '& .MuiChip-label': { fontSize: '0.75rem' },
+              height: '24px'
+            }}
+          />
+        ))}
+      </Stack>
+    </Box>
+  )
+}
 
 export const FilterPanel = ({
   filterState,
@@ -29,122 +92,30 @@ export const FilterPanel = ({
       />
     </Box>
 
-    <Box sx={{ mb: 3 }}>
-      <Box sx={{ mb: 2 }}>
-        <Box
-          sx={{
-            fontSize: '0.875rem',
-            color: 'text.secondary',
-            mb: 1
-          }}
-        >
-          Estado:
-        </Box>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          <Chip
-            label='Online'
-            onClick={() =>
-              onFilterChange(
-                'statuses',
-                new Set(
-                  filterState.statuses.has('online')
-                    ? [...filterState.statuses].filter((s) => s !== 'online')
-                    : [...filterState.statuses, 'online']
-                )
-              )
-            }
-            color={filterState.statuses.has('online') ? 'primary' : 'default'}
-            variant={filterState.statuses.has('online') ? 'filled' : 'outlined'}
-            size='small'
-            sx={{
-              '& .MuiChip-label': { fontSize: '0.75rem' },
-              height: '24px'
-            }}
-          />
-          <Chip
-            label='Offline'
-            onClick={() =>
-              onFilterChange(
-                'statuses',
-                new Set(
-                  filterState.statuses.has('offline')
-                    ? [...filterState.statuses].filter((s) => s !== 'offline')
-                    : [...filterState.statuses, 'offline']
-                )
-              )
-            }
-            color={filterState.statuses.has('offline') ? 'primary' : 'default'}
-            variant={
-              filterState.statuses.has('offline') ? 'filled' : 'outlined'
-            }
-            size='small'
-            sx={{
-              '& .MuiChip-label': { fontSize: '0.75rem' },
-              height: '24px'
-            }}
-          />
-        </Box>
-      </Box>
-    </Box>
+    <Box p={2}>
+      <FilterSection
+        label='Estado'
+        options={['online', 'offline']}
+        selected={filterState.statuses}
+        onChange={(value) => onFilterChange('statuses', value)}
+        allLabel='Todos'
+      />
 
-    <Box sx={{ mb: 3 }}>
-      <Box sx={{ mb: 2 }}>
-        <Box
-          sx={{
-            fontSize: '0.875rem',
-            color: 'text.secondary',
-            mb: 1
-          }}
-        >
-          Fuente de poder:
-        </Box>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          <Chip
-            label='Corriente principal'
-            onClick={() =>
-              onFilterChange(
-                'powerSources',
-                new Set(
-                  filterState.powerSources.has('main')
-                    ? [...filterState.powerSources].filter((s) => s !== 'main')
-                    : [...filterState.powerSources, 'main']
-                )
-              )
-            }
-            color={filterState.powerSources.has('main') ? 'primary' : 'default'}
-            variant={
-              filterState.powerSources.has('main') ? 'filled' : 'outlined'
-            }
-            size='small'
-            sx={{
-              '& .MuiChip-label': { fontSize: '0.75rem' },
-              height: '24px'
-            }}
-          />
-          <Chip
-            label='Batería'
-            onClick={() =>
-              onFilterChange(
-                'powerSources',
-                new Set(
-                  filterState.powerSources.has('bat')
-                    ? [...filterState.powerSources].filter((s) => s !== 'bat')
-                    : [...filterState.powerSources, 'bat']
-                )
-              )
-            }
-            color={filterState.powerSources.has('bat') ? 'primary' : 'default'}
-            variant={
-              filterState.powerSources.has('bat') ? 'filled' : 'outlined'
-            }
-            size='small'
-            sx={{
-              '& .MuiChip-label': { fontSize: '0.75rem' },
-              height: '24px'
-            }}
-          />
-        </Box>
-      </Box>
+      <FilterSection
+        label='Fuente de energía'
+        options={['main', 'bat']}
+        selected={filterState.powerSources}
+        onChange={(value) => onFilterChange('powerSources', value)}
+        allLabel='Todas'
+      />
+
+      <FilterSection
+        label='Severidad de alarmas'
+        options={['information', 'warning', 'critical']}
+        selected={filterState.alarmSeverities}
+        onChange={(value) => onFilterChange('alarmSeverities', value)}
+        allLabel='Cualquier Alarma'
+      />
     </Box>
   </Box>
 )

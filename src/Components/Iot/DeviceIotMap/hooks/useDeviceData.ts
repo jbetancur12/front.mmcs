@@ -7,7 +7,9 @@ export const useDeviceData = (devices: DeviceIot[]) => {
   const [filterState, setFilterState] = useState<FilterState>({
     searchQuery: '',
     statuses: new Set(['online']),
-    powerSources: new Set(['main', 'bat'])
+    powerSources: new Set(['main', 'bat']),
+    alarmSeverities: new Set(),
+    withAnyAlarm: false
   })
 
   const filteredDevices = useMemo(() => {
@@ -22,7 +24,20 @@ export const useDeviceData = (devices: DeviceIot[]) => {
 
       const matchesPower = filterState.powerSources.has(device.src)
 
-      return matchesSearch && matchesStatus && matchesPower
+      const activeAlarms =
+        device.alarms?.filter((alarm) => alarm.active && alarm.enabled) || []
+
+      if (!filterState.withAnyAlarm && filterState.alarmSeverities.size === 0) {
+        return true // Mostrar siempre
+      }
+
+      const matchesAlarms = filterState.withAnyAlarm
+        ? activeAlarms.length > 0
+        : activeAlarms.some((alarm) =>
+            filterState.alarmSeverities.has(alarm.severity)
+          )
+
+      return matchesSearch && matchesStatus && matchesPower && matchesAlarms
     })
   }, [devices, filterState])
 

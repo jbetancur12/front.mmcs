@@ -23,6 +23,8 @@ export interface FilterState {
   searchQuery: string
   statuses: Set<'online' | 'offline'>
   powerSources: Set<'main' | 'bat'>
+  alarmSeverities: Set<string>
+  withAnyAlarm: boolean
 }
 
 export interface MapControlsProps {

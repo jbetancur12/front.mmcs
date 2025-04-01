@@ -27,6 +27,7 @@ import GraphDrawer from '../GraphDrawer/index.tsx'
 import { userStore } from '@stores/userStore'
 
 import MarkerClusterGroup from 'react-leaflet-cluster'
+import AlarmNotification from './parts/AlarmNotification.tsx'
 
 const DeviceIotMap = () => {
   const devices = useStore($devicesIot)
@@ -77,6 +78,7 @@ const DeviceIotMap = () => {
           <CircularProgress />
         </Box>
       )}
+      <AlarmNotification onFilterChange={handleFilterChange} />
       <DeviceSidebar
         isOpen={isSidebarOpen}
         onClose={toggleSidebar}
