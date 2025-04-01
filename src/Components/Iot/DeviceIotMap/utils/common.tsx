@@ -24,9 +24,9 @@ export const getStatusInfo = (status: string) => {
 }
 
 export const getStatusColor = (
-  status: string,
-  isInAlarm: boolean,
-  highestSeverity: 'warning' | 'info' | 'critical' | null
+  status?: string,
+  isInAlarm?: boolean,
+  highestSeverity?: 'warning' | 'info' | 'critical' | null
 ) => {
   if (isInAlarm) {
     switch (highestSeverity) {
@@ -66,11 +66,11 @@ export const getPowerSourceIcon = (device: DeviceIot) => {
 }
 
 export const getConnectionIcon = (
-  device: DeviceIot,
+  device: DeviceIot | null,
 
   highestSeverity: 'warning' | 'info' | 'critical' | null
 ) => {
-  if (device.isInAlarm) {
+  if (device?.isInAlarm) {
     switch (highestSeverity) {
       case AlarmSeverity.INFO:
         return <Info color='info' />
@@ -82,7 +82,7 @@ export const getConnectionIcon = (
         return <ReportProblem color='error' />
     }
   }
-  return device.status === DeviceStatus.ONLINE ? (
+  return device?.status === DeviceStatus.ONLINE ? (
     <SignalCellular4Bar color='success' />
   ) : (
     <SignalCellularConnectedNoInternet0Bar color='error' />

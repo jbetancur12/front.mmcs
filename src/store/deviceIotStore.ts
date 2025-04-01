@@ -5,6 +5,7 @@ import {
   SData,
   type DeviceIot
 } from '../Components/Iot/types'
+import { DeviceAlarm } from 'src/Components/Iot/DeviceIotMap/types'
 
 // Atoms para el estado
 export const $devicesIot = atom<DeviceIot[]>([])
@@ -42,6 +43,53 @@ export const updateDeviceAlarmStatus = action(
       .map((device) =>
         device.name === deviceIotId ? { ...device, isInAlarm } : device
       )
+    store.set(devices)
+  }
+)
+
+export const updateDeviceAlarms = action(
+  $devicesIot,
+  'updateDeviceAlarms',
+  (store, deviceId: string | number, newAlarms: DeviceAlarm[]) => {
+    const devices = store.get().map((device) => {
+      // Normalizar IDs a string para comparación segura
+      const currentDeviceId =
+        typeof device.id === 'number' ? device.id.toString() : device.id
+
+      const targetDeviceId =
+        typeof deviceId === 'number' ? deviceId.toString() : deviceId
+
+      if (currentDeviceId === targetDeviceId) {
+        // Mapear y validar las nuevas alarmas
+        const validatedAlarms = newAlarms.map((alarm) => ({
+          id: alarm.id,
+          deviceId: alarm.deviceId,
+          name: alarm.name,
+          description: alarm.description || '',
+          metric: alarm.metric,
+          condition: alarm.condition,
+          threshold: alarm.threshold,
+          enabled: alarm.enabled,
+          active: alarm.active,
+          severity: alarm.severity,
+          createdAt:
+            alarm.createdAt instanceof Date
+              ? alarm.createdAt
+              : new Date(alarm.createdAt),
+          lastTriggered: alarm.lastTriggered
+            ? new Date(alarm.lastTriggered)
+            : null
+        }))
+
+        return {
+          ...device,
+          alarms: validatedAlarms,
+          isInAlarm: validatedAlarms.some((alarm) => alarm.active)
+        }
+      }
+      return device
+    })
+
     store.set(devices)
   }
 )

@@ -1,8 +1,6 @@
 // components/DeviceGraphs/GraphDrawer/tabs/DeviceDetailPanel.tsx
 import { Alert, Badge, Box, Chip, Grid, Paper, Typography } from '@mui/material'
 
-import { GaugeConfig } from '../types'
-
 import { DataPayload, DeviceIot } from '../../types'
 import {
   getConnectionIcon,
@@ -23,19 +21,17 @@ import { DeviceAlarm } from '../../DeviceIotMap/types'
 interface SummaryTabProps {
   deviceLastData: DataPayload[]
   lastEntry?: any
-  tempConfig?: GaugeConfig | null
-  humConfig?: GaugeConfig | null
   lastTemperature: number | string
   lastHumidity: number | string
   deviceName?: string
-  device: DeviceIot
+  device: DeviceIot | null
 }
 
 export const DeviceDetailPanel = ({
   deviceLastData,
   device
 }: SummaryTabProps) => {
-  const hasActiveAlarms = device.isInAlarm
+  const hasActiveAlarms = device?.isInAlarm
   const activeAlarms = device?.alarms.filter(
     (alarm) => alarm.enabled === true && alarm.active === true
   )
@@ -83,7 +79,7 @@ export const DeviceDetailPanel = ({
                 {device.name}
               </Badge>
             ) : (
-              device.name
+              device?.name
             )}
           </Typography>
           <Typography variant='subtitle1' color='text.secondary'>
@@ -124,11 +120,11 @@ export const DeviceDetailPanel = ({
           )}
         </Box>
         <Chip
-          label={hasActiveAlarms ? 'ALARMA' : device.status}
+          label={hasActiveAlarms ? 'ALARMA' : device?.status}
           variant='filled'
           color={
             getStatusColor(
-              device.status,
+              device?.status,
               hasActiveAlarms,
               highestSeverity
             ) as any
@@ -212,10 +208,13 @@ export const DeviceDetailPanel = ({
                 Connection
               </Typography>
             </Box>
-            <Typography variant='h6'>{device.status}</Typography>
+            <Typography variant='h6'>{device?.status}</Typography>
             <Typography variant='caption' color='text.secondary'>
               Last update:{' '}
-              {format(new Date(device.lastSeen), 'MMM dd, yyyy HH:mm:ss')}
+              {format(
+                new Date((device as DeviceIot).lastSeen),
+                'MMM dd, yyyy HH:mm:ss'
+              )}
             </Typography>
           </Paper>
         </Grid>
@@ -276,7 +275,7 @@ export const DeviceDetailPanel = ({
                 position: 'relative',
                 overflow: 'hidden',
                 ...(hasActiveAlarms &&
-                  activeAlarms.some(
+                  activeAlarms?.some(
                     (alarm: DeviceAlarm) => alarm.metric === 'temperature'
                   ) &&
                   (() => {
@@ -302,7 +301,7 @@ export const DeviceDetailPanel = ({
               }}
             >
               {hasActiveAlarms &&
-                activeAlarms.some(
+                activeAlarms?.some(
                   (alarm: DeviceAlarm) => alarm.metric === 'temperature'
                 ) && (
                   <>
@@ -374,7 +373,7 @@ export const DeviceDetailPanel = ({
               <Thermostat
                 color={
                   hasActiveAlarms &&
-                  activeAlarms.some(
+                  activeAlarms?.some(
                     (alarm: DeviceAlarm) => alarm.metric === 'temperature'
                   )
                     ? (() => {
@@ -398,7 +397,7 @@ export const DeviceDetailPanel = ({
                   fontWeight: 'bold',
                   color:
                     hasActiveAlarms &&
-                    activeAlarms.some(
+                    activeAlarms?.some(
                       (alarm: DeviceAlarm) => alarm.metric === 'temperature'
                     )
                       ? (() => {
@@ -434,7 +433,7 @@ export const DeviceDetailPanel = ({
                 position: 'relative',
                 overflow: 'hidden',
                 ...(hasActiveAlarms &&
-                  activeAlarms.some(
+                  activeAlarms?.some(
                     (alarm: DeviceAlarm) => alarm.metric === 'humidity'
                   ) &&
                   (() => {
@@ -460,7 +459,7 @@ export const DeviceDetailPanel = ({
               }}
             >
               {hasActiveAlarms &&
-                activeAlarms.some(
+                activeAlarms?.some(
                   (alarm: DeviceAlarm) => alarm.metric === 'humidity'
                 ) && (
                   <>
@@ -532,7 +531,7 @@ export const DeviceDetailPanel = ({
               <Opacity
                 color={
                   hasActiveAlarms &&
-                  activeAlarms.some(
+                  activeAlarms?.some(
                     (alarm: DeviceAlarm) => alarm.metric === 'humidity'
                   )
                     ? (() => {
@@ -556,7 +555,7 @@ export const DeviceDetailPanel = ({
                   fontWeight: 'bold',
                   color:
                     hasActiveAlarms &&
-                    activeAlarms.some(
+                    activeAlarms?.some(
                       (alarm: DeviceAlarm) => alarm.metric === 'humidity'
                     )
                       ? (() => {

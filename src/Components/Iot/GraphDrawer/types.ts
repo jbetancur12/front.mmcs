@@ -1,5 +1,7 @@
 // components/DeviceGraphs/GraphDrawer/types.ts
 
+import { DeviceIot } from '../types'
+
 export type SensorType = 'TEMPERATURA' | 'HUMEDAD' | 'PRESION' | 'OTRO'
 
 export interface ModuleConfig {
@@ -43,11 +45,11 @@ export interface AlarmValues {
 }
 
 export interface GraphDrawerProps {
+  device: DeviceIot | null
   deviceId: number | string | null
   deviceName: string
   open: boolean
   onClose: () => void
-  devicesFromApi: any
 }
 
 export interface TabComponentProps {

@@ -2,11 +2,16 @@
 import 'leaflet/dist/leaflet.css'
 import { useStore } from '@nanostores/react'
 import { Box, CircularProgress } from '@mui/material'
-import { MapContainer, TileLayer } from 'react-leaflet'
+import {
+  LayersControl,
+  MapContainer,
+  TileLayer,
+  ZoomControl
+} from 'react-leaflet'
 import { DeviceSidebar } from './sidebar'
 
 import { $devicesIot, loadDevices } from 'src/store/deviceIotStore'
-import { DEFAULT_MAP_CENTER, MAP_STYLE } from './constants'
+import { DEFAULT_MAP_CENTER, MAP_LAYERS, MAP_STYLE } from './constants'
 
 import { useMapSetup } from './hooks/useMapSetup'
 import { useState } from 'react'
@@ -25,6 +30,7 @@ import MarkerClusterGroup from 'react-leaflet-cluster'
 
 const DeviceIotMap = () => {
   const devices = useStore($devicesIot)
+
   const $user = useStore(userStore)
   const axiosPrivate = useAxiosPrivate()
   const { handleMapRef, isSidebarOpen, toggleSidebar } = useMapSetup()
@@ -35,6 +41,8 @@ const DeviceIotMap = () => {
     null
   )
   const [deviceName, setDeviceName] = useState<string>('')
+  const [selectedDeviceForGraph, setSelectedDeviceForGraph] =
+    useState<DeviceIot | null>(null)
 
   const { data: apiDevices } = useQuery(
     ['devices', $user?.customer?.id],
@@ -52,6 +60,7 @@ const DeviceIotMap = () => {
   const handleShowDeviceGraph = (device: DeviceIot) => {
     setGraphDeviceId(device.id)
     setDeviceName(device.name)
+    setSelectedDeviceForGraph(device)
   }
 
   return (
@@ -71,18 +80,18 @@ const DeviceIotMap = () => {
       <DeviceSidebar
         isOpen={isSidebarOpen}
         onClose={toggleSidebar}
-        devices={filteredDevices}
+        filteredDevices={filteredDevices}
         filterState={filterState}
         onFilterChange={handleFilterChange}
         onSelectDevice={setSelectedDevice}
         handleShowDeviceGraph={handleShowDeviceGraph}
       />
       <GraphDrawer
+        device={selectedDeviceForGraph}
         deviceId={graphDeviceId}
         deviceName={deviceName}
         open={graphDeviceId !== null}
         onClose={() => setGraphDeviceId(null)}
-        devicesFromApi={devices}
       />
 
       <MapControls
@@ -95,18 +104,31 @@ const DeviceIotMap = () => {
       >
         <MapContainer
           center={DEFAULT_MAP_CENTER}
-          zoom={3}
+          zoomControl={false}
           style={MAP_STYLE}
           ref={handleMapRef}
         >
-          <TileLayer
-            url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-            attribution='&copy; OpenStreetMap contributors'
-          />
-          <DeviceMapController
-            devices={devices}
-            selectedDevice={selectedDevice}
-          />
+          <LayersControl position='topright'>
+            {/* Capas base */}
+            {MAP_LAYERS.baseLayers.map((layer, index) => (
+              <LayersControl.BaseLayer
+                key={index}
+                name={layer.name}
+                checked={layer.checked}
+              >
+                <TileLayer attribution={layer.attribution} url={layer.url} />
+              </LayersControl.BaseLayer>
+            ))}
+
+            {/* Capas overlay */}
+            {MAP_LAYERS.overlays.map((layer, index) => (
+              <LayersControl.Overlay key={index} name={layer.name}>
+                <TileLayer attribution={layer.attribution} url={layer.url} />
+              </LayersControl.Overlay>
+            ))}
+          </LayersControl>
+          <ZoomControl position='bottomright' />
+          <DeviceMapController selectedDevice={selectedDevice} />
 
           <MarkerClusterGroup
             chunkedLoading

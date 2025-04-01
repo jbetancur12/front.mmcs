@@ -10,7 +10,7 @@ import { HistoryTab } from './tabs/HistoryTab'
 import { useDeviceData } from './hooks/useDeviceData'
 import { useAlarms } from './hooks/useAlarms'
 
-import { aggregateStats, getGaugeConfig } from './helpers'
+import { aggregateStats } from './helpers'
 import { GraphDrawerProps, RangeOption } from './types'
 import { RANGE_OPTIONS } from 'src/Components/Iot/constants'
 
@@ -42,11 +42,11 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const GraphDrawer = ({
+  device,
   deviceId,
   open,
   onClose,
-  deviceName,
-  devicesFromApi: deviceDetails
+  deviceName
 }: GraphDrawerProps) => {
   const realTimeData = useStore($realTimeData)
 
@@ -77,19 +77,7 @@ const GraphDrawer = ({
   const status = lastEntry ? 'Online' : 'Offline'
   const deviceLastData = latestRealTimeData?.[deviceName] || []
 
-  const currentDevice = useMemo(() => {
-    return deviceDetails?.find((device: any) => device.id === deviceId)
-  }, [deviceDetails, deviceId]) //
-
-  const tempConfig = useMemo(
-    () => getGaugeConfig(currentDevice?.deviceIotConfigs, 'TEMPERATURA'),
-    [currentDevice]
-  )
-
-  const humConfig = useMemo(
-    () => getGaugeConfig(currentDevice?.deviceIotConfigs, 'HUMEDAD'),
-    [currentDevice]
-  )
+  const currentDevice = device
 
   const { temperatureAlarms, humidityAlarms } = useAlarms(currentDevice)
 
@@ -142,8 +130,6 @@ const GraphDrawer = ({
               deviceName={deviceName}
               deviceLastData={deviceLastData}
               lastEntry={lastEntry}
-              tempConfig={tempConfig}
-              humConfig={humConfig}
               lastTemperature={lastEntry?.data?.sen.t || 0}
               lastHumidity={lastEntry?.data?.sen.h || 0}
             />

@@ -2,6 +2,28 @@
 export const DEFAULT_MAP_CENTER: [number, number] = [-12.046373, -77.042754]
 export const MAP_STYLE = { height: '80vh', width: '100%', minHeight: '500px' }
 export const SIDEBAR_WIDTH = 360
+export const MAP_LAYERS = {
+  baseLayers: [
+    {
+      name: 'OpenStreetMap',
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      attribution: '&copy; OpenStreetMap contributors',
+      checked: true
+    },
+    {
+      name: 'Satélite',
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      attribution: 'Tiles &copy; Esri'
+    }
+  ],
+  overlays: [
+    {
+      name: 'Tráfico',
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      attribution: 'Datos de tráfico'
+    }
+  ]
+}
 
 export const DeviceStatus = {
   ONLINE: 'online',

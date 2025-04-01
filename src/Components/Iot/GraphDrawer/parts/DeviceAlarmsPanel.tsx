@@ -31,6 +31,7 @@ import { DeviceAlarm } from '../../DeviceIotMap/types'
 import { AlarmSeverity } from '../../DeviceIotMap/constants'
 import useAxiosPrivate from '@utils/use-axios-private'
 import DeviceAlarmDialog from './DeviceAlarmDialog'
+import DeviceAlarmEventsTable from './DeviceAlarmEventsTable'
 
 interface DeviceAlarmsPanelProps {
   deviceId: number
@@ -304,16 +305,14 @@ const DeviceAlarmsPanel: React.FC<DeviceAlarmsPanelProps> = ({ deviceId }) => {
         )}
       </div>
 
-      {/* <div
-        role="tabpanel"
+      <div
+        role='tabpanel'
         hidden={tabValue !== 1}
-        id="alarm-tabpanel-1"
-        aria-labelledby="alarm-tab-1"
+        id='alarm-tabpanel-1'
+        aria-labelledby='alarm-tab-1'
       >
-        {tabValue === 1 && (
-          <DeviceAlarmEventsTable deviceId={deviceId} />
-        )}
-      </div> */}
+        {tabValue === 1 && <DeviceAlarmEventsTable deviceId={deviceId} />}
+      </div>
 
       <DeviceAlarmDialog
         open={openDialog}

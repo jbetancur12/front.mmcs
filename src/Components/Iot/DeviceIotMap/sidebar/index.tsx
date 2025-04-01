@@ -10,7 +10,7 @@ import { DeviceIot } from '../../types'
 export const DeviceSidebar = ({
   isOpen,
   onClose,
-  devices,
+  filteredDevices,
   filterState,
   onFilterChange,
   onSelectDevice,
@@ -18,7 +18,7 @@ export const DeviceSidebar = ({
 }: {
   isOpen: boolean
   onClose: () => void
-  devices: DeviceIot[]
+  filteredDevices: DeviceIot[]
   filterState: FilterState
   onFilterChange: (type: keyof FilterState, value: any) => void
   onSelectDevice: (device: DeviceIot) => void
@@ -63,7 +63,7 @@ export const DeviceSidebar = ({
           />
 
           <DeviceList
-            devices={devices}
+            devices={filteredDevices}
             onSelectDevice={onSelectDevice}
             handleShowDeviceGraph={handleShowDeviceGraph}
           />

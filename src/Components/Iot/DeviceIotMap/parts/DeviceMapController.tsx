@@ -6,30 +6,39 @@ import L from 'leaflet'
 import { DeviceIot } from '../../types'
 
 interface DeviceMapControllerProps {
-  devices: DeviceIot[]
   selectedDevice?: DeviceIot | null
 }
 
+// const COLOMBIA_CENTER = [4.5709, -74.2973] // Bogotá
+const COLOMBIA_BOUNDS = L.latLngBounds(
+  L.latLng(12.4375, -79.84), // Norte-Oeste
+  L.latLng(-4.227, -66.87) // Sur-Este
+)
+
 export const DeviceMapController = ({
-  devices,
   selectedDevice
 }: DeviceMapControllerProps) => {
   const map = useMap()
 
   useEffect(() => {
-    if (devices.length > 0) {
-      const bounds = L.latLngBounds(
-        devices.map((d) => [d.lastLocation.lat, d.lastLocation.lng])
-      )
-      map.fitBounds(bounds, { padding: [50, 50] })
-    }
-  }, [devices, map])
+    // Ajustar vista inicial a los límites de Colombia
+    map.fitBounds(COLOMBIA_BOUNDS, {
+      padding: [50, 50],
+      animate: false
+    })
+
+    // Opcional: Centrar en Bogotá con zoom específico
+    // map.setView(COLOMBIA_CENTER, 6)
+  }, [map]) // Solo se ejecuta una vez al montar el componente
 
   useEffect(() => {
     if (selectedDevice) {
       map.flyTo(
         [selectedDevice.lastLocation.lat, selectedDevice.lastLocation.lng],
-        10
+        18,
+        {
+          duration: 0.75
+        }
       )
     }
   }, [selectedDevice, map])

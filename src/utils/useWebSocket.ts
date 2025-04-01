@@ -1,8 +1,10 @@
 import { useEffect } from 'react'
+import { DeviceAlarm } from 'src/Components/Iot/DeviceIotMap/types'
 import { DataPayload } from 'src/Components/Iot/types'
 import {
   addRealTimeData,
   setLatestRealTimeData,
+  updateDeviceAlarms,
   updateDeviceAlarmStatus,
   updateDeviceIotLocation,
   updateDeviceIotStatus
@@ -30,6 +32,7 @@ const useWebSocket = () => {
           // Se asume que el payload para sensor data tiene esta estructura:
           // { type: "data", data: { dev, gps, ts, sen } }
           const data: DataPayload = message
+          console.log(data)
           const deviceIotId = data.data.dev
           const gps = data.data.gps // Ejemplo: [lat, lng]
           const timestamp = data.data.ts // Ejemplo: timestamp en segundos
@@ -44,11 +47,25 @@ const useWebSocket = () => {
         if (type === 'ALARM_UPDATE') {
           updateDeviceAlarmStatus(message.data.deviceId, message.data.isInAlarm)
         }
-        if (type === 'ALARM_TRIGGERED') {
-          console.log('Alarm triggered:', message.data)
+        if (type === 'ALARM_STATUS_UPDATE') {
+          const { deviceId, alarms } = message.data
+
+          // Convertir a tipos correctos
+          const formattedAlarms: DeviceAlarm[] = alarms.map(
+            (alarm: DeviceAlarm) => ({
+              ...alarm,
+              deviceId: Number(deviceId),
+              createdAt: new Date(alarm.createdAt), // Asumiendo que viene de backend
+              lastTriggered: alarm.lastTriggered
+                ? new Date(alarm.lastTriggered)
+                : null
+            })
+          )
+
+          updateDeviceAlarms(deviceId, formattedAlarms)
         }
         if (type === 'DEVICE_STATUS_UPDATE') {
-          console.log('DEVICE_STATUS_UPDATE:', message.data)
+          //console.log('DEVICE_STATUS_UPDATE:', message.data)
         }
         if (type === 'power') {
         }
