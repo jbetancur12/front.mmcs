@@ -10,7 +10,7 @@ import {
 } from 'react-leaflet'
 import { DeviceSidebar } from './sidebar'
 
-import { $devicesIot, loadDevices } from 'src/store/deviceIotStore'
+import { $devicesIot, hasAlarms, loadDevices } from 'src/store/deviceIotStore'
 import { DEFAULT_MAP_CENTER, MAP_LAYERS, MAP_STYLE } from './constants'
 
 import { useMapSetup } from './hooks/useMapSetup'
@@ -25,6 +25,7 @@ import { useQuery } from 'react-query'
 import { transformDevice } from './utils/transformDevice'
 import GraphDrawer from '../GraphDrawer/index.tsx'
 import { userStore } from '@stores/userStore'
+import L from 'leaflet'
 
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import AlarmNotification from './parts/AlarmNotification.tsx'
@@ -50,6 +51,10 @@ const DeviceIotMap = () => {
     async () => {
       const response = await axiosPrivate.get('/devicesIot')
       const transformed = response.data.map(transformDevice)
+      const hasAlarm = response.data.some(
+        (device: DeviceIot) => device.isInAlarm
+      )
+      hasAlarms(hasAlarm)
       loadDevices(transformed) // Guardar en el store
       return transformed // Asegurar que transformDevice existe
     },
@@ -137,6 +142,45 @@ const DeviceIotMap = () => {
             spiderfyOnMaxZoom={true}
             showCoverageOnHover={false}
             maxClusterRadius={40}
+            iconCreateFunction={(cluster: any) => {
+              const markers = cluster.getAllChildMarkers()
+
+              const hasAlarm = markers.some((marker: any) => {
+                const deviceData = (marker as any).deviceData // Acceder a los datos del dispositivo
+                return deviceData?.isInAlarm // Verificar si tiene alarma activa
+              })
+              const baseColor = hasAlarm ? '#ff0000' : '#1976d2'
+
+              const count = cluster.getChildCount()
+              const size = Math.min(60, 40 + Math.log10(count) * 20)
+
+              return new L.DivIcon({
+                html: `
+                  <div style="
+                  animation: ${hasAlarm ? 'blink 1s infinite' : 'none'};
+                  background: ${baseColor};
+                  color: white;
+                  width: ${size}px;
+                  height: ${size}px;
+                  border-radius: 50%;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  font-weight: bold;
+                  border: 2px solid white;
+                  box-shadow: 0 0 8px rgba(0,0,0,0.3);
+                  transition: all 0.3s ease;
+                  font-family: Arial, sans-serif;
+                  font-size: ${Math.min(16, 12 + count / 5)}px;
+                ">
+                  ${count}
+                </div>
+              `,
+                className: 'custom-cluster',
+                iconSize: L.point(size, size),
+                iconAnchor: L.point(size / 2, size / 2)
+              })
+            }}
           >
             <DeviceMarkers
               devices={filteredDevices}

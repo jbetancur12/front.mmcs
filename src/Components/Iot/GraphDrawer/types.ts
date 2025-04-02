@@ -50,6 +50,7 @@ export interface GraphDrawerProps {
   deviceName: string
   open: boolean
   onClose: () => void
+  isInAlarm?: boolean
 }
 
 export interface TabComponentProps {

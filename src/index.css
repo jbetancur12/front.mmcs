@@ -87,3 +87,25 @@
 .marker-cluster-large div {
   background-color: rgba(241, 128, 23, 0.6);
 }
+
+/* Agrega estos estilos globalmente o en tu archivo CSS principal */
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; background-color: #ff4444; }
+  100% { opacity: 1; }
+}
+
+.custom-cluster {
+  transition: all 0.2s ease;
+}
+
+/* Para mejor rendimiento, forzar aceleración hardware */
+.custom-cluster div {
+  will-change: transform, opacity;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}

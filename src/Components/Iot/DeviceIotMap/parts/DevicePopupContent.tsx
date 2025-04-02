@@ -11,6 +11,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { DeviceIot } from '../../types'
 import { AlarmSeverity } from '../constants'
 import { getStatusColor } from '../utils/common'
+import { es } from 'date-fns/locale'
 
 interface DevicePopupProps {
   device: DeviceIot
@@ -21,7 +22,8 @@ const DevicePopup = ({ device, onViewDetails }: DevicePopupProps) => {
   // Format the last update time
   const hasActiveAlarms = device.isInAlarm
   const lastUpdateTime = formatDistanceToNow(new Date(device.lastSeen), {
-    addSuffix: true
+    addSuffix: true,
+    locale: es
   })
 
   const activeAlarms = device?.alarms.filter(
@@ -267,7 +269,7 @@ const DevicePopup = ({ device, onViewDetails }: DevicePopupProps) => {
         display='block'
         sx={{ mb: 1.5 }}
       >
-        Last update: {lastUpdateTime}
+        Última actualización: {lastUpdateTime}
       </Typography>
 
       <Button

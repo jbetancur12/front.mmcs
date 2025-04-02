@@ -11,10 +11,21 @@ import {
   updateDeviceIotStatus
 } from 'src/store/deviceIotStore'
 
+export const wss = () => {
+  if (import.meta.env.VITE_ENV === 'development') {
+    return window.location.hostname.includes('localhost') ||
+      window.location.hostname.includes('127.0.0.1')
+      ? import.meta.env.VITE_WS_URL // Usar localhost si estás en casa
+      : import.meta.env.VITE_WS_URL_CLOUDFARE // Usar Cloudflare si estás fuera
+  } else {
+    return import.meta.env.VITE_WS_URL
+  }
+}
+
 const useWebSocket = () => {
   useEffect(() => {
     // Asegúrate de que la URL en VITE_WS_URL apunte a tu servidor WebSocket
-    const socket = new WebSocket(import.meta.env.VITE_WS_URL)
+    const socket = new WebSocket(wss())
 
     socket.onopen = () => {
       console.log('Conexión establecida con el servidor WebSocket')
@@ -33,10 +44,10 @@ const useWebSocket = () => {
           // Se asume que el payload para sensor data tiene esta estructura:
           // { type: "data", data: { dev, gps, ts, sen } }
           const data: DataPayload = message
-
           const deviceIotId = data.data.dev
           const gps = data.data.gps // Ejemplo: [lat, lng]
-          const timestamp = data.data.ts // Ejemplo: timestamp en segundos
+          const timestamp = data.timestamp // Ejemplo: timestamp en segundos
+
           const sen = data.data.sen
           const src = data.data.pwr.src // Ejemplo: { t: valor, h: valor }
 

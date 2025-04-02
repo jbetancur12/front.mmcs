@@ -43,13 +43,15 @@ const AlarmNotification = ({
         <Button
           size='small'
           variant='contained'
-          onClick={() =>
+          onClick={() => {
+            onFilterChange('withAnyAlarm', true)
             onFilterChange(
               'alarmSeverities',
               new Set(['information', 'warning', 'critical'])
             )
-          }
+          }}
           sx={{
+            textTransform: 'capitalize',
             mr: 1,
             '&:hover': {
               transform: 'translateY(-2px)',

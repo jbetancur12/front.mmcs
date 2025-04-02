@@ -129,7 +129,7 @@ const MainChart = ({
     <Box sx={{ width: '100%', height: 400, mb: 4 }}>
       <ResponsiveContainer>
         <LineChart data={graphData}>
-          <CartesianGrid strokeDasharray='3 3' />
+          <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
           {visibleSeries.temperature && temperatureAlarms?.above && (
             <ReferenceLine
               y={temperatureAlarms.above}
@@ -188,6 +188,8 @@ const MainChart = ({
             dataKey='timestamp'
             type='number'
             domain={['dataMin', 'dataMax']}
+            tick={{ fontSize: 12 }}
+            tickMargin={10}
             tickFormatter={(tick) => {
               const date = new Date(tick)
               return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
@@ -195,6 +197,7 @@ const MainChart = ({
           />
           <YAxis
             yAxisId='left'
+            tickCount={5}
             domain={tempDomain}
             tickFormatter={yAxisFormatter}
             label={{ value: '°C', angle: -90, position: 'insideLeft' }}
@@ -202,6 +205,7 @@ const MainChart = ({
           />
           <YAxis
             yAxisId='right'
+            tickCount={5}
             domain={humDomain}
             tickFormatter={yAxisFormatter}
             orientation='right'
@@ -216,9 +220,9 @@ const MainChart = ({
             dataKey='temperature'
             stroke='#F44336'
             hide={!visibleSeries.temperature}
-            strokeWidth={1.5}
+            strokeWidth={2}
             dot={false}
-            activeDot={{ r: 2 }}
+            activeDot={{ r: 6 }}
             strokeOpacity={visibleSeries.temperature ? 1 : 0}
           />
           <Line
@@ -226,9 +230,9 @@ const MainChart = ({
             type='monotone'
             dataKey='humidity'
             stroke='#2196F3'
-            strokeWidth={1.5}
+            strokeWidth={2}
             dot={false}
-            activeDot={{ r: 2 }}
+            activeDot={{ r: 6 }}
             hide={!visibleSeries.humidity}
             strokeOpacity={visibleSeries.humidity ? 1 : 0}
           />

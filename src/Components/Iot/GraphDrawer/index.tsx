@@ -93,12 +93,13 @@ const GraphDrawer = ({
           deviceName={deviceName}
           status={status}
           onClose={onClose}
+          isInAlarm={device?.isInAlarm}
         />
 
         <Tabs
           value={tabValue}
           onChange={handleTabChange}
-          variant='fullWidth'
+          variant='standard'
           sx={{ borderBottom: 1, borderColor: 'divider' }}
         >
           <Tab
@@ -120,7 +121,6 @@ const GraphDrawer = ({
             id='device-tab-3'
             aria-controls='device-tabpanel-3'
           />
-          <Tab label='Eventos' value='eventos' />
         </Tabs>
 
         <Box sx={{ p: 3 }}>

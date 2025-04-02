@@ -1,13 +1,23 @@
 // components/DeviceGraphs/GraphDrawer/parts/Header.tsx
-import { IconButton, Toolbar, Typography, Box, AppBar } from '@mui/material'
-import { ArrowBack, Close as CloseIcon } from '@mui/icons-material'
+import {
+  IconButton,
+  Toolbar,
+  Typography,
+  Box,
+  AppBar,
+  Chip
+} from '@mui/material'
+import { ArrowBack, Close as CloseIcon, Warning } from '@mui/icons-material'
 import { GraphDrawerProps } from '../types'
 
 export const DrawerHeader = ({
   deviceName,
   status,
-  onClose
-}: Pick<GraphDrawerProps, 'deviceName' | 'onClose'> & { status: string }) => (
+  onClose,
+  isInAlarm
+}: Pick<GraphDrawerProps, 'deviceName' | 'onClose' | 'isInAlarm'> & {
+  status: string
+}) => (
   <AppBar position='static' color='default' sx={{ boxShadow: 'none' }}>
     <Toolbar>
       <IconButton edge='start' onClick={onClose} aria-label='volver'>
@@ -18,19 +28,34 @@ export const DrawerHeader = ({
         <Typography variant='h6' component='span'>
           Sensor: "{deviceName}"
         </Typography>
-        <Typography component='span' sx={{ ml: 2 }}>
-          Estado: [
-          <Box
-            component='span'
-            sx={{
-              color: status === 'Online' ? 'success.main' : 'error.main',
-              fontWeight: 'bold'
-            }}
-          >
-            {status}
-          </Box>
-          ]
-        </Typography>
+        <Chip
+          label={isInAlarm ? 'ALARMA' : status}
+          variant='filled'
+          size='medium'
+          icon={isInAlarm ? <Warning color='inherit' /> : undefined}
+          sx={{
+            ml: 2,
+            fontWeight: 'bold',
+            color: isInAlarm
+              ? '#fff'
+              : status === 'Online'
+                ? '#fff'
+                : 'error.main',
+            backgroundColor: isInAlarm
+              ? 'error.main'
+              : status === 'Online'
+                ? 'success.main'
+                : 'error.main',
+            ...(isInAlarm && {
+              animation: 'blink 1s infinite',
+              '@keyframes blink': {
+                '0%': { opacity: 0.6 },
+                '50%': { opacity: 1 },
+                '100%': { opacity: 0.6 }
+              }
+            })
+          }}
+        />
       </Box>
 
       <IconButton onClick={onClose}>

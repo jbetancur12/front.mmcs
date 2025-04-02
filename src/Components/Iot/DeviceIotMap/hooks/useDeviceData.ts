@@ -6,8 +6,8 @@ import { DeviceIot } from '../../types'
 export const useDeviceData = (devices: DeviceIot[]) => {
   const [filterState, setFilterState] = useState<FilterState>({
     searchQuery: '',
-    statuses: new Set(['online']),
-    powerSources: new Set(['main', 'bat']),
+    statuses: new Set(['online']), // Inicializar como vacío
+    powerSources: new Set(), // Inicializar como vacío
     alarmSeverities: new Set(),
     withAnyAlarm: false
   })
@@ -18,24 +18,26 @@ export const useDeviceData = (devices: DeviceIot[]) => {
         .toLowerCase()
         .includes(filterState.searchQuery.toLowerCase())
 
-      const matchesStatus = filterState.statuses.has(
-        device.isOnline ? 'online' : 'offline'
-      )
+      const matchesStatus =
+        filterState.statuses.size === 0 ||
+        filterState.statuses.has(device.isOnline ? 'online' : 'offline')
 
-      const matchesPower = filterState.powerSources.has(device.src)
+      const matchesPower =
+        filterState.powerSources.size === 0 ||
+        filterState.powerSources.has(device.src)
 
       const activeAlarms =
         device.alarms?.filter((alarm) => alarm.active && alarm.enabled) || []
 
-      if (!filterState.withAnyAlarm && filterState.alarmSeverities.size === 0) {
-        return true // Mostrar siempre
+      // Lógica de alarmas corregida
+      let matchesAlarms = true
+      if (filterState.withAnyAlarm) {
+        matchesAlarms = activeAlarms.length > 0 // Cualquier alarma activa
+      } else if (filterState.alarmSeverities.size > 0) {
+        matchesAlarms = activeAlarms.some((a) =>
+          filterState.alarmSeverities.has(a.severity)
+        )
       }
-
-      const matchesAlarms = filterState.withAnyAlarm
-        ? activeAlarms.length > 0
-        : activeAlarms.some((alarm) =>
-            filterState.alarmSeverities.has(alarm.severity)
-          )
 
       return matchesSearch && matchesStatus && matchesPower && matchesAlarms
     })
@@ -43,13 +45,20 @@ export const useDeviceData = (devices: DeviceIot[]) => {
 
   const handleFilterChange = (
     type: keyof FilterState,
-    value: string | Set<string>
+    value: string | Set<string> | boolean // Añadir boolean como tipo posible
   ) => {
     setFilterState((prev) => {
       if (type === 'searchQuery') {
         return { ...prev, searchQuery: value as string }
       }
-      return { ...prev, [type]: new Set(value as Iterable<string>) }
+      if (type === 'withAnyAlarm') {
+        return { ...prev, withAnyAlarm: value as boolean }
+      }
+      // Solo crear Set para tipos que son conjuntos
+      return {
+        ...prev,
+        [type]: new Set(value as Iterable<string>)
+      }
     })
   }
 

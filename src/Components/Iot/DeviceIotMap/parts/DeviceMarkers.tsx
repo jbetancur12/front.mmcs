@@ -90,6 +90,10 @@ const MarkerComponent = memo(
         position={[device.lastLocation.lat, device.lastLocation.lng]}
         icon={customIcon}
         eventHandlers={{
+          add: (e) => {
+            // Almacenar datos del dispositivo en el marcador
+            ;(e.target as any).deviceData = device
+          },
           click: () => {
             // Maneja clics específicos en el marcador
             onSelect(device)

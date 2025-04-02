@@ -20,6 +20,7 @@ import { DeviceIot } from '../../types'
 import { AlarmSeverity } from '../constants'
 import { format } from 'date-fns'
 import { getPowerSourceIcon, getStatusColor } from '../utils/common'
+import { es } from 'date-fns/locale'
 
 interface DeviceListItemProps {
   device: DeviceIot
@@ -357,8 +358,10 @@ const DeviceListItem = ({ device, onSelect }: DeviceListItemProps) => {
                 component='span'
                 sx={{ color: 'text.secondary', fontSize: '0.75rem' }}
               >
-                Last updated:{' '}
-                {format(new Date(device.lastSeen), 'MMM dd, HH:mm')}
+                Última actualización:{' '}
+                {format(new Date(device.lastSeen), 'MMM dd, HH:mm', {
+                  locale: es
+                })}
               </Box>
               {getPowerSourceIcon(device)}
             </Box>

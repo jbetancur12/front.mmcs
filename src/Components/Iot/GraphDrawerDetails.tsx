@@ -26,7 +26,7 @@ import { $realTimeData } from 'src/store/deviceIotStore'
 
 import { RANGE_OPTIONS } from './constants'
 import ModuleConfigForm, { ModuleConfig } from './ModuleConfigForm'
-import MainChart from './MainChart'
+import MainChart from './GraphDrawer/parts/MainChart'
 import TemperatureChart from './TemperatureChart'
 import { getGaugeConfig } from './helpers'
 

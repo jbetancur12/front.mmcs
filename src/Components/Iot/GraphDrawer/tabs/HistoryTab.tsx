@@ -6,7 +6,7 @@ import { StatsTable } from '../parts/StatsTable'
 
 import { RangeOption } from '../types'
 import { Skeleton, Typography } from '@mui/material'
-import MainChart from 'src/Components/Iot/MainChart'
+import MainChart from 'src/Components/Iot/GraphDrawer/parts/MainChart'
 
 interface HistoryTabProps {
   combinedData: any[]

@@ -17,6 +17,7 @@ import {
 import { format } from 'date-fns'
 import { AlarmSeverity } from '../../DeviceIotMap/constants'
 import { DeviceAlarm } from '../../DeviceIotMap/types'
+import { es } from 'date-fns/locale'
 
 interface SummaryTabProps {
   deviceLastData: DataPayload[]
@@ -158,7 +159,7 @@ export const DeviceDetailPanel = ({
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <MyLocation color='primary' sx={{ mr: 1 }} />
               <Typography variant='subtitle2' color='text.secondary'>
-                Coordinates
+                Coordenadas
               </Typography>
             </Box>
             <Typography variant='h6'>
@@ -182,7 +183,7 @@ export const DeviceDetailPanel = ({
                 color='text.secondary'
                 sx={{ ml: 1 }}
               >
-                Battery Level
+                Nivel de batería
               </Typography>
             </Box>
             <Typography variant='h6'>{'100'}%</Typography>
@@ -205,15 +206,18 @@ export const DeviceDetailPanel = ({
                 color='text.secondary'
                 sx={{ ml: 1 }}
               >
-                Connection
+                Conexión
               </Typography>
             </Box>
-            <Typography variant='h6'>{device?.status}</Typography>
+            <Typography variant='h6'>
+              {device?.status === 'online' ? 'En Línea' : 'Sin Conexión'}
+            </Typography>
             <Typography variant='caption' color='text.secondary'>
-              Last update:{' '}
+              Última actualización:{' '}
               {format(
                 new Date((device as DeviceIot).lastSeen),
-                'MMM dd, yyyy HH:mm:ss'
+                'MMM dd, yyyy HH:mm:ss',
+                { locale: es }
               )}
             </Typography>
           </Paper>
@@ -229,7 +233,7 @@ export const DeviceDetailPanel = ({
           mb: 2
         }}
       >
-        <Typography variant='h5'>Current Readings</Typography>
+        <Typography variant='h5'>Valores actuales</Typography>
         {hasActiveAlarms && (
           <Chip
             label='¡Alarmas activas!'

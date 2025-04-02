@@ -102,7 +102,7 @@ export const updateDeviceIotLocation = action(
     store,
     deviceIotId: string,
     gps: number[],
-    timestamp: number,
+    timestamp: string,
     sensorData: SData
   ) => {
     const devicesIot = store.get().map((deviceIot) =>
@@ -110,7 +110,7 @@ export const updateDeviceIotLocation = action(
         ? {
             ...deviceIot,
             lastLocation: { lat: gps[0], lng: gps[1] },
-            lastSeen: new Date(timestamp * 1000),
+            lastSeen: new Date(timestamp),
             sensorData
           }
         : deviceIot
