@@ -117,7 +117,9 @@ const DevicePopup = ({ device, onViewDetails }: DevicePopupProps) => {
       </Box>
 
       <Typography variant='body2' className='text-gray-600 mb-3'>
-        Testst
+        {device?.location?.trim() || ''
+          ? device.location
+          : `${device?.lastLocation?.lat ?? 'N/A'}, ${device?.lastLocation?.lng ?? 'N/A'}`}
       </Typography>
 
       {hasActiveAlarms && (

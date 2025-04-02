@@ -11,6 +11,7 @@ import {
   BatteryFull,
   DeviceHub,
   Info,
+  Place,
   ReportProblem,
   Thermostat,
   Warning,
@@ -250,6 +251,17 @@ const DeviceListItem = ({ device, onSelect }: DeviceListItemProps) => {
         }
         secondary={
           <>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+              <Place fontSize='small' sx={{ mr: 0.5, fontSize: 16 }} />
+              <Box
+                component='span'
+                sx={{ color: 'text.secondary', fontSize: '0.875rem' }}
+              >
+                {device?.location?.trim() || ''
+                  ? device.location
+                  : `${device?.lastLocation?.lat ?? 'N/A'}, ${device?.lastLocation?.lng ?? 'N/A'}`}
+              </Box>
+            </Box>
             <Box className='mt-2 flex justify-between'>
               <Box className='flex items-center'>
                 <Thermostat

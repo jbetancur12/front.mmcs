@@ -94,7 +94,7 @@ const DeviceList: React.FC = () => {
     <div>
       <Stack direction='row' spacing={2} mb={2}>
         <Button variant='contained' color='primary' onClick={handleOpen}>
-          Agregar Dispositivo
+          Agregar Dispositivos
         </Button>
       </Stack>
       <MaterialReactTable

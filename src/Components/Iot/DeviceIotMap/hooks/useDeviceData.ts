@@ -9,11 +9,15 @@ export const useDeviceData = (devices: DeviceIot[]) => {
     statuses: new Set(['online']), // Inicializar como vacío
     powerSources: new Set(), // Inicializar como vacío
     alarmSeverities: new Set(),
-    withAnyAlarm: false
+    withAnyAlarm: false,
+    customerId: null // Valor inicial
   })
 
   const filteredDevices = useMemo(() => {
     return devices.filter((device) => {
+      const matchesCustomer =
+        !filterState.customerId || device.customerId === filterState.customerId
+
       const matchesSearch = device.name
         .toLowerCase()
         .includes(filterState.searchQuery.toLowerCase())
@@ -39,27 +43,43 @@ export const useDeviceData = (devices: DeviceIot[]) => {
         )
       }
 
-      return matchesSearch && matchesStatus && matchesPower && matchesAlarms
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesPower &&
+        matchesAlarms &&
+        matchesCustomer
+      )
     })
   }, [devices, filterState])
 
+  // const handleFilterChange = (
+  //   type: keyof FilterState,
+  //   value: string | Set<string> | boolean // Añadir boolean como tipo posible
+  // ) => {
+  //   setFilterState((prev) => {
+  //     if (type === 'searchQuery') {
+  //       return { ...prev, searchQuery: value as string }
+  //     }
+  //     if (type === 'withAnyAlarm') {
+  //       return { ...prev, withAnyAlarm: value as boolean }
+  //     }
+  //     // Solo crear Set para tipos que son conjuntos
+  //     return {
+  //       ...prev,
+  //       [type]: new Set(value as Iterable<string>)
+  //     }
+  //   })
+  // }
+
   const handleFilterChange = (
     type: keyof FilterState,
-    value: string | Set<string> | boolean // Añadir boolean como tipo posible
+    value: string | Set<string> | boolean | number | null
   ) => {
-    setFilterState((prev) => {
-      if (type === 'searchQuery') {
-        return { ...prev, searchQuery: value as string }
-      }
-      if (type === 'withAnyAlarm') {
-        return { ...prev, withAnyAlarm: value as boolean }
-      }
-      // Solo crear Set para tipos que son conjuntos
-      return {
-        ...prev,
-        [type]: new Set(value as Iterable<string>)
-      }
-    })
+    setFilterState((prev) => ({
+      ...prev,
+      [type]: value instanceof Set ? new Set(value) : value
+    }))
   }
 
   return { filteredDevices, filterState, handleFilterChange }

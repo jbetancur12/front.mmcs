@@ -107,7 +107,12 @@ const DeviceIotMap = () => {
       />
 
       <Box
-        sx={{ flexGrow: 1, position: 'relative', ml: isSidebarOpen ? 8 : 0 }}
+        sx={{
+          zIndex: 10,
+          flexGrow: 1,
+          position: 'relative',
+          ml: isSidebarOpen ? 8 : 0
+        }}
       >
         <MapContainer
           center={DEFAULT_MAP_CENTER}

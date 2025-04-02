@@ -25,6 +25,7 @@ export interface FilterState {
   powerSources: Set<'main' | 'bat'>
   alarmSeverities: Set<string>
   withAnyAlarm: boolean
+  customerId?: number | null // Nuevo campo
 }
 
 export interface MapControlsProps {

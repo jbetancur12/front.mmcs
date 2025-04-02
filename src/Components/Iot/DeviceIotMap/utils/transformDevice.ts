@@ -17,6 +17,7 @@ export const transformDevice = (device: any): DeviceIot => {
     sensorData: device.sensorData,
     deviceIotConfigs: device.deviceIotConfigs,
     isInAlarm: device.isInAlarm,
-    alarms: device.alarms
+    alarms: device.alarms,
+    location: device.location
   }
 }

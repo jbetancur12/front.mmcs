@@ -84,7 +84,9 @@ export const DeviceDetailPanel = ({
             )}
           </Typography>
           <Typography variant='subtitle1' color='text.secondary'>
-            {'Ubicacion'}
+            {device?.location?.trim() || ''
+              ? device?.location
+              : `${device?.lastLocation?.lat ?? 'N/A'}, ${device?.lastLocation?.lng ?? 'N/A'}`}
           </Typography>
           {hasActiveAlarms && (
             <Alert

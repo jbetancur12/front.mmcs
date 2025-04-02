@@ -11,14 +11,15 @@ export interface DeviceIot {
   id: string | number
   name: string
   imei: string
+  location: string
   lastLocation: {
     lat: number
     lng: number
   }
   lastSeen: Date
   status: 'online' | 'offline'
-  customerId: string | number
-  customer: Customer | null
+  customerId?: string | number
+  customer?: Customer | null
   isOnline: boolean
   sensorData: SData
   src: 'main' | 'bat'

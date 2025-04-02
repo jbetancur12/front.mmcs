@@ -17,7 +17,12 @@ import {
   Search,
   Tune
 } from '@mui/icons-material'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
+import AsyncSelect from 'react-select/async'
+import { debounce } from 'lodash'
+import useAxiosPrivate from '@utils/use-axios-private'
+import { userStore } from '@stores/userStore'
+import { useStore } from '@nanostores/react'
 
 // Componente Chip personalizado con icono y tooltip
 const FilterChip = ({
@@ -106,7 +111,29 @@ export const FilterPanel = ({
   filterState: FilterState
   onFilterChange: (type: keyof FilterState, value: any) => void
 }) => {
+  const axiosPrivate = useAxiosPrivate()
+  const $userStore = useStore(userStore)
   const [filtersCollapsed, setFiltersCollapsed] = useState(false)
+
+  const loadOptionsClient = useCallback(
+    debounce(async (inputValue: string) => {
+      try {
+        const response = await axiosPrivate.get(`/customers`, {
+          params: { q: inputValue }
+        })
+        const data = response.data
+        return data.map((item: any) => ({
+          value: item.id,
+          label: item.nombre
+        }))
+      } catch (error) {
+        console.error('Error al cargar opciones:', error)
+        throw error
+      }
+    }, 1000),
+    []
+  )
+
   return (
     <Box className='mt-4'>
       {/* Header con botón de colapsar */}
@@ -257,6 +284,34 @@ export const FilterPanel = ({
               />
             </Stack>
           </Box>
+
+          <Divider
+            orientation='horizontal'
+            sx={{
+              mb: 1
+            }}
+          />
+
+          {$userStore.rol.some((role) => ['admin'].includes(role)) && (
+            <Box mb={2}>
+              <Box
+                sx={{ fontSize: '0.875rem', color: 'text.secondary', mb: 1 }}
+              >
+                Clientes
+              </Box>
+              <AsyncSelect
+                cacheOptions
+                // defaultOptions
+
+                placeholder='Buscar Cliente'
+                loadOptions={loadOptionsClient}
+                onChange={(selectedOption: any) => {
+                  onFilterChange('customerId', selectedOption?.value || null)
+                }}
+                isClearable
+              />
+            </Box>
+          )}
         </Box>
       </Collapse>
     </Box>

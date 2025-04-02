@@ -8,7 +8,7 @@ import {
   Box,
   CircularProgress
 } from '@mui/material'
-import { useCreateDevice } from '../hooks/useDeviceMutations'
+import { useCreateDevice, useUpdateDevice } from '../hooks/useDeviceMutations'
 import { AddDeviceModalProps } from '../types/deviceTypes'
 import { DeviceIot } from '../../types'
 import AsyncSelect from 'react-select/async'
@@ -24,6 +24,7 @@ import { customerStore } from '@stores/customerStore'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import Swal from 'sweetalert2'
+import { useEffect } from 'react'
 
 const validationSchema = Yup.object().shape({
   imei: Yup.string()
@@ -35,31 +36,52 @@ const validationSchema = Yup.object().shape({
   customerId: Yup.number().nullable()
 })
 
-const AddDeviceModal = ({ open, onClose }: AddDeviceModalProps) => {
+const AddDeviceModal = ({ open, onClose, device }: AddDeviceModalProps) => {
+  const isEdit = !!device
+
   const $customerStore = useStore(customerStore)
   const createDevice = useCreateDevice()
+  const updateDevice = useUpdateDevice()
 
   const formik = useFormik<Partial<DeviceIot>>({
     initialValues: {
-      imei: '',
-      name: '',
-      customer: null
+      imei: device?.imei || '',
+      name: device?.name || '',
+      location: device?.location || '',
+      customer: device?.customer || null
     },
     validationSchema,
     onSubmit: async (values) => {
       try {
-        await createDevice.mutateAsync({
-          imei: values.imei!,
-          name: values.name!,
-          customerId: values.customer?.id
-        })
-        Swal.fire({
-          title: '¡Éxito!',
-          text: 'Dispositivo creado correctamente',
-          icon: 'success',
-          confirmButtonText: 'Aceptar'
-        })
-        handleClose()
+        if (isEdit) {
+          await updateDevice.mutateAsync({
+            id: device.id,
+            imei: values.imei!,
+            name: values.name!,
+            location: values.location || '',
+            customerId: values.customer?.id // Asegurar enviar solo el ID
+          })
+          Swal.fire(
+            '¡Actualizado!',
+            'Dispositivo actualizado correctamente',
+            'success'
+          )
+          handleClose()
+        } else {
+          await createDevice.mutateAsync({
+            imei: values.imei!,
+            name: values.name!,
+            location: values.location || '',
+            customerId: values.customer?.id
+          })
+          Swal.fire({
+            title: '¡Éxito!',
+            text: 'Dispositivo creado correctamente',
+            icon: 'success',
+            confirmButtonText: 'Aceptar'
+          })
+          handleClose()
+        }
       } catch (error) {
         console.error('Error creating device:', error)
         Swal.fire({
@@ -72,6 +94,18 @@ const AddDeviceModal = ({ open, onClose }: AddDeviceModalProps) => {
     }
   })
 
+  useEffect(() => {
+    if (device) {
+      formik.setValues({
+        imei: device.imei,
+        name: device.name,
+        location: device.location,
+        customerId: device?.customerId,
+        customer: device.customer
+      })
+    }
+  }, [device])
+
   const handleClose = () => {
     formik.resetForm()
     onClose()
@@ -79,7 +113,7 @@ const AddDeviceModal = ({ open, onClose }: AddDeviceModalProps) => {
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth='sm'>
-      <DialogTitle>Agregar Dispositivo</DialogTitle>
+      <DialogTitle>{isEdit ? 'Editar' : 'Agregar'} Dispositivo</DialogTitle>
       <form onSubmit={formik.handleSubmit}>
         <DialogContent>
           <Box mb={3}>
@@ -105,6 +139,18 @@ const AddDeviceModal = ({ open, onClose }: AddDeviceModalProps) => {
               onChange={formik.handleChange}
               error={formik.touched.name && Boolean(formik.errors.name)}
               helperText={formik.touched.name && formik.errors.name}
+            />
+          </Box>
+          <Box mb={3}>
+            <TextField
+              fullWidth
+              label='Ubicación del Dispositivo'
+              name='location'
+              variant='outlined'
+              value={formik.values.location}
+              onChange={formik.handleChange}
+              error={formik.touched.location && Boolean(formik.errors.location)}
+              helperText={formik.touched.location && formik.errors.location}
             />
           </Box>
           <Box mb={3}>
@@ -149,7 +195,7 @@ const AddDeviceModal = ({ open, onClose }: AddDeviceModalProps) => {
             onClick={handleClose}
             variant='outlined'
             color='secondary'
-            disabled={createDevice.isLoading}
+            disabled={createDevice.isLoading || updateDevice.isLoading}
           >
             Cancelar
           </Button>
@@ -158,13 +204,17 @@ const AddDeviceModal = ({ open, onClose }: AddDeviceModalProps) => {
             type='submit'
             variant='contained'
             color='primary'
-            disabled={createDevice.isLoading}
+            disabled={createDevice.isLoading || updateDevice.isLoading}
           >
-            {createDevice.isLoading ? (
-              <CircularProgress size={24} color='inherit' />
-            ) : (
-              'Agregar Dispositivo'
-            )}
+            {
+              createDevice.isLoading || updateDevice.isLoading ? (
+                <CircularProgress size={24} color='inherit' />
+              ) : isEdit ? (
+                'Actualizar Dispositivo'
+              ) : (
+                'Agregar Dispositivo'
+              ) // Cambiar texto según modo
+            }
           </Button>
         </DialogActions>
       </form>

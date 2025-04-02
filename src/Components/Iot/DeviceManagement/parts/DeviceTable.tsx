@@ -37,6 +37,7 @@ export const DeviceTable = ({ data, onEdit, onDelete }: DeviceTableProps) => (
     data={data}
     enableColumnFilters={false}
     enablePagination
+    enableRowActions={true}
     renderRowActions={({ row }) => (
       <Stack direction='row' spacing={1}>
         <IconButton color='primary' onClick={() => onEdit(row.original)}>
