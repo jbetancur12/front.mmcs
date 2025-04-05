@@ -8,6 +8,7 @@ import {
   updateDeviceAlarms,
   updateDeviceAlarmStatus,
   updateDeviceIotLocation,
+  updateDeviceIotSensorData,
   updateDeviceIotStatus
 } from 'src/store/deviceIotStore'
 
@@ -51,7 +52,8 @@ const useWebSocket = () => {
           const sen = data.data.sen
           const src = data.data.pwr.src // Ejemplo: { t: valor, h: valor }
 
-          updateDeviceIotLocation(deviceIotId, gps, timestamp, sen)
+          updateDeviceIotLocation(deviceIotId, gps)
+          updateDeviceIotSensorData(deviceIotId, timestamp, sen)
           addRealTimeData(data)
           setLatestRealTimeData(data)
           updateDeviceIotStatus(deviceIotId, 'online', true, src)
@@ -61,6 +63,7 @@ const useWebSocket = () => {
         }
         if (type === 'ALARM_STATUS_UPDATE') {
           const { deviceId, alarms } = message.data
+          console.log('🚀 ~ useEffect ~ alarms:', alarms)
 
           // Convertir a tipos correctos
           const formattedAlarms: DeviceAlarm[] = alarms.map(
@@ -75,14 +78,14 @@ const useWebSocket = () => {
           )
 
           updateDeviceAlarms(deviceId, formattedAlarms)
+
           if (message.data.alarms.length > 0) {
             hasAlarms(true)
           } else {
             hasAlarms(false)
           }
         }
-        if (type === 'ALARM_STATUS_UPDATE') {
-        }
+
         if (type === 'power') {
         }
         if (type === 'DEVICE_STATUS') {

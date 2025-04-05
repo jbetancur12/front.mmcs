@@ -18,9 +18,10 @@ import { format } from 'date-fns'
 import { AlarmSeverity } from '../../DeviceIotMap/constants'
 import { DeviceAlarm } from '../../DeviceIotMap/types'
 import { es } from 'date-fns/locale'
+import { useStore } from '@nanostores/react'
+import { $deviceSensorData, $devicesIot } from '@stores/deviceIotStore'
 
 interface SummaryTabProps {
-  deviceLastData: DataPayload[]
   lastEntry?: any
   lastTemperature: number | string
   lastHumidity: number | string
@@ -28,10 +29,9 @@ interface SummaryTabProps {
   device: DeviceIot | null
 }
 
-export const DeviceDetailPanel = ({
-  deviceLastData,
-  device
-}: SummaryTabProps) => {
+export const DeviceDetailPanel = ({ device }: SummaryTabProps) => {
+  const DeviceIotSensorData = useStore($deviceSensorData)
+
   const hasActiveAlarms = device?.isInAlarm
   const activeAlarms = device?.alarms.filter(
     (alarm) => alarm.enabled === true && alarm.active === true
@@ -165,7 +165,8 @@ export const DeviceDetailPanel = ({
               </Typography>
             </Box>
             <Typography variant='h6'>
-              {deviceLastData[0]?.data?.gps.join(', ')}
+              {device?.lastLocation &&
+                Object.values(device?.lastLocation).join(', ')}
             </Typography>
           </Paper>
         </Grid>
@@ -216,11 +217,15 @@ export const DeviceDetailPanel = ({
             </Typography>
             <Typography variant='caption' color='text.secondary'>
               Última actualización:{' '}
-              {format(
-                new Date((device as DeviceIot).lastSeen),
-                'MMM dd, yyyy HH:mm:ss',
-                { locale: es }
-              )}
+              {device?.name && DeviceIotSensorData[device.name]?.lastSeen
+                ? format(
+                    new Date(DeviceIotSensorData[device.name]?.lastSeen),
+                    'MMM dd, HH:mm:ss',
+                    {
+                      locale: es
+                    }
+                  )
+                : '---'}
             </Typography>
           </Paper>
         </Grid>
@@ -269,7 +274,7 @@ export const DeviceDetailPanel = ({
         )}
       </Box>
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        {deviceLastData[0]?.data?.sen.h && (
+        {device?.name && DeviceIotSensorData[device.name]?.sensorData.t && (
           <Grid item xs={12} sm={6} md={4}>
             <Paper
               sx={{
@@ -419,7 +424,8 @@ export const DeviceDetailPanel = ({
                       : 'inherit'
                 }}
               >
-                {deviceLastData[0]?.data?.sen.t}°C
+                {device?.name && DeviceIotSensorData[device.name]?.sensorData.t}
+                °C
               </Typography>
               <Typography variant='subtitle1' color='text.secondary'>
                 Temperature
@@ -427,7 +433,7 @@ export const DeviceDetailPanel = ({
             </Paper>
           </Grid>
         )}
-        {deviceLastData[0]?.data?.sen.h && (
+        {device?.name && DeviceIotSensorData[device.name]?.sensorData.h && (
           <Grid item xs={12} sm={6} md={4}>
             <Paper
               sx={{
@@ -577,7 +583,8 @@ export const DeviceDetailPanel = ({
                       : 'inherit'
                 }}
               >
-                {deviceLastData[0]?.data?.sen.h}%
+                {device?.name && DeviceIotSensorData[device.name]?.sensorData.h}
+                %
               </Typography>
               <Typography variant='subtitle1' color='text.secondary'>
                 Humedad

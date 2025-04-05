@@ -18,7 +18,7 @@ interface DeviceMarkersProps {
   onViewDetails: (device: DeviceIot) => void
 }
 
-const MarkerComponent = memo(
+const DeviceMarker = memo(
   ({
     device,
     onSelect,
@@ -117,7 +117,7 @@ export const DeviceMarkers = ({
   return (
     <>
       {devices.map((device) => (
-        <MarkerComponent
+        <DeviceMarker
           key={device.id}
           device={device}
           onSelect={onSelect}

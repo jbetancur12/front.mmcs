@@ -5,7 +5,8 @@ import {
   ListItemText,
   Avatar,
   Badge,
-  ListItemButton
+  ListItemButton,
+  IconButton
 } from '@mui/material'
 import {
   BatteryFull,
@@ -14,6 +15,7 @@ import {
   Place,
   ReportProblem,
   Thermostat,
+  Visibility,
   Warning,
   WaterDrop
 } from '@mui/icons-material'
@@ -22,15 +24,22 @@ import { AlarmSeverity } from '../constants'
 import { format } from 'date-fns'
 import { getPowerSourceIcon, getStatusColor } from '../utils/common'
 import { es } from 'date-fns/locale'
+import { useStore } from '@nanostores/react'
+import { $deviceSensorData } from '@stores/deviceIotStore'
 
 interface DeviceListItemProps {
   device: DeviceIot
   onSelect: (device: DeviceIot) => void
-  handleShowDeviceGraph: (device: DeviceIot) => void
+  onViewDetails?: (device: DeviceIot) => void
 }
 
-const DeviceListItem = ({ device, onSelect }: DeviceListItemProps) => {
+const DeviceListItem = ({
+  device,
+  onSelect,
+  onViewDetails
+}: DeviceListItemProps) => {
   // Determine status color and icon
+  const DeviceIotSensorData = useStore($deviceSensorData)
 
   const hasActiveAlarms = device.isInAlarm
 
@@ -298,8 +307,9 @@ const DeviceListItem = ({ device, onSelect }: DeviceListItemProps) => {
                     fontSize: '0.875rem'
                   }}
                 >
-                  {device.sensorData && device.sensorData.t !== null
-                    ? `${device.sensorData.t}°C`
+                  {DeviceIotSensorData[device.name]?.sensorData &&
+                  DeviceIotSensorData[device.name]?.sensorData.t !== null
+                    ? `${DeviceIotSensorData[device.name]?.sensorData.t}°C`
                     : '--°C'}
                 </Box>
               </Box>
@@ -339,8 +349,9 @@ const DeviceListItem = ({ device, onSelect }: DeviceListItemProps) => {
                     fontSize: '0.875rem'
                   }}
                 >
-                  {device.sensorData && device.sensorData.h !== null
-                    ? `${device.sensorData.h}%`
+                  {DeviceIotSensorData[device.name]?.sensorData &&
+                  DeviceIotSensorData[device.name]?.sensorData.h !== null
+                    ? `${DeviceIotSensorData[device.name]?.sensorData.h}%`
                     : '--%'}
                 </Box>
               </Box>
@@ -367,15 +378,52 @@ const DeviceListItem = ({ device, onSelect }: DeviceListItemProps) => {
               }}
             >
               <Box
-                component='span'
-                sx={{ color: 'text.secondary', fontSize: '0.75rem' }}
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mt: 0.5
+                }}
               >
-                Última actualización:{' '}
-                {format(new Date(device.lastSeen), 'MMM dd, HH:mm', {
-                  locale: es
-                })}
+                <Box
+                  component='span'
+                  sx={{ color: 'text.secondary', fontSize: '0.75rem' }}
+                >
+                  Última actualización:{' '}
+                  {DeviceIotSensorData[device.name]?.lastSeen
+                    ? format(
+                        new Date(DeviceIotSensorData[device.name]?.lastSeen),
+                        'MMM dd, HH:mm:ss',
+                        {
+                          locale: es
+                        }
+                      )
+                    : '---'}
+                </Box>
+                {getPowerSourceIcon(device)}
+                {onViewDetails && (
+                  <Tooltip title='Ver detalles del dispositivo'>
+                    <IconButton
+                      size='small'
+                      color='primary'
+                      onClick={(e) => {
+                        e.stopPropagation() // Evitar que se active el onClick del ListItemButton
+                        onViewDetails(device)
+                      }}
+                      sx={{
+                        ml: 1,
+                        padding: '4px',
+                        backgroundColor: 'rgba(25, 118, 210, 0.1)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(25, 118, 210, 0.2)'
+                        }
+                      }}
+                    >
+                      <Visibility fontSize='small' />
+                    </IconButton>
+                  </Tooltip>
+                )}
               </Box>
-              {getPowerSourceIcon(device)}
             </Box>
           </>
         }

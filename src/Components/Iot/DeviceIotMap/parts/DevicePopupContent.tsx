@@ -12,6 +12,8 @@ import { DeviceIot } from '../../types'
 import { AlarmSeverity } from '../constants'
 import { getStatusColor } from '../utils/common'
 import { es } from 'date-fns/locale'
+import { useStore } from '@nanostores/react'
+import { $deviceSensorData } from '@stores/deviceIotStore'
 
 interface DevicePopupProps {
   device: DeviceIot
@@ -19,12 +21,15 @@ interface DevicePopupProps {
 }
 
 const DevicePopup = ({ device, onViewDetails }: DevicePopupProps) => {
-  // Format the last update time
+  const deviceIotSensorData = useStore($deviceSensorData)
   const hasActiveAlarms = device.isInAlarm
-  const lastUpdateTime = formatDistanceToNow(new Date(device.lastSeen), {
-    addSuffix: true,
-    locale: es
-  })
+  const lastUpdateTime = formatDistanceToNow(
+    new Date(device.name && deviceIotSensorData[device.name]?.lastSeen),
+    {
+      addSuffix: true,
+      locale: es
+    }
+  )
 
   const activeAlarms = device?.alarms.filter(
     (alarm) => alarm.enabled === true && alarm.active === true
@@ -202,8 +207,9 @@ const DevicePopup = ({ device, onViewDetails }: DevicePopupProps) => {
                 : 'inherit'
             }
           >
-            {device.sensorData && device.sensorData.t !== null
-              ? `Temperatura: ${device.sensorData.t}°C`
+            {device.name &&
+            deviceIotSensorData[device.name]?.sensorData !== null
+              ? `Temperatura: ${device?.name && deviceIotSensorData[device.name]?.sensorData.t}°C`
               : 'Temperatura: --°C'}
           </Typography>
         </Box>
@@ -252,8 +258,9 @@ const DevicePopup = ({ device, onViewDetails }: DevicePopupProps) => {
                 : 'inherit'
             }
           >
-            {device.sensorData && device.sensorData.h !== null
-              ? `Humedad: ${device.sensorData.h}%`
+            {device.name &&
+            deviceIotSensorData[device.name]?.sensorData !== null
+              ? `Humedad: ${device?.name && deviceIotSensorData[device.name]?.sensorData.h}%`
               : 'Humedad: --°C'}
           </Typography>
         </Box>

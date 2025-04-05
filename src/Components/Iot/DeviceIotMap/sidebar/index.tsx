@@ -90,7 +90,7 @@ export const DeviceSidebar = ({
           <DeviceList
             devices={filteredDevices}
             onSelectDevice={onSelectDevice}
-            handleShowDeviceGraph={handleShowDeviceGraph}
+            onViewDetails={handleShowDeviceGraph}
           />
         </Box>
       </Box>

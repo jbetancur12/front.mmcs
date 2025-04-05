@@ -55,11 +55,11 @@ export const getStatusColor = (
 export const getPowerSourceIcon = (device: DeviceIot) => {
   if (!device.src) return null
   return device.src === PowerSource.MAIN ? (
-    <Tooltip title='Connected to Main Power'>
+    <Tooltip title='Conectado a la Corriente'>
       <Power color='primary' fontSize='small' />
     </Tooltip>
   ) : (
-    <Tooltip title='Running on Battery'>
+    <Tooltip title='Usando Bateria'>
       <PowerOff color='action' fontSize='small' />
     </Tooltip>
   )

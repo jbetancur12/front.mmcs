@@ -53,25 +53,6 @@ export const useDeviceData = (devices: DeviceIot[]) => {
     })
   }, [devices, filterState])
 
-  // const handleFilterChange = (
-  //   type: keyof FilterState,
-  //   value: string | Set<string> | boolean // Añadir boolean como tipo posible
-  // ) => {
-  //   setFilterState((prev) => {
-  //     if (type === 'searchQuery') {
-  //       return { ...prev, searchQuery: value as string }
-  //     }
-  //     if (type === 'withAnyAlarm') {
-  //       return { ...prev, withAnyAlarm: value as boolean }
-  //     }
-  //     // Solo crear Set para tipos que son conjuntos
-  //     return {
-  //       ...prev,
-  //       [type]: new Set(value as Iterable<string>)
-  //     }
-  //   })
-  // }
-
   const handleFilterChange = (
     type: keyof FilterState,
     value: string | Set<string> | boolean | number | null

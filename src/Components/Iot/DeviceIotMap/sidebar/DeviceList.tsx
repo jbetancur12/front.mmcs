@@ -7,11 +7,11 @@ import { DeviceIot } from '../../types'
 export const DeviceList = ({
   devices,
   onSelectDevice,
-  handleShowDeviceGraph
+  onViewDetails
 }: {
   devices: DeviceIot[]
   onSelectDevice: (device: DeviceIot) => void
-  handleShowDeviceGraph: (device: DeviceIot) => void
+  onViewDetails: (device: DeviceIot) => void
 }) => {
   return (
     <List sx={{ overflow: 'auto', maxHeight: '400px' }}>
@@ -20,7 +20,7 @@ export const DeviceList = ({
           key={device.id}
           device={device}
           onSelect={onSelectDevice}
-          handleShowDeviceGraph={handleShowDeviceGraph}
+          onViewDetails={onViewDetails}
         />
       ))}
     </List>
