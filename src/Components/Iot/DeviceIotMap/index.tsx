@@ -1,16 +1,7 @@
 // components/DeviceIotMap/index.tsx
 import 'leaflet/dist/leaflet.css'
 import { useStore } from '@nanostores/react'
-import {
-  Box,
-  CircularProgress,
-  Fab,
-  ListItem,
-  ListItemText,
-  Menu,
-  MenuItem,
-  Tooltip
-} from '@mui/material'
+import { Box, CircularProgress } from '@mui/material'
 import {
   LayersControl,
   MapContainer,
@@ -24,10 +15,10 @@ import { $devicesIot, hasAlarms, loadDevices } from 'src/store/deviceIotStore'
 import { DEFAULT_MAP_CENTER, MAP_LAYERS, MAP_STYLE } from './constants'
 
 import { useMapSetup } from './hooks/useMapSetup'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useDeviceData } from './hooks/useDeviceData'
 import { MapControls } from './parts/MapControls'
-import { DeviceMapController } from './parts/DeviceMapController'
+
 import { DeviceMarkers } from './parts/DeviceMarkers'
 import { DeviceIot } from '../types'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -39,8 +30,6 @@ import L from 'leaflet'
 
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import AlarmNotification from './parts/AlarmNotification.tsx'
-import { Email, Settings } from '@mui/icons-material'
-import { Link } from 'react-router-dom'
 
 function MapController({
   center,
@@ -78,17 +67,13 @@ const DeviceIotMap = () => {
   const [deviceName, setDeviceName] = useState<string>('')
   const [selectedDeviceForGraph, setSelectedDeviceForGraph] =
     useState<DeviceIot | null>(null)
-  const [settingsAnchorEl, setSettingsAnchorEl] = useState<null | HTMLElement>(
-    null
-  )
-  const [showAlertsButton, setShowAlertsButton] = useState(false)
-  const settingsMenuOpen = Boolean(settingsAnchorEl)
 
   const { data: apiDevices } = useQuery(
     ['devices', $user?.customer?.id],
     async () => {
       const response = await axiosPrivate.get('/devicesIot')
       const transformed = response.data.map(transformDevice)
+
       const hasAlarm = response.data.some(
         (device: DeviceIot) => device.isInAlarm
       )
@@ -118,12 +103,6 @@ const DeviceIotMap = () => {
 
   const zoom = selectedDevice ? 13 : defaultZoom
 
-  const handleSettingsClick = (event: React.MouseEvent<HTMLElement>) => {
-    setSettingsAnchorEl(event.currentTarget)
-  }
-  const handleSettingsClose = () => {
-    setSettingsAnchorEl(null)
-  }
   return (
     <>
       {!apiDevices && (
@@ -155,43 +134,7 @@ const DeviceIotMap = () => {
         open={graphDeviceId !== null}
         onClose={() => setGraphDeviceId(null)}
       />
-      <Tooltip title='Configuración'>
-        <Fab
-          color='primary'
-          aria-label='configuración'
-          onClick={handleSettingsClick}
-          sx={{
-            position: 'absolute',
-            bottom: showAlertsButton ? 300 : 130,
-            right: 20,
-            zIndex: 1100
-          }}
-          size='medium'
-        >
-          <Settings />
-        </Fab>
-      </Tooltip>
 
-      {/* Menú de configuración */}
-      <Menu
-        anchorEl={settingsAnchorEl}
-        open={settingsMenuOpen}
-        onClose={handleSettingsClose}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-      >
-        <Link
-          to='/iot/email-settings'
-          style={{ textDecoration: 'none', color: 'inherit' }}
-        >
-          <MenuItem onClick={handleSettingsClose}>
-            <ListItem sx={{ maxWidth: 50 }}>
-              <Email fontSize='small' />
-            </ListItem>
-            <ListItemText primary='Configuración de Email' />
-          </MenuItem>
-        </Link>
-      </Menu>
       <MapControls
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={toggleSidebar}

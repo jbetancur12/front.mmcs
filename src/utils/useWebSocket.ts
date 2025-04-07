@@ -1,14 +1,10 @@
 import { useEffect } from 'react'
 import { DeviceAlarm } from 'src/Components/Iot/DeviceIotMap/types'
-import { DataPayload } from 'src/Components/Iot/types'
+
 import {
-  addRealTimeData,
   hasAlarms,
-  setLatestRealTimeData,
   updateDeviceAlarms,
   updateDeviceAlarmStatus,
-  updateDeviceIotLocation,
-  updateDeviceIotSensorData,
   updateDeviceIotStatus
 } from 'src/store/deviceIotStore'
 
@@ -44,26 +40,23 @@ const useWebSocket = () => {
         if (type === 'REAL_TIME_DATA') {
           // Se asume que el payload para sensor data tiene esta estructura:
           // { type: "data", data: { dev, gps, ts, sen } }
-          const data: DataPayload = message
-          const deviceIotId = data.data.dev
-          const gps = data.data.gps // Ejemplo: [lat, lng]
-          const timestamp = data.timestamp // Ejemplo: timestamp en segundos
-
-          const sen = data.data.sen
-          const src = data.data.pwr.src // Ejemplo: { t: valor, h: valor }
-
-          updateDeviceIotLocation(deviceIotId, gps)
-          updateDeviceIotSensorData(deviceIotId, timestamp, sen)
-          addRealTimeData(data)
-          setLatestRealTimeData(data)
-          updateDeviceIotStatus(deviceIotId, 'online', true, src)
+          // const data: DataPayload = message
+          // const deviceIotId = data.data.dev
+          // const gps = data.data.gps // Ejemplo: [lat, lng]
+          // const timestamp = data.timestamp // Ejemplo: timestamp en segundos
+          // const sen = data.data.sen
+          // const src = data.data.pwr.src // Ejemplo: { t: valor, h: valor }
+          // updateDeviceIotLocation(deviceIotId, gps)
+          // updateDeviceIotSensorData(deviceIotId, timestamp, sen)
+          // addRealTimeData(data)
+          // setLatestRealTimeData(data)
+          // updateDeviceIotStatus(deviceIotId, 'online', true, src)
         }
         if (type === 'ALARM_UPDATE') {
           updateDeviceAlarmStatus(message.data.deviceId, message.data.isInAlarm)
         }
         if (type === 'ALARM_STATUS_UPDATE') {
           const { deviceId, alarms } = message.data
-          console.log('🚀 ~ useEffect ~ alarms:', alarms)
 
           // Convertir a tipos correctos
           const formattedAlarms: DeviceAlarm[] = alarms.map(

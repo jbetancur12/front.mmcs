@@ -1,10 +1,5 @@
 import { atom, action } from 'nanostores'
-import {
-  DataPayload,
-  DeviceIotConfig,
-  SData,
-  type DeviceIot
-} from '../Components/Iot/types'
+import { DataPayload, SData, type DeviceIot } from '../Components/Iot/types'
 import { DeviceAlarm } from 'src/Components/Iot/DeviceIotMap/types'
 
 // Atoms para el estado
@@ -211,7 +206,7 @@ export const hasAlarms = action(
   'hasAlarms',
   (store, data: boolean) => {
     const alarms = store.get()
-    console.log('🚀 ~ data:', data, alarms)
+
     if (data === alarms) return
     store.set(data)
   }

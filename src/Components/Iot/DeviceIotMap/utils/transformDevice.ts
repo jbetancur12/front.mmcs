@@ -1,4 +1,5 @@
 // components/DeviceIotMap/utils/transformDevice.ts
+import { Customer } from 'src/Components/Quotations/types'
 import { DeviceIot } from '../../types'
 
 export const transformDevice = (device: any): DeviceIot => {
@@ -10,11 +11,14 @@ export const transformDevice = (device: any): DeviceIot => {
     lastLocation: { lat, lng },
     lastSeen: new Date(device.lastSeen),
     status: device.isOnline ? 'online' : 'offline',
-    customer: device.customer,
+    customer: (device.customer as Customer) || null,
     customerId: device.customerId,
     isOnline: device.isOnline,
     src: device.src,
-    sensorData: device.sensorData,
+    sensorData: {
+      h: device.lastHumidity,
+      t: device.lastTemperature
+    },
     deviceIotConfigs: device.deviceIotConfigs,
     isInAlarm: device.isInAlarm,
     alarms: device.alarms,

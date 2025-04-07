@@ -24,8 +24,9 @@ import { AlarmSeverity } from '../constants'
 import { format } from 'date-fns'
 import { getPowerSourceIcon, getStatusColor } from '../utils/common'
 import { es } from 'date-fns/locale'
-import { useStore } from '@nanostores/react'
-import { $deviceSensorData } from '@stores/deviceIotStore'
+import useWebSocket from '@utils/use-websockets'
+import { DeviceReadingPayload } from '../types'
+import { useEffect, useState } from 'react'
 
 interface DeviceListItemProps {
   device: DeviceIot
@@ -38,8 +39,50 @@ const DeviceListItem = ({
   onSelect,
   onViewDetails
 }: DeviceListItemProps) => {
-  // Determine status color and icon
-  const DeviceIotSensorData = useStore($deviceSensorData)
+  const { lastDeviceReading } = useWebSocket()
+  const [lastDeviceDataReaded, setLastDeviceDataReaded] =
+    useState<Partial<DeviceReadingPayload> | null>({
+      sen: {
+        t: device?.sensorData?.t || '0',
+        h: device?.sensorData?.h || '0'
+      },
+      gps: [device?.lastLocation.lat ?? 0, device?.lastLocation.lng ?? 0],
+
+      ts: device?.lastSeen ? device.lastSeen.getTime() : undefined
+    })
+
+  // Actualizar el último dato válido cuando coincida el dispositivo
+  useEffect(() => {
+    if (lastDeviceReading?.dev === device?.name) {
+      setLastDeviceDataReaded(lastDeviceReading)
+    }
+  }, [lastDeviceReading, device?.name])
+
+  const currentSensorData =
+    lastDeviceReading?.dev === device?.name
+      ? lastDeviceDataReaded
+      : lastDeviceReading
+
+  const getValue = (type: 't' | 'h' | 'gps' | 'pwr' | 'ts') => {
+    if (!currentSensorData) return 'N/A'
+
+    switch (type) {
+      case 't':
+        return currentSensorData.sen?.t ?? 'N/A'
+      case 'h':
+        return currentSensorData.sen?.h ?? 'N/A'
+      case 'gps':
+        return currentSensorData.gps ? currentSensorData.gps.join(', ') : 'N/A'
+      case 'pwr':
+        return currentSensorData.pwr?.v ? `${currentSensorData.pwr.v}V` : 'N/A'
+      case 'ts':
+        return currentSensorData.ts
+          ? new Date(Number(currentSensorData.ts)).toLocaleString()
+          : 'N/A'
+      default:
+        return 'N/A'
+    }
+  }
 
   const hasActiveAlarms = device.isInAlarm
 
@@ -307,10 +350,7 @@ const DeviceListItem = ({
                     fontSize: '0.875rem'
                   }}
                 >
-                  {DeviceIotSensorData[device.name]?.sensorData &&
-                  DeviceIotSensorData[device.name]?.sensorData.t !== null
-                    ? `${DeviceIotSensorData[device.name]?.sensorData.t}°C`
-                    : '--°C'}
+                  {getValue('t')}°C
                 </Box>
               </Box>
 
@@ -349,10 +389,7 @@ const DeviceListItem = ({
                     fontSize: '0.875rem'
                   }}
                 >
-                  {DeviceIotSensorData[device.name]?.sensorData &&
-                  DeviceIotSensorData[device.name]?.sensorData.h !== null
-                    ? `${DeviceIotSensorData[device.name]?.sensorData.h}%`
-                    : '--%'}
+                  {getValue('h')}%
                 </Box>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -390,14 +427,10 @@ const DeviceListItem = ({
                   sx={{ color: 'text.secondary', fontSize: '0.75rem' }}
                 >
                   Última actualización:{' '}
-                  {DeviceIotSensorData[device.name]?.lastSeen
-                    ? format(
-                        new Date(DeviceIotSensorData[device.name]?.lastSeen),
-                        'MMM dd, HH:mm:ss',
-                        {
-                          locale: es
-                        }
-                      )
+                  {getValue('ts') !== 'N/A'
+                    ? format(new Date(getValue('ts')), 'MMM dd, HH:mm:ss', {
+                        locale: es
+                      })
                     : '---'}
                 </Box>
                 {getPowerSourceIcon(device)}

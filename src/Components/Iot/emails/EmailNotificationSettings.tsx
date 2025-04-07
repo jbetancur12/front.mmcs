@@ -7,10 +7,8 @@ import {
   Alert,
   Divider,
   Chip,
-  IconButton,
   Paper,
-  CircularProgress,
-  Link
+  CircularProgress
 } from '@mui/material'
 import {
   Delete as DeleteIcon,
@@ -21,6 +19,7 @@ import {
 } from '@mui/icons-material'
 import withReactContent from 'sweetalert2-react-content'
 import Swal from 'sweetalert2'
+import useAxiosPrivate from '@utils/use-axios-private'
 // Utilidad para manejar peticiones API
 const apiRequest = async (url: string, options: RequestInit = {}) => {
   const response = await fetch(url, options)
@@ -32,9 +31,14 @@ const apiRequest = async (url: string, options: RequestInit = {}) => {
 
 // Importaciones originales
 
-export const EmailNotificationSettings = () => {
+export const EmailNotificationSettings = ({
+  customerId
+}: {
+  customerId?: number | string
+}) => {
+  const axiosPrivate = useAxiosPrivate()
   const [email, setEmail] = useState('')
-  const [emails, setEmails] = useState<string[]>([])
+  const [emails, setEmails] = useState<any>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -52,10 +56,10 @@ export const EmailNotificationSettings = () => {
     const fetchEmails = async () => {
       try {
         setLoading(true)
-        const response = await apiRequest('/api/notifications/email', {
-          method: 'GET'
-        })
-        setEmails(response.emails || [])
+        const response = await axiosPrivate.get(
+          '/customers/emails-notifications/' + customerId
+        )
+        setEmails(response.data || [])
         setError(null)
       } catch (err) {
         console.error('Error fetching emails:', err)
@@ -82,15 +86,14 @@ export const EmailNotificationSettings = () => {
 
     try {
       setLoading(true)
-      const response = await apiRequest('/api/notifications/email', {
-        method: 'POST',
-        body: JSON.stringify({ email }),
-        headers: {
-          'Content-Type': 'application/json'
+      const response = await axiosPrivate.post(
+        '/customers/emails-notifications/' + customerId,
+        {
+          email
         }
-      })
+      )
 
-      setEmails(response.emails || [])
+      setEmails((prevEmails: any) => [...prevEmails, response.data])
       setEmail('')
       setError(null)
       setSuccess('Correo electrónico añadido correctamente')
@@ -113,18 +116,16 @@ export const EmailNotificationSettings = () => {
   }
 
   // Manejar la eliminación de un email
-  const handleRemoveEmail = async (emailToRemove: string) => {
+  const handleRemoveEmail = async (emailToRemove: number) => {
     try {
       setLoading(true)
-      const response = await apiRequest('/api/notifications/email', {
-        method: 'DELETE',
-        body: JSON.stringify({ email: emailToRemove }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
+      await axiosPrivate.delete(
+        '/customers/emails-notifications/' + emailToRemove
+      )
 
-      setEmails(response.emails || [])
+      setEmails((prevEmails: any) =>
+        prevEmails.filter((emailItem: any) => emailItem.id !== emailToRemove)
+      )
       setError(null)
       setSuccess('Correo electrónico eliminado correctamente')
 
@@ -265,11 +266,11 @@ export const EmailNotificationSettings = () => {
           </Box>
         ) : emails.length > 0 ? (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {emails.map((emailItem) => (
+            {emails.map((emailItem: any) => (
               <Chip
-                key={emailItem}
-                label={emailItem}
-                onDelete={() => handleRemoveEmail(emailItem)}
+                key={emailItem.id}
+                label={emailItem.email}
+                onDelete={() => handleRemoveEmail(emailItem.id)}
                 deleteIcon={<DeleteIcon />}
                 sx={{ mb: 1 }}
               />

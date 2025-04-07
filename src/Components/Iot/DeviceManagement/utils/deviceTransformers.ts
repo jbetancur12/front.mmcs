@@ -1,5 +1,5 @@
 import { Customer } from 'src/Components/Quotations/types'
-import { DeviceIot, DeviceIotConfig, SData } from '../../types'
+import { DeviceIot, DeviceIotConfig } from '../../types'
 
 export const transformDevice = (device: any): DeviceIot => {
   const [lng, lat] = device.lastLocation?.coordinates || [0, 0]
@@ -14,11 +14,9 @@ export const transformDevice = (device: any): DeviceIot => {
     customer: (device.customer as Customer) || null,
     customerId: device.customerId || null,
     isOnline: device.isOnline || false,
-    sensorData: (device.sensorData as SData) || {
-      // Proporcionar estructura por defecto según tu SData
-      temperature: 0,
-      humidity: 0
-      // ...otros campos necesarios
+    sensorData: {
+      h: device.lastHumidity,
+      t: device.lastTemperature
     },
     src: device.src === 'bat' ? 'bat' : 'main',
     deviceIotConfigs: (device.deviceIotConfigs as DeviceIotConfig[]) || [],

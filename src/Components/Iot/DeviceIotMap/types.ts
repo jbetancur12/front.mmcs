@@ -47,3 +47,17 @@ export type DeviceAlarm = {
   createdAt: Date
   lastTriggered?: Date | null // Puede ser null si aún no se ha disparado
 }
+
+export interface DeviceReadingPayload {
+  dev: string
+  ts: number
+  sen: {
+    t: string // temperatura
+    h: string // humedad
+  }
+  gps: [number, number] // [latitud, longitud]
+  pwr: {
+    v: string // voltaje
+    src: string // fuente de energía
+  }
+}

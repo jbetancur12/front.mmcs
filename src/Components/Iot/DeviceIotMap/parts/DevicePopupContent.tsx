@@ -12,8 +12,10 @@ import { DeviceIot } from '../../types'
 import { AlarmSeverity } from '../constants'
 import { getStatusColor } from '../utils/common'
 import { es } from 'date-fns/locale'
-import { useStore } from '@nanostores/react'
-import { $deviceSensorData } from '@stores/deviceIotStore'
+
+import { useEffect, useState } from 'react'
+import { DeviceReadingPayload } from '../types'
+import useWebSocket from '@utils/use-websockets'
 
 interface DevicePopupProps {
   device: DeviceIot
@@ -21,15 +23,58 @@ interface DevicePopupProps {
 }
 
 const DevicePopup = ({ device, onViewDetails }: DevicePopupProps) => {
-  const deviceIotSensorData = useStore($deviceSensorData)
-  const hasActiveAlarms = device.isInAlarm
-  const lastUpdateTime = formatDistanceToNow(
-    new Date(device.name && deviceIotSensorData[device.name]?.lastSeen),
-    {
-      addSuffix: true,
-      locale: es
+  const { lastDeviceReading } = useWebSocket()
+
+  const [lastDeviceDataReaded, setLastDeviceDataReaded] =
+    useState<Partial<DeviceReadingPayload> | null>({
+      sen: {
+        t: device?.sensorData?.t || '0',
+        h: device?.sensorData?.h || '0'
+      },
+      gps: [device?.lastLocation.lat ?? 0, device?.lastLocation.lng ?? 0],
+
+      ts: device?.lastSeen ? device.lastSeen.getTime() : undefined
+    })
+
+  // Actualizar el último dato válido cuando coincida el dispositivo
+  useEffect(() => {
+    if (lastDeviceReading?.dev === device?.name) {
+      setLastDeviceDataReaded(lastDeviceReading)
     }
-  )
+  }, [lastDeviceReading, device?.name])
+
+  const currentSensorData =
+    lastDeviceReading?.dev === device?.name
+      ? lastDeviceDataReaded
+      : lastDeviceReading
+
+  // Función para obtener valores con manejo de fallos
+  const getValue = (type: 't' | 'h' | 'gps' | 'pwr' | 'ts') => {
+    if (!currentSensorData) return 'N/A'
+
+    switch (type) {
+      case 't':
+        return currentSensorData.sen?.t ?? 'N/A'
+      case 'h':
+        return currentSensorData.sen?.h ?? 'N/A'
+      case 'gps':
+        return currentSensorData.gps ? currentSensorData.gps.join(', ') : 'N/A'
+      case 'pwr':
+        return currentSensorData.pwr?.v ? `${currentSensorData.pwr.v}V` : 'N/A'
+      case 'ts':
+        return currentSensorData.ts
+          ? new Date(Number(currentSensorData.ts)).toLocaleString()
+          : 'N/A'
+      default:
+        return 'N/A'
+    }
+  }
+
+  const hasActiveAlarms = device.isInAlarm
+  const lastUpdateTime = formatDistanceToNow(new Date(getValue('ts')), {
+    addSuffix: true,
+    locale: es
+  })
 
   const activeAlarms = device?.alarms.filter(
     (alarm) => alarm.enabled === true && alarm.active === true
@@ -207,10 +252,7 @@ const DevicePopup = ({ device, onViewDetails }: DevicePopupProps) => {
                 : 'inherit'
             }
           >
-            {device.name &&
-            deviceIotSensorData[device.name]?.sensorData !== null
-              ? `Temperatura: ${device?.name && deviceIotSensorData[device.name]?.sensorData.t}°C`
-              : 'Temperatura: --°C'}
+            {`${getValue('t')} °C`}
           </Typography>
         </Box>
 
@@ -258,10 +300,7 @@ const DevicePopup = ({ device, onViewDetails }: DevicePopupProps) => {
                 : 'inherit'
             }
           >
-            {device.name &&
-            deviceIotSensorData[device.name]?.sensorData !== null
-              ? `Humedad: ${device?.name && deviceIotSensorData[device.name]?.sensorData.h}%`
-              : 'Humedad: --°C'}
+            {`${getValue('h')} %`}
           </Typography>
         </Box>
 

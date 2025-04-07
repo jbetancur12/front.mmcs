@@ -86,7 +86,16 @@ export const DeviceSidebar = ({
             filterState={filterState}
             onFilterChange={onFilterChange}
           />
-
+          <Box
+            sx={{ display: 'flex', justifyContent: 'flex-end', px: 2, mt: 1 }}
+          >
+            <Typography
+              variant='subtitle2'
+              sx={{ color: 'gray', fontWeight: 'bold' }}
+            >
+              Total: {filteredDevices.length}
+            </Typography>
+          </Box>
           <DeviceList
             devices={filteredDevices}
             onSelectDevice={onSelectDevice}

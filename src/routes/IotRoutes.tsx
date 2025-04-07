@@ -5,6 +5,9 @@ import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
 const Iot = lazy(() => import('../pages/Iot/Iot'))
 const DeviceList = lazy(() => import('../pages/Iot/DeviceList'))
 const EmailSettingsPage = lazy(() => import('../pages/Iot/EmailSettingsPage'))
+const CustomersManagement = lazy(
+  () => import('../pages/Iot/CustomersManagement')
+)
 
 const IotRoutes = (role: string[]) => {
   return (
@@ -22,6 +25,10 @@ const IotRoutes = (role: string[]) => {
           <Route index element={<DeviceList />} />
           <Route path='map' element={<Iot />} />
           <Route path='email-settings' element={<EmailSettingsPage />} />
+          <Route
+            path='customers-management'
+            element={<CustomersManagement />}
+          />
         </Route>
       </Route>
     </>

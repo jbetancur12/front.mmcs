@@ -1,7 +1,7 @@
 // components/DeviceGraphs/GraphDrawer/tabs/DeviceDetailPanel.tsx
 import { Alert, Badge, Box, Chip, Grid, Paper, Typography } from '@mui/material'
 
-import { DataPayload, DeviceIot } from '../../types'
+import { DeviceIot } from '../../types'
 import {
   getConnectionIcon,
   getStatusColor
@@ -16,21 +16,58 @@ import {
 } from '@mui/icons-material'
 import { format } from 'date-fns'
 import { AlarmSeverity } from '../../DeviceIotMap/constants'
-import { DeviceAlarm } from '../../DeviceIotMap/types'
+import { DeviceAlarm, DeviceReadingPayload } from '../../DeviceIotMap/types'
 import { es } from 'date-fns/locale'
-import { useStore } from '@nanostores/react'
-import { $deviceSensorData, $devicesIot } from '@stores/deviceIotStore'
+import useWebSocket from '@utils/use-websockets'
+import { useEffect, useState } from 'react'
 
 interface SummaryTabProps {
-  lastEntry?: any
-  lastTemperature: number | string
-  lastHumidity: number | string
-  deviceName?: string
   device: DeviceIot | null
 }
 
 export const DeviceDetailPanel = ({ device }: SummaryTabProps) => {
-  const DeviceIotSensorData = useStore($deviceSensorData)
+  const { lastDeviceReading } = useWebSocket()
+
+  const [lastDeviceDataReaded, setLastDeviceDataReaded] =
+    useState<Partial<DeviceReadingPayload> | null>({
+      sen: {
+        t: device?.sensorData?.t || '0',
+        h: device?.sensorData?.h || '0'
+      },
+      gps: [device?.lastLocation.lat ?? 0, device?.lastLocation.lng ?? 0],
+
+      ts: device?.lastSeen ? device.lastSeen.getTime() : undefined
+    })
+
+  // Actualizar el último dato válido cuando coincida el dispositivo
+  useEffect(() => {
+    if (lastDeviceReading?.dev === device?.name) {
+      setLastDeviceDataReaded(lastDeviceReading)
+    }
+  }, [lastDeviceReading, device?.name])
+
+  const currentSensorData =
+    lastDeviceReading?.dev === device?.name
+      ? lastDeviceDataReaded
+      : lastDeviceReading
+
+  // Función para obtener valores con manejo de fallos
+  const getValue = (type: 't' | 'h' | 'gps' | 'pwr') => {
+    if (!currentSensorData) return 'N/A'
+
+    switch (type) {
+      case 't':
+        return currentSensorData.sen?.t ?? 'N/A'
+      case 'h':
+        return currentSensorData.sen?.h ?? 'N/A'
+      case 'gps':
+        return currentSensorData.gps ? currentSensorData.gps.join(', ') : 'N/A'
+      case 'pwr':
+        return currentSensorData.pwr?.v ? `${currentSensorData.pwr.v}V` : 'N/A'
+      default:
+        return 'N/A'
+    }
+  }
 
   const hasActiveAlarms = device?.isInAlarm
   const activeAlarms = device?.alarms.filter(
@@ -70,14 +107,9 @@ export const DeviceDetailPanel = ({ device }: SummaryTabProps) => {
             {hasActiveAlarms ? (
               <Badge
                 badgeContent={<Warning fontSize='small' color='error' />}
-                sx={{
-                  '& .MuiBadge-badge': {
-                    right: -15,
-                    top: 5
-                  }
-                }}
+                sx={{ '& .MuiBadge-badge': { right: -15, top: 5 } }}
               >
-                {device.name}
+                {device?.name}
               </Badge>
             ) : (
               device?.name
@@ -164,10 +196,7 @@ export const DeviceDetailPanel = ({ device }: SummaryTabProps) => {
                 Coordenadas
               </Typography>
             </Box>
-            <Typography variant='h6'>
-              {device?.lastLocation &&
-                Object.values(device?.lastLocation).join(', ')}
-            </Typography>
+            <Typography variant='h6'>{getValue('gps')}</Typography>
           </Paper>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
@@ -217,14 +246,10 @@ export const DeviceDetailPanel = ({ device }: SummaryTabProps) => {
             </Typography>
             <Typography variant='caption' color='text.secondary'>
               Última actualización:{' '}
-              {device?.name && DeviceIotSensorData[device.name]?.lastSeen
-                ? format(
-                    new Date(DeviceIotSensorData[device.name]?.lastSeen),
-                    'MMM dd, HH:mm:ss',
-                    {
-                      locale: es
-                    }
-                  )
+              {currentSensorData?.ts
+                ? format(new Date(currentSensorData.ts), 'MMM dd, HH:mm:ss', {
+                    locale: es
+                  })
                 : '---'}
             </Typography>
           </Paper>
@@ -274,115 +299,138 @@ export const DeviceDetailPanel = ({ device }: SummaryTabProps) => {
         )}
       </Box>
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        {device?.name && DeviceIotSensorData[device.name]?.sensorData.t && (
-          <Grid item xs={12} sm={6} md={4}>
-            <Paper
-              sx={{
-                p: 3,
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                position: 'relative',
-                overflow: 'hidden',
-                ...(hasActiveAlarms &&
-                  activeAlarms?.some(
-                    (alarm: DeviceAlarm) => alarm.metric === 'temperature'
-                  ) &&
-                  (() => {
-                    const tempAlarm = activeAlarms.find(
-                      (a: DeviceAlarm) => a.metric === 'temperature'
-                    )
-                    return {
-                      border: '2px solid',
-                      borderColor:
-                        tempAlarm?.severity === AlarmSeverity.INFO
-                          ? 'info.main'
-                          : tempAlarm?.severity === AlarmSeverity.WARNING
-                            ? 'warning.main'
-                            : 'error.main',
-                      boxShadow:
-                        tempAlarm?.severity === AlarmSeverity.INFO
-                          ? '0 0 15px rgba(0, 100, 255, 0.3)'
-                          : tempAlarm?.severity === AlarmSeverity.WARNING
-                            ? '0 0 15px rgba(255, 200, 0, 0.3)'
-                            : '0 0 15px rgba(255, 0, 0, 0.3)'
-                    }
-                  })())
-              }}
-            >
-              {hasActiveAlarms &&
+        <Grid item xs={12} sm={6} md={4}>
+          <Paper
+            sx={{
+              p: 3,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              position: 'relative',
+              overflow: 'hidden',
+              ...(hasActiveAlarms &&
                 activeAlarms?.some(
                   (alarm: DeviceAlarm) => alarm.metric === 'temperature'
-                ) && (
-                  <>
-                    {
-                      activeAlarms
-                        .filter(
-                          (alarm: DeviceAlarm) => alarm.metric === 'temperature'
-                        )
-                        .map((alarm: DeviceAlarm) => (
-                          <Box
-                            key={alarm.id}
-                            sx={{
-                              position: 'absolute',
-                              top: 10,
-                              right: 10,
-                              bgcolor:
-                                alarm.severity === AlarmSeverity.INFO
-                                  ? 'info.main'
-                                  : alarm.severity === AlarmSeverity.WARNING
-                                    ? 'warning.main'
-                                    : 'error.main',
-                              borderRadius: '50%',
-                              width: 32,
-                              height: 32,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              animation: 'pulse 1.5s infinite',
-                              '@keyframes pulse': {
-                                '0%': {
-                                  boxShadow:
-                                    alarm.severity === AlarmSeverity.INFO
-                                      ? '0 0 0 0 rgba(0, 100, 255, 0.4)'
-                                      : alarm.severity === AlarmSeverity.WARNING
-                                        ? '0 0 0 0 rgba(255, 200, 0, 0.4)'
-                                        : '0 0 0 0 rgba(255, 0, 0, 0.4)'
-                                },
-                                '70%': {
-                                  boxShadow:
-                                    alarm.severity === AlarmSeverity.INFO
-                                      ? '0 0 0 10px rgba(0, 100, 255, 0)'
-                                      : alarm.severity === AlarmSeverity.WARNING
-                                        ? '0 0 0 10px rgba(255, 200, 0, 0)'
-                                        : '0 0 0 10px rgba(255, 0, 0, 0)'
-                                },
-                                '100%': {
-                                  boxShadow:
-                                    alarm.severity === AlarmSeverity.INFO
-                                      ? '0 0 0 0 rgba(0, 100, 255, 0)'
-                                      : alarm.severity === AlarmSeverity.WARNING
-                                        ? '0 0 0 0 rgba(255, 200, 0, 0)'
-                                        : '0 0 0 0 rgba(255, 0, 0, 0)'
-                                }
+                ) &&
+                (() => {
+                  const tempAlarm = activeAlarms.find(
+                    (a: DeviceAlarm) => a.metric === 'temperature'
+                  )
+                  return {
+                    border: '2px solid',
+                    borderColor:
+                      tempAlarm?.severity === AlarmSeverity.INFO
+                        ? 'info.main'
+                        : tempAlarm?.severity === AlarmSeverity.WARNING
+                          ? 'warning.main'
+                          : 'error.main',
+                    boxShadow:
+                      tempAlarm?.severity === AlarmSeverity.INFO
+                        ? '0 0 15px rgba(0, 100, 255, 0.3)'
+                        : tempAlarm?.severity === AlarmSeverity.WARNING
+                          ? '0 0 15px rgba(255, 200, 0, 0.3)'
+                          : '0 0 15px rgba(255, 0, 0, 0.3)'
+                  }
+                })())
+            }}
+          >
+            {hasActiveAlarms &&
+              activeAlarms?.some(
+                (alarm: DeviceAlarm) => alarm.metric === 'temperature'
+              ) && (
+                <>
+                  {
+                    activeAlarms
+                      .filter(
+                        (alarm: DeviceAlarm) => alarm.metric === 'temperature'
+                      )
+                      .map((alarm: DeviceAlarm) => (
+                        <Box
+                          key={alarm.id}
+                          sx={{
+                            position: 'absolute',
+                            top: 10,
+                            right: 10,
+                            bgcolor:
+                              alarm.severity === AlarmSeverity.INFO
+                                ? 'info.main'
+                                : alarm.severity === AlarmSeverity.WARNING
+                                  ? 'warning.main'
+                                  : 'error.main',
+                            borderRadius: '50%',
+                            width: 32,
+                            height: 32,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            animation: 'pulse 1.5s infinite',
+                            '@keyframes pulse': {
+                              '0%': {
+                                boxShadow:
+                                  alarm.severity === AlarmSeverity.INFO
+                                    ? '0 0 0 0 rgba(0, 100, 255, 0.4)'
+                                    : alarm.severity === AlarmSeverity.WARNING
+                                      ? '0 0 0 0 rgba(255, 200, 0, 0.4)'
+                                      : '0 0 0 0 rgba(255, 0, 0, 0.4)'
+                              },
+                              '70%': {
+                                boxShadow:
+                                  alarm.severity === AlarmSeverity.INFO
+                                    ? '0 0 0 10px rgba(0, 100, 255, 0)'
+                                    : alarm.severity === AlarmSeverity.WARNING
+                                      ? '0 0 0 10px rgba(255, 200, 0, 0)'
+                                      : '0 0 0 10px rgba(255, 0, 0, 0)'
+                              },
+                              '100%': {
+                                boxShadow:
+                                  alarm.severity === AlarmSeverity.INFO
+                                    ? '0 0 0 0 rgba(0, 100, 255, 0)'
+                                    : alarm.severity === AlarmSeverity.WARNING
+                                      ? '0 0 0 0 rgba(255, 200, 0, 0)'
+                                      : '0 0 0 0 rgba(255, 0, 0, 0)'
                               }
-                            }}
-                          >
-                            {alarm.severity === AlarmSeverity.INFO ? (
-                              <Info sx={{ color: 'white', fontSize: 20 }} />
-                            ) : alarm.severity === AlarmSeverity.WARNING ? (
-                              <Warning sx={{ color: 'white', fontSize: 20 }} />
-                            ) : (
-                              <Warning sx={{ color: 'white', fontSize: 20 }} />
-                            )}
-                          </Box>
-                        ))[0]
-                    }
-                  </>
-                )}
-              <Thermostat
-                color={
+                            }
+                          }}
+                        >
+                          {alarm.severity === AlarmSeverity.INFO ? (
+                            <Info sx={{ color: 'white', fontSize: 20 }} />
+                          ) : alarm.severity === AlarmSeverity.WARNING ? (
+                            <Warning sx={{ color: 'white', fontSize: 20 }} />
+                          ) : (
+                            <Warning sx={{ color: 'white', fontSize: 20 }} />
+                          )}
+                        </Box>
+                      ))[0]
+                  }
+                </>
+              )}
+            <Thermostat
+              color={
+                hasActiveAlarms &&
+                activeAlarms?.some(
+                  (alarm: DeviceAlarm) => alarm.metric === 'temperature'
+                )
+                  ? (() => {
+                      const tempAlarm = activeAlarms.find(
+                        (a: DeviceAlarm) => a.metric === 'temperature'
+                      )
+                      return tempAlarm?.severity === AlarmSeverity.INFO
+                        ? 'info'
+                        : tempAlarm?.severity === AlarmSeverity.WARNING
+                          ? 'warning'
+                          : 'error'
+                    })()
+                  : 'primary'
+              }
+              sx={{ fontSize: 48, mb: 2 }}
+            />
+            <Typography
+              variant='h3'
+              sx={{
+                mb: 1,
+                fontWeight: 'bold',
+                color:
                   hasActiveAlarms &&
                   activeAlarms?.some(
                     (alarm: DeviceAlarm) => alarm.metric === 'temperature'
@@ -392,156 +440,154 @@ export const DeviceDetailPanel = ({ device }: SummaryTabProps) => {
                           (a: DeviceAlarm) => a.metric === 'temperature'
                         )
                         return tempAlarm?.severity === AlarmSeverity.INFO
-                          ? 'info'
-                          : tempAlarm?.severity === AlarmSeverity.WARNING
-                            ? 'warning'
-                            : 'error'
-                      })()
-                    : 'primary'
-                }
-                sx={{ fontSize: 48, mb: 2 }}
-              />
-              <Typography
-                variant='h3'
-                sx={{
-                  mb: 1,
-                  fontWeight: 'bold',
-                  color:
-                    hasActiveAlarms &&
-                    activeAlarms?.some(
-                      (alarm: DeviceAlarm) => alarm.metric === 'temperature'
-                    )
-                      ? (() => {
-                          const tempAlarm = activeAlarms.find(
-                            (a: DeviceAlarm) => a.metric === 'temperature'
-                          )
-                          return tempAlarm?.severity === AlarmSeverity.INFO
-                            ? 'info.main'
-                            : tempAlarm?.severity === AlarmSeverity.WARNING
-                              ? 'warning.main'
-                              : 'error.main'
-                        })()
-                      : 'inherit'
-                }}
-              >
-                {device?.name && DeviceIotSensorData[device.name]?.sensorData.t}
-                °C
-              </Typography>
-              <Typography variant='subtitle1' color='text.secondary'>
-                Temperature
-              </Typography>
-            </Paper>
-          </Grid>
-        )}
-        {device?.name && DeviceIotSensorData[device.name]?.sensorData.h && (
-          <Grid item xs={12} sm={6} md={4}>
-            <Paper
-              sx={{
-                p: 3,
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                position: 'relative',
-                overflow: 'hidden',
-                ...(hasActiveAlarms &&
-                  activeAlarms?.some(
-                    (alarm: DeviceAlarm) => alarm.metric === 'humidity'
-                  ) &&
-                  (() => {
-                    const humidityAlarm = activeAlarms.find(
-                      (a: DeviceAlarm) => a.metric === 'humidity'
-                    )
-                    return {
-                      border: '2px solid',
-                      borderColor:
-                        humidityAlarm?.severity === AlarmSeverity.INFO
                           ? 'info.main'
-                          : humidityAlarm?.severity === AlarmSeverity.WARNING
+                          : tempAlarm?.severity === AlarmSeverity.WARNING
                             ? 'warning.main'
-                            : 'error.main',
-                      boxShadow:
-                        humidityAlarm?.severity === AlarmSeverity.INFO
-                          ? '0 0 15px rgba(0, 100, 255, 0.3)'
-                          : humidityAlarm?.severity === AlarmSeverity.WARNING
-                            ? '0 0 15px rgba(255, 200, 0, 0.3)'
-                            : '0 0 15px rgba(255, 0, 0, 0.3)'
-                    }
-                  })())
+                            : 'error.main'
+                      })()
+                    : 'inherit'
               }}
             >
-              {hasActiveAlarms &&
+              {getValue('t')}°C
+            </Typography>
+            <Typography variant='subtitle1' color='text.secondary'>
+              Temperature
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4}>
+          <Paper
+            sx={{
+              p: 3,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              position: 'relative',
+              overflow: 'hidden',
+              ...(hasActiveAlarms &&
                 activeAlarms?.some(
                   (alarm: DeviceAlarm) => alarm.metric === 'humidity'
-                ) && (
-                  <>
-                    {
-                      activeAlarms
-                        .filter(
-                          (alarm: DeviceAlarm) => alarm.metric === 'humidity'
-                        )
-                        .map((alarm: DeviceAlarm) => (
-                          <Box
-                            key={alarm.id}
-                            sx={{
-                              position: 'absolute',
-                              top: 10,
-                              right: 10,
-                              bgcolor:
-                                alarm.severity === AlarmSeverity.INFO
-                                  ? 'info.main'
-                                  : alarm.severity === AlarmSeverity.WARNING
-                                    ? 'warning.main'
-                                    : 'error.main',
-                              borderRadius: '50%',
-                              width: 32,
-                              height: 32,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              animation: 'pulse 1.5s infinite',
-                              '@keyframes pulse': {
-                                '0%': {
-                                  boxShadow:
-                                    alarm.severity === AlarmSeverity.INFO
-                                      ? '0 0 0 0 rgba(0, 100, 255, 0.4)'
-                                      : alarm.severity === AlarmSeverity.WARNING
-                                        ? '0 0 0 0 rgba(255, 200, 0, 0.4)'
-                                        : '0 0 0 0 rgba(255, 0, 0, 0.4)'
-                                },
-                                '70%': {
-                                  boxShadow:
-                                    alarm.severity === AlarmSeverity.INFO
-                                      ? '0 0 0 10px rgba(0, 100, 255, 0)'
-                                      : alarm.severity === AlarmSeverity.WARNING
-                                        ? '0 0 0 10px rgba(255, 200, 0, 0)'
-                                        : '0 0 0 10px rgba(255, 0, 0, 0)'
-                                },
-                                '100%': {
-                                  boxShadow:
-                                    alarm.severity === AlarmSeverity.INFO
-                                      ? '0 0 0 0 rgba(0, 100, 255, 0)'
-                                      : alarm.severity === AlarmSeverity.WARNING
-                                        ? '0 0 0 0 rgba(255, 200, 0, 0)'
-                                        : '0 0 0 0 rgba(255, 0, 0, 0)'
-                                }
+                ) &&
+                (() => {
+                  const humidityAlarm = activeAlarms.find(
+                    (a: DeviceAlarm) => a.metric === 'humidity'
+                  )
+                  return {
+                    border: '2px solid',
+                    borderColor:
+                      humidityAlarm?.severity === AlarmSeverity.INFO
+                        ? 'info.main'
+                        : humidityAlarm?.severity === AlarmSeverity.WARNING
+                          ? 'warning.main'
+                          : 'error.main',
+                    boxShadow:
+                      humidityAlarm?.severity === AlarmSeverity.INFO
+                        ? '0 0 15px rgba(0, 100, 255, 0.3)'
+                        : humidityAlarm?.severity === AlarmSeverity.WARNING
+                          ? '0 0 15px rgba(255, 200, 0, 0.3)'
+                          : '0 0 15px rgba(255, 0, 0, 0.3)'
+                  }
+                })())
+            }}
+          >
+            {hasActiveAlarms &&
+              activeAlarms?.some(
+                (alarm: DeviceAlarm) => alarm.metric === 'humidity'
+              ) && (
+                <>
+                  {
+                    activeAlarms
+                      .filter(
+                        (alarm: DeviceAlarm) => alarm.metric === 'humidity'
+                      )
+                      .map((alarm: DeviceAlarm) => (
+                        <Box
+                          key={alarm.id}
+                          sx={{
+                            position: 'absolute',
+                            top: 10,
+                            right: 10,
+                            bgcolor:
+                              alarm.severity === AlarmSeverity.INFO
+                                ? 'info.main'
+                                : alarm.severity === AlarmSeverity.WARNING
+                                  ? 'warning.main'
+                                  : 'error.main',
+                            borderRadius: '50%',
+                            width: 32,
+                            height: 32,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            animation: 'pulse 1.5s infinite',
+                            '@keyframes pulse': {
+                              '0%': {
+                                boxShadow:
+                                  alarm.severity === AlarmSeverity.INFO
+                                    ? '0 0 0 0 rgba(0, 100, 255, 0.4)'
+                                    : alarm.severity === AlarmSeverity.WARNING
+                                      ? '0 0 0 0 rgba(255, 200, 0, 0.4)'
+                                      : '0 0 0 0 rgba(255, 0, 0, 0.4)'
+                              },
+                              '70%': {
+                                boxShadow:
+                                  alarm.severity === AlarmSeverity.INFO
+                                    ? '0 0 0 10px rgba(0, 100, 255, 0)'
+                                    : alarm.severity === AlarmSeverity.WARNING
+                                      ? '0 0 0 10px rgba(255, 200, 0, 0)'
+                                      : '0 0 0 10px rgba(255, 0, 0, 0)'
+                              },
+                              '100%': {
+                                boxShadow:
+                                  alarm.severity === AlarmSeverity.INFO
+                                    ? '0 0 0 0 rgba(0, 100, 255, 0)'
+                                    : alarm.severity === AlarmSeverity.WARNING
+                                      ? '0 0 0 0 rgba(255, 200, 0, 0)'
+                                      : '0 0 0 0 rgba(255, 0, 0, 0)'
                               }
-                            }}
-                          >
-                            {alarm.severity === AlarmSeverity.INFO ? (
-                              <Info sx={{ color: 'white', fontSize: 20 }} />
-                            ) : alarm.severity === AlarmSeverity.WARNING ? (
-                              <Warning sx={{ color: 'white', fontSize: 20 }} />
-                            ) : (
-                              <Warning sx={{ color: 'white', fontSize: 20 }} />
-                            )}
-                          </Box>
-                        ))[0]
-                    }
-                  </>
-                )}
-              <Opacity
-                color={
+                            }
+                          }}
+                        >
+                          {alarm.severity === AlarmSeverity.INFO ? (
+                            <Info sx={{ color: 'white', fontSize: 20 }} />
+                          ) : alarm.severity === AlarmSeverity.WARNING ? (
+                            <Warning sx={{ color: 'white', fontSize: 20 }} />
+                          ) : (
+                            <Warning sx={{ color: 'white', fontSize: 20 }} />
+                          )}
+                        </Box>
+                      ))[0]
+                  }
+                </>
+              )}
+            <Opacity
+              color={
+                hasActiveAlarms &&
+                activeAlarms?.some(
+                  (alarm: DeviceAlarm) => alarm.metric === 'humidity'
+                )
+                  ? (() => {
+                      const humidityAlarm = activeAlarms.find(
+                        (a: DeviceAlarm) => a.metric === 'humidity'
+                      )
+                      return humidityAlarm?.severity === AlarmSeverity.INFO
+                        ? 'info'
+                        : humidityAlarm?.severity === AlarmSeverity.WARNING
+                          ? 'warning'
+                          : 'error'
+                    })()
+                  : 'primary'
+              }
+              sx={{ fontSize: 48, mb: 2 }}
+            />
+            <Typography
+              variant='h3'
+              sx={{
+                mb: 1,
+                fontWeight: 'bold',
+                color:
                   hasActiveAlarms &&
                   activeAlarms?.some(
                     (alarm: DeviceAlarm) => alarm.metric === 'humidity'
@@ -551,47 +597,21 @@ export const DeviceDetailPanel = ({ device }: SummaryTabProps) => {
                           (a: DeviceAlarm) => a.metric === 'humidity'
                         )
                         return humidityAlarm?.severity === AlarmSeverity.INFO
-                          ? 'info'
+                          ? 'info.main'
                           : humidityAlarm?.severity === AlarmSeverity.WARNING
-                            ? 'warning'
-                            : 'error'
+                            ? 'warning.main'
+                            : 'error.main'
                       })()
-                    : 'primary'
-                }
-                sx={{ fontSize: 48, mb: 2 }}
-              />
-              <Typography
-                variant='h3'
-                sx={{
-                  mb: 1,
-                  fontWeight: 'bold',
-                  color:
-                    hasActiveAlarms &&
-                    activeAlarms?.some(
-                      (alarm: DeviceAlarm) => alarm.metric === 'humidity'
-                    )
-                      ? (() => {
-                          const humidityAlarm = activeAlarms.find(
-                            (a: DeviceAlarm) => a.metric === 'humidity'
-                          )
-                          return humidityAlarm?.severity === AlarmSeverity.INFO
-                            ? 'info.main'
-                            : humidityAlarm?.severity === AlarmSeverity.WARNING
-                              ? 'warning.main'
-                              : 'error.main'
-                        })()
-                      : 'inherit'
-                }}
-              >
-                {device?.name && DeviceIotSensorData[device.name]?.sensorData.h}
-                %
-              </Typography>
-              <Typography variant='subtitle1' color='text.secondary'>
-                Humedad
-              </Typography>
-            </Paper>
-          </Grid>
-        )}
+                    : 'inherit'
+              }}
+            >
+              {getValue('h')}%
+            </Typography>
+            <Typography variant='subtitle1' color='text.secondary'>
+              Humedad
+            </Typography>
+          </Paper>
+        </Grid>
       </Grid>
     </Box>
   )

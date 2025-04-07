@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
-import { $latestRealTimeData, $realTimeData } from 'src/store/deviceIotStore'
+import { $realTimeData } from 'src/store/deviceIotStore'
 import { Drawer, Box, Tabs, Tab } from '@mui/material'
 
 import { DrawerHeader } from './parts/Header'
@@ -50,8 +50,6 @@ const GraphDrawer = ({
 }: GraphDrawerProps) => {
   const realTimeData = useStore($realTimeData)
 
-  const latestRealTimeData = useStore($latestRealTimeData)
-
   const [selectedRange, setSelectedRange] = useState<RangeOption>(
     RANGE_OPTIONS[0]
   )
@@ -75,7 +73,6 @@ const GraphDrawer = ({
   const lilygoData = realTimeData?.[deviceName] || []
   const lastEntry = lilygoData[lilygoData.length - 1] || null
   const status = lastEntry ? 'Online' : 'Offline'
-  const deviceLastData = latestRealTimeData?.[deviceName] || []
 
   const currentDevice = device
 
@@ -125,14 +122,7 @@ const GraphDrawer = ({
 
         <Box sx={{ p: 3 }}>
           <TabPanel value={tabValue} index={0}>
-            <DeviceDetailPanel
-              device={currentDevice}
-              deviceName={deviceName}
-              deviceLastData={deviceLastData}
-              lastEntry={lastEntry}
-              lastTemperature={lastEntry?.data?.sen.t || 0}
-              lastHumidity={lastEntry?.data?.sen.h || 0}
-            />
+            <DeviceDetailPanel device={currentDevice} />
           </TabPanel>
 
           <TabPanel value={tabValue} index={1}>
