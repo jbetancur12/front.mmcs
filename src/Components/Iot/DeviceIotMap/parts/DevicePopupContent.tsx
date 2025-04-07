@@ -23,8 +23,7 @@ interface DevicePopupProps {
 }
 
 const DevicePopup = ({ device, onViewDetails }: DevicePopupProps) => {
-  const { lastDeviceReading } = useWebSocket()
-
+  const { deviceReadings } = useWebSocket()
   const [lastDeviceDataReaded, setLastDeviceDataReaded] =
     useState<Partial<DeviceReadingPayload> | null>({
       sen: {
@@ -32,21 +31,18 @@ const DevicePopup = ({ device, onViewDetails }: DevicePopupProps) => {
         h: device?.sensorData?.h || '0'
       },
       gps: [device?.lastLocation.lat ?? 0, device?.lastLocation.lng ?? 0],
-
       ts: device?.lastSeen ? device.lastSeen.getTime() : undefined
     })
 
   // Actualizar el último dato válido cuando coincida el dispositivo
   useEffect(() => {
-    if (lastDeviceReading?.dev === device?.name) {
-      setLastDeviceDataReaded(lastDeviceReading)
+    const latestReading = deviceReadings[device?.name || '']
+    if (latestReading) {
+      setLastDeviceDataReaded(latestReading)
     }
-  }, [lastDeviceReading, device?.name])
+  }, [deviceReadings, device?.name])
 
-  const currentSensorData =
-    lastDeviceReading?.dev === device?.name
-      ? lastDeviceDataReaded
-      : lastDeviceReading
+  const currentSensorData = lastDeviceDataReaded
 
   // Función para obtener valores con manejo de fallos
   const getValue = (type: 't' | 'h' | 'gps' | 'pwr' | 'ts') => {

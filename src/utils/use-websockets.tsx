@@ -17,6 +17,7 @@ interface WebSocketMessage {
 interface WebSocketContextValue {
   lastMessage: WebSocketMessage | null
   lastDeviceReading: DeviceReadingPayload | null
+  deviceReadings: Record<string, DeviceReadingPayload>
   status: 'connecting' | 'connected' | 'error' | 'closed'
 }
 
@@ -41,6 +42,10 @@ const wss = () => {
 
 export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null)
+  const [deviceReadings, setDeviceReadings] = useState<
+    Record<string, DeviceReadingPayload>
+  >({})
+
   const [lastDeviceReading, setLastDeviceReading] =
     useState<DeviceReadingPayload | null>(null)
   const [status, setStatus] = useState<
@@ -101,6 +106,15 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
           switch (message.type) {
             case 'REAL_TIME_DATA':
               setLastDeviceReading({ ...message.data, ts: new Date() }) // Assuming the payload has a timestamp
+              const reading: DeviceReadingPayload = {
+                ...message.data,
+                ts: Date.now() // o new Date().getTime()
+              }
+
+              setDeviceReadings((prev) => ({
+                ...prev,
+                [reading.dev]: reading
+              }))
 
               break
 
@@ -136,6 +150,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
 
   const value: WebSocketContextValue = {
     lastMessage,
+    deviceReadings,
     lastDeviceReading,
     status
   }
