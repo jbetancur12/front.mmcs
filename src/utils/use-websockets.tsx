@@ -36,7 +36,7 @@ const wss = () => {
       ? import.meta.env.VITE_WS_URL + '?token=' + token // Usar localhost si estás en casa
       : import.meta.env.VITE_WS_URL_CLOUDFARE + '?token=' + token // Usar Cloudflare si estás fuera
   } else {
-    return import.meta.env.VITE_WS_URL
+    return import.meta.env.VITE_WS_URL + '?token=' + token
   }
 }
 

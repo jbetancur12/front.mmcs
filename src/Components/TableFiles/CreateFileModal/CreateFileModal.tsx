@@ -13,7 +13,8 @@ import {
   FormControl,
   FormLabel,
   Select,
-  MenuItem
+  MenuItem,
+  InputLabel
 } from '@mui/material'
 import { DatePicker } from '@mui/x-date-pickers'
 import { CloudUpload } from '@mui/icons-material'
@@ -199,30 +200,39 @@ export const CreateFileModal = ({
             defaultOptions={$certificateTypeStore}
             styles={styles(true)}
           />
-
-          <Select
-            placeholder='Seleccionar Sede'
-            value={values.headquarter || ''}
-            onChange={(e) =>
-              setValues({
-                ...values,
-                headquarter: e.target.value,
-                sede: e.target.value
-              })
-            }
-          >
-            {sedes?.map((sede) => (
-              <MenuItem key={sede} value={sede}>
-                {sede}
-              </MenuItem>
-            ))}
-          </Select>
+          <FormControl fullWidth variant='outlined'>
+            {' '}
+            {/* fullWidth es opcional, variant puede ser "outlined", "filled", "standard" */}
+            <InputLabel id='sede-select-label'>Seleccionar Sede</InputLabel>
+            <Select
+              placeholder='Seleccionar Sede'
+              value={values.headquarter || ''}
+              onChange={(e) =>
+                setValues({
+                  ...values,
+                  headquarter: e.target.value
+                })
+              }
+            >
+              {sedes?.map((sede) => (
+                <MenuItem key={sede} value={sede}>
+                  {sede}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
           <TextField
             label='Ciudad'
             name='city'
             value={values.city || ''}
             onChange={(e) => setValues({ ...values, city: e.target.value })}
+          />
+          <TextField
+            label='Dirección'
+            name='sede'
+            value={values.sede || ''}
+            onChange={(e) => setValues({ ...values, sede: e.target.value })}
           />
 
           <TextField

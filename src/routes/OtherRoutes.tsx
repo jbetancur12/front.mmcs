@@ -1,7 +1,7 @@
 import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
-import BandwidthStats from 'src/pages/BandWidth'
+import BandwidthStats from 'src/pages/Bandwith/BandWidth'
 import WelcomeScreen from 'src/pages/Welcome' // Asegúrate de tener este componente
 
 const Dashboard = lazy(() => import('../pages/Dashboard'))
