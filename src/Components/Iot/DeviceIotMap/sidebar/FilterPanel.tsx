@@ -113,7 +113,7 @@ export const FilterPanel = ({
 }) => {
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
-  const [filtersCollapsed, setFiltersCollapsed] = useState(false)
+  const [filtersCollapsed, setFiltersCollapsed] = useState(true)
 
   const loadOptionsClient = useCallback(
     debounce(async (inputValue: string) => {

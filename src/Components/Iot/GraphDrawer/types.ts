@@ -85,6 +85,9 @@ export interface GaugeConfig {
 }
 
 export interface RangeOption {
-  label: string
-  hours: number
+  label: string;
+  hours?: number;
+  isCustom?: boolean;
+  startDate?: Date;
+  endDate?: Date;
 }

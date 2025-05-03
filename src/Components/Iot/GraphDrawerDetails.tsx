@@ -88,7 +88,7 @@ const GraphDrawer = ({
   const { startDateStr, endDateStr } = useMemo(() => {
     const endDate = new Date()
     const startDate = new Date(
-      endDate.getTime() - selectedRange.hours * 60 * 60 * 1000
+      endDate.getTime() - (selectedRange?.hours ?? 0) * 60 * 60 * 1000
     )
     return {
       startDateStr: startDate.toISOString(),

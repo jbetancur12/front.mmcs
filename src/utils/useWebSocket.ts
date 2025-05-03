@@ -55,6 +55,9 @@ const useWebSocket = () => {
         if (type === 'ALARM_UPDATE') {
           updateDeviceAlarmStatus(message.data.deviceId, message.data.isInAlarm)
         }
+        if (type === 'LABORATORY_DATA') {
+          console.log(message)
+        }
         if (type === 'ALARM_STATUS_UPDATE') {
           const { deviceId, alarms } = message.data
 

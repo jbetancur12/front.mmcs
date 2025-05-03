@@ -7,6 +7,7 @@ type MessageType =
   | 'ALARM_UPDATE'
   | 'ALARM_STATUS_UPDATE'
   | 'DEVICE_STATUS'
+  | 'LABORATORY_DATA'
   | 'power'
 
 interface WebSocketMessage {
@@ -104,6 +105,9 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
           setLastMessage(message)
 
           switch (message.type) {
+            case 'LABORATORY_DATA':
+              console.log(message)
+              break
             case 'REAL_TIME_DATA':
               setLastDeviceReading({ ...message.data, ts: new Date() }) // Assuming the payload has a timestamp
               const reading: DeviceReadingPayload = {

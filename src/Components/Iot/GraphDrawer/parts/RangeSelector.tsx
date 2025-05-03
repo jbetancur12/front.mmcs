@@ -13,11 +13,12 @@ export const RangeSelector = ({
   onSelect,
   options
 }: RangeSelectorProps) => (
-  <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+  <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
     {options.map((rangeOption) => (
       <Button
         key={rangeOption.label}
         variant={
+          (rangeOption.isCustom && selectedRange.isCustom) || 
           rangeOption.label === selectedRange.label ? 'contained' : 'outlined'
         }
         onClick={() => onSelect(rangeOption)}

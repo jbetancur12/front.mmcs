@@ -35,7 +35,8 @@ export const DeviceList = ({
       height={600}
       width='100%'
       itemCount={devices.length}
-      itemSize={150} // Ajusta según la altura de cada ítem
+      itemSize={160} // Ajusta según la altura de cada ítem
+      overscanCount={4}
     >
       {Row}
     </VirtualList>

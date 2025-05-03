@@ -15,10 +15,19 @@ export const useDeviceData = (
   })
 
   const { startDateStr, endDateStr } = useMemo(() => {
+
+    if (selectedRange.isCustom) {
+      return {
+        startDateStr: selectedRange.startDate?.toISOString(),
+        endDateStr: selectedRange.endDate?.toISOString()
+      }
+    }
+
     const endDate = new Date()
     const startDate = new Date(
-      endDate.getTime() - selectedRange.hours * 60 * 60 * 1000
+      endDate.getTime() -  (selectedRange.hours || 1) * 60 * 60 * 1000
     )
+   
     return {
       startDateStr: startDate.toISOString(),
       endDateStr: endDate.toISOString()
@@ -32,14 +41,15 @@ export const useDeviceData = (
   } = useQuery(
     ['deviceDataPoints', deviceId, startDateStr, endDateStr],
     async () => {
-      if (!deviceId) return []
+      if (!deviceId || !startDateStr || !endDateStr) return []
+   
       const response = await axiosPrivate.get(
         `/devicesIot/dataPoints?startDate=${startDateStr}&endDate=${endDateStr}&deviceIotId=${deviceId}`
       )
       return response.data
     },
     {
-      enabled: !!deviceId,
+      enabled: !!deviceId && !!startDateStr && !!endDateStr,
       keepPreviousData: true,
       staleTime: 60_000
     }

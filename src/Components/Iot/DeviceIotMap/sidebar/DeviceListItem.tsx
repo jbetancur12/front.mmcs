@@ -21,7 +21,7 @@ import {
 } from '@mui/icons-material'
 import { DeviceIot } from '../../types'
 import { AlarmSeverity } from '../constants'
-import { format } from 'date-fns'
+import {  formatDistanceToNow, parse } from 'date-fns'
 import { getPowerSourceIcon, getStatusColor } from '../utils/common'
 import { es } from 'date-fns/locale'
 import useWebSocket from '@utils/use-websockets'
@@ -73,10 +73,13 @@ const DeviceListItem = ({
       case 'pwr':
         return currentSensorData.pwr?.v ? `${currentSensorData.pwr.v}V` : 'N/A'
       case 'ts':
-        return currentSensorData.ts
-          ? new Date(Number(currentSensorData.ts)).toLocaleString()
-          : 'N/A'
-      default:
+          if (!currentSensorData.ts || isNaN(new Date(currentSensorData.ts).getTime())) {
+            return 'N/A'; // Validación extra
+          }
+          return new Date(Number(currentSensorData.ts)).toLocaleString('es-ES'); // Ajustar formato
+        default:
+          return 'N/A';
+    
         return 'N/A'
     }
   }
@@ -121,6 +124,15 @@ const DeviceListItem = ({
     }
     return <DeviceHub />
   }
+
+  const raw = getValue('ts') // "14/4/2025, 20:55:55"
+  
+  const parsedDate = parse(raw, 'd/M/yyyy, HH:mm:ss', new Date())
+  const lastUpdateTime = formatDistanceToNow(parsedDate, {
+    addSuffix: true,
+    locale: es
+  })
+ 
 
   return (
     <ListItemButton
@@ -424,11 +436,7 @@ const DeviceListItem = ({
                   sx={{ color: 'text.secondary', fontSize: '0.75rem' }}
                 >
                   Última actualización:{' '}
-                  {getValue('ts') !== 'N/A'
-                    ? format(new Date(getValue('ts')), 'MMM dd, HH:mm:ss', {
-                        locale: es
-                      })
-                    : '---'}
+                  { lastUpdateTime   || '---'}
                 </Box>
                 {getPowerSourceIcon(device)}
                 {onViewDetails && (
