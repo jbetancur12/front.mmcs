@@ -26,6 +26,7 @@ const EquipmentInOutTable = lazy(
 const EquipmentAlertsPage = lazy(
   () => import('../Components/DataSheet/EquipmentAlertPage')
 )
+
 const PDFViewer = lazy(() => import('../Components/DataSheet/PDFViewer'))
 
 const DataSheetRoutes = (role: string[]) => {
