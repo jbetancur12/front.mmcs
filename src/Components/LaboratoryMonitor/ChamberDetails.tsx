@@ -1,0 +1,150 @@
+// src/Components/LaboratoryMonitor/ChamberDetails.tsx
+import React from 'react'
+import {
+  Box,
+  Typography,
+  Button,
+  Paper,
+  CircularProgress,
+  Alert
+} from '@mui/material'
+import PlayArrowIcon from '@mui/icons-material/PlayArrow'
+import {
+  Chamber,
+  Pattern,
+  SensorType as SensorTypeValue,
+  SensorSummaryViewData
+} from './types'
+import { PatternSection } from './PatternSection'
+import { SensorsSummaryTable } from './SensorsSummaryTable'
+
+interface ChamberDetailsProps {
+  chamber: Chamber | null // Puede ser null si no hay ninguna seleccionada o está cargando
+  patterns: Pattern[] // Los patrones específicos de esta cámara
+  sensorsSummary: SensorSummaryViewData[] // Datos aplanados para la tabla resumen
+  onStartCalibration: (chamberId: string) => void
+  // Callbacks para PatternSection
+  onAddPattern: (chamberId: string, patternName: string) => Promise<void> | void
+  onDeletePattern: (patternId: string) => Promise<void> | void
+  onAddSensorToPattern: (
+    patternId: string,
+    sensorData: { name: string; type: SensorTypeValue; showGraph: boolean }
+  ) => Promise<void> | void
+  onDeleteSensorFromPattern: (
+    patternId: string,
+    sensorId: string
+  ) => Promise<void> | void
+  // Loading States
+  isLoadingChamberData?: boolean
+  isStartingCalibration?: boolean
+  isLoadingPatterns?: boolean
+  isLoadingAddPattern?: boolean
+  isLoadingDeletePattern?: Record<string, boolean>
+  isLoadingAddSensorToPattern?: Record<string, boolean>
+  isLoadingDeleteSensor?: Record<string, boolean>
+  isLoadingSummary?: boolean
+}
+
+export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
+  chamber,
+  patterns,
+  sensorsSummary,
+  onStartCalibration,
+  onAddPattern,
+  onDeletePattern,
+  onAddSensorToPattern,
+  onDeleteSensorFromPattern,
+  isLoadingChamberData = false,
+  isStartingCalibration = false,
+  isLoadingPatterns = false,
+  isLoadingAddPattern = false,
+  isLoadingDeletePattern = {},
+  isLoadingAddSensorToPattern = {},
+  isLoadingDeleteSensor = {},
+  isLoadingSummary = false
+}) => {
+  if (isLoadingChamberData) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '400px'
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  if (!chamber) {
+    return (
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Typography variant='h6' color='textSecondary'>
+          Seleccione una cámara para ver sus detalles.
+        </Typography>
+      </Box>
+    )
+  }
+
+  return (
+    <Paper elevation={0} sx={{ p: { xs: 2, md: 3 } }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          mb: 2,
+          flexWrap: 'wrap'
+        }}
+      >
+        <Box>
+          <Typography variant='h4' component='h2' gutterBottom>
+            {chamber.name}
+          </Typography>
+          <Typography variant='subtitle1' color='textSecondary' gutterBottom>
+            {chamber.status || 'Estado no definido'}
+          </Typography>
+        </Box>
+        <Button
+          variant='contained'
+          color='primary'
+          startIcon={<PlayArrowIcon />}
+          onClick={() => onStartCalibration(chamber.id)}
+          disabled={
+            isStartingCalibration ||
+            chamber.status?.toLowerCase().includes('iniciada')
+          } // Ejemplo de lógica de deshabilitación
+          sx={{ mt: { xs: 2, sm: 0 } }}
+        >
+          {isStartingCalibration ? (
+            <CircularProgress size={24} color='inherit' />
+          ) : (
+            'Iniciar'
+          )}
+        </Button>
+      </Box>
+
+      <PatternSection
+        chamberId={chamber.id}
+        chamberName={chamber.name}
+        patterns={patterns}
+        onAddPattern={onAddPattern}
+        onDeletePattern={onDeletePattern}
+        onAddSensorToPattern={onAddSensorToPattern}
+        onDeleteSensorFromPattern={onDeleteSensorFromPattern}
+        isLoadingPatterns={isLoadingPatterns}
+        isLoadingAddPattern={isLoadingAddPattern}
+        isLoadingDeletePattern={isLoadingDeletePattern}
+        isLoadingAddSensorToPattern={isLoadingAddSensorToPattern}
+        isLoadingDeleteSensor={isLoadingDeleteSensor}
+      />
+
+      <SensorsSummaryTable
+        summaryData={sensorsSummary}
+        isLoading={isLoadingSummary}
+      />
+    </Paper>
+  )
+}

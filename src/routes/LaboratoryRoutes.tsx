@@ -12,7 +12,7 @@ const LaboratoryConditions = lazy(
 )
 const LaboratoryPatterns = lazy(
   // Asume que tienes un componente para la página de Patrones
-  () => import('../Components/LaboratoryData/LaboratoryMonitor')
+  () => import('../Components/LaboratoryMonitor/views/CalibrationChamberView')
 )
 // Si tienes una página principal o dashboard para Laboratorio, impórtala también
 // const LaboratoryDashboard = lazy(() => import('../Components/Laboratory/LaboratoryDashboard'));
