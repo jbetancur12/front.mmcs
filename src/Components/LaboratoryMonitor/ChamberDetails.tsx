@@ -1,28 +1,24 @@
 // src/Components/LaboratoryMonitor/ChamberDetails.tsx
 import React from 'react'
-import {
-  Box,
-  Typography,
-  Button,
-  Paper,
-  CircularProgress,
-  Alert
-} from '@mui/material'
+import { Box, Typography, Button, Paper, CircularProgress } from '@mui/material'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import {
   Chamber,
   Pattern,
   SensorType as SensorTypeValue,
-  SensorSummaryViewData
+  SensorSummaryViewData,
+  CHAMBER_STATUS
 } from './types'
 import { PatternSection } from './PatternSection'
 import { SensorsSummaryTable } from './SensorsSummaryTable'
+import { Stop } from '@mui/icons-material'
 
 interface ChamberDetailsProps {
   chamber: Chamber | null // Puede ser null si no hay ninguna seleccionada o está cargando
   patterns: Pattern[] // Los patrones específicos de esta cámara
   sensorsSummary: SensorSummaryViewData[] // Datos aplanados para la tabla resumen
-  onStartCalibration: (chamberId: string) => void
+  onStartCalibration: (chamberId: string | number) => void
+  onStopCalibration: (chamberId: string | number) => void
   // Callbacks para PatternSection
   onAddPattern: (chamberId: string, patternName: string) => Promise<void> | void
   onDeletePattern: (patternId: string) => Promise<void> | void
@@ -37,6 +33,7 @@ interface ChamberDetailsProps {
   // Loading States
   isLoadingChamberData?: boolean
   isStartingCalibration?: boolean
+  isStoppingCalibration?: boolean
   isLoadingPatterns?: boolean
   isLoadingAddPattern?: boolean
   isLoadingDeletePattern?: Record<string, boolean>
@@ -50,12 +47,14 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
   patterns,
   sensorsSummary,
   onStartCalibration,
+  onStopCalibration,
   onAddPattern,
   onDeletePattern,
   onAddSensorToPattern,
   onDeleteSensorFromPattern,
   isLoadingChamberData = false,
   isStartingCalibration = false,
+  isStoppingCalibration = false,
   isLoadingPatterns = false,
   isLoadingAddPattern = false,
   isLoadingDeletePattern = {},
@@ -88,6 +87,9 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
     )
   }
 
+  const isCalibrating = chamber?.status === CHAMBER_STATUS.CALIBRATING
+  const isIdle = chamber?.status === CHAMBER_STATUS.IDLE // O como sea tu estado "detenido"
+
   return (
     <Paper elevation={0} sx={{ p: { xs: 2, md: 3 } }}>
       <Box
@@ -107,28 +109,44 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
             {chamber.status || 'Estado no definido'}
           </Typography>
         </Box>
-        <Button
-          variant='contained'
-          color='primary'
-          startIcon={<PlayArrowIcon />}
-          onClick={() => onStartCalibration(chamber.id)}
-          disabled={
-            isStartingCalibration ||
-            chamber.status?.toLowerCase().includes('iniciada')
-          } // Ejemplo de lógica de deshabilitación
-          sx={{ mt: { xs: 2, sm: 0 } }}
-        >
-          {isStartingCalibration ? (
-            <CircularProgress size={24} color='inherit' />
-          ) : (
-            'Iniciar'
-          )}
-        </Button>
+        {isIdle && ( // Mostrar botón "Iniciar" si está inactiva
+          <Button
+            variant='contained'
+            color='primary'
+            startIcon={<PlayArrowIcon />}
+            onClick={() => onStartCalibration(chamber.id)}
+            disabled={isStartingCalibration}
+            sx={{ mt: { xs: 2, sm: 0 } }}
+          >
+            {isStartingCalibration ? (
+              <CircularProgress size={24} color='inherit' />
+            ) : (
+              'Iniciar Calibración'
+            )}
+          </Button>
+        )}
+        {isCalibrating && ( // Mostrar botón "Detener" si está calibrando
+          <Button
+            variant='contained'
+            color='secondary' // O 'error'
+            startIcon={<Stop />}
+            onClick={() => onStopCalibration(chamber.id)}
+            disabled={isStoppingCalibration}
+            sx={{ mt: { xs: 2, sm: 0 } }}
+          >
+            {isStoppingCalibration ? (
+              <CircularProgress size={24} color='inherit' />
+            ) : (
+              'Detener Calibración'
+            )}
+          </Button>
+        )}
       </Box>
 
       <PatternSection
         chamberId={chamber.id}
         chamberName={chamber.name}
+        chamberStatus={chamber.status}
         patterns={patterns}
         onAddPattern={onAddPattern}
         onDeletePattern={onDeletePattern}

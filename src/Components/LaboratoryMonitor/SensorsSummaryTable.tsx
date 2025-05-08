@@ -64,9 +64,8 @@ export const SensorsSummaryTable: React.FC<SensorsSummaryTableProps> = ({
               <TableCell>Sensor</TableCell>
               <TableCell>Tipo</TableCell>
               <TableCell align='right'>Última Temp. (°C)</TableCell>
-              <TableCell align='right'>Temp. Prom. (°C)</TableCell>
+
               <TableCell align='right'>Última Hum. (%)</TableCell>
-              <TableCell align='right'>Hum. Prom. (%)</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -97,14 +96,9 @@ export const SensorsSummaryTable: React.FC<SensorsSummaryTableProps> = ({
                 <TableCell align='right'>
                   {row.latestTemperature?.toFixed(2) ?? '–'}
                 </TableCell>
-                <TableCell align='right'>
-                  {row.averageTemperature?.toFixed(2) ?? '–'}
-                </TableCell>
+
                 <TableCell align='right'>
                   {row.latestHumidity?.toFixed(2) ?? '–'}
-                </TableCell>
-                <TableCell align='right'>
-                  {row.averageHumidity?.toFixed(2) ?? '–'}
                 </TableCell>
               </TableRow>
             ))}

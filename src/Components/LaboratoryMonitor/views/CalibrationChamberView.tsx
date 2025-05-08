@@ -15,9 +15,9 @@ import { useQuery, useMutation, useQueryClient, QueryKey } from 'react-query' //
 import {
   Chamber,
   Pattern,
-  Sensor,
   SensorType,
-  SensorSummaryViewData
+  SensorSummaryViewData,
+  CHAMBER_STATUS
 } from '../types' // Tus tipos
 // Ajusta las rutas a tus componentes si están en subdirectorios diferentes
 import { ChamberTabs } from '../ChamberTabs'
@@ -290,7 +290,14 @@ const CalibrationChamberView: React.FC = () => {
   const handleStartCalibration = (chamberIdToStart: string | number) => {
     updateChamberStatusMutation.mutate({
       chamberId: chamberIdToStart,
-      status: 'Calibración Iniciada'
+      status: CHAMBER_STATUS.CALIBRATING
+    })
+  }
+
+  const handleStopCalibration = (chamberIdToStop: string | number) => {
+    updateChamberStatusMutation.mutate({
+      chamberId: chamberIdToStop,
+      status: CHAMBER_STATUS.IDLE // <= Usar constante para volver al estado inicial/detenido
     })
   }
 
@@ -309,10 +316,7 @@ const CalibrationChamberView: React.FC = () => {
   ) => {
     createSensorMutation.mutate({ patternId, sensorData })
   }
-  const handleDeleteSensorFromPattern = (
-    patternId: string | number,
-    sensorId: string | number
-  ) => {
+  const handleDeleteSensorFromPattern = (sensorId: string | number) => {
     // patternId no se usa en la mutación directa si sensorId es único, pero puede ser útil para el estado de carga
     deleteSensorMutation.mutate(sensorId)
   }
@@ -430,7 +434,17 @@ const CalibrationChamberView: React.FC = () => {
               patterns={currentPatterns}
               sensorsSummary={currentSensorSummary}
               onStartCalibration={handleStartCalibration}
-              isStartingCalibration={updateChamberStatusMutation.isLoading}
+              onStopCalibration={handleStopCalibration}
+              isStartingCalibration={
+                updateChamberStatusMutation.isLoading &&
+                updateChamberStatusMutation.variables?.status ===
+                  CHAMBER_STATUS.CALIBRATING
+              }
+              isStoppingCalibration={
+                updateChamberStatusMutation.isLoading &&
+                updateChamberStatusMutation.variables?.status ===
+                  CHAMBER_STATUS.IDLE
+              }
               onAddPattern={handleAddPattern}
               isLoadingAddPattern={createPatternMutation.isLoading} // Global para "Agregar Patrón"
               onDeletePattern={handleDeletePattern}

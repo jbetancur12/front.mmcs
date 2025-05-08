@@ -13,8 +13,8 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {
+  ChamberStatus,
   Pattern as PatternType,
-  Sensor,
   SensorType as SensorTypeValue
 } from './types' // Renombrar SensorType para evitar conflicto
 import { SensorItem } from './SensorItem'
@@ -22,6 +22,7 @@ import { AddSensorModal } from './AddSensorModal' // Para abrir el modal de agre
 
 interface PatternItemProps {
   pattern: PatternType
+  chamberStatus: ChamberStatus
   onDeletePattern: (patternId: string) => Promise<void> | void
   onAddSensorToPattern: (
     patternId: string,
@@ -38,6 +39,7 @@ interface PatternItemProps {
 
 export const PatternItem: React.FC<PatternItemProps> = ({
   pattern,
+  chamberStatus,
   onDeletePattern,
   onAddSensorToPattern,
   onDeleteSensorFromPattern,
@@ -108,6 +110,9 @@ export const PatternItem: React.FC<PatternItemProps> = ({
             <SensorItem
               key={sensor.id}
               sensor={sensor}
+              chamberStatus={chamberStatus}
+              patternId={pattern.id}
+              chamberId={pattern.chamberId}
               onDeleteSensor={() => handleDeleteSensor(sensor.id)}
               isLoadingDelete={isLoadingDeleteSensor[sensor.id]}
             />

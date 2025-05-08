@@ -4,8 +4,6 @@ import { useQueryClient, QueryKey } from 'react-query'
 import {
   CalibrationSensorUpdatePayload,
   Chamber,
-  Pattern,
-  Sensor,
   SensorDataPoint
 } from 'src/Components/LaboratoryMonitor/types' // Asegúrate que esta ruta sea correcta
 import useWebSocket, { WebSocketMessage } from './use-websockets'
@@ -93,11 +91,13 @@ export const useCalibrationRealtimeUpdates = () => {
                   }
                   return {
                     ...sensor,
-                    lastTemperature: updatePayload.lastTemperature,
-                    lastHumidity: updatePayload.lastHumidity,
+                    lastTemperature: updatePayload.lastTemperature ?? undefined,
+                    lastHumidity: updatePayload.lastHumidity ?? undefined,
                     lastSeen: updatePayload.lastSeen,
-                    currentTemperature: updatePayload.newReading.temperature,
-                    currentHumidity: updatePayload.newReading.humidity,
+                    currentTemperature:
+                      updatePayload.newReading.temperature ?? undefined,
+                    currentHumidity:
+                      updatePayload.newReading.humidity ?? undefined,
                     historicalData: updatedHistoricalData
                   }
                 })

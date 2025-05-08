@@ -187,5 +187,10 @@ export const fetchSensorReadings = async (
     `${API_BASE_URL}/sensors/${sensorId}/readings`,
     { params }
   )
+  console.log(
+    '%csrc/Components/LaboratoryMonitor/services/calibrationApi.ts:190 response',
+    'color: #007acc;',
+    response
+  )
   return response.data
 }

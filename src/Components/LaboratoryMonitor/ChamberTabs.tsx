@@ -14,7 +14,7 @@ export const ChamberTabs: React.FC<ChamberTabsProps> = ({
   selectedChamberId,
   onChamberSelect
 }) => {
-  const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+  const handleChange = (_event: React.SyntheticEvent, newValue: string) => {
     onChamberSelect(newValue)
   }
 

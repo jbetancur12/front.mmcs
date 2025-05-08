@@ -2,13 +2,18 @@
 import React, { useState } from 'react'
 import { Box, Typography, Button, CircularProgress } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
-import { Pattern as PatternType, SensorType as SensorTypeValue } from './types' // Renombrar SensorType
+import {
+  ChamberStatus,
+  Pattern as PatternType,
+  SensorType as SensorTypeValue
+} from './types' // Renombrar SensorType
 import { PatternItem } from './PatternItem'
 import { AddPatternModal } from './AddPatternModal'
 
 interface PatternSectionProps {
   chamberId: string
   chamberName?: string // Para el título del modal
+  chamberStatus: ChamberStatus
   patterns: PatternType[]
   onAddPattern: (chamberId: string, patternName: string) => Promise<void> | void
   onDeletePattern: (patternId: string) => Promise<void> | void
@@ -31,6 +36,7 @@ interface PatternSectionProps {
 export const PatternSection: React.FC<PatternSectionProps> = ({
   chamberId,
   chamberName,
+  chamberStatus,
   patterns,
   onAddPattern,
   onDeletePattern,
@@ -86,6 +92,7 @@ export const PatternSection: React.FC<PatternSectionProps> = ({
           <PatternItem
             key={pattern.id}
             pattern={pattern}
+            chamberStatus={chamberStatus}
             onDeletePattern={() => onDeletePattern(pattern.id)}
             onAddSensorToPattern={onAddSensorToPattern}
             onDeleteSensorFromPattern={onDeleteSensorFromPattern}

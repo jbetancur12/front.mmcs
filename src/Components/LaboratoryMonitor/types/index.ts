@@ -1,5 +1,21 @@
 // src/Components/LaboratoryMonitor/types/index.ts
 
+export const CHAMBER_STATUS = {
+  IDLE: 'IDLE', // O el valor exacto que uses en el backend (ej: 'Esperando Calibración')
+  CALIBRATING: 'CALIBRATING' // O el valor exacto (ej: 'Calibración Iniciada')
+} as const // 'as const' para tipos más estrictos
+
+export type ChamberStatus = (typeof CHAMBER_STATUS)[keyof typeof CHAMBER_STATUS]
+
+export interface SensorReading {
+  id: number
+  sensorId: number
+  chamberId: number
+  temperature: number
+  humidity: number
+  timestamp: string | Date
+}
+
 export interface SensorDataPoint {
   timestamp: number // O string si es ISO date
   temperature?: number | null
@@ -33,7 +49,8 @@ export interface Pattern {
 export interface Chamber {
   id: string
   name: string
-  status: string // e.g., 'Esperando inicio...', 'Calibrando...'
+  status: ChamberStatus // e.g., 'Esperando inicio...', 'Calibrando...'
+  calibrationStartTime?: string | Date | null
   patterns: Pattern[]
   // Los patrones y sensores podrían cargarse por separado o anidados
   // patterns?: Pattern[]; // Depende de cómo lo maneje React Query

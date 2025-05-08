@@ -27,7 +27,7 @@ import EditSensorModal from './EditSensorModal' // Importar modal editar
 import DeleteConfirmDialog from './DeleteConfirmDialog' // Importar diálogo eliminar
 import useWebSocket from '@utils/use-websockets' // Asegúrate que esta ruta sea correcta
 import { format, subDays } from 'date-fns' // Añadir parseISO si es necesario
-import { Checkbox, FormControlLabel, FormGroup } from '@mui/material'
+import { Checkbox, FormControlLabel, FormGroup, Grid } from '@mui/material'
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import HistoricalCharts from './HistoricalCharts'
@@ -320,9 +320,6 @@ const LaboratoryMonitor: React.FC = () => {
       }
     })
   }
-  const handleDownloadReport = () => {
-    alert('Funcionalidad de Descargar Reporte pendiente')
-  }
 
   // --- Helper para formatear valores estadísticos ---
   const formatStatValue = (value: number | null, unit: string): string => {
@@ -409,228 +406,384 @@ const LaboratoryMonitor: React.FC = () => {
       )}
       {/* --- Sección de Históricos --- */}
       <Box className='mt-12'>
-        <Box className='flex justify-between items-center mb-4'>
-          <Typography
-            variant='h5'
-            component='h2'
-            className='font-bold text-gray-800'
-          >
-            Datos Históricos
-          </Typography>
-          <Box className='flex items-center space-x-4'>
-            {/* Selector de Fecha */}
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DatePicker
-                label='Seleccionar Día'
-                value={selectedDate}
-                onChange={handleDateChange}
-                maxDate={new Date()}
-                slotProps={{ textField: { size: 'small' } }}
-              />
-            </LocalizationProvider>
-            {/* Botón Descargar Reporte */}
-            <Button
-              variant='contained'
-              onClick={handleDownloadReport}
-              className='bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded normal-case'
+        <Paper
+          elevation={1}
+          sx={{
+            p: 1.5, // Padding interno reducido
+            mb: 3, // Margen inferior para separarlo del título "Datos Históricos"
+            border: '1px solid', // Borde general
+            borderColor: 'divider'
+          }}
+        >
+          <Grid container spacing={0} mb={4}>
+            {' '}
+            {/* Sin espaciado entre items del Grid */}
+            {/* Columna Izquierda: Información del Documento */}
+            <Grid
+              item
+              xs={3}
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                display: 'flex',
+                flexDirection: 'column'
+              }}
             >
-              Descargar Reporte
-            </Button>
-          </Box>
-        </Box>
-
-        {/* Checkboxes para seleccionar sensores (sin cambios) */}
-        {displayedDevices.length > 0 && (
-          <Box className='mb-4'>
-            <Typography variant='subtitle1' className='mb-2'>
-              Seleccionar Sensores para Graficar:
-            </Typography>
-            <FormGroup row>
-              {displayedDevices.map((device) => (
-                <FormControlLabel
-                  key={device.id}
-                  control={
-                    <Checkbox
-                      checked={selectedSensorIds.includes(device.id)}
-                      onChange={(e) =>
-                        handleSensorCheckboxChange(device.id, e.target.checked)
-                      }
-                    />
-                  }
-                  label={`${device.name} (${device.location || 'N/A'})`}
-                />
-              ))}
-            </FormGroup>
-          </Box>
-        )}
-
-        {/* Componente de Gráficas Históricas (sin cambios en props) */}
-        {/* Mostrar solo si hay IDs seleccionados para evitar renderizado innecesario */}
-        {selectedSensorIds.length > 0 && (
-          <HistoricalCharts
-            data={processedHistoricalData}
-            // Pasar info de los sensores seleccionados para la leyenda/tooltips
-            sensors={displayedDevices.filter((device) =>
-              selectedSensorIds.includes(device.id)
-            )}
-            isLoading={isLoadingHistory} // Pasar estado de carga de históricos
-            isError={isErrorHistory} // Pasar estado de error de históricos
-            errorMessage={errorHistory?.message} // Pasar mensaje de error
-          />
-        )}
-        {/* Mensaje si no se han seleccionado sensores */}
-        {selectedSensorIds.length === 0 && selectedDate && (
-          <Typography className='mt-4 italic'>
-            Seleccione al menos un sensor para ver los datos históricos.
-          </Typography>
-        )}
-
-        {/* --- NUEVA SECCIÓN: Tabla de Estadísticas --- */}
-        {/* Mostrar solo si la carga de históricos terminó, no hay error, y hay estadísticas */}
-        {!isLoadingHistory &&
-          !isErrorHistory &&
-          statisticsData &&
-          selectedSensorIds.length > 0 && (
-            <Box sx={{ mt: 4 }}>
-              {' '}
-              {/* Más margen superior */}
-              <Typography
-                variant='h6'
-                component='h3'
-                sx={{ mb: 2, fontWeight: '600', color: 'text.primary' }}
+              <Box
+                sx={{
+                  p: 0.5,
+                  borderBottom: '1px solid',
+                  borderColor: 'divider'
+                }}
               >
-                {' '}
-                {/* Título más prominente */}
-                Resumen Estadístico (
-                {selectedDate
-                  ? format(selectedDate, 'yyyy-MM-dd')
-                  : 'Fecha no seleccionada'}
-                )
-              </Typography>
-              {/* Mostrar tabla solo si hay claves en statisticsData */}
-              {statisticsData && Object.keys(statisticsData).length > 0 ? (
-                <TableContainer
-                  component={Paper}
-                  elevation={2} // Sombra sutil
-                  sx={{ borderRadius: '8px', overflowX: 'auto' }} // Bordes redondeados y scroll horizontal
-                >
-                  <Table
-                    aria-label='tabla de estadísticas moderna'
-                    size='medium'
-                  >
-                    <TableHead>
-                      {/* Encabezado con borde inferior y texto capitalizado */}
-                      <TableRow
-                        sx={{
-                          '& th': {
-                            fontWeight: 'bold',
-                            color: 'text.secondary',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                            borderBottom: '1px solid',
-                            borderColor: 'divider',
-                            py: 1,
-                            px: 2,
-                            backgroundColor: 'background.paper'
-                          }
-                        }}
-                      >
-                        <TableCell>Sensor</TableCell>
-                        <TableCell align='right'>Temp Min (°C)</TableCell>
-                        <TableCell align='right'>Temp Max (°C)</TableCell>
-                        <TableCell align='right'>Temp Prom (°C)</TableCell>
-                        <TableCell align='right'>Hum Min (%)</TableCell>
-                        <TableCell align='right'>Hum Max (%)</TableCell>
-                        <TableCell align='right'>Hum Prom (%)</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {/* Iterar sobre los IDs de los sensores SELECCIONADOS */}
-                      {selectedSensorIds.map((sensorId) => {
-                        const stats = statisticsData[sensorId]
-                        if (!stats) return null // Omitir si no hay datos
-
-                        return (
-                          <TableRow
-                            key={stats.id}
-                            sx={{
-                              '&:hover': {
-                                backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                              }, // Hover más sutil
-                              '& td, & th': { py: 1.5, px: 2 }, // Padding consistente
-                              // Quitar borde inferior de la última fila para limpieza
-                              '&:last-child td, &:last-child th': {
-                                borderBottom: 0
-                              }
-                            }}
-                          >
-                            {/* Celda del Sensor con nombre y ubicación */}
-                            <TableCell
-                              component='th'
-                              scope='row'
-                              sx={{ fontWeight: '500', color: 'text.primary' }}
-                            >
-                              {stats.name}
-                              <Typography
-                                variant='body2'
-                                color='text.secondary'
-                                component='span'
-                                sx={{ display: 'block', fontSize: '0.8rem' }}
-                              >
-                                ({stats.location || 'N/A'})
-                              </Typography>
-                            </TableCell>
-                            {/* Celdas de datos */}
-                            <TableCell align='right'>
-                              {formatStatValue(stats.minTemp, '°C')}
-                            </TableCell>
-                            <TableCell align='right'>
-                              {formatStatValue(stats.maxTemp, '°C')}
-                            </TableCell>
-                            <TableCell align='right'>
-                              {formatStatValue(stats.avgTemp, '°C')}
-                            </TableCell>
-                            <TableCell align='right'>
-                              {formatStatValue(stats.minHum, '%')}
-                            </TableCell>
-                            <TableCell align='right'>
-                              {formatStatValue(stats.maxHum, '%')}
-                            </TableCell>
-                            <TableCell align='right'>
-                              {formatStatValue(stats.avgHum, '%')}
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              ) : (
-                // Mensaje si no hay estadísticas (pero la carga fue exitosa)
                 <Typography
-                  sx={{ mt: 2, fontStyle: 'italic', color: 'text.secondary' }}
+                  variant='caption'
+                  component='div'
+                  sx={{ fontSize: '0.65rem', fontWeight: 'bold' }}
                 >
-                  No se encontraron datos estadísticos para la selección actual.
-                  Puede que no haya habido lecturas en este día.
+                  CÓDIGO: FOT-MMCS-13
                 </Typography>
-              )}
+              </Box>
+              <Box
+                sx={{
+                  p: 0.5,
+                  borderBottom: '1px solid',
+                  borderColor: 'divider'
+                }}
+              >
+                <Typography
+                  variant='caption'
+                  component='div'
+                  sx={{ fontSize: '0.65rem', fontWeight: 'bold' }}
+                >
+                  VERSIÓN: 04
+                </Typography>
+              </Box>
+              <Box
+                sx={{
+                  p: 0.5,
+                  borderBottom: '1px solid',
+                  borderColor: 'divider'
+                }}
+              >
+                <Typography
+                  variant='caption'
+                  component='div'
+                  sx={{ fontSize: '0.65rem', fontWeight: 'bold' }}
+                >
+                  FECHA: 2019-12-28
+                </Typography>
+              </Box>
+              <Box sx={{ p: 0.5 }}>
+                <Typography
+                  variant='caption'
+                  component='div'
+                  sx={{ fontSize: '0.65rem', fontWeight: 'bold' }}
+                >
+                  PÁGINA 1 de 2
+                </Typography>
+              </Box>
+            </Grid>
+            {/* Columna Central: Títulos */}
+            <Grid
+              item
+              xs={6}
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center', // Centrar verticalmente el contenido
+                borderRight: '1px solid',
+                borderColor: 'divider'
+              }}
+            >
+              <Box
+                sx={{
+                  textAlign: 'center',
+                  p: 0.5,
+                  borderTop: '1px solid',
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  height: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Typography
+                  variant='subtitle2'
+                  component='div'
+                  sx={{ fontWeight: 'bold', fontSize: '0.8rem' }}
+                >
+                  METROMEDICS
+                </Typography>
+              </Box>
+              <Box
+                sx={{
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  textAlign: 'center',
+                  p: 0.5,
+                  height: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Typography
+                  variant='subtitle2'
+                  component='div'
+                  sx={{ fontWeight: 'bold', fontSize: '0.8rem' }}
+                >
+                  CONTROL DE CONDICIONES AMBIENTALES
+                </Typography>
+              </Box>
+            </Grid>
+            {/* Columna Derecha: Logo */}
+            <Grid
+              item
+              xs={3}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRight: '1px solid',
+                borderTop: '1px solid',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                p: 0.5
+              }}
+            >
+              {/* Asume que tienes una imagen de logo en tu carpeta public o src/assets */}
+              <img
+                src='/images/logo2.png' // ¡CAMBIA ESTA RUTA!
+                alt='Metromedics Logo'
+                style={{ maxHeight: '50px', width: 'auto' }} // Ajusta el tamaño según sea necesario
+              />
+            </Grid>
+          </Grid>
+
+          <Box className='flex justify-between items-center mb-4'>
+            <Typography
+              variant='h5'
+              component='h2'
+              className='font-bold text-gray-800'
+            >
+              Datos Históricos
+            </Typography>
+            <Box className='flex items-center space-x-4'>
+              {/* Selector de Fecha */}
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label='Seleccionar Día'
+                  value={selectedDate}
+                  onChange={handleDateChange}
+                  maxDate={new Date()}
+                  slotProps={{ textField: { size: 'small' } }}
+                />
+              </LocalizationProvider>
+              {/* Botón Descargar Reporte */}
+            </Box>
+          </Box>
+
+          {/* Checkboxes para seleccionar sensores (sin cambios) */}
+          {displayedDevices.length > 0 && (
+            <Box className='mb-4'>
+              <Typography variant='subtitle1' className='mb-2'>
+                Seleccionar Sensores para Graficar:
+              </Typography>
+              <FormGroup row>
+                {displayedDevices.map((device) => (
+                  <FormControlLabel
+                    key={device.id}
+                    control={
+                      <Checkbox
+                        checked={selectedSensorIds.includes(device.id)}
+                        onChange={(e) =>
+                          handleSensorCheckboxChange(
+                            device.id,
+                            e.target.checked
+                          )
+                        }
+                      />
+                    }
+                    label={`${device.name} (${device.location || 'N/A'})`}
+                  />
+                ))}
+              </FormGroup>
             </Box>
           )}
-        {/* Mostrar indicador de carga o error específico para históricos */}
-        {isLoadingHistory && selectedSensorIds.length > 0 && (
-          <Box className='flex justify-center items-center h-32'>
-            <CircularProgress size={24} />
-            <Typography className='ml-2'>
-              Cargando datos históricos...
+
+          {/* Componente de Gráficas Históricas (sin cambios en props) */}
+          {/* Mostrar solo si hay IDs seleccionados para evitar renderizado innecesario */}
+          {selectedSensorIds.length > 0 && (
+            <HistoricalCharts
+              data={processedHistoricalData}
+              // Pasar info de los sensores seleccionados para la leyenda/tooltips
+              sensors={displayedDevices.filter((device) =>
+                selectedSensorIds.includes(device.id)
+              )}
+              isLoading={isLoadingHistory} // Pasar estado de carga de históricos
+              isError={isErrorHistory} // Pasar estado de error de históricos
+              errorMessage={errorHistory?.message} // Pasar mensaje de error
+            />
+          )}
+          {/* Mensaje si no se han seleccionado sensores */}
+          {selectedSensorIds.length === 0 && selectedDate && (
+            <Typography className='mt-4 italic'>
+              Seleccione al menos un sensor para ver los datos históricos.
             </Typography>
-          </Box>
-        )}
-        {isErrorHistory && selectedSensorIds.length > 0 && (
-          <Alert severity='error' className='mt-4'>
-            Error al cargar datos históricos:{' '}
-            {errorHistory?.message || 'Error desconocido'}
-          </Alert>
-        )}
+          )}
+
+          {/* --- NUEVA SECCIÓN: Tabla de Estadísticas --- */}
+          {/* Mostrar solo si la carga de históricos terminó, no hay error, y hay estadísticas */}
+          {!isLoadingHistory &&
+            !isErrorHistory &&
+            statisticsData &&
+            selectedSensorIds.length > 0 && (
+              <Box sx={{ mt: 4 }}>
+                {' '}
+                {/* Más margen superior */}
+                <Typography
+                  variant='h6'
+                  component='h3'
+                  sx={{ mb: 2, fontWeight: '600', color: 'text.primary' }}
+                >
+                  {' '}
+                  {/* Título más prominente */}
+                  Resumen Estadístico (
+                  {selectedDate
+                    ? format(selectedDate, 'yyyy-MM-dd')
+                    : 'Fecha no seleccionada'}
+                  )
+                </Typography>
+                {/* Mostrar tabla solo si hay claves en statisticsData */}
+                {statisticsData && Object.keys(statisticsData).length > 0 ? (
+                  <TableContainer
+                    component={Paper}
+                    elevation={2} // Sombra sutil
+                    sx={{ borderRadius: '8px', overflowX: 'auto' }} // Bordes redondeados y scroll horizontal
+                  >
+                    <Table
+                      aria-label='tabla de estadísticas moderna'
+                      size='medium'
+                    >
+                      <TableHead>
+                        {/* Encabezado con borde inferior y texto capitalizado */}
+                        <TableRow
+                          sx={{
+                            '& th': {
+                              fontWeight: 'bold',
+                              color: 'text.secondary',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px',
+                              borderBottom: '1px solid',
+                              borderColor: 'divider',
+                              py: 1,
+                              px: 2,
+                              backgroundColor: 'background.paper'
+                            }
+                          }}
+                        >
+                          <TableCell>Sensor</TableCell>
+                          <TableCell align='right'>Temp Min (°C)</TableCell>
+                          <TableCell align='right'>Temp Max (°C)</TableCell>
+                          <TableCell align='right'>Temp Prom (°C)</TableCell>
+                          <TableCell align='right'>Hum Min (%)</TableCell>
+                          <TableCell align='right'>Hum Max (%)</TableCell>
+                          <TableCell align='right'>Hum Prom (%)</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {/* Iterar sobre los IDs de los sensores SELECCIONADOS */}
+                        {selectedSensorIds.map((sensorId) => {
+                          const stats = statisticsData[sensorId]
+                          if (!stats) return null // Omitir si no hay datos
+
+                          return (
+                            <TableRow
+                              key={stats.id}
+                              sx={{
+                                '&:hover': {
+                                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                                }, // Hover más sutil
+                                '& td, & th': { py: 1.5, px: 2 }, // Padding consistente
+                                // Quitar borde inferior de la última fila para limpieza
+                                '&:last-child td, &:last-child th': {
+                                  borderBottom: 0
+                                }
+                              }}
+                            >
+                              {/* Celda del Sensor con nombre y ubicación */}
+                              <TableCell
+                                component='th'
+                                scope='row'
+                                sx={{
+                                  fontWeight: '500',
+                                  color: 'text.primary'
+                                }}
+                              >
+                                {stats.name}
+                                <Typography
+                                  variant='body2'
+                                  color='text.secondary'
+                                  component='span'
+                                  sx={{ display: 'block', fontSize: '0.8rem' }}
+                                >
+                                  ({stats.location || 'N/A'})
+                                </Typography>
+                              </TableCell>
+                              {/* Celdas de datos */}
+                              <TableCell align='right'>
+                                {formatStatValue(stats.minTemp, '°C')}
+                              </TableCell>
+                              <TableCell align='right'>
+                                {formatStatValue(stats.maxTemp, '°C')}
+                              </TableCell>
+                              <TableCell align='right'>
+                                {formatStatValue(stats.avgTemp, '°C')}
+                              </TableCell>
+                              <TableCell align='right'>
+                                {formatStatValue(stats.minHum, '%')}
+                              </TableCell>
+                              <TableCell align='right'>
+                                {formatStatValue(stats.maxHum, '%')}
+                              </TableCell>
+                              <TableCell align='right'>
+                                {formatStatValue(stats.avgHum, '%')}
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                ) : (
+                  // Mensaje si no hay estadísticas (pero la carga fue exitosa)
+                  <Typography
+                    sx={{ mt: 2, fontStyle: 'italic', color: 'text.secondary' }}
+                  >
+                    No se encontraron datos estadísticos para la selección
+                    actual. Puede que no haya habido lecturas en este día.
+                  </Typography>
+                )}
+              </Box>
+            )}
+          {/* Mostrar indicador de carga o error específico para históricos */}
+          {isLoadingHistory && selectedSensorIds.length > 0 && (
+            <Box className='flex justify-center items-center h-32'>
+              <CircularProgress size={24} />
+              <Typography className='ml-2'>
+                Cargando datos históricos...
+              </Typography>
+            </Box>
+          )}
+          {isErrorHistory && selectedSensorIds.length > 0 && (
+            <Alert severity='error' className='mt-4'>
+              Error al cargar datos históricos:{' '}
+              {errorHistory?.message || 'Error desconocido'}
+            </Alert>
+          )}
+        </Paper>
       </Box>{' '}
       {/* Fin Sección Históricos */}
       {/* Modales y Diálogos (sin cambios) */}
