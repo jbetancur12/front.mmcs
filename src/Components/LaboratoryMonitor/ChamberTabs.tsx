@@ -5,7 +5,7 @@ import { Chamber } from './types' // Ajusta la ruta si es necesario
 
 interface ChamberTabsProps {
   chambers: Chamber[]
-  selectedChamberId: string | null
+  selectedChamberId: string | number | null
   onChamberSelect: (chamberId: string) => void
 }
 

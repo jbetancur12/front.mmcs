@@ -36,10 +36,11 @@ export const SensorItem: React.FC<SensorItemProps> = ({
     name,
     type,
     showGraph,
-    currentTemperature,
+    lastTemperature,
     averageTemperature,
-    currentHumidity,
+    lastHumidity,
     averageHumidity,
+    lastSeen,
     historicalData
   } = sensor
 
@@ -105,25 +106,27 @@ export const SensorItem: React.FC<SensorItemProps> = ({
           {type.includes('temperature') && (
             <Grid item xs={12} sm={type === 'temperature_humidity' ? 6 : 12}>
               <Typography variant='h6' color='textPrimary'>
-                Temperatura: {currentTemperature?.toFixed(2) ?? 'N/A'}°C
-              </Typography>
-              <Typography variant='caption' color='textSecondary'>
-                Prom: {averageTemperature?.toFixed(2) ?? 'N/A'}°C
+                Temperatura: {lastTemperature?.toFixed(2) ?? 'N/A'}°C
               </Typography>
             </Grid>
           )}
           {type.includes('humidity') && (
             <Grid item xs={12} sm={6}>
               <Typography variant='h6' color='textPrimary'>
-                Humedad: {currentHumidity?.toFixed(2) ?? 'N/A'}%
-              </Typography>
-              <Typography variant='caption' color='textSecondary'>
-                Prom: {averageHumidity?.toFixed(2) ?? 'N/A'}%
+                Humedad: {lastHumidity?.toFixed(2) ?? 'N/A'}%
               </Typography>
             </Grid>
           )}
         </Grid>
-
+        <Box
+          sx={{
+            textAlign: 'center'
+          }}
+        >
+          <Typography variant='caption' color='textSecondary'>
+            Ultima Lectura: {lastSeen}
+          </Typography>
+        </Box>
         {showGraph ? (
           <>
             <SensorDataTable data={historicalData} sensorType={type} />
