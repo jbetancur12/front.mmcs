@@ -28,8 +28,6 @@ export const useCalibrationRealtimeUpdates = () => {
     }
 
     if (lastMessage.type === 'CALIBRATION_SENSOR_UPDATE') {
-      // Marcar este mensaje como procesado INMEDIATAMENTE
-      // para evitar que re-ejecuciones del efecto con la misma instancia de lastMessage lo reprocesen.
       processedMessageRef.current = lastMessage
 
       const updatePayload = lastMessage.data as CalibrationSensorUpdatePayload
@@ -43,10 +41,10 @@ export const useCalibrationRealtimeUpdates = () => {
       }
 
       // Este log ahora solo debería aparecer una vez por cada mensaje nuevo y único.
-      console.log(
-        'Processing CALIBRATION_SENSOR_UPDATE for React Query cache (ONCE PER MESSAGE):',
-        updatePayload
-      )
+      // console.log(
+      //   'Processing CALIBRATION_SENSOR_UPDATE for React Query cache (ONCE PER MESSAGE):',
+      //   updatePayload
+      // )
 
       queryClient.setQueryData<Chamber[]>(chambersQueryKey, (oldData) => {
         if (!oldData) {

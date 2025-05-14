@@ -11,6 +11,7 @@ import {
 } from '@mui/material'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import { useQuery, useMutation, useQueryClient, QueryKey } from 'react-query' // Import QueryKey for React Query v3
+import { ReactQueryDevtools } from 'react-query/devtools'
 
 import {
   Chamber,
@@ -387,6 +388,7 @@ const CalibrationChamberView: React.FC = () => {
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
+      <ReactQueryDevtools initialIsOpen={false} />
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <Box

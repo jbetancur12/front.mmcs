@@ -106,7 +106,11 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
             {chamber.name}
           </Typography>
           <Typography variant='subtitle1' color='textSecondary' gutterBottom>
-            {chamber.status || 'Estado no definido'}
+            {chamber.status === CHAMBER_STATUS.IDLE
+              ? 'Esperando Inicio de Calibración'
+              : chamber.status === CHAMBER_STATUS.CALIBRATING
+                ? 'Calibración en curso'
+                : 'Estado no definido'}
           </Typography>
         </Box>
         {isIdle && ( // Mostrar botón "Iniciar" si está inactiva
