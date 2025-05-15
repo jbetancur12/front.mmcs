@@ -111,6 +111,7 @@ export interface PurchaseRequest {
   createdAt: Date
   updatedAt: Date
   quotations: any[]
+  purchaseType: string
 
   // Relación (opcional para nested loading)
   items?: PurchaseRequestItem[]

@@ -47,7 +47,8 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
     status: PurchaseRequestStatus.Pending,
     requirements: [],
     items: [],
-    elaborationDate: new Date(new Date().getTime() - 5 * 60 * 60 * 1000)
+    elaborationDate: new Date(new Date().getTime() - 5 * 60 * 60 * 1000),
+    purchaseType: 'I'
   })
 
   const [currentItem, setCurrentItem] = React.useState<
@@ -55,7 +56,6 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
   >({
     quantity: 1,
     description: '',
-    motive: '',
     supplierIds: []
   })
 
@@ -200,7 +200,6 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
     setCurrentItem({
       quantity: 1,
       description: '',
-      motive: '',
       supplierIds: []
     })
     setNewRequirement('')
@@ -220,11 +219,7 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
   }
 
   const addItem = () => {
-    if (
-      currentItem.description &&
-      currentItem.motive &&
-      (currentItem.supplierIds?.length ?? 0) > 0
-    ) {
+    if (currentItem.description && (currentItem.supplierIds?.length ?? 0) > 0) {
       setFormData((prev) => ({
         ...prev,
         items: [
@@ -238,7 +233,6 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
       setCurrentItem({
         quantity: 1,
         description: '',
-        motive: '',
         supplierIds: []
       })
     }
@@ -255,59 +249,84 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
 
       <DialogContent dividers>
         <Grid container spacing={3} sx={{ pt: 2 }}>
-          {/* Campos básicos */}
-          <Grid item xs={12} md={4}>
-            <TextField
-              fullWidth
-              label='Fecha de Elaboración *'
-              type='date'
-              InputLabelProps={{ shrink: true }}
-              value={
-                formData.elaborationDate
-                  ? new Date(formData.elaborationDate)
+          <Grid item xs={12}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={3}>
+                <TextField
+                  fullWidth
+                  label='Fecha de Elaboración *'
+                  type='date'
+                  InputLabelProps={{ shrink: true }}
+                  value={
+                    formData.elaborationDate
+                      ? new Date(formData.elaborationDate)
+                          .toISOString()
+                          .split('T')[0] // Formato YYYY-MM-DD
+                      : ''
+                  }
+                  onChange={(e) => {
+                    const dateValue = new Date(e.target.value)
+                    if (!isNaN(dateValue.getTime())) {
+                      setFormData({
+                        ...formData,
+                        elaborationDate: dateValue
+                      })
+                    }
+                  }}
+                  inputProps={{
+                    max: new Date(new Date().getTime() - 5 * 60 * 60 * 1000)
                       .toISOString()
-                      .split('T')[0] // Formato YYYY-MM-DD
-                  : ''
-              }
-              onChange={(e) => {
-                const dateValue = new Date(e.target.value)
-                if (!isNaN(dateValue.getTime())) {
-                  setFormData({
-                    ...formData,
-                    elaborationDate: dateValue
-                  })
-                }
-              }}
-              inputProps={{
-                max: new Date(new Date().getTime() - 5 * 60 * 60 * 1000)
-                  .toISOString()
-                  .split('T')[0] // Deshabilitar días futuros
-              }} // Deshabilitar días futuros
-            />
-          </Grid>
+                      .split('T')[0] // Deshabilitar días futuros
+                  }} // Deshabilitar días futuros
+                />
+              </Grid>
 
-          <Grid item xs={12} md={4}>
-            <TextField
-              fullWidth
-              label='Nombre del Solicitante *'
-              value={formData.applicantName || ''}
-              onChange={(e) =>
-                setFormData({ ...formData, applicantName: e.target.value })
-              }
-            />
+              <Grid item xs={12} md={3}>
+                <TextField
+                  select // Esto convierte el TextField en un Select
+                  fullWidth
+                  label='Tipo de Compra' // Asumiendo que es un campo requerido
+                  value={formData.purchaseType || ''} // Es importante manejar el caso de valor indefinido
+                  onChange={(e) =>
+                    setFormData({ ...formData, purchaseType: e.target.value })
+                  }
+                  name='purchaseType' // Es buena práctica incluir el nombre del campo
+                  required
+                >
+                  <MenuItem value='I'>Tipo I</MenuItem>
+                  <MenuItem value='II'>Tipo II</MenuItem>
+                </TextField>
+              </Grid>
+            </Grid>
           </Grid>
+          <Grid item xs={12}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label='Nombre del Solicitante *'
+                  value={formData.applicantName || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, applicantName: e.target.value })
+                  }
+                />
+              </Grid>
 
-          <Grid item xs={12} md={4}>
-            <TextField
-              fullWidth
-              label='Cargo del Solicitante *'
-              value={formData.applicantPosition || ''}
-              onChange={(e) =>
-                setFormData({ ...formData, applicantPosition: e.target.value })
-              }
-            />
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label='Cargo del Solicitante *'
+                  value={formData.applicantPosition || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      applicantPosition: e.target.value
+                    })
+                  }
+                />
+              </Grid>
+            </Grid>
           </Grid>
-
           {/* Select para tipo de requerimientos */}
 
           {/* Sección de ítems */}
@@ -333,7 +352,7 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                   />
                 </Grid>
 
-                <Grid item xs={4}>
+                <Grid item xs={7}>
                   <TextField
                     fullWidth
                     label='Descripción *'
@@ -342,20 +361,6 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                       setCurrentItem((prev) => ({
                         ...prev,
                         description: e.target.value
-                      }))
-                    }
-                  />
-                </Grid>
-
-                <Grid item xs={3}>
-                  <TextField
-                    fullWidth
-                    label='Motivo *'
-                    value={currentItem.motive}
-                    onChange={(e) =>
-                      setCurrentItem((prev) => ({
-                        ...prev,
-                        motive: e.target.value
                       }))
                     }
                   />
@@ -428,7 +433,6 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                     startIcon={<Add />}
                     disabled={
                       !currentItem.description ||
-                      !currentItem.motive ||
                       !currentItem.supplierIds?.length
                     }
                   >
@@ -454,7 +458,6 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                   >
                     <Box sx={{ flex: 1 }}>
                       (Cant: {item.quantity})<div>{item.description}</div>
-                      <div>Motivo: {item.motive}</div>
                       <div>
                         Proveedores:{' '}
                         {item.supplierIds?.map((id) => (
@@ -488,16 +491,27 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                   select
                   fullWidth
                   label='Tipo de Requerimientos'
-                  value={requirementType}
+                  value={
+                    formData.purchaseType === 'II' &&
+                    requirementType !== 'equipment'
+                      ? '' // Reset if type II and not equipment
+                      : requirementType
+                  }
                   onChange={handleRequirementTypeChange}
                 >
-                  <MenuItem value='calibration'>
-                    Servicios de Calibración
-                  </MenuItem>
                   <MenuItem value='equipment'>Compra de Equipos</MenuItem>
-                  <MenuItem value='proficiency'>Ensayos de Aptitud</MenuItem>
-                  <MenuItem value='audit'>Auditoría Interna</MenuItem>
-                  <MenuItem value='others'>Otros</MenuItem>
+                  {formData.purchaseType === 'I' && (
+                    <>
+                      <MenuItem value='calibration'>
+                        Servicios de Calibración
+                      </MenuItem>
+                      <MenuItem value='proficiency'>
+                        Ensayos de Aptitud
+                      </MenuItem>
+                      <MenuItem value='audit'>Auditoría Interna</MenuItem>
+                      <MenuItem value='others'>Otros</MenuItem>
+                    </>
+                  )}
                 </TextField>
               </Grid>
               <TextField
