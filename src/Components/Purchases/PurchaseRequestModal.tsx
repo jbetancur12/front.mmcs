@@ -81,7 +81,7 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
       try {
         setLoadingProviders(true)
         const { data } = await axiosPrivate.get('/suppliers', {
-          params: { search }
+          params: { search, purchaseType: formData.purchaseType }
         })
         setProviders(data)
         if (initialLoad) setInitialLoad(false)
@@ -91,7 +91,7 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
         setLoadingProviders(false)
       }
     }, 300),
-    []
+    [formData.purchaseType]
   )
 
   // Cargar proveedores al abrir el modal
@@ -500,18 +500,14 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                   onChange={handleRequirementTypeChange}
                 >
                   <MenuItem value='equipment'>Compra de Equipos</MenuItem>
-                  {formData.purchaseType === 'I' && (
-                    <>
-                      <MenuItem value='calibration'>
-                        Servicios de Calibración
-                      </MenuItem>
-                      <MenuItem value='proficiency'>
-                        Ensayos de Aptitud
-                      </MenuItem>
-                      <MenuItem value='audit'>Auditoría Interna</MenuItem>
-                      <MenuItem value='others'>Otros</MenuItem>
-                    </>
-                  )}
+                  {formData.purchaseType === 'I' && [
+                    <MenuItem value='calibration'>
+                      Servicios de Calibración
+                    </MenuItem>,
+                    <MenuItem value='proficiency'>Ensayos de Aptitud</MenuItem>,
+                    <MenuItem value='audit'>Auditoría Interna</MenuItem>,
+                    <MenuItem value='others'>Otros</MenuItem>
+                  ]}
                 </TextField>
               </Grid>
               <TextField
