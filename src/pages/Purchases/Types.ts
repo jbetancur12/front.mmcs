@@ -52,6 +52,7 @@ export interface Supplier {
   accountType: string
   accountNumber: string
   bankName: string
+  applyRetention: boolean
   typePerson: number
   createdAt: string
   updatedAt: string

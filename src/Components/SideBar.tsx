@@ -99,6 +99,11 @@ const sidebarItems = ($userStore: UserData) => [
         label: 'Verificaciones',
         url: 'purchases/verifications',
         roles: ['admin', 'comp_requester', 'comp_supervisor']
+      },
+      {
+        label: 'Parametros Fiscales',
+        url: 'purchases/fiscal-parameters',
+        roles: ['admin', 'comp_requester', 'comp_supervisor']
       }
     ]
   },

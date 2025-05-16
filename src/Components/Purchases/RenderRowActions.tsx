@@ -121,6 +121,7 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
     row.original.quotations.some((quotation) => quotation.accepted)
 
   const items: PurchaseRequestItem[] = row.original.items || []
+
   const allProcessed = items.length > 0 && items.every((item) => item.procesed)
   const allUnprocessed =
     items.length > 0 && items.every((item) => !item.procesed)

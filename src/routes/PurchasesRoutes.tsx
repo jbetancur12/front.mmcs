@@ -22,6 +22,9 @@ const PurchaseOrders = lazy(() => import('src/pages/Purchases/PurchaseOrders'))
 const PurchaseVerifications = lazy(
   () => import('src/pages/Purchases/PurchaseVerifications')
 )
+const FiscalParametersPage = lazy(
+  () => import('src/pages/Admin/FiscalParametersManagementPage')
+)
 
 const SupplierRoutes = (role: string[]) => {
   return (
@@ -36,6 +39,8 @@ const SupplierRoutes = (role: string[]) => {
         }
       >
         <Route path='purchases'>
+          <Route path='fiscal-parameters' element={<FiscalParametersPage />} />
+
           <Route path='supplier-selection' element={<SuppliersSelection />} />
 
           <Route
