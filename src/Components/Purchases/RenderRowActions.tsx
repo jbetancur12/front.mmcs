@@ -4,7 +4,6 @@ import {
   CheckCircle,
   Description,
   ShoppingCart,
-  UploadFile,
   Visibility
 } from '@mui/icons-material'
 import { IconButton, Tooltip, Stack, Divider } from '@mui/material'
@@ -39,8 +38,6 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
 
   const [orderModalOpen, setOrderModalOpen] = useState(false)
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const [viewAnchorEl, setViewAnchorEl] = useState<null | HTMLElement>(null)
 
   const handleOpenOrderModal = () => {
     setOrderModalOpen(true)
@@ -128,16 +125,6 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
   const allUnprocessed =
     items.length > 0 && items.every((item) => !item.procesed)
   const mixedState = items.length > 0 && !allProcessed && !allUnprocessed
-
-  const uniqueSuppliers = Array.from(
-    new Set(
-      items.flatMap((item) => item.suppliers?.map((supplier) => supplier.id))
-    )
-  ).map((id) =>
-    items
-      .flatMap((item) => item.suppliers)
-      .find((supplier) => supplier?.id === id)
-  )
 
   return (
     <Stack direction='row' spacing={1}>

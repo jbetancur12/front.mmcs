@@ -10,7 +10,6 @@ import {
   Grid,
   CircularProgress,
   Alert,
-  IconButton,
   Divider
 } from '@mui/material'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -42,8 +41,6 @@ const UploadQuotationModal: React.FC<UploadQuotationModalProps> = ({
   onSuccess
 }) => {
   const axiosPrivate = useAxiosPrivate()
-  const [file, setFile] = useState<File | null>(null)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [selectedFiles, setSelectedFiles] = useState<{
     [key: string]: File | null
   }>({})
