@@ -219,7 +219,13 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
   }
 
   const addItem = () => {
-    if (currentItem.description && (currentItem.supplierIds?.length ?? 0) > 0) {
+    // Permitir agregar ítem solo con descripción y cantidad.
+    // La selección de proveedores es opcional en esta etapa.
+    if (
+      currentItem.description &&
+      currentItem.quantity &&
+      currentItem.quantity > 0
+    ) {
       setFormData((prev) => ({
         ...prev,
         items: [
@@ -433,7 +439,7 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                     startIcon={<Add />}
                     disabled={
                       !currentItem.description ||
-                      !currentItem.supplierIds?.length
+                      !(currentItem.quantity && currentItem.quantity > 0)
                     }
                   >
                     Agregar Ítem

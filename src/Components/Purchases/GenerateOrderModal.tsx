@@ -1,5 +1,5 @@
 // src/Components/Purchases/GenerateOrderModal.tsx
-import React, { useState, useEffect, FC, ChangeEvent } from 'react'
+import { useState, useEffect, FC, ChangeEvent } from 'react'
 import {
   Modal,
   Button,
