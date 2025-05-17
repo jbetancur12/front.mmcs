@@ -42,6 +42,7 @@ interface Supplier {
     filePath: string // URL o identificador para descargar/ver
     fileMimeType?: string // MIME type del archivo, opcional
   }>
+  purchaseType: 1 | 2
 }
 
 interface DocumentToUpload {
@@ -443,6 +444,12 @@ const SupplierDetailsPage: React.FC = () => {
           <Grid item xs={12} sm={6}>
             <Typography>
               <strong>Teléfono:</strong> {supplier.phone}
+            </Typography>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography>
+              <strong>Tipo de Compra:</strong>{' '}
+              {supplier.purchaseType === 1 ? 'I' : 'II'}
             </Typography>
           </Grid>
           <Grid item xs={12}>

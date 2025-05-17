@@ -1,5 +1,5 @@
 // src/Components/Purchases/GenerateOrderModal.tsx
-import { useState, useEffect, FC, ChangeEvent } from 'react' // Agregado React para React.Fragment
+import React, { useState, useEffect, FC, ChangeEvent } from 'react'
 import {
   Modal,
   Button,
@@ -14,12 +14,12 @@ import {
   Checkbox,
   Grid,
   Box,
-  CircularProgress, // Para el estado de carga de los settings
-  Alert // Para mostrar errores de los settings
+  CircularProgress,
+  Alert
 } from '@mui/material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import Swal from 'sweetalert2'
-import { useQuery } from 'react-query' // React Query para obtener los settings
+import { useQuery } from 'react-query'
 import {
   PurchaseRequestItem,
   Supplier,
@@ -34,18 +34,18 @@ interface FiscalSettings {
   SERVICE_RETENTION_RATE?: number
   PURCHASE_MINIMUM_BASE?: number
   SERVICE_MINIMUM_BASE?: number
-  IVA_GENERAL_RATE_PERCENTAGE?: number
+  IVA_GENERAL_RATE_PERCENTAGE?: number // Ej: 19 para 19%
 }
 
 interface AssignedItem {
   purchaseRequestItemId: string
   description: string
   quantity: number
-  unitValue: string
-  total: number
+  unitValue: string // Se mantiene como string por NumericFormat, se parsea para cálculos
+  total: number // quantity * unitValue (subtotal original del ítem)
   itemType: 'service' | 'purchase'
   applyIVA: boolean
-  ivaPercentageForItem: string
+  ivaPercentageForItem: string // Se mantiene como string, se parsea para cálculos
 }
 
 interface GenerateOrderModalProps {
@@ -77,7 +77,6 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
   onSuccess
 }) => {
   const axiosPrivate = useAxiosPrivate()
-  // Estado para los datos generales de la orden
   const [orderData, setOrderData] = useState<
     Omit<PurchaseOrder, 'purchaseRequestId' | 'purchaseRequest'>
   >({
@@ -89,11 +88,11 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
     installments: 'N/A',
     freight: 'Asume Metromedics',
     observations: '',
-    totalBeforeVAT: 0,
+    totalBeforeVAT: 0, // Suma de item.total (subtotal bruto de la orden)
     vat: 0,
     retefuente: 0,
-    retecree: 0, // Considerar si este campo sigue siendo relevante o se reemplaza por ReteICA u otros
-    discount: 0,
+    retecree: 0,
+    discount: 0, // Valor del descuento (calculado a partir de discountPercentage)
     total: 0,
     requirements: purchaseRequest.requirements || ['No hay requerimientos']
   })
@@ -103,29 +102,23 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
   const [assignedItems, setAssignedItems] = useState<AssignedItem[]>([])
   const [removedItems, setRemovedItems] = useState<string[]>([])
   const [_pendingItems, setPendingItems] = useState<PurchaseRequestItem[]>([])
+  const [discountPercentage, setDiscountPercentage] = useState<number>(0) // Porcentaje de descuento ingresado por el usuario
 
-  // --- NUEVO: Fetch de Parámetros Fiscales ---
   const {
     data: fiscalSettings,
     isLoading: isLoadingFiscalSettings,
     error: fiscalSettingsError
   } = useQuery<FiscalSettings, Error>(
-    'fiscalSettings', // Clave para la query cache
+    'fiscalSettings',
     async () => {
-      // Ajusta este endpoint a tu implementación real en el backend
       const response =
         await axiosPrivate.get<FiscalSettings>('/fiscal-parameters')
       return response.data
     },
-    {
-      staleTime: 1000 * 60 * 30 // Cachear datos por 30 minutos, ya que no cambian muy seguido
-      // onError: (err) => { console.error("Error fetching fiscal settings:", err); },
-    }
+    { staleTime: 1000 * 60 * 30 }
   )
-  // --- FIN NUEVO ---
 
   const handleSubmitOrder = async () => {
-    // ... (lógica de validación existente)
     if (!selectedSupplier) {
       Swal.fire('Advertencia', 'Por favor, seleccione un proveedor.', 'warning')
       return
@@ -138,7 +131,6 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
       )
       return
     }
-    // Asegurarse que los parámetros fiscales hayan cargado, si no, mostrar advertencia o deshabilitar botón.
     if (isLoadingFiscalSettings) {
       Swal.fire(
         'Info',
@@ -150,33 +142,37 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
     if (fiscalSettingsError || !fiscalSettings) {
       Swal.fire(
         'Error',
-        'No se pudo cargar la configuración fiscal necesaria para generar la orden.',
+        'No se pudo cargar la configuración fiscal necesaria.',
         'error'
       )
       return
     }
 
+    // El orderData.discount ya es el valor calculado, no el porcentaje
+    // El orderData.total ya está calculado con el descuento comercial aplicado
     const payload = {
       purchaseRequestId: purchaseRequest.id,
       supplierId: selectedSupplier,
       orderData: {
-        ...orderData,
+        ...orderData, // Contiene todos los valores calculados, incluyendo el total final
         requirements: purchaseRequest.requirements || [],
+        // Asegurar que los valores numéricos se envíen como números
         totalBeforeVAT: Number(orderData.totalBeforeVAT) || 0,
         vat: Number(orderData.vat) || 0,
         retefuente: Number(orderData.retefuente) || 0,
         retecree: Number(orderData.retecree) || 0,
-        discount: Number(orderData.discount) || 0,
+        discount: Number(orderData.discount) || 0, // Este es el valor del descuento
         total: Number(orderData.total) || 0
       },
       items: assignedItems.map((item) => ({
         purchaseRequestItemId: item.purchaseRequestItemId,
-        unitValue: parseFloat(item.unitValue) || 0,
+        unitValue:
+          parseFloat(String(item.unitValue).replace(/[^0-9.-]+/g, '')) || 0,
         quantity: item.quantity,
-        total: item.total,
+        total: item.total, // Subtotal original del ítem (cantidad * valor unitario)
         itemType: item.itemType,
         applyIVA: item.applyIVA,
-        ivaPercentageForItem: parseFloat(item.ivaPercentageForItem) || 0 // Enviar como número
+        ivaPercentageForItem: parseFloat(item.ivaPercentageForItem) || 0
       }))
     }
 
@@ -197,19 +193,16 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
     }
   }
 
-  // Lógica para availableSuppliers (sin cambios directos por esta refactorización)
   const availableSuppliers: Supplier[] = Array.from(
     new Set(
       (purchaseRequest.items ?? [])
-        .filter((item) => !item.procesed) // Considera solo ítems no procesados de la solicitud
-        .flatMap(
-          (item) =>
-            item.suppliers ? item.suppliers.map((s) => s.id.toString()) : [] // Obtiene IDs de proveedores
+        .filter((item) => !item.procesed)
+        .flatMap((item) =>
+          item.suppliers ? item.suppliers.map((s) => s.id.toString()) : []
         )
     )
   )
     .map((supplierId: string) => {
-      // Encuentra el objeto Supplier completo para cada ID único
       const itemWithSupplier = (purchaseRequest.items ?? []).find(
         (item) =>
           !item.procesed &&
@@ -221,7 +214,7 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
         ) || null
       )
     })
-    .filter((s): s is Supplier => s !== null) // Filtra nulos y asegura el tipo
+    .filter((s): s is Supplier => s !== null)
 
   useEffect(() => {
     if (selectedSupplier) {
@@ -229,24 +222,21 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
         (s) => s.id.toString() === selectedSupplier
       )
       setSelectedSupplierFull(supplierDetails || null)
-
       const itemsForSupplier: AssignedItem[] = (purchaseRequest.items ?? [])
         .filter(
           (item) =>
             !item.procesed &&
-            item.suppliers &&
-            item.suppliers.some((s) => s.id.toString() === selectedSupplier) &&
+            item.suppliers?.some((s) => s.id.toString() === selectedSupplier) &&
             !removedItems.includes(item.id.toString())
         )
         .map((item) => ({
           purchaseRequestItemId: item.id.toString(),
           description: item.description,
           quantity: item.quantity,
-          unitValue: '', // El usuario ingresará esto
+          unitValue: '',
           total: 0,
-          itemType: 'purchase', // Tipo por defecto
-          applyIVA: true, // Aplicar IVA por defecto
-          // Usar valor de configuración fiscal para IVA por defecto si está disponible
+          itemType: 'purchase',
+          applyIVA: true,
           ivaPercentageForItem:
             fiscalSettings?.IVA_GENERAL_RATE_PERCENTAGE?.toString() || '19'
         }))
@@ -255,73 +245,15 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
       setSelectedSupplierFull(null)
       setAssignedItems([])
     }
-    // Añadir fiscalSettings a las dependencias si se usa para ivaPercentageForItem
   }, [selectedSupplier, removedItems, purchaseRequest.items, fiscalSettings])
 
-  // --- MODIFICADO: Cálculo de ReteFuente ---
-  useEffect(() => {
-    // Esperar a que fiscalSettings esté cargado y sea válido
-    if (
-      !selectedSupplierFull ||
-      !selectedSupplierFull.applyRetention ||
-      isLoadingFiscalSettings ||
-      !fiscalSettings
-    ) {
-      setOrderData((prev) => ({ ...prev, retefuente: 0 }))
-      return
-    }
-
-    // Usar los valores obtenidos del backend, con fallbacks por si algún parámetro no viene
-    const PURCHASE_RETENTION_RATE = fiscalSettings.PURCHASE_RETENTION_RATE || 0
-    const SERVICE_RETENTION_RATE = fiscalSettings.SERVICE_RETENTION_RATE || 0 // Corregido typo: SERVICE_RETENTION_RATE
-    const PURCHASE_MINIMUM_BASE = fiscalSettings.PURCHASE_MINIMUM_BASE || 0
-    const SERVICE_MINIMUM_BASE = fiscalSettings.SERVICE_MINIMUM_BASE || 0
-
-    let totalPurchasesBase = 0
-    let totalServicesBase = 0
-
-    assignedItems.forEach((item) => {
-      if (item.itemType === 'purchase') {
-        totalPurchasesBase += item.total // item.total ya es unitValue * quantity
-      } else if (item.itemType === 'service') {
-        totalServicesBase += item.total
-      }
-    })
-
-    let calculatedRetefuente = 0
-
-    if (totalPurchasesBase >= PURCHASE_MINIMUM_BASE) {
-      calculatedRetefuente += totalPurchasesBase * PURCHASE_RETENTION_RATE
-    }
-
-    if (totalServicesBase >= SERVICE_MINIMUM_BASE) {
-      calculatedRetefuente += totalServicesBase * SERVICE_RETENTION_RATE
-    }
-
-    // console.log('Cálculo ReteFuente - Bases:', {totalPurchasesBase, totalServicesBase});
-    // console.log('Cálculo ReteFuente - Settings:', {PURCHASE_MINIMUM_BASE, SERVICE_MINIMUM_BASE, PURCHASE_RETENTION_RATE, SERVICE_RETENTION_RATE});
-    // console.log('Cálculo ReteFuente - Resultado:', calculatedRetefuente);
-
-    setOrderData((prev) => ({ ...prev, retefuente: calculatedRetefuente }))
-  }, [
-    assignedItems,
-    selectedSupplierFull,
-    fiscalSettings,
-    isLoadingFiscalSettings
-  ]) // Dependencias actualizadas
-  // --- FIN MODIFICADO ---
-
-  // ... (handleOrderChange, handleSupplierChange, handleItemChange, handleRemoveItem sin cambios)
-  // ... (useEffect para totalBeforeVAT, vat, total sin cambios directos, pero se recalcularán)
   const handleOrderChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setOrderData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleSupplierChange = (e: ChangeEvent<HTMLInputElement>) => {
-    // Debería ser SelectChangeEvent si usas MUI Select
-    const newSupplierId = e.target.value
-    setSelectedSupplier(newSupplierId)
+    setSelectedSupplier(e.target.value)
     setRemovedItems([])
   }
 
@@ -333,16 +265,14 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
     setAssignedItems((prevItems) => {
       const newItems = [...prevItems]
       ;(newItems[index] as any)[field] = value
-
       if (field === 'unitValue' || field === 'quantity') {
         const quantity = Number(newItems[index].quantity) || 0
         const unitValue =
           parseFloat(
             String(newItems[index].unitValue).replace(/[^0-9.-]+/g, '')
-          ) || 0 // Limpiar valor
+          ) || 0
         newItems[index].total = unitValue * quantity
       }
-      // Si cambia applyIVA o ivaPercentageForItem, el useEffect de VAT se encargará
       return newItems
     })
   }
@@ -351,31 +281,133 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
     setRemovedItems((prev) => [...prev, itemId])
   }
 
+  // 1. Calcular Total Bruto Antes de IVA y Descuento (Subtotal Original)
   useEffect(() => {
-    const totalBefore = assignedItems.reduce((sum, item) => sum + item.total, 0)
-    setOrderData((prev) => ({ ...prev, totalBeforeVAT: totalBefore }))
+    const grossSubtotal = assignedItems.reduce(
+      (sum, item) => sum + item.total,
+      0
+    )
+    setOrderData((prev) => ({ ...prev, totalBeforeVAT: grossSubtotal }))
   }, [assignedItems])
 
+  // 2. Calcular el Valor del Descuento
   useEffect(() => {
-    let currentVat = 0
-    currentVat = assignedItems.reduce((sum, item) => {
-      if (item.applyIVA) {
-        const itemPerc = parseFloat(item.ivaPercentageForItem) / 100 || 0
-        return sum + item.total * itemPerc
-      }
-      return sum
-    }, 0)
-    setOrderData((prev) => ({ ...prev, vat: currentVat }))
-  }, [assignedItems])
+    const grossSubtotal = Number(orderData.totalBeforeVAT) || 0
+    const percentage = Number(discountPercentage) || 0
+    const validPercentage = Math.max(0, percentage) // Evitar descuento negativo
+    const calculatedDiscountAmount = (grossSubtotal * validPercentage) / 100
+    setOrderData((prev) => ({
+      ...prev,
+      discount: parseFloat(calculatedDiscountAmount.toFixed(2))
+    }))
+  }, [discountPercentage, orderData.totalBeforeVAT])
 
+  // 3. Calcular IVA Total (sobre la base después del descuento)
   useEffect(() => {
+    const grossSubtotal = Number(orderData.totalBeforeVAT) || 0
+    const discountAmount = Number(orderData.discount) || 0
+    let totalVAT = 0
+
+    if (grossSubtotal > 0) {
+      assignedItems.forEach((item) => {
+        if (item.applyIVA) {
+          const itemOriginalSubtotal = item.total // Subtotal original del ítem
+          const itemProportion = itemOriginalSubtotal / grossSubtotal
+          const itemDiscount = discountAmount * itemProportion
+          const itemTaxableBase = itemOriginalSubtotal - itemDiscount
+          const itemIVAPerc = parseFloat(item.ivaPercentageForItem) / 100 || 0
+          totalVAT += itemTaxableBase * itemIVAPerc
+        }
+      })
+    } else {
+      // Si grossSubtotal es 0, pero algún ítem podría tener IVA (caso raro, ej. ítem de $0 con IVA)
+      assignedItems.forEach((item) => {
+        if (item.applyIVA && item.total === 0) {
+          const itemIVAPerc = parseFloat(item.ivaPercentageForItem) / 100 || 0
+          totalVAT += 0 * itemIVAPerc // Explicitly 0
+        }
+      })
+    }
+    setOrderData((prev) => ({ ...prev, vat: parseFloat(totalVAT.toFixed(2)) }))
+  }, [assignedItems, orderData.totalBeforeVAT, orderData.discount])
+
+  // 4. Calcular Retefuente (sobre la base después del descuento)
+  useEffect(() => {
+    if (
+      !selectedSupplierFull ||
+      !selectedSupplierFull.applyRetention ||
+      isLoadingFiscalSettings ||
+      !fiscalSettings
+    ) {
+      setOrderData((prev) => ({ ...prev, retefuente: 0 }))
+      return
+    }
+
+    const {
+      PURCHASE_RETENTION_RATE = 0,
+      SERVICE_RETENTION_RATE = 0,
+      PURCHASE_MINIMUM_BASE = 0,
+      SERVICE_MINIMUM_BASE = 0
+    } = fiscalSettings
+
+    const grossSubtotal = Number(orderData.totalBeforeVAT) || 0
+    const discountAmount = Number(orderData.discount) || 0
+
+    let discountedPurchasesBase = 0
+    let discountedServicesBase = 0
+
+    if (grossSubtotal > 0) {
+      assignedItems.forEach((item) => {
+        const itemOriginalSubtotal = item.total
+        const itemProportion = itemOriginalSubtotal / grossSubtotal
+        const itemDiscount = discountAmount * itemProportion
+        const itemTaxableBase = itemOriginalSubtotal - itemDiscount
+
+        if (item.itemType === 'purchase') {
+          discountedPurchasesBase += itemTaxableBase
+        } else if (item.itemType === 'service') {
+          discountedServicesBase += itemTaxableBase
+        }
+      })
+    }
+
+    let calculatedRetefuente = 0
+    if (discountedPurchasesBase >= PURCHASE_MINIMUM_BASE) {
+      calculatedRetefuente += discountedPurchasesBase * PURCHASE_RETENTION_RATE
+    }
+    if (discountedServicesBase >= SERVICE_MINIMUM_BASE) {
+      calculatedRetefuente += discountedServicesBase * SERVICE_RETENTION_RATE
+    }
+    setOrderData((prev) => ({
+      ...prev,
+      retefuente: parseFloat(calculatedRetefuente.toFixed(2))
+    }))
+  }, [
+    assignedItems,
+    selectedSupplierFull,
+    fiscalSettings,
+    isLoadingFiscalSettings,
+    orderData.totalBeforeVAT,
+    orderData.discount
+  ])
+
+  // 5. Calcular Total Final
+  useEffect(() => {
+    const subtotalOriginal = Number(orderData.totalBeforeVAT) || 0
+    const discountVal = Number(orderData.discount) || 0
+    const vatVal = Number(orderData.vat) || 0
+    const retefuenteVal = Number(orderData.retefuente) || 0
+    const retecreeVal = Number(orderData.retecree) || 0 // Asumimos que este es un valor, no un %
+
+    const subtotalAfterDiscount = subtotalOriginal - discountVal
+
     const finalTotal =
-      (Number(orderData.totalBeforeVAT) || 0) +
-      (Number(orderData.vat) || 0) -
-      (Number(orderData.retefuente) || 0) -
-      (Number(orderData.retecree) || 0) - // Considerar si retecree sigue aplicando o es ReteICA, etc.
-      (Number(orderData.discount) || 0)
-    setOrderData((prev) => ({ ...prev, total: finalTotal }))
+      subtotalAfterDiscount + vatVal - retefuenteVal - retecreeVal
+
+    setOrderData((prev) => ({
+      ...prev,
+      total: parseFloat(finalTotal.toFixed(2))
+    }))
   }, [
     orderData.totalBeforeVAT,
     orderData.vat,
@@ -391,7 +423,6 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
           Generar Orden de Compra
         </Typography>
 
-        {/* --- NUEVO: Indicador de carga y error para parámetros fiscales --- */}
         {isLoadingFiscalSettings && (
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <CircularProgress size={20} sx={{ mr: 1 }} />
@@ -403,34 +434,21 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
         {fiscalSettingsError && (
           <Alert severity='error' sx={{ mb: 2 }}>
             Error al cargar la configuración fiscal:{' '}
-            {fiscalSettingsError.message}. Los cálculos automáticos pueden ser
-            incorrectos.
+            {fiscalSettingsError.message}. Los cálculos pueden ser incorrectos.
           </Alert>
         )}
-        {/* --- FIN NUEVO --- */}
 
         <Grid container spacing={2}>
-          {/* ... (resto del JSX para los campos de la orden: Proveedor, Código, Fechas, etc.) */}
-          {/* Asegúrate de que el botón "Generar Orden" esté deshabilitado si isLoadingFiscalSettings es true */}
-          {/* Ejemplo:
-            <Button
-                ...
-                onClick={handleSubmitOrder}
-                disabled={!selectedSupplier || assignedItems.length === 0 || isLoadingFiscalSettings}
-            >
-                Generar Orden
-            </Button>
-          */}
           <Grid item xs={12} md={6}>
             <TextField
               select
               label='Seleccionar Proveedor'
               value={selectedSupplier}
-              onChange={handleSupplierChange as any} // Cast a 'any' por el tipo de evento esperado por TextField select
+              onChange={handleSupplierChange}
               fullWidth
               margin='normal'
               required
-              disabled={isLoadingFiscalSettings} // Deshabilitar si la config fiscal está cargando
+              disabled={isLoadingFiscalSettings}
             >
               {availableSuppliers.map((supplier) => (
                 <MenuItem key={supplier.id} value={supplier.id.toString()}>
@@ -439,8 +457,6 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
               ))}
             </TextField>
           </Grid>
-          {/* ... (otros campos como código, fechas, etc. pueden necesitar disabled={isLoadingFiscalSettings} también) */}
-
           <Grid item xs={12} md={6}>
             <TextField
               label='Código Orden (Opcional)'
@@ -452,8 +468,6 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
               disabled={isLoadingFiscalSettings}
             />
           </Grid>
-          {/* ... (campos de fechas, lugar de entrega, etc. ... todos deberían tener disabled={isLoadingFiscalSettings}) ... */}
-          {/* Asegúrate de propagar disabled={isLoadingFiscalSettings} a todos los campos de entrada relevantes */}
           <Grid item xs={12} md={6}>
             <TextField
               label='Fecha de Solicitud'
@@ -581,9 +595,9 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
                         prefix={'$ '}
                         customInput={TextField}
                         size='small'
-                        onValueChange={(values) => {
+                        onValueChange={(values) =>
                           handleItemChange(index, 'unitValue', values.value)
-                        }}
+                        }
                         sx={{ minWidth: 120 }}
                         disabled={isLoadingFiscalSettings}
                       />
@@ -596,7 +610,7 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
                         prefix={'$ '}
                         customInput={TextField}
                         size='small'
-                        disabled // Siempre deshabilitado, es calculado
+                        disabled
                         sx={{ minWidth: 120 }}
                       />
                     </TableCell>
@@ -606,13 +620,13 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
                         customInput={TextField}
                         suffix={'%'}
                         size='small'
-                        onValueChange={(values) => {
+                        onValueChange={(values) =>
                           handleItemChange(
                             index,
                             'ivaPercentageForItem',
                             values.value
                           )
-                        }}
+                        }
                         sx={{ minWidth: 80 }}
                         disabled={isLoadingFiscalSettings || !item.applyIVA}
                       />
@@ -647,6 +661,7 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
             </Table>
           </>
         )}
+
         {selectedSupplier && (
           <Grid container spacing={2} style={{ marginTop: '1rem' }}>
             <Grid item xs={12}>
@@ -663,8 +678,9 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
                 disabled={isLoadingFiscalSettings}
               />
             </Grid>
-            {/* Campos de Totales y Retenciones */}
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={6} md={3}>
+              {' '}
+              {/* Ajustado para que quepan 4 por fila */}
               <NumericFormat
                 label='Total antes de IVA'
                 value={orderData.totalBeforeVAT}
@@ -677,7 +693,38 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
                 disabled
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={6} md={3}>
+              <NumericFormat
+                label='Descuento (%)'
+                value={discountPercentage}
+                suffix={'%'}
+                customInput={TextField}
+                fullWidth
+                margin='normal'
+                onValueChange={(values) => {
+                  setDiscountPercentage(Number(values.value) || 0)
+                }}
+                decimalScale={2}
+                allowNegative={false}
+                disabled={
+                  isLoadingFiscalSettings || orderData.totalBeforeVAT === 0
+                }
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <NumericFormat
+                label='Descuento (Valor)'
+                value={orderData.discount}
+                thousandSeparator=','
+                decimalSeparator='.'
+                prefix={'$ '}
+                customInput={TextField}
+                fullWidth
+                margin='normal'
+                disabled
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
               <NumericFormat
                 label='IVA (valor)'
                 name='vat'
@@ -707,9 +754,9 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
               <NumericFormat
-                label='ReteICA / Otros' // Renombrado. ReteCREE está obsoleto.
-                name='retecree' // Mantener nombre de estado si el backend lo espera, o cambiar a 'reteica'
-                value={orderData.retecree} // Este es un campo manual
+                label='ReteICA / Otros'
+                name='retecree'
+                value={orderData.retecree}
                 thousandSeparator=','
                 decimalSeparator='.'
                 prefix={'$ '}
@@ -719,27 +766,7 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
                 onValueChange={(values) => {
                   setOrderData((prev) => ({
                     ...prev,
-                    retecree: Number(values.value) || 0 // o reteica si cambias el nombre del estado
-                  }))
-                }}
-                disabled={isLoadingFiscalSettings}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <NumericFormat
-                label='Descuento'
-                name='discount'
-                value={orderData.discount}
-                thousandSeparator=','
-                decimalSeparator='.'
-                prefix={'$ '}
-                customInput={TextField}
-                fullWidth
-                margin='normal'
-                onValueChange={(values) => {
-                  setOrderData((prev) => ({
-                    ...prev,
-                    discount: Number(values.value) || 0
+                    retecree: Number(values.value) || 0
                   }))
                 }}
                 disabled={isLoadingFiscalSettings}
@@ -751,7 +778,7 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
                 {new Intl.NumberFormat('es-CO', {
                   style: 'currency',
                   currency: 'COP',
-                  minimumFractionDigits: 0, // Para no mostrar decimales si son .00
+                  minimumFractionDigits: 0,
                   maximumFractionDigits: 0
                 }).format(Number(orderData.total) || 0)}
               </Typography>
