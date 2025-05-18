@@ -192,11 +192,6 @@ const SupplierDetailsPage: React.FC = () => {
   // const [selectedEvaluationForEdit, setSelectedEvaluationForEdit] =
   //   useState<SupplierEvaluationData | null>(null)
 
-  const [evaluationNotification, setEvaluationNotification] = useState<{
-    type: 'warning' | 'info'
-    message: string
-  } | null>(null)
-
   // Fetch supplier details using useQuery
   const {
     data: supplier,
