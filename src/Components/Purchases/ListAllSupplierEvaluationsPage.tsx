@@ -18,7 +18,7 @@ import MaterialReactTable, {
 import { useQuery, useQueryClient, useMutation } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private' // Ajusta la ruta
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
-import { Edit, Add, Refresh, Close } from '@mui/icons-material' // Importar iconos
+import { Edit, Add, Refresh, Close, PictureAsPdf } from '@mui/icons-material' // Importar iconos
 import { useNavigate } from 'react-router-dom'
 
 // Asume que ISupplier y SupplierEvaluationData están en un archivo de tipos compartido
@@ -30,6 +30,7 @@ import SupplierEvaluationForm, {
   SupplierEvaluationData
 } from './SupplierEvaluationForm'
 import Swal from 'sweetalert2'
+import { isAxiosError } from 'axios'
 
 // Interfaz para el objeto de evaluación como se espera de la API (con proveedor anidado)
 interface EvaluationWithSupplier extends SupplierEvaluationData {
@@ -68,6 +69,50 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
       return response.data
     }
   )
+
+  const handleViewReport = async (
+    evaluationId: number | undefined,
+    supplierName: string,
+    evaluationDate: string
+  ) => {
+    try {
+      // El endpoint debe estar configurado para devolver el PDF directamente
+      const response = await axiosPrivate.get(
+        `/reports/fog-mmcs-15/${evaluationId}`,
+        {
+          responseType: 'blob' // Importante para manejar la respuesta como archivo
+        }
+      )
+
+      const file = new Blob([response.data], { type: 'application/pdf' })
+      const fileURL = URL.createObjectURL(file)
+
+      // Abrir PDF en nueva pestaña
+      const pdfWindow = window.open(fileURL, '_blank')
+      if (pdfWindow) {
+        pdfWindow.focus()
+        // Opcional: intentar nombrar la pestaña (puede no funcionar en todos los navegadores)
+        // setTimeout(() => { try { pdfWindow.document.title = `Evaluacion_${supplierName}_${evaluationDate}`; } catch(e){} }, 500);
+      } else {
+        Swal.fire(
+          'Error',
+          'El navegador bloqueó la apertura de una nueva pestaña. Revisa la configuración de pop-ups.',
+          'warning'
+        )
+      }
+      // No necesitas URL.revokeObjectURL(fileURL) inmediatamente si se abre en una nueva pestaña,
+      // el navegador usualmente lo maneja al cerrar la pestaña.
+    } catch (err) {
+      console.error('Error al generar o mostrar el reporte PDF:', err)
+      let message = 'No se pudo generar el reporte PDF.'
+      if (isAxiosError(err) && err.response?.data?.message) {
+        message = err.response.data.message
+      } else if (err instanceof Error) {
+        message = err.message
+      }
+      Swal.fire('Error', message, 'error')
+    }
+  }
 
   const handleOpenCreateModal = () => {
     // Aquí necesitarías una forma de seleccionar para qué proveedor crear la evaluación.
@@ -265,6 +310,21 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
                 size='small'
               >
                 <Edit />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title='Ver Reporte PDF'>
+              <IconButton
+                onClick={() =>
+                  handleViewReport(
+                    row.original.id,
+                    row.original.supplier?.name || 'Proveedor',
+                    row.original.evaluationDate
+                  )
+                }
+                color='secondary'
+                size='small'
+              >
+                <PictureAsPdf />
               </IconButton>
             </Tooltip>
             {/* <Tooltip title="Eliminar Evaluación"> // La eliminación es una acción destructiva, manejar con cuidado
