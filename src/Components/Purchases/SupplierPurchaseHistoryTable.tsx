@@ -17,6 +17,8 @@ import { CheckCircleOutline, HighlightOff } from '@mui/icons-material' // Icono 
 
 // Importar el tipo desde tu archivo central de tipos
 import { PurchaseHistoryEntry } from 'src/pages/Purchases/Types' // Ajusta la ruta
+import Swal from 'sweetalert2'
+import { isAxiosError } from 'axios'
 
 interface SupplierPurchaseHistoryTableProps {
   supplierId: string | number
@@ -47,6 +49,79 @@ const SupplierPurchaseHistoryTable: React.FC<
     }
   )
 
+  const handleViewOrderReportPDF = async (
+    purchaseOrderId: number | string,
+    orderCode: string
+  ) => {
+    try {
+      Swal.fire({
+        title: 'Generando Reporte...',
+        text: `Por favor espera mientras se genera el PDF para la orden ${orderCode}.`,
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading()
+        }
+      })
+
+      // El endpoint que mencionaste, ajusta la ruta base si es necesario (ej. si api() da /api)
+      const reportUrl = `/reports/fog-mmcs-13/${purchaseOrderId}`
+
+      const response = await axiosPrivate.get(reportUrl, {
+        responseType: 'blob' // Importante para manejar la respuesta como archivo
+      })
+
+      Swal.close() // Cerrar el loader de Swal
+
+      const effectiveMimeType =
+        response.headers['content-type'] || 'application/pdf'
+      const blob = new Blob([response.data], { type: effectiveMimeType })
+      const fileURL = URL.createObjectURL(blob)
+
+      const newWindow = window.open(fileURL, '_blank')
+      if (newWindow) {
+        newWindow.focus()
+        setTimeout(() => {
+          // Dar tiempo a que la pestaña cargue antes de intentar cambiar el título
+          try {
+            newWindow.document.title = `Orden ${orderCode} - FOGC-MMCS-13`
+          } catch (e) {
+            console.warn('No se pudo cambiar el título de la pestaña.')
+          }
+        }, 500)
+      } else {
+        Swal.fire(
+          'Error de Navegador',
+          'Tu navegador bloqueó la apertura de una nueva pestaña. Por favor, permite pop-ups para este sitio.',
+          'warning'
+        )
+      }
+    } catch (err) {
+      Swal.close() // Asegurarse de cerrar el loader de Swal en caso de error
+      console.error(
+        `Error obteniendo el reporte PDF para la orden ID ${purchaseOrderId}:`,
+        err
+      )
+      let errorMessage =
+        'No se pudo generar o mostrar el reporte PDF de la orden de compra.'
+      if (isAxiosError(err)) {
+        if (err.response?.status === 404) {
+          errorMessage =
+            'Reporte o datos para la orden de compra no encontrados.'
+        } else if (err.response?.data?.message) {
+          errorMessage =
+            typeof err.response.data.message === 'string'
+              ? err.response.data.message
+              : JSON.stringify(err.response.data.message)
+        } else if (err.message) {
+          errorMessage = err.message
+        }
+      } else if (err instanceof Error) {
+        errorMessage = err.message
+      }
+      Swal.fire('Error', errorMessage, 'error')
+    }
+  }
+
   const columns = useMemo<MRT_ColumnDef<PurchaseHistoryEntry>[]>(
     () => [
       {
@@ -59,8 +134,8 @@ const SupplierPurchaseHistoryTable: React.FC<
           <Typography
             component='a'
             onClick={() =>
-              navigate(`/purchases/orders/details/${row.original.id}`)
-            } // Ajusta esta ruta
+              handleViewOrderReportPDF(row.original.id, row.original.code)
+            } // Llamar al nuevo handler
             sx={{
               color: 'primary.main',
               textDecoration: 'underline',
