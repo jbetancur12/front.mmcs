@@ -6,20 +6,14 @@ import {
   CircularProgress,
   Alert,
   Paper,
-  Chip,
-  Tooltip,
-  IconButton
+  Chip
 } from '@mui/material'
 import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
 import { useQuery } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private' // Ajusta la ruta
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { useNavigate } from 'react-router-dom'
-import {
-  CheckCircleOutline,
-  HighlightOff,
-  Visibility as ViewOrderIcon
-} from '@mui/icons-material' // Icono para ver detalle de orden
+import { CheckCircleOutline, HighlightOff } from '@mui/icons-material' // Icono para ver detalle de orden
 
 // Importar el tipo desde tu archivo central de tipos
 import { PurchaseHistoryEntry } from 'src/pages/Purchases/Types' // Ajusta la ruta

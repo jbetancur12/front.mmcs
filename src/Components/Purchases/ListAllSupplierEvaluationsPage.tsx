@@ -3,19 +3,14 @@ import React, { useMemo, useState } from 'react'
 import {
   Container,
   Typography,
-  Paper,
   Box,
-  Alert,
   Chip,
   IconButton,
   Tooltip,
   Button
 } from '@mui/material'
-import MaterialReactTable, {
-  type MRT_ColumnDef,
-  type MRT_Row
-} from 'material-react-table'
-import { useQuery, useQueryClient, useMutation } from 'react-query'
+import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
+import { useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private' // Ajusta la ruta
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Edit, Add, Refresh, Close, PictureAsPdf } from '@mui/icons-material' // Importar iconos
@@ -70,11 +65,7 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
     }
   )
 
-  const handleViewReport = async (
-    evaluationId: number | undefined,
-    supplierName: string,
-    evaluationDate: string
-  ) => {
+  const handleViewReport = async (evaluationId: number | undefined) => {
     try {
       // El endpoint debe estar configurado para devolver el PDF directamente
       const response = await axiosPrivate.get(
@@ -166,7 +157,7 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
     setIsFormModalOpen(true)
   }
 
-  const handleFormSuccess = (savedEvaluation: SupplierEvaluationData) => {
+  const handleFormSuccess = () => {
     setIsFormModalOpen(false)
     setSelectedEvaluation(null)
     setSupplierForNewEvaluation(null)
@@ -301,7 +292,7 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
         columns={columns}
         data={evaluations}
         enableRowActions // Habilitar acciones por fila
-        renderRowActions={({ row, table }) => (
+        renderRowActions={({ row }) => (
           <Box sx={{ display: 'flex', gap: '0.5rem' }}>
             <Tooltip title='Editar Evaluación'>
               <IconButton
@@ -316,9 +307,9 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
               <IconButton
                 onClick={() =>
                   handleViewReport(
-                    row.original.id,
-                    row.original.supplier?.name || 'Proveedor',
-                    row.original.evaluationDate
+                    row.original.id
+                    // row.original.supplier?.name || 'Proveedor',
+                    // row.original.evaluationDate
                   )
                 }
                 color='secondary'

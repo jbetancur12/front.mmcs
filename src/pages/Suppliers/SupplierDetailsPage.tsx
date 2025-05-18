@@ -104,8 +104,8 @@ const SupplierDetailsPage: React.FC = () => {
   // --- NUEVO: Estado para el modal de evaluación ---
   const [evaluationModalOpen, setEvaluationModalOpen] = useState(false)
   // Opcional: si permites editar evaluaciones desde esta página, necesitarías algo así:
-  const [selectedEvaluationForEdit, setSelectedEvaluationForEdit] =
-    useState<SupplierEvaluationData | null>(null)
+  // const [selectedEvaluationForEdit, setSelectedEvaluationForEdit] =
+  //   useState<SupplierEvaluationData | null>(null)
 
   const [evaluationNotification, setEvaluationNotification] = useState<{
     type: 'warning' | 'info'
@@ -384,7 +384,7 @@ const SupplierDetailsPage: React.FC = () => {
     // setSelectedEvaluationForEdit(null);
   }
 
-  const handleEvaluationSuccess = (evaluation: SupplierEvaluationData) => {
+  const handleEvaluationSuccess = () => {
     handleCloseEvaluationModal()
     Swal.fire(
       'Evaluación Guardada',
