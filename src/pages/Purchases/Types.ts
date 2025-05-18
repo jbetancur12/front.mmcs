@@ -177,3 +177,11 @@ export interface PurchaseVerificationItem {
   meetsRequirements: boolean
   orderItem: PurchaseOrderItem
 }
+
+export interface PurchaseHistoryEntry {
+  id: number | string // ID de la Orden de Compra
+  code: string // Código/Número de la Orden de Compra
+  requestDate: string // Fecha de la orden (o el campo de fecha que uses, ej. orderDate)
+  total: number // Monto total de la orden
+  verified: string // Estado de la orden (ej. 'GENERADA', 'APROBADA', 'COMPLETADA')
+}

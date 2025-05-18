@@ -37,6 +37,7 @@ import { isAxiosError } from 'axios'
 import SupplierEvaluationForm, {
   SupplierEvaluationData
 } from 'src/Components/Purchases/SupplierEvaluationForm'
+import SupplierPurchaseHistoryTable from 'src/Components/Purchases/SupplierPurchaseHistoryTable'
 
 // Asumiendo que tienes una interfaz similar a esta para el proveedor
 export interface Supplier {
@@ -630,6 +631,7 @@ const SupplierDetailsPage: React.FC = () => {
         </List>
         {/* Aquí podrías listar los documentos ya subidos */}
       </Paper>
+      {supplierId && <SupplierPurchaseHistoryTable supplierId={supplierId} />}
       {/* --- NUEVO: Modal/Dialog para el Formulario de Evaluación --- */}
       {evaluationModalOpen &&
         supplier && ( // Solo renderizar si el modal debe estar abierto Y supplier está cargado
