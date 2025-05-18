@@ -65,6 +65,12 @@ interface DocumentToUpload {
   file: File | null
 }
 
+interface EvaluationStatusSummary {
+  lastEvaluationDate: string | null // Formato YYYY-MM-DD
+  lastPurchaseDate: string | null // Formato YYYY-MM-DD o YYYY-MM-DDTHH:mm:ss.sssZ
+  hasActivityInLast6Months: boolean
+}
+
 const juridicalDocumentTypes: Array<Omit<DocumentToUpload, 'file'>> = [
   { id: 'rut_juridical', label: 'RUT' },
   {
@@ -101,6 +107,11 @@ const SupplierDetailsPage: React.FC = () => {
   const [selectedEvaluationForEdit, setSelectedEvaluationForEdit] =
     useState<SupplierEvaluationData | null>(null)
 
+  const [evaluationNotification, setEvaluationNotification] = useState<{
+    type: 'warning' | 'info'
+    message: string
+  } | null>(null)
+
   // Fetch supplier details using useQuery
   const {
     data: supplier,
@@ -127,6 +138,107 @@ const SupplierDetailsPage: React.FC = () => {
       }
     }
   )
+
+  const { data: evalStatusSummary, isLoading: isLoadingEvalStatus } = useQuery<
+    EvaluationStatusSummary,
+    Error
+  >(
+    ['supplierEvaluationStatusSummary', supplierId],
+    async () => {
+      const response = await axiosPrivate.get<EvaluationStatusSummary>(
+        `/suppliers/${supplierId}/evaluation-status-summary`
+      )
+      return response.data
+    },
+    {
+      enabled: !!supplierId // Solo ejecutar si supplierId existe
+      // staleTime: 1000 * 60 * 5 // Cachear por 5 minutos, por ejemplo
+    }
+  )
+
+  useEffect(() => {
+    if (!evalStatusSummary || isLoadingEvalStatus || !supplierId) {
+      setEvaluationNotification(null)
+      return
+    }
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // Normalizar a inicio del día
+
+    const sixMonthsAgo = new Date(today)
+    sixMonthsAgo.setMonth(today.getMonth() - 6)
+
+    let notification: { type: 'warning' | 'info'; message: string } | null =
+      null
+
+    // Helper para parsear fechas YYYY-MM-DD o YYYY-MM-DDTHH...Z como fecha local de inicio de día
+    const parseDateToLocalDayStart = (
+      dateString: string | null
+    ): Date | null => {
+      if (!dateString) return null
+      // Si es YYYY-MM-DDTHH:mm:ss.sssZ, new Date() lo parsea bien.
+      // Si es YYYY-MM-DD, new Date() puede interpretarlo como UTC. Para ser seguro:
+      const parts = dateString.substring(0, 10).split('-')
+      if (parts.length === 3) {
+        return new Date(
+          parseInt(parts[0]),
+          parseInt(parts[1]) - 1,
+          parseInt(parts[2])
+        )
+      }
+      return new Date(dateString) // Fallback para formatos completos
+    }
+
+    if (evalStatusSummary.lastEvaluationDate) {
+      const lastEvalDate = parseDateToLocalDayStart(
+        evalStatusSummary.lastEvaluationDate
+      )
+      if (lastEvalDate && lastEvalDate < sixMonthsAgo) {
+        // Vencida
+        if (evalStatusSummary.hasActivityInLast6Months) {
+          notification = {
+            type: 'warning',
+            message: `Evaluación REQUERIDA. Última evaluación: ${lastEvalDate.toLocaleDateString('es-CO')}. Proveedor con actividad reciente.`
+          }
+        } else {
+          notification = {
+            type: 'info',
+            message: `Evaluación VENCIDA (Última: ${lastEvalDate.toLocaleDateString('es-CO')}). Proveedor inactivo en los últimos 6 meses; evaluar según necesidad.`
+          }
+        }
+      }
+      // else: Evaluación al día
+    } else {
+      // Sin evaluaciones previas
+      if (evalStatusSummary.hasActivityInLast6Months) {
+        // Tiene actividad reciente y nunca ha sido evaluado
+        notification = {
+          type: 'warning',
+          message: `PRIMERA EVALUACIÓN REQUERIDA. El proveedor tiene actividad reciente.`
+        }
+      } else if (evalStatusSummary.lastPurchaseDate) {
+        // Sin actividad reciente, pero tuvo compras antes
+        const lastPurchase = parseDateToLocalDayStart(
+          evalStatusSummary.lastPurchaseDate
+        )
+        if (lastPurchase && lastPurchase < sixMonthsAgo) {
+          notification = {
+            type: 'info',
+            message: `Proveedor sin evaluaciones. Última compra (${lastPurchase.toLocaleDateString('es-CO')}) fue hace más de 6 meses.`
+          }
+        }
+        // Si la última compra fue hace menos de 6 meses, no se muestra nada (aún no es crítico)
+      } else {
+        // Sin evaluaciones y sin historial de compras
+        notification = {
+          type: 'info',
+          message:
+            'Proveedor nuevo sin historial de compras ni evaluaciones. Considerar evaluación si se inician transacciones.'
+        }
+      }
+    }
+    setEvaluationNotification(notification)
+  }, [evalStatusSummary, isLoadingEvalStatus, supplierId])
 
   useEffect(() => {
     // Si el supplierId cambia, react-query se encargará de re-fetch
@@ -463,6 +575,20 @@ const SupplierDetailsPage: React.FC = () => {
           </Button>
         </Box>
       </Box>
+      {isLoadingEvalStatus && (
+        <Box sx={{ display: 'flex', alignItems: 'center', my: 2 }}>
+          <CircularProgress size={20} sx={{ mr: 1 }} />
+          <Typography variant='caption'>
+            {' '}
+            Verificando estado de evaluación...
+          </Typography>
+        </Box>
+      )}
+      {evaluationNotification && !isLoadingEvalStatus && (
+        <Alert severity={evaluationNotification.type} sx={{ mt: 1, mb: 2 }}>
+          {evaluationNotification.message}
+        </Alert>
+      )}
       <Paper elevation={3} sx={{ p: 3 }}>
         <Typography variant='h4' gutterBottom>
           {supplier.name}
