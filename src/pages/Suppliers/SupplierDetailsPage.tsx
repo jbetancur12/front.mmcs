@@ -17,16 +17,29 @@ import {
   Switch,
   FormControlLabel,
   Chip,
-  IconButton
+  IconButton,
+  DialogTitle,
+  DialogContent,
+  Dialog
 } from '@mui/material'
-import { UploadFile, Description, Edit, Visibility } from '@mui/icons-material'
+import {
+  UploadFile,
+  Description,
+  Edit,
+  Visibility,
+  Assessment,
+  Close
+} from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import Swal from 'sweetalert2'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { isAxiosError } from 'axios'
+import SupplierEvaluationForm, {
+  SupplierEvaluationData
+} from 'src/Components/Purchases/SupplierEvaluationForm'
 
 // Asumiendo que tienes una interfaz similar a esta para el proveedor
-interface Supplier {
+export interface Supplier {
   id: number
   name: string
   taxId: string
@@ -80,6 +93,12 @@ const SupplierDetailsPage: React.FC = () => {
 
   const [filesToUpload, setFilesToUpload] = useState<DocumentToUpload[]>([])
   const [applyRetention, setApplyRetention] = useState<boolean>(false)
+
+  // --- NUEVO: Estado para el modal de evaluación ---
+  const [evaluationModalOpen, setEvaluationModalOpen] = useState(false)
+  // Opcional: si permites editar evaluaciones desde esta página, necesitarías algo así:
+  const [selectedEvaluationForEdit, setSelectedEvaluationForEdit] =
+    useState<SupplierEvaluationData | null>(null)
 
   // Fetch supplier details using useQuery
   const {
@@ -240,6 +259,30 @@ const SupplierDetailsPage: React.FC = () => {
     }
   )
 
+  // --- NUEVO: Handlers para el modal de evaluación ---
+  const handleOpenEvaluationModal = () => {
+    // Si quisieras soportar edición desde aquí, aquí establecerías la evaluación a editar.
+    // setSelectedEvaluationForEdit(null); // Para asegurar que se abra para una nueva evaluación
+    setEvaluationModalOpen(true)
+  }
+
+  const handleCloseEvaluationModal = () => {
+    setEvaluationModalOpen(false)
+    // setSelectedEvaluationForEdit(null);
+  }
+
+  const handleEvaluationSuccess = (evaluation: SupplierEvaluationData) => {
+    handleCloseEvaluationModal()
+    Swal.fire(
+      'Evaluación Guardada',
+      'La evaluación del proveedor ha sido guardada con éxito.',
+      'success'
+    )
+    // Opcional: Invalidar queries si esta página muestra una lista de evaluaciones o un resumen
+    queryClient.invalidateQueries(['supplierEvaluations', supplierId])
+    // queryClient.invalidateQueries(['supplierDetails', supplierId]); // Si la evaluación afecta detalles del proveedor
+  }
+
   const handleRetentionChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -397,14 +440,27 @@ const SupplierDetailsPage: React.FC = () => {
           {/* Navegación explícita */}
           &larr; Volver a la lista
         </Button>
-        <Button
-          variant='contained'
-          color='primary'
-          startIcon={<Edit />}
-          onClick={() => navigate(`/purchases/suppliers/edit/${supplierId}`)}
-        >
-          Editar Proveedor
-        </Button>
+        <Box>
+          {' '}
+          {/* Contenedor para los botones de acción */}
+          <Button
+            variant='outlined' // Estilo diferente para que no compita visualmente con "Editar"
+            color='secondary'
+            startIcon={<Assessment />}
+            onClick={handleOpenEvaluationModal} // <--- NUEVO BOTÓN Y HANDLER
+            sx={{ mr: 1 }} // Margen si tienes más botones
+          >
+            Evaluar Proveedor
+          </Button>
+          <Button
+            variant='contained'
+            color='primary'
+            startIcon={<Edit />}
+            onClick={() => navigate(`/purchases/suppliers/edit/${supplierId}`)} // Ajusta la ruta de edición
+          >
+            Editar Proveedor
+          </Button>
+        </Box>
       </Box>
       <Paper elevation={3} sx={{ p: 3 }}>
         <Typography variant='h4' gutterBottom>
@@ -574,6 +630,40 @@ const SupplierDetailsPage: React.FC = () => {
         </List>
         {/* Aquí podrías listar los documentos ya subidos */}
       </Paper>
+      {/* --- NUEVO: Modal/Dialog para el Formulario de Evaluación --- */}
+      {evaluationModalOpen &&
+        supplier && ( // Solo renderizar si el modal debe estar abierto Y supplier está cargado
+          <Dialog
+            open={evaluationModalOpen}
+            onClose={handleCloseEvaluationModal}
+            maxWidth='md' // Puedes ajustar el tamaño
+            fullWidth
+          >
+            <DialogTitle
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}
+            >
+              Nueva Evaluación para: {supplier.name}
+              <IconButton onClick={handleCloseEvaluationModal}>
+                <Close />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent dividers>
+              {' '}
+              {/* dividers añade líneas de separación */}
+              <SupplierEvaluationForm
+                supplier={supplier}
+                // existingEvaluation={selectedEvaluationForEdit} // Pasa esto si implementas edición
+                onSuccess={handleEvaluationSuccess}
+                onCancel={handleCloseEvaluationModal} // El form interno llamará a esto
+              />
+            </DialogContent>
+            {/* Los DialogActions (botones Guardar/Cancelar) están dentro de SupplierEvaluationForm */}
+          </Dialog>
+        )}
     </Container>
   )
 }

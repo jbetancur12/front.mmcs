@@ -104,6 +104,11 @@ const sidebarItems = ($userStore: UserData) => [
         label: 'Parametros Fiscales',
         url: 'purchases/fiscal-parameters',
         roles: ['admin', 'comp_requester', 'comp_supervisor']
+      },
+      {
+        label: 'Evaluaciones de Proveedores',
+        url: 'purchases/suppliers/evaluations',
+        roles: ['admin', 'comp_requester', 'comp_supervisor']
       }
     ]
   },

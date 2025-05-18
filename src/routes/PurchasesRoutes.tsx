@@ -13,7 +13,9 @@ const SupplierEditPage = lazy(
 const PurchaseRequest = lazy(
   () => import('src/pages/Purchases/PurchaseRequest')
 )
-
+const ListAllSupplierEvaluationsPage = lazy(
+  () => import('src/Components/Purchases/ListAllSupplierEvaluationsPage')
+)
 const SuppliersSelection = lazy(
   () => import('src/pages/Purchases/SupplierSelection')
 )
@@ -48,6 +50,10 @@ const SupplierRoutes = (role: string[]) => {
             element={<PDFViewer path='fog-mmcs-10' />}
           />
           <Route path='suppliers' element={<SuppliersTable />} />
+          <Route
+            path='suppliers/evaluations'
+            element={<ListAllSupplierEvaluationsPage />}
+          />
           <Route
             path='suppliers/details/:supplierId'
             element={<SupplierDetailsPage />}
