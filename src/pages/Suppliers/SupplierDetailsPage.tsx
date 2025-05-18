@@ -34,9 +34,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import Swal from 'sweetalert2'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { isAxiosError } from 'axios'
-import SupplierEvaluationForm, {
-  SupplierEvaluationData
-} from 'src/Components/Purchases/SupplierEvaluationForm'
+import SupplierEvaluationForm from 'src/Components/Purchases/SupplierEvaluationForm'
 import SupplierPurchaseHistoryTable from 'src/Components/Purchases/SupplierPurchaseHistoryTable'
 
 // Asumiendo que tienes una interfaz similar a esta para el proveedor
