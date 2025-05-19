@@ -1,6 +1,6 @@
 // src/components/Purchases/SupplierEvaluationForm.tsx
 
-import React, { useState, useEffect, FC, FormEvent, ChangeEvent } from 'react'
+import { useState, useEffect, FC, FormEvent, ChangeEvent } from 'react'
 import {
   Box,
   Button,
@@ -10,15 +10,13 @@ import {
   Paper,
   CircularProgress,
   Alert,
-  MenuItem,
-  FormControl,
-  InputLabel // No es estrictamente necesario Select y FormHelperText si TextField select se usa bien
+  MenuItem
 } from '@mui/material'
 import { Save, Cancel } from '@mui/icons-material'
 import { useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private' // Ajusta la ruta
 import Swal from 'sweetalert2'
-import { isAxiosError, AxiosResponse } from 'axios' // Importar AxiosResponse
+import { isAxiosError } from 'axios' // Importar AxiosResponse
 import { SelectChangeEvent } from '@mui/material/Select'
 
 // Asumiendo que estos tipos están en 'src/pages/Purchases/Types'
