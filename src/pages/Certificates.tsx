@@ -44,6 +44,7 @@ interface DeviceDetailsProps {
   sede: string
   activoFijo: string
   serie: string
+  headquarter: string
   calibrationDate: string
   nextCalibrationDate: string
   filePath: string
@@ -260,6 +261,15 @@ function Certificates() {
           <Box display='flex' alignItems='center' mb={1}>
             {$userStore.rol.some((role) =>
               ['admin', 'metrologist'].includes(role)
+            ) && <Box ml={3.5} />}
+            <Typography flex={1}>
+              <strong>Sede:</strong>{' '}
+              {certificateData.headquarter.toLocaleUpperCase()}
+            </Typography>
+          </Box>
+          <Box display='flex' alignItems='center' mb={1}>
+            {$userStore.rol.some((role) =>
+              ['admin', 'metrologist'].includes(role)
             ) && (
               <IconButton size='small' onClick={() => handleEdit('city')}>
                 <Edit fontSize='small' />
@@ -290,7 +300,7 @@ function Certificates() {
               </IconButton>
             )}
             <Typography flex={1}>
-              <strong>Sede:</strong> {certificateData.sede}
+              <strong>Dirección:</strong> {certificateData.sede}
             </Typography>
           </Box>
           <Box display='flex' alignItems='center' mb={1}>

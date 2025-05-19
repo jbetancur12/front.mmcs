@@ -21,7 +21,10 @@ import CustomerRoutes from './routes/CustomerRoutes'
 import OtherRoutes from './routes/OtherRoutes'
 import ProfileRoutes from './routes/ProfileRoutes'
 import PuchasesRoutes from './routes/PurchasesRoutes'
+import IotRoutes from './routes/IotRoutes'
+import ModulesRoutes from './routes/ModulesRoutes'
 import { Box, CircularProgress, Typography } from '@mui/material'
+import LaboratoryRoutes from './routes/LaboratoryRoutes'
 
 function Router() {
   // useSessionTimeoutWarning({ warningMinutesBefore: 5 })
@@ -65,6 +68,9 @@ function Router() {
             {CustomerRoutes($userStore.rol)}
             {ProfileRoutes($userStore.rol)}
             {PuchasesRoutes($userStore.rol)}
+            {IotRoutes($userStore.rol)}
+            {ModulesRoutes($userStore.rol)}
+            {LaboratoryRoutes($userStore.rol)}
             {OtherRoutes($userStore.rol)}
           </Route>
         </Routes>

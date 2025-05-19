@@ -99,6 +99,16 @@ const sidebarItems = ($userStore: UserData) => [
         label: 'Verificaciones',
         url: 'purchases/verifications',
         roles: ['admin', 'comp_requester', 'comp_supervisor']
+      },
+      {
+        label: 'Parametros Fiscales',
+        url: 'purchases/fiscal-parameters',
+        roles: ['admin', 'comp_requester', 'comp_supervisor']
+      },
+      {
+        label: 'Evaluaciones de Proveedores',
+        url: 'purchases/suppliers/evaluations',
+        roles: ['admin', 'comp_requester', 'comp_supervisor']
       }
     ]
   },
@@ -129,7 +139,37 @@ const sidebarItems = ($userStore: UserData) => [
       'M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H8v-2h6v2zm3-4H8v-2h8v2zm0-4H8V7h8v2z',
     menuItems: [
       { label: 'Hoja de Vida', url: 'datasheets', roles: ['admin'] },
-      { label: 'Alertas', url: 'datasheets/alerts', roles: ['admin'] }
+      { label: 'Alertas', url: 'datasheets/alerts', roles: ['admin'] },
+      { label: 'Chamber', url: 'laboratory/patterns', roles: ['admin'] }
+    ]
+  },
+  // {
+  //   type: 'dropdown',
+  //   buttonText: 'Laboratorio', // Texto del botón principal
+  //   roles: ['admin'], // Roles que pueden ver este menú
+  //   moduleName: 'Basic', // Nombre interno del módulo (opcional, ajusta según tu sistema)
+  //   // Path SVG para un icono de matraz/laboratorio (puedes reemplazarlo)
+  //   pathData: 'M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v8h2V8h2v8h2V8h2v8h2V8h2v8h2V8h2v8z',
+  //   menuItems: [
+  //     { label: 'Condiciones', url: 'laboratory/conditions', roles: ['admin'] }, // Sub-item Condiciones
+  //     { label: 'Patrones', url: 'laboratory/patterns', roles: ['admin'] }     // Sub-item Patrones
+  //   ]
+  // },
+  {
+    type: 'dropdown',
+    buttonText: 'Telemetría',
+    roles: ['admin', 'user'],
+    moduleName: 'Iot',
+    pathData:
+      'M12 3C7.03 3 3 7.03 3 12s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zm0 16c-3.87 0-7-3.13-7-7 0-1.66.56-3.19 1.5-4.39l9.89 9.89C15.19 18.44 13.66 19 12 19zm4.5-2.61L6.61 7.5C7.81 6.56 9.34 6 11 6c3.87 0 7 3.13 7 7 0 1.66-.56 3.19-1.5 4.39z',
+    menuItems: [
+      { label: 'Lista', url: 'iot', roles: ['admin'] },
+      { label: 'Map', url: 'iot/map', roles: ['admin', 'user'] },
+      {
+        label: 'Gestión de Clientes',
+        url: 'iot/customers-management',
+        roles: ['admin']
+      }
     ]
   },
   {

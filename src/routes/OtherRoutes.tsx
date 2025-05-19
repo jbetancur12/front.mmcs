@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
+import BandwidthStats from 'src/pages/Bandwith/BandWidth'
 import WelcomeScreen from 'src/pages/Welcome' // Asegúrate de tener este componente
 
 const Dashboard = lazy(() => import('../pages/Dashboard'))
@@ -30,6 +31,7 @@ const OtherRoutes = (role: string[]) => {
       >
         <Route index element={<Dashboard />} />
         <Route path='settings' element={<Settings />} />
+        <Route path='bandwith' element={<BandwidthStats />} />
         <Route path='users' element={<Clientes />} />
         <Route path='/zip' element={<Zip />} />
         <Route path='/repository' element={<Repository />} />

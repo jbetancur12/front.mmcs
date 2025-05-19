@@ -3,11 +3,19 @@ import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
 import PDFViewer from 'src/Components/DataSheet/PDFViewer'
 
-const SuppliersTable = lazy(() => import('src/pages/SuppliersTable'))
+const SuppliersTable = lazy(() => import('src/pages/Suppliers/SuppliersTable'))
+const SupplierDetailsPage = lazy(
+  () => import('src/pages/Suppliers/SupplierDetailsPage')
+)
+const SupplierEditPage = lazy(
+  () => import('src/pages/Suppliers/SupplierEditPage')
+)
 const PurchaseRequest = lazy(
   () => import('src/pages/Purchases/PurchaseRequest')
 )
-
+const ListAllSupplierEvaluationsPage = lazy(
+  () => import('src/Components/Purchases/ListAllSupplierEvaluationsPage')
+)
 const SuppliersSelection = lazy(
   () => import('src/pages/Purchases/SupplierSelection')
 )
@@ -15,6 +23,9 @@ const SuppliersSelection = lazy(
 const PurchaseOrders = lazy(() => import('src/pages/Purchases/PurchaseOrders'))
 const PurchaseVerifications = lazy(
   () => import('src/pages/Purchases/PurchaseVerifications')
+)
+const FiscalParametersPage = lazy(
+  () => import('src/pages/Admin/FiscalParametersManagementPage')
 )
 
 const SupplierRoutes = (role: string[]) => {
@@ -30,6 +41,8 @@ const SupplierRoutes = (role: string[]) => {
         }
       >
         <Route path='purchases'>
+          <Route path='fiscal-parameters' element={<FiscalParametersPage />} />
+
           <Route path='supplier-selection' element={<SuppliersSelection />} />
 
           <Route
@@ -37,6 +50,18 @@ const SupplierRoutes = (role: string[]) => {
             element={<PDFViewer path='fog-mmcs-10' />}
           />
           <Route path='suppliers' element={<SuppliersTable />} />
+          <Route
+            path='suppliers/evaluations'
+            element={<ListAllSupplierEvaluationsPage />}
+          />
+          <Route
+            path='suppliers/details/:supplierId'
+            element={<SupplierDetailsPage />}
+          />
+          <Route
+            path='suppliers/edit/:supplierId'
+            element={<SupplierEditPage />}
+          />
           <Route
             path='suppliers/report'
             element={<PDFViewer path='fog-mmcs-11' />}

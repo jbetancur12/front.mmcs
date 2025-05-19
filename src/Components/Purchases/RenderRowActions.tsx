@@ -4,17 +4,9 @@ import {
   CheckCircle,
   Description,
   ShoppingCart,
-  UploadFile,
   Visibility
 } from '@mui/icons-material'
-import {
-  IconButton,
-  Tooltip,
-  Stack,
-  Divider,
-  Menu,
-  MenuItem
-} from '@mui/material'
+import { IconButton, Tooltip, Stack, Divider } from '@mui/material'
 import { useStore } from '@nanostores/react'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { QueryClient, useMutation } from 'react-query'
@@ -27,7 +19,6 @@ import GenerateOrderModal from './GenerateOrderModal'
 import { PurchaseRequest, PurchaseRequestItem } from 'src/pages/Purchases/Types'
 import { useHasRole } from '@utils/functions'
 import UploadQuotationModal from './UploadQuotationModal'
-import ViewQuotationsModal from './ViewQuotationsModal'
 import { useState } from 'react'
 
 type RenderRowActionsProps = {
@@ -47,46 +38,13 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
 
   const [orderModalOpen, setOrderModalOpen] = useState(false)
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
-  const [viewModalOpen, setViewModalOpen] = useState(false)
-  const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null)
-  const [selectedSupplierName, setSelectedSupplierName] = useState<
-    string | null
-  >(null)
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const [viewAnchorEl, setViewAnchorEl] = useState<null | HTMLElement>(null)
 
   const handleOpenOrderModal = () => {
     setOrderModalOpen(true)
   }
 
-  const handleOpenUploadModal = (supplierId: string, supplierName: string) => {
-    setSelectedSupplier(supplierId)
-    setSelectedSupplierName(supplierName)
+  const handleManageQuotations = () => {
     setUploadModalOpen(true)
-  }
-
-  const handleOpenViewModal = (supplierId: string) => {
-    setSelectedSupplier(supplierId)
-    setViewModalOpen(true)
-  }
-
-  const handleCloseViewModal = () => {
-    setViewModalOpen(false)
-    setSelectedSupplier(null)
-    queryClient.invalidateQueries('purchaseRequests')
-  }
-
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget)
-  }
-
-  const handleViewMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-    setViewAnchorEl(event.currentTarget)
-  }
-
-  const handleMenuClose = () => {
-    setAnchorEl(null)
-    setViewAnchorEl(null)
   }
 
   const mutation = useMutation(
@@ -163,24 +121,11 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
     row.original.quotations.some((quotation) => quotation.accepted)
 
   const items: PurchaseRequestItem[] = row.original.items || []
+
   const allProcessed = items.length > 0 && items.every((item) => item.procesed)
   const allUnprocessed =
     items.length > 0 && items.every((item) => !item.procesed)
   const mixedState = items.length > 0 && !allProcessed && !allUnprocessed
-
-  const uniqueSuppliers = Array.from(
-    new Set(
-      items.flatMap((item) => item.suppliers?.map((supplier) => supplier.id))
-    )
-  ).map((id) =>
-    items
-      .flatMap((item) => item.suppliers)
-      .find((supplier) => supplier?.id === id)
-  )
-
-  const supplierIds = row.original.quotations.map((quotation: any) =>
-    quotation.supplierId.toString()
-  )
 
   return (
     <Stack direction='row' spacing={1}>
@@ -191,96 +136,22 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
           </IconButton>
         </Link>
       </Tooltip>
-      {/* Botones para subir y ver cotizaciones */}
-      <Tooltip title='Subir Cotización'>
-        <IconButton onClick={handleMenuClick} color='primary'>
-          <UploadFile />
-        </IconButton>
-      </Tooltip>
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        {uniqueSuppliers.map(
-          (supplier) =>
-            supplier && (
-              <MenuItem
-                key={supplier?.id}
-                onClick={() => {
-                  handleOpenUploadModal(supplier.id.toString(), supplier.name)
-                  handleMenuClose()
-                }}
-                style={{
-                  fontWeight: supplierIds.includes(supplier.id.toString())
-                    ? 'bold'
-                    : 'normal'
-                }}
-                disabled={
-                  !!row.original.quotations.find(
-                    (quotation) =>
-                      quotation.supplierId === supplier.id && quotation.accepted
-                  )
-                }
-              >
-                {supplier?.name}
-              </MenuItem>
-            )
-        )}
-      </Menu>
-      <Tooltip title='Ver Cotizaciones'>
+      <Tooltip title='Gestionar Cotizaciones'>
         <IconButton
-          onClick={handleViewMenuClick}
+          onClick={handleManageQuotations}
           color={row.original.quotations.length > 0 ? 'secondary' : 'primary'}
         >
           <Description />
         </IconButton>
       </Tooltip>
-      <Menu
-        anchorEl={viewAnchorEl}
-        open={Boolean(viewAnchorEl)}
-        onClose={handleMenuClose}
-      >
-        {uniqueSuppliers.map(
-          (supplier) =>
-            supplier && (
-              <MenuItem
-                key={supplier?.id}
-                onClick={() => {
-                  handleOpenViewModal(supplier.id.toString())
-                  handleMenuClose()
-                }}
-                style={{
-                  fontWeight: supplierIds.includes(supplier.id.toString())
-                    ? 'bold'
-                    : 'normal'
-                }}
-              >
-                {supplier?.name}
-              </MenuItem>
-            )
-        )}
-      </Menu>
+
       <UploadQuotationModal
         open={uploadModalOpen}
         onClose={() => setUploadModalOpen(false)}
-        supplierId={selectedSupplier}
-        supplierName={selectedSupplierName}
-        purchaseRequestId={row.original.id}
-        purchaseRequestCode={row.original.purchaseCode}
+        purchaseRequest={row.original}
         onSuccess={() => queryClient.invalidateQueries('purchaseRequests')}
       />
-      {selectedSupplier && (
-        <ViewQuotationsModal
-          open={viewModalOpen}
-          onClose={handleCloseViewModal}
-          purchaseRequestId={row.original.id}
-          supplierId={selectedSupplier} // Pasar el ID del proveedor seleccionado
-          quotation={row.original.quotations.find(
-            (quotation) => quotation.supplierId.toString() === selectedSupplier
-          )}
-        />
-      )}
+
       {allowActions.creationOrder && (
         <IconButton
           onClick={handleOpenOrderModal}

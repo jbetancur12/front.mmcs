@@ -7,3 +7,105 @@
 .swal2-container {
   z-index: 1500;
 }
+
+/* En tu archivo de estilos principal */
+.custom-marker-icon.blinking {
+  animation: alarm-blink 1s infinite;
+}
+
+@keyframes alarm-blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+.alarm-dot {
+  filter: drop-shadow(0 0 2px white);
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.leaflet-marker-icon {
+  transition: transform 0.2s ease;
+}
+
+/* Animación de parpadeo */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.blinking {
+  animation: blink 1s ease-in-out infinite;
+}
+
+/* Estilos para los clusters */
+.marker-cluster {
+  background-clip: padding-box;
+  border-radius: 20px;
+}
+
+.marker-cluster div {
+  width: 30px;
+  height: 30px;
+  margin-left: 5px;
+  margin-top: 5px;
+  text-align: center;
+  border-radius: 15px;
+  font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+  font-weight: bold;
+}
+
+.marker-cluster span {
+  line-height: 30px;
+}
+
+/* Colores de los clusters */
+.marker-cluster-small {
+  background-color: rgba(181, 226, 140, 0.6);
+}
+
+.marker-cluster-small div {
+  background-color: rgba(110, 204, 57, 0.6);
+}
+
+.marker-cluster-medium {
+  background-color: rgba(241, 211, 87, 0.6);
+}
+
+.marker-cluster-medium div {
+  background-color: rgba(240, 194, 12, 0.6);
+}
+
+.marker-cluster-large {
+  background-color: rgba(253, 156, 115, 0.6);
+}
+
+.marker-cluster-large div {
+  background-color: rgba(241, 128, 23, 0.6);
+}
+
+/* Agrega estos estilos globalmente o en tu archivo CSS principal */
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; background-color: #ff4444; }
+  100% { opacity: 1; }
+}
+
+.custom-cluster {
+  transition: all 0.2s ease;
+}
+
+/* Para mejor rendimiento, forzar aceleración hardware */
+.custom-cluster div {
+  will-change: transform, opacity;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}

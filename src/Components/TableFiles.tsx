@@ -45,7 +45,6 @@ import { Link } from 'react-router-dom'
 import { Document, Page } from '@react-pdf/renderer'
 import PDFViewer from './PDFViewer'
 import AsyncSelect from 'react-select/async'
-import AnalyzeExcelComponent from './Excel'
 import { RepositoryData } from './Repository'
 import { loadOptions, mapOptions } from '../utils/loadOptions'
 import {
@@ -134,13 +133,6 @@ const Table: React.FC = () => {
     [cellId: string]: string
   }>({})
 
-  // const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   const selectedFile = event.target.files?.[0];
-  //   if (selectedFile) {
-  //     setFile(selectedFile);
-  //   }
-  // };
-
   // Create a new file
   const onCreateFile = async (fileData: FileData) => {
     setLoading(true)
@@ -208,29 +200,6 @@ const Table: React.FC = () => {
       console.error('Error fetching file data:', error)
     }
   }
-
-  // const updateUser = async (fileData: FileData) => {
-
-  //   try {
-  //     const response = await axiosPrivate.put(`/files/${fileData.id}`, fileData, {
-  //       headers: {
-  //         'Authorization': `Bearer ${localStorage.getItem("accessToken")}`
-  //       },
-  //     });
-
-  //     if (response.status === 201) {
-  //       toast.success('Equipo Modificado Exitosamente!', {
-  //         duration: 4000,
-  //         position: 'top-center',
-  //       });
-  //       ; // Refresh data after creation
-  //     } else {
-  //       console.error('Error al crear equipo');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error de red:', error);
-  //   }
-  // }
 
   useEffect(() => {
     fetchUsers()
@@ -911,29 +880,6 @@ export const CreateNewFileModal = ({
                     )
                   case 'selectCustomerId':
                     return (
-                      // <AutoComplete
-                      //   key={index}
-                      //   endpoint={`/customers`}
-                      //   token={localStorage.getItem('accessToken')}
-                      //   label='Buscar Cliente'
-                      //   mapOption={(data) =>
-                      //     data.map((item) => ({
-                      //       id: item.id,
-                      //       nombre: item.nombre
-                      //     }))
-                      //   }
-                      //   //isOptionEqualToValue={(option, value) => option.id === value.id}
-                      //   getOptionLabel={(option) => option.nombre}
-                      //   name={column.accessorKey}
-                      //   value={values[column.accessorKey]}
-                      //   onClientSelection={(e) =>
-                      //     setValues({
-                      //       ...values,
-                      //       [column.accessorKey]: e.id,
-                      //       customerName: convertirCadena(e.nombre)
-                      //     })
-                      //   }
-                      // />
                       <AsyncSelect
                         key={index}
                         cacheOptions
@@ -965,45 +911,6 @@ export const CreateNewFileModal = ({
 
                   case 'selectDeviceId':
                     return (
-                      // <AsyncSelect
-                      //   cacheOptions
-                      //   // defaultOptions
-                      //   loadOptions={(inputValue) =>
-                      //     loadOptions(inputValue, "devices", mapDevices)
-                      //   }
-                      //   onChange={(selectedOption: any) =>
-                      //     setDevice({
-                      //       id: selectedOption.value,
-                      //       name: selectedOption.label,
-                      //     })
-                      //   }
-                      //   placeholder="Buscar Producto"
-                      //   // defaultValue={
-                      //   //   id && {
-                      //   //     value: index,
-                      //   //     label: productName,
-                      //   //   }
-                      //   // }
-                      //   styles={styles}
-                      // />
-                      // <AutoComplete
-                      //   key={index}
-                      //   endpoint={`/devices`}
-                      //   token={localStorage.getItem('accessToken')}
-                      //   label='Buscar Equipo'
-                      //   mapOption={(data) =>
-                      //     data.map((item: any) => ({
-                      //       id: item.id,
-                      //       name: item.name
-                      //     }))
-                      //   }
-                      //   getOptionLabel={(option) => option.name}
-                      //   name={column.accessorKey}
-                      //   value={values[column.accessorKey]}
-                      //   onClientSelection={(e) =>
-                      //     setValues({ ...values, [column.accessorKey]: e.id })
-                      //   }
-                      // />
                       <AsyncSelect
                         key={index}
                         cacheOptions
@@ -1035,26 +942,6 @@ export const CreateNewFileModal = ({
 
                   case 'selectCertificateTypeId':
                     return (
-                      // <AutoComplete
-                      //   key={index}
-                      //   endpoint={`/certificateTypes`}
-                      //   token={localStorage.getItem('accessToken')}
-                      //   label='Buscar Tipo de Certificado'
-                      //   mapOption={(data) =>
-                      //     data.map((item: any) => ({
-                      //       id: item.id,
-                      //       name: item.name
-                      //     }))
-                      //   }
-                      //   //isOptionEqualToValue={(option, value) => option?.id?.toString() === (value?.id ?? value)?.toString()}
-                      //   getOptionLabel={(option) => option.name}
-                      //   name={column.accessorKey}
-                      //   value={values[column.accessorKey]}
-                      //   onClientSelection={(e) =>
-                      //     setValues({ ...values, [column.accessorKey]: e.id })
-                      //   }
-                      // />
-
                       <AsyncSelect
                         key={index}
                         cacheOptions
