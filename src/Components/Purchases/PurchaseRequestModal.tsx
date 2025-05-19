@@ -38,7 +38,7 @@ interface CreatePurchaseRequestModalProps {
   onSuccess: (newRequest: IPurchaseRequest) => void
 }
 
-interface SuppliersAPIResponse {
+export interface SuppliersAPIResponse {
   totalItems: number
   suppliers: Supplier[]
   totalPages: number
