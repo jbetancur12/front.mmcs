@@ -31,10 +31,9 @@ interface Supplier {
   // Campos que ahora envía el backend para determinar el estado de evaluación
   lastEvaluationDate?: string | null // Formato "YYYY-MM-DD"
   hasActivityInLast6Months?: boolean
+  lastEvaluationCoveredPeriod?: string | null // Formato "YYYY-S1", "YYYY-S2", "YYYY-ANUAL"
+  purchaseType?: 1 | 2 // 1: Semestral, 2: Anual
   lastPurchaseDate?: string | null // Formato "YYYY-MM-DD" o ISO completo
-  // Otros campos que pueda tener tu proveedor...
-  // applyRetention?: boolean; // Si lo envías desde el backend
-  // purchaseType?: 1 | 2;   // Si lo envías desde el backend
 }
 
 // Nueva interfaz para la respuesta completa del API de proveedores
@@ -53,11 +52,10 @@ const getEvaluationStatusInfo = (
   needsAction: boolean
 } | null => {
   const today = new Date()
-  today.setHours(0, 0, 0, 0) // Normalizar 'hoy'
+  today.setHours(0, 0, 0, 0)
 
-  // Fecha límite: hace 6 meses exactos desde hoy
-  const sixMonthsAgoCutoff = new Date(today)
-  sixMonthsAgoCutoff.setMonth(today.getMonth() - 6)
+  const currentYear = today.getFullYear()
+  const currentMonth = today.getMonth() // 0 (Ene) a 11 (Dic)
 
   const parseDate = (dateString?: string | null): Date | null => {
     if (!dateString) return null
@@ -67,93 +65,150 @@ const getEvaluationStatusInfo = (
       const year = parseInt(parts[0], 10)
       const month = parseInt(parts[1], 10) - 1
       const day = parseInt(parts[2], 10)
-      if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+      if (!isNaN(year) && !isNaN(month) && !isNaN(day))
         return new Date(year, month, day)
-      }
     }
-    const parsedDate = new Date(dateString)
-    if (!isNaN(parsedDate.getTime())) {
-      parsedDate.setHours(0, 0, 0, 0)
-      return parsedDate
+    const parsedD = new Date(dateString)
+    if (!isNaN(parsedD.getTime())) {
+      parsedD.setHours(0, 0, 0, 0)
+      return parsedD
     }
     return null
   }
 
-  const lastEvalDate = parseDate(supplier.lastEvaluationDate)
+  const lastEvalCoveredPeriodStr = supplier.lastEvaluationCoveredPeriod
+  const supplierPurchaseType = supplier.purchaseType
+  const isActiveInLast6MonthsFromToday =
+    supplier.hasActivityInLast6Months === true
   const lastPurchaseDate = parseDate(supplier.lastPurchaseDate)
-  const isActiveRecently = supplier.hasActivityInLast6Months === true
 
-  // --- Escenario 1: El proveedor TIENE evaluaciones previas ---
-  if (lastEvalDate) {
-    if (lastEvalDate < sixMonthsAgoCutoff) {
-      // La última evaluación tiene más de 6 meses (está vencida)
-      if (isActiveRecently) {
-        // VENCIDA Y ACTIVO RECIENTEMENTE: Alerta CRÍTICA
-        return {
-          text: 'Evaluación REQUERIDA (Vencida, Activo)',
-          color: 'error',
-          needsAction: true
-        }
-      } else {
-        // VENCIDA pero INACTIVO RECIENTEMENTE: Alerta menos crítica (según Nota 10)
-        return {
-          text: 'Eval. Pendiente (Inactivo)',
-          color: 'warning',
-          needsAction: true
-        }
-      }
+  let periodToAssessName: string
+  let periodToAssessStartDate: Date
+  let periodToAssessEndDate: Date
+  let evalWindowForPeriodStart: Date
+
+  if (supplierPurchaseType === 1) {
+    // SEMESTRAL
+    if (currentMonth >= 6) {
+      // Hoy es Jul-Dic => El semestre CERRADO a considerar es S1 de este año.
+      periodToAssessName = `${currentYear}-S1`
+      periodToAssessStartDate = new Date(currentYear, 0, 1)
+      periodToAssessEndDate = new Date(currentYear, 5, 30, 23, 59, 59)
+      evalWindowForPeriodStart = new Date(currentYear, 6, 1) // Ventana de eval: Julio
     } else {
-      // La última evaluación está DENTRO de los últimos 6 meses (al día)
-      return { text: 'Evaluación Al Día', color: 'success', needsAction: false }
+      // Hoy es Ene-Jun => El semestre CERRADO a considerar es S2 del año PASADO.
+      periodToAssessName = `${currentYear - 1}-S2`
+      periodToAssessStartDate = new Date(currentYear - 1, 6, 1)
+      periodToAssessEndDate = new Date(currentYear - 1, 11, 31, 23, 59, 59)
+      evalWindowForPeriodStart = new Date(currentYear, 0, 1) // Ventana de eval: Enero
+    }
+  } else if (supplierPurchaseType === 2) {
+    // ANUAL
+    periodToAssessName = `${currentYear - 1}-ANUAL`
+    periodToAssessStartDate = new Date(currentYear - 1, 0, 1)
+    periodToAssessEndDate = new Date(currentYear - 1, 11, 31, 23, 59, 59)
+    evalWindowForPeriodStart = new Date(currentYear, 0, 1)
+  } else {
+    return {
+      text: 'Tipo Compra Prov. Desc.',
+      color: 'info',
+      needsAction: false
     }
   }
-  // --- Escenario 2: El proveedor NO tiene evaluaciones previas ---
-  else {
-    if (lastPurchaseDate) {
-      // Tiene historial de compras
-      if (lastPurchaseDate < sixMonthsAgoCutoff) {
-        // La última (y potencialmente primera) compra fue hace MÁS de 6 meses,
-        // y nunca ha sido evaluado.
-        // Si además está activo recientemente (compró de nuevo después de esa compra antigua), es aún más crítico.
-        // Si no está activo recientemente, pero su única actividad fue >6m, también es una alerta.
-        // La lógica aquí es que el "reloj de 6 meses" para la primera evaluación comenzó con esa compra antigua.
-        return {
-          text: 'Requiere 1RA EVALUACIÓN (Actividad >6m sin eval.)',
-          color: 'error',
-          needsAction: true
-        }
-      } else {
-        // La última compra fue DENTRO de los últimos 6 meses.
-        // Nunca ha sido evaluado. Aún no han pasado 6 meses desde esta última (quizás primera) compra.
-        // Consideramos esto "normal" o "próxima evaluación" si está activo.
-        return isActiveRecently
-          ? {
-              text: 'Activo Reciente (1ra Eval. Próxima)',
-              color: 'info',
-              needsAction: false
-            }
-          : {
-              text: 'Sin Evaluar (Inactivo <6m)',
-              color: 'info',
-              needsAction: false
-            } // Inactivo pero su última compra fue <6m
+
+  const isEvalWindowForThisPeriodNowOrPassed = today >= evalWindowForPeriodStart
+
+  // --- LÓGICA DE ALERTA ---
+
+  // 1. ¿Está el proveedor al día con la evaluación del 'periodToAssessName'?
+  if (
+    lastEvalCoveredPeriodStr &&
+    lastEvalCoveredPeriodStr >= periodToAssessName
+  ) {
+    return {
+      text: `Evaluación Al Día (Cubre ${lastEvalCoveredPeriodStr})`,
+      color: 'success',
+      needsAction: false
+    }
+  }
+
+  // 2. Si no está al día, la evaluación para 'periodToAssessName' está PENDIENTE.
+  //    Verifiquemos si hubo actividad DENTRO de ESE periodo específico ('periodToAssessName').
+
+  let hadActivityDuringPeriodToAssess = false
+  if (
+    lastPurchaseDate &&
+    lastPurchaseDate >= periodToAssessStartDate &&
+    lastPurchaseDate <= periodToAssessEndDate
+  ) {
+    hadActivityDuringPeriodToAssess = true
+  }
+
+  if (hadActivityDuringPeriodToAssess) {
+    // Hubo actividad DENTRO de 'periodToAssessName' Y la evaluación para ese periodo está pendiente.
+    if (isEvalWindowForThisPeriodNowOrPassed) {
+      const messagePrefix = lastEvalCoveredPeriodStr
+        ? `REQUERIDA (${periodToAssessName})`
+        : `Requiere 1RA EVAL. (${periodToAssessName})`
+      return {
+        text: `${messagePrefix}, Actividad en Periodo`,
+        color: 'error',
+        needsAction: true
       }
     } else {
-      // Sin evaluaciones previas Y SIN historial de compras registrado.
-      // Si el flag `isActiveRecently` es true, significa que hay actividad que no es una compra (raro) o un nuevo proveedor
-      // que aún no registra su primera compra en `lastPurchaseDate` pero sí en el flag de actividad.
-      if (isActiveRecently) {
-        return {
-          text: 'Requiere 1RA EVALUACIÓN (Activo sin compras registradas)',
-          color: 'warning',
-          needsAction: true
-        }
-      }
+      // La ventana para evaluar 'periodToAssessName' es futura
+      const messagePrefix = lastEvalCoveredPeriodStr
+        ? `Próxima Eval: ${periodToAssessName}`
+        : `Pendiente 1RA Eval: ${periodToAssessName}`
       return {
-        text: 'Sin Evaluar (Nuevo/Sin Compras)',
+        text: `${messagePrefix}, Actividad en Periodo`,
         color: 'info',
         needsAction: false
       }
+    }
+  } else {
+    // No hubo actividad confirmada DENTRO de 'periodToAssessName'.
+    // ¿Pero es un proveedor nuevo/activo que necesita su primera evaluación porque 'periodToAssessName' ya pasó?
+    if (
+      !lastEvalCoveredPeriodStr &&
+      isActiveInLast6MonthsFromToday &&
+      isEvalWindowForThisPeriodNowOrPassed
+    ) {
+      // Nunca evaluado, activo AHORA, y es/fue momento de evaluar el 'periodToAssessName' (que es un periodo pasado).
+      // Esto es para nuevos proveedores activos cuya primera ventana de evaluación (para un periodo pasado) ya llegó o pasó.
+      // Ej: Hoy Mayo 2025. periodToAssessName=2024-S2. Proveedor activo ahora, sin eval. -> Alerta.
+      return {
+        text: `Requiere 1RA EVAL. (${periodToAssessName}, Activo Ahora)`,
+        color: 'warning',
+        needsAction: true
+      }
+    }
+
+    // Si tiene una evaluación previa (pero no cubre 'periodToAssessName') y no tuvo actividad en 'periodToAssessName'
+    if (
+      lastEvalCoveredPeriodStr &&
+      lastEvalCoveredPeriodStr < periodToAssessName
+    ) {
+      // La evaluación está pendiente para periodToAssessName, pero no hubo actividad en ESE periodo.
+      // Si está activo ahora (isActiveInLast6MonthsFromToday), podría ser un warning. Sino, info.
+      return isActiveInLast6MonthsFromToday
+        ? {
+            text: `Pendiente (${periodToAssessName}), Sin Act. en Periodo Eval.`,
+            color: 'warning',
+            needsAction: true
+          }
+        : {
+            text: `Pendiente (${periodToAssessName}), Inactivo`,
+            color: 'info',
+            needsAction: true
+          }
+    }
+
+    // Caso final: Sin evaluación previa, sin actividad confirmada en periodToAssessName, y no activo ahora.
+    return {
+      text: 'Sin Evaluar (Sin Actividad Relevante)',
+      color: 'info',
+      needsAction: false
     }
   }
 }
