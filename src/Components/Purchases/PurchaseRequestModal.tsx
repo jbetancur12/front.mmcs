@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback, useEffect } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -19,7 +19,8 @@ import {
 import { Add, Close, Delete, Edit } from '@mui/icons-material'
 import {
   PurchaseRequest as IPurchaseRequest,
-  PurchaseRequestItem
+  PurchaseRequestItem,
+  Supplier
 } from 'src/pages/Purchases/Types'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { PurchaseRequestStatus } from 'src/pages/Purchases/Enums'
@@ -37,6 +38,17 @@ interface CreatePurchaseRequestModalProps {
   onSuccess: (newRequest: IPurchaseRequest) => void
 }
 
+interface SuppliersAPIResponse {
+  totalItems: number
+  suppliers: Supplier[]
+  totalPages: number
+  currentPage: number
+}
+
+interface CurrentPurchaseRequestItem extends Partial<PurchaseRequestItem> {
+  supplierInput?: Supplier[] // Para el 'value' del Autocomplete
+}
+
 const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
   open,
   onClose,
@@ -51,19 +63,21 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
     purchaseType: 'I'
   })
 
-  const [currentItem, setCurrentItem] = React.useState<
-    Partial<PurchaseRequestItem>
-  >({
-    quantity: 1,
-    description: '',
-    supplierIds: []
-  })
+  const [currentItem, setCurrentItem] =
+    React.useState<CurrentPurchaseRequestItem>({
+      quantity: 1,
+      description: '',
+      supplierIds: [],
+      supplierInput: [] // Inicializar supplierInput como array vacío
+    })
 
   // Estados para el autocomplete de proveedores
-  const [providers, setProviders] = React.useState<any[]>([])
+  const [providerOptions, setProviderOptions] = React.useState<Supplier[]>([]) // Tipado fuerte
+
   const [searchTerm, setSearchTerm] = React.useState('')
   const [loadingProviders, setLoadingProviders] = React.useState(false)
-  const [initialLoad, setInitialLoad] = React.useState(true)
+
+  const [initialFetchDone, setInitialFetchDone] = React.useState(false)
 
   const [newRequirement, setNewRequirement] = React.useState('')
   const [error, setError] = React.useState('')
@@ -76,36 +90,77 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
     React.useState<string>('')
 
   // Función debounce para búsquedas
-  const fetchProviders = React.useCallback(
-    debounce(async (search: string) => {
-      try {
+  const debouncedFetchProviders = useCallback(
+    debounce(
+      async (
+        currentSearchTerm: string,
+        currentPurchaseType?: string | number
+      ) => {
+        if (!currentSearchTerm.trim() && currentSearchTerm !== '') {
+          // No buscar si solo son espacios
+          setProviderOptions([]) // Limpiar opciones si la búsqueda se borra a espacios
+          setLoadingProviders(false)
+          return
+        }
+        if (
+          currentSearchTerm.trim().length > 0 &&
+          currentSearchTerm.trim().length < 2
+        ) {
+          // No buscar si es muy corto
+          setProviderOptions([])
+          setLoadingProviders(false)
+          return
+        }
+
         setLoadingProviders(true)
-        const { data } = await axiosPrivate.get('/suppliers', {
-          params: { search, purchaseType: formData.purchaseType }
-        })
-        setProviders(data)
-        if (initialLoad) setInitialLoad(false)
-      } catch (error) {
-        console.error('Error fetching providers:', error)
-      } finally {
-        setLoadingProviders(false)
-      }
-    }, 300),
-    [formData.purchaseType]
+        try {
+          const response = await axiosPrivate.get<
+            SuppliersAPIResponse | Supplier[]
+          >('/suppliers', {
+            params: {
+              search: currentSearchTerm,
+              purchaseType: currentPurchaseType,
+              limit: 20
+            }
+          })
+
+          // --- CORRECCIÓN IMPORTANTE: Extraer el array de la respuesta ---
+          if (
+            response.data &&
+            Array.isArray((response.data as SuppliersAPIResponse).suppliers)
+          ) {
+            setProviderOptions(
+              (response.data as SuppliersAPIResponse).suppliers
+            )
+          } else if (Array.isArray(response.data)) {
+            setProviderOptions(response.data) // Si la API a veces devuelve un array directamente
+          } else {
+            console.warn(
+              'Respuesta de proveedores no esperada o vacía:',
+              response.data
+            )
+            setProviderOptions([])
+          }
+          // --- FIN CORRECCIÓN ---
+        } catch (fetchError) {
+          console.error('Error fetching providers:', fetchError)
+          setProviderOptions([])
+        } finally {
+          setLoadingProviders(false)
+          if (!initialFetchDone) setInitialFetchDone(true) // Marcar que la carga inicial (o intento) se hizo
+        }
+      },
+      300
+    ),
+    [axiosPrivate, initialFetchDone] // axiosPrivate es estable, initialFetchDone para el primer mensaje
   )
 
-  // Cargar proveedores al abrir el modal
-  // React.useEffect(() => {
-  //   if (open) {
-  //     fetchProviders('')
-  //   }
-  // }, [open])
-
-  // Manejar cambio de búsqueda
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value)
-    fetchProviders(value)
-  }
+  // Efecto para cargar proveedores cuando cambia el término de búsqueda o el tipo de compra
+  useEffect(() => {
+    if (open) {
+      debouncedFetchProviders(searchTerm, formData.purchaseType as string)
+    }
+  }, [open, searchTerm, formData.purchaseType, debouncedFetchProviders])
 
   const handleRequirementTypeChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -219,8 +274,6 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
   }
 
   const addItem = () => {
-    // Permitir agregar ítem solo con descripción y cantidad.
-    // La selección de proveedores es opcional en esta etapa.
     if (
       currentItem.description &&
       currentItem.quantity &&
@@ -231,16 +284,23 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
         items: [
           ...(prev.items || []),
           {
-            ...currentItem,
-            supplierIds: currentItem.supplierIds // Enviamos array de IDs
-          } as PurchaseRequestItem
+            // Asegúrate que los campos obligatorios de PurchaseRequestItem estén aquí
+            // description, quantity, y supplierIds son los clave para este item
+            description: currentItem.description!,
+            quantity: currentItem.quantity!,
+            supplierIds: currentItem.supplierIds || [] // Viene de supplierInput
+            // Otros campos de PurchaseRequestItem con valores por defecto si es necesario
+          } as PurchaseRequestItem // Castear al tipo base que se guarda
         ]
       }))
       setCurrentItem({
         quantity: 1,
         description: '',
-        supplierIds: []
-      })
+        supplierIds: [],
+        supplierInput: []
+      }) // Resetear currentItem
+      setSearchTerm('') // Opcional: limpiar búsqueda de proveedores
+      setProviderOptions([]) // Opcional: limpiar opciones
     }
   }
 
@@ -375,27 +435,43 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                 <Grid item xs={3}>
                   <Autocomplete
                     multiple
-                    options={providers}
-                    // value={providers.filter((provider) =>
-                    //   currentItem.supplierIds?.includes(provider.id)
-                    // )}
+                    fullWidth
+                    options={providerOptions}
+                    value={currentItem.supplierInput || []} // Usar supplierInput (array de objetos)
+                    getOptionLabel={(option) => option.name || ''}
                     isOptionEqualToValue={(option, value) =>
                       option.id === value.id
                     }
-                    autoComplete={false}
-                    getOptionLabel={(option) => option.name}
                     loading={loadingProviders}
-                    onInputChange={(_, value) => handleSearchChange(value)}
-                    onChange={(_, newValues) => {
+                    loadingText='Cargando...'
+                    onInputChange={(_event, newInputValue) =>
+                      setSearchTerm(newInputValue)
+                    }
+                    onChange={(_event, newValue) => {
                       setCurrentItem((prev) => ({
                         ...prev,
-                        supplierIds: newValues.map((v) => v.id) // Guardar array de IDs
+                        supplierInput: newValue, // Guardar los objetos Supplier seleccionados
+                        supplierIds: newValue.map((s) => s.id) // Actualizar el array de IDs
                       }))
+                    }}
+                    filterOptions={(options, params) => {
+                      // Filtro básico del lado del cliente
+                      const filtered = options.filter(
+                        (option) =>
+                          option.name
+                            .toLowerCase()
+                            .includes(params.inputValue.toLowerCase()) ||
+                          option.taxId
+                            ?.toLowerCase()
+                            .includes(params.inputValue.toLowerCase())
+                      )
+                      return filtered
                     }}
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label='Proveedor *'
+                        label='Proveedores Sugeridos'
+                        placeholder='Buscar...'
                         InputProps={{
                           ...params.InputProps,
                           endAdornment: (
@@ -409,26 +485,23 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                         }}
                       />
                     )}
-                    renderTags={(
-                      value,
-                      getTagProps // ¡Este prop faltaba!
-                    ) =>
+                    noOptionsText={
+                      loadingProviders
+                        ? 'Cargando...'
+                        : !searchTerm.trim() && !initialFetchDone
+                          ? 'Escriba para buscar...'
+                          : providerOptions.length === 0
+                            ? 'No se encontraron proveedores'
+                            : 'No hay más opciones'
+                    }
+                    renderTags={(value, getTagProps) =>
                       value.map((option, index) => {
-                        const { key, ...tagProps } = getTagProps({ index })
+                        const { key, ...tagProps } = getTagProps({ index }) // Necesitas obtener la key de getTagProps
                         return (
                           <Chip key={key} label={option.name} {...tagProps} />
                         )
                       })
                     }
-                    filterOptions={(x) => x}
-                    noOptionsText={
-                      initialLoad
-                        ? 'Cargando proveedores...'
-                        : searchTerm
-                          ? 'No se encontraron proveedores'
-                          : 'Escribe para buscar'
-                    }
-                    fullWidth
                   />
                 </Grid>
 
@@ -468,7 +541,7 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                         Proveedores:{' '}
                         {item.supplierIds?.map((id) => (
                           <span key={id} style={{ marginRight: '8px' }}>
-                            {providers.find((p) => p.id === id)?.name ||
+                            {providerOptions.find((p) => p.id === id)?.name ||
                               'Desconocido'}
                           </span>
                         ))}
