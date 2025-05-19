@@ -1,5 +1,6 @@
-// src/components/Purchases/SupplierEvaluationForm.tsx (o ubicación similar)
-import React, { useState, useEffect, FC, FormEvent } from 'react'
+// src/components/Purchases/SupplierEvaluationForm.tsx
+
+import React, { useState, useEffect, FC, FormEvent, ChangeEvent } from 'react'
 import {
   Box,
   Button,
@@ -8,21 +9,30 @@ import {
   Typography,
   Paper,
   CircularProgress,
-  Alert
+  Alert,
+  MenuItem,
+  FormControl,
+  InputLabel // No es estrictamente necesario Select y FormHelperText si TextField select se usa bien
 } from '@mui/material'
 import { Save, Cancel } from '@mui/icons-material'
 import { useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private' // Ajusta la ruta
 import Swal from 'sweetalert2'
-import { isAxiosError } from 'axios'
+import { isAxiosError, AxiosResponse } from 'axios' // Importar AxiosResponse
+import { SelectChangeEvent } from '@mui/material/Select'
 
 // Asumiendo que estos tipos están en 'src/pages/Purchases/Types'
-import { Supplier as ISupplier } from 'src/pages/Purchases/Types'
-import { Supplier } from 'src/pages/Suppliers/SupplierDetailsPage'
+// o en un archivo central de tipos.
+interface ISupplier {
+  id: number
+  name: string
+  taxId: string
+  // Otros campos de ISupplier que puedas necesitar
+}
 
 export interface SupplierEvaluationData {
-  id?: number
-  supplierId: number
+  id?: number // Opcional, solo presente si se edita una evaluación existente
+  supplierId: number // Se asigna desde la prop 'supplier'
   evaluationDate: string // Formato YYYY-MM-DD
   qualityScore: number
   deliveryScore: number
@@ -32,30 +42,53 @@ export interface SupplierEvaluationData {
   invoiceScore: number
   comments?: string
   documentReference?: string
-  // Campos calculados (opcionalmente mostrados, no enviados directamente si el backend los calcula)
-  totalScore?: number
-  finalCondition?: string
-  supplier?: Pick<ISupplier, 'id' | 'name' | 'taxId'> // Para mostrar info del proveedor
+  totalScore?: number // Calculado en UI para feedback, y en backend para persistencia
+  finalCondition?: string // Calculado en UI para feedback, y en backend para persistencia
+  supplier?: Pick<ISupplier, 'id' | 'name' | 'taxId'> // Para mostrar info del proveedor si la data viene así
 }
 
 interface SupplierEvaluationFormProps {
-  supplier: Supplier // Información del proveedor que se está evaluando
+  supplier: ISupplier // Información del proveedor que se está evaluando
   existingEvaluation?: SupplierEvaluationData | null // Para modo edición
   onSuccess: (evaluation: SupplierEvaluationData) => void // Callback tras éxito
   onCancel: () => void
 }
 
-// Límites para los puntajes de los criterios
+// Límites y opciones para los puntajes de los criterios
 const SCORE_MIN = 0
-const SCORE_MAX = 15 // Asumiendo que cada criterio es sobre 15 para un total de 90
+const SCORE_MAX = 15 // El puntaje máximo para "Excelente"
 
+const scoreOptions = [
+  // Es importante que el valor por defecto (0) tenga una opción visible si quieres que el Select muestre algo.
+  { value: 0, label: 'No Calificado / No Aplica (0 pts)' },
+  { value: 2, label: 'Regular (2 pts)' },
+  { value: 10, label: 'Bueno (10 pts)' },
+  { value: 15, label: 'Excelente (15 pts)' }
+]
+
+// Función para calcular la condición final basada en el puntaje total
 const calculateFinalCondition = (totalScore: number): string => {
   if (totalScore >= 76 && totalScore <= 90) return 'EXCELENTE'
   if (totalScore >= 56 && totalScore <= 75) return 'BUENO'
   if (totalScore >= 36 && totalScore <= 55) return 'APROBADO CON RESERVA'
   if (totalScore >= 0 && totalScore <= 35) return 'NO APROBADO'
-  return 'INDETERMINADO'
+  return 'INDETERMINADO' // Para puntajes fuera de rango o inicial
 }
+
+// Tipo para las claves de los campos de puntaje en formData
+type ScoreFieldName =
+  | 'qualityScore'
+  | 'deliveryScore'
+  | 'supportScore'
+  | 'warrantyScore'
+  | 'nonConformityScore'
+  | 'invoiceScore'
+
+// Tipo para la parte del estado formData que maneja este formulario
+type EvaluationFormData = Omit<
+  SupplierEvaluationData,
+  'id' | 'supplierId' | 'totalScore' | 'finalCondition' | 'supplier'
+>
 
 const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
   supplier,
@@ -65,31 +98,20 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
 }) => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
-  const [formData, setFormData] = useState<
-    Omit<
-      SupplierEvaluationData,
-      | 'id'
-      | 'supplierId'
-      | 'totalScore'
-      | 'finalCondition'
-      | 'evaluator'
-      | 'supplier'
-    >
-  >({
-    evaluationDate:
-      existingEvaluation?.evaluationDate ||
-      new Date().toISOString().split('T')[0],
-    qualityScore: existingEvaluation?.qualityScore || 0,
-    deliveryScore: existingEvaluation?.deliveryScore || 0,
-    supportScore: existingEvaluation?.supportScore || 0,
-    warrantyScore: existingEvaluation?.warrantyScore || 0,
-    nonConformityScore: existingEvaluation?.nonConformityScore || 0,
-    invoiceScore: existingEvaluation?.invoiceScore || 0,
-    comments: existingEvaluation?.comments || '',
-    documentReference:
-      existingEvaluation?.documentReference || 'FOGC-MMCS-15 V03'
-  })
 
+  const initialFormData: EvaluationFormData = {
+    evaluationDate: new Date().toISOString().split('T')[0],
+    qualityScore: 0, // Default a 0 para 'No Calificado'
+    deliveryScore: 0,
+    supportScore: 0,
+    warrantyScore: 0,
+    nonConformityScore: 0,
+    invoiceScore: 0,
+    comments: '',
+    documentReference: 'FOGC-MMCS-15 V03' // Default del formato
+  }
+
+  const [formData, setFormData] = useState<EvaluationFormData>(initialFormData)
   const [calculatedTotal, setCalculatedTotal] = useState<number>(0)
   const [calculatedCondition, setCalculatedCondition] = useState<string>('')
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -100,43 +122,53 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
         evaluationDate:
           existingEvaluation.evaluationDate ||
           new Date().toISOString().split('T')[0],
-        qualityScore: existingEvaluation.qualityScore || 0,
-        deliveryScore: existingEvaluation.deliveryScore || 0,
-        supportScore: existingEvaluation.supportScore || 0,
-        warrantyScore: existingEvaluation.warrantyScore || 0,
-        nonConformityScore: existingEvaluation.nonConformityScore || 0,
-        invoiceScore: existingEvaluation.invoiceScore || 0,
+        qualityScore: existingEvaluation.qualityScore ?? 0,
+        deliveryScore: existingEvaluation.deliveryScore ?? 0,
+        supportScore: existingEvaluation.supportScore ?? 0,
+        warrantyScore: existingEvaluation.warrantyScore ?? 0,
+        nonConformityScore: existingEvaluation.nonConformityScore ?? 0,
+        invoiceScore: existingEvaluation.invoiceScore ?? 0,
         comments: existingEvaluation.comments || '',
         documentReference:
           existingEvaluation.documentReference || 'FOGC-MMCS-15 V03'
       })
+    } else {
+      // Resetear a valores por defecto si no hay existingEvaluation (ej. al cambiar de editar a crear, o al abrir para crear)
+      setFormData(initialFormData)
     }
-  }, [existingEvaluation])
+  }, [existingEvaluation]) // Dependencia clave
 
   useEffect(() => {
-    const scores = [
-      formData.qualityScore,
-      formData.deliveryScore,
-      formData.supportScore,
-      formData.warrantyScore,
-      formData.nonConformityScore,
-      formData.invoiceScore
+    const scores: number[] = [
+      Number(formData.qualityScore),
+      Number(formData.deliveryScore),
+      Number(formData.supportScore),
+      Number(formData.warrantyScore),
+      Number(formData.nonConformityScore),
+      Number(formData.invoiceScore)
     ]
-    const total = scores.reduce((sum, score) => sum + (Number(score) || 0), 0)
+    const total = scores.reduce((sum, score) => sum + (score || 0), 0)
     setCalculatedTotal(total)
     setCalculatedCondition(calculateFinalCondition(total))
   }, [formData])
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    event:
+      | ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+      | SelectChangeEvent<number> // Acepta ambos tipos de evento
   ) => {
-    const { name, value } = e.target
+    const { name, value } = event.target
     let processedValue: string | number = value
+
+    // Para los campos de puntaje, el valor del Select ya es el número (o un string que representa el número)
     if (name.endsWith('Score')) {
-      processedValue = parseInt(value, 10)
-      if (isNaN(processedValue)) processedValue = 0 // Default to 0 if parse fails
-      processedValue = Math.max(SCORE_MIN, Math.min(SCORE_MAX, processedValue)) // Clamp value
+      processedValue = Number(value) // Convertir a número. Si es "" del Select, será 0.
+      if (isNaN(processedValue)) processedValue = 0 // Fallback si no es un número
+      // El clamping no es estrictamente necesario si las opciones del Select son la única fuente,
+      // pero lo mantenemos por si acaso.
+      processedValue = Math.max(SCORE_MIN, Math.min(SCORE_MAX, processedValue))
     }
+
     setFormData((prev) => ({ ...prev, [name]: processedValue }))
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }))
@@ -145,10 +177,11 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
-    if (!formData.evaluationDate)
+    if (!formData.evaluationDate) {
       newErrors.evaluationDate = 'La fecha es requerida.'
+    }
 
-    const scoreFields: (keyof typeof formData)[] = [
+    const scoreFields: ScoreFieldName[] = [
       'qualityScore',
       'deliveryScore',
       'supportScore',
@@ -156,30 +189,41 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
       'nonConformityScore',
       'invoiceScore'
     ]
+
     scoreFields.forEach((field) => {
-      const value = Number(formData[field])
-      if (isNaN(value) || value < SCORE_MIN || value > SCORE_MAX) {
-        newErrors[field] =
-          `Debe ser un número entre ${SCORE_MIN} y ${SCORE_MAX}.`
+      const value = formData[field] // Ya es un número en formData
+      if (
+        typeof value !== 'number' ||
+        !scoreOptions.some((opt) => opt.value === value)
+      ) {
+        newErrors[field] = `Seleccione una calificación válida.`
       }
     })
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const mutationFn = async (dataToSave: SupplierEvaluationData) => {
+  const mutationFn = async (dataToSubmitForBackend: EvaluationFormData) => {
+    // El backend espera supplierId y los scores numéricos.
+    // totalScore y finalCondition se calculan en backend por el hook del modelo.
+    const payload: Omit<
+      SupplierEvaluationData,
+      'id' | 'totalScore' | 'finalCondition' | 'supplier'
+    > = {
+      ...dataToSubmitForBackend,
+      supplierId: supplier.id
+    }
+
     if (existingEvaluation?.id) {
-      // Update
-      const { data } = await axiosPrivate.put(
+      const { data } = await axiosPrivate.put<SupplierEvaluationData>(
         `/supplier-evaluations/${existingEvaluation.id}`,
-        dataToSave
+        payload
       )
       return data
     } else {
-      // Create
-      const { data } = await axiosPrivate.post(
+      const { data } = await axiosPrivate.post<SupplierEvaluationData>(
         `/supplier-evaluations/${supplier.id}`,
-        dataToSave
+        payload
       )
       return data
     }
@@ -189,10 +233,11 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
     mutate,
     isLoading,
     error: mutationError
-  } = useMutation<SupplierEvaluationData, Error, SupplierEvaluationData>(
+  } = useMutation<SupplierEvaluationData, Error, EvaluationFormData>(
     mutationFn,
     {
-      onSuccess: (data) => {
+      onSuccess: (responseData) => {
+        // responseData es SupplierEvaluationData devuelta por el backend
         Swal.fire({
           title: 'Éxito',
           text: `Evaluación ${existingEvaluation ? 'actualizada' : 'guardada'} correctamente.`,
@@ -203,14 +248,18 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
         queryClient.invalidateQueries([
           'supplierEvaluations',
           supplier.id.toString()
-        ]) // Para refrescar la lista de evaluaciones
-        onSuccess(data) // Llama al callback onSuccess
+        ])
+        queryClient.invalidateQueries('allSupplierEvaluations') // Si tienes una lista global de evaluaciones
+        onSuccess(responseData) // Pasar la data completa recibida del backend
       },
       onError: (err) => {
         console.error('Error guardando evaluación:', err)
         let message = `Error al ${existingEvaluation ? 'actualizar' : 'guardar'} la evaluación.`
         if (isAxiosError(err) && err.response?.data?.message) {
-          message = err.response.data.message
+          message =
+            typeof err.response.data.message === 'string'
+              ? err.response.data.message
+              : JSON.stringify(err.response.data.message)
         } else if (err instanceof Error) {
           message = err.message
         }
@@ -229,58 +278,34 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
       )
       return
     }
-    const dataToSubmit: SupplierEvaluationData = {
-      ...formData,
-      supplierId: supplier.id
-      // totalScore y finalCondition serán calculados por el backend gracias al hook del modelo
-    }
-    mutate(dataToSubmit)
+    mutate(formData) // formData ya tiene la estructura correcta Omit<...>
   }
 
-  const criteria: {
-    label: string
-    name: keyof typeof formData
-    score: number
-  }[] = [
-    {
-      label: 'Calidad de los productos y / o servicios',
-      name: 'qualityScore',
-      score: formData.qualityScore
-    },
-    {
-      label: 'Cumplimiento en la entrega',
-      name: 'deliveryScore',
-      score: formData.deliveryScore
-    },
-    {
-      label: 'Soporte Técnico o asesoramiento',
-      name: 'supportScore',
-      score: formData.supportScore
-    },
-    {
-      label: 'Garantía Ofrecida',
-      name: 'warrantyScore',
-      score: formData.warrantyScore
-    },
-    {
-      label: 'No conformidades presentadas',
-      name: 'nonConformityScore',
-      score: formData.nonConformityScore
-    },
-    {
-      label: 'Entrega de Facturas',
-      name: 'invoiceScore',
-      score: formData.invoiceScore
-    }
+  // Definición de criterios para el renderizado del formulario
+  const criteria: { label: string; name: ScoreFieldName }[] = [
+    { label: 'Calidad de los productos y / o servicios', name: 'qualityScore' },
+    { label: 'Cumplimiento en la entrega', name: 'deliveryScore' },
+    { label: 'Soporte Técnico o asesoramiento', name: 'supportScore' },
+    { label: 'Garantía Ofrecida', name: 'warrantyScore' },
+    { label: 'No conformidades presentadas', name: 'nonConformityScore' },
+    { label: 'Entrega de Facturas', name: 'invoiceScore' }
   ]
 
   return (
-    <Paper elevation={3} sx={{ p: 3, mt: 2 }}>
-      <Typography variant='h5' gutterBottom component='div'>
-        Evaluación para: <strong>{supplier.name}</strong> (NIT: {supplier.taxId}
-        )
+    // Si este Paper está dentro de un DialogContent con dividers, la elevación puede ser 0 o baja.
+    <Paper elevation={0} sx={{ p: { xs: 0, sm: 1, md: 2 } }}>
+      <Typography variant='h6' gutterBottom component='div'>
+        {' '}
+        {/* Cambiado a h6 si está en un Dialog */}
+        Evaluación para Proveedor: <strong>{supplier.name}</strong> (NIT:{' '}
+        {supplier.taxId})
       </Typography>
-      <Typography variant='subtitle2' gutterBottom>
+      <Typography
+        variant='body2'
+        color='text.secondary'
+        gutterBottom
+        sx={{ mb: 2 }}
+      >
         Referencia Documento: {formData.documentReference}
       </Typography>
       <Box component='form' onSubmit={handleSubmit} noValidate>
@@ -300,47 +325,68 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
             />
           </Grid>
 
+          {/* --- Renderizado de Criterios con Select --- */}
           {criteria.map((criterion) => (
             <Grid item xs={12} sm={6} md={4} key={criterion.name}>
               <TextField
-                label={criterion.label}
-                name={criterion.name}
-                type='number'
-                value={criterion.score.toString()} // TextField value debe ser string
-                onChange={handleChange}
-                error={!!errors[criterion.name]}
-                helperText={errors[criterion.name]}
-                inputProps={{ min: SCORE_MIN, max: SCORE_MAX }}
+                select
                 fullWidth
                 required
-              />
+                label={criterion.label}
+                name={criterion.name}
+                value={formData[criterion.name]} // El valor es un número (0, 2, 10, 15)
+                onChange={handleChange as any} // Cast a 'any' para simplificar el tipo de evento del Select
+                error={!!errors[criterion.name]}
+                helperText={errors[criterion.name]}
+                // SelectProps={{ displayEmpty: true }} // Si quieres un placeholder visible
+              >
+                {/* <MenuItem value="" disabled><em>-- Calificar --</em></MenuItem> */}
+                {scoreOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Grid>
           ))}
 
-          <Grid item xs={12}>
+          <Grid item xs={12} sx={{ mt: 1 }}>
+            {' '}
+            {/* Añadido margen superior */}
             <TextField
               label='Comentarios Adicionales'
               name='comments'
               multiline
-              rows={4}
+              rows={3}
               value={formData.comments}
               onChange={handleChange}
               fullWidth
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={4}>
-            <Typography variant='body1'>Puntaje Total Obtenido:</Typography>
-            <Typography variant='h6' color='primary'>
+          <Grid item xs={12} sm={6} md={4} sx={{ mt: 1 }}>
+            <Typography variant='body1' component='div' fontWeight='medium'>
+              Puntaje Total Obtenido:
+            </Typography>
+            <Typography variant='h5' color='primary.main' fontWeight='bold'>
               {calculatedTotal} / 90
             </Typography>
           </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <Typography variant='body1'>Condición Final:</Typography>
+          <Grid item xs={12} sm={6} md={4} sx={{ mt: 1 }}>
+            <Typography variant='body1' component='div' fontWeight='medium'>
+              Condición Final:
+            </Typography>
             <Typography
-              variant='h6'
+              variant='h5'
+              fontWeight='bold'
               color={
-                calculatedCondition === 'NO APROBADO' ? 'error' : 'primary'
+                calculatedCondition === 'NO APROBADO' ||
+                calculatedCondition === 'INDETERMINADO'
+                  ? 'error.main'
+                  : calculatedCondition === 'EXCELENTE' ||
+                      calculatedCondition === 'BUENO'
+                    ? 'success.main'
+                    : 'warning.main'
               }
             >
               {calculatedCondition}
@@ -348,7 +394,7 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
           </Grid>
 
           {mutationError && (
-            <Grid item xs={12}>
+            <Grid item xs={12} sx={{ mt: 1 }}>
               <Alert severity='error'>
                 Error al guardar: {(mutationError as Error).message}
               </Alert>
