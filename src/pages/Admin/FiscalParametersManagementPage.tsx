@@ -1,5 +1,6 @@
-// src/pages/Admin/FiscalParametersManagementPage.tsx (o donde corresponda)
-import React, { useState } from 'react'
+// src/pages/Admin/FiscalParametersManagementPage.tsx (o la ubicación que prefieras)
+
+import React, { useState, ChangeEvent } from 'react'
 import {
   Container,
   Typography,
@@ -27,19 +28,30 @@ import {
   CircularProgress,
   Alert,
   Grid,
-  Chip
+  Chip,
+  Tooltip
 } from '@mui/material'
-import { Edit, Delete, Add, Save, Cancel } from '@mui/icons-material' // Importar Save y Cancel
+import {
+  Edit,
+  Delete,
+  Add,
+  Save,
+  Cancel,
+  Refresh as RefreshIcon,
+  Close as CloseIcon
+} from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private' // Ajusta la ruta
 import Swal from 'sweetalert2'
-import { isAxiosError } from 'axios'
+import { isAxiosError, AxiosResponse } from 'axios'
 import { SelectChangeEvent } from '@mui/material/Select'
+import { NumericFormat, NumberFormatValues } from 'react-number-format'
 
+// Interfaz para los parámetros fiscales
 interface FiscalParameter {
   id: number
   keyName: string
-  value: string
+  value: string // Se guarda como string, se interpreta/formatea según valueType
   valueType: 'PERCENTAGE' | 'AMOUNT' | 'RATE_DECIMAL' | 'TEXT'
   description?: string
   isActive: boolean
@@ -47,13 +59,19 @@ interface FiscalParameter {
   updatedAt?: string // Sequelize los añade
 }
 
-const initialFormValues: Omit<
+// Tipos para las variables de mutación y los datos de respuesta
+type CreateFiscalParameterVariables = Omit<
   FiscalParameter,
   'id' | 'createdAt' | 'updatedAt'
-> = {
+>
+type UpdateFiscalParameterVariables =
+  Partial<CreateFiscalParameterVariables> & { id: number }
+type FiscalParameterMutationResponse = FiscalParameter
+
+const initialFormValues: CreateFiscalParameterVariables = {
   keyName: '',
   value: '',
-  valueType: 'TEXT',
+  valueType: 'TEXT', // Default a TEXT
   description: '',
   isActive: true
 }
@@ -65,6 +83,44 @@ const valueTypeOptions: FiscalParameter['valueType'][] = [
   'TEXT'
 ]
 
+// Función helper para formatear el valor a mostrar en la TABLA
+const formatDisplayValueInTable = (
+  value: string,
+  valueType: FiscalParameter['valueType']
+): string => {
+  let displayValue = value
+  // Intentar parsear solo si no está vacío para evitar que parseFloat('') sea 0
+  if (value && value.trim() !== '') {
+    const numericValue = parseFloat(value)
+    if (!isNaN(numericValue)) {
+      switch (valueType) {
+        case 'PERCENTAGE':
+          displayValue = `${numericValue.toLocaleString('es-CO')}%`
+          break
+        case 'AMOUNT':
+          displayValue = new Intl.NumberFormat('es-CO', {
+            style: 'currency',
+            currency: 'COP',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+          }).format(numericValue)
+          break
+        case 'RATE_DECIMAL':
+          displayValue = numericValue.toLocaleString('es-CO', {
+            minimumFractionDigits: 2, // Mostrar al menos 2 decimales para tasas
+            maximumFractionDigits: 5
+          })
+          break
+        case 'TEXT':
+        default:
+          displayValue = value
+          break
+      }
+    }
+  }
+  return displayValue
+}
+
 const FiscalParametersManagementPage: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
@@ -72,15 +128,15 @@ const FiscalParametersManagementPage: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false)
   const [editingParam, setEditingParam] = useState<FiscalParameter | null>(null)
   const [formValues, setFormValues] =
-    useState<Omit<FiscalParameter, 'id' | 'createdAt' | 'updatedAt'>>(
-      initialFormValues
-    )
+    useState<CreateFiscalParameterVariables>(initialFormValues)
 
   const {
-    data: fiscalParams = [], // Default to empty array
+    data: fiscalParams = [],
     isLoading,
-    error
-    // refetch // no es necesario si invalidamos queries
+    isError: queryIsError, // Renombrado para evitar conflicto con variable 'error'
+    error: queryError, // Renombrado
+    isFetching,
+    refetch
   } = useQuery<FiscalParameter[], Error>(
     'fiscalParametersListManageable',
     async () => {
@@ -88,73 +144,86 @@ const FiscalParametersManagementPage: React.FC = () => {
         '/fiscal-parameters/manageable'
       )
       return response.data
+    },
+    {
+      // staleTime: 1000 * 60 * 5, // Cache por 5 minutos
     }
   )
 
-  const mutationOptions = {
-    onSuccess: (_data: unknown, _variables: unknown, _context: unknown) => {
-      queryClient.invalidateQueries('fiscalParametersListManageable')
-      queryClient.invalidateQueries('activeFiscalSettings') // Para que GenerateOrderModal también se refresque
-      handleCloseDialog()
-    },
-    onError: (err: unknown) => {
-      console.error('Error en la operación del parámetro fiscal:', err)
-      let errorMessage = 'Ocurrió un error.'
-      if (isAxiosError(err) && err.response?.data) {
-        const data = err.response.data
-        errorMessage =
-          typeof data.message === 'string'
-            ? data.message
-            : Array.isArray(data.errors)
-              ? data.errors.join(', ')
-              : JSON.stringify(data)
-      } else if (err instanceof Error) {
-        errorMessage = err.message
-      }
-      Swal.fire('Error', errorMessage, 'error')
-    }
+  const handleGenericMutationSuccess = () => {
+    queryClient.invalidateQueries('fiscalParametersListManageable')
+    queryClient.invalidateQueries('activeFiscalSettings')
+    handleCloseDialog()
   }
 
-  const createMutation = useMutation(
-    (paramData: Omit<FiscalParameter, 'id' | 'createdAt' | 'updatedAt'>) =>
-      axiosPrivate.post('/fiscal-parameters', paramData),
-    {
-      ...mutationOptions,
-      onSuccess: (...args) => {
-        Swal.fire('Creado', 'Parámetro fiscal creado con éxito.', 'success')
-        mutationOptions.onSuccess(...args)
-      }
+  const handleGenericMutationError = (
+    err: unknown,
+    operationMessage: string
+  ) => {
+    console.error(`Error en ${operationMessage}:`, err)
+    let errorMessage = `Error durante ${operationMessage}.`
+    if (isAxiosError(err) && err.response?.data) {
+      const data = err.response.data
+      errorMessage =
+        typeof data.message === 'string'
+          ? data.message
+          : Array.isArray(data.errors)
+            ? data.errors.map((e: any) => e.message).join(', ')
+            : JSON.stringify(data)
+    } else if (err instanceof Error) {
+      errorMessage = err.message
     }
-  )
+    Swal.fire('Error', errorMessage, 'error')
+  }
 
-  const updateMutation = useMutation(
-    (paramData: Partial<FiscalParameter> & { id: number }) =>
+  const createMutation = useMutation<
+    AxiosResponse<FiscalParameterMutationResponse>,
+    Error,
+    CreateFiscalParameterVariables
+  >((paramData) => axiosPrivate.post('/fiscal-parameters', paramData), {
+    onSuccess: () => {
+      Swal.fire('Creado', 'Parámetro fiscal creado con éxito.', 'success')
+      handleGenericMutationSuccess()
+    },
+    onError: (err) =>
+      handleGenericMutationError(err, 'la creación del parámetro')
+  })
+
+  const updateMutation = useMutation<
+    AxiosResponse<FiscalParameterMutationResponse>,
+    Error,
+    UpdateFiscalParameterVariables
+  >(
+    (paramData) =>
       axiosPrivate.put(`/fiscal-parameters/${paramData.id}`, paramData),
     {
-      ...mutationOptions,
-      onSuccess: (...args) => {
+      onSuccess: () => {
         Swal.fire(
           'Actualizado',
           'Parámetro fiscal actualizado con éxito.',
           'success'
         )
-        mutationOptions.onSuccess(...args)
-      }
+        handleGenericMutationSuccess()
+      },
+      onError: (err) =>
+        handleGenericMutationError(err, 'la actualización del parámetro')
     }
   )
 
-  const deleteMutation = useMutation(
+  const deleteMutation = useMutation<AxiosResponse, Error, number>(
     (id: number) => axiosPrivate.delete(`/fiscal-parameters/${id}`),
     {
-      ...mutationOptions,
-      onSuccess: (...args) => {
+      onSuccess: () => {
         Swal.fire(
           'Eliminado',
           'Parámetro fiscal eliminado con éxito.',
           'success'
         )
-        mutationOptions.onSuccess(...args)
-      }
+        queryClient.invalidateQueries('fiscalParametersListManageable')
+        queryClient.invalidateQueries('activeFiscalSettings')
+      },
+      onError: (err) =>
+        handleGenericMutationError(err, 'la eliminación del parámetro')
     }
   )
 
@@ -177,16 +246,30 @@ const FiscalParametersManagementPage: React.FC = () => {
 
   const handleCloseDialog = () => {
     setOpenDialog(false)
-    setEditingParam(null)
+    setEditingParam(null) // Limpiar el parámetro en edición al cerrar
   }
 
   const handleFormChange = (
     event:
-      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+      | ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
       | SelectChangeEvent<FiscalParameter['valueType']>
   ) => {
     const { name, value } = event.target
-    setFormValues((prev) => ({ ...prev, [name!]: value }))
+
+    if (name === 'valueType') {
+      setFormValues((prev) => ({
+        ...prev,
+        value: '', // Resetear valor cuando cambia el tipo de valor
+        [name!]: value as FiscalParameter['valueType']
+      }))
+    } else {
+      setFormValues((prev) => ({ ...prev, [name!]: value }))
+    }
+  }
+
+  // Handler específico para NumericFormat
+  const handleNumericValueChange = (values: NumberFormatValues) => {
+    setFormValues((prev) => ({ ...prev, value: values.value || '' }))
   }
 
   const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -196,22 +279,48 @@ const FiscalParametersManagementPage: React.FC = () => {
 
   const handleFormSubmit = (event: React.FormEvent) => {
     event.preventDefault()
-    if (
-      !formValues.keyName?.trim() ||
-      !formValues.value?.trim() ||
-      !formValues.valueType
-    ) {
+    if (!formValues.keyName?.trim() || !formValues.valueType) {
+      // 'value' puede ser "0" que es falsy pero válido
       Swal.fire(
         'Validación',
-        'Los campos "Key Name", "Valor" y "Tipo de Valor" son requeridos.',
+        'Los campos "Key Name" y "Tipo de Valor" son requeridos.',
         'warning'
       )
       return
     }
+    if (formValues.value.trim() === '' && formValues.valueType !== 'TEXT') {
+      // Para tipos numéricos, el valor no puede estar vacío
+      Swal.fire(
+        'Validación',
+        'El campo "Valor" es requerido para tipos numéricos.',
+        'warning'
+      )
+      return
+    }
+
+    if (
+      formValues.valueType !== 'TEXT' &&
+      isNaN(parseFloat(formValues.value))
+    ) {
+      Swal.fire(
+        'Validación',
+        `El valor para el tipo '${formValues.valueType}' debe ser numérico. Ingresaste: '${formValues.value}'`,
+        'warning'
+      )
+      return
+    }
+
+    const dataToSubmit = { ...formValues }
+    // Asegurarse que el valor para tipos numéricos sea un string que represente el número,
+    // o parsearlo si el backend espera un número (backend actual espera string para 'value')
+    // if (dataToSubmit.valueType !== 'TEXT') {
+    //   dataToSubmit.value = parseFloat(dataToSubmit.value).toString(); // O enviar como número si el backend lo espera
+    // }
+
     if (editingParam) {
-      updateMutation.mutate({ ...formValues, id: editingParam.id })
+      updateMutation.mutate({ ...dataToSubmit, id: editingParam.id })
     } else {
-      createMutation.mutate(formValues)
+      createMutation.mutate(dataToSubmit)
     }
   }
 
@@ -232,25 +341,29 @@ const FiscalParametersManagementPage: React.FC = () => {
     })
   }
 
-  if (isLoading)
+  if (isLoading && fiscalParams.length === 0) {
     return (
-      <Container sx={{ textAlign: 'center', mt: 5 }}>
-        <CircularProgress />{' '}
-        <Typography sx={{ ml: 1 }}>Cargando parámetros fiscales...</Typography>
+      <Container sx={{ textAlign: 'center', mt: 5, p: 2 }}>
+        <CircularProgress />
+        <Typography sx={{ mt: 1 }}>Cargando parámetros fiscales...</Typography>
       </Container>
     )
+  }
 
-  if (error)
+  // Mostrar error solo si es la carga inicial y no hay datos cacheados
+  if (queryIsError && fiscalParams.length === 0) {
     return (
       <Container sx={{ mt: 2 }}>
         <Alert severity='error'>
-          Error al cargar parámetros fiscales: {error.message}
+          Error al cargar parámetros fiscales:{' '}
+          {queryError?.message || 'Error desconocido.'}
         </Alert>
       </Container>
     )
+  }
 
   return (
-    <Container maxWidth='lg' sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth='xl' sx={{ mt: 4, mb: 4 }}>
       <Box
         sx={{
           display: 'flex',
@@ -262,37 +375,87 @@ const FiscalParametersManagementPage: React.FC = () => {
         <Typography variant='h4' component='h1'>
           Gestión de Parámetros Fiscales
         </Typography>
-        <Button
-          variant='contained'
-          color='primary'
-          startIcon={<Add />}
-          onClick={() => handleOpenDialog()}
-        >
-          Nuevo Parámetro
-        </Button>
+        <Box>
+          <Button
+            variant='outlined'
+            onClick={() => refetch()}
+            startIcon={
+              isFetching ? <CircularProgress size={18} /> : <RefreshIcon />
+            }
+            disabled={isFetching}
+            sx={{ mr: 1 }}
+            size='small'
+          >
+            Refrescar
+          </Button>
+          <Button
+            variant='contained'
+            color='primary'
+            startIcon={<Add />}
+            onClick={() => handleOpenDialog()}
+            size='small'
+          >
+            Nuevo Parámetro
+          </Button>
+        </Box>
       </Box>
       <Paper elevation={2}>
         <TableContainer>
-          <Table stickyHeader>
+          <Table stickyHeader size='small'>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>
+                <TableCell sx={{ fontWeight: 'bold', width: '5%' }}>
+                  ID
+                </TableCell>
+                <TableCell sx={{ fontWeight: 'bold', width: '20%' }}>
                   Clave (keyName)
                 </TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Valor</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Tipo de Valor</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', minWidth: 200 }}>
+                <TableCell sx={{ fontWeight: 'bold', width: '15%' }}>
+                  Valor
+                </TableCell>
+                <TableCell sx={{ fontWeight: 'bold', width: '15%' }}>
+                  Tipo de Valor
+                </TableCell>
+                <TableCell sx={{ fontWeight: 'bold', width: '25%' }}>
                   Descripción
                 </TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Activo</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', textAlign: 'right' }}>
+                <TableCell
+                  sx={{ fontWeight: 'bold', width: '10%', textAlign: 'center' }}
+                >
+                  Activo
+                </TableCell>
+                <TableCell
+                  sx={{ fontWeight: 'bold', width: '10%', textAlign: 'right' }}
+                >
                   Acciones
                 </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {fiscalParams.length === 0 && (
+              {isFetching && fiscalParams.length > 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={7}
+                    align='center'
+                    sx={{ py: 0.5, borderBottom: 'none' }}
+                  >
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 1,
+                        opacity: 0.7,
+                        height: 20
+                      }}
+                    >
+                      <CircularProgress size={16} />{' '}
+                      <Typography variant='caption'>Actualizando...</Typography>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              )}
+              {!isLoading && fiscalParams.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} align='center'>
                     No hay parámetros fiscales definidos.
@@ -305,9 +468,15 @@ const FiscalParametersManagementPage: React.FC = () => {
                   <TableCell sx={{ fontWeight: 500 }}>
                     {param.keyName}
                   </TableCell>
-                  <TableCell>{param.value}</TableCell>
                   <TableCell>
-                    <Chip label={param.valueType} size='small' />
+                    {formatDisplayValueInTable(param.value, param.valueType)}
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={param.valueType}
+                      size='small'
+                      variant='outlined'
+                    />
                   </TableCell>
                   <TableCell
                     sx={{
@@ -316,34 +485,46 @@ const FiscalParametersManagementPage: React.FC = () => {
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap'
                     }}
-                    title={param.description}
+                    title={param.description || ''}
                   >
                     {param.description}
                   </TableCell>
-                  <TableCell>
+                  <TableCell align='center'>
                     {param.isActive ? (
-                      <Chip label='Sí' color='success' size='small' />
+                      <Chip
+                        label='Sí'
+                        color='success'
+                        size='small'
+                        variant='filled'
+                      />
                     ) : (
-                      <Chip label='No' color='default' size='small' />
+                      <Chip
+                        label='No'
+                        color='default'
+                        size='small'
+                        variant='outlined'
+                      />
                     )}
                   </TableCell>
                   <TableCell align='right'>
-                    <IconButton
-                      onClick={() => handleOpenDialog(param)}
-                      color='primary'
-                      size='small'
-                      title='Editar'
-                    >
-                      <Edit />
-                    </IconButton>
-                    <IconButton
-                      onClick={() => handleDelete(param.id)}
-                      color='error'
-                      size='small'
-                      title='Eliminar'
-                    >
-                      <Delete />
-                    </IconButton>
+                    <Tooltip title='Editar'>
+                      <IconButton
+                        onClick={() => handleOpenDialog(param)}
+                        color='primary'
+                        size='small'
+                      >
+                        <Edit fontSize='small' />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title='Eliminar'>
+                      <IconButton
+                        onClick={() => handleDelete(param.id)}
+                        color='error'
+                        size='small'
+                      >
+                        <Delete fontSize='small' />
+                      </IconButton>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               ))}
@@ -359,36 +540,101 @@ const FiscalParametersManagementPage: React.FC = () => {
         fullWidth
         PaperProps={{ component: 'form', onSubmit: handleFormSubmit }}
       >
-        <DialogTitle>
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}
+        >
           {editingParam ? 'Editar Parámetro Fiscal' : 'Nuevo Parámetro Fiscal'}
+          <IconButton aria-label='close' onClick={handleCloseDialog}>
+            <CloseIcon />
+          </IconButton>
         </DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ pt: 1 }}>
+        <DialogContent dividers sx={{ pt: '16px !important' }}>
+          {' '}
+          {/* Forzar padding top */}
+          <Grid container spacing={2}>
             <Grid item xs={12}>
               <TextField
                 label='Nombre Clave (Key Name)'
                 name='keyName'
                 required
                 fullWidth
+                margin='normal'
                 value={formValues.keyName || ''}
                 onChange={handleFormChange}
                 helperText='Ej: PURCHASE_RETENTION_RATE (único, no editable después)'
-                InputProps={{ readOnly: !!editingParam }} // KeyName no se edita
+                InputProps={{ readOnly: !!editingParam }}
+                disabled={createMutation.isLoading || updateMutation.isLoading}
               />
             </Grid>
+
             <Grid item xs={12} sm={6}>
-              <TextField
-                label='Valor'
-                name='value'
-                required
+              {formValues.valueType === 'TEXT' ? (
+                <TextField
+                  label='Valor'
+                  name='value'
+                  required
+                  fullWidth
+                  margin='normal'
+                  value={formValues.value || ''}
+                  onChange={handleFormChange}
+                  helperText='Valor del parámetro (texto libre)'
+                  disabled={
+                    createMutation.isLoading || updateMutation.isLoading
+                  }
+                />
+              ) : (
+                <NumericFormat
+                  label='Valor'
+                  name='value'
+                  required
+                  fullWidth
+                  margin='normal'
+                  customInput={TextField}
+                  value={formValues.value || ''}
+                  onValueChange={handleNumericValueChange} // Usar el handler específico
+                  thousandSeparator={
+                    formValues.valueType === 'AMOUNT' ? ',' : undefined
+                  }
+                  decimalSeparator='.'
+                  prefix={formValues.valueType === 'AMOUNT' ? '$ ' : ''}
+                  suffix={formValues.valueType === 'PERCENTAGE' ? ' %' : ''}
+                  decimalScale={
+                    formValues.valueType === 'PERCENTAGE'
+                      ? 2
+                      : formValues.valueType === 'AMOUNT'
+                        ? 2
+                        : formValues.valueType === 'RATE_DECIMAL'
+                          ? 5
+                          : undefined
+                  }
+                  allowNegative={false}
+                  helperText={
+                    formValues.valueType === 'PERCENTAGE'
+                      ? 'Ej: 19 (para 19%)'
+                      : formValues.valueType === 'RATE_DECIMAL'
+                        ? 'Ej: 0.025 (para 2.5%)'
+                        : formValues.valueType === 'AMOUNT'
+                          ? 'Ej: 1350000.50'
+                          : 'Valor numérico'
+                  }
+                  disabled={
+                    createMutation.isLoading || updateMutation.isLoading
+                  }
+                />
+              )}
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <FormControl
                 fullWidth
-                value={formValues.value || ''}
-                onChange={handleFormChange}
-                helperText='Ej: 0.025, 19, 1345000, texto...'
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth required>
+                required
+                margin='normal'
+                disabled={createMutation.isLoading || updateMutation.isLoading}
+              >
                 <InputLabel id='valueType-dialog-label'>
                   Tipo de Valor
                 </InputLabel>
@@ -397,7 +643,11 @@ const FiscalParametersManagementPage: React.FC = () => {
                   name='valueType'
                   label='Tipo de Valor'
                   value={formValues.valueType}
-                  onChange={handleFormChange}
+                  onChange={(e) =>
+                    handleFormChange(
+                      e as SelectChangeEvent<FiscalParameter['valueType']>
+                    )
+                  }
                 >
                   {valueTypeOptions.map((vt) => (
                     <MenuItem key={vt} value={vt}>
@@ -414,8 +664,10 @@ const FiscalParametersManagementPage: React.FC = () => {
                 fullWidth
                 multiline
                 rows={3}
+                margin='normal'
                 value={formValues.description || ''}
                 onChange={handleFormChange}
+                disabled={createMutation.isLoading || updateMutation.isLoading}
               />
             </Grid>
             <Grid item xs={12}>
@@ -428,12 +680,18 @@ const FiscalParametersManagementPage: React.FC = () => {
                   />
                 }
                 label='Parámetro Activo'
+                sx={{ mt: 1 }}
+                disabled={createMutation.isLoading || updateMutation.isLoading}
               />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions sx={{ p: '16px 24px' }}>
-          <Button onClick={handleCloseDialog} startIcon={<Cancel />}>
+          <Button
+            onClick={handleCloseDialog}
+            startIcon={<Cancel />}
+            disabled={createMutation.isLoading || updateMutation.isLoading}
+          >
             Cancelar
           </Button>
           <Button
