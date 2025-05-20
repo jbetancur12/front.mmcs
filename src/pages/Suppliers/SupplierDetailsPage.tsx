@@ -34,9 +34,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import Swal from 'sweetalert2'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { isAxiosError } from 'axios'
-import SupplierEvaluationForm, {
-  SupplierEvaluationData
-} from 'src/Components/Purchases/SupplierEvaluationForm'
+import SupplierEvaluationForm from 'src/Components/Purchases/SupplierEvaluationForm'
 import SupplierPurchaseHistoryTable from 'src/Components/Purchases/SupplierPurchaseHistoryTable'
 
 // Asumiendo que tienes una interfaz similar a esta para el proveedor
@@ -92,6 +90,93 @@ const naturalDocumentTypes: Array<Omit<DocumentToUpload, 'file'>> = [
   }
 ]
 
+const getEvaluationStatusAlertInfo = (
+  summary?: EvaluationStatusSummary | null
+): {
+  type: 'success' | 'warning' | 'error' | 'info' // 'error' para la más crítica
+  message: string
+} | null => {
+  if (!summary) return null
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const sixMonthsAgoCutoff = new Date(today)
+  sixMonthsAgoCutoff.setMonth(today.getMonth() - 6)
+
+  const parseDate = (dateString?: string | null): Date | null => {
+    if (!dateString) return null
+    const datePart = dateString.substring(0, 10)
+    const parts = datePart.split('-')
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10)
+      const month = parseInt(parts[1], 10) - 1
+      const day = parseInt(parts[2], 10)
+      if (!isNaN(year) && !isNaN(month) && !isNaN(day))
+        return new Date(year, month, day)
+    }
+    const parsedDate = new Date(dateString)
+    if (!isNaN(parsedDate.getTime())) {
+      parsedDate.setHours(0, 0, 0, 0)
+      return parsedDate
+    }
+    return null
+  }
+
+  const lastEvalDate = parseDate(summary.lastEvaluationDate)
+  const lastPurchaseDate = parseDate(summary.lastPurchaseDate)
+  const isActiveRecently = summary.hasActivityInLast6Months === true
+
+  if (lastEvalDate) {
+    if (lastEvalDate < sixMonthsAgoCutoff) {
+      return isActiveRecently
+        ? {
+            type: 'error',
+            message: `Evaluación REQUERIDA (Vencida: ${lastEvalDate.toLocaleDateString('es-CO')}, Activo)`
+          }
+        : {
+            type: 'warning',
+            message: `Eval. Pendiente (Vencida: ${lastEvalDate.toLocaleDateString('es-CO')}, Inactivo)`
+          }
+    }
+    return {
+      type: 'success',
+      message: `Evaluación Al Día (Última: ${lastEvalDate.toLocaleDateString('es-CO')})`
+    }
+  } else {
+    if (isActiveRecently) {
+      const GRACE_PERIOD_DAYS = 30
+      const gracePeriodCutoff = new Date(today)
+      gracePeriodCutoff.setDate(today.getDate() - GRACE_PERIOD_DAYS)
+      if (lastPurchaseDate && lastPurchaseDate > gracePeriodCutoff) {
+        return {
+          type: 'info',
+          message: `Actividad Reciente (Última compra: ${lastPurchaseDate.toLocaleDateString('es-CO')}). 1ra Eval. Próxima.`
+        }
+      } else if (lastPurchaseDate && lastPurchaseDate < sixMonthsAgoCutoff) {
+        return {
+          type: 'error',
+          message: 'Requiere 1RA EVALUACIÓN (Actividad >6m sin eval.)'
+        }
+      }
+      return { type: 'warning', message: 'Requiere 1RA EVALUACIÓN (Activo)' }
+    } else {
+      if (lastPurchaseDate) {
+        return lastPurchaseDate < sixMonthsAgoCutoff
+          ? {
+              type: 'info',
+              message: `Sin Eval. (Inactivo >6m, Últ. compra: ${lastPurchaseDate.toLocaleDateString('es-CO')})`
+            }
+          : {
+              type: 'info',
+              message: `Sin Eval. (Inactivo Reciente, Últ. compra: ${lastPurchaseDate.toLocaleDateString('es-CO')})`
+            }
+      }
+      return { type: 'info', message: 'Sin Evaluar (Nuevo/Sin Compras)' }
+    }
+  }
+}
+
 const SupplierDetailsPage: React.FC = () => {
   const { supplierId } = useParams<{ supplierId: string }>()
   const navigate = useNavigate()
@@ -104,13 +189,8 @@ const SupplierDetailsPage: React.FC = () => {
   // --- NUEVO: Estado para el modal de evaluación ---
   const [evaluationModalOpen, setEvaluationModalOpen] = useState(false)
   // Opcional: si permites editar evaluaciones desde esta página, necesitarías algo así:
-  const [selectedEvaluationForEdit, setSelectedEvaluationForEdit] =
-    useState<SupplierEvaluationData | null>(null)
-
-  const [evaluationNotification, setEvaluationNotification] = useState<{
-    type: 'warning' | 'info'
-    message: string
-  } | null>(null)
+  // const [selectedEvaluationForEdit, setSelectedEvaluationForEdit] =
+  //   useState<SupplierEvaluationData | null>(null)
 
   // Fetch supplier details using useQuery
   const {
@@ -156,89 +236,8 @@ const SupplierDetailsPage: React.FC = () => {
     }
   )
 
-  useEffect(() => {
-    if (!evalStatusSummary || isLoadingEvalStatus || !supplierId) {
-      setEvaluationNotification(null)
-      return
-    }
-
-    const today = new Date()
-    today.setHours(0, 0, 0, 0) // Normalizar a inicio del día
-
-    const sixMonthsAgo = new Date(today)
-    sixMonthsAgo.setMonth(today.getMonth() - 6)
-
-    let notification: { type: 'warning' | 'info'; message: string } | null =
-      null
-
-    // Helper para parsear fechas YYYY-MM-DD o YYYY-MM-DDTHH...Z como fecha local de inicio de día
-    const parseDateToLocalDayStart = (
-      dateString: string | null
-    ): Date | null => {
-      if (!dateString) return null
-      // Si es YYYY-MM-DDTHH:mm:ss.sssZ, new Date() lo parsea bien.
-      // Si es YYYY-MM-DD, new Date() puede interpretarlo como UTC. Para ser seguro:
-      const parts = dateString.substring(0, 10).split('-')
-      if (parts.length === 3) {
-        return new Date(
-          parseInt(parts[0]),
-          parseInt(parts[1]) - 1,
-          parseInt(parts[2])
-        )
-      }
-      return new Date(dateString) // Fallback para formatos completos
-    }
-
-    if (evalStatusSummary.lastEvaluationDate) {
-      const lastEvalDate = parseDateToLocalDayStart(
-        evalStatusSummary.lastEvaluationDate
-      )
-      if (lastEvalDate && lastEvalDate < sixMonthsAgo) {
-        // Vencida
-        if (evalStatusSummary.hasActivityInLast6Months) {
-          notification = {
-            type: 'warning',
-            message: `Evaluación REQUERIDA. Última evaluación: ${lastEvalDate.toLocaleDateString('es-CO')}. Proveedor con actividad reciente.`
-          }
-        } else {
-          notification = {
-            type: 'info',
-            message: `Evaluación VENCIDA (Última: ${lastEvalDate.toLocaleDateString('es-CO')}). Proveedor inactivo en los últimos 6 meses; evaluar según necesidad.`
-          }
-        }
-      }
-      // else: Evaluación al día
-    } else {
-      // Sin evaluaciones previas
-      if (evalStatusSummary.hasActivityInLast6Months) {
-        // Tiene actividad reciente y nunca ha sido evaluado
-        notification = {
-          type: 'warning',
-          message: `PRIMERA EVALUACIÓN REQUERIDA. El proveedor tiene actividad reciente.`
-        }
-      } else if (evalStatusSummary.lastPurchaseDate) {
-        // Sin actividad reciente, pero tuvo compras antes
-        const lastPurchase = parseDateToLocalDayStart(
-          evalStatusSummary.lastPurchaseDate
-        )
-        if (lastPurchase && lastPurchase < sixMonthsAgo) {
-          notification = {
-            type: 'info',
-            message: `Proveedor sin evaluaciones. Última compra (${lastPurchase.toLocaleDateString('es-CO')}) fue hace más de 6 meses.`
-          }
-        }
-        // Si la última compra fue hace menos de 6 meses, no se muestra nada (aún no es crítico)
-      } else {
-        // Sin evaluaciones y sin historial de compras
-        notification = {
-          type: 'info',
-          message:
-            'Proveedor nuevo sin historial de compras ni evaluaciones. Considerar evaluación si se inician transacciones.'
-        }
-      }
-    }
-    setEvaluationNotification(notification)
-  }, [evalStatusSummary, isLoadingEvalStatus, supplierId])
+  const evaluationNotificationInfo =
+    getEvaluationStatusAlertInfo(evalStatusSummary)
 
   useEffect(() => {
     // Si el supplierId cambia, react-query se encargará de re-fetch
@@ -384,7 +383,7 @@ const SupplierDetailsPage: React.FC = () => {
     // setSelectedEvaluationForEdit(null);
   }
 
-  const handleEvaluationSuccess = (evaluation: SupplierEvaluationData) => {
+  const handleEvaluationSuccess = () => {
     handleCloseEvaluationModal()
     Swal.fire(
       'Evaluación Guardada',
@@ -584,9 +583,9 @@ const SupplierDetailsPage: React.FC = () => {
           </Typography>
         </Box>
       )}
-      {evaluationNotification && !isLoadingEvalStatus && (
-        <Alert severity={evaluationNotification.type} sx={{ mt: 1, mb: 2 }}>
-          {evaluationNotification.message}
+      {evaluationNotificationInfo && !isLoadingEvalStatus && (
+        <Alert severity={evaluationNotificationInfo.type} sx={{ mt: 1, mb: 2 }}>
+          {evaluationNotificationInfo.message}
         </Alert>
       )}
       <Paper elevation={3} sx={{ p: 3 }}>

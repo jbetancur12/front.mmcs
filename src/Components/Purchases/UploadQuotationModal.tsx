@@ -37,6 +37,7 @@ import {
   // PurchaseOrder, // No se usa directamente en este modal más que para tipos internos
 } from 'src/pages/Purchases/Types' // Asegúrate que estas rutas sean correctas
 import debounce from 'lodash/debounce'
+import { SuppliersAPIResponse } from './PurchaseRequestModal'
 
 // Definir localmente si no está en Types.ts, pero idealmente debería estar allí
 interface Quotation {
@@ -150,7 +151,7 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
       if (!debouncedSearchTerm.trim() || debouncedSearchTerm.length < 2)
         return []
       const response = await axiosPrivate.get<
-        { rows: ISupplier[] } | ISupplier[]
+        SuppliersAPIResponse | ISupplier[]
       >('/suppliers', {
         params: {
           search: debouncedSearchTerm,
@@ -161,7 +162,7 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
       })
       return Array.isArray(response.data)
         ? response.data
-        : response.data.rows || []
+        : response.data.suppliers || []
     },
     { enabled: debouncedSearchTerm.length >= 2, keepPreviousData: true }
   )

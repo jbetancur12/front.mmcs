@@ -70,7 +70,16 @@ const sidebarItems = ($userStore: UserData) => [
   {
     type: 'dropdown',
     buttonText: 'Compras',
-    roles: ['admin', 'comp_requester', 'comp_supervisor'],
+    roles: [
+      'admin',
+      'comp_admin',
+      'comp_requester',
+      'comp_supervisor',
+      'comp_analyst',
+      'comp_orderer',
+      'comp_approver',
+      'comp_verifier'
+    ],
     moduleName: 'Basic',
     pathData:
       'M3 3h2l1 5h13l1-5h2v2h-2l-1 5h-14l-1-5h-2zm4 8h10l1.5 7h-13zm1.5 9a1.5 1.5 0 1 1 3 0 1.5 1.5 0 1 1-3 0zm7 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 1 1-3 0z',
@@ -78,37 +87,37 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Selección de Proveedores',
         url: 'purchases/supplier-selection',
-        roles: ['admin', 'comp_requester', 'comp_supervisor']
+        roles: ['admin', 'comp_admin', 'comp_requester', 'comp_supervisor']
       },
       {
         label: 'Lista de Proveedores',
         url: 'purchases/suppliers',
-        roles: ['admin', 'comp_requester', 'comp_supervisor']
+        roles: ['admin', 'comp_admin', 'comp_requester', 'comp_supervisor']
       },
       {
         label: 'Solicitudes de Compra',
         url: 'purchases/requests',
-        roles: ['admin', 'comp_requester', 'comp_supervisor']
+        roles: ['admin', 'comp_admin', 'comp_requester', 'comp_supervisor']
       },
       {
         label: 'Ordenes de Compra',
         url: 'purchases/orders',
-        roles: ['admin', 'comp_requester', 'comp_supervisor']
+        roles: ['admin', 'comp_admin', 'comp_requester', 'comp_supervisor']
       },
       {
         label: 'Verificaciones',
         url: 'purchases/verifications',
-        roles: ['admin', 'comp_requester', 'comp_supervisor']
+        roles: ['admin', 'comp_admin', 'comp_requester', 'comp_supervisor']
       },
       {
         label: 'Parametros Fiscales',
         url: 'purchases/fiscal-parameters',
-        roles: ['admin', 'comp_requester', 'comp_supervisor']
+        roles: ['admin', 'comp_admin', 'comp_requester', 'comp_supervisor']
       },
       {
         label: 'Evaluaciones de Proveedores',
         url: 'purchases/suppliers/evaluations',
-        roles: ['admin', 'comp_requester', 'comp_supervisor']
+        roles: ['admin', 'comp_admin', 'comp_requester', 'comp_supervisor']
       }
     ]
   },
@@ -228,6 +237,7 @@ const sidebarItems = ($userStore: UserData) => [
 
 const SideBar = () => {
   const $userStore = useStore(userStore)
+  console.log('🚀 ~ SideBar ~ $userStore:', $userStore.rol)
 
   const { pathname } = useLocation()
 
