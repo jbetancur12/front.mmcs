@@ -28,7 +28,11 @@ const fetchPurchaseRequests = async (
 const PurchaseRequest: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
-  const allowCreationRequest = useHasRole(['admin', 'comp_requester'])
+  const allowCreationRequest = useHasRole([
+    'admin',
+    'comp_requester',
+    'comp_admin'
+  ])
   // Uso de react-query para obtener los datos
   const { data, isLoading } = useQuery('purchaseRequests', () =>
     fetchPurchaseRequests(axiosPrivate)
