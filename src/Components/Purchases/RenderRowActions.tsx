@@ -139,7 +139,7 @@ const RenderRowActions = ({
         <IconButton
           onClick={onEdit}
           color='primary'
-          disabled={row.original.status === 'aprobado'}
+          disabled={row.original.status === 'aprobado' && row.original.hasOrder}
         >
           {' '}
           {/* O el color que prefieras */}

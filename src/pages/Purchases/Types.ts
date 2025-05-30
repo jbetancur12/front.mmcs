@@ -113,6 +113,7 @@ export interface PurchaseRequest {
   updatedAt: Date
   quotations: any[]
   purchaseType: string
+  hasOrder: boolean
 
   // Relación (opcional para nested loading)
   items?: PurchaseRequestItem[]
