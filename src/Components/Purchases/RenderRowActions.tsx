@@ -3,6 +3,7 @@ import {
   Cancel,
   CheckCircle,
   Description,
+  Edit,
   ShoppingCart,
   Visibility
 } from '@mui/icons-material'
@@ -24,9 +25,14 @@ import { useState } from 'react'
 type RenderRowActionsProps = {
   row: { original: PurchaseRequest }
   queryClient: QueryClient
+  onEdit: () => void
 }
 
-const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
+const RenderRowActions = ({
+  row,
+  queryClient,
+  onEdit
+}: RenderRowActionsProps) => {
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
 
@@ -129,6 +135,17 @@ const RenderRowActions = ({ row, queryClient }: RenderRowActionsProps) => {
 
   return (
     <Stack direction='row' spacing={1}>
+      <Tooltip title='Editar Solicitud'>
+        <IconButton
+          onClick={onEdit}
+          color='primary'
+          disabled={row.original.status === 'aprobado'}
+        >
+          {' '}
+          {/* O el color que prefieras */}
+          <Edit />
+        </IconButton>
+      </Tooltip>
       <Tooltip title='Ver'>
         <Link to={`${row.original.id}`}>
           <IconButton>

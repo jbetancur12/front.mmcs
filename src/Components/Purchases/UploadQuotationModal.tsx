@@ -156,7 +156,7 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
         params: {
           search: debouncedSearchTerm,
           limit: 15,
-          active: true,
+          //active: true,
           purchaseType: purchaseRequest.purchaseType
         } // Ejemplo de parámetros
       })

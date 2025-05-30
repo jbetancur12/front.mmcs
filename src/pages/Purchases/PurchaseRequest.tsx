@@ -43,6 +43,26 @@ const PurchaseRequest: React.FC = () => {
 
   const [modalOpen, setModalOpen] = useState(false)
   const [_, setProviders] = useState<any[]>([])
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [selectedPREdit, setSelectedPREdit] = useState<IPurchaseRequest | null>(
+    null
+  )
+
+  const handleOpenEditModal = (purchaseRequest: IPurchaseRequest) => {
+    setSelectedPREdit(purchaseRequest)
+    setEditModalOpen(true)
+  }
+
+  const handleCloseEditModal = () => {
+    setSelectedPREdit(null)
+    setEditModalOpen(false)
+  }
+
+  const handleEditSuccess = () => {
+    queryClient.invalidateQueries('purchaseRequests')
+    // No necesitas llamar a handleCloseEditModal aquí si el modal se cierra solo
+    // o si onSuccess en el modal ya lo hace (que es el caso).
+  }
 
   useEffect(() => {
     const fetchProviders = async () => {
@@ -230,7 +250,11 @@ const PurchaseRequest: React.FC = () => {
         localization={MRT_Localization_ES}
         enableRowActions={true}
         renderRowActions={({ row }) => (
-          <RenderRowActions row={row} queryClient={queryClient} />
+          <RenderRowActions
+            row={row}
+            queryClient={queryClient}
+            onEdit={() => handleOpenEditModal(row.original)}
+          />
         )}
         renderTopToolbarCustomActions={() =>
           allowCreationRequest && (
@@ -262,6 +286,14 @@ const PurchaseRequest: React.FC = () => {
         onSuccess={handleSuccess}
         //providers={providers}
       />
+      {selectedPREdit && ( // Solo renderiza si hay una PR seleccionada para editar
+        <CreatePurchaseRequestModal
+          open={editModalOpen} // Nuevo estado para el modal de EDICIÓN
+          onClose={handleCloseEditModal}
+          onSuccess={handleEditSuccess} // Podría ser el mismo handleSuccess si solo invalida
+          existingRequest={selectedPREdit} // Pasar la PR a editar
+        />
+      )}
     </>
   )
 }

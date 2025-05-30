@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -11,10 +11,7 @@ import {
   IconButton,
   Box,
   Typography,
-  Autocomplete,
-  CircularProgress,
-  MenuItem,
-  Chip
+  MenuItem
 } from '@mui/material'
 import { Add, Close, Delete, Edit } from '@mui/icons-material'
 import {
@@ -24,18 +21,21 @@ import {
 } from 'src/pages/Purchases/Types'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { PurchaseRequestStatus } from 'src/pages/Purchases/Enums'
-import { debounce } from 'lodash'
 import {
   calibrationServiceRequirements,
   equipmentPurchaseRequirements,
   proficiencyTestingServiceRequirements,
   internalAuditServiceRequirements
 } from 'src/utils/requirements'
+import Swal from 'sweetalert2'
+import { isAxiosError } from 'axios'
 
 interface CreatePurchaseRequestModalProps {
+  // Renombrar a PurchaseRequestModalProps
   open: boolean
   onClose: () => void
-  onSuccess: (newRequest: IPurchaseRequest) => void
+  onSuccess: (request: IPurchaseRequest) => void // Cambiar 'newRequest' a 'request'
+  existingRequest?: IPurchaseRequest | null // NUEVA PROP para la PR a editar
 }
 
 export interface SuppliersAPIResponse {
@@ -52,16 +52,11 @@ interface CurrentPurchaseRequestItem extends Partial<PurchaseRequestItem> {
 const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
   open,
   onClose,
-  onSuccess
+  onSuccess,
+  existingRequest
 }) => {
   const axiosPrivate = useAxiosPrivate()
-  const [formData, setFormData] = React.useState<Partial<IPurchaseRequest>>({
-    status: PurchaseRequestStatus.Pending,
-    requirements: [],
-    items: [],
-    elaborationDate: new Date(new Date().getTime() - 5 * 60 * 60 * 1000),
-    purchaseType: 'I'
-  })
+  const [formData, setFormData] = React.useState<Partial<IPurchaseRequest>>({})
 
   const [currentItem, setCurrentItem] =
     React.useState<CurrentPurchaseRequestItem>({
@@ -70,14 +65,6 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
       supplierIds: [],
       supplierInput: [] // Inicializar supplierInput como array vacío
     })
-
-  // Estados para el autocomplete de proveedores
-  const [providerOptions, setProviderOptions] = React.useState<Supplier[]>([]) // Tipado fuerte
-
-  const [searchTerm, setSearchTerm] = React.useState('')
-  const [loadingProviders, setLoadingProviders] = React.useState(false)
-
-  const [initialFetchDone, setInitialFetchDone] = React.useState(false)
 
   const [newRequirement, setNewRequirement] = React.useState('')
   const [error, setError] = React.useState('')
@@ -89,78 +76,58 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
   const [editingRequirementValue, setEditingRequirementValue] =
     React.useState<string>('')
 
-  // Función debounce para búsquedas
-  const debouncedFetchProviders = useCallback(
-    debounce(
-      async (
-        currentSearchTerm: string,
-        currentPurchaseType?: string | number
-      ) => {
-        if (!currentSearchTerm.trim() && currentSearchTerm !== '') {
-          // No buscar si solo son espacios
-          setProviderOptions([]) // Limpiar opciones si la búsqueda se borra a espacios
-          setLoadingProviders(false)
-          return
-        }
-        if (
-          currentSearchTerm.trim().length > 0 &&
-          currentSearchTerm.trim().length < 2
-        ) {
-          // No buscar si es muy corto
-          setProviderOptions([])
-          setLoadingProviders(false)
-          return
-        }
-
-        setLoadingProviders(true)
-        try {
-          const response = await axiosPrivate.get<
-            SuppliersAPIResponse | Supplier[]
-          >('/suppliers', {
-            params: {
-              search: currentSearchTerm,
-              purchaseType: currentPurchaseType,
-              limit: 20
-            }
-          })
-
-          // --- CORRECCIÓN IMPORTANTE: Extraer el array de la respuesta ---
-          if (
-            response.data &&
-            Array.isArray((response.data as SuppliersAPIResponse).suppliers)
-          ) {
-            setProviderOptions(
-              (response.data as SuppliersAPIResponse).suppliers
-            )
-          } else if (Array.isArray(response.data)) {
-            setProviderOptions(response.data) // Si la API a veces devuelve un array directamente
-          } else {
-            console.warn(
-              'Respuesta de proveedores no esperada o vacía:',
-              response.data
-            )
-            setProviderOptions([])
-          }
-          // --- FIN CORRECCIÓN ---
-        } catch (fetchError) {
-          console.error('Error fetching providers:', fetchError)
-          setProviderOptions([])
-        } finally {
-          setLoadingProviders(false)
-          if (!initialFetchDone) setInitialFetchDone(true) // Marcar que la carga inicial (o intento) se hizo
-        }
-      },
-      300
-    ),
-    [axiosPrivate, initialFetchDone] // axiosPrivate es estable, initialFetchDone para el primer mensaje
-  )
-
-  // Efecto para cargar proveedores cuando cambia el término de búsqueda o el tipo de compra
   useEffect(() => {
     if (open) {
-      debouncedFetchProviders(searchTerm, formData.purchaseType as string)
+      if (existingRequest) {
+        console.log('🚀 ~ useEffect ~ existingRequest:', existingRequest)
+        // Modo Edición: Cargar datos de la PR existente
+        setFormData({
+          ...existingRequest,
+          // Asegurar que elaborationDate sea un objeto Date si es necesario para el input,
+          // o formatear a YYYY-MM-DD si el input lo espera así.
+          // El backend usualmente devuelve fechas como strings ISO.
+          elaborationDate: existingRequest.elaborationDate
+            ? new Date(existingRequest.elaborationDate)
+            : new Date(new Date().getTime() - 5 * 60 * 60 * 1000),
+          // Asegurar que items y requirements sean arrays
+          items: existingRequest.items || [],
+          requirements: existingRequest.requirements || []
+        })
+        // Inicializar currentItem con los datos del primer ítem si se edita un ítem específico,
+        // o dejarlo para añadir nuevos ítems.
+        // Para el Autocomplete de proveedores en los ítems, necesitarías cargar los objetos Supplier
+        // basados en los supplierIds de existingRequest.items.
+        // Esto puede ser complejo si solo tienes los IDs.
+        // Por simplicidad, el Autocomplete se reseteará o necesitará lógica adicional
+        // para cargar los nombres de los proveedores de los ítems existentes.
+        // Aquí nos enfocaremos en los datos principales de la PR y la estructura de los ítems.
+        setCurrentItem({
+          quantity: 1,
+          description: '',
+          supplierIds: [],
+          supplierInput: []
+        })
+      } else {
+        // Modo Creación: Valores por defecto
+        setFormData({
+          status: PurchaseRequestStatus.Pending,
+          requirements: [],
+          items: [],
+          elaborationDate: new Date(new Date().getTime() - 5 * 60 * 60 * 1000),
+          purchaseType: 'I'
+        })
+        setCurrentItem({
+          quantity: 1,
+          description: '',
+          supplierIds: [],
+          supplierInput: []
+        })
+      }
+      setRequirementType('') // Resetear tipo de requerimiento también
+      setNewRequirement('')
+      setError('')
     }
-  }, [open, searchTerm, formData.purchaseType, debouncedFetchProviders])
+  }, [open, existingRequest])
 
   const handleRequirementTypeChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -213,35 +180,74 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
     }
   }
   const handleSubmit = async () => {
-    try {
-      if (
-        !formData.elaborationDate ||
-        !formData.applicantName ||
-        !formData.applicantPosition ||
-        formData.items?.length === 0
-      ) {
-        setError(
-          'Complete todos los campos obligatorios y agregue al menos un ítem'
-        )
-        return
-      }
-
-      const response = await axiosPrivate.post<IPurchaseRequest>(
-        '/purchaseRequests',
-        {
-          ...formData,
-          items: formData.items?.map((item) => ({
-            ...item,
-            quantity: Number(item.quantity)
-          }))
-        }
+    if (
+      !formData.elaborationDate ||
+      !formData.applicantName ||
+      !formData.applicantPosition ||
+      formData.items?.length === 0
+    ) {
+      setError(
+        'Complete todos los campos obligatorios y agregue al menos un ítem'
       )
+      return
+    }
 
+    const payload = {
+      ...formData,
+      items: formData.items?.map((item) => ({
+        ...item,
+        quantity: Number(item.quantity),
+        // Asegúrate que supplierIds se envíe correctamente
+        supplierIds: item.supplierIds || []
+      }))
+    }
+
+    try {
+      let response
+      if (existingRequest?.id) {
+        // Modo Edición
+        response = await axiosPrivate.put<IPurchaseRequest>( // O PATCH
+          `/purchaseRequests/${existingRequest.id}`,
+          payload
+        )
+        Swal.fire({
+          icon: 'success',
+          title: '¡Actualizado!',
+          text: 'La Solicitud de Compra ha sido actualizada correctamente.',
+          timer: 2000, // Cierra automáticamente después de 2 segundos
+          showConfirmButton: false // No mostrar botón de confirmación
+        })
+      } else {
+        // Modo Creación
+        response = await axiosPrivate.post<IPurchaseRequest>(
+          '/purchaseRequests',
+          payload
+        )
+        Swal.fire({
+          icon: 'success',
+          title: '¡Creado!',
+          text: 'La Solicitud de Compra ha sido creada correctamente.',
+          timer: 2000,
+          showConfirmButton: false
+        })
+      }
       onSuccess(response.data)
       handleClose()
     } catch (err) {
-      setError('Error al crear la solicitud')
-      console.error('Error creating purchase request:', err)
+      setError('Error al crear/actualizar la solicitud') // Tu manejo de errores existente
+      console.error('Error creating/updating purchase request:', err)
+      // Aquí ya tienes un Swal.fire para errores, lo cual está bien.
+      // Si no lo tuvieras, lo añadirías así:
+      let message = `Error al ${existingRequest ? 'actualizar' : 'crear'} la solicitud.`
+      if (isAxiosError(err) && err.response?.data?.message) {
+        message =
+          typeof err.response.data.message === 'string'
+            ? err.response.data.message
+            : JSON.stringify(err.response.data.message)
+      } else if (err instanceof Error) {
+        message = err.message
+      }
+      Swal.fire('Error', message, 'error')
     }
   }
 
@@ -279,35 +285,37 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
       currentItem.quantity &&
       currentItem.quantity > 0
     ) {
-      setFormData((prev) => ({
-        ...prev,
-        items: [
-          ...(prev.items || []),
-          {
-            // Asegúrate que los campos obligatorios de PurchaseRequestItem estén aquí
-            // description, quantity, y supplierIds son los clave para este item
-            description: currentItem.description!,
-            quantity: currentItem.quantity!,
-            supplierIds: currentItem.supplierIds || [] // Viene de supplierInput
-            // Otros campos de PurchaseRequestItem con valores por defecto si es necesario
-          } as PurchaseRequestItem // Castear al tipo base que se guarda
-        ]
-      }))
+      setFormData((prev) => {
+        const updatedFormData = {
+          ...prev,
+          items: [
+            ...(prev.items || []),
+            {
+              description: currentItem.description!,
+              quantity: currentItem.quantity!,
+              supplierIds: currentItem.supplierIds || []
+            } as PurchaseRequestItem
+          ]
+        }
+
+        return updatedFormData
+      })
+
       setCurrentItem({
         quantity: 1,
         description: '',
         supplierIds: [],
         supplierInput: []
       }) // Resetear currentItem
-      setSearchTerm('') // Opcional: limpiar búsqueda de proveedores
-      setProviderOptions([]) // Opcional: limpiar opciones
     }
   }
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth='md' fullWidth>
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        Nueva Solicitud de Compra
+        {existingRequest
+          ? 'Editar Solicitud de Compra'
+          : 'Nueva Solicitud de Compra'}
         <IconButton onClick={handleClose}>
           <Close />
         </IconButton>
@@ -418,7 +426,7 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                   />
                 </Grid>
 
-                <Grid item xs={7}>
+                <Grid item xs={10}>
                   <TextField
                     fullWidth
                     label='Descripción *'
@@ -428,79 +436,6 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                         ...prev,
                         description: e.target.value
                       }))
-                    }
-                  />
-                </Grid>
-
-                <Grid item xs={3}>
-                  <Autocomplete
-                    multiple
-                    fullWidth
-                    options={providerOptions}
-                    value={currentItem.supplierInput || []} // Usar supplierInput (array de objetos)
-                    getOptionLabel={(option) => option.name || ''}
-                    isOptionEqualToValue={(option, value) =>
-                      option.id === value.id
-                    }
-                    loading={loadingProviders}
-                    loadingText='Cargando...'
-                    onInputChange={(_event, newInputValue) =>
-                      setSearchTerm(newInputValue)
-                    }
-                    onChange={(_event, newValue) => {
-                      setCurrentItem((prev) => ({
-                        ...prev,
-                        supplierInput: newValue, // Guardar los objetos Supplier seleccionados
-                        supplierIds: newValue.map((s) => s.id) // Actualizar el array de IDs
-                      }))
-                    }}
-                    filterOptions={(options, params) => {
-                      // Filtro básico del lado del cliente
-                      const filtered = options.filter(
-                        (option) =>
-                          option.name
-                            .toLowerCase()
-                            .includes(params.inputValue.toLowerCase()) ||
-                          option.taxId
-                            ?.toLowerCase()
-                            .includes(params.inputValue.toLowerCase())
-                      )
-                      return filtered
-                    }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label='Proveedores Sugeridos'
-                        placeholder='Buscar...'
-                        InputProps={{
-                          ...params.InputProps,
-                          endAdornment: (
-                            <>
-                              {loadingProviders ? (
-                                <CircularProgress color='inherit' size={20} />
-                              ) : null}
-                              {params.InputProps.endAdornment}
-                            </>
-                          )
-                        }}
-                      />
-                    )}
-                    noOptionsText={
-                      loadingProviders
-                        ? 'Cargando...'
-                        : !searchTerm.trim() && !initialFetchDone
-                          ? 'Escriba para buscar...'
-                          : providerOptions.length === 0
-                            ? 'No se encontraron proveedores'
-                            : 'No hay más opciones'
-                    }
-                    renderTags={(value, getTagProps) =>
-                      value.map((option, index) => {
-                        const { key, ...tagProps } = getTagProps({ index }) // Necesitas obtener la key de getTagProps
-                        return (
-                          <Chip key={key} label={option.name} {...tagProps} />
-                        )
-                      })
                     }
                   />
                 </Grid>
@@ -537,15 +472,6 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
                   >
                     <Box sx={{ flex: 1 }}>
                       (Cant: {item.quantity})<div>{item.description}</div>
-                      <div>
-                        Proveedores:{' '}
-                        {item.supplierIds?.map((id) => (
-                          <span key={id} style={{ marginRight: '8px' }}>
-                            {providerOptions.find((p) => p.id === id)?.name ||
-                              'Desconocido'}
-                          </span>
-                        ))}
-                      </div>
                     </Box>
                     <IconButton
                       onClick={() =>
@@ -706,7 +632,7 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
             '&:hover': { backgroundColor: '#6DC662' }
           }}
         >
-          Crear Solicitud
+          {existingRequest ? 'Guardar Cambios' : 'Crear Solicitud'}
         </Button>
       </DialogActions>
     </Dialog>
