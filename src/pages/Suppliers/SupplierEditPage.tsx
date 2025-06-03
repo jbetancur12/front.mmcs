@@ -34,6 +34,7 @@ interface Supplier {
   email: string
   phone: string
   applyRetention?: boolean
+  purchaseType?: 1 | 2
   // No necesitamos los documentos aquí para la edición de datos principales
 }
 
@@ -297,6 +298,23 @@ const SupplierEditPage: React.FC = () => {
                 label='Aplicar Retención en Fuente'
               />
             </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth margin='normal' required>
+                <InputLabel id='purchaseType'>Tipo de Persona</InputLabel>
+                <Select
+                  labelId='purchaseType-label'
+                  id='purchaseType'
+                  name='purchaseType'
+                  value={formData.purchaseType ?? ''} // Usar ?? '' para manejar 0 correctamente
+                  label='Tipo de Compra'
+                  onChange={handleSelectChange}
+                >
+                  <MenuItem value={1}>I</MenuItem>
+                  <MenuItem value={2}>II</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
             <Grid item xs={12}>
               <Box
                 sx={{
