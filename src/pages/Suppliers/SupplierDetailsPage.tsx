@@ -265,8 +265,18 @@ const SupplierDetailsPage: React.FC = () => {
     docId: string
   ) => {
     const file = event.target.files?.[0] || null
-    setFilesToUpload((prevFiles) =>
-      prevFiles.map((doc) => (doc.id === docId ? { ...doc, file } : doc))
+    if (file && file.type !== 'application/pdf') {
+      Swal.fire('Error', 'Solo se permiten archivos PDF.', 'error')
+      event.target.value = '' // Limpiar el input de archivo
+      setFilesToUpload((prevSlots) =>
+        prevSlots.map((slot) =>
+          slot.id === docId ? { ...slot, file: null } : slot
+        )
+      )
+      return
+    }
+    setFilesToUpload((prevSlots) =>
+      prevSlots.map((slot) => (slot.id === docId ? { ...slot, file } : slot))
     )
   }
 
@@ -318,24 +328,11 @@ const SupplierDetailsPage: React.FC = () => {
   )
 
   const handleUploadDocument = (docId: string) => {
-    console.log('Intentando subir documento con docId:', docId)
     const documentToUpload = filesToUpload.find((doc) => doc.id === docId)
-    console.log('Documento encontrado para subir:', documentToUpload)
-    console.log('Archivo seleccionado:', documentToUpload?.file)
-    console.log('Supplier ID:', supplierId)
+
     if (!documentToUpload || !documentToUpload.file || !supplierId) {
-      console.error('Precondiciones para subir NO cumplidas:', {
-        documentToUploadExists: !!documentToUpload,
-        fileSelected: !!documentToUpload?.file,
-        supplierIdExists: !!supplierId
-      })
       return
     }
-    console.log('Llamando a uploadDocumentMutation.mutate con:', {
-      docId,
-      file: documentToUpload.file,
-      documentTypeLabel: documentToUpload.label
-    })
     uploadDocumentMutation.mutate({
       docId,
       file: documentToUpload.file,
@@ -702,57 +699,69 @@ const SupplierDetailsPage: React.FC = () => {
           </>
         )}
         <List>
-          {filesToUpload.map((doc) => (
-            <React.Fragment key={doc.id}>
-              <ListItem
-                disabled={
-                  !!supplier.documents?.find(
-                    (uploadedDoc) => uploadedDoc.documentType === doc.id
-                  )
-                } // Deshabilitar si ya está subido
-              >
-                <ListItemIcon>
-                  <Description />
-                </ListItemIcon>
-                <ListItemText
-                  primary={doc.label}
-                  secondary={
-                    doc.file ? doc.file.name : 'Ningún archivo seleccionado'
-                  }
-                />
-                <Button
-                  component='label'
-                  variant='outlined'
-                  size='small'
-                  sx={{ mr: 1 }}
+          {filesToUpload.map((doc) => {
+            const existingUploadedDoc = supplier!.documents?.find(
+              (uploadedDoc) => uploadedDoc.documentType === doc.id
+            )
+            const currentFileSelected = doc.file // Archivo seleccionado en el input para este docSlot
+
+            return (
+              <React.Fragment key={doc.id}>
+                <ListItem
+                  disableGutters // Deshabilitar si ya está subido
                 >
-                  Seleccionar
-                  <input
-                    type='file'
-                    hidden
-                    onChange={(e) => handleFileChange(e, doc.id)}
-                    accept='.pdf'
+                  <ListItemIcon>
+                    <Description />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={doc.label}
+                    secondary={
+                      doc.file ? doc.file.name : 'Ningún archivo seleccionado'
+                    }
                   />
-                </Button>
-                <Button
-                  variant='contained'
-                  size='small'
-                  startIcon={<UploadFile />}
-                  disabled={
-                    !doc.file ||
-                    uploadDocumentMutation.isLoading ||
-                    !!supplier.documents?.find(
-                      (uploadedDoc) => uploadedDoc.documentType === doc.id
-                    )
-                  }
-                  onClick={() => handleUploadDocument(doc.id)}
-                >
-                  Subir
-                </Button>
-              </ListItem>
-              <Divider component='li' />
-            </React.Fragment>
-          ))}
+                  <Button
+                    component='label'
+                    variant='outlined'
+                    size='small'
+                    sx={{ mr: 1 }}
+                    disabled={
+                      uploadDocumentMutation.isLoading &&
+                      uploadDocumentMutation.variables?.docId === doc.id
+                    }
+                  >
+                    {existingUploadedDoc ? 'Reemplazar' : 'Seleccionar'} PDF
+                    <input
+                      type='file'
+                      hidden
+                      onChange={(e) => handleFileChange(e, doc.id)}
+                      accept='.pdf'
+                    />
+                  </Button>
+                  <Button
+                    variant='contained'
+                    size='small'
+                    startIcon={
+                      uploadDocumentMutation.isLoading &&
+                      uploadDocumentMutation.variables?.docId === doc.id ? (
+                        <CircularProgress color='inherit' size={16} />
+                      ) : (
+                        <UploadFile />
+                      )
+                    }
+                    disabled={
+                      !currentFileSelected || // Deshabilitado si no hay un NUEVO archivo seleccionado
+                      (uploadDocumentMutation.isLoading &&
+                        uploadDocumentMutation.variables?.docId === doc.id)
+                    }
+                    onClick={() => handleUploadDocument(doc.id)} // handleUploadDocument usa selectedFiles[docSlot.id]
+                  >
+                    {existingUploadedDoc ? 'Subir Reemplazo' : 'Subir'}
+                  </Button>
+                </ListItem>
+                <Divider component='li' />
+              </React.Fragment>
+            )
+          })}
         </List>
         {/* Aquí podrías listar los documentos ya subidos */}
       </Paper>
