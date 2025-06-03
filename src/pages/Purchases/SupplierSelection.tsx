@@ -7,7 +7,7 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Link } from 'react-router-dom'
-import { Add, Visibility } from '@mui/icons-material'
+import { Add, Edit, Visibility } from '@mui/icons-material'
 import SupplierSelectionModal from 'src/Components/Purchases/SupplierSelectionModal'
 
 // Definir el tipo para los proveedores
@@ -20,21 +20,11 @@ const SuppliersSelection: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false)
   const [loading, setLoading] = useState<boolean>(true)
 
-  useEffect(() => {
-    const fetchSuppliers = async () => {
-      try {
-        const response = await axiosPrivate.get<SelectionSupplier[]>(
-          '/suppliers/selection-suppliers'
-        )
-        setSuppliers(response.data)
-      } catch (error) {
-        console.error('Error fetching suppliers', error)
-      } finally {
-        setLoading(false)
-      }
-    }
+  const [editingSelection, setEditingSelection] =
+    useState<SelectionSupplier | null>(null)
 
-    fetchSuppliers()
+  useEffect(() => {
+    loadSuppliers() // Cargar proveedores al montar el componente
   }, [])
 
   // Cargar criterios
@@ -64,6 +54,7 @@ const SuppliersSelection: React.FC = () => {
 
   // Cargar proveedores
   const loadSuppliers = async () => {
+    setLoading(true)
     try {
       const response = await axiosPrivate.get<SelectionSupplier[]>(
         '/suppliers/selection-suppliers'
@@ -71,7 +62,23 @@ const SuppliersSelection: React.FC = () => {
       setSuppliers(response.data)
     } catch (error) {
       console.error('Error cargando proveedores', error)
+    } finally {
+      setLoading(false) // Asegurarse de que el loading se desactive al finalizar
     }
+  }
+
+  const handleOpenEditModal = (selection: SelectionSupplier) => {
+    setEditingSelection(selection)
+    setModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setModalOpen(false)
+    setEditingSelection(null) // Limpiar al cerrar
+  }
+
+  const handleSuccess = () => {
+    loadSuppliers() // Recargar la lista después de crear/editar
   }
 
   // Definir las columnas de la tabla
@@ -151,6 +158,15 @@ const SuppliersSelection: React.FC = () => {
         enableRowActions={true}
         renderRowActions={({ row }) => (
           <Box sx={{ display: 'flex', gap: '1rem' }}>
+            <Tooltip arrow placement='left' title='Editar Evaluación'>
+              <IconButton
+                onClick={() => handleOpenEditModal(row.original)}
+                size='small'
+                color='primary'
+              >
+                <Edit />
+              </IconButton>
+            </Tooltip>
             <Tooltip arrow placement='right' title='Ver'>
               <Link to={`${row.original.id}`}>
                 <IconButton>
@@ -180,10 +196,11 @@ const SuppliersSelection: React.FC = () => {
       />
       <SupplierSelectionModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSuccess={loadSuppliers}
+        onClose={handleCloseModal}
+        onSuccess={handleSuccess}
         criteria={criteria}
         categories={categories}
+        existingSelectionData={editingSelection}
       />
     </>
   )

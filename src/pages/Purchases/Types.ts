@@ -52,16 +52,27 @@ export interface Supplier {
   accountType: string
   accountNumber: string
   bankName: string
+  purchaseType: number
   applyRetention: boolean
   typePerson: number
   createdAt: string
   updatedAt: string
 }
 
+export interface SelectionSupplierDetail {
+  id?: number | string // ID del detalle de la selección (si se guarda individualmente)
+  selectionSupplierId?: number | string // FK a SelectionSupplier
+  selectionSupplierSubItemId: number // ID del Criterion (sub-ítem de evaluación)
+  answer?: boolean // En tu modal, 'answer' siempre es true si el criterio se seleccionó
+  which?: string | null // El texto para el campo "¿Cuál?" si aplica
+  actualScore?: number // El puntaje base del criterio seleccionado
+}
+
 export interface SelectionSupplier {
   id: number
   supplierId: number
   selectionSupplierDate: string
+  details?: SelectionSupplierDetail[]
   finalDecision:
     | 'NOT APPROVED'
     | 'APPROVED'
@@ -72,7 +83,6 @@ export interface SelectionSupplier {
   updatedAt: string
   supplier: Supplier
 }
-
 export interface PurchaseRequestItem {
   id: number
   quantity: number

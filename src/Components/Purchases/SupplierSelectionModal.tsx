@@ -21,14 +21,21 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
-  Checkbox
+  Checkbox,
+  IconButton
 } from '@mui/material'
 
-import { useState } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 import withReactContent from 'sweetalert2-react-content'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { FormState, Criterion } from 'src/pages/Purchases/Types'
+import {
+  FormState,
+  Criterion,
+  SelectionSupplier
+} from 'src/pages/Purchases/Types'
 import Swal from 'sweetalert2'
+import { isAxiosError } from 'axios'
+import { Close } from '@mui/icons-material'
 
 interface SupplierSelectionModalProps {
   open: boolean
@@ -36,6 +43,7 @@ interface SupplierSelectionModalProps {
   onSuccess: () => void
   criteria: Criterion[]
   categories: string[]
+  existingSelectionData?: SelectionSupplier | null
 }
 
 const initialSupplierData = {
@@ -50,7 +58,18 @@ const initialSupplierData = {
   accountNumber: '',
   bankName: '',
   product: '',
-  purchaseType: 1
+  purchaseType: 1,
+  contactName: '',
+  position: ''
+}
+
+const initialFormState: FormState = {
+  supplierData: initialSupplierData,
+  providerType: '', // 'Juridical' o 'Natural'
+  selections: {},
+  scores: {},
+  totalScore: 0,
+  whichAnswers: {}
 }
 
 const SupplierSelectionModal = ({
@@ -58,20 +77,80 @@ const SupplierSelectionModal = ({
   onClose,
   onSuccess,
   criteria,
-  categories
+  categories,
+  existingSelectionData
 }: SupplierSelectionModalProps) => {
   const MySwal = withReactContent(Swal)
   const axiosPrivate = useAxiosPrivate()
   const [isSubmitting, setIsSubmitting] = useState(false) // Estado faltante
-  const [formState, setFormState] = useState<FormState>({
-    supplierData: initialSupplierData,
-    providerType: '',
-    selections: {},
-    scores: {},
-    totalScore: 0,
-    whichAnswers: {}
-  })
+  const [formState, setFormState] = useState<FormState>(initialFormState)
   const [error, setError] = useState<string>('')
+
+  useEffect(() => {
+    if (open) {
+      if (existingSelectionData && existingSelectionData.supplier) {
+        // --- MODO EDICIÓN ---
+        const newSelections: Record<string, number[]> = {}
+        const newScores: Record<string, number> = {}
+        const newWhichAnswers: Record<string, string> = {}
+        let newTotalScore = 0
+
+        // Reconstruir selections, scores, y whichAnswers a partir de existingSelectionData.details
+        // Asumiendo que existingSelectionData.details es Array<SelectionSupplierDetail>
+        ;(existingSelectionData.details || []).forEach((detail: any) => {
+          const criterion = criteria.find(
+            (c) => c.id === detail.selectionSupplierSubItemId
+          )
+          if (criterion) {
+            if (!newSelections[criterion.category]) {
+              newSelections[criterion.category] = []
+            }
+            newSelections[criterion.category].push(criterion.id)
+
+            if (detail.which) {
+              newWhichAnswers[criterion.id] = detail.which
+            }
+            // Sumar al score de la categoría y al total
+            newScores[criterion.category] =
+              (newScores[criterion.category] || 0) + (criterion.baseScore || 0)
+            newTotalScore += criterion.baseScore || 0
+          }
+        })
+
+        setFormState({
+          supplierData: {
+            // Asegurar que todos los campos de initialSupplierData estén presentes
+            name: existingSelectionData.supplier.name || '',
+            taxId: existingSelectionData.supplier.taxId || '',
+            phone: existingSelectionData.supplier.phone || '',
+            mobile: existingSelectionData.supplier.mobile || '',
+            email: existingSelectionData.supplier.email || '',
+            address: existingSelectionData.supplier.address || '',
+            city: existingSelectionData.supplier.city || '',
+            accountType: existingSelectionData.supplier.accountType || '',
+            accountNumber: existingSelectionData.supplier.accountNumber || '',
+            bankName: existingSelectionData.supplier.bankName || '',
+            product: existingSelectionData.product || '', // 'product' viene de SelectionSupplier
+            purchaseType: existingSelectionData.supplier.purchaseType || 1,
+            contactName: existingSelectionData.supplier.contactName || '',
+            position: existingSelectionData.supplier.position || ''
+          },
+          providerType:
+            existingSelectionData.supplier.typePerson === 1
+              ? 'Natural'
+              : 'Juridical',
+          selections: newSelections,
+          scores: newScores,
+          totalScore: newTotalScore,
+          whichAnswers: newWhichAnswers
+        })
+      } else {
+        // --- MODO CREACIÓN ---
+        setFormState(initialFormState)
+      }
+      setError('') // Limpiar errores al abrir/cambiar modo
+    }
+  }, [open, existingSelectionData, criteria])
 
   const groupedCriteria = criteria.reduce(
     (acc, criterion) => {
@@ -84,14 +163,13 @@ const SupplierSelectionModal = ({
   )
 
   const handleSupplierInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
   ) => {
+    // Ajustar tipo para Select
+    const target = e.target as HTMLInputElement // Asumir HTMLInputElement para simplicidad o castear select
     setFormState((prev) => ({
       ...prev,
-      supplierData: {
-        ...prev.supplierData,
-        [e.target.name]: e.target.value
-      }
+      supplierData: { ...prev.supplierData, [target.name]: target.value }
     }))
   }
 
@@ -211,86 +289,98 @@ const SupplierSelectionModal = ({
     e.preventDefault()
     if (!validateForm()) return
 
-    try {
-      setIsSubmitting(true)
-      // Preparamos los detalles de evaluación a partir de las selecciones
-      const details = Object.values(formState.selections)
-        .flat()
-        .map((id) => {
-          const foundCriterion = criteria.find((c) => c.id === id)
-          return {
-            selectionSupplierSubItemId: id,
-            answer: true,
-            which: formState.whichAnswers[id] || null,
-            actualScore: foundCriterion?.baseScore || 0
-          }
-        })
+    setIsSubmitting(true)
+    // Preparamos los detalles de evaluación a partir de las selecciones
+    const details = Object.values(formState.selections)
+      .flat()
+      .map((id) => {
+        const foundCriterion = criteria.find((c) => c.id === id)
+        return {
+          selectionSupplierSubItemId: id,
+          answer: true,
+          which: formState.whichAnswers[id] || null,
+          actualScore: foundCriterion?.baseScore || 0
+        }
+      })
 
-      /* 
+    /* 
         Armamos el payload:
         - Si el puntaje es >= 61, se envían los datos del proveedor (para que se cree).
         - Si no se cumple, se envía supplierData como null y se crea solo la evaluación.
         - evaluationData incluye la fecha y la decisión final según el puntaje.
         - details es el arreglo de detalles de evaluación.
       */
-      const { product, ...supplierDataWithoutProduct } = formState.supplierData
-      const payload = {
-        supplierData: {
-          ...supplierDataWithoutProduct,
-          typePerson: formState.providerType === 'Natural' ? 1 : 0
-        },
+    const { product, ...supplierDataWithoutProduct } = formState.supplierData
 
-        evaluationData: {
-          // Si se crea el proveedor, el backend usará el ID del proveedor recién creado.
-          // Si no se crea, puedes enviar null o forzarlo a null.
-          supplierId: formState.totalScore < 61 ? null : undefined,
-          selectionSupplierDate: new Date().toISOString(),
-          product,
-          finalDecision:
-            formState.totalScore >= 81
-              ? 'APPROVED'
-              : formState.totalScore >= 61
-                ? 'APPROVED WITH RESERVE'
-                : 'NOT APPROVED'
-        },
-        details
+    const payload = {
+      supplierData: {
+        ...supplierDataWithoutProduct,
+        typePerson: formState.providerType === 'Natural' ? 1 : 0
+      },
+
+      evaluationData: {
+        // Si se crea el proveedor, el backend usará el ID del proveedor recién creado.
+        // Si no se crea, puedes enviar null o forzarlo a null.
+        supplierId: formState.totalScore < 61 ? null : undefined,
+        selectionSupplierDate: new Date().toISOString(),
+        product,
+        finalDecision:
+          formState.totalScore >= 81
+            ? 'APPROVED'
+            : formState.totalScore >= 61
+              ? 'APPROVED WITH RESERVE'
+              : 'NOT APPROVED',
+        id: existingSelectionData?.id
+      },
+      details
+    }
+    try {
+      if (existingSelectionData?.id) {
+        // --- MODO EDICIÓN: Llamar a PUT/PATCH ---
+        await axiosPrivate.put(
+          `/suppliers/selection-suppliers/${existingSelectionData.supplierId}`,
+          payload
+        ) // Ajusta el endpoint
+        MySwal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Selección de proveedor actualizada',
+          showConfirmButton: false,
+          timer: 3000
+        })
+      } else {
+        // Llamada al endpoint único que maneja toda la operación dentro de una transacción
+        await axiosPrivate.post('/suppliers', payload)
+
+        const finalDecision = payload.evaluationData.finalDecision
+        MySwal.fire({
+          toast: true,
+          position: 'top-end',
+          icon:
+            finalDecision === 'APPROVED' ||
+            finalDecision === 'APPROVED WITH RESERVE'
+              ? 'success'
+              : 'error',
+          title:
+            finalDecision === 'APPROVED' ||
+            finalDecision === 'APPROVED WITH RESERVE'
+              ? 'Proveedor aprobado'
+              : 'Proveedor no aprobado',
+          showConfirmButton: false,
+          timer: 3000
+        })
       }
-
-      // Llamada al endpoint único que maneja toda la operación dentro de una transacción
-      await axiosPrivate.post('/suppliers', payload)
-
-      const finalDecision = payload.evaluationData.finalDecision
-      MySwal.fire({
-        toast: true,
-        position: 'top-end',
-        icon:
-          finalDecision === 'APPROVED' ||
-          finalDecision === 'APPROVED WITH RESERVE'
-            ? 'success'
-            : 'error',
-        title:
-          finalDecision === 'APPROVED' ||
-          finalDecision === 'APPROVED WITH RESERVE'
-            ? 'Proveedor aprobado'
-            : 'Proveedor no aprobado',
-        showConfirmButton: false,
-        timer: 3000
-      })
-
-      // Reiniciar el formulario
-      setFormState({
-        supplierData: initialSupplierData,
-        providerType: '',
-        selections: {},
-        scores: {},
-        totalScore: 0,
-        whichAnswers: {}
-      })
+      setFormState(initialFormState)
       onSuccess()
       onClose()
     } catch (error) {
       console.log(error)
-      setError('Error guardando la información')
+      let message = 'Error guardando la información.'
+      if (isAxiosError(error) && error.response?.data?.message) {
+        message = error.response.data.message
+      }
+      setError(message)
     } finally {
       setIsSubmitting(false) // Asegurar reset del estado
     }
@@ -317,7 +407,20 @@ const SupplierSelectionModal = ({
       fullWidth
       scroll='paper'
     >
-      <DialogTitle>Evaluar Nuevo Proveedor</DialogTitle>
+      <DialogTitle
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}
+      >
+        {existingSelectionData
+          ? 'Editar Selección/Evaluación de Proveedor'
+          : 'Evaluar Nuevo Proveedor'}
+        <IconButton aria-label='close' onClick={handleClose}>
+          <Close />
+        </IconButton>
+      </DialogTitle>
       <DialogContent dividers>
         <Box component='form' onSubmit={handleSubmit} sx={{ p: 3 }}>
           <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
@@ -762,16 +865,6 @@ const SupplierSelectionModal = ({
                         ? 'APPROVED'
                         : 'NO APROBADO'}
                   </Typography>
-
-                  <Button
-                    type='submit'
-                    variant='contained'
-                    size='large'
-                    fullWidth
-                    disabled={formState.totalScore < 0}
-                  >
-                    {isSubmitting ? <CircularProgress size={24} /> : 'Evaluar'}
-                  </Button>
                 </Paper>
               </>
             )}
@@ -780,6 +873,19 @@ const SupplierSelectionModal = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Cancelar</Button>
+        <Button
+          onClick={handleSubmit}
+          variant='contained'
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <CircularProgress size={24} />
+          ) : existingSelectionData ? (
+            'Guardar Cambios'
+          ) : (
+            'Evaluar y Guardar'
+          )}
+        </Button>
       </DialogActions>
     </Dialog>
   )
