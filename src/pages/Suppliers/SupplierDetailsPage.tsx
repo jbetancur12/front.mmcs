@@ -265,19 +265,44 @@ const SupplierDetailsPage: React.FC = () => {
     docId: string
   ) => {
     const file = event.target.files?.[0] || null
-    if (file && file.type !== 'application/pdf') {
-      Swal.fire('Error', 'Solo se permiten archivos PDF.', 'error')
-      event.target.value = '' // Limpiar el input de archivo
+    if (file) {
+      if (file && file.type !== 'application/pdf') {
+        Swal.fire('Error', 'Solo se permiten archivos PDF.', 'error')
+        event.target.value = '' // Limpiar el input de archivo
+        setFilesToUpload((prevSlots) =>
+          prevSlots.map((slot) =>
+            slot.id === docId ? { ...slot, file: null } : slot
+          )
+        )
+        return
+      }
+
+      const maxSizeInBytes = 5 * 1024 * 1024 // 5MB
+      if (file.size > maxSizeInBytes) {
+        Swal.fire(
+          'Archivo Demasiado Grande',
+          `El archivo seleccionado excede el tamaño máximo permitido de 5MB. Tamaño actual: ${(file.size / 1024 / 1024).toFixed(2)}MB`,
+          'error'
+        )
+        event.target.value = '' // Limpiar el input
+        setFilesToUpload((prevFiles) =>
+          prevFiles.map((doc) =>
+            doc.id === docId ? { ...doc, file: null } : doc
+          )
+        )
+        return
+      }
+
       setFilesToUpload((prevSlots) =>
-        prevSlots.map((slot) =>
-          slot.id === docId ? { ...slot, file: null } : slot
+        prevSlots.map((slot) => (slot.id === docId ? { ...slot, file } : slot))
+      )
+    } else {
+      setFilesToUpload((prevFiles) =>
+        prevFiles.map((doc) =>
+          doc.id === docId ? { ...doc, file: null } : doc
         )
       )
-      return
     }
-    setFilesToUpload((prevSlots) =>
-      prevSlots.map((slot) => (slot.id === docId ? { ...slot, file } : slot))
-    )
   }
 
   // Mutation for uploading a document
