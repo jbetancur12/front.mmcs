@@ -27,6 +27,8 @@ export interface PurchaseVerificationData {
   purchaseRequestId: number
   items: Omit<PurchaseVerificationItem, 'orderItem'>[]
   technicalVerification: string
+  verifiedBy?: string
+  dateVerified?: string
 }
 
 interface CreatePurchaseVerificationModalProps {
@@ -60,7 +62,9 @@ const CreatePurchaseVerificationModal: React.FC<
     purchaseOrderId: purchaseOrder.id,
     purchaseRequestId: purchaseOrder.purchaseRequestId,
     items: initialItems,
-    technicalVerification: ''
+    technicalVerification: '',
+    verifiedBy: '',
+    dateVerified: new Date().toISOString().split('T')[0]
   })
 
   const [error, setError] = React.useState('')
@@ -83,24 +87,18 @@ const CreatePurchaseVerificationModal: React.FC<
 
   const handleSubmit = async () => {
     // Validar campos generales
-    if (!formData.receivedDate || !formData.invoiceNumber) {
+    if (
+      !formData.receivedDate ||
+      !formData.invoiceNumber ||
+      !formData.verifiedBy ||
+      !formData.dateVerified
+    ) {
       setError(
         'Complete all required fields (Received Date and Invoice Number).'
       )
       return
     }
-    // Opcional: validar que cada item tenga sus campos completados
-    for (const item of formData.items || []) {
-      if (
-        !item.sensorialInspection ||
-        !item.technicalVerification ||
-        !item.devliveryTime ||
-        !item.quality
-      ) {
-        setError('Complete all required fields for each item.')
-        return
-      }
-    }
+
     try {
       const response = await axiosPrivate.post<PurchaseVerificationData>(
         '/purchaseVerifications',
@@ -164,162 +162,25 @@ const CreatePurchaseVerificationModal: React.FC<
               onChange={(e) => handleChange('observations', e.target.value)}
             />
           </Grid>
-          {/* Sección de Requerimientos en dos columnas */}
-          <Grid item xs={12}>
-            <Grid container spacing={2}>
-              {/* Columna izquierda: lista de requerimientos */}
-              <Grid item xs={8}>
-                <Typography variant='subtitle1'>
-                  Requerimientos de Solicitud
-                </Typography>
-                {purchaseOrder.requirements &&
-                purchaseOrder.requirements.length > 0 ? (
-                  <ul style={{ listStyleType: 'disc', marginLeft: '1em' }}>
-                    {purchaseOrder.requirements.map(
-                      (req: string, index: number) => (
-                        <li key={index}>{req}</li>
-                      )
-                    )}
-                  </ul>
-                ) : (
-                  <Typography variant='body2' color='text.secondary'>
-                    No hay requerimientos
-                  </Typography>
-                )}
-              </Grid>
-              {/* Columna derecha: checkbox de cumplimiento */}
-              <Grid item xs={4}>
-                <TextField
-                  select
-                  label='Verificación Tecnica'
-                  fullWidth
-                  value={formData.technicalVerification || ''}
-                  onChange={(e) =>
-                    handleChange('technicalVerification', e.target.value)
-                  }
-                >
-                  <MenuItem value={'Bueno'}>Bueno</MenuItem>
-                  <MenuItem value={'Regular'}>Regular</MenuItem>
-                  <MenuItem value={'Malo'}>Malo</MenuItem>
-                  <MenuItem value={'No Aplica'}>No Aplica</MenuItem>
-                </TextField>
-              </Grid>
-            </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label='Verificado por *'
+              fullWidth
+              value={formData.verifiedBy || ''}
+              onChange={(e) => handleChange('verifiedBy', e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label='Fecha de Verificación *'
+              type='date'
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              value={formData.dateVerified || ''}
+              onChange={(e) => handleChange('dateVerified', e.target.value)}
+            />
           </Grid>
 
-          <Grid item xs={12}>
-            <Typography variant='h6' gutterBottom>
-              Verificación de Items
-            </Typography>
-            {formData.items?.map((item, index) => (
-              <Box
-                key={item.purchaseOrderItemId}
-                sx={{
-                  border: '1px solid #ddd',
-                  p: 2,
-                  mb: 2,
-                  borderRadius: 1
-                }}
-              >
-                <Typography variant='subtitle1'>
-                  {purchaseOrder.items[index].purchaseRequestItem.description}{' '}
-                  (Cantidad:{' '}
-                  {purchaseOrder.items[index].purchaseRequestItem.quantity})
-                </Typography>
-                <Grid container spacing={2} sx={{ mt: 1 }}>
-                  <Grid item xs={12} sm={3}>
-                    <TextField
-                      select
-                      label='Inspección Sensorial *'
-                      fullWidth
-                      value={item.sensorialInspection}
-                      onChange={(e) =>
-                        handleItemChange(
-                          index,
-                          'sensorialInspection',
-                          e.target.value
-                        )
-                      }
-                    >
-                      <MenuItem value={'Bueno'}>Bueno</MenuItem>
-                      <MenuItem value={'Regular'}>Regular</MenuItem>
-                      <MenuItem value={'Malo'}>Malo</MenuItem>
-                      <MenuItem value={'No Aplica'}>No Aplica</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={3} alignContent={'center'}>
-                    <TextField
-                      select
-                      label='Verificación Técnica *'
-                      fullWidth
-                      value={item.technicalVerification}
-                      onChange={(e) =>
-                        handleItemChange(
-                          index,
-                          'technicalVerification',
-                          e.target.value
-                        )
-                      }
-                    >
-                      <MenuItem value={'Bueno'}>Bueno</MenuItem>
-                      <MenuItem value={'Regular'}>Regular</MenuItem>
-                      <MenuItem value={'Malo'}>Malo</MenuItem>
-                      <MenuItem value={'No Aplica'}>No Aplica</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={3}>
-                    <TextField
-                      select
-                      label='Tiempo de Entrega *'
-                      fullWidth
-                      value={item.devliveryTime}
-                      onChange={(e) =>
-                        handleItemChange(index, 'devliveryTime', e.target.value)
-                      }
-                    >
-                      <MenuItem value={'Bueno'}>Bueno</MenuItem>
-                      <MenuItem value={'Regular'}>Regular</MenuItem>
-                      <MenuItem value={'Malo'}>Malo</MenuItem>
-                      <MenuItem value={'No Aplica'}>No Aplica</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={3}>
-                    <TextField
-                      select
-                      label='Calidad *'
-                      fullWidth
-                      value={item.quality}
-                      onChange={(e) =>
-                        handleItemChange(index, 'quality', e.target.value)
-                      }
-                    >
-                      <MenuItem value={'Bueno'}>Bueno</MenuItem>
-                      <MenuItem value={'Regular'}>Regular</MenuItem>
-                      <MenuItem value={'Malo'}>Malo</MenuItem>
-                      <MenuItem value={'No Aplica'}>No Aplica</MenuItem>
-                    </TextField>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={item.meetsRequirements}
-                          onChange={(e) =>
-                            handleItemChange(
-                              index,
-                              'meetsRequirements',
-                              e.target.checked
-                            )
-                          }
-                        />
-                      }
-                      label='Cumple'
-                    />
-                  </Grid>
-                </Grid>
-              </Box>
-            ))}
-          </Grid>
           {error && (
             <Grid item xs={12}>
               <Typography color='error'>{error}</Typography>
