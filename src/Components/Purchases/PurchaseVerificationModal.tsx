@@ -7,11 +7,7 @@ import {
   Button,
   TextField,
   Grid,
-  Checkbox,
-  FormControlLabel,
-  Box,
-  Typography,
-  MenuItem
+  Typography
 } from '@mui/material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import {
@@ -71,18 +67,6 @@ const CreatePurchaseVerificationModal: React.FC<
 
   const handleChange = (field: keyof PurchaseVerificationData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const handleItemChange = (
-    index: number,
-    field: keyof PurchaseVerificationItem,
-    value: any
-  ) => {
-    if (!formData.items) return
-    const updatedItems = formData.items.map((item, idx) =>
-      idx === index ? { ...item, [field]: value } : item
-    )
-    setFormData((prev) => ({ ...prev, items: updatedItems }))
   }
 
   const handleSubmit = async () => {
