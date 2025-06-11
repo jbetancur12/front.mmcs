@@ -4,9 +4,7 @@ import MaterialReactTable, {
   MRT_Row
 } from 'material-react-table'
 import {
-  Grid,
   IconButton,
-  InputAdornment,
   Stack,
   TextField,
   Tooltip,
@@ -17,8 +15,8 @@ import { useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Link } from 'react-router-dom'
-import { Edit, Info, Visibility } from '@mui/icons-material'
-import { PurchaseVerification, PurchaseVerificationItem } from './Types'
+import { Edit, Visibility } from '@mui/icons-material'
+import { PurchaseVerification } from './Types'
 
 /* Interfaces de Tipos */
 
@@ -29,6 +27,7 @@ const fetchPurchaseVerifications = async (
   const { data } = await axiosPrivate.get<PurchaseVerification[]>(
     '/purchaseVerifications'
   )
+  console.log('PurchaseVerificationsTable loaded', data)
   return data
 }
 
@@ -89,146 +88,50 @@ const PurchaseVerificationsTable: React.FC = () => {
       enableEditing: false,
       Edit: () => null
     },
-
     {
-      accessorKey: 'techicalVerification',
-      header: 'Verificación Técnica',
+      accessorFn: (row) => row.observations || 'N/A',
+      header: 'Obervaciones',
+      enableEditing: true,
+      enableHiding: true
+    },
+    {
+      accessorFn: (row) => row.verifiedBy || 'N/A',
+      header: 'Veirificado por',
+      enableEditing: true
+    },
+    {
+      accessorKey: 'dateVerified',
+      header: 'Fecha de Verificación',
+      enableEditing: true,
+      Cell: ({ cell }) => {
+        const dateStr = cell.getValue<string>()
+        return dateStr ? format(new Date(dateStr), 'dd/MM/yyyy') : 'N/A'
+      },
       Edit: ({ cell, row, column, table }) => {
-        // Obtenemos el valor actual del campo (asegurando que sea un string)
-        const currentValue = cell.getValue<string>() ?? ''
+        // Convertir el valor almacenado a formato YYYY-MM-DD para el input de tipo date
+        const dateValue = cell.getValue<string>()
+          ? new Date(cell.getValue<string>()).toISOString().split('T')[0]
+          : ''
 
-        // Función para manejar el cambio en el TextField
-        const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-          // Actualizamos el valor en el caché de edición de la fila para esta columna
+        const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          // Actualizamos el caché de edición de la fila para esta columna
           row._valuesCache[column.id] = e.target.value
-          // Notificamos a la tabla que la fila se ha actualizado
+          // Forzamos la actualización del estado de edición en la tabla
           table.setEditingRow({ ...row })
         }
-
-        // Obtenemos los requerimientos de la orden (puede ser un array de strings)
-        const requirements = row.original?.purchaseOrder?.requirements || []
-
-        const requirementsList = (
-          <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-            {requirements.map((req, index) => (
-              <li key={index}>{req}</li>
-            ))}
-          </ul>
-        )
 
         return (
           <TextField
-            label='Verificación Tecnica'
-            value={currentValue}
-            onChange={handleChange}
-            fullWidth
-            margin='dense'
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position='start'>
-                  <Tooltip title={requirementsList}>
-                    <Info color='action' />
-                  </Tooltip>
-                </InputAdornment>
-              )
-            }}
+            type='date'
+            value={dateValue}
+            onChange={handleDateChange}
           />
         )
       }
-    },
+    }
+
     // Columna para editar los items con calificaciones
     // En el Edit y en el Cell, para el campo 'items'
-    {
-      accessorKey: 'items',
-      header: 'Items y Calificaciones',
-      enableEditing: true,
-      /* Componente de edición personalizado para un arreglo */
-      Edit: ({ cell, row, column, table }) => {
-        const rawItems = cell.getValue()
-
-        const items: PurchaseVerificationItem[] = Array.isArray(rawItems)
-          ? rawItems
-          : []
-
-        // Función de ejemplo para manejar el cambio (puedes adaptarla para cada campo si es necesario)
-        const handleItemChange = (
-          event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-          itemIndex: number,
-          field: keyof PurchaseVerificationItem
-        ) => {
-          // Clonamos el arreglo de ítems y actualizamos el campo correspondiente
-          const updatedItems = items.map((item, idx) =>
-            idx === itemIndex ? { ...item, [field]: event.target.value } : item
-          )
-          // Actualizamos el caché de edición de la fila para la columna 'items'
-          row._valuesCache[column.id] = updatedItems
-          // Actualizamos el estado de edición en la tabla
-          table.setEditingRow({ ...row })
-        }
-
-        return (
-          <div>
-            {items.map((item, index) => (
-              <div
-                key={item.id || index}
-                style={{
-                  marginBottom: 16,
-                  padding: 8,
-                  border: '1px solid #ccc',
-                  borderRadius: 4
-                }}
-              >
-                <Typography variant='subtitle2'>
-                  - {item.orderItem.purchaseRequestItem.description}
-                </Typography>
-                <Grid container spacing={2} sx={{ mt: 1 }}>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      label='Sensorial Inspection'
-                      value={item.sensorialInspection}
-                      onChange={(e) =>
-                        handleItemChange(e, index, 'sensorialInspection')
-                      }
-                      fullWidth
-                      margin='dense'
-                    />
-                    <TextField
-                      label='Technical Verification'
-                      value={item.technicalVerification}
-                      onChange={(e) =>
-                        handleItemChange(e, index, 'technicalVerification')
-                      }
-                      fullWidth
-                      margin='dense'
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      label='Delivery Time'
-                      value={item.devliveryTime}
-                      onChange={(e) =>
-                        handleItemChange(e, index, 'devliveryTime')
-                      }
-                      fullWidth
-                      margin='dense'
-                    />
-                    <TextField
-                      label='Quality'
-                      value={item.quality}
-                      onChange={(e) => handleItemChange(e, index, 'quality')}
-                      fullWidth
-                      margin='dense'
-                    />
-                  </Grid>
-                </Grid>
-              </div>
-            ))}
-          </div>
-        )
-      },
-      /* Visualización resumida cuando no se edita */
-      Cell: () => null
-    }
   ]
 
   const handleSave = async ({

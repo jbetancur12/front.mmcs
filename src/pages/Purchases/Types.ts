@@ -175,6 +175,9 @@ export interface PurchaseVerification {
   updatedAt: string
   purchaseOrder: PurchaseOrder
   items: PurchaseVerificationItem[]
+  description?: string
+  verifiedBy?: string
+  dateVerified?: string
 }
 
 export interface PurchaseVerificationItem {
