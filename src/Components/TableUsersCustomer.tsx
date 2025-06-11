@@ -376,7 +376,7 @@ const CreateNewAccountModal = ({
     const newErrors: { [key: string]: string } = {}
     if (!values.nombre) newErrors.nombre = 'Nombre es requerido'
     if (!values.email) newErrors.email = 'Email es requerido'
-    if (!values.rol) newErrors.rol = 'Rol es requerido'
+    // if (!values.rol) newErrors.rol = 'Rol es requerido'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
