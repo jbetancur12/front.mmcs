@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
-import { Button, Chip, Tooltip, Typography } from '@mui/material'
+import {
+  Button,
+  Chip,
+  Grid,
+  IconButton,
+  Tooltip,
+  Typography
+} from '@mui/material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { AccessTime, Add, Cancel, CheckCircle } from '@mui/icons-material'
 import { PurchaseRequest as IPurchaseRequest } from './Types'
@@ -14,6 +21,8 @@ import { useQuery, useQueryClient } from 'react-query'
 import Swal from 'sweetalert2'
 import { useHasRole } from '@utils/functions'
 import { PurchaseRequestModal } from 'src/Components/Purchases/purchase-request-modal'
+import { useNavigate } from 'react-router-dom'
+import { FaUser } from 'react-icons/fa'
 
 // Función para obtener las solicitudes de compra
 const fetchPurchaseRequests = async (
@@ -28,6 +37,7 @@ const fetchPurchaseRequests = async (
 
 const PurchaseRequest: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const allowCreationRequest = useHasRole([
     'admin',
@@ -259,21 +269,32 @@ const PurchaseRequest: React.FC = () => {
         )}
         renderTopToolbarCustomActions={() =>
           allowCreationRequest && (
-            <Button
-              variant='contained'
-              onClick={handleOpenModal}
-              startIcon={<Add />}
-              sx={{
-                backgroundColor: '#9CF08B',
-                fontWeight: 'bold',
-                color: '#2D4A27',
-                '&:hover': {
-                  backgroundColor: '#6DC662' // Azul más oscuro en hover
-                }
-              }}
-            >
-              Nuevo Solicitud de Compra
-            </Button>
+            <Grid container>
+              <Button
+                variant='contained'
+                onClick={handleOpenModal}
+                startIcon={<Add />}
+                sx={{
+                  backgroundColor: '#9CF08B',
+                  fontWeight: 'bold',
+                  color: '#2D4A27',
+                  '&:hover': {
+                    backgroundColor: '#6DC662' // Azul más oscuro en hover
+                  }
+                }}
+              >
+                Nuevo Solicitud de Compra
+              </Button>
+              <IconButton
+                onClick={() => navigate('/purchases/personnel-management')}
+                title='Crear nueva solicitud de compra'
+                sx={{ ml: 1 }}
+              >
+                <Tooltip title='Crear personal de compras'>
+                  <FaUser />
+                </Tooltip>
+              </IconButton>
+            </Grid>
           )
         }
         muiTableBodyCellProps={{

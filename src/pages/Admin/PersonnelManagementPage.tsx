@@ -8,13 +8,14 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material'
-import { Edit, Delete, Add } from '@mui/icons-material'
+import { Edit, Delete, Add, ArrowBack } from '@mui/icons-material'
 import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import Swal from 'sweetalert2'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import PersonnelFormModal from './PersonnelFormModal' // Ajusta la ruta
+import { useNavigate } from 'react-router-dom'
 
 export interface Personnel {
   id: number | string
@@ -26,6 +27,7 @@ export interface Personnel {
 }
 
 const PersonnelManagementPage: React.FC = () => {
+  const navigate = useNavigate()
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
 
@@ -142,12 +144,29 @@ const PersonnelManagementPage: React.FC = () => {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          mb: 3
+          mb: 3,
+          flexWrap: 'wrap', // Para que se ajuste en pantallas pequeñas
+          gap: 2 // Espacio entre elementos si se envuelven
         }}
       >
-        <Typography variant='h4' component='h1'>
+        {/* Botón para volver */}
+        <Button
+          variant='text' // 'text' es sutil, 'outlined' es otra buena opción
+          color='secondary'
+          startIcon={<ArrowBack />}
+          onClick={() => navigate('/purchases/requests')} // useNavigate(-1) navega a la página anterior en el historial
+        >
+          Volver
+        </Button>
+
+        <Typography
+          variant='h4'
+          component='h1'
+          sx={{ flexGrow: 1, textAlign: 'center' }}
+        >
           Gestión de Personal
         </Typography>
+
         <Button
           variant='contained'
           color='primary'
