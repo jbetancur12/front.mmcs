@@ -123,10 +123,6 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
 
               break
             case 'CALIBRATION_SENSOR_UPDATE': // <--- NUEVO CASE
-              console.log(
-                'WS Received CALIBRATION_SENSOR_UPDATE:',
-                message.data
-              )
               // La lógica de actualización del caché de React Query se hará en un hook consumidor,
               // así que aquí solo necesitamos asegurarnos de que setLastMessage(message) se ejecute.
               break

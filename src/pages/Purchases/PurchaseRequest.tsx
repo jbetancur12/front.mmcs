@@ -13,6 +13,7 @@ import RenderRowActions from 'src/Components/Purchases/RenderRowActions'
 import { useQuery, useQueryClient } from 'react-query'
 import Swal from 'sweetalert2'
 import { useHasRole } from '@utils/functions'
+import { PurchaseRequestModal } from 'src/Components/Purchases/purchase-request-modal'
 
 // Función para obtener las solicitudes de compra
 const fetchPurchaseRequests = async (
@@ -287,11 +288,11 @@ const PurchaseRequest: React.FC = () => {
         //providers={providers}
       />
       {selectedPREdit && ( // Solo renderiza si hay una PR seleccionada para editar
-        <CreatePurchaseRequestModal
-          open={editModalOpen} // Nuevo estado para el modal de EDICIÓN
+        <PurchaseRequestModal
+          open={editModalOpen}
           onClose={handleCloseEditModal}
-          onSuccess={handleEditSuccess} // Podría ser el mismo handleSuccess si solo invalida
-          existingRequest={selectedPREdit} // Pasar la PR a editar
+          onSuccess={handleEditSuccess}
+          existingRequest={selectedPREdit}
         />
       )}
     </>

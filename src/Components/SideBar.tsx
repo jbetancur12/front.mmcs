@@ -237,7 +237,6 @@ const sidebarItems = ($userStore: UserData) => [
 
 const SideBar = () => {
   const $userStore = useStore(userStore)
-  console.log('🚀 ~ SideBar ~ $userStore:', $userStore.rol)
 
   const { pathname } = useLocation()
 

@@ -11,7 +11,9 @@ import {
   IconButton,
   Box,
   Typography,
-  MenuItem
+  MenuItem,
+  Autocomplete,
+  CircularProgress
 } from '@mui/material'
 import { Add, Close, Delete, Edit } from '@mui/icons-material'
 import {
@@ -29,6 +31,7 @@ import {
 } from 'src/utils/requirements'
 import Swal from 'sweetalert2'
 import { isAxiosError } from 'axios'
+import { useQuery } from 'react-query'
 
 interface CreatePurchaseRequestModalProps {
   // Renombrar a PurchaseRequestModalProps
@@ -36,6 +39,11 @@ interface CreatePurchaseRequestModalProps {
   onClose: () => void
   onSuccess: (request: IPurchaseRequest) => void // Cambiar 'newRequest' a 'request'
   existingRequest?: IPurchaseRequest | null // NUEVA PROP para la PR a editar
+}
+export interface RequesterUser {
+  id: number | string
+  name: string
+  position: string
 }
 
 export interface SuppliersAPIResponse {
@@ -76,16 +84,59 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
   const [editingRequirementValue, setEditingRequirementValue] =
     React.useState<string>('')
 
+  const [selectedRequester, setSelectedRequester] =
+    React.useState<RequesterUser | null>(null)
+
+  const { data: requesterOptions = [], isLoading: loadingRequesters } =
+    useQuery<RequesterUser[], Error>(
+      'requesterUsersList', // Clave única para esta query
+      async () => {
+        try {
+          // Ajusta este endpoint al tuyo para obtener la lista de solicitantes
+          const response = await axiosPrivate.get<RequesterUser[]>('/personnel')
+          const data = response.data || []
+
+          return data
+        } catch (err) {
+          console.error('Error cargando solicitantes:', err)
+          throw err // Para que React Query maneje el estado de error
+        }
+      },
+      {
+        enabled: open, // Solo cargar cuando el modal esté abierto
+        staleTime: 1000 * 60 * 15, // Cachear por 15 minutos para no llamar en cada apertura
+        onSuccess: (data) => {
+          // Pre-seleccionar el solicitante si estamos en modo edición
+          if (open && existingRequest && data) {
+            const preSelected = data.find((r) => {
+              return (
+                (existingRequest.applicantName &&
+                  r.name === existingRequest.applicantName) || // El mejor método es por ID
+                r.name === existingRequest.applicantName
+              )
+            })
+            if (preSelected) {
+              setSelectedRequester(preSelected)
+              // Asegurar que formData también se sincronice por si el Autocomplete no lo hace al inicio
+              setFormData((prev) => ({
+                ...prev,
+                applicantName: preSelected.name,
+                applicantPosition: preSelected.position,
+                applicantId: preSelected.id
+              }))
+            }
+          }
+        }
+      }
+    )
+
   useEffect(() => {
     if (open) {
       if (existingRequest) {
-        console.log('🚀 ~ useEffect ~ existingRequest:', existingRequest)
         // Modo Edición: Cargar datos de la PR existente
         setFormData({
           ...existingRequest,
-          // Asegurar que elaborationDate sea un objeto Date si es necesario para el input,
-          // o formatear a YYYY-MM-DD si el input lo espera así.
-          // El backend usualmente devuelve fechas como strings ISO.
+
           elaborationDate: existingRequest.elaborationDate
             ? new Date(existingRequest.elaborationDate)
             : new Date(new Date().getTime() - 5 * 60 * 60 * 1000),
@@ -93,14 +144,6 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
           items: existingRequest.items || [],
           requirements: existingRequest.requirements || []
         })
-        // Inicializar currentItem con los datos del primer ítem si se edita un ítem específico,
-        // o dejarlo para añadir nuevos ítems.
-        // Para el Autocomplete de proveedores en los ítems, necesitarías cargar los objetos Supplier
-        // basados en los supplierIds de existingRequest.items.
-        // Esto puede ser complejo si solo tienes los IDs.
-        // Por simplicidad, el Autocomplete se reseteará o necesitará lógica adicional
-        // para cargar los nombres de los proveedores de los ítems existentes.
-        // Aquí nos enfocaremos en los datos principales de la PR y la estructura de los ítems.
         setCurrentItem({
           quantity: 1,
           description: '',
@@ -122,12 +165,62 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
           supplierIds: [],
           supplierInput: []
         })
+        setSelectedRequester(null)
       }
       setRequirementType('') // Resetear tipo de requerimiento también
       setNewRequirement('')
       setError('')
     }
   }, [open, existingRequest])
+
+  useEffect(() => {
+    if (open && existingRequest && requesterOptions.length > 0) {
+      const preSelected = requesterOptions.find(
+        (r) =>
+          (existingRequest.applicantName &&
+            r.name === existingRequest.applicantName) || // Buscar por ID si existe
+          (r.name === existingRequest.applicantName &&
+            r.position === existingRequest.applicantPosition) // Fallback por nombre y cargo
+      )
+
+      if (preSelected) {
+        setSelectedRequester(preSelected)
+        // Sincronizar formData por si acaso, aunque handleRequesterChange lo haría si el usuario interactúa
+        setFormData((prev) => ({
+          ...prev,
+          applicantName: preSelected.name,
+          applicantPosition: preSelected.position,
+          applicantId: preSelected.id
+        }))
+      } else {
+        setSelectedRequester(null) // Si no se encuentra, limpiar la selección
+      }
+    }
+  }, [open, existingRequest, requesterOptions])
+
+  const handleRequesterChange = (
+    _event: React.SyntheticEvent,
+    newValue: RequesterUser | null
+  ) => {
+    setSelectedRequester(newValue) // Actualiza el objeto seleccionado
+    if (newValue) {
+      // Actualiza el formData con los datos del solicitante seleccionado
+      setFormData((prev) => ({
+        ...prev,
+        applicantName: newValue.name,
+        applicantPosition: newValue.position,
+        applicantId: newValue.id // Opcional: si guardas el ID en la PR
+      }))
+    } else {
+      // Limpia los campos si se deselecciona
+      setFormData((prev) => ({
+        ...prev,
+        applicantName: '',
+        applicantPosition: '',
+        applicantId: undefined
+      }))
+    }
+  }
 
   const handleRequirementTypeChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -373,33 +466,50 @@ const PurchaseRequestModal: React.FC<CreatePurchaseRequestModalProps> = ({
               </Grid>
             </Grid>
           </Grid>
-          <Grid item xs={12}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6}>
+            <Autocomplete
+              options={requesterOptions}
+              getOptionLabel={(option) => option.name || ''}
+              value={selectedRequester}
+              onChange={handleRequesterChange}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              loading={loadingRequesters}
+              loadingText='Cargando...'
+              noOptionsText='No se encontraron solicitantes'
+              disabled={!!existingRequest} // Deshabilitar si se está editando para no cambiar el solicitante
+              renderInput={(params) => (
                 <TextField
-                  fullWidth
+                  {...params}
                   label='Nombre del Solicitante *'
-                  value={formData.applicantName || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, applicantName: e.target.value })
-                  }
+                  required={!selectedRequester} // Requerido si no hay nada seleccionado
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingRequesters ? (
+                          <CircularProgress color='inherit' size={20} />
+                        ) : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    )
+                  }}
                 />
-              </Grid>
+              )}
+            />
+          </Grid>
 
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Cargo del Solicitante *'
-                  value={formData.applicantPosition || ''}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      applicantPosition: e.target.value
-                    })
-                  }
-                />
-              </Grid>
-            </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label='Cargo del Solicitante *'
+              value={formData.applicantPosition || ''} // Se llena automáticamente
+              InputProps={{
+                readOnly: true // Hacerlo de solo lectura
+              }}
+              // Para que el label se eleve si hay contenido
+              InputLabelProps={{ shrink: !!formData.applicantPosition }}
+              required
+            />
           </Grid>
           {/* Select para tipo de requerimientos */}
 

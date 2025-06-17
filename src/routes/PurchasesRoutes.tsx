@@ -2,6 +2,7 @@ import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
 import PDFViewer from 'src/Components/DataSheet/PDFViewer'
+import PersonnelManagementPage from 'src/pages/Admin/PersonnelManagementPage'
 
 const SuppliersTable = lazy(() => import('src/pages/Suppliers/SuppliersTable'))
 const SupplierDetailsPage = lazy(
@@ -41,6 +42,10 @@ const SupplierRoutes = (role: string[]) => {
         }
       >
         <Route path='purchases'>
+          <Route
+            path='personnel-management'
+            element={<PersonnelManagementPage />}
+          />
           <Route path='fiscal-parameters' element={<FiscalParametersPage />} />
 
           <Route path='supplier-selection' element={<SuppliersSelection />} />
