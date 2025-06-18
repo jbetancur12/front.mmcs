@@ -7,8 +7,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField,
-  CircularProgress
+  TextField
 } from '@mui/material'
 
 interface AddChamberModalProps {

@@ -391,12 +391,6 @@ const CalibrationChamberView: React.FC = () => {
     deleteSensorMutation.mutate(sensorId)
   }
 
-  const handleOpenEditChamberModal = () => {
-    if (selectedChamber) {
-      setIsEditChamberModalOpen(true)
-    }
-  }
-
   const handleUpdateChamber = (newName: string) => {
     if (selectedChamberId && newName.trim()) {
       updateChamberMutation.mutate({
