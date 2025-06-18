@@ -27,10 +27,7 @@ interface ChamberDetailsProps {
     patternId: string,
     sensorData: { name: string; type: SensorTypeValue; showGraph: boolean }
   ) => Promise<void> | void
-  onDeleteSensorFromPattern: (
-    patternId: string,
-    sensorId: string
-  ) => Promise<void> | void
+  onDeleteSensorFromPattern: (sensorId: string) => Promise<void> | void
   // Loading States
   isLoadingChamberData?: boolean
   isStartingCalibration?: boolean

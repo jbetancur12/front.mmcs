@@ -28,10 +28,7 @@ interface PatternItemProps {
     patternId: string,
     sensorData: { name: string; type: SensorTypeValue; showGraph: boolean }
   ) => Promise<void> | void
-  onDeleteSensorFromPattern: (
-    patternId: string,
-    sensorId: string
-  ) => Promise<void> | void
+  onDeleteSensorFromPattern: (sensorId: string) => Promise<void> | void
   isLoadingDeletePattern?: boolean
   isLoadingAddSensor?: boolean
   isLoadingDeleteSensor?: Record<string, boolean> // Para manejar loading por sensor
@@ -62,7 +59,7 @@ export const PatternItem: React.FC<PatternItemProps> = ({
   }
 
   const handleDeleteSensor = (sensorId: string) => {
-    onDeleteSensorFromPattern(pattern.id, sensorId)
+    onDeleteSensorFromPattern(sensorId)
   }
 
   return (
@@ -106,17 +103,19 @@ export const PatternItem: React.FC<PatternItemProps> = ({
       <Divider sx={{ mb: 2 }} />
       {pattern.sensors && pattern.sensors.length > 0 ? (
         <List disablePadding>
-          {pattern.sensors.map((sensor) => (
-            <SensorItem
-              key={sensor.id}
-              sensor={sensor}
-              chamberStatus={chamberStatus}
-              patternId={pattern.id}
-              chamberId={pattern.chamberId}
-              onDeleteSensor={() => handleDeleteSensor(sensor.id)}
-              isLoadingDelete={isLoadingDeleteSensor[sensor.id]}
-            />
-          ))}
+          {pattern.sensors
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map((sensor) => (
+              <SensorItem
+                key={sensor.id}
+                sensor={sensor}
+                chamberStatus={chamberStatus}
+                patternId={pattern.id}
+                chamberId={pattern.chamberId}
+                onDeleteSensor={() => handleDeleteSensor(sensor.id)}
+                isLoadingDelete={isLoadingDeleteSensor[sensor.id]}
+              />
+            ))}
         </List>
       ) : (
         <Typography

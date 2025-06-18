@@ -308,17 +308,13 @@ const CalibrationChamberView: React.FC = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(chambersQueryKey)
-        setSnackbar({
-          open: true,
-          message: 'Sensor eliminado.',
-          severity: 'success'
-        })
+        Swal.fire('¡Eliminado!', 'El sensor ha sido eliminado.', 'success')
       },
       onError: (error: Error) => {
-        setSnackbar({
-          open: true,
-          message: `Error al eliminar sensor: ${error.message}`,
-          severity: 'error'
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al eliminar sensor',
+          text: error.message || 'Error desconocido al eliminar el sensor.'
         })
       },
       onSettled: () => {
@@ -387,8 +383,22 @@ const CalibrationChamberView: React.FC = () => {
     createSensorMutation.mutate({ patternId, sensorData })
   }
   const handleDeleteSensorFromPattern = (sensorId: string | number) => {
-    // patternId no se usa en la mutación directa si sensorId es único, pero puede ser útil para el estado de carga
-    deleteSensorMutation.mutate(sensorId)
+    Swal.fire({
+      title: '¿Estás seguro de eliminar este sensor?',
+      text: 'Esta acción no se puede revertir.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, ¡eliminar!',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      // Si el usuario confirma la acción
+      if (result.isConfirmed) {
+        // Llamar a la mutación para eliminar el sensor
+        deleteSensorMutation.mutate(sensorId)
+      }
+    })
   }
 
   const handleUpdateChamber = (newName: string) => {
