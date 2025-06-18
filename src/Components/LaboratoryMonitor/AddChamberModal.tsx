@@ -1,6 +1,6 @@
 // src/Components/LaboratoryMonitor/AddChamberModal.tsx
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Button,
   Dialog,
@@ -16,16 +16,27 @@ interface AddChamberModalProps {
   onClose: () => void
   onSubmit: (chamberName: string) => Promise<void> | void
   isLoading?: boolean
+  isEditMode?: boolean // NUEVA PROP
+  initialValue?: string // NUEVA PROP
 }
 
 export const AddChamberModal: React.FC<AddChamberModalProps> = ({
   open,
   onClose,
   onSubmit,
-  isLoading = false
+  isLoading = false,
+  isEditMode = false, // Valor por defecto
+  initialValue = '' // Valor por defecto
 }) => {
   const [chamberName, setChamberName] = useState('')
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (open) {
+      setChamberName(initialValue)
+      setError('')
+    }
+  }, [open, initialValue])
 
   const handleSubmit = async () => {
     if (!chamberName.trim()) {
@@ -48,21 +59,27 @@ export const AddChamberModal: React.FC<AddChamberModalProps> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth='sm' fullWidth>
-      <DialogTitle>Agregar Nueva Cámara</DialogTitle>
+      <DialogTitle>
+        {isEditMode ? 'Editar Nombre de la Cámara' : 'Agregar Nueva Cámara'}
+      </DialogTitle>
       <DialogContent>
         <TextField
           autoFocus
           margin='dense'
-          id='name'
           label='Nombre de la Cámara'
           type='text'
           fullWidth
           variant='outlined'
           value={chamberName}
-          onChange={(e) => setChamberName(e.target.value)}
+          onChange={(e) => {
+            setChamberName(e.target.value)
+            if (error) setError('')
+          }}
           error={!!error}
-          helperText={error || 'Ej: Cámara de Calibración Alpha'}
-          disabled={isLoading}
+          helperText={error}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') handleSubmit()
+          }}
         />
       </DialogContent>
       <DialogActions>
@@ -75,11 +92,11 @@ export const AddChamberModal: React.FC<AddChamberModalProps> = ({
           variant='contained'
           disabled={isLoading}
         >
-          {isLoading ? (
-            <CircularProgress size={24} color='inherit' />
-          ) : (
-            'Agregar'
-          )}
+          {isLoading
+            ? 'Guardando...'
+            : isEditMode
+              ? 'Guardar Cambios'
+              : 'Agregar'}
         </Button>
       </DialogActions>
     </Dialog>

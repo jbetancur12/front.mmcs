@@ -1,6 +1,7 @@
 // src/Components/LaboratoryMonitor/ChamberDetails.tsx
 import React from 'react'
 import { Box, Typography, Button, Paper, CircularProgress } from '@mui/material'
+import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import {
   Chamber,
@@ -40,6 +41,9 @@ interface ChamberDetailsProps {
   isLoadingAddSensorToPattern?: Record<string, boolean>
   isLoadingDeleteSensor?: Record<string, boolean>
   isLoadingSummary?: boolean
+  onEditChamber: () => void // NUEVA PROP
+  onDeleteChamber: (chamberId: string | number) => void // NUEVA PROP
+  isDeletingChamber?: boolean
 }
 
 export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
@@ -60,7 +64,10 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
   isLoadingDeletePattern = {},
   isLoadingAddSensorToPattern = {},
   isLoadingDeleteSensor = {},
-  isLoadingSummary = false
+  isLoadingSummary = false,
+  onEditChamber,
+  onDeleteChamber,
+  isDeletingChamber = false
 }) => {
   if (isLoadingChamberData) {
     return (
@@ -92,6 +99,45 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
 
   return (
     <Paper elevation={0} sx={{ p: { xs: 2, md: 3 } }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2,
+          flexWrap: 'wrap'
+        }}
+      >
+        <Typography variant='h5' component='div'>
+          Detalles de la Cámara: <strong>{chamber.name}</strong>
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant='outlined'
+            size='small'
+            onClick={onEditChamber}
+            startIcon={<EditIcon />}
+          >
+            Editar Nombre
+          </Button>
+          <Button
+            variant='outlined'
+            color='error'
+            size='small'
+            onClick={() => onDeleteChamber(chamber.id)}
+            startIcon={
+              isDeletingChamber ? (
+                <CircularProgress size={16} color='inherit' />
+              ) : (
+                <DeleteIcon />
+              )
+            }
+            disabled={isDeletingChamber}
+          >
+            {isDeletingChamber ? 'Eliminando...' : 'Eliminar Cámara'}
+          </Button>
+        </Box>
+      </Box>
       <Box
         sx={{
           display: 'flex',
