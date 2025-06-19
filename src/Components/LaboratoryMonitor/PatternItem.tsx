@@ -8,7 +8,8 @@ import {
   Paper,
   List,
   Divider,
-  CircularProgress
+  CircularProgress,
+  Tooltip
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -19,6 +20,7 @@ import {
 } from './types' // Renombrar SensorType para evitar conflicto
 import { SensorItem } from './SensorItem'
 import { AddSensorModal } from './AddSensorModal' // Para abrir el modal de agregar sensor
+import { Settings } from '@mui/icons-material'
 
 interface PatternItemProps {
   pattern: PatternType
@@ -32,6 +34,7 @@ interface PatternItemProps {
   isLoadingDeletePattern?: boolean
   isLoadingAddSensor?: boolean
   isLoadingDeleteSensor?: Record<string, boolean> // Para manejar loading por sensor
+  onConfigurePattern: (pattern: PatternType) => void // Nueva prop para configurar el patrón
 }
 
 export const PatternItem: React.FC<PatternItemProps> = ({
@@ -42,7 +45,8 @@ export const PatternItem: React.FC<PatternItemProps> = ({
   onDeleteSensorFromPattern,
   isLoadingDeletePattern = false,
   isLoadingAddSensor = false,
-  isLoadingDeleteSensor = {}
+  isLoadingDeleteSensor = {},
+  onConfigurePattern
 }) => {
   const [isAddSensorModalOpen, setIsAddSensorModalOpen] = useState(false)
 
@@ -98,6 +102,14 @@ export const PatternItem: React.FC<PatternItemProps> = ({
               <DeleteIcon />
             )}
           </IconButton>
+          <Tooltip title='Configurar Visualización de Datos'>
+            <IconButton
+              onClick={() => onConfigurePattern(pattern)}
+              size='small'
+            >
+              <Settings />
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
       <Divider sx={{ mb: 2 }} />

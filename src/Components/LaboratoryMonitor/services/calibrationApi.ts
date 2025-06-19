@@ -50,11 +50,6 @@ interface DeleteResponse {
 }
 
 // Para la paginación de lecturas de sensores
-interface FetchSensorReadingsParams {
-  limit?: number
-  page?: number
-}
-
 interface PaginatedSensorReadingsResponse {
   totalItems: number
   totalPages: number
@@ -180,12 +175,10 @@ export const deleteSensor = async (
 // --- Funciones de Lecturas de Sensor ---
 export const fetchSensorReadings = async (
   axiosPrivate: AxiosInstance,
-  sensorId: string | number,
-  params?: FetchSensorReadingsParams
+  sensorId: string | number
 ): Promise<PaginatedSensorReadingsResponse> => {
   const response = await axiosPrivate.get<PaginatedSensorReadingsResponse>(
-    `${API_BASE_URL}/sensors/${sensorId}/readings`,
-    { params }
+    `${API_BASE_URL}/sensors/${sensorId}/readings`
   )
 
   return response.data

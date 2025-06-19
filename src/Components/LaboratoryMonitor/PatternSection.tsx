@@ -28,6 +28,7 @@ interface PatternSectionProps {
   isLoadingDeletePattern?: Record<string, boolean>
   isLoadingAddSensorToPattern?: Record<string, boolean> // patternId como key
   isLoadingDeleteSensor?: Record<string, boolean> // sensorId como key (o patternId_sensorId)
+  onConfigurePattern: (pattern: PatternType) => void // Nueva prop para configurar el patrón
 }
 
 export const PatternSection: React.FC<PatternSectionProps> = ({
@@ -43,7 +44,8 @@ export const PatternSection: React.FC<PatternSectionProps> = ({
   isLoadingAddPattern = false,
   isLoadingDeletePattern = {},
   isLoadingAddSensorToPattern = {},
-  isLoadingDeleteSensor = {}
+  isLoadingDeleteSensor = {},
+  onConfigurePattern
 }) => {
   const [isAddPatternModalOpen, setIsAddPatternModalOpen] = useState(false)
 
@@ -96,6 +98,7 @@ export const PatternSection: React.FC<PatternSectionProps> = ({
             isLoadingDeletePattern={isLoadingDeletePattern[pattern.id]}
             isLoadingAddSensor={isLoadingAddSensorToPattern[pattern.id]}
             isLoadingDeleteSensor={isLoadingDeleteSensor} // Pasa el objeto completo
+            onConfigurePattern={onConfigurePattern}
           />
         ))
       ) : (

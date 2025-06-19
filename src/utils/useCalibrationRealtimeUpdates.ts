@@ -9,8 +9,6 @@ import {
 import useWebSocket, { WebSocketMessage } from './use-websockets'
 // Asegúrate que esta ruta sea correcta
 
-const MAX_HISTORICAL_DATA_POINTS = 60
-
 export const useCalibrationRealtimeUpdates = () => {
   const { lastMessage } = useWebSocket()
   const queryClient = useQueryClient()
@@ -78,14 +76,23 @@ export const useCalibrationRealtimeUpdates = () => {
                     temperature: updatePayload.newReading.temperature,
                     humidity: updatePayload.newReading.humidity
                   }
-                  const updatedHistoricalData = [
+                  let updatedHistoricalData = [
                     ...(sensor.historicalData || []),
                     newReadingDataPoint
                   ]
-                  while (
-                    updatedHistoricalData.length > MAX_HISTORICAL_DATA_POINTS
-                  ) {
-                    updatedHistoricalData.shift()
+
+                  const { dataMode, dataValue } = pattern
+                  if (dataMode === 'LAST_POINTS' && dataValue > 0) {
+                    // MODO PUNTOS: Recortar el array para mantener solo los últimos 'dataValue' puntos
+                    while (updatedHistoricalData.length > dataValue) {
+                      updatedHistoricalData.shift() // Elimina el punto más antiguo (del principio del array)
+                    }
+                  } else if (dataMode === 'LAST_MINUTES' && dataValue > 0) {
+                    // MODO TIEMPO: Filtrar el array para mantener solo los puntos de los últimos 'dataValue' minutos
+                    const cutoffTimestamp = Date.now() - dataValue * 60 * 1000
+                    updatedHistoricalData = updatedHistoricalData.filter(
+                      (point) => point.timestamp >= cutoffTimestamp
+                    )
                   }
                   return {
                     ...sensor,

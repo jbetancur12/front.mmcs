@@ -41,6 +41,7 @@ interface ChamberDetailsProps {
   onEditChamber: () => void // NUEVA PROP
   onDeleteChamber: (chamberId: string | number) => void // NUEVA PROP
   isDeletingChamber?: boolean
+  onConfigurePattern: (pattern: Pattern) => void // <--- NUEVA PROP
 }
 
 export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
@@ -64,7 +65,8 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
   isLoadingSummary = false,
   onEditChamber,
   onDeleteChamber,
-  isDeletingChamber = false
+  isDeletingChamber = false,
+  onConfigurePattern
 }) => {
   if (isLoadingChamberData) {
     return (
@@ -204,6 +206,7 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
         isLoadingDeletePattern={isLoadingDeletePattern}
         isLoadingAddSensorToPattern={isLoadingAddSensorToPattern}
         isLoadingDeleteSensor={isLoadingDeleteSensor}
+        onConfigurePattern={onConfigurePattern} // NUEVA PROP
       />
 
       <SensorsSummaryTable

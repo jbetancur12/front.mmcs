@@ -39,6 +39,7 @@ import {
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useCalibrationRealtimeUpdates } from '@utils/useCalibrationRealtimeUpdates'
 import Swal from 'sweetalert2'
+import { PatternConfigModal } from '../PatternConfigModal'
 
 // Función para generar el resumen de sensores
 export const generateSensorSummary = (
@@ -95,6 +96,12 @@ const CalibrationChamberView: React.FC = () => {
     string | number | null
   >(null)
 
+  const [isPatternConfigModalOpen, setIsPatternConfigModalOpen] =
+    useState(false)
+  const [configuringPattern, setConfiguringPattern] = useState<Pattern | null>(
+    null
+  )
+
   // --- QUERIES ---
   const chambersQueryKey: QueryKey = ['chambers'] // React Query v3 QueryKey
   const {
@@ -121,6 +128,38 @@ const CalibrationChamberView: React.FC = () => {
   }, [chambers, selectedChamberId])
 
   // --- MUTATIONS ---
+
+  const updatePatternConfigMutation = useMutation(
+    ({
+      patternId,
+      configData
+    }: {
+      patternId: string | number
+      configData: { dataMode: string; dataValue: number }
+    }) =>
+      axiosPrivate.patch(
+        `laboratory-calibration/patterns/${patternId}/config`,
+        configData
+      ),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(chambersQueryKey) // ¡Crucial para refrescar los datos!
+        setSnackbar({
+          open: true,
+          message: 'Configuración del patrón actualizada.',
+          severity: 'success'
+        })
+        handleClosePatternConfigModal()
+      },
+      onError: (error: Error) => {
+        setSnackbar({
+          open: true,
+          message: `Error al guardar configuración: ${error.message}`,
+          severity: 'error'
+        })
+      }
+    }
+  )
 
   const createChamberMutation = useMutation(
     (chamberName: string) =>
@@ -324,6 +363,28 @@ const CalibrationChamberView: React.FC = () => {
   )
 
   // --- MANEJADORES DE EVENTOS ---
+
+  const handleOpenPatternConfigModal = (pattern: Pattern) => {
+    setConfiguringPattern(pattern)
+    setIsPatternConfigModalOpen(true)
+  }
+
+  const handleClosePatternConfigModal = () => {
+    setIsPatternConfigModalOpen(false)
+    setTimeout(() => setConfiguringPattern(null), 300)
+  }
+
+  const handleSavePatternConfig = (configData: {
+    dataMode: 'LAST_MINUTES' | 'LAST_POINTS'
+    dataValue: number
+  }) => {
+    if (configuringPattern) {
+      updatePatternConfigMutation.mutate({
+        patternId: configuringPattern.id,
+        configData
+      })
+    }
+  }
 
   const handleOpenCreateModal = () => {
     setEditingChamber(null) // Asegurarse de que no hay datos de edición
@@ -576,6 +637,7 @@ const CalibrationChamberView: React.FC = () => {
                 deleteChamberMutation.isLoading &&
                 deleteChamberMutation.variables === selectedChamber.id
               }
+              onConfigurePattern={handleOpenPatternConfigModal} // <--- NUEVA PROP
             />
           ) : (
             chambers.length > 0 && (
@@ -600,6 +662,15 @@ const CalibrationChamberView: React.FC = () => {
         isEditMode={!!editingChamber} // true si editingChamber NO es null
         initialValue={editingChamber ? editingChamber.name : ''} // Valor inicial si se edita
       />
+      {configuringPattern && (
+        <PatternConfigModal
+          open={isPatternConfigModalOpen}
+          onClose={handleClosePatternConfigModal}
+          onSave={handleSavePatternConfig}
+          pattern={configuringPattern}
+          isLoading={updatePatternConfigMutation.isLoading}
+        />
+      )}
 
       <Snackbar
         open={snackbar.open}

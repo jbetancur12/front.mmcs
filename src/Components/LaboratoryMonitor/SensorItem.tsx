@@ -36,7 +36,7 @@ import { SensorRealtimeChart } from './SensorRealtimeChart'
 import { fetchSensorReadings as apiFetchSensorReadings } from './services/calibrationApi'
 import { ErrorOutline } from '@mui/icons-material'
 
-const MAX_HISTORICAL_DATA_POINTS_FETCH = 60 // Límite para historial general (o calibración)
+// Límite para historial general (o calibración)
 const MAX_HISTORICAL_DATA_POINTS_DISPLAY = 60 // Límite en frontend (manejado por WS hook)
 
 interface SensorItemProps {
@@ -92,10 +92,7 @@ export const SensorItem: React.FC<SensorItemProps> = ({
   } = useQuery(
     sensorReadingsQueryKey,
     // Llama a la función API existente, el backend decide qué datos devolver
-    () =>
-      apiFetchSensorReadings(axiosPrivate, sensorId, {
-        limit: MAX_HISTORICAL_DATA_POINTS_FETCH
-      }),
+    () => apiFetchSensorReadings(axiosPrivate, sensorId),
     {
       // Activar si está expandido, tiene gráfica Y NO hay datos históricos en caché
       enabled: isExpanded && showGraph && historicalData.length === 0,
@@ -103,12 +100,8 @@ export const SensorItem: React.FC<SensorItemProps> = ({
       cacheTime: 10 * 60 * 1000,
       onSuccess: (fetchedData) => {
         // Actualiza el caché principal ['chambers'] con los datos históricos obtenidos (calibración o general)
-        const source =
-          (fetchedData as any)?.source ||
-          (isCalibrating ? 'calibration' : 'general') // Chequea la fuente si el backend la envía
-        console.log(
-          `Workspaceed ${fetchedData.readings.length} initial ${source} readings for sensor ${sensorId}`
-        )
+        // Chequea la fuente si el backend la envía
+
         queryClient.setQueryData<Chamber[]>(
           chambersQueryKey,
           (oldChambersData) => {

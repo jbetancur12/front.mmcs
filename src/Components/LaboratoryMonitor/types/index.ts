@@ -44,6 +44,8 @@ export interface Pattern {
   name: string
   chamberId: string
   sensors: Sensor[]
+  dataMode: 'LAST_MINUTES' | 'LAST_POINTS' // Modo de visualización
+  dataValue: number // Cantidad de minutos o puntos a mostrar
 }
 
 export interface Chamber {
