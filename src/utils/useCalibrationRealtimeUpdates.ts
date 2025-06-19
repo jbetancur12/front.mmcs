@@ -117,6 +117,7 @@ export const useCalibrationRealtimeUpdates = () => {
         return dataWasUpdated ? newData : oldData
       })
     }
+
     // No es necesario limpiar processedMessageRef.current aquí, ya que queremos
     // recordar el último mensaje procesado a través de los re-renders.
     // Solo se actualizará cuando llegue un NUEVO lastMessage.

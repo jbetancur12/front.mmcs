@@ -10,6 +10,8 @@ type MessageType =
   | 'LABORATORY_DATA'
   | 'power'
   | 'CALIBRATION_SENSOR_UPDATE'
+  | 'DEVICE_CONFIG_CONFIRMED'
+  | 'DEVICE_CONFIG_TIMEOUT'
 
 export interface WebSocketMessage {
   type: MessageType

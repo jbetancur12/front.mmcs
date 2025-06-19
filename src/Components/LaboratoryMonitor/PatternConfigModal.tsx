@@ -12,7 +12,10 @@ import {
   MenuItem,
   Grid,
   IconButton,
-  Box
+  Box,
+  Divider,
+  Typography,
+  Chip
 } from '@mui/material'
 import { Save, Cancel, Close as CloseIcon } from '@mui/icons-material'
 import { Pattern } from './types' // Ajusta la ruta a tus tipos
@@ -23,6 +26,7 @@ interface PatternConfigModalProps {
   onSave: (config: {
     dataMode: 'LAST_MINUTES' | 'LAST_POINTS'
     dataValue: number
+    samplingRateSeconds: number
   }) => void
   pattern: Pattern
   isLoading?: boolean
@@ -38,17 +42,41 @@ export const PatternConfigModal: React.FC<PatternConfigModalProps> = ({
   const [dataMode, setDataMode] = useState(pattern.dataMode)
   const [dataValue, setDataValue] = useState(pattern.dataValue)
 
+  const [samplingValue, setSamplingValue] = useState(60)
+  const [samplingUnit, setSamplingUnit] = useState<'seconds' | 'minutes'>(
+    'seconds'
+  )
+
   useEffect(() => {
-    if (open) {
+    if (open && pattern) {
       setDataMode(pattern.dataMode)
       setDataValue(pattern.dataValue)
+      const seconds = pattern.samplingRateSeconds || 60
+      if (seconds >= 60 && seconds % 60 === 0) {
+        setSamplingUnit('minutes')
+        setSamplingValue(seconds / 60)
+      } else {
+        setSamplingUnit('seconds')
+        setSamplingValue(seconds)
+      }
     }
   }, [open, pattern])
 
   const handleSave = () => {
-    if (dataValue > 0) {
-      onSave({ dataMode, dataValue: Number(dataValue) })
+    if (dataValue <= 0 || samplingValue <= 0) {
+      // Añadir validación si es necesario
+      return
     }
+
+    // --- NUEVO: Convertir el tiempo de muestreo a segundos antes de guardar ---
+    const totalSeconds =
+      samplingUnit === 'minutes' ? samplingValue * 60 : samplingValue
+
+    onSave({
+      dataMode,
+      dataValue: Number(dataValue),
+      samplingRateSeconds: totalSeconds // Enviar el valor total en segundos
+    })
   }
 
   return (
@@ -98,6 +126,45 @@ export const PatternConfigModal: React.FC<PatternConfigModalProps> = ({
                 InputProps={{ inputProps: { min: 1 } }}
               />
             </Grid>
+            <Grid item xs={12}>
+              <Divider sx={{ my: 1 }}>
+                <Chip
+                  label='Configuración del Dispositivo (ESP32)'
+                  size='small'
+                />
+              </Divider>
+            </Grid>
+            <Grid item xs={12}>
+              {' '}
+              <Typography variant='subtitle1'>
+                Frecuencia de Muestreo
+              </Typography>{' '}
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label='Intervalo de Tiempo'
+                type='number'
+                value={samplingValue}
+                onChange={(e) => setSamplingValue(Number(e.target.value))}
+                InputProps={{ inputProps: { min: 1 } }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel>Unidad</InputLabel>
+                <Select
+                  label='Unidad'
+                  value={samplingUnit}
+                  onChange={(e) =>
+                    setSamplingUnit(e.target.value as 'seconds' | 'minutes')
+                  }
+                >
+                  <MenuItem value='seconds'>Segundos</MenuItem>
+                  <MenuItem value='minutes'>Minutos</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
           </Grid>
         </Box>
       </DialogContent>
@@ -111,7 +178,7 @@ export const PatternConfigModal: React.FC<PatternConfigModalProps> = ({
           disabled={isLoading}
           startIcon={<Save />}
         >
-          {isLoading ? 'Guardando...' : 'Guardar'}
+          {isLoading ? 'Guardando...' : 'Guardar Configuración'}
         </Button>
       </DialogActions>
     </Dialog>

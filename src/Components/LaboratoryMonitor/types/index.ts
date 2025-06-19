@@ -46,6 +46,7 @@ export interface Pattern {
   sensors: Sensor[]
   dataMode: 'LAST_MINUTES' | 'LAST_POINTS' // Modo de visualización
   dataValue: number // Cantidad de minutos o puntos a mostrar
+  samplingRateSeconds: number // Frecuencia de muestreo en segundos
 }
 
 export interface Chamber {

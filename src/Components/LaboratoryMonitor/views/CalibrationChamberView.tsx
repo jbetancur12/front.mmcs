@@ -40,6 +40,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { useCalibrationRealtimeUpdates } from '@utils/useCalibrationRealtimeUpdates'
 import Swal from 'sweetalert2'
 import { PatternConfigModal } from '../PatternConfigModal'
+import { useDeviceNotifications } from '@utils/useDeviceNotifications'
 
 // Función para generar el resumen de sensores
 export const generateSensorSummary = (
@@ -69,6 +70,7 @@ const CalibrationChamberView: React.FC = () => {
   const queryClient = useQueryClient()
 
   useCalibrationRealtimeUpdates()
+  useDeviceNotifications()
 
   const [selectedChamberId, setSelectedChamberId] = useState<
     string | number | null
@@ -135,7 +137,11 @@ const CalibrationChamberView: React.FC = () => {
       configData
     }: {
       patternId: string | number
-      configData: { dataMode: string; dataValue: number }
+      configData: {
+        dataMode: string
+        dataValue: number
+        samplingRateSeconds: number
+      } // <-- Añadir nuevo campo
     }) =>
       axiosPrivate.patch(
         `laboratory-calibration/patterns/${patternId}/config`,
@@ -377,6 +383,7 @@ const CalibrationChamberView: React.FC = () => {
   const handleSavePatternConfig = (configData: {
     dataMode: 'LAST_MINUTES' | 'LAST_POINTS'
     dataValue: number
+    samplingRateSeconds: number
   }) => {
     if (configuringPattern) {
       updatePatternConfigMutation.mutate({
