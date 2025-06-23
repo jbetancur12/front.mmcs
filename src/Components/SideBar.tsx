@@ -152,18 +152,19 @@ const sidebarItems = ($userStore: UserData) => [
       { label: 'Chamber', url: 'laboratory/patterns', roles: ['admin'] }
     ]
   },
-  // {
-  //   type: 'dropdown',
-  //   buttonText: 'Laboratorio', // Texto del botón principal
-  //   roles: ['admin'], // Roles que pueden ver este menú
-  //   moduleName: 'Basic', // Nombre interno del módulo (opcional, ajusta según tu sistema)
-  //   // Path SVG para un icono de matraz/laboratorio (puedes reemplazarlo)
-  //   pathData: 'M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v8h2V8h2v8h2V8h2v8h2V8h2v8h2V8h2v8z',
-  //   menuItems: [
-  //     { label: 'Condiciones', url: 'laboratory/conditions', roles: ['admin'] }, // Sub-item Condiciones
-  //     { label: 'Patrones', url: 'laboratory/patterns', roles: ['admin'] }     // Sub-item Patrones
-  //   ]
-  // },
+  {
+    type: 'dropdown',
+    buttonText: 'Laboratorio', // Texto del botón principal
+    roles: ['admin'], // Roles que pueden ver este menú
+    moduleName: 'Basic', // Nombre interno del módulo (opcional, ajusta según tu sistema)
+    // Path SVG para un icono de matraz/laboratorio (puedes reemplazarlo)
+    pathData:
+      'M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v8h2V8h2v8h2V8h2v8h2V8h2v8h2V8h2v8z',
+    menuItems: [
+      { label: 'Condiciones', url: 'laboratory/conditions', roles: ['admin'] }, // Sub-item Condiciones
+      { label: 'Patrones', url: 'laboratory/patterns', roles: ['admin'] } // Sub-item Patrones
+    ]
+  },
   {
     type: 'dropdown',
     buttonText: 'Telemetría',
