@@ -1,5 +1,5 @@
 // src/Components/LaboratoryMonitor/ChamberDetails.tsx
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Box, Typography, Button, Paper, CircularProgress } from '@mui/material'
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
@@ -13,6 +13,14 @@ import {
 import { PatternSection } from './PatternSection'
 import { SensorsSummaryTable } from './SensorsSummaryTable'
 import { Stop } from '@mui/icons-material'
+
+function usePrevious<T>(value: T): T | undefined {
+  const ref = useRef<T>()
+  useEffect(() => {
+    ref.current = value
+  })
+  return ref.current
+}
 
 interface ChamberDetailsProps {
   chamber: Chamber | null // Puede ser null si no hay ninguna seleccionada o está cargando
@@ -44,6 +52,30 @@ interface ChamberDetailsProps {
   onConfigurePattern: (pattern: Pattern) => void // <--- NUEVA PROP
 }
 
+const isPatternStable = (pattern: Pattern): boolean => {
+  if (!pattern || !pattern.sensors || pattern.sensors.length === 0) {
+    return false // No es estable si no tiene sensores
+  }
+  // 'every' se asegura de que TODOS los sensores del patrón cumplan la condición
+  return pattern.sensors.every((sensor) => {
+    const status = sensor.stabilityStatus || {
+      temperatureStable: false,
+      humidityStable: false
+    }
+    // Lógica corregida para evitar el error de tipos
+    if (sensor.type === 'temperature_humidity') {
+      return status.temperatureStable && status.humidityStable
+    }
+    if (sensor.type === 'temperature_only') {
+      return status.temperatureStable
+    }
+    if (sensor.type === 'humidity_only') {
+      return status.humidityStable
+    }
+    return false // Por defecto, si el tipo no es conocido, no es estable
+  })
+}
+
 export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
   chamber,
   patterns,
@@ -68,6 +100,42 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
   isDeletingChamber = false,
   onConfigurePattern
 }) => {
+  const speak = (message: string) => {
+    window.speechSynthesis.cancel()
+    const utterance = new SpeechSynthesisUtterance(message)
+    utterance.lang = 'es-ES '
+    utterance.rate = 0.9
+    window.speechSynthesis.speak(utterance)
+  }
+
+  const prevChamberState = usePrevious(chamber)
+
+  useEffect(() => {
+    // No hacer nada si no hay estado previo, o si el estado actual de la cámara no es 'calibrando'
+    if (!prevChamberState || chamber?.status !== CHAMBER_STATUS.CALIBRATING) {
+      return
+    }
+
+    // Iterar sobre los patrones de la cámara actual
+    ;(chamber.patterns || []).forEach((currentPattern) => {
+      // Encontrar el estado anterior de este mismo patrón
+      const prevPattern = (prevChamberState.patterns || []).find(
+        (p) => p.id === currentPattern.id
+      )
+      if (!prevPattern) return // Si el patrón es nuevo, no hay cambio de estado que detectar
+
+      const wasStable = isPatternStable(prevPattern)
+      const isNowStable = isPatternStable(currentPattern)
+
+      // Si el patrón ANTES no era estable y AHORA sí lo es, activar la notificación de voz
+      if (!wasStable && isNowStable) {
+        speak(
+          `Atención. El patrón ${currentPattern.name} en la cámara ${chamber.name} ha alcanzado la estabilidad.`
+        )
+      }
+    })
+  }, [chamber])
+
   if (isLoadingChamberData) {
     return (
       <Box
@@ -110,6 +178,7 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
         <Typography variant='h5' component='div'>
           Detalles de la Cámara: <strong>{chamber.name}</strong>
         </Typography>
+        <Button onClick={() => speak(chamber.name)}>Click</Button>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
             variant='outlined'

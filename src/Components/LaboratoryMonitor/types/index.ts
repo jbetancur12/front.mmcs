@@ -37,6 +37,10 @@ export interface Sensor {
   lastSeen: string
   // Podríamos necesitar el nombre del patrón aquí para la tabla resumen
   patternId: string
+  stabilityStatus?: {
+    temperatureStable: boolean
+    humidityStable: boolean
+  }
 }
 
 export interface Pattern {
@@ -87,5 +91,9 @@ export interface CalibrationSensorUpdatePayload {
     temperature?: number | null
     humidity?: number | null
     timestamp: string // ISO Date string
+  }
+  stabilityStatus?: {
+    temperatureStable: boolean
+    humidityStable: boolean
   }
 }

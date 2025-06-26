@@ -103,7 +103,11 @@ export const useCalibrationRealtimeUpdates = () => {
                       updatePayload.newReading.temperature ?? undefined,
                     currentHumidity:
                       updatePayload.newReading.humidity ?? undefined,
-                    historicalData: updatedHistoricalData
+                    historicalData: updatedHistoricalData,
+                    stabilityStatus: updatePayload.stabilityStatus || {
+                      temperatureStable: false,
+                      humidityStable: false
+                    }
                   }
                 })
               }
