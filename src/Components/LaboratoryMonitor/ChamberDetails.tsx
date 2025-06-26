@@ -178,7 +178,7 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
         <Typography variant='h5' component='div'>
           Detalles de la Cámara: <strong>{chamber.name}</strong>
         </Typography>
-        <Button onClick={() => speak(chamber.name)}>Click</Button>
+        {/* <Button onClick={() => speak(chamber.name)}>Click</Button> */}
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
             variant='outlined'
