@@ -199,6 +199,7 @@ const PurchaseRequest: React.FC = () => {
             label={status.toUpperCase()}
             color={color}
             sx={estilo}
+            size='small'
             icon={
               {
                 [PurchaseRequestStatus.Pending]: (
