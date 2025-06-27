@@ -109,7 +109,6 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
 
           switch (message.type) {
             case 'LABORATORY_DATA':
-              console.log(message)
               break
             case 'REAL_TIME_DATA':
               setLastDeviceReading({ ...message.data, ts: new Date() }) // Assuming the payload has a timestamp

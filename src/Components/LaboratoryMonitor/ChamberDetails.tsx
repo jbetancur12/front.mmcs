@@ -1,5 +1,5 @@
 // src/Components/LaboratoryMonitor/ChamberDetails.tsx
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Box, Typography, Button, Paper, CircularProgress } from '@mui/material'
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
@@ -53,6 +53,7 @@ interface ChamberDetailsProps {
 }
 
 const isPatternStable = (pattern: Pattern): boolean => {
+  console.log('🚀 ~ isPatternStable ~ pattern:', pattern)
   if (!pattern || !pattern.sensors || pattern.sensors.length === 0) {
     return false // No es estable si no tiene sensores
   }
@@ -109,32 +110,56 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
   }
 
   const prevChamberState = usePrevious(chamber)
+  const [spokenStatus, setSpokenStatus] = useState<
+    Record<string, { count: number; timestamp: number }>
+  >({})
 
   useEffect(() => {
-    // No hacer nada si no hay estado previo, o si el estado actual de la cámara no es 'calibrando'
     if (!prevChamberState || chamber?.status !== CHAMBER_STATUS.CALIBRATING) {
       return
     }
 
-    // Iterar sobre los patrones de la cámara actual
+    const now = Date.now()
+    const oneMinuteInMs = 60 * 1000
+
     ;(chamber.patterns || []).forEach((currentPattern) => {
-      // Encontrar el estado anterior de este mismo patrón
       const prevPattern = (prevChamberState.patterns || []).find(
         (p) => p.id === currentPattern.id
       )
-      if (!prevPattern) return // Si el patrón es nuevo, no hay cambio de estado que detectar
+      if (!prevPattern) return
 
       const wasStable = isPatternStable(prevPattern)
       const isNowStable = isPatternStable(currentPattern)
 
-      // Si el patrón ANTES no era estable y AHORA sí lo es, activar la notificación de voz
+      const currentSpokenStatus = spokenStatus[currentPattern.id]
+
       if (!wasStable && isNowStable) {
         speak(
           `Atención. El patrón ${currentPattern.name} en la cámara ${chamber.name} ha alcanzado la estabilidad.`
         )
+        setSpokenStatus((prev) => ({
+          ...prev,
+          [currentPattern.id]: { count: 1, timestamp: now }
+        }))
+      } else if (isNowStable && currentSpokenStatus?.count === 1) {
+        if (now - currentSpokenStatus.timestamp > oneMinuteInMs) {
+          speak(
+            `Recordatorio: El patrón ${currentPattern.name} se mantiene estable.`
+          )
+          setSpokenStatus((prev) => ({
+            ...prev,
+            [currentPattern.id]: { ...prev[currentPattern.id], count: 2 }
+          }))
+        }
+      } else if (wasStable && !isNowStable) {
+        setSpokenStatus((prev) => {
+          const newState = { ...prev }
+          delete newState[currentPattern.id]
+          return newState
+        })
       }
     })
-  }, [chamber])
+  }, [chamber, prevChamberState, spokenStatus])
 
   if (isLoadingChamberData) {
     return (

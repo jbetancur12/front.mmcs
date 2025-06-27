@@ -122,8 +122,7 @@ export const PatternItem: React.FC<PatternItemProps> = ({
                 key={sensor.id}
                 sensor={sensor}
                 chamberStatus={chamberStatus}
-                patternId={pattern.id}
-                chamberId={pattern.chamberId}
+                pattern={pattern}
                 onDeleteSensor={() => handleDeleteSensor(sensor.id)}
                 isLoadingDelete={isLoadingDeleteSensor[sensor.id]}
               />
