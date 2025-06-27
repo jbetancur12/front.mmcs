@@ -14,7 +14,7 @@ import { PurchaseRequest as IPurchaseRequest } from './Types'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import CreatePurchaseRequestModal from 'src/Components/Purchases/PurchaseRequestModal'
 import { PurchaseRequestStatus } from './Enums'
-import { format } from 'date-fns'
+import { differenceInDays, format } from 'date-fns'
 
 import RenderRowActions from 'src/Components/Purchases/RenderRowActions'
 import { useQuery, useQueryClient } from 'react-query'
@@ -50,6 +50,7 @@ const PurchaseRequest: React.FC = () => {
   )
 
   const purchaseRequests = data?.purchaseRequests ?? []
+  console.log('PurchaseRequestsTable loaded', purchaseRequests)
   const totalRecords = data?.count ?? 0
 
   const [modalOpen, setModalOpen] = useState(false)
@@ -268,6 +269,38 @@ const PurchaseRequest: React.FC = () => {
             onEdit={() => handleOpenEditModal(row.original)}
           />
         )}
+        muiTableBodyRowProps={({ row }) => {
+          const { status, hasOrder, createdAt } = row.original
+
+          // La condición solo se aplica a solicitudes pre-aprobadas o aprobadas
+          const isEligibleForOrder =
+            status === PurchaseRequestStatus.PreApproved ||
+            status === PurchaseRequestStatus.Accepted
+
+          // Si no es elegible o ya tiene una orden, no se hace nada
+          if (!isEligibleForOrder || hasOrder) {
+            return {}
+          }
+
+          // Calculamos los días que han pasado desde la creación
+          const daysPast = differenceInDays(new Date(), new Date(createdAt))
+
+          // Si han pasado más de 7 días, aplicamos el estilo de advertencia
+          if (daysPast > 7) {
+            return {
+              sx: {
+                // Usamos un color ámbar/naranja con transparencia para la advertencia
+                backgroundColor: 'rgba(255, 193, 7, 0.15)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 193, 7, 0.25)'
+                }
+              }
+            }
+          }
+
+          // Si no cumple la condición de días, no se aplica ningún estilo
+          return {}
+        }}
         renderTopToolbarCustomActions={() =>
           allowCreationRequest && (
             <Grid container>
