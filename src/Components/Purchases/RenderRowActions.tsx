@@ -205,7 +205,7 @@ const RenderRowActions = ({
                   <NextPlanOutlined />
                 </IconButton>
               </Tooltip>
-              <Tooltip title='Rechazar'>
+              {/* <Tooltip title='Rechazar'>
                 <IconButton
                   size='small'
                   color='error'
@@ -213,7 +213,7 @@ const RenderRowActions = ({
                 >
                   <Cancel />
                 </IconButton>
-              </Tooltip>
+              </Tooltip> */}
             </>
           )}
 
@@ -228,7 +228,7 @@ const RenderRowActions = ({
                   <ThumbUpOutlined />
                 </IconButton>
               </Tooltip>
-              <Tooltip title='Rechazar'>
+              {/* <Tooltip title='Rechazar'>
                 <IconButton
                   size='small'
                   color='error'
@@ -236,11 +236,11 @@ const RenderRowActions = ({
                 >
                   <Cancel />
                 </IconButton>
-              </Tooltip>
+              </Tooltip> */}
             </>
           )}
 
-          {status === PurchaseRequestStatus.Accepted && (
+          {/* {status === PurchaseRequestStatus.Accepted && (
             <Tooltip title='Rechazar'>
               <IconButton
                 size='small'
@@ -250,7 +250,7 @@ const RenderRowActions = ({
                 <Cancel />
               </IconButton>
             </Tooltip>
-          )}
+          )} */}
         </>
       )}
     </Stack>

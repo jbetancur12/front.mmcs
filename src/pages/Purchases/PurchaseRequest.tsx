@@ -137,7 +137,7 @@ const PurchaseRequest: React.FC = () => {
 
   // Definir las columnas de la tabla
   const columns: MRT_ColumnDef<IPurchaseRequest>[] = [
-    { accessorKey: 'id', header: 'ID' },
+    { accessorKey: 'purchaseCode', header: 'Código' },
     { accessorKey: 'elaborationDate', header: 'Fecha de Elaboración' },
     { accessorKey: 'applicantName', header: 'Nombre del Solicitante' },
     // En tu archivo de columnas
