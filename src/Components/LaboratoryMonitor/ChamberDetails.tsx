@@ -22,6 +22,12 @@ function usePrevious<T>(value: T): T | undefined {
   return ref.current
 }
 
+export interface StabilityAlertState {
+  count: number // Cuántas veces se ha notificado por voz
+  timestamp: number // Cuándo se hizo la primera notificación
+  acknowledged: boolean // Si el usuario ya la reconoció
+}
+
 interface ChamberDetailsProps {
   chamber: Chamber | null // Puede ser null si no hay ninguna seleccionada o está cargando
   patterns: Pattern[] // Los patrones específicos de esta cámara
@@ -52,7 +58,7 @@ interface ChamberDetailsProps {
   onConfigurePattern: (pattern: Pattern) => void // <--- NUEVA PROP
 }
 
-const isPatternStable = (pattern: Pattern): boolean => {
+export const isPatternStable = (pattern: Pattern): boolean => {
   if (!pattern || !pattern.sensors || pattern.sensors.length === 0) {
     return false // No es estable si no tiene sensores
   }
@@ -109,9 +115,23 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
   }
 
   const prevChamberState = usePrevious(chamber)
+  const [stabilityAlerts, setStabilityAlerts] = useState<
+    Record<string, StabilityAlertState>
+  >({})
+
   const [spokenStatus, setSpokenStatus] = useState<
     Record<string, { count: number; timestamp: number }>
   >({})
+
+  const handleAcknowledgeStability = (patternId: string | number) => {
+    setStabilityAlerts((prev) => ({
+      ...prev,
+      [patternId]: {
+        ...prev[patternId], // Mantener count y timestamp por si quieres usarlos
+        acknowledged: true // Marcar como reconocida para silenciar futuras alertas de voz
+      }
+    }))
+  }
 
   useEffect(() => {
     if (!prevChamberState || chamber?.status !== CHAMBER_STATUS.CALIBRATING) {
@@ -120,6 +140,7 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
 
     const now = Date.now()
     const oneMinuteInMs = 60 * 1000
+    const MAX_VOICE_ALERTS = 2 // Definir el número máximo de notificaciones de voz
 
     ;(chamber.patterns || []).forEach((currentPattern) => {
       const prevPattern = (prevChamberState.patterns || []).find(
@@ -129,36 +150,50 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
 
       const wasStable = isPatternStable(prevPattern)
       const isNowStable = isPatternStable(currentPattern)
+      const alertStatus = stabilityAlerts[currentPattern.id]
 
-      const currentSpokenStatus = spokenStatus[currentPattern.id]
+      // --- LÓGICA DE NOTIFICACIÓN ---
 
+      // 1. SI ACABA DE VOLVERSE ESTABLE: Notificar por primera vez
       if (!wasStable && isNowStable) {
         speak(
           `Atención. El patrón ${currentPattern.name} en la cámara ${chamber.name} ha alcanzado la estabilidad.`
         )
-        setSpokenStatus((prev) => ({
+        setStabilityAlerts((prev) => ({
           ...prev,
-          [currentPattern.id]: { count: 1, timestamp: now }
+          [currentPattern.id]: { count: 1, timestamp: now, acknowledged: false }
         }))
-      } else if (isNowStable && currentSpokenStatus?.count === 1) {
-        if (now - currentSpokenStatus.timestamp > oneMinuteInMs) {
-          speak(
-            `Recordatorio: El patrón ${currentPattern.name} se mantiene estable.`
-          )
-          setSpokenStatus((prev) => ({
-            ...prev,
-            [currentPattern.id]: { ...prev[currentPattern.id], count: 2 }
-          }))
+      }
+      // 2. SI SIGUE ESTABLE: Comprobar si se debe repetir la notificación
+      else if (isNowStable && alertStatus) {
+        // Solo notificar si NO ha sido reconocida Y no hemos alcanzado el límite
+        if (!alertStatus.acknowledged && alertStatus.count < MAX_VOICE_ALERTS) {
+          // Y si ha pasado más de un minuto
+          if (now - alertStatus.timestamp > oneMinuteInMs) {
+            speak(
+              `Recordatorio: El patrón ${currentPattern.name} se mantiene estable.`
+            )
+            setStabilityAlerts((prev) => ({
+              ...prev,
+              [currentPattern.id]: {
+                ...prev[currentPattern.id],
+                count: alertStatus.count + 1,
+                timestamp: now
+              }
+            }))
+          }
         }
-      } else if (wasStable && !isNowStable) {
-        setSpokenStatus((prev) => {
+      }
+      // 3. SI ACABA DE VOLVERSE INESTABLE: Resetear el estado de la alerta
+      else if (wasStable && !isNowStable) {
+        setStabilityAlerts((prev) => {
           const newState = { ...prev }
           delete newState[currentPattern.id]
           return newState
         })
       }
     })
-  }, [chamber, prevChamberState, spokenStatus])
+  }, [chamber, prevChamberState, stabilityAlerts])
 
   if (isLoadingChamberData) {
     return (
@@ -299,7 +334,9 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
         isLoadingDeletePattern={isLoadingDeletePattern}
         isLoadingAddSensorToPattern={isLoadingAddSensorToPattern}
         isLoadingDeleteSensor={isLoadingDeleteSensor}
-        onConfigurePattern={onConfigurePattern} // NUEVA PROP
+        onConfigurePattern={onConfigurePattern}
+        stabilityAlerts={stabilityAlerts}
+        onAcknowledgeStability={handleAcknowledgeStability}
       />
 
       <SensorsSummaryTable

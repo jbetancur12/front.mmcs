@@ -9,6 +9,7 @@ import {
 } from './types' // Renombrar SensorType
 import { PatternItem } from './PatternItem'
 import { AddPatternModal } from './AddPatternModal'
+import { StabilityAlertState } from './ChamberDetails'
 
 interface PatternSectionProps {
   chamberId: string
@@ -29,6 +30,8 @@ interface PatternSectionProps {
   isLoadingAddSensorToPattern?: Record<string, boolean> // patternId como key
   isLoadingDeleteSensor?: Record<string, boolean> // sensorId como key (o patternId_sensorId)
   onConfigurePattern: (pattern: PatternType) => void // Nueva prop para configurar el patrón
+  stabilityAlerts: Record<string, StabilityAlertState> // <--- NUEVA PROP
+  onAcknowledgeStability: (patternId: string | number) => void // <--- NUEVA PROP
 }
 
 export const PatternSection: React.FC<PatternSectionProps> = ({
@@ -45,7 +48,9 @@ export const PatternSection: React.FC<PatternSectionProps> = ({
   isLoadingDeletePattern = {},
   isLoadingAddSensorToPattern = {},
   isLoadingDeleteSensor = {},
-  onConfigurePattern
+  onConfigurePattern,
+  stabilityAlerts,
+  onAcknowledgeStability
 }) => {
   const [isAddPatternModalOpen, setIsAddPatternModalOpen] = useState(false)
 
@@ -99,6 +104,8 @@ export const PatternSection: React.FC<PatternSectionProps> = ({
             isLoadingAddSensor={isLoadingAddSensorToPattern[pattern.id]}
             isLoadingDeleteSensor={isLoadingDeleteSensor} // Pasa el objeto completo
             onConfigurePattern={onConfigurePattern}
+            alertStatus={stabilityAlerts[pattern.id]} // <-- Pasar el estado de alerta para este patrón
+            onAcknowledge={() => onAcknowledgeStability(pattern.id)} // <-- Pasar el handler
           />
         ))
       ) : (

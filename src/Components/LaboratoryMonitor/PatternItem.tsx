@@ -9,7 +9,9 @@ import {
   List,
   Divider,
   CircularProgress,
-  Tooltip
+  Tooltip,
+  Alert,
+  AlertTitle
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -20,7 +22,8 @@ import {
 } from './types' // Renombrar SensorType para evitar conflicto
 import { SensorItem } from './SensorItem'
 import { AddSensorModal } from './AddSensorModal' // Para abrir el modal de agregar sensor
-import { Settings } from '@mui/icons-material'
+import { CheckCircle, Settings } from '@mui/icons-material'
+import { isPatternStable, StabilityAlertState } from './ChamberDetails'
 
 interface PatternItemProps {
   pattern: PatternType
@@ -35,6 +38,8 @@ interface PatternItemProps {
   isLoadingAddSensor?: boolean
   isLoadingDeleteSensor?: Record<string, boolean> // Para manejar loading por sensor
   onConfigurePattern: (pattern: PatternType) => void // Nueva prop para configurar el patrón
+  alertStatus?: StabilityAlertState // <-- NUEVA PROP
+  onAcknowledge: () => void // <-- NUEVA PROP
 }
 
 export const PatternItem: React.FC<PatternItemProps> = ({
@@ -46,7 +51,9 @@ export const PatternItem: React.FC<PatternItemProps> = ({
   isLoadingDeletePattern = false,
   isLoadingAddSensor = false,
   isLoadingDeleteSensor = {},
-  onConfigurePattern
+  onConfigurePattern,
+  alertStatus,
+  onAcknowledge
 }) => {
   const [isAddSensorModalOpen, setIsAddSensorModalOpen] = useState(false)
 
@@ -65,6 +72,8 @@ export const PatternItem: React.FC<PatternItemProps> = ({
   const handleDeleteSensor = (sensorId: string) => {
     onDeleteSensorFromPattern(sensorId)
   }
+
+  const isStable = isPatternStable(pattern)
 
   return (
     <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
@@ -113,6 +122,26 @@ export const PatternItem: React.FC<PatternItemProps> = ({
         </Box>
       </Box>
       <Divider sx={{ mb: 2 }} />
+      {isStable && !alertStatus?.acknowledged && (
+        <Alert
+          severity='success'
+          sx={{ mb: 2 }}
+          action={
+            <Button
+              color='inherit'
+              size='small'
+              onClick={onAcknowledge}
+              startIcon={<CheckCircle />}
+            >
+              Reconocer
+            </Button>
+          }
+        >
+          <AlertTitle>¡Patrón Estable!</AlertTitle>
+          Las condiciones de temperatura y humedad se han estabilizado para este
+          patrón.
+        </Alert>
+      )}
       {pattern.sensors && pattern.sensors.length > 0 ? (
         <List disablePadding>
           {pattern.sensors
