@@ -10,7 +10,7 @@ import {
 import useAxiosPrivate from '@utils/use-axios-private'
 import { PurchaseOrderData as IPurchaseOrder } from './Types'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
-import { format } from 'date-fns'
+import { differenceInDays, format } from 'date-fns'
 import { useQuery, useQueryClient } from 'react-query'
 import { Link } from 'react-router-dom'
 import CreatePurchaseVerificationModal from 'src/Components/Purchases/PurchaseVerificationModal'
@@ -98,6 +98,34 @@ const PurchaseOrders: React.FC = () => {
         )}
         muiTableBodyCellProps={{
           sx: { textAlign: 'left' }
+        }}
+        muiTableBodyRowProps={({ row }) => {
+          const { verified, requestDate } = row.original
+
+          // Si ya está verificado, no hacemos nada.
+          if (verified) {
+            return {}
+          }
+
+          // Calculamos los días que han pasado.
+          const daysPast = differenceInDays(new Date(), new Date(requestDate))
+
+          // Si han pasado más de 20 días, aplicamos el estilo.
+          if (daysPast > 20) {
+            return {
+              sx: {
+                // Usamos un color de advertencia con transparencia para que no sea muy agresivo
+                // y funcione bien tanto en tema claro como oscuro.
+                backgroundColor: 'rgba(255, 165, 0, 0.15)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 165, 0, 0.25)' // Opcional: intensificar en hover
+                }
+              }
+            }
+          }
+
+          // Si no cumple la condición, no se aplica ningún estilo especial.
+          return {}
         }}
       />
 

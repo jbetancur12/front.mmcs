@@ -161,6 +161,7 @@ export interface PurchaseOrderData extends PurchaseOrder {
   id: number
   supplier: Supplier
   items: PurchaseOrderItem[]
+  verified: boolean
 }
 
 export interface PurchaseVerification {
