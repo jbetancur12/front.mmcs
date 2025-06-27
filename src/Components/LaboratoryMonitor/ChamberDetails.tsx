@@ -53,7 +53,6 @@ interface ChamberDetailsProps {
 }
 
 const isPatternStable = (pattern: Pattern): boolean => {
-  console.log('🚀 ~ isPatternStable ~ pattern:', pattern)
   if (!pattern || !pattern.sensors || pattern.sensors.length === 0) {
     return false // No es estable si no tiene sensores
   }
