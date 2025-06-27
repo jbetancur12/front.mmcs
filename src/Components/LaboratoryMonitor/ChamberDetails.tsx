@@ -119,10 +119,6 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
     Record<string, StabilityAlertState>
   >({})
 
-  const [spokenStatus, setSpokenStatus] = useState<
-    Record<string, { count: number; timestamp: number }>
-  >({})
-
   const handleAcknowledgeStability = (patternId: string | number) => {
     setStabilityAlerts((prev) => ({
       ...prev,
