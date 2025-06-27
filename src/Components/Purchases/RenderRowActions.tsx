@@ -1,10 +1,10 @@
 import {
-  Autorenew,
+  AddShoppingCart,
   Cancel,
-  CheckCircle,
-  Description,
   Edit,
-  ShoppingCart,
+  NextPlanOutlined,
+  RequestQuote,
+  ThumbUpOutlined,
   Visibility
 } from '@mui/icons-material'
 import { IconButton, Tooltip, Stack, Divider } from '@mui/material'
@@ -134,33 +134,36 @@ const RenderRowActions = ({
   const mixedState = items.length > 0 && !allProcessed && !allUnprocessed
 
   return (
-    <Stack direction='row' spacing={1}>
+    <Stack direction='row' spacing={0}>
       <Tooltip title='Editar Solicitud'>
         <IconButton
+          size='small'
           onClick={onEdit}
           color='primary'
           disabled={row.original.status === 'aprobado' && row.original.hasOrder}
         >
           {' '}
           {/* O el color que prefieras */}
-          <Edit />
+          <Edit color='action' />
         </IconButton>
       </Tooltip>
       <Tooltip title='Ver'>
         <Link to={`${row.original.id}`}>
-          <IconButton>
+          <IconButton size='small'>
             <Visibility />
           </IconButton>
         </Link>
       </Tooltip>
       <Tooltip title='Gestionar Cotizaciones'>
         <IconButton
+          size='small'
           onClick={handleManageQuotations}
-          color={row.original.quotations.length > 0 ? 'secondary' : 'primary'}
+          color={row.original.quotations.length > 0 ? 'primary' : 'default'}
         >
-          <Description />
+          <RequestQuote />
         </IconButton>
       </Tooltip>
+      <Divider orientation='vertical' flexItem />
 
       <UploadQuotationModal
         open={uploadModalOpen}
@@ -171,12 +174,13 @@ const RenderRowActions = ({
 
       {allowActions.creationOrder && (
         <IconButton
+          size='small'
           onClick={handleOpenOrderModal}
           title='Generar Orden'
           color={!isAllowed ? 'default' : mixedState ? 'warning' : 'default'}
           disabled={!isAllowed || allProcessed}
         >
-          <ShoppingCart />
+          <AddShoppingCart />
         </IconButton>
       )}
       <GenerateOrderModal
@@ -194,14 +198,16 @@ const RenderRowActions = ({
             <>
               <Tooltip title='Preaprobar'>
                 <IconButton
+                  size='small'
                   color='success'
                   onClick={() => handleAction(row.original.id, 'pre-approve')}
                 >
-                  <Autorenew />
+                  <NextPlanOutlined />
                 </IconButton>
               </Tooltip>
               <Tooltip title='Rechazar'>
                 <IconButton
+                  size='small'
                   color='error'
                   onClick={() => handleAction(row.original.id, 'reject')}
                 >
@@ -215,14 +221,16 @@ const RenderRowActions = ({
             <>
               <Tooltip title='Aprobar'>
                 <IconButton
+                  size='small'
                   color='success'
                   onClick={() => handleAction(row.original.id, 'approve')}
                 >
-                  <CheckCircle />
+                  <ThumbUpOutlined />
                 </IconButton>
               </Tooltip>
               <Tooltip title='Rechazar'>
                 <IconButton
+                  size='small'
                   color='error'
                   onClick={() => handleAction(row.original.id, 'reject')}
                 >
@@ -235,6 +243,7 @@ const RenderRowActions = ({
           {status === PurchaseRequestStatus.Accepted && (
             <Tooltip title='Rechazar'>
               <IconButton
+                size='small'
                 color='error'
                 onClick={() => handleAction(row.original.id, 'reject')}
               >
