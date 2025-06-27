@@ -1,6 +1,5 @@
 import {
   AddShoppingCart,
-  Cancel,
   Edit,
   NextPlanOutlined,
   RequestQuote,
