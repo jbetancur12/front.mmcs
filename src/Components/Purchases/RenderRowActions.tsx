@@ -176,7 +176,7 @@ const RenderRowActions = ({
           size='small'
           onClick={handleOpenOrderModal}
           title='Generar Orden'
-          color={!isAllowed ? 'default' : mixedState ? 'warning' : 'default'}
+          color={!isAllowed ? 'primary' : mixedState ? 'warning' : 'primary'}
           disabled={!isAllowed || allProcessed}
         >
           <AddShoppingCart />
