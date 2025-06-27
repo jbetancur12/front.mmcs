@@ -272,6 +272,7 @@ const PurchaseRequest: React.FC = () => {
             <Grid container>
               <Button
                 variant='contained'
+                size='small'
                 onClick={handleOpenModal}
                 startIcon={<Add />}
                 sx={{
@@ -289,6 +290,7 @@ const PurchaseRequest: React.FC = () => {
                 onClick={() => navigate('/purchases/personnel-management')}
                 title='Crear nueva solicitud de compra'
                 sx={{ ml: 1 }}
+                size='small'
               >
                 <Tooltip title='Crear personal de compras'>
                   <FaUser />

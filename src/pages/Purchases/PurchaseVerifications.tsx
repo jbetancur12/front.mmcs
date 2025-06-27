@@ -185,18 +185,21 @@ const PurchaseVerificationsTable: React.FC = () => {
         }}
         renderRowActions={({ row, table }) => {
           return (
-            <Stack direction='row' spacing={1}>
+            <Stack direction='row' spacing={0}>
+              <Tooltip title='Editar'>
+                <IconButton
+                  size='small'
+                  onClick={() => table.setEditingRow(row)}
+                >
+                  <Edit />
+                </IconButton>
+              </Tooltip>
               <Tooltip title='Ver'>
                 <Link to={`${row?.original?.id ?? ''}`}>
-                  <IconButton>
+                  <IconButton security='small'>
                     <Visibility />
                   </IconButton>
                 </Link>
-              </Tooltip>
-              <Tooltip title='Editar'>
-                <IconButton onClick={() => table.setEditingRow(row)}>
-                  <Edit />
-                </IconButton>
               </Tooltip>
             </Stack>
           )

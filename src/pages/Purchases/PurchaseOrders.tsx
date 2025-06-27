@@ -157,7 +157,7 @@ const RenderRowActions: React.FC<RenderRowActionsProps> = ({
 }) => {
   const isVerified = row.original.verified
   return (
-    <Stack direction='row' spacing={1} alignItems='center'>
+    <Stack direction='row' spacing={0} alignItems='center'>
       {isVerified ? (
         <AssignmentTurnedIn color='success' />
       ) : (
@@ -166,7 +166,7 @@ const RenderRowActions: React.FC<RenderRowActionsProps> = ({
       <Divider orientation='vertical' flexItem />
       <Tooltip title='Ver'>
         <Link to={`${row.original.id}`}>
-          <IconButton>
+          <IconButton size='small'>
             <Visibility />
           </IconButton>
         </Link>
@@ -177,6 +177,7 @@ const RenderRowActions: React.FC<RenderRowActionsProps> = ({
         {/* El span es necesario para que el tooltip funcione en un botón deshabilitado */}
         <span>
           <IconButton
+            size='small'
             onClick={() => openVerificationModal(row.original)}
             disabled={isVerified}
           >
