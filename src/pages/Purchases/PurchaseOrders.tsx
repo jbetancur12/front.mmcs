@@ -1,7 +1,12 @@
 import React, { useState } from 'react'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
-import { IconButton, Stack, Tooltip, Typography } from '@mui/material'
-import { Visibility, Add, CheckCircle, Cancel } from '@mui/icons-material'
+import { Divider, IconButton, Stack, Tooltip, Typography } from '@mui/material'
+import {
+  AssignmentTurnedIn,
+  FactCheck,
+  HourglassEmpty,
+  Visibility
+} from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { PurchaseOrderData as IPurchaseOrder } from './Types'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
@@ -125,7 +130,12 @@ const RenderRowActions: React.FC<RenderRowActionsProps> = ({
   const isVerified = row.original.verified
   return (
     <Stack direction='row' spacing={1} alignItems='center'>
-      {isVerified ? <CheckCircle color='success' /> : <Cancel color='error' />}
+      {isVerified ? (
+        <AssignmentTurnedIn color='success' />
+      ) : (
+        <HourglassEmpty color='disabled' />
+      )}
+      <Divider orientation='vertical' flexItem />
       <Tooltip title='Ver'>
         <Link to={`${row.original.id}`}>
           <IconButton>
@@ -142,7 +152,7 @@ const RenderRowActions: React.FC<RenderRowActionsProps> = ({
             onClick={() => openVerificationModal(row.original)}
             disabled={isVerified}
           >
-            <Add />
+            <FactCheck color={isVerified ? 'disabled' : 'secondary'} />
           </IconButton>
         </span>
       </Tooltip>
