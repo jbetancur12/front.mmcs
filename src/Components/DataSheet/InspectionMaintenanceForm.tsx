@@ -18,11 +18,13 @@ import * as yup from 'yup'
 
 import { bigToast } from '../ExcelManipulation/Utils'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { InspectionHistoryData } from './InspectionMaintenance'
+
 import AsyncSelect from 'react-select/async'
 import Profile from '../../pages/Profile'
 import { loadOptions, mapOptions } from '../../utils/loadOptions'
 import useAxiosPrivate from '@utils/use-axios-private'
+import Swal from 'sweetalert2'
+import withReactContent from 'sweetalert2-react-content'
 
 // Definir los tipos para los valores del formulario
 export interface InspectionMaintenanceData {
@@ -117,44 +119,76 @@ const validationSchema = yup.object().shape({
   elaboradoPor: yup.string().required('Elaborado por es obligatorio')
 })
 
-interface InspectionMaintenanceFormProps {
-  tableData: InspectionHistoryData[]
-  type: 'maintenance' | 'calibration'
-  id: string | number
-}
-
 const InspectionMaintenanceDataForm: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const location = useLocation()
 
   const navigate = useNavigate()
-  const { id } = location.state as InspectionMaintenanceFormProps
 
   const [equipmentInfo, setEquipmentInfo] = useState<EquipmentInfo | null>(null)
 
-  useEffect(() => {
-    // Obtener la información básica del equipo
-    const fetchEquipmentInfo = async () => {
-      try {
-        const response = await axiosPrivate.get(`/dataSheet/${id}`, {})
-        setEquipmentInfo({
-          equipmentName: response.data.equipmentName,
-          internalCode: response.data.internalCode,
-          brand: response.data.brand,
-          model: response.data.model,
-          serviceType: response.data.serviceType,
-          serialNumber: response.data.serialNumber,
-          calibrationCycle: response.data.calibrationCycle
-        })
-      } catch (error) {
-        console.error('Error al obtener la información del equipo:', error)
-      }
-    }
+  const MySwal = withReactContent(Swal)
+  const isEdit = Boolean(location.state && location.state.edit)
+  const [editId, setEditId] = useState<number | null>(null)
+  const equipoId = isEdit ? location.state.data.equipmentId : location.state?.id
 
-    if (id) {
+  useEffect(() => {
+    let equipoId: any = null
+    if (
+      isEdit &&
+      location.state &&
+      location.state.data &&
+      location.state.data.equipmentId
+    ) {
+      equipoId = location.state.data.equipmentId
+    } else if (!isEdit && location.state && location.state.id) {
+      equipoId = location.state.id
+    }
+    if (equipoId) {
+      const fetchEquipmentInfo = async () => {
+        try {
+          const response = await axiosPrivate.get(`/dataSheet/${equipoId}`)
+          setEquipmentInfo({
+            equipmentName: response.data.equipmentName,
+            internalCode: response.data.internalCode,
+            brand: response.data.brand,
+            model: response.data.model,
+            serviceType: response.data.serviceType,
+            serialNumber: response.data.serialNumber,
+            calibrationCycle: response.data.calibrationCycle
+          })
+        } catch (error) {
+          console.error('Error al obtener la información del equipo:', error)
+        }
+      }
       fetchEquipmentInfo()
     }
-  }, [id])
+  }, [isEdit, location.state])
+
+  useEffect(() => {
+    if (location.state && location.state.edit && location.state.id) {
+      // Si solo tenemos el id, pedimos los datos al backend
+      const fetchEditData = async () => {
+        try {
+          const response = await axiosPrivate.get(
+            `/inspectionMaintenance/${location.state.id}`
+          )
+          const data = response.data
+          setEditId(data.id)
+          formik.setValues({
+            ...data,
+            equipmentId: data.equipmentId,
+            date: data.date.split('T')[0],
+            comentarios: data.comments || '',
+            elaboradoPor: data.verifiedBy || ''
+          })
+        } catch (error) {
+          console.error('Error al obtener datos de edición:', error)
+        }
+      }
+      fetchEditData()
+    }
+  }, [location.state])
 
   const options = ['Bueno', 'Malo', 'No Aplica']
 
@@ -163,7 +197,7 @@ const InspectionMaintenanceDataForm: React.FC = () => {
 
   const formik = useFormik<InspectionMaintenanceData>({
     initialValues: {
-      equipmentId: id || '',
+      equipmentId: equipoId || '',
       date: formattedDate,
       estadoCondicionesAmbientales: '',
       estadoSuperficieExterna: '',
@@ -189,16 +223,29 @@ const InspectionMaintenanceDataForm: React.FC = () => {
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm }) => {
       try {
-        const response = await axiosPrivate.post(
-          `/inspectionMaintenance`,
-          { ...values, name: 'Mantenimiento' },
-          {}
-        )
-
+        let response
+        if (isEdit && editId) {
+          response = await axiosPrivate.put(
+            `/inspectionMaintenance/${editId}`,
+            { ...values, name: 'Mantenimiento' },
+            {}
+          )
+        } else {
+          response = await axiosPrivate.post(
+            `/inspectionMaintenance`,
+            { ...values, name: 'Mantenimiento' },
+            {}
+          )
+        }
         if (response.status >= 200 && response.status < 300) {
-          bigToast('Mantenimiento/Inspección enviada correctamente', 'success')
+          bigToast(
+            isEdit
+              ? 'Mantenimiento actualizado correctamente'
+              : 'Mantenimiento/Inspección enviada correctamente',
+            'success'
+          )
           resetForm()
-          navigate(`/datasheets/${1}/inspection-maintenance`)
+          navigate(`/datasheets/${equipoId}/inspection-maintenance`)
         } else {
           bigToast('Error al enviar mantenimiento/inspección', 'error')
         }
@@ -208,6 +255,33 @@ const InspectionMaintenanceDataForm: React.FC = () => {
       }
     }
   })
+
+  const handleDelete = async () => {
+    if (!editId) return
+    const result = await MySwal.fire({
+      title: '¿Está seguro que desea eliminar este mantenimiento?',
+      text: 'No podrá recuperar esta información una vez eliminada',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      icon: 'warning'
+    })
+    if (result.isConfirmed) {
+      try {
+        const response = await axiosPrivate.delete(
+          `/inspectionMaintenance/${editId}`
+        )
+        if (response.status === 204 || response.status === 200) {
+          bigToast('Mantenimiento eliminado correctamente', 'success')
+          navigate(-1)
+        } else {
+          bigToast('Error al eliminar', 'error')
+        }
+      } catch (error) {
+        bigToast('Error al eliminar', 'error')
+      }
+    }
+  }
 
   const fieldLabels: { [key in keyof InspectionMaintenanceData]: string } = {
     equipmentId: 'ID del equipo',
@@ -391,7 +465,7 @@ const InspectionMaintenanceDataForm: React.FC = () => {
                       <AsyncSelect
                         cacheOptions
                         defaultOptions
-                        placeholder='Buscar Perfil'
+                        placeholder='Elaborado por'
                         loadOptions={(inputValue) =>
                           loadOptions<Profile>(inputValue, 'profiles', (item) =>
                             mapOptions(item, 'id', 'name')
@@ -414,11 +488,27 @@ const InspectionMaintenanceDataForm: React.FC = () => {
                         styles={{
                           control: (provided: any) => ({
                             ...provided,
-                            minHeight: '40px', // Altura mínima del control
-                            height: '55px' // Altura total del control
+                            minHeight: '40px',
+                            height: '55px',
+                            borderColor:
+                              formik.touched.elaboradoPor &&
+                              formik.errors.elaboradoPor
+                                ? 'red'
+                                : provided.borderColor
                           })
                         }}
+                        onBlur={() =>
+                          formik.setFieldTouched('elaboradoPor', true)
+                        }
                       />
+                      {formik.touched.elaboradoPor &&
+                        formik.errors.elaboradoPor && (
+                          <div
+                            style={{ color: 'red', fontSize: 12, marginTop: 4 }}
+                          >
+                            {formik.errors.elaboradoPor}
+                          </div>
+                        )}
                     </Grid>
                   )
                 }
@@ -458,8 +548,18 @@ const InspectionMaintenanceDataForm: React.FC = () => {
 
               <Grid item xs={12}>
                 <Button variant='contained' color='primary' type='submit'>
-                  Guardar
+                  {isEdit ? 'Actualizar' : 'Guardar'}
                 </Button>
+                {isEdit && (
+                  <Button
+                    variant='outlined'
+                    color='error'
+                    onClick={handleDelete}
+                    sx={{ ml: 2 }}
+                  >
+                    Eliminar
+                  </Button>
+                )}
               </Grid>
             </Grid>
           </form>

@@ -47,6 +47,10 @@ const DataSheetRoutes = (role: string[]) => {
             path=':id/new-maintenance'
             element={<InspectionMaintenanceForm />}
           />
+          <Route
+            path=':id/edit-maintenance'
+            element={<InspectionMaintenanceForm />}
+          />
           <Route path='alerts' element={<EquipmentAlertsPage />} />
           <Route
             path='inventory-leasing'
@@ -71,6 +75,7 @@ const DataSheetRoutes = (role: string[]) => {
             element={<PDFViewer path='maintenance-schedule' />}
           />
           <Route path=':id/new-calibration' element={<CalibrationForm />} />
+          <Route path=':id/edit-calibration' element={<CalibrationForm />} />
           <Route path=':id' element={<DataSheetDetail />} />
           <Route path=':id/in-out' element={<EquipmentInOut />} />
           <Route

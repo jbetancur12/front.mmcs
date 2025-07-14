@@ -18,6 +18,8 @@ import {
 } from '@mui/material'
 import { addMonths } from 'date-fns'
 import useAxiosPrivate from '@utils/use-axios-private'
+import Swal from 'sweetalert2'
+import withReactContent from 'sweetalert2-react-content'
 
 export interface CalibrationData {
   equipmentId: string | number
@@ -55,6 +57,8 @@ const validationSchema = yup.object().shape({
     .min(1, 'El ciclo debe ser al menos 1 mes')
 })
 
+const MySwal = withReactContent(Swal)
+
 const CalibrationForm = () => {
   const axiosPrivate = useAxiosPrivate()
   const location = useLocation()
@@ -62,30 +66,68 @@ const CalibrationForm = () => {
   const { id } = location.state as CalibrationFormProps
 
   const [equipmentInfo, setEquipmentInfo] = useState<EquipmentInfo | null>(null)
+  const [calibrationData, setCalibrationData] = useState<any>(null)
+
+  const isEdit = Boolean(location.state && location.state.edit)
+  const [editId, setEditId] = useState<number | null>(null)
+  const equipoId = isEdit ? location.state.data.equipmentId : location.state?.id
 
   useEffect(() => {
-    // Obtener la información básica del equipo
-    const fetchEquipmentInfo = async () => {
-      try {
-        const response = await axiosPrivate.get(`/dataSheet/${id}`, {})
-        setEquipmentInfo({
-          equipmentName: response.data.equipmentName,
-          internalCode: response.data.internalCode,
-          brand: response.data.brand,
-          model: response.data.model,
-          serviceType: response.data.serviceType,
-          serialNumber: response.data.serialNumber,
-          calibrationCycle: response.data.calibrationCycle
-        })
-      } catch (error) {
-        console.error('Error al obtener la información del equipo:', error)
+    if (isEdit && location.state && location.state.data) {
+      const calibrationHistoryId = location.state.data.calibrationId
+      if (calibrationHistoryId) {
+        const fetchEditData = async () => {
+          try {
+            const response = await axiosPrivate.get(
+              `/calibration/${calibrationHistoryId}`
+            )
+            const data = response.data
+            setCalibrationData(data)
+            setEditId(data.id)
+            formik.setValues({
+              ...data,
+              equipmentId: data.equipmentId,
+              date: data.date.split('T')[0],
+              comments: data.comments || '',
+              elaboratedBy: data.elaboratedBy || data.verifiedBy || ''
+            })
+          } catch (error) {
+            console.error('Error al obtener datos de edición:', error)
+          }
+        }
+        fetchEditData()
       }
     }
+  }, [location.state])
 
-    if (id) {
+  // Fetch equipo: en edición usa calibrationData.equipmentId, en creación usa location.state.id
+  useEffect(() => {
+    let equipoId: any = null
+    if (isEdit && calibrationData && calibrationData.equipmentId) {
+      equipoId = calibrationData.equipmentId
+    } else if (!isEdit && location.state && location.state.id) {
+      equipoId = location.state.id
+    }
+    if (equipoId) {
+      const fetchEquipmentInfo = async () => {
+        try {
+          const response = await axiosPrivate.get(`/dataSheet/${equipoId}`)
+          setEquipmentInfo({
+            equipmentName: response.data.equipmentName,
+            internalCode: response.data.internalCode,
+            brand: response.data.brand,
+            model: response.data.model,
+            serviceType: response.data.serviceType,
+            serialNumber: response.data.serialNumber,
+            calibrationCycle: response.data.calibrationCycle
+          })
+        } catch (error) {
+          console.error('Error al obtener la información del equipo:', error)
+        }
+      }
       fetchEquipmentInfo()
     }
-  }, [id])
+  }, [isEdit, calibrationData, location.state])
 
   // Actualizar valores del formulario cuando cambia equipmentInfo
   useEffect(() => {
@@ -111,22 +153,33 @@ const CalibrationForm = () => {
     validationSchema: validationSchema,
     onSubmit: async (values, { resetForm }) => {
       try {
-        const response = await axiosPrivate.post(
-          `/calibration`,
-          { ...values, name: 'Calibración' },
-          {}
-        )
-
-        if (response.status >= 200 && response.status < 300) {
-          // Se ha enviado correctamente la hoja de vida
-          bigToast('Calibración enviada correctamente', 'success')
-          resetForm()
+        let response
+        if (isEdit && editId) {
+          response = await axiosPrivate.put(
+            `/calibration/${editId}`,
+            { ...values, name: 'Calibración' },
+            {}
+          )
         } else {
-          // Ha ocurrido un error al enviar la hoja de vida
+          response = await axiosPrivate.post(
+            `/calibration`,
+            { ...values, name: 'Calibración' },
+            {}
+          )
+        }
+        if (response.status >= 200 && response.status < 300) {
+          bigToast(
+            isEdit
+              ? 'Calibración actualizada correctamente'
+              : 'Calibración enviada correctamente',
+            'success'
+          )
+          resetForm()
+          navigate(`/datasheets/${equipoId}/inspection-maintenance`)
+        } else {
           bigToast('Error al enviar la calibración', 'error')
         }
       } catch (error) {
-        // Ha ocurrido un error al enviar la hoja de vida
         bigToast('Error al enviar la calibración', 'error')
         console.error('Error al enviar la calibración:', error)
       }
@@ -157,12 +210,39 @@ const CalibrationForm = () => {
     }
   }, [formik.values.calibrationDate, equipmentInfo?.calibrationCycle])
 
+  const handleDelete = async () => {
+    if (!editId) return
+    const result = await MySwal.fire({
+      title: '¿Está seguro que desea eliminar esta calibración?',
+      text: 'No podrá recuperar esta información una vez eliminada',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      icon: 'warning'
+    })
+    if (result.isConfirmed) {
+      try {
+        const response = await axiosPrivate.delete(`/calibration/${editId}`)
+        if (response.status === 204 || response.status === 200) {
+          bigToast('Calibración eliminada correctamente', 'success')
+          navigate(-1)
+        } else {
+          bigToast('Error al eliminar', 'error')
+        }
+      } catch (error) {
+        bigToast('Error al eliminar', 'error')
+      }
+    }
+  }
+
   return (
     <Paper elevation={3} sx={{ p: 4, mt: 4 }} style={{ width: '100%' }}>
       <Button
         variant='contained'
         color='secondary'
-        onClick={() => navigate(`/datasheets/${id}/inspection-maintenance`)}
+        onClick={() =>
+          navigate(`/datasheets/${equipoId}/inspection-maintenance`)
+        }
         sx={{ ml: 0, mb: 2 }}
       >
         Volver
@@ -302,8 +382,18 @@ const CalibrationForm = () => {
               ))}
               <Grid item xs={12}>
                 <Button variant='contained' color='primary' type='submit'>
-                  Guardar
+                  {isEdit ? 'Actualizar' : 'Guardar'}
                 </Button>
+                {isEdit && (
+                  <Button
+                    variant='outlined'
+                    color='error'
+                    onClick={handleDelete}
+                    sx={{ ml: 2 }}
+                  >
+                    Eliminar
+                  </Button>
+                )}
               </Grid>
             </Grid>
           </form>

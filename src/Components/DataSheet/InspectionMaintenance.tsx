@@ -19,6 +19,10 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Visibility } from '@mui/icons-material'
 import { bigToast } from '../ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
+import Swal from 'sweetalert2'
+import withReactContent from 'sweetalert2-react-content'
+import EditIcon from '@mui/icons-material/Edit'
+import DeleteIcon from '@mui/icons-material/Delete'
 
 export interface InspectionHistoryData {
   id: number
@@ -33,6 +37,8 @@ export interface InspectionHistoryData {
   comments: string
   verifiedBy: string
   equipmentId: number
+  calibrationId?: number
+  inspectionMaintenanceId?: number
 }
 
 const InspectionMaintenance: React.FC = () => {
@@ -156,6 +162,48 @@ const InspectionMaintenance: React.FC = () => {
     )
   }
 
+  const MySwal = withReactContent(Swal)
+
+  const handleEdit = (row: InspectionHistoryData) => {
+    if (row.activity === 'Calibración') {
+      navigate(`/dataSheets/${row.id}/edit-calibration`, {
+        state: { edit: true, data: row, type: 'calibration', id: row.id }
+      })
+    } else {
+      navigate(`/dataSheets/${row.id}/edit-maintenance`, {
+        state: { edit: true, data: row, type: 'maintenance', id: row.id }
+      })
+    }
+  }
+
+  const handleDelete = async (row: InspectionHistoryData) => {
+    const isCalibration = row.activity === 'Calibración'
+    const endpoint = isCalibration
+      ? `/calibration/${row.calibrationId}`
+      : `/inspectionMaintenance/${row.inspectionMaintenanceId}`
+    const result = await MySwal.fire({
+      title: `¿Está seguro que desea eliminar este registro de ${row.activity}?`,
+      text: 'No podrá recuperar esta información una vez eliminada',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      icon: 'warning'
+    })
+    if (result.isConfirmed) {
+      try {
+        const response = await axiosPrivate.delete(endpoint)
+        if (response.status === 204 || response.status === 200) {
+          bigToast(`${row.activity} eliminada correctamente`, 'success')
+          fetchReports()
+        } else {
+          bigToast('Error al eliminar', 'error')
+        }
+      } catch (error) {
+        bigToast('Error al eliminar', 'error')
+      }
+    }
+  }
+
   return (
     <Box>
       <Box
@@ -239,6 +287,16 @@ const InspectionMaintenance: React.FC = () => {
               id={row.original.id}
               activity={row.original.activity}
             />
+            <Tooltip title='Editar'>
+              <IconButton onClick={() => handleEdit(row.original)}>
+                <EditIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title='Eliminar'>
+              <IconButton onClick={() => handleDelete(row.original)}>
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
           </Box>
         )}
       />
