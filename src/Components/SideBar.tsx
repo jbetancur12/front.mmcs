@@ -82,7 +82,7 @@ const sidebarItems = ($userStore: UserData) => [
     ],
     moduleName: 'Basic',
     pathData:
-      'M3 3h2l1 5h13l1-5h2v2h-2l-1 5h-14l-1-5h-2zm4 8h10l1.5 7h-13zm1.5 9a1.5 1.5 0 1 1 3 0 1.5 1.5 0 1 1-3 0zm7 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 1 1-3 0z',
+      'M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2zM7.16 14l.84-2h7.45c.75 0 1.41-.41 1.75-1.03l3.24-5.88A1 1 0 0 0 20 4H5.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7.42c-.14 0-.25-.11-.26-.25z',
     menuItems: [
       {
         label: 'Selección de Proveedores',
@@ -138,6 +138,21 @@ const sidebarItems = ($userStore: UserData) => [
     roles: ['admin', 'user'],
     moduleName: 'Basic'
   },
+  {
+    type: 'dropdown',
+    buttonText: 'Calidad',
+    roles: ['admin'],
+    moduleName: 'Basic',
+    pathData:
+      'M12 2l2.9 6.9 7.1.6-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.6z',
+    menuItems: [
+      {
+        label: 'Trabajo no Conforme',
+        url: '/non-conform-work-reports',
+        roles: ['admin']
+      }
+    ]
+  },
 
   {
     type: 'dropdown',
@@ -158,8 +173,9 @@ const sidebarItems = ($userStore: UserData) => [
     roles: ['admin'], // Roles que pueden ver este menú
     moduleName: 'Basic', // Nombre interno del módulo (opcional, ajusta según tu sistema)
     // Path SVG para un icono de matraz/laboratorio (puedes reemplazarlo)
+
     pathData:
-      'M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v8h2V8h2v8h2V8h2v8h2V8h2v8h2V8h2v8z',
+      'M19 19V8.83l-6-6-6 6V19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zm-7-7h2v5h-2z',
     menuItems: [
       { label: 'Condiciones', url: 'laboratory/conditions', roles: ['admin'] }, // Sub-item Condiciones
       { label: 'Patrones', url: 'laboratory/patterns', roles: ['admin'] } // Sub-item Patrones

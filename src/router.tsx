@@ -25,6 +25,7 @@ import IotRoutes from './routes/IotRoutes'
 import ModulesRoutes from './routes/ModulesRoutes'
 import { Box, CircularProgress, Typography } from '@mui/material'
 import LaboratoryRoutes from './routes/LaboratoryRoutes'
+import NonConformWorkReportPage from './pages/NonConformWorkReport'
 
 function Router() {
   // useSessionTimeoutWarning({ warningMinutesBefore: 5 })
@@ -72,6 +73,10 @@ function Router() {
             {ModulesRoutes($userStore.rol)}
             {LaboratoryRoutes($userStore.rol)}
             {OtherRoutes($userStore.rol)}
+            <Route
+              path='/non-conform-work-reports'
+              element={<NonConformWorkReportPage />}
+            />
           </Route>
         </Routes>
       </Suspense>
