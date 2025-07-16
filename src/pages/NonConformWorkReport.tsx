@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Box, Paper } from '@mui/material'
 import NonConformWorkReportTable from 'src/Components/NonConformWorkReport/NonConformWorkReportTable'
 import NonConformWorkReportForm from 'src/Components/NonConformWorkReport/NonConformWorkReportForm'
@@ -17,7 +17,7 @@ const NonConformWorkReportPage = () => {
     setMode('edit')
   }
 
-  const handleView = (row: any) => {
+  const handleView = (_row: any) => {
     // Aquí podrías mostrar un modal de detalle si lo deseas
     alert('View not implemented yet')
   }

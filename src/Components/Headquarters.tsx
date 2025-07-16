@@ -100,7 +100,9 @@ const Headquarters: React.FC<HeadquartersProps> = ({
     >
       {!selectedSede ? (
         <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
-          {$userStore.rol.some((role) => ['admin'].includes(role)) && (
+          {$userStore.rol.some((role) =>
+            ['admin', 'metrologist'].includes(role)
+          ) && (
             <Box sx={{ mb: 2 }}>
               {!isAdding ? (
                 <Button variant='contained' onClick={handleAddClick}>
@@ -206,7 +208,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
                     onClick={() => onSedeClick(sede)}
                     secondaryAction={
                       $userStore.rol.some((role) =>
-                        ['admin'].includes(role)
+                        ['admin', 'metrologist'].includes(role)
                       ) && (
                         <IconButton
                           edge='end'

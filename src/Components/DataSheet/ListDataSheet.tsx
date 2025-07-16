@@ -62,6 +62,8 @@ import Swal from 'sweetalert2'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { DatePicker } from '@mui/x-date-pickers'
 import { format, parseISO } from 'date-fns'
+import { useStore } from '@nanostores/react'
+import { userStore } from '@stores/userStore'
 
 // Interfaces y tipos
 
@@ -209,6 +211,7 @@ const menuOptions = [
 
 // Main component
 const ListDataSheet: React.FC = () => {
+  const $userStore = useStore(userStore)
   const [inventoryAnchorEl, setInventoryAnchorEl] =
     useState<null | HTMLElement>(null)
   const [calibrationAnchorEl, setCalibrationAnchorEl] =
@@ -842,6 +845,7 @@ const ListDataSheet: React.FC = () => {
   }
 
   const RowActions = ({ row, table }: { row: any; table: any }) => {
+    const isAdmin = $userStore.rol.includes('admin')
     const [localAnchorEl, setLocalAnchorEl] = useState<null | HTMLElement>(null)
 
     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -904,27 +908,31 @@ const ListDataSheet: React.FC = () => {
           }}
           disablePortal
         >
-          <MuiMenuItem
-            component={Link}
-            to={`${row.original.id}`}
-            onClick={handleMenuClose}
-          >
-            <ListItemIcon>
-              <Visibility fontSize='small' />
-            </ListItemIcon>
-            Ver
-          </MuiMenuItem>
+          {isAdmin && (
+            <MuiMenuItem
+              component={Link}
+              to={`${row.original.id}`}
+              onClick={handleMenuClose}
+            >
+              <ListItemIcon>
+                <Visibility fontSize='small' />
+              </ListItemIcon>
+              Ver
+            </MuiMenuItem>
+          )}
 
-          <MuiMenuItem
-            component={Link}
-            to={`${row.original.id}/inspection-maintenance`}
-            onClick={handleMenuClose}
-          >
-            <ListItemIcon>
-              <Engineering fontSize='small' />
-            </ListItemIcon>
-            Inspection/Maintenance
-          </MuiMenuItem>
+          {isAdmin && (
+            <MuiMenuItem
+              component={Link}
+              to={`${row.original.id}/inspection-maintenance`}
+              onClick={handleMenuClose}
+            >
+              <ListItemIcon>
+                <Engineering fontSize='small' />
+              </ListItemIcon>
+              Inspection/Maintenance
+            </MuiMenuItem>
+          )}
 
           <MuiMenuItem
             component={Link}
@@ -937,7 +945,7 @@ const ListDataSheet: React.FC = () => {
             In/Out
           </MuiMenuItem>
 
-          {row.original.invoiceUrl && (
+          {row.original.invoiceUrl && isAdmin && (
             <MuiMenuItem
               onClick={() => {
                 handleMenuClose()
@@ -953,24 +961,25 @@ const ListDataSheet: React.FC = () => {
 
           <Divider />
 
-          <MuiMenuItem
-            onClick={() => {
-              handleMenuClose()
-              MySwal.fire({
-                title: 'Seleccione una opción',
-                showCancelButton: true,
-                confirmButtonText: 'Editar Imagen',
-                cancelButtonText: 'Editar Otras Opciones',
-                showDenyButton: true, // Nuevo botón
-                denyButtonText: 'Subir Factura PDF',
-                denyButtonColor: '#3085d6'
-              }).then((result) => {
-                if (result.isConfirmed) {
-                  let imageFile: File | null = null
-                  // Lógica para abrir el modal de edición de imagen
-                  MySwal.fire({
-                    title: 'Editar Imagen',
-                    html: `
+          {isAdmin && (
+            <MuiMenuItem
+              onClick={() => {
+                handleMenuClose()
+                MySwal.fire({
+                  title: 'Seleccione una opción',
+                  showCancelButton: true,
+                  confirmButtonText: 'Editar Imagen',
+                  cancelButtonText: 'Editar Otras Opciones',
+                  showDenyButton: true, // Nuevo botón
+                  denyButtonText: 'Subir Factura PDF',
+                  denyButtonColor: '#3085d6'
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    let imageFile: File | null = null
+                    // Lógica para abrir el modal de edición de imagen
+                    MySwal.fire({
+                      title: 'Editar Imagen',
+                      html: `
                       <div id="mui-file-input">
                         <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
                           <label for="imageInput" style="cursor: pointer;">
@@ -990,67 +999,67 @@ const ListDataSheet: React.FC = () => {
                         </div>
                       </div>
                     `,
-                    didOpen: () => {
-                      const imageInput = document.getElementById(
-                        'imageInput'
-                      ) as HTMLInputElement
-                      const avatarImage = document.getElementById(
-                        'avatarImage'
-                      ) as HTMLImageElement
+                      didOpen: () => {
+                        const imageInput = document.getElementById(
+                          'imageInput'
+                        ) as HTMLInputElement
+                        const avatarImage = document.getElementById(
+                          'avatarImage'
+                        ) as HTMLImageElement
 
-                      if (imageInput && avatarImage) {
-                        imageInput.addEventListener('change', function (e) {
-                          const target = e.target as HTMLInputElement
+                        if (imageInput && avatarImage) {
+                          imageInput.addEventListener('change', function (e) {
+                            const target = e.target as HTMLInputElement
 
-                          if (target.files && target.files.length > 0) {
-                            imageFile = target.files[0]
+                            if (target.files && target.files.length > 0) {
+                              imageFile = target.files[0]
 
-                            // Crear un URL para la imagen seleccionada
-                            const newImageUrl = URL.createObjectURL(imageFile)
+                              // Crear un URL para la imagen seleccionada
+                              const newImageUrl = URL.createObjectURL(imageFile)
 
-                            // Actualizar el src del avatar
-                            avatarImage.src = newImageUrl
+                              // Actualizar el src del avatar
+                              avatarImage.src = newImageUrl
 
-                            // Aquí podrías realizar otras acciones como actualizar el estado o almacenar la imagen
+                              // Aquí podrías realizar otras acciones como actualizar el estado o almacenar la imagen
+                            }
+                          })
+                        } else {
+                          console.error(
+                            "No se pudo encontrar el elemento 'imageInput' o 'avatarImage'."
+                          )
+                        }
+                      },
+                      showCancelButton: true,
+                      confirmButtonText: 'Actualizar',
+                      cancelButtonText: 'Cancelar',
+                      preConfirm: () => {
+                        if (!imageFile) {
+                          MySwal.showValidationMessage(
+                            'Por favor selecciona una imagen antes de actualizar.'
+                          )
+                          return false // Previene la resolución de la promesa
+                        }
+                        return new Promise((resolve) => {
+                          if (imageFile) {
+                            // Subir la imagen seleccionada a la API
+                            handleUpload({
+                              id: row.original.id,
+                              image: imageFile
+                            }).then(() => resolve(undefined)) // Resolviendo con undefined
+                          } else {
+                            resolve(undefined) // Resolviendo con undefined
                           }
                         })
-                      } else {
-                        console.error(
-                          "No se pudo encontrar el elemento 'imageInput' o 'avatarImage'."
-                        )
                       }
-                    },
-                    showCancelButton: true,
-                    confirmButtonText: 'Actualizar',
-                    cancelButtonText: 'Cancelar',
-                    preConfirm: () => {
-                      if (!imageFile) {
-                        MySwal.showValidationMessage(
-                          'Por favor selecciona una imagen antes de actualizar.'
-                        )
-                        return false // Previene la resolución de la promesa
-                      }
-                      return new Promise((resolve) => {
-                        if (imageFile) {
-                          // Subir la imagen seleccionada a la API
-                          handleUpload({
-                            id: row.original.id,
-                            image: imageFile
-                          }).then(() => resolve(undefined)) // Resolviendo con undefined
-                        } else {
-                          resolve(undefined) // Resolviendo con undefined
-                        }
-                      })
-                    }
-                  })
-                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                  table.setEditingRow(row)
-                } else if (result.isDenied) {
-                  let pdfFile: File | null = null
+                    })
+                  } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    table.setEditingRow(row)
+                  } else if (result.isDenied) {
+                    let pdfFile: File | null = null
 
-                  MySwal.fire({
-                    title: 'Subir Factura PDF',
-                    html: `
+                    MySwal.fire({
+                      title: 'Subir Factura PDF',
+                      html: `
             <input type="file" 
                    id="pdfInput" 
                    accept="application/pdf" 
@@ -1072,68 +1081,71 @@ const ListDataSheet: React.FC = () => {
           Ningún archivo seleccionado
         </div>
           `,
-                    didOpen: () => {
-                      const pdfInput = document.getElementById(
-                        'pdfInput'
-                      ) as HTMLInputElement
-                      const fileNameDiv = document.getElementById('fileName')
-                      pdfInput.addEventListener('change', (e) => {
-                        const target = e.target as HTMLInputElement
-                        if (target.files?.length) {
-                          pdfFile = target.files[0]
-                          if (fileNameDiv) {
-                            fileNameDiv.textContent = pdfFile.name
-                            fileNameDiv.style.color = '#2e7d32' // Color verde para indicar selección
-                            fileNameDiv.style.fontWeight = '500'
+                      didOpen: () => {
+                        const pdfInput = document.getElementById(
+                          'pdfInput'
+                        ) as HTMLInputElement
+                        const fileNameDiv = document.getElementById('fileName')
+                        pdfInput.addEventListener('change', (e) => {
+                          const target = e.target as HTMLInputElement
+                          if (target.files?.length) {
+                            pdfFile = target.files[0]
+                            if (fileNameDiv) {
+                              fileNameDiv.textContent = pdfFile.name
+                              fileNameDiv.style.color = '#2e7d32' // Color verde para indicar selección
+                              fileNameDiv.style.fontWeight = '500'
+                            }
+                          } else {
+                            if (fileNameDiv) {
+                              fileNameDiv.textContent =
+                                'Ningún archivo seleccionado'
+                              fileNameDiv.style.color = '#666'
+                              fileNameDiv.style.fontWeight = 'normal'
+                            }
                           }
-                        } else {
-                          if (fileNameDiv) {
-                            fileNameDiv.textContent =
-                              'Ningún archivo seleccionado'
-                            fileNameDiv.style.color = '#666'
-                            fileNameDiv.style.fontWeight = 'normal'
-                          }
+                        })
+                      },
+                      preConfirm: () => {
+                        if (!pdfFile) {
+                          MySwal.showValidationMessage(
+                            'Debe seleccionar un archivo PDF'
+                          )
+                          return false
                         }
-                      })
-                    },
-                    preConfirm: () => {
-                      if (!pdfFile) {
-                        MySwal.showValidationMessage(
-                          'Debe seleccionar un archivo PDF'
-                        )
-                        return false
+                        if (pdfFile?.type !== 'application/pdf') {
+                          MySwal.showValidationMessage(
+                            'Solo se permiten archivos PDF'
+                          )
+                          return false
+                        }
+                        // Lógica para subir el PDF
+                        return handleUploadPdf(row.original.id, pdfFile)
                       }
-                      if (pdfFile?.type !== 'application/pdf') {
-                        MySwal.showValidationMessage(
-                          'Solo se permiten archivos PDF'
-                        )
-                        return false
-                      }
-                      // Lógica para subir el PDF
-                      return handleUploadPdf(row.original.id, pdfFile)
-                    }
-                  })
-                }
-              })
-            }}
-          >
-            <ListItemIcon>
-              <Edit fontSize='small' />
-            </ListItemIcon>
-            Editar
-          </MuiMenuItem>
+                    })
+                  }
+                })
+              }}
+            >
+              <ListItemIcon>
+                <Edit fontSize='small' />
+              </ListItemIcon>
+              Editar
+            </MuiMenuItem>
+          )}
 
-          <MuiMenuItem
-            onClick={() => {
-              handleDeleteRow(row)
-              handleMenuClose()
-            }}
-          >
-            <ListItemIcon>
-              <Delete fontSize='small' />
-            </ListItemIcon>
-            Eliminar
-          </MuiMenuItem>
+          {isAdmin && (
+            <MuiMenuItem
+              onClick={() => {
+                handleDeleteRow(row)
+                handleMenuClose()
+              }}
+            >
+              <ListItemIcon>
+                <Delete fontSize='small' />
+              </ListItemIcon>
+              Eliminar
+            </MuiMenuItem>
+          )}
         </Menu>
       </Box>
     )
@@ -1195,150 +1207,155 @@ const ListDataSheet: React.FC = () => {
         renderRowActions={({ row, table }) => (
           <RowActions row={row} table={table} />
         )}
-        renderTopToolbarCustomActions={() => (
-          <Box
-            display='flex'
-            alignItems='center'
-            sx={{ gap: 2, position: 'relative' }}
-          >
-            <Button
-              variant='contained'
-              onClick={() => setCreateModalOpen(true)}
-              sx={{
-                backgroundColor: '#9CF08B',
-                fontWeight: 'bold',
-                color: '#2D4A27',
-                '&.MuiButtonBase-root': {
-                  marginRight: '30px'
-                },
-                '&:hover': {
-                  backgroundColor: '#6DC662' // Azul más oscuro en hover
-                }
-              }}
+        renderTopToolbarCustomActions={() => {
+          if (!$userStore.rol.includes('admin')) {
+            return
+          }
+          return (
+            <Box
+              display='flex'
+              alignItems='center'
+              sx={{ gap: 2, position: 'relative' }}
             >
-              Crear Nueva Hoja de Vida
-            </Button>
-            <Divider orientation='vertical' flexItem />
-            <Tooltip arrow placement='right' title='Inventario'>
-              <div>
-                <IconButton onClick={handleInventoryClick}>
-                  <Inventory />
-                </IconButton>
-                <Menu
-                  anchorEl={inventoryAnchorEl}
-                  open={Boolean(inventoryAnchorEl)}
-                  onClose={handleClose}
-                >
-                  {[
-                    ...[
-                      {
-                        value: 'Inventario General',
-                        text: 'Inventario General',
-                        route: 'inventory'
-                      }
-                    ],
-                    ...menuOptions
-                  ].map((option) => (
-                    <MuiMenuItem
-                      key={option.value}
-                      onClick={() => handleClose()}
-                      component={Link}
-                      to={`inventory/${option.route === 'inventory' ? '' : option.route}`}
-                      state={tableData}
-                    >
-                      {option.text}
-                    </MuiMenuItem>
-                  ))}
-                </Menu>
-              </div>
-            </Tooltip>
-            <Tooltip arrow placement='right' title='Programa de Calibración'>
-              <div>
-                <IconButton onClick={handleCalibrationClick}>
-                  <PrecisionManufacturing />
-                </IconButton>
-                <Menu
-                  anchorEl={calibrationAnchorEl}
-                  open={Boolean(calibrationAnchorEl)}
-                  onClose={handleClose}
-                >
-                  {[
-                    ...[
-                      {
-                        value: 'Cronograma General',
-                        text: 'Cronograma General',
-                        route: 'calibration-program'
-                      }
-                    ],
-                    ...menuOptions
-                  ].map((option) => (
-                    <MuiMenuItem
-                      key={option.value}
-                      onClick={() => handleClose()}
-                      component={Link}
-                      to={`calibration-program/${option.route === 'calibration-program' ? '' : option.route}`}
-                      state={tableData}
-                    >
-                      {option.text}
-                    </MuiMenuItem>
-                  ))}
-                </Menu>
-              </div>
-            </Tooltip>
-            <Tooltip
-              arrow
-              placement='right'
-              title='Cronograma de Mantenimiento'
-            >
-              <div>
-                <IconButton onClick={handleScheduleClick}>
-                  <Event />
-                </IconButton>
-                <Menu
-                  anchorEl={scheduleAnchorEl}
-                  open={Boolean(scheduleAnchorEl)}
-                  onClose={handleClose}
-                >
-                  {[
-                    ...[
-                      {
-                        value: 'Cronograma General',
-                        text: 'Cronograma General',
-                        route: 'maintenance-schedule'
-                      }
-                    ],
-                    ...menuOptions
-                  ].map((option) => (
-                    <MuiMenuItem
-                      key={option.value}
-                      onClick={() => handleClose()}
-                      component={Link}
-                      to={`maintenance-schedule/${option.route === 'maintenance-schedule' ? '' : option.route}`}
-                      state={tableData}
-                    >
-                      {option.text}
-                    </MuiMenuItem>
-                  ))}
-                </Menu>
-              </div>
-            </Tooltip>
-            <Divider orientation='vertical' flexItem />
-            <Tooltip arrow placement='right' title='Inventario Prestamo'>
-              <Link to='inventory-leasing'>
-                <IconButton>
-                  <SyncAlt />
-                </IconButton>
-              </Link>
-            </Tooltip>
-            <Tooltip arrow placement='right' title='Equipos en Prestamo'>
-              <Link to='devices-on-loan'>
-                <IconButton>
-                  <CallMissedOutgoing />
-                </IconButton>
-              </Link>
-            </Tooltip>
-          </Box>
-        )}
+              <Button
+                variant='contained'
+                onClick={() => setCreateModalOpen(true)}
+                sx={{
+                  backgroundColor: '#9CF08B',
+                  fontWeight: 'bold',
+                  color: '#2D4A27',
+                  '&.MuiButtonBase-root': {
+                    marginRight: '30px'
+                  },
+                  '&:hover': {
+                    backgroundColor: '#6DC662' // Azul más oscuro en hover
+                  }
+                }}
+              >
+                Crear Nueva Hoja de Vida
+              </Button>
+              <Divider orientation='vertical' flexItem />
+              <Tooltip arrow placement='right' title='Inventario'>
+                <div>
+                  <IconButton onClick={handleInventoryClick}>
+                    <Inventory />
+                  </IconButton>
+                  <Menu
+                    anchorEl={inventoryAnchorEl}
+                    open={Boolean(inventoryAnchorEl)}
+                    onClose={handleClose}
+                  >
+                    {[
+                      ...[
+                        {
+                          value: 'Inventario General',
+                          text: 'Inventario General',
+                          route: 'inventory'
+                        }
+                      ],
+                      ...menuOptions
+                    ].map((option) => (
+                      <MuiMenuItem
+                        key={option.value}
+                        onClick={() => handleClose()}
+                        component={Link}
+                        to={`inventory/${option.route === 'inventory' ? '' : option.route}`}
+                        state={tableData}
+                      >
+                        {option.text}
+                      </MuiMenuItem>
+                    ))}
+                  </Menu>
+                </div>
+              </Tooltip>
+              <Tooltip arrow placement='right' title='Programa de Calibración'>
+                <div>
+                  <IconButton onClick={handleCalibrationClick}>
+                    <PrecisionManufacturing />
+                  </IconButton>
+                  <Menu
+                    anchorEl={calibrationAnchorEl}
+                    open={Boolean(calibrationAnchorEl)}
+                    onClose={handleClose}
+                  >
+                    {[
+                      ...[
+                        {
+                          value: 'Cronograma General',
+                          text: 'Cronograma General',
+                          route: 'calibration-program'
+                        }
+                      ],
+                      ...menuOptions
+                    ].map((option) => (
+                      <MuiMenuItem
+                        key={option.value}
+                        onClick={() => handleClose()}
+                        component={Link}
+                        to={`calibration-program/${option.route === 'calibration-program' ? '' : option.route}`}
+                        state={tableData}
+                      >
+                        {option.text}
+                      </MuiMenuItem>
+                    ))}
+                  </Menu>
+                </div>
+              </Tooltip>
+              <Tooltip
+                arrow
+                placement='right'
+                title='Cronograma de Mantenimiento'
+              >
+                <div>
+                  <IconButton onClick={handleScheduleClick}>
+                    <Event />
+                  </IconButton>
+                  <Menu
+                    anchorEl={scheduleAnchorEl}
+                    open={Boolean(scheduleAnchorEl)}
+                    onClose={handleClose}
+                  >
+                    {[
+                      ...[
+                        {
+                          value: 'Cronograma General',
+                          text: 'Cronograma General',
+                          route: 'maintenance-schedule'
+                        }
+                      ],
+                      ...menuOptions
+                    ].map((option) => (
+                      <MuiMenuItem
+                        key={option.value}
+                        onClick={() => handleClose()}
+                        component={Link}
+                        to={`maintenance-schedule/${option.route === 'maintenance-schedule' ? '' : option.route}`}
+                        state={tableData}
+                      >
+                        {option.text}
+                      </MuiMenuItem>
+                    ))}
+                  </Menu>
+                </div>
+              </Tooltip>
+              <Divider orientation='vertical' flexItem />
+              <Tooltip arrow placement='right' title='Inventario Prestamo'>
+                <Link to='inventory-leasing'>
+                  <IconButton>
+                    <SyncAlt />
+                  </IconButton>
+                </Link>
+              </Tooltip>
+              <Tooltip arrow placement='right' title='Equipos en Prestamo'>
+                <Link to='devices-on-loan'>
+                  <IconButton>
+                    <CallMissedOutgoing />
+                  </IconButton>
+                </Link>
+              </Tooltip>
+            </Box>
+          )
+        }}
       />
 
       <CreateNewDataSheetModal

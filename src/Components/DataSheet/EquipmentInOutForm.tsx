@@ -26,6 +26,8 @@ import { loadOptions, mapOptions } from '../../utils/loadOptions'
 
 import { Profile } from '../../pages/Profiles'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { useStore } from '@nanostores/react'
+import { userStore } from '@stores/userStore'
 
 // Interfaz para los valores del formulario
 interface EquipmentFormValues {
@@ -65,6 +67,8 @@ const validationSchema = Yup.object({
 
 const EquipmentForm: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
+  const $userStore = useStore(userStore)
+  const isAdmin = $userStore.rol.some((role) => role === 'admin')
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [isEquipmentOut, setIsEquipmentOut] = useState<boolean>(false)
@@ -130,18 +134,20 @@ const EquipmentForm: React.FC = () => {
         <IconButton onClick={() => navigate('/datasheets')}>
           <ArrowBack />
         </IconButton>
-        <div>
-          <IconButton
-            onClick={() => navigate('/dataSheets/' + id + '/in-out-table')}
-          >
-            <TableChart />
-          </IconButton>
-          <IconButton
-            onClick={() => navigate('/dataSheets/' + id + '/in-out-report')}
-          >
-            <Download />
-          </IconButton>
-        </div>
+        {isAdmin && (
+          <div>
+            <IconButton
+              onClick={() => navigate('/dataSheets/' + id + '/in-out-table')}
+            >
+              <TableChart />
+            </IconButton>
+            <IconButton
+              onClick={() => navigate('/dataSheets/' + id + '/in-out-report')}
+            >
+              <Download />
+            </IconButton>
+          </div>
+        )}
       </Box>
       <Typography variant='h4' gutterBottom>
         {!isEquipmentOut ? 'Salida de Equipo' : 'Entrada de Equipo'}

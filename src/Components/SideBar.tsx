@@ -138,31 +138,35 @@ const sidebarItems = ($userStore: UserData) => [
     roles: ['admin', 'user'],
     moduleName: 'Basic'
   },
-  {
-    type: 'dropdown',
-    buttonText: 'Calidad',
-    roles: ['admin'],
-    moduleName: 'Basic',
-    pathData:
-      'M12 2l2.9 6.9 7.1.6-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.6z',
-    menuItems: [
-      {
-        label: 'Trabajo no Conforme',
-        url: '/non-conform-work-reports',
-        roles: ['admin']
-      }
-    ]
-  },
+  // {
+  //   type: 'dropdown',
+  //   buttonText: 'Calidad',
+  //   roles: ['admin'],
+  //   moduleName: 'Basic',
+  //   pathData:
+  //     'M12 2l2.9 6.9 7.1.6-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.6z',
+  //   menuItems: [
+  //     {
+  //       label: 'Trabajo no Conforme',
+  //       url: '/non-conform-work-reports',
+  //       roles: ['admin']
+  //     }
+  //   ]
+  // },
 
   {
     type: 'dropdown',
     buttonText: 'Inventario',
-    roles: ['admin'],
+    roles: ['admin', 'metrologist'],
     moduleName: 'Basic',
     pathData:
       'M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H8v-2h6v2zm3-4H8v-2h8v2zm0-4H8V7h8v2z',
     menuItems: [
-      { label: 'Hoja de Vida', url: 'datasheets', roles: ['admin'] },
+      {
+        label: 'Hoja de Vida',
+        url: 'datasheets',
+        roles: ['admin', 'metrologist']
+      },
       { label: 'Alertas', url: 'datasheets/alerts', roles: ['admin'] },
       { label: 'Chamber', url: 'laboratory/patterns', roles: ['admin'] }
     ]

@@ -396,7 +396,9 @@ function UserProfile() {
             Programación
           </a>
         </li>
-        {$userStore.rol.some((role) => ['admin'].includes(role)) && (
+        {$userStore.rol.some((role) =>
+          ['admin', 'metrologist'].includes(role)
+        ) && (
           <>
             <li className='mr-1'>
               <a
@@ -485,14 +487,20 @@ function UserProfile() {
             </Box>
           ) : (
             <>
-              {certificatesData.map((certificate: Certificate) => (
-                <CertificateListItem
-                  key={certificate.id}
-                  certificate={certificate}
-                  onDelete={handleDelete}
-                  sedes={customerData.sede}
-                />
-              ))}
+              {certificatesData.length === 0 ? (
+                <Typography align='center' color='textSecondary' sx={{ my: 2 }}>
+                  No hay certificados para mostrar.
+                </Typography>
+              ) : (
+                certificatesData.map((certificate: Certificate) => (
+                  <CertificateListItem
+                    key={certificate.id}
+                    certificate={certificate}
+                    onDelete={handleDelete}
+                    sedes={customerData.sede}
+                  />
+                ))
+              )}
               <div className='flex justify-between items-center p-4'>
                 <button
                   onClick={() => handlePageChange('prev')}

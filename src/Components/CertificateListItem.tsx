@@ -55,6 +55,7 @@ export const CertificateListItem: React.FC<CertificateListItemProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedCertificate, setSelectedCertificate] =
     useState<Certificate | null>(certificate)
+  console.log('🚀 ~ selectedCertificate:', selectedCertificate)
 
   const handleModalOpen = () => {
     setIsModalOpen(true)
