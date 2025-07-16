@@ -20,6 +20,13 @@ import Swal from 'sweetalert2'
 const tncAcceptanceOptions = ['Aceptado', 'No aceptado']
 const statusOptions = ['Abierta', 'Cerrada']
 const impactOptions = [1, 5]
+const reviewFrequencyOptions = [
+  { label: 'Diaria', value: 'daily' },
+  { label: 'Semanal', value: 'weekly' },
+  { label: 'Quincenal', value: 'biweekly' },
+  { label: 'Mensual', value: 'monthly' },
+  { label: 'Personalizada', value: 'custom' }
+]
 
 interface NonConformWorkReportFormProps {
   initialData?: Partial<NonConformWorkReport>
@@ -149,31 +156,47 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
     closingJustification: initialData.closingJustification || '',
     recurrence: initialData.recurrence || false,
     correctiveActionsEffectiveness:
-      initialData.correctiveActionsEffectiveness || ''
+      initialData.correctiveActionsEffectiveness || '',
+    reviewFrequency: initialData.reviewFrequency || '',
+    customReviewDays: initialData.customReviewDays || undefined
   }
+
+  const validationSchema = Yup.object({
+    tncCode: Yup.string().required('Required'),
+    tncAcceptance: Yup.string().required('Required'),
+    registerDate: Yup.string().required('Required'),
+    detectedBy: Yup.string().required('Required'),
+    affectedArea: Yup.string().required('Required'),
+    findingDescription: Yup.string().required('Required'),
+    status: Yup.string().required('Required'),
+    resultValidity: Yup.number().oneOf([1, 5]).required(),
+    affectedServicesCount: Yup.number().oneOf([1, 5]).required(),
+    clientResultsDelivery: Yup.number().oneOf([1, 5]).required(),
+    contractualImpact: Yup.number().oneOf([1, 5]).required(),
+    reputationRisk: Yup.number().oneOf([1, 5]).required(),
+    nonConformityOccurrences: Yup.number().min(0).required(),
+    previousNonConformWorks: Yup.string()
+      .oneOf(['Sí', 'No'])
+      .required('Required'),
+    moreFindings: Yup.string().oneOf(['Sí', 'No']).required('Required'),
+    reviewFrequency: Yup.string().when('status', {
+      is: (val: string) => val === 'Abierta',
+      then: (schema) => schema.required('Requerido'),
+      otherwise: (schema) => schema.notRequired()
+    }),
+    customReviewDays: Yup.number().when('reviewFrequency', {
+      is: 'custom',
+      then: (schema) =>
+        schema
+          .required('Ingrese el número de días')
+          .min(1, 'Debe ser mayor a 0'),
+      otherwise: (schema) => schema.notRequired()
+    })
+  })
 
   const formik = useFormik<NonConformWorkReport>({
     initialValues,
-    validationSchema: Yup.object({
-      tncCode: Yup.string().required('Required'),
-      tncAcceptance: Yup.string().required('Required'),
-      registerDate: Yup.string().required('Required'),
-      detectedBy: Yup.string().required('Required'),
-      affectedArea: Yup.string().required('Required'),
-      findingDescription: Yup.string().required('Required'),
-      status: Yup.string().required('Required'),
-      resultValidity: Yup.number().oneOf([1, 5]).required(),
-      affectedServicesCount: Yup.number().oneOf([1, 5]).required(),
-      clientResultsDelivery: Yup.number().oneOf([1, 5]).required(),
-      contractualImpact: Yup.number().oneOf([1, 5]).required(),
-      reputationRisk: Yup.number().oneOf([1, 5]).required(),
-      nonConformityOccurrences: Yup.number().min(0).required(),
-      previousNonConformWorks: Yup.string()
-        .oneOf(['Sí', 'No'])
-        .required('Required'),
-      moreFindings: Yup.string().oneOf(['Sí', 'No']).required('Required')
-      // Puedes agregar más validaciones requeridas según tu lógica de negocio
-    }),
+    validationSchema,
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
         // Mapeo de valores antes de enviar
@@ -189,7 +212,9 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
             yesNoMap[values.moreFindings as string] || values.moreFindings,
           impactWeight: impactMap[impactWeight] || impactWeight,
           probability: probabilityMap[probability] || probability,
-          riskLevel: riskLevelMap[riskLevel] || riskLevel
+          riskLevel: riskLevelMap[riskLevel] || riskLevel,
+          reviewFrequency: values.reviewFrequency,
+          customReviewDays: values.customReviewDays
         }
         if (initialData && initialData.id) {
           // EDITAR
@@ -423,6 +448,52 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                 ))}
               </TextField>
             </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                select
+                fullWidth
+                label='Periodicidad de revisión'
+                name='reviewFrequency'
+                value={formik.values.reviewFrequency}
+                onChange={formik.handleChange}
+                error={
+                  formik.touched.reviewFrequency &&
+                  Boolean(formik.errors.reviewFrequency)
+                }
+                helperText={
+                  formik.touched.reviewFrequency &&
+                  formik.errors.reviewFrequency
+                }
+                disabled={formik.values.status !== 'Abierta'}
+              >
+                {reviewFrequencyOptions.map((opt) => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            {formik.values.reviewFrequency === 'custom' && (
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  type='number'
+                  label='Días para revisión personalizada'
+                  name='customReviewDays'
+                  value={formik.values.customReviewDays || ''}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.customReviewDays &&
+                    Boolean(formik.errors.customReviewDays)
+                  }
+                  helperText={
+                    formik.touched.customReviewDays &&
+                    formik.errors.customReviewDays
+                  }
+                  inputProps={{ min: 1 }}
+                />
+              </Grid>
+            )}
             <Grid item xs={12}>
               <TextField
                 fullWidth

@@ -13,7 +13,11 @@ import {
   Typography,
   TablePagination,
   CircularProgress,
-  Chip
+  Chip,
+  Alert,
+  Stack,
+  Switch,
+  FormControlLabel
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
@@ -22,6 +26,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { NonConformWorkReport } from './NonConformWorkReport.types'
 import { format } from 'date-fns'
 import Swal from 'sweetalert2'
+import { NonConformWorkReportAlert } from './NonConformWorkReport.types'
 
 // Traducciones y mapeos
 const columns = [
@@ -119,6 +124,9 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [alerts, setAlerts] = useState<NonConformWorkReportAlert[]>([])
+  const [alertsLoading, setAlertsLoading] = useState(true)
+  const [showOnlyAlerts, setShowOnlyAlerts] = useState(false)
 
   const fetchReports = async () => {
     setLoading(true)
@@ -132,8 +140,22 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
     }
   }
 
+  // Fetch de alertas de revisión
+  const fetchAlerts = async () => {
+    setAlertsLoading(true)
+    try {
+      const res = await axiosPrivate.get('/non-conform-work-report/alerts')
+      setAlerts(res.data)
+    } catch (err) {
+      setAlerts([])
+    } finally {
+      setAlertsLoading(false)
+    }
+  }
+
   useEffect(() => {
     fetchReports()
+    fetchAlerts()
   }, [])
 
   const handleDelete = async (id: number) => {
@@ -162,6 +184,30 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
   // Renderizado
   return (
     <Box>
+      {/* ALERTAS DE REVISIÓN */}
+      {alertsLoading
+        ? null
+        : alerts.length > 0 && (
+            <Stack spacing={2} mb={2}>
+              <Alert
+                severity='warning'
+                action={
+                  <Button
+                    color='inherit'
+                    size='small'
+                    onClick={() => setShowOnlyAlerts(true)}
+                  >
+                    Ver alertas
+                  </Button>
+                }
+                sx={{ fontWeight: 600 }}
+              >
+                <b>¡Tienes {alerts.length} reportes con revisión pendiente!</b>{' '}
+                Usa el filtro para ver solo los reportes con alerta de revisión.
+              </Alert>
+            </Stack>
+          )}
+      {/* FIN ALERTAS */}
       <Box
         display='flex'
         justifyContent='space-between'
@@ -169,9 +215,23 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
         mb={2}
       >
         <Typography variant='h6'>Reportes de Trabajo No Conforme</Typography>
-        <Button variant='contained' color='primary' onClick={onCreate}>
-          Nuevo reporte
-        </Button>
+        <Box display='flex' alignItems='center' gap={2}>
+          {alerts.length > 0 && (
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showOnlyAlerts}
+                  onChange={(_, checked) => setShowOnlyAlerts(checked)}
+                  color='warning'
+                />
+              }
+              label='Mostrar solo reportes con alerta de revisión'
+            />
+          )}
+          <Button variant='contained' color='primary' onClick={onCreate}>
+            Nuevo reporte
+          </Button>
+        </Box>
       </Box>
       <Paper elevation={2} sx={{ borderRadius: 3 }}>
         {loading ? (
@@ -202,7 +262,10 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows
+                {(showOnlyAlerts
+                  ? rows.filter((row) => alerts.some((a) => a.id === row.id))
+                  : rows
+                )
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((row) => (
                     <TableRow key={row.id} hover>

@@ -70,4 +70,9 @@ export interface NonConformWorkReport {
 
   recurrence?: boolean
   correctiveActionsEffectiveness?: string
+  reviewFrequency?: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'custom'
+  customReviewDays?: number
 }
+
+// Tipo para alertas de revisión de TNC (idéntico a NonConformWorkReport, pero semánticamente claro)
+export type NonConformWorkReportAlert = NonConformWorkReport
