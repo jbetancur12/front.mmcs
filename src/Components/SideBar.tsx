@@ -207,7 +207,7 @@ const sidebarItems = ($userStore: UserData) => [
     roles: ['admin', 'metrologist'],
     moduleName: 'Basic',
     pathData:
-      'M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z',
+      'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 13.17l6.59-6.59L20 8l-8 8z',
     menuItems: [
       {
         label: 'Equipos',

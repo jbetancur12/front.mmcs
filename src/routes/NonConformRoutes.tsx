@@ -44,7 +44,7 @@ const NonConformRoutes = (role: string[]) => {
         />
         <Route
           path='non-conform-work-reports/:id'
-          element={<PDFViewer path='fogc-mmcs-19' />}
+          element={<PDFViewer path='fogc-mmcs-16' />}
         />
       </Route>
     </>
