@@ -8,6 +8,9 @@ import { useStore } from '@nanostores/react'
 import { userStore } from 'src/store/userStore'
 import { FileData } from '../TableFiles'
 import { useParams } from 'react-router-dom'
+import * as XLSX from 'xlsx'
+import { saveAs } from 'file-saver'
+import { Button } from '@mui/material'
 
 const Dashboard: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
@@ -38,6 +41,36 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     fetchFiles()
   }, [])
+
+  const handleExportExcel = () => {
+    const exportData = tableData.map((row) => ({
+      //'Compañía': row.customer?.nombre || '',
+      Equipo: row.device?.name || '',
+      //'Tipo de Certificado': row.certificateType?.name || '',
+      // 'Nombre': row.name,
+      Ciudad: row.city,
+      Ubicación: row.location,
+      Sede: row.sede,
+      'Activo Fijo': row.activoFijo,
+      Serie: row.serie,
+      'Fecha de Calibración': row.calibrationDate
+        ? format(new Date(row.calibrationDate), 'yyyy-MM-dd')
+        : '',
+      'Próxima Fecha de Calibración': row.nextCalibrationDate
+        ? format(new Date(row.nextCalibrationDate), 'yyyy-MM-dd')
+        : ''
+      // Agrega más campos si lo necesitas
+    }))
+    const worksheet = XLSX.utils.json_to_sheet(exportData)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Certificados')
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array'
+    })
+    const data = new Blob([excelBuffer], { type: 'application/octet-stream' })
+    saveAs(data, `${tableData[0].customer?.nombre}-certificados.xlsx`)
+  }
 
   //@ts-ignore
   const columns = useMemo<MRT_ColumnDef<FileData>[]>(() => [
@@ -181,6 +214,14 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
+      <Button
+        variant='contained'
+        color='primary'
+        onClick={handleExportExcel}
+        sx={{ mb: 2 }}
+      >
+        Descargar Excel
+      </Button>
       <MaterialReactTable
         displayColumnDefOptions={{
           'mrt-row-actions': {

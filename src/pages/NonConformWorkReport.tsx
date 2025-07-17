@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { Box, Paper } from '@mui/material'
 import NonConformWorkReportTable from 'src/Components/NonConformWorkReport/NonConformWorkReportTable'
 import NonConformWorkReportForm from 'src/Components/NonConformWorkReport/NonConformWorkReportForm'
+import { useNavigate } from 'react-router-dom'
 
 const NonConformWorkReportPage = () => {
+  const navigate = useNavigate()
   const [mode, setMode] = useState<'table' | 'create' | 'edit'>('table')
   const [editData, setEditData] = useState<any>(null)
 
@@ -19,7 +21,7 @@ const NonConformWorkReportPage = () => {
 
   const handleView = (_row: any) => {
     // Aquí podrías mostrar un modal de detalle si lo deseas
-    alert('View not implemented yet')
+    navigate(`/non-conform-work-reports/${_row.id}`)
   }
 
   const handleSuccess = () => {

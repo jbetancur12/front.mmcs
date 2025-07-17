@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, Outlet } from 'react-router-dom'
 
 // Layout y autenticación
 import Layout from './Components/Layout'
@@ -25,7 +25,7 @@ import IotRoutes from './routes/IotRoutes'
 import ModulesRoutes from './routes/ModulesRoutes'
 import { Box, CircularProgress, Typography } from '@mui/material'
 import LaboratoryRoutes from './routes/LaboratoryRoutes'
-import NonConformWorkReportPage from './pages/NonConformWorkReport'
+import NonConformRoutes from './routes/NonConformRoutes'
 
 function Router() {
   // useSessionTimeoutWarning({ warningMinutesBefore: 5 })
@@ -33,53 +33,55 @@ function Router() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Suspense
-        fallback={
-          <Box
-            display='flex'
-            justifyContent='center'
-            alignItems='center'
-            height='100vh'
-            flexDirection='column'
-          >
-            <CircularProgress />
-            <Typography variant='h6' sx={{ mt: 2, color: 'text.secondary' }}>
-              Cargando...
-            </Typography>
-          </Box>
-        }
-      >
-        <Routes>
-          {/* Rutas públicas */}
-          {PublicRoutes}
+      <Routes>
+        {/* Rutas públicas */}
+        {PublicRoutes}
 
-          {/* Rutas protegidas */}
-          <Route
-            path='/'
-            element={
-              <RequireAuth>
-                <Layout />
-              </RequireAuth>
-            }
-          >
-            {FleetRoutes($userStore.rol)}
-            {DataSheetRoutes($userStore.rol)}
-            {QuotationRoutes($userStore.rol)}
-            {CalibrationRoutes($userStore.rol)}
-            {CustomerRoutes($userStore.rol)}
-            {ProfileRoutes($userStore.rol)}
-            {PuchasesRoutes($userStore.rol)}
-            {IotRoutes($userStore.rol)}
-            {ModulesRoutes($userStore.rol)}
-            {LaboratoryRoutes($userStore.rol)}
-            {OtherRoutes($userStore.rol)}
-            <Route
-              path='/non-conform-work-reports'
-              element={<NonConformWorkReportPage />}
-            />
-          </Route>
-        </Routes>
-      </Suspense>
+        {/* Rutas protegidas */}
+        <Route
+          path='/'
+          element={
+            <RequireAuth>
+              <Layout>
+                <Suspense
+                  fallback={
+                    <Box
+                      display='flex'
+                      justifyContent='center'
+                      alignItems='center'
+                      height='100vh'
+                      flexDirection='column'
+                    >
+                      <CircularProgress />
+                      <Typography
+                        variant='h6'
+                        sx={{ mt: 2, color: 'text.secondary' }}
+                      >
+                        Cargando...
+                      </Typography>
+                    </Box>
+                  }
+                >
+                  <Outlet />
+                </Suspense>
+              </Layout>
+            </RequireAuth>
+          }
+        >
+          {FleetRoutes($userStore.rol)}
+          {DataSheetRoutes($userStore.rol)}
+          {QuotationRoutes($userStore.rol)}
+          {CalibrationRoutes($userStore.rol)}
+          {CustomerRoutes($userStore.rol)}
+          {ProfileRoutes($userStore.rol)}
+          {PuchasesRoutes($userStore.rol)}
+          {IotRoutes($userStore.rol)}
+          {ModulesRoutes($userStore.rol)}
+          {LaboratoryRoutes($userStore.rol)}
+          {NonConformRoutes($userStore.rol)}
+          {OtherRoutes($userStore.rol)}
+        </Route>
+      </Routes>
     </LocalizationProvider>
   )
 }

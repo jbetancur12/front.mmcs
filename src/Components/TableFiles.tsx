@@ -111,6 +111,8 @@ export interface FileData {
     name: string
     // Otras propiedades de Certificate
   }
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 interface ResourceOption {
