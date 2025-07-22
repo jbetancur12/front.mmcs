@@ -7,6 +7,7 @@ import DropdownButton from './DropdownButton' // Importa el componente del dropd
 import { useStore } from '@nanostores/react'
 import { UserData, userStore } from 'src/store/userStore'
 import { CarRepair } from '@mui/icons-material'
+import { Divider } from '@mui/material'
 
 const iconClass =
   'w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white'
@@ -255,9 +256,21 @@ const sidebarItems = ($userStore: UserData) => [
   // Otros ítems...
 ]
 
-const SideBar = () => {
-  const $userStore = useStore(userStore)
+interface SideBarProps {
+  sidebarMinimized: boolean
+  userMinimized: boolean
+  setUserMinimized: (min: boolean) => void
+  setHovered: (hover: boolean) => void
+  hoverEnabled: boolean
+  setHoverEnabled: (enabled: boolean) => void
+}
 
+const SideBar = ({
+  sidebarMinimized,
+  userMinimized,
+  setUserMinimized
+}: SideBarProps) => {
+  const $userStore = useStore(userStore)
   const { pathname } = useLocation()
 
   const hasModuleAccess = (moduleName: string) => {
@@ -268,50 +281,100 @@ const SideBar = () => {
   }
 
   return (
-    <aside className='fixed top-0 left-0 z-20 flex flex-col flex-shrink-0 hidden w-64 h-full pt-16 font-normal duration-75 lg:flex transition-width'>
-      <div className='relative flex flex-col flex-1 min-h-0 bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700 pt-5 overflow-y-auto'>
-        <div className='flex-1 px-3 space-y-1 bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700'>
-          <ul className='space-y-2'>
-            {/* Mapear los ítems combinados del sidebar */}
-            {sidebarItems($userStore).map((item, index) => {
-              if (
-                item.type === 'link' &&
-                item.to &&
-                canViewModule(item.roles, $userStore.rol) &&
-                hasModuleAccess(item.moduleName)
-              ) {
-                return (
-                  <li
-                    key={index}
-                    className={pathname === item.to ? 'bg-green-100' : ''}
-                  >
-                    <Link
-                      to={item.to}
-                      className='flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
-                    >
-                      {item.icon}
-                      <span className='ml-3'>{item.label}</span>
-                    </Link>
-                  </li>
-                )
-              } else if (
-                item.type === 'dropdown' &&
-                canViewModule(item.roles, $userStore.rol)
-              ) {
-                return (
-                  <DropdownButton
-                    key={index}
-                    buttonText={item.buttonText ?? ''}
-                    menuItems={item.menuItems ?? []}
-                    pathData={item.pathData ?? ''}
-                    rol={$userStore.rol}
-                    currentPath={pathname}
-                  />
-                )
-              }
-              return null
-            })}
-          </ul>
+    <aside
+      className={`fixed top-0 left-0 z-20 flex flex-col flex-shrink-0 hidden h-full pt-16 font-normal bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700 lg:flex ${userMinimized ? 'w-20' : 'w-64'}`}
+    >
+      {/* Botón hamburguesa como último ítem del sidebar */}
+      <ul className='space-y-2'>
+        {sidebarItems($userStore).map((item, index) => {
+          if (
+            item.type === 'link' &&
+            item.to &&
+            canViewModule(item.roles, $userStore.rol) &&
+            hasModuleAccess(item.moduleName)
+          ) {
+            return (
+              <li
+                key={index}
+                className={pathname === item.to ? 'bg-green-100' : ''}
+              >
+                <Link
+                  to={item.to}
+                  className={`flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 ${sidebarMinimized ? 'justify-center' : ''}`}
+                >
+                  {item.icon}
+                  {!sidebarMinimized && (
+                    <span className='ml-3'>{item.label}</span>
+                  )}
+                </Link>
+              </li>
+            )
+          } else if (
+            item.type === 'dropdown' &&
+            canViewModule(item.roles, $userStore.rol)
+          ) {
+            return (
+              <DropdownButton
+                key={index}
+                buttonText={item.buttonText ?? ''}
+                menuItems={item.menuItems ?? []}
+                pathData={item.pathData ?? ''}
+                rol={$userStore.rol}
+                currentPath={pathname}
+                onlyIcons={sidebarMinimized}
+              />
+            )
+          }
+          return null
+        })}
+        <Divider />
+        <li
+          className={
+            !userMinimized
+              ? 'flex items-center mt-8'
+              : 'flex items-center mt-8 justify-center'
+          }
+        >
+          <button
+            className='ml-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
+            onClick={() => setUserMinimized(!userMinimized)}
+            aria-label={userMinimized ? 'Expandir menú' : 'Minimizar menú'}
+            type='button'
+            style={{
+              background: 'none',
+              border: 'none',
+              boxShadow: 'none',
+              padding: 0
+            }}
+          >
+            {userMinimized ? (
+              <svg className='w-5 h-5' fill='none' viewBox='0 0 24 24'>
+                <path
+                  d='M10 6l6 6-6 6'
+                  stroke='currentColor'
+                  strokeWidth='2'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                />
+              </svg>
+            ) : (
+              <svg className='w-5 h-5' fill='none' viewBox='0 0 24 24'>
+                <path
+                  d='M14 6l-6 6 6 6'
+                  stroke='currentColor'
+                  strokeWidth='2'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                />
+              </svg>
+            )}
+          </button>
+        </li>
+      </ul>
+      <div className='relative flex flex-col flex-1 min-h-0 pt-5 overflow-y-auto'>
+        <div className='flex-1 px-3 space-y-1 divide-y divide-gray-200 dark:divide-gray-700'>
+          {/* Header del sidebar: logo + botón hamburguesa */}
+          {/* This block is removed as per the edit hint */}
         </div>
       </div>
     </aside>

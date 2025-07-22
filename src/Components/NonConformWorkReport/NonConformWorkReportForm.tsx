@@ -172,16 +172,27 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
     affectedArea: Yup.string().required('Required'),
     findingDescription: Yup.string().required('Required'),
     status: Yup.string().required('Required'),
+    // Campos requeridos de Servicio afectado
+    serviceNumbers: Yup.string().required('Requerido'),
+    affectedClients: Yup.string().required('Requerido'),
+    involvedProcedure: Yup.string().required('Requerido'),
+    resultsDelivered: Yup.string().required('Requerido'),
+    // Evaluación y análisis
+    previousResultsReviewed: Yup.string().required('Requerido'),
+    evaluatedCertificates: Yup.string().required('Requerido'),
+    moreFindings: Yup.string().oneOf(['Sí', 'No']).required('Requerido'),
+    actionOnPreviousResults: Yup.string().required('Requerido'),
+    // Impacto
     resultValidity: Yup.number().oneOf([1, 5]).required(),
     affectedServicesCount: Yup.number().oneOf([1, 5]).required(),
     clientResultsDelivery: Yup.number().oneOf([1, 5]).required(),
     contractualImpact: Yup.number().oneOf([1, 5]).required(),
     reputationRisk: Yup.number().oneOf([1, 5]).required(),
+    // Probabilidad
     nonConformityOccurrences: Yup.number().min(0).required(),
     previousNonConformWorks: Yup.string()
       .oneOf(['Sí', 'No'])
       .required('Required'),
-    moreFindings: Yup.string().oneOf(['Sí', 'No']).required('Required'),
     reviewFrequency: Yup.string().when('status', {
       is: (val: string) => val === 'Abierta',
       then: (schema) => schema.required('Requerido'),
@@ -486,7 +497,7 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                     formik.touched.reviewFrequency &&
                     formik.errors.reviewFrequency
                   }
-                  disabled={formik.values.status !== 'Open'}
+                  disabled={formik.values.status !== 'Abierta'}
                 >
                   {reviewFrequencyOptions.map((opt) => (
                     <MenuItem key={opt.value} value={opt.value}>

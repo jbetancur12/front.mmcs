@@ -17,7 +17,7 @@ export interface NonConformWorkReport {
   affectedArea: string
   iso17025Clause?: string
   findingDescription: string
-  status: 'Open' | 'Closed'
+  status: 'Open' | 'Closed' | 'Abierta' | 'Cerrada'
 
   serviceNumbers?: string
   affectedClients?: string
