@@ -23,6 +23,7 @@ import ProfileRoutes from './routes/ProfileRoutes'
 import PuchasesRoutes from './routes/PurchasesRoutes'
 import IotRoutes from './routes/IotRoutes'
 import ModulesRoutes from './routes/ModulesRoutes'
+import LmsRoutes from './routes/LmsRoutes'
 import { Box, CircularProgress, Typography } from '@mui/material'
 import LaboratoryRoutes from './routes/LaboratoryRoutes'
 import NonConformRoutes from './routes/NonConformRoutes'
@@ -77,6 +78,7 @@ function Router() {
           {PuchasesRoutes($userStore.rol)}
           {IotRoutes($userStore.rol)}
           {ModulesRoutes($userStore.rol)}
+          {LmsRoutes($userStore.rol)}
           {LaboratoryRoutes($userStore.rol)}
           {NonConformRoutes($userStore.rol)}
           {OtherRoutes($userStore.rol)}
