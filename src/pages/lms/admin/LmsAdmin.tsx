@@ -11,9 +11,7 @@ import {
   Grid,
   Tabs,
   Tab,
-  Paper,
-  IconButton,
-  Divider
+  Paper
 } from '@mui/material'
 import {
   People as PeopleIcon,
@@ -70,7 +68,7 @@ const LmsAdmin: React.FC<AdminDashboardProps> = ({ user }) => {
     navigate('/')
   }
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)
   }
 

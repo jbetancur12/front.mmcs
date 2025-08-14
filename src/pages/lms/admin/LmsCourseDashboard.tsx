@@ -22,10 +22,7 @@ import {
   Tab,
   Avatar,
   LinearProgress,
-  Rating,
-  Divider,
-  Alert,
-  Badge
+  Rating
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -35,7 +32,6 @@ import {
   Visibility as ViewIcon,
   Settings as SettingsIcon,
   People as PeopleIcon,
-  Schedule as ScheduleIcon,
   School as SchoolIcon,
   TrendingUp as TrendingUpIcon,
   CheckCircle as CheckIcon,
@@ -362,7 +358,7 @@ const LmsCourseDashboard: React.FC = () => {
   const publishedCourses = courses.filter(
     (c) => c.status === 'published'
   ).length
-  const draftCourses = courses.filter((c) => c.status === 'draft').length
+  // const draftCourses = courses.filter((c) => c.status === 'draft').length
   const totalStudents = courses.reduce((sum, c) => sum + c.enrolledStudents, 0)
   const avgRating =
     courses.reduce((sum, c) => sum + c.rating, 0) / courses.length
@@ -546,7 +542,7 @@ const LmsCourseDashboard: React.FC = () => {
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs
           value={activeTab}
-          onChange={(e, newValue) => setActiveTab(newValue)}
+          onChange={(_e, newValue) => setActiveTab(newValue)}
         >
           <Tab label={`Todos (${filteredCourses.length})`} />
           <Tab

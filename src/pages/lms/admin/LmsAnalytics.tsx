@@ -6,7 +6,6 @@ import {
   CardHeader,
   Typography,
   Grid,
-  Paper,
   Table,
   TableBody,
   TableCell,
@@ -24,11 +23,9 @@ import {
   People as PeopleIcon,
   MenuBook as BookOpenIcon,
   CheckCircle as CheckCircleIcon,
-  Schedule as ScheduleIcon,
   Star as StarIcon
 } from '@mui/icons-material'
 import { useQuery } from 'react-query'
-import useAxiosPrivate from '@utils/use-axios-private'
 
 interface AnalyticsData {
   totalUsers: number
@@ -59,7 +56,6 @@ interface AnalyticsData {
 
 const LmsAnalytics: React.FC = () => {
   const [timeRange, setTimeRange] = useState('30')
-  const axiosPrivate = useAxiosPrivate()
 
   // Mock data para analíticas
   const mockAnalyticsData: AnalyticsData = {

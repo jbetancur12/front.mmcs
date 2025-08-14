@@ -96,7 +96,7 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
       initialData.tncAcceptance as string
     ] ||
       initialData.tncAcceptance ||
-      '') as any,
+      '') as 'Accepted' | 'No accepted',
     registerDate: initialData.registerDate
       ? initialData.registerDate.slice(0, 10)
       : '',
@@ -106,17 +106,29 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
     findingDescription: initialData.findingDescription || '',
     status: (statusReverseMap[initialData.status as string] ||
       initialData.status ||
-      '') as any,
+      '') as 'Open' | 'Abierta' | 'Closed' | 'Cerrada',
     serviceNumbers: initialData.serviceNumbers || '',
     affectedClients: initialData.affectedClients || '',
     involvedProcedure: initialData.involvedProcedure || '',
     resultsDelivered: initialData.resultsDelivered || '',
-    previousResultsReviewed: initialData.previousResultsReviewed || '',
-    evaluatedCertificates: initialData.evaluatedCertificates || '',
     moreFindings: (yesNoReverseMap[initialData.moreFindings as string] ||
       initialData.moreFindings ||
-      'No') as any,
-    actionOnPreviousResults: initialData.actionOnPreviousResults || '',
+      'No') as 'Yes' | 'No',
+
+    causeAnalysis: initialData.causeAnalysis || '',
+    affectedPeriod: initialData.affectedPeriod || '',
+    certificateReview: initialData.certificateReview || '',
+    procedureReview: initialData.procedureReview || '',
+    recordReview: initialData.recordReview || '',
+    metrologyInventoryCheck: initialData.metrologyInventoryCheck || '',
+    personnelCompetenceEvaluation:
+      initialData.personnelCompetenceEvaluation || '',
+    resultValidity4_3: initialData.resultValidity4_3 || 1,
+    affectedServicesCount4_3: initialData.affectedServicesCount4_3 || 1,
+    resultsDelivered4_3: initialData.resultsDelivered4_3 || 1,
+    regulatoryOrContractualImpact4_3:
+      initialData.regulatoryOrContractualImpact4_3 || 1,
+    reputationRisk4_3: initialData.reputationRisk4_3 || 1,
     resultValidity: initialData.resultValidity || 1,
     affectedServicesCount: initialData.affectedServicesCount || 1,
     clientResultsDelivery: initialData.clientResultsDelivery || 1,
@@ -126,7 +138,7 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
       initialData.previousNonConformWorks as string
     ] ||
       initialData.previousNonConformWorks ||
-      'No') as any,
+      'No') as 'Yes' | 'No',
     nonConformityOccurrences: initialData.nonConformityOccurrences || 0,
     immediateCorrection: initialData.immediateCorrection || '',
     correctionBy: initialData.correctionBy || '',
@@ -178,10 +190,24 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
     involvedProcedure: Yup.string().required('Requerido'),
     resultsDelivered: Yup.string().required('Requerido'),
     // Evaluación y análisis
-    previousResultsReviewed: Yup.string().required('Requerido'),
-    evaluatedCertificates: Yup.string().required('Requerido'),
+    // previousResultsReviewed: Yup.string().required('Requerido'),
+    // evaluatedCertificates: Yup.string().required('Requerido'),
     moreFindings: Yup.string().oneOf(['Sí', 'No']).required('Requerido'),
-    actionOnPreviousResults: Yup.string().required('Requerido'),
+    // actionOnPreviousResults: Yup.string().required('Requerido'),
+    // Análisis de causa
+    causeAnalysis: Yup.string().required('Required'),
+    affectedPeriod: Yup.string().required('Required'),
+    certificateReview: Yup.string().required('Required'),
+    procedureReview: Yup.string().required('Required'),
+    recordReview: Yup.string().required('Required'),
+    metrologyInventoryCheck: Yup.string().required('Required'),
+    personnelCompetenceEvaluation: Yup.string().required('Required'),
+    // Importancia del trabajo no conforme
+    resultValidity4_3: Yup.number().oneOf([1, 5]).required(),
+    affectedServicesCount4_3: Yup.number().oneOf([1, 3, 5]).required(),
+    resultsDelivered4_3: Yup.number().oneOf([1, 5]).required(),
+    regulatoryOrContractualImpact4_3: Yup.number().oneOf([1, 5]).required(),
+    reputationRisk4_3: Yup.number().oneOf([1, 5]).required(),
     // Impacto
     resultValidity: Yup.number().oneOf([1, 5]).required(),
     affectedServicesCount: Yup.number().oneOf([1, 5]).required(),
@@ -230,6 +256,7 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
           reviewFrequency: values.reviewFrequency,
           customReviewDays: values.customReviewDays
         }
+        console.log('Payload to send:', payload)
         if (initialData && initialData.id) {
           // EDITAR
           await axiosPrivate.put(
@@ -272,11 +299,27 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
     ].reduce((a, b) => Number(a) + Number(b), 0)
   }, [formik.values])
 
+  const tncImportanceScore = useMemo(() => {
+    return [
+      formik.values.resultValidity4_3,
+      formik.values.affectedServicesCount4_3,
+      formik.values.resultsDelivered4_3,
+      formik.values.regulatoryOrContractualImpact4_3,
+      formik.values.reputationRisk4_3
+    ].reduce((a, b) => Number(a) + Number(b), 0)
+  }, [formik.values])
+
   const impactWeight = useMemo(() => {
     if (impactScore >= 21) return 'Alta'
     if (impactScore >= 13) return 'Media'
     return 'Baja'
   }, [impactScore])
+
+  const tncImportanceWeight = useMemo(() => {
+    if (tncImportanceScore > 14) return 'Alta'
+    if (tncImportanceScore > 9) return 'Media'
+    return 'Baja'
+  }, [tncImportanceScore])
 
   const probability = useMemo(() => {
     if (formik.values.nonConformityOccurrences >= 5) return 'Alta'
@@ -359,7 +402,7 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                     fontSize: 18
                   }}
                 >
-                  Datos generales
+                  1. Datos generales
                 </Typography>
               </Grid>
               <Grid item xs={12} md={6}>
@@ -561,7 +604,7 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                     fontSize: 18
                   }}
                 >
-                  Servicio afectado
+                  2. Servicio afectado
                 </Typography>
               </Grid>
               <Grid item xs={12} md={6}>
@@ -571,6 +614,14 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                   name='serviceNumbers'
                   value={formik.values.serviceNumbers}
                   onChange={formik.handleChange}
+                  error={
+                    formik.touched.serviceNumbers &&
+                    Boolean(formik.errors.serviceNumbers)
+                  }
+                  helperText={
+                    formik.touched.serviceNumbers &&
+                    formik.errors.serviceNumbers
+                  }
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -580,6 +631,14 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                   name='affectedClients'
                   value={formik.values.affectedClients}
                   onChange={formik.handleChange}
+                  error={
+                    formik.touched.affectedClients &&
+                    Boolean(formik.errors.affectedClients)
+                  }
+                  helperText={
+                    formik.touched.affectedClients &&
+                    formik.errors.affectedClients
+                  }
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -589,6 +648,14 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                   name='involvedProcedure'
                   value={formik.values.involvedProcedure}
                   onChange={formik.handleChange}
+                  error={
+                    formik.touched.involvedProcedure &&
+                    Boolean(formik.errors.involvedProcedure)
+                  }
+                  helperText={
+                    formik.touched.involvedProcedure &&
+                    formik.errors.involvedProcedure
+                  }
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -598,12 +665,20 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                   name='resultsDelivered'
                   value={formik.values.resultsDelivered}
                   onChange={formik.handleChange}
+                  error={
+                    formik.touched.resultsDelivered &&
+                    Boolean(formik.errors.resultsDelivered)
+                  }
+                  helperText={
+                    formik.touched.resultsDelivered &&
+                    formik.errors.resultsDelivered
+                  }
                 />
               </Grid>
               <Grid item xs={12}>
                 <Divider sx={{ my: 3 }} />
               </Grid>
-              {/* Evaluación y análisis */}
+              {/* Analisis de Causa */}
               <Grid item xs={12}>
                 <Typography
                   variant='subtitle1'
@@ -615,48 +690,250 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                     fontSize: 18
                   }}
                 >
-                  Evaluación y análisis
+                  3. Analisis de Causa
                 </Typography>
               </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Resultados previos revisados'
-                  name='previousResultsReviewed'
-                  value={formik.values.previousResultsReviewed}
-                  onChange={formik.handleChange}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Certificados evaluados'
-                  name='evaluatedCertificates'
-                  value={formik.values.evaluatedCertificates}
-                  onChange={formik.handleChange}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='¿Se encontraron más afectaciones?'
-                  name='moreFindings'
-                  value={formik.values.moreFindings}
-                  onChange={formik.handleChange}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Acción sobre resultados previos'
-                  name='actionOnPreviousResults'
-                  value={formik.values.actionOnPreviousResults}
-                  onChange={formik.handleChange}
-                />
-              </Grid>
               <Grid item xs={12}>
-                <Divider sx={{ my: 3 }} />
+                <TextField
+                  fullWidth
+                  label='Analisis de causa'
+                  name='causeAnalysis'
+                  value={formik.values.causeAnalysis}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.causeAnalysis &&
+                    Boolean(formik.errors.causeAnalysis)
+                  }
+                  helperText={
+                    formik.touched.causeAnalysis && formik.errors.causeAnalysis
+                  }
+                  multiline
+                  minRows={2}
+                />
               </Grid>
+
+              {/* 4. Evaluación de la importancia del trabajo no conforme y análisis de resultados previos */}
+              <Grid item xs={12}>
+                <Typography
+                  variant='subtitle1'
+                  sx={{
+                    mb: 0,
+                    textAlign: 'center',
+                    color: 'secondary.main',
+                    fontWeight: 600,
+                    fontSize: 18
+                  }}
+                >
+                  4. Evaluación de la importancia del trabajo no conforme y
+                  análisis de resultados previos
+                </Typography>
+              </Grid>
+
+              {/* 4.1 Alcance */}
+              <Grid item xs={12}>
+                <Typography
+                  variant='subtitle2'
+                  sx={{
+                    mb: 1,
+                    textAlign: 'center',
+                    color: 'secondary.main',
+                    fontWeight: 600,
+                    fontSize: 18
+                  }}
+                >
+                  4.1 Alcance
+                </Typography>
+              </Grid>
+              <Grid item xs={12} md={12}>
+                <TextField
+                  fullWidth
+                  label='Identificación del período afectado por el trabajo no conforme'
+                  name='affectedPeriod'
+                  value={formik.values.affectedPeriod}
+                  onChange={formik.handleChange}
+                />
+              </Grid>
+              {/*  4.2 Verificación de registros */}
+              <Grid item xs={12}>
+                <Typography
+                  variant='subtitle2'
+                  sx={{
+                    mb: 1,
+                    textAlign: 'center',
+                    color: 'secondary.main',
+                    fontWeight: 600,
+                    fontSize: 18
+                  }}
+                >
+                  4.2 Verificación de registros
+                </Typography>
+              </Grid>
+              <Grid item xs={12} md={12}>
+                <TextField
+                  fullWidth
+                  label='Revisión de certificados emitidos durante el período afectado'
+                  name='certificateReview'
+                  value={formik.values.certificateReview}
+                  onChange={formik.handleChange}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={12}>
+                <TextField
+                  fullWidth
+                  label='Revisión de procedimientos, políticas o formatos'
+                  name='procedureReview'
+                  value={formik.values.procedureReview}
+                  onChange={formik.handleChange}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={12}>
+                <TextField
+                  fullWidth
+                  label='Revisión de registros del sistema de gestión (ambientales, hojas de trabajo, etc.)'
+                  name='recordReview'
+                  value={formik.values.recordReview}
+                  onChange={formik.handleChange}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={12}>
+                <TextField
+                  fullWidth
+                  label='Verificación del inventario metrológico afectado'
+                  name='metrologyInventoryCheck'
+                  value={formik.values.metrologyInventoryCheck}
+                  onChange={formik.handleChange}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={12}>
+                <TextField
+                  fullWidth
+                  label='Evaluación de la competencia del personal involucrado'
+                  name='personnelCompetenceEvaluation'
+                  value={formik.values.personnelCompetenceEvaluation}
+                  onChange={formik.handleChange}
+                />
+              </Grid>
+
+              {/*  4.3 Importancia del trabajo no conforme */}
+              <Grid item xs={12}>
+                <Typography
+                  variant='subtitle2'
+                  sx={{
+                    mb: 1,
+                    textAlign: 'center',
+                    color: 'secondary.main',
+                    fontWeight: 600,
+                    fontSize: 18
+                  }}
+                >
+                  4.3 Importancia del trabajo no conforme
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <TextField
+                  select
+                  fullWidth
+                  label='Afectación a la validez del resultado'
+                  name='resultValidity4_3'
+                  value={formik.values.resultValidity4_3}
+                  onChange={formik.handleChange}
+                  helperText='Hay o no afectación en la validez de los resultados'
+                >
+                  {[1, 5].map((opt) => (
+                    <MenuItem key={opt} value={opt}>
+                      {opt}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <TextField
+                  select
+                  fullWidth
+                  label='Número de servicios afectados'
+                  name='affectedServicesCount4_3'
+                  value={formik.values.affectedServicesCount4_3}
+                  onChange={formik.handleChange}
+                  helperText='5 o menos (1), 10 o menos (3), más de 10 (5)'
+                >
+                  {[1, 3, 5].map((opt) => (
+                    <MenuItem key={opt} value={opt}>
+                      {opt}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <TextField
+                  select
+                  fullWidth
+                  label='¿Resultados ya entregados?'
+                  name='resultsDelivered4_3'
+                  value={formik.values.resultsDelivered4_3}
+                  onChange={formik.handleChange}
+                  helperText='Se entregaron los resultados'
+                >
+                  {[1, 5].map((opt) => (
+                    <MenuItem key={opt} value={opt}>
+                      {opt}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <TextField
+                  select
+                  fullWidth
+                  label='Impacto normativo o contractual'
+                  name='regulatoryOrContractualImpact4_3'
+                  value={formik.values.regulatoryOrContractualImpact4_3}
+                  onChange={formik.handleChange}
+                  helperText='Hay impacto normativo o contractual'
+                >
+                  {[1, 5].map((opt) => (
+                    <MenuItem key={opt} value={opt}>
+                      {opt}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <TextField
+                  select
+                  fullWidth
+                  label='Riesgo a la reputación'
+                  name='reputationRisk4_3'
+                  value={formik.values.reputationRisk4_3}
+                  onChange={formik.handleChange}
+                  helperText='Hay riesgo en la reputación'
+                >
+                  {[1, 5].map((opt) => (
+                    <MenuItem key={opt} value={opt}>
+                      {opt}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Box mt={2} mb={2}>
+                  <Typography variant='body2' color='textSecondary'>
+                    Total: <b>{tncImportanceScore}</b> &nbsp; | &nbsp;
+                    Importancia del trabajo no conforme:{' '}
+                    <b>{tncImportanceWeight}</b>
+                  </Typography>
+                </Box>
+              </Grid>
+
               {/* Impacto */}
               <Grid item xs={12} mt={2}>
                 <Typography
@@ -669,7 +946,21 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                     fontSize: 18
                   }}
                 >
-                  Impacto
+                  5. Nivel de riesgo del trabajo no conforme
+                </Typography>
+              </Grid>
+              <Grid item xs={12} mt={2}>
+                <Typography
+                  variant='subtitle2'
+                  sx={{
+                    mb: 1,
+                    textAlign: 'center',
+                    color: 'secondary.main',
+                    fontWeight: 600,
+                    fontSize: 18
+                  }}
+                >
+                  5.1 Impacto
                 </Typography>
                 <Typography variant='body2' color='textSecondary' mb={2}>
                   Califique cada criterio según la descripción y la valoración
@@ -784,7 +1075,7 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                     fontSize: 18
                   }}
                 >
-                  Probabilidad
+                  5.2 Probabilidad
                 </Typography>
                 <Typography variant='body2' color='textSecondary' mb={2}>
                   Indique si se han presentado trabajos no conformes similares y
@@ -839,7 +1130,7 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                     fontSize: 18
                   }}
                 >
-                  Matriz de Riesgos
+                  5.3 Matriz de Riesgos
                 </Typography>
                 <Typography variant='body2' color='textSecondary' mb={2}>
                   El nivel de riesgo se calcula automáticamente según la matriz
@@ -915,7 +1206,7 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                     fontSize: 18
                   }}
                 >
-                  Acciones tomadas
+                  6. Acciones tomadas
                 </Typography>
                 <Typography variant='body2' color='textSecondary' mb={2}>
                   Indique las acciones inmediatas y correctivas aplicadas,
@@ -1052,7 +1343,7 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                     fontSize: 18
                   }}
                 >
-                  Comunicación
+                  7. Comunicación
                 </Typography>
               </Grid>
               <Grid item xs={12} md={6}>
@@ -1134,7 +1425,7 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                     fontSize: 18
                   }}
                 >
-                  Reanudación del trabajo
+                  8. Reanudación del trabajo
                 </Typography>
               </Grid>
               <Grid item xs={12} md={6}>
@@ -1207,7 +1498,7 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                     fontSize: 18
                   }}
                 >
-                  Cierre
+                  9. Cierre
                 </Typography>
               </Grid>
               <Grid item xs={12} md={6}>
@@ -1293,7 +1584,7 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                     fontSize: 18
                   }}
                 >
-                  Seguimiento
+                  10. Seguimiento
                 </Typography>
               </Grid>
               <Grid item xs={12} md={6}>
@@ -1324,6 +1615,11 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                 variant='contained'
                 color='primary'
                 disabled={formik.isSubmitting}
+                onClick={() => {
+                  formik.validateForm().then((errors) => {
+                    console.log('Formik errors:', errors)
+                  })
+                }}
               >
                 Guardar
               </Button>

@@ -8,18 +8,15 @@ import {
   RadioGroup,
   FormControlLabel,
   FormControl,
-  FormLabel,
   Checkbox,
   Button,
   Alert,
   Chip,
-  Divider,
-  Paper
+  Divider
 } from '@mui/material'
 import {
   CheckCircle as CheckIcon,
   Cancel as CancelIcon,
-  Help as HelpIcon,
   EmojiEvents as TrophyIcon
 } from '@mui/icons-material'
 

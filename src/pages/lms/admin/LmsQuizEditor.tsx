@@ -3,7 +3,6 @@ import {
   Box,
   Card,
   CardContent,
-  CardHeader,
   Typography,
   Button,
   TextField,
@@ -13,16 +12,12 @@ import {
   MenuItem,
   IconButton,
   List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
   Chip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Grid,
-  Divider,
   Alert,
   Switch,
   FormControlLabel
@@ -54,6 +49,17 @@ interface QuizEditorProps {
   onQuestionsChange: (questions: QuizQuestion[]) => void
 }
 
+// Tipo para el estado del formulario
+interface NewQuestionState {
+  question: string
+  type: 'true-false' | 'single-choice' | 'multiple-choice'
+  options: string[]
+  singleCorrectAnswer: number // Para true-false y single-choice
+  multipleCorrectAnswers: number[] // Para multiple-choice
+  explanation: string
+  points: number
+}
+
 const LmsQuizEditor: React.FC<QuizEditorProps> = ({
   questions,
   onQuestionsChange
@@ -62,11 +68,12 @@ const LmsQuizEditor: React.FC<QuizEditorProps> = ({
   const [editingQuestion, setEditingQuestion] = useState<QuizQuestion | null>(
     null
   )
-  const [newQuestion, setNewQuestion] = useState({
+  const [newQuestion, setNewQuestion] = useState<NewQuestionState>({
     question: '',
-    type: 'single-choice' as 'true-false' | 'single-choice' | 'multiple-choice',
+    type: 'single-choice',
     options: ['', '', '', ''],
-    correctAnswer: 0,
+    singleCorrectAnswer: 0,
+    multipleCorrectAnswers: [],
     explanation: '',
     points: 1
   })
@@ -74,12 +81,15 @@ const LmsQuizEditor: React.FC<QuizEditorProps> = ({
   const handleAddQuestion = () => {
     const question: QuizQuestion = {
       id: Date.now(),
-      ...newQuestion,
+      question: newQuestion.question,
+      type: newQuestion.type,
       options: newQuestion.options.filter((opt) => opt.trim() !== ''),
       correctAnswer:
         newQuestion.type === 'multiple-choice'
-          ? (newQuestion.correctAnswer as number[]) || []
-          : newQuestion.correctAnswer
+          ? newQuestion.multipleCorrectAnswers
+          : newQuestion.singleCorrectAnswer,
+      explanation: newQuestion.explanation || undefined,
+      points: newQuestion.points
     }
 
     onQuestionsChange([...questions, question])
@@ -93,9 +103,12 @@ const LmsQuizEditor: React.FC<QuizEditorProps> = ({
       question: question.question,
       type: question.type,
       options: [...question.options, '', '', '', ''].slice(0, 4),
-      correctAnswer: Array.isArray(question.correctAnswer)
-        ? question.correctAnswer[0] || 0
+      singleCorrectAnswer: Array.isArray(question.correctAnswer)
+        ? 0
         : question.correctAnswer,
+      multipleCorrectAnswers: Array.isArray(question.correctAnswer)
+        ? question.correctAnswer
+        : [],
       explanation: question.explanation || '',
       points: question.points
     })
@@ -107,12 +120,15 @@ const LmsQuizEditor: React.FC<QuizEditorProps> = ({
 
     const updatedQuestion: QuizQuestion = {
       ...editingQuestion,
-      ...newQuestion,
+      question: newQuestion.question,
+      type: newQuestion.type,
       options: newQuestion.options.filter((opt) => opt.trim() !== ''),
       correctAnswer:
         newQuestion.type === 'multiple-choice'
-          ? (newQuestion.correctAnswer as number[]) || []
-          : newQuestion.correctAnswer
+          ? newQuestion.multipleCorrectAnswers
+          : newQuestion.singleCorrectAnswer,
+      explanation: newQuestion.explanation || undefined,
+      points: newQuestion.points
     }
 
     onQuestionsChange(
@@ -137,8 +153,12 @@ const LmsQuizEditor: React.FC<QuizEditorProps> = ({
     setNewQuestion({ ...newQuestion, options: newOptions })
   }
 
-  const handleCorrectAnswerChange = (value: number | number[]) => {
-    setNewQuestion({ ...newQuestion, correctAnswer: value })
+  const handleSingleCorrectAnswerChange = (value: number) => {
+    setNewQuestion({ ...newQuestion, singleCorrectAnswer: value })
+  }
+
+  const handleMultipleCorrectAnswerChange = (value: number[]) => {
+    setNewQuestion({ ...newQuestion, multipleCorrectAnswers: value })
   }
 
   const resetForm = () => {
@@ -146,7 +166,8 @@ const LmsQuizEditor: React.FC<QuizEditorProps> = ({
       question: '',
       type: 'single-choice',
       options: ['', '', '', ''],
-      correctAnswer: 0,
+      singleCorrectAnswer: 0,
+      multipleCorrectAnswers: [],
       explanation: '',
       points: 1
     })
@@ -178,22 +199,6 @@ const LmsQuizEditor: React.FC<QuizEditorProps> = ({
     }
   }
 
-  const getCorrectAnswerText = (question: QuizQuestion) => {
-    if (question.type === 'true-false') {
-      return question.correctAnswer === 0 ? 'Falso' : 'Verdadero'
-    } else if (question.type === 'single-choice') {
-      return question.options[question.correctAnswer as number] || 'No definida'
-    } else if (question.type === 'multiple-choice') {
-      const correctAnswers = (question.correctAnswer as number[])
-        .map((index) => question.options[index])
-        .filter(Boolean)
-      return correctAnswers.length > 0
-        ? correctAnswers.join(', ')
-        : 'No definida'
-    }
-    return 'No definida'
-  }
-
   const validateForm = () => {
     if (!newQuestion.question.trim()) return false
     if (newQuestion.type === 'true-false') return true
@@ -201,15 +206,13 @@ const LmsQuizEditor: React.FC<QuizEditorProps> = ({
       return false
     if (newQuestion.type === 'single-choice') {
       return (
-        newQuestion.correctAnswer >= 0 &&
-        newQuestion.correctAnswer < newQuestion.options.length
+        newQuestion.singleCorrectAnswer >= 0 &&
+        newQuestion.singleCorrectAnswer <
+          newQuestion.options.filter((opt) => opt.trim() !== '').length
       )
     }
     if (newQuestion.type === 'multiple-choice') {
-      return (
-        Array.isArray(newQuestion.correctAnswer) &&
-        newQuestion.correctAnswer.length > 0
-      )
+      return newQuestion.multipleCorrectAnswers.length > 0
     }
     return false
   }
@@ -439,7 +442,8 @@ const LmsQuizEditor: React.FC<QuizEditorProps> = ({
                     setNewQuestion({
                       ...newQuestion,
                       type,
-                      correctAnswer: type === 'multiple-choice' ? [] : 0,
+                      singleCorrectAnswer: 0,
+                      multipleCorrectAnswers: [],
                       options:
                         type === 'true-false'
                           ? ['Falso', 'Verdadero']
@@ -499,14 +503,18 @@ const LmsQuizEditor: React.FC<QuizEditorProps> = ({
                   <FormControlLabel
                     control={
                       <Switch
-                        checked={newQuestion.correctAnswer === 1}
+                        checked={newQuestion.singleCorrectAnswer === 1}
                         onChange={(e) =>
-                          handleCorrectAnswerChange(e.target.checked ? 1 : 0)
+                          handleSingleCorrectAnswerChange(
+                            e.target.checked ? 1 : 0
+                          )
                         }
                       />
                     }
                     label={
-                      newQuestion.correctAnswer === 1 ? 'Verdadero' : 'Falso'
+                      newQuestion.singleCorrectAnswer === 1
+                        ? 'Verdadero'
+                        : 'Falso'
                     }
                   />
                 </FormControl>
@@ -520,9 +528,9 @@ const LmsQuizEditor: React.FC<QuizEditorProps> = ({
                 </Typography>
                 <FormControl fullWidth>
                   <Select
-                    value={newQuestion.correctAnswer}
+                    value={newQuestion.singleCorrectAnswer}
                     onChange={(e) =>
-                      handleCorrectAnswerChange(e.target.value as number)
+                      handleSingleCorrectAnswerChange(e.target.value as number)
                     }
                   >
                     {newQuestion.options.map((option, index) => (
@@ -549,16 +557,16 @@ const LmsQuizEditor: React.FC<QuizEditorProps> = ({
                     key={index}
                     control={
                       <Switch
-                        checked={(
-                          newQuestion.correctAnswer as number[]
-                        ).includes(index)}
+                        checked={newQuestion.multipleCorrectAnswers.includes(
+                          index
+                        )}
                         onChange={(e) => {
                           const currentAnswers =
-                            newQuestion.correctAnswer as number[]
+                            newQuestion.multipleCorrectAnswers
                           const newAnswers = e.target.checked
                             ? [...currentAnswers, index]
                             : currentAnswers.filter((i) => i !== index)
-                          handleCorrectAnswerChange(newAnswers)
+                          handleMultipleCorrectAnswerChange(newAnswers)
                         }}
                         disabled={!option.trim()}
                       />

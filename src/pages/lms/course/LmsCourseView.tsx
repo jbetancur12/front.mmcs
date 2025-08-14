@@ -15,15 +15,10 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Avatar,
-  Divider,
-  Alert,
   IconButton
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
-  PlayArrow as PlayIcon,
-  Pause as PauseIcon,
   SkipNext as SkipNextIcon,
   SkipPrevious as SkipPreviousIcon,
   CheckCircle as CheckIcon,
@@ -32,11 +27,9 @@ import {
   VideoLibrary as VideoIcon,
   Quiz as QuizIcon,
   Schedule as ScheduleIcon,
-  People as PeopleIcon,
-  Star as StarIcon
+  People as PeopleIcon
 } from '@mui/icons-material'
 import { useQuery } from 'react-query'
-import useAxiosPrivate from '@utils/use-axios-private'
 import { useStore } from '@nanostores/react'
 import { userStore } from 'src/store/userStore'
 import LmsQuizComponent from '../components/LmsQuizComponent'
@@ -76,10 +69,7 @@ const LmsCourseView: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
   const [currentUnit, setCurrentUnit] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [showCertificate, setShowCertificate] = useState(false)
 
-  const axiosPrivate = useAxiosPrivate()
   const storeUser = useStore(userStore)
 
   // Mock data para el curso
@@ -392,7 +382,7 @@ let esEstudiante = true;
                     variant='contained'
                     color='success'
                     startIcon={<CheckIcon />}
-                    onClick={() => setShowCertificate(true)}
+                    // onClick={() => setShowCertificate(true)}
                   >
                     Obtener Certificado
                   </Button>

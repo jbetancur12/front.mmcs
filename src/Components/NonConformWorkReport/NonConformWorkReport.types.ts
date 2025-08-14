@@ -29,6 +29,23 @@ export interface NonConformWorkReport {
   moreFindings?: 'Yes' | 'No'
   actionOnPreviousResults?: string
 
+  resultValidity4_3: number
+  affectedServicesCount4_3: number
+  resultsDelivered4_3: number
+  regulatoryOrContractualImpact4_3: number
+  reputationRisk4_3: number
+  tncImportanceScore?: number
+  tncImportanceWeight?: ImpactWeight
+
+  causeAnalysis?: string
+
+  affectedPeriod?: string
+  certificateReview?: string
+  procedureReview?: string
+  recordReview?: string
+  metrologyInventoryCheck?: string
+  personnelCompetenceEvaluation?: string
+
   resultValidity: number
   affectedServicesCount: number
   clientResultsDelivery: number

@@ -15,16 +15,12 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Avatar,
-  Divider,
   Alert,
   IconButton,
   Paper
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
-  PlayArrow as PlayIcon,
-  Pause as PauseIcon,
   SkipNext as SkipNextIcon,
   SkipPrevious as SkipPreviousIcon,
   CheckCircle as CheckIcon,
@@ -34,13 +30,10 @@ import {
   Quiz as QuizIcon,
   Schedule as ScheduleIcon,
   People as PeopleIcon,
-  Star as StarIcon,
   Edit as EditIcon,
-  Visibility as ViewIcon,
-  Settings as SettingsIcon
+  Visibility as ViewIcon
 } from '@mui/icons-material'
 import { useQuery } from 'react-query'
-import useAxiosPrivate from '@utils/use-axios-private'
 import { useStore } from '@nanostores/react'
 import { userStore } from 'src/store/userStore'
 import LmsQuizComponent from '../components/LmsQuizComponent'
@@ -81,10 +74,9 @@ const LmsCoursePreview: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
   const [currentUnit, setCurrentUnit] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
+
   const [previewMode, setPreviewMode] = useState<'student' | 'admin'>('student')
 
-  const axiosPrivate = useAxiosPrivate()
   const storeUser = useStore(userStore)
 
   // Mock data para el curso

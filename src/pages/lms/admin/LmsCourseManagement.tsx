@@ -2,9 +2,6 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
-  Card,
-  CardContent,
-  CardHeader,
   Typography,
   Button,
   Grid,
@@ -22,10 +19,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Switch,
   FormControlLabel
 } from '@mui/material'
@@ -33,10 +26,6 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Visibility as VisibilityIcon,
-  MenuBook as BookOpenIcon,
-  Person as PersonIcon,
-  Schedule as ScheduleIcon,
   EditNote as EditContentIcon
 } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from 'react-query'

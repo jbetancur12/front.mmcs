@@ -13,24 +13,14 @@ import {
   Tab,
   Paper,
   Chip,
-  Avatar,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Divider
+  Avatar
 } from '@mui/material'
 import {
   MenuBook as BookOpenIcon,
-  PlayCircle as PlayCircleIcon,
   CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
   TrendingUp as TrendingUpIcon,
-  Assignment as AssignmentIcon,
-  Quiz as QuizIcon,
-  Logout as LogoutIcon,
-  Person as PersonIcon,
-  Star as StarIcon
+  Logout as LogoutIcon
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@nanostores/react'
@@ -128,7 +118,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     navigate('/')
   }
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)
   }
 

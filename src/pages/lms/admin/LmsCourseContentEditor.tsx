@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -26,8 +26,7 @@ import {
   Tabs,
   Tab,
   Chip,
-  Divider,
-  Alert
+  Divider
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
@@ -37,8 +36,7 @@ import {
   PlayArrow as PlayIcon,
   Description as TextIcon,
   Quiz as QuizIcon,
-  Save as SaveIcon,
-  DragIndicator as DragIcon
+  Save as SaveIcon
 } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -399,7 +397,7 @@ let esEstudiante = true;
             />
             <CardContent>
               <List>
-                {course.units.map((unit, index) => (
+                {course.units.map((unit) => (
                   <ListItem
                     key={unit.id}
                     button
@@ -497,7 +495,7 @@ let esEstudiante = true;
               <CardContent>
                 <Tabs
                   value={activeTab}
-                  onChange={(e, newValue) => setActiveTab(newValue)}
+                  onChange={(_e, newValue) => setActiveTab(newValue)}
                 >
                   <Tab label='Información Básica' />
                   <Tab label='Contenido' />
