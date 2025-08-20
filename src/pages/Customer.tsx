@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import TableUsersCustomer from '../Components/TableUsersCustomer'
 
@@ -10,10 +10,13 @@ import { bigToast } from '../Components/ExcelManipulation/Utils'
 import Headquarters from '../Components/Headquarters'
 import {
   Box,
+  Button,
   CircularProgress,
   Divider,
   IconButton,
   InputAdornment,
+  Menu,
+  MenuItem,
   Paper,
   TextField,
   Typography
@@ -21,13 +24,12 @@ import {
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
 import CalibrationTimeline from '../Components/CalibrationTimeline'
-import { ArrowBack, Clear } from '@mui/icons-material'
+import { ArrowBack, Clear, Download } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useQuery, useQueryClient } from 'react-query'
 import Modules from 'src/Components/Modules'
 
 // API URL
-
 const minioUrl = import.meta.env.VITE_MINIO_URL
 
 interface UserData {
@@ -53,13 +55,71 @@ type Tab =
   | 'calibrationTimeLine'
   | 'modules'
 
-function UserProfile() {
+const exportToCSV = (data: Certificate[], customerName: string = '') => {
+  if (data.length === 0) {
+    alert('No hay datos para exportar')
+    return
+  }
+
+  // Definir las cabeceras del CSV
+  const headers = [
+    'Sede',
+    'Nombre del Equipo',
+    'Activo Fijo',
+    'Serie',
+    'Fecha de Calibración',
+    'Próxima Calibración'
+  ]
+
+  // Convertir los datos a formato CSV
+  const csvContent = [
+    headers.join(','), // Cabeceras
+    ...data.map((cert) =>
+      [
+        `"${cert.headquarter || ''}"`,
+        `"${cert.device?.name || ''}"`,
+        `"${cert.activoFijo || ''}"`,
+        `"${cert.serie || ''}"`,
+        cert.calibrationDate
+          ? new Date(cert.calibrationDate).toLocaleDateString('es-ES')
+          : '',
+        cert.nextCalibrationDate
+          ? new Date(cert.nextCalibrationDate).toLocaleDateString('es-ES')
+          : ''
+      ].join(',')
+    )
+  ].join('\n')
+
+  const BOM = '\uFEFF'
+  const csvWithBOM = BOM + csvContent
+
+  // Crear y descargar el archivo
+  const blob = new Blob([csvWithBOM], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  const url = URL.createObjectURL(blob)
+
+  link.setAttribute('href', url)
+  link.setAttribute(
+    'download',
+    `inventario_equipos_${customerName || 'cliente'}_${new Date().toISOString().split('T')[0]}.csv`
+  )
+  link.style.visibility = 'hidden'
+
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+
+  URL.revokeObjectURL(url)
+}
+
+function UserProfile(): React.JSX.Element {
   const [searchParams, setSearchParams] = useSearchParams()
   const axiosPrivate = useAxiosPrivate()
-  const { id } = useParams()
+  const { id } = useParams<{ id: string }>()
   const $userStore = useStore(userStore)
   const navigate = useNavigate()
-  const queryClient = useQueryClient() // Initialize query client
+  const queryClient = useQueryClient()
+
   const [customerData, setCustomerData] = useState<UserData>({
     nombre: '',
     email: '',
@@ -88,114 +148,249 @@ function UserProfile() {
   const [hasPermission, setHasPermission] = useState(false)
   const [loading, setLoading] = useState(true)
   const [selectedSede, setSelectedSede] = useState<string | null>('')
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [isDownloading, setIsDownloading] = useState(false)
 
   // Fetch customer data
   useQuery<UserData>(
     ['customer-data', id],
     async () => {
+      if (!id) throw new Error('No customer ID provided')
       const response = await axiosPrivate.get(`/customers/${id}`)
       return response.data
     },
     {
+      enabled: !!id,
       onSuccess: (data) => {
         setCustomerData(data)
+        if (data.avatar) {
+          setImage(`${minioUrl}/images/${data.avatar}`)
+        }
       }
     }
   )
 
-  // Fetch certificates data using useQuery
+  // Fetch certificates data using useQuery (paginado)
   const { data: apiResponse, refetch } = useQuery<ApiResponse>(
     ['certificates-data', id, searchTerm, currentPage],
     async () => {
+      if (!id) throw new Error('No customer ID provided')
       const response = await axiosPrivate.get(`/files/customer/${id}`, {
         params: { search: searchTerm, page: currentPage }
       })
       return response.data
+    },
+    {
+      enabled: !!id
     }
   )
 
   const certificatesData = apiResponse?.files || []
 
-  // Aquí puedes usar el valor de 'id' para cargar los detalles del cliente correspondiente
-  // por ejemplo, hacer una solicitud a la API o acceder a tus datos.
+  // Función para obtener todos los datos para descarga
+  const fetchAllDataForDownload = useCallback(
+    async (filterType: 'all' | 'nextOrExpired') => {
+      if (!id) throw new Error('No customer ID provided')
+      const params: Record<string, unknown> = { all: true }
+      if (filterType === 'nextOrExpired') params.filter = 'nextOrExpired'
+      const response = await axiosPrivate.get(`/files/customer/${id}`, {
+        params
+      })
+      return response.data.files || []
+    },
+    [axiosPrivate, id]
+  )
 
-  const getuserInfo = async () => {
-    const response = await axiosPrivate.get(`/customers/${id}`, {})
-    if (response.status === 200) {
-      setCustomerData(response.data)
-      setImage(minioUrl + '/images/' + response.data.avatar)
-    }
-  }
-
-  const handleDelete = async (id: number) => {
-    const isConfirmed = window.confirm(
-      '¿Estás seguro de que deseas eliminar este certificado? Esta acción no se puede deshacer.'
-    )
-
-    if (!isConfirmed) {
-      return
-    }
-
-    try {
-      const response = await axiosPrivate.delete(`/files/${id}`)
-
-      if (response.status >= 200 && response.status < 300) {
-        bigToast('Certificado eliminado con éxito', 'success')
-        refetch()
-        // Invalidate and refetch the certificates query to update the UI
-        queryClient.invalidateQueries(['certificates-data', id])
-      }
-    } catch (error) {
-      console.error('Error al eliminar el certificado:', error)
-      bigToast('Error al eliminar el certificado', 'error')
-    }
-  }
-
-  const handleImageChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const newImage = event.target.files?.[0]
-    // Aquí puedes implementar la lógica para cargar la imagen al servidor y actualizarla en la base de datos
-    // También puedes utilizar librerías como axios para hacer la solicitud HTTP
-    if (newImage) {
-      setImage(URL.createObjectURL(newImage))
-      const formData = new FormData()
-      formData.append('file', newImage as Blob)
-      formData.append(
-        'customerId',
-        id !== undefined && typeof id === 'string' ? id : ''
+  const handleDelete = useCallback(
+    async (certificateId: number) => {
+      const isConfirmed = window.confirm(
+        '¿Estás seguro de que deseas eliminar este certificado? Esta acción no se puede deshacer.'
       )
 
+      if (!isConfirmed) {
+        return
+      }
+
       try {
-        // Enviar la imagen al backend Express
-        await axiosPrivate.post(`/customers/avatar`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
+        const response = await axiosPrivate.delete(`/files/${certificateId}`)
+
+        if (response.status >= 200 && response.status < 300) {
+          bigToast('Certificado eliminado con éxito', 'success')
+          await refetch()
+          // Invalidate and refetch the certificates query to update the UI
+          queryClient.invalidateQueries(['certificates-data', id])
+        }
+      } catch (error) {
+        console.error('Error al eliminar el certificado:', error)
+        bigToast('Error al eliminar el certificado', 'error')
+      }
+    },
+    [axiosPrivate, refetch, queryClient, id]
+  )
+
+  const handleImageChange = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const newImage = event.target.files?.[0]
+
+      if (newImage && id) {
+        setImage(URL.createObjectURL(newImage))
+        const formData = new FormData()
+        formData.append('file', newImage as Blob)
+        formData.append('customerId', id)
+
+        try {
+          await axiosPrivate.post(`/customers/avatar`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          })
+        } catch (error) {
+          console.error('Error al enviar la imagen al backend:', error)
+          setImage('/images/pngaaa.com-4811116.png')
+        }
+      } else {
+        setImage('/images/pngaaa.com-4811116.png')
+      }
+    },
+    [axiosPrivate, id]
+  )
+
+  const handleAddSede = useCallback(
+    async (newSede: string) => {
+      if (!id) return
+
+      try {
+        const response = await axiosPrivate.post(`/customers/${id}/sedes`, {
+          nuevaSede: newSede
         })
 
-        // Actualizar la imagen en el estado local
+        if (response.status === 200) {
+          bigToast('Sede agregada con éxito', 'success')
+          setCustomerData((prev) => ({
+            ...prev,
+            sede: [...prev.sede, newSede]
+          }))
+        }
       } catch (error) {
-        console.error('Error al enviar la imagen al backend:', error)
+        console.error('Error al agregar sede:', error)
+        bigToast('Error al agregar sede', 'error')
       }
-    } else {
-      setImage('/images/pngaaa.com-4811116.png')
+    },
+    [axiosPrivate, id]
+  )
+
+  const handlePageChange = useCallback(
+    (direction: 'prev' | 'next') => {
+      if (direction === 'prev' && currentPage > 1) {
+        setCurrentPage((prev) => prev - 1)
+      } else if (
+        direction === 'next' &&
+        apiResponse &&
+        currentPage < apiResponse.totalPages
+      ) {
+        setCurrentPage((prev) => prev + 1)
+      }
+    },
+    [currentPage, apiResponse]
+  )
+
+  const handleTabChange = useCallback(
+    (tab: Tab) => {
+      const newSearchParams = new URLSearchParams(searchParams)
+      newSearchParams.set('tab', tab)
+      setSearchParams(newSearchParams)
+      setActiveTab(tab)
+    },
+    [searchParams, setSearchParams]
+  )
+
+  const handleEditSede = useCallback(
+    async (oldSede: string, newSede: string) => {
+      if (!id) return
+
+      try {
+        const response = await axiosPrivate.put(`/customers/${id}/sedes`, {
+          oldSede,
+          newSede
+        })
+
+        if (response.status === 200) {
+          bigToast('Sede actualizada con éxito', 'success')
+          setCustomerData((prevData) => ({
+            ...prevData,
+            sede: prevData.sede.map((sede) =>
+              sede === oldSede ? newSede : sede
+            )
+          }))
+        }
+      } catch (error) {
+        console.error('Error al actualizar sede:', error)
+        bigToast('Error al actualizar sede', 'error')
+      }
+    },
+    [axiosPrivate, id]
+  )
+
+  const clearSearch = useCallback(() => {
+    setSearchTerm('')
+    setCurrentPage(1)
+  }, [])
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchTerm(value)
+    setCurrentPage(1)
+  }, [])
+
+  const handleDownloadMenuClick = (
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    setAnchorEl(event.currentTarget)
+  }
+
+  const handleMenuClose = () => {
+    setAnchorEl(null)
+  }
+
+  const handleDownloadOption = async (type: 'all' | 'nextOrExpired') => {
+    setAnchorEl(null)
+    setIsDownloading(true)
+    try {
+      const allData = await fetchAllDataForDownload(
+        type === 'all' ? 'all' : 'nextOrExpired'
+      )
+
+      if (allData.length === 0) {
+        bigToast('No hay datos para exportar', 'info')
+      } else {
+        exportToCSV(allData, customerData.nombre)
+        bigToast('Archivo CSV descargado exitosamente', 'success')
+      }
+    } catch (error) {
+      console.error('Error al descargar CSV:', error)
+      bigToast('Error al descargar el archivo CSV', 'error')
+    } finally {
+      setIsDownloading(false)
     }
   }
 
+  // Update search params when search term changes
   useEffect(() => {
     if (searchTerm) {
-      setSearchParams({ query: searchTerm })
+      setSearchParams((prev) => {
+        const newParams = new URLSearchParams(prev)
+        newParams.set('query', searchTerm)
+        return newParams
+      })
     } else {
-      searchParams.delete('query')
-      setSearchParams(searchParams)
+      setSearchParams((prev) => {
+        const newParams = new URLSearchParams(prev)
+        newParams.delete('query')
+        return newParams
+      })
     }
-  }, [searchTerm])
+  }, [searchTerm, setSearchParams])
 
-  useEffect(() => {
-    getuserInfo()
-  }, [])
-
+  // Permission check
   useEffect(() => {
     const checkPermission = async () => {
       try {
@@ -203,85 +398,32 @@ function UserProfile() {
           $userStore.rol.some((role) =>
             ['admin', 'metrologist'].includes(role)
           ) ||
-          id === $userStore.customer.id + ''
+          id === String($userStore.customer.id)
         ) {
           setHasPermission(true)
         } else {
           setHasPermission(false)
-
-          navigate(-1) // Redirige a una página de acceso denegado o similar
+          navigate(-1)
         }
       } catch (error) {
-        navigate(-1) // Redirige en caso de error
+        navigate(-1)
       } finally {
         setLoading(false)
       }
     }
 
-    checkPermission()
+    if (id) {
+      checkPermission()
+    }
+
     return () => {
       setLoading(true)
     }
   }, [id, $userStore.rol, $userStore.customer, navigate])
 
-  const handleAddSede = async (newSede: string) => {
-    try {
-      const response = await axiosPrivate.post(`/customers/${id}/sedes`, {
-        nuevaSede: newSede
-      })
-
-      if (response.status === 200) {
-        bigToast('Sede agregada con éxito', 'success')
-        setCustomerData({
-          ...customerData,
-          sede: [...customerData.sede, newSede]
-        })
-      }
-    } catch (error) {
-      console.error('Error al agregar sede:', error)
-    }
-  }
-
-  const handlePageChange = (direction: string) => {
-    if (direction === 'prev' && currentPage > 1) {
-      setCurrentPage(currentPage - 1)
-    } else if (
-      direction === 'next' &&
-      apiResponse &&
-      currentPage < apiResponse?.totalPages
-    ) {
-      setCurrentPage(currentPage + 1)
-    }
-  }
-
-  const handleTabChange = (tab: Tab) => {
-    const newSearchParams = new URLSearchParams(searchParams)
-    newSearchParams.set('tab', tab)
-    setSearchParams(newSearchParams)
-    setActiveTab(tab)
-  }
-
-  const handleEditSede = async (oldSede: string, newSede: string) => {
-    try {
-      // Llama a la API para actualizar la sede (ajusta la URL y payload según tu backend)
-      const response = await axiosPrivate.put(`/customers/${id}/sedes`, {
-        oldSede,
-        newSede
-      })
-
-      if (response.status === 200) {
-        bigToast('Sede actualizada con éxito', 'success')
-        // Actualiza el estado local, reemplazando la sede antigua por la nueva
-        setCustomerData((prevData) => ({
-          ...prevData,
-          sede: prevData.sede.map((sede) => (sede === oldSede ? newSede : sede))
-        }))
-      }
-    } catch (error) {
-      console.error('Error al actualizar sede:', error)
-      bigToast('Error al actualizar sede', 'error')
-    }
-  }
+  const isAdmin = $userStore.rol.some((role) =>
+    ['admin', 'metrologist'].includes(role)
+  )
 
   if (loading) {
     return <Typography variant='h6'>Cargando...</Typography>
@@ -296,13 +438,14 @@ function UserProfile() {
       <IconButton onClick={() => navigate('/customers')} sx={{ mb: 2 }}>
         <ArrowBack />
       </IconButton>
+
       <div className='bg-white shadow-md rounded-lg p-8 max-w-md mx-auto mt-4'>
         <div className='text-center'>
           <div className='flex flex-col justify-center'>
             <label htmlFor='imageInput'>
               <img
-                src={image} // Reemplaza con la URL de la imagen del usuario
-                alt={`${customerData.nombre}`}
+                src={image}
+                alt={`Avatar de ${customerData.nombre}`}
                 className='w-24 h-24 rounded-full mx-auto cursor-pointer'
               />
             </label>
@@ -317,8 +460,7 @@ function UserProfile() {
           <h2 className='text-2xl font-semibold mt-4'>{customerData.nombre}</h2>
         </div>
 
-        <div className='mt-6 '>
-          {/* <h3 className="text-xl font-semibold">Información del usuario</h3> */}
+        <div className='mt-6'>
           <ul className='mt-3'>
             <li className='flex items-center text-gray-700'>
               <svg
@@ -326,6 +468,7 @@ function UserProfile() {
                 xmlns='http://www.w3.org/2000/svg'
                 height='1em'
                 viewBox='0 0 512 512'
+                aria-hidden='true'
               >
                 <path d='M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4c0-26.5-21.5-48-48-48H48zM0 176V384c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V176L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z' />
               </svg>
@@ -337,6 +480,7 @@ function UserProfile() {
                 xmlns='http://www.w3.org/2000/svg'
                 height='1em'
                 viewBox='0 0 512 512'
+                aria-hidden='true'
               >
                 <path d='M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z' />
               </svg>
@@ -346,31 +490,24 @@ function UserProfile() {
         </div>
       </div>
 
-      <ul className='flex flex-wrap text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:border-gray-700 dark:text-gray-400 mt-8 '>
+      <ul className='flex flex-wrap text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:border-gray-700 dark:text-gray-400 mt-8'>
         <li className='-mb-px mr-1'>
-          <a
-            href='#'
-            onClick={(e) => {
-              e.preventDefault()
-              handleTabChange('certificates')
-            }}
+          <button
+            type='button'
+            onClick={() => handleTabChange('certificates')}
             className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
               activeTab === 'certificates'
                 ? 'border-l border-t border-r rounded-t'
                 : 'text-blue-500 hover:text-blue-800'
             }`}
-            // aria-current={activeTab === "certificates" ? "page" : undefined}
           >
             Equipos
-          </a>
+          </button>
         </li>
         <li className='mr-1'>
-          <a
-            href='#'
-            onClick={(e) => {
-              e.preventDefault()
-              handleTabChange('headquarters')
-            }}
+          <button
+            type='button'
+            onClick={() => handleTabChange('headquarters')}
             className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
               activeTab === 'headquarters'
                 ? 'border-l border-t border-r rounded-t'
@@ -378,35 +515,27 @@ function UserProfile() {
             }`}
           >
             Sedes
-          </a>
+          </button>
         </li>
         <li className='mr-1'>
-          <a
-            href='#'
-            onClick={(e) => {
-              e.preventDefault()
-              handleTabChange('calibrationTimeLine')
-            }}
+          <button
+            type='button'
+            onClick={() => handleTabChange('calibrationTimeLine')}
             className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
-              activeTab === 'headquarters'
+              activeTab === 'calibrationTimeLine'
                 ? 'border-l border-t border-r rounded-t'
                 : 'text-blue-500 hover:text-blue-800'
             }`}
           >
             Programación
-          </a>
+          </button>
         </li>
-        {$userStore.rol.some((role) =>
-          ['admin', 'metrologist'].includes(role)
-        ) && (
+        {isAdmin && (
           <>
             <li className='mr-1'>
-              <a
-                href='#'
-                onClick={(e) => {
-                  e.preventDefault()
-                  handleTabChange('users')
-                }}
+              <button
+                type='button'
+                onClick={() => handleTabChange('users')}
                 className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
                   activeTab === 'users'
                     ? 'border-l border-t border-r rounded-t'
@@ -414,15 +543,12 @@ function UserProfile() {
                 }`}
               >
                 Usuarios
-              </a>
+              </button>
             </li>
             <li>
-              <a
-                href='#'
-                onClick={(e) => {
-                  e.preventDefault()
-                  handleTabChange('modules')
-                }}
+              <button
+                type='button'
+                onClick={() => handleTabChange('modules')}
                 className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
                   activeTab === 'modules'
                     ? 'border-l border-t border-r rounded-t'
@@ -430,54 +556,79 @@ function UserProfile() {
                 }`}
               >
                 Modulos
-              </a>
+              </button>
             </li>
           </>
         )}
       </ul>
+
       {activeTab === 'certificates' && (
         <Paper elevation={3} sx={{ p: 2 }}>
-          <TextField
-            sx={{ width: '90%', mb: 2 }}
-            variant='outlined'
-            placeholder='Buscar Equipo(s)...'
-            fullWidth
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value)
-              setCurrentPage(1)
-            }}
-            InputProps={{
-              endAdornment: searchTerm && (
-                <InputAdornment position='end'>
-                  <IconButton
-                    aria-label='clear search'
-                    onClick={() => setSearchTerm('')}
-                    edge='end'
-                  >
-                    <Clear />
-                  </IconButton>
-                </InputAdornment>
-              )
-            }}
-          />
+          <Box display='flex' gap={2} alignItems='center' mb={2}>
+            <TextField
+              sx={{ flexGrow: 1 }}
+              variant='outlined'
+              placeholder='Buscar Equipo(s)...'
+              value={searchTerm}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              InputProps={{
+                endAdornment: searchTerm && (
+                  <InputAdornment position='end'>
+                    <IconButton
+                      aria-label='limpiar búsqueda'
+                      onClick={clearSearch}
+                      edge='end'
+                    >
+                      <Clear />
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
+            />
+
+            <Box display='flex' gap={1} alignItems='center'>
+              <Button
+                variant='outlined'
+                startIcon={
+                  isDownloading ? <CircularProgress size={16} /> : <Download />
+                }
+                onClick={handleDownloadMenuClick}
+                disabled={isDownloading}
+                size='small'
+              >
+                Descargar CSV
+              </Button>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+              >
+                <MenuItem onClick={() => handleDownloadOption('all')}>
+                  Todos los equipos
+                </MenuItem>
+                <MenuItem onClick={() => handleDownloadOption('nextOrExpired')}>
+                  Próximos a vencer / Vencidos
+                </MenuItem>
+              </Menu>
+            </Box>
+          </Box>
 
           <Typography variant='subtitle2' gutterBottom>
-            Total Equipos: {apiResponse?.totalFiles}
+            Total Equipos: {apiResponse?.totalFiles || 0}
           </Typography>
           {apiResponse && searchTerm && apiResponse?.totalFiles > 0 && (
             <Typography variant='subtitle2' gutterBottom>
-              Resultados por : {apiResponse?.foundFields.join(', ')}
+              Resultados por: {apiResponse?.foundFields.join(', ')}
             </Typography>
           )}
           <Divider />
-          {false ? (
+
+          {!apiResponse ? (
             <Box
               display='flex'
               justifyContent='center'
               alignItems='center'
               mt={2}
-              // height='100vh'
               flexDirection='column'
             >
               <CircularProgress />
@@ -503,6 +654,7 @@ function UserProfile() {
               )}
               <div className='flex justify-between items-center p-4'>
                 <button
+                  type='button'
                   onClick={() => handlePageChange('prev')}
                   disabled={currentPage === 1}
                   className='bg-gray-300 text-gray-700 px-4 py-2 rounded disabled:opacity-50'
@@ -511,12 +663,13 @@ function UserProfile() {
                 </button>
                 <div className='text-center'>
                   <p className='text-lg font-semibold'>
-                    Página {currentPage} de {apiResponse?.totalPages}
+                    Página {currentPage} de {apiResponse?.totalPages || 1}
                   </p>
                 </div>
                 <button
+                  type='button'
                   onClick={() => handlePageChange('next')}
-                  disabled={currentPage === apiResponse?.totalPages}
+                  disabled={currentPage === (apiResponse?.totalPages || 1)}
                   className='bg-gray-300 text-gray-700 px-4 py-2 rounded disabled:opacity-50'
                 >
                   Siguiente
@@ -526,6 +679,7 @@ function UserProfile() {
           )}
         </Paper>
       )}
+
       {activeTab === 'users' && <TableUsersCustomer />}
       {activeTab === 'headquarters' && (
         <Headquarters
@@ -537,10 +691,10 @@ function UserProfile() {
           onEditSede={handleEditSede}
         />
       )}
-      {activeTab === 'calibrationTimeLine' && (
+      {activeTab === 'calibrationTimeLine' && id && (
         <CalibrationTimeline customerId={id} />
       )}
-      {activeTab === 'modules' && <Modules customerId={id} />}
+      {activeTab === 'modules' && id && <Modules customerId={id} />}
     </div>
   )
 }

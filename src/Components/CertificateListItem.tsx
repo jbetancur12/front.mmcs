@@ -1,3 +1,4 @@
+import React from 'react'
 import { Link } from 'react-router-dom'
 import { userStore } from '../store/userStore'
 import { useStore } from '@nanostores/react'
@@ -81,7 +82,10 @@ export const CertificateListItem: React.FC<CertificateListItemProps> = ({
         setSelectedCertificate(response.data)
         handleModalClose()
       }
-    } catch (error) {}
+    } catch (error) {
+      bigToast('Error al actualizar la sede', 'error')
+      console.error('Error updating headquarter:', error)
+    }
   }
 
   if (!selectedCertificate) return null
