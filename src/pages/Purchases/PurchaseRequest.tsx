@@ -50,7 +50,6 @@ const PurchaseRequest: React.FC = () => {
   )
 
   const purchaseRequests = data?.purchaseRequests ?? []
-  console.log('PurchaseRequestsTable loaded', purchaseRequests)
   const totalRecords = data?.count ?? 0
 
   const [modalOpen, setModalOpen] = useState(false)
@@ -141,6 +140,12 @@ const PurchaseRequest: React.FC = () => {
     { accessorKey: 'purchaseCode', header: 'Código' },
     { accessorKey: 'elaborationDate', header: 'Fecha de Elaboración' },
     { accessorKey: 'applicantName', header: 'Nombre del Solicitante' },
+    {
+      accessorKey: 'purchaseType',
+      header: 'Tipo',
+      filterVariant: 'select',
+      filterSelectOptions: ['I', 'II']
+    }, // <-- Solo muestra coincidencias exactas
     // En tu archivo de columnas
     {
       accessorKey: 'status',
@@ -237,17 +242,17 @@ const PurchaseRequest: React.FC = () => {
         const date = cell.getValue() as string
         return date ? format(new Date(date), 'dd/MM/yyyy') : 'N/A'
       }
-    },
-    {
-      accessorKey: 'approver.nombre',
-      header: 'Aprobado por',
-      Cell: ({ cell }) => {
-        const approver = cell.row.original.approver
-        const approverName =
-          approver && approver.nombre ? approver.nombre : 'N/A'
-        return approverName
-      }
     }
+    // {
+    //   accessorKey: 'approver.nombre',
+    //   header: 'Aprobado por',
+    //   Cell: ({ cell }) => {
+    //     const approver = cell.row.original.approver
+    //     const approverName =
+    //       approver && approver.nombre ? approver.nombre : 'N/A'
+    //     return approverName
+    //   }
+    // }
   ]
 
   return (

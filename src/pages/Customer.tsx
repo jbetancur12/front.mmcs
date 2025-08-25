@@ -3,9 +3,14 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import TableUsersCustomer from '../Components/TableUsersCustomer'
 
 import {
-  Certificate,
+  Certificate as BaseCertificate,
   CertificateListItem
 } from '../Components/CertificateListItem'
+
+// Extend Certificate type to include searchMatches
+export interface Certificate extends BaseCertificate {
+  searchMatches?: { field: string }[]
+}
 import { bigToast } from '../Components/ExcelManipulation/Utils'
 import Headquarters from '../Components/Headquarters'
 import {
@@ -28,6 +33,7 @@ import { ArrowBack, Clear, Download } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useQuery, useQueryClient } from 'react-query'
 import Modules from 'src/Components/Modules'
+import * as XLSX from 'xlsx'
 
 // API URL
 const minioUrl = import.meta.env.VITE_MINIO_URL
@@ -45,7 +51,10 @@ export interface ApiResponse {
   totalPages: number
   currentPage: number
   files: Certificate[]
-  foundFields: string[]
+  searchInfo?: {
+    term: string
+    searchableFields: string[]
+  }
 }
 
 type Tab =
@@ -55,61 +64,80 @@ type Tab =
   | 'calibrationTimeLine'
   | 'modules'
 
-const exportToCSV = (data: Certificate[], customerName: string = '') => {
+// Función para exportar a Excel usando XLSX
+const exportToExcel = (data: Certificate[], customerName: string = '') => {
   if (data.length === 0) {
     alert('No hay datos para exportar')
     return
   }
 
-  // Definir las cabeceras del CSV
-  const headers = [
-    'Sede',
-    'Nombre del Equipo',
-    'Activo Fijo',
-    'Serie',
-    'Fecha de Calibración',
-    'Próxima Calibración'
+  // Preparar los datos para Excel
+  const excelData = data.map((cert) => ({
+    Sede: cert.headquarter || '',
+    'Nombre del Equipo': cert.device?.name || '',
+    'Activo Fijo': cert.activoFijo || '',
+    Serie: cert.serie || '',
+    'Fecha de Calibración': cert.calibrationDate
+      ? new Date(cert.calibrationDate).toLocaleDateString('es-ES')
+      : '',
+    'Próxima Calibración': cert.nextCalibrationDate
+      ? new Date(cert.nextCalibrationDate).toLocaleDateString('es-ES')
+      : ''
+  }))
+
+  // Crear workbook y worksheet
+  const workbook = XLSX.utils.book_new()
+  const worksheet = XLSX.utils.json_to_sheet(excelData)
+
+  // Configurar ancho de columnas para mejor visualización
+  const columnWidths = [
+    { wch: 20 }, // Sede
+    { wch: 35 }, // Nombre del Equipo
+    { wch: 15 }, // Activo Fijo
+    { wch: 15 }, // Serie
+    { wch: 18 }, // Fecha de Calibración
+    { wch: 20 } // Próxima Calibración
   ]
+  worksheet['!cols'] = columnWidths
 
-  // Convertir los datos a formato CSV
-  const csvContent = [
-    headers.join(','), // Cabeceras
-    ...data.map((cert) =>
-      [
-        `"${cert.headquarter || ''}"`,
-        `"${cert.device?.name || ''}"`,
-        `"${cert.activoFijo || ''}"`,
-        `"${cert.serie || ''}"`,
-        cert.calibrationDate
-          ? new Date(cert.calibrationDate).toLocaleDateString('es-ES')
-          : '',
-        cert.nextCalibrationDate
-          ? new Date(cert.nextCalibrationDate).toLocaleDateString('es-ES')
-          : ''
-      ].join(',')
-    )
-  ].join('\n')
+  // Estilo para las cabeceras (fila 1)
+  const headerStyle = {
+    font: { bold: true, color: { rgb: 'FFFFFF' } },
+    fill: { fgColor: { rgb: '366092' } },
+    alignment: { horizontal: 'center', vertical: 'center' }
+  }
 
-  const BOM = '\uFEFF'
-  const csvWithBOM = BOM + csvContent
+  // Aplicar estilo a las cabeceras
+  const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1')
+  for (let col = range.s.c; col <= range.e.c; col++) {
+    const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col })
+    if (!worksheet[cellAddress]) continue
+    worksheet[cellAddress].s = headerStyle
+  }
 
-  // Crear y descargar el archivo
-  const blob = new Blob([csvWithBOM], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  const url = URL.createObjectURL(blob)
+  // Configurar filtros automáticos
+  worksheet['!autofilter'] = { ref: worksheet['!ref'] || 'A1' }
 
-  link.setAttribute('href', url)
-  link.setAttribute(
-    'download',
-    `inventario_equipos_${customerName || 'cliente'}_${new Date().toISOString().split('T')[0]}.csv`
-  )
-  link.style.visibility = 'hidden'
+  // Agregar el worksheet al workbook
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventario Equipos')
 
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+  // Configurar propiedades del archivo
+  workbook.Props = {
+    Title: 'Inventario de Equipos',
+    Subject: 'Reporte de inventario',
+    Author: 'Sistema de Gestión',
+    CreatedDate: new Date()
+  }
 
-  URL.revokeObjectURL(url)
+  // Generar el archivo y descargarlo
+  const fileName = `inventario_equipos_${customerName || 'cliente'}_${new Date().toISOString().split('T')[0]}.xlsx`
+
+  try {
+    XLSX.writeFile(workbook, fileName)
+  } catch (error) {
+    console.error('Error al generar archivo Excel:', error)
+    alert('Error al generar el archivo Excel')
+  }
 }
 
 function UserProfile(): React.JSX.Element {
@@ -362,12 +390,12 @@ function UserProfile(): React.JSX.Element {
       if (allData.length === 0) {
         bigToast('No hay datos para exportar', 'info')
       } else {
-        exportToCSV(allData, customerData.nombre)
-        bigToast('Archivo CSV descargado exitosamente', 'success')
+        exportToExcel(allData, customerData.nombre)
+        bigToast('Archivo Excel descargado exitosamente', 'success')
       }
     } catch (error) {
-      console.error('Error al descargar CSV:', error)
-      bigToast('Error al descargar el archivo CSV', 'error')
+      console.error('Error al descargar Excel:', error)
+      bigToast('Error al descargar el archivo Excel', 'error')
     } finally {
       setIsDownloading(false)
     }
@@ -424,6 +452,29 @@ function UserProfile(): React.JSX.Element {
   const isAdmin = $userStore.rol.some((role) =>
     ['admin', 'metrologist'].includes(role)
   )
+
+  const getMatchedFields = (files: Certificate[]) => {
+    if (!files || files.length === 0) return []
+
+    const fieldLabels: Record<string, string> = {
+      name: 'Nombre',
+      serie: 'Serie',
+      location: 'Ubicación',
+      activoFijo: 'Activo Fijo',
+      deviceName: 'Nombre del Dispositivo'
+    }
+
+    const allMatchedFields = files.flatMap(
+      (file) => file.searchMatches?.map((match) => match.field) || []
+    )
+
+    const uniqueFields = [...new Set(allMatchedFields)]
+    return uniqueFields.map((field) => fieldLabels[field] || field)
+  }
+
+  // En tu componente:
+  const matchedFields = getMatchedFields(apiResponse?.files ?? [])
+  console.log('🚀 ~ UserProfile ~ matchedFields:', matchedFields)
 
   if (loading) {
     return <Typography variant='h6'>Cargando...</Typography>
@@ -596,7 +647,7 @@ function UserProfile(): React.JSX.Element {
                 disabled={isDownloading}
                 size='small'
               >
-                Descargar CSV
+                Descargar Excel
               </Button>
               <Menu
                 anchorEl={anchorEl}
@@ -616,11 +667,15 @@ function UserProfile(): React.JSX.Element {
           <Typography variant='subtitle2' gutterBottom>
             Total Equipos: {apiResponse?.totalFiles || 0}
           </Typography>
-          {apiResponse && searchTerm && apiResponse?.totalFiles > 0 && (
-            <Typography variant='subtitle2' gutterBottom>
-              Resultados por: {apiResponse?.foundFields.join(', ')}
-            </Typography>
-          )}
+          {apiResponse &&
+            searchTerm &&
+            apiResponse?.totalFiles > 0 &&
+            matchedFields.length > 0 && (
+              <Typography variant='subtitle2' gutterBottom>
+                Resultados para: &quot;{searchTerm}&quot; encontrados en:{' '}
+                {matchedFields.join(', ')}
+              </Typography>
+            )}
           <Divider />
 
           {!apiResponse ? (

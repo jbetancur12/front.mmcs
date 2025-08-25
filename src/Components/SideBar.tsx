@@ -188,21 +188,21 @@ const sidebarItems = ($userStore: UserData) => [
     roles: ['admin', 'user'],
     moduleName: 'Basic'
   },
-  // {
-  //   type: 'dropdown',
-  //   buttonText: 'Calidad',
-  //   roles: ['admin'],
-  //   moduleName: 'Basic',
-  //   pathData:
-  //     'M12 2l2.9 6.9 7.1.6-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.6z',
-  //   menuItems: [
-  //     {
-  //       label: 'Trabajo no Conforme',
-  //       url: '/non-conform-work-reports',
-  //       roles: ['admin']
-  //     }
-  //   ]
-  // },
+  {
+    type: 'dropdown',
+    buttonText: 'Calidad',
+    roles: ['admin'],
+    moduleName: 'Basic',
+    pathData:
+      'M12 2l2.9 6.9 7.1.6-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.6z',
+    menuItems: [
+      {
+        label: 'Trabajo no Conforme',
+        url: '/non-conform-work-reports',
+        roles: ['admin']
+      }
+    ]
+  },
 
   {
     type: 'dropdown',

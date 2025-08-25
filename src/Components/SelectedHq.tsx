@@ -14,6 +14,7 @@ import { ApiResponse } from 'src/pages/Customer'
 import { useParams } from 'react-router-dom'
 import { axiosPrivate } from '@utils/api'
 import { Download } from '@mui/icons-material'
+import * as XLSX from 'xlsx'
 
 interface SelectedHqProps {
   onDelete: (id: number) => void
@@ -21,62 +22,80 @@ interface SelectedHqProps {
   selectedSede: string | null
 }
 
-// Función para exportar a CSV
-const exportToCSV = (data: Certificate[], selectedSede: string | null) => {
+// Función para exportar a Excel real usando SheetJS
+const exportToExcel = (data: Certificate[], selectedSede: string | null) => {
   if (data.length === 0) {
     alert('No hay datos para exportar')
     return
   }
 
-  // Definir las cabeceras del CSV
-  const headers = [
-    'Sede',
-    'Nombre del Equipo',
-    'Activo Fijo',
-    'Serie',
-    'Fecha de Calibración',
-    'Próxima Calibración'
+  // Preparar los datos para Excel
+  const excelData = data.map((cert) => ({
+    Sede: cert.headquarter || '',
+    'Nombre del Equipo': cert.device.name || '',
+    'Activo Fijo': cert.activoFijo || '',
+    Serie: cert.serie || '',
+    'Fecha de Calibración': cert.calibrationDate
+      ? new Date(cert.calibrationDate).toLocaleDateString('es-ES')
+      : '',
+    'Próxima Calibración': cert.nextCalibrationDate
+      ? new Date(cert.nextCalibrationDate).toLocaleDateString('es-ES')
+      : ''
+  }))
+
+  // Crear workbook y worksheet
+  const workbook = XLSX.utils.book_new()
+  const worksheet = XLSX.utils.json_to_sheet(excelData)
+
+  // Configurar ancho de columnas para mejor visualización
+  const columnWidths = [
+    { wch: 20 }, // Sede
+    { wch: 35 }, // Nombre del Equipo
+    { wch: 15 }, // Activo Fijo
+    { wch: 15 }, // Serie
+    { wch: 18 }, // Fecha de Calibración
+    { wch: 20 } // Próxima Calibración
   ]
+  worksheet['!cols'] = columnWidths
 
-  // Convertir los datos a formato CSV
-  const csvContent = [
-    headers.join(','), // Cabeceras
-    ...data.map((cert) =>
-      [
-        `"${cert.headquarter || ''}"`,
-        `"${cert.device.name || ''}"`,
-        `"${cert.activoFijo || ''}"`,
-        `"${cert.serie || ''}"`,
-        cert.calibrationDate
-          ? new Date(cert.calibrationDate).toLocaleDateString('es-ES')
-          : '',
-        cert.nextCalibrationDate
-          ? new Date(cert.nextCalibrationDate).toLocaleDateString('es-ES')
-          : ''
-      ].join(',')
-    )
-  ].join('\n')
+  // Estilo para las cabeceras (fila 1)
+  const headerStyle = {
+    font: { bold: true, color: { rgb: 'FFFFFF' } },
+    fill: { fgColor: { rgb: '366092' } },
+    alignment: { horizontal: 'center', vertical: 'center' }
+  }
 
-  const BOM = '\uFEFF'
-  const csvWithBOM = BOM + csvContent
+  // Aplicar estilo a las cabeceras
+  const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1')
+  for (let col = range.s.c; col <= range.e.c; col++) {
+    const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col })
+    if (!worksheet[cellAddress]) continue
+    worksheet[cellAddress].s = headerStyle
+  }
 
-  // Crear y descargar el archivo
-  const blob = new Blob([csvWithBOM], { type: 'text/csv;charset=utf-8;' })
-  const link = document.createElement('a')
-  const url = URL.createObjectURL(blob)
+  // Configurar filtros automáticos
+  worksheet['!autofilter'] = { ref: worksheet['!ref'] || 'A1' }
 
-  link.setAttribute('href', url)
-  link.setAttribute(
-    'download',
-    `inventario_equipos_${selectedSede || 'todas_sedes'}_${new Date().toISOString().split('T')[0]}.csv`
-  )
-  link.style.visibility = 'hidden'
+  // Agregar el worksheet al workbook
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventario Equipos')
 
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+  // Configurar propiedades del archivo
+  workbook.Props = {
+    Title: 'Inventario de Equipos',
+    Subject: 'Reporte de inventario',
+    Author: 'Sistema de Gestión',
+    CreatedDate: new Date()
+  }
 
-  URL.revokeObjectURL(url)
+  // Generar el archivo y descargarlo
+  const fileName = `inventario_equipos_${selectedSede || 'todas_sedes'}_${new Date().toISOString().split('T')[0]}.xlsx`
+
+  try {
+    XLSX.writeFile(workbook, fileName)
+  } catch (error) {
+    console.error('Error al generar archivo Excel:', error)
+    alert('Error al generar el archivo Excel')
+  }
 }
 
 const SelectedHq: React.FC<SelectedHqProps> = ({
@@ -86,7 +105,6 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
 }) => {
   const { id } = useParams<{ id: string }>()
 
-  // Recuperar el estado inicial desde sessionStorage
   const [searchTerm, setSearchTerm] = useState(
     sessionStorage.getItem('searchTerm') || ''
   )
@@ -96,7 +114,6 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [isDownloading, setIsDownloading] = useState(false)
 
-  // Guardar el estado en sessionStorage cuando cambie
   useEffect(() => {
     sessionStorage.setItem('searchTerm', searchTerm)
   }, [searchTerm])
@@ -123,7 +140,6 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
     }
   )
 
-  // Función para obtener todos los datos de la sede para descarga
   const fetchAllDataForDownload = useCallback(
     async (filterType: 'all' | 'nextOrExpired'): Promise<Certificate[]> => {
       if (!id) throw new Error('No customer ID provided')
@@ -163,8 +179,7 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
     [currentPage, apiResponse]
   )
 
-  // Nueva función para descargar CSV filtrado
-  const handleDownloadCSV = useCallback(
+  const handleDownloadExcel = useCallback(
     async (type: 'all' | 'nextOrExpired') => {
       setAnchorEl(null)
       setIsDownloading(true)
@@ -173,11 +188,11 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
         if (allData.length === 0) {
           alert('No hay datos para exportar')
         } else {
-          exportToCSV(allData, selectedSede)
+          exportToExcel(allData, selectedSede)
         }
       } catch (error) {
-        console.error('Error al descargar CSV:', error)
-        alert('Error al descargar el archivo CSV')
+        console.error('Error al descargar Excel:', error)
+        alert('Error al descargar el archivo Excel')
       } finally {
         setIsDownloading(false)
       }
@@ -187,7 +202,7 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value)
-    setCurrentPage(1) // Resetear a la primera página cuando se busca
+    setCurrentPage(1)
   }, [])
 
   return (
@@ -211,17 +226,17 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
             disabled={isDownloading}
             size='small'
           >
-            Descargar CSV
+            Descargar Excel
           </Button>
           <Menu
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
             onClose={() => setAnchorEl(null)}
           >
-            <MenuItem onClick={() => handleDownloadCSV('all')}>
+            <MenuItem onClick={() => handleDownloadExcel('all')}>
               Todos los equipos
             </MenuItem>
-            <MenuItem onClick={() => handleDownloadCSV('nextOrExpired')}>
+            <MenuItem onClick={() => handleDownloadExcel('nextOrExpired')}>
               Próximos a vencer / Vencidos
             </MenuItem>
           </Menu>

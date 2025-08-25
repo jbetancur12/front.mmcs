@@ -177,7 +177,30 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
   }
 
   const validationSchema = Yup.object({
-    tncCode: Yup.string().required('Required'),
+    tncCode: Yup.string()
+      .required('Required')
+      .test(
+        'unique-tnc-code',
+        'El código TNC ya existe',
+        async function (value) {
+          if (!value) return true // Si no hay valor, deja que 'required' maneje el error
+
+          // Si estamos editando y el código no ha cambiado, no validar
+          if (initialData?.id && value === initialData.tncCode) {
+            return true
+          }
+
+          try {
+            const response = await axiosPrivate.get(
+              `/non-conform-work-report/check-code/${value}`
+            )
+            return !response.data.exists // Retorna true si NO existe
+          } catch (error) {
+            console.error('Error checking TNC code:', error)
+            return true // En caso de error, permitir continuar
+          }
+        }
+      ),
     tncAcceptance: Yup.string().required('Required'),
     registerDate: Yup.string().required('Required'),
     detectedBy: Yup.string().required('Required'),
@@ -1609,17 +1632,31 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                 />
               </Grid>
             </Grid>
+
+            {/* Mostrar errores generales */}
+            {formik.submitCount > 0 &&
+              Object.keys(formik.errors).length > 0 && (
+                <Box mt={2} p={2} bgcolor='error.light' borderRadius={1}>
+                  <Typography
+                    variant='body2'
+                    color='error.dark'
+                    fontWeight='bold'
+                  >
+                    ⚠️ Hay errores en el formulario. Por favor, revise los
+                    campos resaltados.
+                  </Typography>
+                  <Typography variant='body2' color='error.dark' mt={1}>
+                    Campos con errores: {Object.keys(formik.errors).length}
+                  </Typography>
+                </Box>
+              )}
+
             <Box mt={3} display='flex' gap={2} justifyContent='center'>
               <Button
                 type='submit'
                 variant='contained'
                 color='primary'
                 disabled={formik.isSubmitting}
-                onClick={() => {
-                  formik.validateForm().then((errors) => {
-                    console.log('Formik errors:', errors)
-                  })
-                }}
               >
                 Guardar
               </Button>
