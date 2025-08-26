@@ -28,6 +28,9 @@ const PurchaseVerifications = lazy(
 const FiscalParametersPage = lazy(
   () => import('src/pages/Admin/FiscalParametersManagementPage')
 )
+const PurchaseStatistics = lazy(
+  () => import('src/pages/Purchases/PurchaseStatistics')
+)
 
 const SupplierRoutes = (role: string[]) => {
   return (
@@ -83,6 +86,7 @@ const SupplierRoutes = (role: string[]) => {
             path='verifications/:id'
             element={<PDFViewer path='fog-mmcs-14' />}
           />
+          <Route path='statistics' element={<PurchaseStatistics />} />
         </Route>
       </Route>
     </>
