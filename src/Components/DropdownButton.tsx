@@ -10,6 +10,7 @@ interface DropdownButtonProps {
   rol: string[]
   currentPath: string
   onlyIcons?: boolean
+  onItemClick?: () => void
 }
 
 const DropdownButton: React.FC<DropdownButtonProps> = ({
@@ -18,7 +19,8 @@ const DropdownButton: React.FC<DropdownButtonProps> = ({
   pathData,
   rol,
   currentPath,
-  onlyIcons = false
+  onlyIcons = false,
+  onItemClick
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -33,6 +35,12 @@ const DropdownButton: React.FC<DropdownButtonProps> = ({
 
   const handleMenuClose = () => {
     setAnchorEl(null)
+  }
+
+  const handleItemClick = () => {
+    setIsDropdownOpen(false)
+    setAnchorEl(null)
+    onItemClick?.()
   }
 
   return (
@@ -93,7 +101,7 @@ const DropdownButton: React.FC<DropdownButtonProps> = ({
               <MenuItem
                 key={item.label}
                 selected={currentPath === `/${item.url}`}
-                onClick={handleMenuClose}
+                onClick={handleItemClick}
                 component={Link}
                 to={item.url}
               >
@@ -113,6 +121,7 @@ const DropdownButton: React.FC<DropdownButtonProps> = ({
                 <Link
                   to={item.url}
                   className={`flex items-center p-2 text-base text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700 ${onlyIcons ? 'justify-center' : ''}`}
+                  onClick={handleItemClick}
                 >
                   {item.label}
                 </Link>

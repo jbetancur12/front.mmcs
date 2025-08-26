@@ -312,12 +312,16 @@ interface SideBarProps {
   setHovered: (hover: boolean) => void
   hoverEnabled: boolean
   setHoverEnabled: (enabled: boolean) => void
+  mobileMenuOpen: boolean
+  setMobileMenuOpen: (open: boolean) => void
 }
 
 const SideBar = ({
   sidebarMinimized,
   userMinimized,
-  setUserMinimized
+  setUserMinimized,
+  mobileMenuOpen,
+  setMobileMenuOpen
 }: SideBarProps) => {
   const $userStore = useStore(userStore)
   const { pathname } = useLocation()
@@ -329,9 +333,16 @@ const SideBar = ({
     )
   }
 
+  const handleLinkClick = () => {
+    // Cerrar el menú móvil cuando se hace clic en un enlace
+    setMobileMenuOpen(false)
+  }
+
   return (
     <aside
-      className={`fixed top-0 left-0 z-20 flex flex-col flex-shrink-0 hidden h-full pt-16 font-normal bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700 lg:flex ${userMinimized ? 'w-20' : 'w-64'}`}
+      className={`fixed top-0 left-0 z-20 flex flex-col flex-shrink-0 h-full pt-16 font-normal bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-transform duration-300 ${
+        mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+      } lg:translate-x-0 lg:flex ${userMinimized ? 'lg:w-20' : 'lg:w-64'} w-64`}
     >
       {/* Contenedor con scroll para los items del sidebar */}
       <div className='flex-1 overflow-y-auto px-3 py-2'>
@@ -351,6 +362,7 @@ const SideBar = ({
                   <Link
                     to={item.to}
                     className={`flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 ${sidebarMinimized ? 'justify-center' : ''}`}
+                    onClick={handleLinkClick}
                   >
                     {item.icon}
                     {!sidebarMinimized && (
@@ -372,6 +384,7 @@ const SideBar = ({
                   rol={$userStore.rol}
                   currentPath={pathname}
                   onlyIcons={sidebarMinimized}
+                  onItemClick={handleLinkClick}
                 />
               )
             }
