@@ -333,55 +333,61 @@ const SideBar = ({
     <aside
       className={`fixed top-0 left-0 z-20 flex flex-col flex-shrink-0 hidden h-full pt-16 font-normal bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700 lg:flex ${userMinimized ? 'w-20' : 'w-64'}`}
     >
-      {/* Botón hamburguesa como último ítem del sidebar */}
-      <ul className='space-y-2'>
-        {sidebarItems($userStore).map((item, index) => {
-          if (
-            item.type === 'link' &&
-            item.to &&
-            canViewModule(item.roles, $userStore.rol) &&
-            hasModuleAccess(item.moduleName)
-          ) {
-            return (
-              <li
-                key={index}
-                className={pathname === item.to ? 'bg-green-100' : ''}
-              >
-                <Link
-                  to={item.to}
-                  className={`flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 ${sidebarMinimized ? 'justify-center' : ''}`}
+      {/* Contenedor con scroll para los items del sidebar */}
+      <div className='flex-1 overflow-y-auto px-3 py-2'>
+        <ul className='space-y-2'>
+          {sidebarItems($userStore).map((item, index) => {
+            if (
+              item.type === 'link' &&
+              item.to &&
+              canViewModule(item.roles, $userStore.rol) &&
+              hasModuleAccess(item.moduleName)
+            ) {
+              return (
+                <li
+                  key={index}
+                  className={pathname === item.to ? 'bg-green-100' : ''}
                 >
-                  {item.icon}
-                  {!sidebarMinimized && (
-                    <span className='ml-3'>{item.label}</span>
-                  )}
-                </Link>
-              </li>
-            )
-          } else if (
-            item.type === 'dropdown' &&
-            canViewModule(item.roles, $userStore.rol)
-          ) {
-            return (
-              <DropdownButton
-                key={index}
-                buttonText={item.buttonText ?? ''}
-                menuItems={item.menuItems ?? []}
-                pathData={item.pathData ?? ''}
-                rol={$userStore.rol}
-                currentPath={pathname}
-                onlyIcons={sidebarMinimized}
-              />
-            )
-          }
-          return null
-        })}
+                  <Link
+                    to={item.to}
+                    className={`flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 ${sidebarMinimized ? 'justify-center' : ''}`}
+                  >
+                    {item.icon}
+                    {!sidebarMinimized && (
+                      <span className='ml-3'>{item.label}</span>
+                    )}
+                  </Link>
+                </li>
+              )
+            } else if (
+              item.type === 'dropdown' &&
+              canViewModule(item.roles, $userStore.rol)
+            ) {
+              return (
+                <DropdownButton
+                  key={index}
+                  buttonText={item.buttonText ?? ''}
+                  menuItems={item.menuItems ?? []}
+                  pathData={item.pathData ?? ''}
+                  rol={$userStore.rol}
+                  currentPath={pathname}
+                  onlyIcons={sidebarMinimized}
+                />
+              )
+            }
+            return null
+          })}
+        </ul>
+      </div>
+
+      {/* Botón de minimizar/expandir fijo en la parte inferior */}
+      <div className='flex-shrink-0 border-t border-gray-200 dark:border-gray-700 p-2'>
         <Divider />
-        <li
+        <div
           className={
             !userMinimized
-              ? 'flex items-center mt-8'
-              : 'flex items-center mt-8 justify-center'
+              ? 'flex items-center mt-2'
+              : 'flex items-center mt-2 justify-center'
           }
         >
           <button
@@ -418,12 +424,6 @@ const SideBar = ({
               </svg>
             )}
           </button>
-        </li>
-      </ul>
-      <div className='relative flex flex-col flex-1 min-h-0 pt-5 overflow-y-auto'>
-        <div className='flex-1 px-3 space-y-1 divide-y divide-gray-200 dark:divide-gray-700'>
-          {/* Header del sidebar: logo + botón hamburguesa */}
-          {/* This block is removed as per the edit hint */}
         </div>
       </div>
     </aside>
