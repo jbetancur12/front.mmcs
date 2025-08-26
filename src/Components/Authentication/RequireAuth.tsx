@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { userStore } from '../../store/userStore'
 import { api } from '../../config'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 interface RequireAuthProps {
   children: React.ReactNode
@@ -17,6 +17,7 @@ const apiUrl = api()
 const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
+  const location = useLocation()
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -42,6 +43,10 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
         userStore.set(formattedUser)
       } catch (error) {
         console.log('Error al validar el token:', error)
+        // Si el token es inválido, también debemos guardar la ubicación
+        const currentPath = location.pathname + location.search
+        sessionStorage.setItem('lastLocation', currentPath)
+        navigate('/login')
       } finally {
         setLoading(false)
       }
@@ -50,6 +55,9 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     if (localStorage.getItem('accessToken')) {
       validateToken()
     } else {
+      // Guardar la ubicación actual antes de redirigir al login
+      const currentPath = location.pathname + location.search
+      sessionStorage.setItem('lastLocation', currentPath)
       navigate('/login')
     }
   }, [])

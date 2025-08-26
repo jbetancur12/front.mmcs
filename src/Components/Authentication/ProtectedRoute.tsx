@@ -1,5 +1,5 @@
 import React from 'react'
-import { Navigate, Outlet } from 'react-router-dom'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
 
 interface ProtectedRouteProps {
   isAuthenticated: boolean
@@ -18,8 +18,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   unauthorizedPath = '/not-authorized',
   fallbackRoute = false
 }) => {
+  const location = useLocation()
+
   if (!isAuthenticated) {
-    // Si el usuario no está autenticado, redirige al login.
+    // Guardar la ubicación actual antes de redirigir al login
+    const currentPath = location.pathname + location.search
+    sessionStorage.setItem('lastLocation', currentPath)
     return <Navigate to={redirectPath} replace />
   }
 

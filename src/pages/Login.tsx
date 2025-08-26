@@ -145,6 +145,9 @@ const Login: React.FC = () => {
         Toast.fire('Bienvenido', '', 'success')
         const lastLocation = sessionStorage.getItem('lastLocation') || '/'
 
+        // Limpiar lastLocation después de usarla
+        sessionStorage.removeItem('lastLocation')
+
         navigate(lastLocation)
 
         localStorage.setItem('accessToken', token)
@@ -174,7 +177,11 @@ const Login: React.FC = () => {
   }
 
   useEffect(() => {
-    if (localStorage.getItem('accessToken')) navigate('/')
+    if (localStorage.getItem('accessToken')) {
+      const lastLocation = sessionStorage.getItem('lastLocation') || '/'
+      sessionStorage.removeItem('lastLocation')
+      navigate(lastLocation)
+    }
   }, [])
 
   return (
