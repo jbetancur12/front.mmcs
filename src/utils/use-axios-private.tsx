@@ -50,8 +50,8 @@ const useAxiosPrivate = () => {
           return Promise.reject(error)
         }
 
-        // Manejar error 403 (token expirado)
-        if (error.response?.status === 403 && !sent.current) {
+        // Manejar error 401/403 (token expirado)
+        if ((error.response?.status === 401 || error.response?.status === 403) && !sent.current) {
           sent.current = true
           try {
             const newToken = await refresh()
@@ -79,8 +79,8 @@ const useAxiosPrivate = () => {
           }
         }
 
-        // Manejar error 401 (no autorizado)
-        if (error.response?.status === 401) {
+        // Si llegamos aquí, el refresh token también expiró
+        if (error.response?.status === 401 || error.response?.status === 403) {
           try {
             await axiosPrivate.post('/auth/logout')
           } catch (logoutError) {
