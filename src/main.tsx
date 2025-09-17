@@ -18,11 +18,11 @@ const options = {
 
 const queryClient = new QueryClient()
 
-Sentry.init({
-  dsn: 'https://5023f73ba5a170f91cba618b6a135cd9@o4509155116253184.ingest.us.sentry.io/4509155117432832',
-  integrations: [Sentry.browserTracingIntegration()],
-  tracesSampleRate: 1.0 // puedes bajarlo en producción
-})
+// Sentry.init({
+//   dsn: 'https://5023f73ba5a170f91cba618b6a135cd9@o4509155116253184.ingest.us.sentry.io/4509155117432832',
+//   integrations: [Sentry.browserTracingIntegration()],
+//   tracesSampleRate: 1.0 // puedes bajarlo en producción
+// })
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

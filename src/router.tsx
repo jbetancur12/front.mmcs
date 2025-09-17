@@ -27,6 +27,7 @@ import LmsRoutes from './routes/LmsRoutes'
 import { Box, CircularProgress, Typography } from '@mui/material'
 import LaboratoryRoutes from './routes/LaboratoryRoutes'
 import NonConformRoutes from './routes/NonConformRoutes'
+import MaintenanceRoutes from './routes/MaintenanceRoutes'
 
 function Router() {
   // useSessionTimeoutWarning({ warningMinutesBefore: 5 })
@@ -81,6 +82,7 @@ function Router() {
           {LmsRoutes($userStore.rol)}
           {LaboratoryRoutes($userStore.rol)}
           {NonConformRoutes($userStore.rol)}
+          {MaintenanceRoutes($userStore.rol)}
           {OtherRoutes($userStore.rol)}
         </Route>
       </Routes>
