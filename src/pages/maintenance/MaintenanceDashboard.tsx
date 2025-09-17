@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Container,
   Grid,
@@ -62,6 +63,7 @@ import useAxiosPrivate from '../../utils/use-axios-private'
  */
 const MaintenanceDashboard: React.FC = () => {
   useAxiosPrivate() // Initialize axios interceptors for automatic token refresh
+  const navigate = useNavigate()
   const [filters, setFilters] = useState<MaintenanceFilters>({})
   const [page, setPage] = useState(1)
   const [showFilters, setShowFilters] = useState(false)
@@ -130,8 +132,8 @@ const MaintenanceDashboard: React.FC = () => {
   }
 
   const handleViewTicket = (ticket: MaintenanceTicket) => {
-    // Navigate to ticket details page
-    window.location.href = `/maintenance/tickets/${ticket.id}`
+    // Navigate to ticket details page using React Router
+    navigate(`/maintenance/tickets/${ticket.id}`)
   }
 
   const handleRefresh = () => {

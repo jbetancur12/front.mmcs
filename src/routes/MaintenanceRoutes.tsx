@@ -8,6 +8,9 @@ const MaintenanceDashboard = lazy(
 const MaintenanceTechnicians = lazy(
   () => import('../pages/maintenance/MaintenanceTechnicians')
 )
+const MaintenanceTicketDetails = lazy(
+  () => import('../pages/maintenance/MaintenanceTicketDetails')
+)
 
 /**
  * MaintenanceRoutes defines the private routes for the maintenance module
@@ -42,7 +45,7 @@ const MaintenanceRoutes = (rol: string[]) => {
       {/* Individual ticket view - Available to both admin and maintenance roles */}
       <Route
         path='maintenance/tickets/:ticketId'
-        element={<MaintenanceDashboard />} // For now, redirect to dashboard
+        element={<MaintenanceTicketDetails />}
       />
     </>
   )
