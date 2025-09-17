@@ -32,7 +32,7 @@ export interface MaintenanceComment {
   userId: string
   userName: string
   userRole: string
-  comment: string
+  content: string
   isInternal: boolean
   createdAt: string
 }

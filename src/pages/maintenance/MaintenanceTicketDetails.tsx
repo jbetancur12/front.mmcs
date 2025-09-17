@@ -286,7 +286,7 @@ const MaintenanceTicketDetails: React.FC = () => {
     if (editData.scheduledDate) {
       const scheduledDate = new Date(editData.scheduledDate)
       const now = new Date()
-      if (scheduledDate < now && ticket.status === MaintenanceStatus.PENDING) {
+      if (scheduledDate < now && ticket?.status === MaintenanceStatus.PENDING) {
         errors.scheduledDate =
           'No se puede programar una fecha en el pasado para tickets pendientes'
       }
@@ -313,6 +313,8 @@ const MaintenanceTicketDetails: React.FC = () => {
       })
       setEditMode(false)
       setEditErrors({})
+      // Refetch ticket data to show updated information
+      await refetchTicket()
       showToast('Ticket actualizado exitosamente', 'success')
     } catch (error) {
       console.error('Error updating ticket:', error)
@@ -329,6 +331,8 @@ const MaintenanceTicketDetails: React.FC = () => {
         comment,
         isInternal
       })
+      // Refetch ticket data to show new comment
+      await refetchTicket()
       showToast('Comentario agregado exitosamente', 'success')
     } catch (error) {
       console.error('Error adding comment:', error)
@@ -345,6 +349,8 @@ const MaintenanceTicketDetails: React.FC = () => {
         ticketId,
         files
       })
+      // Refetch ticket data to show new files
+      await refetchTicket()
       showToast(`${files.length} archivo(s) subido(s) exitosamente`, 'success')
     } catch (error) {
       console.error('Error uploading files:', error)
@@ -364,6 +370,8 @@ const MaintenanceTicketDetails: React.FC = () => {
             ticketId,
             fileId
           })
+          // Refetch ticket data to update file list
+          await refetchTicket()
           showToast('Archivo eliminado exitosamente', 'success')
         } catch (error) {
           console.error('Error deleting file:', error)
@@ -1058,6 +1066,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               </Box>
 
               <Collapse in={showTimeline}>
+                {console.log('Rendering timeline with events:', ticket)}
                 <MaintenanceTimeline timeline={ticket.timeline || []} />
               </Collapse>
             </Paper>

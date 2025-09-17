@@ -124,7 +124,7 @@ const maintenanceAPI = {
   ): Promise<MaintenanceComment> => {
     const response = await axiosPrivate.post<MaintenanceComment>(
       `/maintenance/tickets/${ticketId}/comments`,
-      { comment, isInternal }
+      { content: comment, isInternal }
     )
     return response.data
   },

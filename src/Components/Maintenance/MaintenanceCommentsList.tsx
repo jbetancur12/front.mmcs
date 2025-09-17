@@ -77,6 +77,9 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
   }
 
   const getInitials = (name: string) => {
+    if (!name || typeof name !== 'string') {
+      return 'NN'
+    }
     return name
       .split(' ')
       .map((n) => n[0])
@@ -210,7 +213,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                   wordBreak: 'break-word'
                 }}
               >
-                {comment.comment}
+                {comment.content}
               </Typography>
 
               {index < sortedComments.length - 1 && <Divider sx={{ mt: 2 }} />}
