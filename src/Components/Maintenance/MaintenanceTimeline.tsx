@@ -54,13 +54,13 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
       case MaintenanceAction.ASSIGNED:
         return {
           icon: <Assignment />,
-          color: 'info' as const,
+          color: 'primary' as const,
           label: 'Asignado'
         }
       case MaintenanceAction.STATUS_CHANGED:
         return {
           icon: <Build />,
-          color: 'warning' as const,
+          color: 'primary' as const,
           label: 'Estado Cambiado'
         }
       case MaintenanceAction.PRIORITY_CHANGED:
@@ -84,7 +84,7 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
       case MaintenanceAction.SCHEDULED:
         return {
           icon: <Schedule />,
-          color: 'info' as const,
+          color: 'primary' as const,
           label: 'Programado'
         }
       case MaintenanceAction.COMPLETED:
@@ -153,86 +153,85 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
   }
 
   return (
-    <Card>
-      <CardContent>
-        <Typography variant='h6' gutterBottom>
-          Historial del Ticket
-        </Typography>
+    <Timeline
+      sx={{
+        p: 0,
+        '& .MuiTimelineItem-root': {
+          minHeight: compact ? 60 : 80,
+          '&:before': {
+            display: 'none'
+          }
+        }
+      }}
+    >
+      {sortedTimeline.map((entry, index) => {
+        const config = getActionConfig(entry.action)
+        const isLast = index === sortedTimeline.length - 1
 
-        <Timeline
-          sx={{
-            p: 0,
-            '& .MuiTimelineItem-root': {
-              minHeight: compact ? 60 : 80,
-              '&:before': {
-                display: 'none'
-              }
-            }
-          }}
-        >
-          {sortedTimeline.map((entry, index) => {
-            const config = getActionConfig(entry.action)
-            const isLast = index === sortedTimeline.length - 1
+        return (
+          <TimelineItem key={entry.id}>
+            <TimelineOppositeContent
+              sx={{
+                m: 'auto 0',
+                flex: compact ? 0.3 : 0.4,
+                px: 1
+              }}
+            >
+              <Typography
+                variant={compact ? 'caption' : 'body2'}
+                color='text.secondary'
+                fontWeight='medium'
+              >
+                {formatDate(entry.performedAt)}
+              </Typography>
+            </TimelineOppositeContent>
 
-            return (
-              <TimelineItem key={entry.id}>
-                <TimelineOppositeContent
-                  sx={{
-                    m: 'auto 0',
-                    flex: compact ? 0.3 : 0.4,
-                    px: 1
-                  }}
-                >
-                  <Typography
-                    variant={compact ? 'caption' : 'body2'}
-                    color='text.secondary'
-                    fontWeight='medium'
-                  >
-                    {formatDate(entry.performedAt)}
-                  </Typography>
-                </TimelineOppositeContent>
+            <TimelineSeparator>
+              <TimelineDot
+                color={
+                  config.color === 'default' ? 'grey' : (config.color as any)
+                }
+                variant='outlined'
+              >
+                {config.icon}
+              </TimelineDot>
+              {!isLast && <TimelineConnector />}
+            </TimelineSeparator>
 
-                <TimelineSeparator>
-                  <TimelineDot color={config.color} variant='outlined'>
-                    {config.icon}
-                  </TimelineDot>
-                  {!isLast && <TimelineConnector />}
-                </TimelineSeparator>
+            <TimelineContent sx={{ py: compact ? 1 : 2, px: 2 }}>
+              <Box>
+                <Box display='flex' alignItems='center' gap={1} mb={0.5}>
+                  <Chip
+                    size='small'
+                    label={config.label}
+                    color={config.color}
+                    variant='outlined'
+                  />
 
-                <TimelineContent sx={{ py: compact ? 1 : 2, px: 2 }}>
-                  <Box>
-                    <Box display='flex' alignItems='center' gap={1} mb={0.5}>
-                      <Chip
-                        size='small'
-                        label={config.label}
-                        color={config.color}
-                        variant='outlined'
-                      />
-
-                      {entry.performedBy && (
-                        <Box display='flex' alignItems='center' gap={0.5}>
-                          <Avatar
-                            sx={{
-                              width: 20,
-                              height: 20,
-                              fontSize: '0.65rem'
-                            }}
-                          >
-                            {getInitials(entry.performedBy)}
-                          </Avatar>
-                          <Typography variant='caption' color='text.secondary'>
-                            {entry.performedBy}
-                          </Typography>
-                        </Box>
-                      )}
+                  {entry.performedBy && (
+                    <Box display='flex' alignItems='center' gap={0.5}>
+                      <Avatar
+                        sx={{
+                          width: 20,
+                          height: 20,
+                          fontSize: '0.65rem'
+                        }}
+                      >
+                        {getInitials(entry.performedBy)}
+                      </Avatar>
+                      <Typography variant='caption' color='text.secondary'>
+                        {entry.performedBy}
+                      </Typography>
                     </Box>
+                  )}
+                </Box>
 
-                    <Typography variant={compact ? 'body2' : 'body1'}>
-                      {entry.description}
-                    </Typography>
+                <Typography variant={compact ? 'body2' : 'body1'}>
+                  {entry.description}
+                </Typography>
 
-                    {/* Metadata display */}
-                    {entry.metadata &&
+                {/* Metadata display */}
+                {/* {entry.metadata &&
                       Object.keys(entry.metadata).length > 0 && (
                         <Box mt={1}>
                           {Object.entries(entry.metadata).map(
@@ -248,15 +247,13 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
                             )
                           )}
                         </Box>
-                      )}
-                  </Box>
-                </TimelineContent>
-              </TimelineItem>
-            )
-          })}
-        </Timeline>
-      </CardContent>
-    </Card>
+                      )} */}
+              </Box>
+            </TimelineContent>
+          </TimelineItem>
+        )
+      })}
+    </Timeline>
   )
 }
 

@@ -77,7 +77,8 @@ import {
   useAddMaintenanceComment,
   useUploadMaintenanceFiles,
   useDeleteMaintenanceFile,
-  useMaintenanceTechnicians
+  useMaintenanceTechnicians,
+  useMaintenanceTimeline
 } from '../../hooks/useMaintenance'
 import {
   MaintenanceStatus,
@@ -145,6 +146,11 @@ const MaintenanceTicketDetails: React.FC = () => {
   } = useMaintenanceTicket(ticketId || '')
 
   const { data: technicians } = useMaintenanceTechnicians()
+  const {
+    data: timelineData,
+    isLoading: timelineLoading,
+    refetch: refetchTimeline
+  } = useMaintenanceTimeline(ticketId || '')
   const updateTicketMutation = useUpdateMaintenanceTicket()
   const addCommentMutation = useAddMaintenanceComment()
   const uploadFilesMutation = useUploadMaintenanceFiles()
@@ -158,6 +164,7 @@ const MaintenanceTicketDetails: React.FC = () => {
         console.log('Ticket updated via WebSocket:', updatedTicket)
         setLastUpdate(new Date())
         refetchTicket()
+        refetchTimeline()
         showToast('Ticket actualizado en tiempo real', 'info')
       }
     },
@@ -166,6 +173,7 @@ const MaintenanceTicketDetails: React.FC = () => {
         console.log('New notification for this ticket:', notification)
         setLastUpdate(new Date())
         refetchTicket()
+        refetchTimeline()
         showToast('Nueva notificación recibida', 'info')
       }
     }
@@ -315,6 +323,7 @@ const MaintenanceTicketDetails: React.FC = () => {
       setEditErrors({})
       // Refetch ticket data to show updated information
       await refetchTicket()
+      await refetchTimeline()
       showToast('Ticket actualizado exitosamente', 'success')
     } catch (error) {
       console.error('Error updating ticket:', error)
@@ -333,6 +342,7 @@ const MaintenanceTicketDetails: React.FC = () => {
       })
       // Refetch ticket data to show new comment
       await refetchTicket()
+      await refetchTimeline()
       showToast('Comentario agregado exitosamente', 'success')
     } catch (error) {
       console.error('Error adding comment:', error)
@@ -351,6 +361,7 @@ const MaintenanceTicketDetails: React.FC = () => {
       })
       // Refetch ticket data to show new files
       await refetchTicket()
+      await refetchTimeline()
       showToast(`${files.length} archivo(s) subido(s) exitosamente`, 'success')
     } catch (error) {
       console.error('Error uploading files:', error)
@@ -372,6 +383,7 @@ const MaintenanceTicketDetails: React.FC = () => {
           })
           // Refetch ticket data to update file list
           await refetchTicket()
+          await refetchTimeline()
           showToast('Archivo eliminado exitosamente', 'success')
         } catch (error) {
           console.error('Error deleting file:', error)
@@ -477,6 +489,7 @@ const MaintenanceTicketDetails: React.FC = () => {
 
   const handleRefresh = () => {
     refetchTicket()
+    refetchTimeline()
     showToast('Datos actualizados', 'info')
     setLastUpdate(new Date())
   }
@@ -523,7 +536,7 @@ const MaintenanceTicketDetails: React.FC = () => {
     return (
       <Container maxWidth={false} sx={{ py: 3 }}>
         <Alert severity='error' sx={{ mb: 3 }}>
-          {ticketError?.message ||
+          {(ticketError as any)?.message ||
             'Error al cargar el ticket. El ticket no existe o no tienes permisos para verlo.'}
         </Alert>
         <Button
@@ -1066,8 +1079,13 @@ const MaintenanceTicketDetails: React.FC = () => {
               </Box>
 
               <Collapse in={showTimeline}>
-                {console.log('Rendering timeline with events:', ticket)}
-                <MaintenanceTimeline timeline={ticket.timeline || []} />
+                {timelineLoading ? (
+                  <Box display='flex' justifyContent='center' py={3}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : (
+                  <MaintenanceTimeline timeline={timelineData || []} />
+                )}
               </Collapse>
             </Paper>
 
@@ -1608,6 +1626,7 @@ const MaintenanceTicketDetails: React.FC = () => {
 
         {/* Loading progress bar */}
         {(ticketLoading ||
+          timelineLoading ||
           updateTicketMutation.isLoading ||
           uploadFilesMutation.isLoading ||
           deleteFileMutation.isLoading ||

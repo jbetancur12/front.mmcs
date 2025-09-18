@@ -33,6 +33,7 @@ export interface MaintenanceComment {
   userName: string
   userRole: string
   content: string
+  commentType: string
   isInternal: boolean
   createdAt: string
 }
@@ -268,4 +269,22 @@ export interface MaintenanceTrackingResponse {
   ticket: MaintenanceTicket | null
   found: boolean
   message?: string
+}
+
+// Backend timeline response types
+export interface BackendTimelineEntry {
+  id: string
+  type: string
+  title: string
+  description: string
+  timestamp: string
+  author: string
+  authorType?: string
+  icon: string
+}
+
+export interface MaintenanceTimelineResponse {
+  ticketId: string
+  ticketCode: string
+  timeline: BackendTimelineEntry[]
 }

@@ -114,14 +114,19 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
     }
   }
 
-  const sortedComments = [...comments].sort(
+  // Filter out system events (status_update) to show only user comments
+  const userComments = comments.filter(
+    (comment) => comment.commentType !== 'status_update'
+  )
+
+  const sortedComments = [...userComments].sort(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   )
 
   return (
     <Box>
       <Typography variant='h6' gutterBottom>
-        Comentarios ({comments.length})
+        Comentarios ({userComments.length})
       </Typography>
 
       {/* Comments List */}

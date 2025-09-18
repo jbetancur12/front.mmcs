@@ -10,7 +10,11 @@ import {
   MaintenanceTechnician,
   MaintenanceComment,
   MaintenanceFile,
-  MaintenanceTrackingResponse
+  MaintenanceTrackingResponse,
+  MaintenanceTimelineResponse,
+  BackendTimelineEntry,
+  MaintenanceTimelineEntry,
+  MaintenanceAction
 } from '../types/maintenance'
 
 // API functions
@@ -189,7 +193,76 @@ const maintenanceAPI = {
 
   deleteTechnician: async (id: string): Promise<void> => {
     await axiosPrivate.delete(`/maintenance/technicians/${id}`)
+  },
+
+  // Timeline
+  getTimeline: async (
+    ticketId: string
+  ): Promise<MaintenanceTimelineResponse> => {
+    const response = await axiosPrivate.get<MaintenanceTimelineResponse>(
+      `/maintenance/tickets/${ticketId}/timeline`
+    )
+    return response.data
   }
+}
+
+// Helper function to map backend timeline to frontend format
+const mapBackendTimelineToFrontend = (
+  backendTimeline: BackendTimelineEntry[]
+): MaintenanceTimelineEntry[] => {
+  return backendTimeline.map((entry) => {
+    // Map backend type to frontend action
+    let action: MaintenanceAction
+    switch (entry.type) {
+      case 'ticket_created':
+        action = MaintenanceAction.CREATED
+        break
+      case 'status_update':
+        action = MaintenanceAction.STATUS_CHANGED
+        break
+      case 'assigned':
+        action = MaintenanceAction.ASSIGNED
+        break
+      case 'priority_changed':
+        action = MaintenanceAction.PRIORITY_CHANGED
+        break
+      case 'comment_added':
+        action = MaintenanceAction.COMMENT_ADDED
+        break
+      case 'file_uploaded':
+        action = MaintenanceAction.FILE_UPLOADED
+        break
+      case 'scheduled':
+        action = MaintenanceAction.SCHEDULED
+        break
+      case 'completed':
+        action = MaintenanceAction.COMPLETED
+        break
+      case 'cancelled':
+        action = MaintenanceAction.CANCELLED
+        break
+      case 'cost_updated':
+        action = MaintenanceAction.COST_UPDATED
+        break
+      default:
+        action = MaintenanceAction.STATUS_CHANGED
+        break
+    }
+
+    return {
+      id: entry.id,
+      ticketId: '', // Will be set from the response
+      action,
+      description: entry.description,
+      performedBy: entry.author,
+      performedAt: entry.timestamp,
+      metadata: {
+        title: entry.title,
+        icon: entry.icon,
+        authorType: entry.authorType
+      }
+    }
+  })
 }
 
 // Custom hooks
@@ -226,6 +299,24 @@ export const useMaintenanceTechnicians = () => {
     queryKey: ['maintenance-technicians'],
     queryFn: maintenanceAPI.getTechnicians,
     staleTime: 300000 // 5 minutes
+  })
+}
+
+export const useMaintenanceTimeline = (ticketId: string) => {
+  return useQuery({
+    queryKey: ['maintenance-timeline', ticketId],
+    queryFn: async () => {
+      const response = await maintenanceAPI.getTimeline(ticketId)
+      const mappedTimeline = mapBackendTimelineToFrontend(response.timeline)
+      // Set the ticketId for each entry
+      const timelineWithTicketId = mappedTimeline.map((entry) => ({
+        ...entry,
+        ticketId: response.ticketId
+      }))
+      return timelineWithTicketId
+    },
+    enabled: !!ticketId,
+    staleTime: 30000 // 30 seconds
   })
 }
 
