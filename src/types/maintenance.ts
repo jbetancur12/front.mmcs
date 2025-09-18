@@ -67,15 +67,25 @@ export interface MaintenanceTechnician {
   name: string
   email: string
   phone: string
-  specialties: string[]
-  rating: number
-  totalTickets: number
-  completedTickets: number
-  isActive: boolean
-  availabilityStatus: TechnicianAvailability
+  specialization: string
+  certifications: string
+  status: 'active' | 'inactive' | 'on_leave'
+  employeeId: string
+  hireDate: string
   workload: number
+  rating: number
+  totalTicketsCompleted: number
+  isAvailable: boolean
+  maxWorkload: number
+  notes: string
   createdAt: string
   updatedAt: string
+  metrics?: {
+    activeTickets: number
+    monthlyCompleted: number
+    workloadPercentage: number
+    efficiency: number
+  }
 }
 
 interface Metrics {
@@ -240,15 +250,26 @@ export interface TechnicianFormData {
   name: string
   email: string
   phone: string
-  specialties: string[]
-  isActive: boolean
+  specialization: string
+  certifications: string
+  status: 'active' | 'inactive' | 'on_leave'
+  employeeId: string
+  isAvailable: boolean
+  maxWorkload: number
+  notes: string
 }
 
 export interface TechnicianFormErrors {
   name?: string
   email?: string
   phone?: string
-  specialties?: string
+  specialization?: string
+  certifications?: string
+  status?: string
+  employeeId?: string
+  isAvailable?: string
+  maxWorkload?: string
+  notes?: string
 }
 
 // API Response types

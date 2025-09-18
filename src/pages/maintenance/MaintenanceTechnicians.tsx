@@ -17,13 +17,10 @@ import {
   Alert,
   Card,
   CardContent,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   FormControlLabel,
   Switch,
   Autocomplete,
+  MenuItem,
   Table,
   TableBody,
   TableCell,
@@ -40,8 +37,7 @@ import {
   Delete,
   Star,
   Work,
-  CheckCircle,
-  Cancel
+  CheckCircle
 } from '@mui/icons-material'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
@@ -53,9 +49,7 @@ import {
 } from '../../hooks/useMaintenance'
 import {
   MaintenanceTechnician,
-  TechnicianAvailability,
-  TechnicianFormData,
-  TechnicianFormErrors
+  TechnicianFormData
 } from '../../types/maintenance'
 
 const validationSchema = Yup.object({
@@ -67,13 +61,18 @@ const validationSchema = Yup.object({
   phone: Yup.string()
     .min(10, 'El teléfono debe tener al menos 10 dígitos')
     .required('El teléfono es requerido'),
-  specialties: Yup.array()
-    .min(1, 'Debe seleccionar al menos una especialidad')
-    .required('Las especialidades son requeridas'),
-  isActive: Yup.boolean()
+  specialization: Yup.string()
+    .min(2, 'La especialización es requerida')
+    .required('La especialización es requerida'),
+  certifications: Yup.string(),
+  status: Yup.string().oneOf(['active', 'inactive', 'on_leave']).required(),
+  employeeId: Yup.string(),
+  isAvailable: Yup.boolean(),
+  maxWorkload: Yup.number().min(1).max(50).required(),
+  notes: Yup.string()
 })
 
-const availableSpecialties = [
+const availableSpecializations = [
   'Ventiladores Mecánicos',
   'Monitores de Signos Vitales',
   'Desfibriladores',
@@ -89,6 +88,12 @@ const availableSpecialties = [
   'Equipos Láser',
   'Equipos de Diálisis',
   'Equipos de Anestesia'
+]
+
+const statusOptions = [
+  { value: 'active', label: 'Activo' },
+  { value: 'inactive', label: 'Inactivo' },
+  { value: 'on_leave', label: 'En Licencia' }
 ]
 
 /**
@@ -114,8 +119,13 @@ const MaintenanceTechnicians: React.FC = () => {
       name: '',
       email: '',
       phone: '',
-      specialties: [],
-      isActive: true
+      specialization: '',
+      certifications: '',
+      status: 'active',
+      employeeId: '',
+      isAvailable: true,
+      maxWorkload: 10,
+      notes: ''
     },
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
@@ -145,8 +155,13 @@ const MaintenanceTechnicians: React.FC = () => {
       name: technician.name,
       email: technician.email,
       phone: technician.phone,
-      specialties: technician.specialties,
-      isActive: technician.isActive
+      specialization: technician.specialization,
+      certifications: technician.certifications || '',
+      status: technician.status,
+      employeeId: technician.employeeId || '',
+      isAvailable: technician.isAvailable,
+      maxWorkload: technician.maxWorkload,
+      notes: technician.notes || ''
     })
     setDialogOpen(true)
   }
@@ -179,31 +194,27 @@ const MaintenanceTechnicians: React.FC = () => {
       .slice(0, 2)
   }
 
-  const getAvailabilityColor = (status: TechnicianAvailability) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case TechnicianAvailability.AVAILABLE:
+      case 'active':
         return 'success'
-      case TechnicianAvailability.BUSY:
-        return 'warning'
-      case TechnicianAvailability.ON_BREAK:
-        return 'info'
-      case TechnicianAvailability.OFFLINE:
+      case 'inactive':
         return 'error'
+      case 'on_leave':
+        return 'warning'
       default:
         return 'default'
     }
   }
 
-  const getAvailabilityLabel = (status: TechnicianAvailability) => {
+  const getStatusLabel = (status: string) => {
     switch (status) {
-      case TechnicianAvailability.AVAILABLE:
-        return 'Disponible'
-      case TechnicianAvailability.BUSY:
-        return 'Ocupado'
-      case TechnicianAvailability.ON_BREAK:
-        return 'En Descanso'
-      case TechnicianAvailability.OFFLINE:
-        return 'Desconectado'
+      case 'active':
+        return 'Activo'
+      case 'inactive':
+        return 'Inactivo'
+      case 'on_leave':
+        return 'En Licencia'
       default:
         return 'Desconocido'
     }
@@ -269,10 +280,7 @@ const MaintenanceTechnicians: React.FC = () => {
                 <Box>
                   <Typography variant='h4' color='success.main'>
                     {technicians?.filter(
-                      (t) =>
-                        t.isActive &&
-                        t.availabilityStatus ===
-                          TechnicianAvailability.AVAILABLE
+                      (t) => t.status === 'active' && t.isAvailable
                     ).length || 0}
                   </Typography>
                   <Typography variant='body2' color='text.secondary'>
@@ -296,13 +304,11 @@ const MaintenanceTechnicians: React.FC = () => {
                 <Box>
                   <Typography variant='h4' color='warning.main'>
                     {technicians?.filter(
-                      (t) =>
-                        t.isActive &&
-                        t.availabilityStatus === TechnicianAvailability.BUSY
+                      (t) => t.status === 'active' && !t.isAvailable
                     ).length || 0}
                   </Typography>
                   <Typography variant='body2' color='text.secondary'>
-                    Ocupados
+                    No Disponibles
                   </Typography>
                 </Box>
                 <Work color='warning' sx={{ fontSize: 40 }} />
@@ -321,8 +327,12 @@ const MaintenanceTechnicians: React.FC = () => {
               >
                 <Box>
                   <Typography variant='h4' color='info.main'>
-                    {technicians?.reduce((acc, t) => acc + (t.rating || 0), 0) /
-                      (technicians?.length || 1) || 0}
+                    {technicians && technicians.length > 0
+                      ? (
+                          technicians.reduce((acc, t) => acc + (t.rating || 0), 0) /
+                          technicians.length
+                        ).toFixed(1)
+                      : '0.0'}
                   </Typography>
                   <Typography variant='body2' color='text.secondary'>
                     Rating Promedio
@@ -357,11 +367,11 @@ const MaintenanceTechnicians: React.FC = () => {
                   <TableRow>
                     <TableCell>Técnico</TableCell>
                     <TableCell>Contacto</TableCell>
-                    <TableCell>Especialidades</TableCell>
+                    <TableCell>Especialización</TableCell>
                     <TableCell>Estado</TableCell>
                     <TableCell>Disponibilidad</TableCell>
                     <TableCell>Rating</TableCell>
-                    <TableCell>Tickets</TableCell>
+                    <TableCell>Carga de Trabajo</TableCell>
                     <TableCell>Acciones</TableCell>
                   </TableRow>
                 </TableHead>
@@ -397,51 +407,28 @@ const MaintenanceTechnicians: React.FC = () => {
                       </TableCell>
 
                       <TableCell>
-                        <Box
-                          display='flex'
-                          flexWrap='wrap'
-                          gap={0.5}
-                          maxWidth={200}
-                        >
-                          {technician.specialties
-                            .slice(0, 3)
-                            .map((specialty) => (
-                              <Chip
-                                key={specialty}
-                                label={specialty}
-                                size='small'
-                                variant='outlined'
-                                color='primary'
-                              />
-                            ))}
-                          {technician.specialties.length > 3 && (
-                            <Chip
-                              label={`+${technician.specialties.length - 3}`}
-                              size='small'
-                              variant='outlined'
-                            />
-                          )}
-                        </Box>
+                        <Typography variant='body2'>
+                          {technician.specialization || 'No especificado'}
+                        </Typography>
+                        {technician.certifications && (
+                          <Typography variant='caption' color='text.secondary'>
+                            Cert: {technician.certifications}
+                          </Typography>
+                        )}
                       </TableCell>
 
                       <TableCell>
                         <Chip
-                          label={technician.isActive ? 'Activo' : 'Inactivo'}
-                          color={technician.isActive ? 'success' : 'error'}
+                          label={getStatusLabel(technician.status)}
+                          color={getStatusColor(technician.status) as any}
                           size='small'
                         />
                       </TableCell>
 
                       <TableCell>
                         <Chip
-                          label={getAvailabilityLabel(
-                            technician.availabilityStatus
-                          )}
-                          color={
-                            getAvailabilityColor(
-                              technician.availabilityStatus
-                            ) as any
-                          }
+                          label={technician.isAvailable ? 'Disponible' : 'No Disponible'}
+                          color={technician.isAvailable ? 'success' : 'error'}
                           size='small'
                         />
                       </TableCell>
@@ -462,12 +449,16 @@ const MaintenanceTechnicians: React.FC = () => {
 
                       <TableCell>
                         <Typography variant='body2'>
-                          {technician.completedTickets}/
-                          {technician.totalTickets}
+                          {technician.workload}/{technician.maxWorkload}
                         </Typography>
                         <Typography variant='caption' color='text.secondary'>
-                          Completados/Total
+                          Actual/Máximo
                         </Typography>
+                        {technician.metrics && (
+                          <Typography variant='caption' display='block' color='text.secondary'>
+                            {technician.metrics.workloadPercentage}% utilización
+                          </Typography>
+                        )}
                       </TableCell>
 
                       <TableCell>
@@ -560,54 +551,128 @@ const MaintenanceTechnicians: React.FC = () => {
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formik.values.isActive}
-                      onChange={(e) =>
-                        formik.setFieldValue('isActive', e.target.checked)
-                      }
-                      name='isActive'
-                    />
-                  }
-                  label='Técnico Activo'
+                <TextField
+                  fullWidth
+                  select
+                  name='status'
+                  label='Estado'
+                  value={formik.values.status}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.status && Boolean(formik.errors.status)}
+                  helperText={formik.touched.status && formik.errors.status}
+                  required
+                >
+                  {statusOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  name='employeeId'
+                  label='ID Empleado'
+                  value={formik.values.employeeId}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.employeeId && Boolean(formik.errors.employeeId)}
+                  helperText={formik.touched.employeeId && formik.errors.employeeId}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  type='number'
+                  name='maxWorkload'
+                  label='Carga Máxima de Trabajo'
+                  value={formik.values.maxWorkload}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.maxWorkload && Boolean(formik.errors.maxWorkload)}
+                  helperText={formik.touched.maxWorkload && formik.errors.maxWorkload}
+                  InputProps={{ inputProps: { min: 1, max: 50 } }}
+                  required
                 />
               </Grid>
 
               <Grid item xs={12}>
                 <Autocomplete
-                  multiple
-                  options={availableSpecialties}
-                  value={formik.values.specialties}
+                  freeSolo
+                  options={availableSpecializations}
+                  value={formik.values.specialization}
                   onChange={(_, value) =>
-                    formik.setFieldValue('specialties', value)
+                    formik.setFieldValue('specialization', value || '')
                   }
-                  onBlur={() => formik.setFieldTouched('specialties', true)}
+                  onBlur={() => formik.setFieldTouched('specialization', true)}
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label='Especialidades'
+                      label='Especialización'
+                      name='specialization'
+                      value={formik.values.specialization}
+                      onChange={formik.handleChange}
                       error={
-                        formik.touched.specialties &&
-                        Boolean(formik.errors.specialties)
+                        formik.touched.specialization &&
+                        Boolean(formik.errors.specialization)
                       }
                       helperText={
-                        formik.touched.specialties && formik.errors.specialties
+                        formik.touched.specialization && formik.errors.specialization
                       }
-                      // required
+                      required
                     />
                   )}
-                  renderTags={(value, getTagProps) =>
-                    value.map((option, index) => (
-                      <Chip
-                        {...getTagProps({ index })}
-                        key={option}
-                        label={option}
-                        size='small'
-                        color='primary'
-                      />
-                    ))
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={2}
+                  name='certifications'
+                  label='Certificaciones'
+                  value={formik.values.certifications}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.certifications && Boolean(formik.errors.certifications)}
+                  helperText={formik.touched.certifications && formik.errors.certifications}
+                  placeholder='Ej: Técnico en Electromedicina, Certificado en Ventiladores...'
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  name='notes'
+                  label='Notas'
+                  value={formik.values.notes}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.notes && Boolean(formik.errors.notes)}
+                  helperText={formik.touched.notes && formik.errors.notes}
+                  placeholder='Notas adicionales sobre el técnico...'
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formik.values.isAvailable}
+                      onChange={(e) =>
+                        formik.setFieldValue('isAvailable', e.target.checked)
+                      }
+                      name='isAvailable'
+                    />
                   }
+                  label='Disponible para Asignaciones'
                 />
               </Grid>
             </Grid>
@@ -619,12 +684,12 @@ const MaintenanceTechnicians: React.FC = () => {
               type='submit'
               variant='contained'
               disabled={
-                createTechnicianMutation.isPending ||
-                updateTechnicianMutation.isPending
+                createTechnicianMutation.isLoading ||
+                updateTechnicianMutation.isLoading
               }
             >
-              {createTechnicianMutation.isPending ||
-              updateTechnicianMutation.isPending
+              {createTechnicianMutation.isLoading ||
+              updateTechnicianMutation.isLoading
                 ? 'Guardando...'
                 : editingTechnician
                   ? 'Actualizar'
@@ -653,9 +718,9 @@ const MaintenanceTechnicians: React.FC = () => {
             onClick={handleDelete}
             color='error'
             variant='contained'
-            disabled={deleteTechnicianMutation.isPending}
+            disabled={deleteTechnicianMutation.isLoading}
           >
-            {deleteTechnicianMutation.isPending ? 'Eliminando...' : 'Eliminar'}
+            {deleteTechnicianMutation.isLoading ? 'Eliminando...' : 'Eliminar'}
           </Button>
         </DialogActions>
       </Dialog>
