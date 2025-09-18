@@ -12,6 +12,9 @@ const MaintenanceReport = lazy(
 const MaintenanceTracking = lazy(
   () => import('../pages/maintenance/MaintenanceTracking')
 )
+const MaintenanceTVDisplayPage = lazy(
+  () => import('../pages/MaintenanceTVDisplayPage')
+)
 
 const PublicRoutes = (
   <>
@@ -22,6 +25,8 @@ const PublicRoutes = (
     <Route path='/maintenance/report' element={<MaintenanceReport />} />
     <Route path='/maintenance/tracking' element={<MaintenanceTracking />} />
     <Route path='/maintenance/track' element={<MaintenanceTracking />} />
+    {/* TV Display Route */}
+    <Route path='/tv-display' element={<MaintenanceTVDisplayPage />} />
     {/* Error 404 */}
     <Route path='*' element={<NotFound />} />
     <Route path='/not-authorized' element={<NotAuthorizedPage />} />

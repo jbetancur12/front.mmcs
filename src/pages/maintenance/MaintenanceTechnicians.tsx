@@ -594,7 +594,7 @@ const MaintenanceTechnicians: React.FC = () => {
                       helperText={
                         formik.touched.specialties && formik.errors.specialties
                       }
-                      required
+                      // required
                     />
                   )}
                   renderTags={(value, getTagProps) =>
