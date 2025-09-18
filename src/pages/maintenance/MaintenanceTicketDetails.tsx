@@ -1236,7 +1236,8 @@ const MaintenanceTicketDetails: React.FC = () => {
                       <Box display='flex' alignItems='center' gap={0.5}>
                         <Star color='warning' fontSize='small' />
                         <Typography variant='body2' fontWeight='medium'>
-                          {ticket.assignedTechnician.rating.toFixed(1)}
+                          {ticket.assignedTechnician.rating?.toFixed(1) ||
+                            '0.0'}
                         </Typography>
                       </Box>
                     </Grid>
@@ -1499,7 +1500,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                     color='warning.main'
                     fontWeight='bold'
                   >
-                    {ticket.customerSatisfaction.toFixed(1)}
+                    {ticket.customerSatisfaction?.toFixed(1) || '0.0'}
                   </Typography>
                   <Typography variant='body2' color='text.secondary'>
                     de 5 estrellas

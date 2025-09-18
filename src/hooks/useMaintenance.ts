@@ -103,9 +103,21 @@ const maintenanceAPI = {
     id: string,
     data: MaintenanceUpdateRequest
   ): Promise<MaintenanceTicket> => {
+    // Map frontend field names to backend field names
+    const requestData = {
+      ...data,
+      // Map assignedTechnician to assignedTechnicianId for backend compatibility
+      assignedTechnicianId: data.assignedTechnician
+        ? parseInt(data.assignedTechnician)
+        : null
+    }
+
+    // Remove the frontend field name to avoid conflicts
+    delete requestData.assignedTechnician
+
     const response = await axiosPrivate.put<MaintenanceTicket>(
       `/maintenance/tickets/${id}`,
-      data
+      requestData
     )
     return response.data
   },
