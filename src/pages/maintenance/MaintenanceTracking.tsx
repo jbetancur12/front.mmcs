@@ -406,7 +406,9 @@ const MaintenanceTracking: React.FC = () => {
 
             {/* Timeline */}
             <Grid item xs={12}>
-              <MaintenanceTimeline timeline={trackingData.ticket.timeline} />
+              <MaintenanceTimeline
+                timeline={trackingData.ticket.timeline || []}
+              />
             </Grid>
           </Grid>
         )}

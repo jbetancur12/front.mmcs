@@ -54,10 +54,47 @@ const maintenanceAPI = {
   trackTicket: async (
     ticketNumber: string
   ): Promise<MaintenanceTrackingResponse> => {
-    const response = await axiosPublic.get<MaintenanceTrackingResponse>(
-      `/maintenance/tickets/track/${ticketNumber}`
-    )
-    return response.data
+    try {
+      const response = await axiosPublic.get<any>(
+        `public/maintenance/tickets/${ticketNumber}`
+      )
+
+      // Map backend timeline format to frontend format
+      const mappedTimeline =
+        response.data.timeline?.map((entry: any) => ({
+          id: entry.id,
+          ticketId: response.data.id,
+          action: mapBackendTypeToAction(entry.type),
+          description: entry.description || entry.title,
+          performedBy: entry.author || 'Sistema',
+          performedAt: entry.timestamp || entry.createdAt,
+          metadata: {
+            title: entry.title,
+            icon: entry.icon,
+            authorType: entry.authorType
+          }
+        })) || []
+
+      const ticket: MaintenanceTicket = {
+        ...response.data,
+        timeline: mappedTimeline
+      }
+
+      return {
+        ticket,
+        found: true,
+        message: 'Ticket encontrado'
+      }
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        return {
+          ticket: null,
+          found: false,
+          message: 'Ticket no encontrado'
+        }
+      }
+      throw error
+    }
   },
 
   // Private endpoints (auth required)
@@ -255,6 +292,38 @@ const maintenanceAPI = {
       `/maintenance/tickets/${ticketId}/pdf/options`
     )
     return response.data
+  }
+}
+
+// Helper function to map backend type to frontend action
+const mapBackendTypeToAction = (backendType: string): MaintenanceAction => {
+  switch (backendType) {
+    case 'ticket_created':
+      return MaintenanceAction.CREATED
+    case 'status_update':
+    case 'status_changed':
+      return MaintenanceAction.STATUS_CHANGED
+    case 'assigned':
+      return MaintenanceAction.ASSIGNED
+    case 'priority_changed':
+      return MaintenanceAction.PRIORITY_CHANGED
+    case 'comment_added':
+      return MaintenanceAction.COMMENT_ADDED
+    case 'file_uploaded':
+    case 'file_upload':
+      return MaintenanceAction.FILE_UPLOADED
+    case 'scheduled':
+      return MaintenanceAction.SCHEDULED
+    case 'completed':
+    case 'work_completed':
+      return MaintenanceAction.COMPLETED
+    case 'cancelled':
+    case 'ticket_cancelled':
+      return MaintenanceAction.CANCELLED
+    case 'cost_updated':
+      return MaintenanceAction.COST_UPDATED
+    default:
+      return MaintenanceAction.STATUS_CHANGED
   }
 }
 
