@@ -215,6 +215,46 @@ const maintenanceAPI = {
       `/maintenance/tickets/${ticketId}/timeline`
     )
     return response.data
+  },
+
+  // PDF Generation
+  generateServiceOrder: async (ticketId: string): Promise<Blob> => {
+    const response = await axiosPrivate.get(
+      `/maintenance/tickets/${ticketId}/pdf/service-order`,
+      { responseType: 'blob' }
+    )
+    return response.data
+  },
+
+  generateStatusReport: async (ticketId: string): Promise<Blob> => {
+    const response = await axiosPrivate.get(
+      `/maintenance/tickets/${ticketId}/pdf/status-report`,
+      { responseType: 'blob' }
+    )
+    return response.data
+  },
+
+  generateServiceCertificate: async (ticketId: string): Promise<Blob> => {
+    const response = await axiosPrivate.get(
+      `/maintenance/tickets/${ticketId}/pdf/certificate`,
+      { responseType: 'blob' }
+    )
+    return response.data
+  },
+
+  generateServiceInvoice: async (ticketId: string): Promise<Blob> => {
+    const response = await axiosPrivate.get(
+      `/maintenance/tickets/${ticketId}/pdf/invoice`,
+      { responseType: 'blob' }
+    )
+    return response.data
+  },
+
+  getPDFOptions: async (ticketId: string): Promise<any> => {
+    const response = await axiosPrivate.get(
+      `/maintenance/tickets/${ticketId}/pdf/options`
+    )
+    return response.data
   }
 }
 
@@ -474,5 +514,83 @@ export const useDeleteMaintenanceTechnician = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['maintenance-technicians'] })
     }
+  })
+}
+
+// PDF generation hooks
+export const useGenerateServiceOrder = () => {
+  return useMutation({
+    mutationFn: maintenanceAPI.generateServiceOrder,
+    onSuccess: (pdfBlob, ticketId) => {
+      // Download the PDF
+      const url = window.URL.createObjectURL(pdfBlob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `orden-servicio-${ticketId}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    }
+  })
+}
+
+export const useGenerateStatusReport = () => {
+  return useMutation({
+    mutationFn: maintenanceAPI.generateStatusReport,
+    onSuccess: (pdfBlob, ticketId) => {
+      // Download the PDF
+      const url = window.URL.createObjectURL(pdfBlob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `reporte-estado-${ticketId}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    }
+  })
+}
+
+export const useGenerateServiceCertificate = () => {
+  return useMutation({
+    mutationFn: maintenanceAPI.generateServiceCertificate,
+    onSuccess: (pdfBlob, ticketId) => {
+      // Download the PDF
+      const url = window.URL.createObjectURL(pdfBlob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `certificado-servicio-${ticketId}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    }
+  })
+}
+
+export const useGenerateServiceInvoice = () => {
+  return useMutation({
+    mutationFn: maintenanceAPI.generateServiceInvoice,
+    onSuccess: (pdfBlob, ticketId) => {
+      // Download the PDF
+      const url = window.URL.createObjectURL(pdfBlob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `factura-servicio-${ticketId}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    }
+  })
+}
+
+export const useGetPDFOptions = (ticketId: string) => {
+  return useQuery({
+    queryKey: ['pdf-options', ticketId],
+    queryFn: () => maintenanceAPI.getPDFOptions(ticketId),
+    enabled: !!ticketId,
+    staleTime: 300000 // 5 minutes
   })
 }

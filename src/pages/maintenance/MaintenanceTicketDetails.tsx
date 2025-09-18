@@ -78,7 +78,12 @@ import {
   useUploadMaintenanceFiles,
   useDeleteMaintenanceFile,
   useMaintenanceTechnicians,
-  useMaintenanceTimeline
+  useMaintenanceTimeline,
+  useGenerateServiceOrder,
+  useGenerateStatusReport,
+  useGenerateServiceCertificate,
+  useGenerateServiceInvoice,
+  useGetPDFOptions
 } from '../../hooks/useMaintenance'
 import {
   MaintenanceStatus,
@@ -155,6 +160,13 @@ const MaintenanceTicketDetails: React.FC = () => {
   const addCommentMutation = useAddMaintenanceComment()
   const uploadFilesMutation = useUploadMaintenanceFiles()
   const deleteFileMutation = useDeleteMaintenanceFile()
+
+  // PDF generation mutations
+  const generateServiceOrderMutation = useGenerateServiceOrder()
+  const generateStatusReportMutation = useGenerateStatusReport()
+  const generateServiceCertificateMutation = useGenerateServiceCertificate()
+  const generateServiceInvoiceMutation = useGenerateServiceInvoice()
+  const { data: pdfOptions } = useGetPDFOptions(ticketId || '')
 
   // WebSocket for real-time updates
   useMaintenanceWebSocket({
@@ -402,39 +414,35 @@ const MaintenanceTicketDetails: React.FC = () => {
     )
   }
 
-  const handleGenerateServiceOrder = async () => {
-    setIsGeneratingPdf(true)
-    try {
-      window.open(
-        `/api/maintenance/tickets/${ticketId}/pdf/service-order`,
-        '_blank'
-      )
-      showToast('Orden de servicio generada exitosamente', 'success')
-    } catch (error) {
-      showToast('Error al generar orden de servicio', 'error')
-    } finally {
-      setIsGeneratingPdf(false)
-      setPdfMenuAnchor(null)
-    }
+  const handleGenerateServiceOrder = () => {
+    if (!ticketId) return
+    generateServiceOrderMutation.mutate(ticketId, {
+      onSuccess: () => {
+        showToast('Orden de servicio generada exitosamente', 'success')
+        setPdfMenuAnchor(null)
+      },
+      onError: (error) => {
+        console.error('Error generating service order:', error)
+        showToast('Error al generar orden de servicio', 'error')
+      }
+    })
   }
 
-  const handleGenerateStatusReport = async () => {
-    setIsGeneratingPdf(true)
-    try {
-      window.open(
-        `/api/maintenance/tickets/${ticketId}/pdf/status-report`,
-        '_blank'
-      )
-      showToast('Reporte de estado generado exitosamente', 'success')
-    } catch (error) {
-      showToast('Error al generar reporte de estado', 'error')
-    } finally {
-      setIsGeneratingPdf(false)
-      setPdfMenuAnchor(null)
-    }
+  const handleGenerateStatusReport = () => {
+    if (!ticketId) return
+    generateStatusReportMutation.mutate(ticketId, {
+      onSuccess: () => {
+        showToast('Reporte de estado generado exitosamente', 'success')
+        setPdfMenuAnchor(null)
+      },
+      onError: (error) => {
+        console.error('Error generating status report:', error)
+        showToast('Error al generar reporte de estado', 'error')
+      }
+    })
   }
 
-  const handleGenerateServiceCertificate = async () => {
+  const handleGenerateServiceCertificate = () => {
     if (ticket?.status !== MaintenanceStatus.COMPLETED) {
       showToast(
         'El certificado solo se puede generar para tickets completados',
@@ -443,22 +451,20 @@ const MaintenanceTicketDetails: React.FC = () => {
       return
     }
 
-    setIsGeneratingPdf(true)
-    try {
-      window.open(
-        `/api/maintenance/tickets/${ticketId}/pdf/service-certificate`,
-        '_blank'
-      )
-      showToast('Certificado de servicio generado exitosamente', 'success')
-    } catch (error) {
-      showToast('Error al generar certificado de servicio', 'error')
-    } finally {
-      setIsGeneratingPdf(false)
-      setPdfMenuAnchor(null)
-    }
+    if (!ticketId) return
+    generateServiceCertificateMutation.mutate(ticketId, {
+      onSuccess: () => {
+        showToast('Certificado de servicio generado exitosamente', 'success')
+        setPdfMenuAnchor(null)
+      },
+      onError: (error) => {
+        console.error('Error generating service certificate:', error)
+        showToast('Error al generar certificado de servicio', 'error')
+      }
+    })
   }
 
-  const handleGenerateInvoice = async () => {
+  const handleGenerateInvoice = () => {
     if (!ticket?.actualCost && !ticket?.estimatedCost) {
       showToast(
         'Debe haber un costo especificado para generar factura',
@@ -467,16 +473,17 @@ const MaintenanceTicketDetails: React.FC = () => {
       return
     }
 
-    setIsGeneratingPdf(true)
-    try {
-      window.open(`/api/maintenance/tickets/${ticketId}/pdf/invoice`, '_blank')
-      showToast('Factura generada exitosamente', 'success')
-    } catch (error) {
-      showToast('Error al generar factura', 'error')
-    } finally {
-      setIsGeneratingPdf(false)
-      setPdfMenuAnchor(null)
-    }
+    if (!ticketId) return
+    generateServiceInvoiceMutation.mutate(ticketId, {
+      onSuccess: () => {
+        showToast('Factura generada exitosamente', 'success')
+        setPdfMenuAnchor(null)
+      },
+      onError: (error) => {
+        console.error('Error generating invoice:', error)
+        showToast('Error al generar factura', 'error')
+      }
+    })
   }
 
   const handlePdfMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -629,14 +636,22 @@ const MaintenanceTicketDetails: React.FC = () => {
               <Button
                 variant='outlined'
                 startIcon={
-                  isGeneratingPdf ? (
+                  generateServiceOrderMutation.isLoading ||
+                  generateStatusReportMutation.isLoading ||
+                  generateServiceCertificateMutation.isLoading ||
+                  generateServiceInvoiceMutation.isLoading ? (
                     <CircularProgress size={16} />
                   ) : (
                     <PictureAsPdf />
                   )
                 }
                 onClick={handlePdfMenuOpen}
-                disabled={isGeneratingPdf}
+                disabled={
+                  generateServiceOrderMutation.isLoading ||
+                  generateStatusReportMutation.isLoading ||
+                  generateServiceCertificateMutation.isLoading ||
+                  generateServiceInvoiceMutation.isLoading
+                }
                 size='small'
                 endIcon={<ExpandMore />}
               >
@@ -1561,7 +1576,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   startIcon={<Print />}
                   onClick={handleGenerateServiceOrder}
                   size='small'
-                  disabled={isGeneratingPdf}
+                  disabled={generateServiceOrderMutation.isLoading}
                 >
                   Orden de Servicio
                 </Button>
@@ -1572,7 +1587,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   startIcon={<Assessment />}
                   onClick={handleGenerateStatusReport}
                   size='small'
-                  disabled={isGeneratingPdf}
+                  disabled={generateStatusReportMutation.isLoading}
                 >
                   Reporte de Estado
                 </Button>
@@ -1584,7 +1599,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   onClick={handleGenerateServiceCertificate}
                   size='small'
                   disabled={
-                    isGeneratingPdf ||
+                    generateServiceCertificateMutation.isLoading ||
                     ticket.status !== MaintenanceStatus.COMPLETED
                   }
                 >
@@ -1598,7 +1613,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   onClick={handleGenerateInvoice}
                   size='small'
                   disabled={
-                    isGeneratingPdf ||
+                    generateServiceInvoiceMutation.isLoading ||
                     (!ticket.actualCost && !ticket.estimatedCost)
                   }
                 >
