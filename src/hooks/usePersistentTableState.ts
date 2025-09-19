@@ -219,6 +219,21 @@ export const usePersistentTableState = (
     setTableState(mergedDefaultState)
   }, [tableId, mergedDefaultState])
 
+  // Clear only filters function (keep pagination/other settings)
+  const clearFilters = useCallback(() => {
+    const clearedState = {
+      ...tableState,
+      columnFilters: [],
+      sorting: [],
+      pagination: {
+        pageIndex: 0,
+        pageSize: tableState.pagination.pageSize // Keep current page size
+      }
+    }
+    setTableState(clearedState)
+    debouncedSave(clearedState)
+  }, [tableState, debouncedSave])
+
   // Load state function (for manual refresh)
   const loadState = useCallback(() => {
     const loadedState = loadStateFromStorage(tableId, mergedDefaultState)
@@ -246,6 +261,7 @@ export const usePersistentTableState = (
     // Utility functions
     updateTableState,
     clearState,
+    clearFilters,
     loadState
   }
 }

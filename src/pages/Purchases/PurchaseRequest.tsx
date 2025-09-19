@@ -31,6 +31,7 @@ import {
   generateTableId,
   getModuleTableConfig
 } from '../../utils/tableStateUtils'
+import ActiveFiltersIndicator from '../../components/Table/ActiveFiltersIndicator'
 
 // Función para obtener las solicitudes de compra
 const fetchPurchaseRequests = async (
@@ -285,6 +286,13 @@ const PurchaseRequest: React.FC = () => {
         Solicitudes de Compra
       </Typography>
 
+      {/* Active Filters Indicator */}
+      <ActiveFiltersIndicator
+        tableState={persistentTableState.tableState}
+        onClearFilters={persistentTableState.clearFilters}
+        showDetails={true}
+      />
+
       <MaterialReactTable
         columns={columns}
         data={purchaseRequests}
@@ -338,33 +346,44 @@ const PurchaseRequest: React.FC = () => {
         }}
         renderTopToolbarCustomActions={() =>
           allowCreationRequest && (
-            <Grid container>
-              <Button
-                variant='contained'
-                size='small'
-                onClick={handleOpenModal}
-                startIcon={<Add />}
-                sx={{
-                  backgroundColor: '#9CF08B',
-                  fontWeight: 'bold',
-                  color: '#2D4A27',
-                  '&:hover': {
-                    backgroundColor: '#6DC662' // Azul más oscuro en hover
-                  }
-                }}
-              >
-                Nuevo Solicitud de Compra
-              </Button>
-              <IconButton
-                onClick={() => navigate('/purchases/personnel-management')}
-                title='Crear nueva solicitud de compra'
-                sx={{ ml: 1 }}
-                size='small'
-              >
-                <Tooltip title='Crear personal de compras'>
-                  <FaUser />
-                </Tooltip>
-              </IconButton>
+            <Grid container alignItems="center" spacing={1}>
+              <Grid item>
+                <Button
+                  variant='contained'
+                  size='small'
+                  onClick={handleOpenModal}
+                  startIcon={<Add />}
+                  sx={{
+                    backgroundColor: '#9CF08B',
+                    fontWeight: 'bold',
+                    color: '#2D4A27',
+                    '&:hover': {
+                      backgroundColor: '#6DC662'
+                    }
+                  }}
+                >
+                  Nuevo Solicitud de Compra
+                </Button>
+              </Grid>
+              <Grid item>
+                <IconButton
+                  onClick={() => navigate('/purchases/personnel-management')}
+                  title='Crear nueva solicitud de compra'
+                  size='small'
+                >
+                  <Tooltip title='Crear personal de compras'>
+                    <FaUser />
+                  </Tooltip>
+                </IconButton>
+              </Grid>
+              <Grid item>
+                {/* Compact filter indicator in toolbar */}
+                <ActiveFiltersIndicator
+                  tableState={persistentTableState.tableState}
+                  onClearFilters={persistentTableState.clearFilters}
+                  compact={true}
+                />
+              </Grid>
             </Grid>
           )
         }

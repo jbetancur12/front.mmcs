@@ -137,3 +137,111 @@ export const getAllTableStates = (): Record<string, any> => {
 
   return tableStates
 }
+
+/**
+ * Check if table has any active filters
+ */
+export const hasActiveFilters = (tableState: any): boolean => {
+  const {
+    columnFilters = [],
+    sorting = [],
+    pagination = { pageIndex: 0, pageSize: 10 }
+  } = tableState
+
+  // Check if there are column filters
+  const hasColumnFilters = Array.isArray(columnFilters) && columnFilters.length > 0
+
+  // Check if there's active sorting
+  const hasSorting = Array.isArray(sorting) && sorting.length > 0
+
+  // Check if not on first page (pagination filter)
+  const hasCustomPagination = pagination.pageIndex > 0
+
+  return hasColumnFilters || hasSorting || hasCustomPagination
+}
+
+/**
+ * Get count of active filters for display
+ */
+export const getActiveFiltersCount = (tableState: any): number => {
+  const {
+    columnFilters = [],
+    sorting = [],
+    pagination = { pageIndex: 0 }
+  } = tableState
+
+  let count = 0
+
+  // Count column filters
+  if (Array.isArray(columnFilters)) {
+    count += columnFilters.length
+  }
+
+  // Count sorting (max 1)
+  if (Array.isArray(sorting) && sorting.length > 0) {
+    count += 1
+  }
+
+  // Count pagination if not on first page
+  if (pagination.pageIndex > 0) {
+    count += 1
+  }
+
+  return count
+}
+
+/**
+ * Get filter summary for display
+ */
+export const getFilterSummary = (tableState: any): string[] => {
+  const {
+    columnFilters = [],
+    sorting = [],
+    pagination = { pageIndex: 0 }
+  } = tableState
+
+  const summary: string[] = []
+
+  // Add column filters to summary
+  if (Array.isArray(columnFilters) && columnFilters.length > 0) {
+    columnFilters.forEach((filter: any) => {
+      if (filter.id && filter.value) {
+        const value = Array.isArray(filter.value) ? filter.value.join(', ') : filter.value
+        summary.push(`${filter.id}: ${value}`)
+      }
+    })
+  }
+
+  // Add sorting to summary
+  if (Array.isArray(sorting) && sorting.length > 0) {
+    sorting.forEach((sort: any) => {
+      if (sort.id) {
+        const direction = sort.desc ? 'desc' : 'asc'
+        summary.push(`Ordenado por: ${sort.id} (${direction})`)
+      }
+    })
+  }
+
+  // Add pagination to summary
+  if (pagination.pageIndex > 0) {
+    summary.push(`Página: ${pagination.pageIndex + 1}`)
+  }
+
+  return summary
+}
+
+/**
+ * Reset table state to default values
+ */
+export const getDefaultTableState = (config: ModuleTableConfig): Partial<TableState> => {
+  return {
+    columnFilters: [],
+    sorting: [],
+    pagination: {
+      pageIndex: 0,
+      pageSize: config.defaultPageSize
+    },
+    columnVisibility: {},
+    density: 'comfortable'
+  }
+}

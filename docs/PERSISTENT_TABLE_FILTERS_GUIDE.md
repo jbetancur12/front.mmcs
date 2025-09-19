@@ -11,6 +11,10 @@ Esta guía explica cómo implementar filtros persistentes en todas las tablas Ma
 - ✅ **Densidad de tabla** (opcional) - Compact/comfortable/spacious
 - ✅ **Configuración por módulo** - Cada módulo tiene sus propias configuraciones
 - ✅ **Type-safe** - TypeScript completo con interfaces
+- 🆕 **Indicadores visuales** - Los usuarios siempre saben si hay filtros activos
+- 🆕 **Botón limpiar filtros** - Un click para eliminar todos los filtros
+- 🆕 **Resumen de filtros** - Muestra exactamente qué filtros están aplicados
+- 🆕 **Badges compactos** - Indicadores discretos en la barra de herramientas
 
 ## 📁 Archivos Principales
 
@@ -306,11 +310,127 @@ const tableHandlers = createTableStateHandlers(persistentTableState)
 - Importa correctamente `TableState` desde `usePersistentTableState`
 - Verifica que las interfaces de datos sean compatibles con MaterialReactTable
 
+## 👁️ Indicadores Visuales de Filtros Activos
+
+### Problema Resuelto
+Uno de los problemas más comunes es que los usuarios no se dan cuenta de que hay filtros aplicados cuando regresan a una tabla. Esto puede causar confusión al ver resultados limitados sin saber por qué.
+
+### Soluciones Implementadas
+
+#### 1. **Indicador Principal** (Encima de la tabla)
+```typescript
+<ActiveFiltersIndicator
+  tableState={persistentTableState.tableState}
+  onClearFilters={persistentTableState.clearFilters}
+  showDetails={true}
+/>
+```
+
+**Características:**
+- 🟠 **Banner naranja** muy visible cuando hay filtros activos
+- 📊 **Cuenta de filtros** - "3 filtro(s) activo(s)"
+- 📝 **Resumen expandible** - Lista todos los filtros aplicados
+- 🗑️ **Botón "Limpiar Filtros"** - Un click para eliminar todo
+
+#### 2. **Badge Compacto** (En la barra de herramientas)
+```typescript
+<ActiveFiltersIndicator
+  tableState={persistentTableState.tableState}
+  onClearFilters={persistentTableState.clearFilters}
+  compact={true}
+/>
+```
+
+**Características:**
+- 🏷️ **Chip pequeño** con ícono de filtro y número
+- 💡 **Tooltip informativo** al hacer hover
+- ⚡ **Click para limpiar** directamente desde el badge
+
+### Implementación Completa
+
+```typescript
+import ActiveFiltersIndicator from '../../components/Table/ActiveFiltersIndicator'
+
+const MyTableComponent = () => {
+  const persistentTableState = usePersistentTableState({
+    tableId: generateTableId('mi-modulo', 'mi-tabla'),
+    // ... configuración
+  })
+
+  return (
+    <>
+      <Typography variant="h5">Mi Tabla</Typography>
+
+      {/* Indicador principal - siempre visible si hay filtros */}
+      <ActiveFiltersIndicator
+        tableState={persistentTableState.tableState}
+        onClearFilters={persistentTableState.clearFilters}
+        showDetails={true}
+      />
+
+      <MaterialReactTable
+        // ... configuración de tabla
+        renderTopToolbarCustomActions={() => (
+          <Box>
+            {/* Otros botones */}
+
+            {/* Badge compacto en toolbar */}
+            <ActiveFiltersIndicator
+              tableState={persistentTableState.tableState}
+              onClearFilters={persistentTableState.clearFilters}
+              compact={true}
+            />
+          </Box>
+        )}
+      />
+    </>
+  )
+}
+```
+
+### Configuración de Estilos
+
+Los indicadores usan un esquema de colores **naranja/warning** para máxima visibilidad:
+
+- **Fondo**: `#fff3e0` (naranja muy claro)
+- **Borde izquierdo**: `#ff9800` (naranja)
+- **Ícono**: Color warning de Material-UI
+- **Chips**: Color warning con variantes outlined/filled
+
+### Funciones de Utilidad
+
+```typescript
+import {
+  hasActiveFilters,
+  getActiveFiltersCount,
+  getFilterSummary
+} from '../../utils/tableStateUtils'
+
+// Verificar si hay filtros activos
+const hasFilters = hasActiveFilters(tableState) // boolean
+
+// Obtener número de filtros
+const count = getActiveFiltersCount(tableState) // number
+
+// Obtener resumen detallado
+const summary = getFilterSummary(tableState) // string[]
+// Ejemplo: ["status: pending", "Ordenado por: date (desc)", "Página: 2"]
+```
+
+### Beneficios UX
+
+✅ **Visibilidad máxima** - Imposible no notar que hay filtros activos
+✅ **Información clara** - Saben exactamente qué filtros están aplicados
+✅ **Acción rápida** - Un click para limpiar todo
+✅ **No intrusivo** - Solo aparece cuando es necesario
+✅ **Consistente** - Mismo comportamiento en todas las tablas
+
 ## 📚 Próximos Pasos
 
 1. **Implementar en todas las tablas** de la aplicación
 2. **Agregar sincronización con backend** (API ya implementada)
 3. **Agregar configuraciones por usuario** (preferencias personales)
 4. **Implementar exportación/importación** de configuraciones
+5. **Agregar notificaciones** cuando se aplican filtros automáticamente
 
-¡Ya tienes todo lo necesario para implementar filtros persistentes en cualquier tabla de la aplicación! 🎉
+¡Ya tienes todo lo necesario para implementar filtros persistentes con excelente UX en cualquier tabla de la aplicación! 🎉
