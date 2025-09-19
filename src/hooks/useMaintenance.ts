@@ -304,6 +304,7 @@ const mapBackendTypeToAction = (backendType: string): MaintenanceAction => {
     case 'status_changed':
       return MaintenanceAction.STATUS_CHANGED
     case 'assigned':
+    case 'technician_assigned':
       return MaintenanceAction.ASSIGNED
     case 'priority_changed':
       return MaintenanceAction.PRIORITY_CHANGED
@@ -313,6 +314,7 @@ const mapBackendTypeToAction = (backendType: string): MaintenanceAction => {
     case 'file_upload':
       return MaintenanceAction.FILE_UPLOADED
     case 'scheduled':
+    case 'work_scheduled':
       return MaintenanceAction.SCHEDULED
     case 'completed':
     case 'work_completed':
@@ -322,6 +324,15 @@ const mapBackendTypeToAction = (backendType: string): MaintenanceAction => {
       return MaintenanceAction.CANCELLED
     case 'cost_updated':
       return MaintenanceAction.COST_UPDATED
+    // Map additional backend event types to existing actions
+    case 'work_started':
+      return MaintenanceAction.STATUS_CHANGED
+    case 'customer_contacted':
+      return MaintenanceAction.COMMENT_ADDED
+    case 'parts_ordered':
+      return MaintenanceAction.STATUS_CHANGED
+    case 'timeline_updated':
+      return MaintenanceAction.STATUS_CHANGED
     default:
       return MaintenanceAction.STATUS_CHANGED
   }
@@ -339,9 +350,11 @@ const mapBackendTimelineToFrontend = (
         action = MaintenanceAction.CREATED
         break
       case 'status_update':
+      case 'status_changed':
         action = MaintenanceAction.STATUS_CHANGED
         break
       case 'assigned':
+      case 'technician_assigned':
         action = MaintenanceAction.ASSIGNED
         break
       case 'priority_changed':
@@ -351,19 +364,36 @@ const mapBackendTimelineToFrontend = (
         action = MaintenanceAction.COMMENT_ADDED
         break
       case 'file_uploaded':
+      case 'file_upload':
         action = MaintenanceAction.FILE_UPLOADED
         break
       case 'scheduled':
+      case 'work_scheduled':
         action = MaintenanceAction.SCHEDULED
         break
       case 'completed':
+      case 'work_completed':
         action = MaintenanceAction.COMPLETED
         break
       case 'cancelled':
+      case 'ticket_cancelled':
         action = MaintenanceAction.CANCELLED
         break
       case 'cost_updated':
         action = MaintenanceAction.COST_UPDATED
+        break
+      // Map additional backend event types to existing actions
+      case 'work_started':
+        action = MaintenanceAction.STATUS_CHANGED
+        break
+      case 'customer_contacted':
+        action = MaintenanceAction.COMMENT_ADDED
+        break
+      case 'parts_ordered':
+        action = MaintenanceAction.STATUS_CHANGED
+        break
+      case 'timeline_updated':
+        action = MaintenanceAction.STATUS_CHANGED
         break
       default:
         action = MaintenanceAction.STATUS_CHANGED

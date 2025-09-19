@@ -5,7 +5,6 @@ import {
   Grid,
   Card,
   CardContent,
-  Chip,
   LinearProgress,
   Alert,
   Fade,
@@ -21,25 +20,18 @@ import {
   Warning,
   Person,
   Assignment,
-  PriorityHigh,
   TrendingUp,
   Schedule,
   Group,
   Speed,
   DateRange,
-  CheckCircleOutline,
   NetworkCheck,
-  HealthAndSafety,
   Cached
 } from '@mui/icons-material'
 import { formatDistanceToNow, format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { useTVDisplayData } from '../../hooks/useMaintenancePublic'
-import {
-  MaintenanceTicket,
-  MaintenancePriority,
-  MaintenanceStatus
-} from '../../types/maintenance'
+import { useTVDisplayDataWithWebSocket } from '../../hooks/useMaintenancePublic'
+import { MaintenancePriority } from '../../types/maintenance'
 import MaintenancePriorityBadge from './MaintenancePriorityBadge'
 import MaintenanceStatusBadge from './MaintenanceStatusBadge'
 
@@ -67,15 +59,15 @@ interface SystemStatus {
 
 /**
  * MaintenanceTVDisplayPublic - A public TV display component for maintenance tickets
- * Optimized for large screens (1920x1080+) with real-time updates and auto-refresh
+ * Optimized for large screens (1920x1080+) with real-time WebSocket updates
  * No authentication required - uses public endpoints
  *
  * Features:
  * - Real-time clock and date display
- * - Live metrics dashboard
+ * - Live metrics dashboard via WebSocket
  * - Priority-based ticket organization
  * - Urgent ticket animations
- * - Auto-refresh every 30 seconds
+ * - Real-time updates (no auto-refresh needed)
  * - Error handling and loading states
  * - Dark theme optimized for office environments
  */
@@ -89,16 +81,16 @@ const MaintenanceTVDisplayPublic: React.FC = () => {
     data: tvDisplayData,
     isLoading: isLoading,
     error: error
-  } = useTVDisplayData()
+  } = useTVDisplayDataWithWebSocket()
 
-  // Update animation key for visual refresh
-  useEffect(() => {
-    const animationInterval = setInterval(() => {
-      setAnimationKey((prev) => prev + 1)
-    }, 30000)
+  // Update animation key for visual refresh (removed auto-refresh as WebSocket handles real-time updates)
+  // useEffect(() => {
+  //   const animationInterval = setInterval(() => {
+  //     setAnimationKey((prev) => prev + 1)
+  //   }, 30000)
 
-    return () => clearInterval(animationInterval)
-  }, [])
+  //   return () => clearInterval(animationInterval)
+  // }, [])
 
   // Update clock every second
   useEffect(() => {
@@ -118,12 +110,12 @@ const MaintenanceTVDisplayPublic: React.FC = () => {
         (tvDisplayData.tickets.medium?.length || 0) +
         (tvDisplayData.tickets.low?.length || 0)
 
-      if (totalTickets > 20) {
+      if (totalTickets > 8) {
         const slideInterval = setInterval(() => {
           setSlideIndex((prev) =>
-            prev >= Math.ceil(totalTickets / 20) - 1 ? 0 : prev + 1
+            prev >= Math.ceil(totalTickets / 8) - 1 ? 0 : prev + 1
           )
-        }, 10000)
+        }, 15000)
 
         return () => clearInterval(slideInterval)
       }
@@ -223,8 +215,8 @@ const MaintenanceTVDisplayPublic: React.FC = () => {
       ...organizedTickets.high,
       ...organizedTickets.normal
     ]
-    const startIndex = slideIndex * 20
-    return allNormalTickets.slice(startIndex, startIndex + 20)
+    const startIndex = slideIndex * 8
+    return allNormalTickets.slice(startIndex, startIndex + 8)
   }, [organizedTickets, slideIndex])
 
   // Calculate elapsed time since ticket creation
@@ -568,7 +560,7 @@ const MaintenanceTVDisplayPublic: React.FC = () => {
               boxShadow: '0 4px 16px rgba(0,0,0,0.2)'
             }}
           >
-            <CardContent sx={{ py: 1.5, px: 3 }}>
+            {/* <CardContent sx={{ py: 1.5, px: 3 }}>
               <Grid container spacing={2} alignItems='center'>
                 <Grid item xs={3}>
                   <Box
@@ -711,7 +703,7 @@ const MaintenanceTVDisplayPublic: React.FC = () => {
                   </Box>
                 </Grid>
               </Grid>
-            </CardContent>
+            </CardContent> */}
           </Card>
         </Box>
 
@@ -735,11 +727,11 @@ const MaintenanceTVDisplayPublic: React.FC = () => {
             </Typography>
 
             <Grid container spacing={1.5}>
-              {organizedTickets.urgent.map((ticket) => (
+              {organizedTickets.urgent.map((ticket: any) => (
                 <Grid item xs={4} key={ticket.id}>
                   <Grow
                     in={true}
-                    timeout={1000}
+                    timeout={1500}
                     key={`urgent-${ticket.id}-${animationKey}`}
                   >
                     <Card
@@ -889,28 +881,49 @@ const MaintenanceTVDisplayPublic: React.FC = () => {
             TICKETS ACTIVOS
             {tvDisplayData &&
               organizedTickets.high.length + organizedTickets.normal.length >
-                20 && (
-                <Chip
-                  label={`${slideIndex + 1} de ${Math.ceil((organizedTickets.high.length + organizedTickets.normal.length) / 20)}`}
-                  sx={{ ml: 1.5, fontSize: '0.8rem' }}
-                  size='small'
-                />
+                8 && (
+                <Box
+                  sx={{
+                    backgroundColor: 'rgba(47, 177, 88, 0.2)',
+                    border: '1px solid #2FB158',
+                    borderRadius: 2,
+                    px: 2,
+                    py: 0.5,
+                    ml: 2
+                  }}
+                >
+                  <Typography
+                    variant='body1'
+                    sx={{
+                      color: '#2FB158',
+                      fontWeight: 'bold',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    {slideIndex + 1} de{' '}
+                    {Math.ceil(
+                      (organizedTickets.high.length +
+                        organizedTickets.normal.length) /
+                        8
+                    )}
+                  </Typography>
+                </Box>
               )}
           </Typography>
 
           <Slide
             direction='left'
             in={true}
-            timeout={800}
+            timeout={1200}
             key={`slide-${slideIndex}-${animationKey}`}
           >
             <Grid container spacing={1.5}>
               {currentSliceTickets.map((ticket, index) => (
-                <Grid item xs={2.4} key={ticket.id}>
+                <Grid item xs={3} key={ticket.id}>
                   <Fade
                     in={true}
-                    timeout={1000}
-                    style={{ transitionDelay: `${index * 50}ms` }}
+                    timeout={1500}
+                    style={{ transitionDelay: `${index * 100}ms` }}
                   >
                     <Card
                       sx={{
@@ -1048,8 +1061,7 @@ const MaintenanceTVDisplayPublic: React.FC = () => {
 
         {/* Progress indicator for sliding */}
         {tvDisplayData &&
-          organizedTickets.high.length + organizedTickets.normal.length >
-            20 && (
+          organizedTickets.high.length + organizedTickets.normal.length > 8 && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
               <LinearProgress
                 variant='determinate'
@@ -1058,7 +1070,7 @@ const MaintenanceTVDisplayPublic: React.FC = () => {
                     Math.ceil(
                       (organizedTickets.high.length +
                         organizedTickets.normal.length) /
-                        20
+                        8
                     )) *
                   100
                 }
@@ -1075,109 +1087,6 @@ const MaintenanceTVDisplayPublic: React.FC = () => {
             </Box>
           )}
       </Container>
-
-      {/* System Status Footer */}
-      <Box
-        sx={{
-          backgroundColor: '#1a1a1a',
-          borderTop: '3px solid #2FB158',
-          py: 1,
-          px: 2,
-          mt: 'auto'
-        }}
-      >
-        <Container maxWidth={false} sx={{ px: 3 }}>
-          <Grid container spacing={2} alignItems='center'>
-            <Grid item xs={3}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <NetworkCheck
-                  sx={{
-                    fontSize: '1.5rem',
-                    color: getStatusColor(systemStatus.operationalStatus)
-                  }}
-                />
-                <Box>
-                  <Typography
-                    variant='body1'
-                    sx={{ fontWeight: 'bold', color: 'white', mb: 0 }}
-                  >
-                    {systemStatus.operationalStatus.toUpperCase()}
-                  </Typography>
-                  <Typography variant='caption' sx={{ color: '#888' }}>
-                    Estado Operacional
-                  </Typography>
-                </Box>
-              </Box>
-            </Grid>
-
-            <Grid item xs={3}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Cached
-                  sx={{
-                    fontSize: '1.5rem',
-                    color: getStatusColor(systemStatus.queueHealth)
-                  }}
-                />
-                <Box>
-                  <Typography
-                    variant='body1'
-                    sx={{ fontWeight: 'bold', color: 'white', mb: 0 }}
-                  >
-                    {systemStatus.queueHealth.toUpperCase()}
-                  </Typography>
-                  <Typography variant='caption' sx={{ color: '#888' }}>
-                    Estado de Cola
-                  </Typography>
-                </Box>
-              </Box>
-            </Grid>
-
-            <Grid item xs={3}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Person sx={{ fontSize: '1.5rem', color: '#00bcd4' }} />
-                <Box>
-                  <Typography
-                    variant='body1'
-                    sx={{ fontWeight: 'bold', color: 'white', mb: 0 }}
-                  >
-                    {systemStatus.technicianUtilization.toFixed(0)}%
-                  </Typography>
-                  <Typography variant='caption' sx={{ color: '#888' }}>
-                    Utilización Técnicos
-                  </Typography>
-                </Box>
-              </Box>
-            </Grid>
-
-            <Grid item xs={3}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  justifyContent: 'flex-end'
-                }}
-              >
-                <AccessTime sx={{ fontSize: '1.5rem', color: '#888' }} />
-                <Box sx={{ textAlign: 'right' }}>
-                  <Typography
-                    variant='body1'
-                    sx={{ fontWeight: 'bold', color: 'white', mb: 0 }}
-                  >
-                    {format(
-                      new Date(systemStatus.lastSystemUpdate),
-                      'HH:mm:ss'
-                    )}
-                  </Typography>
-                  <Typography variant='caption' sx={{ color: '#888' }}>
-                    Última Actualización
-                  </Typography>
-                </Box>
-              </Box>
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
 
       {/* CSS Animations */}
       <style>
