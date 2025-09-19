@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import {
   MRT_ColumnFiltersState,
   MRT_PaginationState,
@@ -100,7 +100,7 @@ const saveStateToStorage = (
     const stateToSave: Partial<TableState> = {}
     persistedProperties.forEach((prop) => {
       if (state[prop] !== undefined) {
-        stateToSave[prop] = state[prop]
+        ;(stateToSave as any)[prop] = state[prop]
       }
     })
 
