@@ -24,6 +24,14 @@ import { PurchaseRequestModal } from 'src/Components/Purchases/purchase-request-
 import { useNavigate } from 'react-router-dom'
 import { FaUser } from 'react-icons/fa'
 
+// Import the new generic solution
+import { usePersistentTableState } from '../../hooks/usePersistentTableState'
+import {
+  createTableStateHandlers,
+  generateTableId,
+  getModuleTableConfig
+} from '../../utils/tableStateUtils'
+
 // Función para obtener las solicitudes de compra
 const fetchPurchaseRequests = async (
   axiosPrivate: ReturnType<typeof useAxiosPrivate>
@@ -44,6 +52,22 @@ const PurchaseRequest: React.FC = () => {
     'comp_requester',
     'comp_admin'
   ])
+
+  // Use the new generic persistent table state
+  const tableConfig = getModuleTableConfig('purchases')
+  const persistentTableState = usePersistentTableState({
+    tableId: generateTableId('purchases', 'purchase-requests'),
+    persistedProperties: tableConfig.persistedProperties,
+    defaultState: {
+      pagination: {
+        pageIndex: 0,
+        pageSize: tableConfig.defaultPageSize
+      }
+    }
+  })
+
+  // Create standardized event handlers
+  const tableHandlers = createTableStateHandlers(persistentTableState)
   // Uso de react-query para obtener los datos
   const { data, isLoading } = useQuery('purchaseRequests', () =>
     fetchPurchaseRequests(axiosPrivate)
@@ -264,7 +288,13 @@ const PurchaseRequest: React.FC = () => {
       <MaterialReactTable
         columns={columns}
         data={purchaseRequests}
-        state={{ isLoading }}
+        state={{
+          isLoading,
+          ...tableHandlers.state
+        }}
+        onColumnFiltersChange={tableHandlers.onColumnFiltersChange}
+        onSortingChange={tableHandlers.onSortingChange}
+        onPaginationChange={tableHandlers.onPaginationChange}
         localization={MRT_Localization_ES}
         enableRowActions={true}
         renderRowActions={({ row }) => (
