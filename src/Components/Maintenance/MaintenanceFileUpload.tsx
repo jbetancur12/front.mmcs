@@ -113,8 +113,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
     multiple: true
   })
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes'
+  const formatFileSize = (bytes: number | undefined | null) => {
+    if (!bytes || bytes === 0) return '0 Bytes'
     const k = 1024
     const sizes = ['Bytes', 'KB', 'MB', 'GB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
@@ -217,7 +217,9 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                           whiteSpace: 'nowrap'
                         }}
                       >
-                        {file.originalName}
+                        {file.originalName ||
+                          file.fileName ||
+                          'Archivo sin nombre'}
                       </Typography>
                     </Box>
 

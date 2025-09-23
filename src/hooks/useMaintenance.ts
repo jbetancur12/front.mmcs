@@ -163,9 +163,14 @@ const maintenanceAPI = {
     await axiosPrivate.delete(`/maintenance/tickets/${id}`)
   },
 
-  getStats: async (): Promise<MaintenanceStats> => {
-    const response =
-      await axiosPrivate.get<MaintenanceStats>(`/maintenance/stats`)
+  getStats: async (
+    technicianEmail?: string | null
+  ): Promise<MaintenanceStats> => {
+    const params = technicianEmail ? { technicianEmail } : {}
+    const response = await axiosPrivate.get<MaintenanceStats>(
+      `/maintenance/stats`,
+      { params }
+    )
     return response.data
   },
 
@@ -205,9 +210,7 @@ const maintenanceAPI = {
   },
 
   deleteFile: async (ticketId: string, fileId: string): Promise<void> => {
-    await axiosPrivate.delete(
-      `/maintenance/tickets/${ticketId}/files/${fileId}`
-    )
+    await axiosPrivate.delete(`/maintenance/files/${fileId}`)
   },
 
   // Technicians
@@ -438,6 +441,14 @@ export const useMaintenanceTickets = (
   page = 1,
   limit = 10
 ) => {
+  console.log(
+    'Fetching maintenance tickets with filters:',
+    filters,
+    'page:',
+    page,
+    'limit:',
+    limit
+  )
   return useQuery({
     queryKey: ['maintenance-tickets', filters, page, limit],
     queryFn: () => maintenanceAPI.getTickets(filters, page, limit),
@@ -453,10 +464,10 @@ export const useMaintenanceTicket = (id: string) => {
   })
 }
 
-export const useMaintenanceStats = () => {
+export const useMaintenanceStats = (technicianEmail?: string | null) => {
   return useQuery({
-    queryKey: ['maintenance-stats'],
-    queryFn: maintenanceAPI.getStats,
+    queryKey: ['maintenance-stats', technicianEmail],
+    queryFn: () => maintenanceAPI.getStats(technicianEmail),
     staleTime: 60000 // 1 minute
   })
 }

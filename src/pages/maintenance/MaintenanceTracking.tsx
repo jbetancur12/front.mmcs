@@ -284,23 +284,23 @@ const MaintenanceTracking: React.FC = () => {
                               </Typography>
                             )}
                             {trackingData.ticket.assignedTechnician
-                              .specialties &&
-                              trackingData.ticket.assignedTechnician.specialties
-                                .length > 0 && (
-                                <Box mt={1}>
-                                  {trackingData.ticket.assignedTechnician.specialties.map(
-                                    (specialty) => (
-                                      <Chip
-                                        key={specialty}
-                                        label={specialty}
-                                        size='small'
-                                        variant='outlined'
-                                        sx={{ mr: 0.5 }}
-                                      />
-                                    )
-                                  )}
-                                </Box>
-                              )}
+                              .specialization && (
+                              <Box mt={1}>
+                                <Chip
+                                  key={
+                                    trackingData.ticket.assignedTechnician
+                                      .specialization
+                                  }
+                                  label={
+                                    trackingData.ticket.assignedTechnician
+                                      .specialization
+                                  }
+                                  size='small'
+                                  variant='outlined'
+                                  color='primary'
+                                />
+                              </Box>
+                            )}
                           </Box>
                         </Box>
                       </CardContent>

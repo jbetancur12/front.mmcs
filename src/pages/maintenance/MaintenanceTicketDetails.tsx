@@ -107,7 +107,7 @@ import { es } from 'date-fns/locale'
  * Features: ticket info display, editing, comments, file management, timeline, PDF generation
  */
 const MaintenanceTicketDetails: React.FC = () => {
-  useAxiosPrivate() // Initialize axios interceptors for automatic token refresh
+  const axiosPrivate = useAxiosPrivate() // Initialize axios interceptors for automatic token refresh
 
   const { ticketId } = useParams<{ ticketId: string }>()
   const navigate = useNavigate()
@@ -406,12 +406,28 @@ const MaintenanceTicketDetails: React.FC = () => {
     )
   }
 
-  const handleFileView = (file: MaintenanceFile) => {
-    // Open file in new tab/window
-    window.open(
-      `/api/maintenance/tickets/${ticketId}/files/${file.id}/download`,
-      '_blank'
-    )
+  const handleFileView = async (file: MaintenanceFile) => {
+    try {
+      const response = await axiosPrivate.get(
+        `/maintenance/files/${file.id}/download`,
+        {
+          responseType: 'blob'
+        }
+      )
+
+      const blob = response.data
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = file.originalName || file.fileName || 'archivo'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Error downloading file:', error)
+      showToast('Error al descargar el archivo', 'error')
+    }
   }
 
   const handleGenerateServiceOrder = () => {
@@ -1204,7 +1220,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                               variant='caption'
                               color='text.secondary'
                             >
-                              {technician.specialties?.slice(0, 2).join(', ')}
+                              {technician.specialization || 'N/A'}
                             </Typography>
                           </Box>
                         </Box>
@@ -1258,40 +1274,35 @@ const MaintenanceTicketDetails: React.FC = () => {
                     </Grid>
                     <Grid item xs={6}>
                       <Typography variant='body2' color='text.secondary'>
-                        Tickets
+                        Carga Actual
                       </Typography>
                       <Typography variant='body2' fontWeight='medium'>
-                        {ticket.assignedTechnician.completedTickets}/
-                        {ticket.assignedTechnician.totalTickets}
+                        {ticket.assignedTechnician.workload || 0}/
+                        {ticket.assignedTechnician.maxWorkload || 0}
                       </Typography>
                     </Grid>
                   </Grid>
 
-                  {ticket.assignedTechnician.specialties &&
-                    ticket.assignedTechnician.specialties.length > 0 && (
-                      <Box mt={2}>
-                        <Typography
-                          variant='body2'
-                          color='text.secondary'
-                          gutterBottom
-                        >
-                          Especialidades
-                        </Typography>
-                        <Box display='flex' flexWrap='wrap' gap={0.5}>
-                          {ticket.assignedTechnician.specialties
-                            .slice(0, 3)
-                            .map((specialty) => (
-                              <Chip
-                                key={specialty}
-                                label={specialty}
-                                size='small'
-                                variant='outlined'
-                                color='primary'
-                              />
-                            ))}
-                        </Box>
+                  {ticket.assignedTechnician.specialization && (
+                    <Box mt={2}>
+                      <Typography
+                        variant='body2'
+                        color='text.secondary'
+                        gutterBottom
+                      >
+                        Especialidad
+                      </Typography>
+                      <Box display='flex' flexWrap='wrap' gap={0.5}>
+                        <Chip
+                          key={ticket.assignedTechnician.specialization}
+                          label={ticket.assignedTechnician.specialization}
+                          size='small'
+                          variant='outlined'
+                          color='primary'
+                        />
                       </Box>
-                    )}
+                    </Box>
+                  )}
                 </Box>
               ) : (
                 <Alert severity='info' icon={<Person />}>

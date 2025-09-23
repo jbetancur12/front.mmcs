@@ -81,20 +81,23 @@ const MaintenanceDashboard: React.FC = () => {
   const isTechnician = $userStore.rol.includes('technician')
   const isAdmin = $userStore.rol.includes('admin')
 
+  // Get technician ID if user is a technician
+  const currentTechnicianEmail = useMemo(() => {
+    if (!isTechnician) return null
+    console.log('User email:', $userStore)
+    // Hardcode technician ID 4 for kat34433@laoia.com for testing
+    return $userStore.email
+  }, [isTechnician, $userStore.email])
+
   // For technicians, filter to only show their assigned tickets
   const technicianFilters = useMemo(() => {
-    if (!isTechnician) return filters
-
-    // Hardcode technician ID 4 for kat34433@laoia.com for testing
-    const technicianId = $userStore.email === 'kat34433@laoia.com' ? 4 : null
-
-    if (!technicianId) return filters
+    if (!isTechnician || !currentTechnicianEmail) return filters
 
     return {
       ...filters,
-      assignedTechnicianId: technicianId // Using numeric technician ID
+      assignedTechnicianEmail: currentTechnicianEmail // Using numeric technician ID
     }
-  }, [filters, isTechnician, $userStore.email])
+  }, [filters, isTechnician, currentTechnicianEmail])
 
   // Filter allowed statuses for technicians (they can't change to 'new' or 'assigned')
   const allowedStatuses = useMemo(() => {
@@ -110,7 +113,9 @@ const MaintenanceDashboard: React.FC = () => {
   }, [isTechnician])
 
   // API hooks
-  const { data: stats, refetch: refetchStats } = useMaintenanceStats()
+  const { data: stats, refetch: refetchStats } = useMaintenanceStats(
+    currentTechnicianEmail
+  )
   const {
     data: ticketsData,
     isLoading: ticketsLoading,
