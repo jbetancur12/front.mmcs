@@ -30,9 +30,7 @@ import {
   Assignment,
   Build,
   CheckCircle,
-  Cancel,
   TrendingUp,
-  People,
   Refresh,
   Add,
   FilterList

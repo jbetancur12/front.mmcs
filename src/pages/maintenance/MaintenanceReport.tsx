@@ -26,8 +26,7 @@ import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import {
   MaintenanceCreateRequest,
-  MaintenancePriority,
-  MaintenanceFormErrors
+  MaintenancePriority
 } from '../../types/maintenance'
 import { useCreateMaintenanceTicket } from '../../hooks/useMaintenance'
 import MaintenanceFileUpload from '../../Components/Maintenance/MaintenanceFileUpload'
@@ -598,7 +597,7 @@ const MaintenanceReport: React.FC = () => {
           </Box>
 
           {/* Stepper */}
-          {/* eslint-disable-next-line */}
+          {/* @ts-expect-error Material-UI Stepper type inference issue */}
           <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
             {steps.map((label, index) => (
                 <Step key={`step-${index}`}>

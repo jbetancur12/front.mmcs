@@ -136,7 +136,7 @@ const MaintenanceTicketDetails: React.FC = () => {
   }>({ open: false, message: '', severity: 'info' })
 
   const [pdfMenuAnchor, setPdfMenuAnchor] = useState<null | HTMLElement>(null)
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+  // const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [realTimeUpdatesEnabled, setRealTimeUpdatesEnabled] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [editErrors, setEditErrors] = useState<Record<string, string>>({})
@@ -166,7 +166,7 @@ const MaintenanceTicketDetails: React.FC = () => {
   const generateStatusReportMutation = useGenerateStatusReport()
   const generateServiceCertificateMutation = useGenerateServiceCertificate()
   const generateServiceInvoiceMutation = useGenerateServiceInvoice()
-  const { data: pdfOptions } = useGetPDFOptions(ticketId || '')
+  // const { data: pdfOptions } = useGetPDFOptions(ticketId || '')
 
   // WebSocket for real-time updates
   useMaintenanceWebSocket({

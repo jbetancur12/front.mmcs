@@ -10,14 +10,12 @@ import {
   Card,
   CardContent,
   Grid,
-  Divider,
   Avatar,
   Chip,
   LinearProgress
 } from '@mui/material'
 import {
   Search,
-  Build,
   Person,
   LocationOn,
   Schedule,
@@ -44,8 +42,7 @@ const MaintenanceTracking: React.FC = () => {
   const {
     data: trackingData,
     isLoading,
-    error,
-    refetch
+    error
   } = useTrackMaintenanceTicket(searchedTicketNumber)
 
   const handleSearch = (e: React.FormEvent) => {
@@ -159,7 +156,7 @@ const MaintenanceTracking: React.FC = () => {
                   mb={3}
                 >
                   <Typography variant='h5' component='h2'>
-                    Ticket #{trackingData.ticket.ticketNumber}
+                    Ticket #{trackingData.ticket.ticketCode}
                   </Typography>
                   <Box display='flex' gap={1}>
                     <MaintenanceStatusBadge

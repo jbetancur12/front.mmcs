@@ -159,8 +159,8 @@ const maintenanceAPI = {
     return response.data
   },
 
-  deleteTicket: async (id: string): Promise<void> => {
-    await axiosPrivate.delete(`/maintenance/tickets/${id}`)
+  deleteTicket: async (ticketId: string): Promise<void> => {
+    await axiosPrivate.delete(`/maintenance/tickets/${ticketId}`)
   },
 
   getStats: async (
