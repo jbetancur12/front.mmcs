@@ -58,7 +58,6 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
   onFiltersChange,
   technicians,
   equipmentTypes,
-  loading = false,
   resultsCount
 }) => {
   const [expanded, setExpanded] = useState(false)

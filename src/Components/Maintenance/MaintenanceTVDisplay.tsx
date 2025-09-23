@@ -21,7 +21,6 @@ import {
   Warning,
   Person,
   Assignment,
-  PriorityHigh,
   TrendingUp
 } from '@mui/icons-material'
 import { formatDistanceToNow, format } from 'date-fns'
@@ -31,7 +30,6 @@ import {
   useMaintenanceStats
 } from '../../hooks/useMaintenance'
 import {
-  MaintenanceTicket,
   MaintenancePriority,
   MaintenanceStatus
 } from '../../types/maintenance'
@@ -77,7 +75,7 @@ const MaintenanceTVDisplay: React.FC = () => {
   )
 
   const {
-    data: stats,
+    // data: stats,
     isLoading: statsLoading,
     error: statsError,
     refetch: refetchStats

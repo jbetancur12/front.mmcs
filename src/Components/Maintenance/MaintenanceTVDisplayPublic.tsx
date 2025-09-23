@@ -20,13 +20,7 @@ import {
   Warning,
   Person,
   Assignment,
-  TrendingUp,
-  Schedule,
-  Group,
-  Speed,
-  DateRange,
-  NetworkCheck,
-  Cached
+  TrendingUp
 } from '@mui/icons-material'
 import { formatDistanceToNow, format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -74,7 +68,7 @@ interface SystemStatus {
 const MaintenanceTVDisplayPublic: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [slideIndex, setSlideIndex] = useState(0)
-  const [animationKey, setAnimationKey] = useState(0)
+  const [animationKey] = useState(0)
 
   // Fetch data with auto-refresh using public endpoint
   const {
@@ -155,7 +149,7 @@ const MaintenanceTVDisplayPublic: React.FC = () => {
   }, [tvDisplayData])
 
   // System status from backend
-  const systemStatus: SystemStatus = useMemo(() => {
+  /* const systemStatus: SystemStatus = useMemo(() => {
     if (!tvDisplayData?.systemStatus) {
       return {
         operationalStatus: 'offline',
@@ -168,10 +162,10 @@ const MaintenanceTVDisplayPublic: React.FC = () => {
     }
 
     return tvDisplayData.systemStatus
-  }, [tvDisplayData])
+  }, [tvDisplayData]) */
 
   // Format resolution time
-  const formatResolutionTime = (hours: number) => {
+  /* const formatResolutionTime = (hours: number) => {
     if (hours === 0) return 'N/A'
     if (hours < 24) return `${hours.toFixed(1)}h`
     const days = Math.floor(hours / 24)
@@ -179,10 +173,10 @@ const MaintenanceTVDisplayPublic: React.FC = () => {
     return remainingHours > 0
       ? `${days}d ${remainingHours.toFixed(1)}h`
       : `${days}d`
-  }
+  } */
 
   // Get status color
-  const getStatusColor = (status: string) => {
+  /* const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'online':
       case 'normal':
@@ -195,7 +189,7 @@ const MaintenanceTVDisplayPublic: React.FC = () => {
       default:
         return '#888'
     }
-  }
+  } */
 
   // Organize tickets by priority - tickets are already organized in the API response
   const organizedTickets = useMemo(() => {
