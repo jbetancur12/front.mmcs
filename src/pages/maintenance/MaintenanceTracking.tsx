@@ -77,7 +77,7 @@ const MaintenanceTracking: React.FC = () => {
       <Container maxWidth='lg' sx={{ py: 4 }}>
         {/* Header */}
         {/* @ts-ignore - Material-UI Paper type compatibility issue */}
-        <Paper elevation={3} sx={{ p: 4, mb: 4 }} component="div">
+        <Paper elevation={3} sx={{ p: 4, mb: 4 }} component='div'>
           <Box textAlign='center' mb={4}>
             <Search color='primary' sx={{ fontSize: 48, mb: 2 }} />
             <Typography variant='h4' gutterBottom>
@@ -117,7 +117,6 @@ const MaintenanceTracking: React.FC = () => {
             </Box>
           </form>
 
-          {/* Loading */}
           {isLoading && (
             <Box mt={3}>
               <LinearProgress />
@@ -128,7 +127,7 @@ const MaintenanceTracking: React.FC = () => {
           )}
 
           {/* Error */}
-          {error && (
+          {!!error && (
             <Alert severity='error' sx={{ mt: 3 }}>
               Error al buscar el ticket. Verifique el número e intente
               nuevamente.

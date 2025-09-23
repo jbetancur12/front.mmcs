@@ -121,7 +121,8 @@ const MaintenanceReport: React.FC = () => {
 
         setSubmissionResult({
           success: true,
-          ticketNumber: result?.ticketNumber || result?.ticket?.ticketCode || 'Sin número',
+          ticketNumber:
+            result?.ticketNumber || result?.ticket?.ticketCode || 'Sin número',
           message:
             'Solicitud enviada exitosamente. Su ticket ha sido creado y está pendiente de asignación. Recibirá una confirmación por email.'
         })
@@ -600,11 +601,13 @@ const MaintenanceReport: React.FC = () => {
           {/* Stepper */}
           <Box sx={{ mb: 4 }}>
             <Stepper activeStep={activeStep}>
-              {steps.map((label: string, index: number): React.JSX.Element => (
+              {steps.map(
+                (label: string, index: number): React.JSX.Element => (
                   <Step key={`step-${index}`}>
                     <StepLabel>{label}</StepLabel>
                   </Step>
-              ))}
+                )
+              )}
             </Stepper>
           </Box>
 
@@ -619,7 +622,7 @@ const MaintenanceReport: React.FC = () => {
           )}
 
           {/* Error display */}
-          {createTicketMutation.error && (
+          {!!createTicketMutation.error && (
             <Alert severity='error' sx={{ mb: 2 }}>
               Error al enviar la solicitud. Verifique los datos e intente
               nuevamente.
