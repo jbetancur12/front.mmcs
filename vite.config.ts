@@ -17,6 +17,7 @@ export default defineConfig({
     project: "javascript-react"
   })],
 
+
   build: {
     sourcemap: true
   }

@@ -1,4 +1,4 @@
-import { Suspense } from 'react'
+import { Suspense, lazy } from 'react'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { Route, Routes, Outlet } from 'react-router-dom'
@@ -6,6 +6,9 @@ import { Route, Routes, Outlet } from 'react-router-dom'
 // Layout y autenticación
 import Layout from './Components/Layout'
 import RequireAuth from './Components/Authentication/RequireAuth'
+
+// Error pages
+const NotFound = lazy(() => import('./pages/NotFound'))
 
 // Utils
 // import useSessionTimeoutWarning from '@utils/use-expiry-time'
@@ -85,6 +88,9 @@ function Router() {
           {MaintenanceRoutes($userStore.rol)}
           {OtherRoutes($userStore.rol)}
         </Route>
+
+        {/* Catch-all route for 404 - must be last */}
+        <Route path='*' element={<NotFound />} />
       </Routes>
     </LocalizationProvider>
   )
