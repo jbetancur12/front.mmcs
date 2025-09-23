@@ -6,7 +6,6 @@ import {
   Avatar,
   TextField,
   Button,
-  IconButton,
   Chip,
   Divider,
   FormControlLabel,
@@ -14,7 +13,7 @@ import {
   Tooltip,
   Alert
 } from '@mui/material'
-import { Send, Person, Lock, Public, AccessTime } from '@mui/icons-material'
+import { Send, Lock, Public, AccessTime } from '@mui/icons-material'
 import { MaintenanceComment } from '../../types/maintenance'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
