@@ -584,7 +584,7 @@ const MaintenanceReport: React.FC = () => {
   return (
     <MaintenanceErrorBoundary>
       <Container maxWidth='md' sx={{ py: 4 }}>
-        <Paper elevation={3} sx={{ p: 4 }} component="div">
+        <Paper elevation={3} sx={{ p: 4 }}>
           {/* Header */}
           <Box textAlign='center' mb={4}>
             <Build color='primary' sx={{ fontSize: 48, mb: 2 }} />
@@ -598,12 +598,12 @@ const MaintenanceReport: React.FC = () => {
           </Box>
 
           {/* Stepper */}
-          {/* @ts-ignore */}
+          {/* eslint-disable-next-line */}
           <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-            {steps.map((label: string, index: number) => (
-              <Step key={`step-${index}`}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
+            {steps.map((label, index) => (
+                <Step key={`step-${index}`}>
+                  <StepLabel>{label}</StepLabel>
+                </Step>
             ))}
           </Stepper>
 
