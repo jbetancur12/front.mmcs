@@ -219,6 +219,22 @@ const maintenanceAPI = {
     return response.data.technicians
   },
 
+  getTechnicianByEmail: async (
+    email: string
+  ): Promise<MaintenanceTechnician | null> => {
+    try {
+      const response = await axiosPrivate.get<{
+        technician: MaintenanceTechnician
+      }>(`/maintenance/technicians/by-email/${encodeURIComponent(email)}`)
+      return response.data.technician
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        return null
+      }
+      throw error
+    }
+  },
+
   createTechnician: async (
     data: Partial<MaintenanceTechnician>
   ): Promise<MaintenanceTechnician> => {
@@ -445,10 +461,20 @@ export const useMaintenanceStats = () => {
   })
 }
 
-export const useMaintenanceTechnicians = () => {
+export const useMaintenanceTechnicians = (enabled: boolean = true) => {
   return useQuery({
     queryKey: ['maintenance-technicians'],
     queryFn: maintenanceAPI.getTechnicians,
+    enabled: enabled,
+    staleTime: 300000 // 5 minutes
+  })
+}
+
+export const useTechnicianByEmail = (email: string) => {
+  return useQuery({
+    queryKey: ['technician-by-email', email],
+    queryFn: () => maintenanceAPI.getTechnicianByEmail(email),
+    enabled: !!email,
     staleTime: 300000 // 5 minutes
   })
 }

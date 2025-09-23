@@ -93,9 +93,13 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
       case 'admin':
         return 'error'
       case 'mantenimiento':
+      case 'technician':
         return 'primary'
       case 'client':
+      case 'customer':
         return 'success'
+      case 'system':
+        return 'info'
       default:
         return 'default'
     }
@@ -106,9 +110,13 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
       case 'admin':
         return 'Administrador'
       case 'mantenimiento':
+      case 'technician':
         return 'Técnico'
       case 'client':
+      case 'customer':
         return 'Cliente'
+      case 'system':
+        return 'Sistema'
       default:
         return 'Usuario'
     }
@@ -165,21 +173,27 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                       width: 32,
                       height: 32,
                       fontSize: '0.875rem',
-                      bgcolor: `${getRoleColor(comment.userRole)}.main`
+                      bgcolor: `${getRoleColor(comment.authorType || comment.userRole)}.main`
                     }}
                   >
-                    {getInitials(comment.userName)}
+                    {getInitials(comment.authorName || comment.userName)}
                   </Avatar>
 
                   <Box>
                     <Typography variant='subtitle2' fontWeight='bold'>
-                      {comment.userName}
+                      {comment.authorName || comment.userName}
                     </Typography>
                     <Box display='flex' alignItems='center' gap={0.5}>
                       <Chip
                         size='small'
-                        label={getRoleLabel(comment.userRole)}
-                        color={getRoleColor(comment.userRole) as any}
+                        label={getRoleLabel(
+                          comment.authorType || comment.userRole
+                        )}
+                        color={
+                          getRoleColor(
+                            comment.authorType || comment.userRole
+                          ) as any
+                        }
                         variant='outlined'
                       />
                       {comment.isInternal && (

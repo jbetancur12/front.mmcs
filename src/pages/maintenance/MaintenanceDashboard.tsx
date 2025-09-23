@@ -56,6 +56,8 @@ import MaintenanceStatusBadge from '../../Components/Maintenance/MaintenanceStat
 import MaintenancePriorityBadge from '../../Components/Maintenance/MaintenancePriorityBadge'
 import useMaintenanceWebSocket from '../../hooks/useMaintenanceWebSocket'
 import useAxiosPrivate from '../../utils/use-axios-private'
+import { useStore } from '@nanostores/react'
+import { userStore } from '../../store/userStore'
 
 /**
  * MaintenanceDashboard component provides an admin interface for managing maintenance tickets
@@ -64,6 +66,7 @@ import useAxiosPrivate from '../../utils/use-axios-private'
 const MaintenanceDashboard: React.FC = () => {
   useAxiosPrivate() // Initialize axios interceptors for automatic token refresh
   const navigate = useNavigate()
+  const $userStore = useStore(userStore)
   const [filters, setFilters] = useState<MaintenanceFilters>({})
   const [page, setPage] = useState(1)
   const [showFilters, setShowFilters] = useState(false)
@@ -74,14 +77,47 @@ const MaintenanceDashboard: React.FC = () => {
 
   const limit = 12
 
+  // Check user permissions
+  const isTechnician = $userStore.rol.includes('technician')
+  const isAdmin = $userStore.rol.includes('admin')
+
+  // For technicians, filter to only show their assigned tickets
+  const technicianFilters = useMemo(() => {
+    if (!isTechnician) return filters
+
+    // Hardcode technician ID 4 for kat34433@laoia.com for testing
+    const technicianId = $userStore.email === 'kat34433@laoia.com' ? 4 : null
+
+    if (!technicianId) return filters
+
+    return {
+      ...filters,
+      assignedTechnicianId: technicianId // Using numeric technician ID
+    }
+  }, [filters, isTechnician, $userStore.email])
+
+  // Filter allowed statuses for technicians (they can't change to 'new' or 'assigned')
+  const allowedStatuses = useMemo(() => {
+    if (!isTechnician) return Object.values(MaintenanceStatus)
+
+    return [
+      MaintenanceStatus.IN_PROGRESS,
+      MaintenanceStatus.ON_HOLD,
+      MaintenanceStatus.WAITING_PARTS,
+      MaintenanceStatus.WAITING_CUSTOMER,
+      MaintenanceStatus.COMPLETED
+    ]
+  }, [isTechnician])
+
   // API hooks
   const { data: stats, refetch: refetchStats } = useMaintenanceStats()
   const {
     data: ticketsData,
     isLoading: ticketsLoading,
     refetch: refetchTickets
-  } = useMaintenanceTickets(filters, page, limit)
-  const { data: technicians } = useMaintenanceTechnicians()
+  } = useMaintenanceTickets(technicianFilters, page, limit)
+  // Only admins can access technicians list
+  const { data: technicians } = useMaintenanceTechnicians(isAdmin)
   const updateTicketMutation = useUpdateMaintenanceTicket()
 
   // WebSocket for real-time updates
@@ -105,6 +141,17 @@ const MaintenanceDashboard: React.FC = () => {
   }, [ticketsData?.tickets])
 
   const handleEditTicket = (ticket: MaintenanceTicket) => {
+    // For technicians, only allow editing tickets assigned to them
+    const technicianId = $userStore.email === 'kat34433@laoia.com' ? 4 : null
+    if (
+      isTechnician &&
+      technicianId &&
+      Number(ticket.assignedTechnician?.id) !== technicianId
+    ) {
+      console.warn('Technician can only edit their assigned tickets')
+      return
+    }
+
     setSelectedTicket(ticket)
     setEditData({
       status: ticket.status,
@@ -170,13 +217,15 @@ const MaintenanceDashboard: React.FC = () => {
           >
             Filtros
           </Button>
-          <Button
-            variant='contained'
-            startIcon={<Add />}
-            href='/maintenance/report'
-          >
-            Nueva Solicitud
-          </Button>
+          {!isTechnician && (
+            <Button
+              variant='contained'
+              startIcon={<Add />}
+              href='/maintenance/report'
+            >
+              Nueva Solicitud
+            </Button>
+          )}
         </Box>
       </Box>
 
@@ -419,7 +468,7 @@ const MaintenanceDashboard: React.FC = () => {
                   }
                   label='Estado'
                 >
-                  {Object.values(MaintenanceStatus).map((status) => (
+                  {allowedStatuses.map((status) => (
                     <MenuItem key={status} value={status}>
                       <MaintenanceStatusBadge status={status} size='small' />
                     </MenuItem>
@@ -428,88 +477,94 @@ const MaintenanceDashboard: React.FC = () => {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Prioridad</InputLabel>
-                <Select
-                  value={editData.priority || ''}
+            {!isTechnician && (
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Prioridad</InputLabel>
+                  <Select
+                    value={editData.priority || ''}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        priority: e.target.value as MaintenancePriority
+                      }))
+                    }
+                    label='Prioridad'
+                  >
+                    {Object.values(MaintenancePriority).map((priority) => (
+                      <MenuItem key={priority} value={priority}>
+                        <MaintenancePriorityBadge
+                          priority={priority}
+                          size='small'
+                        />
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
+
+            {!isTechnician && (
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Técnico Asignado</InputLabel>
+                  <Select
+                    value={editData.assignedTechnician || ''}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        assignedTechnician: e.target.value
+                      }))
+                    }
+                    label='Técnico Asignado'
+                  >
+                    <MenuItem value=''>Sin asignar</MenuItem>
+                    {technicians?.map((technician) => (
+                      <MenuItem key={technician.id} value={technician.id}>
+                        <Box display='flex' alignItems='center' gap={1}>
+                          <Avatar
+                            sx={{ width: 24, height: 24, fontSize: '0.75rem' }}
+                          >
+                            {technician.name
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')
+                              .toUpperCase()}
+                          </Avatar>
+                          {technician.name}
+                        </Box>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
+
+            {!isTechnician && (
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label='Fecha Programada'
+                  type='datetime-local'
+                  value={
+                    editData.scheduledDate
+                      ? new Date(editData.scheduledDate)
+                          .toISOString()
+                          .slice(0, 16)
+                      : ''
+                  }
                   onChange={(e) =>
                     setEditData((prev) => ({
                       ...prev,
-                      priority: e.target.value as MaintenancePriority
+                      scheduledDate: e.target.value
+                        ? new Date(e.target.value).toISOString()
+                        : undefined
                     }))
                   }
-                  label='Prioridad'
-                >
-                  {Object.values(MaintenancePriority).map((priority) => (
-                    <MenuItem key={priority} value={priority}>
-                      <MaintenancePriorityBadge
-                        priority={priority}
-                        size='small'
-                      />
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Técnico Asignado</InputLabel>
-                <Select
-                  value={editData.assignedTechnician || ''}
-                  onChange={(e) =>
-                    setEditData((prev) => ({
-                      ...prev,
-                      assignedTechnician: e.target.value
-                    }))
-                  }
-                  label='Técnico Asignado'
-                >
-                  <MenuItem value=''>Sin asignar</MenuItem>
-                  {technicians?.map((technician) => (
-                    <MenuItem key={technician.id} value={technician.id}>
-                      <Box display='flex' alignItems='center' gap={1}>
-                        <Avatar
-                          sx={{ width: 24, height: 24, fontSize: '0.75rem' }}
-                        >
-                          {technician.name
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')
-                            .toUpperCase()}
-                        </Avatar>
-                        {technician.name}
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label='Fecha Programada'
-                type='datetime-local'
-                value={
-                  editData.scheduledDate
-                    ? new Date(editData.scheduledDate)
-                        .toISOString()
-                        .slice(0, 16)
-                    : ''
-                }
-                onChange={(e) =>
-                  setEditData((prev) => ({
-                    ...prev,
-                    scheduledDate: e.target.value
-                      ? new Date(e.target.value).toISOString()
-                      : undefined
-                  }))
-                }
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+            )}
           </Grid>
         </DialogContent>
         <DialogActions>

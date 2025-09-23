@@ -30,8 +30,10 @@ export interface MaintenanceComment {
   id: string
   ticketId: string
   userId: string
-  userName: string
-  userRole: string
+  userName: string // Legacy field
+  userRole: string // Legacy field
+  authorName: string // Backend field
+  authorType: string // Backend field
   content: string
   commentType: string
   isInternal: boolean
@@ -191,6 +193,7 @@ export enum MaintenanceStatus {
   IN_PROGRESS = 'in_progress',
   ON_HOLD = 'on_hold',
   WAITING_PARTS = 'waiting_parts',
+  WAITING_CUSTOMER = 'waiting_customer',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled'
 }
