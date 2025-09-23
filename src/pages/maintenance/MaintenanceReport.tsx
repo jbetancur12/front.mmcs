@@ -31,7 +31,6 @@ import {
 } from '../../types/maintenance'
 import { useCreateMaintenanceTicket } from '../../hooks/useMaintenance'
 import MaintenanceFileUpload from '../../Components/Maintenance/MaintenanceFileUpload'
-import MaintenancePriorityBadge from '../../Components/Maintenance/MaintenancePriorityBadge'
 import MaintenanceErrorBoundary from '../../Components/Maintenance/MaintenanceErrorBoundary'
 
 const validationSchema = Yup.object({
@@ -600,7 +599,7 @@ const MaintenanceReport: React.FC = () => {
 
           {/* Stepper */}
           <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-            {steps.map((label) => (
+            {steps.map((label: string) => (
               <Step key={label}>
                 <StepLabel>{label}</StepLabel>
               </Step>
