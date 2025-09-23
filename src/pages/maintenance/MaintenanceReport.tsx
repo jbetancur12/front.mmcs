@@ -597,14 +597,15 @@ const MaintenanceReport: React.FC = () => {
           </Box>
 
           {/* Stepper */}
-          {/* @ts-expect-error Material-UI Stepper type inference issue */}
-          <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-            {steps.map((label, index) => (
-                <Step key={`step-${index}`}>
-                  <StepLabel>{label}</StepLabel>
-                </Step>
-            ))}
-          </Stepper>
+          <Box sx={{ mb: 4 }}>
+            <Stepper activeStep={activeStep}>
+              {steps.map((label: string, index: number): React.JSX.Element => (
+                  <Step key={`step-${index}`}>
+                    <StepLabel>{label}</StepLabel>
+                  </Step>
+              ))}
+            </Stepper>
+          </Box>
 
           {/* Loading indicator */}
           {createTicketMutation.isLoading && (
