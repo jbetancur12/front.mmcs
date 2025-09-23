@@ -209,7 +209,7 @@ const maintenanceAPI = {
     return response.data
   },
 
-  deleteFile: async (ticketId: string, fileId: string): Promise<void> => {
+  deleteFile: async (_ticketId: string, fileId: string): Promise<void> => {
     await axiosPrivate.delete(`/maintenance/files/${fileId}`)
   },
 

@@ -82,8 +82,8 @@ import {
   useGenerateServiceOrder,
   useGenerateStatusReport,
   useGenerateServiceCertificate,
-  useGenerateServiceInvoice,
-  useGetPDFOptions
+  useGenerateServiceInvoice
+  // useGetPDFOptions
 } from '../../hooks/useMaintenance'
 import {
   MaintenanceStatus,
