@@ -26,6 +26,12 @@ export interface MaintenanceTicket {
   timeline: MaintenanceTimelineEntry[]
 }
 
+export interface MaintenanceTicketCreateResponse {
+  message: string
+  ticket: MaintenanceTicket
+  ticketNumber: string
+}
+
 export interface MaintenanceComment {
   id: string
   ticketId: string

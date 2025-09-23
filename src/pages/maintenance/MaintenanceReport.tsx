@@ -123,10 +123,9 @@ const MaintenanceReport: React.FC = () => {
 
         setSubmissionResult({
           success: true,
-          ticketNumber:
-            result?.ticketNumber || result?.data?.ticketNumber || 'Sin número',
+          ticketNumber: result?.ticketNumber || result?.ticket?.ticketCode || 'Sin número',
           message:
-            'Solicitud enviada exitosamente. Recibirá una confirmación por email.'
+            'Solicitud enviada exitosamente. Su ticket ha sido creado y está pendiente de asignación. Recibirá una confirmación por email.'
         })
 
         // Reset form
@@ -609,7 +608,7 @@ const MaintenanceReport: React.FC = () => {
           </Stepper>
 
           {/* Loading indicator */}
-          {createTicketMutation.isPending && (
+          {createTicketMutation.isLoading && (
             <Box mb={2}>
               <LinearProgress />
               <Typography variant='body2' textAlign='center' mt={1}>
@@ -644,7 +643,7 @@ const MaintenanceReport: React.FC = () => {
                 <Button
                   type='submit'
                   variant='contained'
-                  disabled={!formik.isValid || createTicketMutation.isPending}
+                  disabled={!formik.isValid || createTicketMutation.isLoading}
                   endIcon={<Send />}
                 >
                   Enviar Solicitud

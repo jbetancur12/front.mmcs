@@ -22,7 +22,7 @@ const maintenanceAPI = {
   // Public endpoints (no auth required)
   createTicket: async (
     data: MaintenanceCreateRequest
-  ): Promise<MaintenanceTicket> => {
+  ): Promise<any> => {
     const formData = new FormData()
 
     // Add text fields
@@ -39,7 +39,7 @@ const maintenanceAPI = {
       })
     }
 
-    const response = await axiosPublic.post<MaintenanceTicket>(
+    const response = await axiosPublic.post<any>(
       `/public/maintenance/tickets`,
       formData,
       {
