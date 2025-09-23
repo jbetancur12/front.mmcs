@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
-import { 
-  BarChart, 
-  Bar, 
-  LineChart, 
-  Line, 
+import {
+  Bar,
+  Line,
   ComposedChart,
   PieChart, 
   Pie, 
@@ -55,7 +53,7 @@ interface PurchaseStatistics {
   }
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
+// const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
 
 const PurchaseStatistics = () => {
   const [statistics, setStatistics] = useState<PurchaseStatistics | null>(null)
@@ -192,14 +190,18 @@ const PurchaseStatistics = () => {
     let formattedDate = '';
     try {
       if (timeRange === 'yearly') {
-        formattedDate = format(new Date(item.date || item.year), 'yyyy');
+        const dateValue = 'date' in item ? item.date : 'year' in item ? item.year : '';
+        formattedDate = format(new Date(dateValue), 'yyyy');
       } else if (timeRange === 'monthly') {
-        formattedDate = format(new Date(item.date || item.month), 'MMM yyyy', { locale: es });
+        const dateValue = 'date' in item ? item.date : 'month' in item ? item.month : '';
+        formattedDate = format(new Date(dateValue), 'MMM yyyy', { locale: es });
       } else {
-        formattedDate = formatDate(item.date);
+        const dateValue = 'date' in item ? item.date : '';
+        formattedDate = formatDate(dateValue);
       }
     } catch (error) {
-      formattedDate = item.date || item.month || item.year || '';
+      const fallbackDate = 'date' in item ? item.date : 'month' in item ? item.month : 'year' in item ? item.year : '';
+      formattedDate = fallbackDate;
     }
     
     return {

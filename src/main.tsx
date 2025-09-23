@@ -5,7 +5,7 @@ import './index.css'
 import Router from './router.tsx'
 import { ThemeProvider } from '@mui/material'
 import { theme } from './theme.tsx'
-import * as Sentry from '@sentry/react'
+// import * as Sentry from '@sentry/react'
 
 import { PostHogProvider } from 'posthog-js/react'
 

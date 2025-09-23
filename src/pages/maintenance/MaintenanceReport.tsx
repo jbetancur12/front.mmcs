@@ -583,6 +583,7 @@ const MaintenanceReport: React.FC = () => {
   return (
     <MaintenanceErrorBoundary>
       <Container maxWidth='md' sx={{ py: 4 }}>
+        {/* @ts-ignore - Material-UI Paper type compatibility issue */}
         <Paper elevation={3} sx={{ p: 4 }}>
           {/* Header */}
           <Box textAlign='center' mb={4}>

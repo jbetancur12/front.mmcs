@@ -2,8 +2,7 @@ import { useEffect, useCallback, useRef } from 'react'
 import { useQueryClient } from 'react-query'
 import {
   MaintenanceTicket,
-  MaintenanceNotification,
-  MaintenanceNotificationType
+  MaintenanceNotification
 } from '../types/maintenance'
 
 interface MaintenanceWebSocketMessage {
@@ -159,7 +158,7 @@ export const useMaintenanceWebSocket = ({
   )
 
   const handleTechnicianStatusChange = useCallback(
-    (data: any) => {
+    (_data: any) => {
       // Invalidate technicians query to get updated status
       queryClient.invalidateQueries({ queryKey: ['maintenance-technicians'] })
     },

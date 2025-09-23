@@ -76,6 +76,7 @@ const MaintenanceTracking: React.FC = () => {
     <MaintenanceErrorBoundary>
       <Container maxWidth='lg' sx={{ py: 4 }}>
         {/* Header */}
+        {/* @ts-ignore - Material-UI Paper type compatibility issue */}
         <Paper elevation={3} sx={{ p: 4, mb: 4 }} component="div">
           <Box textAlign='center' mb={4}>
             <Search color='primary' sx={{ fontSize: 48, mb: 2 }} />

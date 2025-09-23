@@ -2,7 +2,7 @@ import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
 
 // Internal-only roles that require userType validation
-const INTERNAL_ONLY_ROLES = [
+/* const INTERNAL_ONLY_ROLES = [
   'admin',
   'super_admin',
   'metrologist',
@@ -10,7 +10,7 @@ const INTERNAL_ONLY_ROLES = [
   'secretary',
   'employee',
   'mantenimiento'
-]
+] */
 
 export const useHasRole = (allowedRoles: string[]): boolean => {
   const $userStore = useStore(userStore)

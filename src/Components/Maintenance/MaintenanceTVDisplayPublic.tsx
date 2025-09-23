@@ -42,14 +42,14 @@ interface TVMetrics {
   completedLast30Days: number
 }
 
-interface SystemStatus {
+/* interface SystemStatus {
   operationalStatus: string
   lastSystemUpdate: string
   queueHealth: string
   averageResponseTime: string
   overdueStatus: string
   technicianUtilization: number
-}
+} */
 
 /**
  * MaintenanceTVDisplayPublic - A public TV display component for maintenance tickets
