@@ -27,15 +27,21 @@ const MaintenanceRoutes = (role: string[]) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['admin', 'mantenimiento', 'technician']}
+            roles={[
+              'admin',
+              'mantenimiento',
+              'technician',
+              'maintenance_coordinator'
+            ]}
           />
         }
       >
         {/* Dashboard - Main maintenance overview */}
         <Route path='maintenance' element={<MaintenanceDashboard />} />
 
-        {/* Technicians Management - Admin only */}
-        {role.includes('admin') && (
+        {/* Technicians Management - Admin and Maintenance Coordinator */}
+        {(role.includes('admin') ||
+          role.includes('maintenance_coordinator')) && (
           <Route
             path='maintenance/technicians'
             element={<MaintenanceTechnicians />}

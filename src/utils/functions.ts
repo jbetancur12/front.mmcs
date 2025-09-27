@@ -9,7 +9,8 @@ import { userStore } from '../store/userStore'
   'purchasing',
   'secretary',
   'employee',
-  'mantenimiento'
+  'mantenimiento',
+  'maintenance_coordinator'
 ] */
 
 export const useHasRole = (allowedRoles: string[]): boolean => {
