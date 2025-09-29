@@ -20,9 +20,7 @@ import {
 // API functions
 const maintenanceAPI = {
   // Public endpoints (no auth required)
-  createTicket: async (
-    data: MaintenanceCreateRequest
-  ): Promise<any> => {
+  createTicket: async (data: MaintenanceCreateRequest): Promise<any> => {
     const formData = new FormData()
 
     // Add text fields
@@ -441,14 +439,6 @@ export const useMaintenanceTickets = (
   page = 1,
   limit = 10
 ) => {
-  console.log(
-    'Fetching maintenance tickets with filters:',
-    filters,
-    'page:',
-    page,
-    'limit:',
-    limit
-  )
   return useQuery({
     queryKey: ['maintenance-tickets', filters, page, limit],
     queryFn: () => maintenanceAPI.getTickets(filters, page, limit),

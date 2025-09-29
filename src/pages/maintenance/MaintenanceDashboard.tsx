@@ -77,7 +77,9 @@ const MaintenanceDashboard: React.FC = () => {
 
   // Check user permissions
   const isTechnician = $userStore.rol.includes('technician')
-  const isAdmin = $userStore.rol.includes('admin')
+  const isAdmin =
+    $userStore.rol.includes('admin') ||
+    $userStore.rol.includes('maintenance_coordinator')
 
   // Get technician ID if user is a technician
   const currentTechnicianEmail = useMemo(() => {
