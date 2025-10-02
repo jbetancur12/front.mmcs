@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button, Modal, Box } from '@mui/material'
 import { CloudUpload } from '@mui/icons-material'
 import { styled } from '@mui/material/styles'
@@ -11,6 +11,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 interface UpdateCertificateModalProps {
   open: boolean
   onClose: () => void
+  onSuccess: () => void
   id?: string
 }
 
@@ -29,6 +30,7 @@ const VisuallyHiddenInput = styled('input')`
 const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
   open,
   onClose,
+  onSuccess,
   id
 }) => {
   const axiosPrivate = useAxiosPrivate()
@@ -37,6 +39,23 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
   const [nextDate, setNextDate] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
+  const [fileInputKey, setFileInputKey] = useState(Date.now())
+
+  // Función para limpiar el formulario
+  const resetForm = () => {
+    setSelectedFileName(null)
+    setPreviousDate('')
+    setNextDate('')
+    setFile(null)
+    setFileInputKey(Date.now()) // Forzar re-render del input de archivo
+  }
+
+  // Limpiar el formulario cuando el modal se abre
+  useEffect(() => {
+    if (open) {
+      resetForm()
+    }
+  }, [open])
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0]
@@ -56,8 +75,24 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
   }
 
   const handleSave = async () => {
+    // Validar que todos los campos requeridos estén completos
+    if (!file) {
+      toast.error('Debes seleccionar un archivo PDF', {
+        duration: 3000,
+        position: 'top-center'
+      })
+      return
+    }
+
+    if (!previousDate || !nextDate) {
+      toast.error('Debes seleccionar las fechas de calibración', {
+        duration: 3000,
+        position: 'top-center'
+      })
+      return
+    }
+
     try {
-      // Aquí puedes realizar la solicitud HTTP a tu API para guardar los datos
       const formData = new FormData()
       formData.append('pdf', file as Blob)
       formData.append('calibrationDate', previousDate)
@@ -70,19 +105,46 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
           'Content-Type': 'multipart/form-data'
         }
       })
+
       if (response.status === 201) {
         setLoading(false)
+
         toast.success('Certificado Actualizado Exitosamente!', {
           duration: 4000,
           position: 'top-center'
         })
-      }
 
-      onClose()
-    } catch (error) {
+        // Notificar éxito al componente padre para refrescar datos
+        onSuccess()
+
+        // Limpiar formulario
+        resetForm()
+
+        // Delay antes de cerrar para que el toast sea visible
+        setTimeout(() => {
+          onClose()
+        }, 500)
+      }
+    } catch (error: any) {
       setLoading(false)
       console.error('Error al guardar los datos del certificado:', error)
-      // Puedes mostrar un mensaje de error al usuario si lo deseas
+
+      // Verificar si es un error de archivo duplicado (409)
+      if (error.response && error.response.status === 409) {
+        toast.error(
+          error.response.data.error ||
+            'El archivo con este nombre ya existe. Por favor, renombre el archivo e intente nuevamente.',
+          {
+            duration: 5000,
+            position: 'top-center'
+          }
+        )
+      } else {
+        toast.error('Error al actualizar el certificado. Intenta nuevamente.', {
+          duration: 4000,
+          position: 'top-center'
+        })
+      }
     }
   }
   return (
@@ -109,15 +171,15 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
         <Box>
           <DatePicker
             label='Fecha de Calibración'
-            value={new Date(previousDate)}
+            value={previousDate ? new Date(previousDate) : null}
             onChange={handleChangeCalibrationDate}
           />
         </Box>
         <Box>
           <DatePicker
-            label='Fecha de Calibración'
-            value={new Date(nextDate)}
-            onChange={(e) => setNextDate(new Date(e as Date).toISOString())}
+            label='Próxima Fecha de Calibración'
+            value={nextDate ? new Date(nextDate) : null}
+            onChange={(e) => setNextDate(e ? new Date(e as Date).toISOString() : '')}
           />
         </Box>
         <Box>
@@ -133,7 +195,7 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
             }}
           >
             {selectedFileName ? selectedFileName : 'Cargar Archivo'}
-            <VisuallyHiddenInput type='file' accept='.pdf' />
+            <VisuallyHiddenInput key={fileInputKey} type='file' accept='.pdf' />
           </Button>
         </Box>
         <Box
@@ -147,14 +209,16 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
             variant='contained'
             color='primary'
             onClick={handleSave}
+            disabled={loading}
             sx={{ marginLeft: '0.5rem', fontWeight: 'bold', color: '#DCFCE7' }}
           >
-            Guardar
+            {loading ? 'Guardando...' : 'Guardar'}
           </Button>
           <Button
             variant='outlined'
             color='secondary'
             onClick={onClose}
+            disabled={loading}
             sx={{ marginLeft: '0.5rem' }}
           >
             Cancelar

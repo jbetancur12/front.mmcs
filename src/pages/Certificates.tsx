@@ -67,6 +67,7 @@ function Certificates() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [certificateData, setCertificateData] =
     useState<DeviceDetailsProps | null>(null)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   const getCertificateInfo = async () => {
     const response = await axiosPrivate.get(`/files/${id}`, {})
@@ -85,6 +86,23 @@ function Certificates() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false)
+  }
+
+  const handleUpdateSuccess = () => {
+    // Refrescar datos automáticamente
+    getCertificateInfo()
+
+    // Refrescar la lista de certificados
+    setRefreshTrigger(prev => prev + 1)
+
+    // Mostrar feedback persistente con SweetAlert2
+    MySwal.fire({
+      icon: 'success',
+      title: 'Certificado Actualizado',
+      text: 'El certificado ha sido actualizado exitosamente',
+      timer: 2000,
+      showConfirmButton: false
+    })
   }
 
   const handleEdit = async (field: string) => {
@@ -360,9 +378,10 @@ function Certificates() {
       <UpdateCertificateModal
         open={isModalOpen}
         onClose={handleCloseModal}
+        onSuccess={handleUpdateSuccess}
         id={id}
       />
-      <CertificatesList />
+      <CertificatesList refreshTrigger={refreshTrigger} />
     </Paper>
   )
 }

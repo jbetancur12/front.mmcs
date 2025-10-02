@@ -29,7 +29,11 @@ interface Certificate {
   filePath: string
 }
 
-function CertificatesList() {
+interface CertificatesListProps {
+  refreshTrigger?: number
+}
+
+function CertificatesList({ refreshTrigger }: CertificatesListProps) {
   const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id: string }>()
   const [certificates, setCertificates] = useState<Certificate[]>([])
@@ -71,7 +75,7 @@ function CertificatesList() {
     }
 
     getCertificates()
-  }, [id])
+  }, [id, refreshTrigger])
 
   const handleDownload = async (path: string) => {
     const filePath = path
