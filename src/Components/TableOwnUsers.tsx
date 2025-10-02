@@ -263,7 +263,7 @@ const TableOwnUsers: React.FC = () => {
     try {
       const response = await axiosPrivate.post(
         `/auth/register`,
-        { ...productData, contraseña: 'password' },
+        { ...productData, contraseña: 'Metromedics@2025' },
         {}
       )
 

@@ -7,8 +7,6 @@ import {
   CardContent,
   LinearProgress,
   Alert,
-  Slide,
-  Grow,
   CircularProgress,
   Container
 } from '@mui/material'
@@ -730,7 +728,7 @@ const MaintenanceTVDisplayPublic: React.FC = () => {
           >
             <TrendingUp sx={{ fontSize: '2rem' }} />
             TICKETS ACTIVOS
-            {organizedTickets.urgent.length > 0 && (
+            {organizedTickets.urgent && organizedTickets?.urgent?.length > 0 && (
               <Box
                 sx={{
                   backgroundColor: 'rgba(244, 67, 54, 0.2)',

@@ -39,12 +39,7 @@ const maintenanceAPI = {
 
     const response = await axiosPublic.post<any>(
       `/public/maintenance/tickets`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      }
+      formData
     )
     return response.data
   },

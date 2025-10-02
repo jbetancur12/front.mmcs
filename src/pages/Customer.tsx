@@ -474,7 +474,6 @@ function UserProfile(): React.JSX.Element {
 
   // En tu componente:
   const matchedFields = getMatchedFields(apiResponse?.files ?? [])
-  console.log('🚀 ~ UserProfile ~ matchedFields:', matchedFields)
 
   if (loading) {
     return <Typography variant='h6'>Cargando...</Typography>
