@@ -104,7 +104,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
           mb={2}
         >
           <Box display='flex' alignItems='center' gap={1}>
-            <FilterList color='primary' />
+            <FilterList color='primary' aria-hidden='true' />
             <Typography variant='h6'>Filtros</Typography>
             {activeFiltersCount > 0 && (
               <Chip
@@ -112,13 +112,14 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                 label={activeFiltersCount}
                 color='primary'
                 variant='outlined'
+                aria-label={`${activeFiltersCount} filtro${activeFiltersCount !== 1 ? 's' : ''} activo${activeFiltersCount !== 1 ? 's' : ''}`}
               />
             )}
           </Box>
 
           <Box display='flex' alignItems='center' gap={1}>
             {resultsCount !== undefined && (
-              <Typography variant='body2' color='text.secondary'>
+              <Typography variant='body2' color='text.secondary' role='status' aria-live='polite'>
                 {resultsCount} resultado{resultsCount !== 1 ? 's' : ''}
               </Typography>
             )}
@@ -127,6 +128,9 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
               onClick={() => setExpanded(!expanded)}
               size='small'
               color='primary'
+              aria-label={expanded ? 'Ocultar filtros avanzados' : 'Mostrar filtros avanzados'}
+              aria-expanded={expanded}
+              aria-controls='advanced-filters-section'
             >
               {expanded ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
@@ -138,27 +142,33 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
           <TextField
             fullWidth
             size='small'
+            id='quick-search-field'
+            label='Búsqueda rápida'
             placeholder='Buscar por número de ticket, cliente, equipo...'
             value={localFilters.search || ''}
             onChange={(e) => handleFilterChange('search', e.target.value)}
             InputProps={{
-              startAdornment: <Search color='action' sx={{ mr: 1 }} />
+              startAdornment: <Search color='action' sx={{ mr: 1 }} aria-hidden='true' />
             }}
+            aria-label='Buscar tickets por número, cliente o equipo'
           />
         </Box>
 
         {/* Expandable Filters */}
-        <Collapse in={expanded}>
+        <Collapse in={expanded} id='advanced-filters-section'>
           <Grid container spacing={2}>
             {/* Status Filter */}
             <Grid item xs={12} sm={6} md={3}>
               <FormControl fullWidth size='small'>
-                <InputLabel>Estado</InputLabel>
+                <InputLabel id='filter-status-label'>Estado</InputLabel>
                 <Select
+                  labelId='filter-status-label'
+                  id='filter-status-select'
                   multiple
                   value={localFilters.status || []}
                   onChange={(e) => handleFilterChange('status', e.target.value)}
                   label='Estado'
+                  aria-label='Filtrar por estado del ticket'
                   renderValue={(selected) => (
                     <Box display='flex' flexWrap='wrap' gap={0.5}>
                       {(selected as MaintenanceStatus[]).map((status) => (
@@ -184,14 +194,17 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
             {/* Priority Filter */}
             <Grid item xs={12} sm={6} md={3}>
               <FormControl fullWidth size='small'>
-                <InputLabel>Prioridad</InputLabel>
+                <InputLabel id='filter-priority-label'>Prioridad</InputLabel>
                 <Select
+                  labelId='filter-priority-label'
+                  id='filter-priority-select'
                   multiple
                   value={localFilters.priority || []}
                   onChange={(e) =>
                     handleFilterChange('priority', e.target.value)
                   }
                   label='Prioridad'
+                  aria-label='Filtrar por prioridad del ticket'
                   renderValue={(selected) => (
                     <Box display='flex' flexWrap='wrap' gap={0.5}>
                       {(selected as MaintenancePriority[]).map((priority) => (
@@ -236,7 +249,11 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                   )
                 }
                 renderInput={(params) => (
-                  <TextField {...params} label='Técnico Asignado' />
+                  <TextField
+                    {...params}
+                    label='Técnico Asignado'
+                    aria-label='Filtrar por técnico asignado'
+                  />
                 )}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => (
@@ -263,7 +280,11 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                   handleFilterChange('equipmentType', value)
                 }
                 renderInput={(params) => (
-                  <TextField {...params} label='Tipo de Equipo' />
+                  <TextField
+                    {...params}
+                    label='Tipo de Equipo'
+                    aria-label='Filtrar por tipo de equipo'
+                  />
                 )}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => (
@@ -284,11 +305,14 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
               <TextField
                 fullWidth
                 size='small'
+                id='filter-customer-email'
                 label='Email del Cliente'
                 value={localFilters.customerEmail || ''}
                 onChange={(e) =>
                   handleFilterChange('customerEmail', e.target.value)
                 }
+                aria-label='Filtrar por email del cliente'
+                type='email'
               />
             </Grid>
 
@@ -352,6 +376,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
                   startIcon={<Clear />}
                   onClick={handleClearFilters}
                   size='small'
+                  aria-label='Limpiar todos los filtros aplicados'
                 >
                   Limpiar Filtros
                 </Button>

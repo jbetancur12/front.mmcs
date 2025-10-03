@@ -88,6 +88,8 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
           transform: 'translateY(-2px)'
         }
       }}
+      role='article'
+      aria-label={`Ticket de mantenimiento ${safeText(ticket.ticketCode, 'sin código')}`}
     >
       <CardContent sx={{ flexGrow: 1, pb: compact ? 1 : 2 }}>
         {/* Header with ticket number and priority */}
@@ -147,7 +149,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
             Equipo
           </Typography>
           <Box display='flex' alignItems='center' gap={0.5} mb={0.5}>
-            <Build fontSize='small' color='action' />
+            <Build fontSize='small' color='action' aria-hidden='true' />
             <Typography variant='body2'>
               {safeText(ticket.equipmentType, 'Tipo no especificado')} -{' '}
               {safeText(ticket.equipmentBrand, 'Marca no especificada')}
@@ -182,7 +184,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
 
         {/* Location */}
         <Box display='flex' alignItems='center' gap={0.5} mb={2}>
-          <LocationOn fontSize='small' color='action' />
+          <LocationOn fontSize='small' color='action' aria-hidden='true' />
           <Typography variant='body2' color='text.secondary'>
             {safeText(ticket.location, 'Ubicación no especificada')}
           </Typography>
@@ -198,6 +200,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
               <Avatar
                 sx={{ width: 24, height: 24, fontSize: '0.75rem' }}
                 src={undefined}
+                aria-hidden='true'
               >
                 {getInitials(ticket.assignedTechnician.name)}
               </Avatar>
@@ -219,7 +222,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
         {/* Scheduled date */}
         {ticket.scheduledDate && (
           <Box display='flex' alignItems='center' gap={0.5} mb={1}>
-            <Schedule fontSize='small' color='action' />
+            <Schedule fontSize='small' color='action' aria-hidden='true' />
             <Typography variant='caption' color='text.secondary'>
               Programado: {formatDate(ticket.scheduledDate)}
             </Typography>
@@ -253,6 +256,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                 size='small'
                 onClick={() => onView(ticket)}
                 color='primary'
+                aria-label={`Ver detalles del ticket ${safeText(ticket.ticketCode, 'sin código')}`}
               >
                 <Visibility />
               </IconButton>
@@ -264,6 +268,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                 size='small'
                 onClick={() => onEdit(ticket)}
                 color='secondary'
+                aria-label={`Editar ticket ${safeText(ticket.ticketCode, 'sin código')}`}
               >
                 <Edit />
               </IconButton>

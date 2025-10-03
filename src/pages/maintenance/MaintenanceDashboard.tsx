@@ -236,7 +236,11 @@ const MaintenanceDashboard: React.FC = () => {
 
         <Box display='flex' gap={1}>
           <Tooltip title='Actualizar datos'>
-            <IconButton onClick={handleRefresh} color='primary'>
+            <IconButton
+              onClick={handleRefresh}
+              color='primary'
+              aria-label='Actualizar datos del dashboard'
+            >
               <Refresh />
             </IconButton>
           </Tooltip>
@@ -244,6 +248,9 @@ const MaintenanceDashboard: React.FC = () => {
             variant='outlined'
             startIcon={<FilterList />}
             onClick={() => setShowFilters(!showFilters)}
+            aria-label={showFilters ? 'Ocultar filtros' : 'Mostrar filtros'}
+            aria-expanded={showFilters}
+            aria-controls='maintenance-filters-section'
           >
             Filtros
           </Button>
@@ -260,9 +267,9 @@ const MaintenanceDashboard: React.FC = () => {
       </Box>
 
       {/* Stats Cards */}
-      <Grid container spacing={3} mb={3}>
+      <Grid container spacing={3} mb={3} role='region' aria-label='Estadísticas del dashboard'>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card role='article' aria-label='Total de tickets'>
             <CardContent>
               <Box
                 display='flex'
@@ -270,21 +277,21 @@ const MaintenanceDashboard: React.FC = () => {
                 justifyContent='space-between'
               >
                 <Box>
-                  <Typography variant='h4' color='primary'>
+                  <Typography variant='h4' color='primary' aria-label={`Total de tickets: ${stats?.metrics?.totalTickets || 0}`}>
                     {stats?.metrics?.totalTickets || 0}
                   </Typography>
                   <Typography variant='body2' color='text.secondary'>
                     Total Tickets
                   </Typography>
                 </Box>
-                <Assignment color='primary' sx={{ fontSize: 40 }} />
+                <Assignment color='primary' sx={{ fontSize: 40 }} aria-hidden='true' />
               </Box>
             </CardContent>
           </Card>
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card role='article' aria-label='Tickets pendientes'>
             <CardContent>
               <Box
                 display='flex'
@@ -292,21 +299,21 @@ const MaintenanceDashboard: React.FC = () => {
                 justifyContent='space-between'
               >
                 <Box>
-                  <Typography variant='h4' color='warning.main'>
+                  <Typography variant='h4' color='warning.main' aria-label={`Tickets pendientes: ${stats?.metrics?.pendingTickets || 0}`}>
                     {stats?.metrics?.pendingTickets || 0}
                   </Typography>
                   <Typography variant='body2' color='text.secondary'>
                     Pendientes
                   </Typography>
                 </Box>
-                <Build color='warning' sx={{ fontSize: 40 }} />
+                <Build color='warning' sx={{ fontSize: 40 }} aria-hidden='true' />
               </Box>
             </CardContent>
           </Card>
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card role='article' aria-label='Tickets completados'>
             <CardContent>
               <Box
                 display='flex'
@@ -314,21 +321,21 @@ const MaintenanceDashboard: React.FC = () => {
                 justifyContent='space-between'
               >
                 <Box>
-                  <Typography variant='h4' color='success.main'>
+                  <Typography variant='h4' color='success.main' aria-label={`Tickets completados: ${stats?.metrics?.completedTickets || 0}`}>
                     {stats?.metrics?.completedTickets || 0}
                   </Typography>
                   <Typography variant='body2' color='text.secondary'>
                     Completados
                   </Typography>
                 </Box>
-                <CheckCircle color='success' sx={{ fontSize: 40 }} />
+                <CheckCircle color='success' sx={{ fontSize: 40 }} aria-hidden='true' />
               </Box>
             </CardContent>
           </Card>
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card role='article' aria-label='Tiempo promedio de resolución'>
             <CardContent>
               <Box
                 display='flex'
@@ -336,14 +343,14 @@ const MaintenanceDashboard: React.FC = () => {
                 justifyContent='space-between'
               >
                 <Box>
-                  <Typography variant='h4' color='info.main'>
+                  <Typography variant='h4' color='info.main' aria-label={`Tiempo promedio de resolución: ${stats?.metrics?.avgResolutionTimeHours || 0} horas`}>
                     {stats?.metrics?.avgResolutionTimeHours || 0}h
                   </Typography>
                   <Typography variant='body2' color='text.secondary'>
                     Tiempo Promedio
                   </Typography>
                 </Box>
-                <TrendingUp color='info' sx={{ fontSize: 40 }} />
+                <TrendingUp color='info' sx={{ fontSize: 40 }} aria-hidden='true' />
               </Box>
             </CardContent>
           </Card>
@@ -405,7 +412,7 @@ const MaintenanceDashboard: React.FC = () => {
 
       {/* Filters */}
       {showFilters && (
-        <Box mb={3}>
+        <Box mb={3} id='maintenance-filters-section' role='region' aria-label='Sección de filtros'>
           <MaintenanceFiltersComponent
             filters={filters}
             onFiltersChange={setFilters}
@@ -438,11 +445,11 @@ const MaintenanceDashboard: React.FC = () => {
         </Box>
 
         {ticketsLoading ? (
-          <Box display='flex' justifyContent='center' py={4}>
+          <Box display='flex' justifyContent='center' py={4} role='status' aria-live='polite'>
             <Typography>Cargando tickets...</Typography>
           </Box>
         ) : !ticketsData?.tickets.length ? (
-          <Alert severity='info'>
+          <Alert severity='info' role='status'>
             No se encontraron tickets con los filtros aplicados.
           </Alert>
         ) : (
@@ -468,6 +475,7 @@ const MaintenanceDashboard: React.FC = () => {
                   page={page}
                   onChange={(_, newPage) => setPage(newPage)}
                   color='primary'
+                  aria-label='Paginación de tickets'
                 />
               </Box>
             )}
@@ -481,14 +489,18 @@ const MaintenanceDashboard: React.FC = () => {
         onClose={() => setEditDialogOpen(false)}
         maxWidth='sm'
         fullWidth
+        aria-labelledby='edit-ticket-dialog-title'
+        aria-describedby='edit-ticket-dialog-description'
       >
-        <DialogTitle>Editar Ticket #{selectedTicket?.ticketCode}</DialogTitle>
-        <DialogContent>
+        <DialogTitle id='edit-ticket-dialog-title'>Editar Ticket #{selectedTicket?.ticketCode}</DialogTitle>
+        <DialogContent id='edit-ticket-dialog-description'>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel>Estado</InputLabel>
+                <InputLabel id='edit-status-label'>Estado</InputLabel>
                 <Select
+                  labelId='edit-status-label'
+                  id='edit-status-select'
                   value={editData.status || ''}
                   onChange={(e) =>
                     setEditData((prev) => ({
@@ -497,6 +509,7 @@ const MaintenanceDashboard: React.FC = () => {
                     }))
                   }
                   label='Estado'
+                  aria-label='Seleccionar estado del ticket'
                 >
                   {allowedStatuses.map((status) => (
                     <MenuItem key={status} value={status}>
@@ -510,8 +523,10 @@ const MaintenanceDashboard: React.FC = () => {
             {!isTechnician && (
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel>Prioridad</InputLabel>
+                  <InputLabel id='edit-priority-label'>Prioridad</InputLabel>
                   <Select
+                    labelId='edit-priority-label'
+                    id='edit-priority-select'
                     value={editData.priority || ''}
                     onChange={(e) =>
                       setEditData((prev) => ({
@@ -520,6 +535,7 @@ const MaintenanceDashboard: React.FC = () => {
                       }))
                     }
                     label='Prioridad'
+                    aria-label='Seleccionar prioridad del ticket'
                   >
                     {Object.values(MaintenancePriority).map((priority) => (
                       <MenuItem key={priority} value={priority}>
@@ -537,8 +553,10 @@ const MaintenanceDashboard: React.FC = () => {
             {!isTechnician && (
               <Grid item xs={12}>
                 <FormControl fullWidth>
-                  <InputLabel>Técnico Asignado</InputLabel>
+                  <InputLabel id='edit-technician-label'>Técnico Asignado</InputLabel>
                   <Select
+                    labelId='edit-technician-label'
+                    id='edit-technician-select'
                     value={editData.assignedTechnician || ''}
                     onChange={(e) =>
                       setEditData((prev) => ({
@@ -547,6 +565,7 @@ const MaintenanceDashboard: React.FC = () => {
                       }))
                     }
                     label='Técnico Asignado'
+                    aria-label='Seleccionar técnico asignado'
                   >
                     <MenuItem value=''>Sin asignar</MenuItem>
                     {technicians
@@ -635,6 +654,7 @@ const MaintenanceDashboard: React.FC = () => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
+                  id='edit-scheduled-date'
                   label='Fecha Programada'
                   type='datetime-local'
                   value={
@@ -653,6 +673,10 @@ const MaintenanceDashboard: React.FC = () => {
                     }))
                   }
                   InputLabelProps={{ shrink: true }}
+                  aria-label='Seleccionar fecha y hora programada'
+                  inputProps={{
+                    'aria-describedby': 'scheduled-date-helper'
+                  }}
                 />
               </Grid>
             )}

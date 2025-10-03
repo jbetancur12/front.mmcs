@@ -605,7 +605,11 @@ const MaintenanceTicketDetails: React.FC = () => {
             alignItems='center'
           >
             <Box display='flex' alignItems='center' gap={2}>
-              <IconButton onClick={handleBack} color='primary'>
+              <IconButton
+                onClick={handleBack}
+                color='primary'
+                aria-label='Volver al dashboard de mantenimiento'
+              >
                 <ArrowBack />
               </IconButton>
               <Box>
@@ -646,7 +650,11 @@ const MaintenanceTicketDetails: React.FC = () => {
               </Box>
 
               <Tooltip title='Actualizar datos'>
-                <IconButton onClick={handleRefresh} color='primary'>
+                <IconButton
+                  onClick={handleRefresh}
+                  color='primary'
+                  aria-label='Actualizar datos del ticket'
+                >
                   <Refresh />
                 </IconButton>
               </Tooltip>
@@ -673,11 +681,16 @@ const MaintenanceTicketDetails: React.FC = () => {
                 }
                 size='small'
                 endIcon={<ExpandMore />}
+                aria-label='Menú de generación de documentos PDF'
+                aria-haspopup='menu'
+                aria-expanded={Boolean(pdfMenuAnchor)}
+                aria-controls='pdf-menu'
               >
                 Documentos
               </Button>
 
               <Menu
+                id='pdf-menu'
                 anchorEl={pdfMenuAnchor}
                 open={Boolean(pdfMenuAnchor)}
                 onClose={handlePdfMenuClose}
@@ -689,11 +702,16 @@ const MaintenanceTicketDetails: React.FC = () => {
                   vertical: 'top',
                   horizontal: 'right'
                 }}
+                aria-labelledby='pdf-menu-button'
               >
-                <MenuList dense>
-                  <ListItemButton onClick={handleGenerateServiceOrder}>
+                <MenuList dense role='menu'>
+                  <ListItemButton
+                    onClick={handleGenerateServiceOrder}
+                    role='menuitem'
+                    aria-label='Generar orden de servicio'
+                  >
                     <ListItemIcon>
-                      <Print fontSize='small' />
+                      <Print fontSize='small' aria-hidden='true' />
                     </ListItemIcon>
                     <ListItemText
                       primary='Orden de Servicio'
@@ -701,9 +719,13 @@ const MaintenanceTicketDetails: React.FC = () => {
                     />
                   </ListItemButton>
 
-                  <ListItemButton onClick={handleGenerateStatusReport}>
+                  <ListItemButton
+                    onClick={handleGenerateStatusReport}
+                    role='menuitem'
+                    aria-label='Generar reporte de estado'
+                  >
                     <ListItemIcon>
-                      <Assessment fontSize='small' />
+                      <Assessment fontSize='small' aria-hidden='true' />
                     </ListItemIcon>
                     <ListItemText
                       primary='Reporte de Estado'
@@ -714,9 +736,12 @@ const MaintenanceTicketDetails: React.FC = () => {
                   <ListItemButton
                     onClick={handleGenerateServiceCertificate}
                     disabled={ticket.status !== MaintenanceStatus.COMPLETED}
+                    role='menuitem'
+                    aria-label='Generar certificado de servicio'
+                    aria-disabled={ticket.status !== MaintenanceStatus.COMPLETED}
                   >
                     <ListItemIcon>
-                      <AssignmentTurnedIn fontSize='small' />
+                      <AssignmentTurnedIn fontSize='small' aria-hidden='true' />
                     </ListItemIcon>
                     <ListItemText
                       primary='Certificado de Servicio'
@@ -731,9 +756,12 @@ const MaintenanceTicketDetails: React.FC = () => {
                   <ListItemButton
                     onClick={handleGenerateInvoice}
                     disabled={!ticket.actualCost && !ticket.estimatedCost}
+                    role='menuitem'
+                    aria-label='Generar factura'
+                    aria-disabled={!ticket.actualCost && !ticket.estimatedCost}
                   >
                     <ListItemIcon>
-                      <Receipt fontSize='small' />
+                      <Receipt fontSize='small' aria-hidden='true' />
                     </ListItemIcon>
                     <ListItemText
                       primary='Factura'
@@ -811,8 +839,10 @@ const MaintenanceTicketDetails: React.FC = () => {
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
                     <FormControl fullWidth>
-                      <InputLabel>Estado</InputLabel>
+                      <InputLabel id='detail-status-label'>Estado</InputLabel>
                       <Select
+                        labelId='detail-status-label'
+                        id='detail-status-select'
                         value={editData.status || ''}
                         onChange={(e) =>
                           setEditData((prev) => ({
@@ -821,6 +851,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                           }))
                         }
                         label='Estado'
+                        aria-label='Seleccionar estado del ticket'
                       >
                         {Object.values(MaintenanceStatus).map((status) => (
                           <MenuItem key={status} value={status}>
@@ -836,8 +867,10 @@ const MaintenanceTicketDetails: React.FC = () => {
 
                   <Grid item xs={12} sm={6}>
                     <FormControl fullWidth>
-                      <InputLabel>Prioridad</InputLabel>
+                      <InputLabel id='detail-priority-label'>Prioridad</InputLabel>
                       <Select
+                        labelId='detail-priority-label'
+                        id='detail-priority-select'
                         value={editData.priority || ''}
                         onChange={(e) =>
                           setEditData((prev) => ({
@@ -846,6 +879,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                           }))
                         }
                         label='Prioridad'
+                        aria-label='Seleccionar prioridad del ticket'
                       >
                         {Object.values(MaintenancePriority).map((priority) => (
                           <MenuItem key={priority} value={priority}>
@@ -910,6 +944,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                         window.open(`mailto:${ticket.customerEmail}`, '_blank')
                       }
                       color='primary'
+                      aria-label={`Enviar email a ${ticket.customerEmail}`}
                     >
                       <Email />
                     </IconButton>
@@ -921,6 +956,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                         window.open(`tel:${ticket.customerPhone}`, '_blank')
                       }
                       color='primary'
+                      aria-label={`Llamar al cliente ${ticket.customerPhone}`}
                     >
                       <Phone />
                     </IconButton>
@@ -931,7 +967,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
                   <Box display='flex' alignItems='center' gap={1} mb={1}>
-                    <Person color='action' />
+                    <Person color='action' aria-hidden='true' />
                     <Typography variant='body2' color='text.secondary'>
                       Nombre
                     </Typography>
@@ -943,7 +979,7 @@ const MaintenanceTicketDetails: React.FC = () => {
 
                 <Grid item xs={12} md={6}>
                   <Box display='flex' alignItems='center' gap={1} mb={1}>
-                    <Email color='action' />
+                    <Email color='action' aria-hidden='true' />
                     <Typography variant='body2' color='text.secondary'>
                       Email
                     </Typography>
@@ -955,7 +991,7 @@ const MaintenanceTicketDetails: React.FC = () => {
 
                 <Grid item xs={12} md={6}>
                   <Box display='flex' alignItems='center' gap={1} mb={1}>
-                    <Phone color='action' />
+                    <Phone color='action' aria-hidden='true' />
                     <Typography variant='body2' color='text.secondary'>
                       Teléfono
                     </Typography>
@@ -967,7 +1003,7 @@ const MaintenanceTicketDetails: React.FC = () => {
 
                 <Grid item xs={12} md={6}>
                   <Box display='flex' alignItems='center' gap={1} mb={1}>
-                    <LocationOn color='action' />
+                    <LocationOn color='action' aria-hidden='true' />
                     <Typography variant='body2' color='text.secondary'>
                       Ubicación
                     </Typography>
@@ -975,6 +1011,8 @@ const MaintenanceTicketDetails: React.FC = () => {
                   {editMode ? (
                     <TextField
                       fullWidth
+                      id='edit-location-field'
+                      label='Ubicación del servicio'
                       value={editData.location || ''}
                       onChange={(e) =>
                         setEditData((prev) => ({
@@ -988,6 +1026,9 @@ const MaintenanceTicketDetails: React.FC = () => {
                       placeholder='Ingrese la ubicación del servicio'
                       error={!!editErrors.location}
                       helperText={editErrors.location}
+                      aria-label='Editar ubicación del servicio'
+                      aria-invalid={!!editErrors.location}
+                      aria-describedby={editErrors.location ? 'location-error' : undefined}
                     />
                   ) : (
                     <Typography variant='body1' sx={{ whiteSpace: 'pre-wrap' }}>
@@ -999,9 +1040,9 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Equipment Information */}
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+            <Paper elevation={2} sx={{ p: 3, mb: 3 }} role='region' aria-label='Información del equipo'>
               <Box display='flex' alignItems='center' gap={1} mb={2}>
-                <Build color='action' />
+                <Build color='action' aria-hidden='true' />
                 <Typography variant='h6'>Información del Equipo</Typography>
               </Box>
 
@@ -1072,9 +1113,9 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Issue Description */}
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+            <Paper elevation={2} sx={{ p: 3, mb: 3 }} role='region' aria-label='Descripción del problema'>
               <Box display='flex' alignItems='center' gap={1} mb={2}>
-                <Description color='action' />
+                <Description color='action' aria-hidden='true' />
                 <Typography variant='h6'>Descripción del Problema</Typography>
               </Box>
               <Box
@@ -1096,7 +1137,7 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Timeline Section */}
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+            <Paper elevation={2} sx={{ p: 3, mb: 3 }} role='region' aria-label='Historial del ticket'>
               <Box
                 display='flex'
                 justifyContent='space-between'
@@ -1107,15 +1148,18 @@ const MaintenanceTicketDetails: React.FC = () => {
                 <IconButton
                   onClick={() => setShowTimeline(!showTimeline)}
                   color='primary'
+                  aria-label={showTimeline ? 'Ocultar historial' : 'Mostrar historial'}
+                  aria-expanded={showTimeline}
+                  aria-controls='timeline-section'
                 >
                   {showTimeline ? <ExpandLess /> : <ExpandMore />}
                 </IconButton>
               </Box>
 
-              <Collapse in={showTimeline}>
+              <Collapse in={showTimeline} id='timeline-section'>
                 {timelineLoading ? (
-                  <Box display='flex' justifyContent='center' py={3}>
-                    <CircularProgress size={24} />
+                  <Box display='flex' justifyContent='center' py={3} role='status' aria-live='polite'>
+                    <CircularProgress size={24} aria-label='Cargando historial' />
                   </Box>
                 ) : (
                   <MaintenanceTimeline timeline={timelineData || []} />
@@ -1124,7 +1168,7 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Comments Section */}
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+            <Paper elevation={2} sx={{ p: 3, mb: 3 }} role='region' aria-label='Sección de comentarios'>
               <Box
                 display='flex'
                 justifyContent='space-between'
@@ -1135,12 +1179,15 @@ const MaintenanceTicketDetails: React.FC = () => {
                 <IconButton
                   onClick={() => setShowComments(!showComments)}
                   color='primary'
+                  aria-label={showComments ? 'Ocultar comentarios' : 'Mostrar comentarios'}
+                  aria-expanded={showComments}
+                  aria-controls='comments-section'
                 >
                   {showComments ? <ExpandLess /> : <ExpandMore />}
                 </IconButton>
               </Box>
 
-              <Collapse in={showComments}>
+              <Collapse in={showComments} id='comments-section'>
                 <MaintenanceCommentsList
                   comments={ticket.comments || []}
                   onAddComment={handleAddComment}
@@ -1151,7 +1198,7 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Files Section */}
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+            <Paper elevation={2} sx={{ p: 3, mb: 3 }} role='region' aria-label='Archivos adjuntos'>
               <Box
                 display='flex'
                 justifyContent='space-between'
@@ -1162,12 +1209,15 @@ const MaintenanceTicketDetails: React.FC = () => {
                 <IconButton
                   onClick={() => setShowFiles(!showFiles)}
                   color='primary'
+                  aria-label={showFiles ? 'Ocultar archivos' : 'Mostrar archivos'}
+                  aria-expanded={showFiles}
+                  aria-controls='files-section'
                 >
                   {showFiles ? <ExpandLess /> : <ExpandMore />}
                 </IconButton>
               </Box>
 
-              <Collapse in={showFiles}>
+              <Collapse in={showFiles} id='files-section'>
                 <MaintenanceFileUpload
                   files={ticket.files || []}
                   onFilesChange={handleFileUpload}
@@ -1416,6 +1466,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               {editMode ? (
                 <TextField
                   fullWidth
+                  id='detail-scheduled-date'
                   label='Fecha Programada'
                   type='datetime-local'
                   value={
@@ -1439,6 +1490,9 @@ const MaintenanceTicketDetails: React.FC = () => {
                     'Seleccione fecha y hora del servicio'
                   }
                   error={!!editErrors.scheduledDate}
+                  aria-label='Seleccionar fecha y hora programada del servicio'
+                  aria-invalid={!!editErrors.scheduledDate}
+                  aria-describedby={editErrors.scheduledDate ? 'scheduled-date-error' : 'scheduled-date-helper'}
                 />
               ) : (
                 <Box>
@@ -1501,6 +1555,8 @@ const MaintenanceTicketDetails: React.FC = () => {
                     {editMode ? (
                       <TextField
                         fullWidth
+                        id='detail-estimated-cost'
+                        label='Costo estimado'
                         type='number'
                         value={editData.estimatedCost || ''}
                         onChange={(e) =>
@@ -1520,6 +1576,9 @@ const MaintenanceTicketDetails: React.FC = () => {
                           'Costo estimado del servicio'
                         }
                         error={!!editErrors.estimatedCost}
+                        aria-label='Ingresar costo estimado del servicio'
+                        aria-invalid={!!editErrors.estimatedCost}
+                        aria-describedby={editErrors.estimatedCost ? 'estimated-cost-error' : 'estimated-cost-helper'}
                       />
                     ) : (
                       <Typography variant='h6' color='warning.main'>
@@ -1541,6 +1600,8 @@ const MaintenanceTicketDetails: React.FC = () => {
                     {editMode ? (
                       <TextField
                         fullWidth
+                        id='detail-actual-cost'
+                        label='Costo real'
                         type='number'
                         value={editData.actualCost || ''}
                         onChange={(e) =>
@@ -1559,6 +1620,9 @@ const MaintenanceTicketDetails: React.FC = () => {
                           editErrors.actualCost || 'Costo final del servicio'
                         }
                         error={!!editErrors.actualCost}
+                        aria-label='Ingresar costo real del servicio'
+                        aria-invalid={!!editErrors.actualCost}
+                        aria-describedby={editErrors.actualCost ? 'actual-cost-error' : 'actual-cost-helper'}
                       />
                     ) : (
                       <Typography variant='h6' color='success.main'>
