@@ -337,9 +337,12 @@ const MaintenanceTicketDetails: React.FC = () => {
       await refetchTicket()
       await refetchTimeline()
       showToast('Ticket actualizado exitosamente', 'success')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating ticket:', error)
-      showToast('Error al actualizar el ticket', 'error')
+      const errorMessage = error.response?.data?.error ||
+                          error.response?.data?.message ||
+                          'Error al actualizar el ticket'
+      showToast(errorMessage, 'error')
     }
   }
 
@@ -1187,47 +1190,138 @@ const MaintenanceTicketDetails: React.FC = () => {
               </Box>
 
               {editMode ? (
-                <FormControl fullWidth>
-                  <InputLabel>Técnico</InputLabel>
-                  <Select
-                    value={editData.assignedTechnician || ''}
-                    onChange={(e) =>
-                      setEditData((prev) => ({
-                        ...prev,
-                        assignedTechnician: e.target.value
-                      }))
-                    }
-                    label='Técnico'
-                  >
-                    <MenuItem value=''>Sin asignar</MenuItem>
-                    {technicians?.map((technician) => (
-                      <MenuItem key={technician.id} value={technician.id}>
-                        <Box display='flex' alignItems='center' gap={1}>
-                          <Avatar
-                            sx={{ width: 24, height: 24, fontSize: '0.75rem' }}
-                          >
-                            {technician.name
-                              .split(' ')
-                              .map((n) => n[0])
-                              .join('')
-                              .toUpperCase()}
-                          </Avatar>
-                          <Box>
-                            <Typography variant='body2'>
-                              {technician.name}
-                            </Typography>
-                            <Typography
-                              variant='caption'
-                              color='text.secondary'
+                <>
+                  <FormControl fullWidth>
+                    <InputLabel>Técnico</InputLabel>
+                    <Select
+                      value={editData.assignedTechnician || ''}
+                      onChange={(e) =>
+                        setEditData((prev) => ({
+                          ...prev,
+                          assignedTechnician: e.target.value
+                        }))
+                      }
+                      label='Técnico'
+                    >
+                      <MenuItem value=''>Sin asignar</MenuItem>
+                      {technicians
+                        ?.filter(t => t.status === 'active')
+                        .sort((a, b) => {
+                          const aCapacity = a.maxWorkload - a.workload
+                          const bCapacity = b.maxWorkload - b.workload
+                          return bCapacity - aCapacity
+                        })
+                        .map((technician) => {
+                          const utilizationPct = (technician.workload / technician.maxWorkload) * 100
+                          const isFull = technician.workload >= technician.maxWorkload
+                          const isNearFull = utilizationPct >= 80
+
+                          return (
+                            <MenuItem
+                              key={technician.id}
+                              value={technician.id}
+                              disabled={isFull}
                             >
-                              {technician.specialization || 'N/A'}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                              <Box display='flex' flexDirection='column' width='100%'>
+                                <Box display='flex' alignItems='center' gap={1} width='100%'>
+                                  <Avatar
+                                    sx={{
+                                      width: 32,
+                                      height: 32,
+                                      fontSize: '0.875rem',
+                                      bgcolor: isFull ? 'error.main' : isNearFull ? 'warning.main' : 'success.main'
+                                    }}
+                                  >
+                                    {technician.name.split(' ').map((n) => n[0]).join('').toUpperCase()}
+                                  </Avatar>
+
+                                  <Box flex={1}>
+                                    <Typography variant='body2' fontWeight='medium'>
+                                      {technician.name}
+                                    </Typography>
+                                    <Typography variant='caption' color='text.secondary'>
+                                      {technician.specialization || 'General'}
+                                    </Typography>
+                                  </Box>
+
+                                  <Box display='flex' gap={0.5} alignItems='center'>
+                                    <Chip
+                                      size='small'
+                                      label={`${technician.workload}/${technician.maxWorkload}`}
+                                      color={
+                                        isFull ? 'error' :
+                                        isNearFull ? 'warning' :
+                                        'success'
+                                      }
+                                      variant='outlined'
+                                    />
+                                    {isFull && (
+                                      <Chip
+                                        size='small'
+                                        label='Completo'
+                                        color='error'
+                                      />
+                                    )}
+                                  </Box>
+                                </Box>
+
+                                <Box width='100%' mt={1}>
+                                  <LinearProgress
+                                    variant='determinate'
+                                    value={utilizationPct}
+                                    color={
+                                      isFull ? 'error' :
+                                      isNearFull ? 'warning' :
+                                      'success'
+                                    }
+                                    sx={{ height: 4, borderRadius: 2 }}
+                                  />
+                                </Box>
+                              </Box>
+                            </MenuItem>
+                          )
+                        })}
+                    </Select>
+                  </FormControl>
+
+                  {/* Capacity Warning Alert */}
+                  {editData.assignedTechnician && (() => {
+                    const selectedTech = technicians?.find(t => t.id === editData.assignedTechnician)
+                    if (!selectedTech) return null
+
+                    const utilizationPct = (selectedTech.workload / selectedTech.maxWorkload) * 100
+
+                    if (utilizationPct >= 80 && utilizationPct < 100) {
+                      return (
+                        <Alert severity='warning' sx={{ mt: 2 }}>
+                          <AlertTitle>Técnico casi en capacidad máxima</AlertTitle>
+                          <Typography variant='body2'>
+                            <strong>{selectedTech.name}</strong> tiene{' '}
+                            <strong>{selectedTech.workload}</strong> de{' '}
+                            <strong>{selectedTech.maxWorkload}</strong> tickets asignados{' '}
+                            ({utilizationPct.toFixed(0)}% utilización).
+                            {' '}Considere asignar a un técnico con menos carga de trabajo.
+                          </Typography>
+                        </Alert>
+                      )
+                    }
+
+                    if (utilizationPct >= 100) {
+                      return (
+                        <Alert severity='error' sx={{ mt: 2 }}>
+                          <AlertTitle>Técnico en capacidad máxima</AlertTitle>
+                          <Typography variant='body2'>
+                            <strong>{selectedTech.name}</strong> ha alcanzado su capacidad máxima{' '}
+                            ({selectedTech.workload}/{selectedTech.maxWorkload} tickets).
+                            {' '}Por favor seleccione otro técnico disponible.
+                          </Typography>
+                        </Alert>
+                      )
+                    }
+
+                    return null
+                  })()}
+                </>
               ) : ticket.assignedTechnician ? (
                 <Box>
                   <Box display='flex' alignItems='center' gap={2} mb={2}>

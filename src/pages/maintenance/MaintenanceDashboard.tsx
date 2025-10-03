@@ -23,7 +23,10 @@ import {
   Chip,
   Avatar,
   Alert,
-  Pagination
+  Pagination,
+  Snackbar,
+  AlertTitle,
+  LinearProgress
 } from '@mui/material'
 import {
   Dashboard,
@@ -72,8 +75,25 @@ const MaintenanceDashboard: React.FC = () => {
   const [selectedTicket, setSelectedTicket] =
     useState<MaintenanceTicket | null>(null)
   const [editData, setEditData] = useState<MaintenanceUpdateRequest>({})
+  const [toast, setToast] = useState<{
+    open: boolean
+    message: string
+    severity: 'success' | 'error' | 'warning' | 'info'
+  }>({
+    open: false,
+    message: '',
+    severity: 'info'
+  })
 
   const limit = 12
+
+  const showToast = (message: string, severity: 'success' | 'error' | 'warning' | 'info') => {
+    setToast({ open: true, message, severity })
+  }
+
+  const handleCloseToast = () => {
+    setToast(prev => ({ ...prev, open: false }))
+  }
 
   // Check user permissions
   const isTechnician = $userStore.rol.includes('technician')
@@ -178,8 +198,13 @@ const MaintenanceDashboard: React.FC = () => {
       setEditDialogOpen(false)
       setSelectedTicket(null)
       setEditData({})
-    } catch (error) {
+      showToast('Ticket actualizado exitosamente', 'success')
+    } catch (error: any) {
       console.error('Error updating ticket:', error)
+      const errorMessage = error.response?.data?.error ||
+                          error.response?.data?.message ||
+                          'Error al actualizar el ticket'
+      showToast(errorMessage, 'error')
     }
   }
 
@@ -524,22 +549,83 @@ const MaintenanceDashboard: React.FC = () => {
                     label='Técnico Asignado'
                   >
                     <MenuItem value=''>Sin asignar</MenuItem>
-                    {technicians?.map((technician) => (
-                      <MenuItem key={technician.id} value={technician.id}>
-                        <Box display='flex' alignItems='center' gap={1}>
-                          <Avatar
-                            sx={{ width: 24, height: 24, fontSize: '0.75rem' }}
+                    {technicians
+                      ?.filter(t => t.status === 'active')
+                      .sort((a, b) => {
+                        const aCapacity = a.maxWorkload - a.workload
+                        const bCapacity = b.maxWorkload - b.workload
+                        return bCapacity - aCapacity
+                      })
+                      .map((technician) => {
+                        const utilizationPct = (technician.workload / technician.maxWorkload) * 100
+                        const isFull = technician.workload >= technician.maxWorkload
+                        const isNearFull = utilizationPct >= 80
+
+                        return (
+                          <MenuItem
+                            key={technician.id}
+                            value={technician.id}
+                            disabled={isFull}
                           >
-                            {technician.name
-                              .split(' ')
-                              .map((n) => n[0])
-                              .join('')
-                              .toUpperCase()}
-                          </Avatar>
-                          {technician.name}
-                        </Box>
-                      </MenuItem>
-                    ))}
+                            <Box display='flex' flexDirection='column' width='100%'>
+                              <Box display='flex' alignItems='center' gap={1} width='100%'>
+                                <Avatar
+                                  sx={{
+                                    width: 32,
+                                    height: 32,
+                                    fontSize: '0.875rem',
+                                    bgcolor: isFull ? 'error.main' : isNearFull ? 'warning.main' : 'success.main'
+                                  }}
+                                >
+                                  {technician.name.split(' ').map((n) => n[0]).join('').toUpperCase()}
+                                </Avatar>
+
+                                <Box flex={1}>
+                                  <Typography variant='body2' fontWeight='medium'>
+                                    {technician.name}
+                                  </Typography>
+                                  <Typography variant='caption' color='text.secondary'>
+                                    {technician.specialization || 'General'}
+                                  </Typography>
+                                </Box>
+
+                                <Box display='flex' gap={0.5} alignItems='center'>
+                                  <Chip
+                                    size='small'
+                                    label={`${technician.workload}/${technician.maxWorkload}`}
+                                    color={
+                                      isFull ? 'error' :
+                                      isNearFull ? 'warning' :
+                                      'success'
+                                    }
+                                    variant='outlined'
+                                  />
+                                  {isFull && (
+                                    <Chip
+                                      size='small'
+                                      label='Completo'
+                                      color='error'
+                                    />
+                                  )}
+                                </Box>
+                              </Box>
+
+                              <Box width='100%' mt={1}>
+                                <LinearProgress
+                                  variant='determinate'
+                                  value={utilizationPct}
+                                  color={
+                                    isFull ? 'error' :
+                                    isNearFull ? 'warning' :
+                                    'success'
+                                  }
+                                  sx={{ height: 4, borderRadius: 2 }}
+                                />
+                              </Box>
+                            </Box>
+                          </MenuItem>
+                        )
+                      })}
                   </Select>
                 </FormControl>
               </Grid>
@@ -570,6 +656,48 @@ const MaintenanceDashboard: React.FC = () => {
                 />
               </Grid>
             )}
+
+            {/* Capacity Warning Alert */}
+            {editData.assignedTechnician && (() => {
+              const selectedTech = technicians?.find(t => t.id === editData.assignedTechnician)
+              if (!selectedTech) return null
+
+              const utilizationPct = (selectedTech.workload / selectedTech.maxWorkload) * 100
+
+              if (utilizationPct >= 80 && utilizationPct < 100) {
+                return (
+                  <Grid item xs={12}>
+                    <Alert severity='warning' sx={{ mt: 2 }}>
+                      <AlertTitle>Técnico casi en capacidad máxima</AlertTitle>
+                      <Typography variant='body2'>
+                        <strong>{selectedTech.name}</strong> tiene{' '}
+                        <strong>{selectedTech.workload}</strong> de{' '}
+                        <strong>{selectedTech.maxWorkload}</strong> tickets asignados{' '}
+                        ({utilizationPct.toFixed(0)}% utilización).
+                        {' '}Considere asignar a un técnico con menos carga de trabajo.
+                      </Typography>
+                    </Alert>
+                  </Grid>
+                )
+              }
+
+              if (utilizationPct >= 100) {
+                return (
+                  <Grid item xs={12}>
+                    <Alert severity='error' sx={{ mt: 2 }}>
+                      <AlertTitle>Técnico en capacidad máxima</AlertTitle>
+                      <Typography variant='body2'>
+                        <strong>{selectedTech.name}</strong> ha alcanzado su capacidad máxima{' '}
+                        ({selectedTech.workload}/{selectedTech.maxWorkload} tickets).
+                        {' '}Por favor seleccione otro técnico disponible.
+                      </Typography>
+                    </Alert>
+                  </Grid>
+                )
+              }
+
+              return null
+            })()}
           </Grid>
         </DialogContent>
         <DialogActions>
@@ -583,6 +711,23 @@ const MaintenanceDashboard: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Toast Notifications */}
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={6000}
+        onClose={handleCloseToast}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={handleCloseToast}
+          severity={toast.severity}
+          variant='filled'
+          sx={{ width: '100%' }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </Container>
   )
 }
