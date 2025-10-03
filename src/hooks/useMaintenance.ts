@@ -512,6 +512,7 @@ export const useCreateMaintenanceTicket = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['maintenance-tickets'] })
       queryClient.invalidateQueries({ queryKey: ['maintenance-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['maintenance-technicians'] })
     }
   })
 }
@@ -533,6 +534,7 @@ export const useUpdateMaintenanceTicket = () => {
         queryKey: ['maintenance-ticket', updatedTicket.id]
       })
       queryClient.invalidateQueries({ queryKey: ['maintenance-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['maintenance-technicians'] })
     }
   })
 }
@@ -545,6 +547,7 @@ export const useDeleteMaintenanceTicket = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['maintenance-tickets'] })
       queryClient.invalidateQueries({ queryKey: ['maintenance-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['maintenance-technicians'] })
     }
   })
 }
