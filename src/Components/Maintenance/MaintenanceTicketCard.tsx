@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Card,
   CardContent,
@@ -8,14 +8,18 @@ import {
   Chip,
   IconButton,
   Tooltip,
-  Avatar
+  Avatar,
+  Button,
+  Collapse
 } from '@mui/material'
 import {
   Visibility,
   Edit,
   Schedule,
   LocationOn,
-  Build
+  Build,
+  ExpandMore,
+  ExpandLess
 } from '@mui/icons-material'
 import { MaintenanceTicket } from '../../types/maintenance'
 import MaintenanceStatusBadge from './MaintenanceStatusBadge'
@@ -47,6 +51,12 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
   showActions = true,
   compact = false
 }) => {
+  const [expanded, setExpanded] = useState(false)
+
+  const handleExpandClick = () => {
+    setExpanded(!expanded)
+  }
+
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'No disponible'
     try {
@@ -92,15 +102,15 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
       role='article'
       aria-label={`Ticket de mantenimiento ${safeText(ticket.ticketCode, 'sin código')}`}
     >
-      <CardContent sx={{ flexGrow: 1, pb: compact ? 1 : 2, p: { xs: 2, sm: 3 } }}>
-        {/* Header with ticket number and priority */}
+      <CardContent sx={{ flexGrow: 1, pb: 1, p: { xs: 2, sm: 3 } }}>
+        {/* Header with ticket number, priority and status */}
         <Box
           display='flex'
           flexDirection={{ xs: 'column', sm: 'row' }}
           justifyContent='space-between'
           alignItems={{ xs: 'flex-start', sm: 'center' }}
-          mb={1}
-          gap={{ xs: 0.5, sm: 0 }}
+          mb={2}
+          gap={{ xs: 1, sm: 0 }}
         >
           <Typography
             variant={compact ? 'subtitle1' : 'h6'}
@@ -114,15 +124,15 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
           >
             #{safeText(ticket.ticketCode, 'SIN-CÓDIGO')}
           </Typography>
-          <MaintenancePriorityBadge priority={ticket.priority} size='small' />
+          <Box display='flex' alignItems='center' gap={1}>
+            <MaintenancePriorityBadge priority={ticket.priority} size='small' />
+            <MaintenanceStatusBadge status={ticket.status} />
+          </Box>
         </Box>
 
-        {/* Status */}
-        <Box mb={2}>
-          <MaintenanceStatusBadge status={ticket.status} />
-        </Box>
+        {/* ESSENTIAL FIELDS - Always visible */}
 
-        {/* Customer info */}
+        {/* Customer name */}
         <Box mb={2}>
           <Typography
             variant='subtitle2'
@@ -139,77 +149,60 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
           >
             {safeText(ticket.customerName, 'Cliente no especificado')}
           </Typography>
-          {!compact && (
-            <Typography
-              variant='caption'
-              color='text.secondary'
-              sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' } }}
-            >
-              {safeText(ticket.customerEmail, 'Sin email')}
-            </Typography>
-          )}
-          {!compact && ticket.customerPhone && (
-            <Typography
-              variant='caption'
-              color='text.secondary'
-              display='block'
-              sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' } }}
-            >
-              Tel: {safeText(ticket.customerPhone, 'Sin teléfono')}
-            </Typography>
-          )}
         </Box>
 
-        {/* Equipment info */}
+        {/* Equipment info - Condensed */}
         <Box mb={2}>
-          <Typography variant='subtitle2' color='text.secondary' gutterBottom>
+          <Typography
+            variant='subtitle2'
+            color='text.secondary'
+            gutterBottom
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+          >
             Equipo
           </Typography>
-          <Box display='flex' alignItems='center' gap={0.5} mb={0.5}>
+          <Box display='flex' alignItems='center' gap={0.5}>
             <Build fontSize='small' color='action' aria-hidden='true' />
-            <Typography variant='body2'>
+            <Typography variant='body2' sx={{ fontSize: { xs: '0.875rem', sm: '0.875rem' } }}>
               {safeText(ticket.equipmentType, 'Tipo no especificado')} -{' '}
               {safeText(ticket.equipmentBrand, 'Marca no especificada')}
             </Typography>
           </Box>
-          {!compact && (
-            <Typography variant='caption' color='text.secondary'>
-              Modelo: {safeText(ticket.equipmentModel, 'No especificado')} |
-              S/N: {safeText(ticket.equipmentSerial, 'No especificado')}
-            </Typography>
-          )}
         </Box>
 
-        {/* Issue description */}
+        {/* Issue description - Truncated */}
         <Box mb={2}>
-          <Typography variant='subtitle2' color='text.secondary' gutterBottom>
+          <Typography
+            variant='subtitle2'
+            color='text.secondary'
+            gutterBottom
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+          >
             Descripción
           </Typography>
           <Typography
             variant='body2'
             sx={{
               display: '-webkit-box',
-              WebkitLineClamp: compact ? 2 : 3,
+              WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
-              textOverflow: 'ellipsis'
+              textOverflow: 'ellipsis',
+              fontSize: { xs: '0.875rem', sm: '0.875rem' }
             }}
           >
             {safeText(ticket.issueDescription, 'Sin descripción del problema')}
           </Typography>
         </Box>
 
-        {/* Location */}
-        <Box display='flex' alignItems='center' gap={0.5} mb={2}>
-          <LocationOn fontSize='small' color='action' aria-hidden='true' />
-          <Typography variant='body2' color='text.secondary'>
-            {safeText(ticket.location, 'Ubicación no especificada')}
-          </Typography>
-        </Box>
-
         {/* Assigned technician */}
         <Box mb={2}>
-          <Typography variant='subtitle2' color='text.secondary' gutterBottom>
+          <Typography
+            variant='subtitle2'
+            color='text.secondary'
+            gutterBottom
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+          >
             Técnico Asignado
           </Typography>
           {ticket.assignedTechnician && ticket.assignedTechnician.name ? (
@@ -221,7 +214,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
               >
                 {getInitials(ticket.assignedTechnician.name)}
               </Avatar>
-              <Typography variant='body2'>
+              <Typography variant='body2' sx={{ fontSize: { xs: '0.875rem', sm: '0.875rem' } }}>
                 {ticket.assignedTechnician.name}
               </Typography>
             </Box>
@@ -230,38 +223,155 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
               variant='body2'
               color='text.secondary'
               fontStyle='italic'
+              sx={{ fontSize: { xs: '0.875rem', sm: '0.875rem' } }}
             >
               Sin asignar
             </Typography>
           )}
         </Box>
 
-        {/* Scheduled date */}
-        {ticket.scheduledDate && (
-          <Box display='flex' alignItems='center' gap={0.5} mb={1}>
-            <Schedule fontSize='small' color='action' aria-hidden='true' />
-            <Typography variant='caption' color='text.secondary'>
-              Programado: {formatDate(ticket.scheduledDate)}
-            </Typography>
-          </Box>
-        )}
+        {/* ADDITIONAL FIELDS - Collapsible section */}
+        <Collapse in={expanded} timeout="auto" unmountOnExit>
+          <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+            {/* Customer contact details */}
+            <Box mb={2}>
+              <Typography
+                variant='subtitle2'
+                color='text.secondary'
+                gutterBottom
+                sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+              >
+                Contacto del Cliente
+              </Typography>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                display='block'
+                sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' } }}
+              >
+                {safeText(ticket.customerEmail, 'Sin email')}
+              </Typography>
+              {ticket.customerPhone && (
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  display='block'
+                  sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' } }}
+                >
+                  Tel: {safeText(ticket.customerPhone, 'Sin teléfono')}
+                </Typography>
+              )}
+            </Box>
 
-        {/* Created date */}
-        <Typography variant='caption' color='text.secondary'>
-          Creado: {formatDate(ticket.createdAt)}
-        </Typography>
+            {/* Equipment details */}
+            <Box mb={2}>
+              <Typography
+                variant='subtitle2'
+                color='text.secondary'
+                gutterBottom
+                sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+              >
+                Detalles del Equipo
+              </Typography>
+              <Typography variant='caption' color='text.secondary' display='block'>
+                Modelo: {safeText(ticket.equipmentModel, 'No especificado')}
+              </Typography>
+              <Typography variant='caption' color='text.secondary' display='block'>
+                S/N: {safeText(ticket.equipmentSerial, 'No especificado')}
+              </Typography>
+            </Box>
 
-        {/* File count */}
-        {ticket.files && ticket.files.length > 0 && (
-          <Box mt={1}>
-            <Chip
-              size='small'
-              label={`${ticket.files.length} archivo${ticket.files.length > 1 ? 's' : ''}`}
-              variant='outlined'
-              color='info'
-            />
+            {/* Location */}
+            <Box mb={2}>
+              <Typography
+                variant='subtitle2'
+                color='text.secondary'
+                gutterBottom
+                sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+              >
+                Ubicación
+              </Typography>
+              <Box display='flex' alignItems='center' gap={0.5}>
+                <LocationOn fontSize='small' color='action' aria-hidden='true' />
+                <Typography variant='body2' color='text.secondary'>
+                  {safeText(ticket.location, 'Ubicación no especificada')}
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Scheduled date */}
+            {ticket.scheduledDate && (
+              <Box mb={2}>
+                <Typography
+                  variant='subtitle2'
+                  color='text.secondary'
+                  gutterBottom
+                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                >
+                  Fecha Programada
+                </Typography>
+                <Box display='flex' alignItems='center' gap={0.5}>
+                  <Schedule fontSize='small' color='action' aria-hidden='true' />
+                  <Typography variant='caption' color='text.secondary'>
+                    {formatDate(ticket.scheduledDate)}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+
+            {/* Created date */}
+            <Box mb={2}>
+              <Typography
+                variant='subtitle2'
+                color='text.secondary'
+                gutterBottom
+                sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+              >
+                Fecha de Creación
+              </Typography>
+              <Typography variant='caption' color='text.secondary'>
+                {formatDate(ticket.createdAt)}
+              </Typography>
+            </Box>
+
+            {/* File count */}
+            {ticket.files && ticket.files.length > 0 && (
+              <Box>
+                <Typography
+                  variant='subtitle2'
+                  color='text.secondary'
+                  gutterBottom
+                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                >
+                  Archivos Adjuntos
+                </Typography>
+                <Chip
+                  size='small'
+                  label={`${ticket.files.length} archivo${ticket.files.length > 1 ? 's' : ''}`}
+                  variant='outlined'
+                  color='info'
+                />
+              </Box>
+            )}
           </Box>
-        )}
+        </Collapse>
+
+        {/* Ver más / Ver menos button */}
+        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+          <Button
+            onClick={handleExpandClick}
+            endIcon={expanded ? <ExpandLess /> : <ExpandMore />}
+            size="small"
+            sx={{
+              textTransform: 'none',
+              fontSize: { xs: '0.875rem', sm: '0.875rem' }
+            }}
+            aria-expanded={expanded}
+            aria-label={expanded ? 'Ver menos detalles' : 'Ver más detalles'}
+          >
+            {expanded ? 'Ver menos' : 'Ver más'}
+          </Button>
+        </Box>
       </CardContent>
 
       {/* Actions */}
