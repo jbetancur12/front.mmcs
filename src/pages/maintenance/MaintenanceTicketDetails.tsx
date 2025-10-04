@@ -38,7 +38,9 @@ import {
   FormControlLabel,
   Badge,
   Stack,
-  LinearProgress
+  LinearProgress,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
 import {
   ArrowBack,
@@ -108,7 +110,8 @@ import { es } from 'date-fns/locale'
  */
 const MaintenanceTicketDetails: React.FC = () => {
   const axiosPrivate = useAxiosPrivate() // Initialize axios interceptors for automatic token refresh
-
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const { ticketId } = useParams<{ ticketId: string }>()
   const navigate = useNavigate()
 
@@ -538,14 +541,14 @@ const MaintenanceTicketDetails: React.FC = () => {
   // Loading state
   if (ticketLoading) {
     return (
-      <Container maxWidth={false} sx={{ py: 3 }}>
+      <Container maxWidth={false} sx={{ py: { xs: 2, sm: 3 }, px: { xs: 1, sm: 2, md: 3 } }}>
         <Skeleton
           variant='rectangular'
           width='100%'
           height={60}
-          sx={{ mb: 3 }}
+          sx={{ mb: { xs: 2, sm: 3 } }}
         />
-        <Grid container spacing={3}>
+        <Grid container spacing={{ xs: 2, sm: 3 }}>
           <Grid item xs={12} md={8}>
             <Skeleton variant='rectangular' width='100%' height={400} />
           </Grid>
@@ -560,7 +563,7 @@ const MaintenanceTicketDetails: React.FC = () => {
   // Error state
   if (ticketError || !ticket) {
     return (
-      <Container maxWidth={false} sx={{ py: 3 }}>
+      <Container maxWidth={false} sx={{ py: { xs: 2, sm: 3 }, px: { xs: 1, sm: 2, md: 3 } }}>
         <Alert severity='error' sx={{ mb: 3 }}>
           {(ticketError as any)?.message ||
             'Error al cargar el ticket. El ticket no existe o no tienes permisos para verlo.'}
@@ -569,6 +572,7 @@ const MaintenanceTicketDetails: React.FC = () => {
           variant='outlined'
           startIcon={<ArrowBack />}
           onClick={handleBack}
+          sx={{ minHeight: 48 }}
         >
           Volver al Dashboard
         </Button>
@@ -578,10 +582,10 @@ const MaintenanceTicketDetails: React.FC = () => {
 
   return (
     <MaintenanceErrorBoundary>
-      <Container maxWidth={false} sx={{ py: 3 }}>
+      <Container maxWidth={false} sx={{ py: { xs: 2, sm: 3 }, px: { xs: 1, sm: 2, md: 3 } }}>
         {/* Header with breadcrumbs */}
-        <Box mb={3}>
-          <Breadcrumbs aria-label='breadcrumb' sx={{ mb: 2 }}>
+        <Box mb={{ xs: 2, sm: 3 }}>
+          <Breadcrumbs aria-label='breadcrumb' sx={{ mb: 2, display: { xs: 'none', sm: 'flex' } }}>
             <Link
               color='inherit'
               href='/maintenance'
@@ -601,30 +605,41 @@ const MaintenanceTicketDetails: React.FC = () => {
 
           <Box
             display='flex'
+            flexDirection={{ xs: 'column', sm: 'row' }}
             justifyContent='space-between'
-            alignItems='center'
+            alignItems={{ xs: 'flex-start', sm: 'center' }}
+            gap={{ xs: 2, sm: 0 }}
           >
-            <Box display='flex' alignItems='center' gap={2}>
+            <Box display='flex' alignItems='center' gap={{ xs: 1, sm: 2 }} width={{ xs: '100%', sm: 'auto' }}>
               <IconButton
                 onClick={handleBack}
                 color='primary'
                 aria-label='Volver al dashboard de mantenimiento'
+                sx={{ minWidth: 48, minHeight: 48 }}
               >
                 <ArrowBack />
               </IconButton>
-              <Box>
-                <Typography variant='h4' component='h1'>
+              <Box flex={1}>
+                <Typography
+                  variant='h4'
+                  component='h1'
+                  sx={{ fontSize: { xs: '1.5rem', sm: '1.875rem', md: '2.125rem' } }}
+                >
                   Ticket #{ticket.ticketCode}
                 </Typography>
-                <Typography variant='subtitle1' color='text.secondary'>
+                <Typography
+                  variant='subtitle1'
+                  color='text.secondary'
+                  sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
+                >
                   {ticket.customerName} - {ticket.equipmentType}
                 </Typography>
               </Box>
             </Box>
 
-            <Box display='flex' gap={1} alignItems='center'>
-              {/* Real-time updates indicator */}
-              <Box display='flex' alignItems='center' gap={1} mr={2}>
+            <Box display='flex' gap={{ xs: 0.5, sm: 1 }} alignItems='center' flexWrap='wrap' width={{ xs: '100%', sm: 'auto' }}>
+              {/* Real-time updates indicator - hide on mobile */}
+              <Box display={{ xs: 'none', md: 'flex' }} alignItems='center' gap={1} mr={2}>
                 <FormControlLabel
                   control={
                     <Switch
@@ -654,6 +669,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   onClick={handleRefresh}
                   color='primary'
                   aria-label='Actualizar datos del ticket'
+                  sx={{ minWidth: 48, minHeight: 48 }}
                 >
                   <Refresh />
                 </IconButton>
@@ -663,14 +679,14 @@ const MaintenanceTicketDetails: React.FC = () => {
               <Button
                 variant='outlined'
                 startIcon={
-                  generateServiceOrderMutation.isLoading ||
+                  !isMobile && (generateServiceOrderMutation.isLoading ||
                   generateStatusReportMutation.isLoading ||
                   generateServiceCertificateMutation.isLoading ||
                   generateServiceInvoiceMutation.isLoading ? (
                     <CircularProgress size={16} />
                   ) : (
                     <PictureAsPdf />
-                  )
+                  ))
                 }
                 onClick={handlePdfMenuOpen}
                 disabled={
@@ -679,14 +695,18 @@ const MaintenanceTicketDetails: React.FC = () => {
                   generateServiceCertificateMutation.isLoading ||
                   generateServiceInvoiceMutation.isLoading
                 }
-                size='small'
+                size={isMobile ? 'small' : 'medium'}
                 endIcon={<ExpandMore />}
                 aria-label='Menú de generación de documentos PDF'
                 aria-haspopup='menu'
                 aria-expanded={Boolean(pdfMenuAnchor)}
                 aria-controls='pdf-menu'
+                sx={{
+                  minHeight: 48,
+                  fontSize: { xs: '0.813rem', sm: '0.875rem' }
+                }}
               >
-                Documentos
+                {isMobile ? <PictureAsPdf /> : 'Documentos'}
               </Button>
 
               <Menu
@@ -779,66 +799,88 @@ const MaintenanceTicketDetails: React.FC = () => {
                 <>
                   <Button
                     variant='outlined'
-                    startIcon={<Cancel />}
+                    startIcon={!isMobile && <Cancel />}
                     onClick={handleCancelEdit}
                     disabled={updateTicketMutation.isLoading}
+                    size={isMobile ? 'small' : 'medium'}
+                    sx={{
+                      minHeight: 48,
+                      fontSize: { xs: '0.813rem', sm: '0.875rem' }
+                    }}
                   >
-                    Cancelar
+                    {isMobile ? <Cancel /> : 'Cancelar'}
                   </Button>
                   <Button
                     variant='contained'
                     startIcon={
-                      updateTicketMutation.isLoading ? (
+                      !isMobile && (updateTicketMutation.isLoading ? (
                         <CircularProgress size={16} />
                       ) : (
                         <Save />
-                      )
+                      ))
                     }
                     onClick={handleSaveEdit}
                     disabled={updateTicketMutation.isLoading || !isEditValid}
                     color='primary'
+                    size={isMobile ? 'small' : 'medium'}
+                    sx={{
+                      minHeight: 48,
+                      fontSize: { xs: '0.813rem', sm: '0.875rem' }
+                    }}
                   >
-                    {updateTicketMutation.isLoading
+                    {isMobile ? <Save /> : (updateTicketMutation.isLoading
                       ? 'Guardando...'
-                      : 'Guardar'}
+                      : 'Guardar')}
                   </Button>
                 </>
               ) : (
                 <Button
                   variant='contained'
-                  startIcon={<Edit />}
+                  startIcon={!isMobile && <Edit />}
                   onClick={handleEdit}
                   color='primary'
+                  size={isMobile ? 'small' : 'medium'}
+                  sx={{
+                    minHeight: 48,
+                    fontSize: { xs: '0.813rem', sm: '0.875rem' }
+                  }}
                 >
-                  Editar
+                  {isMobile ? <Edit /> : 'Editar'}
                 </Button>
               )}
             </Box>
           </Box>
         </Box>
 
-        <Grid container spacing={3}>
+        <Grid container spacing={{ xs: 2, sm: 3 }}>
           {/* Main Content */}
           <Grid item xs={12} lg={8}>
             {/* Ticket Status and Priority */}
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+            <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 3 } }}>
               <Box
                 display='flex'
+                flexDirection={{ xs: 'column', sm: 'row' }}
                 justifyContent='space-between'
-                alignItems='center'
+                alignItems={{ xs: 'flex-start', sm: 'center' }}
                 mb={2}
+                gap={{ xs: 1, sm: 0 }}
               >
-                <Typography variant='h6'>Estado del Ticket</Typography>
-                <Box display='flex' gap={1}>
+                <Typography
+                  variant='h6'
+                  sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}
+                >
+                  Estado del Ticket
+                </Typography>
+                <Box display='flex' gap={1} flexWrap='wrap'>
                   <MaintenanceStatusBadge status={ticket.status} />
                   <MaintenancePriorityBadge priority={ticket.priority} />
                 </Box>
               </Box>
 
               {editMode ? (
-                <Grid container spacing={2}>
+                <Grid container spacing={{ xs: 1, sm: 2 }}>
                   <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth>
+                    <FormControl fullWidth size={isMobile ? 'small' : 'medium'}>
                       <InputLabel id='detail-status-label'>Estado</InputLabel>
                       <Select
                         labelId='detail-status-label'

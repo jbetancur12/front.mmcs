@@ -83,6 +83,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
         display: 'flex',
         flexDirection: 'column',
         transition: 'all 0.2s',
+        minHeight: { xs: 'auto', md: 300 },
         '&:hover': {
           elevation: 4,
           transform: 'translateY(-2px)'
@@ -91,13 +92,15 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
       role='article'
       aria-label={`Ticket de mantenimiento ${safeText(ticket.ticketCode, 'sin código')}`}
     >
-      <CardContent sx={{ flexGrow: 1, pb: compact ? 1 : 2 }}>
+      <CardContent sx={{ flexGrow: 1, pb: compact ? 1 : 2, p: { xs: 2, sm: 3 } }}>
         {/* Header with ticket number and priority */}
         <Box
           display='flex'
+          flexDirection={{ xs: 'column', sm: 'row' }}
           justifyContent='space-between'
-          alignItems='center'
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
           mb={1}
+          gap={{ xs: 0.5, sm: 0 }}
         >
           <Typography
             variant={compact ? 'subtitle1' : 'h6'}
@@ -105,7 +108,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
             fontWeight='bold'
             color='primary'
             sx={{
-              fontSize: compact ? '1.1rem' : '1.25rem',
+              fontSize: { xs: '1rem', sm: compact ? '1.1rem' : '1.25rem' },
               letterSpacing: '0.5px'
             }}
           >
@@ -121,14 +124,27 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
 
         {/* Customer info */}
         <Box mb={2}>
-          <Typography variant='subtitle2' color='text.secondary' gutterBottom>
+          <Typography
+            variant='subtitle2'
+            color='text.secondary'
+            gutterBottom
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+          >
             Cliente
           </Typography>
-          <Typography variant='body2' fontWeight='medium'>
+          <Typography
+            variant='body2'
+            fontWeight='medium'
+            sx={{ fontSize: { xs: '0.875rem', sm: '0.875rem' } }}
+          >
             {safeText(ticket.customerName, 'Cliente no especificado')}
           </Typography>
           {!compact && (
-            <Typography variant='caption' color='text.secondary'>
+            <Typography
+              variant='caption'
+              color='text.secondary'
+              sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' } }}
+            >
               {safeText(ticket.customerEmail, 'Sin email')}
             </Typography>
           )}
@@ -137,6 +153,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
               variant='caption'
               color='text.secondary'
               display='block'
+              sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' } }}
             >
               Tel: {safeText(ticket.customerPhone, 'Sin teléfono')}
             </Typography>
@@ -249,14 +266,18 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
 
       {/* Actions */}
       {showActions && (
-        <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }}>
+        <CardActions sx={{ justifyContent: 'flex-end', pt: 0, p: { xs: 1, sm: 2 } }}>
           {onView && (
             <Tooltip title='Ver detalles'>
               <IconButton
-                size='small'
+                size='medium'
                 onClick={() => onView(ticket)}
                 color='primary'
                 aria-label={`Ver detalles del ticket ${safeText(ticket.ticketCode, 'sin código')}`}
+                sx={{
+                  minWidth: 44,
+                  minHeight: 44
+                }}
               >
                 <Visibility />
               </IconButton>
@@ -265,10 +286,14 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
           {onEdit && (
             <Tooltip title='Editar'>
               <IconButton
-                size='small'
+                size='medium'
                 onClick={() => onEdit(ticket)}
                 color='secondary'
                 aria-label={`Editar ticket ${safeText(ticket.ticketCode, 'sin código')}`}
+                sx={{
+                  minWidth: 44,
+                  minHeight: 44
+                }}
               >
                 <Edit />
               </IconButton>

@@ -26,7 +26,9 @@ import {
   Pagination,
   Snackbar,
   AlertTitle,
-  LinearProgress
+  LinearProgress,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
 import {
   Dashboard,
@@ -36,7 +38,8 @@ import {
   TrendingUp,
   Refresh,
   Add,
-  FilterList
+  FilterList,
+  Cancel
 } from '@mui/icons-material'
 import {
   useMaintenanceStats,
@@ -67,6 +70,8 @@ import { userStore } from '../../store/userStore'
 const MaintenanceDashboard: React.FC = () => {
   useAxiosPrivate() // Initialize axios interceptors for automatic token refresh
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const $userStore = useStore(userStore)
   const [filters, setFilters] = useState<MaintenanceFilters>({})
   const [page, setPage] = useState(1)
@@ -219,72 +224,103 @@ const MaintenanceDashboard: React.FC = () => {
   }
 
   return (
-    <Container maxWidth={false} sx={{ py: 3 }}>
+    <Container maxWidth={false} sx={{ py: { xs: 2, sm: 3, md: 3 }, px: { xs: 1, sm: 2, md: 3 } }}>
       {/* Header */}
       <Box
         display='flex'
+        flexDirection={{ xs: 'column', sm: 'row' }}
         justifyContent='space-between'
-        alignItems='center'
-        mb={3}
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
+        mb={{ xs: 2, sm: 3, md: 3 }}
+        gap={{ xs: 2, sm: 0 }}
       >
-        <Box display='flex' alignItems='center' gap={2}>
-          <Dashboard color='primary' sx={{ fontSize: 32 }} />
-          <Typography variant='h4' component='h1'>
+        <Box display='flex' alignItems='center' gap={{ xs: 1, sm: 2 }}>
+          <Dashboard color='primary' sx={{ fontSize: { xs: 28, sm: 32 } }} />
+          <Typography
+            variant='h4'
+            component='h1'
+            sx={{
+              fontSize: { xs: '1.5rem', sm: '1.875rem', md: '2.125rem' }
+            }}
+          >
             Dashboard de Mantenimiento
           </Typography>
         </Box>
 
-        <Box display='flex' gap={1}>
+        <Box display='flex' gap={{ xs: 0.5, sm: 1 }} flexWrap='wrap'>
           <Tooltip title='Actualizar datos'>
             <IconButton
               onClick={handleRefresh}
               color='primary'
               aria-label='Actualizar datos del dashboard'
+              sx={{
+                minWidth: 48,
+                minHeight: 48
+              }}
             >
               <Refresh />
             </IconButton>
           </Tooltip>
           <Button
             variant='outlined'
-            startIcon={<FilterList />}
+            startIcon={!isMobile && <FilterList />}
             onClick={() => setShowFilters(!showFilters)}
             aria-label={showFilters ? 'Ocultar filtros' : 'Mostrar filtros'}
             aria-expanded={showFilters}
             aria-controls='maintenance-filters-section'
+            size={isMobile ? 'small' : 'medium'}
+            sx={{
+              minHeight: 48,
+              fontSize: { xs: '0.813rem', sm: '0.875rem' }
+            }}
           >
-            Filtros
+            {isMobile ? <FilterList /> : 'Filtros'}
           </Button>
           {!isTechnician && (
             <Button
               variant='contained'
-              startIcon={<Add />}
+              startIcon={!isMobile && <Add />}
               href='/maintenance/report'
+              size={isMobile ? 'small' : 'medium'}
+              sx={{
+                minHeight: 48,
+                fontSize: { xs: '0.813rem', sm: '0.875rem' }
+              }}
             >
-              Nueva Solicitud
+              {isMobile ? <Add /> : 'Nueva Solicitud'}
             </Button>
           )}
         </Box>
       </Box>
 
       {/* Stats Cards */}
-      <Grid container spacing={3} mb={3} role='region' aria-label='Estadísticas del dashboard'>
+      <Grid container spacing={{ xs: 2, sm: 2, md: 3 }} mb={{ xs: 2, sm: 3, md: 3 }} role='region' aria-label='Estadísticas del dashboard'>
         <Grid item xs={12} sm={6} md={3}>
           <Card role='article' aria-label='Total de tickets'>
-            <CardContent>
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
               <Box
                 display='flex'
                 alignItems='center'
                 justifyContent='space-between'
               >
                 <Box>
-                  <Typography variant='h4' color='primary' aria-label={`Total de tickets: ${stats?.metrics?.totalTickets || 0}`}>
+                  <Typography
+                    variant='h4'
+                    color='primary'
+                    aria-label={`Total de tickets: ${stats?.metrics?.totalTickets || 0}`}
+                    sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' } }}
+                  >
                     {stats?.metrics?.totalTickets || 0}
                   </Typography>
-                  <Typography variant='body2' color='text.secondary'>
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                  >
                     Total Tickets
                   </Typography>
                 </Box>
-                <Assignment color='primary' sx={{ fontSize: 40 }} aria-hidden='true' />
+                <Assignment color='primary' sx={{ fontSize: { xs: 32, sm: 40 } }} aria-hidden='true' />
               </Box>
             </CardContent>
           </Card>
@@ -292,21 +328,30 @@ const MaintenanceDashboard: React.FC = () => {
 
         <Grid item xs={12} sm={6} md={3}>
           <Card role='article' aria-label='Tickets pendientes'>
-            <CardContent>
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
               <Box
                 display='flex'
                 alignItems='center'
                 justifyContent='space-between'
               >
                 <Box>
-                  <Typography variant='h4' color='warning.main' aria-label={`Tickets pendientes: ${stats?.metrics?.pendingTickets || 0}`}>
+                  <Typography
+                    variant='h4'
+                    color='warning.main'
+                    aria-label={`Tickets pendientes: ${stats?.metrics?.pendingTickets || 0}`}
+                    sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' } }}
+                  >
                     {stats?.metrics?.pendingTickets || 0}
                   </Typography>
-                  <Typography variant='body2' color='text.secondary'>
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                  >
                     Pendientes
                   </Typography>
                 </Box>
-                <Build color='warning' sx={{ fontSize: 40 }} aria-hidden='true' />
+                <Build color='warning' sx={{ fontSize: { xs: 32, sm: 40 } }} aria-hidden='true' />
               </Box>
             </CardContent>
           </Card>
@@ -314,21 +359,30 @@ const MaintenanceDashboard: React.FC = () => {
 
         <Grid item xs={12} sm={6} md={3}>
           <Card role='article' aria-label='Tickets completados'>
-            <CardContent>
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
               <Box
                 display='flex'
                 alignItems='center'
                 justifyContent='space-between'
               >
                 <Box>
-                  <Typography variant='h4' color='success.main' aria-label={`Tickets completados: ${stats?.metrics?.completedTickets || 0}`}>
+                  <Typography
+                    variant='h4'
+                    color='success.main'
+                    aria-label={`Tickets completados: ${stats?.metrics?.completedTickets || 0}`}
+                    sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' } }}
+                  >
                     {stats?.metrics?.completedTickets || 0}
                   </Typography>
-                  <Typography variant='body2' color='text.secondary'>
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                  >
                     Completados
                   </Typography>
                 </Box>
-                <CheckCircle color='success' sx={{ fontSize: 40 }} aria-hidden='true' />
+                <CheckCircle color='success' sx={{ fontSize: { xs: 32, sm: 40 } }} aria-hidden='true' />
               </Box>
             </CardContent>
           </Card>
@@ -336,21 +390,30 @@ const MaintenanceDashboard: React.FC = () => {
 
         <Grid item xs={12} sm={6} md={3}>
           <Card role='article' aria-label='Tiempo promedio de resolución'>
-            <CardContent>
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
               <Box
                 display='flex'
                 alignItems='center'
                 justifyContent='space-between'
               >
                 <Box>
-                  <Typography variant='h4' color='info.main' aria-label={`Tiempo promedio de resolución: ${stats?.metrics?.avgResolutionTimeHours || 0} horas`}>
+                  <Typography
+                    variant='h4'
+                    color='info.main'
+                    aria-label={`Tiempo promedio de resolución: ${stats?.metrics?.avgResolutionTimeHours || 0} horas`}
+                    sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' } }}
+                  >
                     {stats?.metrics?.avgResolutionTimeHours || 0}h
                   </Typography>
-                  <Typography variant='body2' color='text.secondary'>
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                  >
                     Tiempo Promedio
                   </Typography>
                 </Box>
-                <TrendingUp color='info' sx={{ fontSize: 40 }} aria-hidden='true' />
+                <TrendingUp color='info' sx={{ fontSize: { xs: 32, sm: 40 } }} aria-hidden='true' />
               </Box>
             </CardContent>
           </Card>
@@ -358,18 +421,26 @@ const MaintenanceDashboard: React.FC = () => {
       </Grid>
 
       {/* Additional Stats */}
-      <Grid container spacing={3} mb={3}>
+      <Grid container spacing={{ xs: 2, sm: 2, md: 3 }} mb={{ xs: 2, sm: 3, md: 3 }}>
         <Grid item xs={12} md={6}>
-          <Paper elevation={2} sx={{ p: 3 }}>
-            <Typography variant='h6' gutterBottom>
+          <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+            <Typography
+              variant='h6'
+              gutterBottom
+              sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}
+            >
               Tickets por Prioridad
             </Typography>
-            <Grid container spacing={2}>
+            <Grid container spacing={{ xs: 1, sm: 2 }}>
               {stats?.priorityStats &&
                 stats.priorityStats.map(({ priority, count }) => (
                   <Grid item xs={6} sm={3} key={priority}>
                     <Box textAlign='center'>
-                      <Typography variant='h5' color='primary'>
+                      <Typography
+                        variant='h5'
+                        color='primary'
+                        sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}
+                      >
                         {count}
                       </Typography>
                       <MaintenancePriorityBadge
@@ -425,14 +496,19 @@ const MaintenanceDashboard: React.FC = () => {
       )}
 
       {/* Tickets Grid */}
-      <Paper elevation={2} sx={{ p: 3 }}>
+      <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
         <Box
           display='flex'
+          flexDirection={{ xs: 'column', sm: 'row' }}
           justifyContent='space-between'
-          alignItems='center'
-          mb={3}
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+          mb={{ xs: 2, sm: 3 }}
+          gap={{ xs: 1, sm: 0 }}
         >
-          <Typography variant='h6'>
+          <Typography
+            variant='h6'
+            sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}
+          >
             Tickets de Mantenimiento
             {ticketsData?.pagination.totalItems && (
               <Chip
@@ -454,7 +530,7 @@ const MaintenanceDashboard: React.FC = () => {
           </Alert>
         ) : (
           <>
-            <Grid container spacing={3}>
+            <Grid container spacing={{ xs: 2, sm: 2, md: 3 }}>
               {ticketsData.tickets.map((ticket) => (
                 <Grid item xs={12} sm={6} lg={4} key={ticket.id}>
                   <MaintenanceTicketCard
@@ -469,13 +545,23 @@ const MaintenanceDashboard: React.FC = () => {
 
             {/* Pagination */}
             {ticketsData.pagination.totalPages > 1 && (
-              <Box display='flex' justifyContent='center' mt={3}>
+              <Box display='flex' justifyContent='center' mt={{ xs: 2, sm: 3 }}>
                 <Pagination
                   count={ticketsData.pagination.totalPages}
                   page={page}
                   onChange={(_, newPage) => setPage(newPage)}
                   color='primary'
                   aria-label='Paginación de tickets'
+                  size={isMobile ? 'small' : 'medium'}
+                  siblingCount={isMobile ? 0 : 1}
+                  boundaryCount={1}
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      minWidth: { xs: 32, sm: 36 },
+                      height: { xs: 32, sm: 36 },
+                      fontSize: { xs: '0.813rem', sm: '0.875rem' }
+                    }
+                  }}
                 />
               </Box>
             )}
@@ -489,14 +575,30 @@ const MaintenanceDashboard: React.FC = () => {
         onClose={() => setEditDialogOpen(false)}
         maxWidth='sm'
         fullWidth
+        fullScreen={isMobile}
         aria-labelledby='edit-ticket-dialog-title'
         aria-describedby='edit-ticket-dialog-description'
       >
-        <DialogTitle id='edit-ticket-dialog-title'>Editar Ticket #{selectedTicket?.ticketCode}</DialogTitle>
+        <DialogTitle id='edit-ticket-dialog-title'>
+          <Box display='flex' justifyContent='space-between' alignItems='center'>
+            <Typography variant='h6' sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
+              Editar Ticket #{selectedTicket?.ticketCode}
+            </Typography>
+            {isMobile && (
+              <IconButton
+                onClick={() => setEditDialogOpen(false)}
+                aria-label='Cerrar'
+                sx={{ minWidth: 44, minHeight: 44 }}
+              >
+                <Cancel />
+              </IconButton>
+            )}
+          </Box>
+        </DialogTitle>
         <DialogContent id='edit-ticket-dialog-description'>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
+          <Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mt: 1 }}>
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
+              <FormControl fullWidth size={isMobile ? 'small' : 'medium'}>
                 <InputLabel id='edit-status-label'>Estado</InputLabel>
                 <Select
                   labelId='edit-status-label'
@@ -522,7 +624,7 @@ const MaintenanceDashboard: React.FC = () => {
 
             {!isTechnician && (
               <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
+                <FormControl fullWidth size={isMobile ? 'small' : 'medium'}>
                   <InputLabel id='edit-priority-label'>Prioridad</InputLabel>
                   <Select
                     labelId='edit-priority-label'
@@ -552,7 +654,7 @@ const MaintenanceDashboard: React.FC = () => {
 
             {!isTechnician && (
               <Grid item xs={12}>
-                <FormControl fullWidth>
+                <FormControl fullWidth size={isMobile ? 'small' : 'medium'}>
                   <InputLabel id='edit-technician-label'>Técnico Asignado</InputLabel>
                   <Select
                     labelId='edit-technician-label'
@@ -654,6 +756,7 @@ const MaintenanceDashboard: React.FC = () => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
+                  size={isMobile ? 'small' : 'medium'}
                   id='edit-scheduled-date'
                   label='Fecha Programada'
                   type='datetime-local'
