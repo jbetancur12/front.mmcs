@@ -1,7 +1,7 @@
 import React from 'react'
 import { Box } from '@mui/material'
 import { QueryClient, QueryClientProvider } from 'react-query'
-import MaintenanceTVDisplayPublic from '../Components/Maintenance/MaintenanceTVDisplayPublic'
+import MaintenanceTVDisplayPublic from '../Components/Maintenance/TVDisplayModern'
 
 // Create a separate query client for the TV display to avoid conflicts
 const tvDisplayQueryClient = new QueryClient({

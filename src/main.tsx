@@ -24,6 +24,22 @@ const queryClient = new QueryClient()
 //   tracesSampleRate: 1.0 // puedes bajarlo en producción
 // })
 
+const APP_VERSION = '1.0.0'; // Cambia esto en cada deploy
+
+// Limpiar cache cuando cambie la versión
+const currentVersion = localStorage.getItem('app-version');
+if (currentVersion !== APP_VERSION) {
+  if ('caches' in window) {
+    caches.keys().then(names => {
+      names.forEach(name => {
+        caches.delete(name);
+      });
+    });
+  }
+  localStorage.setItem('app-version', APP_VERSION);
+  window.location.reload();
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <PostHogProvider

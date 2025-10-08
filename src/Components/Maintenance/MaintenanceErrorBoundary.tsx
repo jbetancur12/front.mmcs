@@ -46,6 +46,9 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
           alignItems='center'
           minHeight='400px'
           p={3}
+          sx={{
+            background: 'linear-gradient(135deg, rgba(244, 67, 54, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)'
+          }}
         >
           <Paper
             elevation={3}
@@ -53,24 +56,68 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
               p: 4,
               textAlign: 'center',
               maxWidth: 500,
-              width: '100%'
+              width: '100%',
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '16px',
+              boxShadow: '0 8px 32px rgba(244, 67, 54, 0.15)',
+              border: '1px solid rgba(244, 67, 54, 0.1)'
             }}
           >
-            <ErrorIcon color='error' sx={{ fontSize: 64, mb: 2 }} />
-            <Typography variant='h5' gutterBottom color='error'>
+            <Box
+              sx={{
+                background: 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)',
+                borderRadius: '50%',
+                width: 80,
+                height: 80,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px',
+                boxShadow: '0 4px 20px rgba(244, 67, 54, 0.3)'
+              }}
+            >
+              <ErrorIcon sx={{ fontSize: 40, color: 'white' }} />
+            </Box>
+            <Typography 
+              variant='h5' 
+              gutterBottom 
+              sx={{
+                color: '#f44336',
+                fontWeight: 700
+              }}
+            >
               Error en el Módulo de Mantenimiento
             </Typography>
-            <Typography variant='body1' color='text.secondary' paragraph>
+            <Typography 
+              variant='body1' 
+              color='text.secondary' 
+              paragraph
+              sx={{ fontWeight: 500 }}
+            >
               Ha ocurrido un error inesperado. Por favor, intente recargar la
               página o contacte al administrador.
             </Typography>
 
             {this.state.error && (
-              <Alert severity='error' sx={{ mb: 2, textAlign: 'left' }}>
+              <Alert 
+                severity='error' 
+                sx={{ 
+                  mb: 2, 
+                  textAlign: 'left',
+                  background: 'rgba(244, 67, 54, 0.05)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(244, 67, 54, 0.2)'
+                }}
+              >
                 <Typography
                   variant='body2'
                   component='pre'
-                  sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}
+                  sx={{ 
+                    fontFamily: 'monospace', 
+                    fontSize: '0.75rem',
+                    color: '#d32f2f'
+                  }}
                 >
                   {this.state.error.message}
                 </Typography>
@@ -82,12 +129,34 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
                 variant='contained'
                 onClick={this.handleRetry}
                 startIcon={<Refresh />}
+                sx={{
+                  background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #5ab052 0%, #4a9642 100%)',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
+                  }
+                }}
               >
                 Intentar Nuevamente
               </Button>
               <Button
                 variant='outlined'
                 onClick={() => window.location.reload()}
+                sx={{
+                  borderColor: '#f44336',
+                  color: '#f44336',
+                  borderRadius: '12px',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    borderColor: '#d32f2f',
+                    background: 'rgba(244, 67, 54, 0.1)',
+                    transform: 'translateY(-1px)'
+                  }
+                }}
               >
                 Recargar Página
               </Button>

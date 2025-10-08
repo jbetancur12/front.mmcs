@@ -58,6 +58,8 @@ import MaintenanceTicketCard from '../../Components/Maintenance/MaintenanceTicke
 import MaintenanceFiltersComponent from '../../Components/Maintenance/MaintenanceFilters'
 import MaintenanceStatusBadge from '../../Components/Maintenance/MaintenanceStatusBadge'
 import MaintenancePriorityBadge from '../../Components/Maintenance/MaintenancePriorityBadge'
+import StatCardSkeleton from '../../Components/Maintenance/StatCardSkeleton'
+import TicketCardSkeleton from '../../Components/Maintenance/TicketCardSkeleton'
 import useMaintenanceWebSocket from '../../hooks/useMaintenanceWebSocket'
 import useAxiosPrivate from '../../utils/use-axios-private'
 import { useStore } from '@nanostores/react'
@@ -138,7 +140,7 @@ const MaintenanceDashboard: React.FC = () => {
   }, [isTechnician])
 
   // API hooks
-  const { data: stats, refetch: refetchStats } = useMaintenanceStats(
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useMaintenanceStats(
     currentTechnicianEmail
   )
   const {
@@ -224,7 +226,15 @@ const MaintenanceDashboard: React.FC = () => {
   }
 
   return (
-    <Container maxWidth={false} sx={{ py: { xs: 2, sm: 3, md: 3 }, px: { xs: 1, sm: 2, md: 3 } }}>
+    <Container 
+      maxWidth={false} 
+      sx={{ 
+        py: { xs: 2, sm: 3, md: 3 }, 
+        px: { xs: 1, sm: 2, md: 3 },
+        background: 'linear-gradient(135deg, rgba(109, 198, 98, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)',
+        minHeight: '100vh'
+      }}
+    >
       {/* Header */}
       <Box
         display='flex'
@@ -233,29 +243,73 @@ const MaintenanceDashboard: React.FC = () => {
         alignItems={{ xs: 'flex-start', sm: 'center' }}
         mb={{ xs: 2, sm: 3, md: 3 }}
         gap={{ xs: 2, sm: 0 }}
+        sx={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '16px',
+          p: { xs: 2, sm: 3 },
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+          border: '1px solid rgba(109, 198, 98, 0.1)'
+        }}
       >
         <Box display='flex' alignItems='center' gap={{ xs: 1, sm: 2 }}>
-          <Dashboard color='primary' sx={{ fontSize: { xs: 28, sm: 32 } }} />
-          <Typography
-            variant='h4'
-            component='h1'
+          <Box
             sx={{
-              fontSize: { xs: '1.5rem', sm: '1.875rem', md: '2.125rem' }
+              background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+              borderRadius: '12px',
+              p: 1.5,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)'
             }}
           >
-            Dashboard de Mantenimiento
-          </Typography>
+            <Dashboard sx={{ fontSize: { xs: 28, sm: 32 }, color: 'white' }} />
+          </Box>
+          <Box>
+            <Typography
+              variant='h4'
+              component='h1'
+              sx={{
+                fontSize: { xs: '1.5rem', sm: '1.875rem', md: '2.125rem' },
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                letterSpacing: '-0.02em'
+              }}
+            >
+              Dashboard de Mantenimiento
+            </Typography>
+            <Typography
+              variant='subtitle1'
+              color='text.secondary'
+              sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
+            >
+              Gestión integral de tickets y técnicos
+            </Typography>
+          </Box>
         </Box>
 
         <Box display='flex' gap={{ xs: 0.5, sm: 1 }} flexWrap='wrap'>
           <Tooltip title='Actualizar datos'>
             <IconButton
               onClick={handleRefresh}
-              color='primary'
               aria-label='Actualizar datos del dashboard'
               sx={{
                 minWidth: 48,
-                minHeight: 48
+                minHeight: 48,
+                background: 'rgba(109, 198, 98, 0.1)',
+                color: '#6dc662',
+                borderRadius: '12px',
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                  color: 'white',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 6px 20px rgba(109, 198, 98, 0.3)'
+                }
               }}
             >
               <Refresh />
@@ -271,7 +325,16 @@ const MaintenanceDashboard: React.FC = () => {
             size={isMobile ? 'small' : 'medium'}
             sx={{
               minHeight: 48,
-              fontSize: { xs: '0.813rem', sm: '0.875rem' }
+              fontSize: { xs: '0.813rem', sm: '0.875rem' },
+              borderColor: '#6dc662',
+              color: '#6dc662',
+              borderRadius: '12px',
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                borderColor: '#5ab052',
+                background: 'rgba(109, 198, 98, 0.1)',
+                transform: 'translateY(-1px)'
+              }
             }}
           >
             {isMobile ? <FilterList /> : 'Filtros'}
@@ -284,7 +347,16 @@ const MaintenanceDashboard: React.FC = () => {
               size={isMobile ? 'small' : 'medium'}
               sx={{
                 minHeight: 48,
-                fontSize: { xs: '0.813rem', sm: '0.875rem' }
+                fontSize: { xs: '0.813rem', sm: '0.875rem' },
+                background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                borderRadius: '12px',
+                boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #5ab052 0%, #4a9642 100%)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
+                }
               }}
             >
               {isMobile ? <Add /> : 'Nueva Solicitud'}
@@ -295,8 +367,41 @@ const MaintenanceDashboard: React.FC = () => {
 
       {/* Stats Cards */}
       <Grid container spacing={{ xs: 2, sm: 2, md: 3 }} mb={{ xs: 2, sm: 3, md: 3 }} role='region' aria-label='Estadísticas del dashboard'>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card role='article' aria-label='Total de tickets'>
+        {statsLoading ? (
+          <>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatCardSkeleton />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatCardSkeleton />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatCardSkeleton />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StatCardSkeleton />
+            </Grid>
+          </>
+        ) : (
+          <>
+            <Grid item xs={12} sm={6} md={3}>
+          <Card 
+            role='article' 
+            aria-label='Total de tickets'
+            sx={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '16px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(109, 198, 98, 0.1)',
+              transition: 'all 0.3s ease-in-out',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: '0 8px 30px rgba(109, 198, 98, 0.15)',
+                border: '1px solid rgba(109, 198, 98, 0.2)'
+              }
+            }}
+          >
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
               <Box
                 display='flex'
@@ -306,28 +411,61 @@ const MaintenanceDashboard: React.FC = () => {
                 <Box>
                   <Typography
                     variant='h4'
-                    color='primary'
                     aria-label={`Total de tickets: ${stats?.metrics?.totalTickets || 0}`}
-                    sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' } }}
+                    sx={{ 
+                      fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' },
+                      fontWeight: 700,
+                      color: '#6dc662'
+                    }}
                   >
                     {stats?.metrics?.totalTickets || 0}
                   </Typography>
                   <Typography
                     variant='body2'
                     color='text.secondary'
-                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                    sx={{ 
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      fontWeight: 500
+                    }}
                   >
                     Total Tickets
                   </Typography>
                 </Box>
-                <Assignment color='primary' sx={{ fontSize: { xs: 32, sm: 40 } }} aria-hidden='true' />
+                <Box
+                  sx={{
+                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    borderRadius: '12px',
+                    p: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <Assignment sx={{ fontSize: { xs: 32, sm: 40 }, color: 'white' }} aria-hidden='true' />
+                </Box>
               </Box>
             </CardContent>
           </Card>
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card role='article' aria-label='Tickets pendientes'>
+          <Card 
+            role='article' 
+            aria-label='Tickets pendientes'
+            sx={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '16px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(255, 152, 0, 0.1)',
+              transition: 'all 0.3s ease-in-out',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: '0 8px 30px rgba(255, 152, 0, 0.15)',
+                border: '1px solid rgba(255, 152, 0, 0.2)'
+              }
+            }}
+          >
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
               <Box
                 display='flex'
@@ -337,28 +475,61 @@ const MaintenanceDashboard: React.FC = () => {
                 <Box>
                   <Typography
                     variant='h4'
-                    color='warning.main'
                     aria-label={`Tickets pendientes: ${stats?.metrics?.pendingTickets || 0}`}
-                    sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' } }}
+                    sx={{ 
+                      fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' },
+                      fontWeight: 700,
+                      color: '#ff9800'
+                    }}
                   >
                     {stats?.metrics?.pendingTickets || 0}
                   </Typography>
                   <Typography
                     variant='body2'
                     color='text.secondary'
-                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                    sx={{ 
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      fontWeight: 500
+                    }}
                   >
                     Pendientes
                   </Typography>
                 </Box>
-                <Build color='warning' sx={{ fontSize: { xs: 32, sm: 40 } }} aria-hidden='true' />
+                <Box
+                  sx={{
+                    background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
+                    borderRadius: '12px',
+                    p: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <Build sx={{ fontSize: { xs: 32, sm: 40 }, color: 'white' }} aria-hidden='true' />
+                </Box>
               </Box>
             </CardContent>
           </Card>
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card role='article' aria-label='Tickets completados'>
+          <Card 
+            role='article' 
+            aria-label='Tickets completados'
+            sx={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '16px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(76, 175, 80, 0.1)',
+              transition: 'all 0.3s ease-in-out',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: '0 8px 30px rgba(76, 175, 80, 0.15)',
+                border: '1px solid rgba(76, 175, 80, 0.2)'
+              }
+            }}
+          >
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
               <Box
                 display='flex'
@@ -368,28 +539,61 @@ const MaintenanceDashboard: React.FC = () => {
                 <Box>
                   <Typography
                     variant='h4'
-                    color='success.main'
                     aria-label={`Tickets completados: ${stats?.metrics?.completedTickets || 0}`}
-                    sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' } }}
+                    sx={{ 
+                      fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' },
+                      fontWeight: 700,
+                      color: '#4caf50'
+                    }}
                   >
                     {stats?.metrics?.completedTickets || 0}
                   </Typography>
                   <Typography
                     variant='body2'
                     color='text.secondary'
-                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                    sx={{ 
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      fontWeight: 500
+                    }}
                   >
                     Completados
                   </Typography>
                 </Box>
-                <CheckCircle color='success' sx={{ fontSize: { xs: 32, sm: 40 } }} aria-hidden='true' />
+                <Box
+                  sx={{
+                    background: 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)',
+                    borderRadius: '12px',
+                    p: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <CheckCircle sx={{ fontSize: { xs: 32, sm: 40 }, color: 'white' }} aria-hidden='true' />
+                </Box>
               </Box>
             </CardContent>
           </Card>
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card role='article' aria-label='Tiempo promedio de resolución'>
+          <Card 
+            role='article' 
+            aria-label='Tiempo promedio de resolución'
+            sx={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '16px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(33, 150, 243, 0.1)',
+              transition: 'all 0.3s ease-in-out',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: '0 8px 30px rgba(33, 150, 243, 0.15)',
+                border: '1px solid rgba(33, 150, 243, 0.2)'
+              }
+            }}
+          >
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
               <Box
                 display='flex'
@@ -399,35 +603,74 @@ const MaintenanceDashboard: React.FC = () => {
                 <Box>
                   <Typography
                     variant='h4'
-                    color='info.main'
                     aria-label={`Tiempo promedio de resolución: ${stats?.metrics?.avgResolutionTimeHours || 0} horas`}
-                    sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' } }}
+                    sx={{ 
+                      fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' },
+                      fontWeight: 700,
+                      color: '#2196f3'
+                    }}
                   >
                     {stats?.metrics?.avgResolutionTimeHours || 0}h
                   </Typography>
                   <Typography
                     variant='body2'
                     color='text.secondary'
-                    sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                    sx={{ 
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      fontWeight: 500
+                    }}
                   >
                     Tiempo Promedio
                   </Typography>
                 </Box>
-                <TrendingUp color='info' sx={{ fontSize: { xs: 32, sm: 40 } }} aria-hidden='true' />
+                <Box
+                  sx={{
+                    background: 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)',
+                    borderRadius: '12px',
+                    p: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <TrendingUp sx={{ fontSize: { xs: 32, sm: 40 }, color: 'white' }} aria-hidden='true' />
+                </Box>
               </Box>
             </CardContent>
           </Card>
         </Grid>
+          </>
+        )}
       </Grid>
 
       {/* Additional Stats */}
       <Grid container spacing={{ xs: 2, sm: 2, md: 3 }} mb={{ xs: 2, sm: 3, md: 3 }}>
         <Grid item xs={12} md={6}>
-          <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+          <Paper 
+            elevation={2} 
+            sx={{ 
+              p: { xs: 2, sm: 3 },
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '16px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(109, 198, 98, 0.1)',
+              transition: 'all 0.3s ease-in-out',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
+              }
+            }}
+          >
             <Typography
               variant='h6'
               gutterBottom
-              sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}
+              sx={{ 
+                fontSize: { xs: '1.125rem', sm: '1.25rem' },
+                fontWeight: 600,
+                color: '#6dc662',
+                mb: 3
+              }}
             >
               Tickets por Prioridad
             </Typography>
@@ -435,11 +678,28 @@ const MaintenanceDashboard: React.FC = () => {
               {stats?.priorityStats &&
                 stats.priorityStats.map(({ priority, count }) => (
                   <Grid item xs={6} sm={3} key={priority}>
-                    <Box textAlign='center'>
+                    <Box 
+                      textAlign='center'
+                      sx={{
+                        p: 2,
+                        borderRadius: '12px',
+                        background: 'rgba(109, 198, 98, 0.05)',
+                        border: '1px solid rgba(109, 198, 98, 0.1)',
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                          background: 'rgba(109, 198, 98, 0.1)',
+                          transform: 'translateY(-2px)'
+                        }
+                      }}
+                    >
                       <Typography
                         variant='h5'
-                        color='primary'
-                        sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}
+                        sx={{ 
+                          fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                          fontWeight: 700,
+                          color: '#6dc662',
+                          mb: 1
+                        }}
                       >
                         {count}
                       </Typography>
@@ -496,7 +756,17 @@ const MaintenanceDashboard: React.FC = () => {
       )}
 
       {/* Tickets Grid */}
-      <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+      <Paper 
+        elevation={2} 
+        sx={{ 
+          p: { xs: 2, sm: 3 },
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '16px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+          border: '1px solid rgba(109, 198, 98, 0.1)'
+        }}
+      >
         <Box
           display='flex'
           flexDirection={{ xs: 'column', sm: 'row' }}
@@ -507,23 +777,36 @@ const MaintenanceDashboard: React.FC = () => {
         >
           <Typography
             variant='h6'
-            sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}
+            sx={{ 
+              fontSize: { xs: '1.125rem', sm: '1.25rem' },
+              fontWeight: 600,
+              color: '#6dc662'
+            }}
           >
             Tickets de Mantenimiento
             {ticketsData?.pagination.totalItems && (
               <Chip
                 label={`${ticketsData.pagination.totalItems} total`}
                 size='small'
-                sx={{ ml: 1 }}
+                sx={{ 
+                  ml: 1,
+                  background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                  color: 'white',
+                  fontWeight: 500
+                }}
               />
             )}
           </Typography>
         </Box>
 
         {ticketsLoading ? (
-          <Box display='flex' justifyContent='center' py={4} role='status' aria-live='polite'>
-            <Typography>Cargando tickets...</Typography>
-          </Box>
+          <Grid container spacing={{ xs: 2, sm: 2, md: 3 }} role='status' aria-live='polite'>
+            {[...Array(6)].map((_, index) => (
+              <Grid item xs={12} sm={6} lg={4} key={index}>
+                <TicketCardSkeleton />
+              </Grid>
+            ))}
+          </Grid>
         ) : !ticketsData?.tickets.length ? (
           <Alert severity='info' role='status'>
             No se encontraron tickets con los filtros aplicados.

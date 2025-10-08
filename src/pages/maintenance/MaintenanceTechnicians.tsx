@@ -221,25 +221,82 @@ const MaintenanceTechnicians: React.FC = () => {
   }
 
   return (
-    <Container maxWidth={false} sx={{ py: 3 }}>
+    <Container 
+      maxWidth={false} 
+      sx={{ 
+        py: 3,
+        background: 'linear-gradient(135deg, rgba(109, 198, 98, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)',
+        minHeight: '100vh'
+      }}
+    >
       {/* Header */}
       <Box
         display='flex'
         justifyContent='space-between'
         alignItems='center'
         mb={3}
+        sx={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '16px',
+          p: 3,
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+          border: '1px solid rgba(109, 198, 98, 0.1)'
+        }}
       >
         <Box display='flex' alignItems='center' gap={2}>
-          <People color='primary' sx={{ fontSize: 32 }} />
-          <Typography variant='h4' component='h1'>
-            Gestión de Técnicos
-          </Typography>
+          <Box
+            sx={{
+              background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+              borderRadius: '12px',
+              p: 1.5,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)'
+            }}
+          >
+            <People sx={{ fontSize: 32, color: 'white' }} />
+          </Box>
+          <Box>
+            <Typography 
+              variant='h4' 
+              component='h1'
+              sx={{
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                letterSpacing: '-0.02em'
+              }}
+            >
+              Gestión de Técnicos
+            </Typography>
+            <Typography
+              variant='subtitle1'
+              color='text.secondary'
+            >
+              Administración del equipo de mantenimiento
+            </Typography>
+          </Box>
         </Box>
 
         <Button
           variant='contained'
           startIcon={<Add />}
           onClick={() => setDialogOpen(true)}
+          sx={{
+            background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+            borderRadius: '12px',
+            boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
+            transition: 'all 0.2s ease-in-out',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #5ab052 0%, #4a9642 100%)',
+              transform: 'translateY(-2px)',
+              boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
+            }
+          }}
         >
           Agregar Técnico
         </Button>
@@ -248,7 +305,21 @@ const MaintenanceTechnicians: React.FC = () => {
       {/* Statistics Cards */}
       <Grid container spacing={3} mb={3}>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card
+            sx={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '16px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(109, 198, 98, 0.1)',
+              transition: 'all 0.3s ease-in-out',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: '0 8px 30px rgba(109, 198, 98, 0.15)',
+                border: '1px solid rgba(109, 198, 98, 0.2)'
+              }
+            }}
+          >
             <CardContent>
               <Box
                 display='flex'
@@ -256,21 +327,52 @@ const MaintenanceTechnicians: React.FC = () => {
                 justifyContent='space-between'
               >
                 <Box>
-                  <Typography variant='h4' color='primary'>
+                  <Typography 
+                    variant='h4' 
+                    sx={{
+                      fontWeight: 700,
+                      color: '#6dc662'
+                    }}
+                  >
                     {technicians?.length || 0}
                   </Typography>
-                  <Typography variant='body2' color='text.secondary'>
+                  <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 500 }}>
                     Total Técnicos
                   </Typography>
                 </Box>
-                <People color='primary' sx={{ fontSize: 40 }} />
+                <Box
+                  sx={{
+                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    borderRadius: '12px',
+                    p: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <People sx={{ fontSize: 40, color: 'white' }} />
+                </Box>
               </Box>
             </CardContent>
           </Card>
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card
+            sx={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '16px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(76, 175, 80, 0.1)',
+              transition: 'all 0.3s ease-in-out',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: '0 8px 30px rgba(76, 175, 80, 0.15)',
+                border: '1px solid rgba(76, 175, 80, 0.2)'
+              }
+            }}
+          >
             <CardContent>
               <Box
                 display='flex'
@@ -278,23 +380,54 @@ const MaintenanceTechnicians: React.FC = () => {
                 justifyContent='space-between'
               >
                 <Box>
-                  <Typography variant='h4' color='success.main'>
+                  <Typography 
+                    variant='h4' 
+                    sx={{
+                      fontWeight: 700,
+                      color: '#4caf50'
+                    }}
+                  >
                     {technicians?.filter(
                       (t) => t.status === 'active' && t.isAvailable
                     ).length || 0}
                   </Typography>
-                  <Typography variant='body2' color='text.secondary'>
+                  <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 500 }}>
                     Disponibles
                   </Typography>
                 </Box>
-                <CheckCircle color='success' sx={{ fontSize: 40 }} />
+                <Box
+                  sx={{
+                    background: 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)',
+                    borderRadius: '12px',
+                    p: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <CheckCircle sx={{ fontSize: 40, color: 'white' }} />
+                </Box>
               </Box>
             </CardContent>
           </Card>
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card
+            sx={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '16px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(255, 152, 0, 0.1)',
+              transition: 'all 0.3s ease-in-out',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: '0 8px 30px rgba(255, 152, 0, 0.15)',
+                border: '1px solid rgba(255, 152, 0, 0.2)'
+              }
+            }}
+          >
             <CardContent>
               <Box
                 display='flex'
@@ -302,23 +435,54 @@ const MaintenanceTechnicians: React.FC = () => {
                 justifyContent='space-between'
               >
                 <Box>
-                  <Typography variant='h4' color='warning.main'>
+                  <Typography 
+                    variant='h4' 
+                    sx={{
+                      fontWeight: 700,
+                      color: '#ff9800'
+                    }}
+                  >
                     {technicians?.filter(
                       (t) => t.status === 'active' && !t.isAvailable
                     ).length || 0}
                   </Typography>
-                  <Typography variant='body2' color='text.secondary'>
+                  <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 500 }}>
                     No Disponibles
                   </Typography>
                 </Box>
-                <Work color='warning' sx={{ fontSize: 40 }} />
+                <Box
+                  sx={{
+                    background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
+                    borderRadius: '12px',
+                    p: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <Work sx={{ fontSize: 40, color: 'white' }} />
+                </Box>
               </Box>
             </CardContent>
           </Card>
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card
+            sx={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '16px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(255, 193, 7, 0.1)',
+              transition: 'all 0.3s ease-in-out',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: '0 8px 30px rgba(255, 193, 7, 0.15)',
+                border: '1px solid rgba(255, 193, 7, 0.2)'
+              }
+            }}
+          >
             <CardContent>
               <Box
                 display='flex'
@@ -326,7 +490,13 @@ const MaintenanceTechnicians: React.FC = () => {
                 justifyContent='space-between'
               >
                 <Box>
-                  <Typography variant='h4' color='info.main'>
+                  <Typography 
+                    variant='h4' 
+                    sx={{
+                      fontWeight: 700,
+                      color: '#ffc107'
+                    }}
+                  >
                     {technicians && technicians.length > 0
                       ? (
                           technicians.reduce((acc, t) => acc + (t.rating || 0), 0) /
@@ -334,11 +504,22 @@ const MaintenanceTechnicians: React.FC = () => {
                         ).toFixed(1)
                       : '0.0'}
                   </Typography>
-                  <Typography variant='body2' color='text.secondary'>
+                  <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 500 }}>
                     Rating Promedio
                   </Typography>
                 </Box>
-                <Star color='warning' sx={{ fontSize: 40 }} />
+                <Box
+                  sx={{
+                    background: 'linear-gradient(135deg, #ffc107 0%, #ff8f00 100%)',
+                    borderRadius: '12px',
+                    p: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <Star sx={{ fontSize: 40, color: 'white' }} />
+                </Box>
               </Box>
             </CardContent>
           </Card>
@@ -346,9 +527,26 @@ const MaintenanceTechnicians: React.FC = () => {
       </Grid>
 
       {/* Technicians Table */}
-      <Paper elevation={2}>
+      <Paper 
+        elevation={2}
+        sx={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '16px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+          border: '1px solid rgba(109, 198, 98, 0.1)'
+        }}
+      >
         <Box p={3}>
-          <Typography variant='h6' gutterBottom>
+          <Typography 
+            variant='h6' 
+            gutterBottom
+            sx={{
+              fontWeight: 600,
+              color: '#6dc662',
+              mb: 3
+            }}
+          >
             Lista de Técnicos
           </Typography>
 

@@ -4,6 +4,7 @@ import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/TextLayer.css'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import { Box, Button, Typography } from '@mui/material'
+import { NavigateBefore, NavigateNext } from '@mui/icons-material'
 
 const minioClient = new minioExports.Client({
   endPoint: import.meta.env.VITE_MINIO_ENDPOINT || 'localhost',
@@ -26,6 +27,8 @@ const PDFViewer = ({
   view?: 'preview' | 'default'
   buttons?: boolean
 }) => {
+  console.log('PDFViewer path:', path)
+  console.log('PDFViewer bucket:', bucket)
   const [numPages, setNumPages] = useState<number>(1)
   const [pageNumber, setPageNumber] = useState<number>(1)
   const [pdfData, setPdfData] = useState<string | null>(null)
@@ -46,8 +49,8 @@ const PDFViewer = ({
             return
           }
 
-          const chunks: Uint8Array[] = []
-          dataStream.on('data', (chunk: Uint8Array) => chunks.push(chunk))
+          const chunks: any[] = []
+          dataStream.on('data', (chunk: any) => chunks.push(chunk))
           dataStream.on('end', () => {
             const pdfBlob = new Blob(chunks, { type: 'application/pdf' })
             const pdfUrl = URL.createObjectURL(pdfBlob)
@@ -79,41 +82,106 @@ const PDFViewer = ({
           }}
         >
           {buttons && (
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                marginTop: 2,
-                marginBottom: 2
-              }}
-            >
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 2,
+              mb: 3,
+              p: 2,
+              bgcolor: '#f8f9fa',
+              borderRadius: 3,
+              border: '1px solid #e0e0e0'
+            }}>
               <Button
-                variant='contained'
-                color='primary'
-                disabled={pageNumber <= 1}
                 onClick={(event) => changePage(-1, event)}
-                sx={{ marginRight: 2 }}
+                disabled={pageNumber <= 1}
+                variant="contained"
+                startIcon={<NavigateBefore />}
+                sx={{
+                  bgcolor: pageNumber <= 1 ? '#e0e0e0' : '#00BFA5',
+                  color: pageNumber <= 1 ? '#9e9e9e' : 'white',
+                  '&:hover': {
+                    bgcolor: pageNumber <= 1 ? '#e0e0e0' : '#00ACC1'
+                  },
+                  borderRadius: 2,
+                  px: 3,
+                  py: 1,
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  boxShadow: 'none',
+                  '&:disabled': {
+                    bgcolor: '#e0e0e0',
+                    color: '#9e9e9e'
+                  }
+                }}
               >
                 Anterior
               </Button>
+              
+              <Box sx={{ 
+                bgcolor: 'white',
+                border: '2px solid #00BFA5',
+                borderRadius: 2,
+                px: 3,
+                py: 1.5,
+                minWidth: 140,
+                textAlign: 'center',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}>
+                <Typography variant="body1" sx={{ 
+                  fontWeight: 600,
+                  color: '#00BFA5',
+                  fontSize: '0.95rem'
+                }}>
+                  Página {pageNumber} de {numPages}
+                </Typography>
+              </Box>
+              
               <Button
-                variant='contained'
-                color='primary'
-                disabled={pageNumber >= numPages}
                 onClick={(event) => changePage(1, event)}
+                disabled={pageNumber >= numPages}
+                variant="contained"
+                endIcon={<NavigateNext />}
+                sx={{
+                  bgcolor: pageNumber >= numPages ? '#e0e0e0' : '#00BFA5',
+                  color: pageNumber >= numPages ? '#9e9e9e' : 'white',
+                  '&:hover': {
+                    bgcolor: pageNumber >= numPages ? '#e0e0e0' : '#00ACC1'
+                  },
+                  borderRadius: 2,
+                  px: 3,
+                  py: 1,
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  boxShadow: 'none',
+                  '&:disabled': {
+                    bgcolor: '#e0e0e0',
+                    color: '#9e9e9e'
+                  }
+                }}
               >
                 Siguiente
               </Button>
             </Box>
           )}
-          <Box sx={{ marginBottom: 4 }}>
+          <Box sx={{ 
+            mb: 4,
+            border: '1px solid #e0e0e0',
+            borderRadius: 2,
+            overflow: 'hidden',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            bgcolor: 'white'
+          }}>
             <Document file={pdfData} onLoadSuccess={onDocumentLoadSuccess}>
-              <Page scale={1.5} pageNumber={pageNumber} />
+              <Page 
+                scale={1.5} 
+                pageNumber={pageNumber}
+                renderTextLayer={true}
+                renderAnnotationLayer={true}
+              />
             </Document>
           </Box>
-          <Typography variant='body1'>
-            Página {pageNumber} de {numPages}
-          </Typography>
+       
         </Box>
       )}
       {view === 'default' && pdfData && (

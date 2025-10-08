@@ -1,11 +1,33 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Modal, Box } from '@mui/material'
-import { CloudUpload } from '@mui/icons-material'
+import { 
+  Button, 
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Box,
+  Typography,
+  Paper,
+  Fade,
+  IconButton,
+  LinearProgress,
+  Alert,
+  Divider
+} from '@mui/material'
+import { 
+  CloudUpload, 
+  Close, 
+  CalendarToday, 
+  Description,
+  CheckCircle,
+  Update
+} from '@mui/icons-material'
 import { styled } from '@mui/material/styles'
 
 import toast, { Toaster } from 'react-hot-toast'
 import Loader from './Loader2'
-import { DatePicker } from '@mui/x-date-pickers'
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import useAxiosPrivate from '@utils/use-axios-private'
 
 interface UpdateCertificateModalProps {
@@ -15,17 +37,43 @@ interface UpdateCertificateModalProps {
   id?: string
 }
 
-const VisuallyHiddenInput = styled('input')`
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  height: 1px;
-  overflow: hidden;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  white-space: nowrap;
-  width: 1px;
-`
+
+
+const DropZone = styled(Paper)(() => ({
+  border: '2px dashed #d1d5db',
+  borderRadius: '12px',
+  padding: '24px',
+  textAlign: 'center',
+  cursor: 'pointer',
+  transition: 'all 0.3s ease-in-out',
+  backgroundColor: '#f9fafb',
+  '&:hover': {
+    borderColor: '#10b981',
+    backgroundColor: '#f0fdf4',
+    transform: 'translateY(-2px)',
+    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.15)'
+  },
+  '&.dragover': {
+    borderColor: '#10b981',
+    backgroundColor: '#f0fdf4',
+    boxShadow: '0 0 0 4px rgba(16, 185, 129, 0.1)'
+  }
+}))
+
+const DatePickerContainer = styled(Box)(() => ({
+  '& .MuiTextField-root': {
+    width: '100%',
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '12px',
+      '&:hover .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#10b981'
+      },
+      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#10b981'
+      }
+    }
+  }
+}))
 
 const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
   open,
@@ -40,6 +88,7 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [fileInputKey, setFileInputKey] = useState(Date.now())
+  const [isDragOver, setIsDragOver] = useState(false)
 
   // Función para limpiar el formulario
   const resetForm = () => {
@@ -47,6 +96,7 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
     setPreviousDate('')
     setNextDate('')
     setFile(null)
+    setIsDragOver(false)
     setFileInputKey(Date.now()) // Forzar re-render del input de archivo
   }
 
@@ -60,8 +110,51 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0]
     if (selectedFile) {
-      setFile(selectedFile)
-      setSelectedFileName(selectedFile.name)
+      processFile(selectedFile)
+    }
+  }
+
+  const processFile = (selectedFile: File) => {
+    // Validar que sea un PDF
+    if (selectedFile.type !== 'application/pdf') {
+      toast.error('Solo se permiten archivos PDF', {
+        duration: 3000,
+        position: 'top-center'
+      })
+      return
+    }
+
+    // Validar tamaño (máximo 10MB)
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      toast.error('El archivo no puede ser mayor a 10MB', {
+        duration: 3000,
+        position: 'top-center'
+      })
+      return
+    }
+
+    setFile(selectedFile)
+    setSelectedFileName(selectedFile.name)
+  }
+
+  // Funciones para drag & drop
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    setIsDragOver(false)
+  }
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    setIsDragOver(false)
+    
+    const files = event.dataTransfer.files
+    if (files.length > 0) {
+      processFile(files[0])
     }
   }
 
@@ -148,84 +241,259 @@ const UpdateCertificateModal: React.FC<UpdateCertificateModalProps> = ({
     }
   }
   return (
-    <Modal open={open} onClose={onClose}>
-      <Box
-        sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 400,
-          bgcolor: 'background.paper',
-          border: '2px solid #000',
-          boxShadow: 24,
-          p: 4,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '1rem'
+    <>
+      <Toaster />
+      <Loader loading={loading} />
+      
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth="sm"
+        fullWidth
+        TransitionComponent={Fade}
+        PaperProps={{
+          sx: {
+            borderRadius: '20px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            overflow: 'visible'
+          }
         }}
       >
-        <Toaster />
-        <Loader loading={loading} />
-        <Box>
-          <DatePicker
-            label='Fecha de Calibración'
-            value={previousDate ? new Date(previousDate) : null}
-            onChange={handleChangeCalibrationDate}
-          />
-        </Box>
-        <Box>
-          <DatePicker
-            label='Próxima Fecha de Calibración'
-            value={nextDate ? new Date(nextDate) : null}
-            onChange={(e) => setNextDate(e ? new Date(e as Date).toISOString() : '')}
-          />
-        </Box>
-        <Box>
-          <Button
-            component='label'
-            variant='contained'
-            startIcon={<CloudUpload />}
-            href='#file-upload'
-            //@ts-ignore
-            onChange={handleFileChange}
-            style={{
-              textTransform: 'none'
-            }}
-          >
-            {selectedFileName ? selectedFileName : 'Cargar Archivo'}
-            <VisuallyHiddenInput key={fileInputKey} type='file' accept='.pdf' />
-          </Button>
-        </Box>
-        <Box
+        {/* Header */}
+        <DialogTitle
           sx={{
-            marginTop: '1rem',
-            display: 'flex',
-            justifyContent: 'flex-end'
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            color: 'white',
+            position: 'relative',
+            textAlign: 'center',
+            py: 3
           }}
         >
-          <Button
-            variant='contained'
-            color='primary'
-            onClick={handleSave}
-            disabled={loading}
-            sx={{ marginLeft: '0.5rem', fontWeight: 'bold', color: '#DCFCE7' }}
-          >
-            {loading ? 'Guardando...' : 'Guardar'}
-          </Button>
-          <Button
-            variant='outlined'
-            color='secondary'
+          <Box display="flex" alignItems="center" justifyContent="center" mb={1}>
+            <Update sx={{ fontSize: 28, mr: 1 }} />
+            <Typography variant="h5" fontWeight="bold">
+              Actualizar Certificado
+            </Typography>
+          </Box>
+          <Typography variant="body2" sx={{ opacity: 0.9 }}>
+            Sube el nuevo certificado y actualiza las fechas de calibración
+          </Typography>
+          
+          <IconButton
             onClick={onClose}
             disabled={loading}
-            sx={{ marginLeft: '0.5rem' }}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+              }
+            }}
+          >
+            <Close />
+          </IconButton>
+        </DialogTitle>
+
+        {loading && (
+          <LinearProgress 
+            sx={{ 
+              height: 3,
+              '& .MuiLinearProgress-bar': {
+                backgroundColor: '#10b981'
+              }
+            }} 
+          />
+        )}
+
+        <DialogContent sx={{ p: 4 }}>
+          {/* File Upload Section */}
+          <Box mb={4}>
+            <Box display="flex" alignItems="center" mb={2}>
+              <Description sx={{ color: '#10b981', mr: 1 }} />
+              <Typography variant="h6" fontWeight="600" sx={{ color: '#1f2937' }}>
+                Certificado PDF
+              </Typography>
+            </Box>
+            
+            <DropZone
+              elevation={0}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => document.getElementById('file-input')?.click()}
+              sx={{
+                borderColor: isDragOver ? '#10b981' : '#d1d5db',
+                backgroundColor: isDragOver ? '#f0fdf4' : '#f9fafb',
+                transform: isDragOver ? 'scale(1.02)' : 'scale(1)',
+                boxShadow: isDragOver ? '0 8px 25px rgba(16, 185, 129, 0.2)' : 'none'
+              }}
+            >
+              <input
+                id="file-input"
+                key={fileInputKey}
+                type="file"
+                accept=".pdf"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
+              
+              <CloudUpload 
+                sx={{ 
+                  fontSize: 48, 
+                  color: selectedFileName ? '#10b981' : isDragOver ? '#10b981' : '#9ca3af',
+                  mb: 2,
+                  transition: 'color 0.3s ease'
+                }} 
+              />
+              
+              {selectedFileName ? (
+                <Box>
+                  <Typography variant="body1" fontWeight="600" sx={{ color: '#10b981', mb: 1 }}>
+                    ✓ Archivo seleccionado
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#374151' }}>
+                    {selectedFileName}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#6b7280', mt: 1, display: 'block' }}>
+                    Haz clic para cambiar el archivo
+                  </Typography>
+                </Box>
+              ) : (
+                <Box>
+                  <Typography 
+                    variant="body1" 
+                    fontWeight="600" 
+                    sx={{ 
+                      color: isDragOver ? '#10b981' : '#374151', 
+                      mb: 1,
+                      transition: 'color 0.3s ease'
+                    }}
+                  >
+                    {isDragOver ? '¡Suelta el archivo aquí!' : 'Arrastra tu archivo PDF aquí'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#6b7280' }}>
+                    o haz clic para seleccionar
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#9ca3af', mt: 1, display: 'block' }}>
+                    Máximo 10MB • Solo archivos PDF
+                  </Typography>
+                </Box>
+              )}
+            </DropZone>
+          </Box>
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* Dates Section */}
+          <Box>
+            <Box display="flex" alignItems="center" mb={3}>
+              <CalendarToday sx={{ color: '#10b981', mr: 1 }} />
+              <Typography variant="h6" fontWeight="600" sx={{ color: '#1f2937' }}>
+                Fechas de Calibración
+              </Typography>
+            </Box>
+
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <Box display="flex" flexDirection="column" gap={3}>
+                <DatePickerContainer>
+                  <DatePicker
+                    label="Fecha de Calibración"
+                    value={previousDate ? new Date(previousDate) : null}
+                    onChange={handleChangeCalibrationDate}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        variant: 'outlined'
+                      }
+                    }}
+                  />
+                </DatePickerContainer>
+
+                <DatePickerContainer>
+                  <DatePicker
+                    label="Próxima Fecha de Calibración"
+                    value={nextDate ? new Date(nextDate) : null}
+                    onChange={(e) => setNextDate(e ? new Date(e as Date).toISOString() : '')}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        variant: 'outlined'
+                      }
+                    }}
+                  />
+                </DatePickerContainer>
+              </Box>
+            </LocalizationProvider>
+
+            {previousDate && nextDate && (
+              <Alert 
+                severity="info" 
+                sx={{ 
+                  mt: 2, 
+                  borderRadius: '12px',
+                  '& .MuiAlert-icon': {
+                    color: '#10b981'
+                  }
+                }}
+              >
+                <Typography variant="body2">
+                  <strong>Período de calibración:</strong> {' '}
+                  {Math.round((new Date(nextDate).getTime() - new Date(previousDate).getTime()) / (1000 * 60 * 60 * 24 * 365))} año(s)
+                </Typography>
+              </Alert>
+            )}
+          </Box>
+        </DialogContent>
+
+        <DialogActions sx={{ p: 3, pt: 0 }}>
+          <Button
+            onClick={onClose}
+            disabled={loading}
+            variant="outlined"
+            sx={{
+              borderRadius: '12px',
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3,
+              borderColor: '#d1d5db',
+              color: '#374151',
+              '&:hover': {
+                borderColor: '#9ca3af',
+                backgroundColor: '#f9fafb'
+              }
+            }}
           >
             Cancelar
           </Button>
-        </Box>
-      </Box>
-    </Modal>
+          
+          <Button
+            onClick={handleSave}
+            disabled={loading || !file || !previousDate || !nextDate}
+            variant="contained"
+            startIcon={loading ? null : <CheckCircle />}
+            sx={{
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              borderRadius: '12px',
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 4,
+              ml: 2,
+              '&:hover': {
+                background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+              },
+              '&:disabled': {
+                background: '#e5e7eb',
+                color: '#9ca3af'
+              }
+            }}
+          >
+            {loading ? 'Actualizando...' : 'Actualizar Certificado'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   )
 }
 

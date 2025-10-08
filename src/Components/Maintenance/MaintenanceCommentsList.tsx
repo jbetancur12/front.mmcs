@@ -132,14 +132,49 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
 
   return (
     <Box>
-      <Typography variant='h6' gutterBottom>
+      <Typography 
+        variant='h6' 
+        gutterBottom
+        sx={{
+          fontWeight: 600,
+          color: '#6dc662',
+          mb: 3
+        }}
+      >
         Comentarios ({userComments.length})
       </Typography>
 
       {/* Comments List */}
-      <Box sx={{ maxHeight: 400, overflowY: 'auto', mb: 3 }}>
+      <Box 
+        sx={{ 
+          maxHeight: 400, 
+          overflowY: 'auto', 
+          mb: 3,
+          '&::-webkit-scrollbar': {
+            width: '6px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'rgba(0,0,0,0.1)',
+            borderRadius: '3px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+            borderRadius: '3px',
+          },
+        }}
+      >
         {sortedComments.length === 0 ? (
-          <Alert severity='info' sx={{ mb: 2 }}>
+          <Alert 
+            severity='info' 
+            sx={{ 
+              mb: 2,
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '12px',
+              boxShadow: '0 4px 20px rgba(33, 150, 243, 0.1)',
+              border: '1px solid rgba(33, 150, 243, 0.2)'
+            }}
+          >
             No hay comentarios aún. ¡Sé el primero en comentar!
           </Alert>
         ) : (
@@ -150,13 +185,24 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
               sx={{
                 p: 2,
                 mb: 2,
-                backgroundColor: comment.isInternal
-                  ? 'action.hover'
-                  : 'background.paper',
-                border: comment.isInternal ? '1px solid' : 'none',
-                borderColor: comment.isInternal
-                  ? 'warning.light'
-                  : 'transparent'
+                background: comment.isInternal
+                  ? 'linear-gradient(135deg, rgba(255, 193, 7, 0.05) 0%, rgba(255, 152, 0, 0.05) 100%)'
+                  : 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '12px',
+                boxShadow: comment.isInternal
+                  ? '0 4px 20px rgba(255, 193, 7, 0.1)'
+                  : '0 4px 20px rgba(0, 0, 0, 0.08)',
+                border: comment.isInternal 
+                  ? '1px solid rgba(255, 193, 7, 0.2)' 
+                  : '1px solid rgba(109, 198, 98, 0.1)',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: comment.isInternal
+                    ? '0 8px 30px rgba(255, 193, 7, 0.15)'
+                    : '0 8px 30px rgba(109, 198, 98, 0.12)'
+                }
               }}
             >
               {/* Comment Header */}
@@ -172,7 +218,16 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                       width: 32,
                       height: 32,
                       fontSize: '0.875rem',
-                      bgcolor: `${getRoleColor(comment.authorType || comment.userRole)}.main`
+                      background: `linear-gradient(135deg, ${getRoleColor(comment.authorType || comment.userRole) === 'primary' ? '#6dc662' : 
+                        getRoleColor(comment.authorType || comment.userRole) === 'error' ? '#f44336' :
+                        getRoleColor(comment.authorType || comment.userRole) === 'success' ? '#4caf50' :
+                        getRoleColor(comment.authorType || comment.userRole) === 'info' ? '#2196f3' : '#9e9e9e'} 0%, ${
+                        getRoleColor(comment.authorType || comment.userRole) === 'primary' ? '#5ab052' : 
+                        getRoleColor(comment.authorType || comment.userRole) === 'error' ? '#d32f2f' :
+                        getRoleColor(comment.authorType || comment.userRole) === 'success' ? '#388e3c' :
+                        getRoleColor(comment.authorType || comment.userRole) === 'info' ? '#1976d2' : '#757575'} 100%)`,
+                      color: 'white',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
                     }}
                   >
                     {getInitials(comment.authorName || comment.userName)}
@@ -188,12 +243,25 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                         label={getRoleLabel(
                           comment.authorType || comment.userRole
                         )}
+                        sx={{
+                          borderRadius: '6px',
+                          fontWeight: 500,
+                          background: getRoleColor(comment.authorType || comment.userRole) === 'primary' 
+                            ? 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)'
+                            : undefined,
+                          color: getRoleColor(comment.authorType || comment.userRole) === 'primary' 
+                            ? 'white' 
+                            : undefined,
+                          border: getRoleColor(comment.authorType || comment.userRole) === 'primary' 
+                            ? 'none' 
+                            : undefined
+                        }}
                         color={
                           getRoleColor(
                             comment.authorType || comment.userRole
                           ) as any
                         }
-                        variant='outlined'
+                        variant={getRoleColor(comment.authorType || comment.userRole) === 'primary' ? 'filled' : 'outlined'}
                       />
                       {comment.isInternal && (
                         <Tooltip title='Comentario interno - Solo visible para técnicos y administradores'>
@@ -201,8 +269,16 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                             size='small'
                             icon={<Lock />}
                             label='Interno'
-                            color='warning'
-                            variant='outlined'
+                            sx={{
+                              borderRadius: '6px',
+                              fontWeight: 500,
+                              background: 'linear-gradient(135deg, #ffc107 0%, #ff8f00 100%)',
+                              color: 'white',
+                              border: 'none',
+                              '& .MuiChip-icon': {
+                                color: 'white'
+                              }
+                            }}
                           />
                         </Tooltip>
                       )}
@@ -242,8 +318,25 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
 
       {/* Add Comment Form */}
       {!disabled && (
-        <Paper elevation={2} sx={{ p: 2 }}>
-          <Typography variant='subtitle2' gutterBottom>
+        <Paper 
+          elevation={2} 
+          sx={{ 
+            p: 2,
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+            border: '1px solid rgba(109, 198, 98, 0.1)'
+          }}
+        >
+          <Typography 
+            variant='subtitle2' 
+            gutterBottom
+            sx={{
+              fontWeight: 600,
+              color: '#6dc662'
+            }}
+          >
             Agregar comentario
           </Typography>
 
@@ -256,7 +349,21 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
               onChange={(e) => setNewComment(e.target.value)}
               placeholder='Escribe tu comentario aquí...'
               disabled={submitting || loading}
-              sx={{ mb: 2 }}
+              sx={{ 
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '8px',
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#6dc662',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#6dc662',
+                  },
+                },
+                '& .MuiInputLabel-root.Mui-focused': {
+                  color: '#6dc662',
+                }
+              }}
             />
 
             <Box
@@ -313,6 +420,21 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                 endIcon={<Send />}
                 disabled={!newComment.trim() || submitting || loading}
                 size='small'
+                sx={{
+                  background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #5ab052 0%, #4a9642 100%)',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
+                  },
+                  '&:disabled': {
+                    background: 'rgba(0, 0, 0, 0.12)',
+                    color: 'rgba(0, 0, 0, 0.26)'
+                  }
+                }}
               >
                 {submitting ? 'Enviando...' : 'Enviar'}
               </Button>

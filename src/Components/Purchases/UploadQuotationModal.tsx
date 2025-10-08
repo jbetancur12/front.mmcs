@@ -227,7 +227,13 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
       formData.append('purchaseRequestId', purchaseRequest.id.toString())
       formData.append('purchaseRequestCode', purchaseRequest.purchaseCode || '')
       formData.append('supplierName', supplierName || 'Desconocido')
-      return axiosPrivate.post('/purchaseQuotations', formData)
+      for (const [key, value] of formData.entries()) {
+  console.log(key, value);
+}
+
+      return axiosPrivate.post('/purchaseQuotations', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
     },
     {
       onSuccess: (_data, variables) => {

@@ -541,19 +541,50 @@ const MaintenanceTicketDetails: React.FC = () => {
   // Loading state
   if (ticketLoading) {
     return (
-      <Container maxWidth={false} sx={{ py: { xs: 2, sm: 3 }, px: { xs: 1, sm: 2, md: 3 } }}>
+      <Container 
+        maxWidth={false} 
+        sx={{ 
+          py: { xs: 2, sm: 3 }, 
+          px: { xs: 1, sm: 2, md: 3 },
+          background: 'linear-gradient(135deg, rgba(109, 198, 98, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)',
+          minHeight: '100vh'
+        }}
+      >
         <Skeleton
           variant='rectangular'
           width='100%'
           height={60}
-          sx={{ mb: { xs: 2, sm: 3 } }}
+          sx={{ 
+            mb: { xs: 2, sm: 3 },
+            borderRadius: '16px',
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)'
+          }}
         />
         <Grid container spacing={{ xs: 2, sm: 3 }}>
           <Grid item xs={12} md={8}>
-            <Skeleton variant='rectangular' width='100%' height={400} />
+            <Skeleton 
+              variant='rectangular' 
+              width='100%' 
+              height={400}
+              sx={{
+                borderRadius: '16px',
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)'
+              }}
+            />
           </Grid>
           <Grid item xs={12} md={4}>
-            <Skeleton variant='rectangular' width='100%' height={300} />
+            <Skeleton 
+              variant='rectangular' 
+              width='100%' 
+              height={300}
+              sx={{
+                borderRadius: '16px',
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)'
+              }}
+            />
           </Grid>
         </Grid>
       </Container>
@@ -563,8 +594,26 @@ const MaintenanceTicketDetails: React.FC = () => {
   // Error state
   if (ticketError || !ticket) {
     return (
-      <Container maxWidth={false} sx={{ py: { xs: 2, sm: 3 }, px: { xs: 1, sm: 2, md: 3 } }}>
-        <Alert severity='error' sx={{ mb: 3 }}>
+      <Container 
+        maxWidth={false} 
+        sx={{ 
+          py: { xs: 2, sm: 3 }, 
+          px: { xs: 1, sm: 2, md: 3 },
+          background: 'linear-gradient(135deg, rgba(109, 198, 98, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)',
+          minHeight: '100vh'
+        }}
+      >
+        <Alert 
+          severity='error' 
+          sx={{ 
+            mb: 3,
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '16px',
+            boxShadow: '0 4px 20px rgba(244, 67, 54, 0.1)',
+            border: '1px solid rgba(244, 67, 54, 0.2)'
+          }}
+        >
           {(ticketError as any)?.message ||
             'Error al cargar el ticket. El ticket no existe o no tienes permisos para verlo.'}
         </Alert>
@@ -572,7 +621,18 @@ const MaintenanceTicketDetails: React.FC = () => {
           variant='outlined'
           startIcon={<ArrowBack />}
           onClick={handleBack}
-          sx={{ minHeight: 48 }}
+          sx={{ 
+            minHeight: 48,
+            borderColor: '#6dc662',
+            color: '#6dc662',
+            borderRadius: '12px',
+            transition: 'all 0.2s ease-in-out',
+            '&:hover': {
+              borderColor: '#5ab052',
+              background: 'rgba(109, 198, 98, 0.1)',
+              transform: 'translateY(-1px)'
+            }
+          }}
         >
           Volver al Dashboard
         </Button>
@@ -582,15 +642,52 @@ const MaintenanceTicketDetails: React.FC = () => {
 
   return (
     <MaintenanceErrorBoundary>
-      <Container maxWidth={false} sx={{ py: { xs: 2, sm: 3 }, px: { xs: 1, sm: 2, md: 3 } }}>
+      <Container 
+        maxWidth={false} 
+        sx={{ 
+          py: { xs: 2, sm: 3 }, 
+          px: { xs: 1, sm: 2, md: 3 },
+          background: 'linear-gradient(135deg, rgba(109, 198, 98, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)',
+          minHeight: '100vh'
+        }}
+      >
         {/* Header with breadcrumbs */}
-        <Box mb={{ xs: 2, sm: 3 }}>
-          <Breadcrumbs aria-label='breadcrumb' sx={{ mb: 2, display: { xs: 'none', sm: 'flex' } }}>
+        <Box 
+          mb={{ xs: 2, sm: 3 }}
+          sx={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '16px',
+            p: { xs: 2, sm: 3 },
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+            border: '1px solid rgba(109, 198, 98, 0.1)'
+          }}
+        >
+          <Breadcrumbs 
+            aria-label='breadcrumb' 
+            sx={{ 
+              mb: 2, 
+              display: { xs: 'none', sm: 'flex' },
+              '& .MuiBreadcrumbs-separator': {
+                color: '#6dc662'
+              }
+            }}
+          >
             <Link
               color='inherit'
               href='/maintenance'
               underline='hover'
-              sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                cursor: 'pointer',
+                color: '#6dc662',
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  color: '#5ab052',
+                  transform: 'translateY(-1px)'
+                }
+              }}
               onClick={(e) => {
                 e.preventDefault()
                 handleBack()
@@ -598,7 +695,15 @@ const MaintenanceTicketDetails: React.FC = () => {
             >
               Dashboard de Mantenimiento
             </Link>
-            <Typography color='text.primary'>
+            <Typography 
+              sx={{
+                background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                fontWeight: 600
+              }}
+            >
               Ticket #{ticket.ticketCode}
             </Typography>
           </Breadcrumbs>
@@ -613,9 +718,21 @@ const MaintenanceTicketDetails: React.FC = () => {
             <Box display='flex' alignItems='center' gap={{ xs: 1, sm: 2 }} width={{ xs: '100%', sm: 'auto' }}>
               <IconButton
                 onClick={handleBack}
-                color='primary'
                 aria-label='Volver al dashboard de mantenimiento'
-                sx={{ minWidth: 48, minHeight: 48 }}
+                sx={{ 
+                  minWidth: 48, 
+                  minHeight: 48,
+                  background: 'rgba(109, 198, 98, 0.1)',
+                  color: '#6dc662',
+                  borderRadius: '12px',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    color: 'white',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 6px 20px rgba(109, 198, 98, 0.3)'
+                  }
+                }}
               >
                 <ArrowBack />
               </IconButton>
@@ -623,14 +740,25 @@ const MaintenanceTicketDetails: React.FC = () => {
                 <Typography
                   variant='h4'
                   component='h1'
-                  sx={{ fontSize: { xs: '1.5rem', sm: '1.875rem', md: '2.125rem' } }}
+                  sx={{ 
+                    fontSize: { xs: '1.5rem', sm: '1.875rem', md: '2.125rem' },
+                    fontWeight: 700,
+                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    letterSpacing: '-0.02em'
+                  }}
                 >
                   Ticket #{ticket.ticketCode}
                 </Typography>
                 <Typography
                   variant='subtitle1'
                   color='text.secondary'
-                  sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
+                  sx={{ 
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                    fontWeight: 500
+                  }}
                 >
                   {ticket.customerName} - {ticket.equipmentType}
                 </Typography>
@@ -667,9 +795,21 @@ const MaintenanceTicketDetails: React.FC = () => {
               <Tooltip title='Actualizar datos'>
                 <IconButton
                   onClick={handleRefresh}
-                  color='primary'
                   aria-label='Actualizar datos del ticket'
-                  sx={{ minWidth: 48, minHeight: 48 }}
+                  sx={{ 
+                    minWidth: 48, 
+                    minHeight: 48,
+                    background: 'rgba(109, 198, 98, 0.1)',
+                    color: '#6dc662',
+                    borderRadius: '12px',
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                      color: 'white',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(109, 198, 98, 0.3)'
+                    }
+                  }}
                 >
                   <Refresh />
                 </IconButton>
@@ -703,7 +843,16 @@ const MaintenanceTicketDetails: React.FC = () => {
                 aria-controls='pdf-menu'
                 sx={{
                   minHeight: 48,
-                  fontSize: { xs: '0.813rem', sm: '0.875rem' }
+                  fontSize: { xs: '0.813rem', sm: '0.875rem' },
+                  borderColor: '#6dc662',
+                  color: '#6dc662',
+                  borderRadius: '12px',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    borderColor: '#5ab052',
+                    background: 'rgba(109, 198, 98, 0.1)',
+                    transform: 'translateY(-1px)'
+                  }
                 }}
               >
                 {isMobile ? <PictureAsPdf /> : 'Documentos'}
@@ -723,15 +872,35 @@ const MaintenanceTicketDetails: React.FC = () => {
                   horizontal: 'right'
                 }}
                 aria-labelledby='pdf-menu-button'
+                sx={{
+                  '& .MuiPaper-root': {
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(10px)',
+                    borderRadius: '12px',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+                    border: '1px solid rgba(109, 198, 98, 0.1)',
+                    mt: 1
+                  }
+                }}
               >
                 <MenuList dense role='menu'>
                   <ListItemButton
                     onClick={handleGenerateServiceOrder}
                     role='menuitem'
                     aria-label='Generar orden de servicio'
+                    sx={{
+                      borderRadius: '8px',
+                      mx: 1,
+                      mb: 0.5,
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        background: 'rgba(109, 198, 98, 0.1)',
+                        transform: 'translateX(4px)'
+                      }
+                    }}
                   >
                     <ListItemIcon>
-                      <Print fontSize='small' aria-hidden='true' />
+                      <Print fontSize='small' aria-hidden='true' sx={{ color: '#6dc662' }} />
                     </ListItemIcon>
                     <ListItemText
                       primary='Orden de Servicio'
@@ -743,9 +912,19 @@ const MaintenanceTicketDetails: React.FC = () => {
                     onClick={handleGenerateStatusReport}
                     role='menuitem'
                     aria-label='Generar reporte de estado'
+                    sx={{
+                      borderRadius: '8px',
+                      mx: 1,
+                      mb: 0.5,
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        background: 'rgba(109, 198, 98, 0.1)',
+                        transform: 'translateX(4px)'
+                      }
+                    }}
                   >
                     <ListItemIcon>
-                      <Assessment fontSize='small' aria-hidden='true' />
+                      <Assessment fontSize='small' aria-hidden='true' sx={{ color: '#6dc662' }} />
                     </ListItemIcon>
                     <ListItemText
                       primary='Reporte de Estado'
@@ -759,9 +938,34 @@ const MaintenanceTicketDetails: React.FC = () => {
                     role='menuitem'
                     aria-label='Generar certificado de servicio'
                     aria-disabled={ticket.status !== MaintenanceStatus.COMPLETED}
+                    sx={{
+                      borderRadius: '8px',
+                      mx: 1,
+                      mb: 0.5,
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        background: ticket.status === MaintenanceStatus.COMPLETED 
+                          ? 'rgba(109, 198, 98, 0.1)' 
+                          : 'rgba(0, 0, 0, 0.04)',
+                        transform: ticket.status === MaintenanceStatus.COMPLETED 
+                          ? 'translateX(4px)' 
+                          : 'none'
+                      },
+                      '&.Mui-disabled': {
+                        opacity: 0.5
+                      }
+                    }}
                   >
                     <ListItemIcon>
-                      <AssignmentTurnedIn fontSize='small' aria-hidden='true' />
+                      <AssignmentTurnedIn 
+                        fontSize='small' 
+                        aria-hidden='true' 
+                        sx={{ 
+                          color: ticket.status === MaintenanceStatus.COMPLETED 
+                            ? '#6dc662' 
+                            : 'text.disabled' 
+                        }} 
+                      />
                     </ListItemIcon>
                     <ListItemText
                       primary='Certificado de Servicio'
@@ -779,9 +983,34 @@ const MaintenanceTicketDetails: React.FC = () => {
                     role='menuitem'
                     aria-label='Generar factura'
                     aria-disabled={!ticket.actualCost && !ticket.estimatedCost}
+                    sx={{
+                      borderRadius: '8px',
+                      mx: 1,
+                      mb: 0.5,
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        background: (ticket.actualCost || ticket.estimatedCost)
+                          ? 'rgba(109, 198, 98, 0.1)' 
+                          : 'rgba(0, 0, 0, 0.04)',
+                        transform: (ticket.actualCost || ticket.estimatedCost)
+                          ? 'translateX(4px)' 
+                          : 'none'
+                      },
+                      '&.Mui-disabled': {
+                        opacity: 0.5
+                      }
+                    }}
                   >
                     <ListItemIcon>
-                      <Receipt fontSize='small' aria-hidden='true' />
+                      <Receipt 
+                        fontSize='small' 
+                        aria-hidden='true' 
+                        sx={{ 
+                          color: (ticket.actualCost || ticket.estimatedCost)
+                            ? '#6dc662' 
+                            : 'text.disabled' 
+                        }} 
+                      />
                     </ListItemIcon>
                     <ListItemText
                       primary='Factura'
@@ -805,7 +1034,16 @@ const MaintenanceTicketDetails: React.FC = () => {
                     size={isMobile ? 'small' : 'medium'}
                     sx={{
                       minHeight: 48,
-                      fontSize: { xs: '0.813rem', sm: '0.875rem' }
+                      fontSize: { xs: '0.813rem', sm: '0.875rem' },
+                      borderColor: '#ff5722',
+                      color: '#ff5722',
+                      borderRadius: '12px',
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        borderColor: '#d84315',
+                        background: 'rgba(255, 87, 34, 0.1)',
+                        transform: 'translateY(-1px)'
+                      }
                     }}
                   >
                     {isMobile ? <Cancel /> : 'Cancelar'}
@@ -821,11 +1059,23 @@ const MaintenanceTicketDetails: React.FC = () => {
                     }
                     onClick={handleSaveEdit}
                     disabled={updateTicketMutation.isLoading || !isEditValid}
-                    color='primary'
                     size={isMobile ? 'small' : 'medium'}
                     sx={{
                       minHeight: 48,
-                      fontSize: { xs: '0.813rem', sm: '0.875rem' }
+                      fontSize: { xs: '0.813rem', sm: '0.875rem' },
+                      background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #5ab052 0%, #4a9642 100%)',
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
+                      },
+                      '&:disabled': {
+                        background: 'rgba(0, 0, 0, 0.12)',
+                        color: 'rgba(0, 0, 0, 0.26)'
+                      }
                     }}
                   >
                     {isMobile ? <Save /> : (updateTicketMutation.isLoading
@@ -838,11 +1088,19 @@ const MaintenanceTicketDetails: React.FC = () => {
                   variant='contained'
                   startIcon={!isMobile && <Edit />}
                   onClick={handleEdit}
-                  color='primary'
                   size={isMobile ? 'small' : 'medium'}
                   sx={{
                     minHeight: 48,
-                    fontSize: { xs: '0.813rem', sm: '0.875rem' }
+                    fontSize: { xs: '0.813rem', sm: '0.875rem' },
+                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #5ab052 0%, #4a9642 100%)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
+                    }
                   }}
                 >
                   {isMobile ? <Edit /> : 'Editar'}
@@ -856,7 +1114,23 @@ const MaintenanceTicketDetails: React.FC = () => {
           {/* Main Content */}
           <Grid item xs={12} lg={8}>
             {/* Ticket Status and Priority */}
-            <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 3 } }}>
+            <Paper 
+              elevation={2} 
+              sx={{ 
+                p: { xs: 2, sm: 3 }, 
+                mb: { xs: 2, sm: 3 },
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '16px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(109, 198, 98, 0.1)',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
+                }
+              }}
+            >
               <Box
                 display='flex'
                 flexDirection={{ xs: 'column', sm: 'row' }}
@@ -867,7 +1141,11 @@ const MaintenanceTicketDetails: React.FC = () => {
               >
                 <Typography
                   variant='h6'
-                  sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}
+                  sx={{ 
+                    fontSize: { xs: '1.125rem', sm: '1.25rem' },
+                    fontWeight: 600,
+                    color: '#6dc662'
+                  }}
                 >
                   Estado del Ticket
                 </Typography>
@@ -970,14 +1248,38 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Customer Information */}
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+            <Paper 
+              elevation={2} 
+              sx={{ 
+                p: 3, 
+                mb: 3,
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '16px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(109, 198, 98, 0.1)',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
+                }
+              }}
+            >
               <Box
                 display='flex'
                 justifyContent='space-between'
                 alignItems='center'
                 mb={2}
               >
-                <Typography variant='h6'>Información del Cliente</Typography>
+                <Typography 
+                  variant='h6'
+                  sx={{
+                    fontWeight: 600,
+                    color: '#6dc662'
+                  }}
+                >
+                  Información del Cliente
+                </Typography>
                 <Box display='flex' gap={1}>
                   <Tooltip title='Enviar email al cliente'>
                     <IconButton
@@ -985,8 +1287,19 @@ const MaintenanceTicketDetails: React.FC = () => {
                       onClick={() =>
                         window.open(`mailto:${ticket.customerEmail}`, '_blank')
                       }
-                      color='primary'
                       aria-label={`Enviar email a ${ticket.customerEmail}`}
+                      sx={{
+                        background: 'rgba(109, 198, 98, 0.1)',
+                        color: '#6dc662',
+                        borderRadius: '8px',
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                          color: 'white',
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)'
+                        }
+                      }}
                     >
                       <Email />
                     </IconButton>
@@ -997,8 +1310,19 @@ const MaintenanceTicketDetails: React.FC = () => {
                       onClick={() =>
                         window.open(`tel:${ticket.customerPhone}`, '_blank')
                       }
-                      color='primary'
                       aria-label={`Llamar al cliente ${ticket.customerPhone}`}
+                      sx={{
+                        background: 'rgba(109, 198, 98, 0.1)',
+                        color: '#6dc662',
+                        borderRadius: '8px',
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                          color: 'white',
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)'
+                        }
+                      }}
                     >
                       <Phone />
                     </IconButton>
@@ -1082,10 +1406,47 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Equipment Information */}
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }} role='region' aria-label='Información del equipo'>
+            <Paper 
+              elevation={2} 
+              sx={{ 
+                p: 3, 
+                mb: 3,
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '16px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(109, 198, 98, 0.1)',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
+                }
+              }} 
+              role='region' 
+              aria-label='Información del equipo'
+            >
               <Box display='flex' alignItems='center' gap={1} mb={2}>
-                <Build color='action' aria-hidden='true' />
-                <Typography variant='h6'>Información del Equipo</Typography>
+                <Box
+                  sx={{
+                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    borderRadius: '8px',
+                    p: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <Build sx={{ color: 'white', fontSize: 20 }} aria-hidden='true' />
+                </Box>
+                <Typography 
+                  variant='h6'
+                  sx={{
+                    fontWeight: 600,
+                    color: '#6dc662'
+                  }}
+                >
+                  Información del Equipo
+                </Typography>
               </Box>
 
               <Grid container spacing={3}>
@@ -1100,9 +1461,17 @@ const MaintenanceTicketDetails: React.FC = () => {
                     </Typography>
                     <Chip
                       label={ticket.equipmentType}
-                      color='primary'
-                      variant='outlined'
-                      sx={{ fontWeight: 'medium' }}
+                      sx={{ 
+                        fontWeight: 'medium',
+                        background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                        color: 'white',
+                        borderRadius: '8px',
+                        boxShadow: '0 2px 8px rgba(109, 198, 98, 0.3)',
+                        '&:hover': {
+                          transform: 'translateY(-1px)',
+                          boxShadow: '0 4px 12px rgba(109, 198, 98, 0.4)'
+                        }
+                      }}
                     />
                   </Box>
                 </Grid>
@@ -1155,10 +1524,47 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Issue Description */}
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }} role='region' aria-label='Descripción del problema'>
+            <Paper 
+              elevation={2} 
+              sx={{ 
+                p: 3, 
+                mb: 3,
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '16px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(109, 198, 98, 0.1)',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
+                }
+              }} 
+              role='region' 
+              aria-label='Descripción del problema'
+            >
               <Box display='flex' alignItems='center' gap={1} mb={2}>
-                <Description color='action' aria-hidden='true' />
-                <Typography variant='h6'>Descripción del Problema</Typography>
+                <Box
+                  sx={{
+                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    borderRadius: '8px',
+                    p: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <Description sx={{ color: 'white', fontSize: 20 }} aria-hidden='true' />
+                </Box>
+                <Typography 
+                  variant='h6'
+                  sx={{
+                    fontWeight: 600,
+                    color: '#6dc662'
+                  }}
+                >
+                  Descripción del Problema
+                </Typography>
               </Box>
               <Box
                 sx={{
@@ -1179,7 +1585,25 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Timeline Section */}
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }} role='region' aria-label='Historial del ticket'>
+            <Paper 
+              elevation={2} 
+              sx={{ 
+                p: 3, 
+                mb: 3,
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '16px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(109, 198, 98, 0.1)',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
+                }
+              }} 
+              role='region' 
+              aria-label='Historial del ticket'
+            >
               <Box
                 display='flex'
                 justifyContent='space-between'
@@ -1210,7 +1634,25 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Comments Section */}
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }} role='region' aria-label='Sección de comentarios'>
+            <Paper 
+              elevation={2} 
+              sx={{ 
+                p: 3, 
+                mb: 3,
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '16px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(109, 198, 98, 0.1)',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
+                }
+              }} 
+              role='region' 
+              aria-label='Sección de comentarios'
+            >
               <Box
                 display='flex'
                 justifyContent='space-between'
@@ -1240,7 +1682,25 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Files Section */}
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }} role='region' aria-label='Archivos adjuntos'>
+            <Paper 
+              elevation={2} 
+              sx={{ 
+                p: 3, 
+                mb: 3,
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '16px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(109, 198, 98, 0.1)',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
+                }
+              }} 
+              role='region' 
+              aria-label='Archivos adjuntos'
+            >
               <Box
                 display='flex'
                 justifyContent='space-between'
@@ -1275,10 +1735,45 @@ const MaintenanceTicketDetails: React.FC = () => {
           {/* Sidebar */}
           <Grid item xs={12} lg={4}>
             {/* Assigned Technician */}
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+            <Paper 
+              elevation={2} 
+              sx={{ 
+                p: 3, 
+                mb: 3,
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '16px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(109, 198, 98, 0.1)',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
+                }
+              }}
+            >
               <Box display='flex' alignItems='center' gap={1} mb={2}>
-                <Assignment color='action' />
-                <Typography variant='h6'>Técnico Asignado</Typography>
+                <Box
+                  sx={{
+                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    borderRadius: '8px',
+                    p: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <Assignment sx={{ color: 'white', fontSize: 20 }} />
+                </Box>
+                <Typography 
+                  variant='h6'
+                  sx={{
+                    fontWeight: 600,
+                    color: '#6dc662'
+                  }}
+                >
+                  Técnico Asignado
+                </Typography>
               </Box>
 
               {editMode ? (
@@ -1499,10 +1994,45 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Schedule */}
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+            <Paper 
+              elevation={2} 
+              sx={{ 
+                p: 3, 
+                mb: 3,
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '16px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(109, 198, 98, 0.1)',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
+                }
+              }}
+            >
               <Box display='flex' alignItems='center' gap={1} mb={2}>
-                <Schedule color='action' />
-                <Typography variant='h6'>Programación</Typography>
+                <Box
+                  sx={{
+                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    borderRadius: '8px',
+                    p: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <Schedule sx={{ color: 'white', fontSize: 20 }} />
+                </Box>
+                <Typography 
+                  variant='h6'
+                  sx={{
+                    fontWeight: 600,
+                    color: '#6dc662'
+                  }}
+                >
+                  Programación
+                </Typography>
               </Box>
 
               {editMode ? (
@@ -1578,10 +2108,45 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Costs */}
-            <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+            <Paper 
+              elevation={2} 
+              sx={{ 
+                p: 3, 
+                mb: 3,
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '16px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(109, 198, 98, 0.1)',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
+                }
+              }}
+            >
               <Box display='flex' alignItems='center' gap={1} mb={2}>
-                <AttachMoney color='action' />
-                <Typography variant='h6'>Costos</Typography>
+                <Box
+                  sx={{
+                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    borderRadius: '8px',
+                    p: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <AttachMoney sx={{ color: 'white', fontSize: 20 }} />
+                </Box>
+                <Typography 
+                  variant='h6'
+                  sx={{
+                    fontWeight: 600,
+                    color: '#6dc662'
+                  }}
+                >
+                  Costos
+                </Typography>
               </Box>
 
               <Grid container spacing={2}>
@@ -1714,10 +2279,45 @@ const MaintenanceTicketDetails: React.FC = () => {
 
             {/* Customer Satisfaction */}
             {ticket.customerSatisfaction && (
-              <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+              <Paper 
+                elevation={2} 
+                sx={{ 
+                  p: 3, 
+                  mb: 3,
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                  border: '1px solid rgba(255, 193, 7, 0.2)',
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 8px 30px rgba(255, 193, 7, 0.15)'
+                  }
+                }}
+              >
                 <Box display='flex' alignItems='center' gap={1} mb={2}>
-                  <Star color='warning' />
-                  <Typography variant='h6'>Satisfacción del Cliente</Typography>
+                  <Box
+                    sx={{
+                      background: 'linear-gradient(135deg, #ffc107 0%, #ff8f00 100%)',
+                      borderRadius: '8px',
+                      p: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <Star sx={{ color: 'white', fontSize: 20 }} />
+                  </Box>
+                  <Typography 
+                    variant='h6'
+                    sx={{
+                      fontWeight: 600,
+                      color: '#ffc107'
+                    }}
+                  >
+                    Satisfacción del Cliente
+                  </Typography>
                 </Box>
 
                 <Box textAlign='center' py={2}>

@@ -6,7 +6,6 @@ import {
   Typography,
   Box,
   Chip,
-  IconButton,
   Tooltip,
   Avatar,
   Button,
@@ -92,39 +91,88 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        transition: 'all 0.2s',
-        minHeight: { xs: 'auto', md: 300 },
+        minHeight: { xs: 'auto', md: 320 },
+        background: 'rgba(255, 255, 255, 0.98)',
+        backdropFilter: 'blur(10px)',
+        borderRadius: '16px',
+        boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
+        border: '1px solid rgba(109, 198, 98, 0.12)',
+        position: 'relative',
+        overflow: 'hidden',
+        transition: 'all 0.3s ease',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '3px',
+          background: '#6dc662',
+          opacity: 0.8
+        },
         '&:hover': {
-          elevation: 4,
-          transform: 'translateY(-2px)'
+          transform: 'translateY(-4px)',
+          boxShadow: '0 8px 24px rgba(109, 198, 98, 0.15)',
+          border: '1px solid rgba(109, 198, 98, 0.2)',
+          '&::before': {
+            opacity: 1
+          }
         }
       }}
       role='article'
       aria-label={`Ticket de mantenimiento ${safeText(ticket.ticketCode, 'sin código')}`}
     >
       <CardContent sx={{ flexGrow: 1, pb: 1, p: { xs: 2, sm: 3 } }}>
-        {/* Header with ticket number, priority and status */}
+        {/* Header with ticket number, priority and status - MINIMAL */}
         <Box
           display='flex'
           flexDirection={{ xs: 'column', sm: 'row' }}
           justifyContent='space-between'
           alignItems={{ xs: 'flex-start', sm: 'center' }}
-          mb={2}
-          gap={{ xs: 1, sm: 0 }}
+          mb={3}
+          gap={{ xs: 2, sm: 0 }}
         >
-          <Typography
-            variant={compact ? 'subtitle1' : 'h6'}
-            component='h3'
-            fontWeight='bold'
-            color='primary'
-            sx={{
-              fontSize: { xs: '1rem', sm: compact ? '1.1rem' : '1.25rem' },
-              letterSpacing: '0.5px'
-            }}
-          >
-            #{safeText(ticket.ticketCode, 'SIN-CÓDIGO')}
-          </Typography>
-          <Box display='flex' alignItems='center' gap={1}>
+          <Box display='flex' alignItems='center' gap={1.5}>
+            <Box
+              sx={{
+                background: '#6dc662',
+                borderRadius: '8px',
+                p: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minWidth: 36,
+                minHeight: 36
+              }}
+            >
+              <Build sx={{ color: 'white', fontSize: 18 }} />
+            </Box>
+            <Box>
+              <Typography
+                variant={compact ? 'h6' : 'h5'}
+                component='h3'
+                sx={{
+                  fontSize: { xs: '1.2rem', sm: compact ? '1.3rem' : '1.4rem' },
+                  fontWeight: 700,
+                  color: '#6dc662',
+                  mb: 0.2
+                }}
+              >
+                #{safeText(ticket.ticketCode, 'SIN-CÓDIGO')}
+              </Typography>
+              <Typography
+                variant='caption'
+                sx={{
+                  color: 'text.secondary',
+                  fontSize: '0.75rem',
+                  fontWeight: 500
+                }}
+              >
+                Ticket de Mantenimiento
+              </Typography>
+            </Box>
+          </Box>
+          <Box display='flex' alignItems='center' gap={1} flexWrap='wrap'>
             <MaintenancePriorityBadge priority={ticket.priority} size='small' />
             <MaintenanceStatusBadge status={ticket.status} />
           </Box>
@@ -132,51 +180,60 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
 
         {/* ESSENTIAL FIELDS - Always visible */}
 
-        {/* Customer name */}
+        {/* Customer name - MINIMAL */}
         <Box mb={2}>
           <Typography
             variant='subtitle2'
             color='text.secondary'
             gutterBottom
-            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}
           >
             Cliente
           </Typography>
           <Typography
             variant='body2'
             fontWeight='medium'
-            sx={{ fontSize: { xs: '0.875rem', sm: '0.875rem' } }}
+            sx={{
+              fontSize: { xs: '0.875rem', sm: '0.875rem' },
+              color: 'text.primary'
+            }}
           >
             {safeText(ticket.customerName, 'Cliente no especificado')}
           </Typography>
         </Box>
 
-        {/* Equipment info - Condensed */}
+        {/* Equipment info - MINIMAL */}
         <Box mb={2}>
           <Typography
             variant='subtitle2'
             color='text.secondary'
             gutterBottom
-            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}
           >
             Equipo
           </Typography>
           <Box display='flex' alignItems='center' gap={0.5}>
             <Build fontSize='small' color='action' aria-hidden='true' />
-            <Typography variant='body2' sx={{ fontSize: { xs: '0.875rem', sm: '0.875rem' } }}>
+            <Typography
+              variant='body2'
+              sx={{
+                fontSize: { xs: '0.875rem', sm: '0.875rem' },
+                color: 'text.primary'
+              }}
+            >
               {safeText(ticket.equipmentType, 'Tipo no especificado')} -{' '}
               {safeText(ticket.equipmentBrand, 'Marca no especificada')}
             </Typography>
           </Box>
         </Box>
 
-        {/* Issue description - Truncated */}
+        {/* Issue description - MINIMAL */}
         <Box mb={2}>
           <Typography
             variant='subtitle2'
             color='text.secondary'
             gutterBottom
-            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}
           >
             Descripción
           </Typography>
@@ -188,20 +245,22 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              fontSize: { xs: '0.875rem', sm: '0.875rem' }
+              fontSize: { xs: '0.875rem', sm: '0.875rem' },
+              color: 'text.primary',
+              lineHeight: 1.4
             }}
           >
             {safeText(ticket.issueDescription, 'Sin descripción del problema')}
           </Typography>
         </Box>
 
-        {/* Assigned technician */}
+        {/* Assigned technician - MINIMAL */}
         <Box mb={2}>
           <Typography
             variant='subtitle2'
             color='text.secondary'
             gutterBottom
-            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}
           >
             Técnico Asignado
           </Typography>
@@ -356,15 +415,32 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
           </Box>
         </Collapse>
 
-        {/* Ver más / Ver menos button */}
-        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+        {/* Ver más / Ver menos button - COMPACT & RESPONSIVE */}
+        <Box sx={{ mt: 1.5, display: 'flex', justifyContent: 'center' }}>
           <Button
             onClick={handleExpandClick}
             endIcon={expanded ? <ExpandLess /> : <ExpandMore />}
             size="small"
             sx={{
               textTransform: 'none',
-              fontSize: { xs: '0.875rem', sm: '0.875rem' }
+              fontSize: { xs: '0.75rem', sm: '0.8rem' },
+              color: '#6dc662',
+              borderRadius: '6px',
+              fontWeight: 500,
+              minHeight: { xs: 28, sm: 32 },
+              px: { xs: 1.5, sm: 2 },
+              py: { xs: 0.5, sm: 0.75 },
+              transition: 'all 0.2s ease',
+              '& .MuiButton-endIcon': {
+                marginLeft: { xs: 0.5, sm: 1 },
+                '& > svg': {
+                  fontSize: { xs: '1rem', sm: '1.2rem' }
+                }
+              },
+              '&:hover': {
+                background: 'rgba(109, 198, 98, 0.08)',
+                transform: 'translateY(-1px)'
+              }
             }}
             aria-expanded={expanded}
             aria-label={expanded ? 'Ver menos detalles' : 'Ver más detalles'}
@@ -374,39 +450,86 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
         </Box>
       </CardContent>
 
-      {/* Actions */}
+      {/* Actions - COMPACT & RESPONSIVE */}
       {showActions && (
-        <CardActions sx={{ justifyContent: 'flex-end', pt: 0, p: { xs: 1, sm: 2 } }}>
+        <CardActions
+          sx={{
+            justifyContent: 'flex-end',
+            pt: 0,
+            p: { xs: 0.75, sm: 1.5 },
+            gap: { xs: 0.5, sm: 1 }
+          }}
+        >
           {onView && (
             <Tooltip title='Ver detalles'>
-              <IconButton
-                size='medium'
+              <Button
+                variant='text'
+                size='small'
                 onClick={() => onView(ticket)}
-                color='primary'
+                startIcon={<Visibility />}
                 aria-label={`Ver detalles del ticket ${safeText(ticket.ticketCode, 'sin código')}`}
                 sx={{
-                  minWidth: 44,
-                  minHeight: 44
+                  color: '#6dc662',
+                  borderRadius: '6px',
+                  fontWeight: 500,
+                  fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                  textTransform: 'none',
+                  minHeight: { xs: 28, sm: 32 },
+                  px: { xs: 1, sm: 1.5 },
+                  py: { xs: 0.5, sm: 0.75 },
+                  transition: 'all 0.2s ease',
+                  '& .MuiButton-startIcon': {
+                    marginRight: { xs: 0.5, sm: 0.75 },
+                    '& > svg': {
+                      fontSize: { xs: '0.9rem', sm: '1rem' }
+                    }
+                  },
+                  '&:hover': {
+                    background: 'rgba(109, 198, 98, 0.08)',
+                    transform: 'translateY(-1px)'
+                  }
                 }}
               >
-                <Visibility />
-              </IconButton>
+                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                  Ver
+                </Box>
+              </Button>
             </Tooltip>
           )}
           {onEdit && (
             <Tooltip title='Editar'>
-              <IconButton
-                size='medium'
+              <Button
+                variant='text'
+                size='small'
                 onClick={() => onEdit(ticket)}
-                color='secondary'
+                startIcon={<Edit />}
                 aria-label={`Editar ticket ${safeText(ticket.ticketCode, 'sin código')}`}
                 sx={{
-                  minWidth: 44,
-                  minHeight: 44
+                  color: '#ff9800',
+                  borderRadius: '6px',
+                  fontWeight: 500,
+                  fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                  textTransform: 'none',
+                  minHeight: { xs: 28, sm: 32 },
+                  px: { xs: 1, sm: 1.5 },
+                  py: { xs: 0.5, sm: 0.75 },
+                  transition: 'all 0.2s ease',
+                  '& .MuiButton-startIcon': {
+                    marginRight: { xs: 0.5, sm: 0.75 },
+                    '& > svg': {
+                      fontSize: { xs: '0.9rem', sm: '1rem' }
+                    }
+                  },
+                  '&:hover': {
+                    background: 'rgba(255, 152, 0, 0.08)',
+                    transform: 'translateY(-1px)'
+                  }
                 }}
               >
-                <Edit />
-              </IconButton>
+                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                  Editar
+                </Box>
+              </Button>
             </Tooltip>
           )}
         </CardActions>

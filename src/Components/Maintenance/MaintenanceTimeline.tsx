@@ -142,9 +142,22 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
 
   if (timeline.length === 0) {
     return (
-      <Card>
+      <Card
+        sx={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '12px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+          border: '1px solid rgba(109, 198, 98, 0.1)'
+        }}
+      >
         <CardContent>
-          <Typography variant='body2' color='text.secondary' textAlign='center'>
+          <Typography 
+            variant='body2' 
+            color='text.secondary' 
+            textAlign='center'
+            sx={{ fontWeight: 500 }}
+          >
             No hay eventos en el historial
           </Typography>
         </CardContent>
@@ -161,6 +174,10 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
           '&:before': {
             display: 'none'
           }
+        },
+        '& .MuiTimelineConnector-root': {
+          background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+          width: '3px'
         }
       }}
     >
@@ -188,10 +205,22 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
 
             <TimelineSeparator>
               <TimelineDot
-                color={
-                  config.color === 'default' ? 'grey' : (config.color as any)
-                }
-                variant='outlined'
+                sx={{
+                  background: config.color === 'primary' 
+                    ? 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)'
+                    : config.color === 'success'
+                    ? 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)'
+                    : config.color === 'error'
+                    ? 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)'
+                    : config.color === 'secondary'
+                    ? 'linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%)'
+                    : 'linear-gradient(135deg, #9e9e9e 0%, #757575 100%)',
+                  color: 'white',
+                  border: 'none',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                  width: 40,
+                  height: 40
+                }}
               >
                 {config.icon}
               </TimelineDot>
@@ -204,8 +233,21 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
                   <Chip
                     size='small'
                     label={config.label}
-                    color={config.color}
-                    variant='outlined'
+                    sx={{
+                      background: config.color === 'primary' 
+                        ? 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)'
+                        : config.color === 'success'
+                        ? 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)'
+                        : config.color === 'error'
+                        ? 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)'
+                        : config.color === 'secondary'
+                        ? 'linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%)'
+                        : 'linear-gradient(135deg, #9e9e9e 0%, #757575 100%)',
+                      color: 'white',
+                      borderRadius: '6px',
+                      fontWeight: 500,
+                      border: 'none'
+                    }}
                   />
 
                   {entry.performedBy && (
@@ -214,7 +256,9 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
                         sx={{
                           width: 20,
                           height: 20,
-                          fontSize: '0.65rem'
+                          fontSize: '0.65rem',
+                          background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                          color: 'white'
                         }}
                       >
                         {getInitials(entry.performedBy)}

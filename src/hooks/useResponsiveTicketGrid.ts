@@ -41,14 +41,14 @@ export const useResponsiveTicketGrid = () => {
   const gridCalculation = useMemo((): GridCalculation => {
     const { width, height } = screenSize
 
-    // Espacios fijos que debemos considerar
+    // Espacios fijos optimizados para pantalla completa
     const headerHeight = 60 // Header con reloj
-    const metricsHeight = 120 // Row de métricas principales
-    const titleHeight = 80 // Título "TICKETS ACTIVOS"
-    const progressHeight = 40 // Barra de progreso
-    const padding = 48 // Padding del container (24px * 2)
-    const verticalPadding = 48 // Padding vertical del container (24px * 2)
-    const marginBetweenSections = 48 // Margen entre métricas y tickets (aumentado)
+    const metricsHeight = 80 // Row de métricas compactas
+    const titleHeight = 50 // Título "TICKETS ACTIVOS" más compacto
+    const progressHeight = 30 // Barra de progreso más pequeña
+    const padding = 16 // Padding mínimo del container (8px * 2)
+    const verticalPadding = 16 // Padding vertical mínimo (8px * 2)
+    const marginBetweenSections = 8 // Margen mínimo entre secciones
 
     // Altura disponible para tickets
     const availableHeight =
@@ -63,40 +63,40 @@ export const useResponsiveTicketGrid = () => {
     // Ancho disponible (considerando padding del container)
     const availableWidth = width - padding
 
-    // Configuraciones base dependiendo del ancho de pantalla
+    // Configuraciones optimizadas para mostrar más tickets en pantalla completa
     let baseColumns: number
     let baseCardWidth: number
     let cardSpacing: number
 
     if (width >= 3840) {
-      // 4K y superiores (3840x2160+)
-      baseColumns = 6
-      baseCardWidth = 300
-      cardSpacing = 24
-    } else if (width >= 2560) {
-      // 2K/QHD (2560x1440)
-      baseColumns = 5
+      // 4K y superiores (3840x2160+) - Maximizar tickets
+      baseColumns = 8
       baseCardWidth = 280
-      cardSpacing = 20
-    } else if (width >= 1920) {
-      // Full HD (1920x1080)
-      baseColumns = 4
+      cardSpacing = 16
+    } else if (width >= 2560) {
+      // 2K/QHD (2560x1440) - Más tickets
+      baseColumns = 6
       baseCardWidth = 260
       cardSpacing = 16
+    } else if (width >= 1920) {
+      // Full HD (1920x1080) - Optimizado para TV
+      baseColumns = 5
+      baseCardWidth = 240
+      cardSpacing = 12
     } else if (width >= 1366) {
       // Laptop común (1366x768)
-      baseColumns = 3
-      baseCardWidth = 240
+      baseColumns = 4
+      baseCardWidth = 220
       cardSpacing = 12
     } else if (width >= 1024) {
       // Tablet landscape (1024x768)
       baseColumns = 3
-      baseCardWidth = 220
-      cardSpacing = 12
+      baseCardWidth = 200
+      cardSpacing = 10
     } else {
       // Pantallas pequeñas (768x1024 tablet portrait y menores)
       baseColumns = 2
-      baseCardWidth = 200
+      baseCardWidth = 180
       cardSpacing = 8
     }
 
@@ -121,36 +121,36 @@ export const useResponsiveTicketGrid = () => {
       }
     }
 
-    // Calcular altura de tarjeta óptima
+    // Calcular altura de tarjeta optimizada para mostrar más tickets
     let cardHeight: number
 
     if (height >= 2160) {
-      // 4K vertical
-      cardHeight = 220
-    } else if (height >= 1440) {
-      // 2K vertical
-      cardHeight = 200
-    } else if (height >= 1080) {
-      // Full HD vertical
+      // 4K vertical - Más filas
       cardHeight = 180
+    } else if (height >= 1440) {
+      // 2K vertical - Más filas
+      cardHeight = 160
+    } else if (height >= 1080) {
+      // Full HD vertical - Optimizado para TV
+      cardHeight = 140
     } else if (height >= 768) {
       // Laptop/tablet común
-      cardHeight = 160
+      cardHeight = 130
     } else {
       // Pantallas muy pequeñas
-      cardHeight = 140
+      cardHeight = 120
     }
 
-    // Calcular cuántas filas caben
+    // Calcular cuántas filas caben - Maximizar uso del espacio
     const totalRowSpacing = cardSpacing // Spacing entre filas
     let rows = Math.floor(
       (availableHeight + totalRowSpacing) / (cardHeight + totalRowSpacing)
     )
 
-    // Mínimo 1 fila, máximo razonable dependiendo de la pantalla
+    // Maximizar filas según la pantalla
     rows = Math.max(
       1,
-      Math.min(rows, height >= 1440 ? 4 : height >= 1080 ? 3 : 2)
+      Math.min(rows, height >= 2160 ? 6 : height >= 1440 ? 5 : height >= 1080 ? 4 : 3)
     )
 
     const ticketsPerPage = columns * rows
