@@ -172,6 +172,31 @@ const MaintenanceDashboard: React.FC = () => {
     return Array.from(types)
   }, [ticketsData?.tickets])
 
+  // Sort tickets by priority (urgent -> high -> medium -> low) then by creation date (oldest first)
+  const sortedTickets = useMemo(() => {
+    if (!ticketsData?.tickets) return []
+
+    const priorityOrder = {
+      [MaintenancePriority.URGENT]: 1,
+      [MaintenancePriority.HIGH]: 2,
+      [MaintenancePriority.MEDIUM]: 3,
+      [MaintenancePriority.LOW]: 4
+    }
+
+    return [...ticketsData.tickets].sort((a, b) => {
+      // First sort by priority (urgent first)
+      const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority]
+      if (priorityDiff !== 0) {
+        return priorityDiff
+      }
+
+      // If priorities are the same, sort by creation date (oldest first)
+      const dateA = new Date(a.createdAt).getTime()
+      const dateB = new Date(b.createdAt).getTime()
+      return dateA - dateB
+    })
+  }, [ticketsData?.tickets])
+
   const handleEditTicket = (ticket: MaintenanceTicket) => {
     // For technicians, only allow editing tickets assigned to them
     const technicianId = $userStore.email === 'kat34433@laoia.com' ? 4 : null
@@ -202,6 +227,9 @@ const MaintenanceDashboard: React.FC = () => {
         id: selectedTicket.id,
         data: editData
       })
+      // Refresh tickets to ensure proper re-ordering after priority/status changes
+      refetchTickets()
+      refetchStats()
       setEditDialogOpen(false)
       setSelectedTicket(null)
       setEditData({})
@@ -807,14 +835,14 @@ const MaintenanceDashboard: React.FC = () => {
               </Grid>
             ))}
           </Grid>
-        ) : !ticketsData?.tickets.length ? (
+        ) : !sortedTickets.length ? (
           <Alert severity='info' role='status'>
             No se encontraron tickets con los filtros aplicados.
           </Alert>
         ) : (
           <>
             <Grid container spacing={{ xs: 2, sm: 2, md: 3 }}>
-              {ticketsData.tickets.map((ticket) => (
+              {sortedTickets.map((ticket) => (
                 <Grid item xs={12} sm={6} lg={4} key={ticket.id}>
                   <MaintenanceTicketCard
                     ticket={ticket}
@@ -827,7 +855,7 @@ const MaintenanceDashboard: React.FC = () => {
             </Grid>
 
             {/* Pagination */}
-            {ticketsData.pagination.totalPages > 1 && (
+            {ticketsData && ticketsData.pagination.totalPages > 1 && (
               <Box display='flex' justifyContent='center' mt={{ xs: 2, sm: 3 }}>
                 <Pagination
                   count={ticketsData.pagination.totalPages}

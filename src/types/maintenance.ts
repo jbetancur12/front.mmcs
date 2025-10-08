@@ -169,6 +169,15 @@ export interface MaintenanceFilters {
   customerEmail?: string
 }
 
+export interface FilterPreset {
+  id: string
+  name: string
+  filters: MaintenanceFilters
+  isDefault: boolean
+  createdBy: string
+  createdAt: string
+}
+
 export interface MaintenancePagination {
   currentPage: number
   itemsPerPage: number
