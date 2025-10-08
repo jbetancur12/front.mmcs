@@ -25,6 +25,7 @@ import MaintenanceStatusBadge from './MaintenanceStatusBadge'
 import MaintenancePriorityBadge from './MaintenancePriorityBadge'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import useRelativeTime from '../../hooks/useRelativeTime'
 
 interface MaintenanceTicketCardProps {
   ticket: MaintenanceTicket
@@ -51,6 +52,10 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
   compact = false
 }) => {
   const [expanded, setExpanded] = useState(false)
+
+  // Relative time hooks
+  const createdTime = useRelativeTime(ticket.createdAt)
+  const scheduledTime = useRelativeTime(ticket.scheduledDate)
 
   const handleExpandClick = () => {
     setExpanded(!expanded)
@@ -371,9 +376,11 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                 </Typography>
                 <Box display='flex' alignItems='center' gap={0.5}>
                   <Schedule fontSize='small' color='action' aria-hidden='true' />
-                  <Typography variant='caption' color='text.secondary'>
-                    {formatDate(ticket.scheduledDate)}
-                  </Typography>
+                  <Tooltip title={scheduledTime.absoluteTime || formatDate(ticket.scheduledDate)}>
+                    <Typography variant='caption' color='text.secondary' sx={{ cursor: 'help' }}>
+                      {scheduledTime.relativeTime || formatDate(ticket.scheduledDate)}
+                    </Typography>
+                  </Tooltip>
                 </Box>
               </Box>
             )}
@@ -388,9 +395,11 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
               >
                 Fecha de Creación
               </Typography>
-              <Typography variant='caption' color='text.secondary'>
-                {formatDate(ticket.createdAt)}
-              </Typography>
+              <Tooltip title={createdTime.absoluteTime || formatDate(ticket.createdAt)}>
+                <Typography variant='caption' color='text.secondary' sx={{ cursor: 'help' }}>
+                  {createdTime.relativeTime || formatDate(ticket.createdAt)}
+                </Typography>
+              </Tooltip>
             </Box>
 
             {/* File count */}

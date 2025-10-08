@@ -64,6 +64,8 @@ import useMaintenanceWebSocket from '../../hooks/useMaintenanceWebSocket'
 import useAxiosPrivate from '../../utils/use-axios-private'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../../store/userStore'
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
+import KeyboardShortcutsHelp from '../../Components/Maintenance/KeyboardShortcutsHelp'
 
 /**
  * MaintenanceDashboard component provides an admin interface for managing maintenance tickets
@@ -91,6 +93,7 @@ const MaintenanceDashboard: React.FC = () => {
     message: '',
     severity: 'info'
   })
+  const [shortcutsHelpOpen, setShortcutsHelpOpen] = useState(false)
 
   const limit = 12
 
@@ -163,6 +166,51 @@ const MaintenanceDashboard: React.FC = () => {
       console.log('New notification:', notification)
       // You could integrate with a notification system here
     }
+  })
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onNewTicket: () => {
+      if (isAdmin) {
+        navigate('/maintenance/new')
+      }
+    },
+    onToggleFilters: () => {
+      setShowFilters(prev => !prev)
+    },
+    onRefreshData: () => {
+      refetchTickets()
+      refetchStats()
+      showToast('Datos actualizados', 'success')
+    },
+    onFocusSearch: () => {
+      // Focus search field in filters
+      const searchField = document.getElementById('quick-search-field')
+      if (searchField) {
+        searchField.focus()
+      } else {
+        // If filters are collapsed, expand them first
+        if (!showFilters) {
+          setShowFilters(true)
+          // Focus after a brief delay to allow expansion
+          setTimeout(() => {
+            const searchFieldDelayed = document.getElementById('quick-search-field')
+            searchFieldDelayed?.focus()
+          }, 100)
+        }
+      }
+    },
+    onShowHelp: () => {
+      setShortcutsHelpOpen(true)
+    },
+    onCloseModal: () => {
+      if (editDialogOpen) {
+        setEditDialogOpen(false)
+      } else if (shortcutsHelpOpen) {
+        setShortcutsHelpOpen(false)
+      }
+    },
+    enabled: true
   })
 
   // Equipment types for filters (this could come from an API)
@@ -1166,6 +1214,12 @@ const MaintenanceDashboard: React.FC = () => {
           {toast.message}
         </Alert>
       </Snackbar>
+
+      {/* Keyboard Shortcuts Help Modal */}
+      <KeyboardShortcutsHelp
+        open={shortcutsHelpOpen}
+        onClose={() => setShortcutsHelpOpen(false)}
+      />
     </Container>
   )
 }
