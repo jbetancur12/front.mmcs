@@ -22,7 +22,7 @@ import {
   Skeleton
 } from '@mui/material'
 
-import { 
+import {
   GetApp,
   Schedule,
   CheckCircle,
@@ -31,7 +31,8 @@ import {
   Devices,
   Timeline as TimelineIcon,
   KeyboardArrowDown,
-  Error as ErrorIcon
+  Error as ErrorIcon,
+  HelpOutline
 } from '@mui/icons-material'
 
 import { useNavigate } from 'react-router-dom'
@@ -186,7 +187,7 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
           <Skeleton variant="text" width={200} height={32} />
           <Skeleton variant="rectangular" width={120} height={36} sx={{ borderRadius: '8px' }} />
         </Box>
-        
+
         <Grid container spacing={2} mb={3}>
           {[...Array(3)].map((_, i) => (
             <Grid item xs={12} sm={4} key={i}>
@@ -194,7 +195,7 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
             </Grid>
           ))}
         </Grid>
-        
+
         <Skeleton variant="rectangular" width="100%" height={400} sx={{ borderRadius: '12px' }} />
       </Box>
     )
@@ -202,9 +203,9 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
 
   if (error) {
     return (
-      <Alert 
-        severity="error" 
-        sx={{ 
+      <Alert
+        severity="error"
+        sx={{
           borderRadius: '12px',
           backgroundColor: '#fef2f2',
           border: '1px solid #fecaca'
@@ -222,9 +223,9 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
 
   if (!timeline || !devices) {
     return (
-      <Alert 
-        severity="info" 
-        sx={{ 
+      <Alert
+        severity="info"
+        sx={{
           borderRadius: '12px',
           backgroundColor: '#f0f9ff',
           border: '1px solid #bfdbfe'
@@ -242,8 +243,8 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
       {/* Header with Export Button */}
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={4}>
         <Box display="flex" alignItems="center">
-          <Avatar 
-            sx={{ 
+          <Avatar
+            sx={{
               backgroundColor: '#10b981',
               mr: 2,
               width: 40,
@@ -280,7 +281,7 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
         >
           Exportar PDF
         </Button>
-        
+
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
@@ -312,9 +313,9 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
       {/* Stats Cards */}
       <Grid container spacing={3} mb={4}>
         <Grid item xs={12} sm={6} md={3}>
-          <Card 
+          <Card
             elevation={0}
-            sx={{ 
+            sx={{
               border: '1px solid #e5e7eb',
               borderRadius: '12px',
               background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)'
@@ -327,13 +328,18 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
                 </Avatar>
                 <Box>
                   <Typography variant="h4" fontWeight="bold" sx={{ color: '#059669' }}>
-                    {devices.filter(d => 
+                    {devices.filter(d =>
                       d.calibrationMonth === currentMonth && d.calibrationYear === currentYear
                     ).length}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#065f46' }}>
-                    Este mes
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Typography variant="body2" sx={{ color: '#065f46' }}>
+                      Este mes
+                    </Typography>
+                    <Tooltip title="Calibraciones realizadas durante el mes actual" arrow>
+                      <HelpOutline sx={{ fontSize: 14, color: '#065f46', cursor: 'help' }} />
+                    </Tooltip>
+                  </Box>
                 </Box>
               </Box>
             </CardContent>
@@ -341,9 +347,9 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card 
+          <Card
             elevation={0}
-            sx={{ 
+            sx={{
               border: '1px solid #e5e7eb',
               borderRadius: '12px',
               background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)'
@@ -356,13 +362,18 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
                 </Avatar>
                 <Box>
                   <Typography variant="h4" fontWeight="bold" sx={{ color: '#d97706' }}>
-                    {devices.filter(d => 
+                    {devices.filter(d =>
                       d.nextCalibrationMonth === currentMonth && d.nextCalibrationYear === currentYear
                     ).length}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#92400e' }}>
-                    Próximas
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Typography variant="body2" sx={{ color: '#92400e' }}>
+                      Próximas
+                    </Typography>
+                    <Tooltip title="Calibraciones programadas para realizarse este mes" arrow>
+                      <HelpOutline sx={{ fontSize: 14, color: '#92400e', cursor: 'help' }} />
+                    </Tooltip>
+                  </Box>
                 </Box>
               </Box>
             </CardContent>
@@ -370,9 +381,9 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card 
+          <Card
             elevation={0}
-            sx={{ 
+            sx={{
               border: '1px solid #e5e7eb',
               borderRadius: '12px',
               background: 'linear-gradient(135deg, #fef2f2 0%, #fecaca 100%)'
@@ -391,9 +402,14 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
                       return nextCalibrationDate < currentDate
                     }).length}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#991b1b' }}>
-                    Vencidas
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Typography variant="body2" sx={{ color: '#991b1b' }}>
+                      Vencidas
+                    </Typography>
+                    <Tooltip title="Calibraciones que ya han vencido y requieren atención inmediata" arrow>
+                      <HelpOutline sx={{ fontSize: 14, color: '#991b1b', cursor: 'help' }} />
+                    </Tooltip>
+                  </Box>
                 </Box>
               </Box>
             </CardContent>
@@ -401,9 +417,9 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card 
+          <Card
             elevation={0}
-            sx={{ 
+            sx={{
               border: '1px solid #e5e7eb',
               borderRadius: '12px',
               background: 'linear-gradient(135deg, #f0f9ff 0%, #dbeafe 100%)'
@@ -418,9 +434,14 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
                   <Typography variant="h4" fontWeight="bold" sx={{ color: '#3b82f6' }}>
                     {devices.length}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#1e40af' }}>
-                    Total equipos
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Typography variant="body2" sx={{ color: '#1e40af' }}>
+                      Total equipos
+                    </Typography>
+                    <Tooltip title="Número total de equipos incluidos en la programación de calibraciones" arrow>
+                      <HelpOutline sx={{ fontSize: 14, color: '#1e40af', cursor: 'help' }} />
+                    </Tooltip>
+                  </Box>
                 </Box>
               </Box>
             </CardContent>
@@ -429,9 +450,9 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
       </Grid>
 
       {/* Legend */}
-      <Card 
+      <Card
         elevation={0}
-        sx={{ 
+        sx={{
           border: '1px solid #e5e7eb',
           borderRadius: '12px',
           mb: 3
@@ -443,10 +464,10 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
           </Typography>
           <Box display="flex" alignItems="center" gap={4} flexWrap="wrap">
             <Box display="flex" alignItems="center" gap={1}>
-              <Chip 
+              <Chip
                 icon={<CheckCircle />}
-                label="Calibración realizada" 
-                size="small" 
+                label="Calibración realizada"
+                size="small"
                 sx={{
                   backgroundColor: '#10b981',
                   color: 'white',
@@ -455,10 +476,10 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
               />
             </Box>
             <Box display="flex" alignItems="center" gap={1}>
-              <Chip 
+              <Chip
                 icon={<Schedule />}
-                label="Próxima calibración" 
-                size="small" 
+                label="Próxima calibración"
+                size="small"
                 sx={{
                   backgroundColor: '#d97706',
                   color: 'white',
@@ -467,10 +488,10 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
               />
             </Box>
             <Box display="flex" alignItems="center" gap={1}>
-              <Chip 
+              <Chip
                 icon={<ErrorIcon />}
-                label="Calibración vencida" 
-                size="small" 
+                label="Calibración vencida"
+                size="small"
                 sx={{
                   backgroundColor: '#dc2626',
                   color: 'white',
@@ -479,14 +500,14 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
               />
             </Box>
             <Box display="flex" alignItems="center" gap={1}>
-              <Box 
-                sx={{ 
-                  width: 20, 
-                  height: 20, 
+              <Box
+                sx={{
+                  width: 20,
+                  height: 20,
                   backgroundColor: '#f0fdf4',
                   border: '2px solid #10b981',
                   borderRadius: '4px'
-                }} 
+                }}
               />
               <Typography variant="body2" sx={{ color: '#374151' }}>
                 Mes actual
@@ -497,17 +518,17 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
       </Card>
 
       {/* Modern Timeline Table */}
-      <Card 
+      <Card
         elevation={0}
-        sx={{ 
+        sx={{
           border: '1px solid #e5e7eb',
           borderRadius: '12px',
           overflow: 'hidden'
         }}
         id="calibration-timeline"
       >
-        <TableContainer 
-          sx={{ 
+        <TableContainer
+          sx={{
             maxHeight: 600,
             '& .MuiTable-root': {
               borderCollapse: 'separate',
@@ -610,7 +631,7 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
             <TableBody>
               {devices.map((device, deviceIndex) => (
                 <Fade in={true} timeout={300 + deviceIndex * 50} key={`${device.deviceId}-${deviceIndex}`}>
-                  <TableRow 
+                  <TableRow
                     sx={{
                       '&:hover': {
                         backgroundColor: '#f8fafc'
@@ -646,9 +667,9 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
                       const isNextCalibration =
                         entry.month === device.nextCalibrationMonth &&
                         entry.year === device.nextCalibrationYear
-                      const isCurrentMonth = 
+                      const isCurrentMonth =
                         entry.month === currentMonth && entry.year === currentYear
-                      
+
                       // Check if calibration is overdue
                       const nextCalibrationDate = new Date(device.nextCalibrationYear, device.nextCalibrationMonth - 1)
                       const currentDate = new Date(currentYear, currentMonth - 1)
@@ -667,10 +688,10 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
                         >
                           {isCalibration && (
                             <Tooltip title="Calibración realizada">
-                              <Chip 
+                              <Chip
                                 icon={<CheckCircle />}
-                                label="✓" 
-                                size="small" 
+                                label="✓"
+                                size="small"
                                 sx={{
                                   backgroundColor: '#10b981',
                                   color: 'white',
@@ -684,10 +705,10 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
                           )}
                           {isNextCalibration && !isOverdue && (
                             <Tooltip title="Próxima calibración programada">
-                              <Chip 
+                              <Chip
                                 icon={<Schedule />}
-                                label="!" 
-                                size="small" 
+                                label="!"
+                                size="small"
                                 sx={{
                                   backgroundColor: '#d97706',
                                   color: 'white',
@@ -701,10 +722,10 @@ const CalibrationTimeline: React.FC<Props> = ({ customerId }) => {
                           )}
                           {isNextCalibration && isOverdue && (
                             <Tooltip title="Calibración vencida - Requiere atención inmediata">
-                              <Chip 
+                              <Chip
                                 icon={<ErrorIcon />}
-                                label="!" 
-                                size="small" 
+                                label="!"
+                                size="small"
                                 sx={{
                                   backgroundColor: '#dc2626',
                                   color: 'white',

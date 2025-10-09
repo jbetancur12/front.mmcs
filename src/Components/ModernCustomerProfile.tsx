@@ -47,7 +47,8 @@ import {
   Search,
   Clear,
   Edit,
-  Delete
+  Delete,
+  HelpOutline
 } from '@mui/icons-material'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
@@ -727,9 +728,14 @@ const ModernCustomerProfile: React.FC = () => {
               <Typography variant="h4" fontWeight="bold" color="primary">
                 {stats.total}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Equipos
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Total Equipos
+                </Typography>
+                <Tooltip title="Número total de equipos registrados para este cliente" arrow>
+                  <HelpOutline sx={{ fontSize: 16, color: 'text.secondary', cursor: 'help' }} />
+                </Tooltip>
+              </Box>
             </CardContent>
           </Card>
         </Grid>
@@ -755,9 +761,14 @@ const ModernCustomerProfile: React.FC = () => {
               <Typography variant="h4" fontWeight="bold" color="error">
                 {stats.expired}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Vencidos
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Vencidos
+                </Typography>
+                <Tooltip title="Calibraciones que ya han vencido y requieren atención inmediata" arrow>
+                  <HelpOutline sx={{ fontSize: 16, color: 'text.secondary', cursor: 'help' }} />
+                </Tooltip>
+              </Box>
             </CardContent>
           </Card>
         </Grid>
@@ -783,9 +794,14 @@ const ModernCustomerProfile: React.FC = () => {
               <Typography variant="h4" fontWeight="bold" color="warning.main">
                 {stats.upcoming}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Próximos
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Próximos
+                </Typography>
+                <Tooltip title="Calibraciones próximas a vencer (dentro de 30 días) que requieren programación" arrow>
+                  <HelpOutline sx={{ fontSize: 16, color: 'text.secondary', cursor: 'help' }} />
+                </Tooltip>
+              </Box>
             </CardContent>
           </Card>
         </Grid>
@@ -811,9 +827,14 @@ const ModernCustomerProfile: React.FC = () => {
               <Typography variant="h4" fontWeight="bold" color="success.main">
                 {stats.active}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Activos
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Activos
+                </Typography>
+                <Tooltip title="Calibraciones vigentes con más de 30 días restantes hasta su vencimiento" arrow>
+                  <HelpOutline sx={{ fontSize: 16, color: 'text.secondary', cursor: 'help' }} />
+                </Tooltip>
+              </Box>
             </CardContent>
           </Card>
         </Grid>

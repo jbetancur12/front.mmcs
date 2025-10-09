@@ -10,13 +10,13 @@ import {
   Button,
   IconButton,
   Skeleton,
-  Fade,
   Chip,
   Avatar,
   Paper,
   Tooltip,
   Breadcrumbs,
-  Link as MuiLink
+  Link as MuiLink,
+  Grow
 } from '@mui/material'
 import {
   CheckCircle as CheckCircleIcon,
@@ -26,8 +26,8 @@ import {
   GetApp as GetAppIcon,
   ArrowBack as ArrowBackIcon,
   Visibility as VisibilityIcon,
-  Error as ErrorIcon,
-  Schedule as ScheduleIcon
+  Error as ErrorIcon
+
 } from '@mui/icons-material'
 import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
@@ -41,6 +41,10 @@ import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import Swal from 'sweetalert2'
 
+
+// Filter types and interfaces
+type FilterType = 'all' | 'warning' | 'expired'
+
 const Dashboard: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
@@ -50,6 +54,45 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [customerInfo, setCustomerInfo] = useState<any>(null)
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards')
+  
+  // Filter state management
+  const [filterType, setFilterType] = useState<FilterType>('all')
+  
+  // Table pagination state
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  })
+
+  // Filter predicate functions
+  const filterPredicates = useMemo<Record<FilterType, (cert: FileData) => boolean>>(() => ({
+    all: () => true,
+    warning: (cert: FileData) => {
+      const now = new Date()
+      const nextDate = new Date(cert.nextCalibrationDate)
+      const daysRemaining = differenceInDays(nextDate, now)
+      return daysRemaining >= 0 && daysRemaining <= 30
+    },
+    expired: (cert: FileData) => {
+      const now = new Date()
+      const nextDate = new Date(cert.nextCalibrationDate)
+      const daysRemaining = differenceInDays(nextDate, now)
+      return daysRemaining < 0
+    }
+  }), [])
+
+  // Filter handler functions
+  const handleFilterChange = (newFilterType: FilterType) => {
+    setFilterType(newFilterType)
+    // Reset pagination when filter changes
+    setPagination(prev => ({ ...prev, pageIndex: 0 }))
+  }
+
+  const clearFilter = () => {
+    setFilterType('all')
+    // Reset pagination when clearing filter
+    setPagination(prev => ({ ...prev, pageIndex: 0 }))
+  }
 
   // Fetch files data
   const fetchFiles = async () => {
@@ -87,34 +130,13 @@ const Dashboard: React.FC = () => {
     fetchFiles()
   }, [id])
 
-  // Calculate statistics
-  const stats = useMemo(() => {
-    const totalCertificates = tableData.length
-    let expiredCount = 0
-    let soonToExpireCount = 0
-    let activeCount = 0
-    
-    tableData.forEach(cert => {
-      const now = new Date()
-      const nextDate = new Date(cert.nextCalibrationDate)
-      const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-      
-      if (nextDate < now) {
-        expiredCount++
-      } else if (nextDate <= thirtyDaysFromNow) {
-        soonToExpireCount++
-      } else {
-        activeCount++
-      }
-    })
-
-    return {
-      totalCertificates,
-      expiredCount,
-      soonToExpireCount,
-      activeCount
+  // Memoized filtered data calculation
+  const filteredData = useMemo(() => {
+    if (filterType === 'all') {
+      return tableData
     }
-  }, [tableData])
+    return tableData.filter(filterPredicates[filterType])
+  }, [tableData, filterType, filterPredicates])
 
   const getCertificateStatus = (cert: FileData) => {
     const now = new Date()
@@ -141,7 +163,7 @@ const Dashboard: React.FC = () => {
       }
     } else {
       return { 
-        status: 'active', 
+        status: 'vigente', 
         color: '#388e3c', 
         bgColor: '#e8f5e8', 
         label: 'Vigente', 
@@ -152,7 +174,7 @@ const Dashboard: React.FC = () => {
   }
 
   const handleExportExcel = () => {
-    if (tableData.length === 0) {
+    if (filteredData.length === 0) {
       Swal.fire({
         title: 'Sin datos',
         text: 'No hay certificados para exportar',
@@ -162,7 +184,7 @@ const Dashboard: React.FC = () => {
       return
     }
 
-    const exportData = tableData.map((row) => ({
+    const exportData = filteredData.map((row) => ({
       'Compañía': row.customer?.nombre || '',
       'Equipo': row.device?.name || '',
       'Tipo de Certificado': row.certificateType?.name || '',
@@ -189,12 +211,24 @@ const Dashboard: React.FC = () => {
       type: 'array'
     })
     const data = new Blob([excelBuffer], { type: 'application/octet-stream' })
-    const fileName = `${customerInfo?.nombre || 'Cliente'}-certificados-${format(new Date(), 'yyyy-MM-dd')}.xlsx`
+    
+    // Generate filename based on filter state
+    const filterSuffix = filterType !== 'all' ? `-${
+      filterType === 'warning' ? 'proximos-vencer' :
+      filterType === 'expired' ? 'vencidos' : 'todos'
+    }` : ''
+    
+    const fileName = `${customerInfo?.nombre || 'Cliente'}-certificados${filterSuffix}-${format(new Date(), 'yyyy-MM-dd')}.xlsx`
     saveAs(data, fileName)
+    
+    const filterText = filterType !== 'all' ? ` (${
+      filterType === 'warning' ? 'Próximos a Vencer' :
+      filterType === 'expired' ? 'Vencidos' : 'Todos'
+    })` : ''
     
     Swal.fire({
       title: '¡Exportado!',
-      text: 'El archivo Excel ha sido descargado exitosamente',
+      text: `El archivo Excel${filterText} ha sido descargado exitosamente`,
       icon: 'success',
       timer: 2000,
       showConfirmButton: false
@@ -528,259 +562,261 @@ const Dashboard: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Statistics Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card 
-            elevation={3}
-            sx={{ 
-              background: 'linear-gradient(135deg, #2196f3 0%, #42a5f5 100%)',
-              color: 'white',
-              transition: 'transform 0.2s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-4px)'
-              }
-            }}
-          >
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                    Total Certificados
-                  </Typography>
-                  <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
-                    {stats.totalCertificates}
-                  </Typography>
-                </Box>
-                <AssignmentIcon sx={{ fontSize: 48, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card 
-            elevation={3}
-            sx={{ 
-              background: 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
-              color: 'white',
-              transition: 'transform 0.2s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-4px)'
-              }
-            }}
-          >
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                    Vigentes
-                  </Typography>
-                  <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
-                    {stats.activeCount}
-                  </Typography>
-                </Box>
-                <CheckCircleIcon sx={{ fontSize: 48, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card 
-            elevation={3}
-            sx={{ 
-              background: 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)',
-              color: 'white',
-              transition: 'transform 0.2s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-4px)'
-              }
-            }}
-          >
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                    Próximos a Vencer
-                  </Typography>
-                  <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
-                    {stats.soonToExpireCount}
-                  </Typography>
-                </Box>
-                <ScheduleIcon sx={{ fontSize: 48, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card 
-            elevation={3}
-            sx={{ 
-              background: 'linear-gradient(135deg, #f44336 0%, #ef5350 100%)',
-              color: 'white',
-              transition: 'transform 0.2s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-4px)'
-              }
-            }}
-          >
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                    Vencidos
-                  </Typography>
-                  <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
-                    {stats.expiredCount}
-                  </Typography>
-                </Box>
-                <ErrorIcon sx={{ fontSize: 48, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      {/* Información de la vista */}
+      <Paper 
+        elevation={1} 
+        sx={{ 
+          p: 3, 
+          mb: 4,
+          background: 'linear-gradient(135deg, #fff3e0 0%, #ffecb3 100%)',
+          border: '1px solid #ffb74d'
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <WarningIcon sx={{ fontSize: 32, color: '#f57c00', mr: 2 }} />
+          <Typography variant="h5" sx={{ fontWeight: 600, color: '#e65100' }}>
+            Certificados que Requieren Atención
+          </Typography>
+        </Box>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+          Esta vista muestra únicamente los certificados que están <strong>vencidos</strong> o <strong>próximos a vencer</strong> (dentro de 30 días).
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <Chip
+            label={`Todos (${filteredData.length})`}
+            onClick={() => handleFilterChange('all')}
+            color={filterType === 'all' ? 'primary' : 'default'}
+            variant={filterType === 'all' ? 'filled' : 'outlined'}
+            sx={{ cursor: 'pointer' }}
+          />
+          <Chip
+            label={`Próximos a Vencer (${tableData.filter(filterPredicates.warning).length})`}
+            onClick={() => handleFilterChange('warning')}
+            color={filterType === 'warning' ? 'warning' : 'default'}
+            variant={filterType === 'warning' ? 'filled' : 'outlined'}
+            sx={{ cursor: 'pointer' }}
+          />
+          <Chip
+            label={`Vencidos (${tableData.filter(filterPredicates.expired).length})`}
+            onClick={() => handleFilterChange('expired')}
+            color={filterType === 'expired' ? 'error' : 'default'}
+            variant={filterType === 'expired' ? 'filled' : 'outlined'}
+            sx={{ cursor: 'pointer' }}
+          />
+          {filterType !== 'all' && (
+            <Chip
+              label="Limpiar filtro"
+              onClick={clearFilter}
+              variant="outlined"
+              onDelete={clearFilter}
+              sx={{ cursor: 'pointer' }}
+            />
+          )}
+        </Box>
+      </Paper>
 
       {/* Content Area */}
       {viewMode === 'cards' ? (
-        <Grid container spacing={3}>
-          {tableData.map((cert, index) => {
-            const status = getCertificateStatus(cert)
-            return (
-              <Grid item xs={12} md={6} lg={4} key={cert.id || index}>
-                <Fade in timeout={300}>
-                  <Card 
-                    elevation={2}
-                    sx={{ 
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      transition: 'all 0.2s ease-in-out',
-                      '&:hover': {
-                        elevation: 6,
-                        transform: 'translateY(-4px)'
-                      }
+        <Box sx={{ minHeight: '400px' }}>
+          <Grid 
+            container 
+            spacing={3}
+            sx={{
+              // Maintain consistent spacing and layout
+              '& .MuiGrid-item': {
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              }
+            }}
+          >
+            {filteredData.map((cert, index) => {
+              const status = getCertificateStatus(cert)
+              return (
+                <Grid 
+                  item 
+                  xs={12} 
+                  md={6} 
+                  lg={4} 
+                  key={cert.id || index}
+                  sx={{
+                    // Ensure consistent grid item behavior
+                    display: 'flex',
+                    '& > *': {
+                      width: '100%'
+                    }
+                  }}
+                >
+                  <Grow
+                    in={true}
+                    timeout={{
+                      enter: 400 + (index * 100), // Staggered entrance
+                      exit: 300
+                    }}
+                    style={{
+                      transformOrigin: 'center center',
                     }}
                   >
-                    <CardContent sx={{ flexGrow: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <Avatar
-                          sx={{ 
-                            bgcolor: '#2196f3', 
-                            mr: 2,
-                            width: 40,
-                            height: 40
-                          }}
-                        >
-                          <AssignmentIcon />
-                        </Avatar>
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Typography variant="h6" noWrap sx={{ fontWeight: 600 }}>
-                            {cert.device?.name || 'Equipo'}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" noWrap>
-                            Serie: {cert.serie || 'N/A'}
-                          </Typography>
-                        </Box>
-                      </Box>
-                      
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                          <strong>Ubicación:</strong> {cert.city}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                          <strong>Local:</strong> {cert.location}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          <strong>Sede:</strong> {cert.sede}
-                        </Typography>
-                      </Box>
-
-                      <Box 
-                        sx={{ 
-                          p: 2, 
-                          backgroundColor: status.bgColor,
-                          borderRadius: 2,
-                          border: `1px solid ${status.color}30`,
-                          mb: 2
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                          <status.icon 
+                    <Card 
+                      elevation={2}
+                      sx={{ 
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        transform: 'scale(1)',
+                        opacity: 1,
+                        '&:hover': {
+                          elevation: 8,
+                          transform: 'translateY(-6px) scale(1.02)',
+                          boxShadow: '0 12px 24px rgba(0,0,0,0.15)'
+                        }
+                      }}
+                    >
+                      <CardContent sx={{ flexGrow: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                          <Avatar
                             sx={{ 
-                              fontSize: 20, 
-                              color: status.color,
-                              mr: 1
-                            }} 
-                          />
-                          <Typography 
-                            variant="body2" 
-                            fontWeight="600" 
-                            sx={{ color: status.color }}
+                              bgcolor: '#2196f3', 
+                              mr: 2,
+                              width: 40,
+                              height: 40,
+                              transition: 'all 0.3s ease-in-out'
+                            }}
                           >
-                            {status.label}
+                            <AssignmentIcon />
+                          </Avatar>
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography variant="h6" noWrap sx={{ fontWeight: 600 }}>
+                              {cert.device?.name || 'Equipo'}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" noWrap>
+                              Serie: {cert.serie || 'N/A'}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        
+                        <Box sx={{ mb: 2 }}>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            <strong>Ubicación:</strong> {cert.city}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            <strong>Local:</strong> {cert.location}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            <strong>Sede:</strong> {cert.sede}
                           </Typography>
                         </Box>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                          📅 Próxima: {format(new Date(cert.nextCalibrationDate), 'dd/MM/yyyy')}
-                        </Typography>
-                        <Typography 
-                          variant="caption" 
+
+                        <Box 
                           sx={{ 
-                            color: status.status === 'expired' ? '#d32f2f' : 'text.secondary',
-                            fontWeight: status.status === 'expired' ? 'bold' : 'normal'
+                            p: 2, 
+                            backgroundColor: status.bgColor,
+                            borderRadius: 2,
+                            border: `1px solid ${status.color}30`,
+                            mb: 2,
+                            transition: 'all 0.3s ease-in-out'
                           }}
                         >
-                          {status.daysText}
-                        </Typography>
-                      </Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                            <status.icon 
+                              sx={{ 
+                                fontSize: 20, 
+                                color: status.color,
+                                mr: 1,
+                                transition: 'all 0.3s ease-in-out'
+                              }} 
+                            />
+                            <Typography 
+                              variant="body2" 
+                              fontWeight="600" 
+                              sx={{ color: status.color }}
+                            >
+                              {status.label}
+                            </Typography>
+                          </Box>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            📅 Próxima: {format(new Date(cert.nextCalibrationDate), 'dd/MM/yyyy')}
+                          </Typography>
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              color: status.status === 'expired' ? '#d32f2f' : 'text.secondary',
+                              fontWeight: status.status === 'expired' ? 'bold' : 'normal'
+                            }}
+                          >
+                            {status.daysText}
+                          </Typography>
+                        </Box>
 
-                      {cert.certificateType && (
-                        <Chip
-                          label={cert.certificateType.name}
-                          size="small"
-                          sx={{ bgcolor: '#e3f2fd', color: '#1976d2' }}
-                        />
-                      )}
-                    </CardContent>
-                    
-                    <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        startIcon={<VisibilityIcon />}
-                        onClick={() => navigate(`/calibraciones/certificados/${cert.id}`)}
-                        sx={{
-                          bgcolor: '#2196f3',
-                          '&:hover': {
-                            bgcolor: '#1976d2'
-                          }
-                        }}
-                      >
-                        Ver Detalles
-                      </Button>
+                        {cert.certificateType && (
+                          <Chip
+                            label={cert.certificateType.name}
+                            size="small"
+                            sx={{ 
+                              bgcolor: '#e3f2fd', 
+                              color: '#1976d2',
+                              transition: 'all 0.3s ease-in-out'
+                            }}
+                          />
+                        )}
+                      </CardContent>
                       
-                      <Typography variant="caption" color="text.secondary">
-                        {cert.calibrationDate ? format(new Date(cert.calibrationDate), 'dd/MM/yyyy') : 'Sin fecha'}
-                      </Typography>
-                    </CardActions>
-                  </Card>
-                </Fade>
-              </Grid>
-            )
-          })}
-        </Grid>
+                      <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          startIcon={<VisibilityIcon />}
+                          onClick={() => navigate(`/calibraciones/certificados/${cert.id}`)}
+                          sx={{
+                            bgcolor: '#2196f3',
+                            transition: 'all 0.3s ease-in-out',
+                            '&:hover': {
+                              bgcolor: '#1976d2',
+                              transform: 'scale(1.05)'
+                            }
+                          }}
+                        >
+                          Ver Detalles
+                        </Button>
+                        
+                        <Typography variant="caption" color="text.secondary">
+                          {cert.calibrationDate ? format(new Date(cert.calibrationDate), 'dd/MM/yyyy') : 'Sin fecha'}
+                        </Typography>
+                      </CardActions>
+                    </Card>
+                  </Grow>
+                </Grid>
+              )
+            })}
+          </Grid>
+          
+          {/* Maintain layout stability with minimum height when filtering */}
+          {filteredData.length === 0 && (
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center',
+                minHeight: '300px',
+                opacity: 0.7
+              }}
+            >
+              <Typography variant="h6" color="text.secondary">
+                No hay certificados que coincidan con el filtro seleccionado
+              </Typography>
+            </Box>
+          )}
+        </Box>
       ) : (
         <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
           <MaterialReactTable
             columns={columns}
-            data={tableData}
+            data={filteredData}
             localization={MRT_Localization_ES}
             state={{
               isLoading: loading,
+              pagination,
             }}
+            onPaginationChange={setPagination}
             enableRowActions
             positionActionsColumn="last"
             renderRowActions={({ row }) => (
@@ -801,6 +837,30 @@ const Dashboard: React.FC = () => {
                 </Tooltip>
               </Box>
             )}
+            renderTopToolbarCustomActions={() => (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                {filterType !== 'all' && (
+                  <Chip
+                    label={`Filtrado: ${
+                      filterType === 'warning' ? 'Próximos a Vencer' :
+                      filterType === 'expired' ? 'Vencidos' : 'Todos'
+                    } (${filteredData.length})`}
+                    onDelete={clearFilter}
+                    color="primary"
+                    variant="outlined"
+                    sx={{
+                      backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                      '& .MuiChip-deleteIcon': {
+                        color: '#1976d2'
+                      }
+                    }}
+                  />
+                )}
+                <Typography variant="body2" color="text.secondary">
+                  {filteredData.length} de {tableData.length} certificados
+                </Typography>
+              </Box>
+            )}
             muiTableProps={{
               sx: {
                 '& .MuiTableHead-root': {
@@ -810,8 +870,12 @@ const Dashboard: React.FC = () => {
                   }
                 },
                 '& .MuiTableBody-root': {
-                  '& .MuiTableRow-root:hover': {
-                    backgroundColor: 'rgba(33, 150, 243, 0.04)',
+                  '& .MuiTableRow-root': {
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                      backgroundColor: 'rgba(33, 150, 243, 0.04)',
+                      transform: 'scale(1.001)'
+                    }
                   }
                 }
               }
@@ -824,6 +888,7 @@ const Dashboard: React.FC = () => {
             muiTopToolbarProps={{
               sx: {
                 backgroundColor: '#fafafa',
+                borderBottom: filterType !== 'all' ? '2px solid #2196f3' : 'none'
               }
             }}
             muiBottomToolbarProps={{
@@ -833,14 +898,12 @@ const Dashboard: React.FC = () => {
             }}
             initialState={{
               density: 'comfortable',
-              pagination: {
-                pageSize: 10,
-                pageIndex: 0,
-              },
               columnVisibility: {
                 id: false
               }
             }}
+            // Reset pagination when filter changes
+            autoResetPageIndex={false}
             enableColumnFilterModes
             enableColumnOrdering
             enableFacetedValues
@@ -851,7 +914,66 @@ const Dashboard: React.FC = () => {
                 maxHeight: '600px',
               }
             }}
+            // Add custom empty state for filtered results
+            muiTableBodyProps={{
+              sx: filteredData.length === 0 ? {
+                '& .MuiTableRow-root:first-of-type .MuiTableCell-root': {
+                  textAlign: 'center',
+                  py: 4
+                }
+              } : {}
+            }}
+            // Custom no data message
+            muiTableBodyRowProps={filteredData.length === 0 ? {
+              sx: {
+                '& .MuiTableCell-root': {
+                  border: 'none'
+                }
+              }
+            } : {}}
           />
+          
+          {/* Custom empty state for table when filtered */}
+          {filteredData.length === 0 && tableData.length > 0 && (
+            <Box 
+              sx={{ 
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                textAlign: 'center',
+                zIndex: 1,
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                p: 4,
+                borderRadius: 2,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+              }}
+            >
+              <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+                No hay certificados que coincidan con el filtro
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Filtro activo: {
+                  filterType === 'warning' ? 'Próximos a Vencer' :
+                  filterType === 'expired' ? 'Vencidos' : 'Todos'
+                }
+              </Typography>
+              <Button
+                variant="outlined"
+                onClick={clearFilter}
+                size="small"
+                sx={{
+                  borderColor: '#2196f3',
+                  color: '#2196f3',
+                  '&:hover': {
+                    backgroundColor: 'rgba(33, 150, 243, 0.1)'
+                  }
+                }}
+              >
+                Ver Todos los Certificados
+              </Button>
+            </Box>
+          )}
         </Paper>
       )}
     </Container>

@@ -39,7 +39,8 @@ import {
   Refresh,
   Add,
   FilterList,
-  Cancel
+  Cancel,
+  Help
 } from '@mui/icons-material'
 import {
   useMaintenanceStats,
@@ -391,6 +392,30 @@ const MaintenanceDashboard: React.FC = () => {
               <Refresh />
             </IconButton>
           </Tooltip>
+
+          <Tooltip title='Atajos de teclado (Shift + ?)'>
+            <IconButton
+              onClick={() => setShortcutsHelpOpen(true)}
+              aria-label='Mostrar atajos de teclado'
+              sx={{
+                minWidth: 48,
+                minHeight: 48,
+                background: 'rgba(33, 150, 243, 0.1)',
+                color: '#2196F3',
+                borderRadius: '12px',
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
+                  color: 'white',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 6px 20px rgba(33, 150, 243, 0.3)'
+                }
+              }}
+            >
+              <Help />
+            </IconButton>
+          </Tooltip>
+
           <Button
             variant='outlined'
             startIcon={!isMobile && <FilterList />}

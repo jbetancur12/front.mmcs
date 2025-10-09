@@ -14,7 +14,7 @@ const RotatingInfo: React.FC<RotatingInfoProps> = ({
   ticket,
   interval = 4000
 }) => {
-  const { modernColors, tvTypography } = useModernStyles()
+  const { modernColors } = useModernStyles()
   const [infoIndex, setInfoIndex] = useState(0)
   const [isVisible, setIsVisible] = useState(true)
 

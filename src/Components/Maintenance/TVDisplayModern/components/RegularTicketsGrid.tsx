@@ -40,7 +40,8 @@ const RegularTicketsGrid: React.FC<RegularTicketsGridProps> = ({
         margin: 0,
         width: '100%'
       }}
-    >
+      >
+      
       {tickets.map((ticket) => (
         <Grid
           item
@@ -58,8 +59,7 @@ const RegularTicketsGrid: React.FC<RegularTicketsGridProps> = ({
               width: '100%',
               height: '100%',
               display: 'flex',
-              flexDirection: 'column'
-            }}
+              flexDirection: 'column',            }}
           >
             <CardContent sx={{ 
               p: 1, 
