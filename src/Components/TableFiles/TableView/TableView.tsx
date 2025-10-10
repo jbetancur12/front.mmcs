@@ -4,8 +4,8 @@ import { createTableColumns } from './tableColumns'
 import { useMemo, useState } from 'react'
 import { useValidation } from '../hooks/useValidation'
 import { Link } from 'react-router-dom'
-import { Box, Button, IconButton, Tooltip } from '@mui/material'
-import { Delete, FileDownload, Visibility } from '@mui/icons-material'
+import { Box, Button, IconButton, Tooltip, Typography } from '@mui/material'
+import { Delete, FileDownload, Visibility, Add } from '@mui/icons-material'
 import { userStore } from '@stores/userStore'
 import { useStore } from '@nanostores/react'
 import { useFileActions } from '../hooks/useFileActions'
@@ -47,31 +47,177 @@ export const TableView = ({
       data={data}
       positionActionsColumn='first'
       enableRowActions={true}
+      enableColumnOrdering
+      enableStickyHeader
+      enablePagination
+      initialState={{
+        pagination: { pageSize: 15, pageIndex: 0 },
+        density: 'comfortable',
+        columnVisibility: { filePath: false }
+      }}
+      enableRowVirtualization
+      enableColumnResizing
+      columnResizeMode="onChange"
+      muiTablePaperProps={{
+        elevation: 0,
+        sx: {
+          borderRadius: '0',
+          border: 'none',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column'
+        }
+      }}
+      muiTableContainerProps={{
+        sx: {
+          borderRadius: '12px',
+          maxHeight: '100%',
+          flex: 1,
+          overflow: 'auto'
+        }
+      }}
+      muiTableProps={{
+        sx: {
+          tableLayout: 'fixed',
+          '& .MuiTableCell-root': {
+            borderColor: '#f3f4f6'
+          }
+        }
+      }}
+      muiTableHeadCellProps={{
+        sx: {
+          backgroundColor: '#f9fafb',
+          color: '#374151',
+          fontWeight: 700,
+          fontSize: '0.75rem',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+          borderBottom: '2px solid #e5e7eb',
+          py: 2,
+          px: 1.5,
+          whiteSpace: 'normal',
+          wordWrap: 'break-word',
+          lineHeight: 1.3,
+          '&:first-of-type': {
+            borderTopLeftRadius: '12px'
+          },
+          '&:last-of-type': {
+            borderTopRightRadius: '12px'
+          },
+          '& .Mui-TableHeadCell-Content': {
+            whiteSpace: 'normal',
+            overflow: 'visible'
+          }
+        }
+      }}
+      muiTableBodyProps={{
+        sx: {
+          '& tr:hover': {
+            backgroundColor: '#f0fdf4 !important',
+            transition: 'background-color 0.2s ease'
+          }
+        }
+      }}
+      muiTableBodyCellProps={{
+        sx: {
+          fontSize: '0.8125rem',
+          color: '#1f2937',
+          py: 1.5,
+          px: 1.5,
+          borderColor: '#f3f4f6',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }
+      }}
+      muiTableBodyRowProps={({ row }) => ({
+        sx: {
+          backgroundColor: row.index % 2 === 0 ? '#ffffff' : '#fafafa',
+          '&:hover': {
+            backgroundColor: '#f0fdf4 !important',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }
+        }
+      })}
+      muiTopToolbarProps={{
+        sx: {
+          backgroundColor: '#ffffff',
+          borderBottom: '1px solid #e5e7eb',
+          py: 2
+        }
+      }}
+      muiBottomToolbarProps={{
+        sx: {
+          backgroundColor: '#ffffff',
+          borderTop: '1px solid #e5e7eb'
+        }
+      }}
+      muiPaginationProps={{
+        color: 'primary',
+        shape: 'rounded',
+        showRowsPerPage: true,
+        variant: 'outlined',
+        sx: {
+          '& .MuiPaginationItem-root': {
+            borderRadius: '8px',
+            '&.Mui-selected': {
+              backgroundColor: '#10b981',
+              color: 'white',
+              '&:hover': {
+                backgroundColor: '#059669'
+              }
+            }
+          }
+        }
+      }}
       renderRowActions={({ row }) => {
         return (
-          <Box sx={{ display: 'flex', gap: '1rem' }}>
+          <Box sx={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
             {$userStore.rol.some((role) => ['admin'].includes(role)) && (
-              <Tooltip arrow placement='right' title='Delete'>
+              <Tooltip arrow placement='top' title='Eliminar'>
                 <IconButton
-                  color='error'
                   onClick={() => handleDeleteRow(Number(row.original.id))}
+                  sx={{
+                    color: '#ef4444',
+                    '&:hover': {
+                      backgroundColor: '#fee2e2',
+                      color: '#dc2626'
+                    }
+                  }}
                 >
                   <Delete />
                 </IconButton>
               </Tooltip>
             )}
-            <Tooltip arrow placement='left' title='Descargar'>
+            <Tooltip arrow placement='top' title='Descargar'>
               <IconButton
                 onClick={() =>
                   handleDownload(row.original.filePath, axiosPrivate)
                 }
+                sx={{
+                  color: '#10b981',
+                  '&:hover': {
+                    backgroundColor: '#d1fae5',
+                    color: '#059669'
+                  }
+                }}
               >
                 <FileDownload />
               </IconButton>
             </Tooltip>
-            <Tooltip arrow placement='left' title='Ver archivos'>
-              <Link to={`${row.original.id}`}>
-                <Visibility />
+            <Tooltip arrow placement='top' title='Ver archivo'>
+              <Link to={`${row.original.id}`} style={{ textDecoration: 'none' }}>
+                <IconButton
+                  sx={{
+                    color: '#3b82f6',
+                    '&:hover': {
+                      backgroundColor: '#dbeafe',
+                      color: '#2563eb'
+                    }
+                  }}
+                >
+                  <Visibility />
+                </IconButton>
               </Link>
             </Tooltip>
           </Box>
@@ -88,9 +234,22 @@ export const TableView = ({
           <Button
             onClick={() => openModal(true)}
             variant='contained'
+            startIcon={<Add />}
             sx={{
-              fontWeight: 'bold',
-              color: '#DCFCE7'
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              borderRadius: '12px',
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3,
+              py: 1.5,
+              color: 'white',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                boxShadow: '0 6px 16px rgba(16, 185, 129, 0.4)',
+                transform: 'translateY(-2px)'
+              },
+              transition: 'all 0.3s ease'
             }}
           >
             Subir Nuevo Certificado
@@ -101,21 +260,63 @@ export const TableView = ({
         return (
           <Box
             sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              maxWidth: '1000px'
+              p: 4,
+              backgroundColor: '#f9fafb',
+              borderRadius: '12px',
+              m: 2
             }}
           >
-            <PDFViewer path={row.original.filePath} />
+            <Box
+              sx={{
+                mb: 3,
+                pb: 2,
+                borderBottom: '2px solid #e5e7eb'
+              }}
+            >
+              <Typography
+                variant='h6'
+                sx={{
+                  color: '#374151',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1
+                }}
+              >
+                <Visibility sx={{ color: '#10b981' }} />
+                Vista Previa del Certificado
+              </Typography>
+              <Typography variant='body2' sx={{ color: '#6b7280', mt: 1 }}>
+                {row.original.customer?.nombre} - {row.original.device?.name}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                backgroundColor: 'white',
+                borderRadius: '8px',
+                p: 2,
+                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+              }}
+            >
+              <PDFViewer path={row.original.filePath} />
+            </Box>
           </Box>
         )
       }}
       displayColumnDefOptions={{
         'mrt-row-actions': {
+          header: 'Acciones',
           muiTableHeadCellProps: {
-            align: 'center'
+            align: 'center',
+            sx: {
+              backgroundColor: '#f9fafb',
+              color: '#374151',
+              fontWeight: 700
+            }
           },
-          size: 120
+          size: 150
         }
       }}
     />
