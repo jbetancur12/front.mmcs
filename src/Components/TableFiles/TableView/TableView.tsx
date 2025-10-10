@@ -39,10 +39,10 @@ export const TableView = ({
     setValidationErrors
   )
 
-  // Load saved state from sessionStorage
+  // Load saved state from localStorage
   const loadSavedState = () => {
     try {
-      const saved = sessionStorage.getItem(TABLE_STATE_KEY)
+      const saved = localStorage.getItem(TABLE_STATE_KEY)
       if (saved) {
         return JSON.parse(saved)
       }
@@ -68,7 +68,7 @@ export const TableView = ({
     savedState?.globalFilter || ''
   )
 
-  // Save state to sessionStorage whenever it changes
+  // Save state to localStorage whenever it changes
   useEffect(() => {
     const state = {
       pagination,
@@ -77,7 +77,7 @@ export const TableView = ({
       globalFilter
     }
     try {
-      sessionStorage.setItem(TABLE_STATE_KEY, JSON.stringify(state))
+      localStorage.setItem(TABLE_STATE_KEY, JSON.stringify(state))
     } catch (error) {
       console.error('Error saving table state:', error)
     }
@@ -89,7 +89,7 @@ export const TableView = ({
     setColumnFilters([])
     setSorting([])
     setGlobalFilter('')
-    sessionStorage.removeItem(TABLE_STATE_KEY)
+    localStorage.removeItem(TABLE_STATE_KEY)
   }
 
   // Check if any filters are active
