@@ -106,15 +106,21 @@ interface ApiResponse {
     term: string
     searchableFields: string[]
   }
-      statistics: {
-        expired: number,
-        expiringSoon: number,
-        active: number,
-        total: number
-    },
+  statistics: {
+    expired: number
+    expiringSoon: number
+    active: number
+    total: number
+  }
 }
 
-type TabValue = 'overview' | 'equipment' | 'headquarters' | 'schedule' | 'users' | 'modules'
+type TabValue =
+  | 'overview'
+  | 'equipment'
+  | 'headquarters'
+  | 'schedule'
+  | 'users'
+  | 'modules'
 
 // Función para exportar a Excel
 const exportToExcel = (data: Certificate[], customerName: string = '') => {
@@ -140,7 +146,12 @@ const exportToExcel = (data: Certificate[], customerName: string = '') => {
   const worksheet = XLSX.utils.json_to_sheet(excelData)
 
   const columnWidths = [
-    { wch: 20 }, { wch: 35 }, { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 20 }
+    { wch: 20 },
+    { wch: 35 },
+    { wch: 15 },
+    { wch: 15 },
+    { wch: 18 },
+    { wch: 20 }
   ]
   worksheet['!cols'] = columnWidths
 
@@ -154,6 +165,185 @@ const exportToExcel = (data: Certificate[], customerName: string = '') => {
   } catch (error) {
     console.error('Error al generar archivo Excel:', error)
     bigToast('Error al generar el archivo Excel', 'error')
+  }
+}
+
+// Función para exportar reporte completo del cliente (Overview)
+const exportOverviewReport = (
+  customerData: UserData,
+  allEquipment: Certificate[],
+  stats: { total: number; expired: number; upcoming: number; active: number }
+) => {
+  if (!customerData) {
+    bigToast('No hay datos del cliente para exportar', 'error')
+    return
+  }
+
+  const workbook = XLSX.utils.book_new()
+  const now = new Date()
+  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+
+  // 1. Hoja de Información del Cliente
+  const customerInfo = [
+    ['REPORTE GENERAL DEL CLIENTE'],
+    [''],
+    ['Información del Cliente'],
+    ['Nombre:', customerData.nombre],
+    ['Email:', customerData.email],
+    ['Teléfono:', customerData.telefono],
+    [''],
+    ['Sedes'],
+    ...(customerData.sede?.map((sede) => ['', sede]) || []),
+    [''],
+    ['Estadísticas Generales'],
+    ['Total de Equipos:', stats.total],
+    ['Equipos Activos:', stats.active],
+    ['Próximos a Vencer (30 días):', stats.upcoming],
+    ['Equipos Vencidos:', stats.expired],
+    [''],
+    ['Fecha de Generación:', new Date().toLocaleDateString('es-ES')]
+  ]
+
+  const wsCustomer = XLSX.utils.aoa_to_sheet(customerInfo)
+  wsCustomer['!cols'] = [{ wch: 30 }, { wch: 40 }]
+  XLSX.utils.book_append_sheet(workbook, wsCustomer, 'Resumen Cliente')
+
+  // 2. Hoja de Equipos Vencidos
+  const expiredEquipment = allEquipment.filter((cert) => {
+    if (!cert.nextCalibrationDate) return false
+    return new Date(cert.nextCalibrationDate) < now
+  })
+
+  if (expiredEquipment.length > 0) {
+    const expiredData = expiredEquipment.map((cert) => ({
+      Sede: cert.headquarter || '',
+      'Nombre del Equipo': cert.device?.name || '',
+      'Activo Fijo': cert.activoFijo || '',
+      Serie: cert.serie || '',
+      'Última Calibración': cert.calibrationDate
+        ? new Date(cert.calibrationDate).toLocaleDateString('es-ES')
+        : '',
+      'Fecha de Vencimiento': cert.nextCalibrationDate
+        ? new Date(cert.nextCalibrationDate).toLocaleDateString('es-ES')
+        : '',
+      'Días Vencido': cert.nextCalibrationDate
+        ? Math.floor(
+            (now.getTime() - new Date(cert.nextCalibrationDate).getTime()) /
+              (1000 * 60 * 60 * 24)
+          )
+        : ''
+    }))
+
+    const wsExpired = XLSX.utils.json_to_sheet(expiredData)
+    wsExpired['!cols'] = [
+      { wch: 20 },
+      { wch: 35 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 18 },
+      { wch: 20 },
+      { wch: 15 }
+    ]
+    XLSX.utils.book_append_sheet(workbook, wsExpired, 'Equipos Vencidos')
+  }
+
+  // 3. Hoja de Equipos Próximos a Vencer
+  const upcomingEquipment = allEquipment.filter((cert) => {
+    if (!cert.nextCalibrationDate) return false
+    const nextDate = new Date(cert.nextCalibrationDate)
+    return nextDate >= now && nextDate <= thirtyDaysFromNow
+  })
+
+  if (upcomingEquipment.length > 0) {
+    const upcomingData = upcomingEquipment.map((cert) => ({
+      Sede: cert.headquarter || '',
+      'Nombre del Equipo': cert.device?.name || '',
+      'Activo Fijo': cert.activoFijo || '',
+      Serie: cert.serie || '',
+      'Última Calibración': cert.calibrationDate
+        ? new Date(cert.calibrationDate).toLocaleDateString('es-ES')
+        : '',
+      'Próxima Calibración': cert.nextCalibrationDate
+        ? new Date(cert.nextCalibrationDate).toLocaleDateString('es-ES')
+        : '',
+      'Días Restantes': cert.nextCalibrationDate
+        ? Math.floor(
+            (new Date(cert.nextCalibrationDate).getTime() - now.getTime()) /
+              (1000 * 60 * 60 * 24)
+          )
+        : ''
+    }))
+
+    const wsUpcoming = XLSX.utils.json_to_sheet(upcomingData)
+    wsUpcoming['!cols'] = [
+      { wch: 20 },
+      { wch: 35 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 18 },
+      { wch: 20 },
+      { wch: 15 }
+    ]
+    XLSX.utils.book_append_sheet(workbook, wsUpcoming, 'Próximos a Vencer')
+  }
+
+  // 4. Hoja de Todos los Equipos
+  if (allEquipment.length > 0) {
+    const allEquipmentData = allEquipment.map((cert) => {
+      const getStatus = () => {
+        if (!cert.nextCalibrationDate) return 'Sin fecha'
+        const nextDate = new Date(cert.nextCalibrationDate)
+        if (nextDate < now) return 'Vencido'
+        if (nextDate <= thirtyDaysFromNow) return 'Próximo a vencer'
+        return 'Activo'
+      }
+
+      return {
+        Sede: cert.headquarter || '',
+        'Nombre del Equipo': cert.device?.name || '',
+        'Activo Fijo': cert.activoFijo || '',
+        Serie: cert.serie || '',
+        'Última Calibración': cert.calibrationDate
+          ? new Date(cert.calibrationDate).toLocaleDateString('es-ES')
+          : '',
+        'Próxima Calibración': cert.nextCalibrationDate
+          ? new Date(cert.nextCalibrationDate).toLocaleDateString('es-ES')
+          : '',
+        Estado: getStatus()
+      }
+    })
+
+    const wsAll = XLSX.utils.json_to_sheet(allEquipmentData)
+    wsAll['!cols'] = [
+      { wch: 20 },
+      { wch: 35 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 18 },
+      { wch: 20 },
+      { wch: 15 }
+    ]
+    wsAll['!autofilter'] = { ref: wsAll['!ref'] || 'A1' }
+    XLSX.utils.book_append_sheet(workbook, wsAll, 'Todos los Equipos')
+  }
+
+  // Configurar propiedades del archivo
+  workbook.Props = {
+    Title: `Reporte General - ${customerData.nombre}`,
+    Subject: 'Reporte completo del cliente',
+    Author: 'Sistema de Gestión MetroMedics',
+    CreatedDate: new Date()
+  }
+
+  // Generar el archivo
+  const fileName = `reporte_completo_${customerData.nombre.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`
+
+  try {
+    XLSX.writeFile(workbook, fileName)
+    bigToast('Reporte completo descargado exitosamente', 'success')
+  } catch (error) {
+    console.error('Error al generar reporte completo:', error)
+    bigToast('Error al generar el reporte completo', 'error')
   }
 }
 
@@ -171,10 +361,19 @@ const ModernCustomerProfile: React.FC = () => {
   // State
   const [activeTab, setActiveTab] = useState<TabValue>(() => {
     const tabParam = searchParams.get('tab')
-    const validTabs: TabValue[] = ['overview', 'equipment', 'headquarters', 'schedule', 'users', 'modules']
-    return validTabs.includes(tabParam as TabValue) ? (tabParam as TabValue) : 'equipment'
+    const validTabs: TabValue[] = [
+      'overview',
+      'equipment',
+      'headquarters',
+      'schedule',
+      'users',
+      'modules'
+    ]
+    return validTabs.includes(tabParam as TabValue)
+      ? (tabParam as TabValue)
+      : 'equipment'
   })
-  
+
   const [searchTerm, setSearchTerm] = useState(searchParams.get('query') || '')
   const [currentPage, setCurrentPage] = useState(1)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -219,16 +418,15 @@ const ModernCustomerProfile: React.FC = () => {
 
   // Calculate statistics
   const stats = React.useMemo(() => {
-    if (!apiResponse?.files) return { total: 0, expired: 0, upcoming: 0, active: 0 }
-    
+    if (!apiResponse?.files)
+      return { total: 0, expired: 0, upcoming: 0, active: 0 }
+
     return {
       total: apiResponse.statistics.total || 0,
       expired: apiResponse.statistics?.expired || 0,
       upcoming: apiResponse.statistics?.expiringSoon || 0,
       active: apiResponse.statistics?.active || 0
     }
-    
-   
   }, [apiResponse])
 
   // Función para obtener todos los datos para descarga
@@ -237,7 +435,9 @@ const ModernCustomerProfile: React.FC = () => {
       if (!id) throw new Error('No customer ID provided')
       const params: Record<string, unknown> = { all: true }
       if (filterType === 'nextOrExpired') params.filter = 'nextOrExpired'
-      const response = await axiosPrivate.get(`/files/customer/${id}`, { params })
+      const response = await axiosPrivate.get(`/files/customer/${id}`, {
+        params
+      })
       return response.data.files || []
     },
     [axiosPrivate, id]
@@ -359,7 +559,9 @@ const ModernCustomerProfile: React.FC = () => {
     setCurrentPage(1)
   }, [])
 
-  const handleDownloadMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleDownloadMenuClick = (
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
     setAnchorEl(event.currentTarget)
   }
 
@@ -385,14 +587,35 @@ const ModernCustomerProfile: React.FC = () => {
     }
   }
 
-  const handleTabChange = useCallback((newTab: TabValue) => {
-    console.log('handleTabChange called:', { currentTab: activeTab, newTab })
-    const newSearchParams = new URLSearchParams(searchParams)
-    newSearchParams.set('tab', newTab)
-    setSearchParams(newSearchParams)
-    setActiveTab(newTab)
-    console.log('Tab changed to:', newTab)
-  }, [searchParams, setSearchParams, activeTab])
+  const handleDownloadOverviewReport = async () => {
+    if (!customerData) {
+      bigToast('No hay datos del cliente disponibles', 'error')
+      return
+    }
+
+    setIsDownloading(true)
+    try {
+      const allData = await fetchAllDataForDownload('all')
+      exportOverviewReport(customerData, allData, stats)
+    } catch (error) {
+      console.error('Error al descargar reporte completo:', error)
+      bigToast('Error al descargar el reporte completo', 'error')
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  const handleTabChange = useCallback(
+    (newTab: TabValue) => {
+      console.log('handleTabChange called:', { currentTab: activeTab, newTab })
+      const newSearchParams = new URLSearchParams(searchParams)
+      newSearchParams.set('tab', newTab)
+      setSearchParams(newSearchParams)
+      setActiveTab(newTab)
+      console.log('Tab changed to:', newTab)
+    },
+    [searchParams, setSearchParams, activeTab]
+  )
 
   // Update search params when search term changes
   useEffect(() => {
@@ -416,7 +639,9 @@ const ModernCustomerProfile: React.FC = () => {
     const checkPermission = async () => {
       try {
         if (
-          $userStore.rol.some((role) => ['admin', 'metrologist'].includes(role)) ||
+          $userStore.rol.some((role) =>
+            ['admin', 'metrologist'].includes(role)
+          ) ||
           id === String($userStore.customer.id)
         ) {
           setHasPermission(true)
@@ -440,8 +665,10 @@ const ModernCustomerProfile: React.FC = () => {
     }
   }, [id, $userStore.rol, $userStore.customer, navigate])
 
-  const isAdmin = $userStore.rol.some((role) => ['admin', 'metrologist'].includes(role))
-  
+  const isAdmin = $userStore.rol.some((role) =>
+    ['admin', 'metrologist'].includes(role)
+  )
+
   // Debug logs
   console.log('ModernCustomerProfile Debug:', {
     activeTab,
@@ -474,10 +701,17 @@ const ModernCustomerProfile: React.FC = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+      <Container maxWidth='lg' sx={{ py: 4 }}>
+        <Box
+          display='flex'
+          justifyContent='center'
+          alignItems='center'
+          minHeight='60vh'
+        >
           <CircularProgress size={60} />
-          <Typography variant="h6" sx={{ ml: 2 }}>Cargando...</Typography>
+          <Typography variant='h6' sx={{ ml: 2 }}>
+            Cargando...
+          </Typography>
         </Box>
       </Container>
     )
@@ -485,8 +719,8 @@ const ModernCustomerProfile: React.FC = () => {
 
   if (!hasPermission) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Alert severity="error">
+      <Container maxWidth='lg' sx={{ py: 4 }}>
+        <Alert severity='error'>
           No tienes permisos suficientes para acceder a esta página.
         </Alert>
       </Container>
@@ -495,8 +729,13 @@ const ModernCustomerProfile: React.FC = () => {
 
   if (loadingCustomer) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+      <Container maxWidth='lg' sx={{ py: 4 }}>
+        <Box
+          display='flex'
+          justifyContent='center'
+          alignItems='center'
+          minHeight='60vh'
+        >
           <CircularProgress size={60} />
         </Box>
       </Container>
@@ -504,12 +743,12 @@ const ModernCustomerProfile: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 2 }}>
+    <Container maxWidth='lg' sx={{ py: 2 }}>
       {/* Header with Back Button */}
       <Box sx={{ mb: 3 }}>
-        <IconButton 
-          onClick={() => navigate('/customers')} 
-          sx={{ 
+        <IconButton
+          onClick={() => navigate('/customers')}
+          sx={{
             mb: 2,
             backgroundColor: 'rgba(16, 185, 129, 0.1)',
             '&:hover': { backgroundColor: 'rgba(16, 185, 129, 0.2)' }
@@ -520,10 +759,10 @@ const ModernCustomerProfile: React.FC = () => {
       </Box>
 
       {/* Customer Profile Header */}
-      <Card 
+      <Card
         elevation={0}
-        sx={{ 
-          mb: 4, 
+        sx={{
+          mb: 4,
           background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
           color: 'white',
           borderRadius: '20px',
@@ -558,15 +797,20 @@ const ModernCustomerProfile: React.FC = () => {
         />
 
         <CardContent sx={{ p: 4, position: 'relative', zIndex: 1 }}>
-          <Grid container spacing={3} alignItems="center">
+          <Grid container spacing={3} alignItems='center'>
             <Grid item xs={12} md={4}>
-              <Box display="flex" flexDirection="column" alignItems="center" textAlign="center">
+              <Box
+                display='flex'
+                flexDirection='column'
+                alignItems='center'
+                textAlign='center'
+              >
                 <Box sx={{ position: 'relative', mb: 2 }}>
-                  <label htmlFor="imageInput" style={{ cursor: 'pointer' }}>
+                  <label htmlFor='imageInput' style={{ cursor: 'pointer' }}>
                     <Avatar
                       src={image}
-                      sx={{ 
-                        width: 120, 
+                      sx={{
+                        width: 120,
                         height: 120,
                         border: '4px solid rgba(255,255,255,0.3)',
                         boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
@@ -580,14 +824,14 @@ const ModernCustomerProfile: React.FC = () => {
                     </Avatar>
                   </label>
                   <input
-                    type="file"
-                    id="imageInput"
-                    accept="image/*"
+                    type='file'
+                    id='imageInput'
+                    accept='image/*'
                     style={{ display: 'none' }}
                     onChange={handleImageChange}
                   />
                   {isAdmin && (
-                    <Tooltip title="Cambiar imagen">
+                    <Tooltip title='Cambiar imagen'>
                       <IconButton
                         sx={{
                           position: 'absolute',
@@ -596,70 +840,70 @@ const ModernCustomerProfile: React.FC = () => {
                           backgroundColor: 'rgba(255,255,255,0.9)',
                           '&:hover': { backgroundColor: 'white' }
                         }}
-                        size="small"
+                        size='small'
                       >
-                        <Edit fontSize="small" />
+                        <Edit fontSize='small' />
                       </IconButton>
                     </Tooltip>
                   )}
                 </Box>
-                <Typography variant="h4" fontWeight="bold" gutterBottom>
+                <Typography variant='h4' fontWeight='bold' gutterBottom>
                   {customerData?.nombre}
                 </Typography>
-                <Chip 
-                  label="Cliente Activo" 
-                  sx={{ 
+                <Chip
+                  label='Cliente Activo'
+                  sx={{
                     backgroundColor: 'rgba(255,255,255,0.2)',
                     color: 'white',
                     fontWeight: 600
-                  }} 
+                  }}
                 />
               </Box>
             </Grid>
-            
+
             <Grid item xs={12} md={8}>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
-                  <Box display="flex" alignItems="center" mb={2}>
+                  <Box display='flex' alignItems='center' mb={2}>
                     <Email sx={{ mr: 2, opacity: 0.8 }} />
                     <Box>
-                      <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                      <Typography variant='body2' sx={{ opacity: 0.8 }}>
                         Email
                       </Typography>
-                      <Typography variant="body1" fontWeight="500">
+                      <Typography variant='body1' fontWeight='500'>
                         {customerData?.email}
                       </Typography>
                     </Box>
                   </Box>
                 </Grid>
-                
+
                 <Grid item xs={12} sm={6}>
-                  <Box display="flex" alignItems="center" mb={2}>
+                  <Box display='flex' alignItems='center' mb={2}>
                     <Phone sx={{ mr: 2, opacity: 0.8 }} />
                     <Box>
-                      <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                      <Typography variant='body2' sx={{ opacity: 0.8 }}>
                         Teléfono
                       </Typography>
-                      <Typography variant="body1" fontWeight="500">
+                      <Typography variant='body1' fontWeight='500'>
                         {customerData?.telefono}
                       </Typography>
                     </Box>
                   </Box>
                 </Grid>
-                
+
                 <Grid item xs={12}>
-                  <Box display="flex" alignItems="flex-start">
+                  <Box display='flex' alignItems='flex-start'>
                     <LocationOn sx={{ mr: 2, mt: 0.5, opacity: 0.8 }} />
                     <Box>
-                      <Typography variant="body2" sx={{ opacity: 0.8, mb: 1 }}>
+                      <Typography variant='body2' sx={{ opacity: 0.8, mb: 1 }}>
                         Sedes ({customerData?.sede?.length || 0})
                       </Typography>
-                      <Box display="flex" flexWrap="wrap" gap={1}>
+                      <Box display='flex' flexWrap='wrap' gap={1}>
                         {customerData?.sede?.slice(0, 3).map((sede, index) => (
                           <Chip
                             key={index}
                             label={sede}
-                            size="small"
+                            size='small'
                             sx={{
                               backgroundColor: 'rgba(255,255,255,0.2)',
                               color: 'white',
@@ -670,7 +914,7 @@ const ModernCustomerProfile: React.FC = () => {
                         {(customerData?.sede?.length || 0) > 3 && (
                           <Chip
                             label={`+${(customerData?.sede?.length || 0) - 3} más`}
-                            size="small"
+                            size='small'
                             sx={{
                               backgroundColor: 'rgba(255,255,255,0.2)',
                               color: 'white',
@@ -691,7 +935,10 @@ const ModernCustomerProfile: React.FC = () => {
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={6} md={3}>
-          <Card elevation={0} sx={{ borderRadius: '16px', border: '1px solid #e5e7eb' }}>
+          <Card
+            elevation={0}
+            sx={{ borderRadius: '16px', border: '1px solid #e5e7eb' }}
+          >
             <CardContent sx={{ textAlign: 'center', py: 3 }}>
               <Box
                 sx={{
@@ -708,15 +955,31 @@ const ModernCustomerProfile: React.FC = () => {
               >
                 <Devices sx={{ color: '#1976d2', fontSize: 24 }} />
               </Box>
-              <Typography variant="h4" fontWeight="bold" color="primary">
+              <Typography variant='h4' fontWeight='bold' color='primary'>
                 {stats.total}
               </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-                <Typography variant="body2" color="text.secondary">
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 0.5
+                }}
+              >
+                <Typography variant='body2' color='text.secondary'>
                   Total Equipos
                 </Typography>
-                <Tooltip title="Número total de equipos registrados para este cliente" arrow>
-                  <HelpOutline sx={{ fontSize: 16, color: 'text.secondary', cursor: 'help' }} />
+                <Tooltip
+                  title='Número total de equipos registrados para este cliente'
+                  arrow
+                >
+                  <HelpOutline
+                    sx={{
+                      fontSize: 16,
+                      color: 'text.secondary',
+                      cursor: 'help'
+                    }}
+                  />
                 </Tooltip>
               </Box>
             </CardContent>
@@ -724,7 +987,10 @@ const ModernCustomerProfile: React.FC = () => {
         </Grid>
 
         <Grid item xs={6} md={3}>
-          <Card elevation={0} sx={{ borderRadius: '16px', border: '1px solid #e5e7eb' }}>
+          <Card
+            elevation={0}
+            sx={{ borderRadius: '16px', border: '1px solid #e5e7eb' }}
+          >
             <CardContent sx={{ textAlign: 'center', py: 3 }}>
               <Box
                 sx={{
@@ -741,15 +1007,31 @@ const ModernCustomerProfile: React.FC = () => {
               >
                 <Warning sx={{ color: '#d32f2f', fontSize: 24 }} />
               </Box>
-              <Typography variant="h4" fontWeight="bold" color="error">
+              <Typography variant='h4' fontWeight='bold' color='error'>
                 {stats.expired}
               </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-                <Typography variant="body2" color="text.secondary">
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 0.5
+                }}
+              >
+                <Typography variant='body2' color='text.secondary'>
                   Vencidos
                 </Typography>
-                <Tooltip title="Calibraciones que ya han vencido y requieren atención inmediata" arrow>
-                  <HelpOutline sx={{ fontSize: 16, color: 'text.secondary', cursor: 'help' }} />
+                <Tooltip
+                  title='Calibraciones que ya han vencido y requieren atención inmediata'
+                  arrow
+                >
+                  <HelpOutline
+                    sx={{
+                      fontSize: 16,
+                      color: 'text.secondary',
+                      cursor: 'help'
+                    }}
+                  />
                 </Tooltip>
               </Box>
             </CardContent>
@@ -757,7 +1039,10 @@ const ModernCustomerProfile: React.FC = () => {
         </Grid>
 
         <Grid item xs={6} md={3}>
-          <Card elevation={0} sx={{ borderRadius: '16px', border: '1px solid #e5e7eb' }}>
+          <Card
+            elevation={0}
+            sx={{ borderRadius: '16px', border: '1px solid #e5e7eb' }}
+          >
             <CardContent sx={{ textAlign: 'center', py: 3 }}>
               <Box
                 sx={{
@@ -774,15 +1059,31 @@ const ModernCustomerProfile: React.FC = () => {
               >
                 <Schedule sx={{ color: '#f57c00', fontSize: 24 }} />
               </Box>
-              <Typography variant="h4" fontWeight="bold" color="warning.main">
+              <Typography variant='h4' fontWeight='bold' color='warning.main'>
                 {stats.upcoming}
               </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-                <Typography variant="body2" color="text.secondary">
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 0.5
+                }}
+              >
+                <Typography variant='body2' color='text.secondary'>
                   Próximos
                 </Typography>
-                <Tooltip title="Calibraciones próximas a vencer (dentro de 30 días) que requieren programación" arrow>
-                  <HelpOutline sx={{ fontSize: 16, color: 'text.secondary', cursor: 'help' }} />
+                <Tooltip
+                  title='Calibraciones próximas a vencer (dentro de 30 días) que requieren programación'
+                  arrow
+                >
+                  <HelpOutline
+                    sx={{
+                      fontSize: 16,
+                      color: 'text.secondary',
+                      cursor: 'help'
+                    }}
+                  />
                 </Tooltip>
               </Box>
             </CardContent>
@@ -790,7 +1091,10 @@ const ModernCustomerProfile: React.FC = () => {
         </Grid>
 
         <Grid item xs={6} md={3}>
-          <Card elevation={0} sx={{ borderRadius: '16px', border: '1px solid #e5e7eb' }}>
+          <Card
+            elevation={0}
+            sx={{ borderRadius: '16px', border: '1px solid #e5e7eb' }}
+          >
             <CardContent sx={{ textAlign: 'center', py: 3 }}>
               <Box
                 sx={{
@@ -807,15 +1111,31 @@ const ModernCustomerProfile: React.FC = () => {
               >
                 <CheckCircle sx={{ color: '#2e7d32', fontSize: 24 }} />
               </Box>
-              <Typography variant="h4" fontWeight="bold" color="success.main">
+              <Typography variant='h4' fontWeight='bold' color='success.main'>
                 {stats.active}
               </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-                <Typography variant="body2" color="text.secondary">
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 0.5
+                }}
+              >
+                <Typography variant='body2' color='text.secondary'>
                   Activos
                 </Typography>
-                <Tooltip title="Calibraciones vigentes con más de 30 días restantes hasta su vencimiento" arrow>
-                  <HelpOutline sx={{ fontSize: 16, color: 'text.secondary', cursor: 'help' }} />
+                <Tooltip
+                  title='Calibraciones vigentes con más de 30 días restantes hasta su vencimiento'
+                  arrow
+                >
+                  <HelpOutline
+                    sx={{
+                      fontSize: 16,
+                      color: 'text.secondary',
+                      cursor: 'help'
+                    }}
+                  />
                 </Tooltip>
               </Box>
             </CardContent>
@@ -824,15 +1144,22 @@ const ModernCustomerProfile: React.FC = () => {
       </Grid>
 
       {/* Navigation Tabs */}
-      <Card elevation={0} sx={{ borderRadius: '16px', border: '1px solid #e5e7eb', mb: 3 }}>
+      <Card
+        elevation={0}
+        sx={{ borderRadius: '16px', border: '1px solid #e5e7eb', mb: 3 }}
+      >
         <Tabs
           value={activeTab}
           onChange={(event, newValue) => {
-            console.log('Tabs onChange triggered:', { event, newValue, currentActiveTab: activeTab })
+            console.log('Tabs onChange triggered:', {
+              event,
+              newValue,
+              currentActiveTab: activeTab
+            })
             handleTabChange(newValue)
           }}
-          variant={isMobile ? "scrollable" : "fullWidth"}
-          scrollButtons="auto"
+          variant={isMobile ? 'scrollable' : 'fullWidth'}
+          scrollButtons='auto'
           sx={{
             '& .MuiTab-root': {
               textTransform: 'none',
@@ -851,35 +1178,46 @@ const ModernCustomerProfile: React.FC = () => {
           }}
         >
           <Tab
-            value="overview"
-            label="Resumen"
+            value='overview'
+            label='Resumen'
             icon={<TrendingUp />}
-            iconPosition="start"
+            iconPosition='start'
           />
           <Tab
-            value="equipment"
-            label="Equipos"
-            icon={<Badge badgeContent={stats.total} color="primary"><Devices /></Badge>}
-            iconPosition="start"
+            value='equipment'
+            label='Equipos'
+            icon={
+              <Badge badgeContent={stats.total} color='primary'>
+                <Devices />
+              </Badge>
+            }
+            iconPosition='start'
           />
           <Tab
-            value="headquarters"
-            label="Sedes"
-            icon={<Badge badgeContent={customerData?.sede?.length || 0} color="primary"><Business /></Badge>}
-            iconPosition="start"
+            value='headquarters'
+            label='Sedes'
+            icon={
+              <Badge
+                badgeContent={customerData?.sede?.length || 0}
+                color='primary'
+              >
+                <Business />
+              </Badge>
+            }
+            iconPosition='start'
           />
           <Tab
-            value="schedule"
-            label="Programación"
+            value='schedule'
+            label='Programación'
             icon={<CalendarToday />}
-            iconPosition="start"
+            iconPosition='start'
           />
           {isAdmin && (
             <Tab
-              value="users"
-              label="Usuarios"
+              value='users'
+              label='Usuarios'
               icon={<People />}
-              iconPosition="start"
+              iconPosition='start'
               onClick={() => {
                 console.log('Users tab clicked directly')
                 handleTabChange('users')
@@ -888,10 +1226,10 @@ const ModernCustomerProfile: React.FC = () => {
           )}
           {isAdmin && (
             <Tab
-              value="modules"
-              label="Módulos"
+              value='modules'
+              label='Módulos'
               icon={<Settings />}
-              iconPosition="start"
+              iconPosition='start'
               onClick={() => {
                 console.log('Modules tab clicked directly')
                 handleTabChange('modules')
@@ -902,23 +1240,30 @@ const ModernCustomerProfile: React.FC = () => {
       </Card>
 
       {/* Tab Content */}
-      <Card elevation={0} sx={{ borderRadius: '16px', border: '1px solid #e5e7eb', minHeight: '400px' }}>
+      <Card
+        elevation={0}
+        sx={{
+          borderRadius: '16px',
+          border: '1px solid #e5e7eb',
+          minHeight: '400px'
+        }}
+      >
         <CardContent sx={{ p: 4 }}>
           {activeTab === 'overview' && (
             <Box>
-              <Typography variant="h5" fontWeight="bold" gutterBottom>
+              <Typography variant='h5' fontWeight='bold' gutterBottom>
                 Resumen del Cliente
               </Typography>
-              <Typography variant="body1" color="text.secondary" paragraph>
+              <Typography variant='body1' color='text.secondary' paragraph>
                 Vista general de la información y estadísticas del cliente.
               </Typography>
-              
+
               {/* Quick Actions */}
               <Grid container spacing={2} sx={{ mt: 2 }}>
                 <Grid item xs={12} sm={6} md={4}>
                   <Button
                     fullWidth
-                    variant="outlined"
+                    variant='outlined'
                     startIcon={<Devices />}
                     onClick={() => handleTabChange('equipment')}
                     sx={{
@@ -934,7 +1279,7 @@ const ModernCustomerProfile: React.FC = () => {
                 <Grid item xs={12} sm={6} md={4}>
                   <Button
                     fullWidth
-                    variant="outlined"
+                    variant='outlined'
                     startIcon={<CalendarToday />}
                     onClick={() => handleTabChange('schedule')}
                     sx={{
@@ -950,17 +1295,32 @@ const ModernCustomerProfile: React.FC = () => {
                 <Grid item xs={12} sm={6} md={4}>
                   <Button
                     fullWidth
-                    variant="contained"
-                    startIcon={<Download />}
+                    variant='contained'
+                    startIcon={
+                      isDownloading ? (
+                        <CircularProgress size={16} />
+                      ) : (
+                        <Download />
+                      )
+                    }
+                    onClick={handleDownloadOverviewReport}
+                    disabled={isDownloading}
                     sx={{
                       py: 2,
                       borderRadius: '12px',
                       textTransform: 'none',
                       fontWeight: 600,
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                      background:
+                        'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      '&:hover': {
+                        background:
+                          'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                      }
                     }}
                   >
-                    Descargar Reporte
+                    {isDownloading
+                      ? 'Generando Reporte...'
+                      : 'Descargar Reporte'}
                   </Button>
                 </Grid>
               </Grid>
@@ -969,30 +1329,41 @@ const ModernCustomerProfile: React.FC = () => {
 
           {activeTab === 'equipment' && (
             <Box>
-              <Typography variant="h5" fontWeight="bold" gutterBottom>
+              <Typography variant='h5' fontWeight='bold' gutterBottom>
                 Gestión de Equipos
               </Typography>
-              
+
               {/* Advanced Search and Filters */}
-              <Card elevation={0} sx={{ mb: 3, border: '1px solid #e5e7eb', borderRadius: '16px' }}>
+              <Card
+                elevation={0}
+                sx={{
+                  mb: 3,
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '16px'
+                }}
+              >
                 <CardContent sx={{ p: 3 }}>
-                  <Grid container spacing={3} alignItems="center">
+                  <Grid container spacing={3} alignItems='center'>
                     <Grid item xs={12} md={6}>
                       <TextField
                         fullWidth
-                        variant="outlined"
-                        placeholder="Buscar por nombre, serie, activo fijo..."
+                        variant='outlined'
+                        placeholder='Buscar por nombre, serie, activo fijo...'
                         value={searchTerm}
                         onChange={(e) => handleSearchChange(e.target.value)}
                         InputProps={{
                           startAdornment: (
-                            <InputAdornment position="start">
+                            <InputAdornment position='start'>
                               <Search sx={{ color: '#10b981' }} />
                             </InputAdornment>
                           ),
                           endAdornment: searchTerm && (
-                            <InputAdornment position="end">
-                              <IconButton onClick={clearSearch} edge="end" size="small">
+                            <InputAdornment position='end'>
+                              <IconButton
+                                onClick={clearSearch}
+                                edge='end'
+                                size='small'
+                              >
                                 <Clear />
                               </IconButton>
                             </InputAdornment>
@@ -1011,12 +1382,18 @@ const ModernCustomerProfile: React.FC = () => {
                         }}
                       />
                     </Grid>
-                    
+
                     <Grid item xs={12} md={3}>
                       <Button
                         fullWidth
-                        variant="contained"
-                        startIcon={isDownloading ? <CircularProgress size={16} /> : <Download />}
+                        variant='contained'
+                        startIcon={
+                          isDownloading ? (
+                            <CircularProgress size={16} />
+                          ) : (
+                            <Download />
+                          )
+                        }
                         onClick={handleDownloadMenuClick}
                         disabled={isDownloading}
                         sx={{
@@ -1024,9 +1401,11 @@ const ModernCustomerProfile: React.FC = () => {
                           textTransform: 'none',
                           fontWeight: 600,
                           py: 1.5,
-                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                          background:
+                            'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                           '&:hover': {
-                            background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                            background:
+                              'linear-gradient(135deg, #059669 0%, #047857 100%)'
                           }
                         }}
                       >
@@ -1036,28 +1415,32 @@ const ModernCustomerProfile: React.FC = () => {
                         anchorEl={anchorEl}
                         open={Boolean(anchorEl)}
                         onClose={handleMenuClose}
-                        PaperProps={{
-                          sx: { borderRadius: '12px', mt: 1 }
+                        slotProps={{
+                          paper: {
+                            sx: { borderRadius: '12px', mt: 1 }
+                          }
                         }}
                       >
                         <MenuItem onClick={() => handleDownloadOption('all')}>
                           📊 Todos los equipos
                         </MenuItem>
-                        <MenuItem onClick={() => handleDownloadOption('nextOrExpired')}>
+                        <MenuItem
+                          onClick={() => handleDownloadOption('nextOrExpired')}
+                        >
                           ⚠️ Próximos a vencer / Vencidos
                         </MenuItem>
                       </Menu>
                     </Grid>
-                    
+
                     <Grid item xs={12} md={3}>
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <Typography variant="body2" color="text.secondary">
+                      <Box display='flex' alignItems='center' gap={1}>
+                        <Typography variant='body2' color='text.secondary'>
                           Total:
                         </Typography>
-                        <Chip 
+                        <Chip
                           label={`${apiResponse?.totalFiles || 0} equipos`}
-                          size="small"
-                          sx={{ 
+                          size='small'
+                          sx={{
                             backgroundColor: '#f0f9ff',
                             color: '#0369a1',
                             fontWeight: 600
@@ -1066,31 +1449,50 @@ const ModernCustomerProfile: React.FC = () => {
                       </Box>
                     </Grid>
                   </Grid>
-                  
+
                   {/* Search Results Info */}
-                  {apiResponse && searchTerm && apiResponse?.totalFiles > 0 && matchedFields.length > 0 && (
-                    <Box mt={2} p={2} sx={{ backgroundColor: '#f0f9ff', borderRadius: '8px' }}>
-                      <Typography variant="body2" color="#0369a1">
-                        🔍 Resultados para "<strong>{searchTerm}</strong>" encontrados en: {matchedFields.join(', ')}
-                      </Typography>
-                    </Box>
-                  )}
+                  {apiResponse &&
+                    searchTerm &&
+                    apiResponse?.totalFiles > 0 &&
+                    matchedFields.length > 0 && (
+                      <Box
+                        mt={2}
+                        p={2}
+                        sx={{ backgroundColor: '#f0f9ff', borderRadius: '8px' }}
+                      >
+                        <Typography variant='body2' color='#0369a1'>
+                          🔍 Resultados para "<strong>{searchTerm}</strong>"
+                          encontrados en: {matchedFields.join(', ')}
+                        </Typography>
+                      </Box>
+                    )}
                 </CardContent>
               </Card>
 
               {/* Equipment Grid */}
               {!apiResponse ? (
-                <Box display="flex" flexDirection="column" alignItems="center" py={8}>
-                  <CircularProgress size={60} sx={{ color: '#10b981', mb: 2 }} />
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                <Box
+                  display='flex'
+                  flexDirection='column'
+                  alignItems='center'
+                  py={8}
+                >
+                  <CircularProgress
+                    size={60}
+                    sx={{ color: '#10b981', mb: 2 }}
+                  />
+                  <Typography variant='h6' color='text.secondary' gutterBottom>
                     Cargando equipos...
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant='body2' color='text.secondary'>
                     Obteniendo información de los equipos del cliente
                   </Typography>
                 </Box>
               ) : certificatesData.length === 0 ? (
-                <Card elevation={0} sx={{ border: '2px dashed #d1d5db', borderRadius: '16px' }}>
+                <Card
+                  elevation={0}
+                  sx={{ border: '2px dashed #d1d5db', borderRadius: '16px' }}
+                >
                   <CardContent sx={{ textAlign: 'center', py: 8 }}>
                     <Box
                       sx={{
@@ -1107,18 +1509,27 @@ const ModernCustomerProfile: React.FC = () => {
                     >
                       <Devices sx={{ fontSize: 40, color: '#9ca3af' }} />
                     </Box>
-                    <Typography variant="h6" color="text.secondary" gutterBottom>
-                      {searchTerm ? 'No se encontraron equipos' : 'No hay equipos registrados'}
+                    <Typography
+                      variant='h6'
+                      color='text.secondary'
+                      gutterBottom
+                    >
+                      {searchTerm
+                        ? 'No se encontraron equipos'
+                        : 'No hay equipos registrados'}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" paragraph>
-                      {searchTerm 
+                    <Typography
+                      variant='body2'
+                      color='text.secondary'
+                      paragraph
+                    >
+                      {searchTerm
                         ? 'Intenta con otros términos de búsqueda o verifica los filtros aplicados'
-                        : 'Este cliente aún no tiene equipos registrados en el sistema'
-                      }
+                        : 'Este cliente aún no tiene equipos registrados en el sistema'}
                     </Typography>
                     {searchTerm && (
                       <Button
-                        variant="outlined"
+                        variant='outlined'
                         onClick={clearSearch}
                         sx={{ borderRadius: '8px', textTransform: 'none' }}
                       >
@@ -1133,7 +1544,7 @@ const ModernCustomerProfile: React.FC = () => {
                   <Grid container spacing={3}>
                     {certificatesData.map((certificate: Certificate) => (
                       <Grid item xs={12} sm={6} lg={4} key={certificate.id}>
-                        <EquipmentCard 
+                        <EquipmentCard
                           certificate={certificate}
                           onDelete={handleDelete}
                           sedes={customerData?.sede || []}
@@ -1142,16 +1553,31 @@ const ModernCustomerProfile: React.FC = () => {
                       </Grid>
                     ))}
                   </Grid>
-                  
+
                   {/* Modern Pagination */}
-                  <Box display="flex" justifyContent="center" alignItems="center" mt={6}>
-                    <Card elevation={0} sx={{ border: '1px solid #e5e7eb', borderRadius: '12px' }}>
-                      <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2 }}>
+                  <Box
+                    display='flex'
+                    justifyContent='center'
+                    alignItems='center'
+                    mt={6}
+                  >
+                    <Card
+                      elevation={0}
+                      sx={{ border: '1px solid #e5e7eb', borderRadius: '12px' }}
+                    >
+                      <CardContent
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 2,
+                          py: 2
+                        }}
+                      >
                         <Button
-                          variant="outlined"
+                          variant='outlined'
                           onClick={() => handlePageChange('prev')}
                           disabled={currentPage === 1}
-                          sx={{ 
+                          sx={{
                             borderRadius: '8px',
                             minWidth: '100px',
                             '&:disabled': { opacity: 0.5 }
@@ -1159,31 +1585,33 @@ const ModernCustomerProfile: React.FC = () => {
                         >
                           ← Anterior
                         </Button>
-                        
-                        <Box display="flex" alignItems="center" gap={1} px={2}>
-                          <Typography variant="body2" color="text.secondary">
+
+                        <Box display='flex' alignItems='center' gap={1} px={2}>
+                          <Typography variant='body2' color='text.secondary'>
                             Página
                           </Typography>
-                          <Chip 
+                          <Chip
                             label={currentPage}
-                            size="small"
-                            sx={{ 
+                            size='small'
+                            sx={{
                               backgroundColor: '#10b981',
                               color: 'white',
                               fontWeight: 600,
                               minWidth: '32px'
                             }}
                           />
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography variant='body2' color='text.secondary'>
                             de {apiResponse?.totalPages || 1}
                           </Typography>
                         </Box>
-                        
+
                         <Button
-                          variant="outlined"
+                          variant='outlined'
                           onClick={() => handlePageChange('next')}
-                          disabled={currentPage === (apiResponse?.totalPages || 1)}
-                          sx={{ 
+                          disabled={
+                            currentPage === (apiResponse?.totalPages || 1)
+                          }
+                          sx={{
                             borderRadius: '8px',
                             minWidth: '100px',
                             '&:disabled': { opacity: 0.5 }
@@ -1201,13 +1629,13 @@ const ModernCustomerProfile: React.FC = () => {
 
           {activeTab === 'headquarters' && (
             <Box>
-              <Typography variant="h5" fontWeight="bold" gutterBottom>
+              <Typography variant='h5' fontWeight='bold' gutterBottom>
                 Sedes del Cliente
               </Typography>
-              <Typography variant="body1" color="text.secondary" paragraph>
+              <Typography variant='body1' color='text.secondary' paragraph>
                 Gestiona las diferentes sedes y ubicaciones del cliente.
               </Typography>
-              
+
               <Headquarters
                 setSelectedSede={setSelectedSede}
                 selectedSede={selectedSede}
@@ -1221,38 +1649,43 @@ const ModernCustomerProfile: React.FC = () => {
 
           {activeTab === 'schedule' && (
             <Box>
-              <Typography variant="h5" fontWeight="bold" gutterBottom>
+              <Typography variant='h5' fontWeight='bold' gutterBottom>
                 Programación de Calibraciones
               </Typography>
-              <Typography variant="body1" color="text.secondary" paragraph>
+              <Typography variant='body1' color='text.secondary' paragraph>
                 Visualiza y gestiona el cronograma de calibraciones.
               </Typography>
-              
+
               {id && <CalibrationTimeline customerId={id} />}
             </Box>
           )}
 
           {activeTab === 'users' && (
             <Box>
-              <Typography variant="h5" fontWeight="bold" gutterBottom>
+              <Typography variant='h5' fontWeight='bold' gutterBottom>
                 Usuarios del Cliente
               </Typography>
-              <Typography variant="body1" color="text.secondary" paragraph>
+              <Typography variant='body1' color='text.secondary' paragraph>
                 Administra los usuarios asociados a este cliente.
               </Typography>
-              
+
               {!isAdmin ? (
-                <Alert severity="warning" sx={{ mt: 3 }}>
-                  No tienes permisos para ver esta sección. Solo administradores y metrólogos pueden acceder.
+                <Alert severity='warning' sx={{ mt: 3 }}>
+                  No tienes permisos para ver esta sección. Solo administradores
+                  y metrólogos pueden acceder.
                 </Alert>
               ) : (
                 <Box sx={{ mt: 3 }}>
-                  <React.Suspense fallback={
-                    <Box display="flex" justifyContent="center" py={4}>
-                      <CircularProgress />
-                      <Typography sx={{ ml: 2 }}>Cargando usuarios...</Typography>
-                    </Box>
-                  }>
+                  <React.Suspense
+                    fallback={
+                      <Box display='flex' justifyContent='center' py={4}>
+                        <CircularProgress />
+                        <Typography sx={{ ml: 2 }}>
+                          Cargando usuarios...
+                        </Typography>
+                      </Box>
+                    }
+                  >
                     <TableUsersCustomer />
                   </React.Suspense>
                 </Box>
@@ -1262,29 +1695,34 @@ const ModernCustomerProfile: React.FC = () => {
 
           {activeTab === 'modules' && (
             <Box>
-              <Typography variant="h5" fontWeight="bold" gutterBottom>
+              <Typography variant='h5' fontWeight='bold' gutterBottom>
                 Módulos del Cliente
               </Typography>
-              <Typography variant="body1" color="text.secondary" paragraph>
+              <Typography variant='body1' color='text.secondary' paragraph>
                 Configura los módulos y funcionalidades disponibles.
               </Typography>
-              
+
               {!isAdmin ? (
-                <Alert severity="warning" sx={{ mt: 3 }}>
-                  No tienes permisos para ver esta sección. Solo administradores y metrólogos pueden acceder.
+                <Alert severity='warning' sx={{ mt: 3 }}>
+                  No tienes permisos para ver esta sección. Solo administradores
+                  y metrólogos pueden acceder.
                 </Alert>
               ) : !id ? (
-                <Alert severity="error" sx={{ mt: 3 }}>
+                <Alert severity='error' sx={{ mt: 3 }}>
                   Error: ID de cliente no disponible
                 </Alert>
               ) : (
                 <Box sx={{ mt: 3 }}>
-                  <React.Suspense fallback={
-                    <Box display="flex" justifyContent="center" py={4}>
-                      <CircularProgress />
-                      <Typography sx={{ ml: 2 }}>Cargando módulos...</Typography>
-                    </Box>
-                  }>
+                  <React.Suspense
+                    fallback={
+                      <Box display='flex' justifyContent='center' py={4}>
+                        <CircularProgress />
+                        <Typography sx={{ ml: 2 }}>
+                          Cargando módulos...
+                        </Typography>
+                      </Box>
+                    }
+                  >
                     <Modules customerId={id} />
                   </React.Suspense>
                 </Box>
