@@ -131,6 +131,7 @@ export const TableView = ({
       manualPagination={false}
       manualFiltering={false}
       manualSorting={false}
+      autoResetPageIndex={false}
       muiTablePaperProps={{
         elevation: 0,
         sx: {
