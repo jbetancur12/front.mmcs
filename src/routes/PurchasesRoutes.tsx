@@ -1,9 +1,11 @@
-import { lazy } from 'react'
+import { lazy, Suspense } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
-import PDFViewer from 'src/Components/DataSheet/PDFViewer'
 import PersonnelManagementPage from 'src/pages/Admin/PersonnelManagementPage'
+import CircularProgress from '@mui/material/CircularProgress'
+import Box from '@mui/material/Box'
 
+const PDFViewer = lazy(() => import('src/Components/DataSheet/PDFViewer'))
 const SuppliersTable = lazy(() => import('src/pages/Suppliers/SuppliersTable'))
 const SupplierDetailsPage = lazy(
   () => import('src/pages/Suppliers/SupplierDetailsPage')
@@ -32,6 +34,26 @@ const PurchaseStatistics = lazy(
   () => import('src/pages/Purchases/PurchaseStatistics')
 )
 
+// Helper component for PDFViewer with Suspense
+const PDFViewerWithSuspense = ({ path }: { path: string }) => (
+  <Suspense
+    fallback={
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '80vh'
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    }
+  >
+    <PDFViewer path={path} />
+  </Suspense>
+)
+
 const SupplierRoutes = (role: string[]) => {
   return (
     <>
@@ -55,7 +77,7 @@ const SupplierRoutes = (role: string[]) => {
 
           <Route
             path='supplier-selection/:id'
-            element={<PDFViewer path='fog-mmcs-10' />}
+            element={<PDFViewerWithSuspense path='fog-mmcs-10' />}
           />
           <Route path='suppliers' element={<SuppliersTable />} />
           <Route
@@ -72,19 +94,22 @@ const SupplierRoutes = (role: string[]) => {
           />
           <Route
             path='suppliers/report'
-            element={<PDFViewer path='fog-mmcs-11' />}
+            element={<PDFViewerWithSuspense path='fog-mmcs-11' />}
           />
           <Route path='requests' element={<PurchaseRequest />} />
           <Route
             path='requests/:id'
-            element={<PDFViewer path='fog-mmcs-12' />}
+            element={<PDFViewerWithSuspense path='fog-mmcs-12' />}
           />
           <Route path='orders' element={<PurchaseOrders />} />
-          <Route path='orders/:id' element={<PDFViewer path='fog-mmcs-13' />} />
+          <Route
+            path='orders/:id'
+            element={<PDFViewerWithSuspense path='fog-mmcs-13' />}
+          />
           <Route path='verifications' element={<PurchaseVerifications />} />
           <Route
             path='verifications/:id'
-            element={<PDFViewer path='fog-mmcs-14' />}
+            element={<PDFViewerWithSuspense path='fog-mmcs-14' />}
           />
           <Route path='statistics' element={<PurchaseStatistics />} />
         </Route>
