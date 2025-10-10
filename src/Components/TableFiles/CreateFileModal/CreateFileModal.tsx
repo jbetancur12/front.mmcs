@@ -21,8 +21,7 @@ import {
   Fade,
   IconButton,
   LinearProgress,
-  Divider,
-  Chip
+  Divider
 } from '@mui/material'
 import { DatePicker } from '@mui/x-date-pickers'
 import {
@@ -33,7 +32,6 @@ import {
   CheckCircle,
   Business,
   LocationOn,
-  Category,
   Devices,
   Upload
 } from '@mui/icons-material'

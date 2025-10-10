@@ -1,17 +1,28 @@
-import { MaterialReactTable, MRT_PaginationState, MRT_ColumnFiltersState, MRT_SortingState } from 'material-react-table'
+import {
+  MaterialReactTable,
+  MRT_PaginationState,
+  MRT_ColumnFiltersState,
+  MRT_SortingState
+} from 'material-react-table'
 import { FileData } from '../types/fileTypes'
 import { createTableColumns } from './tableColumns'
 import { useMemo, useState, useEffect } from 'react'
 import { useValidation } from '../hooks/useValidation'
 import { Link } from 'react-router-dom'
-import { Box, Button, IconButton, Tooltip, Typography, Chip } from '@mui/material'
-import { Delete, FileDownload, Visibility, Add, FilterAltOff } from '@mui/icons-material'
+import { Box, Button, IconButton, Tooltip, Chip } from '@mui/material'
+import {
+  Delete,
+  FileDownload,
+  Visibility,
+  Add,
+  FilterAltOff
+} from '@mui/icons-material'
 import { userStore } from '@stores/userStore'
 import { useStore } from '@nanostores/react'
 import { useFileActions } from '../hooks/useFileActions'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { handleDownload } from '../utils/fileHandlers'
-import PDFViewer from 'src/Components/PDFViewer'
+// import PDFViewer from 'src/Components/PDFViewer'
 
 // Key for sessionStorage
 const TABLE_STATE_KEY = 'calibration-table-state'
@@ -93,7 +104,8 @@ export const TableView = ({
   }
 
   // Check if any filters are active
-  const hasActiveFilters = columnFilters.length > 0 || globalFilter !== '' || sorting.length > 0
+  const hasActiveFilters =
+    columnFilters.length > 0 || globalFilter !== '' || sorting.length > 0
 
   const columns = useMemo(
     () => createTableColumns(getCommonEditTextFieldProps),
@@ -127,7 +139,7 @@ export const TableView = ({
       }}
       enableRowVirtualization
       enableColumnResizing
-      columnResizeMode="onChange"
+      columnResizeMode='onChange'
       manualPagination={false}
       manualFiltering={false}
       manualSorting={false}
@@ -226,11 +238,8 @@ export const TableView = ({
           borderTop: '1px solid #e5e7eb'
         }
       }}
-      muiPaginationProps={{
+      muiTablePaginationProps={{
         color: 'primary',
-        shape: 'rounded',
-        showRowsPerPage: true,
-        variant: 'outlined',
         sx: {
           '& .MuiPaginationItem-root': {
             borderRadius: '8px',
@@ -246,7 +255,9 @@ export const TableView = ({
       }}
       renderRowActions={({ row }) => {
         return (
-          <Box sx={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+          <Box
+            sx={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}
+          >
             {$userStore.rol.some((role) => ['admin'].includes(role)) && (
               <Tooltip arrow placement='top' title='Eliminar'>
                 <IconButton
@@ -280,7 +291,10 @@ export const TableView = ({
               </IconButton>
             </Tooltip>
             <Tooltip arrow placement='top' title='Ver archivo'>
-              <Link to={`${row.original.id}`} style={{ textDecoration: 'none' }}>
+              <Link
+                to={`${row.original.id}`}
+                style={{ textDecoration: 'none' }}
+              >
                 <IconButton
                   sx={{
                     color: '#3b82f6',
@@ -319,13 +333,16 @@ export const TableView = ({
               />
             )}
 
-            {$userStore.rol.some((role) => ['admin', 'metrologist'].includes(role)) && (
+            {$userStore.rol.some((role) =>
+              ['admin', 'metrologist'].includes(role)
+            ) && (
               <Button
                 onClick={() => openModal(true)}
                 variant='contained'
                 startIcon={<Add />}
                 sx={{
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  background:
+                    'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                   borderRadius: '12px',
                   textTransform: 'none',
                   fontWeight: 600,
@@ -334,7 +351,8 @@ export const TableView = ({
                   color: 'white',
                   boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
                   '&:hover': {
-                    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                    background:
+                      'linear-gradient(135deg, #059669 0%, #047857 100%)',
                     boxShadow: '0 6px 16px rgba(16, 185, 129, 0.4)',
                     transform: 'translateY(-2px)'
                   },
@@ -347,55 +365,55 @@ export const TableView = ({
           </Box>
         )
       }}
-      renderDetailPanel={({ row }) => {
-        return (
-          <Box
-            sx={{
-              p: 4,
-              backgroundColor: '#f9fafb',
-              borderRadius: '12px',
-              m: 2
-            }}
-          >
-            <Box
-              sx={{
-                mb: 3,
-                pb: 2,
-                borderBottom: '2px solid #e5e7eb'
-              }}
-            >
-              <Typography
-                variant='h6'
-                sx={{
-                  color: '#374151',
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1
-                }}
-              >
-                <Visibility sx={{ color: '#10b981' }} />
-                Vista Previa del Certificado
-              </Typography>
-              <Typography variant='body2' sx={{ color: '#6b7280', mt: 1 }}>
-                {row.original.customer?.nombre} - {row.original.device?.name}
-              </Typography>
-            </Box>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                backgroundColor: 'white',
-                borderRadius: '8px',
-                p: 2,
-                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
-              }}
-            >
-              <PDFViewer path={row.original.filePath} />
-            </Box>
-          </Box>
-        )
-      }}
+      // renderDetailPanel={({ row }) => {
+      //   return (
+      //     <Box
+      //       sx={{
+      //         p: 4,
+      //         backgroundColor: '#f9fafb',
+      //         borderRadius: '12px',
+      //         m: 2
+      //       }}
+      //     >
+      //       <Box
+      //         sx={{
+      //           mb: 3,
+      //           pb: 2,
+      //           borderBottom: '2px solid #e5e7eb'
+      //         }}
+      //       >
+      //         <Typography
+      //           variant='h6'
+      //           sx={{
+      //             color: '#374151',
+      //             fontWeight: 700,
+      //             display: 'flex',
+      //             alignItems: 'center',
+      //             gap: 1
+      //           }}
+      //         >
+      //           <Visibility sx={{ color: '#10b981' }} />
+      //           Vista Previa del Certificado
+      //         </Typography>
+      //         <Typography variant='body2' sx={{ color: '#6b7280', mt: 1 }}>
+      //           {row.original.customer?.nombre} - {row.original.device?.name}
+      //         </Typography>
+      //       </Box>
+      //       <Box
+      //         sx={{
+      //           display: 'flex',
+      //           justifyContent: 'center',
+      //           backgroundColor: 'white',
+      //           borderRadius: '8px',
+      //           p: 2,
+      //           boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+      //         }}
+      //       >
+      //         <PDFViewer path={row.original.filePath} />
+      //       </Box>
+      //     </Box>
+      //   )
+      // }}
       displayColumnDefOptions={{
         'mrt-row-actions': {
           header: 'Acciones',

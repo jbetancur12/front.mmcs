@@ -24,32 +24,27 @@ export const createTableColumns = (
         const daysRemaining = differenceInDays(nextCalibrationDate, new Date())
         const formattedDate = format(nextCalibrationDate, 'dd/MM/yyyy')
 
-        let chipColor: 'success' | 'warning' | 'error' = 'success'
         let chipIcon: JSX.Element
         let chipLabel: string
         let bgColor: string
         let textColor: string
 
         if (daysRemaining < 0) {
-          chipColor = 'error'
           chipIcon = <Cancel sx={{ fontSize: 18 }} />
           chipLabel = 'VENCIDO'
           bgColor = '#fee2e2'
           textColor = '#dc2626'
         } else if (daysRemaining <= 15) {
-          chipColor = 'error'
           chipIcon = <Cancel sx={{ fontSize: 18 }} />
           chipLabel = `${daysRemaining} días`
           bgColor = '#fef3c7'
           textColor = '#f59e0b'
         } else if (daysRemaining <= 45) {
-          chipColor = 'warning'
           chipIcon = <Warning sx={{ fontSize: 18 }} />
           chipLabel = `${daysRemaining} días`
           bgColor = '#fef3c7'
           textColor = '#f59e0b'
         } else {
-          chipColor = 'success'
           chipIcon = <CheckCircle sx={{ fontSize: 18 }} />
           chipLabel = `${daysRemaining} días`
           bgColor = '#d1fae5'
