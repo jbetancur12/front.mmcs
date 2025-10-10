@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import {
   Box,
   Card,
-  CardContent,
   Typography,
   FormControl,
   InputLabel,
@@ -12,12 +11,7 @@ import {
   Chip,
   Button,
   Grid,
-  Collapse,
-  IconButton,
   Autocomplete,
-  Divider,
-  useMediaQuery,
-  useTheme,
   Accordion,
   AccordionSummary,
   AccordionDetails
@@ -26,7 +20,6 @@ import {
   FilterList,
   Clear,
   ExpandMore,
-  ExpandLess,
   Search
 } from '@mui/icons-material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
@@ -65,9 +58,6 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
   equipmentTypes,
   resultsCount
 }) => {
-  const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
-  const [expanded, setExpanded] = useState(false)
   const [localFilters, setLocalFilters] = useState<IMaintenanceFilters>(filters)
 
   useEffect(() => {

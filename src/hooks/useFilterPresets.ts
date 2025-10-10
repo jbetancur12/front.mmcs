@@ -48,7 +48,7 @@ const createDefaultPresets = (): FilterPreset[] => {
       id: 'pending-assignment',
       name: 'Pending Assignment',
       filters: {
-        status: [MaintenanceStatus.NEW]
+        status: [MaintenanceStatus.PENDING]
       },
       isDefault: true,
       createdBy: 'system',

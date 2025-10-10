@@ -13,7 +13,6 @@ import {
   TextField,
   IconButton,
   Tooltip,
-  Chip,
   Typography,
   Divider,
   ListItemIcon,
@@ -23,10 +22,8 @@ import {
 import {
   Bookmark,
   BookmarkBorder,
-  Add,
   Save,
   Delete,
-  Refresh,
   Star
 } from '@mui/icons-material'
 import { FilterPreset, MaintenanceFilters } from '../../types/maintenance'

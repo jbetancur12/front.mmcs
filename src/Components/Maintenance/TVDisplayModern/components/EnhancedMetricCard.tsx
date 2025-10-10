@@ -91,9 +91,9 @@ const EnhancedMetricCard: React.FC<EnhancedMetricCardProps> = ({
             >
               {value}
             </Typography>
-            {trend && (
+            {trend && getTrendIcon() && (
               <Chip
-                icon={getTrendIcon()}
+                icon={getTrendIcon()!}
                 label={`${trend.value > 0 ? '+' : ''}${trend.value}% ${trend.period}`}
                 color={getTrendColor()}
                 size="small"

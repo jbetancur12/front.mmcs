@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useRef, useEffect } from 'react'
+import React, { useCallback, useState, useEffect } from 'react'
 import {
   Box,
   Typography,
@@ -10,7 +10,6 @@ import {
   CardContent,
   Grid,
   Tooltip,
-  Button,
   CardMedia
 } from '@mui/material'
 import {
@@ -20,8 +19,7 @@ import {
   VideoFile,
   InsertDriveFile,
   Visibility,
-  Refresh,
-  Download
+  Refresh
 } from '@mui/icons-material'
 import { useDropzone } from 'react-dropzone'
 import { MaintenanceFile } from '../../types/maintenance'
@@ -130,8 +128,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
       const newPreviews: Record<string, string> = {}
 
       for (const file of files) {
-        if (file.isImage && file.fileUrl && !imagePreviews[file.id]) {
-          newPreviews[file.id] = file.fileUrl
+        if (file.isImage && file.filePath && !imagePreviews[file.id]) {
+          newPreviews[file.id] = file.filePath
         }
       }
 
@@ -143,19 +141,6 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
     generatePreviews()
   }, [files, imagePreviews])
 
-  // Generate preview for newly selected files (before upload)
-  const generateFilePreview = (file: File): Promise<string | null> => {
-    return new Promise((resolve) => {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader()
-        reader.onload = (e) => resolve(e.target?.result as string)
-        reader.onerror = () => resolve(null)
-        reader.readAsDataURL(file)
-      } else {
-        resolve(null)
-      }
-    })
-  }
 
   const formatFileSize = (bytes: number | undefined | null) => {
     if (!bytes || bytes === 0) return '0 Bytes'
