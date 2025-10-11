@@ -5,7 +5,7 @@ import './index.css'
 import Router from './router.tsx'
 import { ThemeProvider } from '@mui/material'
 import { theme } from './theme.tsx'
-import * as Sentry from '@sentry/react'
+// import * as Sentry from '@sentry/react'
 
 import { PostHogProvider } from 'posthog-js/react'
 
@@ -18,11 +18,27 @@ const options = {
 
 const queryClient = new QueryClient()
 
-Sentry.init({
-  dsn: 'https://5023f73ba5a170f91cba618b6a135cd9@o4509155116253184.ingest.us.sentry.io/4509155117432832',
-  integrations: [Sentry.browserTracingIntegration()],
-  tracesSampleRate: 1.0 // puedes bajarlo en producción
-})
+// Sentry.init({
+//   dsn: 'https://5023f73ba5a170f91cba618b6a135cd9@o4509155116253184.ingest.us.sentry.io/4509155117432832',
+//   integrations: [Sentry.browserTracingIntegration()],
+//   tracesSampleRate: 1.0 // puedes bajarlo en producción
+// })
+
+const APP_VERSION = '1.0.0'; // Cambia esto en cada deploy
+
+// Limpiar cache cuando cambie la versión
+const currentVersion = localStorage.getItem('app-version');
+if (currentVersion !== APP_VERSION) {
+  if ('caches' in window) {
+    caches.keys().then(names => {
+      names.forEach(name => {
+        caches.delete(name);
+      });
+    });
+  }
+  localStorage.setItem('app-version', APP_VERSION);
+  window.location.reload();
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

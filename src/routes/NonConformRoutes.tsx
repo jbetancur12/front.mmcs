@@ -3,8 +3,8 @@ import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute' // Asegúrate que la ruta sea correcta
 import CircularProgress from '@mui/material/CircularProgress' // Para el fallback de Suspense
 import Box from '@mui/material/Box' // Para centrar el fallback
-import PDFViewer from 'src/Components/DataSheet/PDFViewer'
 
+const PDFViewer = lazy(() => import('src/Components/DataSheet/PDFViewer'))
 const NonConformWorkReportPage = lazy(
   () => import('src/pages/NonConformWorkReport')
 )
@@ -44,7 +44,24 @@ const NonConformRoutes = (role: string[]) => {
         />
         <Route
           path='non-conform-work-reports/:id'
-          element={<PDFViewer path='fogc-mmcs-16' />}
+          element={
+            <Suspense
+              fallback={
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '80vh'
+                  }}
+                >
+                  <CircularProgress />
+                </Box>
+              }
+            >
+              <PDFViewer path='fogc-mmcs-16' />
+            </Suspense>
+          }
         />
       </Route>
     </>

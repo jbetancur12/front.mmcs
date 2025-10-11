@@ -1,20 +1,44 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Certificate, CertificateListItem } from './CertificateListItem'
+import EquipmentCard, { Certificate } from './EquipmentCard'
 import {
-  Divider,
   Typography,
   Button,
   Box,
   CircularProgress,
   Menu,
-  MenuItem
+  MenuItem,
+  Grid,
+  Card,
+  CardContent,
+  TextField,
+  InputAdornment,
+  IconButton,
+  Chip
 } from '@mui/material'
 import { useQuery } from 'react-query'
-import { ApiResponse } from 'src/pages/Customer'
 import { useParams } from 'react-router-dom'
+
+interface ApiResponse {
+  totalFiles: number
+  totalPages: number
+  currentPage: number
+  files: Certificate[]
+  searchInfo?: {
+    term: string
+    searchableFields: string[]
+  }
+  statistics: {
+    expired: number
+    expiringSoon: number
+    active: number
+    total: number
+  }
+}
 import { axiosPrivate } from '@utils/api'
-import { Download } from '@mui/icons-material'
+import { Download, Search, Clear } from '@mui/icons-material'
 import * as XLSX from 'xlsx'
+import { useStore } from '@nanostores/react'
+import { userStore } from '../store/userStore'
 
 interface SelectedHqProps {
   onDelete: (id: number) => void
@@ -104,6 +128,7 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
   selectedSede
 }) => {
   const { id } = useParams<{ id: string }>()
+  const $userStore = useStore(userStore)
 
   const [searchTerm, setSearchTerm] = useState(
     sessionStorage.getItem('searchTerm') || ''
@@ -205,107 +230,231 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
     setCurrentPage(1)
   }, [])
 
+  const clearSearch = useCallback(() => {
+    setSearchTerm('')
+    setCurrentPage(1)
+  }, [])
+
   return (
     <div>
-      <Box display='flex' gap={2} alignItems='center' mb={2}>
-        <input
-          type='text'
-          placeholder='Buscar Equipo(s)...'
-          className='flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500'
-          value={searchTerm}
-          onChange={(e) => handleSearchChange(e.target.value)}
-        />
+      {/* Advanced Search and Filters */}
+      <Card elevation={0} sx={{ mb: 3, border: '1px solid #e5e7eb', borderRadius: '16px' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Grid container spacing={3} alignItems='center'>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                variant='outlined'
+                placeholder='Buscar por nombre, serie, activo fijo...'
+                value={searchTerm}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position='start'>
+                      <Search sx={{ color: '#10b981' }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: searchTerm && (
+                    <InputAdornment position='end'>
+                      <IconButton onClick={clearSearch} edge='end' size='small'>
+                        <Clear />
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#10b981'
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#10b981'
+                    }
+                  }
+                }}
+              />
+            </Grid>
 
-        <Box display='flex' gap={1}>
-          <Button
-            variant='outlined'
-            startIcon={
-              isDownloading ? <CircularProgress size={16} /> : <Download />
-            }
-            onClick={(e) => setAnchorEl(e.currentTarget)}
-            disabled={isDownloading}
-            size='small'
-          >
-            Descargar Excel
-          </Button>
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={() => setAnchorEl(null)}
-          >
-            <MenuItem onClick={() => handleDownloadExcel('all')}>
-              Todos los equipos
-            </MenuItem>
-            <MenuItem onClick={() => handleDownloadExcel('nextOrExpired')}>
-              Próximos a vencer / Vencidos
-            </MenuItem>
-          </Menu>
-        </Box>
-      </Box>
+            <Grid item xs={12} md={3}>
+              <Button
+                fullWidth
+                variant='contained'
+                startIcon={isDownloading ? <CircularProgress size={16} /> : <Download />}
+                onClick={(e) => setAnchorEl(e.currentTarget)}
+                disabled={isDownloading}
+                sx={{
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  py: 1.5,
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                  }
+                }}
+              >
+                {isDownloading ? 'Descargando...' : 'Exportar Excel'}
+              </Button>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={() => setAnchorEl(null)}
+                slotProps={{
+                  paper: {
+                    sx: { borderRadius: '12px', mt: 1 }
+                  }
+                }}
+              >
+                <MenuItem onClick={() => handleDownloadExcel('all')}>
+                  📊 Todos los equipos
+                </MenuItem>
+                <MenuItem onClick={() => handleDownloadExcel('nextOrExpired')}>
+                  ⚠️ Próximos a vencer / Vencidos
+                </MenuItem>
+              </Menu>
+            </Grid>
 
-      <Typography variant='subtitle2' gutterBottom>
-        Total Equipos: {apiResponse?.totalFiles || 0}
-        {selectedSede && (
-          <span style={{ fontWeight: 'normal', color: '#666' }}>
-            {' '}
-            en {selectedSede}
-          </span>
-        )}
-      </Typography>
-
-      <Divider />
+            <Grid item xs={12} md={3}>
+              <Box display='flex' alignItems='center' gap={1}>
+                <Typography variant='body2' color='text.secondary'>
+                  Total:
+                </Typography>
+                <Chip
+                  label={`${apiResponse?.statistics?.total || 0} equipos`}
+                  size='small'
+                  sx={{
+                    backgroundColor: '#f0f9ff',
+                    color: '#0369a1',
+                    fontWeight: 600
+                  }}
+                />
+              </Box>
+              {selectedSede && (
+                <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5, display: 'block' }}>
+                  en {selectedSede}
+                </Typography>
+              )}
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
       {isLoading ? (
-        <Box display='flex' justifyContent='center' alignItems='center' py={4}>
-          <CircularProgress />
-          <Typography variant='body2' sx={{ ml: 2 }}>
+        <Box display='flex' flexDirection='column' alignItems='center' py={8}>
+          <CircularProgress size={60} sx={{ color: '#10b981', mb: 2 }} />
+          <Typography variant='h6' color='text.secondary' gutterBottom>
             Cargando equipos...
+          </Typography>
+          <Typography variant='body2' color='text.secondary'>
+            Obteniendo información de los equipos
           </Typography>
         </Box>
       ) : (
         <>
           {certificatesData.length === 0 ? (
-            <Typography align='center' color='textSecondary' sx={{ py: 4 }}>
-              {searchTerm
-                ? `No se encontraron equipos que coincidan con "${searchTerm}"`
-                : 'No hay equipos para mostrar en esta sede'}
-            </Typography>
+            <Card elevation={0} sx={{ border: '2px dashed #d1d5db', borderRadius: '16px' }}>
+              <CardContent sx={{ textAlign: 'center', py: 8 }}>
+                <Box
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: '50%',
+                    backgroundColor: '#f3f4f6',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mx: 'auto',
+                    mb: 3
+                  }}
+                >
+                  <Search sx={{ fontSize: 40, color: '#9ca3af' }} />
+                </Box>
+                <Typography variant='h6' color='text.secondary' gutterBottom>
+                  {searchTerm ? 'No se encontraron equipos' : 'No hay equipos en esta sede'}
+                </Typography>
+                <Typography variant='body2' color='text.secondary' paragraph>
+                  {searchTerm
+                    ? `No hay resultados para "${searchTerm}"`
+                    : 'Esta sede aún no tiene equipos registrados'}
+                </Typography>
+                {searchTerm && (
+                  <Button
+                    variant='outlined'
+                    onClick={clearSearch}
+                    sx={{ borderRadius: '8px', textTransform: 'none' }}
+                  >
+                    Limpiar búsqueda
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
           ) : (
             <>
-              {certificatesData.map((certificate: Certificate) => (
-                <CertificateListItem
-                  key={certificate.id}
-                  certificate={certificate}
-                  onDelete={onDelete}
-                  sedes={sedes}
-                />
-              ))}
+              <Grid container spacing={3}>
+                {certificatesData.map((certificate: Certificate) => (
+                  <Grid item xs={12} sm={6} lg={4} key={certificate.id}>
+                    <EquipmentCard
+                      certificate={certificate}
+                      onDelete={onDelete}
+                      sedes={sedes}
+                      rol={$userStore.rol}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
 
-              <div className='flex justify-between items-center p-4'>
-                <button
-                  type='button'
-                  onClick={() => handlePageChange('prev')}
-                  disabled={currentPage === 1}
-                  className='bg-gray-300 text-gray-700 px-4 py-2 rounded disabled:opacity-50 hover:bg-gray-400 disabled:cursor-not-allowed'
-                >
-                  Anterior
-                </button>
+              {/* Modern Pagination */}
+              <Box display='flex' justifyContent='center' alignItems='center' mt={6}>
+                <Card elevation={0} sx={{ border: '1px solid #e5e7eb', borderRadius: '12px' }}>
+                  <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2 }}>
+                    <Button
+                      variant='outlined'
+                      onClick={() => handlePageChange('prev')}
+                      disabled={currentPage === 1}
+                      sx={{
+                        borderRadius: '8px',
+                        minWidth: '100px',
+                        '&:disabled': { opacity: 0.5 }
+                      }}
+                    >
+                      ← Anterior
+                    </Button>
 
-                <div className='text-center'>
-                  <p className='text-lg font-semibold'>
-                    Página {currentPage} de {apiResponse?.totalPages || 1}
-                  </p>
-                </div>
+                    <Box display='flex' alignItems='center' gap={1} px={2}>
+                      <Typography variant='body2' color='text.secondary'>
+                        Página
+                      </Typography>
+                      <Chip
+                        label={currentPage}
+                        size='small'
+                        sx={{
+                          backgroundColor: '#10b981',
+                          color: 'white',
+                          fontWeight: 600,
+                          minWidth: '32px'
+                        }}
+                      />
+                      <Typography variant='body2' color='text.secondary'>
+                        de {apiResponse?.totalPages || 1}
+                      </Typography>
+                    </Box>
 
-                <button
-                  type='button'
-                  onClick={() => handlePageChange('next')}
-                  disabled={currentPage === (apiResponse?.totalPages || 1)}
-                  className='bg-gray-300 text-gray-700 px-4 py-2 rounded disabled:opacity-50 hover:bg-gray-400 disabled:cursor-not-allowed'
-                >
-                  Siguiente
-                </button>
-              </div>
+                    <Button
+                      variant='outlined'
+                      onClick={() => handlePageChange('next')}
+                      disabled={currentPage === (apiResponse?.totalPages || 1)}
+                      sx={{
+                        borderRadius: '8px',
+                        minWidth: '100px',
+                        '&:disabled': { opacity: 0.5 }
+                      }}
+                    >
+                      Siguiente →
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Box>
             </>
           )}
         </>

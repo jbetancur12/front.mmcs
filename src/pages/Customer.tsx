@@ -2,15 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import TableUsersCustomer from '../Components/TableUsersCustomer'
 
-import {
-  Certificate as BaseCertificate,
-  CertificateListItem
-} from '../Components/CertificateListItem'
-
-// Extend Certificate type to include searchMatches
-export interface Certificate extends BaseCertificate {
-  searchMatches?: { field: string }[]
-}
+import EquipmentCard, { Certificate } from '../Components/EquipmentCard'
 import { bigToast } from '../Components/ExcelManipulation/Utils'
 import Headquarters from '../Components/Headquarters'
 import {
@@ -24,7 +16,8 @@ import {
   MenuItem,
   Paper,
   TextField,
-  Typography
+  Typography,
+  Grid
 } from '@mui/material'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
@@ -55,6 +48,12 @@ export interface ApiResponse {
     term: string
     searchableFields: string[]
   }
+   statistics: {
+        expired: number,
+        expiringSoon: number,
+        active: number,
+        total: number
+    },
 }
 
 type Tab =
@@ -474,7 +473,6 @@ function UserProfile(): React.JSX.Element {
 
   // En tu componente:
   const matchedFields = getMatchedFields(apiResponse?.files ?? [])
-  console.log('🚀 ~ UserProfile ~ matchedFields:', matchedFields)
 
   if (loading) {
     return <Typography variant='h6'>Cargando...</Typography>
@@ -698,14 +696,18 @@ function UserProfile(): React.JSX.Element {
                   No hay certificados para mostrar.
                 </Typography>
               ) : (
-                certificatesData.map((certificate: Certificate) => (
-                  <CertificateListItem
-                    key={certificate.id}
-                    certificate={certificate}
-                    onDelete={handleDelete}
-                    sedes={customerData.sede}
-                  />
-                ))
+                <Grid container spacing={3}>
+                  {certificatesData.map((certificate: Certificate) => (
+                    <Grid item xs={12} sm={6} lg={4} key={certificate.id}>
+                      <EquipmentCard
+                        certificate={certificate}
+                        onDelete={handleDelete}
+                        sedes={customerData.sede}
+                        rol={$userStore.rol}
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
               )}
               <div className='flex justify-between items-center p-4'>
                 <button

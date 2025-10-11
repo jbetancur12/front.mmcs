@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -14,20 +14,39 @@ import {
   FormLabel,
   Select,
   MenuItem,
-  InputLabel
+  InputLabel,
+  Box,
+  Typography,
+  Paper,
+  Fade,
+  IconButton,
+  LinearProgress,
+  Divider
 } from '@mui/material'
 import { DatePicker } from '@mui/x-date-pickers'
-import { CloudUpload } from '@mui/icons-material'
+import {
+  CloudUpload,
+  Close,
+  CalendarToday,
+  Description,
+  CheckCircle,
+  Business,
+  LocationOn,
+  Devices,
+  Upload
+} from '@mui/icons-material'
+import { styled } from '@mui/material/styles'
 import AsyncSelect from 'react-select/async'
 import { useStore } from '@nanostores/react'
+import toast, { Toaster } from 'react-hot-toast'
+import Loader from '../../Loader2'
 import { FileData } from '../types/fileTypes'
 import { handleCreateFile } from './CreateFileModalHandlers'
 import { customerStore } from '@stores/customerStore'
 import { deviceStore } from '@stores/deviceStore'
 import { certificateTypeStore } from '@stores/certificateTypeStore'
 import { genericMapOptions, loadOptions } from '@utils/loadOptions'
-import { bigToast, styles } from 'src/Components/ExcelManipulation/Utils'
-import { VisuallyHiddenInput } from 'src/Components/TableFiles'
+import { styles } from 'src/Components/ExcelManipulation/Utils'
 import { GroupBase } from 'react-select'
 import axios from 'axios'
 import {
@@ -43,6 +62,64 @@ interface CreateFileModalProps {
   fetchFiles: () => Promise<void>
   axiosPrivate: any
 }
+
+// Styled Components
+const DropZone = styled(Paper)(() => ({
+  border: '2px dashed #d1d5db',
+  borderRadius: '12px',
+  padding: '24px',
+  textAlign: 'center',
+  cursor: 'pointer',
+  transition: 'all 0.3s ease-in-out',
+  backgroundColor: '#f9fafb',
+  '&:hover': {
+    borderColor: '#10b981',
+    backgroundColor: '#f0fdf4',
+    transform: 'translateY(-2px)',
+    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.15)'
+  },
+  '&.dragover': {
+    borderColor: '#10b981',
+    backgroundColor: '#f0fdf4',
+    boxShadow: '0 0 0 4px rgba(16, 185, 129, 0.1)'
+  }
+}))
+
+const DatePickerContainer = styled(Box)(() => ({
+  '& .MuiTextField-root': {
+    width: '100%',
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '12px',
+      '&:hover .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#10b981'
+      },
+      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: '#10b981'
+      }
+    }
+  }
+}))
+
+const StyledTextField = styled(TextField)(() => ({
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '12px',
+    '&:hover .MuiOutlinedInput-notchedOutline': {
+      borderColor: '#10b981'
+    },
+    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+      borderColor: '#10b981'
+    }
+  }
+}))
+
+const SectionHeader = ({ icon: Icon, title }: { icon: any; title: string }) => (
+  <Box display='flex' alignItems='center' mb={2}>
+    <Icon sx={{ color: '#10b981', mr: 1, fontSize: 24 }} />
+    <Typography variant='h6' fontWeight='600' sx={{ color: '#1f2937' }}>
+      {title}
+    </Typography>
+  </Box>
+)
 
 export const CreateFileModal = ({
   open,
@@ -62,12 +139,79 @@ export const CreateFileModal = ({
   const [selectedPeriod, setSelectedPeriod] = useState<'6' | '12'>('12')
   const [selectedFileName, setSelectedFileName] = useState('')
   const [sedes, setSedes] = useState<string[]>([])
+  const [loading, setLoading] = useState(false)
+  const [fileInputKey, setFileInputKey] = useState(Date.now())
+  const [isDragOver, setIsDragOver] = useState(false)
+
+  // Función para limpiar el formulario
+  const resetForm = () => {
+    setValues({
+      calibrationDate: new Date(),
+      nextCalibrationDate: new Date()
+    })
+    setFile(null)
+    setSelectedFileName('')
+    setIsDragOver(false)
+    setSedes([])
+    setSelectedPeriod('12')
+    setFileInputKey(Date.now())
+  }
+
+  // Limpiar el formulario cuando el modal se abre
+  useEffect(() => {
+    if (open) {
+      resetForm()
+    }
+  }, [open])
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0]
     if (selectedFile) {
-      setFile(selectedFile)
-      setSelectedFileName(selectedFile.name)
+      processFile(selectedFile)
+    }
+  }
+
+  const processFile = (selectedFile: File) => {
+    // Validar que sea un PDF
+    if (selectedFile.type !== 'application/pdf') {
+      toast.error('Solo se permiten archivos PDF', {
+        duration: 3000,
+        position: 'top-center'
+      })
+      return
+    }
+
+    // Validar tamaño (máximo 10MB)
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      toast.error('El archivo no puede ser mayor a 10MB', {
+        duration: 3000,
+        position: 'top-center'
+      })
+      return
+    }
+
+    setFile(selectedFile)
+    setSelectedFileName(selectedFile.name)
+  }
+
+  // Funciones para drag & drop
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    setIsDragOver(false)
+  }
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    setIsDragOver(false)
+
+    const files = event.dataTransfer.files
+    if (files.length > 0) {
+      processFile(files[0])
     }
   }
 
@@ -92,7 +236,106 @@ export const CreateFileModal = ({
   }, [values.calibrationDate, selectedPeriod])
 
   const handleSubmit = async () => {
+    // Validación del archivo PDF
+    if (!file) {
+      toast.error('Debes seleccionar un archivo PDF', {
+        duration: 3000,
+        position: 'top-center'
+      })
+      return
+    }
+
+    // Validación de campos obligatorios
+    if (!values.customerId) {
+      toast.error('Debes seleccionar un cliente', {
+        duration: 3000,
+        position: 'top-center'
+      })
+      return
+    }
+
+    if (!values.deviceId) {
+      toast.error('Debes seleccionar un equipo', {
+        duration: 3000,
+        position: 'top-center'
+      })
+      return
+    }
+
+    if (!values.certificateTypeId) {
+      toast.error('Debes seleccionar un tipo de certificado', {
+        duration: 3000,
+        position: 'top-center'
+      })
+      return
+    }
+
+    if (!values.headquarter) {
+      toast.error('Debes seleccionar una sede', {
+        duration: 3000,
+        position: 'top-center'
+      })
+      return
+    }
+
+    if (!values.city || values.city.trim() === '') {
+      toast.error('Debes ingresar la ciudad', {
+        duration: 3000,
+        position: 'top-center'
+      })
+      return
+    }
+
+    if (!values.sede || values.sede.trim() === '') {
+      toast.error('Debes ingresar la dirección', {
+        duration: 3000,
+        position: 'top-center'
+      })
+      return
+    }
+
+    if (!values.location || values.location.trim() === '') {
+      toast.error('Debes ingresar la ubicación', {
+        duration: 3000,
+        position: 'top-center'
+      })
+      return
+    }
+
+    if (!values.activoFijo || values.activoFijo.trim() === '') {
+      toast.error('Debes ingresar el activo fijo', {
+        duration: 3000,
+        position: 'top-center'
+      })
+      return
+    }
+
+    if (!values.serie || values.serie.trim() === '') {
+      toast.error('Debes ingresar la serie', {
+        duration: 3000,
+        position: 'top-center'
+      })
+      return
+    }
+
+    if (!values.calibrationDate) {
+      toast.error('Debes seleccionar la fecha de calibración', {
+        duration: 3000,
+        position: 'top-center'
+      })
+      return
+    }
+
+    if (!values.nextCalibrationDate) {
+      toast.error('Debes seleccionar la próxima fecha de calibración', {
+        duration: 3000,
+        position: 'top-center'
+      })
+      return
+    }
+
     try {
+      setLoading(true)
       const success = await handleCreateFile(
         values as FileData,
         file,
@@ -101,16 +344,22 @@ export const CreateFileModal = ({
       )
 
       if (success) {
-        bigToast('Certificado Creado Exitosamente!', 'success')
-        onClose()
-        setValues({
-          calibrationDate: new Date(),
-          nextCalibrationDate: new Date()
+        setLoading(false)
+        toast.success('Certificado Creado Exitosamente!', {
+          duration: 4000,
+          position: 'top-center'
         })
-        setFile(null)
-        setSelectedFileName('')
+
+        // Limpiar formulario
+        resetForm()
+
+        // Delay antes de cerrar para que el toast sea visible
+        setTimeout(() => {
+          onClose()
+        }, 500)
       }
     } catch (error) {
+      setLoading(false)
       let errorMessage = 'Error desconocido al crear el certificado'
 
       // Manejo de errores de Axios
@@ -119,6 +368,19 @@ export const CreateFileModal = ({
           error.response?.data?.error ||
           error.response?.data?.message ||
           error.message
+
+        // Verificar si es un error de archivo duplicado (409)
+        if (error.response && error.response.status === 409) {
+          toast.error(
+            error.response.data.error ||
+              'El archivo con este nombre ya existe. Por favor, renombre el archivo e intente nuevamente.',
+            {
+              duration: 5000,
+              position: 'top-center'
+            }
+          )
+          return
+        }
       }
       // Manejo de errores genéricos
       else if (error instanceof Error) {
@@ -126,7 +388,10 @@ export const CreateFileModal = ({
       }
 
       // Mostrar error específico del backend o genérico
-      bigToast(errorMessage, 'error')
+      toast.error(errorMessage, {
+        duration: 4000,
+        position: 'top-center'
+      })
 
       // Opcional: Loggear error para debugging
       console.error('Error en creación de certificado:', error)
@@ -134,201 +399,496 @@ export const CreateFileModal = ({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth='xs' fullWidth>
-      <DialogTitle textAlign='center' sx={{ fontWeight: 'bold' }}>
-        Subir Nuevo Certificado
-      </DialogTitle>
+    <>
+      <Toaster />
+      <Loader loading={loading} />
 
-      <DialogContent>
-        <Stack spacing={3} sx={{ mt: 2 }}>
-          {/* Selector de Cliente */}
-          <AsyncSelect<SelectOption, false, GroupBase<SelectOption>>
-            cacheOptions
-            placeholder='Buscar Cliente'
-            loadOptions={(input) =>
-              loadOptions(input, 'customers', (item) =>
-                genericMapOptions(item, 'id', 'nombre', { sede: 'sede' })
-              )
-            }
-            onChange={(option) => {
-              setSedes((option as any)?.sede)
-              limitArraySizeCustomer($customerStore, option)
-              setValues({ ...values, customerId: Number(option?.value) })
-            }}
-            defaultOptions={$customerStore}
-            styles={styles(true)}
-          />
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth='sm'
+        fullWidth
+        TransitionComponent={Fade}
+        PaperProps={{
+          sx: {
+            borderRadius: '20px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            overflow: 'visible'
+          }
+        }}
+      >
+        {/* Header */}
+        <DialogTitle
+          sx={{
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            color: 'white',
+            position: 'relative',
+            textAlign: 'center',
+            py: 3
+          }}
+        >
+          <Box
+            display='flex'
+            alignItems='center'
+            justifyContent='center'
+            mb={1}
+          >
+            <Upload sx={{ fontSize: 28, mr: 1 }} />
+            <Typography variant='h5' fontWeight='bold'>
+              Subir Nuevo Certificado
+            </Typography>
+          </Box>
+          <Typography variant='body2' sx={{ opacity: 0.9 }}>
+            Completa la información del certificado y sube el archivo PDF
+          </Typography>
 
-          {/* Selector de Equipo */}
-          <AsyncSelect<SelectOption, false, GroupBase<SelectOption>>
-            cacheOptions
-            placeholder='Buscar Equipo'
-            loadOptions={(input) =>
-              loadOptions(input, 'devices', (item) =>
-                genericMapOptions(item, 'id', 'name')
-              )
-            }
-            onChange={(option) => {
-              const opt = {
-                value: option?.value,
-                label: option?.label
-              }
-              limitArraySizeDevice($deviceStore, opt)
-              setValues({ ...values, deviceId: Number(option?.value) })
-            }}
-            defaultOptions={$deviceStore}
-            styles={styles(true)}
-          />
-
-          {/* Selector de Tipo de Certificado */}
-          <AsyncSelect<SelectOption, false, GroupBase<SelectOption>>
-            cacheOptions
-            placeholder='Tipo de Certificado'
-            loadOptions={(input) =>
-              loadOptions(input, 'certificateTypes', (item) =>
-                genericMapOptions(item, 'id', 'name')
-              )
-            }
-            onChange={(option) => {
-              const opt = {
-                value: option?.value,
-                label: option?.label
-              }
-              limitArraySize($certificateTypeStore, opt)
-              setValues({ ...values, certificateTypeId: Number(option?.value) })
-            }}
-            defaultOptions={$certificateTypeStore}
-            styles={styles(true)}
-          />
-          <FormControl fullWidth variant='outlined'>
-            {' '}
-            {/* fullWidth es opcional, variant puede ser "outlined", "filled", "standard" */}
-            <InputLabel id='sede-select-label'>Seleccionar Sede</InputLabel>
-            <Select
-              placeholder='Seleccionar Sede'
-              value={values.headquarter || ''}
-              onChange={(e) =>
-                setValues({
-                  ...values,
-                  headquarter: e.target.value
-                })
-              }
-            >
-              {sedes?.map((sede) => (
-                <MenuItem key={sede} value={sede}>
-                  {sede}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <TextField
-            label='Ciudad'
-            name='city'
-            value={values.city || ''}
-            onChange={(e) => setValues({ ...values, city: e.target.value })}
-          />
-          <TextField
-            label='Dirección'
-            name='sede'
-            value={values.sede || ''}
-            onChange={(e) => setValues({ ...values, sede: e.target.value })}
-          />
-
-          <TextField
-            label='Ubicación'
-            name='location'
-            value={values.location || ''}
-            onChange={(e) => setValues({ ...values, location: e.target.value })}
-          />
-
-          {/* <TextField
-            label='Sede'
-            name='sede'
-            value={values.headquarter || ''}
-            onChange={(e) => setValues({ ...values, sede: e.target.value })}
-          /> */}
-
-          <TextField
-            label='Activo Fijo'
-            value={values.activoFijo || ''}
-            onChange={(e) =>
-              setValues({ ...values, activoFijo: e.target.value })
-            }
-          />
-
-          <TextField
-            label='Serie'
-            value={values.serie || ''}
-            onChange={(e) => setValues({ ...values, serie: e.target.value })}
-          />
-
-          {/* Selector de Fecha de Calibración */}
-          <DatePicker
-            label='Fecha de Calibración'
-            value={values.calibrationDate}
-            onChange={(newDate) =>
-              setValues({ ...values, calibrationDate: newDate as Date })
-            }
-          />
-
-          <DatePicker
-            label='Próxima Calibración'
-            value={values.nextCalibrationDate}
-            onChange={(newDate) =>
-              setValues({ ...values, nextCalibrationDate: newDate as Date })
-            }
-          />
-
-          {/* Selector de Periodo */}
-          <FormControl component='fieldset'>
-            <FormLabel component='legend'>Periodo de Calibración</FormLabel>
-            <RadioGroup
-              row
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value as '6' | '12')}
-            >
-              <FormControlLabel value='6' control={<Radio />} label='6 Meses' />
-              <FormControlLabel
-                value='12'
-                control={<Radio />}
-                label='12 Meses'
-              />
-            </RadioGroup>
-          </FormControl>
-
-          {/* Campos adicionales */}
-
-          {/* Upload de Archivo */}
-          <Button
-            component='label'
-            variant='contained'
-            startIcon={<CloudUpload />}
+          <IconButton
+            onClick={onClose}
+            disabled={loading}
             sx={{
-              textTransform: 'none',
-              fontWeight: 'bold',
-              bgcolor: 'primary.main',
-              '&:hover': { bgcolor: 'primary.dark' }
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+              }
             }}
           >
-            {selectedFileName || 'Seleccionar archivo PDF'}
-            <VisuallyHiddenInput
-              type='file'
-              accept='.pdf'
-              onChange={handleFileChange}
-            />
-          </Button>
-        </Stack>
-      </DialogContent>
+            <Close />
+          </IconButton>
+        </DialogTitle>
 
-      <DialogActions sx={{ p: 3 }}>
-        <Button onClick={onClose} variant='outlined'>
-          Cancelar
-        </Button>
-        <Button onClick={handleSubmit} variant='contained' color='primary'>
-          Guardar Certificado
-        </Button>
-      </DialogActions>
-    </Dialog>
+        {loading && (
+          <LinearProgress
+            sx={{
+              height: 3,
+              '& .MuiLinearProgress-bar': {
+                backgroundColor: '#10b981'
+              }
+            }}
+          />
+        )}
+
+        <DialogContent sx={{ p: 4 }}>
+          <Stack spacing={4}>
+            {/* Sección: Información General */}
+            <Box>
+              <SectionHeader icon={Business} title='Información General' />
+              <Stack spacing={3}>
+                <AsyncSelect<SelectOption, false, GroupBase<SelectOption>>
+                  cacheOptions
+                  placeholder='Buscar Cliente *'
+                  loadOptions={(input) =>
+                    loadOptions(input, 'customers', (item) =>
+                      genericMapOptions(item, 'id', 'nombre', { sede: 'sede' })
+                    )
+                  }
+                  onChange={(option) => {
+                    setSedes((option as any)?.sede)
+                    limitArraySizeCustomer($customerStore, option)
+                    setValues({ ...values, customerId: Number(option?.value) })
+                  }}
+                  defaultOptions={$customerStore}
+                  styles={styles(true)}
+                />
+
+                <AsyncSelect<SelectOption, false, GroupBase<SelectOption>>
+                  cacheOptions
+                  placeholder='Buscar Equipo *'
+                  loadOptions={(input) =>
+                    loadOptions(input, 'devices', (item) =>
+                      genericMapOptions(item, 'id', 'name')
+                    )
+                  }
+                  onChange={(option) => {
+                    const opt = {
+                      value: option?.value,
+                      label: option?.label
+                    }
+                    limitArraySizeDevice($deviceStore, opt)
+                    setValues({ ...values, deviceId: Number(option?.value) })
+                  }}
+                  defaultOptions={$deviceStore}
+                  styles={styles(true)}
+                />
+
+                <AsyncSelect<SelectOption, false, GroupBase<SelectOption>>
+                  cacheOptions
+                  placeholder='Tipo de Certificado *'
+                  loadOptions={(input) =>
+                    loadOptions(input, 'certificateTypes', (item) =>
+                      genericMapOptions(item, 'id', 'name')
+                    )
+                  }
+                  onChange={(option) => {
+                    const opt = {
+                      value: option?.value,
+                      label: option?.label
+                    }
+                    limitArraySize($certificateTypeStore, opt)
+                    setValues({
+                      ...values,
+                      certificateTypeId: Number(option?.value)
+                    })
+                  }}
+                  defaultOptions={$certificateTypeStore}
+                  styles={styles(true)}
+                />
+              </Stack>
+            </Box>
+
+            <Divider />
+
+            {/* Sección: Ubicación */}
+            <Box>
+              <SectionHeader icon={LocationOn} title='Ubicación' />
+              <Stack spacing={3}>
+                <FormControl fullWidth variant='outlined' required>
+                  <InputLabel id='sede-select-label'>
+                    Seleccionar Sede
+                  </InputLabel>
+                  <Select
+                    labelId='sede-select-label'
+                    label='Seleccionar Sede'
+                    value={values.headquarter || ''}
+                    onChange={(e) =>
+                      setValues({
+                        ...values,
+                        headquarter: e.target.value
+                      })
+                    }
+                    required
+                    sx={{
+                      borderRadius: '12px',
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#10b981'
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#10b981'
+                      }
+                    }}
+                  >
+                    {sedes?.map((sede) => (
+                      <MenuItem key={sede} value={sede}>
+                        {sede}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <StyledTextField
+                  label='Ciudad'
+                  name='city'
+                  value={values.city || ''}
+                  onChange={(e) =>
+                    setValues({ ...values, city: e.target.value })
+                  }
+                  fullWidth
+                  required
+                />
+
+                <StyledTextField
+                  label='Dirección'
+                  name='sede'
+                  value={values.sede || ''}
+                  onChange={(e) =>
+                    setValues({ ...values, sede: e.target.value })
+                  }
+                  fullWidth
+                  required
+                />
+
+                <StyledTextField
+                  label='Ubicación'
+                  name='location'
+                  value={values.location || ''}
+                  onChange={(e) =>
+                    setValues({ ...values, location: e.target.value })
+                  }
+                  fullWidth
+                  required
+                />
+              </Stack>
+            </Box>
+
+            <Divider />
+
+            {/* Sección: Información del Equipo */}
+            <Box>
+              <SectionHeader icon={Devices} title='Información del Equipo' />
+              <Stack spacing={3}>
+                <StyledTextField
+                  label='Activo Fijo'
+                  value={values.activoFijo || ''}
+                  onChange={(e) =>
+                    setValues({ ...values, activoFijo: e.target.value })
+                  }
+                  fullWidth
+                  required
+                />
+
+                <StyledTextField
+                  label='Serie'
+                  value={values.serie || ''}
+                  onChange={(e) =>
+                    setValues({ ...values, serie: e.target.value })
+                  }
+                  fullWidth
+                  required
+                />
+              </Stack>
+            </Box>
+
+            <Divider />
+
+            {/* Sección: Fechas de Calibración */}
+            <Box>
+              <SectionHeader
+                icon={CalendarToday}
+                title='Fechas de Calibración'
+              />
+              <Stack spacing={3}>
+                <DatePickerContainer>
+                  <DatePicker
+                    label='Fecha de Calibración'
+                    value={values.calibrationDate}
+                    onChange={(newDate) =>
+                      setValues({ ...values, calibrationDate: newDate as Date })
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        variant: 'outlined',
+                        required: true
+                      }
+                    }}
+                  />
+                </DatePickerContainer>
+
+                <DatePickerContainer>
+                  <DatePicker
+                    label='Próxima Calibración'
+                    value={values.nextCalibrationDate}
+                    onChange={(newDate) =>
+                      setValues({
+                        ...values,
+                        nextCalibrationDate: newDate as Date
+                      })
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        variant: 'outlined',
+                        required: true
+                      }
+                    }}
+                  />
+                </DatePickerContainer>
+
+                <FormControl component='fieldset'>
+                  <FormLabel
+                    component='legend'
+                    sx={{
+                      color: '#374151',
+                      fontWeight: 600,
+                      mb: 1
+                    }}
+                  >
+                    Periodo de Calibración
+                  </FormLabel>
+                  <RadioGroup
+                    row
+                    value={selectedPeriod}
+                    onChange={(e) =>
+                      setSelectedPeriod(e.target.value as '6' | '12')
+                    }
+                  >
+                    <FormControlLabel
+                      value='6'
+                      control={
+                        <Radio
+                          sx={{
+                            '&.Mui-checked': {
+                              color: '#10b981'
+                            }
+                          }}
+                        />
+                      }
+                      label='6 Meses'
+                    />
+                    <FormControlLabel
+                      value='12'
+                      control={
+                        <Radio
+                          sx={{
+                            '&.Mui-checked': {
+                              color: '#10b981'
+                            }
+                          }}
+                        />
+                      }
+                      label='12 Meses'
+                    />
+                  </RadioGroup>
+                </FormControl>
+              </Stack>
+            </Box>
+
+            <Divider />
+
+            {/* Sección: Archivo PDF */}
+            <Box>
+              <SectionHeader icon={Description} title='Certificado PDF *' />
+              <DropZone
+                elevation={0}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() =>
+                  document.getElementById('file-input-create')?.click()
+                }
+                sx={{
+                  borderColor: isDragOver ? '#10b981' : '#d1d5db',
+                  backgroundColor: isDragOver ? '#f0fdf4' : '#f9fafb',
+                  transform: isDragOver ? 'scale(1.02)' : 'scale(1)',
+                  boxShadow: isDragOver
+                    ? '0 8px 25px rgba(16, 185, 129, 0.2)'
+                    : 'none'
+                }}
+              >
+                <input
+                  id='file-input-create'
+                  key={fileInputKey}
+                  type='file'
+                  accept='.pdf'
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
+                />
+
+                <CloudUpload
+                  sx={{
+                    fontSize: 48,
+                    color: selectedFileName
+                      ? '#10b981'
+                      : isDragOver
+                        ? '#10b981'
+                        : '#9ca3af',
+                    mb: 2,
+                    transition: 'color 0.3s ease'
+                  }}
+                />
+
+                {selectedFileName ? (
+                  <Box>
+                    <Typography
+                      variant='body1'
+                      fontWeight='600'
+                      sx={{ color: '#10b981', mb: 1 }}
+                    >
+                      ✓ Archivo seleccionado
+                    </Typography>
+                    <Typography variant='body2' sx={{ color: '#374151' }}>
+                      {selectedFileName}
+                    </Typography>
+                    <Typography
+                      variant='caption'
+                      sx={{ color: '#6b7280', mt: 1, display: 'block' }}
+                    >
+                      Haz clic para cambiar el archivo
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Box>
+                    <Typography
+                      variant='body1'
+                      fontWeight='600'
+                      sx={{
+                        color: isDragOver ? '#10b981' : '#374151',
+                        mb: 1,
+                        transition: 'color 0.3s ease'
+                      }}
+                    >
+                      {isDragOver
+                        ? '¡Suelta el archivo aquí!'
+                        : 'Arrastra tu archivo PDF aquí'}
+                    </Typography>
+                    <Typography variant='body2' sx={{ color: '#6b7280' }}>
+                      o haz clic para seleccionar
+                    </Typography>
+                    <Typography
+                      variant='caption'
+                      sx={{ color: '#9ca3af', mt: 1, display: 'block' }}
+                    >
+                      Máximo 10MB • Solo archivos PDF
+                    </Typography>
+                  </Box>
+                )}
+              </DropZone>
+            </Box>
+          </Stack>
+        </DialogContent>
+
+        <DialogActions sx={{ p: 3, pt: 0 }}>
+          <Button
+            onClick={onClose}
+            disabled={loading}
+            variant='outlined'
+            sx={{
+              borderRadius: '12px',
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3,
+              borderColor: '#d1d5db',
+              color: '#374151',
+              '&:hover': {
+                borderColor: '#9ca3af',
+                backgroundColor: '#f9fafb'
+              }
+            }}
+          >
+            Cancelar
+          </Button>
+
+          <Button
+            onClick={handleSubmit}
+            disabled={
+              loading ||
+              !file ||
+              !values.customerId ||
+              !values.deviceId ||
+              !values.certificateTypeId ||
+              !values.headquarter ||
+              !values.city?.trim() ||
+              !values.sede?.trim() ||
+              !values.location?.trim() ||
+              !values.activoFijo?.trim() ||
+              !values.serie?.trim() ||
+              !values.calibrationDate ||
+              !values.nextCalibrationDate
+            }
+            variant='contained'
+            startIcon={loading ? null : <CheckCircle />}
+            sx={{
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              borderRadius: '12px',
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 4,
+              ml: 2,
+              '&:hover': {
+                background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+              },
+              '&:disabled': {
+                background: '#e5e7eb',
+                color: '#9ca3af'
+              }
+            }}
+          >
+            {loading ? 'Guardando...' : 'Guardar Certificado'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   )
 }

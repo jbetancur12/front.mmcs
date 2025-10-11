@@ -10,17 +10,28 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Divider,
+  Box,
+  Typography,
+  Card,
+  CardContent,
   IconButton,
-  List,
-  ListItem,
-  ListItemText
+  Collapse,
+  Fade,
+  Tooltip,
+  Alert
 } from '@mui/material'
 
 import Loader from './Loader2'
 import { bigToast } from './ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { Visibility, VisibilityOff } from '@mui/icons-material'
+import { 
+  Download,
+  Delete,
+  CalendarToday,
+  ExpandMore,
+  ExpandLess,
+  PictureAsPdf
+} from '@mui/icons-material'
 import PDFViewer from './PDFViewer'
 
 interface Certificate {
@@ -29,7 +40,11 @@ interface Certificate {
   filePath: string
 }
 
-function CertificatesList() {
+interface CertificatesListProps {
+  refreshTrigger?: number
+}
+
+function CertificatesList({ refreshTrigger }: CertificatesListProps) {
   const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id: string }>()
   const [certificates, setCertificates] = useState<Certificate[]>([])
@@ -71,7 +86,7 @@ function CertificatesList() {
     }
 
     getCertificates()
-  }, [id])
+  }, [id, refreshTrigger])
 
   const handleDownload = async (path: string) => {
     const filePath = path
@@ -180,78 +195,248 @@ function CertificatesList() {
 
   return (
     <>
-      {/* <Paper elevation={3} className="p-4 mt-8"> */}
-
       <Loader loading={loading} />
-      {/* <Typography variant="h6" gutterBottom>
-        Certificados del Dispositivo
-      </Typography> */}
-      <Divider className='mb-4' />
-      <List>
-        {certificates.map((certificate) => (
-          <div key={certificate.id}>
-            <ListItem>
-              <IconButton
-                sx={{ mr: 3 }}
-                onClick={() => handlePreview(certificate)}
+      
+      {certificates.length === 0 ? (
+        <Alert 
+          severity="info" 
+          sx={{ 
+            borderRadius: '12px',
+            backgroundColor: '#f0f9ff',
+            border: '1px solid #bfdbfe',
+            '& .MuiAlert-icon': {
+              color: '#3b82f6'
+            }
+          }}
+        >
+          <Typography variant="body2">
+            No hay certificados disponibles para este equipo.
+          </Typography>
+        </Alert>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {certificates.map((certificate, index) => (
+            <Fade in={true} timeout={300 + index * 100} key={certificate.id}>
+              <Card 
+                elevation={0}
+                sx={{ 
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '12px',
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    borderColor: '#10b981',
+                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.1)',
+                    transform: 'translateY(-2px)'
+                  }
+                }}
               >
-                {previewId === certificate.id ? (
-                  <VisibilityOff />
-                ) : (
-                  <Visibility />
-                )}
-              </IconButton>
+                <CardContent sx={{ p: 3 }}>
+                  <Box display="flex" alignItems="center" justifyContent="space-between">
+                    {/* File Info */}
+                    <Box display="flex" alignItems="center" flex={1}>
+                      <Box 
+                        sx={{ 
+                          p: 1.5,
+                          backgroundColor: '#fef2f2',
+                          borderRadius: '8px',
+                          mr: 2,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <PictureAsPdf sx={{ color: '#dc2626', fontSize: 24 }} />
+                      </Box>
+                      
+                      <Box flex={1}>
+                        <Typography 
+                          variant="body1" 
+                          fontWeight="600" 
+                          sx={{ 
+                            color: '#1f2937',
+                            mb: 0.5,
+                            wordBreak: 'break-word'
+                          }}
+                        >
+                          {certificate.filePath.split('-').slice(1).join('-') || certificate.filePath}
+                        </Typography>
+                        
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <CalendarToday sx={{ fontSize: 16, color: '#6b7280' }} />
+                          <Typography variant="body2" sx={{ color: '#6b7280' }}>
+                            Fecha de Calibración: {new Date(certificate.calibrationDate).toLocaleDateString('es-ES', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
 
-              <ListItemText
-                primary={certificate.filePath}
-                secondary={`Fecha de Calibración: ${new Date(
-                  certificate.calibrationDate
-                ).toLocaleDateString()}`}
-              />
-              <Button
-                variant='outlined'
-                color='primary'
-                onClick={() => handleDownload(certificate.filePath)}
-              >
-                Descargar
-              </Button>
-              {$userStore.rol.some((role) =>
-                ['admin', 'metrologist'].includes(role)
-              ) && (
-                <Button
-                  variant='outlined'
-                  color='error'
-                  onClick={() => handleClickOpen(certificate.id)}
-                  sx={{ ml: 2 }}
-                >
-                  Eliminar
-                </Button>
-              )}
-            </ListItem>
-            {previewId === certificate.id && (
-              <PDFViewer path={certificatePath} buttons={false} />
-            )}
-          </div>
-        ))}
-        <Dialog open={open} onClose={handleClose}>
-          <DialogTitle>Confirmar eliminación</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              ¿Estás seguro de que quieres eliminar este certificado? Esta
-              acción no se puede deshacer.
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose} color='primary'>
-              Cancelar
-            </Button>
-            <Button onClick={handleConfirmDelete} color='error'>
-              Eliminar
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </List>
-      {/* </Paper> */}
+                    {/* Actions */}
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Tooltip title={previewId === certificate.id ? "Ocultar vista previa" : "Ver vista previa"}>
+                        <IconButton
+                          onClick={() => handlePreview(certificate)}
+                          sx={{
+                            color: previewId === certificate.id ? '#10b981' : '#6b7280',
+                            backgroundColor: previewId === certificate.id ? '#f0fdf4' : 'transparent',
+                            '&:hover': {
+                              backgroundColor: '#f0fdf4',
+                              color: '#10b981'
+                            }
+                          }}
+                        >
+                          {previewId === certificate.id ? <ExpandLess /> : <ExpandMore />}
+                        </IconButton>
+                      </Tooltip>
+
+                      <Tooltip title="Descargar certificado">
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<Download />}
+                          onClick={() => handleDownload(certificate.filePath)}
+                          sx={{
+                            borderColor: '#10b981',
+                            color: '#10b981',
+                            borderRadius: '8px',
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            '&:hover': {
+                              borderColor: '#059669',
+                              backgroundColor: '#f0fdf4',
+                              color: '#059669'
+                            }
+                          }}
+                        >
+                          Descargar
+                        </Button>
+                      </Tooltip>
+
+                      {$userStore.rol.some((role) => ['admin', 'metrologist'].includes(role)) && (
+                        <Tooltip title="Eliminar certificado">
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<Delete />}
+                            onClick={() => handleClickOpen(certificate.id)}
+                            sx={{
+                              borderColor: '#dc2626',
+                              color: '#dc2626',
+                              borderRadius: '8px',
+                              textTransform: 'none',
+                              fontWeight: 600,
+                              ml: 1,
+                              '&:hover': {
+                                borderColor: '#b91c1c',
+                                backgroundColor: '#fef2f2',
+                                color: '#b91c1c'
+                              }
+                            }}
+                          >
+                            Eliminar
+                          </Button>
+                        </Tooltip>
+                      )}
+                    </Box>
+                  </Box>
+
+                  {/* PDF Preview */}
+                  <Collapse in={previewId === certificate.id} timeout={300}>
+                    <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid #e5e7eb' }}>
+                      <Box 
+                        sx={{ 
+                          backgroundColor: '#f8fafc',
+                          borderRadius: '8px',
+                          p: 2,
+                          border: '1px solid #e5e7eb'
+                        }}
+                      >
+                        <PDFViewer path={certificatePath} buttons={false} />
+                      </Box>
+                    </Box>
+                  </Collapse>
+                </CardContent>
+              </Card>
+            </Fade>
+          ))}
+        </Box>
+      )}
+
+      {/* Modern Delete Confirmation Dialog */}
+      <Dialog 
+        open={open} 
+        onClose={handleClose}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          textAlign: 'center', 
+          fontWeight: 'bold',
+          pb: 1,
+          borderBottom: '1px solid #e5e7eb'
+        }}>
+          <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>
+            <Delete sx={{ color: '#dc2626' }} />
+            <Typography variant="h6" fontWeight="bold">
+              Confirmar Eliminación
+            </Typography>
+          </Box>
+        </DialogTitle>
+        
+        <DialogContent sx={{ pt: 3, textAlign: 'center' }}>
+          <DialogContentText sx={{ fontSize: '1rem', color: '#374151' }}>
+            ¿Estás seguro de que quieres eliminar este certificado?
+          </DialogContentText>
+          <DialogContentText sx={{ fontSize: '0.875rem', color: '#6b7280', mt: 1 }}>
+            Esta acción no se puede deshacer.
+          </DialogContentText>
+        </DialogContent>
+        
+        <DialogActions sx={{ p: 3, pt: 0 }}>
+          <Button 
+            onClick={handleClose}
+            variant="outlined"
+            sx={{
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontWeight: 600,
+              borderColor: '#d1d5db',
+              color: '#374151',
+              '&:hover': {
+                borderColor: '#9ca3af',
+                backgroundColor: '#f9fafb'
+              }
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleConfirmDelete}
+            variant="contained"
+            sx={{
+              backgroundColor: '#dc2626',
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontWeight: 600,
+              ml: 2,
+              '&:hover': {
+                backgroundColor: '#b91c1c'
+              }
+            }}
+          >
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   )
 }

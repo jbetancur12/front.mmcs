@@ -4,6 +4,7 @@ import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
 
 const Customers = lazy(() => import('../pages/Customers'))
 const Customer = lazy(() => import('../pages/Customer'))
+const ModernCustomer = lazy(() => import('../pages/ModernCustomer'))
 
 const PDFViewer = lazy(() => import('../Components/DataSheet/PDFViewer'))
 const DashboardCustomer = lazy(
@@ -38,7 +39,8 @@ const CustomerRoutes = (role: string[]) => {
         <Route path='customers'>
           <Route index element={<Customers />} />
           <Route path='certificates-due/:id' element={<DashboardCustomer />} />
-          <Route path=':id' element={<Customer />} />
+          <Route path=':id' element={<ModernCustomer />} />
+          <Route path=':id/legacy' element={<Customer />} />
           <Route
             path=':id/schedule/pdf'
             element={<PDFViewer path='calibration-schedule' />}

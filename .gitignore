@@ -6,6 +6,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+stats.html
 
 node_modules
 dist
@@ -29,3 +30,6 @@ dist-ssr
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Bundle analyzer stats
+stats.html
