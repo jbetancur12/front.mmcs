@@ -23,6 +23,17 @@ const LmsUserManagement = lazy(
   () => import('../pages/lms/admin/LmsUserManagement')
 )
 const LmsAnalytics = lazy(() => import('../pages/lms/admin/LmsAnalytics'))
+const LmsReporting = lazy(() => import('../pages/lms/admin/LmsReporting'))
+const LmsCourseAssignments = lazy(() => import('../pages/lms/admin/LmsCourseAssignments'))
+const LmsQuizManagement = lazy(() => import('../pages/lms/admin/LmsQuizManagement'))
+const LmsQuestionBank = lazy(() => import('../pages/lms/admin/LmsQuestionBank'))
+const LmsQuizAnalytics = lazy(() => import('../pages/lms/admin/LmsQuizAnalytics'))
+const LmsQuizValidator = lazy(() => import('../pages/lms/admin/LmsQuizValidator'))
+const LmsCourseAssignmentInterface = lazy(() => import('../pages/lms/admin/LmsCourseAssignmentInterface'))
+const LmsComplianceTracker = lazy(() => import('../pages/lms/admin/LmsComplianceTracker'))
+const LmsCertificateTemplates = lazy(() => import('../pages/lms/admin/LmsCertificateTemplates'))
+const LmsCertificateView = lazy(() => import('../pages/lms/course/LmsCertificateView'))
+const LmsJobManagement = lazy(() => import('../pages/lms/admin/LmsJobManagement'))
 
 const LmsRoutes = (role: string[]) => {
   return (
@@ -53,6 +64,18 @@ const LmsRoutes = (role: string[]) => {
         />
         <Route path='lms/admin/users' element={<LmsUserManagement />} />
         <Route path='lms/admin/analytics' element={<LmsAnalytics />} />
+        <Route path='lms/admin/reporting' element={<LmsReporting />} />
+        <Route path='lms/admin/courses/:courseId/assignments' element={<LmsCourseAssignments />} />
+        <Route path='lms/admin/quiz-management' element={<LmsQuizManagement />} />
+        <Route path='lms/admin/question-bank' element={<LmsQuestionBank />} />
+        <Route path='lms/admin/quiz-analytics' element={<LmsQuizAnalytics />} />
+        <Route path='lms/admin/quiz-validator' element={<LmsQuizValidator />} />
+        <Route path='lms/admin/assignments' element={<LmsCourseAssignmentInterface />} />
+        <Route path='lms/admin/compliance' element={<LmsComplianceTracker />} />
+        <Route path='lms/admin/certificate-templates' element={<LmsCertificateTemplates />} />
+        <Route path='lms/certificate/:certificateId' element={<LmsCertificateView />} />
+        <Route path='lms/certificates' element={<LmsCertificateView />} />
+        <Route path='lms/admin/jobs' element={<LmsJobManagement />} />
       </Route>
     </>
   )

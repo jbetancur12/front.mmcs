@@ -1,0 +1,805 @@
+import React, { useState, useEffect } from 'react'
+import {
+  Box,
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+  Button,
+  Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Paper,
+  Chip,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Divider,
+  Alert,
+  TextField,
+  InputAdornment,
+  Tooltip,
+  Avatar,
+  LinearProgress
+} from '@mui/material'
+import {
+  Download as DownloadIcon,
+  Share as ShareIcon,
+  Visibility as VisibilityIcon,
+  Print as PrintIcon,
+  Search as SearchIcon,
+  EmojiEvents as CertificateIcon,
+  Verified as VerifiedIcon,
+  CalendarToday as CalendarIcon,
+  School as SchoolIcon,
+  Person as PersonIcon,
+  Link as LinkIcon,
+  Email as EmailIcon,
+  LinkedIn as LinkedInIcon,
+  WhatsApp as WhatsAppIcon,
+  Close as CloseIcon,
+  CheckCircle as CheckCircleIcon,
+  Error as ErrorIcon
+} from '@mui/icons-material'
+import { useParams, useNavigate } from 'react-router-dom'
+
+interface Certificate {
+  id: number
+  certificate_number: string
+  user_name: string
+  user_email: string
+  course_name: string
+  course_id: number
+  completion_date: string
+  issued_at: string
+  template_name: string
+  pdf_path: string
+  verification_url: string
+  is_verified: boolean
+  certificate_data: {
+    user_name: string
+    course_name: string
+    completion_date: string
+    certificate_number: string
+    course_duration?: number
+    instructor_name?: string
+    organization_name?: string
+  }
+}
+
+interface UserCertificate {
+  id: number
+  certificate_number: string
+  course_name: string
+  course_id: number
+  completion_date: string
+  issued_at: string
+  template_name: string
+  pdf_path: string
+  verification_url: string
+  course_thumbnail?: string
+  course_category?: string
+}
+
+interface CertificateVerification {
+  isValid: boolean
+  certificate?: Certificate
+  error?: string
+}
+
+const LmsCertificateView: React.FC = () => {
+  const { certificateId } = useParams<{ certificateId: string }>()
+  const navigate = useNavigate()
+  
+  const [certificate, setCertificate] = useState<Certificate | null>(null)
+  const [userCertificates, setUserCertificates] = useState<UserCertificate[]>([])
+  const [loading, setLoading] = useState(false)
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
+  const [isVerificationDialogOpen, setIsVerificationDialogOpen] = useState(false)
+  const [verificationNumber, setVerificationNumber] = useState('')
+  const [verificationResult, setVerificationResult] = useState<CertificateVerification | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [viewMode, setViewMode] = useState<'single' | 'gallery'>('single')
+
+  // Mock data for certificates
+  const mockCertificate: Certificate = {
+    id: 1,
+    certificate_number: 'CERT-2024-001',
+    user_name: 'Juan Pérez García',
+    user_email: 'juan.perez@example.com',
+    course_name: 'Fundamentos de React y TypeScript',
+    course_id: 1,
+    completion_date: '2024-01-15',
+    issued_at: '2024-01-15T10:30:00Z',
+    template_name: 'Certificado Estándar',
+    pdf_path: '/certificates/CERT-2024-001.pdf',
+    verification_url: 'https://lms.example.com/verify/CERT-2024-001',
+    is_verified: true,
+    certificate_data: {
+      user_name: 'Juan Pérez García',
+      course_name: 'Fundamentos de React y TypeScript',
+      completion_date: '15 de Enero, 2024',
+      certificate_number: 'CERT-2024-001',
+      course_duration: 40,
+      instructor_name: 'María González',
+      organization_name: 'MMCS Learning Platform'
+    }
+  }
+
+  const mockUserCertificates: UserCertificate[] = [
+    {
+      id: 1,
+      certificate_number: 'CERT-2024-001',
+      course_name: 'Fundamentos de React y TypeScript',
+      course_id: 1,
+      completion_date: '2024-01-15',
+      issued_at: '2024-01-15T10:30:00Z',
+      template_name: 'Certificado Estándar',
+      pdf_path: '/certificates/CERT-2024-001.pdf',
+      verification_url: 'https://lms.example.com/verify/CERT-2024-001',
+      course_thumbnail: '/placeholder.svg?height=200&width=300',
+      course_category: 'Desarrollo Web'
+    },
+    {
+      id: 2,
+      certificate_number: 'CERT-2024-002',
+      course_name: 'Seguridad en el Trabajo',
+      course_id: 2,
+      completion_date: '2024-01-20',
+      issued_at: '2024-01-20T14:15:00Z',
+      template_name: 'Certificado Corporativo',
+      pdf_path: '/certificates/CERT-2024-002.pdf',
+      verification_url: 'https://lms.example.com/verify/CERT-2024-002',
+      course_thumbnail: '/placeholder.svg?height=200&width=300',
+      course_category: 'Seguridad'
+    },
+    {
+      id: 3,
+      certificate_number: 'CERT-2024-003',
+      course_name: 'Comunicación Efectiva',
+      course_id: 3,
+      completion_date: '2024-01-25',
+      issued_at: '2024-01-25T09:45:00Z',
+      template_name: 'Certificado Estándar',
+      pdf_path: '/certificates/CERT-2024-003.pdf',
+      verification_url: 'https://lms.example.com/verify/CERT-2024-003',
+      course_thumbnail: '/placeholder.svg?height=200&width=300',
+      course_category: 'Habilidades Blandas'
+    }
+  ]
+
+  useEffect(() => {
+    if (certificateId) {
+      setViewMode('single')
+      loadCertificate(certificateId)
+    } else {
+      setViewMode('gallery')
+      loadUserCertificates()
+    }
+  }, [certificateId])
+
+  const loadCertificate = async (_id: string) => {
+    setLoading(true)
+    try {
+      // TODO: Replace with actual API call
+      // const response = await fetch(`/api/lms/certificates/${id}`)
+      // const data = await response.json()
+      setCertificate(mockCertificate)
+    } catch (error) {
+      console.error('Error loading certificate:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadUserCertificates = async () => {
+    setLoading(true)
+    try {
+      // TODO: Replace with actual API call
+      // const response = await fetch('/api/lms/certificates/my-certificates')
+      // const data = await response.json()
+      setUserCertificates(mockUserCertificates)
+    } catch (error) {
+      console.error('Error loading certificates:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDownloadCertificate = async (certificateNumber: string) => {
+    try {
+      // TODO: Replace with actual API call
+      // const response = await fetch(`/api/lms/certificates/${certificateNumber}/download`)
+      // const blob = await response.blob()
+      // const url = window.URL.createObjectURL(blob)
+      // const a = document.createElement('a')
+      // a.href = url
+      // a.download = `certificate-${certificateNumber}.pdf`
+      // a.click()
+      // window.URL.revokeObjectURL(url)
+      
+      console.log('Downloading certificate:', certificateNumber)
+      // Simulate download
+      alert(`Descargando certificado ${certificateNumber}...`)
+    } catch (error) {
+      console.error('Error downloading certificate:', error)
+    }
+  }
+
+  const handlePrintCertificate = () => {
+    window.print()
+  }
+
+  const handleShareCertificate = (certificate: Certificate | UserCertificate) => {
+    setCertificate(certificate as Certificate)
+    setIsShareDialogOpen(true)
+  }
+
+  const handleVerifyCertificate = async () => {
+    if (!verificationNumber.trim()) return
+
+    setLoading(true)
+    try {
+      // TODO: Replace with actual API call
+      // const response = await fetch(`/api/lms/certificates/verify/${verificationNumber}`)
+      // const data = await response.json()
+      
+      // Mock verification
+      if (verificationNumber === 'CERT-2024-001') {
+        setVerificationResult({
+          isValid: true,
+          certificate: mockCertificate
+        })
+      } else {
+        setVerificationResult({
+          isValid: false,
+          error: 'Certificado no encontrado o número inválido'
+        })
+      }
+    } catch (error) {
+      console.error('Error verifying certificate:', error)
+      setVerificationResult({
+        isValid: false,
+        error: 'Error al verificar el certificado'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const generateCertificateHtml = (cert: Certificate) => {
+    // This would normally use the template from the database
+    return `
+      <div style="width: 800px; height: 600px; border: 2px solid #2196F3; padding: 40px; font-family: Arial, sans-serif; text-align: center; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); margin: 0 auto;">
+        <h1 style="color: #2196F3; margin-bottom: 20px; font-size: 36px;">CERTIFICADO DE FINALIZACIÓN</h1>
+        <div style="margin: 40px 0;">
+          <p style="font-size: 18px; margin-bottom: 10px;">Se certifica que</p>
+          <h2 style="color: #333; font-size: 28px; margin: 20px 0; border-bottom: 2px solid #2196F3; padding-bottom: 10px;">${cert.certificate_data.user_name}</h2>
+          <p style="font-size: 18px; margin-bottom: 10px;">ha completado exitosamente el curso</p>
+          <h3 style="color: #2196F3; font-size: 24px; margin: 20px 0;">${cert.certificate_data.course_name}</h3>
+        </div>
+        <div style="margin: 40px 0;">
+          <p style="font-size: 16px;">Fecha de finalización: ${cert.certificate_data.completion_date}</p>
+          <p style="font-size: 14px; color: #666;">Certificado N°: ${cert.certificate_data.certificate_number}</p>
+        </div>
+        <div style="margin-top: 60px;">
+          <div style="border-top: 1px solid #333; width: 200px; margin: 0 auto; padding-top: 10px;">
+            <p style="font-size: 14px; margin: 0;">Firma Autorizada</p>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  const filteredCertificates = userCertificates.filter(cert =>
+    cert.course_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    cert.certificate_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    cert.course_category?.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const shareOptions = [
+    {
+      name: 'Copiar enlace',
+      icon: <LinkIcon />,
+      action: () => {
+        navigator.clipboard.writeText(certificate?.verification_url || '')
+        alert('Enlace copiado al portapapeles')
+      }
+    },
+    {
+      name: 'Email',
+      icon: <EmailIcon />,
+      action: () => {
+        const subject = `Mi certificado: ${certificate?.course_name}`
+        const body = `He completado el curso "${certificate?.course_name}" y obtenido mi certificado. Puedes verificarlo en: ${certificate?.verification_url}`
+        window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)
+      }
+    },
+    {
+      name: 'LinkedIn',
+      icon: <LinkedInIcon />,
+      action: () => {
+        const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(certificate?.verification_url || '')}`
+        window.open(url, '_blank')
+      }
+    },
+    {
+      name: 'WhatsApp',
+      icon: <WhatsAppIcon />,
+      action: () => {
+        const text = `He completado el curso "${certificate?.course_name}" y obtenido mi certificado. Puedes verificarlo en: ${certificate?.verification_url}`
+        const url = `https://wa.me/?text=${encodeURIComponent(text)}`
+        window.open(url, '_blank')
+      }
+    }
+  ]
+
+  if (loading && viewMode === 'single') {
+    return (
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <LinearProgress sx={{ mb: 2 }} />
+        <Typography>Cargando certificado...</Typography>
+      </Box>
+    )
+  }
+
+  return (
+    <Box sx={{ p: 3 }}>
+      {viewMode === 'single' && certificate ? (
+        // Single Certificate View
+        <Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography variant="h4" component="h1">
+              Certificado de Finalización
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="outlined"
+                startIcon={<PrintIcon />}
+                onClick={handlePrintCertificate}
+              >
+                Imprimir
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<ShareIcon />}
+                onClick={() => handleShareCertificate(certificate)}
+              >
+                Compartir
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<DownloadIcon />}
+                onClick={() => handleDownloadCertificate(certificate.certificate_number)}
+              >
+                Descargar PDF
+              </Button>
+            </Box>
+          </Box>
+
+          <Grid container spacing={3}>
+            <Grid item xs={12} lg={8}>
+              <Paper sx={{ p: 2, mb: 3 }}>
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: generateCertificateHtml(certificate)
+                  }}
+                />
+              </Paper>
+            </Grid>
+
+            <Grid item xs={12} lg={4}>
+              <Card sx={{ mb: 3 }}>
+                <CardHeader
+                  title="Información del Certificado"
+                  avatar={
+                    <Avatar sx={{ bgcolor: 'primary.main' }}>
+                      <CertificateIcon />
+                    </Avatar>
+                  }
+                />
+                <CardContent>
+                  <List dense>
+                    <ListItem>
+                      <ListItemIcon>
+                        <PersonIcon />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Estudiante"
+                        secondary={certificate.user_name}
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemIcon>
+                        <SchoolIcon />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Curso"
+                        secondary={certificate.course_name}
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemIcon>
+                        <CalendarIcon />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Fecha de finalización"
+                        secondary={new Date(certificate.completion_date).toLocaleDateString('es-ES')}
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemIcon>
+                        <VerifiedIcon />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Número de certificado"
+                        secondary={certificate.certificate_number}
+                      />
+                    </ListItem>
+                  </List>
+
+                  <Divider sx={{ my: 2 }} />
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                    <CheckCircleIcon color="success" />
+                    <Typography variant="body2" color="success.main">
+                      Certificado verificado
+                    </Typography>
+                  </Box>
+
+                  <Typography variant="caption" color="text.secondary">
+                    Este certificado puede ser verificado usando el número: {certificate.certificate_number}
+                  </Typography>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader title="Verificar Certificado" />
+                <CardContent>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Ingresa el número de certificado para verificar su autenticidad
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    startIcon={<VerifiedIcon />}
+                    onClick={() => setIsVerificationDialogOpen(true)}
+                  >
+                    Verificar Certificado
+                  </Button>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </Box>
+      ) : (
+        // Certificate Gallery View
+        <Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography variant="h4" component="h1">
+              Mis Certificados
+            </Typography>
+            <Button
+              variant="outlined"
+              startIcon={<VerifiedIcon />}
+              onClick={() => setIsVerificationDialogOpen(true)}
+            >
+              Verificar Certificado
+            </Button>
+          </Box>
+
+          <Box sx={{ mb: 3 }}>
+            <TextField
+              fullWidth
+              placeholder="Buscar certificados por nombre del curso, número o categoría..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                )
+              }}
+            />
+          </Box>
+
+          {loading ? (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <LinearProgress sx={{ mb: 2 }} />
+              <Typography>Cargando certificados...</Typography>
+            </Box>
+          ) : (
+            <Grid container spacing={3}>
+              {filteredCertificates.map((cert) => (
+                <Grid item xs={12} md={6} lg={4} key={cert.id}>
+                  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <CardHeader
+                      title={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <CertificateIcon color="primary" />
+                          <Typography variant="h6" component="div" noWrap>
+                            {cert.course_name}
+                          </Typography>
+                        </Box>
+                      }
+                      action={
+                        <Chip
+                          label={cert.course_category}
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                        />
+                      }
+                    />
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Certificado N°: {cert.certificate_number}
+                      </Typography>
+                      
+                      <Typography variant="body2" sx={{ mb: 1 }}>
+                        <strong>Completado:</strong> {new Date(cert.completion_date).toLocaleDateString('es-ES')}
+                      </Typography>
+                      
+                      <Typography variant="body2" sx={{ mb: 2 }}>
+                        <strong>Plantilla:</strong> {cert.template_name}
+                      </Typography>
+
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        <Tooltip title="Ver certificado">
+                          <IconButton
+                            size="small"
+                            onClick={() => navigate(`/lms/certificate/${cert.id}`)}
+                          >
+                            <VisibilityIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Descargar PDF">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDownloadCertificate(cert.certificate_number)}
+                          >
+                            <DownloadIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Compartir">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleShareCertificate(cert as Certificate)}
+                          >
+                            <ShareIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          )}
+
+          {filteredCertificates.length === 0 && !loading && (
+            <Paper sx={{ p: 4, textAlign: 'center' }}>
+              <CertificateIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                {searchTerm ? 'No se encontraron certificados' : 'No tienes certificados aún'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {searchTerm 
+                  ? 'Intenta con otros términos de búsqueda'
+                  : 'Completa cursos para obtener tus primeros certificados'
+                }
+              </Typography>
+            </Paper>
+          )}
+        </Box>
+      )}   
+   {/* Share Certificate Dialog */}
+      <Dialog
+        open={isShareDialogOpen}
+        onClose={() => setIsShareDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6">
+              Compartir Certificado
+            </Typography>
+            <IconButton onClick={() => setIsShareDialogOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Alert severity="info" sx={{ mb: 3 }}>
+            <Typography variant="body2">
+              Comparte tu certificado con otros para demostrar tu logro académico.
+            </Typography>
+          </Alert>
+
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Enlace de verificación:
+            </Typography>
+            <Paper sx={{ p: 2, bgcolor: 'grey.50', border: '1px dashed', borderColor: 'grey.300' }}>
+              <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
+                {certificate?.verification_url}
+              </Typography>
+            </Paper>
+          </Box>
+
+          <Typography variant="subtitle2" gutterBottom>
+            Compartir en:
+          </Typography>
+          <Grid container spacing={2}>
+            {shareOptions.map((option) => (
+              <Grid item xs={6} key={option.name}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  startIcon={option.icon}
+                  onClick={option.action}
+                  sx={{ justifyContent: 'flex-start' }}
+                >
+                  {option.name}
+                </Button>
+              </Grid>
+            ))}
+          </Grid>
+        </DialogContent>
+      </Dialog>
+
+      {/* Certificate Verification Dialog */}
+      <Dialog
+        open={isVerificationDialogOpen}
+        onClose={() => {
+          setIsVerificationDialogOpen(false)
+          setVerificationResult(null)
+          setVerificationNumber('')
+        }}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Verificar Certificado
+        </DialogTitle>
+        <DialogContent>
+          <Alert severity="info" sx={{ mb: 3 }}>
+            <Typography variant="body2">
+              Ingresa el número de certificado para verificar su autenticidad y validez.
+            </Typography>
+          </Alert>
+
+          <Box sx={{ mb: 3 }}>
+            <TextField
+              fullWidth
+              label="Número de Certificado"
+              value={verificationNumber}
+              onChange={(e) => setVerificationNumber(e.target.value)}
+              placeholder="Ej: CERT-2024-001"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <VerifiedIcon />
+                  </InputAdornment>
+                )
+              }}
+            />
+          </Box>
+
+          <Button
+            variant="contained"
+            onClick={handleVerifyCertificate}
+            disabled={!verificationNumber.trim() || loading}
+            fullWidth
+            sx={{ mb: 3 }}
+          >
+            {loading ? 'Verificando...' : 'Verificar Certificado'}
+          </Button>
+
+          {verificationResult && (
+            <Paper sx={{ p: 3, border: '1px solid', borderColor: verificationResult.isValid ? 'success.main' : 'error.main' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                {verificationResult.isValid ? (
+                  <CheckCircleIcon color="success" />
+                ) : (
+                  <ErrorIcon color="error" />
+                )}
+                <Typography variant="h6" color={verificationResult.isValid ? 'success.main' : 'error.main'}>
+                  {verificationResult.isValid ? 'Certificado Válido' : 'Certificado No Válido'}
+                </Typography>
+              </Box>
+
+              {verificationResult.isValid && verificationResult.certificate ? (
+                <Box>
+                  <Typography variant="body2" sx={{ mb: 2 }}>
+                    Este certificado es auténtico y ha sido emitido por nuestra plataforma.
+                  </Typography>
+                  
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="caption" color="text.secondary">
+                        Estudiante:
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                        {verificationResult.certificate.user_name}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="caption" color="text.secondary">
+                        Curso:
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                        {verificationResult.certificate.course_name}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="caption" color="text.secondary">
+                        Fecha de finalización:
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                        {new Date(verificationResult.certificate.completion_date).toLocaleDateString('es-ES')}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="caption" color="text.secondary">
+                        Fecha de emisión:
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                        {new Date(verificationResult.certificate.issued_at).toLocaleDateString('es-ES')}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+
+                  <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<VisibilityIcon />}
+                      onClick={() => {
+                        navigate(`/lms/certificate/${verificationResult.certificate?.id}`)
+                        setIsVerificationDialogOpen(false)
+                      }}
+                    >
+                      Ver Certificado
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<DownloadIcon />}
+                      onClick={() => handleDownloadCertificate(verificationResult.certificate?.certificate_number || '')}
+                    >
+                      Descargar
+                    </Button>
+                  </Box>
+                </Box>
+              ) : (
+                <Typography variant="body2" color="error">
+                  {verificationResult.error || 'El certificado no pudo ser verificado.'}
+                </Typography>
+              )}
+            </Paper>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setIsVerificationDialogOpen(false)
+              setVerificationResult(null)
+              setVerificationNumber('')
+            }}
+          >
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  )
+}
+
+export default LmsCertificateView

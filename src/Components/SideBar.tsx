@@ -127,56 +127,76 @@ const sidebarItems = ($userStore: UserData) => [
       }
     ]
   },
-  // {
-  //   type: 'dropdown',
-  //   buttonText: 'LMS',
-  //   roles: ['admin', 'employee', 'client'],
-  //   moduleName: 'Basic',
-  //   pathData:
-  //     'M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z',
-  //   menuItems: [
-  //     {
-  //       label: 'Dashboard',
-  //       url: 'lms',
-  //       roles: ['admin', 'employee', 'client']
-  //     },
-  //     {
-  //       label: 'Administración',
-  //       url: 'lms/admin',
-  //       roles: ['admin']
-  //     },
-  //     {
-  //       label: 'Mis Cursos',
-  //       url: 'lms/admin/dashboard',
-  //       roles: ['admin']
-  //     },
-  //     {
-  //       label: 'Gestión de Cursos',
-  //       url: 'lms/admin/courses',
-  //       roles: ['admin']
-  //     },
-  //     {
-  //       label: 'Gestión de Usuarios',
-  //       url: 'lms/admin/users',
-  //       roles: ['admin']
-  //     },
-  //     {
-  //       label: 'Analíticas',
-  //       url: 'lms/admin/analytics',
-  //       roles: ['admin']
-  //     },
-  //     {
-  //       label: 'Mi Aprendizaje',
-  //       url: 'lms/employee',
-  //       roles: ['employee']
-  //     },
-  //     {
-  //       label: 'Cursos Públicos',
-  //       url: 'lms/client',
-  //       roles: ['client']
-  //     }
-  //   ]
-  // },
+  {
+    type: 'dropdown',
+    buttonText: 'LMS',
+    roles: ['admin', 'employee', 'client'],
+    moduleName: 'Basic',
+    pathData:
+      'M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z',
+    menuItems: [
+      {
+        label: 'Dashboard',
+        url: 'lms',
+        roles: ['admin', 'employee', 'client']
+      },
+      {
+        label: 'Administración',
+        url: 'lms/admin',
+        roles: ['admin']
+      },
+      {
+        label: 'Mis Cursos',
+        url: 'lms/admin/dashboard',
+        roles: ['admin']
+      },
+      {
+        label: 'Gestión de Cursos',
+        url: 'lms/admin/courses',
+        roles: ['admin']
+      },
+      {
+        label: 'Gestión de Usuarios',
+        url: 'lms/admin/users',
+        roles: ['admin']
+      },
+      {
+        label: 'Analíticas',
+        url: 'lms/admin/analytics',
+        roles: ['admin']
+      },
+      {
+        label: 'Asignacioness',
+        url: 'lms/admin/assignments',
+        roles: ['admin']
+      },
+      {
+        label: 'Cumplimiento',
+        url: 'lms/admin/compliance',
+        roles: ['admin']
+      },
+      {
+        label: 'Plantillas de Certificados',
+        url: 'lms/admin/certificate-templates',
+        roles: ['admin']
+      },
+      {
+        label: 'Mi Aprendizaje',
+        url: 'lms/employee',
+        roles: ['employee']
+      },
+      {
+        label: 'Mis Certificados',
+        url: 'lms/certificates',
+        roles: ['employee', 'client']
+      },
+      {
+        label: 'Cursos Públicos',
+        url: 'lms/client',
+        roles: ['client']
+      }
+    ]
+  },
   {
     type: 'link',
     label: 'Biomedicos',

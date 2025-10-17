@@ -5,6 +5,9 @@
     "paths": {
       "@utils/*": ["src/utils/*"], // This should map to the correct directory
       "@stores/*": ["src/store/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@services/*": ["src/services/*"],
+      "@config/*": ["src/config/*"]
     },
     "target": "ES2020",
     "useDefineForClassFields": true,

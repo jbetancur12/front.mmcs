@@ -30,7 +30,8 @@ import {
   Settings as SettingsIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  School as SchoolIcon
 } from '@mui/icons-material'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../../store/userStore'
@@ -67,6 +68,13 @@ const SimplifiedModernSidebar: React.FC<ModernSidebarProps> = ({ onItemClick }) 
       icon: <BusinessIcon />,
       to: '/customers',
       roles: ['admin', 'metrologist']
+    },
+    {
+      id: 'lms',
+      label: 'LMS',
+      icon: <SchoolIcon />,
+      to: '/lms',
+      roles: ['admin', 'employee', 'client']
     },
     {
       id: 'quotes',
