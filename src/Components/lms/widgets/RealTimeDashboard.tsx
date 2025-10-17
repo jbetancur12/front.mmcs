@@ -52,10 +52,10 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
     isRealTimeEnabled,
     lastNotificationTime
   } = useHybridNotifications({
-    enableWebSocket: true,
-    enablePolling: true,
+    enableWebSocket: false, // Disabled temporarily to prevent connection issues
+    enablePolling: false, // Disabled to prevent excessive requests
     pollingInterval: refreshInterval,
-    fallbackToPolling: true,
+    fallbackToPolling: false, // Disabled to prevent excessive requests
     onNewNotification: (notification) => {
       // Show real-time alert for new notifications
       setRealtimeAlert({
@@ -85,7 +85,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
 
     // Default navigation based on notification metadata
     const metadata = notification.metadata || {}
-    
+
     if (notification.actionUrl) {
       navigate(notification.actionUrl)
     } else if (metadata.courseId) {
@@ -104,18 +104,28 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
   }
 
   const handleCloseAlert = () => {
-    setRealtimeAlert(prev => ({ ...prev, show: false }))
+    setRealtimeAlert((prev) => ({ ...prev, show: false }))
   }
 
   return (
     <Box>
       {/* Connection Status */}
       {showConnectionStatus && (
-        <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2 }}>
-          <Typography variant="caption" color="text.secondary">
-            {connectionMethod === 'websocket' ? 'Tiempo real (WebSocket)' : 
-             connectionMethod === 'polling' ? 'Actualización automática' : 
-             'Solo actualización manual'}
+        <Box
+          sx={{
+            mb: 2,
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: 2
+          }}
+        >
+          <Typography variant='caption' color='text.secondary'>
+            {connectionMethod === 'websocket'
+              ? 'Tiempo real (WebSocket)'
+              : connectionMethod === 'polling'
+                ? 'Actualización automática'
+                : 'Solo actualización manual'}
           </Typography>
           <ConnectionStatusIndicator
             isConnected={isConnected}
@@ -124,15 +134,15 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
             connectionAttempts={0}
             onRefresh={handleRefreshConnection}
             showLabel={true}
-            size="medium"
+            size='medium'
           />
         </Box>
       )}
 
       {/* Error Alerts */}
       {(wsError || notificationsError) && (
-        <Alert 
-          severity={isRealTimeEnabled ? "info" : "warning"} 
+        <Alert
+          severity={isRealTimeEnabled ? 'info' : 'warning'}
           sx={{ mb: 2, borderRadius: 2 }}
           action={
             <ConnectionStatusIndicator
@@ -142,29 +152,31 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
               connectionAttempts={0}
               onRefresh={handleRefreshConnection}
               showLabel={false}
-              size="small"
+              size='small'
             />
           }
         >
           <Stack spacing={1}>
             {wsError && !isRealTimeEnabled && (
-              <Typography variant="body2">
+              <Typography variant='body2'>
                 Conexión WebSocket no disponible: {wsError}
               </Typography>
             )}
             {isRealTimeEnabled && connectionMethod === 'polling' && (
-              <Typography variant="body2">
-                Usando actualización automática como respaldo (cada {Math.round(refreshInterval / 1000)}s)
+              <Typography variant='body2'>
+                Usando actualización automática como respaldo (cada{' '}
+                {Math.round(refreshInterval / 1000)}s)
               </Typography>
             )}
             {notificationsError && (
-              <Typography variant="body2">
+              <Typography variant='body2'>
                 Error al cargar notificaciones: {notificationsError.message}
               </Typography>
             )}
             {!isRealTimeEnabled && (
-              <Typography variant="caption" color="text.secondary">
-                Las notificaciones requieren actualización manual. Algunas funciones pueden estar limitadas.
+              <Typography variant='caption' color='text.secondary'>
+                Las notificaciones requieren actualización manual. Algunas
+                funciones pueden estar limitadas.
               </Typography>
             )}
           </Stack>
@@ -189,30 +201,46 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
 
         {/* Real-time Status Card */}
         <Grid item xs={12} md={6} lg={4}>
-          <Card sx={{
-            borderRadius: '16px',
-            border: '1px solid #e5e7eb',
-            height: '100%'
-          }}>
+          <Card
+            sx={{
+              borderRadius: '16px',
+              border: '1px solid #e5e7eb',
+              height: '100%'
+            }}
+          >
             <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+              <Typography variant='h6' sx={{ fontWeight: 700, mb: 2 }}>
                 Estado en Tiempo Real
               </Typography>
-              
+
               <Stack spacing={2}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="body2" color="text.secondary">
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Typography variant='body2' color='text.secondary'>
                     Método de conexión
                   </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {connectionMethod === 'websocket' ? 'WebSocket' : 
-                     connectionMethod === 'polling' ? 'Polling' : 
-                     'Manual'}
+                  <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                    {connectionMethod === 'websocket'
+                      ? 'WebSocket'
+                      : connectionMethod === 'polling'
+                        ? 'Polling'
+                        : 'Manual'}
                   </Typography>
                 </Box>
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="body2" color="text.secondary">
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Typography variant='body2' color='text.secondary'>
                     Estado de conexión
                   </Typography>
                   <ConnectionStatusIndicator
@@ -222,26 +250,38 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
                     connectionAttempts={0}
                     onRefresh={handleRefreshConnection}
                     showLabel={false}
-                    size="small"
+                    size='small'
                   />
                 </Box>
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="body2" color="text.secondary">
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Typography variant='body2' color='text.secondary'>
                     Notificaciones sin leer
                   </Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  <Typography variant='h6' sx={{ fontWeight: 700 }}>
                     {summary.unread}
                   </Typography>
                 </Box>
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="body2" color="text.secondary">
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Typography variant='body2' color='text.secondary'>
                     Alertas críticas
                   </Typography>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
+                  <Typography
+                    variant='h6'
+                    sx={{
                       fontWeight: 700,
                       color: summary.critical > 0 ? '#dc2626' : 'inherit'
                     }}
@@ -252,15 +292,22 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
 
                 {lastNotificationTime && (
                   <Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    <Typography
+                      variant='body2'
+                      color='text.secondary'
+                      sx={{ mb: 1 }}
+                    >
                       Última actividad
                     </Typography>
-                    <Typography variant="caption" sx={{ 
-                      bgcolor: '#f3f4f6',
-                      p: 1,
-                      borderRadius: 1,
-                      display: 'block'
-                    }}>
+                    <Typography
+                      variant='caption'
+                      sx={{
+                        bgcolor: '#f3f4f6',
+                        p: 1,
+                        borderRadius: 1,
+                        display: 'block'
+                      }}
+                    >
                       {lastNotificationTime.toLocaleTimeString()}
                     </Typography>
                   </Box>
@@ -268,15 +315,22 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
 
                 {connectionStatus.details && (
                   <Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    <Typography
+                      variant='body2'
+                      color='text.secondary'
+                      sx={{ mb: 1 }}
+                    >
                       Detalles
                     </Typography>
-                    <Typography variant="caption" sx={{ 
-                      bgcolor: '#f3f4f6',
-                      p: 1,
-                      borderRadius: 1,
-                      display: 'block'
-                    }}>
+                    <Typography
+                      variant='caption'
+                      sx={{
+                        bgcolor: '#f3f4f6',
+                        p: 1,
+                        borderRadius: 1,
+                        display: 'block'
+                      }}
+                    >
                       {connectionStatus.details}
                     </Typography>
                   </Box>
@@ -301,10 +355,10 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         TransitionComponent={Fade}
       >
-        <Alert 
-          onClose={handleCloseAlert} 
+        <Alert
+          onClose={handleCloseAlert}
           severity={realtimeAlert.severity}
-          sx={{ 
+          sx={{
             borderRadius: 2,
             boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
           }}

@@ -1,6 +1,11 @@
 import { useState, useCallback } from 'react'
 import { useQuery, useMutation } from 'react-query'
-import { Notification, NotificationSummary, SystemAlert, TrainingAlert } from '../types/notifications'
+import {
+  Notification,
+  NotificationSummary,
+  SystemAlert,
+  TrainingAlert
+} from '../types/notifications'
 import { axiosPrivate } from '../utils/api'
 
 interface NotificationsResponse {
@@ -28,12 +33,7 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
   } = options
 
   // Fetch notifications
-  const {
-    data,
-    isLoading,
-    error,
-    refetch
-  } = useQuery(
+  const { data, isLoading, error, refetch } = useQuery(
     ['notifications', { limit, severity, unreadOnly }],
     async (): Promise<NotificationsResponse> => {
       const params = new URLSearchParams({
@@ -51,14 +51,16 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
     {
       refetchInterval: autoRefresh ? refreshInterval : false,
       staleTime: 10000, // Consider data stale after 10 seconds
-      cacheTime: 300000, // Keep in cache for 5 minutes
+      cacheTime: 300000 // Keep in cache for 5 minutes
     }
   )
 
   // Mark notification as read
   const markAsReadMutation = useMutation(
     async (notificationId: string) => {
-      const response = await axiosPrivate.patch(`/lms/notifications/${notificationId}/read`)
+      const response = await axiosPrivate.patch(
+        `/lms/notifications/${notificationId}/read`
+      )
       return response.data
     },
     {
@@ -86,7 +88,10 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
   // Create notification (for testing or manual creation)
   const createNotificationMutation = useMutation(
     async (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
-      const response = await axiosPrivate.post('/lms/notifications', notification)
+      const response = await axiosPrivate.post(
+        '/lms/notifications',
+        notification
+      )
       return response.data
     },
     {
@@ -100,7 +105,9 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
   // Dismiss notification (soft delete)
   const dismissNotificationMutation = useMutation(
     async (notificationId: string) => {
-      const response = await axiosPrivate.delete(`/lms/notifications/${notificationId}`)
+      const response = await axiosPrivate.delete(
+        `/lms/notifications/${notificationId}`
+      )
       return response.data
     },
     {
@@ -112,21 +119,30 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
   )
 
   // Handlers
-  const handleMarkAsRead = useCallback((notificationId: string) => {
-    markAsReadMutation.mutate(notificationId)
-  }, [markAsReadMutation])
+  const handleMarkAsRead = useCallback(
+    (notificationId: string) => {
+      markAsReadMutation.mutate(notificationId)
+    },
+    [markAsReadMutation]
+  )
 
   const handleMarkAllAsRead = useCallback(() => {
     markAllAsReadMutation.mutate()
   }, [markAllAsReadMutation])
 
-  const handleCreateNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
-    createNotificationMutation.mutate(notification)
-  }, [createNotificationMutation])
+  const handleCreateNotification = useCallback(
+    (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
+      createNotificationMutation.mutate(notification)
+    },
+    [createNotificationMutation]
+  )
 
-  const handleDismissNotification = useCallback((notificationId: string) => {
-    dismissNotificationMutation.mutate(notificationId)
-  }, [dismissNotificationMutation])
+  const handleDismissNotification = useCallback(
+    (notificationId: string) => {
+      dismissNotificationMutation.mutate(notificationId)
+    },
+    [dismissNotificationMutation]
+  )
 
   const handleRefresh = useCallback(() => {
     refetch()
@@ -151,18 +167,18 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
     summary,
     systemAlerts,
     trainingAlerts,
-    
+
     // Loading states
     isLoading,
     error: error as Error | null,
-    
+
     // Actions
     markAsRead: handleMarkAsRead,
     markAllAsRead: handleMarkAllAsRead,
     createNotification: handleCreateNotification,
     dismissNotification: handleDismissNotification,
     refresh: handleRefresh,
-    
+
     // Mutation states
     isMarkingAsRead: markAsReadMutation.isLoading,
     isMarkingAllAsRead: markAllAsReadMutation.isLoading,
@@ -173,10 +189,12 @@ export const useNotifications = (options: UseNotificationsOptions = {}) => {
 
 // Hook for real-time notifications (to be used with WebSocket)
 export const useRealtimeNotifications = () => {
-  const [realtimeNotifications, setRealtimeNotifications] = useState<Notification[]>([])
+  const [realtimeNotifications, setRealtimeNotifications] = useState<
+    Notification[]
+  >([])
 
   const addRealtimeNotification = useCallback((notification: Notification) => {
-    setRealtimeNotifications(prev => [notification, ...prev.slice(0, 9)]) // Keep last 10
+    setRealtimeNotifications((prev) => [notification, ...prev.slice(0, 9)]) // Keep last 10
   }, [])
 
   const clearRealtimeNotifications = useCallback(() => {

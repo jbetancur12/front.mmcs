@@ -12,17 +12,23 @@ interface HybridNotificationOptions {
   onNewNotification?: (notification: Notification) => void
 }
 
-export const useHybridNotifications = (options: HybridNotificationOptions = {}) => {
+export const useHybridNotifications = (
+  options: HybridNotificationOptions = {}
+) => {
   const {
     enableWebSocket = true,
-    enablePolling = true,
-    pollingInterval = 60000, // 1 minute for fallback
+    enablePolling = false, // Disabled by default to prevent infinite requests
+    pollingInterval = 300000, // 5 minutes for fallback
     fallbackToPolling = true,
     onNewNotification
   } = options
 
-  const [connectionMethod, setConnectionMethod] = useState<'websocket' | 'polling' | 'none'>('none')
-  const [lastNotificationTime, setLastNotificationTime] = useState<Date | null>(null)
+  const [connectionMethod, setConnectionMethod] = useState<
+    'websocket' | 'polling' | 'none'
+  >('none')
+  const [lastNotificationTime, setLastNotificationTime] = useState<Date | null>(
+    null
+  )
 
   // WebSocket connection
   const {
@@ -82,7 +88,9 @@ export const useHybridNotifications = (options: HybridNotificationOptions = {}) 
           title: wsLastMessage.data.title || 'Nueva notificación',
           message: wsLastMessage.data.message || '',
           severity: wsLastMessage.data.severity || 'info',
-          timestamp: new Date(wsLastMessage.data.timestamp || wsLastMessage.timestamp),
+          timestamp: new Date(
+            wsLastMessage.data.timestamp || wsLastMessage.timestamp
+          ),
           read: false,
           actionUrl: wsLastMessage.data.actionUrl,
           actionLabel: wsLastMessage.data.actionLabel,
@@ -144,25 +152,26 @@ export const useHybridNotifications = (options: HybridNotificationOptions = {}) 
   }, [notificationsHook])
 
   // Get real-time capability status
-  const isRealTimeEnabled = connectionMethod === 'websocket' || connectionMethod === 'polling'
+  const isRealTimeEnabled =
+    connectionMethod === 'websocket' || connectionMethod === 'polling'
   const isOptimalConnection = connectionMethod === 'websocket'
 
   return {
     // Notification data (from main hook)
     ...notificationsHook,
-    
+
     // Connection status
     connectionStatus: getConnectionStatus(),
     connectionMethod,
     isRealTimeEnabled,
     isOptimalConnection,
-    
+
     // Manual actions
     refresh,
-    
+
     // Last activity
     lastNotificationTime,
-    
+
     // Detailed status for debugging
     debug: {
       websocket: {

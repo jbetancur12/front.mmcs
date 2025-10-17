@@ -10,10 +10,12 @@ interface NotificationPollingOptions {
   onError?: (error: Error) => void
 }
 
-export const useNotificationPolling = (options: NotificationPollingOptions = {}) => {
+export const useNotificationPolling = (
+  options: NotificationPollingOptions = {}
+) => {
   const {
-    enabled = true,
-    interval = 30000, // 30 seconds
+    enabled = false, // Disabled by default to prevent infinite requests
+    interval = 300000, // 5 minutes (300 seconds)
     onNewNotification,
     onError
   } = options
@@ -38,19 +40,19 @@ export const useNotificationPolling = (options: NotificationPollingOptions = {})
       })
 
       const notifications = response.notifications || []
-      
+
       // Check for new notifications
-      const newNotifications = notifications.filter(notification => 
-        !lastNotificationIds.current.has(notification.id)
+      const newNotifications = notifications.filter(
+        (notification) => !lastNotificationIds.current.has(notification.id)
       )
 
       // Update the set of known notification IDs
-      notifications.forEach(notification => {
+      notifications.forEach((notification) => {
         lastNotificationIds.current.add(notification.id)
       })
 
       // Trigger callbacks for new notifications
-      newNotifications.forEach(notification => {
+      newNotifications.forEach((notification) => {
         if (onNewNotification) {
           onNewNotification(notification)
         }
@@ -60,11 +62,31 @@ export const useNotificationPolling = (options: NotificationPollingOptions = {})
       queryClient.setQueryData(['notifications'], response)
 
       setLastPollTime(new Date())
-      setPollCount(prev => prev + 1)
-
+      setPollCount((prev) => prev + 1)
     } catch (err) {
       const error = err as Error
       setError(error)
+
+      // If it's a rate limit error (429), stop polling temporarily
+      if (
+        error.message.includes('429') ||
+        error.message.includes('Too Many Requests')
+      ) {
+        console.warn('Rate limit hit, stopping polling for 5 minutes')
+        stopPolling()
+        // Resume after 5 minutes
+        setTimeout(
+          () => {
+            if (enabled) {
+              console.log('Resuming polling after rate limit cooldown')
+              startPolling()
+            }
+          },
+          5 * 60 * 1000
+        ) // 5 minutes
+        return
+      }
+
       if (onError) {
         onError(error)
       }
@@ -78,7 +100,7 @@ export const useNotificationPolling = (options: NotificationPollingOptions = {})
     }
 
     setIsPolling(true)
-    
+
     // Initial poll
     pollNotifications()
 
@@ -100,7 +122,7 @@ export const useNotificationPolling = (options: NotificationPollingOptions = {})
     setPollCount(0)
     setLastPollTime(null)
     setError(null)
-    
+
     if (enabled) {
       startPolling()
     }
@@ -130,7 +152,7 @@ export const useNotificationPolling = (options: NotificationPollingOptions = {})
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
-    
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }

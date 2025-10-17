@@ -42,8 +42,12 @@ import {
   Speed as SpeedIcon,
   Memory as MemoryIcon
 } from '@mui/icons-material'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { lmsService, type JobQueueStatus, type Job } from '../../../services/lmsService'
+import { useQuery, useMutation, useQueryClient } from 'react-query'
+import {
+  lmsService,
+  type JobQueueStatus,
+  type Job
+} from '../../../services/lmsService'
 
 // Modern color palette
 const colors = {
@@ -182,14 +186,25 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
   }
 
   const formatJobType = (type: string) => {
-    return type.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
+    return type
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, (str) => str.toUpperCase())
   }
 
   if (isLoading) {
     return (
-      <Card sx={{ borderRadius: '16px', border: `1px solid ${colors.gray[200]}` }}>
+      <Card
+        sx={{ borderRadius: '16px', border: `1px solid ${colors.gray[200]}` }}
+      >
         <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              py: 4
+            }}
+          >
             <CircularProgress size={40} />
           </Box>
         </CardContent>
@@ -199,9 +214,11 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
 
   if (error) {
     return (
-      <Card sx={{ borderRadius: '16px', border: `1px solid ${colors.gray[200]}` }}>
+      <Card
+        sx={{ borderRadius: '16px', border: `1px solid ${colors.gray[200]}` }}
+      >
         <CardContent sx={{ p: 3 }}>
-          <Alert severity="error">
+          <Alert severity='error'>
             Error loading job queue data. Please try again.
           </Alert>
         </CardContent>
@@ -216,38 +233,76 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
     queueHealth: 'healthy',
     processingTimes: { average: 0, p95: 0, p99: 0 },
     jobTypes: {
-      certificateGeneration: { active: 0, completed: 0, failed: 0, averageProcessingTime: 0, successRate: 100 },
-      videoProcessing: { active: 0, completed: 0, failed: 0, averageProcessingTime: 0, successRate: 100 },
-      emailNotifications: { active: 0, completed: 0, failed: 0, averageProcessingTime: 0, successRate: 100 },
-      dataCleanup: { active: 0, completed: 0, failed: 0, averageProcessingTime: 0, successRate: 100 }
+      certificateGeneration: {
+        active: 0,
+        completed: 0,
+        failed: 0,
+        averageProcessingTime: 0,
+        successRate: 100
+      },
+      videoProcessing: {
+        active: 0,
+        completed: 0,
+        failed: 0,
+        averageProcessingTime: 0,
+        successRate: 100
+      },
+      emailNotifications: {
+        active: 0,
+        completed: 0,
+        failed: 0,
+        averageProcessingTime: 0,
+        successRate: 100
+      },
+      dataCleanup: {
+        active: 0,
+        completed: 0,
+        failed: 0,
+        averageProcessingTime: 0,
+        successRate: 100
+      }
     },
     recentJobs: []
   }
 
   return (
     <>
-      <Card sx={{
-        borderRadius: '16px',
-        border: `1px solid ${colors.gray[200]}`,
-        height: '100%'
-      }}>
+      <Card
+        sx={{
+          borderRadius: '16px',
+          border: `1px solid ${colors.gray[200]}`,
+          height: '100%'
+        }}
+      >
         <CardContent sx={{ p: 3 }}>
           {/* Header */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 3
+            }}
+          >
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Avatar sx={{
-                bgcolor: colors.info,
-                mr: 2,
-                width: 40,
-                height: 40
-              }}>
+              <Avatar
+                sx={{
+                  bgcolor: colors.info,
+                  mr: 2,
+                  width: 40,
+                  height: 40
+                }}
+              >
                 <MemoryIcon />
               </Avatar>
               <Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: colors.gray[800] }}>
+                <Typography
+                  variant='h6'
+                  sx={{ fontWeight: 700, color: colors.gray[800] }}
+                >
                   Job Queue Monitor
                 </Typography>
-                <Typography variant="body2" color={colors.gray[500]}>
+                <Typography variant='body2' color={colors.gray[500]}>
                   System job processing status
                 </Typography>
               </Box>
@@ -255,7 +310,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Chip
                 label={jobQueue.queueHealth.toUpperCase()}
-                size="small"
+                size='small'
                 sx={{
                   bgcolor: getHealthColor(jobQueue.queueHealth),
                   color: 'white',
@@ -264,7 +319,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
               />
               <IconButton
                 onClick={() => refetch()}
-                size="small"
+                size='small'
                 sx={{ color: colors.gray[600] }}
               >
                 <RefreshIcon />
@@ -275,65 +330,101 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
           {/* Job Status Overview */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
             <Grid item xs={3}>
-              <Box sx={{
-                textAlign: 'center',
-                p: 2,
-                borderRadius: '12px',
-                bgcolor: colors.gray[50],
-                border: `1px solid ${colors.gray[100]}`
-              }}>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: colors.info, mb: 0.5 }}>
+              <Box
+                sx={{
+                  textAlign: 'center',
+                  p: 2,
+                  borderRadius: '12px',
+                  bgcolor: colors.gray[50],
+                  border: `1px solid ${colors.gray[100]}`
+                }}
+              >
+                <Typography
+                  variant='h4'
+                  sx={{ fontWeight: 700, color: colors.info, mb: 0.5 }}
+                >
                   {jobQueue.activeJobs}
                 </Typography>
-                <Typography variant="body2" color={colors.gray[600]} sx={{ fontWeight: 500 }}>
+                <Typography
+                  variant='body2'
+                  color={colors.gray[600]}
+                  sx={{ fontWeight: 500 }}
+                >
                   Active
                 </Typography>
               </Box>
             </Grid>
             <Grid item xs={3}>
-              <Box sx={{
-                textAlign: 'center',
-                p: 2,
-                borderRadius: '12px',
-                bgcolor: colors.gray[50],
-                border: `1px solid ${colors.gray[100]}`
-              }}>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: colors.success, mb: 0.5 }}>
+              <Box
+                sx={{
+                  textAlign: 'center',
+                  p: 2,
+                  borderRadius: '12px',
+                  bgcolor: colors.gray[50],
+                  border: `1px solid ${colors.gray[100]}`
+                }}
+              >
+                <Typography
+                  variant='h4'
+                  sx={{ fontWeight: 700, color: colors.success, mb: 0.5 }}
+                >
                   {jobQueue.completedJobs}
                 </Typography>
-                <Typography variant="body2" color={colors.gray[600]} sx={{ fontWeight: 500 }}>
+                <Typography
+                  variant='body2'
+                  color={colors.gray[600]}
+                  sx={{ fontWeight: 500 }}
+                >
                   Completed
                 </Typography>
               </Box>
             </Grid>
             <Grid item xs={3}>
-              <Box sx={{
-                textAlign: 'center',
-                p: 2,
-                borderRadius: '12px',
-                bgcolor: colors.gray[50],
-                border: `1px solid ${colors.gray[100]}`
-              }}>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: colors.error, mb: 0.5 }}>
+              <Box
+                sx={{
+                  textAlign: 'center',
+                  p: 2,
+                  borderRadius: '12px',
+                  bgcolor: colors.gray[50],
+                  border: `1px solid ${colors.gray[100]}`
+                }}
+              >
+                <Typography
+                  variant='h4'
+                  sx={{ fontWeight: 700, color: colors.error, mb: 0.5 }}
+                >
                   {jobQueue.failedJobs}
                 </Typography>
-                <Typography variant="body2" color={colors.gray[600]} sx={{ fontWeight: 500 }}>
+                <Typography
+                  variant='body2'
+                  color={colors.gray[600]}
+                  sx={{ fontWeight: 500 }}
+                >
                   Failed
                 </Typography>
               </Box>
             </Grid>
             <Grid item xs={3}>
-              <Box sx={{
-                textAlign: 'center',
-                p: 2,
-                borderRadius: '12px',
-                bgcolor: colors.gray[50],
-                border: `1px solid ${colors.gray[100]}`
-              }}>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: colors.gray[700], mb: 0.5 }}>
+              <Box
+                sx={{
+                  textAlign: 'center',
+                  p: 2,
+                  borderRadius: '12px',
+                  bgcolor: colors.gray[50],
+                  border: `1px solid ${colors.gray[100]}`
+                }}
+              >
+                <Typography
+                  variant='h4'
+                  sx={{ fontWeight: 700, color: colors.gray[700], mb: 0.5 }}
+                >
                   {formatDuration(jobQueue.processingTimes.average)}
                 </Typography>
-                <Typography variant="body2" color={colors.gray[600]} sx={{ fontWeight: 500 }}>
+                <Typography
+                  variant='body2'
+                  color={colors.gray[600]}
+                  sx={{ fontWeight: 500 }}
+                >
                   Avg Time
                 </Typography>
               </Box>
@@ -342,41 +433,56 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
 
           {/* Job Types Breakdown */}
           <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, color: colors.gray[800] }}>
+            <Typography
+              variant='subtitle1'
+              sx={{ fontWeight: 600, mb: 2, color: colors.gray[800] }}
+            >
               Job Types Status
             </Typography>
             <Stack spacing={2}>
               {Object.entries(jobQueue.jobTypes).map(([type, status]) => (
-                <Box key={type} sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  p: 2,
-                  borderRadius: '12px',
-                  bgcolor: colors.gray[50],
-                  border: `1px solid ${colors.gray[100]}`
-                }}>
+                <Box
+                  key={type}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    p: 2,
+                    borderRadius: '12px',
+                    bgcolor: colors.gray[50],
+                    border: `1px solid ${colors.gray[100]}`
+                  }}
+                >
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Box sx={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      bgcolor: status.successRate > 90 ? colors.success : 
-                               status.successRate > 70 ? colors.warning : colors.error,
-                      mr: 2
-                    }} />
-                    <Typography variant="body2" sx={{ fontWeight: 600, color: colors.gray[800] }}>
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        bgcolor:
+                          status.successRate > 90
+                            ? colors.success
+                            : status.successRate > 70
+                              ? colors.warning
+                              : colors.error,
+                        mr: 2
+                      }}
+                    />
+                    <Typography
+                      variant='body2'
+                      sx={{ fontWeight: 600, color: colors.gray[800] }}
+                    >
                       {formatJobType(type)}
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Typography variant="body2" color={colors.gray[600]}>
+                    <Typography variant='body2' color={colors.gray[600]}>
                       {status.active} active
                     </Typography>
-                    <Typography variant="body2" color={colors.gray[600]}>
+                    <Typography variant='body2' color={colors.gray[600]}>
                       {status.successRate.toFixed(1)}% success
                     </Typography>
-                    <Typography variant="body2" color={colors.gray[600]}>
+                    <Typography variant='body2' color={colors.gray[600]}>
                       {formatDuration(status.averageProcessingTime)} avg
                     </Typography>
                   </Box>
@@ -388,11 +494,20 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
           {/* Recent Jobs */}
           {jobQueue.recentJobs && jobQueue.recentJobs.length > 0 && (
             <Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, color: colors.gray[800] }}>
+              <Typography
+                variant='subtitle1'
+                sx={{ fontWeight: 600, mb: 2, color: colors.gray[800] }}
+              >
                 Recent Jobs
               </Typography>
-              <TableContainer component={Paper} sx={{ borderRadius: '12px', border: `1px solid ${colors.gray[200]}` }}>
-                <Table size="small">
+              <TableContainer
+                component={Paper}
+                sx={{
+                  borderRadius: '12px',
+                  border: `1px solid ${colors.gray[200]}`
+                }}
+              >
+                <Table size='small'>
                   <TableHead>
                     <TableRow>
                       <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
@@ -406,7 +521,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                     {jobQueue.recentJobs.slice(0, 5).map((job) => (
                       <TableRow key={job.id} hover>
                         <TableCell>
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          <Typography variant='body2' sx={{ fontWeight: 500 }}>
                             {formatJobType(job.type)}
                           </Typography>
                         </TableCell>
@@ -415,7 +530,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                             {getStatusIcon(job.status)}
                             <Chip
                               label={job.status.toUpperCase()}
-                              size="small"
+                              size='small'
                               sx={{
                                 ml: 1,
                                 bgcolor: getStatusColor(job.status),
@@ -427,9 +542,15 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                           </Box>
                         </TableCell>
                         <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 100 }}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              minWidth: 100
+                            }}
+                          >
                             <LinearProgress
-                              variant="determinate"
+                              variant='determinate'
                               value={job.progress}
                               sx={{
                                 flex: 1,
@@ -443,48 +564,55 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                                 }
                               }}
                             />
-                            <Typography variant="body2" color={colors.gray[600]} sx={{ fontSize: '0.75rem' }}>
+                            <Typography
+                              variant='body2'
+                              color={colors.gray[600]}
+                              sx={{ fontSize: '0.75rem' }}
+                            >
                               {job.progress}%
                             </Typography>
                           </Box>
                         </TableCell>
                         <TableCell>
-                          <Typography variant="body2" color={colors.gray[600]}>
-                            {job.processingTime ? formatDuration(job.processingTime) : '-'}
+                          <Typography variant='body2' color={colors.gray[600]}>
+                            {job.processingTime
+                              ? formatDuration(job.processingTime)
+                              : '-'}
                           </Typography>
                         </TableCell>
                         <TableCell>
                           <Box sx={{ display: 'flex', gap: 0.5 }}>
-                            <Tooltip title="View Details">
+                            <Tooltip title='View Details'>
                               <IconButton
-                                size="small"
+                                size='small'
                                 onClick={() => handleJobDetails(job)}
                                 sx={{ color: colors.gray[600] }}
                               >
-                                <InfoIcon fontSize="small" />
+                                <InfoIcon fontSize='small' />
                               </IconButton>
                             </Tooltip>
                             {job.status === 'failed' && (
-                              <Tooltip title="Retry Job">
+                              <Tooltip title='Retry Job'>
                                 <IconButton
-                                  size="small"
+                                  size='small'
                                   onClick={() => handleRetryJob(job.id)}
                                   sx={{ color: colors.warning }}
                                   disabled={retryJobMutation.isPending}
                                 >
-                                  <RetryIcon fontSize="small" />
+                                  <RetryIcon fontSize='small' />
                                 </IconButton>
                               </Tooltip>
                             )}
-                            {(job.status === 'active' || job.status === 'pending') && (
-                              <Tooltip title="Cancel Job">
+                            {(job.status === 'active' ||
+                              job.status === 'pending') && (
+                              <Tooltip title='Cancel Job'>
                                 <IconButton
-                                  size="small"
+                                  size='small'
                                   onClick={() => handleCancelJob(job.id)}
                                   sx={{ color: colors.error }}
                                   disabled={cancelJobMutation.isPending}
                                 >
-                                  <CancelIcon fontSize="small" />
+                                  <CancelIcon fontSize='small' />
                                 </IconButton>
                               </Tooltip>
                             )}
@@ -504,18 +632,24 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
       <Dialog
         open={jobDetailsOpen}
         onClose={() => setJobDetailsOpen(false)}
-        maxWidth="md"
+        maxWidth='md'
         fullWidth
       >
         <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}
+          >
+            <Typography variant='h6' sx={{ fontWeight: 700 }}>
               Job Details
             </Typography>
             {selectedJob && (
               <Chip
                 label={selectedJob.status.toUpperCase()}
-                size="small"
+                size='small'
                 sx={{
                   bgcolor: getStatusColor(selectedJob.status),
                   color: 'white',
@@ -530,44 +664,64 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
             <Box sx={{ pt: 1 }}>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color={colors.gray[600]} sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant='body2'
+                    color={colors.gray[600]}
+                    sx={{ mb: 0.5 }}
+                  >
                     Job ID
                   </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600, mb: 2 }}>
+                  <Typography variant='body1' sx={{ fontWeight: 600, mb: 2 }}>
                     {selectedJob.id}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color={colors.gray[600]} sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant='body2'
+                    color={colors.gray[600]}
+                    sx={{ mb: 0.5 }}
+                  >
                     Type
                   </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600, mb: 2 }}>
+                  <Typography variant='body1' sx={{ fontWeight: 600, mb: 2 }}>
                     {formatJobType(selectedJob.type)}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color={colors.gray[600]} sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant='body2'
+                    color={colors.gray[600]}
+                    sx={{ mb: 0.5 }}
+                  >
                     Priority
                   </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600, mb: 2 }}>
+                  <Typography variant='body1' sx={{ fontWeight: 600, mb: 2 }}>
                     {selectedJob.priority}
                   </Typography>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color={colors.gray[600]} sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant='body2'
+                    color={colors.gray[600]}
+                    sx={{ mb: 0.5 }}
+                  >
                     Attempts
                   </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600, mb: 2 }}>
+                  <Typography variant='body1' sx={{ fontWeight: 600, mb: 2 }}>
                     {selectedJob.attempts} / {selectedJob.maxAttempts}
                   </Typography>
                 </Grid>
                 <Grid item xs={12}>
-                  <Typography variant="body2" color={colors.gray[600]} sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant='body2'
+                    color={colors.gray[600]}
+                    sx={{ mb: 0.5 }}
+                  >
                     Progress
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                     <LinearProgress
-                      variant="determinate"
+                      variant='determinate'
                       value={selectedJob.progress}
                       sx={{
                         flex: 1,
@@ -581,42 +735,56 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                         }
                       }}
                     />
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    <Typography variant='body2' sx={{ fontWeight: 600 }}>
                       {selectedJob.progress}%
                     </Typography>
                   </Box>
                 </Grid>
                 {selectedJob.error && (
                   <Grid item xs={12}>
-                    <Typography variant="body2" color={colors.gray[600]} sx={{ mb: 0.5 }}>
+                    <Typography
+                      variant='body2'
+                      color={colors.gray[600]}
+                      sx={{ mb: 0.5 }}
+                    >
                       Error
                     </Typography>
-                    <Alert severity="error" sx={{ mb: 2 }}>
+                    <Alert severity='error' sx={{ mb: 2 }}>
                       {selectedJob.error}
                     </Alert>
                   </Grid>
                 )}
                 <Grid item xs={12}>
-                  <Typography variant="body2" color={colors.gray[600]} sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant='body2'
+                    color={colors.gray[600]}
+                    sx={{ mb: 0.5 }}
+                  >
                     Timestamps
                   </Typography>
-                  <Box sx={{ bgcolor: colors.gray[50], p: 2, borderRadius: '8px' }}>
-                    <Typography variant="body2" sx={{ mb: 1 }}>
-                      <strong>Created:</strong> {new Date(selectedJob.createdAt).toLocaleString()}
+                  <Box
+                    sx={{ bgcolor: colors.gray[50], p: 2, borderRadius: '8px' }}
+                  >
+                    <Typography variant='body2' sx={{ mb: 1 }}>
+                      <strong>Created:</strong>{' '}
+                      {new Date(selectedJob.createdAt).toLocaleString()}
                     </Typography>
                     {selectedJob.startedAt && (
-                      <Typography variant="body2" sx={{ mb: 1 }}>
-                        <strong>Started:</strong> {new Date(selectedJob.startedAt).toLocaleString()}
+                      <Typography variant='body2' sx={{ mb: 1 }}>
+                        <strong>Started:</strong>{' '}
+                        {new Date(selectedJob.startedAt).toLocaleString()}
                       </Typography>
                     )}
                     {selectedJob.completedAt && (
-                      <Typography variant="body2" sx={{ mb: 1 }}>
-                        <strong>Completed:</strong> {new Date(selectedJob.completedAt).toLocaleString()}
+                      <Typography variant='body2' sx={{ mb: 1 }}>
+                        <strong>Completed:</strong>{' '}
+                        {new Date(selectedJob.completedAt).toLocaleString()}
                       </Typography>
                     )}
                     {selectedJob.failedAt && (
-                      <Typography variant="body2">
-                        <strong>Failed:</strong> {new Date(selectedJob.failedAt).toLocaleString()}
+                      <Typography variant='body2'>
+                        <strong>Failed:</strong>{' '}
+                        {new Date(selectedJob.failedAt).toLocaleString()}
                       </Typography>
                     )}
                   </Box>
@@ -626,12 +794,10 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setJobDetailsOpen(false)}>
-            Close
-          </Button>
+          <Button onClick={() => setJobDetailsOpen(false)}>Close</Button>
           {selectedJob?.status === 'failed' && (
             <Button
-              variant="contained"
+              variant='contained'
               startIcon={<RetryIcon />}
               onClick={() => {
                 handleRetryJob(selectedJob.id)
