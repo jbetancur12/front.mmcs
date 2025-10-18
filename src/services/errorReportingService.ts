@@ -31,7 +31,7 @@ class ErrorReportingService {
 
   constructor(config: ErrorReportingConfig = {}) {
     this.config = {
-      apiEndpoint: config.apiEndpoint || '/api/errors/report',
+      apiEndpoint: config.apiEndpoint || '/errors/report',
       maxReports: config.maxReports || 100,
       batchSize: config.batchSize || 10,
       flushInterval: config.flushInterval || 30000, // 30 seconds
@@ -256,7 +256,7 @@ class ErrorReportingService {
 
 // Create singleton instance
 export const errorReportingService = new ErrorReportingService({
-  apiEndpoint: '/api/lms/errors/report',
+  apiEndpoint: '/lms/errors/report',
   maxReports: 100,
   batchSize: 5,
   flushInterval: 30000,

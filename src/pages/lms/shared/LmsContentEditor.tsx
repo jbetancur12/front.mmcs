@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
 import {
   Box,
   Card,
@@ -23,7 +23,8 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
-  Chip
+  Chip,
+  CircularProgress
 } from '@mui/material'
 import {
   CloudUpload as CloudUploadIcon,
@@ -68,6 +69,8 @@ interface LmsContentEditorProps {
   onModulesChange: (modules: ContentModule[]) => void
   onSave?: () => void
   isLoading?: boolean
+  hasUnsavedChanges?: boolean
+  onUpdateLesson?: (params: { moduleId: string, lessonData: any }) => void
 }
 
 // WYSIWYG Editor configuration
@@ -95,7 +98,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   modules,
   onModulesChange,
   onSave,
-  isLoading = false
+  isLoading = false,
+  hasUnsavedChanges = false,
+  onUpdateLesson
 }) => {
   const [selectedModule, setSelectedModule] = useState<ContentModule | null>(null)
   const [videoUploads, setVideoUploads] = useState<VideoUploadProgress[]>([])
@@ -106,6 +111,58 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
     description: ''
   })
   const [draggedModule, setDraggedModule] = useState<string | null>(null)
+  const [isSavingLesson, setIsSavingLesson] = useState(false)
+  const [hasPendingChanges, setHasPendingChanges] = useState(false)
+
+  // Ref to track the current editor content to prevent spurious onChange events
+  const editorContentRef = useRef<string>('')
+
+  // Ref to track the debounce timeout for auto-save
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Update editorContentRef when selectedModule changes
+  useEffect(() => {
+    if (selectedModule?.content.text) {
+      console.log('📝 Updating editor content ref:', selectedModule.content.text)
+      editorContentRef.current = selectedModule.content.text
+    } else {
+      editorContentRef.current = ''
+    }
+    // Reset pending changes state when switching modules
+    setHasPendingChanges(false)
+    setIsSavingLesson(false)
+  }, [selectedModule])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  // Sync selectedModule with modules when modules change
+  // This ensures that when the parent component updates modules (e.g., from API),
+  // the selectedModule gets updated with the latest data
+  useEffect(() => {
+    if (selectedModule) {
+      const updatedModule = modules.find(m => m.id === selectedModule.id)
+      if (updatedModule) {
+        console.log('🔍 Module sync check:', {
+          selectedId: selectedModule.id,
+          selectedContent: selectedModule.content.text,
+          updatedContent: updatedModule.content.text,
+          areEqual: JSON.stringify(updatedModule) === JSON.stringify(selectedModule)
+        })
+        if (JSON.stringify(updatedModule) !== JSON.stringify(selectedModule)) {
+          console.log('🔄 Syncing selectedModule with updated data')
+          setSelectedModule(updatedModule)
+        }
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modules])
 
   // Sanitize HTML content
   const sanitizeHtml = useCallback((html: string): string => {
@@ -121,6 +178,32 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       ],
       ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
     })
+  }, [])
+
+  // Convert YouTube URL to embed format
+  const getYouTubeEmbedUrl = useCallback((url: string): string => {
+    if (!url) return ''
+
+    try {
+      // Match various YouTube URL formats
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
+      const match = url.match(regExp)
+
+      if (match && match[2].length === 11) {
+        const videoId = match[2]
+        return `https://www.youtube.com/embed/${videoId}`
+      }
+
+      // If already an embed URL, return as is
+      if (url.includes('/embed/')) {
+        return url
+      }
+
+      return url
+    } catch (error) {
+      console.error('Error parsing YouTube URL:', error)
+      return url
+    }
   }, [])
 
   // Video upload handling
@@ -258,9 +341,45 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
         : module
     )
     onModulesChange(updatedModules)
-    
+
     if (selectedModule?.id === moduleId) {
       setSelectedModule({ ...selectedModule, content })
+    }
+
+    // Auto-save the lesson content with debounce (only for existing modules)
+    if (onUpdateLesson && moduleId && !moduleId.startsWith('temp_')) {
+      // Mark that there are pending changes
+      setHasPendingChanges(true)
+
+      // Clear previous timeout
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current)
+      }
+
+      // Set new timeout for auto-save (2 seconds after user stops typing)
+      updateTimeoutRef.current = setTimeout(async () => {
+        const module = updatedModules.find(m => m.id === moduleId)
+        if (module) {
+          setIsSavingLesson(true)
+          const lessonData = {
+            title: module.title,
+            type: module.type, // El backend espera 'type', no 'content_type'
+            order_index: 0,
+            content: module.content.text || '',
+            video_url: module.content.videoUrl || null,
+            is_mandatory: true
+          }
+          console.log('💾 Auto-saving lesson:', { moduleId, content: module.content.text })
+          try {
+            await onUpdateLesson({ moduleId, lessonData })
+            setHasPendingChanges(false)
+          } catch (error) {
+            console.error('Error auto-saving:', error)
+          } finally {
+            setIsSavingLesson(false)
+          }
+        }
+      }, 2000) // 2 seconds debounce
     }
   }
 
@@ -382,7 +501,14 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                         backgroundColor: 'action.hover'
                       }
                     }}
-                    onClick={() => setSelectedModule(module)}
+                    onClick={() => {
+                      console.log('📌 Module clicked:', {
+                        id: module.id,
+                        title: module.title,
+                        content: module.content.text
+                      })
+                      setSelectedModule(module)
+                    }}
                   >
                     <ListItemIcon>
                       <DragIndicatorIcon sx={{ cursor: 'grab' }} />
@@ -442,17 +568,35 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                   sx={{ fontSize: '1.25rem', fontWeight: 500 }}
                 />
               }
-              subheader={`Tipo: ${getModuleTypeLabel(selectedModule.type)}`}
-              action={
-                onSave && (
-                  <Button
-                    variant="contained"
-                    onClick={onSave}
-                    disabled={isLoading}
-                  >
-                    Guardar
-                  </Button>
-                )
+              subheader={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                  <span>{`Tipo: ${getModuleTypeLabel(selectedModule.type)}`}</span>
+                  {hasPendingChanges && !selectedModule.id.startsWith('temp_') && (
+                    <Chip
+                      label="Guardando en 2s..."
+                      size="small"
+                      color="warning"
+                      sx={{ fontSize: '0.7rem' }}
+                    />
+                  )}
+                  {isSavingLesson && (
+                    <Chip
+                      icon={<CircularProgress size={12} sx={{ color: 'white' }} />}
+                      label="Guardando..."
+                      size="small"
+                      color="primary"
+                      sx={{ fontSize: '0.7rem' }}
+                    />
+                  )}
+                  {!hasPendingChanges && !isSavingLesson && !selectedModule.id.startsWith('temp_') && (
+                    <Chip
+                      label="Guardado"
+                      size="small"
+                      color="success"
+                      sx={{ fontSize: '0.7rem' }}
+                    />
+                  )}
+                </Box>
               }
             />
             <CardContent>
@@ -464,9 +608,11 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                   </Typography>
                   <Box sx={{ mb: 2 }}>
                     <ReactQuill
+                      key={selectedModule.id}
                       theme="snow"
                       value={selectedModule.content.text || ''}
                       onChange={(content) => {
+                        console.log('✏️ Editor onChange fired:', content)
                         const sanitizedContent = sanitizeHtml(content)
                         updateModuleContent(selectedModule.id, {
                           ...selectedModule.content,
@@ -632,14 +778,17 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                   )}
 
                   {/* Video Preview */}
-                  {selectedModule.content.videoUrl && (
+                  {selectedModule.content.videoUrl && validateYouTubeUrl(selectedModule.content.videoUrl) && (
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="subtitle2" gutterBottom>
                         Vista Previa
                       </Typography>
                       <Box
                         component="iframe"
-                        src={selectedModule.content.videoUrl}
+                        src={getYouTubeEmbedUrl(selectedModule.content.videoUrl)}
+                        title="YouTube video preview"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
                         sx={{
                           width: '100%',
                           height: 300,

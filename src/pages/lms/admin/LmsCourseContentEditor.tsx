@@ -17,7 +17,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import LmsContentEditor from '../shared/LmsContentEditor'
-import { lmsService } from '../../../services/lmsService'
+import { lmsService, type Course as BackendCourse } from '../../../services/lmsService'
 
 interface ContentModule {
   id: string
@@ -40,23 +40,17 @@ declare global {
   }
 }
 
-interface Course {
+// Interface para el curso en el frontend (compatible con el componente)
+interface FrontendCourse {
   id: number
   title: string
   description: string
-  category: string
-  instructor: string
-  duration: string
-  isActive: boolean
-  isPublic: boolean
-  totalLessons: number
-  enrolledStudents: number
-  rating: number
-  createdAt: string
   audience: {
     employees: boolean
     clients: boolean
   }
+  is_mandatory?: boolean
+  has_certificate?: boolean
   modules: ContentModule[]
 }
 
@@ -64,58 +58,79 @@ const LmsCourseContentEditor: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
   const [isSaving, setIsSaving] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const axiosPrivate = useAxiosPrivate()
 
   const queryClient = useQueryClient()
 
   // Función para crear un curso vacío por defecto
-  const createEmptyCourse = (courseId: string): Course => ({
+  const createEmptyCourse = (courseId: string): FrontendCourse => ({
     id: parseInt(courseId),
     title: `Curso ${courseId}`,
     description: 'Descripción del curso',
-    category: '',
-    instructor: '',
-    duration: '',
-    isActive: true,
-    isPublic: false,
-    totalLessons: 0,
-    enrolledStudents: 0,
-    rating: 0,
-    createdAt: new Date().toISOString(),
     audience: {
       employees: true,
       clients: false
     },
+    is_mandatory: false,
+    has_certificate: false,
     modules: [] // Siempre empezar con módulos vacíos
   })
 
-  // Función para transformar módulos del backend al formato del frontend
-  const transformModulesFromBackend = (backendModules: any[]): ContentModule[] => {
-    return backendModules.map((module, index) => {
+  // Función para transformar el curso del backend al formato del frontend
+  const transformCourseFromBackend = (backendCourse: BackendCourse): FrontendCourse => {
+    // Transformar módulos del backend al formato del frontend
+    const transformedModules: ContentModule[] = (backendCourse.modules || []).map((module, index) => {
       // Si el módulo tiene lecciones, usar la primera lección como contenido
       const firstLesson = module.lessons && module.lessons[0]
-      
+
+      // Determinar el tipo de contenido: si hay lección usar su 'type', sino 'text' por defecto
+      const contentType = firstLesson?.type || 'text'
+
+      console.log(`📦 Módulo "${module.title}":`, {
+        hasLesson: !!firstLesson,
+        type: firstLesson?.type,
+        finalType: contentType,
+        videoUrl: firstLesson?.video_url
+      })
+
       return {
         id: module.id.toString(),
         title: module.title,
-        type: firstLesson?.type || 'text',
+        type: contentType as 'text' | 'video' | 'quiz',
         order: module.order_index || index,
         content: {
           description: module.description || '',
           text: firstLesson?.content || '',
           videoUrl: firstLesson?.video_url || '',
-          videoSource: firstLesson?.video_source || 'youtube'
+          videoSource: firstLesson?.video_url ? 'youtube' : 'youtube' // Por defecto youtube
         }
       }
     })
+
+    // Transformar audience del backend al formato del frontend
+    const audienceMapping = {
+      internal: { employees: true, clients: false },
+      client: { employees: false, clients: true },
+      both: { employees: true, clients: true }
+    }
+
+    return {
+      id: backendCourse.id,
+      title: backendCourse.title,
+      description: backendCourse.description,
+      audience: audienceMapping[backendCourse.audience] || { employees: true, clients: false },
+      is_mandatory: backendCourse.is_mandatory,
+      has_certificate: backendCourse.has_certificate,
+      modules: transformedModules
+    }
   }
 
   // Query para obtener el curso
   const {
     data: course,
-    isLoading,
-    error
-  } = useQuery<Course>(
+    isLoading
+  } = useQuery<FrontendCourse>(
     ['lms-course', courseId],
     async () => {
       if (!courseId) {
@@ -124,16 +139,12 @@ const LmsCourseContentEditor: React.FC = () => {
 
       try {
         // Hacer llamada real a la API
-        const response = await lmsService.getCourse(parseInt(courseId))
-        const courseData = response
+        const backendCourse = await lmsService.getCourse(parseInt(courseId))
+        
+        console.log('Course data from API:', backendCourse)
 
-        console.log('Course data from API:', courseData)
-
-        // Asegurar que el curso tenga la estructura correcta y transformar módulos
-        return {
-          ...courseData,
-          modules: courseData.modules ? transformModulesFromBackend(courseData.modules) : []
-        }
+        // Transformar el curso del backend al formato del frontend
+        return transformCourseFromBackend(backendCourse)
       } catch (error) {
         console.error('Error fetching course:', error)
         // Si hay error, lanzar la excepción para que React Query la maneje
@@ -155,12 +166,22 @@ const LmsCourseContentEditor: React.FC = () => {
 
   // Mutación para guardar cambios del curso (sin módulos)
   const saveCourseInfoMutation = useMutation(
-    async (courseData: Course) => {
+    async (courseData: FrontendCourse) => {
+      // Transformar audience del frontend al formato del backend
+      let backendAudience: 'internal' | 'client' | 'both' = 'internal'
+      if (courseData.audience.employees && courseData.audience.clients) {
+        backendAudience = 'both'
+      } else if (courseData.audience.clients) {
+        backendAudience = 'client'
+      } else {
+        backendAudience = 'internal'
+      }
+
       // Solo actualizar información básica del curso, no los módulos
       const response = await axiosPrivate.put(`/lms/courses/${courseId}`, {
         title: courseData.title,
         description: courseData.description,
-        audience: courseData.audience,
+        audience: backendAudience,
         is_mandatory: courseData.is_mandatory,
         has_certificate: courseData.has_certificate
       })
@@ -182,10 +203,7 @@ const LmsCourseContentEditor: React.FC = () => {
     async (modules: ContentModule[]) => {
       setIsSaving(true)
       try {
-        console.log('Guardando módulos:', modules)
-        
-        // Obtener módulos existentes del curso actual
-        const existingModules = courseData.modules || []
+       
         const results = []
 
         // Procesar cada módulo
@@ -193,7 +211,6 @@ const LmsCourseContentEditor: React.FC = () => {
           try {
             if (module.id && module.id.startsWith('temp_')) {
               // Es un módulo nuevo (ID temporal), crear en el backend
-              console.log('Creando módulo nuevo:', module.title)
               
               // 1. Crear el módulo (sin contenido)
               const moduleData = {
@@ -213,11 +230,11 @@ const LmsCourseContentEditor: React.FC = () => {
               if (module.content && (module.content.text || module.content.videoUrl)) {
                 const lessonData = {
                   title: module.title, // Usar el mismo título del módulo
-                  type: module.type,
+                  type: module.type, // El backend espera 'type', no 'content_type'
                   order_index: 0, // Primera lección del módulo
                   content: module.content.text || '',
                   video_url: module.content.videoUrl || null,
-                  video_source: module.content.videoSource || null
+                  is_mandatory: true
                 }
 
                 const lessonResponse = await axiosPrivate.post(
@@ -225,7 +242,6 @@ const LmsCourseContentEditor: React.FC = () => {
                   lessonData
                 )
                 
-                console.log('Lección creada:', lessonResponse.data)
               }
               
               results.push({
@@ -235,7 +251,6 @@ const LmsCourseContentEditor: React.FC = () => {
               })
             } else if (module.id) {
               // Es un módulo existente, actualizar
-              console.log('Actualizando módulo existente:', module.title)
               
               // 1. Actualizar el módulo (sin contenido)
               const moduleData = {
@@ -251,7 +266,6 @@ const LmsCourseContentEditor: React.FC = () => {
               
               // 2. TODO: Actualizar las lecciones del módulo
               // Por ahora solo actualizamos el módulo
-              console.log('Módulo actualizado, lecciones pendientes de implementar')
               
               results.push({
                 action: 'updated',
@@ -264,7 +278,6 @@ const LmsCourseContentEditor: React.FC = () => {
           }
         }
 
-        console.log('Resultados del guardado:', results)
         return { success: true, results }
       } catch (error) {
         console.error('Error general al guardar módulos:', error)
@@ -275,7 +288,6 @@ const LmsCourseContentEditor: React.FC = () => {
     },
     {
       onSuccess: (data) => {
-        console.log('Módulos guardados exitosamente:', data)
         queryClient.invalidateQueries(['lms-course', courseId])
       },
       onError: (error: any) => {
@@ -296,12 +308,10 @@ const LmsCourseContentEditor: React.FC = () => {
           // Actualizar la primera lección (por ahora solo manejamos una lección por módulo)
           const lessonId = lessons[0].id
           const response = await axiosPrivate.put(`/lms/content/lessons/${lessonId}`, lessonData)
-          console.log('Lección actualizada:', response.data)
           return response.data
         } else {
           // Si no hay lecciones, crear una nueva
           const response = await axiosPrivate.post(`/lms/content/modules/${moduleId}/lessons`, lessonData)
-          console.log('Lección creada:', response.data)
           return response.data
         }
       } catch (error) {
@@ -311,7 +321,6 @@ const LmsCourseContentEditor: React.FC = () => {
     },
     {
       onSuccess: () => {
-        console.log('Lección actualizada exitosamente')
         // No invalidar queries aquí para evitar recargas constantes
       },
       onError: (error: any) => {
@@ -327,27 +336,14 @@ const LmsCourseContentEditor: React.FC = () => {
     }
     // Update local state immediately for better UX
     queryClient.setQueryData(['lms-course', courseId], updatedCourse)
-    
-    // Auto-save changes to lessons when content is modified
-    modules.forEach(module => {
-      if (module.id && !module.id.startsWith('temp_')) {
-        // Solo actualizar módulos existentes (no temporales)
-        const lessonData = {
-          title: module.title,
-          type: module.type,
-          order_index: 0,
-          content: module.content.text || '',
-          video_url: module.content.videoUrl || null,
-          video_source: module.content.videoSource || null
-        }
-        
-        // Debounce la actualización para evitar demasiadas llamadas
-        clearTimeout(window.lessonUpdateTimeout)
-        window.lessonUpdateTimeout = setTimeout(() => {
-          updateLessonMutation.mutate({ moduleId: module.id, lessonData })
-        }, 1000) // Esperar 1 segundo después del último cambio
-      }
-    })
+
+    // Mark that there are unsaved changes (for new modules or module structure changes)
+    setHasUnsavedChanges(true)
+
+    // NOTE: Auto-save has been removed from here to prevent overwriting content
+    // when switching between modules. Auto-save should only happen when the user
+    // explicitly edits content, not when changing module selection.
+    // The save will happen when the user clicks the "Guardar Curso" button.
   }
 
   const handleSave = () => {
@@ -355,6 +351,8 @@ const LmsCourseContentEditor: React.FC = () => {
     saveCourseInfoMutation.mutate(courseData)
     // Guardar módulos por separado
     saveModulesMutation.mutate(courseData.modules)
+    // Reset unsaved changes flag
+    setHasUnsavedChanges(false)
   }
 
   if (isLoading) {
@@ -394,9 +392,9 @@ const LmsCourseContentEditor: React.FC = () => {
           variant='contained'
           startIcon={<SaveIcon />}
           onClick={handleSave}
-          disabled={isSaving}
+          disabled={isSaving || !hasUnsavedChanges}
         >
-          {isSaving ? 'Guardando...' : 'Guardar Curso'}
+          {isSaving ? 'Guardando...' : hasUnsavedChanges ? 'Guardar Curso' : 'Sin cambios'}
         </Button>
       </Box>
 
@@ -424,6 +422,8 @@ const LmsCourseContentEditor: React.FC = () => {
             onModulesChange={handleModulesChange}
             onSave={handleSave}
             isLoading={isSaving}
+            hasUnsavedChanges={hasUnsavedChanges}
+            onUpdateLesson={updateLessonMutation.mutate}
           />
         </CardContent>
       </Card>

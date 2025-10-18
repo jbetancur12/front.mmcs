@@ -434,7 +434,7 @@ class LMSService {
    */
   async getCourse(id: number): Promise<Course> {
     const response = await axiosPrivate.get(`${this.baseURL}/courses/${id}`)
-    return response.data.course || response.data
+    return response.data.data || response.data.course || response.data
   }
 
   /**
