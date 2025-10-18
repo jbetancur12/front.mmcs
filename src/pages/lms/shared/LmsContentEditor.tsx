@@ -224,7 +224,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   // Module management
   const addModule = () => {
     const module: ContentModule = {
-      id: Date.now().toString(),
+      id: `temp_${Date.now()}`,
       title: newModule.title,
       type: newModule.type,
       order: modules.length,

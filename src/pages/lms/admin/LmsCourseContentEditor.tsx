@@ -150,25 +150,82 @@ const LmsCourseContentEditor: React.FC = () => {
     }
   )
 
-  // Mutación para guardar módulos
+  // Mutación para guardar módulos usando los endpoints correctos
   const saveModulesMutation = useMutation(
     async (modules: ContentModule[]) => {
       setIsSaving(true)
       try {
-        // Por ahora, vamos a simular el guardado de módulos
-        // TODO: Implementar llamadas individuales a los endpoints de módulos
         console.log('Guardando módulos:', modules)
+        
+        // Obtener módulos existentes del curso actual
+        const existingModules = courseData.modules || []
+        const results = []
 
-        // Simular delay de guardado
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+        // Procesar cada módulo
+        for (const module of modules) {
+          try {
+            if (module.id && module.id.startsWith('temp_')) {
+              // Es un módulo nuevo (ID temporal), crear en el backend
+              console.log('Creando módulo nuevo:', module.title)
+              
+              const moduleData = {
+                title: module.title,
+                type: module.type,
+                order_index: module.order,
+                description: module.content.description || '',
+                content: module.content
+              }
 
-        return { success: true, modules }
+              const response = await axiosPrivate.post(
+                `/lms/content/courses/${courseId}/modules`,
+                moduleData
+              )
+              
+              results.push({
+                action: 'created',
+                module: response.data.data || response.data,
+                originalId: module.id
+              })
+            } else if (module.id) {
+              // Es un módulo existente, actualizar
+              console.log('Actualizando módulo existente:', module.title)
+              
+              const moduleData = {
+                title: module.title,
+                type: module.type,
+                order_index: module.order,
+                description: module.content.description || '',
+                content: module.content
+              }
+
+              const response = await axiosPrivate.put(
+                `/lms/content/modules/${module.id}`,
+                moduleData
+              )
+              
+              results.push({
+                action: 'updated',
+                module: response.data.data || response.data
+              })
+            }
+          } catch (moduleError) {
+            console.error(`Error procesando módulo ${module.title}:`, moduleError)
+            // Continuar con otros módulos aunque uno falle
+          }
+        }
+
+        console.log('Resultados del guardado:', results)
+        return { success: true, results }
+      } catch (error) {
+        console.error('Error general al guardar módulos:', error)
+        throw error
       } finally {
         setIsSaving(false)
       }
     },
     {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        console.log('Módulos guardados exitosamente:', data)
         queryClient.invalidateQueries(['lms-course', courseId])
       },
       onError: (error: any) => {
