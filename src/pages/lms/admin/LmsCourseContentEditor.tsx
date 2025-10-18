@@ -17,6 +17,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import LmsContentEditor from '../shared/LmsContentEditor'
+import { lmsService } from '../../../services/lmsService'
 
 interface ContentModule {
   id: string
@@ -123,10 +124,8 @@ const LmsCourseContentEditor: React.FC = () => {
 
       try {
         // Hacer llamada real a la API
-        const response = await axiosPrivate.get(`http://localhost:5050/lms/courses/${courseId}`)
-        const courseData = response.data.success
-          ? response.data.data
-          : response.data
+        const response = await lmsService.getCourse(parseInt(courseId))
+        const courseData = response
 
         console.log('Course data from API:', courseData)
 
