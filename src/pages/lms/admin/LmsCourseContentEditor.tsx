@@ -116,7 +116,7 @@ const LmsCourseContentEditor: React.FC = () => {
 
       try {
         // Hacer llamada real a la API
-        const response = await axiosPrivate.get(`/lms/courses/${courseId}`)
+        const response = await axiosPrivate.get(`http://localhost:5050/lms/courses/${courseId}`)
         const courseData = response.data.success
           ? response.data.data
           : response.data
