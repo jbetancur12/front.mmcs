@@ -32,6 +32,13 @@ interface ContentModule {
   }
 }
 
+// Declaración global para el timeout
+declare global {
+  interface Window {
+    lessonUpdateTimeout: NodeJS.Timeout
+  }
+}
+
 interface Course {
   id: number
   title: string
@@ -278,6 +285,42 @@ const LmsCourseContentEditor: React.FC = () => {
     }
   )
 
+  // Mutación para actualizar lecciones individuales
+  const updateLessonMutation = useMutation(
+    async ({ moduleId, lessonData }: { moduleId: string, lessonData: any }) => {
+      try {
+        // Primero obtener las lecciones del módulo
+        const lessonsResponse = await axiosPrivate.get(`/lms/content/modules/${moduleId}/lessons`)
+        const lessons = lessonsResponse.data.data || lessonsResponse.data || []
+        
+        if (lessons.length > 0) {
+          // Actualizar la primera lección (por ahora solo manejamos una lección por módulo)
+          const lessonId = lessons[0].id
+          const response = await axiosPrivate.put(`/lms/content/lessons/${lessonId}`, lessonData)
+          console.log('Lección actualizada:', response.data)
+          return response.data
+        } else {
+          // Si no hay lecciones, crear una nueva
+          const response = await axiosPrivate.post(`/lms/content/modules/${moduleId}/lessons`, lessonData)
+          console.log('Lección creada:', response.data)
+          return response.data
+        }
+      } catch (error) {
+        console.error('Error actualizando lección:', error)
+        throw error
+      }
+    },
+    {
+      onSuccess: () => {
+        console.log('Lección actualizada exitosamente')
+        // No invalidar queries aquí para evitar recargas constantes
+      },
+      onError: (error: any) => {
+        console.error('Error al actualizar lección:', error)
+      }
+    }
+  )
+
   const handleModulesChange = (modules: ContentModule[]) => {
     const updatedCourse = {
       ...courseData,
@@ -285,6 +328,27 @@ const LmsCourseContentEditor: React.FC = () => {
     }
     // Update local state immediately for better UX
     queryClient.setQueryData(['lms-course', courseId], updatedCourse)
+    
+    // Auto-save changes to lessons when content is modified
+    modules.forEach(module => {
+      if (module.id && !module.id.startsWith('temp_')) {
+        // Solo actualizar módulos existentes (no temporales)
+        const lessonData = {
+          title: module.title,
+          type: module.type,
+          order_index: 0,
+          content: module.content.text || '',
+          video_url: module.content.videoUrl || null,
+          video_source: module.content.videoSource || null
+        }
+        
+        // Debounce la actualización para evitar demasiadas llamadas
+        clearTimeout(window.lessonUpdateTimeout)
+        window.lessonUpdateTimeout = setTimeout(() => {
+          updateLessonMutation.mutate({ moduleId: module.id, lessonData })
+        }, 1000) // Esperar 1 segundo después del último cambio
+      }
+    })
   }
 
   const handleSave = () => {
