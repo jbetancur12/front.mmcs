@@ -244,31 +244,31 @@ const LmsAdmin: React.FC = () => {
       recentActivity.length > 0
         ? recentActivity
         : [
-            {
-              id: 1,
-              type: 'course_created',
-              title: 'Nuevo curso: Seguridad Laboral 2024',
-              user: 'Dr. Carlos Méndez',
-              timestamp: '2 horas',
-              icon: <SchoolIcon color='success' />
-            },
-            {
-              id: 2,
-              type: 'assignment_created',
-              title: 'Curso asignado a Desarrollo',
-              user: 'Ana López',
-              timestamp: '4 horas',
-              icon: <AssignmentIcon color='primary' />
-            },
-            {
-              id: 3,
-              type: 'certificate_issued',
-              title: 'Certificado emitido: React Fundamentals',
-              user: 'María García',
-              timestamp: '6 horas',
-              icon: <CertificateIcon color='warning' />
-            }
-          ]
+          {
+            id: 1,
+            type: 'course_created',
+            title: 'Nuevo curso: Seguridad Laboral 2024',
+            user: 'Dr. Carlos Méndez',
+            timestamp: '2 horas',
+            icon: <SchoolIcon color='success' />
+          },
+          {
+            id: 2,
+            type: 'assignment_created',
+            title: 'Curso asignado a Desarrollo',
+            user: 'Ana López',
+            timestamp: '4 horas',
+            icon: <AssignmentIcon color='primary' />
+          },
+          {
+            id: 3,
+            type: 'certificate_issued',
+            title: 'Certificado emitido: React Fundamentals',
+            user: 'María García',
+            timestamp: '6 horas',
+            icon: <CertificateIcon color='warning' />
+          }
+        ]
   }
 
   // Loading state for the entire dashboard
