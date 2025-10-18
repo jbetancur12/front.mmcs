@@ -42,6 +42,7 @@ import './quill-custom.css'
 import DOMPurify from 'dompurify'
 import { useDropzone } from 'react-dropzone'
 import LmsQuizManagement from '../admin/LmsQuizManagement'
+import Swal from 'sweetalert2'
 
 // Types
 interface ContentModule {
@@ -80,6 +81,7 @@ interface LmsContentEditorProps {
   isLoading?: boolean
   hasUnsavedChanges?: boolean
   onUpdateLesson?: (params: { moduleId: string, lessonData: any }) => void
+  onDeleteModule?: (moduleId: string) => void
 }
 
 // WYSIWYG Editor configuration
@@ -109,7 +111,8 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   onSave,
   isLoading = false,
   hasUnsavedChanges = false,
-  onUpdateLesson
+  onUpdateLesson,
+  onDeleteModule
 }) => {
   const [selectedModule, setSelectedModule] = useState<ContentModule | null>(null)
   const [videoUploads, setVideoUploads] = useState<VideoUploadProgress[]>([])
@@ -334,13 +337,53 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
     setSelectedModule(module)
   }
 
-  const deleteModule = (moduleId: string) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este módulo?')) {
+  const deleteModule = async (moduleId: string) => {
+    const moduleToDelete = modules.find(m => m.id === moduleId)
+
+    const result = await Swal.fire({
+      title: '¿Eliminar módulo?',
+      html: `
+        <div style="text-align: left;">
+          <p>Estás a punto de eliminar el módulo:</p>
+          <p><strong>${moduleToDelete?.title || 'Sin título'}</strong></p>
+          <p style="color: #d32f2f; margin-top: 16px;">
+            ⚠️ Esta acción no se puede deshacer. Se eliminará el módulo y todo su contenido.
+          </p>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d32f2f',
+      cancelButtonColor: '#757575',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true,
+      focusCancel: true
+    })
+
+    if (result.isConfirmed) {
+      // Primero actualizar el estado local
       const updatedModules = modules.filter(m => m.id !== moduleId)
       onModulesChange(updatedModules)
+
+      // Si el módulo seleccionado es el que se está eliminando, limpiar la selección
       if (selectedModule?.id === moduleId) {
         setSelectedModule(null)
       }
+
+      // Si hay callback de eliminación y el módulo no es temporal, llamar al backend
+      if (onDeleteModule) {
+        onDeleteModule(moduleId)
+      }
+
+      // Mostrar mensaje de éxito
+      Swal.fire({
+        title: '¡Eliminado!',
+        text: 'El módulo ha sido eliminado correctamente.',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      })
     }
   }
 

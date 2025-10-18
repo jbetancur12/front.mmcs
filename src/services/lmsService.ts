@@ -69,7 +69,7 @@ export interface CourseLesson {
   module_id: number
   title: string
   content: string
-  content_type: ContentType
+  type: ContentType
   video_url?: string
   duration_minutes?: number
   order_index: number

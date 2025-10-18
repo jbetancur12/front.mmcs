@@ -44,9 +44,23 @@ interface QuizQuestion {
   points: number
 }
 
+interface QuizConfig {
+  title: string
+  instructions?: string
+  passingPercentage: number
+  maxAttempts: number
+  cooldownMinutes: number
+  showCorrectAnswers: boolean
+  randomizeQuestions: boolean
+  shuffleAnswers: boolean
+  timeLimitMinutes?: number
+}
+
 interface QuizEditorProps {
   questions: QuizQuestion[]
   onQuestionsChange: (questions: QuizQuestion[]) => void
+  config: QuizConfig
+  onConfigChange: (config: QuizConfig) => void
 }
 
 // Tipo para el estado del formulario
@@ -62,7 +76,9 @@ interface NewQuestionState {
 
 const LmsQuizEditor: React.FC<QuizEditorProps> = ({
   questions,
-  onQuestionsChange
+  onQuestionsChange,
+  config,
+  onConfigChange
 }) => {
   const [openDialog, setOpenDialog] = useState(false)
   const [editingQuestion, setEditingQuestion] = useState<QuizQuestion | null>(
@@ -219,6 +235,151 @@ const LmsQuizEditor: React.FC<QuizEditorProps> = ({
 
   return (
     <Box>
+      {/* Quiz Configuration */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant='h6' gutterBottom>
+            Configuración del Quiz
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label='Título del Quiz'
+                value={config.title}
+                onChange={(e) =>
+                  onConfigChange({ ...config, title: e.target.value })
+                }
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                multiline
+                rows={2}
+                label='Instrucciones (opcional)'
+                value={config.instructions || ''}
+                onChange={(e) =>
+                  onConfigChange({ ...config, instructions: e.target.value })
+                }
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                type='number'
+                label='Porcentaje para aprobar (%)'
+                value={config.passingPercentage}
+                onChange={(e) =>
+                  onConfigChange({
+                    ...config,
+                    passingPercentage: Number(e.target.value)
+                  })
+                }
+                inputProps={{ min: 0, max: 100 }}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                type='number'
+                label='Intentos máximos'
+                value={config.maxAttempts}
+                onChange={(e) =>
+                  onConfigChange({
+                    ...config,
+                    maxAttempts: Number(e.target.value)
+                  })
+                }
+                inputProps={{ min: 1, max: 50 }}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                type='number'
+                label='Tiempo entre intentos (min)'
+                value={config.cooldownMinutes}
+                onChange={(e) =>
+                  onConfigChange({
+                    ...config,
+                    cooldownMinutes: Number(e.target.value)
+                  })
+                }
+                inputProps={{ min: 0 }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                type='number'
+                label='Límite de tiempo (min, opcional)'
+                value={config.timeLimitMinutes || ''}
+                onChange={(e) =>
+                  onConfigChange({
+                    ...config,
+                    timeLimitMinutes: e.target.value ? Number(e.target.value) : undefined
+                  })
+                }
+                inputProps={{ min: 1 }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={config.showCorrectAnswers}
+                    onChange={(e) =>
+                      onConfigChange({
+                        ...config,
+                        showCorrectAnswers: e.target.checked
+                      })
+                    }
+                  />
+                }
+                label='Mostrar respuestas correctas'
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={config.randomizeQuestions}
+                    onChange={(e) =>
+                      onConfigChange({
+                        ...config,
+                        randomizeQuestions: e.target.checked
+                      })
+                    }
+                  />
+                }
+                label='Aleatorizar preguntas'
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={config.shuffleAnswers}
+                    onChange={(e) =>
+                      onConfigChange({
+                        ...config,
+                        shuffleAnswers: e.target.checked
+                      })
+                    }
+                  />
+                }
+                label='Mezclar respuestas'
+              />
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      {/* Questions Section */}
       <Box
         sx={{
           display: 'flex',
@@ -619,3 +780,4 @@ const LmsQuizEditor: React.FC<QuizEditorProps> = ({
 }
 
 export default LmsQuizEditor
+export type { QuizQuestion, QuizConfig }
