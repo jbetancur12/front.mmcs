@@ -33,13 +33,15 @@ import {
   Delete as DeleteIcon,
   DragIndicator as DragIndicatorIcon,
   Add as AddIcon,
-  Edit as EditIcon
+  Edit as EditIcon,
+  Settings as SettingsIcon
 } from '@mui/icons-material'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import './quill-custom.css'
 import DOMPurify from 'dompurify'
 import { useDropzone } from 'react-dropzone'
+import LmsQuizManagement from '../admin/LmsQuizManagement'
 
 // Types
 interface ContentModule {
@@ -53,6 +55,13 @@ interface ContentModule {
     videoSource?: 'minio' | 'youtube'
     videoFile?: File
     description?: string
+    // Quiz - NEW: Reference to quiz in LmsQuizManagement
+    quizId?: number
+    // DEPRECATED: Use quizId instead (legacy inline quiz editor)
+    // @deprecated - Will be removed in future version
+    quizConfig?: any
+    // @deprecated - Will be removed in future version
+    quizQuestions?: any[]
   }
 }
 
@@ -113,6 +122,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   const [draggedModule, setDraggedModule] = useState<string | null>(null)
   const [isSavingLesson, setIsSavingLesson] = useState(false)
   const [hasPendingChanges, setHasPendingChanges] = useState(false)
+  const [openQuizManagement, setOpenQuizManagement] = useState(false)
 
   // Ref to track the current editor content to prevent spurious onChange events
   const editorContentRef = useRef<string>('')
@@ -818,26 +828,25 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
 
               {/* Quiz Content Editor */}
               {selectedModule.type === 'quiz' && (
-                <Box>
-                  <Typography variant="h6" gutterBottom>
-                    Editor de Quiz
-                  </Typography>
-                  <Alert severity="info" sx={{ mb: 2 }}>
-                    El editor de quiz se implementará en una tarea separada
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Alert severity="info" sx={{ mb: 3 }}>
+                    Este módulo usa el sistema completo de gestión de quizzes con banco de preguntas,
+                    analíticas y validación automática.
                   </Alert>
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={3}
-                    label="Descripción del quiz"
-                    value={selectedModule.content.description || ''}
-                    onChange={(e) =>
-                      updateModuleContent(selectedModule.id, {
-                        ...selectedModule.content,
-                        description: e.target.value
-                      })
-                    }
-                  />
+                  <Button
+                    variant="contained"
+                    size="large"
+                    startIcon={<SettingsIcon />}
+                    onClick={() => setOpenQuizManagement(true)}
+                    sx={{ mb: 2 }}
+                  >
+                    Abrir Editor de Quiz Completo
+                  </Button>
+                  {selectedModule.content.quizId && (
+                    <Typography variant="body2" color="text.secondary">
+                      Quiz ID: {selectedModule.content.quizId}
+                    </Typography>
+                  )}
                 </Box>
               )}
             </CardContent>
@@ -922,6 +931,30 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
             Agregar
           </Button>
         </DialogActions>
+      </Dialog>
+
+      {/* Quiz Management Dialog */}
+      <Dialog
+        open={openQuizManagement}
+        onClose={() => setOpenQuizManagement(false)}
+        maxWidth="xl"
+        fullWidth
+        PaperProps={{
+          sx: { height: '90vh' }
+        }}
+      >
+        <DialogTitle>
+          Editor de Quiz: {selectedModule?.title}
+          <IconButton
+            onClick={() => setOpenQuizManagement(false)}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <DeleteIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          <LmsQuizManagement />
+        </DialogContent>
       </Dialog>
     </Grid>
   )
