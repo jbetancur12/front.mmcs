@@ -100,14 +100,16 @@ const MetricCard: React.FC<MetricCardProps> = ({
   trend,
   status = 'healthy'
 }) => {
-
-
   const getStatusIcon = () => {
     switch (status) {
-      case 'healthy': return <CheckIcon sx={{ fontSize: 16, color: colors.success }} />
-      case 'warning': return <WarningIcon sx={{ fontSize: 16, color: colors.warning }} />
-      case 'critical': return <ErrorIcon sx={{ fontSize: 16, color: colors.error }} />
-      default: return null
+      case 'healthy':
+        return <CheckIcon sx={{ fontSize: 16, color: colors.success }} />
+      case 'warning':
+        return <WarningIcon sx={{ fontSize: 16, color: colors.warning }} />
+      case 'critical':
+        return <ErrorIcon sx={{ fontSize: 16, color: colors.error }} />
+      default:
+        return null
     }
   }
 
@@ -127,7 +129,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
       }}
     >
       <Stack spacing={2}>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
+        <Box display='flex' alignItems='center' justifyContent='space-between'>
           <Avatar
             sx={{
               bgcolor: `${color}15`,
@@ -140,10 +142,10 @@ const MetricCard: React.FC<MetricCardProps> = ({
           </Avatar>
           {getStatusIcon()}
         </Box>
-        
+
         <Box>
           <Typography
-            variant="h4"
+            variant='h4'
             sx={{
               fontWeight: 700,
               color: colors.gray[900],
@@ -153,7 +155,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
             {value}
           </Typography>
           <Typography
-            variant="body2"
+            variant='body2'
             sx={{
               color: colors.gray[600],
               fontWeight: 500
@@ -163,7 +165,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
           </Typography>
           {subtitle && (
             <Typography
-              variant="caption"
+              variant='caption'
               sx={{
                 color: colors.gray[500],
                 display: 'block',
@@ -176,7 +178,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
         </Box>
 
         {trend && (
-          <Box display="flex" alignItems="center" gap={1}>
+          <Box display='flex' alignItems='center' gap={1}>
             <TrendingUpIcon
               sx={{
                 fontSize: 16,
@@ -185,13 +187,14 @@ const MetricCard: React.FC<MetricCardProps> = ({
               }}
             />
             <Typography
-              variant="caption"
+              variant='caption'
               sx={{
                 color: trend.isPositive ? colors.success : colors.error,
                 fontWeight: 600
               }}
             >
-              {trend.isPositive ? '+' : ''}{trend.value}%
+              {trend.isPositive ? '+' : ''}
+              {trend.value}%
             </Typography>
           </Box>
         )}
@@ -218,7 +221,7 @@ const ProgressMetric: React.FC<ProgressMetricProps> = ({
   color
 }) => {
   const percentage = (value / max) * 100
-  
+
   const getProgressColor = () => {
     if (percentage > 90) return colors.error
     if (percentage > 75) return colors.warning
@@ -236,8 +239,8 @@ const ProgressMetric: React.FC<ProgressMetricProps> = ({
       }}
     >
       <Stack spacing={2}>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Box display="flex" alignItems="center" gap={2}>
+        <Box display='flex' alignItems='center' justifyContent='space-between'>
+          <Box display='flex' alignItems='center' gap={2}>
             <Avatar
               sx={{
                 bgcolor: `${color}15`,
@@ -249,7 +252,7 @@ const ProgressMetric: React.FC<ProgressMetricProps> = ({
               {icon}
             </Avatar>
             <Typography
-              variant="h6"
+              variant='h6'
               sx={{
                 fontWeight: 600,
                 color: colors.gray[900]
@@ -260,7 +263,7 @@ const ProgressMetric: React.FC<ProgressMetricProps> = ({
           </Box>
           <Chip
             label={`${value.toFixed(1)} ${unit}`}
-            size="small"
+            size='small'
             sx={{
               bgcolor: `${getProgressColor()}15`,
               color: getProgressColor(),
@@ -270,16 +273,16 @@ const ProgressMetric: React.FC<ProgressMetricProps> = ({
         </Box>
 
         <Box>
-          <Box display="flex" justifyContent="space-between" mb={1}>
-            <Typography variant="body2" color={colors.gray[600]}>
+          <Box display='flex' justifyContent='space-between' mb={1}>
+            <Typography variant='body2' color={colors.gray[600]}>
               Usage
             </Typography>
-            <Typography variant="body2" color={colors.gray[600]}>
+            <Typography variant='body2' color={colors.gray[600]}>
               {percentage.toFixed(1)}%
             </Typography>
           </Box>
           <LinearProgress
-            variant="determinate"
+            variant='determinate'
             value={percentage}
             sx={{
               height: 8,
@@ -292,7 +295,7 @@ const ProgressMetric: React.FC<ProgressMetricProps> = ({
             }}
           />
           <Typography
-            variant="caption"
+            variant='caption'
             sx={{
               color: colors.gray[500],
               mt: 1,
@@ -317,8 +320,6 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
     setTimeout(() => setRefreshing(false), 1000)
   }
 
-
-
   const formatBandwidth = (bps: number): string => {
     const sizes = ['bps', 'Kbps', 'Mbps', 'Gbps']
     if (bps === 0) return '0 bps'
@@ -327,14 +328,14 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
   }
 
   const getSystemStatus = (metrics: SystemPerformanceMetrics) => {
-    const storageUsage = metrics.storageUsage.percentage
+    const storageUsage = metrics?.storageUsage?.percentage || 0
     const errorRate = Math.max(
-      metrics.errorRates.api,
-      metrics.errorRates.database,
-      metrics.errorRates.storage,
-      metrics.errorRates.streaming
+      metrics?.errorRates?.api || 0,
+      metrics?.errorRates?.database || 0,
+      metrics?.errorRates?.storage || 0,
+      metrics?.errorRates?.streaming || 0
     )
-    
+
     if (storageUsage > 90 || errorRate > 5) return 'critical'
     if (storageUsage > 75 || errorRate > 2) return 'warning'
     return 'healthy'
@@ -344,7 +345,12 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
     return (
       <Card sx={{ height: '100%' }}>
         <CardContent>
-          <Box display="flex" alignItems="center" justifyContent="center" minHeight={400}>
+          <Box
+            display='flex'
+            alignItems='center'
+            justifyContent='center'
+            minHeight={400}
+          >
             <CircularProgress />
           </Box>
         </CardContent>
@@ -356,7 +362,7 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
     return (
       <Card sx={{ height: '100%' }}>
         <CardContent>
-          <Alert severity="error">
+          <Alert severity='error'>
             Failed to load system performance metrics. Please try again.
           </Alert>
         </CardContent>
@@ -364,57 +370,92 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
     )
   }
 
-  if (!systemMetrics) {
-    return (
-      <Card sx={{ height: '100%' }}>
-        <CardContent>
-          <Alert severity="info">
-            No system performance data available.
-          </Alert>
-        </CardContent>
-      </Card>
-    )
+  // Provide default values to prevent undefined errors
+  const defaultMetrics: SystemPerformanceMetrics = {
+    storageUsage: { total: 0, used: 0, available: 0, percentage: 0 },
+    videoStreamingStats: {
+      activeStreams: 0,
+      bandwidth: 0,
+      errors: 0,
+      totalViews: 0
+    },
+    databasePerformance: {
+      connectionPool: 0,
+      maxConnections: 100,
+      queryTime: 0,
+      slowQueries: 0
+    },
+    errorRates: { api: 0, database: 0, storage: 0, streaming: 0 },
+    lastUpdated: new Date().toISOString()
   }
 
-  const systemStatus = getSystemStatus(systemMetrics)
+  const safeMetrics: SystemPerformanceMetrics = {
+    storageUsage: systemMetrics?.storageUsage || defaultMetrics.storageUsage,
+    videoStreamingStats:
+      systemMetrics?.videoStreamingStats || defaultMetrics.videoStreamingStats,
+    databasePerformance:
+      systemMetrics?.databasePerformance || defaultMetrics.databasePerformance,
+    errorRates: systemMetrics?.errorRates || defaultMetrics.errorRates,
+    lastUpdated: systemMetrics?.lastUpdated || defaultMetrics.lastUpdated
+  }
+
+  const systemStatus = getSystemStatus(safeMetrics)
 
   return (
     <Card sx={{ height: '100%' }}>
       <CardContent>
-        <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
+        <Box
+          display='flex'
+          alignItems='center'
+          justifyContent='space-between'
+          mb={3}
+        >
           <Box>
-            <Typography variant="h6" sx={{ fontWeight: 600, color: colors.gray[900] }}>
+            <Typography
+              variant='h6'
+              sx={{ fontWeight: 600, color: colors.gray[900] }}
+            >
               System Performance Metrics
             </Typography>
-            <Typography variant="body2" color={colors.gray[600]}>
+            <Typography variant='body2' color={colors.gray[600]}>
               Real-time system health and performance monitoring
             </Typography>
           </Box>
-          <Box display="flex" alignItems="center" gap={1}>
+          <Box display='flex' alignItems='center' gap={1}>
             <Chip
               label={systemStatus.toUpperCase()}
-              size="small"
+              size='small'
               sx={{
-                bgcolor: systemStatus === 'healthy' ? `${colors.success}15` : 
-                        systemStatus === 'warning' ? `${colors.warning}15` : `${colors.error}15`,
-                color: systemStatus === 'healthy' ? colors.success : 
-                       systemStatus === 'warning' ? colors.warning : colors.error,
+                bgcolor:
+                  systemStatus === 'healthy'
+                    ? `${colors.success}15`
+                    : systemStatus === 'warning'
+                      ? `${colors.warning}15`
+                      : `${colors.error}15`,
+                color:
+                  systemStatus === 'healthy'
+                    ? colors.success
+                    : systemStatus === 'warning'
+                      ? colors.warning
+                      : colors.error,
                 fontWeight: 600
               }}
             />
-            <Tooltip title="Refresh metrics">
+            <Tooltip title='Refresh metrics'>
               <IconButton
                 onClick={handleRefresh}
                 disabled={refreshing}
-                size="small"
+                size='small'
               >
-                <RefreshIcon sx={{ 
-                  animation: refreshing ? 'spin 1s linear infinite' : 'none',
-                  '@keyframes spin': {
-                    '0%': { transform: 'rotate(0deg)' },
-                    '100%': { transform: 'rotate(360deg)' }
-                  }
-                }} />
+                <RefreshIcon
+                  sx={{
+                    animation: refreshing ? 'spin 1s linear infinite' : 'none',
+                    '@keyframes spin': {
+                      '0%': { transform: 'rotate(0deg)' },
+                      '100%': { transform: 'rotate(360deg)' }
+                    }
+                  }}
+                />
               </IconButton>
             </Tooltip>
           </Box>
@@ -424,10 +465,10 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
           {/* Storage Usage */}
           <Grid item xs={12} md={6}>
             <ProgressMetric
-              title="Storage Usage"
-              value={systemMetrics.storageUsage.used}
-              max={systemMetrics.storageUsage.total}
-              unit="GB"
+              title='Storage Usage'
+              value={safeMetrics.storageUsage.used}
+              max={safeMetrics.storageUsage.total}
+              unit='GB'
               icon={<StorageIcon />}
               color={colors.info}
             />
@@ -436,10 +477,10 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
           {/* Database Connections */}
           <Grid item xs={12} md={6}>
             <ProgressMetric
-              title="Database Connections"
-              value={systemMetrics.databasePerformance.connectionPool}
-              max={systemMetrics.databasePerformance.maxConnections}
-              unit="connections"
+              title='Database Connections'
+              value={safeMetrics.databasePerformance.connectionPool}
+              max={safeMetrics.databasePerformance.maxConnections}
+              unit='connections'
               icon={<DatabaseIcon />}
               color={colors.primary}
             />
@@ -448,20 +489,24 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
           {/* Video Streaming Stats */}
           <Grid item xs={12} md={6} lg={3}>
             <MetricCard
-              title="Active Streams"
-              value={systemMetrics.videoStreamingStats.activeStreams}
-              subtitle="Currently streaming"
+              title='Active Streams'
+              value={safeMetrics.videoStreamingStats.activeStreams}
+              subtitle='Currently streaming'
               icon={<VideoIcon />}
               color={colors.info}
-              status={systemMetrics.videoStreamingStats.errors > 10 ? 'warning' : 'healthy'}
+              status={
+                safeMetrics.videoStreamingStats.errors > 10
+                  ? 'warning'
+                  : 'healthy'
+              }
             />
           </Grid>
 
           <Grid item xs={12} md={6} lg={3}>
             <MetricCard
-              title="Bandwidth Usage"
-              value={formatBandwidth(systemMetrics.videoStreamingStats.bandwidth)}
-              subtitle="Current usage"
+              title='Bandwidth Usage'
+              value={formatBandwidth(safeMetrics.videoStreamingStats.bandwidth)}
+              subtitle='Current usage'
               icon={<SpeedIcon />}
               color={colors.primary}
             />
@@ -469,40 +514,50 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
 
           <Grid item xs={12} md={6} lg={3}>
             <MetricCard
-              title="Query Time"
-              value={`${systemMetrics.databasePerformance.queryTime}ms`}
-              subtitle="Average response"
+              title='Query Time'
+              value={`${safeMetrics.databasePerformance.queryTime}ms`}
+              subtitle='Average response'
               icon={<DatabaseIcon />}
               color={colors.success}
-              status={systemMetrics.databasePerformance.queryTime > 1000 ? 'critical' : 
-                     systemMetrics.databasePerformance.queryTime > 500 ? 'warning' : 'healthy'}
+              status={
+                safeMetrics.databasePerformance.queryTime > 1000
+                  ? 'critical'
+                  : safeMetrics.databasePerformance.queryTime > 500
+                    ? 'warning'
+                    : 'healthy'
+              }
             />
           </Grid>
 
           <Grid item xs={12} md={6} lg={3}>
             <MetricCard
-              title="Error Rate"
+              title='Error Rate'
               value={`${Math.max(
-                systemMetrics.errorRates.api,
-                systemMetrics.errorRates.database,
-                systemMetrics.errorRates.storage,
-                systemMetrics.errorRates.streaming
+                safeMetrics.errorRates.api,
+                safeMetrics.errorRates.database,
+                safeMetrics.errorRates.storage,
+                safeMetrics.errorRates.streaming
               ).toFixed(2)}%`}
-              subtitle="System-wide errors"
+              subtitle='System-wide errors'
               icon={<ErrorIcon />}
               color={colors.error}
-              status={Math.max(
-                systemMetrics.errorRates.api,
-                systemMetrics.errorRates.database,
-                systemMetrics.errorRates.storage,
-                systemMetrics.errorRates.streaming
-              ) > 5 ? 'critical' : 
-              Math.max(
-                systemMetrics.errorRates.api,
-                systemMetrics.errorRates.database,
-                systemMetrics.errorRates.storage,
-                systemMetrics.errorRates.streaming
-              ) > 2 ? 'warning' : 'healthy'}
+              status={
+                Math.max(
+                  safeMetrics.errorRates.api,
+                  safeMetrics.errorRates.database,
+                  safeMetrics.errorRates.storage,
+                  safeMetrics.errorRates.streaming
+                ) > 5
+                  ? 'critical'
+                  : Math.max(
+                        safeMetrics.errorRates.api,
+                        safeMetrics.errorRates.database,
+                        safeMetrics.errorRates.storage,
+                        safeMetrics.errorRates.streaming
+                      ) > 2
+                    ? 'warning'
+                    : 'healthy'
+              }
             />
           </Grid>
 
@@ -518,7 +573,7 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
               }}
             >
               <Typography
-                variant="h6"
+                variant='h6'
                 sx={{
                   fontWeight: 600,
                   color: colors.gray[900],
@@ -529,41 +584,53 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={6} md={3}>
-                  <Box textAlign="center">
-                    <Typography variant="h5" sx={{ fontWeight: 700, color: colors.error }}>
-                      {systemMetrics.errorRates.api.toFixed(2)}%
+                  <Box textAlign='center'>
+                    <Typography
+                      variant='h5'
+                      sx={{ fontWeight: 700, color: colors.error }}
+                    >
+                      {safeMetrics.errorRates.api.toFixed(2)}%
                     </Typography>
-                    <Typography variant="body2" color={colors.gray[600]}>
+                    <Typography variant='body2' color={colors.gray[600]}>
                       API Errors
                     </Typography>
                   </Box>
                 </Grid>
                 <Grid item xs={6} md={3}>
-                  <Box textAlign="center">
-                    <Typography variant="h5" sx={{ fontWeight: 700, color: colors.warning }}>
-                      {systemMetrics.errorRates.database.toFixed(2)}%
+                  <Box textAlign='center'>
+                    <Typography
+                      variant='h5'
+                      sx={{ fontWeight: 700, color: colors.warning }}
+                    >
+                      {safeMetrics.errorRates.database.toFixed(2)}%
                     </Typography>
-                    <Typography variant="body2" color={colors.gray[600]}>
+                    <Typography variant='body2' color={colors.gray[600]}>
                       Database Errors
                     </Typography>
                   </Box>
                 </Grid>
                 <Grid item xs={6} md={3}>
-                  <Box textAlign="center">
-                    <Typography variant="h5" sx={{ fontWeight: 700, color: colors.info }}>
-                      {systemMetrics.errorRates.storage.toFixed(2)}%
+                  <Box textAlign='center'>
+                    <Typography
+                      variant='h5'
+                      sx={{ fontWeight: 700, color: colors.info }}
+                    >
+                      {safeMetrics.errorRates.storage.toFixed(2)}%
                     </Typography>
-                    <Typography variant="body2" color={colors.gray[600]}>
+                    <Typography variant='body2' color={colors.gray[600]}>
                       Storage Errors
                     </Typography>
                   </Box>
                 </Grid>
                 <Grid item xs={6} md={3}>
-                  <Box textAlign="center">
-                    <Typography variant="h5" sx={{ fontWeight: 700, color: colors.primary }}>
-                      {systemMetrics.errorRates.streaming.toFixed(2)}%
+                  <Box textAlign='center'>
+                    <Typography
+                      variant='h5'
+                      sx={{ fontWeight: 700, color: colors.primary }}
+                    >
+                      {safeMetrics.errorRates.streaming.toFixed(2)}%
                     </Typography>
-                    <Typography variant="body2" color={colors.gray[600]}>
+                    <Typography variant='body2' color={colors.gray[600]}>
                       Streaming Errors
                     </Typography>
                   </Box>
@@ -575,11 +642,16 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
 
         <Divider sx={{ my: 3 }} />
 
-        <Box display="flex" alignItems="center" justifyContent="between" gap={2}>
-          <Typography variant="caption" color={colors.gray[500]}>
-            Last updated: {new Date(systemMetrics.lastUpdated).toLocaleString()}
+        <Box
+          display='flex'
+          alignItems='center'
+          justifyContent='between'
+          gap={2}
+        >
+          <Typography variant='caption' color={colors.gray[500]}>
+            Last updated: {new Date(safeMetrics.lastUpdated).toLocaleString()}
           </Typography>
-          <Typography variant="caption" color={colors.gray[500]}>
+          <Typography variant='caption' color={colors.gray[500]}>
             Auto-refresh every 30 seconds
           </Typography>
         </Box>

@@ -309,10 +309,10 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Chip
-                label={jobQueue.queueHealth.toUpperCase()}
+                label={(jobQueue.queueHealth || 'unknown').toUpperCase()}
                 size='small'
                 sx={{
-                  bgcolor: getHealthColor(jobQueue.queueHealth),
+                  bgcolor: getHealthColor(jobQueue.queueHealth || 'unknown'),
                   color: 'white',
                   fontWeight: 700
                 }}
@@ -418,7 +418,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                   variant='h4'
                   sx={{ fontWeight: 700, color: colors.gray[700], mb: 0.5 }}
                 >
-                  {formatDuration(jobQueue.processingTimes.average)}
+                  {formatDuration(jobQueue.processingTimes?.average || 0)}
                 </Typography>
                 <Typography
                   variant='body2'
@@ -440,7 +440,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
               Job Types Status
             </Typography>
             <Stack spacing={2}>
-              {Object.entries(jobQueue.jobTypes).map(([type, status]) => (
+              {Object.entries(jobQueue.jobTypes || {}).map(([type, status]) => (
                 <Box
                   key={type}
                   sx={{
@@ -529,11 +529,13 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                           <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             {getStatusIcon(job.status)}
                             <Chip
-                              label={job.status.toUpperCase()}
+                              label={(job.status || 'unknown').toUpperCase()}
                               size='small'
                               sx={{
                                 ml: 1,
-                                bgcolor: getStatusColor(job.status),
+                                bgcolor: getStatusColor(
+                                  job.status || 'unknown'
+                                ),
                                 color: 'white',
                                 fontWeight: 600,
                                 fontSize: '0.7rem'
@@ -648,10 +650,10 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
             </Typography>
             {selectedJob && (
               <Chip
-                label={selectedJob.status.toUpperCase()}
+                label={(selectedJob.status || 'unknown').toUpperCase()}
                 size='small'
                 sx={{
-                  bgcolor: getStatusColor(selectedJob.status),
+                  bgcolor: getStatusColor(selectedJob.status || 'unknown'),
                   color: 'white',
                   fontWeight: 600
                 }}
