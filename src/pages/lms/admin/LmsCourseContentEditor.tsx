@@ -81,6 +81,27 @@ const LmsCourseContentEditor: React.FC = () => {
     modules: [] // Siempre empezar con módulos vacíos
   })
 
+  // Función para transformar módulos del backend al formato del frontend
+  const transformModulesFromBackend = (backendModules: any[]): ContentModule[] => {
+    return backendModules.map((module, index) => {
+      // Si el módulo tiene lecciones, usar la primera lección como contenido
+      const firstLesson = module.lessons && module.lessons[0]
+      
+      return {
+        id: module.id.toString(),
+        title: module.title,
+        type: firstLesson?.type || 'text',
+        order: module.order_index || index,
+        content: {
+          description: module.description || '',
+          text: firstLesson?.content || '',
+          videoUrl: firstLesson?.video_url || '',
+          videoSource: firstLesson?.video_source || 'youtube'
+        }
+      }
+    })
+  }
+
   // Query para obtener el curso
   const {
     data: course,
@@ -102,10 +123,10 @@ const LmsCourseContentEditor: React.FC = () => {
 
         console.log('Course data from API:', courseData)
 
-        // Asegurar que el curso tenga la estructura correcta
+        // Asegurar que el curso tenga la estructura correcta y transformar módulos
         return {
           ...courseData,
-          modules: courseData.modules || [] // Empezar con módulos vacíos si no existen
+          modules: courseData.modules ? transformModulesFromBackend(courseData.modules) : []
         }
       } catch (error) {
         console.error('Error fetching course:', error)
@@ -168,44 +189,67 @@ const LmsCourseContentEditor: React.FC = () => {
               // Es un módulo nuevo (ID temporal), crear en el backend
               console.log('Creando módulo nuevo:', module.title)
               
+              // 1. Crear el módulo (sin contenido)
               const moduleData = {
                 title: module.title,
-                type: module.type,
                 order_index: module.order,
-                description: module.content.description || '',
-                content: module.content
+                description: module.content.description || ''
               }
 
-              const response = await axiosPrivate.post(
+              const moduleResponse = await axiosPrivate.post(
                 `/lms/content/courses/${courseId}/modules`,
                 moduleData
               )
               
+              const createdModule = moduleResponse.data.data || moduleResponse.data
+              
+              // 2. Crear una lección dentro del módulo con el contenido
+              if (module.content && (module.content.text || module.content.videoUrl)) {
+                const lessonData = {
+                  title: module.title, // Usar el mismo título del módulo
+                  type: module.type,
+                  order_index: 0, // Primera lección del módulo
+                  content: module.content.text || '',
+                  video_url: module.content.videoUrl || null,
+                  video_source: module.content.videoSource || null
+                }
+
+                const lessonResponse = await axiosPrivate.post(
+                  `/lms/content/modules/${createdModule.id}/lessons`,
+                  lessonData
+                )
+                
+                console.log('Lección creada:', lessonResponse.data)
+              }
+              
               results.push({
                 action: 'created',
-                module: response.data.data || response.data,
+                module: createdModule,
                 originalId: module.id
               })
             } else if (module.id) {
               // Es un módulo existente, actualizar
               console.log('Actualizando módulo existente:', module.title)
               
+              // 1. Actualizar el módulo (sin contenido)
               const moduleData = {
                 title: module.title,
-                type: module.type,
                 order_index: module.order,
-                description: module.content.description || '',
-                content: module.content
+                description: module.content.description || ''
               }
 
-              const response = await axiosPrivate.put(
+              const moduleResponse = await axiosPrivate.put(
                 `/lms/content/modules/${module.id}`,
                 moduleData
               )
               
+              // 2. TODO: Actualizar las lecciones del módulo
+              // Por ahora solo actualizamos el módulo
+              console.log('Módulo actualizado, lecciones pendientes de implementar')
+              
               results.push({
                 action: 'updated',
-                module: response.data.data || response.data
+                module: moduleResponse.data.data || moduleResponse.data
               })
             }
           } catch (moduleError) {
