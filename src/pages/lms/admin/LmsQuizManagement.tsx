@@ -128,7 +128,21 @@ function TabPanel(props: TabPanelProps) {
   )
 }
 
-const LmsQuizManagement: React.FC = () => {
+interface LmsQuizManagementProps {
+  courseId?: number
+  moduleId?: string
+  initialQuizId?: number
+  onQuizSaved?: (quizId: number) => void
+  embedded?: boolean  // True cuando se usa dentro de un Dialog
+}
+
+const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
+  courseId,
+  moduleId,
+  initialQuizId,
+  onQuizSaved,
+  embedded = false
+}) => {
   const [activeTab, setActiveTab] = useState(0)
   const [quizConfig, setQuizConfig] = useState<QuizConfiguration>({
     title: '',
@@ -380,10 +394,23 @@ const LmsQuizManagement: React.FC = () => {
       alert('Errores de validación:\n' + errors.join('\n'))
       return
     }
-    
+
     // Here you would save the quiz configuration to the backend
-    console.log('Saving quiz configuration:', quizConfig)
-    alert('Quiz guardado exitosamente')
+    console.log('Saving quiz configuration:', quizConfig, {
+      courseId,
+      moduleId,
+      initialQuizId
+    })
+
+    // Generar un quizId temporal (en producción vendría del backend)
+    const quizId = initialQuizId || Date.now()
+
+    // Si hay callback (modo embebido), llamarlo
+    if (onQuizSaved) {
+      onQuizSaved(quizId)
+    } else {
+      alert('Quiz guardado exitosamente')
+    }
   }
 
   return (

@@ -82,6 +82,7 @@ interface LmsContentEditorProps {
   hasUnsavedChanges?: boolean
   onUpdateLesson?: (params: { moduleId: string, lessonData: any }) => void
   onDeleteModule?: (moduleId: string) => void
+  courseId?: string  // Nuevo: ID del curso para integración con quiz
 }
 
 // WYSIWYG Editor configuration
@@ -112,7 +113,8 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   isLoading = false,
   hasUnsavedChanges = false,
   onUpdateLesson,
-  onDeleteModule
+  onDeleteModule,
+  courseId
 }) => {
   const [selectedModule, setSelectedModule] = useState<ContentModule | null>(null)
   const [videoUploads, setVideoUploads] = useState<VideoUploadProgress[]>([])
@@ -996,7 +998,22 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
           </IconButton>
         </DialogTitle>
         <DialogContent>
-          <LmsQuizManagement />
+          <LmsQuizManagement
+            courseId={courseId ? parseInt(courseId) : undefined}
+            moduleId={selectedModule?.id}
+            initialQuizId={selectedModule?.content.quizId}
+            onQuizSaved={(quizId) => {
+              // Actualizar el módulo con el quizId guardado
+              if (selectedModule) {
+                updateModuleContent(selectedModule.id, {
+                  ...selectedModule.content,
+                  quizId
+                })
+              }
+              setOpenQuizManagement(false)
+            }}
+            embedded={true}
+          />
         </DialogContent>
       </Dialog>
     </Grid>

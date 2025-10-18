@@ -504,6 +504,7 @@ const LmsCourseContentEditor: React.FC = () => {
             hasUnsavedChanges={hasUnsavedChanges}
             onUpdateLesson={updateLessonMutation.mutate}
             onDeleteModule={deleteModuleMutation.mutate}
+            courseId={courseId}
           />
         </CardContent>
       </Card>
