@@ -10,7 +10,19 @@
     "check": "tsc --noEmit",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "version:patch": "node scripts/update-version.js patch",
+    "version:minor": "node scripts/update-version.js minor",
+    "version:major": "node scripts/update-version.js major",
+    "version:patch:commit": "node scripts/update-version.js patch --commit",
+    "version:minor:commit": "node scripts/update-version.js minor --commit",
+    "version:major:commit": "node scripts/update-version.js major --commit",
+    "version:patch:cz": "node scripts/update-version.js patch && git add . && HUSKY=0 npx cz",
+    "version:minor:cz": "node scripts/update-version.js minor && git add . && HUSKY=0 npx cz",
+    "version:major:cz": "node scripts/update-version.js major && git add . && HUSKY=0 npx cz",
+    "version:rollback": "node scripts/rollback-version.js",
+    "version:list": "git tag -l \"v*\" --sort=-version:refname | head -10",
+    "version:current": "node -e \"import('./src/constants/version.ts').then(m => console.log('v' + m.APP_CONFIG.VERSION))\""
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
