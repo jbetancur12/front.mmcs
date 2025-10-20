@@ -22,7 +22,9 @@
     "version:major:cz": "node scripts/update-version.js major && git add . && HUSKY=0 npx cz",
     "version:rollback": "node scripts/rollback-version.js",
     "version:list": "git tag -l \"v*\" --sort=-version:refname | head -10",
-    "version:current": "node -e \"import('./src/constants/version.ts').then(m => console.log('v' + m.APP_CONFIG.VERSION))\""
+    "version:list:all": "git tag -l --format='%(refname:short) %(contents:lines=1)' | head -15",
+    "version:current": "node -e \"import('./src/constants/version.ts').then(m => console.log('v' + m.APP_CONFIG.VERSION))\"",
+    "version:show-tag": "git show"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",

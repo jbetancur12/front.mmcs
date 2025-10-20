@@ -79,11 +79,43 @@ try {
     execSync('git add .', { stdio: 'inherit' });
     execSync(`git commit -m "${rollbackMessage}"`, { stdio: 'inherit' });
     
+    // Anotar tag problemático
+    try {
+      const currentVersion = getCurrentVersion();
+      if (currentVersion && currentVersion !== targetVersion) {
+        const buggyTag = currentVersion.replace('v', '');
+        const annotationMessage = `⚠️ DEPRECATED: This version has critical issues. Rolled back to ${fileVersion} on ${today}. Do not use this version in production.`;
+        
+        // Crear tag anotado para marcar como problemático
+        execSync(`git tag -a ${currentVersion}-DEPRECATED -m "${annotationMessage}"`, { stdio: 'inherit' });
+        
+        console.log('');
+        console.log('🏷️  Tag management:');
+        console.log(`   ✅ Created annotated tag: ${currentVersion}-DEPRECATED`);
+        console.log(`   📝 Original tag ${currentVersion} preserved for history`);
+        console.log(`   ⚠️  Tag marked as deprecated with rollback info`);
+      }
+    } catch (error) {
+      console.log('');
+      console.log('⚠️  Could not annotate problematic tag:', error.message);
+    }
+    
     console.log('');
     console.log('🚀 Para deployar el rollback:');
     console.log('   git push --force-with-lease');
     console.log('');
     console.log('⚠️  IMPORTANTE: Notifica al equipo sobre el rollback');
+
+// Helper function to get current version from git
+function getCurrentVersion() {
+  try {
+    const tags = execSync('git tag -l "v*" --sort=-version:refname', { encoding: 'utf8' });
+    const latestTag = tags.split('\n').filter(tag => tag.trim())[0];
+    return latestTag || null;
+  } catch {
+    return null;
+  }
+}
   }
   
 } catch (error) {
