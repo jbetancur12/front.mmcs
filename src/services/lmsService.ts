@@ -71,9 +71,11 @@ export interface CourseLesson {
   content: string
   type: ContentType
   video_url?: string
+  video_source?: 'youtube' | 'minio'
   duration_minutes?: number
   order_index: number
   is_mandatory: boolean
+  quiz?: Quiz  // Quiz asociado a la lección (si type es 'quiz')
   created_at: string
   updated_at: string
 }

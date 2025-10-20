@@ -36,7 +36,11 @@ import {
   TableRow,
   LinearProgress,
   Tooltip,
-  Badge
+  Badge,
+  CircularProgress,
+  RadioGroup,
+  Radio,
+  Checkbox
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -61,14 +65,18 @@ import {
   TrendingUp as TrendingUpIcon,
   Warning as WarningIcon
 } from '@mui/icons-material'
+import { useQuery, useMutation, useQueryClient } from 'react-query'
+import useAxiosPrivate from '@utils/use-axios-private'
+import quizService from '../../../services/quizService'
 import LmsQuizComponent from '../components/LmsQuizComponent'
+import Swal from 'sweetalert2'
 
 interface QuizQuestion {
   id: number
   question: string
-  type: 'true-false' | 'single-choice' | 'multiple-choice'
+  type: 'single' | 'multiple' | 'boolean'  // Backend types
   options: string[]
-  correctAnswer: number | number[]
+  correctAnswers: number[]  // Always array for consistency
   explanation?: string
   points: number
   difficulty?: 'easy' | 'medium' | 'hard'
@@ -88,9 +96,10 @@ interface QuizConfiguration {
   showCorrectAnswers: boolean
   randomizeQuestions: boolean
   shuffleAnswers: boolean
-  timeLimitMinutes?: number
-  allowReview: boolean
-  showProgressBar: boolean
+  hasTimeLimit: boolean  // Frontend flag
+  timeLimitMinutes: number | null
+  allowReview: boolean  // Frontend only (not in backend)
+  showProgressBar: boolean  // Frontend only (not in backend)
   questions: QuizQuestion[]
 }
 
@@ -143,6 +152,9 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   onQuizSaved,
   embedded = false
 }) => {
+  const queryClient = useQueryClient()
+  const axiosPrivate = useAxiosPrivate()
+
   const [activeTab, setActiveTab] = useState(0)
   const [quizConfig, setQuizConfig] = useState<QuizConfiguration>({
     title: '',
@@ -153,17 +165,17 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     showCorrectAnswers: true,
     randomizeQuestions: false,
     shuffleAnswers: false,
-    timeLimitMinutes: undefined,
+    hasTimeLimit: false,
+    timeLimitMinutes: null,
     allowReview: true,
     showProgressBar: true,
     questions: []
   })
-  
+
   const [questionBank, setQuestionBank] = useState<QuizQuestion[]>([])
   const [openQuestionDialog, setOpenQuestionDialog] = useState(false)
   const [editingQuestion, setEditingQuestion] = useState<QuizQuestion | null>(null)
   const [previewMode, setPreviewMode] = useState(false)
-  const [quizStats, setQuizStats] = useState<QuizAttemptStats | null>(null)
   const [selectedQuestions, setSelectedQuestions] = useState<number[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('')
@@ -171,9 +183,9 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
 
   const [newQuestion, setNewQuestion] = useState<Partial<QuizQuestion>>({
     question: '',
-    type: 'single-choice',
+    type: 'single',
     options: ['', '', '', ''],
-    correctAnswer: 0,
+    correctAnswers: [0],
     explanation: '',
     points: 1,
     difficulty: 'medium',
@@ -181,53 +193,231 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     tags: []
   })
 
-  // Mock data for demonstration
-  useEffect(() => {
-    // Load existing question bank
-    const mockQuestionBank: QuizQuestion[] = [
-      {
-        id: 1,
-        question: '¿Cuál es la capital de Francia?',
-        type: 'single-choice',
-        options: ['Londres', 'París', 'Madrid', 'Roma'],
-        correctAnswer: 1,
-        explanation: 'París es la capital y ciudad más poblada de Francia.',
-        points: 1,
-        difficulty: 'easy',
-        category: 'Geografía',
-        tags: ['europa', 'capitales'],
-        usageCount: 15,
-        successRate: 85
-      },
-      {
-        id: 2,
-        question: '¿Cuáles de los siguientes son lenguajes de programación?',
-        type: 'multiple-choice',
-        options: ['JavaScript', 'HTML', 'Python', 'CSS'],
-        correctAnswer: [0, 2],
-        explanation: 'JavaScript y Python son lenguajes de programación, mientras que HTML y CSS son lenguajes de marcado y estilo.',
-        points: 2,
-        difficulty: 'medium',
-        category: 'Programación',
-        tags: ['tecnología', 'desarrollo'],
-        usageCount: 8,
-        successRate: 65
-      }
-    ]
-    setQuestionBank(mockQuestionBank)
+  // ============================================================================
+  // React Query Hooks
+  // ============================================================================
 
-    // Mock quiz stats
-    setQuizStats({
-      totalAttempts: 45,
-      averageScore: 78.5,
-      passRate: 82.2,
-      averageTimeSpent: 12.5,
-      questionStats: [
-        { questionId: 1, correctAnswers: 38, totalAnswers: 45, averageTime: 2.3 },
-        { questionId: 2, correctAnswers: 29, totalAnswers: 45, averageTime: 4.7 }
-      ]
-    })
-  }, [])
+  // Load existing quiz if initialQuizId is provided
+  const {
+    data: loadedQuiz,
+    isLoading: isLoadingQuiz,
+    error: quizLoadError
+  } = useQuery(
+    ['quiz', initialQuizId],
+    () => quizService.getQuizById(initialQuizId!),
+    {
+      enabled: !!initialQuizId,
+      retry: 1,
+      onSuccess: (quiz) => {
+        console.log('✅ Quiz loaded from backend:', quiz)
+
+        // Map backend quiz to frontend state
+        setQuizConfig({
+          id: quiz.id,
+          title: quiz.title,
+          instructions: quiz.instructions,
+          passingPercentage: quiz.passing_percentage,
+          maxAttempts: quiz.max_attempts,
+          cooldownMinutes: quiz.cooldown_minutes,
+          showCorrectAnswers: quiz.show_correct_answers,
+          randomizeQuestions: quiz.randomize_questions,
+          shuffleAnswers: quiz.shuffle_answers,
+          hasTimeLimit: quiz.time_limit_minutes !== null,
+          timeLimitMinutes: quiz.time_limit_minutes,
+          allowReview: true,
+          showProgressBar: true,
+          questions: quiz.questions.map(q => ({
+            id: q.id,
+            type: q.type,
+            question: q.question,
+            options: q.options,
+            correctAnswers: q.correct_answers,
+            points: q.points,
+            explanation: q.explanation || undefined
+          }))
+        })
+      },
+      onError: (error: any) => {
+        console.error('❌ Error loading quiz:', error)
+      }
+    }
+  )
+
+  // Load quiz statistics for analytics tab
+  const {
+    data: quizStats,
+    isLoading: isLoadingStats,
+    error: statsLoadError
+  } = useQuery(
+    ['quiz-stats', initialQuizId],
+    () => quizService.getQuizStatistics(initialQuizId!),
+    {
+      enabled: !!initialQuizId && activeTab === 3,
+      retry: 1,
+      refetchInterval: 30000, // Refresh every 30 seconds when on analytics tab
+      onError: (error: any) => {
+        console.error('❌ Error loading quiz stats:', error)
+      }
+    }
+  )
+
+  // Save quiz mutation (create or update)
+  const saveQuizMutation = useMutation(
+    async () => {
+      if (!moduleId) {
+        throw new Error('Module ID is required')
+      }
+
+      // Get lesson ID from module
+      const lessonsResponse = await axiosPrivate.get(`/lms/content/modules/${moduleId}/lessons`)
+      const lessons = lessonsResponse.data.data || lessonsResponse.data || []
+
+      if (lessons.length === 0) {
+        throw new Error('Este módulo no tiene lecciones. Por favor, crea una lección primero.')
+      }
+
+      const lessonId = lessons[0].id
+
+      // Build quiz DTO
+      const quizDTO = quizService.buildQuizDTO(quizConfig, quizConfig.questions)
+
+      console.log('📤 Sending quiz to backend:', { lessonId, quizDTO })
+
+      // Create or Update
+      if (initialQuizId) {
+        return await quizService.updateQuiz(initialQuizId, quizDTO)
+      } else {
+        return await quizService.createQuiz(lessonId, quizDTO)
+      }
+    },
+    {
+      onSuccess: (quiz) => {
+        console.log('✅ Quiz saved successfully:', quiz)
+
+        // Invalidate queries
+        queryClient.invalidateQueries(['quiz', quiz.id])
+        queryClient.invalidateQueries(['lms-course', courseId])
+
+        // Callback to parent component
+        if (onQuizSaved) {
+          onQuizSaved(quiz.id)
+        }
+      },
+      onError: (error: any) => {
+        console.error('❌ Error saving quiz:', error)
+      }
+    }
+  )
+
+  // ============================================================================
+  // Question Bank API Integration
+  // ============================================================================
+
+  // Fetch question bank from API
+  const { data: questionBankData, isLoading: isLoadingQuestionBank } = useQuery(
+    ['questionBank', searchTerm, filterCategory, filterDifficulty],
+    async () => {
+      const params = new URLSearchParams()
+      if (filterDifficulty) params.append('difficulty', filterDifficulty)
+      if (filterCategory) params.append('category', filterCategory)
+      if (searchTerm) params.append('search', searchTerm)
+
+      const response = await axiosPrivate.get(`/lms/question-bank?${params.toString()}`)
+      return response.data
+    },
+    {
+      staleTime: 3 * 60 * 1000, // 3 minutes
+      onSuccess: (data) => {
+        console.log('✅ Question bank loaded from API:', data)
+        setQuestionBank(data.data || [])
+      },
+      onError: (error: any) => {
+        console.error('❌ Error loading question bank:', error)
+        Swal.fire('Error', 'Error al cargar el banco de preguntas', 'error')
+      }
+    }
+  )
+
+  // Sync questionBankData with questionBank state
+  useEffect(() => {
+    if (questionBankData?.data) {
+      console.log('🔄 Syncing question bank data:', questionBankData.data)
+      setQuestionBank(questionBankData.data)
+    }
+  }, [questionBankData])
+
+  // Create question mutation
+  const createQuestionMutation = useMutation(
+    async (questionData: Partial<QuizQuestion>) => {
+      const response = await axiosPrivate.post('/lms/question-bank', questionData)
+      return response.data
+    },
+    {
+      onSuccess: (data) => {
+        console.log('✅ Question created:', data)
+        Swal.fire('Éxito', 'Pregunta creada exitosamente', 'success')
+        queryClient.invalidateQueries(['questionBank'])
+        // Close modal and reset form after successful creation
+        resetQuestionForm()
+        setOpenQuestionDialog(false)
+      },
+      onError: (error: any) => {
+        console.error('❌ Error creating question:', error)
+        Swal.fire('Error', error.response?.data?.error?.message || 'Error al crear la pregunta', 'error')
+      }
+    }
+  )
+
+  // Update question mutation
+  const updateQuestionMutation = useMutation(
+    async ({ id, data, updateQuiz }: { id: number; data: Partial<QuizQuestion>; updateQuiz?: { isInQuiz: boolean; updatedQuestion: QuizQuestion } }) => {
+      const response = await axiosPrivate.put(`/lms/question-bank/${id}`, data)
+      return { response: response.data, updateQuiz }
+    },
+    {
+      onSuccess: ({ response, updateQuiz }) => {
+        console.log('✅ Question updated:', response)
+        Swal.fire('Éxito', 'Pregunta actualizada exitosamente', 'success')
+        queryClient.invalidateQueries(['questionBank'])
+
+        // Update quiz questions if this question is in the quiz
+        if (updateQuiz?.isInQuiz && updateQuiz.updatedQuestion) {
+          setQuizConfig(prev => ({
+            ...prev,
+            questions: prev.questions.map(q => q.id === updateQuiz.updatedQuestion.id ? updateQuiz.updatedQuestion : q)
+          }))
+        }
+
+        // Close modal and reset form after successful update
+        setEditingQuestion(null)
+        resetQuestionForm()
+        setOpenQuestionDialog(false)
+      },
+      onError: (error: any) => {
+        console.error('❌ Error updating question:', error)
+        Swal.fire('Error', error.response?.data?.error?.message || 'Error al actualizar la pregunta', 'error')
+      }
+    }
+  )
+
+  // Delete question mutation
+  const deleteQuestionMutation = useMutation(
+    async (id: number) => {
+      const response = await axiosPrivate.delete(`/lms/question-bank/${id}`)
+      return response.data
+    },
+    {
+      onSuccess: () => {
+        console.log('✅ Question deleted')
+        Swal.fire('Éxito', 'Pregunta eliminada exitosamente', 'success')
+        queryClient.invalidateQueries(['questionBank'])
+      },
+      onError: (error: any) => {
+        console.error('❌ Error deleting question:', error)
+        Swal.fire('Error', error.response?.data?.error?.message || 'Error al eliminar la pregunta', 'error')
+      }
+    }
+  )
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)
@@ -240,24 +430,19 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   const handleAddQuestion = () => {
     if (!newQuestion.question?.trim()) return
 
-    const question: QuizQuestion = {
-      id: Date.now(),
+    const questionData = {
       question: newQuestion.question,
-      type: newQuestion.type || 'single-choice',
+      type: newQuestion.type || 'single',
       options: newQuestion.options?.filter(opt => opt.trim() !== '') || [],
-      correctAnswer: newQuestion.correctAnswer || 0,
+      correct_answers: newQuestion.correctAnswers || [0],
       explanation: newQuestion.explanation,
       points: newQuestion.points || 1,
       difficulty: newQuestion.difficulty || 'medium',
       category: newQuestion.category || '',
-      tags: newQuestion.tags || [],
-      usageCount: 0,
-      successRate: 0
+      tags: newQuestion.tags || []
     }
 
-    setQuestionBank(prev => [...prev, question])
-    resetQuestionForm()
-    setOpenQuestionDialog(false)
+    createQuestionMutation.mutate(questionData)
   }
 
   const handleEditQuestion = (question: QuizQuestion) => {
@@ -266,7 +451,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       question: question.question,
       type: question.type,
       options: [...question.options],
-      correctAnswer: question.correctAnswer,
+      correctAnswers: question.correctAnswers,
       explanation: question.explanation,
       points: question.points,
       difficulty: question.difficulty,
@@ -279,12 +464,11 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   const handleUpdateQuestion = () => {
     if (!editingQuestion || !newQuestion.question?.trim()) return
 
-    const updatedQuestion: QuizQuestion = {
-      ...editingQuestion,
+    const questionData = {
       question: newQuestion.question,
       type: newQuestion.type || editingQuestion.type,
       options: newQuestion.options?.filter(opt => opt.trim() !== '') || editingQuestion.options,
-      correctAnswer: newQuestion.correctAnswer || editingQuestion.correctAnswer,
+      correct_answers: newQuestion.correctAnswers || editingQuestion.correctAnswers,
       explanation: newQuestion.explanation,
       points: newQuestion.points || editingQuestion.points,
       difficulty: newQuestion.difficulty || editingQuestion.difficulty,
@@ -292,20 +476,26 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       tags: newQuestion.tags || editingQuestion.tags
     }
 
-    setQuestionBank(prev => prev.map(q => q.id === editingQuestion.id ? updatedQuestion : q))
-    setQuizConfig(prev => ({
-      ...prev,
-      questions: prev.questions.map(q => q.id === editingQuestion.id ? updatedQuestion : q)
-    }))
-    
-    setEditingQuestion(null)
-    resetQuestionForm()
-    setOpenQuestionDialog(false)
+    // Check if this question is in the quiz
+    const isInQuiz = quizConfig.questions.some(q => q.id === editingQuestion.id)
+    const updatedQuestion: QuizQuestion = {
+      ...editingQuestion,
+      ...questionData,
+      correctAnswers: questionData.correct_answers
+    }
+
+    updateQuestionMutation.mutate({
+      id: editingQuestion.id,
+      data: questionData,
+      updateQuiz: isInQuiz ? { isInQuiz, updatedQuestion } : undefined
+    })
   }
 
-  const handleDeleteQuestion = (questionId: number) => {
+  const handleDeleteQuestion = async (questionId: number) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta pregunta?')) {
-      setQuestionBank(prev => prev.filter(q => q.id !== questionId))
+      await deleteQuestionMutation.mutateAsync(questionId)
+
+      // Also remove from quiz if present
       setQuizConfig(prev => ({
         ...prev,
         questions: prev.questions.filter(q => q.id !== questionId)
@@ -332,9 +522,9 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   const resetQuestionForm = () => {
     setNewQuestion({
       question: '',
-      type: 'single-choice',
+      type: 'single',
       options: ['', '', '', ''],
-      correctAnswer: 0,
+      correctAnswers: [0],
       explanation: '',
       points: 1,
       difficulty: 'medium',
@@ -395,26 +585,50 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       return
     }
 
-    // Here you would save the quiz configuration to the backend
-    console.log('Saving quiz configuration:', quizConfig, {
-      courseId,
-      moduleId,
-      initialQuizId
-    })
-
-    // Generar un quizId temporal (en producción vendría del backend)
-    const quizId = initialQuizId || Date.now()
-
-    // Si hay callback (modo embebido), llamarlo
-    if (onQuizSaved) {
-      onQuizSaved(quizId)
-    } else {
-      alert('Quiz guardado exitosamente')
+    if (quizConfig.questions.length === 0) {
+      alert('Debes agregar al menos una pregunta al quiz antes de guardar')
+      return
     }
+
+    // Trigger save mutation
+    saveQuizMutation.mutate()
+  }
+
+  // ============================================================================
+  // Loading States
+  // ============================================================================
+  if (isLoadingQuiz) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 8 }}>
+        <CircularProgress size={60} />
+        <Typography sx={{ ml: 3 }} variant="h6">
+          Cargando quiz...
+        </Typography>
+      </Box>
+    )
   }
 
   return (
     <Box sx={{ width: '100%' }}>
+      {/* Error Messages */}
+      {quizLoadError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Error al cargar el quiz. Por favor, inténtalo de nuevo.
+        </Alert>
+      )}
+
+      {saveQuizMutation.isError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Error al guardar el quiz: {(saveQuizMutation.error as any)?.message || 'Error desconocido'}
+        </Alert>
+      )}
+
+      {saveQuizMutation.isSuccess && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          ✅ Quiz guardado exitosamente
+        </Alert>
+      )}
+
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={activeTab} onChange={handleTabChange}>
           <Tab label="Configuración" icon={<AssessmentIcon />} />
@@ -589,12 +803,12 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                 <Button
                   fullWidth
                   variant="contained"
-                  startIcon={<SaveIcon />}
+                  startIcon={saveQuizMutation.isLoading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                   onClick={handleSaveQuiz}
                   sx={{ mt: 2 }}
-                  disabled={validateQuizConfig().length > 0}
+                  disabled={validateQuizConfig().length > 0 || saveQuizMutation.isLoading}
                 >
-                  Guardar Quiz
+                  {saveQuizMutation.isLoading ? 'Guardando...' : (initialQuizId ? 'Actualizar Quiz' : 'Guardar Quiz')}
                 </Button>
               </CardContent>
             </Card>
@@ -862,7 +1076,11 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
               </Alert>
             ) : previewMode ? (
               <LmsQuizComponent
-                questions={quizConfig.questions}
+                questions={quizConfig.questions.map(q => ({
+                  ...q,
+                  type: q.type === 'single' ? 'single-choice' : q.type === 'multiple' ? 'multiple-choice' : 'true-false',
+                  correctAnswer: q.type === 'single' || q.type === 'boolean' ? q.correctAnswers[0] : q.correctAnswers
+                }))}
                 isPreview={true}
                 onComplete={(score, totalPoints) => {
                   alert(`Vista previa completada: ${score}/${totalPoints} puntos (${Math.round((score/totalPoints)*100)}%)`)
@@ -933,123 +1151,132 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
               Analíticas del Quiz
             </Typography>
           </Grid>
-          
-          {quizStats && (
+
+          {/* No quiz saved yet */}
+          {!initialQuizId && (
+            <Grid item xs={12}>
+              <Alert severity="info">
+                Debes guardar el quiz primero para ver las analíticas de intentos
+              </Alert>
+            </Grid>
+          )}
+
+          {/* Loading stats */}
+          {isLoadingStats && (
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                <CircularProgress />
+                <Typography sx={{ ml: 2 }}>Cargando estadísticas...</Typography>
+              </Box>
+            </Grid>
+          )}
+
+          {/* Error loading stats */}
+          {statsLoadError && (
+            <Grid item xs={12}>
+              <Alert severity="warning">
+                No se pudieron cargar las estadísticas. Puede que aún no haya intentos registrados.
+              </Alert>
+            </Grid>
+          )}
+
+          {/* Stats loaded and available */}
+          {quizStats && !isLoadingStats && (
             <>
+              {/* Main Stats Cards */}
               <Grid item xs={12} sm={6} md={3}>
                 <Card>
                   <CardContent sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" color="primary">
                       {quizStats.totalAttempts}
                     </Typography>
-                    <Typography variant="body2">Total de Intentos</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Total de Intentos
+                    </Typography>
                   </CardContent>
                 </Card>
               </Grid>
-              
+
               <Grid item xs={12} sm={6} md={3}>
                 <Card>
                   <CardContent sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" color="success.main">
-                      {quizStats.averageScore.toFixed(1)}
+                      {quizStats.averageScore}%
                     </Typography>
-                    <Typography variant="body2">Puntuación Promedio</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Puntuación Promedio
+                    </Typography>
                   </CardContent>
                 </Card>
               </Grid>
-              
+
               <Grid item xs={12} sm={6} md={3}>
                 <Card>
                   <CardContent sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" color="info.main">
-                      {quizStats.passRate.toFixed(1)}%
+                      {quizStats.passRate}%
                     </Typography>
-                    <Typography variant="body2">Tasa de Aprobación</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Tasa de Aprobación
+                    </Typography>
                   </CardContent>
                 </Card>
               </Grid>
-              
+
               <Grid item xs={12} sm={6} md={3}>
                 <Card>
                   <CardContent sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" color="warning.main">
-                      {quizStats.averageTimeSpent.toFixed(1)}
+                      {quizStats.averageTimeMinutes.toFixed(1)}
                     </Typography>
-                    <Typography variant="body2">Tiempo Promedio (min)</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Tiempo Promedio (min)
+                    </Typography>
                   </CardContent>
                 </Card>
               </Grid>
-              
-              <Grid item xs={12}>
+
+              {/* Additional Stats */}
+              <Grid item xs={12} sm={6}>
                 <Card>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Análisis por Pregunta
+                  <CardContent sx={{ textAlign: 'center' }}>
+                    <Typography variant="h4" color="secondary">
+                      {quizStats.uniqueUsers}
                     </Typography>
-                    
-                    <TableContainer>
-                      <Table>
-                        <TableHead>
-                          <TableRow>
-                            <TableCell>Pregunta</TableCell>
-                            <TableCell align="center">Respuestas Correctas</TableCell>
-                            <TableCell align="center">Total Respuestas</TableCell>
-                            <TableCell align="center">Tasa de Éxito</TableCell>
-                            <TableCell align="center">Tiempo Promedio</TableCell>
-                            <TableCell align="center">Dificultad</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {quizStats.questionStats.map((stat) => {
-                            const question = quizConfig.questions.find(q => q.id === stat.questionId)
-                            const successRate = (stat.correctAnswers / stat.totalAnswers) * 100
-                            
-                            return (
-                              <TableRow key={stat.questionId}>
-                                <TableCell>
-                                  <Typography variant="body2" sx={{ maxWidth: 300 }}>
-                                    {question?.question || `Pregunta ${stat.questionId}`}
-                                  </Typography>
-                                </TableCell>
-                                <TableCell align="center">{stat.correctAnswers}</TableCell>
-                                <TableCell align="center">{stat.totalAnswers}</TableCell>
-                                <TableCell align="center">
-                                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                                    <LinearProgress
-                                      variant="determinate"
-                                      value={successRate}
-                                      sx={{ width: 60, height: 8, borderRadius: 4 }}
-                                      color={successRate >= 70 ? 'success' : successRate >= 50 ? 'warning' : 'error'}
-                                    />
-                                    <Typography variant="body2">
-                                      {successRate.toFixed(1)}%
-                                    </Typography>
-                                  </Box>
-                                </TableCell>
-                                <TableCell align="center">
-                                  {stat.averageTime.toFixed(1)}s
-                                </TableCell>
-                                <TableCell align="center">
-                                  {successRate < 50 && (
-                                    <Tooltip title="Pregunta difícil - considera revisar">
-                                      <WarningIcon color="warning" />
-                                    </Tooltip>
-                                  )}
-                                  {successRate >= 90 && (
-                                    <Tooltip title="Pregunta muy fácil - considera aumentar dificultad">
-                                      <TrendingUpIcon color="info" />
-                                    </Tooltip>
-                                  )}
-                                </TableCell>
-                              </TableRow>
-                            )
-                          })}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
+                    <Typography variant="body2" color="text.secondary">
+                      Usuarios Únicos
+                    </Typography>
                   </CardContent>
                 </Card>
               </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Card>
+                  <CardContent sx={{ textAlign: 'center' }}>
+                    <Typography variant="h4" color={quizStats.suspiciousAttempts > 0 ? "error" : "success.main"}>
+                      {quizStats.suspiciousAttempts}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Intentos Sospechosos
+                    </Typography>
+                    {quizStats.suspiciousAttempts > 0 && (
+                      <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
+                        <WarningIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 0.5 }} />
+                        Completados demasiado rápido
+                      </Typography>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* No attempts yet */}
+              {quizStats.totalAttempts === 0 && (
+                <Grid item xs={12}>
+                  <Alert severity="info">
+                    Aún no hay intentos registrados para este quiz. Las estadísticas aparecerán cuando los usuarios comiencen a tomar el quiz.
+                  </Alert>
+                </Grid>
+              )}
             </>
           )}
         </Grid>
@@ -1087,21 +1314,21 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
               <FormControl fullWidth>
                 <InputLabel>Tipo de pregunta</InputLabel>
                 <Select
-                  value={newQuestion.type || 'single-choice'}
+                  value={newQuestion.type || 'single'}
                   label="Tipo de pregunta"
                   onChange={(e) => {
-                    const type = e.target.value as 'true-false' | 'single-choice' | 'multiple-choice'
+                    const type = e.target.value as 'single' | 'multiple' | 'boolean'
                     setNewQuestion(prev => ({
                       ...prev,
                       type,
-                      options: type === 'true-false' ? ['Falso', 'Verdadero'] : ['', '', '', ''],
-                      correctAnswer: type === 'multiple-choice' ? [] : 0
+                      options: type === 'boolean' ? ['Falso', 'Verdadero'] : ['', '', '', ''],
+                      correctAnswers: type === 'multiple' ? [] : [0]
                     }))
                   }}
                 >
-                  <MenuItem value="true-false">Verdadero/Falso</MenuItem>
-                  <MenuItem value="single-choice">Selección Única</MenuItem>
-                  <MenuItem value="multiple-choice">Selección Múltiple</MenuItem>
+                  <MenuItem value="boolean">Verdadero/Falso</MenuItem>
+                  <MenuItem value="single">Selección Única</MenuItem>
+                  <MenuItem value="multiple">Selección Múltiple</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -1162,7 +1389,79 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                 ))}
               </Grid>
             )}
-            
+
+            {/* Correct Answer Selection */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
+                Respuesta(s) Correcta(s):
+              </Typography>
+
+              {newQuestion.type === 'boolean' && (
+                <RadioGroup
+                  value={newQuestion.correctAnswers?.[0] ?? 0}
+                  onChange={(e) => setNewQuestion(prev => ({ ...prev, correctAnswers: [parseInt(e.target.value)] }))}
+                >
+                  <FormControlLabel
+                    value={0}
+                    control={<Radio />}
+                    label="Falso"
+                  />
+                  <FormControlLabel
+                    value={1}
+                    control={<Radio />}
+                    label="Verdadero"
+                  />
+                </RadioGroup>
+              )}
+
+              {newQuestion.type === 'single' && (
+                <RadioGroup
+                  value={newQuestion.correctAnswers?.[0] ?? 0}
+                  onChange={(e) => setNewQuestion(prev => ({ ...prev, correctAnswers: [parseInt(e.target.value)] }))}
+                >
+                  {(newQuestion.options || ['', '', '', '']).map((option, index) => (
+                    <FormControlLabel
+                      key={index}
+                      value={index}
+                      control={<Radio />}
+                      label={option || `Opción ${index + 1}`}
+                      disabled={!option?.trim()}
+                    />
+                  ))}
+                </RadioGroup>
+              )}
+
+              {newQuestion.type === 'multiple' && (
+                <Box>
+                  {(newQuestion.options || ['', '', '', '']).map((option, index) => (
+                    <FormControlLabel
+                      key={index}
+                      control={
+                        <Checkbox
+                          checked={newQuestion.correctAnswers?.includes(index) || false}
+                          onChange={(e) => {
+                            const currentCorrect = newQuestion.correctAnswers || []
+                            const newCorrect = e.target.checked
+                              ? [...currentCorrect, index]
+                              : currentCorrect.filter(i => i !== index)
+                            setNewQuestion(prev => ({ ...prev, correctAnswers: newCorrect }))
+                          }}
+                          disabled={!option?.trim()}
+                        />
+                      }
+                      label={option || `Opción ${index + 1}`}
+                    />
+                  ))}
+                </Box>
+              )}
+
+              {newQuestion.type === 'multiple' && (!newQuestion.correctAnswers || newQuestion.correctAnswers.length === 0) && (
+                <Alert severity="warning" sx={{ mt: 1 }}>
+                  Debe seleccionar al menos una respuesta correcta
+                </Alert>
+              )}
+            </Grid>
+
             <Grid item xs={12}>
               <TextField
                 fullWidth

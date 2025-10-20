@@ -92,7 +92,9 @@ const LmsCourseContentEditor: React.FC = () => {
         hasLesson: !!firstLesson,
         type: firstLesson?.type,
         finalType: contentType,
-        videoUrl: firstLesson?.video_url
+        videoUrl: firstLesson?.video_url,
+        hasQuiz: !!firstLesson?.quiz,
+        quizId: firstLesson?.quiz?.id
       })
 
       return {
@@ -104,7 +106,8 @@ const LmsCourseContentEditor: React.FC = () => {
           description: module.description || '',
           text: firstLesson?.content || '',
           videoUrl: firstLesson?.video_url || '',
-          videoSource: firstLesson?.video_url ? 'youtube' : 'youtube' // Por defecto youtube
+          videoSource: firstLesson?.video_source || (firstLesson?.video_url ? 'youtube' : 'youtube'),
+          quizId: firstLesson?.quiz?.id  // Include quizId if lesson has a quiz
         }
       }
     })

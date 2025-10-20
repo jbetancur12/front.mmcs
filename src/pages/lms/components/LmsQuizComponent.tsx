@@ -67,6 +67,13 @@ const LmsQuizComponent: React.FC<QuizComponentProps> = ({
         totalPossiblePoints += question.points
 
         const userAnswer = userAnswers[index]
+        console.log(`🔍 Q${index + 1}:`, {
+          type: question.type,
+          userAnswer,
+          correctAnswer: question.correctAnswer,
+          points: question.points
+        })
+
         if (userAnswer !== undefined) {
           if (question.type === 'multiple-choice') {
             const userArray = Array.isArray(userAnswer)
@@ -76,14 +83,21 @@ const LmsQuizComponent: React.FC<QuizComponentProps> = ({
               ? question.correctAnswer
               : [question.correctAnswer]
 
-            if (
-              userArray.length === correctArray.length &&
+            console.log(`   Arrays:`, { userArray, correctArray })
+
+            const isCorrect = userArray.length === correctArray.length &&
               userArray.every((answer) => correctArray.includes(answer))
-            ) {
+
+            console.log(`   ✓ Correct:`, isCorrect)
+
+            if (isCorrect) {
               totalScore += question.points
             }
           } else {
-            if (userAnswer === question.correctAnswer) {
+            const isCorrect = userAnswer === question.correctAnswer
+            console.log(`   ✓ Correct:`, isCorrect)
+
+            if (isCorrect) {
               totalScore += question.points
             }
           }
