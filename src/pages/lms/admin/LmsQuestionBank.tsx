@@ -53,7 +53,7 @@ interface QuizQuestion {
   question: string
   type: 'true-false' | 'single-choice' | 'multiple-choice'
   options: string[]
-  correctAnswer: number | number[]
+  correct_answer: number | number[]
   explanation?: string
   points: number
   difficulty: 'easy' | 'medium' | 'hard'
@@ -110,7 +110,7 @@ const LmsQuestionBank: React.FC = () => {
     question: '',
     type: 'single-choice',
     options: ['', '', '', ''],
-    correctAnswer: 0,
+    correct_answer: 0,
     explanation: '',
     points: 1,
     difficulty: 'medium',
@@ -123,73 +123,7 @@ const LmsQuestionBank: React.FC = () => {
   const [bulkAction, setBulkAction] = useState('')
 
   // Mock data for demonstration
-  useEffect(() => {
-    const mockQuestions: QuizQuestion[] = [
-      {
-        id: 1,
-        question: '¿Cuál es la capital de Francia?',
-        type: 'single-choice',
-        options: ['Londres', 'París', 'Madrid', 'Roma'],
-        correctAnswer: 1,
-        explanation: 'París es la capital y ciudad más poblada de Francia.',
-        points: 1,
-        difficulty: 'easy',
-        category: 'Geografía',
-        tags: ['europa', 'capitales', 'francia'],
-        usageCount: 15,
-        successRate: 85,
-        createdAt: new Date('2024-01-15'),
-        updatedAt: new Date('2024-01-20'),
-        createdBy: 'admin@example.com',
-        isFavorite: true
-      },
-      {
-        id: 2,
-        question: '¿Cuáles de los siguientes son lenguajes de programación?',
-        type: 'multiple-choice',
-        options: ['JavaScript', 'HTML', 'Python', 'CSS'],
-        correctAnswer: [0, 2],
-        explanation: 'JavaScript y Python son lenguajes de programación, mientras que HTML y CSS son lenguajes de marcado y estilo.',
-        points: 2,
-        difficulty: 'medium',
-        category: 'Programación',
-        tags: ['tecnología', 'desarrollo', 'web'],
-        usageCount: 8,
-        successRate: 65,
-        createdAt: new Date('2024-01-10'),
-        updatedAt: new Date('2024-01-18'),
-        createdBy: 'trainer@example.com',
-        isFavorite: false
-      },
-      {
-        id: 3,
-        question: 'La Tierra es plana',
-        type: 'true-false',
-        options: ['Falso', 'Verdadero'],
-        correctAnswer: 0,
-        explanation: 'La Tierra es un esferoide oblato, no plana.',
-        points: 1,
-        difficulty: 'easy',
-        category: 'Ciencias',
-        tags: ['geografía', 'astronomía'],
-        usageCount: 25,
-        successRate: 95,
-        createdAt: new Date('2024-01-05'),
-        updatedAt: new Date('2024-01-15'),
-        createdBy: 'admin@example.com',
-        isFavorite: false
-      }
-    ]
-    
-    setQuestions(mockQuestions)
-    setFilteredQuestions(mockQuestions)
-    
-    // Extract unique categories and tags
-    const categories = [...new Set(mockQuestions.map(q => q.category))]
-    const tags = [...new Set(mockQuestions.flatMap(q => q.tags))]
-    setAvailableCategories(categories)
-    setAvailableTags(tags)
-  }, [])
+
 
   // Apply filters
   useEffect(() => {
@@ -270,7 +204,7 @@ const LmsQuestionBank: React.FC = () => {
       question: newQuestion.question,
       type: newQuestion.type || 'single-choice',
       options: newQuestion.options?.filter(opt => opt.trim() !== '') || [],
-      correctAnswer: newQuestion.correctAnswer || 0,
+      correct_answer: newQuestion.correct_answer || 0,
       explanation: newQuestion.explanation,
       points: newQuestion.points || 1,
       difficulty: newQuestion.difficulty || 'medium',
@@ -306,7 +240,7 @@ const LmsQuestionBank: React.FC = () => {
       question: question.question,
       type: question.type,
       options: [...question.options],
-      correctAnswer: question.correctAnswer,
+      correct_answer: question.correct_answer,
       explanation: question.explanation,
       points: question.points,
       difficulty: question.difficulty,
@@ -324,7 +258,7 @@ const LmsQuestionBank: React.FC = () => {
       question: newQuestion.question,
       type: newQuestion.type || editingQuestion.type,
       options: newQuestion.options?.filter(opt => opt.trim() !== '') || editingQuestion.options,
-      correctAnswer: newQuestion.correctAnswer || editingQuestion.correctAnswer,
+      correct_answer: newQuestion.correct_answer || editingQuestion.correct_answer,
       explanation: newQuestion.explanation,
       points: newQuestion.points || editingQuestion.points,
       difficulty: newQuestion.difficulty || editingQuestion.difficulty,
@@ -411,7 +345,7 @@ const LmsQuestionBank: React.FC = () => {
       question: '',
       type: 'single-choice',
       options: ['', '', '', ''],
-      correctAnswer: 0,
+      correct_answer: 0,
       explanation: '',
       points: 1,
       difficulty: 'medium',
@@ -842,7 +776,7 @@ const LmsQuestionBank: React.FC = () => {
                       ...prev,
                       type,
                       options: type === 'true-false' ? ['Falso', 'Verdadero'] : ['', '', '', ''],
-                      correctAnswer: type === 'multiple-choice' ? [] : 0
+                      correct_answer: type === 'multiple-choice' ? [] : 0
                     }))
                   }}
                 >

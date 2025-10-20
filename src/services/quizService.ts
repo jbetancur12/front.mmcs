@@ -416,7 +416,7 @@ class QuizService {
       type: question.type,
       question: question.question,
       options: question.options,
-      correct_answers: question.correctAnswers,
+      correct_answers: question.correct_answers,
       points: question.points,
       order_index: orderIndex,
       explanation: question.explanation || undefined
@@ -459,6 +459,7 @@ class QuizService {
     quizConfig: any,
     questions: any[]
   ): CreateQuizDTO {
+    console.log("Building QuizDTO with config:",  questions);
     return {
       title: quizConfig.title,
       instructions: quizConfig.instructions,

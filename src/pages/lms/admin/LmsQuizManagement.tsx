@@ -76,7 +76,7 @@ interface QuizQuestion {
   question: string
   type: 'single' | 'multiple' | 'boolean'  // Backend types
   options: string[]
-  correctAnswers: number[]  // Always array for consistency
+  correct_answers: number[]  // Always array for consistency
   explanation?: string
   points: number
   difficulty?: 'easy' | 'medium' | 'hard'
@@ -110,7 +110,7 @@ interface QuizAttemptStats {
   averageTimeSpent: number
   questionStats: {
     questionId: number
-    correctAnswers: number
+    correct_answers: number
     totalAnswers: number
     averageTime: number
   }[]
@@ -185,7 +185,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     question: '',
     type: 'single',
     options: ['', '', '', ''],
-    correctAnswers: [0],
+    correct_answers: [0],
     explanation: '',
     points: 1,
     difficulty: 'medium',
@@ -207,6 +207,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     () => quizService.getQuizById(initialQuizId!),
     {
       enabled: !!initialQuizId,
+      refetchOnMount: 'always',
       retry: 1,
       onSuccess: (quiz) => {
         console.log('✅ Quiz loaded from backend:', quiz)
@@ -231,7 +232,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
             type: q.type,
             question: q.question,
             options: q.options,
-            correctAnswers: q.correct_answers,
+            correct_answers: q.correct_answers,
             points: q.points,
             explanation: q.explanation || undefined
           }))
@@ -268,6 +269,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
         throw new Error('Module ID is required')
       }
 
+
       // Get lesson ID from module
       const lessonsResponse = await axiosPrivate.get(`/lms/content/modules/${moduleId}/lessons`)
       const lessons = lessonsResponse.data.data || lessonsResponse.data || []
@@ -279,6 +281,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       const lessonId = lessons[0].id
 
       // Build quiz DTO
+      console.log("🚀 ~ LmsQuizManagement ~ quizConfig:", quizConfig) 
       const quizDTO = quizService.buildQuizDTO(quizConfig, quizConfig.questions)
 
       console.log('📤 Sending quiz to backend:', { lessonId, quizDTO })
@@ -327,6 +330,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     },
     {
       staleTime: 3 * 60 * 1000, // 3 minutes
+      refetchOnMount: 'always', // <--- fuerza re-fetch cada vez que el componente monta
       onSuccess: (data) => {
         console.log('✅ Question bank loaded from API:', data)
         setQuestionBank(data.data || [])
@@ -345,6 +349,38 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       setQuestionBank(questionBankData.data)
     }
   }, [questionBankData])
+
+   useEffect(() => {
+    if (!loadedQuiz) return
+
+    const quiz = loadedQuiz
+    console.log('✅ Quiz (effect) loaded:', quiz)
+
+    setQuizConfig({
+      id: quiz.id,
+      title: quiz.title,
+      instructions: quiz.instructions,
+      passingPercentage: quiz.passing_percentage,
+      maxAttempts: quiz.max_attempts,
+      cooldownMinutes: quiz.cooldown_minutes,
+      showCorrectAnswers: quiz.show_correct_answers,
+      randomizeQuestions: quiz.randomize_questions,
+      shuffleAnswers: quiz.shuffle_answers,
+      hasTimeLimit: quiz.time_limit_minutes !== null,
+      timeLimitMinutes: quiz.time_limit_minutes,
+      allowReview: true,
+      showProgressBar: true,
+      questions: quiz.questions.map((q: any) => ({
+        id: q.id,
+        type: q.type,
+        question: q.question,
+        options: q.options,
+        correct_answers: q.correct_answers,
+        points: q.points,
+        explanation: q.explanation || undefined
+      }))
+    })
+  }, [loadedQuiz])
 
   // Create question mutation
   const createQuestionMutation = useMutation(
@@ -434,7 +470,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       question: newQuestion.question,
       type: newQuestion.type || 'single',
       options: newQuestion.options?.filter(opt => opt.trim() !== '') || [],
-      correct_answers: newQuestion.correctAnswers || [0],
+      correct_answers: newQuestion.correct_answers || [0],
       explanation: newQuestion.explanation,
       points: newQuestion.points || 1,
       difficulty: newQuestion.difficulty || 'medium',
@@ -451,7 +487,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       question: question.question,
       type: question.type,
       options: [...question.options],
-      correctAnswers: question.correctAnswers,
+      correct_answers: question.correct_answers,
       explanation: question.explanation,
       points: question.points,
       difficulty: question.difficulty,
@@ -468,7 +504,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       question: newQuestion.question,
       type: newQuestion.type || editingQuestion.type,
       options: newQuestion.options?.filter(opt => opt.trim() !== '') || editingQuestion.options,
-      correct_answers: newQuestion.correctAnswers || editingQuestion.correctAnswers,
+      correct_answers: newQuestion.correct_answers || editingQuestion.correct_answers,
       explanation: newQuestion.explanation,
       points: newQuestion.points || editingQuestion.points,
       difficulty: newQuestion.difficulty || editingQuestion.difficulty,
@@ -481,7 +517,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     const updatedQuestion: QuizQuestion = {
       ...editingQuestion,
       ...questionData,
-      correctAnswers: questionData.correct_answers
+      correct_answers: questionData.correct_answers
     }
 
     updateQuestionMutation.mutate({
@@ -524,7 +560,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       question: '',
       type: 'single',
       options: ['', '', '', ''],
-      correctAnswers: [0],
+      correct_answers: [0],
       explanation: '',
       points: 1,
       difficulty: 'medium',
@@ -1079,7 +1115,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                 questions={quizConfig.questions.map(q => ({
                   ...q,
                   type: q.type === 'single' ? 'single-choice' : q.type === 'multiple' ? 'multiple-choice' : 'true-false',
-                  correctAnswer: q.type === 'single' || q.type === 'boolean' ? q.correctAnswers[0] : q.correctAnswers
+                  correctAnswer: q.type === 'single' || q.type === 'boolean' ? q.correct_answers[0] : q.correct_answers
                 }))}
                 isPreview={true}
                 onComplete={(score, totalPoints) => {
@@ -1322,7 +1358,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                       ...prev,
                       type,
                       options: type === 'boolean' ? ['Falso', 'Verdadero'] : ['', '', '', ''],
-                      correctAnswers: type === 'multiple' ? [] : [0]
+                      correct_answers: type === 'multiple' ? [] : [0]
                     }))
                   }}
                 >
@@ -1368,7 +1404,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
               />
             </Grid>
             
-            {newQuestion.type !== 'true-false' && (
+            {newQuestion.type !== 'boolean' && (
               <Grid item xs={12}>
                 <Typography variant="subtitle2" gutterBottom>
                   Opciones:
@@ -1398,8 +1434,8 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
 
               {newQuestion.type === 'boolean' && (
                 <RadioGroup
-                  value={newQuestion.correctAnswers?.[0] ?? 0}
-                  onChange={(e) => setNewQuestion(prev => ({ ...prev, correctAnswers: [parseInt(e.target.value)] }))}
+                  value={newQuestion.correct_answers?.[0] ?? 0}
+                  onChange={(e) => setNewQuestion(prev => ({ ...prev, correct_answers: [parseInt(e.target.value)] }))}
                 >
                   <FormControlLabel
                     value={0}
@@ -1416,8 +1452,8 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
 
               {newQuestion.type === 'single' && (
                 <RadioGroup
-                  value={newQuestion.correctAnswers?.[0] ?? 0}
-                  onChange={(e) => setNewQuestion(prev => ({ ...prev, correctAnswers: [parseInt(e.target.value)] }))}
+                  value={newQuestion.correct_answers?.[0] ?? 0}
+                  onChange={(e) => setNewQuestion(prev => ({ ...prev, correct_answers: [parseInt(e.target.value)] }))}
                 >
                   {(newQuestion.options || ['', '', '', '']).map((option, index) => (
                     <FormControlLabel
@@ -1438,13 +1474,13 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                       key={index}
                       control={
                         <Checkbox
-                          checked={newQuestion.correctAnswers?.includes(index) || false}
+                          checked={newQuestion.correct_answers?.includes(index) || false}
                           onChange={(e) => {
-                            const currentCorrect = newQuestion.correctAnswers || []
+                            const currentCorrect = newQuestion.correct_answers || []
                             const newCorrect = e.target.checked
                               ? [...currentCorrect, index]
                               : currentCorrect.filter(i => i !== index)
-                            setNewQuestion(prev => ({ ...prev, correctAnswers: newCorrect }))
+                            setNewQuestion(prev => ({ ...prev, correct_answers: newCorrect }))
                           }}
                           disabled={!option?.trim()}
                         />
@@ -1455,7 +1491,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                 </Box>
               )}
 
-              {newQuestion.type === 'multiple' && (!newQuestion.correctAnswers || newQuestion.correctAnswers.length === 0) && (
+              {newQuestion.type === 'multiple' && (!newQuestion.correct_answers || newQuestion.correct_answers.length === 0) && (
                 <Alert severity="warning" sx={{ mt: 1 }}>
                   Debe seleccionar al menos una respuesta correcta
                 </Alert>

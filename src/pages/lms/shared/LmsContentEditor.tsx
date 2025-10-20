@@ -564,7 +564,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                       })
                       setSelectedModule(module)
                     }}
-                  >
+                  >                    
                     <ListItemIcon>
                       <DragIndicatorIcon sx={{ cursor: 'grab' }} />
                     </ListItemIcon>
@@ -984,6 +984,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
         onClose={() => setOpenQuizManagement(false)}
         maxWidth="xl"
         fullWidth
+        keepMounted={true}
         PaperProps={{
           sx: { height: '90vh' }
         }}
