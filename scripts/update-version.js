@@ -19,13 +19,23 @@ if (!versionType || !['patch', 'minor', 'major'].includes(versionType)) {
   process.exit(1);
 }
 
-// Verificar que estamos en un repo git limpio
+// Verificar estado del repositorio Git
 try {
   const gitStatus = execSync('git status --porcelain', { encoding: 'utf8' });
-  if (gitStatus.trim() && !autoCommit) {
-    console.error('❌ Hay cambios sin commitear. Haz commit primero o usa --commit');
-    console.error('   git add . && git commit -m "cambios pendientes"');
-    process.exit(1);
+  
+  if (gitStatus.trim()) {
+    if (autoCommit) {
+      console.error('❌ Hay cambios staged/unstaged. Para auto-commit, el repo debe estar limpio.');
+      console.error('   Haz commit de los cambios pendientes primero:');
+      console.error('   git add . && git commit -m "cambios pendientes"');
+      console.error('   Luego ejecuta el comando de versionado.');
+      process.exit(1);
+    } else {
+      console.error('❌ Hay cambios sin commitear. Opciones:');
+      console.error('   1. Hacer commit manual: git add . && git commit -m "cambios"');
+      console.error('   2. Usar auto-commit: npm run version:' + versionType + ':commit "' + message + '"');
+      process.exit(1);
+    }
   }
 } catch (error) {
   console.error('❌ No estás en un repositorio Git');
