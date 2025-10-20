@@ -1,4 +1,13 @@
-export const APP_CONFIG = {
+interface AppConfig {
+  VERSION: string
+  BUILD_DATE: string
+  ENVIRONMENT: string
+  CHANGELOG: Record<string, string>
+  CLEAR_TOKENS_ON_VERSION_CHANGE: boolean
+  CLEAR_CACHE_ON_VERSION_CHANGE: boolean
+}
+
+export const APP_CONFIG: AppConfig = {
   VERSION: '1.4.0',
   BUILD_DATE: '2025-10-20',
   ENVIRONMENT:
@@ -11,7 +20,7 @@ export const APP_CONFIG = {
     '1.2.1': 'Fix token authentication + LMS content editor',
     '1.2.0': 'LMS module improvements',
     '1.4.0': '--commit'
-  },
+  } as Record<string, string>,
 
   // Configuración de limpieza
   CLEAR_TOKENS_ON_VERSION_CHANGE: true,
@@ -19,7 +28,7 @@ export const APP_CONFIG = {
 }
 
 // Helper para logging
-export const logVersionUpdate = (from: string | null, to: string) => {
+export const logVersionUpdate = (from: string | null, to: string): void => {
   console.log(`🔄 App version updated: ${from || 'unknown'} → ${to}`)
   if (APP_CONFIG.CHANGELOG[to]) {
     console.log(`📝 Changes: ${APP_CONFIG.CHANGELOG[to]}`)
