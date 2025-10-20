@@ -24,20 +24,28 @@ const queryClient = new QueryClient()
 //   tracesSampleRate: 1.0 // puedes bajarlo en producción
 // })
 
-const APP_VERSION = '1.0.0'; // Cambia esto en cada deploy
+const APP_VERSION = '1.2.1' // Cambia esto en cada deploy
 
-// Limpiar cache cuando cambie la versión
-const currentVersion = localStorage.getItem('app-version');
+// Limpiar cache y tokens cuando cambie la versión
+const currentVersion = localStorage.getItem('app-version')
+console.log(window.caches)
 if (currentVersion !== APP_VERSION) {
   if ('caches' in window) {
-    caches.keys().then(names => {
-      names.forEach(name => {
-        caches.delete(name);
-      });
-    });
+    caches.keys().then((names) => {
+      names.forEach((name) => {
+        caches.delete(name)
+      })
+    })
   }
-  localStorage.setItem('app-version', APP_VERSION);
-  window.location.reload();
+
+  // Limpiar tokens de autenticación
+  localStorage.removeItem('accessToken')
+  localStorage.removeItem('refreshToken')
+  localStorage.removeItem('user')
+  localStorage.removeItem('userProfile')
+
+  localStorage.setItem('app-version', APP_VERSION)
+  window.location.reload()
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
