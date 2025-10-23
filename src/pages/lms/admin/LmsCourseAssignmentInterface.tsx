@@ -66,6 +66,44 @@ interface User {
   department?: string
 }
 
+// Backend response interface
+interface BackendAssignment {
+  id: number
+  course_id: number
+  course: {
+    id: number
+    title: string
+    description: string
+    is_mandatory: boolean
+    audience: string
+  }
+  assignment_type?: string
+  user_ids?: number[]
+  department?: string
+  all_employees: boolean
+  role?: string
+  deadline: string | null
+  created_by: number
+  creator?: {
+    id: number
+    nombre: string
+    email: string
+  }
+  created_at: string
+  updated_at: string
+  progress_stats: {
+    totalUsers: number
+    completedUsers: number
+    inProgressUsers: number
+    notStartedUsers: number
+    avgProgress: number
+  }
+  status: 'active' | 'completed' | 'overdue'
+  assigned_to: string[]
+  affected_users_count: number
+}
+
+// Frontend interface (for compatibility)
 interface Assignment {
   id: number
   courseId: number
@@ -79,46 +117,24 @@ interface Assignment {
   notificationsSent: number
 }
 
-// Mock data
-
-
-const mockUsers: User[] = [
-  { id: 1, nombre: 'Ana López', email: 'ana@company.com', roles: ['employee'], department: 'Desarrollo' },
-  { id: 2, nombre: 'Carlos Méndez', email: 'carlos@company.com', roles: ['employee'], department: 'Desarrollo' },
-  { id: 3, nombre: 'María García', email: 'maria@company.com', roles: ['employee'], department: 'Marketing' },
-  { id: 4, nombre: 'Roberto Silva', email: 'roberto@company.com', roles: ['employee'], department: 'Ventas' }
-]
-
-const mockAssignments: Assignment[] = [
-  {
-    id: 1,
-    courseId: 1,
-    courseTitle: 'Seguridad en el Trabajo',
-    assignedTo: ['Desarrollo', 'Marketing'],
-    assignedBy: 'Admin',
-    deadline: '2024-02-15',
-    status: 'active',
-    progress: 65,
-    createdAt: '2024-01-15',
-    notificationsSent: 2
-  },
-  {
-    id: 2,
-    courseId: 2,
-    courseTitle: 'Protección de Datos',
-    assignedTo: ['Todos los empleados'],
-    assignedBy: 'Admin',
-    deadline: '2024-02-10',
-    status: 'overdue',
-    progress: 30,
-    createdAt: '2024-01-10',
-    notificationsSent: 5
+// Transform backend assignment to frontend format
+const transformAssignment = (backendAssignment: BackendAssignment): Assignment => {
+  return {
+    id: backendAssignment.id,
+    courseId: backendAssignment.course_id,
+    courseTitle: backendAssignment.course.title,
+    assignedTo: backendAssignment.assigned_to,
+    assignedBy: backendAssignment.creator?.nombre || 'Admin',
+    deadline: backendAssignment.deadline || '',
+    status: backendAssignment.status,
+    progress: Math.round(backendAssignment.progress_stats.avgProgress || 0),
+    createdAt: backendAssignment.created_at,
+    notificationsSent: 0 // TODO: Add from backend when available
   }
-]
+}
 
 const LmsCourseAssignmentInterface: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0)
-  const [assignments, setAssignments] = useState(mockAssignments)
   const [openDialog, setOpenDialog] = useState(false)
   const [selectedCourse, setSelectedCourse] = useState<number | ''>('')
   const [selectedUsers, setSelectedUsers] = useState<number[]>([])
@@ -176,7 +192,31 @@ const LmsCourseAssignmentInterface: React.FC = () => {
       onError: (error: any) => {
         setSnackbar({
           open: true,
-          message: 'Error al cargar los cursos: ' + (error.response?.data?.message || error.message),
+          message: 'Error al cargar los usuarios: ' + (error.response?.data?.message || error.message),
+          severity: 'error'
+        })
+      }
+    }
+  )
+
+  // Get all assignments
+  const { data: assignmentsResponse, isLoading: isLoadingAssignments, error: errorAssignments } = useQuery<{ assignments: BackendAssignment[], total: number, page: number, limit: number }>(
+    ['lms-all-assignments', page, rowsPerPage],
+    async () => {
+      const response = await axiosPrivate.get('/lms/assignments/all', {
+        params: {
+          page: page + 1,
+          limit: rowsPerPage
+        }
+      })
+      return response.data.data
+    },
+    {
+      keepPreviousData: true,
+      onError: (error: any) => {
+        setSnackbar({
+          open: true,
+          message: 'Error al cargar las asignaciones: ' + (error.response?.data?.message || error.message),
           severity: 'error'
         })
       }
@@ -184,9 +224,11 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   )
 
 
-  const courses = coursesResponse?.courses || [] 
+  const courses = coursesResponse?.courses || []
   const totalCourses = coursesResponse?.total || 0
   const internalUsers = ownUsersResponse || []
+  const assignments = (assignmentsResponse?.assignments || []).map(transformAssignment)
+  const totalAssignments = assignmentsResponse?.total || 0
   console.log("🚀 ~ LmsCourseAssignmentInterface ~ internalUsers:", internalUsers)
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
