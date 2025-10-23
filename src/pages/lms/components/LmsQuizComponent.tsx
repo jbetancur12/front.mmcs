@@ -34,12 +34,18 @@ interface QuizComponentProps {
   questions: QuizQuestion[]
   onComplete?: (score: number, totalPoints: number) => void
   isPreview?: boolean
+  maxAttempts?: number
+  currentAttempt?: number
+  onRetry?: () => void
 }
 
 const LmsQuizComponent: React.FC<QuizComponentProps> = ({
   questions,
   onComplete,
-  isPreview = false
+  isPreview = false,
+  maxAttempts = 3,
+  currentAttempt = 1,
+  onRetry
 }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [userAnswers, setUserAnswers] = useState<(number | number[])[]>([])
@@ -153,7 +159,22 @@ const LmsQuizComponent: React.FC<QuizComponentProps> = ({
     }
   }
 
+  const handleRetry = () => {
+    setCurrentQuestionIndex(0)
+    setUserAnswers([])
+    setShowResults(false)
+    setScore(0)
+    setTotalPoints(0)
+    if (onRetry) {
+      onRetry()
+    }
+  }
+
   if (showResults) {
+    const percentage = Math.round((score / totalPoints) * 100)
+    const remainingAttempts = maxAttempts - currentAttempt
+    const hasAttemptsLeft = remainingAttempts > 0
+
     return (
       <Card>
         <CardContent>
@@ -176,9 +197,61 @@ const LmsQuizComponent: React.FC<QuizComponentProps> = ({
               </Typography>
             </Box>
             <Typography variant='h6' color='text.secondary'>
-              {Math.round((score / totalPoints) * 100)}% de aciertos
+              {percentage}% de aciertos
             </Typography>
+
+            {!isPreview && (
+              <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Chip
+                  label={`Intento ${currentAttempt} de ${maxAttempts}`}
+                  color='primary'
+                  size='small'
+                />
+                {hasAttemptsLeft && (
+                  <Typography variant='body2' color='text.secondary'>
+                    Te quedan {remainingAttempts} intento{remainingAttempts !== 1 ? 's' : ''}
+                  </Typography>
+                )}
+              </Box>
+            )}
           </Box>
+
+          {!isPreview && hasAttemptsLeft && percentage < 70 && (
+            <Alert severity='warning' sx={{ mb: 2 }}>
+              <Typography variant='body2'>
+                <strong>No aprobaste el quiz.</strong> Necesitas al menos 70% para aprobar.
+                Puedes intentarlo de nuevo.
+              </Typography>
+            </Alert>
+          )}
+
+          {!isPreview && percentage >= 70 && (
+            <Alert severity='success' sx={{ mb: 2 }}>
+              <Typography variant='body2'>
+                <strong>¡Felicitaciones!</strong> Has aprobado el quiz.
+              </Typography>
+            </Alert>
+          )}
+
+          {!isPreview && !hasAttemptsLeft && percentage < 70 && (
+            <Alert severity='error' sx={{ mb: 2 }}>
+              <Typography variant='body2'>
+                <strong>No hay más intentos disponibles.</strong> Has agotado tus {maxAttempts} intentos.
+              </Typography>
+            </Alert>
+          )}
+
+          {!isPreview && hasAttemptsLeft && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+              <Button
+                variant='contained'
+                color='primary'
+                onClick={handleRetry}
+              >
+                Reintentar Quiz
+              </Button>
+            </Box>
+          )}
 
           <Divider sx={{ my: 2 }} />
 

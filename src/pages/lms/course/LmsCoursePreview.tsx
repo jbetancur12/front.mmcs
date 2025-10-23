@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import ReactMarkdown from 'react-markdown'
+import Swal from 'sweetalert2'
 import {
   Box,
   Card,
@@ -33,10 +35,11 @@ import {
   Edit as EditIcon,
   Visibility as ViewIcon
 } from '@mui/icons-material'
-import { useQuery } from 'react-query'
+import { useQuery, useQueryClient } from 'react-query'
 import { useStore } from '@nanostores/react'
 import { userStore } from 'src/store/userStore'
 import LmsQuizComponent from '../components/LmsQuizComponent'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 interface CourseUnit {
   id: number
@@ -70,6 +73,159 @@ interface Course {
   status: 'draft' | 'published' | 'archived'
 }
 
+// ==================== HELPER FUNCTIONS ====================
+
+/**
+ * Mapea tipos de quiz del backend al formato del frontend
+ */
+const mapQuizType = (backendType: string): 'single-choice' | 'multiple-choice' | 'true-false' => {
+  switch (backendType) {
+    case 'single':
+      return 'single-choice'
+    case 'multiple':
+      return 'multiple-choice'
+    case 'boolean':
+      return 'true-false'
+    default:
+      return 'single-choice'
+  }
+}
+
+/**
+ * Convierte URL de YouTube a formato embebible
+ */
+const convertToEmbedUrl = (url: string): string => {
+  if (!url || url.includes('/embed/')) return url
+
+  // Detectar formato watch?v=
+  const watchMatch = url.match(/[?&]v=([^&]+)/)
+  if (watchMatch) {
+    return `https://www.youtube.com/embed/${watchMatch[1]}`
+  }
+
+  // Detectar formato youtu.be/
+  const shortMatch = url.match(/youtu\.be\/([^?]+)/)
+  if (shortMatch) {
+    return `https://www.youtube.com/embed/${shortMatch[1]}`
+  }
+
+  return url
+}
+
+/**
+ * Transforma datos de preview (modo admin) al formato Course
+ */
+const transformPreviewDataToCourse = (previewData: any): Course => {
+  const units = previewData.modules.flatMap((module: any, moduleIndex: number) =>
+    module.lessons.map((lesson: any, lessonIndex: number) => {
+      // Transformar quiz questions si existen
+      let questions: any[] = []
+      if (lesson.quiz && lesson.quiz.questions && Array.isArray(lesson.quiz.questions)) {
+        questions = lesson.quiz.questions.map((q: any) => ({
+          id: q.id,
+          question: q.question,
+          type: mapQuizType(q.type),
+          options: q.options || [],
+          correctAnswer: q.type === 'multiple' ? q.correct_answers : q.correct_answers[0],
+          explanation: q.explanation,
+          points: q.points
+        }))
+      }
+
+      return {
+        id: lesson.id,
+        title: lesson.title,
+        type: lesson.type === 'video' ? 'video' : lesson.type === 'quiz' ? 'quiz' : 'text',
+        duration: `${lesson.estimated_minutes || 30} min`,
+        order: moduleIndex * 100 + lessonIndex + 1,
+        completed: false, // Nada completado en preview admin
+        unlocked: true, // Todo desbloqueado en preview admin
+        content: {
+          videoUrl: convertToEmbedUrl(lesson.video_url),
+          text: lesson.content,
+          description: lesson.description,
+          questions: questions
+        }
+      }
+    })
+  )
+
+  return {
+    id: previewData.id,
+    title: previewData.title,
+    description: previewData.description,
+    category: previewData.category || 'Programación',
+    instructor: previewData.instructor || 'Instructor',
+    duration: previewData.duration || '8 horas',
+    rating: previewData.rating || 4.5,
+    enrolledUsers: previewData.enrolledUsers || 0,
+    audience: previewData.audience,
+    thumbnail: previewData.thumbnail || '/placeholder.svg?height=400&width=600',
+    status: previewData.status,
+    units
+  }
+}
+
+/**
+ * Transforma datos de progreso (modo estudiante) al formato Course
+ */
+const transformProgressDataToCourse = (progressData: any): Course => {
+  const units = progressData.modules.flatMap((module: any, moduleIndex: number) =>
+    module.lessons.map((lesson: any, lessonIndex: number) => {
+      const isCompleted = lesson.progress?.status === 'completed'
+      const hasProgress = lesson.progress !== null && lesson.progress !== undefined
+
+      // Primera lección siempre desbloqueada, o si tiene progreso
+      const isUnlocked = lessonIndex === 0 || hasProgress
+
+      // Transformar quiz questions si existen
+      let questions: any[] = []
+      if (lesson.quiz && lesson.quiz.questions && Array.isArray(lesson.quiz.questions)) {
+        questions = lesson.quiz.questions.map((q: any) => ({
+          id: q.id,
+          question: q.question,
+          type: mapQuizType(q.type),
+          options: q.options || [],
+          correctAnswer: q.type === 'multiple' ? q.correct_answers : q.correct_answers[0],
+          explanation: q.explanation,
+          points: q.points
+        }))
+      }
+
+      return {
+        id: lesson.id,
+        title: lesson.title,
+        type: lesson.type === 'video' ? 'video' : lesson.type === 'quiz' ? 'quiz' : 'text',
+        duration: `${lesson.estimated_minutes || 30} min`,
+        order: moduleIndex * 100 + lessonIndex + 1,
+        completed: isCompleted,
+        unlocked: isUnlocked,
+        content: {
+          videoUrl: convertToEmbedUrl(lesson.video_url),
+          text: lesson.content,
+          description: lesson.description,
+          questions: questions
+        }
+      }
+    })
+  )
+
+  return {
+    id: progressData.course?.id || progressData.id,
+    title: progressData.course?.title || progressData.title,
+    description: progressData.course?.description || progressData.description,
+    category: 'Programación',
+    instructor: 'Instructor',
+    duration: `${Math.ceil((progressData.progress?.totalTimeSpent || 0) / 60)} horas`,
+    rating: 4.5,
+    enrolledUsers: 0,
+    audience: 'employee',
+    thumbnail: '/placeholder.svg?height=400&width=600',
+    status: 'published',
+    units
+  }
+}
+
 const LmsCoursePreview: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
@@ -77,7 +233,14 @@ const LmsCoursePreview: React.FC = () => {
 
   const [previewMode, setPreviewMode] = useState<'student' | 'admin'>('student')
 
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+
   const storeUser = useStore(userStore)
+  const queryClient = useQueryClient()
+
+  const axiosPrivate = useAxiosPrivate()
+
 
   // Mock data para el curso
   const mockCourse: Course = {
@@ -200,19 +363,47 @@ let esEstudiante = true;
     ]
   }
 
-  // Query para obtener el curso
-  const { data: course = mockCourse, isLoading } = useQuery<Course>(
-    ['lms-course-preview', courseId || ''],
-    async () => {
-      // En el futuro, esto hará una llamada real a la API
-      // const response = await axiosPrivate.get(`/lms/courses/${courseId}/preview`)
-      // return response.data
-      return mockCourse
-    },
-    {
-      enabled: !!courseId
+  // Query para obtener el curso con progreso real
+const { data: courseData, isLoading, error } = useQuery(
+  ['lms-course-preview', courseId, previewMode],
+  async () => {
+    if (previewMode === 'admin') {
+      // En modo admin, obtener estructura completa del curso (preview)
+      const response = await axiosPrivate.get(`/lms/courses/preview/${courseId}`);
+      const previewData = response.data.data;
+
+      console.log('📊 Preview data (admin):', previewData);
+
+      const transformedCourse = transformPreviewDataToCourse(previewData);
+      console.log('✅ Transformed preview course:', transformedCourse);
+
+      return { course: transformedCourse, isPreview: true };
+    } else {
+      // Para modo estudiante, obtener progreso real
+      const response = await axiosPrivate.get(`/lms/progress/courses/${courseId}`);
+      const progressData = response.data.data;
+
+      console.log('📊 Progress data (student):', progressData);
+
+      const transformedCourse = transformProgressDataToCourse(progressData);
+      console.log('✅ Transformed progress course:', transformedCourse);
+
+      return { course: transformedCourse, isPreview: false };
     }
-  )
+  },
+  {
+    staleTime: 1000 * 60 * 2,
+    refetchOnWindowFocus: false,
+    onError: (err: any) => {
+      console.error('❌ Error fetching course:', err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al cargar el curso',
+        text: err.response?.data?.error?.message || 'No se pudo cargar el curso'
+      });
+    }
+  }
+)
 
   useEffect(() => {
     // Verificar que el usuario está autenticado
@@ -243,24 +434,87 @@ let esEstudiante = true;
     )
   }
 
+  const course = courseData?.course || mockCourse;
+  const isPreview = courseData?.isPreview || false;
+  
   const completedUnits = course.units.filter((unit) => unit.completed).length
   const progressPercentage = (completedUnits / course.units.length) * 100
   const currentUnitData = course.units[currentUnit]
 
-  const handleUnitComplete = (unitId: number) => {
-    // En modo preview, esto solo simula la acción
-    console.log('Unidad completada (preview):', unitId)
+  const handleUnitComplete = async (unitId: number) => {
+    if (isPreview || previewMode === 'admin') {
+      // En modo preview admin, solo simular
+      console.log('✅ Unidad completada (preview):', unitId);
+      Swal.fire({
+        icon: 'info',
+        title: 'Modo Preview',
+        text: 'En modo administrador el progreso no se guarda',
+        timer: 2000,
+        showConfirmButton: false
+      });
+      return;
+    }
+
+    try {
+      // Mostrar loading
+      Swal.fire({
+        title: 'Guardando progreso...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      // Marcar lección como completada en el backend
+      await axiosPrivate.post(`/lms/progress/lessons/${unitId}/complete`, {
+        timeSpentMinutes: 30 // Tiempo estimado por defecto
+      });
+
+      // Refrescar datos para actualizar el progreso y desbloqueos
+      await queryClient.invalidateQueries(['lms-course-preview', courseId]);
+
+      console.log('✅ Lección completada exitosamente');
+
+      // Mostrar éxito
+      Swal.fire({
+        icon: 'success',
+        title: '¡Lección completada!',
+        text: 'Tu progreso ha sido guardado. La siguiente lección está desbloqueada.',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error: any) {
+      console.error('❌ Error al completar lección:', error);
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al guardar progreso',
+        text: error.response?.data?.error?.message || 'No se pudo marcar la lección como completada',
+        confirmButtonText: 'OK'
+      });
+    }
   }
 
   const handleNextUnit = () => {
     if (currentUnit < course.units.length - 1) {
       const nextUnit = course.units[currentUnit + 1]
-      if (nextUnit.unlocked) {
+
+      // Validar que nextUnit existe
+      if (!nextUnit) {
+        console.error('❌ La siguiente unidad no existe');
+        return;
+      }
+
+      if (nextUnit.unlocked || isPreview || previewMode === 'admin') {
         setCurrentUnit(currentUnit + 1)
       } else {
-        console.log(
-          'La siguiente unidad está bloqueada. Completa la unidad actual primero.'
-        )
+        console.log('⚠️ La siguiente unidad está bloqueada. Completa la unidad actual primero.');
+        Swal.fire({
+          icon: 'warning',
+          title: 'Lección bloqueada',
+          text: 'Completa la lección actual antes de continuar',
+          confirmButtonText: 'Entendido'
+        });
       }
     }
   }
@@ -272,7 +526,19 @@ let esEstudiante = true;
   }
 
   const canNavigateToUnit = (unitIndex: number) => {
-    return course.units[unitIndex].unlocked
+    // Validar que el índice esté dentro del rango
+    if (unitIndex < 0 || unitIndex >= course.units.length) {
+      return false;
+    }
+
+    // En modo preview admin, permitir navegación libre
+    if (isPreview || previewMode === 'admin') {
+      return true;
+    }
+
+    // Verificar que la unidad existe y está desbloqueada
+    const unit = course.units[unitIndex];
+    return unit && unit.unlocked;
   }
 
   const getUnitIcon = (type: string) => {
@@ -419,8 +685,11 @@ let esEstudiante = true;
                 <Typography variant='h6' gutterBottom>
                   {Math.round(progressPercentage)}% Completado
                 </Typography>
-                <Alert severity='info' sx={{ mb: 2 }}>
-                  Modo de vista previa - Los cambios no se guardan
+                <Alert severity={isPreview ? 'info' : 'success'} sx={{ mb: 2 }}>
+                  {isPreview 
+                    ? 'Modo de vista previa - Los cambios no se guardan'
+                    : 'Progreso real del estudiante'
+                  }
                 </Alert>
               </Box>
             </Grid>
@@ -453,7 +722,7 @@ let esEstudiante = true;
                         size='small'
                       />
                     )}
-                    {previewMode === 'admin' && (
+                    {(previewMode === 'admin' || isPreview) && (
                       <Chip label='Vista Admin' color='warning' size='small' />
                     )}
                   </Box>
@@ -513,19 +782,48 @@ let esEstudiante = true;
 
                 {currentUnitData.type === 'text' &&
                   currentUnitData.content.text && (
-                    <Box sx={{ mb: 3 }}>
-                      <Typography
-                        component='div'
-                        sx={{
-                          whiteSpace: 'pre-wrap',
+                    <Box
+                      sx={{
+                        mb: 3,
+                        p: 3,
+                        backgroundColor: 'grey.50',
+                        borderRadius: 1,
+                        '& h1': { fontSize: '2rem', fontWeight: 'bold', mt: 2, mb: 1 },
+                        '& h2': { fontSize: '1.5rem', fontWeight: 'bold', mt: 2, mb: 1 },
+                        '& h3': { fontSize: '1.25rem', fontWeight: 'bold', mt: 2, mb: 1 },
+                        '& p': { mb: 1, lineHeight: 1.7 },
+                        '& ul, & ol': { pl: 3, mb: 2 },
+                        '& li': { mb: 0.5 },
+                        '& code': {
+                          backgroundColor: 'grey.200',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
                           fontFamily: 'monospace',
-                          backgroundColor: 'grey.50',
+                          fontSize: '0.9em'
+                        },
+                        '& pre': {
+                          backgroundColor: 'grey.800',
+                          color: 'white',
                           p: 2,
-                          borderRadius: 1
-                        }}
-                      >
-                        {currentUnitData.content.text}
-                      </Typography>
+                          borderRadius: 1,
+                          overflowX: 'auto',
+                          mb: 2
+                        },
+                        '& pre code': {
+                          backgroundColor: 'transparent',
+                          color: 'white',
+                          padding: 0
+                        },
+                        '& blockquote': {
+                          borderLeft: '4px solid',
+                          borderColor: 'primary.main',
+                          pl: 2,
+                          ml: 0,
+                          fontStyle: 'italic'
+                        }
+                      }}
+                    >
+                      <ReactMarkdown>{currentUnitData.content.text}</ReactMarkdown>
                     </Box>
                   )}
 
@@ -533,12 +831,60 @@ let esEstudiante = true;
                   currentUnitData.content.questions && (
                     <LmsQuizComponent
                       questions={currentUnitData.content.questions}
-                      isPreview={true}
-                      onComplete={(score, totalPoints) => {
-                        console.log('Quiz completado en preview:', {
-                          score,
-                          totalPoints
-                        })
+                      isPreview={isPreview || previewMode === 'admin'}
+                      maxAttempts={currentUnitData.content.maxAttempts || 3}
+                      currentAttempt={currentUnitData.content.currentAttempt || 1}
+                      onComplete={async (score, totalPoints) => {
+                        const percentage = Math.round((score / totalPoints) * 100);
+
+                        if (isPreview || previewMode === 'admin') {
+                          console.log('✅ Quiz completado en preview:', { score, totalPoints, percentage });
+                          Swal.fire({
+                            icon: 'info',
+                            title: 'Quiz Completado (Preview)',
+                            html: `<p>Puntuación: <strong>${score}/${totalPoints}</strong> (${percentage}%)</p>
+                                   <p><em>Modo administrador - El progreso no se guarda</em></p>`,
+                            confirmButtonText: 'OK'
+                          });
+                          return;
+                        }
+
+                        // Completar quiz real
+                        try {
+                          Swal.fire({
+                            title: 'Guardando resultados del quiz...',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                              Swal.showLoading();
+                            }
+                          });
+
+                          await axiosPrivate.post(`/lms/progress/lessons/${currentUnitData.id}/complete`, {
+                            timeSpentMinutes: 15, // Tiempo estimado para quiz
+                            quizScore: percentage
+                          });
+
+                          await queryClient.invalidateQueries(['lms-course-preview', courseId]);
+
+                          console.log('✅ Quiz completado exitosamente');
+
+                          Swal.fire({
+                            icon: percentage >= 70 ? 'success' : 'warning',
+                            title: percentage >= 70 ? '¡Quiz Aprobado!' : 'Quiz Completado',
+                            html: `<p>Puntuación: <strong>${score}/${totalPoints}</strong> (${percentage}%)</p>
+                                   <p>${percentage >= 70 ? 'La siguiente lección está desbloqueada' : 'Necesitas 70% o más para aprobar'}</p>`,
+                            confirmButtonText: 'OK'
+                          });
+                        } catch (error: any) {
+                          console.error('❌ Error al completar quiz:', error);
+
+                          Swal.fire({
+                            icon: 'error',
+                            title: 'Error al guardar resultados',
+                            text: error.response?.data?.error?.message || 'No se pudo guardar el quiz',
+                            confirmButtonText: 'OK'
+                          });
+                        }
                       }}
                     />
                   )}
@@ -556,7 +902,10 @@ let esEstudiante = true;
                         variant='contained'
                         onClick={() => handleUnitComplete(currentUnitData.id)}
                       >
-                        Marcar como Completado (Preview)
+                        {isPreview || previewMode === 'admin' 
+                          ? 'Marcar como Completado (Preview)'
+                          : 'Marcar como Completado'
+                        }
                       </Button>
                     </Box>
                   )}
@@ -579,23 +928,35 @@ let esEstudiante = true;
                     key={unit.id}
                     button
                     selected={currentUnit === index}
-                    onClick={() => unit.unlocked && setCurrentUnit(index)}
+                    onClick={() => {
+                      if (canNavigateToUnit(index)) {
+                        setCurrentUnit(index);
+                      } else if (!isPreview && previewMode !== 'admin') {
+                        // Solo mostrar alerta en modo estudiante
+                        Swal.fire({
+                          icon: 'warning',
+                          title: 'Lección bloqueada',
+                          text: 'Completa las lecciones anteriores para desbloquear esta lección',
+                          confirmButtonText: 'Entendido'
+                        });
+                      }
+                    }}
                     sx={{
                       border: '1px solid',
                       borderColor:
                         currentUnit === index
                           ? 'primary.main'
-                          : unit.unlocked
+                          : canNavigateToUnit(index)
                             ? 'divider'
                             : 'grey.300',
                       borderRadius: 1,
                       mb: 1,
-                      opacity: unit.unlocked ? 1 : 0.6,
-                      cursor: unit.unlocked ? 'pointer' : 'not-allowed'
+                      opacity: canNavigateToUnit(index) ? 1 : 0.6,
+                      cursor: canNavigateToUnit(index) ? 'pointer' : 'not-allowed'
                     }}
                   >
                     <ListItemIcon>
-                      {unit.unlocked ? getUnitIcon(unit.type) : <LockIcon />}
+                      {canNavigateToUnit(index) ? getUnitIcon(unit.type) : <LockIcon />}
                     </ListItemIcon>
                     <ListItemText
                       primary={unit.title}

@@ -47,6 +47,8 @@ import {
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import useAxiosPrivate from '@utils/use-axios-private'
+import { useQuery, useQueryClient } from 'react-query'
 
 interface Course {
   id: number
@@ -58,10 +60,10 @@ interface Course {
 
 interface User {
   id: number
-  name: string
+  nombre: string
   email: string
-  role: string
-  department: string
+  roles: string[]
+  department?: string
 }
 
 interface Assignment {
@@ -78,35 +80,13 @@ interface Assignment {
 }
 
 // Mock data
-const mockCourses: Course[] = [
-  {
-    id: 1,
-    title: 'Seguridad en el Trabajo',
-    description: 'Curso obligatorio de seguridad laboral',
-    duration: '4 horas',
-    category: 'Seguridad'
-  },
-  {
-    id: 2,
-    title: 'Protección de Datos',
-    description: 'Normativas de protección de datos personales',
-    duration: '3 horas',
-    category: 'Cumplimiento'
-  },
-  {
-    id: 3,
-    title: 'JavaScript Avanzado',
-    description: 'Conceptos avanzados de programación',
-    duration: '8 horas',
-    category: 'Tecnología'
-  }
-]
+
 
 const mockUsers: User[] = [
-  { id: 1, name: 'Ana López', email: 'ana@company.com', role: 'employee', department: 'Desarrollo' },
-  { id: 2, name: 'Carlos Méndez', email: 'carlos@company.com', role: 'employee', department: 'Desarrollo' },
-  { id: 3, name: 'María García', email: 'maria@company.com', role: 'employee', department: 'Marketing' },
-  { id: 4, name: 'Roberto Silva', email: 'roberto@company.com', role: 'employee', department: 'Ventas' }
+  { id: 1, nombre: 'Ana López', email: 'ana@company.com', roles: ['employee'], department: 'Desarrollo' },
+  { id: 2, nombre: 'Carlos Méndez', email: 'carlos@company.com', roles: ['employee'], department: 'Desarrollo' },
+  { id: 3, nombre: 'María García', email: 'maria@company.com', roles: ['employee'], department: 'Marketing' },
+  { id: 4, nombre: 'Roberto Silva', email: 'roberto@company.com', roles: ['employee'], department: 'Ventas' }
 ]
 
 const mockAssignments: Assignment[] = [
@@ -145,6 +125,69 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   const [selectedDepartment, setSelectedDepartment] = useState<string>('')
   const [deadline, setDeadline] = useState<Date | null>(null)
   const [assignmentType, setAssignmentType] = useState<'individual' | 'department' | 'all'>('individual')
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' })
+
+
+
+  const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient()
+
+  const { data: coursesResponse, isLoading, error } = useQuery<{ courses: Course[], total: number }>(
+    ['lms-courses', page, rowsPerPage],
+    async () => {
+      const response = await axiosPrivate.get('/lms/courses', {
+        params: {
+          page: page + 1,
+          limit: rowsPerPage,
+          include: 'modules,assignments,_count'
+        }
+      })
+      return response.data
+    },
+    {
+      keepPreviousData: true,
+      onError: (error: any) => {
+        setSnackbar({
+          open: true,
+          message: 'Error al cargar los cursos: ' + (error.response?.data?.message || error.message),
+          severity: 'error'
+        })
+      }
+    }
+  )
+
+
+    const { data: ownUsersResponse, isLoading:isLoadingOwnUsers, error: errorOwnUsers } = useQuery<User[]>(
+    ['lms-users', page, rowsPerPage],
+    async () => {
+      const response = await axiosPrivate.get('/users/own-users', {
+        params: {
+          page: page + 1,
+          limit: rowsPerPage,
+          include: 'modules,assignments,_count'
+        }
+      })
+      return response.data
+    },
+    {
+      keepPreviousData: true,
+      onError: (error: any) => {
+        setSnackbar({
+          open: true,
+          message: 'Error al cargar los cursos: ' + (error.response?.data?.message || error.message),
+          severity: 'error'
+        })
+      }
+    }
+  )
+
+
+  const courses = coursesResponse?.courses || [] 
+  const totalCourses = coursesResponse?.total || 0
+  const internalUsers = ownUsersResponse || []
+  console.log("🚀 ~ LmsCourseAssignmentInterface ~ internalUsers:", internalUsers)
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)
@@ -338,7 +381,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                         label="Seleccionar Curso"
                         onChange={(e) => setSelectedCourse(e.target.value as number)}
                       >
-                        {mockCourses.map((course) => (
+                        {courses.map((course) => (
                           <MenuItem key={course.id} value={course.id}>
                             {course.title} ({course.duration})
                           </MenuItem>
@@ -395,7 +438,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                         Seleccionar Usuarios:
                       </Typography>
                       <List>
-                        {mockUsers.map((user) => (
+                        {internalUsers.map((user) => (
                           <ListItem
                             key={user.id}
                             button
@@ -411,7 +454,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                               <PersonIcon />
                             </ListItemIcon>
                             <ListItemText
-                              primary={user.name}
+                              primary={user.nombre}
                               secondary={`${user.email} - ${user.department}`}
                             />
                             <ListItemSecondaryAction>
