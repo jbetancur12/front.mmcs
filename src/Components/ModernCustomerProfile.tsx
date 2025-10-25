@@ -42,7 +42,8 @@ import {
   Search,
   Clear,
   Edit,
-  HelpOutline
+  HelpOutline,
+  Add
 } from '@mui/icons-material'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
@@ -55,6 +56,7 @@ import Headquarters from './Headquarters'
 import CalibrationTimeline from './CalibrationTimeline'
 import Modules from './Modules'
 import EquipmentCard from './EquipmentCard'
+import { CreateFileModal } from './TableFiles/CreateFileModal/CreateFileModal'
 
 import { bigToast } from './ExcelManipulation/Utils'
 import * as XLSX from 'xlsx'
@@ -382,6 +384,7 @@ const ModernCustomerProfile: React.FC = () => {
   const [selectedSede, setSelectedSede] = useState<string | null>('')
   const [hasPermission, setHasPermission] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [createModalOpen, setCreateModalOpen] = useState(false)
 
   // Fetch customer data
   const { data: customerData, isLoading: loadingCustomer } = useQuery<UserData>(
@@ -1383,7 +1386,35 @@ const ModernCustomerProfile: React.FC = () => {
                       />
                     </Grid>
 
-                    <Grid item xs={12} md={3}>
+                    {isAdmin && (
+                      <Grid item xs={12} md={2}>
+                        <Button
+                          fullWidth
+                          variant='contained'
+                          startIcon={<Add />}
+                          onClick={() => setCreateModalOpen(true)}
+                          sx={{
+                            borderRadius: '12px',
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            py: 1.5,
+                            px: 2,
+                            fontSize: '0.875rem',
+                            whiteSpace: 'nowrap',
+                            background:
+                              'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                            '&:hover': {
+                              background:
+                                'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)'
+                            }
+                          }}
+                        >
+                          Certificado
+                        </Button>
+                      </Grid>
+                    )}
+
+                    <Grid item xs={12} md={isAdmin ? 2 : 3}>
                       <Button
                         fullWidth
                         variant='contained'
@@ -1432,7 +1463,7 @@ const ModernCustomerProfile: React.FC = () => {
                       </Menu>
                     </Grid>
 
-                    <Grid item xs={12} md={3}>
+                    <Grid item xs={12} md={isAdmin ? 2 : 3}>
                       <Box display='flex' alignItems='center' gap={1}>
                         <Typography variant='body2' color='text.secondary'>
                           Total:
@@ -1731,6 +1762,20 @@ const ModernCustomerProfile: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal para subir certificado con cliente pre-seleccionado */}
+      {isAdmin && (
+        <CreateFileModal
+          open={createModalOpen}
+          onClose={() => setCreateModalOpen(false)}
+          fetchFiles={async () => {
+            await refetch()
+            queryClient.invalidateQueries(['certificates-data', id])
+          }}
+          axiosPrivate={axiosPrivate}
+          preSelectedCustomerId={id ? Number(id) : undefined}
+        />
+      )}
     </Container>
   )
 }

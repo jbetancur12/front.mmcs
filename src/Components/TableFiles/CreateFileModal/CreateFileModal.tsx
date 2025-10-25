@@ -61,6 +61,7 @@ interface CreateFileModalProps {
   onClose: () => void
   fetchFiles: () => Promise<void>
   axiosPrivate: any
+  preSelectedCustomerId?: number
 }
 
 // Styled Components
@@ -125,7 +126,8 @@ export const CreateFileModal = ({
   open,
   onClose,
   fetchFiles,
-  axiosPrivate
+  axiosPrivate,
+  preSelectedCustomerId
 }: CreateFileModalProps) => {
   const $customerStore = useStore(customerStore)
   const $deviceStore = useStore(deviceStore)
@@ -142,6 +144,8 @@ export const CreateFileModal = ({
   const [loading, setLoading] = useState(false)
   const [fileInputKey, setFileInputKey] = useState(Date.now())
   const [isDragOver, setIsDragOver] = useState(false)
+  const [preSelectedCustomerName, setPreSelectedCustomerName] =
+    useState<string>('')
 
   // Función para limpiar el formulario
   const resetForm = () => {
@@ -163,6 +167,37 @@ export const CreateFileModal = ({
       resetForm()
     }
   }, [open])
+
+  // Cargar datos del cliente pre-seleccionado
+  useEffect(() => {
+    const loadPreSelectedCustomer = async () => {
+      if (preSelectedCustomerId && open) {
+        try {
+          const response = await axiosPrivate.get(
+            `/customers/${preSelectedCustomerId}`
+          )
+          const customerData = response.data
+
+          setValues((prev) => ({
+            ...prev,
+            customerId: preSelectedCustomerId
+          }))
+          setPreSelectedCustomerName(customerData.nombre)
+          setSedes(customerData.sede || [])
+        } catch (error) {
+          console.error('Error al cargar el cliente pre-seleccionado:', error)
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo cargar la información del cliente',
+            confirmButtonColor: '#10b981'
+          })
+        }
+      }
+    }
+
+    loadPreSelectedCustomer()
+  }, [preSelectedCustomerId, open, axiosPrivate])
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0]
@@ -509,22 +544,47 @@ export const CreateFileModal = ({
             <Box>
               <SectionHeader icon={Business} title='Información General' />
               <Stack spacing={3}>
-                <AsyncSelect<SelectOption, false, GroupBase<SelectOption>>
-                  cacheOptions
-                  placeholder='Buscar Cliente *'
-                  loadOptions={(input) =>
-                    loadOptions(input, 'customers', (item) =>
-                      genericMapOptions(item, 'id', 'nombre', { sede: 'sede' })
-                    )
-                  }
-                  onChange={(option) => {
-                    setSedes((option as any)?.sede)
-                    limitArraySizeCustomer($customerStore, option)
-                    setValues({ ...values, customerId: Number(option?.value) })
-                  }}
-                  defaultOptions={$customerStore}
-                  styles={styles(true)}
-                />
+                {preSelectedCustomerId ? (
+                  <StyledTextField
+                    label='Cliente'
+                    value={preSelectedCustomerName}
+                    disabled
+                    fullWidth
+                    sx={{
+                      '& .MuiInputBase-input.Mui-disabled': {
+                        WebkitTextFillColor: '#374151',
+                        fontWeight: 600
+                      },
+                      '& .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline':
+                        {
+                          borderColor: '#d1d5db'
+                        }
+                    }}
+                    helperText='Cliente pre-seleccionado desde el perfil'
+                  />
+                ) : (
+                  <AsyncSelect<SelectOption, false, GroupBase<SelectOption>>
+                    cacheOptions
+                    placeholder='Buscar Cliente *'
+                    loadOptions={(input) =>
+                      loadOptions(input, 'customers', (item) =>
+                        genericMapOptions(item, 'id', 'nombre', {
+                          sede: 'sede'
+                        })
+                      )
+                    }
+                    onChange={(option) => {
+                      setSedes((option as any)?.sede)
+                      limitArraySizeCustomer($customerStore, option)
+                      setValues({
+                        ...values,
+                        customerId: Number(option?.value)
+                      })
+                    }}
+                    defaultOptions={$customerStore}
+                    styles={styles(true)}
+                  />
+                )}
 
                 <AsyncSelect<SelectOption, false, GroupBase<SelectOption>>
                   cacheOptions

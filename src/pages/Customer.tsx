@@ -27,6 +27,8 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { useQuery, useQueryClient } from 'react-query'
 import Modules from 'src/Components/Modules'
 import * as XLSX from 'xlsx'
+import { CreateFileModal } from '../Components/TableFiles/CreateFileModal/CreateFileModal'
+import { Add } from '@mui/icons-material'
 
 // API URL
 const minioUrl = import.meta.env.VITE_MINIO_URL
@@ -48,12 +50,12 @@ export interface ApiResponse {
     term: string
     searchableFields: string[]
   }
-   statistics: {
-        expired: number,
-        expiringSoon: number,
-        active: number,
-        total: number
-    },
+  statistics: {
+    expired: number
+    expiringSoon: number
+    active: number
+    total: number
+  }
 }
 
 type Tab =
@@ -177,6 +179,7 @@ function UserProfile(): React.JSX.Element {
   const [selectedSede, setSelectedSede] = useState<string | null>('')
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [createModalOpen, setCreateModalOpen] = useState(false)
 
   // Fetch customer data
   useQuery<UserData>(
@@ -636,6 +639,26 @@ function UserProfile(): React.JSX.Element {
             />
 
             <Box display='flex' gap={1} alignItems='center'>
+              {isAdmin && (
+                <Button
+                  variant='contained'
+                  startIcon={<Add />}
+                  onClick={() => setCreateModalOpen(true)}
+                  size='small'
+                  sx={{
+                    background:
+                      'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    '&:hover': {
+                      background:
+                        'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                    }
+                  }}
+                >
+                  Subir Nuevo Certificado
+                </Button>
+              )}
               <Button
                 variant='outlined'
                 startIcon={
@@ -752,6 +775,20 @@ function UserProfile(): React.JSX.Element {
         <CalibrationTimeline customerId={id} />
       )}
       {activeTab === 'modules' && id && <Modules customerId={id} />}
+
+      {/* Modal para subir certificado con cliente pre-seleccionado */}
+      {isAdmin && (
+        <CreateFileModal
+          open={createModalOpen}
+          onClose={() => setCreateModalOpen(false)}
+          fetchFiles={async () => {
+            await refetch()
+            queryClient.invalidateQueries(['certificates-data', id])
+          }}
+          axiosPrivate={axiosPrivate}
+          preSelectedCustomerId={id ? Number(id) : undefined}
+        />
+      )}
     </div>
   )
 }
