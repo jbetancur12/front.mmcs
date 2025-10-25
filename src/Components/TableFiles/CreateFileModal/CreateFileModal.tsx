@@ -38,7 +38,7 @@ import {
 import { styled } from '@mui/material/styles'
 import AsyncSelect from 'react-select/async'
 import { useStore } from '@nanostores/react'
-import toast, { Toaster } from 'react-hot-toast'
+import Swal from 'sweetalert2'
 import Loader from '../../Loader2'
 import { FileData } from '../types/fileTypes'
 import { handleCreateFile } from './CreateFileModalHandlers'
@@ -174,18 +174,22 @@ export const CreateFileModal = ({
   const processFile = (selectedFile: File) => {
     // Validar que sea un PDF
     if (selectedFile.type !== 'application/pdf') {
-      toast.error('Solo se permiten archivos PDF', {
-        duration: 3000,
-        position: 'top-center'
+      Swal.fire({
+        icon: 'error',
+        title: 'Archivo inválido',
+        text: 'Solo se permiten archivos PDF',
+        confirmButtonColor: '#10b981'
       })
       return
     }
 
     // Validar tamaño (máximo 10MB)
     if (selectedFile.size > 10 * 1024 * 1024) {
-      toast.error('El archivo no puede ser mayor a 10MB', {
-        duration: 3000,
-        position: 'top-center'
+      Swal.fire({
+        icon: 'error',
+        title: 'Archivo muy grande',
+        text: 'El archivo no puede ser mayor a 10MB',
+        confirmButtonColor: '#10b981'
       })
       return
     }
@@ -238,98 +242,122 @@ export const CreateFileModal = ({
   const handleSubmit = async () => {
     // Validación del archivo PDF
     if (!file) {
-      toast.error('Debes seleccionar un archivo PDF', {
-        duration: 3000,
-        position: 'top-center'
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campo requerido',
+        text: 'Debes seleccionar un archivo PDF',
+        confirmButtonColor: '#10b981'
       })
       return
     }
 
     // Validación de campos obligatorios
     if (!values.customerId) {
-      toast.error('Debes seleccionar un cliente', {
-        duration: 3000,
-        position: 'top-center'
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campo requerido',
+        text: 'Debes seleccionar un cliente',
+        confirmButtonColor: '#10b981'
       })
       return
     }
 
     if (!values.deviceId) {
-      toast.error('Debes seleccionar un equipo', {
-        duration: 3000,
-        position: 'top-center'
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campo requerido',
+        text: 'Debes seleccionar un equipo',
+        confirmButtonColor: '#10b981'
       })
       return
     }
 
     if (!values.certificateTypeId) {
-      toast.error('Debes seleccionar un tipo de certificado', {
-        duration: 3000,
-        position: 'top-center'
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campo requerido',
+        text: 'Debes seleccionar un tipo de certificado',
+        confirmButtonColor: '#10b981'
       })
       return
     }
 
     if (!values.headquarter) {
-      toast.error('Debes seleccionar una sede', {
-        duration: 3000,
-        position: 'top-center'
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campo requerido',
+        text: 'Debes seleccionar una sede',
+        confirmButtonColor: '#10b981'
       })
       return
     }
 
     if (!values.city || values.city.trim() === '') {
-      toast.error('Debes ingresar la ciudad', {
-        duration: 3000,
-        position: 'top-center'
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campo requerido',
+        text: 'Debes ingresar la ciudad',
+        confirmButtonColor: '#10b981'
       })
       return
     }
 
     if (!values.sede || values.sede.trim() === '') {
-      toast.error('Debes ingresar la dirección', {
-        duration: 3000,
-        position: 'top-center'
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campo requerido',
+        text: 'Debes ingresar la dirección',
+        confirmButtonColor: '#10b981'
       })
       return
     }
 
     if (!values.location || values.location.trim() === '') {
-      toast.error('Debes ingresar la ubicación', {
-        duration: 3000,
-        position: 'top-center'
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campo requerido',
+        text: 'Debes ingresar la ubicación',
+        confirmButtonColor: '#10b981'
       })
       return
     }
 
     if (!values.activoFijo || values.activoFijo.trim() === '') {
-      toast.error('Debes ingresar el activo fijo', {
-        duration: 3000,
-        position: 'top-center'
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campo requerido',
+        text: 'Debes ingresar el activo fijo',
+        confirmButtonColor: '#10b981'
       })
       return
     }
 
     if (!values.serie || values.serie.trim() === '') {
-      toast.error('Debes ingresar la serie', {
-        duration: 3000,
-        position: 'top-center'
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campo requerido',
+        text: 'Debes ingresar la serie',
+        confirmButtonColor: '#10b981'
       })
       return
     }
 
     if (!values.calibrationDate) {
-      toast.error('Debes seleccionar la fecha de calibración', {
-        duration: 3000,
-        position: 'top-center'
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campo requerido',
+        text: 'Debes seleccionar la fecha de calibración',
+        confirmButtonColor: '#10b981'
       })
       return
     }
 
     if (!values.nextCalibrationDate) {
-      toast.error('Debes seleccionar la próxima fecha de calibración', {
-        duration: 3000,
-        position: 'top-center'
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campo requerido',
+        text: 'Debes seleccionar la próxima fecha de calibración',
+        confirmButtonColor: '#10b981'
       })
       return
     }
@@ -345,18 +373,22 @@ export const CreateFileModal = ({
 
       if (success) {
         setLoading(false)
-        toast.success('Certificado Creado Exitosamente!', {
-          duration: 4000,
-          position: 'top-center'
-        })
 
         // Limpiar formulario
         resetForm()
 
-        // Delay antes de cerrar para que el toast sea visible
-        setTimeout(() => {
-          onClose()
-        }, 500)
+        // Cerrar modal primero
+        onClose()
+
+        // Mostrar mensaje de éxito después de cerrar
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'Certificado creado exitosamente',
+          confirmButtonColor: '#10b981',
+          timer: 3000,
+          showConfirmButton: true
+        })
       }
     } catch (error) {
       setLoading(false)
@@ -371,14 +403,14 @@ export const CreateFileModal = ({
 
         // Verificar si es un error de archivo duplicado (409)
         if (error.response && error.response.status === 409) {
-          toast.error(
-            error.response.data.error ||
+          Swal.fire({
+            icon: 'error',
+            title: 'Archivo duplicado',
+            text:
+              error.response.data.error ||
               'El archivo con este nombre ya existe. Por favor, renombre el archivo e intente nuevamente.',
-            {
-              duration: 5000,
-              position: 'top-center'
-            }
-          )
+            confirmButtonColor: '#10b981'
+          })
           return
         }
       }
@@ -388,9 +420,11 @@ export const CreateFileModal = ({
       }
 
       // Mostrar error específico del backend o genérico
-      toast.error(errorMessage, {
-        duration: 4000,
-        position: 'top-center'
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: errorMessage,
+        confirmButtonColor: '#10b981'
       })
 
       // Opcional: Loggear error para debugging
@@ -400,7 +434,6 @@ export const CreateFileModal = ({
 
   return (
     <>
-      <Toaster />
       <Loader loading={loading} />
 
       <Dialog
