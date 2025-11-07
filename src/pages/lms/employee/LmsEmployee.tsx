@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Box,
   Card,
@@ -19,7 +19,9 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
-  Divider
+  Divider,
+  CircularProgress,
+  Skeleton
 } from '@mui/material'
 import {
   MenuBook as BookOpenIcon,
@@ -31,12 +33,15 @@ import {
   Assignment as AssignmentIcon,
   Star as StarIcon,
   PlayArrow as PlayArrowIcon,
-  EmojiEvents as AwardIcon
+  EmojiEvents as AwardIcon,
+  Error as ErrorIcon
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../../../store/userStore'
 import LmsNotificationCenter from '../shared/LmsNotificationCenter'
+import { useAvailableCourses } from '../../../hooks/useLms'
+import type { Course } from '../../../services/lmsService'
 
 interface User {
   id: number
@@ -45,151 +50,52 @@ interface User {
   name: string
 }
 
-interface Course {
-  id: number
-  title: string
-  description: string
-  progress: number
-  totalLessons: number
-  completedLessons: number
-  category: string
-  instructor: string
-  duration: string
-  rating: number
-  image?: string
-}
-
 interface EmployeeDashboardProps {
   user?: User
 }
 
-interface MandatoryCourse extends Course {
-  isMandatory: boolean
-  deadline?: string
-  daysUntilDeadline?: number
-  isOverdue?: boolean
+// Helper para calcular el progreso de un curso
+const calculateCourseProgress = (course: Course): number => {
+  // Si el curso tiene userProgress, usar ese valor
+  if (course.userProgress && course.userProgress.length > 0) {
+    return course.userProgress[0].progress_percentage || 0
+  }
+  return 0
 }
 
-// Mock data para cursos obligatorios
-const mockMandatoryCourses: MandatoryCourse[] = [
-  {
-    id: 1,
-    title: 'Seguridad en el Trabajo',
-    description: 'Curso obligatorio de seguridad laboral',
-    progress: 60,
-    totalLessons: 8,
-    completedLessons: 5,
-    category: 'Seguridad',
-    instructor: 'Dr. Carlos Méndez',
-    duration: '4 horas',
-    rating: 4.8,
-    isMandatory: true,
-    deadline: '2024-02-15',
-    daysUntilDeadline: 5,
-    isOverdue: false
-  },
-  {
-    id: 2,
-    title: 'Protección de Datos',
-    description: 'Normativas de protección de datos personales',
-    progress: 0,
-    totalLessons: 6,
-    completedLessons: 0,
-    category: 'Cumplimiento',
-    instructor: 'Lic. Ana López',
-    duration: '3 horas',
-    rating: 4.7,
-    isMandatory: true,
-    deadline: '2024-02-10',
-    daysUntilDeadline: -2,
-    isOverdue: true
+// Helper para contar lecciones completadas
+const countCompletedLessons = (course: Course): number => {
+  if (course.userProgress && course.userProgress.length > 0) {
+    return course.userProgress[0].completed_lessons?.length || 0
   }
-]
+  return 0
+}
 
-// Mock data para cursos opcionales
-const mockOptionalCourses: Course[] = [
-  {
-    id: 3,
-    title: 'JavaScript Avanzado',
-    description: 'Aprende conceptos avanzados de JavaScript',
-    progress: 75,
-    totalLessons: 12,
-    completedLessons: 9,
-    category: 'Programación',
-    instructor: 'Dr. Carlos Méndez',
-    duration: '8 horas',
-    rating: 4.8
-  },
-  {
-    id: 4,
-    title: 'React Fundamentals',
-    description: 'Introducción a React y sus conceptos básicos',
-    progress: 45,
-    totalLessons: 15,
-    completedLessons: 7,
-    category: 'Frontend',
-    instructor: 'Ing. María García',
-    duration: '10 horas',
-    rating: 4.6
-  },
-  {
-    id: 5,
-    title: 'Gestión de Proyectos',
-    description: 'Metodologías y herramientas de gestión',
-    progress: 100,
-    totalLessons: 8,
-    completedLessons: 8,
-    category: 'Gestión',
-    instructor: 'Lic. Ana López',
-    duration: '6 horas',
-    rating: 4.9
-  }
-]
+// Helper para contar total de lecciones
+const countTotalLessons = (course: Course): number => {
+  let total = 0
+  course.modules?.forEach(module => {
+    total += module.lessons?.length || 0
+  })
+  return total
+}
 
-// Mock data para cursos recomendados
-const mockRecommendedCourses: Course[] = [
-  {
-    id: 6,
-    title: 'Comunicación Efectiva',
-    description: 'Mejora tus habilidades de comunicación',
-    progress: 0,
-    totalLessons: 10,
-    completedLessons: 0,
-    category: 'Habilidades Blandas',
-    instructor: 'Dra. Patricia Ruiz',
-    duration: '5 horas',
-    rating: 4.9
-  },
-  {
-    id: 7,
-    title: 'Liderazgo Transformacional',
-    description: 'Desarrolla habilidades de liderazgo moderno',
-    progress: 0,
-    totalLessons: 12,
-    completedLessons: 0,
-    category: 'Liderazgo',
-    instructor: 'Ing. Roberto Silva',
-    duration: '7 horas',
-    rating: 4.8
-  }
-]
-
-const mockStats = {
-  totalCourses: 15,
-  completedCourses: 8,
-  inProgressCourses: 4,
-  averageProgress: 73,
-  certificatesEarned: 12,
-  totalHoursLearned: 45,
-  mandatoryCourses: 2,
-  mandatoryCompleted: 0,
-  overdueTraining: 1
+// Helper para calcular días hasta deadline
+const getDaysUntilDeadline = (deadline?: string): number | undefined => {
+  if (!deadline) return undefined
+  const now = new Date()
+  const deadlineDate = new Date(deadline)
+  const diff = deadlineDate.getTime() - now.getTime()
+  return Math.ceil(diff / (1000 * 60 * 60 * 24))
 }
 
 const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   const [activeTab, setActiveTab] = useState(0)
   const navigate = useNavigate()
   const $userStore = useStore(userStore)
+
+  // Fetch available courses from API
+  const { data: coursesData, isLoading, error } = useAvailableCourses()
 
   // Usar el usuario del store si no se proporciona uno
   const currentUser = user || {
@@ -198,6 +104,101 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     role: 'employee',
     name: $userStore.nombre || $userStore.email || 'Empleado'
   }
+
+  // Process courses data
+  const { mandatoryCourses, optionalCourses, stats } = useMemo(() => {
+    if (!coursesData) {
+      return {
+        mandatoryCourses: [],
+        optionalCourses: [],
+        stats: {
+          totalCourses: 0,
+          completedCourses: 0,
+          inProgressCourses: 0,
+          averageProgress: 0,
+          certificatesEarned: 0,
+          totalHoursLearned: 0,
+          mandatoryCourses: 0,
+          mandatoryCompleted: 0,
+          overdueTraining: 0
+        }
+      }
+    }
+
+    // Extract courses array from response
+    const courses = Array.isArray(coursesData) ? coursesData : coursesData.data || []
+
+    // Separar cursos obligatorios y opcionales
+    const mandatory: any[] = []
+    const optional: any[] = []
+
+    courses.forEach((course: Course) => {
+      const progress = calculateCourseProgress(course)
+      const totalLessons = countTotalLessons(course)
+      const completedLessons = countCompletedLessons(course)
+
+      const enrichedCourse = {
+        ...course,
+        progress,
+        totalLessons,
+        completedLessons,
+        category: course.audience || 'General',
+        instructor: course.creator?.nombre || 'Instructor',
+        duration: `${totalLessons} lecciones`,
+        rating: 4.5
+      }
+
+      // Verificar si hay assignments para determinar si es obligatorio
+      if (course.assignments && course.assignments.length > 0) {
+        // Es un curso con assignment (posiblemente obligatorio)
+        const assignment = course.assignments[0]
+        const deadline = assignment.deadline
+        const daysUntilDeadline = getDaysUntilDeadline(deadline)
+        const isOverdue = daysUntilDeadline !== undefined && daysUntilDeadline < 0
+
+        mandatory.push({
+          ...enrichedCourse,
+          isMandatory: true,
+          deadline,
+          daysUntilDeadline,
+          isOverdue
+        })
+      } else {
+        // Es un curso opcional (sin assignment o assignment no obligatorio)
+        optional.push(enrichedCourse)
+      }
+    })
+
+    // Calcular estadísticas
+    const totalCourses = courses.length
+    const completedCourses = courses.filter((c: Course) => calculateCourseProgress(c) === 100).length
+    const inProgressCourses = courses.filter((c: Course) => {
+      const prog = calculateCourseProgress(c)
+      return prog > 0 && prog < 100
+    }).length
+
+    const totalProgress = courses.reduce((sum: number, c: Course) => sum + calculateCourseProgress(c), 0)
+    const averageProgress = totalCourses > 0 ? Math.round(totalProgress / totalCourses) : 0
+
+    const mandatoryCompleted = mandatory.filter(c => c.progress === 100).length
+    const overdueTraining = mandatory.filter(c => c.isOverdue && c.progress < 100).length
+
+    return {
+      mandatoryCourses: mandatory,
+      optionalCourses: optional,
+      stats: {
+        totalCourses,
+        completedCourses,
+        inProgressCourses,
+        averageProgress,
+        certificatesEarned: completedCourses, // Simplificado por ahora
+        totalHoursLearned: Math.round(totalCourses * 3), // Estimación
+        mandatoryCourses: mandatory.length,
+        mandatoryCompleted,
+        overdueTraining
+      }
+    }
+  }, [coursesData])
 
   const handleLogout = () => {
     localStorage.removeItem('currentUser')
@@ -210,7 +211,41 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
 
   const handleCourseClick = (courseId: number) => {
     // Navegar al curso específico
-    console.log('Navegando al curso:', courseId)
+    navigate(`/lms/course/${courseId}`)
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box sx={{ textAlign: 'center' }}>
+          <CircularProgress size={60} sx={{ mb: 2 }} />
+          <Typography variant="h6" color="text.secondary">
+            Cargando tus cursos...
+          </Typography>
+        </Box>
+      </Box>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box sx={{ textAlign: 'center', maxWidth: 500 }}>
+          <ErrorIcon sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
+          <Typography variant="h5" color="error" gutterBottom>
+            Error al cargar los cursos
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            {error instanceof Error ? error.message : 'No se pudieron cargar los cursos disponibles'}
+          </Typography>
+          <Button variant="contained" onClick={() => window.location.reload()}>
+            Reintentar
+          </Button>
+        </Box>
+      </Box>
+    )
   }
 
   return (
@@ -276,10 +311,10 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         {activeTab === 0 && (
           <Box>
             {/* Alertas importantes */}
-            {mockStats.overdueTraining > 0 && (
+            {stats.overdueTraining > 0 && (
               <Alert severity="error" sx={{ mb: 3 }}>
                 <Typography variant="body2">
-                  <strong>¡Atención!</strong> Tienes {mockStats.overdueTraining} curso(s) obligatorio(s) vencido(s).
+                  <strong>¡Atención!</strong> Tienes {stats.overdueTraining} curso(s) obligatorio(s) vencido(s).
                   <Button size="small" sx={{ ml: 2 }} onClick={() => setActiveTab(1)}>
                     Ver cursos obligatorios
                   </Button>
@@ -305,10 +340,10 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                       component='div'
                       sx={{ fontWeight: 'bold' }}
                     >
-                      {mockStats.mandatoryCourses}
+                      {stats.mandatoryCourses}
                     </Typography>
                     <Typography variant='body2' color='text.secondary'>
-                      {mockStats.mandatoryCompleted} completados
+                      {stats.mandatoryCompleted} completados
                     </Typography>
                   </CardContent>
                 </Card>
@@ -330,11 +365,11 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                       component='div'
                       sx={{ fontWeight: 'bold' }}
                     >
-                      {mockStats.averageProgress}%
+                      {stats.averageProgress}%
                     </Typography>
                     <LinearProgress
                       variant='determinate'
-                      value={mockStats.averageProgress}
+                      value={stats.averageProgress}
                       sx={{ mt: 1 }}
                     />
                   </CardContent>
@@ -357,7 +392,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                       component='div'
                       sx={{ fontWeight: 'bold' }}
                     >
-                      {mockStats.certificatesEarned}
+                      {stats.certificatesEarned}
                     </Typography>
                     <Typography variant='body2' color='text.secondary'>
                       Obtenidos
@@ -382,7 +417,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                       component='div'
                       sx={{ fontWeight: 'bold' }}
                     >
-                      {mockStats.totalHoursLearned}h
+                      {stats.totalHoursLearned}h
                     </Typography>
                     <Typography variant='body2' color='text.secondary'>
                       Este año
@@ -399,7 +434,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                   <CardHeader title='Cursos en Progreso' />
                   <CardContent>
                     <List>
-                      {[...mockMandatoryCourses, ...mockOptionalCourses]
+                      {[...mandatoryCourses, ...optionalCourses]
                         .filter((course) => course.progress > 0 && course.progress < 100)
                         .slice(0, 4)
                         .map((course) => (
@@ -467,7 +502,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                 <Card sx={{ mb: 2 }}>
                   <CardHeader title="Próximos Vencimientos" />
                   <CardContent>
-                    {mockMandatoryCourses
+                    {mandatoryCourses
                       .filter(course => course.daysUntilDeadline && course.daysUntilDeadline <= 7)
                       .map(course => (
                         <Box key={course.id} sx={{ mb: 2, p: 2, border: 1, borderColor: course.isOverdue ? 'error.main' : 'warning.main', borderRadius: 1 }}>
@@ -517,16 +552,16 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
               <Typography variant='h6'>
                 Cursos Obligatorios
               </Typography>
-              <Chip 
-                label={`${mockStats.overdueTraining} vencidos`} 
-                color="error" 
+              <Chip
+                label={`${stats.overdueTraining} vencidos`}
+                color="error"
                 size="small"
-                sx={{ display: mockStats.overdueTraining > 0 ? 'flex' : 'none' }}
+                sx={{ display: stats.overdueTraining > 0 ? 'flex' : 'none' }}
               />
             </Box>
-            
+
             <Grid container spacing={3}>
-              {mockMandatoryCourses.map((course) => (
+              {mandatoryCourses.map((course) => (
                 <Grid item xs={12} md={6} key={course.id}>
                   <Card 
                     variant='outlined'
@@ -630,12 +665,12 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                 Cursos Opcionales
               </Typography>
               <Typography variant='body2' color='text.secondary'>
-                {mockOptionalCourses.length} cursos disponibles
+                {optionalCourses.length} cursos disponibles
               </Typography>
             </Box>
-            
+
             <Grid container spacing={3}>
-              {mockOptionalCourses.map((course) => (
+              {optionalCourses.map((course) => (
                 <Grid item xs={12} md={6} lg={4} key={course.id}>
                   <Card
                     variant='outlined'
