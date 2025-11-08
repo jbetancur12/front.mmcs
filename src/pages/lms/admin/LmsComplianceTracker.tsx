@@ -91,6 +91,8 @@ const LmsComplianceTracker: React.FC = () => {
   const [selectedRecord, setSelectedRecord] = useState<ComplianceRecord | null>(null)
   const [openDialog, setOpenDialog] = useState(false)
   const [reminderMessage, setReminderMessage] = useState('')
+  const [openDetailsDialog, setOpenDetailsDialog] = useState(false)
+  const [detailsRecord, setDetailsRecord] = useState<ComplianceRecord | null>(null)
 
   // Filtros
   const [filterAnchorEl, setFilterAnchorEl] = useState<HTMLButtonElement | null>(null)
@@ -207,6 +209,16 @@ const LmsComplianceTracker: React.FC = () => {
     setOpenDialog(false)
     setReminderMessage('')
     setSelectedRecord(null)
+  }
+
+  const handleViewDetails = (record: ComplianceRecord) => {
+    setDetailsRecord(record)
+    setOpenDetailsDialog(true)
+  }
+
+  const handleCloseDetails = () => {
+    setOpenDetailsDialog(false)
+    setDetailsRecord(null)
   }
 
   // Apply filters to compliance records
@@ -520,12 +532,16 @@ const LmsComplianceTracker: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', gap: 0.5 }}>
-                          <IconButton size="small" title="Ver detalles">
+                          <IconButton
+                            size="small"
+                            title="Ver detalles"
+                            onClick={() => handleViewDetails(record)}
+                          >
                             <VisibilityIcon />
                           </IconButton>
                           {record.status !== 'completed' && (
-                            <IconButton 
-                              size="small" 
+                            <IconButton
+                              size="small"
                               onClick={() => handleSendReminder(record)}
                               title="Enviar recordatorio"
                             >
@@ -741,7 +757,11 @@ const LmsComplianceTracker: React.FC = () => {
                             </TableCell>
                             <TableCell>
                               <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                <IconButton size="small" title="Ver detalles">
+                                <IconButton
+                                  size="small"
+                                  title="Ver detalles"
+                                  onClick={() => handleViewDetails(record)}
+                                >
                                   <VisibilityIcon />
                                 </IconButton>
                                 {record.status !== 'completed' && (
@@ -931,6 +951,227 @@ const LmsComplianceTracker: React.FC = () => {
             disabled={!reminderMessage.trim()}
           >
             Enviar Recordatorio
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog de detalles de progreso */}
+      <Dialog
+        open={openDetailsDialog}
+        onClose={handleCloseDetails}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6">Detalles de Progreso</Typography>
+            <IconButton size="small" onClick={handleCloseDetails}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          {detailsRecord && (
+            <Box>
+              {/* Header con información general */}
+              <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <PersonIcon color="primary" />
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Usuario
+                      </Typography>
+                    </Box>
+                    <Typography variant="body1" fontWeight="medium">
+                      {detailsRecord.userName}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {detailsRecord.userEmail}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <SchoolIcon color="primary" />
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Curso
+                      </Typography>
+                    </Box>
+                    <Typography variant="body1" fontWeight="medium">
+                      {detailsRecord.courseTitle}
+                    </Typography>
+                    <Chip
+                      label={detailsRecord.department}
+                      size="small"
+                      variant="outlined"
+                      sx={{ mt: 0.5 }}
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* Progreso y Estado */}
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 2 }}>
+                  Progreso General
+                </Typography>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Completado
+                      </Typography>
+                      <Typography variant="h6" fontWeight="bold" color="primary">
+                        {detailsRecord.progress}%
+                      </Typography>
+                    </Box>
+                    <LinearProgress
+                      variant="determinate"
+                      value={detailsRecord.progress}
+                      sx={{ height: 10, borderRadius: 5 }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Box sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        Estado
+                      </Typography>
+                      <Chip
+                        label={getStatusLabel(detailsRecord.status)}
+                        color={getStatusColor(detailsRecord.status) as any}
+                      />
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Box sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        Fecha Asignación
+                      </Typography>
+                      <Typography variant="body1" fontWeight="medium">
+                        {new Date(detailsRecord.assignedDate).toLocaleDateString()}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Box sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        Fecha Límite
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        fontWeight="medium"
+                        color={detailsRecord.isOverdue ? 'error.main' : detailsRecord.daysUntilDeadline <= 7 ? 'warning.main' : 'inherit'}
+                      >
+                        {new Date(detailsRecord.deadline).toLocaleDateString()}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* Información de tiempo */}
+              <Box sx={{ mb: 3 }}>
+                <Alert
+                  severity={detailsRecord.isOverdue ? 'error' : detailsRecord.daysUntilDeadline <= 7 ? 'warning' : 'info'}
+                  icon={detailsRecord.isOverdue ? <WarningIcon /> : <ScheduleIcon />}
+                >
+                  {detailsRecord.isOverdue ? (
+                    <Typography variant="body2">
+                      <strong>Vencido hace {Math.abs(detailsRecord.daysUntilDeadline)} días</strong> - Se requiere acción inmediata
+                    </Typography>
+                  ) : detailsRecord.status === 'completed' ? (
+                    <Typography variant="body2">
+                      <strong>Completado el {detailsRecord.completedDate ? new Date(detailsRecord.completedDate).toLocaleDateString() : 'N/A'}</strong>
+                    </Typography>
+                  ) : (
+                    <Typography variant="body2">
+                      {detailsRecord.daysUntilDeadline <= 7 ? (
+                        <>
+                          <strong>Vence en {detailsRecord.daysUntilDeadline} días</strong> - Fecha límite próxima
+                        </>
+                      ) : (
+                        <>
+                          Vence en {detailsRecord.daysUntilDeadline} días
+                        </>
+                      )}
+                    </Typography>
+                  )}
+                </Alert>
+              </Box>
+
+              {/* Información adicional */}
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 2 }}>
+                  Información Adicional
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                      <AssignmentIcon fontSize="small" color="action" />
+                      <Box>
+                        <Typography variant="body2" color="text.secondary">
+                          ID de Asignación
+                        </Typography>
+                        <Typography variant="body2" fontWeight="medium">
+                          #{detailsRecord.id}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                      <PersonIcon fontSize="small" color="action" />
+                      <Box>
+                        <Typography variant="body2" color="text.secondary">
+                          Rol/Departamento
+                        </Typography>
+                        <Typography variant="body2" fontWeight="medium">
+                          {detailsRecord.department}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Box>
+
+              <Divider sx={{ my: 2 }} />
+
+              {/* Nota informativa */}
+              <Alert severity="info" sx={{ mt: 2 }}>
+                <Typography variant="body2">
+                  Para ver el contenido detallado del curso y el progreso completo por módulos y lecciones,
+                  haz clic en "Ver Curso Completo" abajo.
+                </Typography>
+              </Alert>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDetails}>
+            Cerrar
+          </Button>
+          {detailsRecord && detailsRecord.status !== 'completed' && (
+            <Button
+              variant="outlined"
+              startIcon={<SendIcon />}
+              onClick={() => {
+                handleCloseDetails()
+                handleSendReminder(detailsRecord)
+              }}
+            >
+              Enviar Recordatorio
+            </Button>
+          )}
+          <Button
+            variant="contained"
+            startIcon={<SchoolIcon />}
+            onClick={() => {
+              if (detailsRecord) {
+                window.open(`/lms/courses/${detailsRecord.courseId}`, '_blank')
+              }
+            }}
+          >
+            Ver Curso Completo
           </Button>
         </DialogActions>
       </Dialog>
