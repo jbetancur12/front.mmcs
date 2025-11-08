@@ -151,8 +151,8 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
       // Verificar si hay assignments para determinar si es obligatorio
       if (course.assignments && course.assignments.length > 0) {
         // Es un curso con assignment (posiblemente obligatorio)
-        const assignment = course.assignments[0]
-        const deadline = assignment.deadline
+        // Usar user_deadline del backend (ya filtrado por el usuario específico)
+        const deadline = course.user_deadline
         const daysUntilDeadline = getDaysUntilDeadline(deadline)
         const isOverdue = daysUntilDeadline !== undefined && daysUntilDeadline < 0
 

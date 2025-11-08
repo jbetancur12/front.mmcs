@@ -45,6 +45,9 @@ export interface Course {
   updated_at: string
   modules?: CourseModule[]
   stats?: CourseStats
+  assignments?: CourseAssignment[]
+  userProgress?: UserProgress[]
+  user_deadline?: string  // Deadline específico del usuario (calculado por el backend)
 }
 
 /**

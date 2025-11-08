@@ -38,7 +38,10 @@ import {
   EditNote as EditContentIcon,
   Visibility as PreviewIcon,
   Assignment as AssignIcon,
-  Analytics as AnalyticsIcon
+  Analytics as AnalyticsIcon,
+  Publish as PublishIcon,
+  Archive as ArchiveIcon,
+  Unarchive as UnarchiveIcon
 } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -209,24 +212,48 @@ const LmsCourseManagement: React.FC = () => {
     }
   )
 
-  // Mutación para cambiar estado del curso
-  const updateCourseStatusMutation = useMutation(
-    async ({ courseId, status }: { courseId: number, status: 'draft' | 'published' | 'archived' }) => {
-      return axiosPrivate.patch(`/lms/courses/${courseId}/status`, { status })
+  // Mutación para publicar curso
+  const publishCourseMutation = useMutation(
+    async (courseId: number) => {
+      return axiosPrivate.post(`/lms/courses/${courseId}/publish`)
     },
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['lms-courses'])
         setSnackbar({
           open: true,
-          message: 'Estado del curso actualizado exitosamente',
+          message: 'Curso publicado exitosamente',
           severity: 'success'
         })
       },
       onError: (error: any) => {
         setSnackbar({
           open: true,
-          message: 'Error al actualizar estado: ' + (error.response?.data?.message || error.message),
+          message: 'Error al publicar curso: ' + (error.response?.data?.message || error.message),
+          severity: 'error'
+        })
+      }
+    }
+  )
+
+  // Mutación para archivar curso
+  const archiveCourseMutation = useMutation(
+    async (courseId: number) => {
+      return axiosPrivate.post(`/lms/courses/${courseId}/archive`)
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['lms-courses'])
+        setSnackbar({
+          open: true,
+          message: 'Curso archivado exitosamente',
+          severity: 'success'
+        })
+      },
+      onError: (error: any) => {
+        setSnackbar({
+          open: true,
+          message: 'Error al archivar curso: ' + (error.response?.data?.message || error.message),
           severity: 'error'
         })
       }
@@ -282,6 +309,18 @@ const LmsCourseManagement: React.FC = () => {
   const handleDelete = (courseId: number) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este curso?')) {
       deleteCourseMutation.mutate(courseId)
+    }
+  }
+
+  const handlePublishCourse = (courseId: number) => {
+    if (window.confirm('¿Estás seguro de que quieres publicar este curso? Los estudiantes podrán verlo.')) {
+      publishCourseMutation.mutate(courseId)
+    }
+  }
+
+  const handleArchiveCourse = (courseId: number) => {
+    if (window.confirm('¿Estás seguro de que quieres archivar este curso? Ya no estará visible para los estudiantes.')) {
+      archiveCourseMutation.mutate(courseId)
     }
   }
 
@@ -530,6 +569,33 @@ const LmsCourseManagement: React.FC = () => {
                           <AnalyticsIcon />
                         </IconButton>
                       </Tooltip>
+
+                      {/* Botón de Publicar - solo para cursos en draft o archived */}
+                      {(course.status === 'draft' || course.status === 'archived') && (
+                        <Tooltip title={course.status === 'draft' ? 'Publicar curso' : 'Desarchive y publicar'}>
+                          <IconButton
+                            size='small'
+                            sx={{ color: '#2e7d32' }}
+                            onClick={() => handlePublishCourse(course.id)}
+                          >
+                            <PublishIcon />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+
+                      {/* Botón de Archivar - solo para cursos publicados */}
+                      {course.status === 'published' && (
+                        <Tooltip title="Archivar curso">
+                          <IconButton
+                            size='small'
+                            sx={{ color: '#ed6c02' }}
+                            onClick={() => handleArchiveCourse(course.id)}
+                          >
+                            <ArchiveIcon />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+
                       <Tooltip title="Eliminar curso">
                         <IconButton
                           size='small'

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -55,6 +55,8 @@ import { userStore } from 'src/store/userStore'
 import LmsProgressBar from '../shared/LmsProgressBar'
 import LmsVideoPlayer from '../shared/LmsVideoPlayer'
 import LmsQuizPlayer from '../shared/LmsQuizPlayer'
+import { useCourse } from '../../../hooks/useLms'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 interface CourseLesson {
   id: number
@@ -129,294 +131,104 @@ const LmsCourseView: React.FC = () => {
   const [lessonStartTime, setLessonStartTime] = useState<Date | null>(null)
 
   const storeUser = useStore(userStore)
+  const axiosPrivate = useAxiosPrivate()
 
-  // Mock data para el curso con estructura modular
-  const mockCourse: Course = {
-    id: 1,
-    title: 'JavaScript Avanzado para Desarrollo Web',
-    description: 'Aprende conceptos avanzados de JavaScript para desarrollo web moderno, incluyendo ES6+, programación asíncrona y mejores prácticas.',
-    instructor: 'Dr. Carlos Méndez',
-    duration: '12 horas',
-    rating: 4.8,
-    enrolledUsers: 245,
-    category: 'Programación',
-    audience: 'employee',
-    thumbnail: '/placeholder.svg?height=400&width=600',
-    hasCertificate: true,
-    isMandatory: false,
-    modules: [
-      {
-        id: 1,
-        title: 'Fundamentos de JavaScript',
-        description: 'Conceptos básicos y fundamentos del lenguaje',
-        order: 1,
-        completed: false,
-        unlocked: true,
-        lessons: [
-          {
-            id: 1,
-            title: 'Introducción a JavaScript',
-            type: 'video',
-            duration: '45 min',
-            estimatedMinutes: 45,
-            order: 1,
-            completed: true,
-            unlocked: true,
-            content: {
-              videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-              videoSource: 'youtube',
-              transcript: 'En esta lección exploraremos los fundamentos básicos de JavaScript, su historia y evolución...',
-              description: 'Introducción a los conceptos fundamentales de JavaScript'
-            }
-          },
-          {
-            id: 2,
-            title: 'Variables y Tipos de Datos',
-            type: 'text',
-            duration: '30 min',
-            estimatedMinutes: 30,
-            order: 2,
-            completed: true,
-            unlocked: true,
-            content: {
-              text: `# Variables y Tipos de Datos
-
-## Declaración de Variables
-En JavaScript, puedes declarar variables usando \`var\`, \`let\` o \`const\`:
-
-### var
-- Tiene scope de función
-- Puede ser redeclarada
-- Se eleva (hoisting)
-
-### let
-- Tiene scope de bloque
-- No puede ser redeclarada en el mismo scope
-- Se eleva pero no se inicializa
-
-### const
-- Tiene scope de bloque
-- Debe ser inicializada al declararse
-- No puede ser reasignada
-
-## Tipos de Datos Primitivos
-- **String**: Para texto
-- **Number**: Para números enteros y decimales
-- **Boolean**: Para valores true/false
-- **Undefined**: Variable sin valor asignado
-- **Null**: Valor nulo intencional
-- **Symbol**: Identificador único
-- **BigInt**: Para números enteros grandes
-
-## Ejemplos Prácticos
-\`\`\`javascript
-// Declaración de variables
-let nombre = "Juan";
-const edad = 25;
-var esEstudiante = true;
-
-// Tipos de datos
-let texto = "Hola mundo";
-let numero = 42;
-let booleano = true;
-let indefinido;
-let nulo = null;
-\`\`\`
-
-## Verificación de Tipos
-Usa \`typeof\` para verificar el tipo de una variable:
-
-\`\`\`javascript
-console.log(typeof "Hola"); // "string"
-console.log(typeof 42); // "number"
-console.log(typeof true); // "boolean"
-\`\`\``,
-              description: 'Aprende sobre variables y tipos de datos en JavaScript'
-            }
-          },
-          {
-            id: 3,
-            title: 'Quiz: Fundamentos Básicos',
-            type: 'quiz',
-            duration: '15 min',
-            estimatedMinutes: 15,
-            order: 3,
-            completed: false,
-            unlocked: true,
-            content: {
-              quiz: {
-                id: 1,
-                title: 'Quiz: Fundamentos de JavaScript',
-                instructions: 'Responde las siguientes preguntas sobre los fundamentos de JavaScript.',
-                passingPercentage: 70,
-                maxAttempts: 3,
-                cooldownMinutes: 5,
-                showCorrectAnswers: true,
-                randomizeQuestions: false,
-                shuffleAnswers: true,
-                timeLimitMinutes: 15,
-                allowReview: true,
-                showProgressBar: true,
-                questions: [
-                  {
-                    id: 1,
-                    question: '¿Cuál es la forma correcta de declarar una variable constante en JavaScript?',
-                    type: 'single-choice',
-                    options: [
-                      'var nombre = "Juan"',
-                      'let nombre = "Juan"',
-                      'const nombre = "Juan"',
-                      'constant nombre = "Juan"'
-                    ],
-                    correctAnswer: 2,
-                    explanation: 'const es la palabra clave correcta para declarar constantes en JavaScript.',
-                    points: 2
-                  },
-                  {
-                    id: 2,
-                    question: '¿Qué tipos de datos primitivos existen en JavaScript?',
-                    type: 'multiple-choice',
-                    options: [
-                      'String',
-                      'Number',
-                      'Boolean',
-                      'Object',
-                      'Undefined',
-                      'Null'
-                    ],
-                    correctAnswer: [0, 1, 2, 4, 5],
-                    explanation: 'Object no es un tipo primitivo, es un tipo de referencia.',
-                    points: 3
-                  }
-                ]
-              },
-              description: 'Evalúa tu conocimiento sobre los fundamentos de JavaScript'
-            }
-          }
-        ]
-      },
-      {
-        id: 2,
-        title: 'Programación Asíncrona',
-        description: 'Callbacks, Promises y async/await',
-        order: 2,
-        completed: false,
-        unlocked: false,
-        lessons: [
-          {
-            id: 4,
-            title: 'Introducción a la Programación Asíncrona',
-            type: 'video',
-            duration: '50 min',
-            estimatedMinutes: 50,
-            order: 1,
-            completed: false,
-            unlocked: false,
-            content: {
-              videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-              videoSource: 'youtube',
-              transcript: 'La programación asíncrona es fundamental para el desarrollo web moderno...',
-              description: 'Aprende los conceptos básicos de la programación asíncrona'
-            }
-          },
-          {
-            id: 5,
-            title: 'Promises y async/await',
-            type: 'text',
-            duration: '35 min',
-            estimatedMinutes: 35,
-            order: 2,
-            completed: false,
-            unlocked: false,
-            content: {
-              text: '# Promises y async/await\n\nLas Promises son una forma moderna de manejar operaciones asíncronas...',
-              description: 'Explora Promises y la sintaxis async/await'
-            }
-          },
-          {
-            id: 6,
-            title: 'Quiz: Programación Asíncrona',
-            type: 'quiz',
-            duration: '20 min',
-            estimatedMinutes: 20,
-            order: 3,
-            completed: false,
-            unlocked: false,
-            content: {
-              quiz: {
-                id: 2,
-                title: 'Quiz: Programación Asíncrona',
-                instructions: 'Evalúa tu comprensión de la programación asíncrona en JavaScript.',
-                passingPercentage: 75,
-                maxAttempts: 3,
-                cooldownMinutes: 10,
-                showCorrectAnswers: true,
-                randomizeQuestions: true,
-                shuffleAnswers: true,
-                timeLimitMinutes: 20,
-                allowReview: true,
-                showProgressBar: true,
-                questions: [
-                  {
-                    id: 3,
-                    question: '¿Qué es una Promise en JavaScript?',
-                    type: 'single-choice',
-                    options: [
-                      'Una función que se ejecuta inmediatamente',
-                      'Un objeto que representa la eventual finalización de una operación asíncrona',
-                      'Un tipo de variable',
-                      'Un método de array'
-                    ],
-                    correctAnswer: 1,
-                    explanation: 'Una Promise es un objeto que representa la eventual finalización (o falla) de una operación asíncrona.',
-                    points: 3
-                  }
-                ]
-              },
-              description: 'Evalúa tu conocimiento sobre programación asíncrona'
-            }
-          }
-        ]
-      }
-    ]
-  }
-
-  // Query para obtener el curso
-  const { data: course = mockCourse, isLoading } = useQuery<Course>(
-    ['lms-course', courseId],
-    async () => {
-      // En el futuro, esto hará una llamada real a la API
-      // const response = await axiosPrivate.get(`/lms/courses/${courseId}`)
-      // return response.data
-      return mockCourse
-    }
+  // Obtener curso real de la API
+  const { data: courseData, isLoading: isLoadingCourse, error: courseError } = useCourse(
+    parseInt(courseId || '0')
   )
+
+  // Adapter: Convert API data to expected Course interface
+  const course: Course | null = courseData ? {
+    id: courseData.id,
+    title: courseData.title,
+    description: courseData.description,
+    category: courseData.audience || 'General',
+    instructor: 'Instructor',  // TODO: Get from courseData.creator
+    duration: courseData.estimated_duration_minutes ? `${courseData.estimated_duration_minutes} min` : 'N/A',
+    rating: 4.5,  // TODO: Get from courseData.stats
+    enrolledUsers: 0,  // TODO: Get from courseData.stats
+    audience: courseData.audience || 'both',
+    thumbnail: '/placeholder.svg?height=400&width=600',
+    hasCertificate: courseData.has_certificate || false,
+    isMandatory: courseData.is_mandatory || false,
+    modules: (courseData.modules || []).map((mod: any, modIndex: number) => ({
+      id: mod.id,
+      title: mod.title,
+      description: mod.description || '',
+      order: mod.order_index || modIndex + 1,
+      completed: false,  // TODO: Calculate from userProgress
+      unlocked: true,  // TODO: Calculate based on completion logic
+      lessons: (mod.lessons || []).map((lesson: any, lessonIndex: number) => ({
+        id: lesson.id,
+        title: lesson.title,
+        type: lesson.type || 'text',
+        duration: lesson.duration_minutes ? `${lesson.duration_minutes} min` : 'N/A',
+        estimatedMinutes: lesson.duration_minutes || 30,
+        order: lesson.order_index || lessonIndex + 1,
+        completed: false,  // TODO: Get from userProgress
+        unlocked: true,  // TODO: Calculate based on completion logic
+        content: {
+          videoUrl: lesson.video_url,
+          videoSource: lesson.video_source,
+          text: lesson.content,
+          description: lesson.description || '',
+          quiz: lesson.quiz
+        }
+      }))
+    }))
+  } : null
 
   // Query para obtener el progreso del usuario
-  const { data: userProgress = [] } = useQuery<UserProgress[]>(
-    ['lms-progress', courseId, storeUser.email],
+  const { data: progressData } = useQuery(
+    ['lms-progress', courseId],
     async () => {
-      // En el futuro, esto hará una llamada real a la API
-      // const response = await axiosPrivate.get(`/lms/progress/${storeUser.email}/${courseId}`)
-      // return response.data
-      return []
+      const response = await axiosPrivate.get(`/lms/progress/courses/${courseId}`)
+      return response.data
     },
-    { enabled: !!storeUser.email && !!courseId }
+    { enabled: !!courseId }
   )
 
-  // Mutation para actualizar progreso
+  // Adapt progress data to UserProgress[] format
+  const userProgress: UserProgress[] = useMemo(() => {
+    if (!progressData || !progressData.data || !progressData.data.modules) return []
+
+    const lessons: UserProgress[] = []
+    progressData.data.modules.forEach((module: any) => {
+      if (module.lessons && Array.isArray(module.lessons)) {
+        module.lessons.forEach((lesson: any) => {
+          if (lesson.progress && lesson.progress.status === 'completed') {
+            lessons.push({
+              courseId: parseInt(courseId || '0'),
+              lessonId: lesson.id,
+              status: lesson.progress.status,
+              timeSpent: lesson.progress.time_spent_minutes || 0,
+              completedAt: lesson.progress.completed_at ? new Date(lesson.progress.completed_at) : undefined
+            })
+          }
+        })
+      }
+    })
+    return lessons
+  }, [progressData, courseId])
+
+  // Mutation para completar lección
   const updateProgressMutation = useMutation(
     async (data: { lessonId: number; status: string; timeSpent: number }) => {
-      // En el futuro, esto hará una llamada real a la API
-      // const response = await axiosPrivate.post('/lms/progress', data)
-      // return response.data
-      console.log('Actualizando progreso:', data)
-      return data
+      const response = await axiosPrivate.post(`/lms/progress/lessons/${data.lessonId}/complete`, {
+        time_spent_minutes: data.timeSpent
+      })
+      return response.data
     },
     {
       onSuccess: () => {
-        queryClient.invalidateQueries(['lms-progress', courseId, storeUser.email])
-        setSnackbarMessage('Progreso guardado correctamente')
+        queryClient.invalidateQueries(['lms-progress', courseId])
+        queryClient.invalidateQueries(['lms-courses'])
+        setSnackbarMessage('Lección completada correctamente')
+        setShowSnackbar(true)
+      },
+      onError: (error: any) => {
+        setSnackbarMessage('Error al completar lección: ' + (error.response?.data?.message || error.message))
         setShowSnackbar(true)
       }
     }
@@ -425,22 +237,31 @@ console.log(typeof true); // "boolean"
   // Mutation para completar quiz
   const completeQuizMutation = useMutation(
     async (data: { quizId: number; answers: any; score: number; totalPoints: number }) => {
-      // En el futuro, esto hará una llamada real a la API
-      // const response = await axiosPrivate.post('/lms/quiz/attempt', data)
-      // return response.data
-      console.log('Completando quiz:', data)
-      return data
+      const response = await axiosPrivate.post('/lms/quiz/attempt', {
+        quiz_id: data.quizId,
+        answers: data.answers,
+        score: data.score,
+        total_points: data.totalPoints
+      })
+      return response.data
     },
     {
       onSuccess: () => {
-        queryClient.invalidateQueries(['lms-progress', courseId, storeUser.email])
+        queryClient.invalidateQueries(['lms-progress', courseId])
+        setSnackbarMessage('Quiz completado correctamente')
+        setShowSnackbar(true)
+      },
+      onError: (error: any) => {
+        setSnackbarMessage('Error al completar quiz: ' + (error.response?.data?.message || error.message))
+        setShowSnackbar(true)
       }
     }
   )
 
   // Helper functions
   const getAllLessons = useCallback(() => {
-    return course.modules.flatMap(module => 
+    if (!course || !course.modules) return []
+    return course.modules.flatMap(module =>
       module.lessons.map(lesson => ({
         ...lesson,
         moduleId: module.id,
@@ -450,11 +271,12 @@ console.log(typeof true); // "boolean"
   }, [course])
 
   const getCurrentLesson = useCallback(() => {
-    if (!course.modules[currentModuleIndex]) return null
+    if (!course || !course.modules || !course.modules[currentModuleIndex]) return null
     return course.modules[currentModuleIndex].lessons[currentLessonIndex] || null
   }, [course, currentModuleIndex, currentLessonIndex])
 
   const getNextLesson = useCallback(() => {
+    if (!course || !course.modules) return null
     const currentModule = course.modules[currentModuleIndex]
     if (!currentModule) return null
 
@@ -483,6 +305,8 @@ console.log(typeof true); // "boolean"
   }, [course, currentModuleIndex, currentLessonIndex])
 
   const getPreviousLesson = useCallback(() => {
+    if (!course || !course.modules) return null
+
     // Check if there's a previous lesson in current module
     if (currentLessonIndex > 0) {
       return {
@@ -511,6 +335,19 @@ console.log(typeof true); // "boolean"
     return userProgress.some(p => p.lessonId === lessonId && p.status === 'completed')
   }, [userProgress])
 
+  const getPreviousLessonByIndex = useCallback((moduleIndex: number, lessonIndex: number) => {
+    if (!course || !course.modules) return null
+
+    if (lessonIndex > 0) {
+      return course.modules[moduleIndex].lessons[lessonIndex - 1]
+    }
+    if (moduleIndex > 0) {
+      const prevModule = course.modules[moduleIndex - 1]
+      return prevModule.lessons[prevModule.lessons.length - 1]
+    }
+    return null
+  }, [course])
+
   const isLessonUnlocked = useCallback((moduleIndex: number, lessonIndex: number) => {
     // First lesson of first module is always unlocked
     if (moduleIndex === 0 && lessonIndex === 0) return true
@@ -522,18 +359,7 @@ console.log(typeof true); // "boolean"
     }
 
     return false
-  }, [userProgress])
-
-  const getPreviousLessonByIndex = (moduleIndex: number, lessonIndex: number) => {
-    if (lessonIndex > 0) {
-      return course.modules[moduleIndex].lessons[lessonIndex - 1]
-    }
-    if (moduleIndex > 0) {
-      const prevModule = course.modules[moduleIndex - 1]
-      return prevModule.lessons[prevModule.lessons.length - 1]
-    }
-    return null
-  }
+  }, [getPreviousLessonByIndex, isLessonCompleted])
 
   const getCourseProgress = useCallback(() => {
     const allLessons = getAllLessons()
@@ -546,6 +372,7 @@ console.log(typeof true); // "boolean"
   }, [getAllLessons, isLessonCompleted])
 
   const getModuleProgress = useCallback((moduleIndex: number) => {
+    if (!course || !course.modules) return { completed: 0, total: 0, percentage: 0 }
     const module = course.modules[moduleIndex]
     if (!module) return { completed: 0, total: 0, percentage: 0 }
 
@@ -585,7 +412,7 @@ console.log(typeof true); // "boolean"
 
   // Event handlers
   const handleLessonComplete = useCallback(async (lessonId: number) => {
-    const timeSpent = lessonStartTime 
+    const timeSpent = lessonStartTime
       ? Math.round((new Date().getTime() - lessonStartTime.getTime()) / 1000 / 60)
       : 0
 
@@ -596,27 +423,14 @@ console.log(typeof true); // "boolean"
         timeSpent
       })
 
-      // Check if course is completed
-      const progress = getCourseProgress()
-      if (progress.percentage === 100) {
-        setShowCompletionDialog(true)
-      } else {
-        // Auto-navigate to next lesson if available
-        const nextLesson = getNextLesson()
-        if (nextLesson && isLessonUnlocked(nextLesson.moduleIndex, nextLesson.lessonIndex)) {
-          setCurrentModuleIndex(nextLesson.moduleIndex)
-          setCurrentLessonIndex(nextLesson.lessonIndex)
-          
-          // Expand next module if needed
-          setExpandedModules(prev => new Set([...prev, nextLesson.moduleIndex]))
-        }
-      }
+      setSnackbarMessage('Lección completada exitosamente')
+      setShowSnackbar(true)
     } catch (error) {
       console.error('Error completing lesson:', error)
       setSnackbarMessage('Error al guardar el progreso')
       setShowSnackbar(true)
     }
-  }, [lessonStartTime, updateProgressMutation, getCourseProgress, getNextLesson, isLessonUnlocked])
+  }, [lessonStartTime, updateProgressMutation])
 
   const handleQuizComplete = useCallback(async (attempt: any) => {
     const currentLesson = getCurrentLesson()
@@ -676,6 +490,24 @@ console.log(typeof true); // "boolean"
     })
   }, [])
 
+  // Early return states (must be after all hooks)
+  if (isLoadingCourse) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
+        <Typography>Cargando curso...</Typography>
+      </Box>
+    )
+  }
+
+  if (courseError || !course) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">Error al cargar el curso. Por favor, intenta nuevamente.</Alert>
+        <Button onClick={() => navigate(-1)} sx={{ mt: 2 }}>Volver</Button>
+      </Box>
+    )
+  }
+
   const getContentIcon = (type: string) => {
     switch (type) {
       case 'video':
@@ -702,7 +534,7 @@ console.log(typeof true); // "boolean"
     }
   }
 
-  if (isLoading) {
+  if (isLoadingCourse) {
     return (
       <Box
         sx={{
