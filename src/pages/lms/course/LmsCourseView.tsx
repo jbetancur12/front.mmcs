@@ -138,46 +138,50 @@ const LmsCourseView: React.FC = () => {
     parseInt(courseId || '0')
   )
 
-  // Adapter: Convert API data to expected Course interface
-  const course: Course | null = courseData ? {
-    id: courseData.id,
-    title: courseData.title,
-    description: courseData.description,
-    category: courseData.audience || 'General',
-    instructor: 'Instructor',  // TODO: Get from courseData.creator
-    duration: courseData.estimated_duration_minutes ? `${courseData.estimated_duration_minutes} min` : 'N/A',
-    rating: 4.5,  // TODO: Get from courseData.stats
-    enrolledUsers: 0,  // TODO: Get from courseData.stats
-    audience: courseData.audience || 'both',
-    thumbnail: '/placeholder.svg?height=400&width=600',
-    hasCertificate: courseData.has_certificate || false,
-    isMandatory: courseData.is_mandatory || false,
-    modules: (courseData.modules || []).map((mod: any, modIndex: number) => ({
-      id: mod.id,
-      title: mod.title,
-      description: mod.description || '',
-      order: mod.order_index || modIndex + 1,
-      completed: false,  // TODO: Calculate from userProgress
-      unlocked: true,  // TODO: Calculate based on completion logic
-      lessons: (mod.lessons || []).map((lesson: any, lessonIndex: number) => ({
-        id: lesson.id,
-        title: lesson.title,
-        type: lesson.type || 'text',
-        duration: lesson.duration_minutes ? `${lesson.duration_minutes} min` : 'N/A',
-        estimatedMinutes: lesson.duration_minutes || 30,
-        order: lesson.order_index || lessonIndex + 1,
-        completed: false,  // TODO: Get from userProgress
+  // Adapter: Convert API data to expected Course interface (memoized to prevent infinite loops)
+  const course: Course | null = useMemo(() => {
+    if (!courseData) return null
+
+    return {
+      id: courseData.id,
+      title: courseData.title,
+      description: courseData.description,
+      category: courseData.audience || 'General',
+      instructor: 'Instructor',  // TODO: Get from courseData.creator
+      duration: courseData.estimated_duration_minutes ? `${courseData.estimated_duration_minutes} min` : 'N/A',
+      rating: 4.5,  // TODO: Get from courseData.stats
+      enrolledUsers: 0,  // TODO: Get from courseData.stats
+      audience: courseData.audience || 'both',
+      thumbnail: '/placeholder.svg?height=400&width=600',
+      hasCertificate: courseData.has_certificate || false,
+      isMandatory: courseData.is_mandatory || false,
+      modules: (courseData.modules || []).map((mod: any, modIndex: number) => ({
+        id: mod.id,
+        title: mod.title,
+        description: mod.description || '',
+        order: mod.order_index || modIndex + 1,
+        completed: false,  // TODO: Calculate from userProgress
         unlocked: true,  // TODO: Calculate based on completion logic
-        content: {
-          videoUrl: lesson.video_url,
-          videoSource: lesson.video_source,
-          text: lesson.content,
-          description: lesson.description || '',
-          quiz: lesson.quiz
-        }
+        lessons: (mod.lessons || []).map((lesson: any, lessonIndex: number) => ({
+          id: lesson.id,
+          title: lesson.title,
+          type: lesson.type || 'text',
+          duration: lesson.duration_minutes ? `${lesson.duration_minutes} min` : 'N/A',
+          estimatedMinutes: lesson.duration_minutes || 30,
+          order: lesson.order_index || lessonIndex + 1,
+          completed: false,  // TODO: Get from userProgress
+          unlocked: true,  // TODO: Calculate based on completion logic
+          content: {
+            videoUrl: lesson.video_url,
+            videoSource: lesson.video_source,
+            text: lesson.content,
+            description: lesson.description || '',
+            quiz: lesson.quiz
+          }
+        }))
       }))
-    }))
-  } : null
+    }
+  }, [courseData])
 
   // Query para obtener el progreso del usuario
   const { data: progressData } = useQuery(
@@ -257,6 +261,18 @@ const LmsCourseView: React.FC = () => {
       }
     }
   )
+
+  // Memoize quiz config and empty arrays to prevent infinite loop in LmsQuizPlayer
+  const currentQuizConfig = useMemo(() => {
+    if (!course || !course.modules || !course.modules[currentModuleIndex]) return null
+    const currentModule = course.modules[currentModuleIndex]
+    if (!currentModule.lessons || !currentModule.lessons[currentLessonIndex]) return null
+    const lesson = currentModule.lessons[currentLessonIndex]
+    if (lesson.type !== 'quiz' || !lesson.content.quiz) return null
+    return lesson.content.quiz
+  }, [course, currentModuleIndex, currentLessonIndex])
+
+  const emptyUserAttempts = useMemo(() => [], [])
 
   // Helper functions
   const getAllLessons = useCallback(() => {
@@ -433,12 +449,13 @@ const LmsCourseView: React.FC = () => {
   }, [lessonStartTime, updateProgressMutation])
 
   const handleQuizComplete = useCallback(async (attempt: any) => {
-    const currentLesson = getCurrentLesson()
-    if (!currentLesson || !currentLesson.content.quiz) return
+    if (!currentQuizConfig || !course || !course.modules[currentModuleIndex]) return
+    const currentLesson = course.modules[currentModuleIndex].lessons[currentLessonIndex]
+    if (!currentLesson) return
 
     try {
       await completeQuizMutation.mutateAsync({
-        quizId: currentLesson.content.quiz.id,
+        quizId: currentQuizConfig.id,
         answers: attempt.answers,
         score: attempt.score,
         totalPoints: attempt.totalPoints
@@ -450,7 +467,7 @@ const LmsCourseView: React.FC = () => {
     } catch (error) {
       console.error('Error completing quiz:', error)
     }
-  }, [getCurrentLesson, completeQuizMutation, handleLessonComplete])
+  }, [currentQuizConfig, course, currentModuleIndex, currentLessonIndex, completeQuizMutation, handleLessonComplete])
 
   const handleNavigateToLesson = useCallback((moduleIndex: number, lessonIndex: number) => {
     if (isLessonUnlocked(moduleIndex, lessonIndex)) {
@@ -959,9 +976,10 @@ const LmsCourseView: React.FC = () => {
                 )}
 
                 {/* Quiz content */}
-                {currentLesson.type === 'quiz' && currentLesson.content.quiz && (
+                {currentLesson.type === 'quiz' && currentQuizConfig && (
                   <LmsQuizPlayer
-                    quizConfig={currentLesson.content.quiz}
+                    quizConfig={currentQuizConfig}
+                    userAttempts={emptyUserAttempts}
                     onComplete={handleQuizComplete}
                   />
                 )}
