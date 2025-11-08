@@ -84,11 +84,11 @@ const LmsComplianceTracker: React.FC = () => {
 
   // Transform API data to component format
   const complianceRecords = useMemo(() => {
-    if (!trainingData || !trainingData.data || !trainingData.data.mandatoryTraining) {
+    if (!trainingData || !trainingData.mandatoryTraining) {
       return []
     }
 
-    return trainingData.data.mandatoryTraining.map((training: any, index: number) => ({
+    return trainingData.mandatoryTraining.map((training: any, index: number) => ({
       id: training.assignmentId || index,
       userId: training.userId,
       userName: training.userName,
@@ -108,9 +108,9 @@ const LmsComplianceTracker: React.FC = () => {
 
   // Calculate compliance alerts from data
   const complianceAlerts = useMemo((): ComplianceAlert[] => {
-    if (!trainingData || !trainingData.data) return []
+    if (!trainingData) return []
 
-    const summary = trainingData.data.summary || {}
+    const summary = trainingData.summary || {}
 
     return [
       {
