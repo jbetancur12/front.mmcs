@@ -668,7 +668,8 @@ class LMSService {
       ? `${this.baseURL}/certificates/users/${userId}`
       : `${this.baseURL}/certificates/my-certificates`
     const response = await axiosPrivate.get(url)
-    return response.data.data?.certificates || response.data.certificates || response.data
+    // Backend returns { success: true, data: [...] } where data is the array
+    return response.data.data || response.data.certificates || response.data
   }
 
   /**
