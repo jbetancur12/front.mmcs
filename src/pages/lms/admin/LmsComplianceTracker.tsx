@@ -221,6 +221,32 @@ const LmsComplianceTracker: React.FC = () => {
     setDetailsRecord(null)
   }
 
+  const handleAlertClick = (alertType: string) => {
+    // Clear filters first
+    setFilters({
+      status: [],
+      department: '',
+      courseId: null,
+      daysUntilDeadline: null
+    })
+
+    // Apply specific filters based on alert type
+    switch (alertType) {
+      case 'overdue':
+        setFilters(prev => ({ ...prev, status: ['overdue'] }))
+        setActiveTab(1) // Go to "Vencidos" tab
+        break
+      case 'deadline_approaching':
+        setFilters(prev => ({ ...prev, daysUntilDeadline: 7 }))
+        setActiveTab(2) // Go to "Próximos a vencer" tab
+        break
+      case 'not_started':
+        setFilters(prev => ({ ...prev, status: ['pending'] }))
+        setActiveTab(0) // Go to "Todos" tab
+        break
+    }
+  }
+
   // Apply filters to compliance records
   const filteredRecords = useMemo(() => {
     let filtered = complianceRecords
@@ -411,7 +437,11 @@ const LmsComplianceTracker: React.FC = () => {
             <Alert
               severity={alert.severity}
               action={
-                <Button size="small" color="inherit">
+                <Button
+                  size="small"
+                  color="inherit"
+                  onClick={() => handleAlertClick(alert.type)}
+                >
                   Ver detalles
                 </Button>
               }
