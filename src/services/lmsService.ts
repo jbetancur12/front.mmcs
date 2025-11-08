@@ -665,10 +665,10 @@ class LMSService {
    */
   async getUserCertificates(userId?: number): Promise<Certificate[]> {
     const url = userId
-      ? `${this.baseURL}/certificates/user/${userId}`
-      : `${this.baseURL}/certificates/user/me`
+      ? `${this.baseURL}/certificates/users/${userId}`
+      : `${this.baseURL}/certificates/my-certificates`
     const response = await axiosPrivate.get(url)
-    return response.data.certificates || response.data
+    return response.data.data?.certificates || response.data.certificates || response.data
   }
 
   /**
@@ -701,6 +701,24 @@ class LMSService {
       }
     )
     return response.data
+  }
+
+  /**
+   * Verify certificate by certificate number
+   */
+  async verifyCertificate(certificateNumber: string): Promise<{ isValid: boolean; certificate?: Certificate; error?: string }> {
+    try {
+      const response = await axiosPrivate.get(`${this.baseURL}/certificates/verify/${certificateNumber}`)
+      return {
+        isValid: response.data.success || response.data.isValid,
+        certificate: response.data.data?.certificate || response.data.certificate
+      }
+    } catch (error: any) {
+      return {
+        isValid: false,
+        error: error.response?.data?.message || 'Error al verificar el certificado'
+      }
+    }
   }
 
   // ===========================

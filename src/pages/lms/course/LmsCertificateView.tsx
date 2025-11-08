@@ -46,6 +46,8 @@ import {
   Error as ErrorIcon
 } from '@mui/icons-material'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useUserCertificates, useCertificate, useDownloadCertificate } from '../../../hooks/useLms'
+import { lmsService } from '../../../services/lmsService'
 
 interface Certificate {
   id: number
@@ -94,139 +96,39 @@ interface CertificateVerification {
 const LmsCertificateView: React.FC = () => {
   const { certificateId } = useParams<{ certificateId: string }>()
   const navigate = useNavigate()
-  
-  const [certificate, setCertificate] = useState<Certificate | null>(null)
-  const [userCertificates, setUserCertificates] = useState<UserCertificate[]>([])
-  const [loading, setLoading] = useState(false)
+
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
   const [isVerificationDialogOpen, setIsVerificationDialogOpen] = useState(false)
   const [verificationNumber, setVerificationNumber] = useState('')
   const [verificationResult, setVerificationResult] = useState<CertificateVerification | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [viewMode, setViewMode] = useState<'single' | 'gallery'>('single')
+  const [viewMode, setViewMode] = useState<'single' | 'gallery'>(certificateId ? 'single' : 'gallery')
+  const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null)
 
-  // Mock data for certificates
-  const mockCertificate: Certificate = {
-    id: 1,
-    certificate_number: 'CERT-2024-001',
-    user_name: 'Juan Pérez García',
-    user_email: 'juan.perez@example.com',
-    course_name: 'Fundamentos de React y TypeScript',
-    course_id: 1,
-    completion_date: '2024-01-15',
-    issued_at: '2024-01-15T10:30:00Z',
-    template_name: 'Certificado Estándar',
-    pdf_path: '/certificates/CERT-2024-001.pdf',
-    verification_url: 'https://lms.example.com/verify/CERT-2024-001',
-    is_verified: true,
-    certificate_data: {
-      user_name: 'Juan Pérez García',
-      course_name: 'Fundamentos de React y TypeScript',
-      completion_date: '15 de Enero, 2024',
-      certificate_number: 'CERT-2024-001',
-      course_duration: 40,
-      instructor_name: 'María González',
-      organization_name: 'MMCS Learning Platform'
-    }
-  }
+  // Fetch user certificates or single certificate
+  const { data: userCertificatesData, isLoading: isLoadingCertificates } = useUserCertificates()
+  const { data: singleCertificate, isLoading: isLoadingSingle } = useCertificate(
+    certificateId ? parseInt(certificateId) : undefined,
+    { enabled: !!certificateId }
+  )
+  const downloadCertificateMutation = useDownloadCertificate()
 
-  const mockUserCertificates: UserCertificate[] = [
-    {
-      id: 1,
-      certificate_number: 'CERT-2024-001',
-      course_name: 'Fundamentos de React y TypeScript',
-      course_id: 1,
-      completion_date: '2024-01-15',
-      issued_at: '2024-01-15T10:30:00Z',
-      template_name: 'Certificado Estándar',
-      pdf_path: '/certificates/CERT-2024-001.pdf',
-      verification_url: 'https://lms.example.com/verify/CERT-2024-001',
-      course_thumbnail: '/placeholder.svg?height=200&width=300',
-      course_category: 'Desarrollo Web'
-    },
-    {
-      id: 2,
-      certificate_number: 'CERT-2024-002',
-      course_name: 'Seguridad en el Trabajo',
-      course_id: 2,
-      completion_date: '2024-01-20',
-      issued_at: '2024-01-20T14:15:00Z',
-      template_name: 'Certificado Corporativo',
-      pdf_path: '/certificates/CERT-2024-002.pdf',
-      verification_url: 'https://lms.example.com/verify/CERT-2024-002',
-      course_thumbnail: '/placeholder.svg?height=200&width=300',
-      course_category: 'Seguridad'
-    },
-    {
-      id: 3,
-      certificate_number: 'CERT-2024-003',
-      course_name: 'Comunicación Efectiva',
-      course_id: 3,
-      completion_date: '2024-01-25',
-      issued_at: '2024-01-25T09:45:00Z',
-      template_name: 'Certificado Estándar',
-      pdf_path: '/certificates/CERT-2024-003.pdf',
-      verification_url: 'https://lms.example.com/verify/CERT-2024-003',
-      course_thumbnail: '/placeholder.svg?height=200&width=300',
-      course_category: 'Habilidades Blandas'
-    }
-  ]
+  const loading = isLoadingCertificates || isLoadingSingle || downloadCertificateMutation.isPending
+  const certificate = viewMode === 'single' ? singleCertificate : selectedCertificate
+  const userCertificates = userCertificatesData || []
 
-  useEffect(() => {
-    if (certificateId) {
-      setViewMode('single')
-      loadCertificate(certificateId)
-    } else {
-      setViewMode('gallery')
-      loadUserCertificates()
-    }
-  }, [certificateId])
-
-  const loadCertificate = async (_id: string) => {
-    setLoading(true)
+  const handleDownloadCertificate = async (certificateId: number) => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/lms/certificates/${id}`)
-      // const data = await response.json()
-      setCertificate(mockCertificate)
-    } catch (error) {
-      console.error('Error loading certificate:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const loadUserCertificates = async () => {
-    setLoading(true)
-    try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/lms/certificates/my-certificates')
-      // const data = await response.json()
-      setUserCertificates(mockUserCertificates)
-    } catch (error) {
-      console.error('Error loading certificates:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleDownloadCertificate = async (certificateNumber: string) => {
-    try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/lms/certificates/${certificateNumber}/download`)
-      // const blob = await response.blob()
-      // const url = window.URL.createObjectURL(blob)
-      // const a = document.createElement('a')
-      // a.href = url
-      // a.download = `certificate-${certificateNumber}.pdf`
-      // a.click()
-      // window.URL.revokeObjectURL(url)
-      
-      console.log('Downloading certificate:', certificateNumber)
-      // Simulate download
-      alert(`Descargando certificado ${certificateNumber}...`)
+      const blob = await downloadCertificateMutation.mutateAsync(certificateId)
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `certificate-${certificateId}.pdf`
+      a.click()
+      window.URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Error downloading certificate:', error)
+      alert('Error al descargar el certificado')
     }
   }
 
@@ -234,40 +136,23 @@ const LmsCertificateView: React.FC = () => {
     window.print()
   }
 
-  const handleShareCertificate = (certificate: Certificate | UserCertificate) => {
-    setCertificate(certificate as Certificate)
+  const handleShareCertificate = (cert: Certificate | UserCertificate) => {
+    setSelectedCertificate(cert as Certificate)
     setIsShareDialogOpen(true)
   }
 
   const handleVerifyCertificate = async () => {
     if (!verificationNumber.trim()) return
 
-    setLoading(true)
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/lms/certificates/verify/${verificationNumber}`)
-      // const data = await response.json()
-      
-      // Mock verification
-      if (verificationNumber === 'CERT-2024-001') {
-        setVerificationResult({
-          isValid: true,
-          certificate: mockCertificate
-        })
-      } else {
-        setVerificationResult({
-          isValid: false,
-          error: 'Certificado no encontrado o número inválido'
-        })
-      }
+      const result = await lmsService.verifyCertificate(verificationNumber)
+      setVerificationResult(result)
     } catch (error) {
       console.error('Error verifying certificate:', error)
       setVerificationResult({
         isValid: false,
         error: 'Error al verificar el certificado'
       })
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -297,8 +182,7 @@ const LmsCertificateView: React.FC = () => {
 
   const filteredCertificates = userCertificates.filter(cert =>
     cert.course_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cert.certificate_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cert.course_category?.toLowerCase().includes(searchTerm.toLowerCase())
+    cert.certificate_number.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const shareOptions = [
@@ -374,7 +258,7 @@ const LmsCertificateView: React.FC = () => {
               <Button
                 variant="contained"
                 startIcon={<DownloadIcon />}
-                onClick={() => handleDownloadCertificate(certificate.certificate_number)}
+                onClick={() => handleDownloadCertificate(certificate.id)}
               >
                 Descargar PDF
               </Button>
@@ -529,7 +413,7 @@ const LmsCertificateView: React.FC = () => {
                       }
                       action={
                         <Chip
-                          label={cert.course_category}
+                          label={cert.template_name}
                           size="small"
                           color="primary"
                           variant="outlined"
@@ -561,7 +445,7 @@ const LmsCertificateView: React.FC = () => {
                         <Tooltip title="Descargar PDF">
                           <IconButton
                             size="small"
-                            onClick={() => handleDownloadCertificate(cert.certificate_number)}
+                            onClick={() => handleDownloadCertificate(cert.id)}
                           >
                             <DownloadIcon />
                           </IconButton>
@@ -772,7 +656,7 @@ const LmsCertificateView: React.FC = () => {
                       variant="outlined"
                       size="small"
                       startIcon={<DownloadIcon />}
-                      onClick={() => handleDownloadCertificate(verificationResult.certificate?.certificate_number || '')}
+                      onClick={() => verificationResult.certificate && handleDownloadCertificate(verificationResult.certificate.id)}
                     >
                       Descargar
                     </Button>
