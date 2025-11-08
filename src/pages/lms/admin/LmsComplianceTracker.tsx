@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   Box,
   Card,
@@ -29,7 +29,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField
+  TextField,
+  CircularProgress
 } from '@mui/material'
 import {
   Warning as WarningIcon,
@@ -40,8 +41,10 @@ import {
   Send as SendIcon,
   Visibility as VisibilityIcon,
   Download as DownloadIcon,
-  FilterList as FilterListIcon
+  FilterList as FilterListIcon,
+  Error as ErrorIcon
 } from '@mui/icons-material'
+import { useMandatoryTrainingStatus } from '../../../hooks/useLms'
 
 interface ComplianceRecord {
   id: number
@@ -68,86 +71,71 @@ interface ComplianceAlert {
   severity: 'warning' | 'error' | 'info'
 }
 
-// Mock data
-const mockComplianceRecords: ComplianceRecord[] = [
-  {
-    id: 1,
-    userId: 1,
-    userName: 'Ana López',
-    userEmail: 'ana@company.com',
-    department: 'Desarrollo',
-    courseId: 1,
-    courseTitle: 'Seguridad en el Trabajo',
-    assignedDate: '2024-01-15',
-    deadline: '2024-02-15',
-    progress: 75,
-    status: 'in_progress',
-    daysUntilDeadline: 5,
-    isOverdue: false
-  },
-  {
-    id: 2,
-    userId: 2,
-    userName: 'Carlos Méndez',
-    userEmail: 'carlos@company.com',
-    department: 'Desarrollo',
-    courseId: 2,
-    courseTitle: 'Protección de Datos',
-    assignedDate: '2024-01-10',
-    deadline: '2024-02-10',
-    progress: 0,
-    status: 'overdue',
-    daysUntilDeadline: -2,
-    isOverdue: true
-  },
-  {
-    id: 3,
-    userId: 3,
-    userName: 'María García',
-    userEmail: 'maria@company.com',
-    department: 'Marketing',
-    courseId: 1,
-    courseTitle: 'Seguridad en el Trabajo',
-    assignedDate: '2024-01-15',
-    deadline: '2024-02-15',
-    completedDate: '2024-01-25',
-    progress: 100,
-    status: 'completed',
-    daysUntilDeadline: 5,
-    isOverdue: false
-  }
-]
-
-const mockComplianceAlerts: ComplianceAlert[] = [
-  {
-    id: 1,
-    type: 'overdue',
-    message: 'Cursos vencidos que requieren atención inmediata',
-    count: 12,
-    severity: 'error'
-  },
-  {
-    id: 2,
-    type: 'deadline_approaching',
-    message: 'Cursos que vencen en los próximos 7 días',
-    count: 23,
-    severity: 'warning'
-  },
-  {
-    id: 3,
-    type: 'not_started',
-    message: 'Usuarios que no han comenzado cursos asignados',
-    count: 8,
-    severity: 'info'
-  }
-]
-
 const LmsComplianceTracker: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0)
-  const [complianceRecords, setComplianceRecords] = useState(mockComplianceRecords)
   const [selectedRecord, setSelectedRecord] = useState<ComplianceRecord | null>(null)
   const [openDialog, setOpenDialog] = useState(false)
   const [reminderMessage, setReminderMessage] = useState('')
+
+  // Fetch mandatory training status from API
+  const { data: trainingData, isLoading, error } = useMandatoryTrainingStatus({
+    includeCompleted: true
+  })
+
+  // Transform API data to component format
+  const complianceRecords = useMemo(() => {
+    if (!trainingData || !trainingData.data || !trainingData.data.mandatoryTraining) {
+      return []
+    }
+
+    return trainingData.data.mandatoryTraining.map((training: any, index: number) => ({
+      id: training.assignmentId || index,
+      userId: training.userId,
+      userName: training.userName,
+      userEmail: training.userEmail || 'N/A',
+      department: training.department || training.role || 'N/A',
+      courseId: training.courseId,
+      courseTitle: training.courseTitle,
+      assignedDate: training.assignedDate,
+      deadline: training.deadline,
+      completedDate: training.completedDate,
+      progress: training.progress || 0,
+      status: training.status,
+      daysUntilDeadline: training.daysUntilDeadline || 0,
+      isOverdue: training.isOverdue || false
+    }))
+  }, [trainingData])
+
+  // Calculate compliance alerts from data
+  const complianceAlerts = useMemo((): ComplianceAlert[] => {
+    if (!trainingData || !trainingData.data) return []
+
+    const summary = trainingData.data.summary || {}
+
+    return [
+      {
+        id: 1,
+        type: 'overdue',
+        message: 'Cursos vencidos que requieren atención inmediata',
+        count: summary.overdue || 0,
+        severity: 'error'
+      },
+      {
+        id: 2,
+        type: 'deadline_approaching',
+        message: 'Cursos que vencen en los próximos 7 días',
+        count: complianceRecords.filter(r => !r.isOverdue && r.daysUntilDeadline <= 7 && r.status !== 'completed').length,
+        severity: 'warning'
+      },
+      {
+        id: 3,
+        type: 'not_started',
+        message: 'Usuarios que no han comenzado cursos asignados',
+        count: summary.pending || 0,
+        severity: 'info'
+      }
+    ]
+  }, [trainingData, complianceRecords])
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)
@@ -201,6 +189,40 @@ const LmsComplianceTracker: React.FC = () => {
   const approachingDeadline = complianceRecords.filter(r => !r.isOverdue && r.daysUntilDeadline <= 7 && r.status !== 'completed')
   const completedRecords = complianceRecords.filter(r => r.status === 'completed')
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box sx={{ textAlign: 'center' }}>
+          <CircularProgress size={60} sx={{ mb: 2 }} />
+          <Typography variant="h6" color="text.secondary">
+            Cargando datos de cumplimiento...
+          </Typography>
+        </Box>
+      </Box>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box sx={{ textAlign: 'center', maxWidth: 500 }}>
+          <ErrorIcon sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
+          <Typography variant="h5" color="error" gutterBottom>
+            Error al cargar datos de cumplimiento
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            {error instanceof Error ? error.message : 'No se pudieron cargar los datos'}
+          </Typography>
+          <Button variant="contained" onClick={() => window.location.reload()}>
+            Reintentar
+          </Button>
+        </Box>
+      </Box>
+    )
+  }
+
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', p: 3 }}>
       <Box sx={{ mb: 3 }}>
@@ -208,15 +230,15 @@ const LmsComplianceTracker: React.FC = () => {
           Seguimiento de Cumplimiento
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Monitorea el progreso de cursos obligatorios y gestiona vencimientos
+          Monitorea el progreso de cursos obligatorios y gestiona vencimientos (Solo usuarios internos)
         </Typography>
       </Box>
 
       {/* Alertas de cumplimiento */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        {mockComplianceAlerts.map((alert) => (
+        {complianceAlerts.map((alert) => (
           <Grid item xs={12} md={4} key={alert.id}>
-            <Alert 
+            <Alert
               severity={alert.severity}
               action={
                 <Button size="small" color="inherit">
