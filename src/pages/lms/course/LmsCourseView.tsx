@@ -176,7 +176,31 @@ const LmsCourseView: React.FC = () => {
             videoSource: lesson.video_source,
             text: lesson.content,
             description: lesson.description || '',
-            quiz: lesson.quiz
+            quiz: lesson.quiz ? {
+              id: lesson.quiz.id,
+              title: lesson.quiz.title,
+              instructions: lesson.quiz.instructions || '',
+              passingPercentage: lesson.quiz.passing_percentage ?? 70,
+              maxAttempts: lesson.quiz.max_attempts ?? 10,
+              cooldownMinutes: lesson.quiz.cooldown_minutes ?? 0,
+              showCorrectAnswers: lesson.quiz.show_correct_answers ?? true,
+              randomizeQuestions: lesson.quiz.randomize_questions ?? false,
+              shuffleAnswers: lesson.quiz.shuffle_answers ?? false,
+              timeLimitMinutes: lesson.quiz.time_limit_minutes,
+              allowReview: lesson.quiz.allow_review ?? true,
+              showProgressBar: lesson.quiz.show_progress_bar ?? true,
+              questions: (lesson.quiz.questions || []).map((q: any) => ({
+                id: q.id,
+                question: q.question,
+                type: q.type === 'single' ? 'single-choice' : q.type === 'boolean' ? 'true-false' : 'multiple-choice',
+                options: q.options || [],
+                correctAnswer: q.type === 'single' || q.type === 'boolean'
+                  ? (q.correct_answers?.[0] ?? 0)  // Single answer: take first element
+                  : (q.correct_answers || []),      // Multiple answers: keep as array
+                explanation: q.explanation,
+                points: q.points || 1
+              }))
+            } : undefined
           }
         }))
       }))
@@ -220,7 +244,7 @@ const LmsCourseView: React.FC = () => {
   const updateProgressMutation = useMutation(
     async (data: { lessonId: number; status: string; timeSpent: number }) => {
       const response = await axiosPrivate.post(`/lms/progress/lessons/${data.lessonId}/complete`, {
-        time_spent_minutes: data.timeSpent
+        timeSpentMinutes: data.timeSpent
       })
       return response.data
     },
@@ -240,18 +264,17 @@ const LmsCourseView: React.FC = () => {
 
   // Mutation para completar quiz
   const completeQuizMutation = useMutation(
-    async (data: { quizId: number; answers: any; score: number; totalPoints: number }) => {
-      const response = await axiosPrivate.post('/lms/quiz/attempt', {
-        quiz_id: data.quizId,
+    async (data: { quizId: number; answers: any; timeSpent: number }) => {
+      const response = await axiosPrivate.post(`/lms/quizzes/${data.quizId}/attempt`, {
         answers: data.answers,
-        score: data.score,
-        total_points: data.totalPoints
+        timeSpent: data.timeSpent
       })
       return response.data
     },
     {
-      onSuccess: () => {
+      onSuccess: (data, variables) => {
         queryClient.invalidateQueries(['lms-progress', courseId])
+        queryClient.invalidateQueries(['quiz-attempts', variables.quizId])
         setSnackbarMessage('Quiz completado correctamente')
         setShowSnackbar(true)
       },
@@ -272,7 +295,34 @@ const LmsCourseView: React.FC = () => {
     return lesson.content.quiz
   }, [course, currentModuleIndex, currentLessonIndex])
 
-  const emptyUserAttempts = useMemo(() => [], [])
+  // Query para obtener intentos del quiz actual
+  const { data: quizAttemptsData } = useQuery(
+    ['quiz-attempts', currentQuizConfig?.id],
+    async () => {
+      if (!currentQuizConfig?.id) return null
+      const response = await axiosPrivate.get(`/lms/quizzes/${currentQuizConfig.id}/attempts`)
+      return response.data
+    },
+    {
+      enabled: !!currentQuizConfig?.id,
+      staleTime: 30000 // 30 seconds
+    }
+  )
+
+  // Adaptador de intentos del quiz
+  const userQuizAttempts = useMemo(() => {
+    if (!quizAttemptsData || !quizAttemptsData.data) return []
+
+    return quizAttemptsData.data.map((attempt: any) => ({
+      attemptNumber: attempt.attempt_number,
+      startedAt: new Date(attempt.started_at),
+      answers: attempt.answers,
+      timeSpent: Math.round((new Date(attempt.completed_at).getTime() - new Date(attempt.started_at).getTime()) / 1000),
+      score: attempt.score,
+      totalPoints: attempt.total_points,
+      passed: attempt.passed
+    }))
+  }, [quizAttemptsData])
 
   // Helper functions
   const getAllLessons = useCallback(() => {
@@ -348,6 +398,7 @@ const LmsCourseView: React.FC = () => {
   }, [course, currentModuleIndex, currentLessonIndex])
 
   const isLessonCompleted = useCallback((lessonId: number) => {
+    console.log('userProgress:', userProgress, 'checking lessonId:', lessonId)
     return userProgress.some(p => p.lessonId === lessonId && p.status === 'completed')
   }, [userProgress])
 
@@ -454,14 +505,22 @@ const LmsCourseView: React.FC = () => {
     if (!currentLesson) return
 
     try {
-      await completeQuizMutation.mutateAsync({
-        quizId: currentQuizConfig.id,
-        answers: attempt.answers,
-        score: attempt.score,
-        totalPoints: attempt.totalPoints
+      // Transform answers to service schema: object with questionId as key, answer array as value
+      const formattedAnswers: Record<number, number[]> = {}
+      attempt.answers.forEach((answer: any, index: number) => {
+        const questionId = currentQuizConfig.questions[index].id
+        // Ensure answer is always an array
+        formattedAnswers[questionId] = Array.isArray(answer) ? answer : [answer]
       })
 
-      if (attempt.passed) {
+      const result = await completeQuizMutation.mutateAsync({
+        quizId: currentQuizConfig.id,
+        answers: formattedAnswers,
+        timeSpent: attempt.timeSpent || 0
+      })
+
+      // Use backend result to determine if quiz was passed
+      if (result?.data?.results?.passed) {
         await handleLessonComplete(currentLesson.id)
       }
     } catch (error) {
@@ -979,7 +1038,7 @@ const LmsCourseView: React.FC = () => {
                 {currentLesson.type === 'quiz' && currentQuizConfig && (
                   <LmsQuizPlayer
                     quizConfig={currentQuizConfig}
-                    userAttempts={emptyUserAttempts}
+                    userAttempts={userQuizAttempts}
                     onComplete={handleQuizComplete}
                   />
                 )}

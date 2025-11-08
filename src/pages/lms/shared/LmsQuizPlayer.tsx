@@ -438,15 +438,78 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
               <Typography variant="h6" gutterBottom>
                 Intentos Anteriores
               </Typography>
-              {userAttempts.map((attempt, index) => (
-                <Alert 
-                  key={index} 
-                  severity={attempt.passed ? 'success' : 'error'} 
+
+              {/* Best attempt summary */}
+              {(() => {
+                const bestAttempt = userAttempts.reduce((best, current) =>
+                  (current.score! / current.totalPoints!) > (best.score! / best.totalPoints!) ? current : best
+                )
+                const bestPercentage = Math.round((bestAttempt.score! / bestAttempt.totalPoints!) * 100)
+
+                return (
+                  <Paper
+                    elevation={3}
+                    sx={{
+                      p: 3,
+                      mb: 2,
+                      backgroundColor: bestAttempt.passed ? '#e8f5e9' : '#fff3e0',
+                      border: 2,
+                      borderColor: bestAttempt.passed ? 'success.main' : 'warning.main'
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                      {bestAttempt.passed ? (
+                        <CheckIcon sx={{ fontSize: 40, color: 'success.main' }} />
+                      ) : (
+                        <WarningIcon sx={{ fontSize: 40, color: 'warning.main' }} />
+                      )}
+                      <Box>
+                        <Typography variant="h5" fontWeight="bold">
+                          {bestAttempt.passed ? '¡Quiz Aprobado!' : 'Quiz No Aprobado'}
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary">
+                          Mejor resultado: {bestAttempt.score}/{bestAttempt.totalPoints} puntos ({bestPercentage}%)
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    {bestAttempt.passed && (
+                      <Alert severity="success" sx={{ mb: 1 }}>
+                        Has completado este quiz exitosamente. Puedes volver a intentarlo para mejorar tu puntuación.
+                      </Alert>
+                    )}
+
+                    {!bestAttempt.passed && quizConfig.maxAttempts - userAttempts.length > 0 && (
+                      <Alert severity="info">
+                        Tienes {quizConfig.maxAttempts - userAttempts.length} intentos restantes. ¡Sigue intentando!
+                      </Alert>
+                    )}
+                  </Paper>
+                )
+              })()}
+
+              {/* All attempts list */}
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ mt: 2 }}>
+                Historial de {userAttempts.length} intento{userAttempts.length > 1 ? 's' : ''}:
+              </Typography>
+              {userAttempts.slice().reverse().map((attempt, index) => (
+                <Alert
+                  key={index}
+                  severity={attempt.passed ? 'success' : 'error'}
                   sx={{ mb: 1 }}
+                  icon={attempt.passed ? <CheckIcon /> : <CancelIcon />}
                 >
-                  Intento {attempt.attemptNumber}: {attempt.score}/{attempt.totalPoints} puntos 
-                  ({Math.round((attempt.score! / attempt.totalPoints!) * 100)}%) - 
-                  {attempt.passed ? ' Aprobado' : ' No aprobado'}
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box>
+                      <strong>Intento #{attempt.attemptNumber}</strong>: {attempt.score}/{attempt.totalPoints} puntos
+                      ({Math.round((attempt.score! / attempt.totalPoints!) * 100)}%)
+                    </Box>
+                    <Chip
+                      label={attempt.passed ? 'Aprobado' : 'No aprobado'}
+                      color={attempt.passed ? 'success' : 'error'}
+                      size="small"
+                    />
+                  </Box>
                 </Alert>
               ))}
             </Box>
@@ -458,10 +521,23 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
               size="large"
               onClick={handleStartQuiz}
               disabled={!canStartQuiz}
+              color={userAttempts.length > 0 ? 'primary' : 'primary'}
             >
-              Comenzar Quiz
+              {userAttempts.length > 0 ? 'Reintentar Quiz' : 'Comenzar Quiz'}
             </Button>
           </Box>
+
+          {!canStartQuiz && userAttempts.length >= quizConfig.maxAttempts && (
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              Has alcanzado el número máximo de intentos ({quizConfig.maxAttempts}) para este quiz.
+            </Alert>
+          )}
+
+          {!canStartQuiz && cooldownEndTime && (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              Debes esperar hasta {cooldownEndTime.toLocaleTimeString()} para poder reintentar este quiz.
+            </Alert>
+          )}
           
           {isPreview && (
             <Alert severity="info" sx={{ mt: 2 }}>
