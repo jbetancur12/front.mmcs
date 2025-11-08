@@ -222,26 +222,33 @@ const LmsComplianceTracker: React.FC = () => {
   }
 
   const handleAlertClick = (alertType: string) => {
-    // Clear filters first
-    setFilters({
-      status: [],
-      department: '',
-      courseId: null,
-      daysUntilDeadline: null
-    })
-
-    // Apply specific filters based on alert type
+    // Apply specific filters based on alert type (clear others)
     switch (alertType) {
       case 'overdue':
-        setFilters(prev => ({ ...prev, status: ['overdue'] }))
+        setFilters({
+          status: ['overdue'],
+          department: '',
+          courseId: null,
+          daysUntilDeadline: null
+        })
         setActiveTab(1) // Go to "Vencidos" tab
         break
       case 'deadline_approaching':
-        setFilters(prev => ({ ...prev, daysUntilDeadline: 7 }))
+        setFilters({
+          status: [],
+          department: '',
+          courseId: null,
+          daysUntilDeadline: 7
+        })
         setActiveTab(2) // Go to "Próximos a vencer" tab
         break
       case 'not_started':
-        setFilters(prev => ({ ...prev, status: ['pending'] }))
+        setFilters({
+          status: ['pending'],
+          department: '',
+          courseId: null,
+          daysUntilDeadline: null
+        })
         setActiveTab(0) // Go to "Todos" tab
         break
     }
@@ -503,7 +510,23 @@ const LmsComplianceTracker: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {filteredRecords.map((record) => (
+                  {filteredRecords.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center" sx={{ py: 8 }}>
+                        <Typography variant="body1" color="text.secondary">
+                          No se encontraron registros con los filtros aplicados
+                        </Typography>
+                        <Button
+                          variant="text"
+                          onClick={handleClearFilters}
+                          sx={{ mt: 2 }}
+                        >
+                          Limpiar filtros
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredRecords.map((record) => (
                     <TableRow key={record.id}>
                       <TableCell>
                         <Box>
@@ -581,7 +604,8 @@ const LmsComplianceTracker: React.FC = () => {
                         </Box>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ))
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -593,8 +617,19 @@ const LmsComplianceTracker: React.FC = () => {
         <Card>
           <CardHeader title="Cursos Vencidos - Acción Requerida" />
           <CardContent>
-            <List>
-              {overdueRecords.map((record) => (
+            {overdueRecords.length === 0 ? (
+              <Box sx={{ py: 8, textAlign: 'center' }}>
+                <CheckCircleIcon sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
+                <Typography variant="h6" color="text.secondary">
+                  ¡No hay cursos vencidos!
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Todos los usuarios están al día con sus cursos obligatorios
+                </Typography>
+              </Box>
+            ) : (
+              <List>
+                {overdueRecords.map((record) => (
                 <ListItem key={record.id}>
                   <ListItemIcon>
                     <WarningIcon color="error" />
@@ -615,7 +650,8 @@ const LmsComplianceTracker: React.FC = () => {
                   </ListItemSecondaryAction>
                 </ListItem>
               ))}
-            </List>
+              </List>
+            )}
           </CardContent>
         </Card>
       )}
@@ -624,8 +660,19 @@ const LmsComplianceTracker: React.FC = () => {
         <Card>
           <CardHeader title="Próximos Vencimientos (7 días)" />
           <CardContent>
-            <List>
-              {approachingDeadline.map((record) => (
+            {approachingDeadline.length === 0 ? (
+              <Box sx={{ py: 8, textAlign: 'center' }}>
+                <CheckCircleIcon sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
+                <Typography variant="h6" color="text.secondary">
+                  No hay vencimientos próximos
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Ningún curso vence en los próximos 7 días
+                </Typography>
+              </Box>
+            ) : (
+              <List>
+                {approachingDeadline.map((record) => (
                 <ListItem key={record.id}>
                   <ListItemIcon>
                     <ScheduleIcon color="warning" />
@@ -646,7 +693,8 @@ const LmsComplianceTracker: React.FC = () => {
                   </ListItemSecondaryAction>
                 </ListItem>
               ))}
-            </List>
+              </List>
+            )}
           </CardContent>
         </Card>
       )}
@@ -655,8 +703,19 @@ const LmsComplianceTracker: React.FC = () => {
         <Card>
           <CardHeader title="Cursos Completados" />
           <CardContent>
-            <List>
-              {completedRecords.map((record) => (
+            {completedRecords.length === 0 ? (
+              <Box sx={{ py: 8, textAlign: 'center' }}>
+                <ScheduleIcon sx={{ fontSize: 64, color: 'warning.main', mb: 2 }} />
+                <Typography variant="h6" color="text.secondary">
+                  No hay cursos completados
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Ningún usuario ha completado sus cursos obligatorios aún
+                </Typography>
+              </Box>
+            ) : (
+              <List>
+                {completedRecords.map((record) => (
                 <ListItem key={record.id}>
                   <ListItemIcon>
                     <CheckCircleIcon color="success" />
@@ -667,7 +726,8 @@ const LmsComplianceTracker: React.FC = () => {
                   />
                 </ListItem>
               ))}
-            </List>
+              </List>
+            )}
           </CardContent>
         </Card>
       )}
@@ -689,7 +749,18 @@ const LmsComplianceTracker: React.FC = () => {
             }
           />
           <CardContent>
-            {recordsByCourse.map((course) => (
+            {recordsByCourse.length === 0 ? (
+              <Box sx={{ py: 8, textAlign: 'center' }}>
+                <SchoolIcon sx={{ fontSize: 64, color: 'action.disabled', mb: 2 }} />
+                <Typography variant="h6" color="text.secondary">
+                  No hay cursos con asignaciones
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  No se encontraron cursos obligatorios con usuarios asignados
+                </Typography>
+              </Box>
+            ) : (
+              recordsByCourse.map((course) => (
               <Accordion key={course.courseId} sx={{ mb: 2 }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
@@ -812,7 +883,8 @@ const LmsComplianceTracker: React.FC = () => {
                   </TableContainer>
                 </AccordionDetails>
               </Accordion>
-            ))}
+            ))
+            )}
           </CardContent>
         </Card>
       )}
