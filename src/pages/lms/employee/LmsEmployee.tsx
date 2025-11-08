@@ -56,19 +56,20 @@ interface EmployeeDashboardProps {
 
 // Helper para calcular el progreso de un curso
 const calculateCourseProgress = (course: Course): number => {
-  // Si el curso tiene userProgress, usar ese valor
-  if (course.userProgress && course.userProgress.length > 0) {
-    return course.userProgress[0].progress_percentage || 0
-  }
-  return 0
+  // Calcular progreso basado en lecciones completadas
+  const totalLessons = countTotalLessons(course)
+  const completedLessons = countCompletedLessons(course)
+
+  if (totalLessons === 0) return 0
+  return Math.round((completedLessons / totalLessons) * 100)
 }
 
 // Helper para contar lecciones completadas
 const countCompletedLessons = (course: Course): number => {
-  if (course.userProgress && course.userProgress.length > 0) {
-    return course.userProgress[0].completed_lessons?.length || 0
-  }
-  return 0
+  if (!course.userProgress || course.userProgress.length === 0) return 0
+
+  // userProgress es un array de progreso de lecciones
+  return course.userProgress.filter((progress: any) => progress.status === 'completed').length
 }
 
 // Helper para contar total de lecciones
@@ -148,11 +149,13 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         rating: 4.5
       }
 
-      // Verificar si hay assignments para determinar si es obligatorio
-      if (course.assignments && course.assignments.length > 0) {
-        // Es un curso con assignment (posiblemente obligatorio)
+      // Verificar si el curso es obligatorio usando el campo is_mandatory
+      const isMandatory = (course as any).is_mandatory === true
+
+      if (isMandatory) {
+        // Es un curso obligatorio
         // Usar user_deadline del backend (ya filtrado por el usuario específico)
-        const deadline = course.user_deadline
+        const deadline = (course as any).user_deadline
         const daysUntilDeadline = getDaysUntilDeadline(deadline)
         const isOverdue = daysUntilDeadline !== undefined && daysUntilDeadline < 0
 
@@ -164,7 +167,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
           isOverdue
         })
       } else {
-        // Es un curso opcional (sin assignment o assignment no obligatorio)
+        // Es un curso opcional
         optional.push(enrichedCourse)
       }
     })
@@ -183,6 +186,28 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     const mandatoryCompleted = mandatory.filter(c => c.progress === 100).length
     const overdueTraining = mandatory.filter(c => c.isOverdue && c.progress < 100).length
 
+    // Calcular certificados reales: solo cursos completados que emiten certificado
+    const certificatesEarned = courses.filter((c: Course) => {
+      const isCompleted = calculateCourseProgress(c) === 100
+      const hasCertificate = (c as any).has_certificate === true
+      return isCompleted && hasCertificate
+    }).length
+
+    // Calcular horas reales aprendidas desde userProgress
+    const totalHoursLearned = courses.reduce((totalHours: number, course: Course) => {
+      if (!course.userProgress || course.userProgress.length === 0) return totalHours
+
+      // Sumar time_spent_minutes de todas las lecciones completadas
+      const courseMinutes = course.userProgress.reduce((sum: number, progress: any) => {
+        return sum + (progress.time_spent_minutes || 0)
+      }, 0)
+
+      return totalHours + courseMinutes
+    }, 0)
+
+    // Convertir minutos a horas
+    const totalHoursLearnedRounded = Math.round(totalHoursLearned / 60)
+
     return {
       mandatoryCourses: mandatory,
       optionalCourses: optional,
@@ -191,8 +216,8 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         completedCourses,
         inProgressCourses,
         averageProgress,
-        certificatesEarned: completedCourses, // Simplificado por ahora
-        totalHoursLearned: Math.round(totalCourses * 3), // Estimación
+        certificatesEarned, // ✅ Ahora usa datos reales
+        totalHoursLearned: totalHoursLearnedRounded, // ✅ Ahora usa tiempo real
         mandatoryCourses: mandatory.length,
         mandatoryCompleted,
         overdueTraining
