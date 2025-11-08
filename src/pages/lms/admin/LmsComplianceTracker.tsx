@@ -114,7 +114,7 @@ const LmsComplianceTracker: React.FC = () => {
       return []
     }
 
-    return trainingData.mandatoryTraining.map((training: any, index: number) => ({
+    const records = trainingData.mandatoryTraining.map((training: any, index: number) => ({
       id: training.assignmentId || index,
       userId: training.userId,
       userName: training.userName,
@@ -130,6 +130,17 @@ const LmsComplianceTracker: React.FC = () => {
       daysUntilDeadline: training.daysUntilDeadline || 0,
       isOverdue: training.isOverdue || false
     }))
+
+    // Deduplicate by userId + courseId (in case backend returns duplicates)
+    const seen = new Map<string, ComplianceRecord>()
+    records.forEach(record => {
+      const key = `${record.userId}-${record.courseId}`
+      if (!seen.has(key)) {
+        seen.set(key, record)
+      }
+    })
+
+    return Array.from(seen.values())
   }, [trainingData])
 
   // Calculate compliance alerts from data
@@ -254,9 +265,9 @@ const LmsComplianceTracker: React.FC = () => {
     }
   }
 
-  // Apply filters to compliance records
-  const filteredRecords = useMemo(() => {
-    let filtered = complianceRecords
+  // Helper function to apply user filters
+  const applyUserFilters = (records: ComplianceRecord[]) => {
+    let filtered = records
 
     // Filter by status
     if (filters.status.length > 0) {
@@ -279,11 +290,29 @@ const LmsComplianceTracker: React.FC = () => {
     }
 
     return filtered
-  }, [complianceRecords, filters])
+  }
 
-  const overdueRecords = filteredRecords.filter(r => r.isOverdue)
-  const approachingDeadline = filteredRecords.filter(r => !r.isOverdue && r.daysUntilDeadline <= 7 && r.status !== 'completed')
-  const completedRecords = filteredRecords.filter(r => r.status === 'completed')
+  // Base categories (without user filters)
+  const baseOverdueRecords = useMemo(() =>
+    complianceRecords.filter(r => r.isOverdue),
+    [complianceRecords]
+  )
+
+  const baseApproachingDeadline = useMemo(() =>
+    complianceRecords.filter(r => !r.isOverdue && r.daysUntilDeadline <= 7 && r.status !== 'completed'),
+    [complianceRecords]
+  )
+
+  const baseCompletedRecords = useMemo(() =>
+    complianceRecords.filter(r => r.status === 'completed'),
+    [complianceRecords]
+  )
+
+  // Apply user filters to each category
+  const filteredRecords = useMemo(() => applyUserFilters(complianceRecords), [complianceRecords, filters])
+  const overdueRecords = useMemo(() => applyUserFilters(baseOverdueRecords), [baseOverdueRecords, filters])
+  const approachingDeadline = useMemo(() => applyUserFilters(baseApproachingDeadline), [baseApproachingDeadline, filters])
+  const completedRecords = useMemo(() => applyUserFilters(baseCompletedRecords), [baseCompletedRecords, filters])
 
   // Get unique values for filter options
   const uniqueDepartments = useMemo(() => {
