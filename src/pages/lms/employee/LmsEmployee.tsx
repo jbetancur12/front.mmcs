@@ -21,7 +21,8 @@ import {
   ListItemIcon,
   Divider,
   CircularProgress,
-  Skeleton
+  Skeleton,
+  IconButton
 } from '@mui/material'
 import {
   MenuBook as BookOpenIcon,
@@ -34,7 +35,10 @@ import {
   Star as StarIcon,
   PlayArrow as PlayArrowIcon,
   EmojiEvents as AwardIcon,
-  Error as ErrorIcon
+  Error as ErrorIcon,
+  Download as DownloadIcon,
+  Visibility as VisibilityIcon,
+  Person as PersonIcon
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@nanostores/react'
@@ -330,6 +334,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
           <Tab label='Mi Progreso' />
           <Tab label='Cursos Obligatorios' />
           <Tab label='Cursos Opcionales' />
+          <Tab label='Mis Certificados' />
           <Tab label='Notificaciones' />
         </Tabs>
 
@@ -776,6 +781,144 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         )}
 
         {activeTab === 3 && (
+          <Box>
+            <Box sx={{ mb: 3 }}>
+              <Typography variant='h6' gutterBottom>
+                Mis Certificados Obtenidos
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                Certificados que has obtenido al completar cursos
+              </Typography>
+            </Box>
+
+            {(() => {
+              const completedCoursesWithCertificates = [...mandatoryCourses, ...optionalCourses].filter((course) => {
+                const isCompleted = course.progress === 100
+                const hasCertificate = (course as any).has_certificate === true
+                return isCompleted && hasCertificate
+              })
+
+              if (completedCoursesWithCertificates.length === 0) {
+                return (
+                  <Box
+                    sx={{
+                      py: 8,
+                      textAlign: 'center',
+                      border: '2px dashed',
+                      borderColor: 'divider',
+                      borderRadius: 2
+                    }}
+                  >
+                    <AwardIcon sx={{ fontSize: 64, color: 'action.disabled', mb: 2 }} />
+                    <Typography variant='h6' color='text.secondary' gutterBottom>
+                      Aún no has obtenido certificados
+                    </Typography>
+                    <Typography variant='body2' color='text.secondary'>
+                      Completa cursos que otorgan certificados para verlos aquí
+                    </Typography>
+                  </Box>
+                )
+              }
+
+              return (
+                <Grid container spacing={3}>
+                  {completedCoursesWithCertificates.map((course) => (
+                    <Grid item xs={12} md={6} lg={4} key={course.id}>
+                      <Card
+                        variant='outlined'
+                        sx={{
+                          height: '100%',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          borderColor: 'warning.main',
+                          borderWidth: 2,
+                          transition: 'all 0.3s',
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: 4
+                          }
+                        }}
+                      >
+                        <CardContent sx={{ flex: 1 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                            <Avatar sx={{ bgcolor: 'warning.main', mr: 2, width: 56, height: 56 }}>
+                              <AwardIcon sx={{ fontSize: 32 }} />
+                            </Avatar>
+                            <Box>
+                              <Chip
+                                label='CERTIFICADO'
+                                size='small'
+                                color='warning'
+                                sx={{ mb: 0.5, fontWeight: 'bold' }}
+                              />
+                              <Typography variant='caption' color='text.secondary' display='block'>
+                                Completado {course.completedDate ? new Date(course.completedDate).toLocaleDateString() : 'recientemente'}
+                              </Typography>
+                            </Box>
+                          </Box>
+
+                          <Typography variant='h6' gutterBottom>
+                            {course.title}
+                          </Typography>
+
+                          <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                            {course.description}
+                          </Typography>
+
+                          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+                            <Chip
+                              size='small'
+                              icon={<PersonIcon />}
+                              label={course.instructor}
+                              variant='outlined'
+                            />
+                            <Chip
+                              size='small'
+                              icon={<ScheduleIcon />}
+                              label={course.duration}
+                              variant='outlined'
+                            />
+                            <Chip
+                              size='small'
+                              icon={<CheckCircleIcon />}
+                              label={`${course.completedLessons}/${course.totalLessons} lecciones`}
+                              color='success'
+                              variant='outlined'
+                            />
+                          </Box>
+                        </CardContent>
+
+                        <Box sx={{ p: 2, pt: 0, display: 'flex', gap: 1 }}>
+                          <Button
+                            variant='contained'
+                            color='warning'
+                            startIcon={<DownloadIcon />}
+                            fullWidth
+                            onClick={() => {
+                              // TODO: Implement download certificate
+                              window.open(`/lms/certificates/${course.id}/view`, '_blank')
+                            }}
+                          >
+                            Ver Certificado
+                          </Button>
+                          <IconButton
+                            color='primary'
+                            onClick={() => handleCourseClick(course.id)}
+                            title='Ver curso'
+                          >
+                            <VisibilityIcon />
+                          </IconButton>
+                        </Box>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              )
+            })()}
+          </Box>
+        )}
+
+        {activeTab === 4 && (
           <Box>
             <LmsNotificationCenter userRole="employee" userId={currentUser.id} />
           </Box>
