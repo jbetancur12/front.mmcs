@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import {
   Box,
   Card,
@@ -265,8 +265,8 @@ const LmsComplianceTracker: React.FC = () => {
     }
   }
 
-  // Helper function to apply user filters
-  const applyUserFilters = (records: ComplianceRecord[]) => {
+  // Helper function to apply user filters (memoized with useCallback)
+  const applyUserFilters = useCallback((records: ComplianceRecord[]) => {
     let filtered = records
 
     // Filter by status
@@ -290,7 +290,7 @@ const LmsComplianceTracker: React.FC = () => {
     }
 
     return filtered
-  }
+  }, [filters])
 
   // Base categories (without user filters)
   const baseOverdueRecords = useMemo(() =>
@@ -309,10 +309,10 @@ const LmsComplianceTracker: React.FC = () => {
   )
 
   // Apply user filters to each category
-  const filteredRecords = useMemo(() => applyUserFilters(complianceRecords), [complianceRecords, filters])
-  const overdueRecords = useMemo(() => applyUserFilters(baseOverdueRecords), [baseOverdueRecords, filters])
-  const approachingDeadline = useMemo(() => applyUserFilters(baseApproachingDeadline), [baseApproachingDeadline, filters])
-  const completedRecords = useMemo(() => applyUserFilters(baseCompletedRecords), [baseCompletedRecords, filters])
+  const filteredRecords = useMemo(() => applyUserFilters(complianceRecords), [complianceRecords, applyUserFilters])
+  const overdueRecords = useMemo(() => applyUserFilters(baseOverdueRecords), [baseOverdueRecords, applyUserFilters])
+  const approachingDeadline = useMemo(() => applyUserFilters(baseApproachingDeadline), [baseApproachingDeadline, applyUserFilters])
+  const completedRecords = useMemo(() => applyUserFilters(baseCompletedRecords), [baseCompletedRecords, applyUserFilters])
 
   // Get unique values for filter options
   const uniqueDepartments = useMemo(() => {
