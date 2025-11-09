@@ -51,37 +51,30 @@ import { lmsService } from '../../../services/lmsService'
 
 interface Certificate {
   id: number
-  certificate_number: string
-  user_name: string
-  user_email: string
-  course_name: string
-  course_id: number
-  completion_date: string
-  issued_at: string
-  template_name: string
-  pdf_path: string
-  verification_url: string
-  is_verified: boolean
-  certificate_data: {
-    user_name: string
-    course_name: string
-    completion_date: string
-    certificate_number: string
-    course_duration?: number
-    instructor_name?: string
-    organization_name?: string
+  certificateNumber: string
+  courseTitle: string
+  courseDescription: string
+  issuedAt: string
+  pdfPath: string
+  certificateData: {
+    userName?: string
+    courseTitle?: string
+    completionDate?: string
+    certificateNumber?: string
+    courseDuration?: number
+    instructorName?: string
+    organizationName?: string
   }
 }
 
 interface UserCertificate {
   id: number
-  certificate_number: string
-  course_name: string
-  course_id: number
-  completion_date: string
-  issued_at: string
-  template_name: string
-  pdf_path: string
+  certificateNumber: string
+  courseTitle: string
+  courseDescription: string
+  issuedAt: string
+  pdfPath: string
+  certificateData: any
   verification_url: string
   course_thumbnail?: string
   course_category?: string
@@ -163,13 +156,13 @@ const LmsCertificateView: React.FC = () => {
         <h1 style="color: #2196F3; margin-bottom: 20px; font-size: 36px;">CERTIFICADO DE FINALIZACIÓN</h1>
         <div style="margin: 40px 0;">
           <p style="font-size: 18px; margin-bottom: 10px;">Se certifica que</p>
-          <h2 style="color: #333; font-size: 28px; margin: 20px 0; border-bottom: 2px solid #2196F3; padding-bottom: 10px;">${cert.certificate_data.user_name}</h2>
+          <h2 style="color: #333; font-size: 28px; margin: 20px 0; border-bottom: 2px solid #2196F3; padding-bottom: 10px;">${cert.certificateData?.userName || 'Usuario'}</h2>
           <p style="font-size: 18px; margin-bottom: 10px;">ha completado exitosamente el curso</p>
-          <h3 style="color: #2196F3; font-size: 24px; margin: 20px 0;">${cert.certificate_data.course_name}</h3>
+          <h3 style="color: #2196F3; font-size: 24px; margin: 20px 0;">${cert.certificateData?.courseTitle || cert.courseTitle}</h3>
         </div>
         <div style="margin: 40px 0;">
-          <p style="font-size: 16px;">Fecha de finalización: ${cert.certificate_data.completion_date}</p>
-          <p style="font-size: 14px; color: #666;">Certificado N°: ${cert.certificate_data.certificate_number}</p>
+          <p style="font-size: 16px;">Fecha de finalización: ${cert.certificateData?.completionDate || new Date(cert.issuedAt).toLocaleDateString()}</p>
+          <p style="font-size: 14px; color: #666;">Certificado N°: ${cert.certificateData?.certificateNumber || cert.certificateNumber}</p>
         </div>
         <div style="margin-top: 60px;">
           <div style="border-top: 1px solid #333; width: 200px; margin: 0 auto; padding-top: 10px;">
@@ -181,8 +174,8 @@ const LmsCertificateView: React.FC = () => {
   }
 
   const filteredCertificates = userCertificates.filter(cert =>
-    cert.course_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cert.certificate_number.toLowerCase().includes(searchTerm.toLowerCase())
+    cert.courseTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    cert.certificateNumber?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const shareOptions = [
@@ -303,7 +296,7 @@ const LmsCertificateView: React.FC = () => {
                       </ListItemIcon>
                       <ListItemText
                         primary="Curso"
-                        secondary={certificate.course_name}
+                        secondary={certificate.courseTitle}
                       />
                     </ListItem>
                     <ListItem>
@@ -321,7 +314,7 @@ const LmsCertificateView: React.FC = () => {
                       </ListItemIcon>
                       <ListItemText
                         primary="Número de certificado"
-                        secondary={certificate.certificate_number}
+                        secondary={certificate.certificateNumber}
                       />
                     </ListItem>
                   </List>
@@ -336,7 +329,7 @@ const LmsCertificateView: React.FC = () => {
                   </Box>
 
                   <Typography variant="caption" color="text.secondary">
-                    Este certificado puede ser verificado usando el número: {certificate.certificate_number}
+                    Este certificado puede ser verificado usando el número: {certificate.certificateNumber}
                   </Typography>
                 </CardContent>
               </Card>
@@ -407,7 +400,7 @@ const LmsCertificateView: React.FC = () => {
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <CertificateIcon color="primary" />
                           <Typography variant="h6" component="div" noWrap>
-                            {cert.course_name}
+                            {cert.courseTitle}
                           </Typography>
                         </Box>
                       }
@@ -422,7 +415,7 @@ const LmsCertificateView: React.FC = () => {
                     />
                     <CardContent sx={{ flexGrow: 1 }}>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Certificado N°: {cert.certificate_number}
+                        Certificado N°: {cert.certificateNumber}
                       </Typography>
                       
                       <Typography variant="body2" sx={{ mb: 1 }}>
@@ -611,7 +604,7 @@ const LmsCertificateView: React.FC = () => {
                         Estudiante:
                       </Typography>
                       <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                        {verificationResult.certificate.user_name}
+                        {verificationResult.certificate.userName}
                       </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
@@ -619,7 +612,7 @@ const LmsCertificateView: React.FC = () => {
                         Curso:
                       </Typography>
                       <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                        {verificationResult.certificate.course_name}
+                        {verificationResult.certificate.courseTitle}
                       </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
@@ -627,7 +620,7 @@ const LmsCertificateView: React.FC = () => {
                         Fecha de finalización:
                       </Typography>
                       <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                        {new Date(verificationResult.certificate.completion_date).toLocaleDateString('es-ES')}
+                        {verificationResult.certificate.certificateData?.completionDate ? new Date(verificationResult.certificate.certificateData.completionDate).toLocaleDateString('es-ES') : 'N/A'}
                       </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
@@ -635,7 +628,7 @@ const LmsCertificateView: React.FC = () => {
                         Fecha de emisión:
                       </Typography>
                       <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                        {new Date(verificationResult.certificate.issued_at).toLocaleDateString('es-ES')}
+                        {new Date(verificationResult.certificate.issuedAt).toLocaleDateString('es-ES')}
                       </Typography>
                     </Grid>
                   </Grid>
