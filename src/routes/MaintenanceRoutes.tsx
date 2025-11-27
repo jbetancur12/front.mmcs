@@ -12,6 +12,9 @@ const MaintenanceTechnicians = lazy(
 const MaintenanceTicketDetails = lazy(
   () => import('../pages/maintenance/MaintenanceTicketDetails')
 )
+const MaintenanceBilling = lazy(
+  () => import('../Components/Maintenance/MaintenanceBilling')
+)
 
 /**
  * MaintenanceRoutes defines the private routes for the maintenance module
@@ -39,19 +42,42 @@ const MaintenanceRoutes = (role: string[]) => {
         {/* Dashboard - Main maintenance overview */}
         <Route path='maintenance' element={<MaintenanceDashboard />} />
 
-        {/* Technicians Management - Admin and Maintenance Coordinator */}
-        {(role.includes('admin') ||
-          role.includes('maintenance_coordinator')) && (
-          <Route
-            path='maintenance/technicians'
-            element={<MaintenanceTechnicians />}
-          />
-        )}
-
         {/* Individual ticket view - Available to admin, maintenance, and technician roles */}
         <Route
           path='maintenance/tickets/:ticketId'
           element={<MaintenanceTicketDetails />}
+        />
+      </Route>
+
+      {/* Technicians Management - Admin and Maintenance Coordinator */}
+      <Route
+        element={
+          <ProtectedRoute
+            isAuthenticated={localStorage.getItem('accessToken') !== null}
+            userRole={role}
+            roles={['admin', 'maintenance_coordinator']}
+          />
+        }
+      >
+        <Route
+          path='maintenance/technicians'
+          element={<MaintenanceTechnicians />}
+        />
+      </Route>
+
+      {/* Billing Management - Admin, Maintenance, and Maintenance Coordinator */}
+      <Route
+        element={
+          <ProtectedRoute
+            isAuthenticated={localStorage.getItem('accessToken') !== null}
+            userRole={role}
+            roles={['admin', 'mantenimiento', 'maintenance_coordinator']}
+          />
+        }
+      >
+        <Route
+          path='maintenance/billing'
+          element={<MaintenanceBilling />}
         />
       </Route>
     </>

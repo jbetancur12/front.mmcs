@@ -116,6 +116,11 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
     await onComplete(formattedCosts)
   }
 
+  const handleCompleteWithoutCosts = async () => {
+    // Complete with empty costs array
+    await onComplete([])
+  }
+
   const calculateTotal = () => {
     return costs.reduce((sum, cost) => {
       const amount = parseFloat(cost.amount as string)
@@ -186,8 +191,8 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
           sx={{ mb: 3, borderRadius: '12px' }}
         >
           <AlertTitle sx={{ fontWeight: 600 }}>Completando Ticket</AlertTitle>
-          Una vez completado, el estado no podrá modificarse. Registre todos los costos
-          (repuestos, transporte, mano de obra, etc.)
+          Una vez completado, el estado no podrá modificarse. Si el servicio tiene costos asociados,
+          regístrelos aquí (repuestos, transporte, mano de obra, etc.). De lo contrario, puede completar sin costos.
         </Alert>
 
         {/* Costs List */}
@@ -318,7 +323,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       </DialogContent>
 
       {/* Actions */}
-      <DialogActions sx={{ px: 3, py: 2, background: '#fafafa', gap: 1 }}>
+      <DialogActions sx={{ px: 3, py: 2, background: '#fafafa', gap: 1, flexWrap: 'wrap' }}>
         <Button
           onClick={onClose}
           disabled={loading}
@@ -326,6 +331,31 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
           sx={{ borderRadius: '12px', minHeight: 48 }}
         >
           Cancelar
+        </Button>
+
+        <Box sx={{ flex: 1 }} />
+
+        <Button
+          onClick={handleCompleteWithoutCosts}
+          disabled={loading}
+          variant="outlined"
+          sx={{
+            borderRadius: '12px',
+            borderColor: '#6dc662',
+            color: '#6dc662',
+            minHeight: 48,
+            fontWeight: 600,
+            '&:hover': {
+              borderColor: '#5ab052',
+              background: 'rgba(109, 198, 98, 0.1)'
+            },
+            '&:disabled': {
+              borderColor: '#e5e7eb',
+              color: '#9ca3af'
+            }
+          }}
+        >
+          Completar sin costos
         </Button>
 
         <Button
@@ -347,7 +377,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
             }
           }}
         >
-          {loading ? 'Completando...' : 'Completar Ticket'}
+          {loading ? 'Completando...' : 'Completar con costos'}
         </Button>
       </DialogActions>
     </Dialog>
