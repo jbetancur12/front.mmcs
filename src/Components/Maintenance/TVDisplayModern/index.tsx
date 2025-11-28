@@ -92,6 +92,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
     if (!tvDisplayData?.tickets) return { stickyUrgents: [], paginatedTickets: [], allActive: [], urgent: [], high: [], normal: [] }
 
     const tickets = tvDisplayData.tickets
+    console.log("🚀 ~ MaintenanceTVDisplayModern ~ tickets:", tickets)
 
     // Para pantalla completa, incluir TODOS los tickets en la paginación
     // Ordenar por prioridad: urgentes primero, luego por fecha
