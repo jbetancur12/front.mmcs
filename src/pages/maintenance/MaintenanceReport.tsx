@@ -15,8 +15,6 @@ import {
   CardContent,
   FormControl,
   InputLabel,
-  Select,
-  MenuItem,
   LinearProgress,
   Chip,
   Divider
@@ -61,24 +59,6 @@ const steps = [
   'Confirmación'
 ]
 
-const equipmentTypes = [
-  'Monitor de Signos Vitales',
-  'Ventilador Mecánico',
-  'Desfibrilador',
-  'Electrocardiografo',
-  'Bomba de Infusión',
-  'Oxímetro de Pulso',
-  'Aspirador',
-  'Autoclave',
-  'Microscopio',
-  'Centrífuga',
-  'Incubadora',
-  'Lámpara Quirúrgica',
-  'Mesa Quirúrgica',
-  'Equipo de Rayos X',
-  'Ecógrafo',
-  'Otro'
-]
 
 /**
  * MaintenanceReport component provides a public form for creating maintenance requests
@@ -301,8 +281,11 @@ const MaintenanceReport: React.FC = () => {
             <Grid item xs={12} md={6}>
               <FormControl fullWidth required>
                 <InputLabel>Tipo de Equipo</InputLabel>
-                <Select
+
+                <TextField
+                  fullWidth
                   name='equipmentType'
+                  label='Tipo de Equipo'
                   value={formik.values.equipmentType}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
@@ -310,14 +293,11 @@ const MaintenanceReport: React.FC = () => {
                     formik.touched.equipmentType &&
                     Boolean(formik.errors.equipmentType)
                   }
-                  label='Tipo de Equipo'
-                >
-                  {equipmentTypes.map((type) => (
-                    <MenuItem key={type} value={type}>
-                      {type}
-                    </MenuItem>
-                  ))}
-                </Select>
+                  helperText={
+                    formik.touched.equipmentType && formik.errors.equipmentType
+                  }
+                  required
+                />
               </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
