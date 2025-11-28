@@ -107,7 +107,13 @@ const MaintenanceBilling: React.FC = () => {
 
   // Toggle invoice status mutation
   const toggleInvoiceMutation = useMutation({
-    mutationFn: async ({ ticketId, isInvoiced }: { ticketId: string; isInvoiced: boolean }) => {
+    mutationFn: async ({
+      ticketId,
+      isInvoiced
+    }: {
+      ticketId: string
+      isInvoiced: boolean
+    }) => {
       const response = await axiosPrivate.put(
         `/maintenance/invoicing/tickets/${ticketId}/toggle`,
         { isInvoiced }
@@ -119,7 +125,10 @@ const MaintenanceBilling: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['maintenance-billing'] })
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Error al actualizar estado de facturación')
+      toast.error(
+        error.response?.data?.error ||
+          'Error al actualizar estado de facturación'
+      )
     }
   })
 
@@ -138,7 +147,9 @@ const MaintenanceBilling: React.FC = () => {
     setPage(newPage)
   }
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10))
     setPage(0)
   }
@@ -161,7 +172,7 @@ const MaintenanceBilling: React.FC = () => {
 
   if (error) {
     return (
-      <Alert severity="error" sx={{ m: 3 }}>
+      <Alert severity='error' sx={{ m: 3 }}>
         Error al cargar tickets de facturación. Por favor intente nuevamente.
       </Alert>
     )
@@ -171,10 +182,10 @@ const MaintenanceBilling: React.FC = () => {
     <Box sx={{ p: 3 }}>
       {/* Header */}
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" fontWeight={700} gutterBottom>
+        <Typography variant='h4' fontWeight={700} gutterBottom>
           Control de Facturación
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant='body2' color='text.secondary'>
           Gestión y seguimiento de facturación de servicios de mantenimiento
         </Typography>
       </Box>
@@ -185,13 +196,13 @@ const MaintenanceBilling: React.FC = () => {
           <Grid item xs={12} md={4}>
             <Card elevation={2}>
               <CardContent>
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display='flex' alignItems='center' gap={2}>
                   <Receipt sx={{ fontSize: 40, color: '#3b82f6' }} />
                   <Box>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       Total Tickets
                     </Typography>
-                    <Typography variant="h5" fontWeight={700}>
+                    <Typography variant='h5' fontWeight={700}>
                       {data.summary.totalTickets}
                     </Typography>
                   </Box>
@@ -203,13 +214,13 @@ const MaintenanceBilling: React.FC = () => {
           <Grid item xs={12} md={4}>
             <Card elevation={2}>
               <CardContent>
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display='flex' alignItems='center' gap={2}>
                   <AttachMoney sx={{ fontSize: 40, color: '#10b981' }} />
                   <Box>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       Monto Total
                     </Typography>
-                    <Typography variant="h5" fontWeight={700} color="#10b981">
+                    <Typography variant='h5' fontWeight={700} color='#10b981'>
                       {formatCurrency(data.summary.totalAmount)}
                     </Typography>
                   </Box>
@@ -221,18 +232,18 @@ const MaintenanceBilling: React.FC = () => {
           <Grid item xs={12} md={4}>
             <Card elevation={2}>
               <CardContent>
-                <Box display="flex" alignItems="center" gap={2}>
+                <Box display='flex' alignItems='center' gap={2}>
                   <Warning sx={{ fontSize: 40, color: '#f59e0b' }} />
                   <Box>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant='body2' color='text.secondary'>
                       Filtro Activo
                     </Typography>
-                    <Typography variant="h6" fontWeight={600}>
+                    <Typography variant='h6' fontWeight={600}>
                       {filter === 'not_invoiced'
                         ? 'Sin Facturar'
                         : filter === 'invoiced'
-                        ? 'Facturados'
-                        : 'Todos'}
+                          ? 'Facturados'
+                          : 'Todos'}
                     </Typography>
                   </Box>
                 </Box>
@@ -244,7 +255,7 @@ const MaintenanceBilling: React.FC = () => {
 
       {/* Filters */}
       <Paper sx={{ p: 2, mb: 2 }}>
-        <ButtonGroup variant="outlined" fullWidth>
+        <ButtonGroup variant='outlined' fullWidth>
           <Button
             onClick={() => {
               setFilter('not_invoiced')
@@ -252,9 +263,11 @@ const MaintenanceBilling: React.FC = () => {
             }}
             variant={filter === 'not_invoiced' ? 'contained' : 'outlined'}
             sx={{
-              backgroundColor: filter === 'not_invoiced' ? '#dc2626' : undefined,
+              backgroundColor:
+                filter === 'not_invoiced' ? '#dc2626' : undefined,
               '&:hover': {
-                backgroundColor: filter === 'not_invoiced' ? '#b91c1c' : undefined
+                backgroundColor:
+                  filter === 'not_invoiced' ? '#b91c1c' : undefined
               }
             }}
           >
@@ -311,13 +324,13 @@ const MaintenanceBilling: React.FC = () => {
               <TableCell>
                 <Typography fontWeight={700}>Fecha Completado</Typography>
               </TableCell>
-              <TableCell align="right">
+              <TableCell align='right'>
                 <Typography fontWeight={700}>Total</Typography>
               </TableCell>
-              <TableCell align="center">
+              <TableCell align='center'>
                 <Typography fontWeight={700}>Estado</Typography>
               </TableCell>
-              <TableCell align="center">
+              <TableCell align='center'>
                 <Typography fontWeight={700}>Acciones</Typography>
               </TableCell>
             </TableRow>
@@ -325,25 +338,33 @@ const MaintenanceBilling: React.FC = () => {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
+                <TableCell colSpan={8} align='center' sx={{ py: 8 }}>
                   <CircularProgress />
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ mt: 2 }}
+                  >
                     Cargando tickets...
                   </Typography>
                 </TableCell>
               </TableRow>
             ) : data?.tickets.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
-                  <Typography variant="h6" color="text.secondary">
+                <TableCell colSpan={8} align='center' sx={{ py: 8 }}>
+                  <Typography variant='h6' color='text.secondary'>
                     No hay tickets con costos para mostrar
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ mt: 1 }}
+                  >
                     {filter === 'not_invoiced'
                       ? 'No hay tickets pendientes de facturar'
                       : filter === 'invoiced'
-                      ? 'No hay tickets facturados'
-                      : 'No hay tickets completados con costos'}
+                        ? 'No hay tickets facturados'
+                        : 'No hay tickets completados con costos'}
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -354,57 +375,69 @@ const MaintenanceBilling: React.FC = () => {
                   <TableRow hover>
                     <TableCell>
                       <IconButton
-                        size="small"
+                        size='small'
                         onClick={() => handleToggleExpand(ticket.id)}
                       >
-                        {expandedRow === ticket.id ? <ExpandLess /> : <ExpandMore />}
+                        {expandedRow === ticket.id ? (
+                          <ExpandLess />
+                        ) : (
+                          <ExpandMore />
+                        )}
                       </IconButton>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2" fontWeight={600}>
+                      <Typography variant='body2' fontWeight={600}>
                         {ticket.ticketCode}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">{ticket.customerName}</Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant='body2'>
+                        {ticket.customerName}
+                      </Typography>
+                      <Typography variant='caption' color='text.secondary'>
                         {ticket.customerEmail}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">{ticket.equipmentType}</Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant='body2'>
+                        {ticket.equipmentType}
+                      </Typography>
+                      <Typography variant='caption' color='text.secondary'>
                         {ticket.equipmentBrand} {ticket.equipmentModel}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">
+                      <Typography variant='body2'>
                         {formatDate(ticket.actualCompletionDate)}
                       </Typography>
                     </TableCell>
-                    <TableCell align="right">
-                      <Typography variant="body1" fontWeight={700} color="#10b981">
+                    <TableCell align='right'>
+                      <Typography
+                        variant='body1'
+                        fontWeight={700}
+                        color='#10b981'
+                      >
                         {formatCurrency(ticket.totalCost)}
                       </Typography>
                     </TableCell>
-                    <TableCell align="center">
+                    <TableCell align='center'>
                       {ticket.isInvoiced ? (
                         <Chip
-                          label="Facturado"
-                          color="success"
-                          size="small"
+                          label='Facturado'
+                          color='success'
+                          size='small'
                           icon={<CheckCircle />}
                         />
                       ) : (
                         <Chip
-                          label="Sin Facturar"
-                          color="error"
-                          size="small"
+                          label='Sin Facturar'
+                          color='error'
+                          size='small'
                           icon={<Cancel />}
                         />
                       )}
                     </TableCell>
-                    <TableCell align="center">
+                    <TableCell align='center'>
                       <Tooltip
                         title={
                           ticket.isInvoiced
@@ -414,9 +447,11 @@ const MaintenanceBilling: React.FC = () => {
                       >
                         <span>
                           <IconButton
-                            size="small"
-                            onClick={() => handleToggleInvoice(ticket.id, ticket.isInvoiced)}
-                            disabled={toggleInvoiceMutation.isPending}
+                            size='small'
+                            onClick={() =>
+                              handleToggleInvoice(ticket.id, ticket.isInvoiced)
+                            }
+                            disabled={toggleInvoiceMutation.isLoading}
                             sx={{
                               color: ticket.isInvoiced ? '#dc2626' : '#10b981',
                               '&:hover': {
@@ -435,15 +470,26 @@ const MaintenanceBilling: React.FC = () => {
 
                   {/* Expanded Row - Cost Details */}
                   <TableRow>
-                    <TableCell colSpan={8} sx={{ py: 0, backgroundColor: '#fafafa' }}>
-                      <Collapse in={expandedRow === ticket.id} timeout="auto" unmountOnExit>
+                    <TableCell
+                      colSpan={8}
+                      sx={{ py: 0, backgroundColor: '#fafafa' }}
+                    >
+                      <Collapse
+                        in={expandedRow === ticket.id}
+                        timeout='auto'
+                        unmountOnExit
+                      >
                         <Box sx={{ py: 3, px: 2 }}>
-                          <Typography variant="h6" gutterBottom fontWeight={600}>
+                          <Typography
+                            variant='h6'
+                            gutterBottom
+                            fontWeight={600}
+                          >
                             Desglose de Costos
                           </Typography>
                           <Divider sx={{ mb: 2 }} />
                           <Grid container spacing={2}>
-                            {ticket.costs.map((cost, index) => (
+                            {ticket.costs.map((cost) => (
                               <Grid item xs={12} sm={6} md={4} key={cost.id}>
                                 <Paper
                                   elevation={1}
@@ -453,20 +499,28 @@ const MaintenanceBilling: React.FC = () => {
                                     borderRadius: '8px'
                                   }}
                                 >
-                                  <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+                                  <Typography
+                                    variant='subtitle2'
+                                    fontWeight={700}
+                                    gutterBottom
+                                  >
                                     {cost.name}
                                   </Typography>
                                   {cost.description && (
                                     <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                      display="block"
+                                      variant='caption'
+                                      color='text.secondary'
+                                      display='block'
                                       sx={{ mb: 1 }}
                                     >
                                       {cost.description}
                                     </Typography>
                                   )}
-                                  <Typography variant="h6" fontWeight={700} color="#10b981">
+                                  <Typography
+                                    variant='h6'
+                                    fontWeight={700}
+                                    color='#10b981'
+                                  >
                                     {formatCurrency(cost.amount)}
                                   </Typography>
                                 </Paper>
@@ -484,10 +538,18 @@ const MaintenanceBilling: React.FC = () => {
                               alignItems: 'center'
                             }}
                           >
-                            <Typography variant="h6" fontWeight={700} color="white">
+                            <Typography
+                              variant='h6'
+                              fontWeight={700}
+                              color='white'
+                            >
                               Total
                             </Typography>
-                            <Typography variant="h5" fontWeight={700} color="white">
+                            <Typography
+                              variant='h5'
+                              fontWeight={700}
+                              color='white'
+                            >
                               {formatCurrency(ticket.totalCost)}
                             </Typography>
                           </Box>
@@ -504,15 +566,17 @@ const MaintenanceBilling: React.FC = () => {
         {/* Pagination */}
         {data && (
           <TablePagination
-            component="div"
+            component='div'
             count={data.pagination.totalItems}
             page={page}
             onPageChange={handleChangePage}
             rowsPerPage={rowsPerPage}
             onRowsPerPageChange={handleChangeRowsPerPage}
             rowsPerPageOptions={[10, 20, 50, 100]}
-            labelRowsPerPage="Filas por página"
-            labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+            labelRowsPerPage='Filas por página'
+            labelDisplayedRows={({ from, to, count }) =>
+              `${from}-${to} de ${count}`
+            }
           />
         )}
       </TableContainer>
