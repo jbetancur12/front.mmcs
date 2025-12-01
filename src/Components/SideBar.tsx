@@ -8,7 +8,6 @@ import { useStore } from '@nanostores/react'
 import { UserData, userStore } from 'src/store/userStore'
 import { CarRepair } from '@mui/icons-material'
 
-
 const iconClass =
   'w-5 h-5 text-gray-600 transition-all duration-300 group-hover:text-white dark:text-gray-300 dark:group-hover:text-white group-hover:scale-110 group-hover:drop-shadow-sm'
 
@@ -302,7 +301,13 @@ const sidebarItems = ($userStore: UserData) => [
   {
     type: 'dropdown',
     buttonText: 'Mantenimiento',
-    roles: ['admin', 'mantenimiento', 'technician', 'maintenance_coordinator'],
+    roles: [
+      'admin',
+      'mantenimiento',
+      'technician',
+      'maintenance_coordinator',
+      'invoicing'
+    ],
     moduleName: 'Basic',
     pathData:
       'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z',
@@ -325,7 +330,7 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Facturación',
         url: 'maintenance/billing',
-        roles: ['admin', 'mantenimiento', 'technician', 'maintenance_coordinator']
+        roles: ['admin', 'mantenimiento', 'invoicing']
       }
     ]
   },
@@ -375,8 +380,9 @@ const SideBar = ({
 
   return (
     <aside
-      className={`fixed top-0 left-0 z-20 flex flex-col flex-shrink-0 h-full pt-16 font-normal bg-white/98 backdrop-blur-lg border-r border-gray-200/50 dark:bg-gray-900/98 dark:border-gray-700/50 shadow-xl shadow-gray-200/30 dark:shadow-gray-900/30 transition-all duration-300 ease-out ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 lg:flex ${userMinimized ? 'lg:w-20' : 'lg:w-64'} w-64`}
+      className={`fixed top-0 left-0 z-20 flex flex-col flex-shrink-0 h-full pt-16 font-normal bg-white/98 backdrop-blur-lg border-r border-gray-200/50 dark:bg-gray-900/98 dark:border-gray-700/50 shadow-xl shadow-gray-200/30 dark:shadow-gray-900/30 transition-all duration-300 ease-out ${
+        mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+      } lg:translate-x-0 lg:flex ${userMinimized ? 'lg:w-20' : 'lg:w-64'} w-64`}
     >
       {/* Contenedor con scroll para los items del sidebar */}
       <div className='flex-1 overflow-y-auto px-3 py-4 scrollbar-thin scrollbar-thumb-gray-300/50 dark:scrollbar-thumb-gray-600/50 scrollbar-track-transparent hover:scrollbar-thumb-gray-400/70'>
@@ -392,13 +398,16 @@ const SideBar = ({
                 <li key={index} className='relative group'>
                   <Link
                     to={item.to}
-                    className={`flex items-center p-2.5 text-sm font-medium rounded-lg transition-all duration-250 group relative ${pathname === item.to
-                      ? 'bg-[#6dc662]/12 text-[#6dc662] shadow-sm shadow-[#6dc662]/15 border-l-3 border-[#6dc662] dark:bg-[#6dc662]/20 dark:text-[#6dc662]'
-                      : 'text-gray-700 hover:bg-gray-50/80 hover:text-gray-900 hover:shadow-sm hover:shadow-gray-200/30 dark:text-gray-300 dark:hover:bg-gray-800/40 dark:hover:text-white'
-                      } ${sidebarMinimized ? 'justify-center px-2' : ''}`}
+                    className={`flex items-center p-2.5 text-sm font-medium rounded-lg transition-all duration-250 group relative ${
+                      pathname === item.to
+                        ? 'bg-[#6dc662]/12 text-[#6dc662] shadow-sm shadow-[#6dc662]/15 border-l-3 border-[#6dc662] dark:bg-[#6dc662]/20 dark:text-[#6dc662]'
+                        : 'text-gray-700 hover:bg-gray-50/80 hover:text-gray-900 hover:shadow-sm hover:shadow-gray-200/30 dark:text-gray-300 dark:hover:bg-gray-800/40 dark:hover:text-white'
+                    } ${sidebarMinimized ? 'justify-center px-2' : ''}`}
                     onClick={handleLinkClick}
                   >
-                    <div className={`flex-shrink-0 ${sidebarMinimized ? '' : 'mr-3'} ${pathname === item.to ? 'bg-[#6dc662] p-1.5 rounded-md shadow-sm' : 'group-hover:bg-[#6dc662]/10 group-hover:p-1.5 group-hover:rounded-md transition-all duration-250'}`}>
+                    <div
+                      className={`flex-shrink-0 ${sidebarMinimized ? '' : 'mr-3'} ${pathname === item.to ? 'bg-[#6dc662] p-1.5 rounded-md shadow-sm' : 'group-hover:bg-[#6dc662]/10 group-hover:p-1.5 group-hover:rounded-md transition-all duration-250'}`}
+                    >
                       {item.icon}
                     </div>
                     {!sidebarMinimized && (
@@ -413,8 +422,18 @@ const SideBar = ({
                     )}
                     {!pathname.includes(item.to) && !sidebarMinimized && (
                       <div className='ml-auto opacity-0 group-hover:opacity-60 transition-opacity duration-250'>
-                        <svg className='w-3.5 h-3.5 text-gray-400' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
-                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
+                        <svg
+                          className='w-3.5 h-3.5 text-gray-400'
+                          fill='none'
+                          viewBox='0 0 24 24'
+                          stroke='currentColor'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth={2}
+                            d='M9 5l7 7-7 7'
+                          />
                         </svg>
                       </div>
                     )}
@@ -445,27 +464,38 @@ const SideBar = ({
 
       {/* Botón de minimizar/expandir fijo en la parte inferior */}
       <div className='flex-shrink-0 border-t border-gray-200/40 dark:border-gray-700/40 p-3 bg-gray-50/30 dark:bg-gray-800/30'>
-        <div className={`flex items-center ${userMinimized ? 'justify-center' : 'justify-between'}`}>
+        <div
+          className={`flex items-center ${userMinimized ? 'justify-center' : 'justify-between'}`}
+        >
           {!userMinimized && (
             <div className='flex items-center space-x-2.5'>
               <div className='w-8 h-8 bg-[#6dc662] rounded-lg flex items-center justify-center shadow-sm'>
                 <span className='text-white text-xs font-bold'>MM</span>
               </div>
               <div className='flex flex-col'>
-                <span className='text-xs font-semibold text-gray-900 dark:text-white'>MetroMedics</span>
-                <span className='text-xs text-gray-500 dark:text-gray-400'>Sistema</span>
+                <span className='text-xs font-semibold text-gray-900 dark:text-white'>
+                  MetroMedics
+                </span>
+                <span className='text-xs text-gray-500 dark:text-gray-400'>
+                  Sistema
+                </span>
               </div>
             </div>
           )}
           <button
-            className={`p-2 rounded-lg bg-white/80 dark:bg-gray-700/80 border border-gray-200/60 dark:border-gray-600/60 text-gray-600 hover:text-[#6dc662] dark:text-gray-300 dark:hover:text-[#6dc662] hover:bg-[#6dc662]/8 dark:hover:bg-gray-600/60 transition-all duration-200 hover:shadow-sm hover:scale-102 ${userMinimized ? 'mx-auto' : ''
-              }`}
+            className={`p-2 rounded-lg bg-white/80 dark:bg-gray-700/80 border border-gray-200/60 dark:border-gray-600/60 text-gray-600 hover:text-[#6dc662] dark:text-gray-300 dark:hover:text-[#6dc662] hover:bg-[#6dc662]/8 dark:hover:bg-gray-600/60 transition-all duration-200 hover:shadow-sm hover:scale-102 ${
+              userMinimized ? 'mx-auto' : ''
+            }`}
             onClick={() => setUserMinimized(!userMinimized)}
             aria-label={userMinimized ? 'Expandir menú' : 'Minimizar menú'}
             type='button'
           >
             {userMinimized ? (
-              <svg className='w-4 h-4 transition-transform duration-200' fill='none' viewBox='0 0 24 24'>
+              <svg
+                className='w-4 h-4 transition-transform duration-200'
+                fill='none'
+                viewBox='0 0 24 24'
+              >
                 <path
                   d='M10 6l6 6-6 6'
                   stroke='currentColor'
@@ -475,7 +505,11 @@ const SideBar = ({
                 />
               </svg>
             ) : (
-              <svg className='w-4 h-4 transition-transform duration-200' fill='none' viewBox='0 0 24 24'>
+              <svg
+                className='w-4 h-4 transition-transform duration-200'
+                fill='none'
+                viewBox='0 0 24 24'
+              >
                 <path
                   d='M14 6l-6 6 6 6'
                   stroke='currentColor'

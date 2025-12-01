@@ -35,6 +35,8 @@ import {
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import { toast } from 'react-toastify'
 import useAxiosPrivate from '../../utils/use-axios-private'
+import { useStore } from '@nanostores/react'
+import { userStore } from 'src/store/userStore'
 
 interface MaintenanceTicketCost {
   id: string
@@ -84,6 +86,10 @@ const MaintenanceBilling: React.FC = () => {
   const [expandedRow, setExpandedRow] = useState<string | null>(null)
 
   const queryClient = useQueryClient()
+  const $userStore = useStore(userStore)
+  const canPerformActions =
+    $userStore.rol.includes('invoicing') || $userStore.rol.includes('admin')
+
   const axiosPrivate = useAxiosPrivate()
 
   // Fetch billing tickets
@@ -451,7 +457,10 @@ const MaintenanceBilling: React.FC = () => {
                             onClick={() =>
                               handleToggleInvoice(ticket.id, ticket.isInvoiced)
                             }
-                            disabled={toggleInvoiceMutation.isLoading}
+                            disabled={
+                              toggleInvoiceMutation.isLoading ||
+                              !canPerformActions
+                            }
                             sx={{
                               color: ticket.isInvoiced ? '#dc2626' : '#10b981',
                               '&:hover': {

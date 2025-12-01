@@ -36,7 +36,7 @@ interface Cost {
 interface CompletionCostsDialogProps {
   open: boolean
   onClose: () => void
-  onComplete: (costs: Cost[]) => Promise<void>
+  onComplete: (workPerformed: string, costs: Cost[]) => Promise<void>
   loading?: boolean
 }
 
@@ -49,10 +49,14 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
+  const [workPerformed, setWorkPerformed] = useState<string>('')
+  const [workPerformedError, setWorkPerformedError] = useState<string>('')
   const [costs, setCosts] = useState<Cost[]>([
     { name: '', description: '', amount: '' }
   ])
-  const [errors, setErrors] = useState<Record<number, { name?: string; amount?: string }>>({})
+  const [errors, setErrors] = useState<
+    Record<number, { name?: string; amount?: string }>
+  >({})
 
   const handleAddCost = () => {
     setCosts([...costs, { name: '', description: '', amount: '' }])
@@ -67,7 +71,11 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
     }
   }
 
-  const handleCostChange = (index: number, field: keyof Cost, value: string) => {
+  const handleCostChange = (
+    index: number,
+    field: keyof Cost,
+    value: string
+  ) => {
     const updated = [...costs]
     updated[index] = { ...updated[index], [field]: value }
     setCosts(updated)
@@ -80,13 +88,29 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
     }
   }
 
+  const validateWorkPerformed = (): boolean => {
+    if (!workPerformed.trim()) {
+      setWorkPerformedError('La descripción del trabajo es requerida')
+      return false
+    }
+    if (workPerformed.trim().length < 20) {
+      setWorkPerformedError('Debe tener al menos 20 caracteres')
+      return false
+    }
+    setWorkPerformedError('')
+    return true
+  }
+
   const validate = (): boolean => {
     const newErrors: Record<number, { name?: string; amount?: string }> = {}
     let isValid = true
 
     costs.forEach((cost, index) => {
       if (!cost.name.trim()) {
-        newErrors[index] = { ...newErrors[index], name: 'El nombre es requerido' }
+        newErrors[index] = {
+          ...newErrors[index],
+          name: 'El nombre es requerido'
+        }
         isValid = false
       } else if (cost.name.trim().length < 3) {
         newErrors[index] = { ...newErrors[index], name: 'Mínimo 3 caracteres' }
@@ -105,20 +129,25 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
   }
 
   const handleSubmit = async () => {
-    if (!validate()) return
+    const isWorkValid = validateWorkPerformed()
+    const areCostsValid = validate()
 
-    const formattedCosts = costs.map(cost => ({
+    if (!isWorkValid || !areCostsValid) return
+
+    const formattedCosts = costs.map((cost) => ({
       name: cost.name.trim(),
       description: cost.description?.trim() || undefined,
       amount: parseFloat(cost.amount as string)
     }))
 
-    await onComplete(formattedCosts)
+    await onComplete(workPerformed.trim(), formattedCosts)
   }
 
   const handleCompleteWithoutCosts = async () => {
-    // Complete with empty costs array
-    await onComplete([])
+    if (!validateWorkPerformed()) return
+
+    // Complete with empty costs array but with workPerformed
+    await onComplete(workPerformed.trim(), [])
   }
 
   const calculateTotal = () => {
@@ -137,19 +166,26 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
   }
 
   const isFormValid = useMemo(() => {
-    return costs.every(cost =>
-      cost.name.trim().length >= 3 &&
-      cost.amount &&
-      !isNaN(parseFloat(cost.amount as string)) &&
-      parseFloat(cost.amount as string) >= 0
+    const workValid = workPerformed.trim().length >= 20
+    const costsValid = costs.every(
+      (cost) =>
+        cost.name.trim().length >= 3 &&
+        cost.amount &&
+        !isNaN(parseFloat(cost.amount as string)) &&
+        parseFloat(cost.amount as string) >= 0
     )
-  }, [costs])
+    return workValid && costsValid
+  }, [costs, workPerformed])
+
+  const isWorkPerformedValid = useMemo(() => {
+    return workPerformed.trim().length >= 20
+  }, [workPerformed])
 
   return (
     <Dialog
       open={open}
       onClose={loading ? undefined : onClose}
-      maxWidth="md"
+      maxWidth='md'
       fullWidth
       fullScreen={isMobile}
       disableEscapeKeyDown={loading}
@@ -165,15 +201,21 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
           py: 3
         }}
       >
-        <Avatar sx={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', width: 48, height: 48 }}>
+        <Avatar
+          sx={{
+            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            width: 48,
+            height: 48
+          }}
+        >
           <Build />
         </Avatar>
         <Box flex={1}>
-          <Typography variant="h5" fontWeight={700}>
-            Costos del Servicio
+          <Typography variant='h5' fontWeight={700}>
+            Completar Ticket
           </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.9 }}>
-            Registre los costos asociados a este mantenimiento
+          <Typography variant='body2' sx={{ opacity: 0.9 }}>
+            Describa el trabajo realizado y registre los costos
           </Typography>
         </Box>
         {isMobile && !loading && (
@@ -186,14 +228,70 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       <DialogContent sx={{ pt: 3 }}>
         {/* Alert */}
         <Alert
-          severity="info"
+          severity='info'
           icon={<CheckCircle />}
           sx={{ mb: 3, borderRadius: '12px' }}
         >
           <AlertTitle sx={{ fontWeight: 600 }}>Completando Ticket</AlertTitle>
-          Una vez completado, el estado no podrá modificarse. Si el servicio tiene costos asociados,
-          regístrelos aquí (repuestos, transporte, mano de obra, etc.). De lo contrario, puede completar sin costos.
+          Una vez completado, el estado no podrá modificarse. Describa el
+          trabajo realizado y, si el servicio tiene costos asociados,
+          regístrelos aquí (repuestos, transporte, mano de obra, etc.).
         </Alert>
+
+        {/* Work Performed Section */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            mb: 3,
+            borderRadius: '12px',
+            border: '2px solid #3b82f6',
+            background: 'rgba(59, 130, 246, 0.03)'
+          }}
+        >
+          <Typography
+            variant='subtitle1'
+            fontWeight={600}
+            gutterBottom
+            sx={{ color: '#3b82f6' }}
+          >
+            Trabajo Realizado *
+          </Typography>
+          <TextField
+            fullWidth
+            required
+            multiline
+            rows={4}
+            label='Descripción del Trabajo Realizado'
+            placeholder='Describa en detalle el diagnóstico técnico, las reparaciones efectuadas, partes reemplazadas, ajustes realizados, pruebas ejecutadas, etc.'
+            value={workPerformed}
+            onChange={(e) => {
+              setWorkPerformed(e.target.value)
+              if (workPerformedError) setWorkPerformedError('')
+            }}
+            error={!!workPerformedError}
+            helperText={
+              workPerformedError ||
+              `${workPerformed.length}/500 caracteres (mínimo 20)`
+            }
+            inputProps={{ maxLength: 500 }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: 'white'
+              }
+            }}
+          />
+        </Paper>
+
+        {/* Costs Section Header */}
+        <Typography
+          variant='h6'
+          fontWeight={600}
+          gutterBottom
+          sx={{ mb: 2, color: '#10b981' }}
+        >
+          Costos del Servicio (Opcional)
+        </Typography>
 
         {/* Costs List */}
         {costs.map((cost, index) => (
@@ -230,10 +328,12 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
                 <TextField
                   fullWidth
                   required
-                  label="Nombre del Costo"
-                  placeholder="Ej: Repuesto filtro, Transporte, Mano de obra"
+                  label='Nombre del Costo'
+                  placeholder='Ej: Repuesto filtro, Transporte, Mano de obra'
                   value={cost.name}
-                  onChange={(e) => handleCostChange(index, 'name', e.target.value)}
+                  onChange={(e) =>
+                    handleCostChange(index, 'name', e.target.value)
+                  }
                   error={!!errors[index]?.name}
                   helperText={errors[index]?.name || 'Tipo de costo o concepto'}
                   inputProps={{ maxLength: 200 }}
@@ -246,10 +346,12 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
                   fullWidth
                   multiline
                   rows={2}
-                  label="Descripción (Opcional)"
-                  placeholder="Detalles adicionales..."
+                  label='Descripción (Opcional)'
+                  placeholder='Detalles adicionales...'
                   value={cost.description}
-                  onChange={(e) => handleCostChange(index, 'description', e.target.value)}
+                  onChange={(e) =>
+                    handleCostChange(index, 'description', e.target.value)
+                  }
                   inputProps={{ maxLength: 500 }}
                 />
               </Grid>
@@ -259,15 +361,19 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
                 <TextField
                   fullWidth
                   required
-                  type="number"
-                  label="Monto"
-                  placeholder="0"
+                  type='number'
+                  label='Monto'
+                  placeholder='0'
                   value={cost.amount}
-                  onChange={(e) => handleCostChange(index, 'amount', e.target.value)}
+                  onChange={(e) =>
+                    handleCostChange(index, 'amount', e.target.value)
+                  }
                   error={!!errors[index]?.amount}
                   helperText={errors[index]?.amount}
                   InputProps={{
-                    startAdornment: <AttachMoney sx={{ color: '#10b981', mr: 0.5 }} />
+                    startAdornment: (
+                      <AttachMoney sx={{ color: '#10b981', mr: 0.5 }} />
+                    )
                   }}
                   inputProps={{ min: 0, step: 0.01 }}
                 />
@@ -279,7 +385,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
         {/* Add Button */}
         <Button
           fullWidth
-          variant="outlined"
+          variant='outlined'
           startIcon={<Add />}
           onClick={handleAddCost}
           disabled={loading}
@@ -307,15 +413,20 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
             p: 2,
             mt: 3,
             borderRadius: '12px',
-            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%)',
+            background:
+              'linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%)',
             border: '2px solid #10b981'
           }}
         >
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="h6" fontWeight={600}>
+          <Box
+            display='flex'
+            justifyContent='space-between'
+            alignItems='center'
+          >
+            <Typography variant='h6' fontWeight={600}>
               Total de Costos
             </Typography>
-            <Typography variant="h4" fontWeight={700} color="#059669">
+            <Typography variant='h4' fontWeight={700} color='#059669'>
               {formatCurrency(calculateTotal())}
             </Typography>
           </Box>
@@ -323,11 +434,13 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       </DialogContent>
 
       {/* Actions */}
-      <DialogActions sx={{ px: 3, py: 2, background: '#fafafa', gap: 1, flexWrap: 'wrap' }}>
+      <DialogActions
+        sx={{ px: 3, py: 2, background: '#fafafa', gap: 1, flexWrap: 'wrap' }}
+      >
         <Button
           onClick={onClose}
           disabled={loading}
-          variant="outlined"
+          variant='outlined'
           sx={{ borderRadius: '12px', minHeight: 48 }}
         >
           Cancelar
@@ -337,8 +450,8 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
 
         <Button
           onClick={handleCompleteWithoutCosts}
-          disabled={loading}
-          variant="outlined"
+          disabled={loading || !isWorkPerformedValid}
+          variant='outlined'
           sx={{
             borderRadius: '12px',
             borderColor: '#6dc662',
@@ -361,7 +474,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
         <Button
           onClick={handleSubmit}
           disabled={loading || !isFormValid}
-          variant="contained"
+          variant='contained'
           startIcon={loading ? <CircularProgress size={20} /> : <CheckCircle />}
           sx={{
             borderRadius: '12px',

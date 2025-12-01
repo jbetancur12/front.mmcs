@@ -71,14 +71,11 @@ const MaintenanceRoutes = (role: string[]) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['admin', 'mantenimiento', 'maintenance_coordinator']}
+            roles={['admin', 'maintenance_coordinator', 'invoicing']}
           />
         }
       >
-        <Route
-          path='maintenance/billing'
-          element={<MaintenanceBilling />}
-        />
+        <Route path='maintenance/billing' element={<MaintenanceBilling />} />
       </Route>
     </>
   )

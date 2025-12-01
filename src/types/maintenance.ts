@@ -28,6 +28,7 @@ export interface MaintenanceTicket {
   actualCost?: number
   customerSatisfaction?: number
   location: string
+  workPerformed?: string
   createdAt: string
   updatedAt: string
   comments: MaintenanceComment[]
@@ -165,6 +166,7 @@ export interface MaintenanceUpdateRequest {
   actualCost?: number
   priority?: MaintenancePriority
   location?: string
+  workPerformed?: string
   costs?: MaintenanceTicketCost[]
   isInvoiced?: boolean
 }
