@@ -14,7 +14,6 @@ import {
   Card,
   CardContent,
   FormControl,
-  InputLabel,
   LinearProgress,
   Chip,
   Divider
@@ -58,7 +57,6 @@ const steps = [
   'Descripción del Problema',
   'Confirmación'
 ]
-
 
 /**
  * MaintenanceReport component provides a public form for creating maintenance requests
@@ -256,7 +254,7 @@ const MaintenanceReport: React.FC = () => {
               <TextField
                 fullWidth
                 name='location'
-                label='Ubicación del Equipo'
+                label='Cliente / Ubicación'
                 value={formik.values.location}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -280,8 +278,6 @@ const MaintenanceReport: React.FC = () => {
             </Grid>
             <Grid item xs={12} md={6}>
               <FormControl fullWidth required>
-                <InputLabel>Tipo de Equipo</InputLabel>
-
                 <TextField
                   fullWidth
                   name='equipmentType'

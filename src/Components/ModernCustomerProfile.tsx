@@ -69,6 +69,7 @@ interface UserData {
   telefono: string
   avatar?: string
   sede: string[]
+  isActive: boolean
 }
 
 export interface Certificate {
@@ -851,7 +852,11 @@ const ModernCustomerProfile: React.FC = () => {
                   {customerData?.nombre}
                 </Typography>
                 <Chip
-                  label='Cliente Activo'
+                  label={
+                    customerData?.isActive
+                      ? 'Cliente Activo'
+                      : 'Cliente Inactivo'
+                  }
                   sx={{
                     backgroundColor: 'rgba(255,255,255,0.2)',
                     color: 'white',

@@ -38,7 +38,7 @@ export interface CustomerData {
   ciudad: string
   departamento: string
   pais: string
-  active: boolean
+  isActive: boolean
   rol: string
 }
 
@@ -49,7 +49,9 @@ const CustomersTable: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
-  const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(null)
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(
+    null
+  )
 
   const fetchCustomers = async () => {
     try {
@@ -115,7 +117,11 @@ const CustomersTable: React.FC = () => {
 
   const handleUpdateCustomer = async (customerData: CustomerData) => {
     try {
-      const response = await axiosPrivate.put(`/customers/${customerData.id}`, customerData, {})
+      const response = await axiosPrivate.put(
+        `/customers/${customerData.id}`,
+        customerData,
+        {}
+      )
 
       if (response.status >= 200 && response.status < 300) {
         Swal.fire({
@@ -176,11 +182,14 @@ const CustomersTable: React.FC = () => {
         }
       })
 
-      const response = await axiosPrivate.delete(`/customers/${customer.id}`, {})
+      const response = await axiosPrivate.delete(
+        `/customers/${customer.id}`,
+        {}
+      )
 
       if (response.status === 204) {
         fetchCustomers()
-        
+
         Swal.fire({
           title: '¡Eliminado!',
           text: 'El cliente ha sido eliminado correctamente',
@@ -191,7 +200,7 @@ const CustomersTable: React.FC = () => {
       }
     } catch (error) {
       console.error('Error al eliminar cliente:', error)
-      
+
       Swal.fire({
         title: 'Error',
         text: 'No se pudo eliminar el cliente. Por favor intenta nuevamente.',
@@ -214,8 +223,8 @@ const CustomersTable: React.FC = () => {
         Cell: ({ row }) => (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Avatar
-              sx={{ 
-                bgcolor: '#00BFA5', 
+              sx={{
+                bgcolor: '#00BFA5',
                 width: 32,
                 height: 32
               }}
@@ -223,15 +232,15 @@ const CustomersTable: React.FC = () => {
               <Business sx={{ fontSize: 18 }} />
             </Avatar>
             <Box>
-              <Typography variant="body2" fontWeight="600">
+              <Typography variant='body2' fontWeight='600'>
                 {row.original.nombre}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant='caption' color='text.secondary'>
                 ID: {row.original.identificacion}
               </Typography>
             </Box>
           </Box>
-        ),
+        )
       },
       {
         accessorKey: 'email',
@@ -240,11 +249,9 @@ const CustomersTable: React.FC = () => {
         Cell: ({ cell }) => (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Email sx={{ fontSize: 16, color: 'text.secondary' }} />
-            <Typography variant="body2">
-              {cell.getValue<string>()}
-            </Typography>
+            <Typography variant='body2'>{cell.getValue<string>()}</Typography>
           </Box>
-        ),
+        )
       },
       {
         accessorKey: 'telefono',
@@ -253,11 +260,9 @@ const CustomersTable: React.FC = () => {
         Cell: ({ cell }) => (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Phone sx={{ fontSize: 16, color: 'text.secondary' }} />
-            <Typography variant="body2">
-              {cell.getValue<string>()}
-            </Typography>
+            <Typography variant='body2'>{cell.getValue<string>()}</Typography>
           </Box>
-        ),
+        )
       },
       {
         accessorKey: 'ciudad',
@@ -266,52 +271,59 @@ const CustomersTable: React.FC = () => {
         Cell: ({ row }) => (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <LocationOn sx={{ fontSize: 16, color: 'text.secondary' }} />
-            <Typography variant="body2">
+            <Typography variant='body2'>
               {row.original.ciudad}, {row.original.departamento}
             </Typography>
           </Box>
-        ),
+        )
       },
       {
-        accessorKey: 'active',
+        accessorKey: 'isActive',
         header: 'Estado',
         size: 100,
         Cell: ({ cell }) => (
           <Chip
-            label={cell.getValue<boolean>() ? "Activo" : "Inactivo"}
-            size="small"
-            color={cell.getValue<boolean>() ? "success" : "default"}
-            variant="outlined"
+            label={cell.getValue<boolean>() ? 'Activo' : 'Inactivo'}
+            size='small'
+            color={cell.getValue<boolean>() ? 'success' : 'default'}
+            variant='outlined'
           />
-        ),
-      },
+        )
+      }
     ],
     []
   )
 
   return (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
       {/* Header Section */}
-      <Box component="header" sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+      <Box component='header' sx={{ mb: 4 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            mb: 2
+          }}
+        >
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Business sx={{ mr: 2, fontSize: 32, color: 'primary.main' }} />
-            <Typography variant="h4" component="h1" fontWeight="bold">
+            <Typography variant='h4' component='h1' fontWeight='bold'>
               Clientes - Vista Tabla
             </Typography>
           </Box>
-          
+
           <Button
-            variant="contained"
+            variant='contained'
             startIcon={<Add />}
             onClick={() => setCreateModalOpen(true)}
-            sx={{ 
+            sx={{
               bgcolor: '#00BFA5',
               '&:hover': {
                 bgcolor: '#00ACC1'
               }
             }}
-            aria-label="Crear nuevo cliente"
+            aria-label='Crear nuevo cliente'
           >
             Crear Cliente
           </Button>
@@ -325,15 +337,15 @@ const CustomersTable: React.FC = () => {
           data={customers}
           localization={MRT_Localization_ES}
           state={{
-            isLoading: loading,
+            isLoading: loading
           }}
           enableRowActions
-          positionActionsColumn="last"
+          positionActionsColumn='last'
           renderRowActions={({ row }) => (
             <Box sx={{ display: 'flex', gap: 1 }}>
-              <Tooltip title="Ver detalles">
+              <Tooltip title='Ver detalles'>
                 <IconButton
-                  size="small"
+                  size='small'
                   onClick={() => handleViewCustomer(row.original.id!)}
                   sx={{
                     color: '#00BFA5',
@@ -345,19 +357,19 @@ const CustomersTable: React.FC = () => {
                   <Visibility />
                 </IconButton>
               </Tooltip>
-              <Tooltip title="Editar">
+              <Tooltip title='Editar'>
                 <IconButton
-                  size="small"
-                  color="primary"
+                  size='small'
+                  color='primary'
                   onClick={() => handleEditCustomer(row.original)}
                 >
                   <Edit />
                 </IconButton>
               </Tooltip>
-              <Tooltip title="Eliminar">
+              <Tooltip title='Eliminar'>
                 <IconButton
-                  size="small"
-                  color="error"
+                  size='small'
+                  color='error'
                   onClick={() => handleDeleteCustomer(row.original)}
                 >
                   <Delete />
@@ -370,12 +382,12 @@ const CustomersTable: React.FC = () => {
               '& .MuiTableHead-root': {
                 '& .MuiTableCell-root': {
                   backgroundColor: '#f5f5f5',
-                  fontWeight: 600,
+                  fontWeight: 600
                 }
               },
               '& .MuiTableBody-root': {
                 '& .MuiTableRow-root:hover': {
-                  backgroundColor: 'rgba(0, 191, 165, 0.04)',
+                  backgroundColor: 'rgba(0, 191, 165, 0.04)'
                 }
               }
             }
@@ -383,7 +395,7 @@ const CustomersTable: React.FC = () => {
           muiSearchTextFieldProps={{
             placeholder: 'Buscar clientes...',
             sx: { minWidth: '300px' },
-            variant: 'outlined',
+            variant: 'outlined'
           }}
           muiTopToolbarProps={{
             sx: {
@@ -395,15 +407,15 @@ const CustomersTable: React.FC = () => {
           }}
           muiBottomToolbarProps={{
             sx: {
-              backgroundColor: '#fafafa',
+              backgroundColor: '#fafafa'
             }
           }}
           initialState={{
             density: 'comfortable',
             pagination: {
               pageSize: 10,
-              pageIndex: 0,
-            },
+              pageIndex: 0
+            }
           }}
           enableColumnFilterModes
           enableColumnOrdering
@@ -413,7 +425,7 @@ const CustomersTable: React.FC = () => {
           enableStickyHeader
           muiTableContainerProps={{
             sx: {
-              maxHeight: '600px',
+              maxHeight: '600px'
             }
           }}
         />

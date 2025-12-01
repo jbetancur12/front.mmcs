@@ -10,27 +10,8 @@ import {
   IconButton,
   Grid
 } from '@mui/material'
-import {
-  Clear,
-  Person,
-  Email,
-  LocationOn,
-  Edit
-} from '@mui/icons-material'
-
-interface CustomerData {
-  id?: number
-  nombre: string
-  identificacion: string
-  direccion: string
-  email: string
-  telefono: string
-  ciudad: string
-  departamento: string
-  pais: string
-  active: boolean
-  rol: string
-}
+import { Clear, Person, Email, LocationOn, Edit } from '@mui/icons-material'
+import { CustomerData } from './TableCustomers'
 
 interface EditCustomerModalProps {
   open: boolean
@@ -54,11 +35,11 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
     ciudad: '',
     departamento: '',
     pais: 'Colombia',
-    active: true,
+    isActive: true,
     rol: 'customer'
   })
 
-  const [errors, setErrors] = useState<{[key: string]: string}>({})
+  const [errors, setErrors] = useState<{ [key: string]: string }>({})
 
   // Cargar datos del cliente cuando se abre el modal
   useEffect(() => {
@@ -70,17 +51,22 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
   }, [customer, open])
 
   const validateForm = () => {
-    const newErrors: {[key: string]: string} = {}
-    
+    const newErrors: { [key: string]: string } = {}
+
     if (!formData.nombre.trim()) newErrors.nombre = 'El nombre es requerido'
-    if (!formData.identificacion.trim()) newErrors.identificacion = 'La identificación es requerida'
+    if (!formData.identificacion.trim())
+      newErrors.identificacion = 'La identificación es requerida'
     if (!formData.email.trim()) newErrors.email = 'El email es requerido'
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email inválido'
-    if (!formData.telefono.trim()) newErrors.telefono = 'El teléfono es requerido'
-    if (!formData.direccion.trim()) newErrors.direccion = 'La dirección es requerida'
+    else if (!/\S+@\S+\.\S+/.test(formData.email))
+      newErrors.email = 'Email inválido'
+    if (!formData.telefono.trim())
+      newErrors.telefono = 'El teléfono es requerido'
+    if (!formData.direccion.trim())
+      newErrors.direccion = 'La dirección es requerida'
     if (!formData.ciudad.trim()) newErrors.ciudad = 'La ciudad es requerida'
-    if (!formData.departamento.trim()) newErrors.departamento = 'El departamento es requerido'
-    
+    if (!formData.departamento.trim())
+      newErrors.departamento = 'El departamento es requerido'
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -91,7 +77,7 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
       ...formData,
       [name]: value
     })
-    
+
     // Limpiar error del campo cuando el usuario empiece a escribir
     if (errors[name]) {
       setErrors({
@@ -114,10 +100,10 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
   }
 
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={handleClose}
-      maxWidth="md"
+      maxWidth='md'
       fullWidth
       PaperProps={{
         sx: { borderRadius: 3, overflow: 'hidden' }
@@ -137,56 +123,55 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Edit sx={{ fontSize: 28 }} />
           <Box>
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            <Typography variant='h6' sx={{ fontWeight: 600 }}>
               Editar Cliente
             </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+            <Typography variant='body2' sx={{ opacity: 0.9 }}>
               Modifica la información del cliente
             </Typography>
           </Box>
         </Box>
-        <IconButton
-          onClick={handleClose}
-          sx={{ color: 'white' }}
-        >
+        <IconButton onClick={handleClose} sx={{ color: 'white' }}>
           <Clear />
         </IconButton>
       </Box>
-      
-      <DialogContent sx={{ 
-        p: 3, 
-        maxHeight: '70vh', 
-        overflowY: 'auto',
-        '&::-webkit-scrollbar': {
-          width: '8px',
-        },
-        '&::-webkit-scrollbar-track': {
-          background: '#f1f1f1',
-          borderRadius: '4px',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          background: '#1976d2',
-          borderRadius: '4px',
-        },
-        '&::-webkit-scrollbar-thumb:hover': {
-          background: '#1565c0',
-        },
-      }}>
+
+      <DialogContent
+        sx={{
+          p: 3,
+          maxHeight: '70vh',
+          overflowY: 'auto',
+          '&::-webkit-scrollbar': {
+            width: '8px'
+          },
+          '&::-webkit-scrollbar-track': {
+            background: '#f1f1f1',
+            borderRadius: '4px'
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: '#1976d2',
+            borderRadius: '4px'
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            background: '#1565c0'
+          }
+        }}
+      >
         {/* Información Personal */}
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             <Person sx={{ color: '#1976d2', fontSize: 20 }} />
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+            <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
               Información Personal
             </Typography>
           </Box>
-          
+
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Nombre completo"
-                name="nombre"
+                label='Nombre completo'
+                name='nombre'
                 value={formData.nombre}
                 onChange={handleInputChange}
                 error={!!errors.nombre}
@@ -199,12 +184,12 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                 }}
               />
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Identificación"
-                name="identificacion"
+                label='Identificación'
+                name='identificacion'
                 value={formData.identificacion}
                 onChange={handleInputChange}
                 error={!!errors.identificacion}
@@ -224,18 +209,18 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             <Email sx={{ color: '#1976d2', fontSize: 20 }} />
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+            <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
               Información de Contacto
             </Typography>
           </Box>
-          
+
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Email"
-                name="email"
-                type="email"
+                label='Email'
+                name='email'
+                type='email'
                 value={formData.email}
                 onChange={handleInputChange}
                 error={!!errors.email}
@@ -248,12 +233,12 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                 }}
               />
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Teléfono"
-                name="telefono"
+                label='Teléfono'
+                name='telefono'
                 value={formData.telefono}
                 onChange={handleInputChange}
                 error={!!errors.telefono}
@@ -266,12 +251,12 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                 }}
               />
             </Grid>
-            
+
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Dirección"
-                name="direccion"
+                label='Dirección'
+                name='direccion'
                 value={formData.direccion}
                 onChange={handleInputChange}
                 error={!!errors.direccion}
@@ -291,17 +276,17 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             <LocationOn sx={{ color: '#1976d2', fontSize: 20 }} />
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+            <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
               Ubicación
             </Typography>
           </Box>
-          
+
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                label="Ciudad"
-                name="ciudad"
+                label='Ciudad'
+                name='ciudad'
                 value={formData.ciudad}
                 onChange={handleInputChange}
                 error={!!errors.ciudad}
@@ -314,12 +299,12 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                 }}
               />
             </Grid>
-            
+
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                label="Departamento"
-                name="departamento"
+                label='Departamento'
+                name='departamento'
                 value={formData.departamento}
                 onChange={handleInputChange}
                 error={!!errors.departamento}
@@ -332,12 +317,12 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
                 }}
               />
             </Grid>
-            
+
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                label="País"
-                name="pais"
+                label='País'
+                name='pais'
                 value={formData.pais}
                 onChange={handleInputChange}
                 sx={{
@@ -351,11 +336,11 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
           </Grid>
         </Box>
       </DialogContent>
-      
+
       <DialogActions sx={{ p: 3, pt: 0, gap: 2, justifyContent: 'flex-end' }}>
-        <Button 
+        <Button
           onClick={handleClose}
-          sx={{ 
+          sx={{
             borderRadius: 2,
             px: 3,
             py: 1,
@@ -367,9 +352,9 @@ const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
         >
           Cancelar
         </Button>
-        <Button 
+        <Button
           onClick={handleSubmit}
-          variant="contained"
+          variant='contained'
           startIcon={<Edit />}
           sx={{
             borderRadius: 2,

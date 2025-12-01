@@ -7,10 +7,7 @@ import {
   Card,
   Chip
 } from '@mui/material'
-import {
-  TrendingUp,
-  Error as ErrorIcon
-} from '@mui/icons-material'
+import { TrendingUp, Error as ErrorIcon } from '@mui/icons-material'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useTVDisplayDataWithWebSocket } from '../../../hooks/useMaintenancePublic'
@@ -23,14 +20,19 @@ import RegularTicketsGrid from './components/RegularTicketsGrid'
 import PaginationProgress from './components/PaginationProgress'
 
 // Import types and hooks
-import { TVMetrics, SmartPagination, OrganizedTickets, ConnectionStatus } from './types'
+import {
+  TVMetrics,
+  SmartPagination,
+  OrganizedTickets,
+  ConnectionStatus
+} from './types'
 import { useModernStyles } from './hooks/useModernStyles'
 
 /**
  * MaintenanceTVDisplayModern - Modern TV display component for maintenance tickets
  * Features clean white design with company branding and improved readability
  * Optimized for large screens (1920x1080+) with real-time WebSocket updates
- * 
+ *
  * Key Features:
  * - Clean white background with company primary color (#7bff7f)
  * - Modular component architecture for better maintainability
@@ -89,10 +91,17 @@ const MaintenanceTVDisplayModern: React.FC = () => {
 
   // Smart organization: All tickets in one pagination system for fullscreen display
   const organizedTickets: OrganizedTickets = useMemo(() => {
-    if (!tvDisplayData?.tickets) return { stickyUrgents: [], paginatedTickets: [], allActive: [], urgent: [], high: [], normal: [] }
+    if (!tvDisplayData?.tickets)
+      return {
+        stickyUrgents: [],
+        paginatedTickets: [],
+        allActive: [],
+        urgent: [],
+        high: [],
+        normal: []
+      }
 
     const tickets = tvDisplayData.tickets
-    console.log("🚀 ~ MaintenanceTVDisplayModern ~ tickets:", tickets)
 
     // Para pantalla completa, incluir TODOS los tickets en la paginación
     // Ordenar por prioridad: urgentes primero, luego por fecha
@@ -104,8 +113,14 @@ const MaintenanceTVDisplayModern: React.FC = () => {
     ].sort((a, b) => {
       // Primero por prioridad
       const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 }
-      const aPriority = priorityOrder[a.priority?.toLowerCase() as keyof typeof priorityOrder] ?? 4
-      const bPriority = priorityOrder[b.priority?.toLowerCase() as keyof typeof priorityOrder] ?? 4
+      const aPriority =
+        priorityOrder[
+          a.priority?.toLowerCase() as keyof typeof priorityOrder
+        ] ?? 4
+      const bPriority =
+        priorityOrder[
+          b.priority?.toLowerCase() as keyof typeof priorityOrder
+        ] ?? 4
 
       if (aPriority !== bPriority) {
         return aPriority - bPriority
@@ -134,7 +149,11 @@ const MaintenanceTVDisplayModern: React.FC = () => {
 
   // Smart Pagination System - Optimizado para pantalla completa
   useEffect(() => {
-    if (!smartPagination.isActive || smartPagination.isPaused || isTransitioning) {
+    if (
+      !smartPagination.isActive ||
+      smartPagination.isPaused ||
+      isTransitioning
+    ) {
       return
     }
 
@@ -148,12 +167,14 @@ const MaintenanceTVDisplayModern: React.FC = () => {
 
           setTimeout(() => {
             setSlideIndex((prev) => {
-              const nextIndex = prev >= Math.ceil(totalTickets / ticketsPerPage) - 1 ? 0 : prev + 1
+              const nextIndex =
+                prev >= Math.ceil(totalTickets / ticketsPerPage) - 1
+                  ? 0
+                  : prev + 1
               return nextIndex
             })
             setIsTransitioning(false)
           }, 500) // Transición más rápida
-
         }, 20000) // 20 segundos por página para ver más tickets
 
         return () => clearInterval(slideInterval)
@@ -182,7 +203,8 @@ const MaintenanceTVDisplayModern: React.FC = () => {
         techniciansAvailable: '0/0',
         averageWorkload: 0,
         avgResolutionTimeHours: 0,
-        completedLast30Days: 0
+        completedLast30Days: 0,
+        isInvoiced: 0
       }
     }
 
@@ -197,7 +219,8 @@ const MaintenanceTVDisplayModern: React.FC = () => {
       techniciansAvailable: backendMetrics.techniciansAvailable,
       averageWorkload: backendMetrics.averageWorkload,
       avgResolutionTimeHours: backendMetrics.avgResolutionTimeHours,
-      completedLast30Days: backendMetrics.completedLast30Days
+      completedLast30Days: backendMetrics.completedLast30Days,
+      isInvoiced: backendMetrics.isInvoiced || 0
     }
   }, [tvDisplayData])
 
@@ -251,17 +274,26 @@ const MaintenanceTVDisplayModern: React.FC = () => {
             boxShadow: `0 8px 32px rgba(220, 53, 69, 0.15)`
           }}
         >
-          <ErrorIcon sx={{ fontSize: '4rem', color: modernColors.danger, mb: 2 }} />
-          <Typography variant='h4' sx={{ color: modernColors.textPrimary, mb: 2, fontWeight: 700 }}>
+          <ErrorIcon
+            sx={{ fontSize: '4rem', color: modernColors.danger, mb: 2 }}
+          />
+          <Typography
+            variant='h4'
+            sx={{ color: modernColors.textPrimary, mb: 2, fontWeight: 700 }}
+          >
             Error de Conexión
           </Typography>
-          <Typography variant='body1' sx={{ color: modernColors.textSecondary, mb: 3 }}>
-            No se pueden cargar los datos de mantenimiento. El sistema está intentando reconectar automáticamente.
+          <Typography
+            variant='body1'
+            sx={{ color: modernColors.textSecondary, mb: 3 }}
+          >
+            No se pueden cargar los datos de mantenimiento. El sistema está
+            intentando reconectar automáticamente.
           </Typography>
           <Chip
-            label="Reintentando..."
-            color="error"
-            variant="outlined"
+            label='Reintentando...'
+            color='error'
+            variant='outlined'
             sx={{ fontSize: '1rem', py: 2, px: 3 }}
           />
         </Card>
@@ -288,7 +320,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
           sx={{
             color: modernColors.primary,
             '& .MuiCircularProgress-circle': {
-              strokeLinecap: 'round',
+              strokeLinecap: 'round'
             }
           }}
         />
@@ -319,7 +351,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
     <Box
       sx={{
         height: '100vh', // Altura fija para evitar scroll vertical
-        width: '100vw',   // Ancho fijo para evitar scroll horizontal
+        width: '100vw', // Ancho fijo para evitar scroll horizontal
         backgroundColor: modernColors.background,
         color: modernColors.textPrimary,
         fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
@@ -332,7 +364,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
       <ModernHeader
         currentTime={currentTime}
         connectionStatus={connectionStatus}
-        companyName="MetroMedics"
+        companyName='MetroMedics'
         showLogo={true}
       />
 
@@ -378,15 +410,28 @@ const MaintenanceTVDisplayModern: React.FC = () => {
       >
         {/* Metrics Dashboard - Ultra compacto */}
         <Box sx={{ flexShrink: 0, mb: 0.5 }}>
-          <MetricsDashboard
-            metrics={metrics}
-            colors={modernColors}
-          />
+          <MetricsDashboard metrics={metrics} colors={modernColors} />
         </Box>
 
         {/* Tickets Section - Maximizar espacio disponible */}
-        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5, flexShrink: 0 }}>
+        <Box
+          sx={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            minHeight: 0
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              mb: 0.5,
+              flexShrink: 0
+            }}
+          >
             <Typography
               variant='h4'
               sx={{
@@ -398,14 +443,17 @@ const MaintenanceTVDisplayModern: React.FC = () => {
                 fontSize: '1.8rem' // Reducir tamaño del título
               }}
             >
-              <TrendingUp sx={{ fontSize: '2rem', color: modernColors.primary }} />
+              <TrendingUp
+                sx={{ fontSize: '2rem', color: modernColors.primary }}
+              />
               Tickets Activos ({organizedTickets.paginatedTickets.length})
             </Typography>
 
             {/* Pagination Info */}
             {tvDisplayData &&
               gridCalculation &&
-              organizedTickets.paginatedTickets.length > gridCalculation.ticketsPerPage && (
+              organizedTickets.paginatedTickets.length >
+                gridCalculation.ticketsPerPage && (
                 <Card
                   sx={{
                     backgroundColor: modernColors.secondaryBackground,
@@ -423,7 +471,11 @@ const MaintenanceTVDisplayModern: React.FC = () => {
                       fontSize: '0.85rem'
                     }}
                   >
-                    Página {slideIndex + 1}/{Math.ceil(organizedTickets.paginatedTickets.length / gridCalculation.ticketsPerPage)}
+                    Página {slideIndex + 1}/
+                    {Math.ceil(
+                      organizedTickets.paginatedTickets.length /
+                        gridCalculation.ticketsPerPage
+                    )}
                   </Typography>
                 </Card>
               )}
@@ -441,16 +493,18 @@ const MaintenanceTVDisplayModern: React.FC = () => {
         </Box>
 
         {/* Pagination Progress - Mínimo espacio */}
-        {gridCalculation && organizedTickets.paginatedTickets.length > gridCalculation.ticketsPerPage && (
-          <Box sx={{ flexShrink: 0, mt: 0.5 }}>
-            <PaginationProgress
-              slideIndex={slideIndex}
-              totalTickets={organizedTickets.paginatedTickets.length}
-              ticketsPerPage={gridCalculation.ticketsPerPage}
-              colors={modernColors}
-            />
-          </Box>
-        )}
+        {gridCalculation &&
+          organizedTickets.paginatedTickets.length >
+            gridCalculation.ticketsPerPage && (
+            <Box sx={{ flexShrink: 0, mt: 0.5 }}>
+              <PaginationProgress
+                slideIndex={slideIndex}
+                totalTickets={organizedTickets.paginatedTickets.length}
+                ticketsPerPage={gridCalculation.ticketsPerPage}
+                colors={modernColors}
+              />
+            </Box>
+          )}
       </Container>
     </Box>
   )

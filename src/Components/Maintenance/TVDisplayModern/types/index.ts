@@ -9,6 +9,7 @@ export interface TVMetrics {
   averageWorkload: number
   avgResolutionTimeHours: number
   completedLast30Days: number
+  isInvoiced: number
 }
 
 export interface DisplayConfig {
