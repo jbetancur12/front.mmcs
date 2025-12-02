@@ -107,6 +107,7 @@ const MaintenanceTechnicians: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [technicianToDelete, setTechnicianToDelete] =
     useState<MaintenanceTechnician | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   // API hooks
   const { data: technicians, isLoading, refetch } = useMaintenanceTechnicians()
@@ -168,14 +169,18 @@ const MaintenanceTechnicians: React.FC = () => {
 
   const handleDelete = async () => {
     if (!technicianToDelete) return
+    setDeleteError(null)
 
     try {
       await deleteTechnicianMutation.mutateAsync(technicianToDelete.id)
       setDeleteDialogOpen(false)
       setTechnicianToDelete(null)
       refetch()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting technician:', error)
+      const message =
+        error.response?.data?.error || 'Error al eliminar el técnico'
+      setDeleteError(message)
     }
   }
 
@@ -221,11 +226,12 @@ const MaintenanceTechnicians: React.FC = () => {
   }
 
   return (
-    <Container 
-      maxWidth={false} 
-      sx={{ 
+    <Container
+      maxWidth={false}
+      sx={{
         py: 3,
-        background: 'linear-gradient(135deg, rgba(109, 198, 98, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)',
+        background:
+          'linear-gradient(135deg, rgba(109, 198, 98, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)',
         minHeight: '100vh'
       }}
     >
@@ -259,8 +265,8 @@ const MaintenanceTechnicians: React.FC = () => {
             <People sx={{ fontSize: 32, color: 'white' }} />
           </Box>
           <Box>
-            <Typography 
-              variant='h4' 
+            <Typography
+              variant='h4'
               component='h1'
               sx={{
                 fontWeight: 700,
@@ -273,10 +279,7 @@ const MaintenanceTechnicians: React.FC = () => {
             >
               Gestión de Técnicos
             </Typography>
-            <Typography
-              variant='subtitle1'
-              color='text.secondary'
-            >
+            <Typography variant='subtitle1' color='text.secondary'>
               Administración del equipo de mantenimiento
             </Typography>
           </Box>
@@ -327,8 +330,8 @@ const MaintenanceTechnicians: React.FC = () => {
                 justifyContent='space-between'
               >
                 <Box>
-                  <Typography 
-                    variant='h4' 
+                  <Typography
+                    variant='h4'
                     sx={{
                       fontWeight: 700,
                       color: '#6dc662'
@@ -336,13 +339,18 @@ const MaintenanceTechnicians: React.FC = () => {
                   >
                     {technicians?.length || 0}
                   </Typography>
-                  <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 500 }}>
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ fontWeight: 500 }}
+                  >
                     Total Técnicos
                   </Typography>
                 </Box>
                 <Box
                   sx={{
-                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    background:
+                      'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
                     borderRadius: '12px',
                     p: 1.5,
                     display: 'flex',
@@ -380,8 +388,8 @@ const MaintenanceTechnicians: React.FC = () => {
                 justifyContent='space-between'
               >
                 <Box>
-                  <Typography 
-                    variant='h4' 
+                  <Typography
+                    variant='h4'
                     sx={{
                       fontWeight: 700,
                       color: '#4caf50'
@@ -391,13 +399,18 @@ const MaintenanceTechnicians: React.FC = () => {
                       (t) => t.status === 'active' && t.isAvailable
                     ).length || 0}
                   </Typography>
-                  <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 500 }}>
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ fontWeight: 500 }}
+                  >
                     Disponibles
                   </Typography>
                 </Box>
                 <Box
                   sx={{
-                    background: 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)',
+                    background:
+                      'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)',
                     borderRadius: '12px',
                     p: 1.5,
                     display: 'flex',
@@ -435,8 +448,8 @@ const MaintenanceTechnicians: React.FC = () => {
                 justifyContent='space-between'
               >
                 <Box>
-                  <Typography 
-                    variant='h4' 
+                  <Typography
+                    variant='h4'
                     sx={{
                       fontWeight: 700,
                       color: '#ff9800'
@@ -446,13 +459,18 @@ const MaintenanceTechnicians: React.FC = () => {
                       (t) => t.status === 'active' && !t.isAvailable
                     ).length || 0}
                   </Typography>
-                  <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 500 }}>
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ fontWeight: 500 }}
+                  >
                     No Disponibles
                   </Typography>
                 </Box>
                 <Box
                   sx={{
-                    background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
+                    background:
+                      'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
                     borderRadius: '12px',
                     p: 1.5,
                     display: 'flex',
@@ -490,8 +508,8 @@ const MaintenanceTechnicians: React.FC = () => {
                 justifyContent='space-between'
               >
                 <Box>
-                  <Typography 
-                    variant='h4' 
+                  <Typography
+                    variant='h4'
                     sx={{
                       fontWeight: 700,
                       color: '#ffc107'
@@ -499,18 +517,25 @@ const MaintenanceTechnicians: React.FC = () => {
                   >
                     {technicians && technicians.length > 0
                       ? (
-                          technicians.reduce((acc, t) => acc + (t.rating || 0), 0) /
-                          technicians.length
+                          technicians.reduce(
+                            (acc, t) => acc + (t.rating || 0),
+                            0
+                          ) / technicians.length
                         ).toFixed(1)
                       : '0.0'}
                   </Typography>
-                  <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 500 }}>
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ fontWeight: 500 }}
+                  >
                     Rating Promedio
                   </Typography>
                 </Box>
                 <Box
                   sx={{
-                    background: 'linear-gradient(135deg, #ffc107 0%, #ff8f00 100%)',
+                    background:
+                      'linear-gradient(135deg, #ffc107 0%, #ff8f00 100%)',
                     borderRadius: '12px',
                     p: 1.5,
                     display: 'flex',
@@ -527,7 +552,7 @@ const MaintenanceTechnicians: React.FC = () => {
       </Grid>
 
       {/* Technicians Table */}
-      <Paper 
+      <Paper
         elevation={2}
         sx={{
           background: 'rgba(255, 255, 255, 0.95)',
@@ -538,8 +563,8 @@ const MaintenanceTechnicians: React.FC = () => {
         }}
       >
         <Box p={3}>
-          <Typography 
-            variant='h6' 
+          <Typography
+            variant='h6'
             gutterBottom
             sx={{
               fontWeight: 600,
@@ -625,7 +650,11 @@ const MaintenanceTechnicians: React.FC = () => {
 
                       <TableCell>
                         <Chip
-                          label={technician.isAvailable ? 'Disponible' : 'No Disponible'}
+                          label={
+                            technician.isAvailable
+                              ? 'Disponible'
+                              : 'No Disponible'
+                          }
                           color={technician.isAvailable ? 'success' : 'error'}
                           size='small'
                         />
@@ -653,7 +682,11 @@ const MaintenanceTechnicians: React.FC = () => {
                           Actual/Máximo
                         </Typography>
                         {technician.metrics && (
-                          <Typography variant='caption' display='block' color='text.secondary'>
+                          <Typography
+                            variant='caption'
+                            display='block'
+                            color='text.secondary'
+                          >
                             {technician.metrics.workloadPercentage}% utilización
                           </Typography>
                         )}
@@ -777,8 +810,13 @@ const MaintenanceTechnicians: React.FC = () => {
                   value={formik.values.employeeId}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  error={formik.touched.employeeId && Boolean(formik.errors.employeeId)}
-                  helperText={formik.touched.employeeId && formik.errors.employeeId}
+                  error={
+                    formik.touched.employeeId &&
+                    Boolean(formik.errors.employeeId)
+                  }
+                  helperText={
+                    formik.touched.employeeId && formik.errors.employeeId
+                  }
                 />
               </Grid>
 
@@ -791,8 +829,13 @@ const MaintenanceTechnicians: React.FC = () => {
                   value={formik.values.maxWorkload}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  error={formik.touched.maxWorkload && Boolean(formik.errors.maxWorkload)}
-                  helperText={formik.touched.maxWorkload && formik.errors.maxWorkload}
+                  error={
+                    formik.touched.maxWorkload &&
+                    Boolean(formik.errors.maxWorkload)
+                  }
+                  helperText={
+                    formik.touched.maxWorkload && formik.errors.maxWorkload
+                  }
                   InputProps={{ inputProps: { min: 1, max: 50 } }}
                   required
                 />
@@ -819,7 +862,8 @@ const MaintenanceTechnicians: React.FC = () => {
                         Boolean(formik.errors.specialization)
                       }
                       helperText={
-                        formik.touched.specialization && formik.errors.specialization
+                        formik.touched.specialization &&
+                        formik.errors.specialization
                       }
                       required
                     />
@@ -837,8 +881,14 @@ const MaintenanceTechnicians: React.FC = () => {
                   value={formik.values.certifications}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  error={formik.touched.certifications && Boolean(formik.errors.certifications)}
-                  helperText={formik.touched.certifications && formik.errors.certifications}
+                  error={
+                    formik.touched.certifications &&
+                    Boolean(formik.errors.certifications)
+                  }
+                  helperText={
+                    formik.touched.certifications &&
+                    formik.errors.certifications
+                  }
                   placeholder='Ej: Técnico en Electromedicina, Certificado en Ventiladores...'
                 />
               </Grid>
@@ -900,26 +950,48 @@ const MaintenanceTechnicians: React.FC = () => {
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
+        onClose={() => {
+          setDeleteDialogOpen(false)
+          setDeleteError(null)
+        }}
       >
-        <DialogTitle>Confirmar Eliminación</DialogTitle>
+        <DialogTitle>
+          {deleteError ? 'No se puede eliminar' : 'Confirmar Eliminación'}
+        </DialogTitle>
         <DialogContent>
-          <Typography>
-            ¿Está seguro de que desea eliminar al técnico{' '}
-            <strong>{technicianToDelete?.name}</strong>? Esta acción no se puede
-            deshacer.
-          </Typography>
+          {deleteError ? (
+            <Alert severity='error' sx={{ mt: 1 }}>
+              {deleteError}
+            </Alert>
+          ) : (
+            <Typography>
+              ¿Está seguro de que desea eliminar al técnico{' '}
+              <strong>{technicianToDelete?.name}</strong>? Esta acción no se
+              puede deshacer.
+            </Typography>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancelar</Button>
           <Button
-            onClick={handleDelete}
-            color='error'
-            variant='contained'
-            disabled={deleteTechnicianMutation.isLoading}
+            onClick={() => {
+              setDeleteDialogOpen(false)
+              setDeleteError(null)
+            }}
           >
-            {deleteTechnicianMutation.isLoading ? 'Eliminando...' : 'Eliminar'}
+            {deleteError ? 'Cerrar' : 'Cancelar'}
           </Button>
+          {!deleteError && (
+            <Button
+              onClick={handleDelete}
+              color='error'
+              variant='contained'
+              disabled={deleteTechnicianMutation.isLoading}
+            >
+              {deleteTechnicianMutation.isLoading
+                ? 'Eliminando...'
+                : 'Eliminar'}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Container>
