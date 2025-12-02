@@ -1988,6 +1988,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                         }))
                       }
                       label='Técnico'
+                      disabled={ticket.status === MaintenanceStatus.COMPLETED}
                     >
                       <MenuItem value=''>Sin asignar</MenuItem>
                       {technicians
