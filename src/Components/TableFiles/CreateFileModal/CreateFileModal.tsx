@@ -61,6 +61,11 @@ interface CreateFileModalProps {
   onClose: () => void
   fetchFiles: () => Promise<void>
   axiosPrivate: any
+  preSelectedCustomer?: {
+    id: number
+    nombre: string
+    sede: string[]
+  }
 }
 
 // Styled Components
@@ -125,7 +130,8 @@ export const CreateFileModal = ({
   open,
   onClose,
   fetchFiles,
-  axiosPrivate
+  axiosPrivate,
+  preSelectedCustomer
 }: CreateFileModalProps) => {
   const $customerStore = useStore(customerStore)
   const $deviceStore = useStore(deviceStore)
@@ -163,6 +169,17 @@ export const CreateFileModal = ({
       resetForm()
     }
   }, [open])
+
+  // Establecer datos del cliente pre-seleccionado
+  useEffect(() => {
+    if (open && preSelectedCustomer) {
+      setValues((prev) => ({
+        ...prev,
+        customerId: preSelectedCustomer.id
+      }))
+      setSedes(preSelectedCustomer.sede || [])
+    }
+  }, [open, preSelectedCustomer])
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0]
@@ -522,7 +539,27 @@ export const CreateFileModal = ({
                     limitArraySizeCustomer($customerStore, option)
                     setValues({ ...values, customerId: Number(option?.value) })
                   }}
-                  defaultOptions={$customerStore}
+                  defaultOptions={
+                    preSelectedCustomer
+                      ? ([
+                        {
+                          value: String(preSelectedCustomer.id),
+                          label: preSelectedCustomer.nombre,
+                          sede: preSelectedCustomer.sede
+                        }
+                      ] as any)
+                      : $customerStore
+                  }
+                  defaultValue={
+                    preSelectedCustomer
+                      ? ({
+                        value: String(preSelectedCustomer.id),
+                        label: preSelectedCustomer.nombre,
+                        sede: preSelectedCustomer.sede
+                      } as any)
+                      : null
+                  }
+                  isDisabled={!!preSelectedCustomer}
                   styles={styles(true)}
                 />
 
