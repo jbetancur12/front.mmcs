@@ -37,7 +37,9 @@ import {
   Delete,
   Star,
   Work,
-  CheckCircle
+  CheckCircle,
+  PowerSettingsNew,
+  RestoreFromTrash
 } from '@mui/icons-material'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
@@ -109,6 +111,10 @@ const MaintenanceTechnicians: React.FC = () => {
     useState<MaintenanceTechnician | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
+  const [statusConfirmDialogOpen, setStatusConfirmDialogOpen] = useState(false)
+  const [technicianToToggle, setTechnicianToToggle] =
+    useState<MaintenanceTechnician | null>(null)
+
   // API hooks
   const { data: technicians, isLoading, refetch } = useMaintenanceTechnicians()
   const createTechnicianMutation = useCreateMaintenanceTechnician()
@@ -165,6 +171,31 @@ const MaintenanceTechnicians: React.FC = () => {
       notes: technician.notes || ''
     })
     setDialogOpen(true)
+  }
+
+  const handleToggleStatus = async () => {
+    if (!technicianToToggle) return
+
+    try {
+      const newStatus =
+        technicianToToggle.status === 'active' ? 'inactive' : 'active'
+      // If reactivating, also set isAvailable to true by default
+      const isAvailable = newStatus === 'active' ? true : false
+
+      await updateTechnicianMutation.mutateAsync({
+        id: technicianToToggle.id,
+        data: {
+          status: newStatus,
+          isAvailable: isAvailable
+        }
+      })
+
+      setStatusConfirmDialogOpen(false)
+      setTechnicianToToggle(null)
+      refetch()
+    } catch (error) {
+      console.error('Error toggling technician status:', error)
+    }
   }
 
   const handleDelete = async () => {
@@ -703,6 +734,33 @@ const MaintenanceTechnicians: React.FC = () => {
                           </IconButton>
                         </Tooltip>
 
+                        <Tooltip
+                          title={
+                            technician.status === 'active'
+                              ? 'Desactivar'
+                              : 'Reactivar'
+                          }
+                        >
+                          <IconButton
+                            size='small'
+                            onClick={() => {
+                              setTechnicianToToggle(technician)
+                              setStatusConfirmDialogOpen(true)
+                            }}
+                            color={
+                              technician.status === 'active'
+                                ? 'warning'
+                                : 'success'
+                            }
+                          >
+                            {technician.status === 'active' ? (
+                              <PowerSettingsNew />
+                            ) : (
+                              <RestoreFromTrash />
+                            )}
+                          </IconButton>
+                        </Tooltip>
+
                         <Tooltip title='Eliminar'>
                           <IconButton
                             size='small'
@@ -945,6 +1003,51 @@ const MaintenanceTechnicians: React.FC = () => {
             </Button>
           </DialogActions>
         </form>
+      </Dialog>
+
+      {/* Status Toggle Confirmation Dialog */}
+      <Dialog
+        open={statusConfirmDialogOpen}
+        onClose={() => setStatusConfirmDialogOpen(false)}
+      >
+        <DialogTitle>
+          {technicianToToggle?.status === 'active'
+            ? 'Desactivar Técnico'
+            : 'Reactivar Técnico'}
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            ¿Está seguro de que desea{' '}
+            {technicianToToggle?.status === 'active'
+              ? 'desactivar'
+              : 'reactivar'}{' '}
+            al técnico <strong>{technicianToToggle?.name}</strong>?
+          </Typography>
+          {technicianToToggle?.status === 'active' && (
+            <Alert severity='warning' sx={{ mt: 2 }}>
+              El técnico no podrá ser asignado a nuevos tickets.
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setStatusConfirmDialogOpen(false)}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleToggleStatus}
+            color={
+              technicianToToggle?.status === 'active' ? 'warning' : 'success'
+            }
+            variant='contained'
+            disabled={updateTechnicianMutation.isLoading}
+          >
+            {updateTechnicianMutation.isLoading
+              ? 'Procesando...'
+              : technicianToToggle?.status === 'active'
+                ? 'Desactivar'
+                : 'Reactivar'}
+          </Button>
+        </DialogActions>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
