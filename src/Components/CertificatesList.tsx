@@ -24,7 +24,7 @@ import {
 import Loader from './Loader2'
 import { bigToast } from './ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { 
+import {
   Download,
   Delete,
   CalendarToday,
@@ -91,14 +91,16 @@ function CertificatesList({ refreshTrigger }: CertificatesListProps) {
   const handleDownload = async (path: string) => {
     const filePath = path
 
-    const partes = filePath.split('-')
-    let resultado = ''
+    // const partes = filePath.split('-')
+    // let resultado = ''
 
-    if (partes.length > 1) {
-      resultado = partes.slice(1).join('-')
-    } else {
-      resultado = filePath
-    }
+    // if (partes.length > 1) {
+    //   resultado = partes.slice(1).join('-')
+    // } else {
+    //   resultado = filePath
+    // }
+
+    const resultado = filePath
 
     try {
       const response: AxiosResponse<Blob> = await axiosPrivate.get(
@@ -196,11 +198,11 @@ function CertificatesList({ refreshTrigger }: CertificatesListProps) {
   return (
     <>
       <Loader loading={loading} />
-      
+
       {certificates.length === 0 ? (
-        <Alert 
-          severity="info" 
-          sx={{ 
+        <Alert
+          severity='info'
+          sx={{
             borderRadius: '12px',
             backgroundColor: '#f0f9ff',
             border: '1px solid #bfdbfe',
@@ -209,7 +211,7 @@ function CertificatesList({ refreshTrigger }: CertificatesListProps) {
             }
           }}
         >
-          <Typography variant="body2">
+          <Typography variant='body2'>
             No hay certificados disponibles para este equipo.
           </Typography>
         </Alert>
@@ -217,9 +219,9 @@ function CertificatesList({ refreshTrigger }: CertificatesListProps) {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {certificates.map((certificate, index) => (
             <Fade in={true} timeout={300 + index * 100} key={certificate.id}>
-              <Card 
+              <Card
                 elevation={0}
-                sx={{ 
+                sx={{
                   border: '1px solid #e5e7eb',
                   borderRadius: '12px',
                   transition: 'all 0.3s ease-in-out',
@@ -231,11 +233,15 @@ function CertificatesList({ refreshTrigger }: CertificatesListProps) {
                 }}
               >
                 <CardContent sx={{ p: 3 }}>
-                  <Box display="flex" alignItems="center" justifyContent="space-between">
+                  <Box
+                    display='flex'
+                    alignItems='center'
+                    justifyContent='space-between'
+                  >
                     {/* File Info */}
-                    <Box display="flex" alignItems="center" flex={1}>
-                      <Box 
-                        sx={{ 
+                    <Box display='flex' alignItems='center' flex={1}>
+                      <Box
+                        sx={{
                           p: 1.5,
                           backgroundColor: '#fef2f2',
                           borderRadius: '8px',
@@ -247,24 +253,29 @@ function CertificatesList({ refreshTrigger }: CertificatesListProps) {
                       >
                         <PictureAsPdf sx={{ color: '#dc2626', fontSize: 24 }} />
                       </Box>
-                      
+
                       <Box flex={1}>
-                        <Typography 
-                          variant="body1" 
-                          fontWeight="600" 
-                          sx={{ 
+                        <Typography
+                          variant='body1'
+                          fontWeight='600'
+                          sx={{
                             color: '#1f2937',
                             mb: 0.5,
                             wordBreak: 'break-word'
                           }}
                         >
-                          {certificate.filePath.split('-').slice(1).join('-') || certificate.filePath}
+                          {certificate.filePath}
                         </Typography>
-                        
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <CalendarToday sx={{ fontSize: 16, color: '#6b7280' }} />
-                          <Typography variant="body2" sx={{ color: '#6b7280' }}>
-                            Fecha de Calibración: {new Date(certificate.calibrationDate).toLocaleDateString('es-ES', {
+
+                        <Box display='flex' alignItems='center' gap={1}>
+                          <CalendarToday
+                            sx={{ fontSize: 16, color: '#6b7280' }}
+                          />
+                          <Typography variant='body2' sx={{ color: '#6b7280' }}>
+                            Fecha de Calibración:{' '}
+                            {new Date(
+                              certificate.calibrationDate
+                            ).toLocaleDateString('es-ES', {
                               year: 'numeric',
                               month: 'long',
                               day: 'numeric'
@@ -275,27 +286,43 @@ function CertificatesList({ refreshTrigger }: CertificatesListProps) {
                     </Box>
 
                     {/* Actions */}
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Tooltip title={previewId === certificate.id ? "Ocultar vista previa" : "Ver vista previa"}>
+                    <Box display='flex' alignItems='center' gap={1}>
+                      <Tooltip
+                        title={
+                          previewId === certificate.id
+                            ? 'Ocultar vista previa'
+                            : 'Ver vista previa'
+                        }
+                      >
                         <IconButton
                           onClick={() => handlePreview(certificate)}
                           sx={{
-                            color: previewId === certificate.id ? '#10b981' : '#6b7280',
-                            backgroundColor: previewId === certificate.id ? '#f0fdf4' : 'transparent',
+                            color:
+                              previewId === certificate.id
+                                ? '#10b981'
+                                : '#6b7280',
+                            backgroundColor:
+                              previewId === certificate.id
+                                ? '#f0fdf4'
+                                : 'transparent',
                             '&:hover': {
                               backgroundColor: '#f0fdf4',
                               color: '#10b981'
                             }
                           }}
                         >
-                          {previewId === certificate.id ? <ExpandLess /> : <ExpandMore />}
+                          {previewId === certificate.id ? (
+                            <ExpandLess />
+                          ) : (
+                            <ExpandMore />
+                          )}
                         </IconButton>
                       </Tooltip>
 
-                      <Tooltip title="Descargar certificado">
+                      <Tooltip title='Descargar certificado'>
                         <Button
-                          variant="outlined"
-                          size="small"
+                          variant='outlined'
+                          size='small'
                           startIcon={<Download />}
                           onClick={() => handleDownload(certificate.filePath)}
                           sx={{
@@ -315,11 +342,13 @@ function CertificatesList({ refreshTrigger }: CertificatesListProps) {
                         </Button>
                       </Tooltip>
 
-                      {$userStore.rol.some((role) => ['admin', 'metrologist'].includes(role)) && (
-                        <Tooltip title="Eliminar certificado">
+                      {$userStore.rol.some((role) =>
+                        ['admin', 'metrologist'].includes(role)
+                      ) && (
+                        <Tooltip title='Eliminar certificado'>
                           <Button
-                            variant="outlined"
-                            size="small"
+                            variant='outlined'
+                            size='small'
                             startIcon={<Delete />}
                             onClick={() => handleClickOpen(certificate.id)}
                             sx={{
@@ -346,8 +375,8 @@ function CertificatesList({ refreshTrigger }: CertificatesListProps) {
                   {/* PDF Preview */}
                   <Collapse in={previewId === certificate.id} timeout={300}>
                     <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid #e5e7eb' }}>
-                      <Box 
-                        sx={{ 
+                      <Box
+                        sx={{
                           backgroundColor: '#f8fafc',
                           borderRadius: '8px',
                           p: 2,
@@ -366,10 +395,10 @@ function CertificatesList({ refreshTrigger }: CertificatesListProps) {
       )}
 
       {/* Modern Delete Confirmation Dialog */}
-      <Dialog 
-        open={open} 
+      <Dialog
+        open={open}
         onClose={handleClose}
-        maxWidth="sm"
+        maxWidth='sm'
         fullWidth
         PaperProps={{
           sx: {
@@ -378,33 +407,43 @@ function CertificatesList({ refreshTrigger }: CertificatesListProps) {
           }
         }}
       >
-        <DialogTitle sx={{ 
-          textAlign: 'center', 
-          fontWeight: 'bold',
-          pb: 1,
-          borderBottom: '1px solid #e5e7eb'
-        }}>
-          <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>
+        <DialogTitle
+          sx={{
+            textAlign: 'center',
+            fontWeight: 'bold',
+            pb: 1,
+            borderBottom: '1px solid #e5e7eb'
+          }}
+        >
+          <Box
+            display='flex'
+            alignItems='center'
+            justifyContent='center'
+            gap={1}
+            mb={1}
+          >
             <Delete sx={{ color: '#dc2626' }} />
-            <Typography variant="h6" fontWeight="bold">
+            <Typography variant='h6' fontWeight='bold'>
               Confirmar Eliminación
             </Typography>
           </Box>
         </DialogTitle>
-        
+
         <DialogContent sx={{ pt: 3, textAlign: 'center' }}>
           <DialogContentText sx={{ fontSize: '1rem', color: '#374151' }}>
             ¿Estás seguro de que quieres eliminar este certificado?
           </DialogContentText>
-          <DialogContentText sx={{ fontSize: '0.875rem', color: '#6b7280', mt: 1 }}>
+          <DialogContentText
+            sx={{ fontSize: '0.875rem', color: '#6b7280', mt: 1 }}
+          >
             Esta acción no se puede deshacer.
           </DialogContentText>
         </DialogContent>
-        
+
         <DialogActions sx={{ p: 3, pt: 0 }}>
-          <Button 
+          <Button
             onClick={handleClose}
-            variant="outlined"
+            variant='outlined'
             sx={{
               borderRadius: '8px',
               textTransform: 'none',
@@ -419,9 +458,9 @@ function CertificatesList({ refreshTrigger }: CertificatesListProps) {
           >
             Cancelar
           </Button>
-          <Button 
+          <Button
             onClick={handleConfirmDelete}
-            variant="contained"
+            variant='contained'
             sx={{
               backgroundColor: '#dc2626',
               borderRadius: '8px',
