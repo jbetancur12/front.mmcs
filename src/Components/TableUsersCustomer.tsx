@@ -45,7 +45,7 @@ export interface UserData {
   nombre: string
   email: string
   contraseña: string
-  active: boolean
+  isActive: boolean
   customer: {
     id: number
     nombre: string
@@ -463,18 +463,18 @@ const Table: React.FC = () => {
                         />
 
                         <Chip
-                          icon={user.active ? <CheckCircle /> : <Cancel />}
-                          label={user.active ? 'Activo' : 'Inactivo'}
+                          icon={user.isActive ? <CheckCircle /> : <Cancel />}
+                          label={user.isActive ? 'Activo' : 'Inactivo'}
                           size='small'
                           sx={{
-                            backgroundColor: user.active
+                            backgroundColor: user.isActive
                               ? '#f0fdf4'
                               : '#fef2f2',
-                            color: user.active ? '#059669' : '#dc2626',
+                            color: user.isActive ? '#059669' : '#dc2626',
                             fontWeight: 600,
                             fontSize: '0.75rem',
                             '& .MuiChip-icon': {
-                              color: user.active ? '#059669' : '#dc2626'
+                              color: user.isActive ? '#059669' : '#dc2626'
                             }
                           }}
                         />

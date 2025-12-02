@@ -21,7 +21,7 @@ export interface MaintenanceTicket {
   priority: MaintenancePriority
   status: MaintenanceStatus
   assignedTechnician?: MaintenanceTechnician
-  technicianId?: string
+  assignedTechnicianId?: string
   scheduledDate?: string
   completedDate?: string
   estimatedCost?: number

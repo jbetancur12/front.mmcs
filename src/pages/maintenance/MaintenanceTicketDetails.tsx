@@ -214,7 +214,7 @@ const MaintenanceTicketDetails: React.FC = () => {
     if (ticket && !editMode) {
       setEditData({
         status: ticket.status,
-        assignedTechnician: ticket.technicianId || '',
+        assignedTechnician: ticket.assignedTechnicianId || '',
         scheduledDate: ticket.scheduledDate || '',
         priority: ticket.priority,
         estimatedCost: ticket.estimatedCost,
@@ -306,7 +306,7 @@ const MaintenanceTicketDetails: React.FC = () => {
     if (ticket) {
       setEditData({
         status: ticket.status,
-        assignedTechnician: ticket.technicianId || '',
+        assignedTechnician: ticket.assignedTechnicianId || '',
         scheduledDate: ticket.scheduledDate || '',
         priority: ticket.priority,
         estimatedCost: ticket.estimatedCost,

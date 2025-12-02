@@ -232,20 +232,20 @@ const MaintenanceDashboard: React.FC = () => {
     return Array.from(types)
   }, [ticketsData?.tickets])
 
-  // Sort tickets by priority (urgent -> high -> medium -> low) then by creation date (oldest first)
+  // Ordenar tickets por prioridad (urgente -> alta -> media -> baja) y luego por fecha de creación (más antiguos primero)
   const sortedTickets = useMemo(() => {
     if (!ticketsData?.tickets) return []
 
     const priorityOrder = {
-      [MaintenancePriority.URGENT]: 1,
-      [MaintenancePriority.HIGH]: 2,
-      [MaintenancePriority.MEDIUM]: 3,
-      [MaintenancePriority.LOW]: 4
+      [MaintenancePriority.URGENT]: 4,
+      [MaintenancePriority.HIGH]: 3,
+      [MaintenancePriority.MEDIUM]: 2,
+      [MaintenancePriority.LOW]: 1
     }
 
     return [...ticketsData.tickets].sort((a, b) => {
-      // First sort by priority (urgent first)
-      const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority]
+      // Primero ordenar por prioridad (más alta primero)
+      const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority]
       if (priorityDiff !== 0) {
         return priorityDiff
       }
@@ -258,21 +258,25 @@ const MaintenanceDashboard: React.FC = () => {
   }, [ticketsData?.tickets])
 
   const handleEditTicket = (ticket: MaintenanceTicket) => {
-    // For technicians, only allow editing tickets assigned to them
-    const technicianId = $userStore.email === 'kat34433@laoia.com' ? 4 : null
+    // Para técnicos, solo permitir editar tickets que les pertenecen.
+    // Buscamos el técnico en la lista de técnicos usando el email del usuario logueado.
+    const currentTechnician = technicians?.find(
+      (tech) => tech.email === $userStore.email
+    )
+
     if (
       isTechnician &&
-      technicianId &&
-      Number(ticket.assignedTechnician?.id) !== technicianId
+      currentTechnician &&
+      Number(ticket.assignedTechnician?.id) !== Number(currentTechnician.id)
     ) {
-      console.warn('Technician can only edit their assigned tickets')
       return
     }
 
     setSelectedTicket(ticket)
+    console.log('🚀 ~ handleEditTicket ~ ticket:', ticket)
     setEditData({
       status: ticket.status,
-      assignedTechnician: ticket.technicianId || '',
+      assignedTechnician: ticket.assignedTechnicianId || '',
       scheduledDate: ticket.scheduledDate || '',
       priority: ticket.priority
     })

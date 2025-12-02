@@ -44,7 +44,7 @@ export interface CustomerData {
   ciudad: string
   departamento: string
   pais: string
-  active: boolean
+  isActive: boolean
   rol: string
 }
 
@@ -58,7 +58,9 @@ const CustomersCards: React.FC = () => {
   const [isSearching, setIsSearching] = useState(false)
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
-  const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(null)
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(
+    null
+  )
 
   // Debounced search effect
   useEffect(() => {
@@ -102,27 +104,43 @@ const CustomersCards: React.FC = () => {
   const filteredCustomers = useMemo(() => {
     if (!debouncedSearchTerm) return customers
 
-    return customers.filter((customer) =>
-      (customer.nombre || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-      (customer.identificacion || '').includes(debouncedSearchTerm) ||
-      (customer.email || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-      (customer.telefono || '').includes(debouncedSearchTerm) ||
-      (customer.ciudad || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    return customers.filter(
+      (customer) =>
+        (customer.nombre || '')
+          .toLowerCase()
+          .includes(debouncedSearchTerm.toLowerCase()) ||
+        (customer.identificacion || '').includes(debouncedSearchTerm) ||
+        (customer.email || '')
+          .toLowerCase()
+          .includes(debouncedSearchTerm.toLowerCase()) ||
+        (customer.telefono || '').includes(debouncedSearchTerm) ||
+        (customer.ciudad || '')
+          .toLowerCase()
+          .includes(debouncedSearchTerm.toLowerCase())
     )
   }, [customers, debouncedSearchTerm])
 
-  const highlightText = useCallback((text: string | null | undefined, highlight: string) => {
-    if (!highlight || !text) return text || ''
+  const highlightText = useCallback(
+    (text: string | null | undefined, highlight: string) => {
+      if (!highlight || !text) return text || ''
 
-    const parts = text.split(new RegExp(`(${highlight})`, 'gi'))
-    return parts.map((part, index) =>
-      part.toLowerCase() === highlight.toLowerCase() ? (
-        <Box component="span" key={index} sx={{ bgcolor: 'yellow', fontWeight: 'bold' }}>
-          {part}
-        </Box>
-      ) : part
-    )
-  }, [])
+      const parts = text.split(new RegExp(`(${highlight})`, 'gi'))
+      return parts.map((part, index) =>
+        part.toLowerCase() === highlight.toLowerCase() ? (
+          <Box
+            component='span'
+            key={index}
+            sx={{ bgcolor: 'yellow', fontWeight: 'bold' }}
+          >
+            {part}
+          </Box>
+        ) : (
+          part
+        )
+      )
+    },
+    []
+  )
 
   const clearSearch = () => {
     setSearchTerm('')
@@ -165,7 +183,11 @@ const CustomersCards: React.FC = () => {
 
   const handleUpdateCustomer = async (customerData: CustomerData) => {
     try {
-      const response = await axiosPrivate.put(`/customers/${customerData.id}`, customerData, {})
+      const response = await axiosPrivate.put(
+        `/customers/${customerData.id}`,
+        customerData,
+        {}
+      )
 
       if (response.status >= 200 && response.status < 300) {
         Swal.fire({
@@ -226,7 +248,10 @@ const CustomersCards: React.FC = () => {
         }
       })
 
-      const response = await axiosPrivate.delete(`/customers/${customer.id}`, {})
+      const response = await axiosPrivate.delete(
+        `/customers/${customer.id}`,
+        {}
+      )
 
       if (response.status === 204) {
         fetchCustomers()
@@ -259,21 +284,21 @@ const CustomersCards: React.FC = () => {
     <Card elevation={2} sx={{ height: '100%' }}>
       <CardContent sx={{ pb: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Skeleton variant="circular" width={40} height={40} sx={{ mr: 2 }} />
+          <Skeleton variant='circular' width={40} height={40} sx={{ mr: 2 }} />
           <Box sx={{ flex: 1 }}>
-            <Skeleton variant="text" width="60%" />
-            <Skeleton variant="text" width="40%" />
+            <Skeleton variant='text' width='60%' />
+            <Skeleton variant='text' width='40%' />
           </Box>
         </Box>
-        <Skeleton variant="text" width="80%" />
-        <Skeleton variant="text" width="70%" />
-        <Skeleton variant="text" width="90%" />
+        <Skeleton variant='text' width='80%' />
+        <Skeleton variant='text' width='70%' />
+        <Skeleton variant='text' width='90%' />
       </CardContent>
       <CardActions sx={{ justifyContent: 'space-between' }}>
-        <Skeleton variant="rectangular" width={80} height={32} />
+        <Skeleton variant='rectangular' width={80} height={32} />
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Skeleton variant="rectangular" width={40} height={32} />
-          <Skeleton variant="rectangular" width={40} height={32} />
+          <Skeleton variant='rectangular' width={40} height={32} />
+          <Skeleton variant='rectangular' width={40} height={32} />
         </Box>
       </CardActions>
     </Card>
@@ -291,27 +316,22 @@ const CustomersCards: React.FC = () => {
       }}
     >
       <Business sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-      <Typography variant="h6" color="text.secondary" gutterBottom>
+      <Typography variant='h6' color='text.secondary' gutterBottom>
         No hay clientes registrados
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+      <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
         {debouncedSearchTerm
           ? `No se encontraron clientes que coincidan con "${debouncedSearchTerm}"`
-          : 'Comienza creando el primer cliente'
-        }
+          : 'Comienza creando el primer cliente'}
       </Typography>
       {debouncedSearchTerm && (
-        <Button
-          variant="outlined"
-          onClick={clearSearch}
-          sx={{ mb: 2 }}
-        >
+        <Button variant='outlined' onClick={clearSearch} sx={{ mb: 2 }}>
           Limpiar búsqueda
         </Button>
       )}
       {!debouncedSearchTerm && (
         <Button
-          variant="contained"
+          variant='contained'
           startIcon={<Add />}
           onClick={() => setCreateModalOpen(true)}
           sx={{
@@ -328,57 +348,61 @@ const CustomersCards: React.FC = () => {
   )
 
   return (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
       {/* Header Section */}
-      <Box component="header" sx={{ mb: 4 }}>
+      <Box component='header' sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
           <Business sx={{ mr: 2, fontSize: 32, color: 'primary.main' }} />
-          <Typography variant="h4" component="h1" fontWeight="bold">
+          <Typography variant='h4' component='h1' fontWeight='bold'>
             Clientes - Vista Cards
           </Typography>
         </Box>
 
         {/* Search and Create Section */}
-        <Box sx={{
-          display: 'flex',
-          gap: 2,
-          flexDirection: { xs: 'column', sm: 'row' },
-          alignItems: { xs: 'stretch', sm: 'center' }
-        }}>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 2,
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'stretch', sm: 'center' }
+          }}
+        >
           <TextField
-            label="Buscar clientes"
-            variant="outlined"
+            label='Buscar clientes'
+            variant='outlined'
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             sx={{ flex: 1 }}
-            aria-label="Campo de búsqueda de clientes"
+            aria-label='Campo de búsqueda de clientes'
             InputProps={{
               startAdornment: (
-                <InputAdornment position="start">
-                  <Search color={isSearching ? "primary" : "inherit"} />
+                <InputAdornment position='start'>
+                  <Search color={isSearching ? 'primary' : 'inherit'} />
                 </InputAdornment>
               ),
               endAdornment: searchTerm && (
-                <InputAdornment position="end">
+                <InputAdornment position='end'>
                   <IconButton
-                    size="small"
+                    size='small'
                     onClick={clearSearch}
-                    edge="end"
-                    aria-label="Limpiar búsqueda"
+                    edge='end'
+                    aria-label='Limpiar búsqueda'
                   >
                     <Clear />
                   </IconButton>
                 </InputAdornment>
-              ),
+              )
             }}
             helperText={
-              isSearching ? "Buscando..." :
-                searchTerm && !isSearching ? `${filteredCustomers.length} resultado(s) encontrado(s)` :
-                  ""
+              isSearching
+                ? 'Buscando...'
+                : searchTerm && !isSearching
+                  ? `${filteredCustomers.length} resultado(s) encontrado(s)`
+                  : ''
             }
           />
           <Button
-            variant="contained"
+            variant='contained'
             startIcon={<Add />}
             onClick={() => setCreateModalOpen(true)}
             sx={{
@@ -388,7 +412,7 @@ const CustomersCards: React.FC = () => {
                 bgcolor: '#00ACC1'
               }
             }}
-            aria-label="Crear nuevo cliente"
+            aria-label='Crear nuevo cliente'
           >
             Crear Cliente
           </Button>
@@ -396,13 +420,14 @@ const CustomersCards: React.FC = () => {
 
         {/* Results Count */}
         {!loading && customers.length > 0 && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
             {filteredCustomers.length} de {customers.length} clientes
           </Typography>
         )}
-      </Box>      {/* 
+      </Box>{' '}
+      {/* 
 Content Area */}
-      <Box component="main" role="main" aria-label="Lista de clientes">
+      <Box component='main' role='main' aria-label='Lista de clientes'>
         {loading ? (
           <Grid container spacing={3}>
             {[...Array(8)].map((_, index) => (
@@ -420,7 +445,7 @@ Content Area */}
                 <Fade in timeout={300}>
                   <Card
                     elevation={2}
-                    role="article"
+                    role='article'
                     aria-label={`Cliente: ${customer.nombre}`}
                     sx={{
                       height: '100%',
@@ -434,7 +459,9 @@ Content Area */}
                     }}
                   >
                     <CardContent sx={{ flexGrow: 1, pb: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', mb: 2 }}
+                      >
                         <Avatar
                           sx={{
                             bgcolor: '#00BFA5',
@@ -446,48 +473,91 @@ Content Area */}
                           <Business />
                         </Avatar>
                         <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Typography variant="h6" noWrap sx={{ fontWeight: 600 }}>
-                            {highlightText(customer.nombre, debouncedSearchTerm)}
+                          <Typography
+                            variant='h6'
+                            noWrap
+                            sx={{ fontWeight: 600 }}
+                          >
+                            {highlightText(
+                              customer.nombre,
+                              debouncedSearchTerm
+                            )}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary" noWrap>
-                            ID: {highlightText(customer.identificacion, debouncedSearchTerm)}
+                          <Typography
+                            variant='body2'
+                            color='text.secondary'
+                            noWrap
+                          >
+                            ID:{' '}
+                            {highlightText(
+                              customer.identificacion,
+                              debouncedSearchTerm
+                            )}
                           </Typography>
                         </Box>
                       </Box>
 
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                        <Email sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
-                        <Typography variant="body2" color="text.secondary" noWrap>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', mb: 1 }}
+                      >
+                        <Email
+                          sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }}
+                        />
+                        <Typography
+                          variant='body2'
+                          color='text.secondary'
+                          noWrap
+                        >
                           {highlightText(customer.email, debouncedSearchTerm)}
                         </Typography>
                       </Box>
 
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                        <Phone sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
-                        <Typography variant="body2" color="text.secondary">
-                          {highlightText(customer.telefono, debouncedSearchTerm)}
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', mb: 1 }}
+                      >
+                        <Phone
+                          sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }}
+                        />
+                        <Typography variant='body2' color='text.secondary'>
+                          {highlightText(
+                            customer.telefono,
+                            debouncedSearchTerm
+                          )}
                         </Typography>
                       </Box>
 
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <LocationOn sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }} />
-                        <Typography variant="body2" color="text.secondary" noWrap>
-                          {highlightText(`${customer.ciudad}, ${customer.departamento}`, debouncedSearchTerm)}
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', mb: 2 }}
+                      >
+                        <LocationOn
+                          sx={{ fontSize: 16, color: 'text.secondary', mr: 1 }}
+                        />
+                        <Typography
+                          variant='body2'
+                          color='text.secondary'
+                          noWrap
+                        >
+                          {highlightText(
+                            `${customer.ciudad}, ${customer.departamento}`,
+                            debouncedSearchTerm
+                          )}
                         </Typography>
                       </Box>
 
                       <Chip
-                        label={customer.active ? "Activo" : "Inactivo"}
-                        size="small"
-                        color={customer.active ? "success" : "default"}
-                        variant="outlined"
+                        label={customer.isActive ? 'Activo' : 'Inactivo'}
+                        size='small'
+                        color={customer.isActive ? 'success' : 'default'}
+                        variant='outlined'
                       />
                     </CardContent>
 
-                    <CardActions sx={{ justifyContent: 'space-between', p: 2, pt: 0 }}>
+                    <CardActions
+                      sx={{ justifyContent: 'space-between', p: 2, pt: 0 }}
+                    >
                       <Button
-                        size="small"
-                        variant="contained"
+                        size='small'
+                        variant='contained'
                         startIcon={<Visibility />}
                         onClick={() => handleViewCustomer(customer.id!)}
                         sx={{
@@ -503,16 +573,16 @@ Content Area */}
 
                       <Box sx={{ display: 'flex', gap: 1 }}>
                         <IconButton
-                          size="small"
-                          color="primary"
+                          size='small'
+                          color='primary'
                           onClick={() => handleEditCustomer(customer)}
                           aria-label={`Editar ${customer.nombre}`}
                         >
                           <Edit />
                         </IconButton>
                         <IconButton
-                          size="small"
-                          color="error"
+                          size='small'
+                          color='error'
                           onClick={() => handleDeleteCustomer(customer)}
                           aria-label={`Eliminar ${customer.nombre}`}
                         >
@@ -527,14 +597,12 @@ Content Area */}
           </Grid>
         )}
       </Box>
-
       {/* Create Customer Modal */}
       <CreateCustomerModal
         open={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         onSubmit={handleCreateCustomer}
       />
-
       {/* Edit Customer Modal */}
       <EditCustomerModal
         open={editModalOpen}
