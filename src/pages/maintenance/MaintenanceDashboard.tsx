@@ -67,6 +67,7 @@ import { useStore } from '@nanostores/react'
 import { userStore } from '../../store/userStore'
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import KeyboardShortcutsHelp from '../../Components/Maintenance/KeyboardShortcutsHelp'
+import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
 
 /**
  * MaintenanceDashboard component provides an admin interface for managing maintenance tickets
@@ -90,6 +91,7 @@ const MaintenanceDashboard: React.FC = () => {
   const [selectedTicket, setSelectedTicket] =
     useState<MaintenanceTicket | null>(null)
   const [editData, setEditData] = useState<MaintenanceUpdateRequest>({})
+  const [costsDialogOpen, setCostsDialogOpen] = useState(false)
   const [toast, setToast] = useState<{
     open: boolean
     message: string
@@ -286,6 +288,16 @@ const MaintenanceDashboard: React.FC = () => {
   const handleSaveEdit = async () => {
     if (!selectedTicket) return
 
+    // Check if changing to COMPLETED status
+    if (
+      editData.status === MaintenanceStatus.COMPLETED &&
+      selectedTicket.status !== MaintenanceStatus.COMPLETED
+    ) {
+      // Open costs dialog instead of saving directly
+      setCostsDialogOpen(true)
+      return
+    }
+
     try {
       await updateTicketMutation.mutateAsync({
         id: selectedTicket.id,
@@ -305,6 +317,40 @@ const MaintenanceDashboard: React.FC = () => {
         error.response?.data?.message ||
         'Error al actualizar el ticket'
       showToast(errorMessage, 'error')
+    }
+  }
+
+  const handleCompleteWithCosts = async (
+    workPerformed: string,
+    costs: any[]
+  ) => {
+    if (!selectedTicket) return
+
+    try {
+      await updateTicketMutation.mutateAsync({
+        id: selectedTicket.id,
+        data: {
+          ...editData,
+          status: MaintenanceStatus.COMPLETED,
+          workPerformed,
+          costs: costs
+        }
+      })
+      setCostsDialogOpen(false)
+      setEditDialogOpen(false)
+      setSelectedTicket(null)
+      setEditData({})
+      refetchTickets()
+      refetchStats()
+      showToast('Ticket completado exitosamente', 'success')
+    } catch (error: any) {
+      console.error('Error completing ticket:', error)
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Error al completar el ticket'
+      showToast(errorMessage, 'error')
+      throw error
     }
   }
 
@@ -1076,6 +1122,9 @@ const MaintenanceDashboard: React.FC = () => {
                   }
                   label='Estado'
                   aria-label='Seleccionar estado del ticket'
+                  disabled={
+                    selectedTicket?.status === MaintenanceStatus.COMPLETED
+                  }
                 >
                   {allowedStatuses.map((status) => (
                     <MenuItem key={status} value={status}>
@@ -1102,6 +1151,9 @@ const MaintenanceDashboard: React.FC = () => {
                     }
                     label='Prioridad'
                     aria-label='Seleccionar prioridad del ticket'
+                    disabled={
+                      selectedTicket?.status === MaintenanceStatus.COMPLETED
+                    }
                   >
                     {Object.values(MaintenancePriority).map((priority) => (
                       <MenuItem key={priority} value={priority}>
@@ -1134,6 +1186,9 @@ const MaintenanceDashboard: React.FC = () => {
                     }
                     label='Técnico Asignado'
                     aria-label='Seleccionar técnico asignado'
+                    disabled={
+                      selectedTicket?.status === MaintenanceStatus.COMPLETED
+                    }
                   >
                     <MenuItem value=''>Sin asignar</MenuItem>
                     {technicians
@@ -1345,6 +1400,14 @@ const MaintenanceDashboard: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Completion Costs Dialog */}
+      <CompletionCostsDialog
+        open={costsDialogOpen}
+        onClose={() => setCostsDialogOpen(false)}
+        onComplete={handleCompleteWithCosts}
+        loading={updateTicketMutation.isLoading}
+      />
 
       {/* Toast Notifications */}
       <Snackbar
