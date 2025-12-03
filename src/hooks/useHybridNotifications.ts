@@ -19,7 +19,6 @@ export const useHybridNotifications = (
     enableWebSocket = true,
     enablePolling = false, // Disabled by default to prevent infinite requests
     pollingInterval = 300000, // 5 minutes for fallback
-    fallbackToPolling = true,
     onNewNotification
   } = options
 
@@ -79,6 +78,7 @@ export const useHybridNotifications = (
   }, [enableWebSocket, wsConnected, enablePolling, isPolling])
 
   // Handle WebSocket messages
+  const { refresh: refreshNotifications } = notificationsHook
   useEffect(() => {
     if (wsLastMessage && wsLastMessage.type === 'NOTIFICATION_NEW') {
       setLastNotificationTime(new Date())
@@ -99,9 +99,9 @@ export const useHybridNotifications = (
         onNewNotification(notification)
       }
       // Refresh notifications data
-      notificationsHook.refresh()
+      refreshNotifications()
     }
-  }, [wsLastMessage, onNewNotification, notificationsHook])
+  }, [wsLastMessage, onNewNotification, refreshNotifications])
 
   // Connection status
   const getConnectionStatus = useCallback(() => {
