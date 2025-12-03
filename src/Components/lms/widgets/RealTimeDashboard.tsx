@@ -52,10 +52,10 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
     isRealTimeEnabled,
     lastNotificationTime
   } = useHybridNotifications({
-    enableWebSocket: false, // Disabled temporarily to prevent connection issues
-    enablePolling: false, // Disabled to prevent excessive requests
+    enableWebSocket: true, // Enabled for real-time updates
+    enablePolling: true, // Enabled as fallback
     pollingInterval: refreshInterval,
-    fallbackToPolling: false, // Disabled to prevent excessive requests
+    fallbackToPolling: true, // Enabled as fallback
     onNewNotification: (notification) => {
       // Show real-time alert for new notifications
       setRealtimeAlert({
