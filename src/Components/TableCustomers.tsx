@@ -39,7 +39,7 @@ export interface CustomerData {
   ciudad: string
   departamento: string
   pais: string
-  active: boolean
+  isActive: boolean
   rol: string
 }
 
@@ -442,7 +442,7 @@ export const CreateNewAccountModal = ({
             {columns.map(
               (column) =>
                 column.accessorKey !== 'id' &&
-                column.accessorKey !== 'active' && (
+                column.accessorKey !== 'isActive' && (
                   <TextField
                     key={column.accessorKey}
                     label={column.header}

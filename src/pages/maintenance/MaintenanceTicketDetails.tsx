@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Container,
@@ -16,6 +16,8 @@ import {
   TextField,
   FormControl,
   InputLabel,
+  InputAdornment,
+  FormHelperText,
   Select,
   MenuItem,
   Chip,
@@ -67,11 +69,13 @@ import {
   Warning,
   Info,
   Receipt,
-  AssignmentTurnedIn,
+  // AssignmentTurnedIn,
   Share,
   NotificationsActive,
   TrendingUp,
-  Assessment
+  // Assessment,
+  Lock,
+  CheckCircle
 } from '@mui/icons-material'
 import {
   useMaintenanceTicket,
@@ -99,11 +103,20 @@ import MaintenanceCommentsList from '../../Components/Maintenance/MaintenanceCom
 import MaintenanceFileUpload from '../../Components/Maintenance/MaintenanceFileUpload'
 import MaintenanceTimeline from '../../Components/Maintenance/MaintenanceTimeline'
 import MaintenanceErrorBoundary from '../../Components/Maintenance/MaintenanceErrorBoundary'
+import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
 import useMaintenanceWebSocket from '../../hooks/useMaintenanceWebSocket'
 import useAxiosPrivate from '../../utils/use-axios-private'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import CostsListDialog from 'src/Components/Maintenance/CostsList'
 
+export const formatCurrency = (amount: number | undefined) => {
+  if (!amount) return 'No especificado'
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP'
+  }).format(amount)
+}
 /**
  * MaintenanceTicketDetails component provides a comprehensive ticket management interface
  * Features: ticket info display, editing, comments, file management, timeline, PDF generation
@@ -140,6 +153,8 @@ const MaintenanceTicketDetails: React.FC = () => {
 
   const [pdfMenuAnchor, setPdfMenuAnchor] = useState<null | HTMLElement>(null)
   // const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+  const [costsDialogOpen, setCostsDialogOpen] = useState(false)
+  const [briefCostsDialogOpen, setBriefCostsDialogOpen] = useState(false)
   const [realTimeUpdatesEnabled, setRealTimeUpdatesEnabled] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [editErrors, setEditErrors] = useState<Record<string, string>>({})
@@ -199,7 +214,7 @@ const MaintenanceTicketDetails: React.FC = () => {
     if (ticket && !editMode) {
       setEditData({
         status: ticket.status,
-        assignedTechnician: ticket.technicianId || '',
+        assignedTechnician: ticket.assignedTechnicianId || '',
         scheduledDate: ticket.scheduledDate || '',
         priority: ticket.priority,
         estimatedCost: ticket.estimatedCost,
@@ -216,6 +231,27 @@ const MaintenanceTicketDetails: React.FC = () => {
     }
   }, [editData, editMode])
 
+  const statusChip = useMemo(() => {
+    if (ticket?.isInvoiced) {
+      return (
+        <Chip
+          label='Facturado'
+          color='success'
+          icon={<Receipt />}
+          size='small'
+        />
+      )
+    }
+    return (
+      <Chip
+        label='No Facturado'
+        color='warning'
+        icon={<AttachMoney />}
+        size='small'
+      />
+    )
+  }, [ticket?.isInvoiced])
+
   // Helper functions
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return 'No programada'
@@ -224,14 +260,6 @@ const MaintenanceTicketDetails: React.FC = () => {
     } catch {
       return 'Fecha inválida'
     }
-  }
-
-  const formatCurrency = (amount: number | undefined) => {
-    if (!amount) return 'No especificado'
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP'
-    }).format(amount)
   }
 
   // Toast notification helper
@@ -278,7 +306,7 @@ const MaintenanceTicketDetails: React.FC = () => {
     if (ticket) {
       setEditData({
         status: ticket.status,
-        assignedTechnician: ticket.technicianId || '',
+        assignedTechnician: ticket.assignedTechnicianId || '',
         scheduledDate: ticket.scheduledDate || '',
         priority: ticket.priority,
         estimatedCost: ticket.estimatedCost,
@@ -329,6 +357,16 @@ const MaintenanceTicketDetails: React.FC = () => {
       return
     }
 
+    // Check if changing to COMPLETED status
+    if (
+      editData.status === MaintenanceStatus.COMPLETED &&
+      ticket.status !== MaintenanceStatus.COMPLETED
+    ) {
+      // Open costs dialog instead of saving directly
+      setCostsDialogOpen(true)
+      return
+    }
+
     try {
       await updateTicketMutation.mutateAsync({
         id: ticket.id,
@@ -342,10 +380,70 @@ const MaintenanceTicketDetails: React.FC = () => {
       showToast('Ticket actualizado exitosamente', 'success')
     } catch (error: any) {
       console.error('Error updating ticket:', error)
-      const errorMessage = error.response?.data?.error ||
-                          error.response?.data?.message ||
-                          'Error al actualizar el ticket'
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Error al actualizar el ticket'
       showToast(errorMessage, 'error')
+    }
+  }
+
+  const handleCompleteWithCosts = async (
+    workPerformed: string,
+    costs: any[]
+  ) => {
+    if (!ticket) return
+
+    try {
+      await updateTicketMutation.mutateAsync({
+        id: ticket.id,
+        data: {
+          ...editData,
+          status: MaintenanceStatus.COMPLETED,
+          workPerformed,
+          costs: costs
+        }
+      })
+      setCostsDialogOpen(false)
+      setEditMode(false)
+      setEditErrors({})
+      await refetchTicket()
+      await refetchTimeline()
+      showToast('Ticket completado exitosamente', 'success')
+    } catch (error: any) {
+      console.error('Error completing ticket:', error)
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Error al completar el ticket'
+      showToast(errorMessage, 'error')
+      throw error
+    }
+  }
+
+  const handleInvoice = async () => {
+    console.log(ticket)
+    if (!ticket) return
+
+    try {
+      await updateTicketMutation.mutateAsync({
+        id: ticket.id,
+        data: {
+          isInvoiced: true
+        }
+      })
+      setBriefCostsDialogOpen(false)
+      await refetchTicket()
+      await refetchTimeline()
+      showToast('Ticket completado exitosamente', 'success')
+    } catch (error: any) {
+      console.error('Error completing ticket:', error)
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Error al completar el ticket'
+      showToast(errorMessage, 'error')
+      throw error
     }
   }
 
@@ -450,63 +548,63 @@ const MaintenanceTicketDetails: React.FC = () => {
     })
   }
 
-  const handleGenerateStatusReport = () => {
-    if (!ticketId) return
-    generateStatusReportMutation.mutate(ticketId, {
-      onSuccess: () => {
-        showToast('Reporte de estado generado exitosamente', 'success')
-        setPdfMenuAnchor(null)
-      },
-      onError: (error) => {
-        console.error('Error generating status report:', error)
-        showToast('Error al generar reporte de estado', 'error')
-      }
-    })
-  }
+  // const handleGenerateStatusReport = () => {
+  //   if (!ticketId) return
+  //   generateStatusReportMutation.mutate(ticketId, {
+  //     onSuccess: () => {
+  //       showToast('Reporte de estado generado exitosamente', 'success')
+  //       setPdfMenuAnchor(null)
+  //     },
+  //     onError: (error) => {
+  //       console.error('Error generating status report:', error)
+  //       showToast('Error al generar reporte de estado', 'error')
+  //     }
+  //   })
+  // }
 
-  const handleGenerateServiceCertificate = () => {
-    if (ticket?.status !== MaintenanceStatus.COMPLETED) {
-      showToast(
-        'El certificado solo se puede generar para tickets completados',
-        'warning'
-      )
-      return
-    }
+  // const handleGenerateServiceCertificate = () => {
+  //   if (ticket?.status !== MaintenanceStatus.COMPLETED) {
+  //     showToast(
+  //       'El certificado solo se puede generar para tickets completados',
+  //       'warning'
+  //     )
+  //     return
+  //   }
 
-    if (!ticketId) return
-    generateServiceCertificateMutation.mutate(ticketId, {
-      onSuccess: () => {
-        showToast('Certificado de servicio generado exitosamente', 'success')
-        setPdfMenuAnchor(null)
-      },
-      onError: (error) => {
-        console.error('Error generating service certificate:', error)
-        showToast('Error al generar certificado de servicio', 'error')
-      }
-    })
-  }
+  //   if (!ticketId) return
+  //   generateServiceCertificateMutation.mutate(ticketId, {
+  //     onSuccess: () => {
+  //       showToast('Certificado de servicio generado exitosamente', 'success')
+  //       setPdfMenuAnchor(null)
+  //     },
+  //     onError: (error) => {
+  //       console.error('Error generating service certificate:', error)
+  //       showToast('Error al generar certificado de servicio', 'error')
+  //     }
+  //   })
+  // }
 
-  const handleGenerateInvoice = () => {
-    if (!ticket?.actualCost && !ticket?.estimatedCost) {
-      showToast(
-        'Debe haber un costo especificado para generar factura',
-        'warning'
-      )
-      return
-    }
+  // const handleGenerateInvoice = () => {
+  //   if (!ticket?.actualCost && !ticket?.estimatedCost) {
+  //     showToast(
+  //       'Debe haber un costo especificado para generar factura',
+  //       'warning'
+  //     )
+  //     return
+  //   }
 
-    if (!ticketId) return
-    generateServiceInvoiceMutation.mutate(ticketId, {
-      onSuccess: () => {
-        showToast('Factura generada exitosamente', 'success')
-        setPdfMenuAnchor(null)
-      },
-      onError: (error) => {
-        console.error('Error generating invoice:', error)
-        showToast('Error al generar factura', 'error')
-      }
-    })
-  }
+  //   if (!ticketId) return
+  //   generateServiceInvoiceMutation.mutate(ticketId, {
+  //     onSuccess: () => {
+  //       showToast('Factura generada exitosamente', 'success')
+  //       setPdfMenuAnchor(null)
+  //     },
+  //     onError: (error) => {
+  //       console.error('Error generating invoice:', error)
+  //       showToast('Error al generar factura', 'error')
+  //     }
+  //   })
+  // }
 
   const handlePdfMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setPdfMenuAnchor(event.currentTarget)
@@ -541,12 +639,13 @@ const MaintenanceTicketDetails: React.FC = () => {
   // Loading state
   if (ticketLoading) {
     return (
-      <Container 
-        maxWidth={false} 
-        sx={{ 
-          py: { xs: 2, sm: 3 }, 
+      <Container
+        maxWidth={false}
+        sx={{
+          py: { xs: 2, sm: 3 },
           px: { xs: 1, sm: 2, md: 3 },
-          background: 'linear-gradient(135deg, rgba(109, 198, 98, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)',
+          background:
+            'linear-gradient(135deg, rgba(109, 198, 98, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)',
           minHeight: '100vh'
         }}
       >
@@ -554,7 +653,7 @@ const MaintenanceTicketDetails: React.FC = () => {
           variant='rectangular'
           width='100%'
           height={60}
-          sx={{ 
+          sx={{
             mb: { xs: 2, sm: 3 },
             borderRadius: '16px',
             background: 'rgba(255, 255, 255, 0.95)',
@@ -563,9 +662,9 @@ const MaintenanceTicketDetails: React.FC = () => {
         />
         <Grid container spacing={{ xs: 2, sm: 3 }}>
           <Grid item xs={12} md={8}>
-            <Skeleton 
-              variant='rectangular' 
-              width='100%' 
+            <Skeleton
+              variant='rectangular'
+              width='100%'
               height={400}
               sx={{
                 borderRadius: '16px',
@@ -575,9 +674,9 @@ const MaintenanceTicketDetails: React.FC = () => {
             />
           </Grid>
           <Grid item xs={12} md={4}>
-            <Skeleton 
-              variant='rectangular' 
-              width='100%' 
+            <Skeleton
+              variant='rectangular'
+              width='100%'
               height={300}
               sx={{
                 borderRadius: '16px',
@@ -594,18 +693,19 @@ const MaintenanceTicketDetails: React.FC = () => {
   // Error state
   if (ticketError || !ticket) {
     return (
-      <Container 
-        maxWidth={false} 
-        sx={{ 
-          py: { xs: 2, sm: 3 }, 
+      <Container
+        maxWidth={false}
+        sx={{
+          py: { xs: 2, sm: 3 },
           px: { xs: 1, sm: 2, md: 3 },
-          background: 'linear-gradient(135deg, rgba(109, 198, 98, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)',
+          background:
+            'linear-gradient(135deg, rgba(109, 198, 98, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)',
           minHeight: '100vh'
         }}
       >
-        <Alert 
-          severity='error' 
-          sx={{ 
+        <Alert
+          severity='error'
+          sx={{
             mb: 3,
             background: 'rgba(255, 255, 255, 0.95)',
             backdropFilter: 'blur(10px)',
@@ -621,7 +721,7 @@ const MaintenanceTicketDetails: React.FC = () => {
           variant='outlined'
           startIcon={<ArrowBack />}
           onClick={handleBack}
-          sx={{ 
+          sx={{
             minHeight: 48,
             borderColor: '#6dc662',
             color: '#6dc662',
@@ -642,17 +742,18 @@ const MaintenanceTicketDetails: React.FC = () => {
 
   return (
     <MaintenanceErrorBoundary>
-      <Container 
-        maxWidth={false} 
-        sx={{ 
-          py: { xs: 2, sm: 3 }, 
+      <Container
+        maxWidth={false}
+        sx={{
+          py: { xs: 2, sm: 3 },
           px: { xs: 1, sm: 2, md: 3 },
-          background: 'linear-gradient(135deg, rgba(109, 198, 98, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)',
+          background:
+            'linear-gradient(135deg, rgba(109, 198, 98, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)',
           minHeight: '100vh'
         }}
       >
         {/* Header with breadcrumbs */}
-        <Box 
+        <Box
           mb={{ xs: 2, sm: 3 }}
           sx={{
             background: 'rgba(255, 255, 255, 0.95)',
@@ -663,10 +764,10 @@ const MaintenanceTicketDetails: React.FC = () => {
             border: '1px solid rgba(109, 198, 98, 0.1)'
           }}
         >
-          <Breadcrumbs 
-            aria-label='breadcrumb' 
-            sx={{ 
-              mb: 2, 
+          <Breadcrumbs
+            aria-label='breadcrumb'
+            sx={{
+              mb: 2,
               display: { xs: 'none', sm: 'flex' },
               '& .MuiBreadcrumbs-separator': {
                 color: '#6dc662'
@@ -677,9 +778,9 @@ const MaintenanceTicketDetails: React.FC = () => {
               color='inherit'
               href='/maintenance'
               underline='hover'
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
                 cursor: 'pointer',
                 color: '#6dc662',
                 transition: 'all 0.2s ease-in-out',
@@ -695,7 +796,7 @@ const MaintenanceTicketDetails: React.FC = () => {
             >
               Dashboard de Mantenimiento
             </Link>
-            <Typography 
+            <Typography
               sx={{
                 background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
                 backgroundClip: 'text',
@@ -715,19 +816,25 @@ const MaintenanceTicketDetails: React.FC = () => {
             alignItems={{ xs: 'flex-start', sm: 'center' }}
             gap={{ xs: 2, sm: 0 }}
           >
-            <Box display='flex' alignItems='center' gap={{ xs: 1, sm: 2 }} width={{ xs: '100%', sm: 'auto' }}>
+            <Box
+              display='flex'
+              alignItems='center'
+              gap={{ xs: 1, sm: 2 }}
+              width={{ xs: '100%', sm: 'auto' }}
+            >
               <IconButton
                 onClick={handleBack}
                 aria-label='Volver al dashboard de mantenimiento'
-                sx={{ 
-                  minWidth: 48, 
+                sx={{
+                  minWidth: 48,
                   minHeight: 48,
                   background: 'rgba(109, 198, 98, 0.1)',
                   color: '#6dc662',
                   borderRadius: '12px',
                   transition: 'all 0.2s ease-in-out',
                   '&:hover': {
-                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    background:
+                      'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
                     color: 'white',
                     transform: 'translateY(-2px)',
                     boxShadow: '0 6px 20px rgba(109, 198, 98, 0.3)'
@@ -740,10 +847,11 @@ const MaintenanceTicketDetails: React.FC = () => {
                 <Typography
                   variant='h4'
                   component='h1'
-                  sx={{ 
+                  sx={{
                     fontSize: { xs: '1.5rem', sm: '1.875rem', md: '2.125rem' },
                     fontWeight: 700,
-                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    background:
+                      'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
                     backgroundClip: 'text',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
@@ -755,7 +863,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                 <Typography
                   variant='subtitle1'
                   color='text.secondary'
-                  sx={{ 
+                  sx={{
                     fontSize: { xs: '0.875rem', sm: '1rem' },
                     fontWeight: 500
                   }}
@@ -765,9 +873,20 @@ const MaintenanceTicketDetails: React.FC = () => {
               </Box>
             </Box>
 
-            <Box display='flex' gap={{ xs: 0.5, sm: 1 }} alignItems='center' flexWrap='wrap' width={{ xs: '100%', sm: 'auto' }}>
+            <Box
+              display='flex'
+              gap={{ xs: 0.5, sm: 1 }}
+              alignItems='center'
+              flexWrap='wrap'
+              width={{ xs: '100%', sm: 'auto' }}
+            >
               {/* Real-time updates indicator - hide on mobile */}
-              <Box display={{ xs: 'none', md: 'flex' }} alignItems='center' gap={1} mr={2}>
+              <Box
+                display={{ xs: 'none', md: 'flex' }}
+                alignItems='center'
+                gap={1}
+                mr={2}
+              >
                 <FormControlLabel
                   control={
                     <Switch
@@ -796,15 +915,16 @@ const MaintenanceTicketDetails: React.FC = () => {
                 <IconButton
                   onClick={handleRefresh}
                   aria-label='Actualizar datos del ticket'
-                  sx={{ 
-                    minWidth: 48, 
+                  sx={{
+                    minWidth: 48,
                     minHeight: 48,
                     background: 'rgba(109, 198, 98, 0.1)',
                     color: '#6dc662',
                     borderRadius: '12px',
                     transition: 'all 0.2s ease-in-out',
                     '&:hover': {
-                      background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                      background:
+                        'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
                       color: 'white',
                       transform: 'translateY(-2px)',
                       boxShadow: '0 6px 20px rgba(109, 198, 98, 0.3)'
@@ -819,7 +939,8 @@ const MaintenanceTicketDetails: React.FC = () => {
               <Button
                 variant='outlined'
                 startIcon={
-                  !isMobile && (generateServiceOrderMutation.isLoading ||
+                  !isMobile &&
+                  (generateServiceOrderMutation.isLoading ||
                   generateStatusReportMutation.isLoading ||
                   generateServiceCertificateMutation.isLoading ||
                   generateServiceInvoiceMutation.isLoading ? (
@@ -900,14 +1021,18 @@ const MaintenanceTicketDetails: React.FC = () => {
                     }}
                   >
                     <ListItemIcon>
-                      <Print fontSize='small' aria-hidden='true' sx={{ color: '#6dc662' }} />
+                      <Print
+                        fontSize='small'
+                        aria-hidden='true'
+                        sx={{ color: '#6dc662' }}
+                      />
                     </ListItemIcon>
                     <ListItemText
                       primary='Orden de Servicio'
                       secondary='Documento de trabajo'
                     />
                   </ListItemButton>
-
+                  {/* 
                   <ListItemButton
                     onClick={handleGenerateStatusReport}
                     role='menuitem'
@@ -930,8 +1055,8 @@ const MaintenanceTicketDetails: React.FC = () => {
                       primary='Reporte de Estado'
                       secondary='Estado actual del ticket'
                     />
-                  </ListItemButton>
-
+                  </ListItemButton> */}
+                  {/* 
                   <ListItemButton
                     onClick={handleGenerateServiceCertificate}
                     disabled={ticket.status !== MaintenanceStatus.COMPLETED}
@@ -944,11 +1069,11 @@ const MaintenanceTicketDetails: React.FC = () => {
                       mb: 0.5,
                       transition: 'all 0.2s ease-in-out',
                       '&:hover': {
-                        background: ticket.status === MaintenanceStatus.COMPLETED 
-                          ? 'rgba(109, 198, 98, 0.1)' 
+                        background: ticket.status === MaintenanceStatus.COMPLETED
+                          ? 'rgba(109, 198, 98, 0.1)'
                           : 'rgba(0, 0, 0, 0.04)',
-                        transform: ticket.status === MaintenanceStatus.COMPLETED 
-                          ? 'translateX(4px)' 
+                        transform: ticket.status === MaintenanceStatus.COMPLETED
+                          ? 'translateX(4px)'
                           : 'none'
                       },
                       '&.Mui-disabled': {
@@ -957,14 +1082,14 @@ const MaintenanceTicketDetails: React.FC = () => {
                     }}
                   >
                     <ListItemIcon>
-                      <AssignmentTurnedIn 
-                        fontSize='small' 
-                        aria-hidden='true' 
-                        sx={{ 
-                          color: ticket.status === MaintenanceStatus.COMPLETED 
-                            ? '#6dc662' 
-                            : 'text.disabled' 
-                        }} 
+                      <AssignmentTurnedIn
+                        fontSize='small'
+                        aria-hidden='true'
+                        sx={{
+                          color: ticket.status === MaintenanceStatus.COMPLETED
+                            ? '#6dc662'
+                            : 'text.disabled'
+                        }}
                       />
                     </ListItemIcon>
                     <ListItemText
@@ -990,10 +1115,10 @@ const MaintenanceTicketDetails: React.FC = () => {
                       transition: 'all 0.2s ease-in-out',
                       '&:hover': {
                         background: (ticket.actualCost || ticket.estimatedCost)
-                          ? 'rgba(109, 198, 98, 0.1)' 
+                          ? 'rgba(109, 198, 98, 0.1)'
                           : 'rgba(0, 0, 0, 0.04)',
                         transform: (ticket.actualCost || ticket.estimatedCost)
-                          ? 'translateX(4px)' 
+                          ? 'translateX(4px)'
                           : 'none'
                       },
                       '&.Mui-disabled': {
@@ -1002,14 +1127,14 @@ const MaintenanceTicketDetails: React.FC = () => {
                     }}
                   >
                     <ListItemIcon>
-                      <Receipt 
-                        fontSize='small' 
-                        aria-hidden='true' 
-                        sx={{ 
+                      <Receipt
+                        fontSize='small'
+                        aria-hidden='true'
+                        sx={{
                           color: (ticket.actualCost || ticket.estimatedCost)
-                            ? '#6dc662' 
-                            : 'text.disabled' 
-                        }} 
+                            ? '#6dc662'
+                            : 'text.disabled'
+                        }}
                       />
                     </ListItemIcon>
                     <ListItemText
@@ -1020,7 +1145,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                           : 'Documento de facturación'
                       }
                     />
-                  </ListItemButton>
+                  </ListItemButton> */}
                 </MenuList>
               </Menu>
 
@@ -1051,7 +1176,8 @@ const MaintenanceTicketDetails: React.FC = () => {
                   <Button
                     variant='contained'
                     startIcon={
-                      !isMobile && (updateTicketMutation.isLoading ? (
+                      !isMobile &&
+                      (updateTicketMutation.isLoading ? (
                         <CircularProgress size={16} />
                       ) : (
                         <Save />
@@ -1063,12 +1189,14 @@ const MaintenanceTicketDetails: React.FC = () => {
                     sx={{
                       minHeight: 48,
                       fontSize: { xs: '0.813rem', sm: '0.875rem' },
-                      background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                      background:
+                        'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
                       borderRadius: '12px',
                       boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
                       transition: 'all 0.2s ease-in-out',
                       '&:hover': {
-                        background: 'linear-gradient(135deg, #5ab052 0%, #4a9642 100%)',
+                        background:
+                          'linear-gradient(135deg, #5ab052 0%, #4a9642 100%)',
                         transform: 'translateY(-2px)',
                         boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
                       },
@@ -1078,9 +1206,13 @@ const MaintenanceTicketDetails: React.FC = () => {
                       }
                     }}
                   >
-                    {isMobile ? <Save /> : (updateTicketMutation.isLoading
-                      ? 'Guardando...'
-                      : 'Guardar')}
+                    {isMobile ? (
+                      <Save />
+                    ) : updateTicketMutation.isLoading ? (
+                      'Guardando...'
+                    ) : (
+                      'Guardar'
+                    )}
                   </Button>
                 </>
               ) : (
@@ -1092,12 +1224,14 @@ const MaintenanceTicketDetails: React.FC = () => {
                   sx={{
                     minHeight: 48,
                     fontSize: { xs: '0.813rem', sm: '0.875rem' },
-                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    background:
+                      'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
                     borderRadius: '12px',
                     boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
                     transition: 'all 0.2s ease-in-out',
                     '&:hover': {
-                      background: 'linear-gradient(135deg, #5ab052 0%, #4a9642 100%)',
+                      background:
+                        'linear-gradient(135deg, #5ab052 0%, #4a9642 100%)',
                       transform: 'translateY(-2px)',
                       boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
                     }
@@ -1114,10 +1248,10 @@ const MaintenanceTicketDetails: React.FC = () => {
           {/* Main Content */}
           <Grid item xs={12} lg={8}>
             {/* Ticket Status and Priority */}
-            <Paper 
-              elevation={2} 
-              sx={{ 
-                p: { xs: 2, sm: 3 }, 
+            <Paper
+              elevation={2}
+              sx={{
+                p: { xs: 2, sm: 3 },
                 mb: { xs: 2, sm: 3 },
                 background: 'rgba(255, 255, 255, 0.95)',
                 backdropFilter: 'blur(10px)',
@@ -1141,7 +1275,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               >
                 <Typography
                   variant='h6'
-                  sx={{ 
+                  sx={{
                     fontSize: { xs: '1.125rem', sm: '1.25rem' },
                     fontWeight: 600,
                     color: '#6dc662'
@@ -1158,8 +1292,16 @@ const MaintenanceTicketDetails: React.FC = () => {
               {editMode ? (
                 <Grid container spacing={{ xs: 1, sm: 2 }}>
                   <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth size={isMobile ? 'small' : 'medium'}>
-                      <InputLabel id='detail-status-label'>Estado</InputLabel>
+                    <FormControl
+                      fullWidth
+                      size={isMobile ? 'small' : 'medium'}
+                      disabled={ticket.status === MaintenanceStatus.COMPLETED}
+                    >
+                      <InputLabel id='detail-status-label'>
+                        Estado{' '}
+                        {ticket.status === MaintenanceStatus.COMPLETED &&
+                          '(Bloqueado)'}
+                      </InputLabel>
                       <Select
                         labelId='detail-status-label'
                         id='detail-status-select'
@@ -1170,8 +1312,25 @@ const MaintenanceTicketDetails: React.FC = () => {
                             status: e.target.value as MaintenanceStatus
                           }))
                         }
-                        label='Estado'
+                        label={`Estado${ticket.status === MaintenanceStatus.COMPLETED ? ' (Bloqueado)' : ''}`}
+                        startAdornment={
+                          ticket.status === MaintenanceStatus.COMPLETED ? (
+                            <InputAdornment position='start'>
+                              <Lock sx={{ color: '#10b981' }} />
+                            </InputAdornment>
+                          ) : undefined
+                        }
                         aria-label='Seleccionar estado del ticket'
+                        sx={
+                          ticket.status === MaintenanceStatus.COMPLETED
+                            ? {
+                                background: 'rgba(16, 185, 129, 0.05)',
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: '#10b981'
+                                }
+                              }
+                            : {}
+                        }
                       >
                         {Object.values(MaintenanceStatus).map((status) => (
                           <MenuItem key={status} value={status}>
@@ -1182,12 +1341,23 @@ const MaintenanceTicketDetails: React.FC = () => {
                           </MenuItem>
                         ))}
                       </Select>
+                      {ticket.status === MaintenanceStatus.COMPLETED && (
+                        <FormHelperText>
+                          <Box display='flex' alignItems='center' gap={0.5}>
+                            <Lock fontSize='small' />
+                            Este ticket está completado y no puede cambiar de
+                            estado
+                          </Box>
+                        </FormHelperText>
+                      )}
                     </FormControl>
                   </Grid>
 
                   <Grid item xs={12} sm={6}>
                     <FormControl fullWidth>
-                      <InputLabel id='detail-priority-label'>Prioridad</InputLabel>
+                      <InputLabel id='detail-priority-label'>
+                        Prioridad
+                      </InputLabel>
                       <Select
                         labelId='detail-priority-label'
                         id='detail-priority-select'
@@ -1248,10 +1418,10 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Customer Information */}
-            <Paper 
-              elevation={2} 
-              sx={{ 
-                p: 3, 
+            <Paper
+              elevation={2}
+              sx={{
+                p: 3,
                 mb: 3,
                 background: 'rgba(255, 255, 255, 0.95)',
                 backdropFilter: 'blur(10px)',
@@ -1271,7 +1441,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                 alignItems='center'
                 mb={2}
               >
-                <Typography 
+                <Typography
                   variant='h6'
                   sx={{
                     fontWeight: 600,
@@ -1294,7 +1464,8 @@ const MaintenanceTicketDetails: React.FC = () => {
                         borderRadius: '8px',
                         transition: 'all 0.2s ease-in-out',
                         '&:hover': {
-                          background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                          background:
+                            'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
                           color: 'white',
                           transform: 'translateY(-2px)',
                           boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)'
@@ -1317,7 +1488,8 @@ const MaintenanceTicketDetails: React.FC = () => {
                         borderRadius: '8px',
                         transition: 'all 0.2s ease-in-out',
                         '&:hover': {
-                          background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                          background:
+                            'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
                           color: 'white',
                           transform: 'translateY(-2px)',
                           boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)'
@@ -1394,7 +1566,9 @@ const MaintenanceTicketDetails: React.FC = () => {
                       helperText={editErrors.location}
                       aria-label='Editar ubicación del servicio'
                       aria-invalid={!!editErrors.location}
-                      aria-describedby={editErrors.location ? 'location-error' : undefined}
+                      aria-describedby={
+                        editErrors.location ? 'location-error' : undefined
+                      }
                     />
                   ) : (
                     <Typography variant='body1' sx={{ whiteSpace: 'pre-wrap' }}>
@@ -1406,10 +1580,10 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Equipment Information */}
-            <Paper 
-              elevation={2} 
-              sx={{ 
-                p: 3, 
+            <Paper
+              elevation={2}
+              sx={{
+                p: 3,
                 mb: 3,
                 background: 'rgba(255, 255, 255, 0.95)',
                 backdropFilter: 'blur(10px)',
@@ -1421,14 +1595,15 @@ const MaintenanceTicketDetails: React.FC = () => {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
                 }
-              }} 
-              role='region' 
+              }}
+              role='region'
               aria-label='Información del equipo'
             >
               <Box display='flex' alignItems='center' gap={1} mb={2}>
                 <Box
                   sx={{
-                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    background:
+                      'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
                     borderRadius: '8px',
                     p: 1,
                     display: 'flex',
@@ -1436,9 +1611,12 @@ const MaintenanceTicketDetails: React.FC = () => {
                     justifyContent: 'center'
                   }}
                 >
-                  <Build sx={{ color: 'white', fontSize: 20 }} aria-hidden='true' />
+                  <Build
+                    sx={{ color: 'white', fontSize: 20 }}
+                    aria-hidden='true'
+                  />
                 </Box>
-                <Typography 
+                <Typography
                   variant='h6'
                   sx={{
                     fontWeight: 600,
@@ -1461,9 +1639,10 @@ const MaintenanceTicketDetails: React.FC = () => {
                     </Typography>
                     <Chip
                       label={ticket.equipmentType}
-                      sx={{ 
+                      sx={{
                         fontWeight: 'medium',
-                        background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                        background:
+                          'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
                         color: 'white',
                         borderRadius: '8px',
                         boxShadow: '0 2px 8px rgba(109, 198, 98, 0.3)',
@@ -1524,10 +1703,10 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Issue Description */}
-            <Paper 
-              elevation={2} 
-              sx={{ 
-                p: 3, 
+            <Paper
+              elevation={2}
+              sx={{
+                p: 3,
                 mb: 3,
                 background: 'rgba(255, 255, 255, 0.95)',
                 backdropFilter: 'blur(10px)',
@@ -1539,14 +1718,15 @@ const MaintenanceTicketDetails: React.FC = () => {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
                 }
-              }} 
-              role='region' 
+              }}
+              role='region'
               aria-label='Descripción del problema'
             >
               <Box display='flex' alignItems='center' gap={1} mb={2}>
                 <Box
                   sx={{
-                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    background:
+                      'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
                     borderRadius: '8px',
                     p: 1,
                     display: 'flex',
@@ -1554,9 +1734,12 @@ const MaintenanceTicketDetails: React.FC = () => {
                     justifyContent: 'center'
                   }}
                 >
-                  <Description sx={{ color: 'white', fontSize: 20 }} aria-hidden='true' />
+                  <Description
+                    sx={{ color: 'white', fontSize: 20 }}
+                    aria-hidden='true'
+                  />
                 </Box>
-                <Typography 
+                <Typography
                   variant='h6'
                   sx={{
                     fontWeight: 600,
@@ -1585,10 +1768,10 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Timeline Section */}
-            <Paper 
-              elevation={2} 
-              sx={{ 
-                p: 3, 
+            <Paper
+              elevation={2}
+              sx={{
+                p: 3,
                 mb: 3,
                 background: 'rgba(255, 255, 255, 0.95)',
                 backdropFilter: 'blur(10px)',
@@ -1600,8 +1783,8 @@ const MaintenanceTicketDetails: React.FC = () => {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
                 }
-              }} 
-              role='region' 
+              }}
+              role='region'
               aria-label='Historial del ticket'
             >
               <Box
@@ -1614,7 +1797,9 @@ const MaintenanceTicketDetails: React.FC = () => {
                 <IconButton
                   onClick={() => setShowTimeline(!showTimeline)}
                   color='primary'
-                  aria-label={showTimeline ? 'Ocultar historial' : 'Mostrar historial'}
+                  aria-label={
+                    showTimeline ? 'Ocultar historial' : 'Mostrar historial'
+                  }
                   aria-expanded={showTimeline}
                   aria-controls='timeline-section'
                 >
@@ -1624,8 +1809,17 @@ const MaintenanceTicketDetails: React.FC = () => {
 
               <Collapse in={showTimeline} id='timeline-section'>
                 {timelineLoading ? (
-                  <Box display='flex' justifyContent='center' py={3} role='status' aria-live='polite'>
-                    <CircularProgress size={24} aria-label='Cargando historial' />
+                  <Box
+                    display='flex'
+                    justifyContent='center'
+                    py={3}
+                    role='status'
+                    aria-live='polite'
+                  >
+                    <CircularProgress
+                      size={24}
+                      aria-label='Cargando historial'
+                    />
                   </Box>
                 ) : (
                   <MaintenanceTimeline timeline={timelineData || []} />
@@ -1634,10 +1828,10 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Comments Section */}
-            <Paper 
-              elevation={2} 
-              sx={{ 
-                p: 3, 
+            <Paper
+              elevation={2}
+              sx={{
+                p: 3,
                 mb: 3,
                 background: 'rgba(255, 255, 255, 0.95)',
                 backdropFilter: 'blur(10px)',
@@ -1649,8 +1843,8 @@ const MaintenanceTicketDetails: React.FC = () => {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
                 }
-              }} 
-              role='region' 
+              }}
+              role='region'
               aria-label='Sección de comentarios'
             >
               <Box
@@ -1663,7 +1857,9 @@ const MaintenanceTicketDetails: React.FC = () => {
                 <IconButton
                   onClick={() => setShowComments(!showComments)}
                   color='primary'
-                  aria-label={showComments ? 'Ocultar comentarios' : 'Mostrar comentarios'}
+                  aria-label={
+                    showComments ? 'Ocultar comentarios' : 'Mostrar comentarios'
+                  }
                   aria-expanded={showComments}
                   aria-controls='comments-section'
                 >
@@ -1682,10 +1878,10 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Files Section */}
-            <Paper 
-              elevation={2} 
-              sx={{ 
-                p: 3, 
+            <Paper
+              elevation={2}
+              sx={{
+                p: 3,
                 mb: 3,
                 background: 'rgba(255, 255, 255, 0.95)',
                 backdropFilter: 'blur(10px)',
@@ -1697,8 +1893,8 @@ const MaintenanceTicketDetails: React.FC = () => {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
                 }
-              }} 
-              role='region' 
+              }}
+              role='region'
               aria-label='Archivos adjuntos'
             >
               <Box
@@ -1711,7 +1907,9 @@ const MaintenanceTicketDetails: React.FC = () => {
                 <IconButton
                   onClick={() => setShowFiles(!showFiles)}
                   color='primary'
-                  aria-label={showFiles ? 'Ocultar archivos' : 'Mostrar archivos'}
+                  aria-label={
+                    showFiles ? 'Ocultar archivos' : 'Mostrar archivos'
+                  }
                   aria-expanded={showFiles}
                   aria-controls='files-section'
                 >
@@ -1735,10 +1933,10 @@ const MaintenanceTicketDetails: React.FC = () => {
           {/* Sidebar */}
           <Grid item xs={12} lg={4}>
             {/* Assigned Technician */}
-            <Paper 
-              elevation={2} 
-              sx={{ 
-                p: 3, 
+            <Paper
+              elevation={2}
+              sx={{
+                p: 3,
                 mb: 3,
                 background: 'rgba(255, 255, 255, 0.95)',
                 backdropFilter: 'blur(10px)',
@@ -1755,7 +1953,8 @@ const MaintenanceTicketDetails: React.FC = () => {
               <Box display='flex' alignItems='center' gap={1} mb={2}>
                 <Box
                   sx={{
-                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    background:
+                      'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
                     borderRadius: '8px',
                     p: 1,
                     display: 'flex',
@@ -1765,7 +1964,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                 >
                   <Assignment sx={{ color: 'white', fontSize: 20 }} />
                 </Box>
-                <Typography 
+                <Typography
                   variant='h6'
                   sx={{
                     fontWeight: 600,
@@ -1789,18 +1988,21 @@ const MaintenanceTicketDetails: React.FC = () => {
                         }))
                       }
                       label='Técnico'
+                      disabled={ticket.status === MaintenanceStatus.COMPLETED}
                     >
                       <MenuItem value=''>Sin asignar</MenuItem>
                       {technicians
-                        ?.filter(t => t.status === 'active')
+                        ?.filter((t) => t.status === 'active')
                         .sort((a, b) => {
                           const aCapacity = a.maxWorkload - a.workload
                           const bCapacity = b.maxWorkload - b.workload
                           return bCapacity - aCapacity
                         })
                         .map((technician) => {
-                          const utilizationPct = (technician.workload / technician.maxWorkload) * 100
-                          const isFull = technician.workload >= technician.maxWorkload
+                          const utilizationPct =
+                            (technician.workload / technician.maxWorkload) * 100
+                          const isFull =
+                            technician.workload >= technician.maxWorkload
                           const isNearFull = utilizationPct >= 80
 
                           return (
@@ -1809,36 +2011,65 @@ const MaintenanceTicketDetails: React.FC = () => {
                               value={technician.id}
                               disabled={isFull}
                             >
-                              <Box display='flex' flexDirection='column' width='100%'>
-                                <Box display='flex' alignItems='center' gap={1} width='100%'>
+                              <Box
+                                display='flex'
+                                flexDirection='column'
+                                width='100%'
+                              >
+                                <Box
+                                  display='flex'
+                                  alignItems='center'
+                                  gap={1}
+                                  width='100%'
+                                >
                                   <Avatar
                                     sx={{
                                       width: 32,
                                       height: 32,
                                       fontSize: '0.875rem',
-                                      bgcolor: isFull ? 'error.main' : isNearFull ? 'warning.main' : 'success.main'
+                                      bgcolor: isFull
+                                        ? 'error.main'
+                                        : isNearFull
+                                          ? 'warning.main'
+                                          : 'success.main'
                                     }}
                                   >
-                                    {technician.name.split(' ').map((n) => n[0]).join('').toUpperCase()}
+                                    {technician.name
+                                      .split(' ')
+                                      .map((n) => n[0])
+                                      .join('')
+                                      .toUpperCase()}
                                   </Avatar>
 
                                   <Box flex={1}>
-                                    <Typography variant='body2' fontWeight='medium'>
+                                    <Typography
+                                      variant='body2'
+                                      fontWeight='medium'
+                                    >
                                       {technician.name}
                                     </Typography>
-                                    <Typography variant='caption' color='text.secondary'>
+                                    <Typography
+                                      variant='caption'
+                                      color='text.secondary'
+                                    >
                                       {technician.specialization || 'General'}
                                     </Typography>
                                   </Box>
 
-                                  <Box display='flex' gap={0.5} alignItems='center'>
+                                  <Box
+                                    display='flex'
+                                    gap={0.5}
+                                    alignItems='center'
+                                  >
                                     <Chip
                                       size='small'
                                       label={`${technician.workload}/${technician.maxWorkload}`}
                                       color={
-                                        isFull ? 'error' :
-                                        isNearFull ? 'warning' :
-                                        'success'
+                                        isFull
+                                          ? 'error'
+                                          : isNearFull
+                                            ? 'warning'
+                                            : 'success'
                                       }
                                       variant='outlined'
                                     />
@@ -1857,9 +2088,11 @@ const MaintenanceTicketDetails: React.FC = () => {
                                     variant='determinate'
                                     value={utilizationPct}
                                     color={
-                                      isFull ? 'error' :
-                                      isNearFull ? 'warning' :
-                                      'success'
+                                      isFull
+                                        ? 'error'
+                                        : isNearFull
+                                          ? 'warning'
+                                          : 'success'
                                     }
                                     sx={{ height: 4, borderRadius: 2 }}
                                   />
@@ -1872,42 +2105,50 @@ const MaintenanceTicketDetails: React.FC = () => {
                   </FormControl>
 
                   {/* Capacity Warning Alert */}
-                  {editData.assignedTechnician && (() => {
-                    const selectedTech = technicians?.find(t => t.id === editData.assignedTechnician)
-                    if (!selectedTech) return null
-
-                    const utilizationPct = (selectedTech.workload / selectedTech.maxWorkload) * 100
-
-                    if (utilizationPct >= 80 && utilizationPct < 100) {
-                      return (
-                        <Alert severity='warning' sx={{ mt: 2 }}>
-                          <AlertTitle>Técnico casi en capacidad máxima</AlertTitle>
-                          <Typography variant='body2'>
-                            <strong>{selectedTech.name}</strong> tiene{' '}
-                            <strong>{selectedTech.workload}</strong> de{' '}
-                            <strong>{selectedTech.maxWorkload}</strong> tickets asignados{' '}
-                            ({utilizationPct.toFixed(0)}% utilización).
-                            {' '}Considere asignar a un técnico con menos carga de trabajo.
-                          </Typography>
-                        </Alert>
+                  {editData.assignedTechnician &&
+                    (() => {
+                      const selectedTech = technicians?.find(
+                        (t) => t.id === editData.assignedTechnician
                       )
-                    }
+                      if (!selectedTech) return null
 
-                    if (utilizationPct >= 100) {
-                      return (
-                        <Alert severity='error' sx={{ mt: 2 }}>
-                          <AlertTitle>Técnico en capacidad máxima</AlertTitle>
-                          <Typography variant='body2'>
-                            <strong>{selectedTech.name}</strong> ha alcanzado su capacidad máxima{' '}
-                            ({selectedTech.workload}/{selectedTech.maxWorkload} tickets).
-                            {' '}Por favor seleccione otro técnico disponible.
-                          </Typography>
-                        </Alert>
-                      )
-                    }
+                      const utilizationPct =
+                        (selectedTech.workload / selectedTech.maxWorkload) * 100
 
-                    return null
-                  })()}
+                      if (utilizationPct >= 80 && utilizationPct < 100) {
+                        return (
+                          <Alert severity='warning' sx={{ mt: 2 }}>
+                            <AlertTitle>
+                              Técnico casi en capacidad máxima
+                            </AlertTitle>
+                            <Typography variant='body2'>
+                              <strong>{selectedTech.name}</strong> tiene{' '}
+                              <strong>{selectedTech.workload}</strong> de{' '}
+                              <strong>{selectedTech.maxWorkload}</strong>{' '}
+                              tickets asignados ({utilizationPct.toFixed(0)}%
+                              utilización). Considere asignar a un técnico con
+                              menos carga de trabajo.
+                            </Typography>
+                          </Alert>
+                        )
+                      }
+
+                      if (utilizationPct >= 100) {
+                        return (
+                          <Alert severity='error' sx={{ mt: 2 }}>
+                            <AlertTitle>Técnico en capacidad máxima</AlertTitle>
+                            <Typography variant='body2'>
+                              <strong>{selectedTech.name}</strong> ha alcanzado
+                              su capacidad máxima ({selectedTech.workload}/
+                              {selectedTech.maxWorkload} tickets). Por favor
+                              seleccione otro técnico disponible.
+                            </Typography>
+                          </Alert>
+                        )
+                      }
+
+                      return null
+                    })()}
                 </>
               ) : ticket.assignedTechnician ? (
                 <Box>
@@ -1994,10 +2235,10 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Schedule */}
-            <Paper 
-              elevation={2} 
-              sx={{ 
-                p: 3, 
+            <Paper
+              elevation={2}
+              sx={{
+                p: 3,
                 mb: 3,
                 background: 'rgba(255, 255, 255, 0.95)',
                 backdropFilter: 'blur(10px)',
@@ -2014,7 +2255,8 @@ const MaintenanceTicketDetails: React.FC = () => {
               <Box display='flex' alignItems='center' gap={1} mb={2}>
                 <Box
                   sx={{
-                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    background:
+                      'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
                     borderRadius: '8px',
                     p: 1,
                     display: 'flex',
@@ -2024,7 +2266,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                 >
                   <Schedule sx={{ color: 'white', fontSize: 20 }} />
                 </Box>
-                <Typography 
+                <Typography
                   variant='h6'
                   sx={{
                     fontWeight: 600,
@@ -2064,7 +2306,11 @@ const MaintenanceTicketDetails: React.FC = () => {
                   error={!!editErrors.scheduledDate}
                   aria-label='Seleccionar fecha y hora programada del servicio'
                   aria-invalid={!!editErrors.scheduledDate}
-                  aria-describedby={editErrors.scheduledDate ? 'scheduled-date-error' : 'scheduled-date-helper'}
+                  aria-describedby={
+                    editErrors.scheduledDate
+                      ? 'scheduled-date-error'
+                      : 'scheduled-date-helper'
+                  }
                 />
               ) : (
                 <Box>
@@ -2108,7 +2354,7 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Paper>
 
             {/* Costs */}
-            <Paper 
+            {/* <Paper 
               elevation={2} 
               sx={{ 
                 p: 3, 
@@ -2275,14 +2521,114 @@ const MaintenanceTicketDetails: React.FC = () => {
                   </Grid>
                 )}
               </Grid>
-            </Paper>
+            </Paper> */}
+
+            {/* Service Costs */}
+            {ticket.costs && ticket.costs.length > 0 && (
+              <Paper
+                elevation={2}
+                // --- Estilos de Contenedor: Mejoramos el Box Shadow para que sea más sutil ---
+                sx={{
+                  p: 3,
+                  mb: 3,
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)', // Sombra más suave
+                  border: '1px solid #e0e0e0', // Borde más claro por defecto
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 6px 20px rgba(16, 185, 129, 0.15)', // Sombra con color al pasar el mouse
+                    borderColor: '#10b981' // Borde que resalta
+                  },
+                  cursor: 'pointer'
+                }}
+                onClick={() => setBriefCostsDialogOpen(true)}
+              >
+                {/* Contenedor Principal: Asegura la separación y alineación vertical central */}
+                <Box
+                  display='flex'
+                  alignItems='center'
+                  justifyContent='space-between'
+                  gap={3}
+                >
+                  {/* 1. Avatar (Ícono) */}
+                  <Avatar
+                    sx={{
+                      background:
+                        'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      width: 48,
+                      height: 48,
+                      flexShrink: 0 // Evita que se encoja
+                    }}
+                  >
+                    <AttachMoney fontSize='medium' /> {/* Tamaño de ícono */}
+                  </Avatar>
+
+                  {/* 2. Bloque Central de Título y Estado */}
+                  {/* Usa flexGrow para que ocupe el máximo espacio disponible */}
+                  <Box flexGrow={1} minWidth={0}>
+                    {/* 2A. Línea Superior (Título y Chip) */}
+                    <Box display='flex' alignItems='center' mb={0.5}>
+                      <Typography
+                        variant='body1'
+                        sx={{
+                          fontWeight: 700,
+                          color: '#10b981',
+                          lineHeight: 1
+                        }}
+                      >
+                        Costos del Servicio
+                      </Typography>
+                      {/* El chip ya debe tener la apariencia deseada, ajustamos el margen */}
+                      <Box ml={1.5} sx={{ pt: '2px' }}>
+                        {statusChip}
+                      </Box>
+                    </Box>
+
+                    {/* 2B. Línea Inferior (Leyenda) */}
+                    <Typography
+                      variant='caption'
+                      color='text.secondary'
+                      lineHeight={1}
+                    >
+                      {ticket.costs.length} costo(s) registrado(s)
+                    </Typography>
+                  </Box>
+
+                  {/* 3. Chip del Monto Total (Monto de mayor jerarquía visual) */}
+                  <Chip
+                    icon={<CheckCircle sx={{ fontSize: '1.2rem' }} />}
+                    label={formatCurrency(
+                      ticket.costs.reduce(
+                        (sum, cost) => sum + parseFloat(cost.amount.toString()),
+                        0
+                      )
+                    )}
+                    sx={{
+                      // Mantenemos el gradiente fuerte
+                      background:
+                        'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      color: 'white',
+                      fontWeight: 700, // Hacemos el monto más visible
+                      fontSize: '0.9rem', // Ligeramente más grande
+                      height: 40, // Un poco más alto para verse más prominente
+                      borderRadius: '20px', // Bordes más redondeados si se desea
+                      padding: '0 8px',
+                      flexShrink: 0 // Evita que se encoja
+                    }}
+                  />
+                </Box>
+              </Paper>
+            )}
 
             {/* Customer Satisfaction */}
             {ticket.customerSatisfaction && (
-              <Paper 
-                elevation={2} 
-                sx={{ 
-                  p: 3, 
+              <Paper
+                elevation={2}
+                sx={{
+                  p: 3,
                   mb: 3,
                   background: 'rgba(255, 255, 255, 0.95)',
                   backdropFilter: 'blur(10px)',
@@ -2299,7 +2645,8 @@ const MaintenanceTicketDetails: React.FC = () => {
                 <Box display='flex' alignItems='center' gap={1} mb={2}>
                   <Box
                     sx={{
-                      background: 'linear-gradient(135deg, #ffc107 0%, #ff8f00 100%)',
+                      background:
+                        'linear-gradient(135deg, #ffc107 0%, #ff8f00 100%)',
                       borderRadius: '8px',
                       p: 1,
                       display: 'flex',
@@ -2309,7 +2656,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   >
                     <Star sx={{ color: 'white', fontSize: 20 }} />
                   </Box>
-                  <Typography 
+                  <Typography
                     variant='h6'
                     sx={{
                       fontWeight: 600,
@@ -2391,7 +2738,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                 >
                   Orden de Servicio
                 </Button>
-
+                {/* 
                 <Button
                   fullWidth
                   variant='outlined'
@@ -2401,8 +2748,8 @@ const MaintenanceTicketDetails: React.FC = () => {
                   disabled={generateStatusReportMutation.isLoading}
                 >
                   Reporte de Estado
-                </Button>
-
+                </Button> */}
+                {/* 
                 <Button
                   fullWidth
                   variant='outlined'
@@ -2429,7 +2776,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   }
                 >
                   Factura
-                </Button>
+                </Button> */}
 
                 <Divider sx={{ my: 1 }} />
 
@@ -2502,6 +2849,26 @@ const MaintenanceTicketDetails: React.FC = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Completion Costs Dialog */}
+        <CompletionCostsDialog
+          open={costsDialogOpen}
+          onClose={() => {
+            setCostsDialogOpen(false)
+            setEditData((prev) => ({ ...prev, status: ticket.status }))
+          }}
+          onComplete={handleCompleteWithCosts}
+          loading={updateTicketMutation.isLoading}
+        />
+
+        <CostsListDialog
+          open={briefCostsDialogOpen}
+          onClose={() => setBriefCostsDialogOpen(false)}
+          costs={ticket.costs || []}
+          isProcessingInvoice={updateTicketMutation.isLoading}
+          isInitiallyInvoiced={ticket.isInvoiced || false}
+          onInvoice={handleInvoice}
+        />
 
         {/* Toast Notifications */}
         <Snackbar

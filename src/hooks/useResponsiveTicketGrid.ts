@@ -126,19 +126,19 @@ export const useResponsiveTicketGrid = () => {
 
     if (height >= 2160) {
       // 4K vertical - Más filas
-      cardHeight = 180
+      cardHeight = 220
     } else if (height >= 1440) {
       // 2K vertical - Más filas
-      cardHeight = 160
+      cardHeight = 200
     } else if (height >= 1080) {
       // Full HD vertical - Optimizado para TV
-      cardHeight = 140
+      cardHeight = 220
     } else if (height >= 768) {
       // Laptop/tablet común
-      cardHeight = 130
+      cardHeight = 200
     } else {
       // Pantallas muy pequeñas
-      cardHeight = 120
+      cardHeight = 160
     }
 
     // Calcular cuántas filas caben - Maximizar uso del espacio

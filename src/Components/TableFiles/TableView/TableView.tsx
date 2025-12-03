@@ -336,32 +336,32 @@ export const TableView = ({
             {$userStore.rol.some((role) =>
               ['admin', 'metrologist'].includes(role)
             ) && (
-              <Button
-                onClick={() => openModal(true)}
-                variant='contained'
-                startIcon={<Add />}
-                sx={{
-                  background:
-                    'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  borderRadius: '12px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  px: 3,
-                  py: 1.5,
-                  color: 'white',
-                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
-                  '&:hover': {
+                <Button
+                  onClick={() => openModal(true)}
+                  variant='contained'
+                  startIcon={<Add />}
+                  sx={{
                     background:
-                      'linear-gradient(135deg, #059669 0%, #047857 100%)',
-                    boxShadow: '0 6px 16px rgba(16, 185, 129, 0.4)',
-                    transform: 'translateY(-2px)'
-                  },
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                Subir Nuevo Certificado
-              </Button>
-            )}
+                      'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    borderRadius: '12px',
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    px: 3,
+                    py: 1.5,
+                    color: 'white',
+                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+                    '&:hover': {
+                      background:
+                        'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                      boxShadow: '0 6px 16px rgba(16, 185, 129, 0.4)',
+                      transform: 'translateY(-2px)'
+                    },
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  Subir Nuevo Certificado
+                </Button>
+              )}
           </Box>
         )
       }}

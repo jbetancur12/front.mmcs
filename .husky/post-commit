@@ -8,4 +8,17 @@ if [ "$BRANCH" != "main" ] && [ "$BRANCH" != "staging" ]; then
   exit 0
 fi
 
+# Skip deploy for version bump commits
+COMMIT_MSG=$(git log -1 --pretty=%B)
+if echo "$COMMIT_MSG" | grep -q "^chore(version):"; then
+  echo "Skipping deploy for version bump commit"
+  exit 0
+fi
+
+# Skip deploy if HUSKY=0 (version scripts)
+if [ "$HUSKY" = "0" ]; then
+  echo "Skipping deploy (HUSKY=0)"
+  exit 0
+fi
+
 sh ./deploy.sh

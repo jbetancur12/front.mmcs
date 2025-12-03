@@ -10,7 +10,10 @@ import {
 import { MetricsDashboardProps } from '../types'
 import { useModernStyles } from '../hooks/useModernStyles'
 
-const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ metrics, colors }) => {
+const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
+  metrics,
+  colors
+}) => {
   const { cardStyles, iconContainerStyles } = useModernStyles()
 
   const metricsConfig = [
@@ -49,13 +52,20 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ metrics, colors }) 
       color: 'danger',
       borderColor: colors.danger,
       isUrgent: metrics.urgentTickets > 0
+    },
+    {
+      title: 'Por facturar',
+      value: metrics.isInvoiced,
+      icon: Warning,
+      color: 'warning',
+      borderColor: colors.warning
     }
   ]
 
   return (
     <Grid container spacing={1.5} sx={{ mb: 0 }}>
       {metricsConfig.map((metric, index) => (
-        <Grid item xs={2.4} key={index}>
+        <Grid item xs={2} key={index}>
           <Card
             sx={{
               ...cardStyles.base,
@@ -72,12 +82,24 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ metrics, colors }) 
               })
             }}
           >
-            <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+            <CardContent
+              sx={{
+                p: 3,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center'
+              }}
+            >
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}
+              >
                 <Box
                   sx={{
                     ...iconContainerStyles.base,
-                    ...iconContainerStyles[metric.color as keyof typeof iconContainerStyles]
+                    ...iconContainerStyles[
+                      metric.color as keyof typeof iconContainerStyles
+                    ]
                   }}
                 >
                   <metric.icon sx={{ fontSize: '1.5rem', color: 'white' }} />

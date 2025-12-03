@@ -423,9 +423,8 @@ const Table: React.FC = () => {
                 <span className='ml-2'>{formattedCalibrationDate}</span>
               </div>
               <span
-                className={`mt-2 ${
-                  daysRemaining < 0 ? 'text-red-500 font-bold' : ''
-                }`}
+                className={`mt-2 ${daysRemaining < 0 ? 'text-red-500 font-bold' : ''
+                  }`}
               >
                 {daysRemaining < 0
                   ? 'VENCIDO'

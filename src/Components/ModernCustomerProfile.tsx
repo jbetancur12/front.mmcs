@@ -22,7 +22,10 @@ import {
   Menu,
   MenuItem,
   Tooltip,
-  Alert
+  Alert,
+  Switch,
+  SwitchProps,
+  styled
 } from '@mui/material'
 import {
   ArrowBack,
@@ -42,7 +45,8 @@ import {
   Search,
   Clear,
   Edit,
-  HelpOutline
+  HelpOutline,
+  Add
 } from '@mui/icons-material'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
@@ -55,6 +59,7 @@ import Headquarters from './Headquarters'
 import CalibrationTimeline from './CalibrationTimeline'
 import Modules from './Modules'
 import EquipmentCard from './EquipmentCard'
+import { CreateFileModal } from './TableFiles/CreateFileModal/CreateFileModal'
 
 import { bigToast } from './ExcelManipulation/Utils'
 import * as XLSX from 'xlsx'
@@ -69,6 +74,7 @@ interface UserData {
   telefono: string
   avatar?: string
   sede: string[]
+  isActive: boolean
 }
 
 export interface Certificate {
@@ -228,9 +234,9 @@ const exportOverviewReport = (
         : '',
       'Días Vencido': cert.nextCalibrationDate
         ? Math.floor(
-            (now.getTime() - new Date(cert.nextCalibrationDate).getTime()) /
-              (1000 * 60 * 60 * 24)
-          )
+          (now.getTime() - new Date(cert.nextCalibrationDate).getTime()) /
+          (1000 * 60 * 60 * 24)
+        )
         : ''
     }))
 
@@ -268,9 +274,9 @@ const exportOverviewReport = (
         : '',
       'Días Restantes': cert.nextCalibrationDate
         ? Math.floor(
-            (new Date(cert.nextCalibrationDate).getTime() - now.getTime()) /
-              (1000 * 60 * 60 * 24)
-          )
+          (new Date(cert.nextCalibrationDate).getTime() - now.getTime()) /
+          (1000 * 60 * 60 * 24)
+        )
         : ''
     }))
 
@@ -347,6 +353,58 @@ const exportOverviewReport = (
   }
 }
 
+// Modern Switch Component
+const ModernSwitch = styled((props: SwitchProps) => (
+  <Switch focusVisibleClassName='Mui-focusVisible' disableRipple {...props} />
+))(({ theme }) => ({
+  width: 42,
+  height: 26,
+  padding: 0,
+  '& .MuiSwitch-switchBase': {
+    padding: 0,
+    margin: 2,
+    transitionDuration: '300ms',
+    '&.Mui-checked': {
+      transform: 'translateX(16px)',
+      color: '#fff',
+      '& + .MuiSwitch-track': {
+        backgroundColor: '#10b981',
+        opacity: 1,
+        border: 0
+      },
+      '&.Mui-disabled + .MuiSwitch-track': {
+        opacity: 0.5
+      }
+    },
+    '&.Mui-focusVisible .MuiSwitch-thumb': {
+      color: '#33cf4d',
+      border: '6px solid #fff'
+    },
+    '&.Mui-disabled .MuiSwitch-thumb': {
+      color:
+        theme.palette.mode === 'light'
+          ? theme.palette.grey[100]
+          : theme.palette.grey[600]
+    },
+    '&.Mui-disabled + .MuiSwitch-track': {
+      opacity: theme.palette.mode === 'light' ? 0.7 : 0.3
+    }
+  },
+  '& .MuiSwitch-thumb': {
+    boxSizing: 'border-box',
+    width: 22,
+    height: 22
+  },
+  '& .MuiSwitch-track': {
+    borderRadius: 26 / 2,
+    backgroundColor: theme.palette.mode === 'light' ? '#E9E9EA' : '#39393D',
+    opacity: 1,
+    transition: theme.transitions.create(['background-color'], {
+      duration: 500
+    })
+  }
+}))
+
 // Modern Customer Profile Component
 const ModernCustomerProfile: React.FC = () => {
   const theme = useTheme()
@@ -382,6 +440,7 @@ const ModernCustomerProfile: React.FC = () => {
   const [selectedSede, setSelectedSede] = useState<string | null>('')
   const [hasPermission, setHasPermission] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   // Fetch customer data
   const { data: customerData, isLoading: loadingCustomer } = useQuery<UserData>(
@@ -400,6 +459,15 @@ const ModernCustomerProfile: React.FC = () => {
       }
     }
   )
+
+  const preSelectedCustomerData = React.useMemo(() => {
+    if (!customerData) return undefined
+    return {
+      id: Number(id),
+      nombre: customerData.nombre,
+      sede: customerData.sede
+    }
+  }, [id, customerData])
 
   // Fetch certificates data (paginado)
   const { data: apiResponse, refetch } = useQuery<ApiResponse>(
@@ -533,6 +601,26 @@ const ModernCustomerProfile: React.FC = () => {
     },
     [axiosPrivate, id, queryClient]
   )
+
+  const handleStatusChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const newStatus = event.target.checked
+    if (!customerData || !id) return
+
+    try {
+      await axiosPrivate.put(`/customers/${id}`, { isActive: newStatus })
+      queryClient.invalidateQueries(['customer-data', id])
+      bigToast(
+        `Cliente ${newStatus ? 'activado' : 'desactivado'} con éxito`,
+        'success'
+      )
+    } catch (error) {
+      console.error('Error updating customer status:', error)
+      bigToast('Error al actualizar el estado del cliente', 'error')
+      queryClient.invalidateQueries(['customer-data', id])
+    }
+  }
 
   const handlePageChange = useCallback(
     (direction: 'prev' | 'next') => {
@@ -669,14 +757,7 @@ const ModernCustomerProfile: React.FC = () => {
     ['admin', 'metrologist'].includes(role)
   )
 
-  // Debug logs
-  console.log('ModernCustomerProfile Debug:', {
-    activeTab,
-    isAdmin,
-    userRoles: $userStore.rol,
-    customerId: id,
-    searchParams: searchParams.toString()
-  })
+
 
   const getMatchedFields = (files: Certificate[]) => {
     if (!files || files.length === 0) return []
@@ -850,14 +931,41 @@ const ModernCustomerProfile: React.FC = () => {
                 <Typography variant='h4' fontWeight='bold' gutterBottom>
                   {customerData?.nombre}
                 </Typography>
-                <Chip
-                  label='Cliente Activo'
+                {/* Status Switch */}
+                <Box
                   sx={{
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    color: 'white',
-                    fontWeight: 600
+                    position: 'absolute',
+                    top: 20,
+                    right: 20,
+                    zIndex: 2,
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(10px)',
+                    borderRadius: '12px',
+                    padding: '8px 16px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5
                   }}
-                />
+                >
+                  <Typography
+                    variant='body2'
+                    sx={{
+                      color: 'white',
+                      fontWeight: 600,
+                      letterSpacing: '0.5px'
+                    }}
+                  >
+                    {customerData?.isActive
+                      ? 'Cliente Activo'
+                      : 'Cliente Inactivo'}
+                  </Typography>
+                  <ModernSwitch
+                    checked={customerData?.isActive || false}
+                    onChange={handleStatusChange}
+                    disabled={!isAdmin}
+                  />
+                </Box>{' '}
               </Box>
             </Grid>
 
@@ -1384,6 +1492,31 @@ const ModernCustomerProfile: React.FC = () => {
                     </Grid>
 
                     <Grid item xs={12} md={3}>
+                      {isAdmin && (
+                        <Button
+                          fullWidth
+                          variant='contained'
+                          startIcon={<Add />}
+                          onClick={() => setIsCreateModalOpen(true)}
+                          sx={{
+                            borderRadius: '12px',
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            py: 1.5,
+                            background:
+                              'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            '&:hover': {
+                              background:
+                                'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                            }
+                          }}
+                        >
+                          Subir Nuevo Certificado
+                        </Button>
+                      )}
+                    </Grid>
+
+                    <Grid item xs={12} md={3}>
                       <Button
                         fullWidth
                         variant='contained'
@@ -1402,10 +1535,10 @@ const ModernCustomerProfile: React.FC = () => {
                           fontWeight: 600,
                           py: 1.5,
                           background:
-                            'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                           '&:hover': {
                             background:
-                              'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                              'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)'
                           }
                         }}
                       >
@@ -1433,7 +1566,7 @@ const ModernCustomerProfile: React.FC = () => {
                     </Grid>
 
                     <Grid item xs={12} md={3}>
-                      <Box display='flex' alignItems='center' gap={1}>
+                      <Box display='flex' alignItems='center' gap={1} justifyContent='flex-end'>
                         <Typography variant='body2' color='text.secondary'>
                           Total:
                         </Typography>
@@ -1731,6 +1864,18 @@ const ModernCustomerProfile: React.FC = () => {
           )}
         </CardContent>
       </Card>
+      {/* Create File Modal */}
+      {customerData && (
+        <CreateFileModal
+          open={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          fetchFiles={async () => {
+            await refetch()
+          }}
+          axiosPrivate={axiosPrivate}
+          preSelectedCustomer={preSelectedCustomerData}
+        />
+      )}
     </Container>
   )
 }

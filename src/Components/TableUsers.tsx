@@ -30,7 +30,7 @@ export interface UserData {
   identificacion: string
   email: string
   contraseña: string
-  active: boolean
+  isActive: boolean
   rol: string
 }
 
@@ -253,7 +253,7 @@ const Table: React.FC = () => {
         })
       },
       {
-        accessorKey: 'active',
+        accessorKey: 'isActive',
         header: 'Activo',
         size: 10,
         Cell: ({ cell }) => (
@@ -365,7 +365,7 @@ export const CreateNewAccountModal = ({
             {columns.map(
               (column) =>
                 column.accessorKey !== 'id' &&
-                column.accessorKey !== 'active' && (
+                column.accessorKey !== 'isActive' && (
                   <TextField
                     key={column.accessorKey}
                     label={column.header}

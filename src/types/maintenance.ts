@@ -1,3 +1,12 @@
+export interface MaintenanceTicketCost {
+  id?: string
+  ticketId?: string
+  name: string
+  description?: string
+  amount: number
+  createdAt?: string
+}
+
 export interface MaintenanceTicket {
   id: string
   ticketCode: string
@@ -12,18 +21,21 @@ export interface MaintenanceTicket {
   priority: MaintenancePriority
   status: MaintenanceStatus
   assignedTechnician?: MaintenanceTechnician
-  technicianId?: string
+  assignedTechnicianId?: string
   scheduledDate?: string
   completedDate?: string
   estimatedCost?: number
   actualCost?: number
   customerSatisfaction?: number
   location: string
+  workPerformed?: string
   createdAt: string
   updatedAt: string
   comments: MaintenanceComment[]
   files: MaintenanceFile[]
   timeline: MaintenanceTimelineEntry[]
+  costs?: MaintenanceTicketCost[]
+  isInvoiced?: boolean
 }
 
 export interface MaintenanceTicketCreateResponse {
@@ -154,6 +166,9 @@ export interface MaintenanceUpdateRequest {
   actualCost?: number
   priority?: MaintenancePriority
   location?: string
+  workPerformed?: string
+  costs?: MaintenanceTicketCost[]
+  isInvoiced?: boolean
 }
 
 export interface MaintenanceFilters {

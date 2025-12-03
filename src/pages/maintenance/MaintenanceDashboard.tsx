@@ -67,6 +67,7 @@ import { useStore } from '@nanostores/react'
 import { userStore } from '../../store/userStore'
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import KeyboardShortcutsHelp from '../../Components/Maintenance/KeyboardShortcutsHelp'
+import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
 
 /**
  * MaintenanceDashboard component provides an admin interface for managing maintenance tickets
@@ -78,13 +79,19 @@ const MaintenanceDashboard: React.FC = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const $userStore = useStore(userStore)
-  const [filters, setFilters] = useState<MaintenanceFilters>({})
+  // Por defecto, no mostrar los tickets completados
+  const [filters, setFilters] = useState<MaintenanceFilters>({
+    status: Object.values(MaintenanceStatus).filter(
+      (s) => s !== MaintenanceStatus.COMPLETED
+    )
+  })
   const [page, setPage] = useState(1)
   const [showFilters, setShowFilters] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [selectedTicket, setSelectedTicket] =
     useState<MaintenanceTicket | null>(null)
   const [editData, setEditData] = useState<MaintenanceUpdateRequest>({})
+  const [costsDialogOpen, setCostsDialogOpen] = useState(false)
   const [toast, setToast] = useState<{
     open: boolean
     message: string
@@ -98,12 +105,15 @@ const MaintenanceDashboard: React.FC = () => {
 
   const limit = 12
 
-  const showToast = (message: string, severity: 'success' | 'error' | 'warning' | 'info') => {
+  const showToast = (
+    message: string,
+    severity: 'success' | 'error' | 'warning' | 'info'
+  ) => {
     setToast({ open: true, message, severity })
   }
 
   const handleCloseToast = () => {
-    setToast(prev => ({ ...prev, open: false }))
+    setToast((prev) => ({ ...prev, open: false }))
   }
 
   // Check user permissions
@@ -144,9 +154,11 @@ const MaintenanceDashboard: React.FC = () => {
   }, [isTechnician])
 
   // API hooks
-  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useMaintenanceStats(
-    currentTechnicianEmail
-  )
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    refetch: refetchStats
+  } = useMaintenanceStats(currentTechnicianEmail)
   const {
     data: ticketsData,
     isLoading: ticketsLoading,
@@ -177,7 +189,7 @@ const MaintenanceDashboard: React.FC = () => {
       }
     },
     onToggleFilters: () => {
-      setShowFilters(prev => !prev)
+      setShowFilters((prev) => !prev)
     },
     onRefreshData: () => {
       refetchTickets()
@@ -195,7 +207,8 @@ const MaintenanceDashboard: React.FC = () => {
           setShowFilters(true)
           // Focus after a brief delay to allow expansion
           setTimeout(() => {
-            const searchFieldDelayed = document.getElementById('quick-search-field')
+            const searchFieldDelayed =
+              document.getElementById('quick-search-field')
             searchFieldDelayed?.focus()
           }, 100)
         }
@@ -221,20 +234,20 @@ const MaintenanceDashboard: React.FC = () => {
     return Array.from(types)
   }, [ticketsData?.tickets])
 
-  // Sort tickets by priority (urgent -> high -> medium -> low) then by creation date (oldest first)
+  // Ordenar tickets por prioridad (urgente -> alta -> media -> baja) y luego por fecha de creación (más antiguos primero)
   const sortedTickets = useMemo(() => {
     if (!ticketsData?.tickets) return []
 
     const priorityOrder = {
-      [MaintenancePriority.URGENT]: 1,
-      [MaintenancePriority.HIGH]: 2,
-      [MaintenancePriority.MEDIUM]: 3,
-      [MaintenancePriority.LOW]: 4
+      [MaintenancePriority.URGENT]: 4,
+      [MaintenancePriority.HIGH]: 3,
+      [MaintenancePriority.MEDIUM]: 2,
+      [MaintenancePriority.LOW]: 1
     }
 
     return [...ticketsData.tickets].sort((a, b) => {
-      // First sort by priority (urgent first)
-      const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority]
+      // Primero ordenar por prioridad (más alta primero)
+      const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority]
       if (priorityDiff !== 0) {
         return priorityDiff
       }
@@ -247,21 +260,25 @@ const MaintenanceDashboard: React.FC = () => {
   }, [ticketsData?.tickets])
 
   const handleEditTicket = (ticket: MaintenanceTicket) => {
-    // For technicians, only allow editing tickets assigned to them
-    const technicianId = $userStore.email === 'kat34433@laoia.com' ? 4 : null
+    // Para técnicos, solo permitir editar tickets que les pertenecen.
+    // Buscamos el técnico en la lista de técnicos usando el email del usuario logueado.
+    const currentTechnician = technicians?.find(
+      (tech) => tech.email === $userStore.email
+    )
+
     if (
       isTechnician &&
-      technicianId &&
-      Number(ticket.assignedTechnician?.id) !== technicianId
+      currentTechnician &&
+      Number(ticket.assignedTechnician?.id) !== Number(currentTechnician.id)
     ) {
-      console.warn('Technician can only edit their assigned tickets')
       return
     }
 
     setSelectedTicket(ticket)
+    console.log('🚀 ~ handleEditTicket ~ ticket:', ticket)
     setEditData({
       status: ticket.status,
-      assignedTechnician: ticket.technicianId || '',
+      assignedTechnician: ticket.assignedTechnicianId || '',
       scheduledDate: ticket.scheduledDate || '',
       priority: ticket.priority
     })
@@ -270,6 +287,16 @@ const MaintenanceDashboard: React.FC = () => {
 
   const handleSaveEdit = async () => {
     if (!selectedTicket) return
+
+    // Check if changing to COMPLETED status
+    if (
+      editData.status === MaintenanceStatus.COMPLETED &&
+      selectedTicket.status !== MaintenanceStatus.COMPLETED
+    ) {
+      // Open costs dialog instead of saving directly
+      setCostsDialogOpen(true)
+      return
+    }
 
     try {
       await updateTicketMutation.mutateAsync({
@@ -285,10 +312,45 @@ const MaintenanceDashboard: React.FC = () => {
       showToast('Ticket actualizado exitosamente', 'success')
     } catch (error: any) {
       console.error('Error updating ticket:', error)
-      const errorMessage = error.response?.data?.error ||
-                          error.response?.data?.message ||
-                          'Error al actualizar el ticket'
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Error al actualizar el ticket'
       showToast(errorMessage, 'error')
+    }
+  }
+
+  const handleCompleteWithCosts = async (
+    workPerformed: string,
+    costs: any[]
+  ) => {
+    if (!selectedTicket) return
+
+    try {
+      await updateTicketMutation.mutateAsync({
+        id: selectedTicket.id,
+        data: {
+          ...editData,
+          status: MaintenanceStatus.COMPLETED,
+          workPerformed,
+          costs: costs
+        }
+      })
+      setCostsDialogOpen(false)
+      setEditDialogOpen(false)
+      setSelectedTicket(null)
+      setEditData({})
+      refetchTickets()
+      refetchStats()
+      showToast('Ticket completado exitosamente', 'success')
+    } catch (error: any) {
+      console.error('Error completing ticket:', error)
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Error al completar el ticket'
+      showToast(errorMessage, 'error')
+      throw error
     }
   }
 
@@ -303,12 +365,13 @@ const MaintenanceDashboard: React.FC = () => {
   }
 
   return (
-    <Container 
-      maxWidth={false} 
-      sx={{ 
-        py: { xs: 2, sm: 3, md: 3 }, 
+    <Container
+      maxWidth={false}
+      sx={{
+        py: { xs: 2, sm: 3, md: 3 },
         px: { xs: 1, sm: 2, md: 3 },
-        background: 'linear-gradient(135deg, rgba(109, 198, 98, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)',
+        background:
+          'linear-gradient(135deg, rgba(109, 198, 98, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)',
         minHeight: '100vh'
       }}
     >
@@ -382,7 +445,8 @@ const MaintenanceDashboard: React.FC = () => {
                 borderRadius: '12px',
                 transition: 'all 0.2s ease-in-out',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                  background:
+                    'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
                   color: 'white',
                   transform: 'translateY(-2px)',
                   boxShadow: '0 6px 20px rgba(109, 198, 98, 0.3)'
@@ -405,7 +469,8 @@ const MaintenanceDashboard: React.FC = () => {
                 borderRadius: '12px',
                 transition: 'all 0.2s ease-in-out',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
+                  background:
+                    'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
                   color: 'white',
                   transform: 'translateY(-2px)',
                   boxShadow: '0 6px 20px rgba(33, 150, 243, 0.3)'
@@ -454,7 +519,8 @@ const MaintenanceDashboard: React.FC = () => {
                 boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
                 transition: 'all 0.2s ease-in-out',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #5ab052 0%, #4a9642 100%)',
+                  background:
+                    'linear-gradient(135deg, #5ab052 0%, #4a9642 100%)',
                   transform: 'translateY(-2px)',
                   boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
                 }
@@ -467,7 +533,13 @@ const MaintenanceDashboard: React.FC = () => {
       </Box>
 
       {/* Stats Cards */}
-      <Grid container spacing={{ xs: 2, sm: 2, md: 3 }} mb={{ xs: 2, sm: 3, md: 3 }} role='region' aria-label='Estadísticas del dashboard'>
+      <Grid
+        container
+        spacing={{ xs: 2, sm: 2, md: 3 }}
+        mb={{ xs: 2, sm: 3, md: 3 }}
+        role='region'
+        aria-label='Estadísticas del dashboard'
+      >
         {statsLoading ? (
           <>
             <Grid item xs={12} sm={6} md={3}>
@@ -486,270 +558,306 @@ const MaintenanceDashboard: React.FC = () => {
         ) : (
           <>
             <Grid item xs={12} sm={6} md={3}>
-          <Card 
-            role='article' 
-            aria-label='Total de tickets'
-            sx={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-              border: '1px solid rgba(109, 198, 98, 0.1)',
-              transition: 'all 0.3s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: '0 8px 30px rgba(109, 198, 98, 0.15)',
-                border: '1px solid rgba(109, 198, 98, 0.2)'
-              }
-            }}
-          >
-            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-              <Box
-                display='flex'
-                alignItems='center'
-                justifyContent='space-between'
+              <Card
+                role='article'
+                aria-label='Total de tickets'
+                sx={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                  border: '1px solid rgba(109, 198, 98, 0.1)',
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 8px 30px rgba(109, 198, 98, 0.15)',
+                    border: '1px solid rgba(109, 198, 98, 0.2)'
+                  }
+                }}
               >
-                <Box>
-                  <Typography
-                    variant='h4'
-                    aria-label={`Total de tickets: ${stats?.metrics?.totalTickets || 0}`}
-                    sx={{ 
-                      fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' },
-                      fontWeight: 700,
-                      color: '#6dc662'
-                    }}
+                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                  <Box
+                    display='flex'
+                    alignItems='center'
+                    justifyContent='space-between'
                   >
-                    {stats?.metrics?.totalTickets || 0}
-                  </Typography>
-                  <Typography
-                    variant='body2'
-                    color='text.secondary'
-                    sx={{ 
-                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                      fontWeight: 500
-                    }}
-                  >
-                    Total Tickets
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
-                    borderRadius: '12px',
-                    p: 1.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <Assignment sx={{ fontSize: { xs: 32, sm: 40 }, color: 'white' }} aria-hidden='true' />
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+                    <Box>
+                      <Typography
+                        variant='h4'
+                        aria-label={`Total de tickets: ${stats?.metrics?.totalTickets || 0}`}
+                        sx={{
+                          fontSize: {
+                            xs: '1.75rem',
+                            sm: '2rem',
+                            md: '2.125rem'
+                          },
+                          fontWeight: 700,
+                          color: '#6dc662'
+                        }}
+                      >
+                        {stats?.metrics?.totalTickets || 0}
+                      </Typography>
+                      <Typography
+                        variant='body2'
+                        color='text.secondary'
+                        sx={{
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                          fontWeight: 500
+                        }}
+                      >
+                        Total Tickets
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{
+                        background:
+                          'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                        borderRadius: '12px',
+                        p: 1.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <Assignment
+                        sx={{ fontSize: { xs: 32, sm: 40 }, color: 'white' }}
+                        aria-hidden='true'
+                      />
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card 
-            role='article' 
-            aria-label='Tickets pendientes'
-            sx={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-              border: '1px solid rgba(255, 152, 0, 0.1)',
-              transition: 'all 0.3s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: '0 8px 30px rgba(255, 152, 0, 0.15)',
-                border: '1px solid rgba(255, 152, 0, 0.2)'
-              }
-            }}
-          >
-            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-              <Box
-                display='flex'
-                alignItems='center'
-                justifyContent='space-between'
+            <Grid item xs={12} sm={6} md={3}>
+              <Card
+                role='article'
+                aria-label='Tickets pendientes'
+                sx={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                  border: '1px solid rgba(255, 152, 0, 0.1)',
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 8px 30px rgba(255, 152, 0, 0.15)',
+                    border: '1px solid rgba(255, 152, 0, 0.2)'
+                  }
+                }}
               >
-                <Box>
-                  <Typography
-                    variant='h4'
-                    aria-label={`Tickets pendientes: ${stats?.metrics?.pendingTickets || 0}`}
-                    sx={{ 
-                      fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' },
-                      fontWeight: 700,
-                      color: '#ff9800'
-                    }}
+                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                  <Box
+                    display='flex'
+                    alignItems='center'
+                    justifyContent='space-between'
                   >
-                    {stats?.metrics?.pendingTickets || 0}
-                  </Typography>
-                  <Typography
-                    variant='body2'
-                    color='text.secondary'
-                    sx={{ 
-                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                      fontWeight: 500
-                    }}
-                  >
-                    Pendientes
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
-                    borderRadius: '12px',
-                    p: 1.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <Build sx={{ fontSize: { xs: 32, sm: 40 }, color: 'white' }} aria-hidden='true' />
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+                    <Box>
+                      <Typography
+                        variant='h4'
+                        aria-label={`Tickets pendientes: ${stats?.metrics?.pendingTickets || 0}`}
+                        sx={{
+                          fontSize: {
+                            xs: '1.75rem',
+                            sm: '2rem',
+                            md: '2.125rem'
+                          },
+                          fontWeight: 700,
+                          color: '#ff9800'
+                        }}
+                      >
+                        {stats?.metrics?.pendingTickets || 0}
+                      </Typography>
+                      <Typography
+                        variant='body2'
+                        color='text.secondary'
+                        sx={{
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                          fontWeight: 500
+                        }}
+                      >
+                        Pendientes
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{
+                        background:
+                          'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
+                        borderRadius: '12px',
+                        p: 1.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <Build
+                        sx={{ fontSize: { xs: 32, sm: 40 }, color: 'white' }}
+                        aria-hidden='true'
+                      />
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card 
-            role='article' 
-            aria-label='Tickets completados'
-            sx={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-              border: '1px solid rgba(76, 175, 80, 0.1)',
-              transition: 'all 0.3s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: '0 8px 30px rgba(76, 175, 80, 0.15)',
-                border: '1px solid rgba(76, 175, 80, 0.2)'
-              }
-            }}
-          >
-            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-              <Box
-                display='flex'
-                alignItems='center'
-                justifyContent='space-between'
+            <Grid item xs={12} sm={6} md={3}>
+              <Card
+                role='article'
+                aria-label='Tickets completados'
+                sx={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                  border: '1px solid rgba(76, 175, 80, 0.1)',
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 8px 30px rgba(76, 175, 80, 0.15)',
+                    border: '1px solid rgba(76, 175, 80, 0.2)'
+                  }
+                }}
               >
-                <Box>
-                  <Typography
-                    variant='h4'
-                    aria-label={`Tickets completados: ${stats?.metrics?.completedTickets || 0}`}
-                    sx={{ 
-                      fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' },
-                      fontWeight: 700,
-                      color: '#4caf50'
-                    }}
+                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                  <Box
+                    display='flex'
+                    alignItems='center'
+                    justifyContent='space-between'
                   >
-                    {stats?.metrics?.completedTickets || 0}
-                  </Typography>
-                  <Typography
-                    variant='body2'
-                    color='text.secondary'
-                    sx={{ 
-                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                      fontWeight: 500
-                    }}
-                  >
-                    Completados
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    background: 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)',
-                    borderRadius: '12px',
-                    p: 1.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <CheckCircle sx={{ fontSize: { xs: 32, sm: 40 }, color: 'white' }} aria-hidden='true' />
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+                    <Box>
+                      <Typography
+                        variant='h4'
+                        aria-label={`Tickets completados: ${stats?.metrics?.completedTickets || 0}`}
+                        sx={{
+                          fontSize: {
+                            xs: '1.75rem',
+                            sm: '2rem',
+                            md: '2.125rem'
+                          },
+                          fontWeight: 700,
+                          color: '#4caf50'
+                        }}
+                      >
+                        {stats?.metrics?.completedTickets || 0}
+                      </Typography>
+                      <Typography
+                        variant='body2'
+                        color='text.secondary'
+                        sx={{
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                          fontWeight: 500
+                        }}
+                      >
+                        Completados
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{
+                        background:
+                          'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)',
+                        borderRadius: '12px',
+                        p: 1.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <CheckCircle
+                        sx={{ fontSize: { xs: 32, sm: 40 }, color: 'white' }}
+                        aria-hidden='true'
+                      />
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card 
-            role='article' 
-            aria-label='Tiempo promedio de resolución'
-            sx={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-              border: '1px solid rgba(33, 150, 243, 0.1)',
-              transition: 'all 0.3s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: '0 8px 30px rgba(33, 150, 243, 0.15)',
-                border: '1px solid rgba(33, 150, 243, 0.2)'
-              }
-            }}
-          >
-            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-              <Box
-                display='flex'
-                alignItems='center'
-                justifyContent='space-between'
+            <Grid item xs={12} sm={6} md={3}>
+              <Card
+                role='article'
+                aria-label='Tiempo promedio de resolución'
+                sx={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                  border: '1px solid rgba(33, 150, 243, 0.1)',
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 8px 30px rgba(33, 150, 243, 0.15)',
+                    border: '1px solid rgba(33, 150, 243, 0.2)'
+                  }
+                }}
               >
-                <Box>
-                  <Typography
-                    variant='h4'
-                    aria-label={`Tiempo promedio de resolución: ${stats?.metrics?.avgResolutionTimeHours || 0} horas`}
-                    sx={{ 
-                      fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' },
-                      fontWeight: 700,
-                      color: '#2196f3'
-                    }}
+                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                  <Box
+                    display='flex'
+                    alignItems='center'
+                    justifyContent='space-between'
                   >
-                    {stats?.metrics?.avgResolutionTimeHours || 0}h
-                  </Typography>
-                  <Typography
-                    variant='body2'
-                    color='text.secondary'
-                    sx={{ 
-                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                      fontWeight: 500
-                    }}
-                  >
-                    Tiempo Promedio
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    background: 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)',
-                    borderRadius: '12px',
-                    p: 1.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <TrendingUp sx={{ fontSize: { xs: 32, sm: 40 }, color: 'white' }} aria-hidden='true' />
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+                    <Box>
+                      <Typography
+                        variant='h4'
+                        aria-label={`Tiempo promedio de resolución: ${stats?.metrics?.avgResolutionTimeHours || 0} horas`}
+                        sx={{
+                          fontSize: {
+                            xs: '1.75rem',
+                            sm: '2rem',
+                            md: '2.125rem'
+                          },
+                          fontWeight: 700,
+                          color: '#2196f3'
+                        }}
+                      >
+                        {stats?.metrics?.avgResolutionTimeHours || 0}h
+                      </Typography>
+                      <Typography
+                        variant='body2'
+                        color='text.secondary'
+                        sx={{
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                          fontWeight: 500
+                        }}
+                      >
+                        Tiempo Promedio
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{
+                        background:
+                          'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)',
+                        borderRadius: '12px',
+                        p: 1.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <TrendingUp
+                        sx={{ fontSize: { xs: 32, sm: 40 }, color: 'white' }}
+                        aria-hidden='true'
+                      />
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
           </>
         )}
       </Grid>
 
       {/* Additional Stats */}
-      <Grid container spacing={{ xs: 2, sm: 2, md: 3 }} mb={{ xs: 2, sm: 3, md: 3 }}>
+      <Grid
+        container
+        spacing={{ xs: 2, sm: 2, md: 3 }}
+        mb={{ xs: 2, sm: 3, md: 3 }}
+      >
         <Grid item xs={12} md={6}>
-          <Paper 
-            elevation={2} 
-            sx={{ 
+          <Paper
+            elevation={2}
+            sx={{
               p: { xs: 2, sm: 3 },
               background: 'rgba(255, 255, 255, 0.95)',
               backdropFilter: 'blur(10px)',
@@ -766,7 +874,7 @@ const MaintenanceDashboard: React.FC = () => {
             <Typography
               variant='h6'
               gutterBottom
-              sx={{ 
+              sx={{
                 fontSize: { xs: '1.125rem', sm: '1.25rem' },
                 fontWeight: 600,
                 color: '#6dc662',
@@ -779,7 +887,7 @@ const MaintenanceDashboard: React.FC = () => {
               {stats?.priorityStats &&
                 stats.priorityStats.map(({ priority, count }) => (
                   <Grid item xs={6} sm={3} key={priority}>
-                    <Box 
+                    <Box
                       textAlign='center'
                       sx={{
                         p: 2,
@@ -795,7 +903,7 @@ const MaintenanceDashboard: React.FC = () => {
                     >
                       <Typography
                         variant='h5'
-                        sx={{ 
+                        sx={{
                           fontSize: { xs: '1.25rem', sm: '1.5rem' },
                           fontWeight: 700,
                           color: '#6dc662',
@@ -844,10 +952,15 @@ const MaintenanceDashboard: React.FC = () => {
 
       {/* Filters */}
       {showFilters && (
-        <Box mb={3} id='maintenance-filters-section' role='region' aria-label='Sección de filtros'>
+        <Box
+          mb={3}
+          id='maintenance-filters-section'
+          role='region'
+          aria-label='Sección de filtros'
+        >
           <MaintenanceFiltersComponent
             filters={filters}
-            onFiltersChange={setFilters}
+            onFiltersChange={(newFilters) => setFilters({ ...newFilters })}
             technicians={technicians || []}
             equipmentTypes={equipmentTypes}
             loading={ticketsLoading}
@@ -857,9 +970,9 @@ const MaintenanceDashboard: React.FC = () => {
       )}
 
       {/* Tickets Grid */}
-      <Paper 
-        elevation={2} 
-        sx={{ 
+      <Paper
+        elevation={2}
+        sx={{
           p: { xs: 2, sm: 3 },
           background: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(10px)',
@@ -878,7 +991,7 @@ const MaintenanceDashboard: React.FC = () => {
         >
           <Typography
             variant='h6'
-            sx={{ 
+            sx={{
               fontSize: { xs: '1.125rem', sm: '1.25rem' },
               fontWeight: 600,
               color: '#6dc662'
@@ -889,9 +1002,10 @@ const MaintenanceDashboard: React.FC = () => {
               <Chip
                 label={`${ticketsData.pagination.totalItems} total`}
                 size='small'
-                sx={{ 
+                sx={{
                   ml: 1,
-                  background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                  background:
+                    'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
                   color: 'white',
                   fontWeight: 500
                 }}
@@ -901,7 +1015,12 @@ const MaintenanceDashboard: React.FC = () => {
         </Box>
 
         {ticketsLoading ? (
-          <Grid container spacing={{ xs: 2, sm: 2, md: 3 }} role='status' aria-live='polite'>
+          <Grid
+            container
+            spacing={{ xs: 2, sm: 2, md: 3 }}
+            role='status'
+            aria-live='polite'
+          >
             {[...Array(6)].map((_, index) => (
               <Grid item xs={12} sm={6} lg={4} key={index}>
                 <TicketCardSkeleton />
@@ -964,8 +1083,15 @@ const MaintenanceDashboard: React.FC = () => {
         aria-describedby='edit-ticket-dialog-description'
       >
         <DialogTitle id='edit-ticket-dialog-title'>
-          <Box display='flex' justifyContent='space-between' alignItems='center'>
-            <Typography variant='h6' sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
+          <Box
+            display='flex'
+            justifyContent='space-between'
+            alignItems='center'
+          >
+            <Typography
+              variant='h6'
+              sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}
+            >
               Editar Ticket #{selectedTicket?.ticketCode}
             </Typography>
             {isMobile && (
@@ -996,6 +1122,9 @@ const MaintenanceDashboard: React.FC = () => {
                   }
                   label='Estado'
                   aria-label='Seleccionar estado del ticket'
+                  disabled={
+                    selectedTicket?.status === MaintenanceStatus.COMPLETED
+                  }
                 >
                   {allowedStatuses.map((status) => (
                     <MenuItem key={status} value={status}>
@@ -1022,6 +1151,9 @@ const MaintenanceDashboard: React.FC = () => {
                     }
                     label='Prioridad'
                     aria-label='Seleccionar prioridad del ticket'
+                    disabled={
+                      selectedTicket?.status === MaintenanceStatus.COMPLETED
+                    }
                   >
                     {Object.values(MaintenancePriority).map((priority) => (
                       <MenuItem key={priority} value={priority}>
@@ -1039,7 +1171,9 @@ const MaintenanceDashboard: React.FC = () => {
             {!isTechnician && (
               <Grid item xs={12}>
                 <FormControl fullWidth size={isMobile ? 'small' : 'medium'}>
-                  <InputLabel id='edit-technician-label'>Técnico Asignado</InputLabel>
+                  <InputLabel id='edit-technician-label'>
+                    Técnico Asignado
+                  </InputLabel>
                   <Select
                     labelId='edit-technician-label'
                     id='edit-technician-select'
@@ -1052,18 +1186,23 @@ const MaintenanceDashboard: React.FC = () => {
                     }
                     label='Técnico Asignado'
                     aria-label='Seleccionar técnico asignado'
+                    disabled={
+                      selectedTicket?.status === MaintenanceStatus.COMPLETED
+                    }
                   >
                     <MenuItem value=''>Sin asignar</MenuItem>
                     {technicians
-                      ?.filter(t => t.status === 'active')
+                      ?.filter((t) => t.status === 'active')
                       .sort((a, b) => {
                         const aCapacity = a.maxWorkload - a.workload
                         const bCapacity = b.maxWorkload - b.workload
                         return bCapacity - aCapacity
                       })
                       .map((technician) => {
-                        const utilizationPct = (technician.workload / technician.maxWorkload) * 100
-                        const isFull = technician.workload >= technician.maxWorkload
+                        const utilizationPct =
+                          (technician.workload / technician.maxWorkload) * 100
+                        const isFull =
+                          technician.workload >= technician.maxWorkload
                         const isNearFull = utilizationPct >= 80
 
                         return (
@@ -1072,36 +1211,65 @@ const MaintenanceDashboard: React.FC = () => {
                             value={technician.id}
                             disabled={isFull}
                           >
-                            <Box display='flex' flexDirection='column' width='100%'>
-                              <Box display='flex' alignItems='center' gap={1} width='100%'>
+                            <Box
+                              display='flex'
+                              flexDirection='column'
+                              width='100%'
+                            >
+                              <Box
+                                display='flex'
+                                alignItems='center'
+                                gap={1}
+                                width='100%'
+                              >
                                 <Avatar
                                   sx={{
                                     width: 32,
                                     height: 32,
                                     fontSize: '0.875rem',
-                                    bgcolor: isFull ? 'error.main' : isNearFull ? 'warning.main' : 'success.main'
+                                    bgcolor: isFull
+                                      ? 'error.main'
+                                      : isNearFull
+                                        ? 'warning.main'
+                                        : 'success.main'
                                   }}
                                 >
-                                  {technician.name.split(' ').map((n) => n[0]).join('').toUpperCase()}
+                                  {technician.name
+                                    .split(' ')
+                                    .map((n) => n[0])
+                                    .join('')
+                                    .toUpperCase()}
                                 </Avatar>
 
                                 <Box flex={1}>
-                                  <Typography variant='body2' fontWeight='medium'>
+                                  <Typography
+                                    variant='body2'
+                                    fontWeight='medium'
+                                  >
                                     {technician.name}
                                   </Typography>
-                                  <Typography variant='caption' color='text.secondary'>
+                                  <Typography
+                                    variant='caption'
+                                    color='text.secondary'
+                                  >
                                     {technician.specialization || 'General'}
                                   </Typography>
                                 </Box>
 
-                                <Box display='flex' gap={0.5} alignItems='center'>
+                                <Box
+                                  display='flex'
+                                  gap={0.5}
+                                  alignItems='center'
+                                >
                                   <Chip
                                     size='small'
                                     label={`${technician.workload}/${technician.maxWorkload}`}
                                     color={
-                                      isFull ? 'error' :
-                                      isNearFull ? 'warning' :
-                                      'success'
+                                      isFull
+                                        ? 'error'
+                                        : isNearFull
+                                          ? 'warning'
+                                          : 'success'
                                     }
                                     variant='outlined'
                                   />
@@ -1120,9 +1288,11 @@ const MaintenanceDashboard: React.FC = () => {
                                   variant='determinate'
                                   value={utilizationPct}
                                   color={
-                                    isFull ? 'error' :
-                                    isNearFull ? 'warning' :
-                                    'success'
+                                    isFull
+                                      ? 'error'
+                                      : isNearFull
+                                        ? 'warning'
+                                        : 'success'
                                   }
                                   sx={{ height: 4, borderRadius: 2 }}
                                 />
@@ -1169,46 +1339,54 @@ const MaintenanceDashboard: React.FC = () => {
             )}
 
             {/* Capacity Warning Alert */}
-            {editData.assignedTechnician && (() => {
-              const selectedTech = technicians?.find(t => t.id === editData.assignedTechnician)
-              if (!selectedTech) return null
-
-              const utilizationPct = (selectedTech.workload / selectedTech.maxWorkload) * 100
-
-              if (utilizationPct >= 80 && utilizationPct < 100) {
-                return (
-                  <Grid item xs={12}>
-                    <Alert severity='warning' sx={{ mt: 2 }}>
-                      <AlertTitle>Técnico casi en capacidad máxima</AlertTitle>
-                      <Typography variant='body2'>
-                        <strong>{selectedTech.name}</strong> tiene{' '}
-                        <strong>{selectedTech.workload}</strong> de{' '}
-                        <strong>{selectedTech.maxWorkload}</strong> tickets asignados{' '}
-                        ({utilizationPct.toFixed(0)}% utilización).
-                        {' '}Considere asignar a un técnico con menos carga de trabajo.
-                      </Typography>
-                    </Alert>
-                  </Grid>
+            {editData.assignedTechnician &&
+              (() => {
+                const selectedTech = technicians?.find(
+                  (t) => t.id === editData.assignedTechnician
                 )
-              }
+                if (!selectedTech) return null
 
-              if (utilizationPct >= 100) {
-                return (
-                  <Grid item xs={12}>
-                    <Alert severity='error' sx={{ mt: 2 }}>
-                      <AlertTitle>Técnico en capacidad máxima</AlertTitle>
-                      <Typography variant='body2'>
-                        <strong>{selectedTech.name}</strong> ha alcanzado su capacidad máxima{' '}
-                        ({selectedTech.workload}/{selectedTech.maxWorkload} tickets).
-                        {' '}Por favor seleccione otro técnico disponible.
-                      </Typography>
-                    </Alert>
-                  </Grid>
-                )
-              }
+                const utilizationPct =
+                  (selectedTech.workload / selectedTech.maxWorkload) * 100
 
-              return null
-            })()}
+                if (utilizationPct >= 80 && utilizationPct < 100) {
+                  return (
+                    <Grid item xs={12}>
+                      <Alert severity='warning' sx={{ mt: 2 }}>
+                        <AlertTitle>
+                          Técnico casi en capacidad máxima
+                        </AlertTitle>
+                        <Typography variant='body2'>
+                          <strong>{selectedTech.name}</strong> tiene{' '}
+                          <strong>{selectedTech.workload}</strong> de{' '}
+                          <strong>{selectedTech.maxWorkload}</strong> tickets
+                          asignados ({utilizationPct.toFixed(0)}% utilización).{' '}
+                          Considere asignar a un técnico con menos carga de
+                          trabajo.
+                        </Typography>
+                      </Alert>
+                    </Grid>
+                  )
+                }
+
+                if (utilizationPct >= 100) {
+                  return (
+                    <Grid item xs={12}>
+                      <Alert severity='error' sx={{ mt: 2 }}>
+                        <AlertTitle>Técnico en capacidad máxima</AlertTitle>
+                        <Typography variant='body2'>
+                          <strong>{selectedTech.name}</strong> ha alcanzado su
+                          capacidad máxima ({selectedTech.workload}/
+                          {selectedTech.maxWorkload} tickets). Por favor
+                          seleccione otro técnico disponible.
+                        </Typography>
+                      </Alert>
+                    </Grid>
+                  )
+                }
+
+                return null
+              })()}
           </Grid>
         </DialogContent>
         <DialogActions>
@@ -1222,6 +1400,14 @@ const MaintenanceDashboard: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Completion Costs Dialog */}
+      <CompletionCostsDialog
+        open={costsDialogOpen}
+        onClose={() => setCostsDialogOpen(false)}
+        onComplete={handleCompleteWithCosts}
+        loading={updateTicketMutation.isLoading}
+      />
 
       {/* Toast Notifications */}
       <Snackbar

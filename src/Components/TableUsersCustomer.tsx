@@ -1,4 +1,13 @@
-import { Delete, Edit, Add, Person, Email, VpnKey, CheckCircle, Cancel } from '@mui/icons-material'
+import {
+  Delete,
+  Edit,
+  Add,
+  Person,
+  Email,
+  VpnKey,
+  CheckCircle,
+  Cancel
+} from '@mui/icons-material'
 import {
   Box,
   Button,
@@ -57,7 +66,7 @@ const Table: React.FC = () => {
   const [editingUser, setEditingUser] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
   const { id } = useParams()
-  
+
   // Initialize SweetAlert with React content
   const MySwal = withReactContent(Swal)
 
@@ -119,7 +128,11 @@ const Table: React.FC = () => {
   }, [fetchUsers])
 
   const handleCreateNewRow = (values: any) => {
-    onCreateUser({ ...values, customerId: parseInt(id || '0'), contraseña: 'NewUser@123' })
+    onCreateUser({
+      ...values,
+      customerId: parseInt(id || '0'),
+      contraseña: 'NewUser@123'
+    })
     setCreateModalOpen(false)
   }
 
@@ -127,8 +140,12 @@ const Table: React.FC = () => {
     try {
       const updatedValues: any = { ...userData }
       delete updatedValues.id
-      
-      const response = await axiosPrivate.put(`/users/${userData.id}`, updatedValues, {})
+
+      const response = await axiosPrivate.put(
+        `/users/${userData.id}`,
+        updatedValues,
+        {}
+      )
 
       if (response.status === 200) {
         bigToast('Usuario modificado exitosamente!', 'success')
@@ -260,13 +277,30 @@ const Table: React.FC = () => {
         <Grid container spacing={3}>
           {[...Array(6)].map((_, i) => (
             <Grid item xs={12} sm={6} md={4} key={i}>
-              <Card elevation={0} sx={{ border: '1px solid #e5e7eb', borderRadius: '12px' }}>
+              <Card
+                elevation={0}
+                sx={{ border: '1px solid #e5e7eb', borderRadius: '12px' }}
+              >
                 <CardContent sx={{ p: 3 }}>
-                  <Box display="flex" alignItems="center" mb={2}>
+                  <Box display='flex' alignItems='center' mb={2}>
                     <Avatar sx={{ mr: 2, width: 40, height: 40 }} />
                     <Box flex={1}>
-                      <Box sx={{ height: 20, backgroundColor: '#f3f4f6', borderRadius: '4px', mb: 1 }} />
-                      <Box sx={{ height: 16, backgroundColor: '#f3f4f6', borderRadius: '4px', width: '70%' }} />
+                      <Box
+                        sx={{
+                          height: 20,
+                          backgroundColor: '#f3f4f6',
+                          borderRadius: '4px',
+                          mb: 1
+                        }}
+                      />
+                      <Box
+                        sx={{
+                          height: 16,
+                          backgroundColor: '#f3f4f6',
+                          borderRadius: '4px',
+                          width: '70%'
+                        }}
+                      />
                     </Box>
                   </Box>
                 </CardContent>
@@ -281,10 +315,15 @@ const Table: React.FC = () => {
   return (
     <Box sx={{ py: 2 }}>
       {/* Header with Add Button */}
-      <Box display="flex" alignItems="center" justifyContent="space-between" mb={4}>
-        <Box display="flex" alignItems="center">
-          <Avatar 
-            sx={{ 
+      <Box
+        display='flex'
+        alignItems='center'
+        justifyContent='space-between'
+        mb={4}
+      >
+        <Box display='flex' alignItems='center'>
+          <Avatar
+            sx={{
               backgroundColor: '#10b981',
               mr: 2,
               width: 40,
@@ -294,17 +333,24 @@ const Table: React.FC = () => {
             <Person />
           </Avatar>
           <Box>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: '#1f2937' }}>
+            <Typography
+              variant='h6'
+              fontWeight='bold'
+              sx={{ color: '#1f2937' }}
+            >
               Usuarios del Cliente
             </Typography>
-            <Typography variant="body2" sx={{ color: '#6b7280' }}>
-              {tableData.length} {tableData.length === 1 ? 'usuario registrado' : 'usuarios registrados'}
+            <Typography variant='body2' sx={{ color: '#6b7280' }}>
+              {tableData.length}{' '}
+              {tableData.length === 1
+                ? 'usuario registrado'
+                : 'usuarios registrados'}
             </Typography>
           </Box>
         </Box>
 
         <Button
-          variant="contained"
+          variant='contained'
           startIcon={<Add />}
           onClick={() => setCreateModalOpen(true)}
           sx={{
@@ -314,7 +360,7 @@ const Table: React.FC = () => {
             fontWeight: 600,
             px: 3,
             '&:hover': {
-              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
             }
           }}
         >
@@ -324,16 +370,17 @@ const Table: React.FC = () => {
 
       {/* Users Grid */}
       {tableData.length === 0 ? (
-        <Alert 
-          severity="info" 
-          sx={{ 
+        <Alert
+          severity='info'
+          sx={{
             borderRadius: '12px',
             backgroundColor: '#f0f9ff',
             border: '1px solid #bfdbfe'
           }}
         >
-          <Typography variant="body2">
-            No hay usuarios registrados para este cliente. Crea el primer usuario para comenzar.
+          <Typography variant='body2'>
+            No hay usuarios registrados para este cliente. Crea el primer
+            usuario para comenzar.
           </Typography>
         </Alert>
       ) : (
@@ -341,9 +388,9 @@ const Table: React.FC = () => {
           {tableData.map((user, index) => (
             <Grid item xs={12} sm={6} md={4} key={user.id}>
               <Fade in={true} timeout={300 + index * 100}>
-                <Card 
+                <Card
                   elevation={0}
-                  sx={{ 
+                  sx={{
                     border: '1px solid #e5e7eb',
                     borderRadius: '12px',
                     transition: 'all 0.3s ease-in-out',
@@ -356,10 +403,15 @@ const Table: React.FC = () => {
                 >
                   <CardContent sx={{ p: 3 }}>
                     {/* User Header */}
-                    <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-                      <Box display="flex" alignItems="center">
-                        <Avatar 
-                          sx={{ 
+                    <Box
+                      display='flex'
+                      alignItems='center'
+                      justifyContent='space-between'
+                      mb={2}
+                    >
+                      <Box display='flex' alignItems='center'>
+                        <Avatar
+                          sx={{
                             backgroundColor: '#f0fdf4',
                             mr: 2,
                             width: 40,
@@ -369,32 +421,39 @@ const Table: React.FC = () => {
                           <Person sx={{ color: '#10b981' }} />
                         </Avatar>
                         <Box>
-                          <Typography 
-                            variant="h6" 
-                            fontWeight="600" 
-                            sx={{ 
+                          <Typography
+                            variant='h6'
+                            fontWeight='600'
+                            sx={{
                               color: '#1f2937',
                               fontSize: '1rem'
                             }}
                           >
                             {user.nombre}
                           </Typography>
-                          <Box display="flex" alignItems="center" gap={1}>
+                          <Box display='flex' alignItems='center' gap={1}>
                             <Email sx={{ fontSize: 14, color: '#6b7280' }} />
-                            <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                            <Typography
+                              variant='body2'
+                              sx={{ color: '#6b7280', fontSize: '0.875rem' }}
+                            >
                               {user.email}
                             </Typography>
                           </Box>
                         </Box>
                       </Box>
                     </Box>
-                    
+
                     {/* User Details */}
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Box display="flex" gap={1}>
+                    <Box
+                      display='flex'
+                      justifyContent='space-between'
+                      alignItems='center'
+                    >
+                      <Box display='flex' gap={1}>
                         <Chip
                           label={getRoleColor(user.rol).label}
-                          size="small"
+                          size='small'
                           sx={{
                             backgroundColor: getRoleColor(user.rol).bg,
                             color: getRoleColor(user.rol).color,
@@ -402,13 +461,15 @@ const Table: React.FC = () => {
                             fontSize: '0.75rem'
                           }}
                         />
-                        
+
                         <Chip
                           icon={user.active ? <CheckCircle /> : <Cancel />}
-                          label={user.active ? "Activo" : "Inactivo"}
-                          size="small"
+                          label={user.active ? 'Activo' : 'Inactivo'}
+                          size='small'
                           sx={{
-                            backgroundColor: user.active ? '#f0fdf4' : '#fef2f2',
+                            backgroundColor: user.active
+                              ? '#f0fdf4'
+                              : '#fef2f2',
                             color: user.active ? '#059669' : '#dc2626',
                             fontWeight: 600,
                             fontSize: '0.75rem',
@@ -418,12 +479,12 @@ const Table: React.FC = () => {
                           }}
                         />
                       </Box>
-                      
+
                       {/* Action Buttons - Moved to bottom for better visibility */}
-                      <Box display="flex" alignItems="center" gap={0.5}>
-                        <Tooltip title="Editar usuario">
+                      <Box display='flex' alignItems='center' gap={0.5}>
+                        <Tooltip title='Editar usuario'>
                           <IconButton
-                            size="small"
+                            size='small'
                             onClick={() => setEditingUser(user)}
                             sx={{
                               color: '#6b7280',
@@ -433,13 +494,13 @@ const Table: React.FC = () => {
                               }
                             }}
                           >
-                            <Edit fontSize="small" />
+                            <Edit fontSize='small' />
                           </IconButton>
                         </Tooltip>
-                        
-                        <Tooltip title="Restablecer contraseña">
+
+                        <Tooltip title='Restablecer contraseña'>
                           <IconButton
-                            size="small"
+                            size='small'
                             onClick={() => {
                               setSelectedUser(user)
                               setResetPasswordModalOpen(true)
@@ -452,13 +513,13 @@ const Table: React.FC = () => {
                               }
                             }}
                           >
-                            <VpnKey fontSize="small" />
+                            <VpnKey fontSize='small' />
                           </IconButton>
                         </Tooltip>
-                        
-                        <Tooltip title="Eliminar usuario">
+
+                        <Tooltip title='Eliminar usuario'>
                           <IconButton
-                            size="small"
+                            size='small'
                             onClick={() => handleDeleteUser(user)}
                             sx={{
                               color: '#6b7280',
@@ -468,7 +529,7 @@ const Table: React.FC = () => {
                               }
                             }}
                           >
-                            <Delete fontSize="small" />
+                            <Delete fontSize='small' />
                           </IconButton>
                         </Tooltip>
                       </Box>
@@ -487,14 +548,14 @@ const Table: React.FC = () => {
         onClose={() => setCreateModalOpen(false)}
         onSubmit={handleCreateNewRow}
       />
-      
+
       <EditUserModal
         open={!!editingUser}
         user={editingUser}
         onClose={() => setEditingUser(null)}
         onSubmit={handleEditUser}
       />
-      
+
       <ResetPasswordModal
         open={resetPasswordModalOpen}
         onClose={() => setResetPasswordModalOpen(false)}
@@ -519,7 +580,11 @@ interface EditModalProps {
 }
 
 // Modern Create User Modal
-const CreateNewAccountModal = ({ open, onClose, onSubmit }: CreateModalProps) => {
+const CreateNewAccountModal = ({
+  open,
+  onClose,
+  onSubmit
+}: CreateModalProps) => {
   const { id } = useParams()
   const [values, setValues] = useState({
     nombre: '',
@@ -532,14 +597,19 @@ const CreateNewAccountModal = ({ open, onClose, onSubmit }: CreateModalProps) =>
     const newErrors: { [key: string]: string } = {}
     if (!values.nombre) newErrors.nombre = 'Nombre es requerido'
     if (!values.email) newErrors.email = 'Email es requerido'
-    if (!validateEmail(values.email) && values.email) newErrors.email = 'Email inválido'
+    if (!validateEmail(values.email) && values.email)
+      newErrors.email = 'Email inválido'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = () => {
     if (validateFields()) {
-      onSubmit({ ...values, rol: 'user', customerId: parseInt(id || '0') })
+      onSubmit({
+        ...values,
+        roles: [{ id: 3 }],
+        customerId: parseInt(id || '0')
+      })
       setValues({ nombre: '', email: '' })
       setErrors({})
     }
@@ -552,10 +622,10 @@ const CreateNewAccountModal = ({ open, onClose, onSubmit }: CreateModalProps) =>
   }
 
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={handleClose}
-      maxWidth="sm"
+      maxWidth='sm'
       fullWidth
       PaperProps={{
         sx: {
@@ -564,24 +634,32 @@ const CreateNewAccountModal = ({ open, onClose, onSubmit }: CreateModalProps) =>
         }
       }}
     >
-      <DialogTitle sx={{ 
-        textAlign: 'center', 
-        fontWeight: 'bold',
-        pb: 1,
-        borderBottom: '1px solid #e5e7eb'
-      }}>
-        <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>
+      <DialogTitle
+        sx={{
+          textAlign: 'center',
+          fontWeight: 'bold',
+          pb: 1,
+          borderBottom: '1px solid #e5e7eb'
+        }}
+      >
+        <Box
+          display='flex'
+          alignItems='center'
+          justifyContent='center'
+          gap={1}
+          mb={1}
+        >
           <Person sx={{ color: '#10b981' }} />
-          <Typography variant="h6" fontWeight="bold">
+          <Typography variant='h6' fontWeight='bold'>
             Crear Nuevo Usuario
           </Typography>
         </Box>
       </DialogTitle>
-      
+
       <DialogContent sx={{ pt: 3 }}>
         <Stack spacing={3}>
           <TextField
-            label="Nombre completo"
+            label='Nombre completo'
             value={values.nombre}
             error={!!errors.nombre}
             helperText={errors.nombre}
@@ -599,10 +677,10 @@ const CreateNewAccountModal = ({ open, onClose, onSubmit }: CreateModalProps) =>
               }
             }}
           />
-          
+
           <TextField
-            label="Correo electrónico"
-            type="email"
+            label='Correo electrónico'
+            type='email'
             value={values.email}
             error={!!errors.email}
             helperText={errors.email}
@@ -622,11 +700,11 @@ const CreateNewAccountModal = ({ open, onClose, onSubmit }: CreateModalProps) =>
           />
         </Stack>
       </DialogContent>
-      
+
       <DialogActions sx={{ p: 3, pt: 0 }}>
-        <Button 
+        <Button
           onClick={handleClose}
-          variant="outlined"
+          variant='outlined'
           sx={{
             borderRadius: '8px',
             textTransform: 'none',
@@ -641,9 +719,9 @@ const CreateNewAccountModal = ({ open, onClose, onSubmit }: CreateModalProps) =>
         >
           Cancelar
         </Button>
-        <Button 
+        <Button
           onClick={handleSubmit}
-          variant="contained"
+          variant='contained'
           sx={{
             background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
             borderRadius: '8px',
@@ -651,7 +729,7 @@ const CreateNewAccountModal = ({ open, onClose, onSubmit }: CreateModalProps) =>
             fontWeight: 600,
             ml: 2,
             '&:hover': {
-              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
             }
           }}
         >
@@ -684,7 +762,8 @@ const EditUserModal = ({ open, user, onClose, onSubmit }: EditModalProps) => {
     const newErrors: { [key: string]: string } = {}
     if (!values.nombre) newErrors.nombre = 'Nombre es requerido'
     if (!values.email) newErrors.email = 'Email es requerido'
-    if (!validateEmail(values.email) && values.email) newErrors.email = 'Email inválido'
+    if (!validateEmail(values.email) && values.email)
+      newErrors.email = 'Email inválido'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -702,10 +781,10 @@ const EditUserModal = ({ open, user, onClose, onSubmit }: EditModalProps) => {
   }
 
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={handleClose}
-      maxWidth="sm"
+      maxWidth='sm'
       fullWidth
       PaperProps={{
         sx: {
@@ -714,24 +793,32 @@ const EditUserModal = ({ open, user, onClose, onSubmit }: EditModalProps) => {
         }
       }}
     >
-      <DialogTitle sx={{ 
-        textAlign: 'center', 
-        fontWeight: 'bold',
-        pb: 1,
-        borderBottom: '1px solid #e5e7eb'
-      }}>
-        <Box display="flex" alignItems="center" justifyContent="center" gap={1} mb={1}>
+      <DialogTitle
+        sx={{
+          textAlign: 'center',
+          fontWeight: 'bold',
+          pb: 1,
+          borderBottom: '1px solid #e5e7eb'
+        }}
+      >
+        <Box
+          display='flex'
+          alignItems='center'
+          justifyContent='center'
+          gap={1}
+          mb={1}
+        >
           <Edit sx={{ color: '#10b981' }} />
-          <Typography variant="h6" fontWeight="bold">
+          <Typography variant='h6' fontWeight='bold'>
             Editar Usuario
           </Typography>
         </Box>
       </DialogTitle>
-      
+
       <DialogContent sx={{ pt: 3 }}>
         <Stack spacing={3}>
           <TextField
-            label="Nombre completo"
+            label='Nombre completo'
             value={values.nombre}
             error={!!errors.nombre}
             helperText={errors.nombre}
@@ -749,10 +836,10 @@ const EditUserModal = ({ open, user, onClose, onSubmit }: EditModalProps) => {
               }
             }}
           />
-          
+
           <TextField
-            label="Correo electrónico"
-            type="email"
+            label='Correo electrónico'
+            type='email'
             value={values.email}
             error={!!errors.email}
             helperText={errors.email}
@@ -772,11 +859,11 @@ const EditUserModal = ({ open, user, onClose, onSubmit }: EditModalProps) => {
           />
         </Stack>
       </DialogContent>
-      
+
       <DialogActions sx={{ p: 3, pt: 0 }}>
-        <Button 
+        <Button
           onClick={handleClose}
-          variant="outlined"
+          variant='outlined'
           sx={{
             borderRadius: '8px',
             textTransform: 'none',
@@ -791,9 +878,9 @@ const EditUserModal = ({ open, user, onClose, onSubmit }: EditModalProps) => {
         >
           Cancelar
         </Button>
-        <Button 
+        <Button
           onClick={handleSubmit}
-          variant="contained"
+          variant='contained'
           sx={{
             background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
             borderRadius: '8px',
@@ -801,7 +888,7 @@ const EditUserModal = ({ open, user, onClose, onSubmit }: EditModalProps) => {
             fontWeight: 600,
             ml: 2,
             '&:hover': {
-              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
             }
           }}
         >

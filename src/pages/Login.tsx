@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import * as Yup from 'yup' // Importa Yup para la validación
 
-import { Toast } from '../Components/ExcelManipulation/Utils'
 import { usePostHog } from 'posthog-js/react'
 
 import { userStore } from 'src/store/userStore'
@@ -61,8 +60,6 @@ const Login: React.FC = () => {
   }
 
   function handleNetworkError(error: AxiosError) {
-    console.error('An error occurred:', error)
-
     if (error.response) {
       switch (error.response.status) {
         case 401:
@@ -91,6 +88,38 @@ const Login: React.FC = () => {
               'Error de inicio de sesión. Por favor, inténtalo de nuevo más tarde.'
             )
           }
+          break
+
+        case 403:
+          if (
+            error.response.data &&
+            typeof error.response.data === 'object' &&
+            'message' in error.response.data
+          ) {
+            const message = error.response.data.message
+            if (
+              message ===
+              '"El cliente asociado está inactivo. Contacta al administrador.'
+            ) {
+              setError(
+                '"El cliente asociado está inactivo. Contacta al administrador.'
+              )
+            } else {
+              setError(
+                'Error de inicio de sesión. Por favor, inténtalo de nuevo más tarde.'
+              )
+            }
+          } else {
+            setError(
+              'Error de inicio de sesión. Por favor, inténtalo de nuevo más tarde.'
+            )
+          }
+          break
+
+        case 429:
+          setError(
+            'Demasiados intentos de inicio de sesión. Por favor, espera un momento e inténtalo de nuevo.'
+          )
           break
         default:
           setError(
@@ -142,7 +171,7 @@ const Login: React.FC = () => {
         //   position: "top-center",
         // });
 
-        Toast.fire('Bienvenido', '', 'success')
+        // Toast.fire('Bienvenido', '', 'success')
         const lastLocation = sessionStorage.getItem('lastLocation') || '/'
 
         // Limpiar lastLocation después de usarla
@@ -172,7 +201,7 @@ const Login: React.FC = () => {
     } catch (error: any) {
       // Handle network error or other exceptions
       handleValidationOrNetworkError(error)
-      Toast.fire('Error', error.message, 'error')
+      // Toast.fire('Error', error.message, 'error')
     }
   }
 
