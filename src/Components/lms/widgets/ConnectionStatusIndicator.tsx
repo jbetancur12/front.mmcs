@@ -59,7 +59,7 @@ const ConnectionStatusIndicator: React.FC<ConnectionStatusIndicatorProps> = ({
 
   const getStatusText = () => {
     if (isConnecting) {
-      return connectionAttempts > 0 
+      return connectionAttempts > 0
         ? `Reconectando... (${connectionAttempts}/${maxAttempts})`
         : 'Conectando...'
     }
@@ -70,7 +70,7 @@ const ConnectionStatusIndicator: React.FC<ConnectionStatusIndicatorProps> = ({
 
   const getTooltipText = () => {
     if (isConnecting) {
-      return connectionAttempts > 0 
+      return connectionAttempts > 0
         ? `Reintentando conexión WebSocket (${connectionAttempts}/${maxAttempts})`
         : 'Estableciendo conexión WebSocket para actualizaciones en tiempo real'
     }
@@ -163,45 +163,17 @@ const ConnectionStatusIndicator: React.FC<ConnectionStatusIndicatorProps> = ({
                 color: '#dc2626'
               })
             }}
-          />
-        </Tooltip>
-
-        {/* Manual refresh button */}
-        {onRefresh && (shouldShowWarning || shouldShowError || !isConnected) && (
-          <Tooltip title="Reconectar manualmente" arrow>
-            <IconButton
-              size="small"
-              onClick={onRefresh}
-              disabled={isConnecting}
-              sx={{
-                color: getStatusColor(),
-                '&:hover': {
-                  bgcolor: `${getStatusColor()}10`
-                },
-                '&:disabled': {
-                  color: '#9ca3af'
-                }
-              }}
-            >
-              <RefreshIcon sx={{ fontSize: size === 'small' ? 16 : 18 }} />
-            </IconButton>
-          </Tooltip>
-        )}
-
-        {/* Connection attempts warning */}
-        {shouldShowWarning && (
-          <Tooltip 
             title={`Reintentando conexión (${connectionAttempts}/${maxAttempts}). Si persiste el problema, verifique su conexión a internet.`}
             arrow
           >
-            <WarningIcon 
-              sx={{ 
-                fontSize: 16, 
+            <WarningIcon
+              sx={{
+                fontSize: 16,
                 color: '#f59e0b',
                 animation: 'pulse 2s infinite'
-              }} 
+              }}
             />
-          </Tooltip>
+        </Tooltip>
         )}
 
         {/* Max attempts reached error */}
@@ -209,9 +181,9 @@ const ConnectionStatusIndicator: React.FC<ConnectionStatusIndicatorProps> = ({
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <ErrorIcon sx={{ fontSize: 16, color: '#ef4444' }} />
             {showLabel && (
-              <Typography 
-                variant="caption" 
-                sx={{ 
+              <Typography
+                variant="caption"
+                sx={{
                   color: '#ef4444',
                   fontWeight: 500,
                   fontSize: '0.7rem'

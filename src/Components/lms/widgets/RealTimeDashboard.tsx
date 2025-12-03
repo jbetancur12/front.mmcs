@@ -52,7 +52,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
     isRealTimeEnabled,
     lastNotificationTime
   } = useDashboardNotifications({
-    enabled: true,
+    enabled: showConnectionStatus, // Only connect if status is shown (or always true if preferred)
     refreshInterval: refreshInterval,
     onNewNotification: (notification) => {
       // Show real-time alert for new notifications
@@ -368,4 +368,4 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
   )
 }
 
-export default RealTimeDashboard
+export default React.memo(RealTimeDashboard)

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import {
   Box,
   Card,
@@ -296,6 +296,8 @@ const LmsAdmin: React.FC = () => {
     }
   }, [dashboardError, coursesError, quizError, showError, showWarning])
 
+
+
   return (
     <DashboardErrorBoundary
       onError={(error, errorInfo) => {
@@ -437,7 +439,7 @@ const LmsAdmin: React.FC = () => {
               <RealTimeDashboard
                 showConnectionStatus={true}
                 refreshInterval={300000}
-                onNotificationClick={(notification) => {
+                onNotificationClick={useCallback((notification: any) => {
                   // Handle notification clicks with custom logic
                   const metadata = notification.metadata || {}
                   if (metadata.courseId) {
@@ -449,7 +451,7 @@ const LmsAdmin: React.FC = () => {
                   } else {
                     navigate('/lms/admin/analytics')
                   }
-                }}
+                }, [navigate])}
               />
             </RealTimeErrorBoundary>
           </Box>

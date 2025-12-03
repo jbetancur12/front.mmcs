@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useQuery, useQueryClient } from 'react-query'
 import { axiosPrivate } from '../utils/api'
-import { Notification, NotificationSummary } from '../types/notifications'
+import { Notification, NotificationStats } from '../types/notifications'
 
 interface DashboardNotificationsOptions {
     enabled?: boolean
@@ -138,9 +138,11 @@ export const useDashboardNotifications = (options: DashboardNotificationsOptions
 
     // Effect to manage connection
     useEffect(() => {
+        console.log('useDashboardNotifications: Effect mounted')
         connectWebSocket()
 
         return () => {
+            console.log('useDashboardNotifications: Effect cleanup (unmount or dep change)')
             if (wsRef.current) {
                 wsRef.current.close()
             }
