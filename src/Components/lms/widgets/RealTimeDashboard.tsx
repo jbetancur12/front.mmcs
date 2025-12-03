@@ -13,7 +13,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import NotificationWidget from './NotificationWidget'
 import ConnectionStatusIndicator from './ConnectionStatusIndicator'
-import useHybridNotifications from '../../../hooks/useHybridNotifications'
+import useDashboardNotifications from '../../../hooks/useDashboardNotifications'
 import { Notification } from '../../../types/notifications'
 
 interface RealTimeDashboardProps {
@@ -38,7 +38,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
     show: false
   })
 
-  // Hybrid notifications system (WebSocket + Polling fallback)
+  // New consolidated hook
   const {
     notifications,
     summary,
@@ -51,11 +51,9 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
     connectionMethod,
     isRealTimeEnabled,
     lastNotificationTime
-  } = useHybridNotifications({
-    enableWebSocket: true, // Enabled for real-time updates
-    enablePolling: true, // Enabled as fallback
-    pollingInterval: refreshInterval,
-    fallbackToPolling: true, // Enabled as fallback
+  } = useDashboardNotifications({
+    enabled: true,
+    refreshInterval: refreshInterval,
     onNewNotification: (notification) => {
       // Show real-time alert for new notifications
       setRealtimeAlert({
@@ -170,7 +168,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
             )}
             {notificationsError && (
               <Typography variant='body2'>
-                Error al cargar notificaciones: {notificationsError.message}
+                Error al cargar notificaciones: {(notificationsError as Error)?.message || 'Error desconocido'}
               </Typography>
             )}
             {!isRealTimeEnabled && (
@@ -191,7 +189,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
             notifications={notifications}
             summary={summary}
             loading={notificationsLoading}
-            error={notificationsError?.message}
+            error={(notificationsError as Error)?.message}
             onNotificationClick={handleNotificationClick}
             onMarkAsRead={markAsRead}
             onMarkAllAsRead={markAllAsRead}
