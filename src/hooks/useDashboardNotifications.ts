@@ -24,6 +24,13 @@ export const useDashboardNotifications = (options: DashboardNotificationsOptions
     const reconnectTimeoutRef = useRef<NodeJS.Timeout>()
     const queryClient = useQueryClient()
 
+    // Use ref for callback to avoid dependency changes
+    const onNewNotificationRef = useRef(onNewNotification)
+
+    useEffect(() => {
+        onNewNotificationRef.current = onNewNotification
+    }, [onNewNotification])
+
     // Fetch notifications
     const { data, isLoading, error, refetch } = useQuery(
         ['dashboard-notifications'],
@@ -90,9 +97,9 @@ export const useDashboardNotifications = (options: DashboardNotificationsOptions
                     if (message.type === 'NOTIFICATION_NEW') {
                         const notification = message.data
 
-                        // Notify parent
-                        if (onNewNotification) {
-                            onNewNotification(notification)
+                        // Notify parent using ref
+                        if (onNewNotificationRef.current) {
+                            onNewNotificationRef.current(notification)
                         }
 
                         // Invalidate query to refresh list
@@ -127,7 +134,7 @@ export const useDashboardNotifications = (options: DashboardNotificationsOptions
             setConnectionStatus('error')
             setConnectionMethod('polling')
         }
-    }, [enabled, onNewNotification, queryClient])
+    }, [enabled, queryClient]) // Removed onNewNotification from dependencies
 
     // Effect to manage connection
     useEffect(() => {
