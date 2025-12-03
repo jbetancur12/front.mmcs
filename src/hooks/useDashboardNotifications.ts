@@ -49,9 +49,24 @@ export const useDashboardNotifications = (options: DashboardNotificationsOptions
             const token = localStorage.getItem('accessToken')
             if (!token) return
 
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-            const host = window.location.host
-            const wsUrl = `${protocol}//${host}/lms/notifications?token=${token}`
+            let baseUrl = import.meta.env.VITE_WS_URL
+
+            // Handle development environment logic similar to use-websockets.tsx
+            if (import.meta.env.VITE_ENV === 'development') {
+                const isLocal = window.location.hostname.includes('localhost') ||
+                    window.location.hostname.includes('127.0.0.1')
+
+                if (!isLocal && import.meta.env.VITE_WS_URL_CLOUDFARE) {
+                    baseUrl = import.meta.env.VITE_WS_URL_CLOUDFARE
+                }
+            }
+
+            // Remove trailing slash if present
+            if (baseUrl) {
+                baseUrl = baseUrl.replace(/\/$/, '')
+            }
+
+            const wsUrl = `${baseUrl}/lms/notifications?token=${token}`
 
             console.log('Connecting to Dashboard WebSocket:', wsUrl)
             const socket = new WebSocket(wsUrl)
