@@ -63,7 +63,7 @@ const useLmsWebSocket = (options: LmsWebSocketOptions = {}) => {
     const token = localStorage.getItem('accessToken')
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const baseUrl = import.meta.env.VITE_WS_URL || `${protocol}//${window.location.host}`
-    
+
     return `${baseUrl}/lms/notifications?token=${token}`
   }, [])
 
@@ -81,7 +81,7 @@ const useLmsWebSocket = (options: LmsWebSocketOptions = {}) => {
   const handleMessage = useCallback((event: MessageEvent) => {
     try {
       const message: LmsWebSocketMessage = JSON.parse(event.data)
-      
+
       setState(prev => ({
         ...prev,
         lastMessage: message,
@@ -299,7 +299,7 @@ const useLmsWebSocket = (options: LmsWebSocketOptions = {}) => {
 
     if (wsRef.current) {
       wsRef.current.addEventListener('message', handleSubscribedMessage)
-      
+
       // Return unsubscribe function
       return () => {
         if (wsRef.current) {
@@ -308,7 +308,7 @@ const useLmsWebSocket = (options: LmsWebSocketOptions = {}) => {
       }
     }
 
-    return () => {} // No-op unsubscribe
+    return () => { } // No-op unsubscribe
   }, [])
 
   // Auto-connect on mount if enabled
@@ -323,15 +323,7 @@ const useLmsWebSocket = (options: LmsWebSocketOptions = {}) => {
     }
   }, [autoConnect, connect, disconnect])
 
-  // Reconnect when token changes
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken')
-    if (token && state.isConnected) {
-      // Reconnect with new token
-      disconnect()
-      setTimeout(connect, 1000)
-    }
-  }, [connect, disconnect, state.isConnected])
+  // Reconnect logic removed to prevent infinite loop
 
   return {
     // Connection state
@@ -339,16 +331,16 @@ const useLmsWebSocket = (options: LmsWebSocketOptions = {}) => {
     isConnecting: state.isConnecting,
     error: state.error,
     connectionAttempts: state.connectionAttempts,
-    
+
     // Last message
     lastMessage: state.lastMessage,
-    
+
     // Actions
     connect,
     disconnect,
     sendMessage,
     subscribe,
-    
+
     // Manual refresh trigger
     refresh: connect
   }

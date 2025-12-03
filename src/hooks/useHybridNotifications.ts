@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Notification } from '../types/notifications'
 import useLmsWebSocket from './useLmsWebSocket'
 import useNotificationPolling from './useNotificationPolling'
@@ -40,6 +40,17 @@ export const useHybridNotifications = (
     autoConnect: enableWebSocket
   })
 
+  const handlePollingNotification = useCallback((notification: Notification) => {
+    setLastNotificationTime(new Date())
+    if (onNewNotification) {
+      onNewNotification(notification)
+    }
+  }, [onNewNotification])
+
+  const handlePollingError = useCallback((error: Error) => {
+    console.error('Polling error:', error)
+  }, [])
+
   // Polling fallback
   const {
     isPolling,
@@ -49,22 +60,17 @@ export const useHybridNotifications = (
   } = useNotificationPolling({
     enabled: enablePolling && (!enableWebSocket || !wsConnected),
     interval: pollingInterval,
-    onNewNotification: (notification) => {
-      setLastNotificationTime(new Date())
-      if (onNewNotification) {
-        onNewNotification(notification)
-      }
-    },
-    onError: (error) => {
-      console.error('Polling error:', error)
-    }
+    onNewNotification: handlePollingNotification,
+    onError: handlePollingError
   })
 
   // Main notifications hook
-  const notificationsHook = useNotifications({
+  const notificationOptions = useMemo(() => ({
     autoRefresh: false, // We handle refresh manually
     refreshInterval: 0
-  })
+  }), [])
+
+  const notificationsHook = useNotifications(notificationOptions)
 
   // Determine active connection method
   useEffect(() => {
