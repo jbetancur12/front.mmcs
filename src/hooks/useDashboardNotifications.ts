@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useQuery, useQueryClient } from 'react-query'
 import { axiosPrivate } from '../utils/api'
-import { Notification, NotificationStats } from '../types/notifications'
+import { Notification } from '../types/notifications'
 
 interface DashboardNotificationsOptions {
     enabled?: boolean
