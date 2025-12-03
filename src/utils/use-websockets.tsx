@@ -31,9 +31,8 @@ interface WebSocketProviderProps {
   children: ReactNode
 }
 
-const token = localStorage.getItem('accessToken')
-
 const wss = () => {
+  const token = localStorage.getItem('accessToken')
   if (import.meta.env.VITE_ENV === 'development') {
     return window.location.hostname.includes('localhost') ||
       window.location.hostname.includes('127.0.0.1')
