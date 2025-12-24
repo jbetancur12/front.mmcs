@@ -40,6 +40,8 @@ export interface SupplierEvaluationData {
   invoiceScore: number
   comments?: string
   documentReference?: string
+  preparedBy?: string
+  approvedBy?: string
   totalScore?: number // Calculado en UI para feedback, y en backend para persistencia
   finalCondition?: string // Calculado en UI para feedback, y en backend para persistencia
   supplier?: Pick<ISupplier, 'id' | 'name' | 'taxId'> // Para mostrar info del proveedor si la data viene así
@@ -62,6 +64,11 @@ const scoreOptions = [
   { value: 2, label: 'Regular (2 pts)' },
   { value: 10, label: 'Bueno (10 pts)' },
   { value: 15, label: 'Excelente (15 pts)' }
+]
+
+const evaluatorOptions = [
+  { value: 'Jessica Cardona Martinez', label: 'Jessica Cardona Martinez' },
+  { value: 'Andres Felipe', label: 'Andres Felipe' }
 ]
 
 // Función para calcular la condición final basada en el puntaje total
@@ -106,7 +113,9 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
     nonConformityScore: 0,
     invoiceScore: 0,
     comments: '',
-    documentReference: 'FOGC-MMCS-15 V03' // Default del formato
+    documentReference: 'FOGC-MMCS-15 V03', // Default del formato
+    preparedBy: 'Jessica Cardona Martinez',
+    approvedBy: 'Jessica Cardona Martinez'
   }
 
   const [formData, setFormData] = useState<EvaluationFormData>(initialFormData)
@@ -128,7 +137,9 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
         invoiceScore: existingEvaluation.invoiceScore ?? 0,
         comments: existingEvaluation.comments || '',
         documentReference:
-          existingEvaluation.documentReference || 'FOGC-MMCS-15 V03'
+          existingEvaluation.documentReference || 'FOGC-MMCS-15 V03',
+        preparedBy: existingEvaluation.preparedBy || 'Jessica Cardona Martinez',
+        approvedBy: existingEvaluation.approvedBy || 'Jessica Cardona Martinez'
       })
     } else {
       // Resetear a valores por defecto si no hay existingEvaluation (ej. al cambiar de editar a crear, o al abrir para crear)
@@ -321,6 +332,42 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
               fullWidth
               required
             />
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              select
+              label='Evaluado por (Elaboró)'
+              name='preparedBy'
+              value={formData.preparedBy}
+              onChange={handleChange as any}
+              fullWidth
+              required
+            >
+              {evaluatorOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              select
+              label='Aprobado por'
+              name='approvedBy'
+              value={formData.approvedBy}
+              onChange={handleChange as any}
+              fullWidth
+              required
+            >
+              {evaluatorOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
           </Grid>
 
           {/* --- Renderizado de Criterios con Select --- */}
