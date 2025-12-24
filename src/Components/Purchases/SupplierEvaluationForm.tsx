@@ -68,7 +68,7 @@ const scoreOptions = [
 
 const evaluatorOptions = [
   { value: 'Jessica Cardona Martinez', label: 'Jessica Cardona Martinez' },
-  { value: 'Andres Felipe', label: 'Andres Felipe' }
+  { value: 'Andres Felipe Bernal', label: 'Andres Felipe Bernal' }
 ]
 
 // Función para calcular la condición final basada en el puntaje total
@@ -115,7 +115,7 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
     comments: '',
     documentReference: 'FOGC-MMCS-15 V03', // Default del formato
     preparedBy: 'Jessica Cardona Martinez',
-    approvedBy: 'Jessica Cardona Martinez'
+    approvedBy: 'Andres Felipe Bernal'
   }
 
   const [formData, setFormData] = useState<EvaluationFormData>(initialFormData)
@@ -139,7 +139,7 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
         documentReference:
           existingEvaluation.documentReference || 'FOGC-MMCS-15 V03',
         preparedBy: existingEvaluation.preparedBy || 'Jessica Cardona Martinez',
-        approvedBy: existingEvaluation.approvedBy || 'Jessica Cardona Martinez'
+        approvedBy: existingEvaluation.approvedBy || 'Andres Felipe Bernal'
       })
     } else {
       // Resetear a valores por defecto si no hay existingEvaluation (ej. al cambiar de editar a crear, o al abrir para crear)
@@ -334,42 +334,6 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={4}>
-            <TextField
-              select
-              label='Evaluado por (Elaboró)'
-              name='preparedBy'
-              value={formData.preparedBy}
-              onChange={handleChange as any}
-              fullWidth
-              required
-            >
-              {evaluatorOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={4}>
-            <TextField
-              select
-              label='Aprobado por'
-              name='approvedBy'
-              value={formData.approvedBy}
-              onChange={handleChange as any}
-              fullWidth
-              required
-            >
-              {evaluatorOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-
           {/* --- Renderizado de Criterios con Select --- */}
           {criteria.map((criterion) => (
             <Grid item xs={12} sm={6} md={4} key={criterion.name}>
@@ -409,33 +373,79 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
             />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={4} sx={{ mt: 1 }}>
-            <Typography variant='body1' component='div' fontWeight='medium'>
-              Puntaje Total Obtenido:
-            </Typography>
-            <Typography variant='h5' color='primary.main' fontWeight='bold'>
-              {calculatedTotal} / 90
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6} md={4} sx={{ mt: 1 }}>
-            <Typography variant='body1' component='div' fontWeight='medium'>
-              Condición Final:
-            </Typography>
-            <Typography
-              variant='h5'
-              fontWeight='bold'
-              color={
-                calculatedCondition === 'NO APROBADO' ||
-                calculatedCondition === 'INDETERMINADO'
-                  ? 'error.main'
-                  : calculatedCondition === 'EXCELENTE' ||
-                      calculatedCondition === 'BUENO'
-                    ? 'success.main'
-                    : 'warning.main'
-              }
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              select
+              label='Evaluado por (Elaboró)'
+              name='preparedBy'
+              value={formData.preparedBy}
+              onChange={handleChange as any}
+              fullWidth
+              required
             >
-              {calculatedCondition}
-            </Typography>
+              {evaluatorOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              select
+              label='Aprobado por'
+              name='approvedBy'
+              value={formData.approvedBy}
+              onChange={handleChange as any}
+              fullWidth
+              required
+            >
+              {evaluatorOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          <Grid item xs={12} sx={{ mt: 1 }}>
+            <Box
+              display='flex'
+              flexDirection={{ xs: 'column', md: 'row' }}
+              gap={4}
+              alignItems='center'
+            >
+              <Box>
+                <Typography variant='body1' component='div' fontWeight='medium'>
+                  Puntaje Total Obtenido:
+                </Typography>
+                <Typography variant='h5' color='primary.main' fontWeight='bold'>
+                  {calculatedTotal} / 90
+                </Typography>
+              </Box>
+
+              <Box>
+                <Typography variant='body1' component='div' fontWeight='medium'>
+                  Condición Final:
+                </Typography>
+                <Typography
+                  variant='h5'
+                  fontWeight='bold' // @ts-ignore
+                  color={
+                    calculatedCondition === 'NO APROBADO' ||
+                    calculatedCondition === 'INDETERMINADO'
+                      ? 'error.main'
+                      : calculatedCondition === 'EXCELENTE' ||
+                          calculatedCondition === 'BUENO'
+                        ? 'success.main'
+                        : 'warning.main'
+                  }
+                >
+                  {calculatedCondition}
+                </Typography>
+              </Box>
+            </Box>
           </Grid>
 
           {mutationError && (
