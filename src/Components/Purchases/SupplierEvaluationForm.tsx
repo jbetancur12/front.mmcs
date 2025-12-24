@@ -409,7 +409,7 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
               fullWidth
               required
             >
-              {evaluatorOptions.map((option) => (
+              {approverOptions.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
                   {option.label}
                 </MenuItem>
