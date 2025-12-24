@@ -91,8 +91,8 @@ const quillModules = {
     [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
     ['bold', 'italic', 'underline', 'strike'],
     [{ 'color': [] }, { 'background': [] }],
-    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-    [{ 'indent': '-1'}, { 'indent': '+1' }],
+    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    [{ 'indent': '-1' }, { 'indent': '+1' }],
     [{ 'align': [] }],
     ['link', 'image', 'video'],
     ['blockquote', 'code-block'],
@@ -176,7 +176,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
         }
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modules])
 
   // Sanitize HTML content
@@ -262,9 +262,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       // Simulate upload progress
       for (let progress = 0; progress <= 100; progress += 10) {
         await new Promise(resolve => setTimeout(resolve, 200))
-        setVideoUploads(prev => 
-          prev.map(upload => 
-            upload.file === file 
+        setVideoUploads(prev =>
+          prev.map(upload =>
+            upload.file === file
               ? { ...upload, progress }
               : upload
           )
@@ -272,9 +272,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       }
 
       // Simulate processing
-      setVideoUploads(prev => 
-        prev.map(upload => 
-          upload.file === file 
+      setVideoUploads(prev =>
+        prev.map(upload =>
+          upload.file === file
             ? { ...upload, status: 'processing' }
             : upload
         )
@@ -284,9 +284,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
 
       // Complete upload
       const videoUrl = URL.createObjectURL(file) // In real implementation, this would be the MinIO URL
-      setVideoUploads(prev => 
-        prev.map(upload => 
-          upload.file === file 
+      setVideoUploads(prev =>
+        prev.map(upload =>
+          upload.file === file
             ? { ...upload, status: 'completed', url: videoUrl }
             : upload
         )
@@ -303,9 +303,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       }
 
     } catch (error) {
-      setVideoUploads(prev => 
-        prev.map(upload => 
-          upload.file === file 
+      setVideoUploads(prev =>
+        prev.map(upload =>
+          upload.file === file
             ? { ...upload, status: 'error', error: 'Error al subir el video' }
             : upload
         )
@@ -445,7 +445,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
         : module
     )
     onModulesChange(updatedModules)
-    
+
     if (selectedModule?.id === moduleId) {
       setSelectedModule({ ...selectedModule, title })
     }
@@ -462,7 +462,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
 
   const handleDrop = (e: React.DragEvent, targetModuleId: string) => {
     e.preventDefault()
-    
+
     if (!draggedModule || draggedModule === targetModuleId) {
       setDraggedModule(null)
       return
@@ -564,7 +564,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                       })
                       setSelectedModule(module)
                     }}
-                  >                    
+                  >
                     <ListItemIcon>
                       <DragIndicatorIcon sx={{ cursor: 'grab' }} />
                     </ListItemIcon>
@@ -607,312 +607,326 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
               )}
             </List>
           </CardContent>
-        </Card>
-      </Grid>
+        </Card >
+      </Grid >
 
       {/* Content Editor */}
-      <Grid item xs={12} md={8}>
-        {selectedModule ? (
-          <Card>
-            <CardHeader
-              title={
-                <TextField
-                  variant="standard"
-                  value={selectedModule.title}
-                  onChange={(e) => updateModuleTitle(selectedModule.id, e.target.value)}
-                  sx={{ fontSize: '1.25rem', fontWeight: 500 }}
-                />
-              }
-              subheader={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-                  <span>{`Tipo: ${getModuleTypeLabel(selectedModule.type)}`}</span>
-                  {hasPendingChanges && !selectedModule.id.startsWith('temp_') && (
-                    <Chip
-                      label="Guardando en 2s..."
-                      size="small"
-                      color="warning"
-                      sx={{ fontSize: '0.7rem' }}
-                    />
-                  )}
-                  {isSavingLesson && (
-                    <Chip
-                      icon={<CircularProgress size={12} sx={{ color: 'white' }} />}
-                      label="Guardando..."
-                      size="small"
-                      color="primary"
-                      sx={{ fontSize: '0.7rem' }}
-                    />
-                  )}
-                  {!hasPendingChanges && !isSavingLesson && !selectedModule.id.startsWith('temp_') && (
-                    <Chip
-                      label="Guardado"
-                      size="small"
-                      color="success"
-                      sx={{ fontSize: '0.7rem' }}
-                    />
-                  )}
-                </Box>
-              }
-            />
-            <CardContent>
-              {/* Text Content Editor */}
-              {selectedModule.type === 'text' && (
-                <Box>
-                  <Typography variant="h6" gutterBottom>
-                    Editor de Contenido
-                  </Typography>
-                  <Box sx={{ mb: 2 }}>
-                    <ReactQuill
-                      key={selectedModule.id}
-                      theme="snow"
-                      value={selectedModule.content.text || ''}
-                      onChange={(content) => {
-                        console.log('✏️ Editor onChange fired:', content)
-                        const sanitizedContent = sanitizeHtml(content)
-                        updateModuleContent(selectedModule.id, {
-                          ...selectedModule.content,
-                          text: sanitizedContent
-                        })
-                      }}
-                      modules={quillModules}
-                      formats={quillFormats}
-                      style={{ height: '300px', marginBottom: '50px' }}
-                    />
-                  </Box>
-                  
+      < Grid item xs={12} md={8} >
+        {
+          selectedModule ? (
+            <Card>
+              <CardHeader
+                title={
                   <TextField
-                    fullWidth
-                    multiline
-                    rows={3}
-                    label="Descripción del módulo"
-                    value={selectedModule.content.description || ''}
-                    onChange={(e) =>
-                      updateModuleContent(selectedModule.id, {
-                        ...selectedModule.content,
-                        description: e.target.value
-                      })
-                    }
-                    sx={{ mt: 2 }}
+                    variant="standard"
+                    value={selectedModule.title}
+                    onChange={(e) => updateModuleTitle(selectedModule.id, e.target.value)}
+                    sx={{ fontSize: '1.25rem', fontWeight: 500 }}
                   />
-                </Box>
-              )}
+                }
+                subheader={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                    <span>{`Tipo: ${getModuleTypeLabel(selectedModule.type)}`}</span>
+                    {hasPendingChanges && !selectedModule.id.startsWith('temp_') && (
+                      <Chip
+                        label="Guardando en 2s..."
+                        size="small"
+                        color="warning"
+                        sx={{ fontSize: '0.7rem' }}
+                      />
+                    )}
+                    {isSavingLesson && (
+                      <Chip
+                        icon={<CircularProgress size={12} sx={{ color: 'white' }} />}
+                        label="Guardando..."
+                        size="small"
+                        color="primary"
+                        sx={{ fontSize: '0.7rem' }}
+                      />
+                    )}
+                    {!hasPendingChanges && !isSavingLesson && !selectedModule.id.startsWith('temp_') && (
+                      <Chip
+                        label="Guardado"
+                        size="small"
+                        color="success"
+                        sx={{ fontSize: '0.7rem' }}
+                      />
+                    )}
+                  </Box>
+                }
+              />
+              <CardContent>
+                {/* Text Content Editor */}
+                {selectedModule.type === 'text' && (
+                  <Box>
+                    <Typography variant="h6" gutterBottom>
+                      Editor de Contenido
+                    </Typography>
+                    <Box sx={{ mb: 2 }}>
+                      <ReactQuill
+                        key={selectedModule.id}
+                        theme="snow"
+                        value={selectedModule.content.text || ''}
+                        onChange={(content) => {
+                          console.log('✏️ Editor onChange fired:', content)
+                          const sanitizedContent = sanitizeHtml(content)
+                          updateModuleContent(selectedModule.id, {
+                            ...selectedModule.content,
+                            text: sanitizedContent
+                          })
+                        }}
+                        modules={quillModules}
+                        formats={quillFormats}
+                        style={{ height: '300px', marginBottom: '50px' }}
+                      />
+                    </Box>
 
-              {/* Video Content Editor */}
-              {selectedModule.type === 'video' && (
-                <Box>
-                  <Typography variant="h6" gutterBottom>
-                    Configuración de Video
-                  </Typography>
-                  
-                  {/* Video Source Selection */}
-                  <FormControl fullWidth sx={{ mb: 2 }}>
-                    <InputLabel>Fuente del Video</InputLabel>
-                    <Select
-                      value={selectedModule.content.videoSource || 'youtube'}
-                      label="Fuente del Video"
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={3}
+                      label="Descripción del módulo"
+                      value={selectedModule.content.description || ''}
                       onChange={(e) =>
                         updateModuleContent(selectedModule.id, {
                           ...selectedModule.content,
-                          videoSource: e.target.value as 'minio' | 'youtube'
+                          description: e.target.value
                         })
                       }
-                    >
-                      <MenuItem value="youtube">
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <YouTubeIcon />
-                          YouTube
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="minio">
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <CloudUploadIcon />
-                          Subir Video
-                        </Box>
-                      </MenuItem>
-                    </Select>
-                  </FormControl>
+                      sx={{ mt: 2 }}
+                    />
+                  </Box>
+                )}
 
-                  {/* YouTube URL Input */}
-                  {selectedModule.content.videoSource === 'youtube' && (
+                {/* Video Content Editor */}
+                {selectedModule.type === 'video' && (
+                  <Box>
+                    <Typography variant="h6" gutterBottom>
+                      Configuración de Video
+                    </Typography>
+
+                    {/* Video Source Selection */}
+                    <FormControl fullWidth sx={{ mb: 2 }}>
+                      <InputLabel>Fuente del Video</InputLabel>
+                      <Select
+                        value={selectedModule.content.videoSource || 'youtube'}
+                        label="Fuente del Video"
+                        onChange={(e) =>
+                          updateModuleContent(selectedModule.id, {
+                            ...selectedModule.content,
+                            videoSource: e.target.value as 'minio' | 'youtube'
+                          })
+                        }
+                      >
+                        <MenuItem value="youtube">
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <YouTubeIcon />
+                            YouTube
+                          </Box>
+                        </MenuItem>
+                        <MenuItem value="minio">
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <CloudUploadIcon />
+                            Subir Video
+                          </Box>
+                        </MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    {/* YouTube URL Input */}
+                    {selectedModule.content.videoSource === 'youtube' && (
+                      <TextField
+                        fullWidth
+                        label="URL de YouTube"
+                        value={selectedModule.content.videoUrl || ''}
+                        onChange={(e) => {
+                          const url = e.target.value
+                          updateModuleContent(selectedModule.id, {
+                            ...selectedModule.content,
+                            videoUrl: url
+                          })
+                        }}
+                        error={selectedModule.content.videoUrl ? !validateYouTubeUrl(selectedModule.content.videoUrl) : false}
+                        helperText={
+                          selectedModule.content.videoUrl && !validateYouTubeUrl(selectedModule.content.videoUrl)
+                            ? "URL de YouTube no válida"
+                            : "Ingresa la URL completa del video de YouTube"
+                        }
+                        sx={{ mb: 2 }}
+                      />
+                    )}
+
+                    {/* Video Upload */}
+                    {selectedModule.content.videoSource === 'minio' && (
+                      <Box>
+                        <Box
+                          {...getRootProps()}
+                          sx={{
+                            border: '2px dashed',
+                            borderColor: isDragActive ? 'primary.main' : 'divider',
+                            borderRadius: 2,
+                            p: 3,
+                            textAlign: 'center',
+                            cursor: 'pointer',
+                            backgroundColor: isDragActive ? 'action.hover' : 'background.paper',
+                            mb: 2
+                          }}
+                        >
+                          <input {...getInputProps()} />
+                          <CloudUploadIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
+                          <Typography variant="h6" gutterBottom>
+                            {isDragActive ? 'Suelta los archivos aquí' : 'Arrastra videos aquí o haz clic para seleccionar'}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Formatos soportados: MP4, AVI, MOV, WMV, FLV, WebM, MKV
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Tamaño máximo: 100MB por archivo
+                          </Typography>
+                        </Box>
+
+                        {/* Upload Progress */}
+                        {videoUploads.length > 0 && (
+                          <Box sx={{ mb: 2 }}>
+                            <Typography variant="subtitle2" gutterBottom>
+                              Subidas en Progreso
+                            </Typography>
+                            {videoUploads.map((upload, index) => (
+                              <Box key={index} sx={{ mb: 2 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                  <Typography variant="body2" sx={{ flexGrow: 1 }}>
+                                    {upload.file.name}
+                                  </Typography>
+                                  <Chip
+                                    label={upload.status}
+                                    size="small"
+                                    color={
+                                      upload.status === 'completed' ? 'success' :
+                                        upload.status === 'error' ? 'error' : 'primary'
+                                    }
+                                  />
+                                </Box>
+                                {upload.status === 'uploading' && (
+                                  <LinearProgress
+                                    variant="determinate"
+                                    value={upload.progress}
+                                    sx={{ mb: 1 }}
+                                  />
+                                )}
+                                {upload.status === 'processing' && (
+                                  <LinearProgress sx={{ mb: 1 }} />
+                                )}
+                                {upload.status === 'error' && upload.error && (
+                                  <Alert severity="error" sx={{ mb: 1 }}>
+                                    {upload.error}
+                                  </Alert>
+                                )}
+                                {upload.status === 'completed' && upload.url && (
+                                  <Alert severity="success" sx={{ mb: 1 }}>
+                                    Video subido exitosamente
+                                  </Alert>
+                                )}
+                              </Box>
+                            ))}
+                          </Box>
+                        )}
+                      </Box>
+                    )}
+
+                    {/* Video Preview */}
+                    {selectedModule.content.videoUrl && validateYouTubeUrl(selectedModule.content.videoUrl) && (
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="subtitle2" gutterBottom>
+                          Vista Previa
+                        </Typography>
+                        <Box
+                          component="iframe"
+                          src={getYouTubeEmbedUrl(selectedModule.content.videoUrl)}
+                          title="YouTube video preview"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          sx={{
+                            width: '100%',
+                            height: 300,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 1
+                          }}
+                        />
+                      </Box>
+                    )}
+
                     <TextField
                       fullWidth
-                      label="URL de YouTube"
-                      value={selectedModule.content.videoUrl || ''}
-                      onChange={(e) => {
-                        const url = e.target.value
+                      multiline
+                      rows={3}
+                      label="Descripción del video"
+                      value={selectedModule.content.description || ''}
+                      onChange={(e) =>
                         updateModuleContent(selectedModule.id, {
                           ...selectedModule.content,
-                          videoUrl: url
+                          description: e.target.value
                         })
-                      }}
-                      error={selectedModule.content.videoUrl ? !validateYouTubeUrl(selectedModule.content.videoUrl) : false}
-                      helperText={
-                        selectedModule.content.videoUrl && !validateYouTubeUrl(selectedModule.content.videoUrl)
-                          ? "URL de YouTube no válida"
-                          : "Ingresa la URL completa del video de YouTube"
                       }
-                      sx={{ mb: 2 }}
                     />
-                  )}
+                  </Box>
+                )}
 
-                  {/* Video Upload */}
-                  {selectedModule.content.videoSource === 'minio' && (
-                    <Box>
-                      <Box
-                        {...getRootProps()}
-                        sx={{
-                          border: '2px dashed',
-                          borderColor: isDragActive ? 'primary.main' : 'divider',
-                          borderRadius: 2,
-                          p: 3,
-                          textAlign: 'center',
-                          cursor: 'pointer',
-                          backgroundColor: isDragActive ? 'action.hover' : 'background.paper',
-                          mb: 2
-                        }}
-                      >
-                        <input {...getInputProps()} />
-                        <CloudUploadIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
-                        <Typography variant="h6" gutterBottom>
-                          {isDragActive ? 'Suelta los archivos aquí' : 'Arrastra videos aquí o haz clic para seleccionar'}
+                {/* Quiz Content Editor */}
+                {selectedModule.type === 'quiz' && (
+                  <Box sx={{ textAlign: 'center', py: 4 }}>
+                    {selectedModule.id.startsWith('temp_') ? (
+                      <Alert severity="warning" sx={{ mb: 3, maxWidth: 600, mx: 'auto' }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                          Módulo no guardado
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Formatos soportados: MP4, AVI, MOV, WMV, FLV, WebM, MKV
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Tamaño máximo: 100MB por archivo
-                        </Typography>
-                      </Box>
+                        Para poder agregar preguntas y configurar el quiz, primero debes guardar el curso.
+                        Esto creará el módulo en el sistema y habilitará el editor completo.
+                      </Alert>
+                    ) : (
+                      <Alert severity="info" sx={{ mb: 3 }}>
+                        Este módulo usa el sistema completo de gestión de quizzes con banco de preguntas,
+                        analíticas y validación automática.
+                      </Alert>
+                    )}
 
-                      {/* Upload Progress */}
-                      {videoUploads.length > 0 && (
-                        <Box sx={{ mb: 2 }}>
-                          <Typography variant="subtitle2" gutterBottom>
-                            Subidas en Progreso
-                          </Typography>
-                          {videoUploads.map((upload, index) => (
-                            <Box key={index} sx={{ mb: 2 }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                                <Typography variant="body2" sx={{ flexGrow: 1 }}>
-                                  {upload.file.name}
-                                </Typography>
-                                <Chip
-                                  label={upload.status}
-                                  size="small"
-                                  color={
-                                    upload.status === 'completed' ? 'success' :
-                                    upload.status === 'error' ? 'error' : 'primary'
-                                  }
-                                />
-                              </Box>
-                              {upload.status === 'uploading' && (
-                                <LinearProgress
-                                  variant="determinate"
-                                  value={upload.progress}
-                                  sx={{ mb: 1 }}
-                                />
-                              )}
-                              {upload.status === 'processing' && (
-                                <LinearProgress sx={{ mb: 1 }} />
-                              )}
-                              {upload.status === 'error' && upload.error && (
-                                <Alert severity="error" sx={{ mb: 1 }}>
-                                  {upload.error}
-                                </Alert>
-                              )}
-                              {upload.status === 'completed' && upload.url && (
-                                <Alert severity="success" sx={{ mb: 1 }}>
-                                  Video subido exitosamente
-                                </Alert>
-                              )}
-                            </Box>
-                          ))}
-                        </Box>
-                      )}
-                    </Box>
-                  )}
+                    <Button
+                      variant="contained"
+                      size="large"
+                      startIcon={<SettingsIcon />}
+                      onClick={() => setOpenQuizManagement(true)}
+                      sx={{ mb: 2 }}
+                      disabled={selectedModule.id.startsWith('temp_')}
+                    >
+                      Abrir Editor de Quiz Completo
+                    </Button>
 
-                  {/* Video Preview */}
-                  {selectedModule.content.videoUrl && validateYouTubeUrl(selectedModule.content.videoUrl) && (
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="subtitle2" gutterBottom>
-                        Vista Previa
+                    {selectedModule.content.quizId && (
+                      <Typography variant="body2" color="text.secondary">
+                        Quiz ID: {selectedModule.content.quizId}
                       </Typography>
-                      <Box
-                        component="iframe"
-                        src={getYouTubeEmbedUrl(selectedModule.content.videoUrl)}
-                        title="YouTube video preview"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        sx={{
-                          width: '100%',
-                          height: 300,
-                          border: '1px solid',
-                          borderColor: 'divider',
-                          borderRadius: 1
-                        }}
-                      />
-                    </Box>
-                  )}
-
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={3}
-                    label="Descripción del video"
-                    value={selectedModule.content.description || ''}
-                    onChange={(e) =>
-                      updateModuleContent(selectedModule.id, {
-                        ...selectedModule.content,
-                        description: e.target.value
-                      })
-                    }
-                  />
-                </Box>
-              )}
-
-              {/* Quiz Content Editor */}
-              {selectedModule.type === 'quiz' && (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <Alert severity="info" sx={{ mb: 3 }}>
-                    Este módulo usa el sistema completo de gestión de quizzes con banco de preguntas,
-                    analíticas y validación automática.
-                  </Alert>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    startIcon={<SettingsIcon />}
-                    onClick={() => setOpenQuizManagement(true)}
-                    sx={{ mb: 2 }}
-                  >
-                    Abrir Editor de Quiz Completo
-                  </Button>
-                  {selectedModule.content.quizId && (
-                    <Typography variant="body2" color="text.secondary">
-                      Quiz ID: {selectedModule.content.quizId}
-                    </Typography>
-                  )}
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent sx={{ textAlign: 'center', py: 8 }}>
-              <EditIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
-              <Typography variant="h6" color="text.secondary" gutterBottom>
-                Selecciona un módulo para editar
-              </Typography>
-              <Typography color="text.secondary">
-                O crea un nuevo módulo para comenzar
-              </Typography>
-            </CardContent>
-          </Card>
-        )}
-      </Grid>
+                    )}
+                  </Box>
+                )}
+              </CardContent>
+            </Card >
+          ) : (
+            <Card>
+              <CardContent sx={{ textAlign: 'center', py: 8 }}>
+                <EditIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  Selecciona un módulo para editar
+                </Typography>
+                <Typography color="text.secondary">
+                  O crea un nuevo módulo para comenzar
+                </Typography>
+              </CardContent>
+            </Card>
+          )}
+      </Grid >
 
       {/* Add Module Dialog */}
-      <Dialog
+      < Dialog
         open={openModuleDialog}
         onClose={() => setOpenModuleDialog(false)}
         maxWidth="sm"
@@ -976,10 +990,10 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
             Agregar
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog >
 
       {/* Quiz Management Dialog */}
-      <Dialog
+      < Dialog
         open={openQuizManagement}
         onClose={() => setOpenQuizManagement(false)}
         maxWidth="xl"
@@ -1016,8 +1030,8 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
             embedded={true}
           />
         </DialogContent>
-      </Dialog>
-    </Grid>
+      </Dialog >
+    </Grid >
   )
 }
 
