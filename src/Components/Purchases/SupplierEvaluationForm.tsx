@@ -67,8 +67,15 @@ const scoreOptions = [
 ]
 
 const evaluatorOptions = [
-  { value: 'Jessica Cardona Martinez', label: 'Jessica Cardona Martinez' },
-  { value: 'Andres Felipe Bernal', label: 'Andres Felipe Bernal' }
+  { value: 'Jessica Cardona Garcia', label: 'Jessica Cardona Garcia' },
+  { value: 'Daniel Alberto Paredes', label: 'Daniel Alberto Paredes' }
+]
+
+const approverOptions = [
+  {
+    value: 'Andres Felipe Bernal Meneses',
+    label: 'Andres Felipe Bernal Meneses'
+  }
 ]
 
 // Función para calcular la condición final basada en el puntaje total
@@ -114,8 +121,8 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
     invoiceScore: 0,
     comments: '',
     documentReference: 'FOGC-MMCS-15 V03', // Default del formato
-    preparedBy: 'Jessica Cardona Martinez',
-    approvedBy: 'Andres Felipe Bernal'
+    preparedBy: 'Jessica Cardona Garcia',
+    approvedBy: 'Andres Felipe Bernal Meneses'
   }
 
   const [formData, setFormData] = useState<EvaluationFormData>(initialFormData)
@@ -138,8 +145,9 @@ const SupplierEvaluationForm: FC<SupplierEvaluationFormProps> = ({
         comments: existingEvaluation.comments || '',
         documentReference:
           existingEvaluation.documentReference || 'FOGC-MMCS-15 V03',
-        preparedBy: existingEvaluation.preparedBy || 'Jessica Cardona Martinez',
-        approvedBy: existingEvaluation.approvedBy || 'Andres Felipe Bernal'
+        preparedBy: existingEvaluation.preparedBy || 'Jessica Cardona Garcia',
+        approvedBy:
+          existingEvaluation.approvedBy || 'Andres Felipe Bernal Meneses'
       })
     } else {
       // Resetear a valores por defecto si no hay existingEvaluation (ej. al cambiar de editar a crear, o al abrir para crear)
