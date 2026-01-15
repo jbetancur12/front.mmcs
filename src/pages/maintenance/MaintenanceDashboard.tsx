@@ -1071,6 +1071,7 @@ const MaintenanceDashboard: React.FC = () => {
                     onView={handleViewTicket}
                     onEdit={handleEditTicket}
                     onDelete={
+                      !isTechnician &&
                       [
                         MaintenanceStatus.PENDING,
                         MaintenanceStatus.ASSIGNED,
