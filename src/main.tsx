@@ -70,3 +70,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </PostHogProvider>
   </React.StrictMode>
 )
+
+// Unregister any existing service workers to avoid caching issues from other branches/projects
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const registration of registrations) {
+      registration.unregister()
+    }
+  })
+}

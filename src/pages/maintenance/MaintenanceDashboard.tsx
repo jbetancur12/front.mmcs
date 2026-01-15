@@ -46,7 +46,8 @@ import {
   useMaintenanceStats,
   useMaintenanceTickets,
   useMaintenanceTechnicians,
-  useUpdateMaintenanceTicket
+  useUpdateMaintenanceTicket,
+  useDeleteMaintenanceTicket
 } from '../../hooks/useMaintenance'
 import {
   MaintenanceFilters,
@@ -102,6 +103,9 @@ const MaintenanceDashboard: React.FC = () => {
     severity: 'info'
   })
   const [shortcutsHelpOpen, setShortcutsHelpOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [ticketToDelete, setTicketToDelete] =
+    useState<MaintenanceTicket | null>(null)
 
   const limit = 12
 
@@ -167,6 +171,7 @@ const MaintenanceDashboard: React.FC = () => {
   // Only admins can access technicians list
   const { data: technicians } = useMaintenanceTechnicians(isAdmin)
   const updateTicketMutation = useUpdateMaintenanceTicket()
+  const deleteTicketMutation = useDeleteMaintenanceTicket()
 
   // WebSocket for real-time updates
   useMaintenanceWebSocket({
@@ -357,6 +362,31 @@ const MaintenanceDashboard: React.FC = () => {
   const handleViewTicket = (ticket: MaintenanceTicket) => {
     // Navigate to ticket details page using React Router
     navigate(`/maintenance/tickets/${ticket.id}`)
+  }
+
+  const handleDeleteClick = (ticket: MaintenanceTicket) => {
+    setTicketToDelete(ticket)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!ticketToDelete) return
+
+    try {
+      await deleteTicketMutation.mutateAsync(ticketToDelete.id)
+      setDeleteDialogOpen(false)
+      setTicketToDelete(null)
+      refetchTickets()
+      refetchStats()
+      showToast('Ticket eliminado exitosamente', 'success')
+    } catch (error: any) {
+      console.error('Error deleting ticket:', error)
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Error al eliminar el ticket'
+      showToast(errorMessage, 'error')
+    }
   }
 
   const handleRefresh = () => {
@@ -1040,6 +1070,15 @@ const MaintenanceDashboard: React.FC = () => {
                     ticket={ticket}
                     onView={handleViewTicket}
                     onEdit={handleEditTicket}
+                    onDelete={
+                      [
+                        MaintenanceStatus.PENDING,
+                        MaintenanceStatus.ASSIGNED,
+                        MaintenanceStatus.CANCELLED
+                      ].includes(ticket.status as MaintenanceStatus)
+                        ? handleDeleteClick
+                        : undefined
+                    }
                     showActions={true}
                   />
                 </Grid>
@@ -1071,6 +1110,46 @@ const MaintenanceDashboard: React.FC = () => {
           </>
         )}
       </Paper>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        aria-labelledby='alert-dialog-title'
+        aria-describedby='alert-dialog-description'
+      >
+        <DialogTitle id='alert-dialog-title'>
+          {'¿Eliminar ticket de mantenimiento?'}
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant='body1' gutterBottom>
+            ¿Estás seguro de que deseas eliminar el ticket{' '}
+            <strong>#{ticketToDelete?.ticketCode}</strong>?
+          </Typography>
+          <Alert severity='warning' sx={{ mt: 2 }}>
+            Esta acción no se puede deshacer. Se eliminarán todos los
+            comentarios y archivos asociados.
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setDeleteDialogOpen(false)}
+            color='primary'
+            disabled={deleteTicketMutation.isLoading}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={confirmDelete}
+            color='error'
+            variant='contained'
+            autoFocus
+            disabled={deleteTicketMutation.isLoading}
+          >
+            {deleteTicketMutation.isLoading ? 'Eliminando...' : 'Eliminar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Edit Ticket Dialog */}
       <Dialog

@@ -18,7 +18,8 @@ import {
   LocationOn,
   Build,
   ExpandMore,
-  ExpandLess
+  ExpandLess,
+  Delete
 } from '@mui/icons-material'
 import { MaintenanceTicket } from '../../types/maintenance'
 import MaintenanceStatusBadge from './MaintenanceStatusBadge'
@@ -31,6 +32,7 @@ interface MaintenanceTicketCardProps {
   ticket: MaintenanceTicket
   onView?: (ticket: MaintenanceTicket) => void
   onEdit?: (ticket: MaintenanceTicket) => void
+  onDelete?: (ticket: MaintenanceTicket) => void
   showActions?: boolean
   compact?: boolean
 }
@@ -48,6 +50,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
   ticket,
   onView,
   onEdit,
+  onDelete,
   showActions = true,
   compact = false
 }) => {
@@ -191,7 +194,10 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
             variant='subtitle2'
             color='text.secondary'
             gutterBottom
-            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}
+            sx={{
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              fontWeight: 600
+            }}
           >
             Cliente
           </Typography>
@@ -213,7 +219,10 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
             variant='subtitle2'
             color='text.secondary'
             gutterBottom
-            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}
+            sx={{
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              fontWeight: 600
+            }}
           >
             Equipo
           </Typography>
@@ -238,7 +247,10 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
             variant='subtitle2'
             color='text.secondary'
             gutterBottom
-            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}
+            sx={{
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              fontWeight: 600
+            }}
           >
             Descripción
           </Typography>
@@ -265,7 +277,10 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
             variant='subtitle2'
             color='text.secondary'
             gutterBottom
-            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontWeight: 600 }}
+            sx={{
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              fontWeight: 600
+            }}
           >
             Técnico Asignado
           </Typography>
@@ -278,7 +293,10 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
               >
                 {getInitials(ticket.assignedTechnician.name)}
               </Avatar>
-              <Typography variant='body2' sx={{ fontSize: { xs: '0.875rem', sm: '0.875rem' } }}>
+              <Typography
+                variant='body2'
+                sx={{ fontSize: { xs: '0.875rem', sm: '0.875rem' } }}
+              >
                 {ticket.assignedTechnician.name}
               </Typography>
             </Box>
@@ -295,7 +313,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
         </Box>
 
         {/* ADDITIONAL FIELDS - Collapsible section */}
-        <Collapse in={expanded} timeout="auto" unmountOnExit>
+        <Collapse in={expanded} timeout='auto' unmountOnExit>
           <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
             {/* Customer contact details */}
             <Box mb={2}>
@@ -337,10 +355,18 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
               >
                 Detalles del Equipo
               </Typography>
-              <Typography variant='caption' color='text.secondary' display='block'>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                display='block'
+              >
                 Modelo: {safeText(ticket.equipmentModel, 'No especificado')}
               </Typography>
-              <Typography variant='caption' color='text.secondary' display='block'>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                display='block'
+              >
                 S/N: {safeText(ticket.equipmentSerial, 'No especificado')}
               </Typography>
             </Box>
@@ -356,7 +382,11 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                 Ubicación
               </Typography>
               <Box display='flex' alignItems='center' gap={0.5}>
-                <LocationOn fontSize='small' color='action' aria-hidden='true' />
+                <LocationOn
+                  fontSize='small'
+                  color='action'
+                  aria-hidden='true'
+                />
                 <Typography variant='body2' color='text.secondary'>
                   {safeText(ticket.location, 'Ubicación no especificada')}
                 </Typography>
@@ -375,10 +405,24 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                   Fecha Programada
                 </Typography>
                 <Box display='flex' alignItems='center' gap={0.5}>
-                  <Schedule fontSize='small' color='action' aria-hidden='true' />
-                  <Tooltip title={scheduledTime.absoluteTime || formatDate(ticket.scheduledDate)}>
-                    <Typography variant='caption' color='text.secondary' sx={{ cursor: 'help' }}>
-                      {scheduledTime.relativeTime || formatDate(ticket.scheduledDate)}
+                  <Schedule
+                    fontSize='small'
+                    color='action'
+                    aria-hidden='true'
+                  />
+                  <Tooltip
+                    title={
+                      scheduledTime.absoluteTime ||
+                      formatDate(ticket.scheduledDate)
+                    }
+                  >
+                    <Typography
+                      variant='caption'
+                      color='text.secondary'
+                      sx={{ cursor: 'help' }}
+                    >
+                      {scheduledTime.relativeTime ||
+                        formatDate(ticket.scheduledDate)}
                     </Typography>
                   </Tooltip>
                 </Box>
@@ -395,8 +439,14 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
               >
                 Fecha de Creación
               </Typography>
-              <Tooltip title={createdTime.absoluteTime || formatDate(ticket.createdAt)}>
-                <Typography variant='caption' color='text.secondary' sx={{ cursor: 'help' }}>
+              <Tooltip
+                title={createdTime.absoluteTime || formatDate(ticket.createdAt)}
+              >
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{ cursor: 'help' }}
+                >
                   {createdTime.relativeTime || formatDate(ticket.createdAt)}
                 </Typography>
               </Tooltip>
@@ -429,7 +479,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
           <Button
             onClick={handleExpandClick}
             endIcon={expanded ? <ExpandLess /> : <ExpandMore />}
-            size="small"
+            size='small'
             sx={{
               textTransform: 'none',
               fontSize: { xs: '0.75rem', sm: '0.8rem' },
@@ -499,7 +549,10 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                   }
                 }}
               >
-                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                <Box
+                  component='span'
+                  sx={{ display: { xs: 'none', sm: 'inline' } }}
+                >
                   Ver
                 </Box>
               </Button>
@@ -535,8 +588,50 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                   }
                 }}
               >
-                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                <Box
+                  component='span'
+                  sx={{ display: { xs: 'none', sm: 'inline' } }}
+                >
                   Editar
+                </Box>
+              </Button>
+            </Tooltip>
+          )}
+          {onDelete && (
+            <Tooltip title='Eliminar'>
+              <Button
+                variant='text'
+                size='small'
+                onClick={() => onDelete(ticket)}
+                startIcon={<Delete />}
+                aria-label={`Eliminar ticket ${safeText(ticket.ticketCode, 'sin código')}`}
+                sx={{
+                  color: '#f44336',
+                  borderRadius: '6px',
+                  fontWeight: 500,
+                  fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                  textTransform: 'none',
+                  minHeight: { xs: 28, sm: 32 },
+                  px: { xs: 1, sm: 1.5 },
+                  py: { xs: 0.5, sm: 0.75 },
+                  transition: 'all 0.2s ease',
+                  '& .MuiButton-startIcon': {
+                    marginRight: { xs: 0.5, sm: 0.75 },
+                    '& > svg': {
+                      fontSize: { xs: '0.9rem', sm: '1rem' }
+                    }
+                  },
+                  '&:hover': {
+                    background: 'rgba(244, 67, 54, 0.08)',
+                    transform: 'translateY(-1px)'
+                  }
+                }}
+              >
+                <Box
+                  component='span'
+                  sx={{ display: { xs: 'none', sm: 'inline' } }}
+                >
+                  Eliminar
                 </Box>
               </Button>
             </Tooltip>
