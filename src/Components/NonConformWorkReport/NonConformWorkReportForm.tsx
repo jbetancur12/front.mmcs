@@ -531,6 +531,23 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
               </Grid>
               <Grid item xs={12} md={6}>
                 <TextField
+                  fullWidth
+                  label='Numeral de ISO 17025 relacionado'
+                  name='iso17025Clause'
+                  value={formik.values.iso17025Clause || ''}
+                  onChange={formik.handleChange}
+                  error={
+                    formik.touched.iso17025Clause &&
+                    Boolean(formik.errors.iso17025Clause)
+                  }
+                  helperText={
+                    formik.touched.iso17025Clause &&
+                    formik.errors.iso17025Clause
+                  }
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
                   select
                   fullWidth
                   label='Estatus'
@@ -645,6 +662,8 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                     formik.touched.serviceNumbers &&
                     formik.errors.serviceNumbers
                   }
+                  multiline
+                  minRows={2}
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -662,6 +681,8 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                     formik.touched.affectedClients &&
                     formik.errors.affectedClients
                   }
+                  multiline
+                  minRows={2}
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -679,6 +700,8 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                     formik.touched.involvedProcedure &&
                     formik.errors.involvedProcedure
                   }
+                  multiline
+                  minRows={2}
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -696,6 +719,8 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                     formik.touched.resultsDelivered &&
                     formik.errors.resultsDelivered
                   }
+                  multiline
+                  minRows={2}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -774,6 +799,8 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                   name='affectedPeriod'
                   value={formik.values.affectedPeriod}
                   onChange={formik.handleChange}
+                  multiline
+                  minRows={2}
                 />
               </Grid>
               {/*  4.2 Verificación de registros */}
@@ -798,6 +825,8 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                   name='certificateReview'
                   value={formik.values.certificateReview}
                   onChange={formik.handleChange}
+                  multiline
+                  minRows={2}
                 />
               </Grid>
 
@@ -808,6 +837,8 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                   name='procedureReview'
                   value={formik.values.procedureReview}
                   onChange={formik.handleChange}
+                  multiline
+                  minRows={2}
                 />
               </Grid>
 
@@ -818,6 +849,8 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                   name='recordReview'
                   value={formik.values.recordReview}
                   onChange={formik.handleChange}
+                  multiline
+                  minRows={2}
                 />
               </Grid>
 
@@ -828,6 +861,8 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                   name='metrologyInventoryCheck'
                   value={formik.values.metrologyInventoryCheck}
                   onChange={formik.handleChange}
+                  multiline
+                  minRows={2}
                 />
               </Grid>
 
@@ -838,6 +873,8 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                   name='personnelCompetenceEvaluation'
                   value={formik.values.personnelCompetenceEvaluation}
                   onChange={formik.handleChange}
+                  multiline
+                  minRows={2}
                 />
               </Grid>
 
@@ -1243,6 +1280,8 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                   name='immediateCorrection'
                   value={formik.values.immediateCorrection}
                   onChange={formik.handleChange}
+                  multiline
+                  minRows={2}
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -1306,6 +1345,8 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                   name='correctiveAction'
                   value={formik.values.correctiveAction}
                   onChange={formik.handleChange}
+                  multiline
+                  minRows={2}
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -1430,6 +1471,8 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                   name='communicationSummary'
                   value={formik.values.communicationSummary}
                   onChange={formik.handleChange}
+                  multiline
+                  minRows={2}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -1572,6 +1615,8 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
                   name='closingComments'
                   value={formik.values.closingComments}
                   onChange={formik.handleChange}
+                  multiline
+                  minRows={2}
                 />
               </Grid>
               <Grid item xs={12} md={6}>
