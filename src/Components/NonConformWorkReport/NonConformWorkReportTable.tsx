@@ -1,24 +1,19 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import {
   Box,
   Button,
   IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   Typography,
-  TablePagination,
-  CircularProgress,
   Chip,
   Alert,
   Stack,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  Tooltip,
+  Paper
 } from '@mui/material'
+import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
+import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
 import VisibilityIcon from '@mui/icons-material/Visibility'
@@ -29,17 +24,6 @@ import Swal from 'sweetalert2'
 import { NonConformWorkReportAlert } from './NonConformWorkReport.types'
 
 // Traducciones y mapeos
-const columns = [
-  { id: 'tncCode', label: 'Código TNC' },
-  { id: 'tncAcceptance', label: 'Aceptación' },
-  { id: 'registerDate', label: 'Fecha de registro' },
-  { id: 'detectedBy', label: 'Detectado por' },
-  { id: 'status', label: 'Estatus' },
-  { id: 'impactWeight', label: 'Impacto' },
-  { id: 'probability', label: 'Probabilidad' },
-  { id: 'riskLevel', label: 'Nivel de riesgo' }
-]
-
 const impactMap: Record<string, string> = {
   High: 'Alta',
   Medium: 'Media',
@@ -122,8 +106,6 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
   const axiosPrivate = useAxiosPrivate()
   const [rows, setRows] = useState<NonConformWorkReport[]>([])
   const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
   const [alerts, setAlerts] = useState<NonConformWorkReportAlert[]>([])
   const [alertsLoading, setAlertsLoading] = useState(true)
   const [showOnlyAlerts, setShowOnlyAlerts] = useState(false)
@@ -132,7 +114,7 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
     setLoading(true)
     try {
       const res = await axiosPrivate.get('/non-conform-work-report')
-      setRows(res.data)
+      setRows(res.data || [])
     } catch (err) {
       alert('Error al obtener los reportes')
     } finally {
@@ -140,12 +122,11 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
     }
   }
 
-  // Fetch de alertas de revisión
   const fetchAlerts = async () => {
     setAlertsLoading(true)
     try {
       const res = await axiosPrivate.get('/non-conform-work-report/alerts')
-      setAlerts(res.data)
+      setAlerts(res.data || [])
     } catch (err) {
       setAlerts([])
     } finally {
@@ -181,33 +162,161 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
     }
   }
 
-  // Renderizado
+  const columns = useMemo<MRT_ColumnDef<NonConformWorkReport>[]>(
+    () => [
+      {
+        accessorKey: 'tncCode',
+        header: 'Código TNC',
+        size: 150,
+        sortingFn: (rowA, rowB, columnId) => {
+          return rowA
+            .getValue<string>(columnId)
+            .localeCompare(rowB.getValue<string>(columnId), undefined, {
+              numeric: true,
+              sensitivity: 'base'
+            })
+        }
+      },
+      {
+        accessorKey: 'tncAcceptance',
+        header: 'Aceptación',
+        size: 150,
+        Cell: ({ cell }) => {
+          const value = cell.getValue<string>()
+          const acceptance = acceptanceMap[value] || {
+            label: value,
+            color: 'default'
+          }
+          return (
+            <Chip
+              label={acceptance.label}
+              color={acceptance.color as any}
+              size='small'
+              sx={{ fontWeight: 600 }}
+            />
+          )
+        }
+      },
+      {
+        accessorKey: 'registerDate',
+        header: 'Fecha de registro',
+        size: 150,
+        Cell: ({ cell }) => {
+          const value = cell.getValue<string>()
+          return value ? format(new Date(value), 'dd/MM/yyyy') : ''
+        }
+      },
+      {
+        accessorKey: 'detectedBy',
+        header: 'Detectado por',
+        size: 200
+      },
+      {
+        accessorKey: 'status',
+        header: 'Estatus',
+        size: 130,
+        Cell: ({ cell }) => {
+          const value = cell.getValue<string>()
+          const status = statusMap[value] || {
+            label: value,
+            color: 'default'
+          }
+          return (
+            <Chip
+              label={status.label}
+              color={status.color as any}
+              size='small'
+              sx={{ fontWeight: 600 }}
+            />
+          )
+        }
+      },
+      {
+        accessorKey: 'impactWeight',
+        header: 'Impacto',
+        size: 130,
+        Cell: ({ cell }) => {
+          const value = cell.getValue<string>()
+          const displayValue = impactMap[value] || value
+          const { bg, color } = impactProbColor(displayValue)
+          return (
+            <Chip
+              label={displayValue}
+              sx={{ bgcolor: bg, color, fontWeight: 600 }}
+              size='small'
+            />
+          )
+        }
+      },
+      {
+        accessorKey: 'probability',
+        header: 'Probabilidad',
+        size: 130,
+        Cell: ({ cell }) => {
+          const value = cell.getValue<string>()
+          const displayValue = probabilityMap[value] || value
+          const { bg, color } = impactProbColor(displayValue)
+          return (
+            <Chip
+              label={displayValue}
+              sx={{ bgcolor: bg, color, fontWeight: 600 }}
+              size='small'
+            />
+          )
+        }
+      },
+      {
+        accessorKey: 'riskLevel',
+        header: 'Nivel de riesgo',
+        size: 150,
+        Cell: ({ cell }) => {
+          const value = cell.getValue<string>()
+          const displayValue = riskLevelMap[value] || value
+          const { bg, color } = riskLevelColor(displayValue)
+          return (
+            <Chip
+              label={displayValue}
+              sx={{ bgcolor: bg, color, fontWeight: 600 }}
+              size='small'
+            />
+          )
+        }
+      }
+    ],
+    []
+  )
+
+  const filteredRows = useMemo(() => {
+    if (showOnlyAlerts) {
+      return rows.filter((row) => alerts.some((a) => a.id === row.id))
+    }
+    return rows
+  }, [rows, showOnlyAlerts, alerts])
+
   return (
     <Box>
       {/* ALERTAS DE REVISIÓN */}
-      {alertsLoading
-        ? null
-        : alerts.length > 0 && (
-            <Stack spacing={2} mb={2}>
-              <Alert
-                severity='warning'
-                action={
-                  <Button
-                    color='inherit'
-                    size='small'
-                    onClick={() => setShowOnlyAlerts(true)}
-                  >
-                    Ver alertas
-                  </Button>
-                }
-                sx={{ fontWeight: 600 }}
+      {!alertsLoading && alerts.length > 0 && (
+        <Stack spacing={2} mb={2}>
+          <Alert
+            severity='warning'
+            action={
+              <Button
+                color='inherit'
+                size='small'
+                onClick={() => setShowOnlyAlerts(true)}
               >
-                <b>¡Tienes {alerts.length} reportes con revisión pendiente!</b>{' '}
-                Usa el filtro para ver solo los reportes con alerta de revisión.
-              </Alert>
-            </Stack>
-          )}
-      {/* FIN ALERTAS */}
+                Ver alertas
+              </Button>
+            }
+            sx={{ fontWeight: 600 }}
+          >
+            <b>¡Tienes {alerts.length} reportes con revisión pendiente!</b> Usa
+            el filtro para ver solo los reportes con alerta de revisión.
+          </Alert>
+        </Stack>
+      )}
+
       <Box
         display='flex'
         justifyContent='space-between'
@@ -233,163 +342,59 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
           </Button>
         </Box>
       </Box>
-      <Paper elevation={2} sx={{ borderRadius: 3 }}>
-        {loading ? (
-          <Box
-            display='flex'
-            justifyContent='center'
-            alignItems='center'
-            minHeight={200}
-          >
-            <CircularProgress />
-          </Box>
-        ) : (
-          <TableContainer>
-            <Table size='small'>
-              <TableHead>
-                <TableRow>
-                  {columns.map((col) => (
-                    <TableCell
-                      key={col.id}
-                      sx={{ fontWeight: 700, background: '#f5f5f5' }}
-                    >
-                      {col.label}
-                    </TableCell>
-                  ))}
-                  <TableCell sx={{ fontWeight: 700, background: '#f5f5f5' }}>
-                    Acciones
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {(showOnlyAlerts
-                  ? rows.filter((row) => alerts.some((a) => a.id === row.id))
-                  : rows
-                )
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((row) => (
-                    <TableRow key={row.id} hover>
-                      {columns.map((col) => {
-                        let value = row[col.id as keyof NonConformWorkReport]
-                        let displayValue = value
-                        if (col.id === 'impactWeight') {
-                          displayValue = impactMap[value as string] || value
-                          const { bg, color } = impactProbColor(
-                            displayValue as string
-                          )
-                          return (
-                            <TableCell key={col.id} align='center'>
-                              <Chip
-                                label={displayValue}
-                                sx={{ bgcolor: bg, color, fontWeight: 600 }}
-                                size='small'
-                              />
-                            </TableCell>
-                          )
-                        } else if (col.id === 'probability') {
-                          displayValue =
-                            probabilityMap[value as string] || value
-                          const { bg, color } = impactProbColor(
-                            displayValue as string
-                          )
-                          return (
-                            <TableCell key={col.id} align='center'>
-                              <Chip
-                                label={displayValue}
-                                sx={{ bgcolor: bg, color, fontWeight: 600 }}
-                                size='small'
-                              />
-                            </TableCell>
-                          )
-                        } else if (col.id === 'riskLevel') {
-                          displayValue = riskLevelMap[value as string] || value
-                          const { bg, color } = riskLevelColor(
-                            displayValue as string
-                          )
-                          return (
-                            <TableCell key={col.id} align='center'>
-                              <Chip
-                                label={displayValue}
-                                sx={{ bgcolor: bg, color, fontWeight: 600 }}
-                                size='small'
-                              />
-                            </TableCell>
-                          )
-                        } else if (col.id === 'status') {
-                          const status = statusMap[value as string] || {
-                            label: value,
-                            color: 'default'
-                          }
-                          return (
-                            <TableCell key={col.id} align='center'>
-                              <Chip
-                                label={status.label}
-                                color={status.color}
-                                size='small'
-                                sx={{ fontWeight: 600 }}
-                              />
-                            </TableCell>
-                          )
-                        } else if (col.id === 'tncAcceptance') {
-                          const acceptance = acceptanceMap[value as string] || {
-                            label: value,
-                            color: 'default'
-                          }
-                          return (
-                            <TableCell key={col.id} align='center'>
-                              <Chip
-                                label={acceptance.label}
-                                color={acceptance.color}
-                                size='small'
-                                sx={{ fontWeight: 600 }}
-                              />
-                            </TableCell>
-                          )
-                        } else if (col.id === 'registerDate') {
-                          // Formato humano dd/MM/yyyy
-                          let formatted = value
-                            ? format(new Date(value as string), 'dd/MM/yyyy')
-                            : ''
-                          return (
-                            <TableCell key={col.id} align='center'>
-                              {formatted}
-                            </TableCell>
-                          )
-                        }
-                        return (
-                          <TableCell key={col.id}>{displayValue}</TableCell>
-                        )
-                      })}
-                      <TableCell align='center'>
-                        <IconButton onClick={() => onView && onView(row)}>
-                          <VisibilityIcon />
-                        </IconButton>
-                        <IconButton onClick={() => onEdit && onEdit(row)}>
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => row.id && handleDelete(row.id)}
-                        >
-                          <DeleteIcon color='error' />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-        <TablePagination
-          component='div'
-          count={rows.length}
-          page={page}
-          onPageChange={(_, newPage) => setPage(newPage)}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={(e) => {
-            setRowsPerPage(parseInt(e.target.value, 10))
-            setPage(0)
+
+      <Paper elevation={2} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+        <MaterialReactTable
+          columns={columns}
+          data={filteredRows}
+          state={{ isLoading: loading }}
+          localization={MRT_Localization_ES}
+          enableRowActions
+          renderRowActions={({ row }) => (
+            <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+              <Tooltip title='Ver'>
+                <IconButton onClick={() => onView && onView(row.original)}>
+                  <VisibilityIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title='Editar'>
+                <IconButton onClick={() => onEdit && onEdit(row.original)}>
+                  <EditIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title='Eliminar'>
+                <IconButton
+                  onClick={() =>
+                    row.original.id && handleDelete(row.original.id)
+                  }
+                >
+                  <DeleteIcon color='error' />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
+          initialState={{
+            density: 'compact',
+            pagination: { pageSize: 10, pageIndex: 0 },
+            sorting: [{ id: 'tncCode', desc: true }]
           }}
-          rowsPerPageOptions={[5, 10, 25]}
+          muiTablePaperProps={{
+            elevation: 0,
+            sx: {
+              borderRadius: '0'
+            }
+          }}
+          muiTableBodyCellProps={{
+            sx: {
+              textAlign: 'left'
+            }
+          }}
+          muiTableHeadCellProps={{
+            sx: {
+              fontWeight: 700,
+              backgroundColor: '#f5f5f5'
+            }
+          }}
         />
       </Paper>
     </Box>
