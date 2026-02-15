@@ -198,6 +198,11 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
         }
       },
       {
+        accessorKey: 'iso17025Clause',
+        header: 'Numeral ISO 17025',
+        size: 180
+      },
+      {
         accessorKey: 'registerDate',
         header: 'Fecha de registro',
         size: 150,
@@ -351,24 +356,31 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
           localization={MRT_Localization_ES}
           enableRowActions
           renderRowActions={({ row }) => (
-            <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+            <Box sx={{ display: 'flex' }}>
               <Tooltip title='Ver'>
-                <IconButton onClick={() => onView && onView(row.original)}>
-                  <VisibilityIcon />
+                <IconButton
+                  size='small'
+                  onClick={() => onView && onView(row.original)}
+                >
+                  <VisibilityIcon fontSize='small' />
                 </IconButton>
               </Tooltip>
               <Tooltip title='Editar'>
-                <IconButton onClick={() => onEdit && onEdit(row.original)}>
-                  <EditIcon />
+                <IconButton
+                  size='small'
+                  onClick={() => onEdit && onEdit(row.original)}
+                >
+                  <EditIcon fontSize='small' />
                 </IconButton>
               </Tooltip>
               <Tooltip title='Eliminar'>
                 <IconButton
+                  size='small'
                   onClick={() =>
                     row.original.id && handleDelete(row.original.id)
                   }
                 >
-                  <DeleteIcon color='error' />
+                  <DeleteIcon color='error' fontSize='small' />
                 </IconButton>
               </Tooltip>
             </Box>
