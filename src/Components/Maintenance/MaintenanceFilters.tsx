@@ -95,16 +95,16 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
       elevation={1}
       sx={{
         p: 2,
-        background: 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(10px)',
+        backgroundColor: '#ffffff',
         borderRadius: '12px',
-        border: '1px solid rgba(109, 198, 98, 0.1)'
+        border: '1px solid #e5e7eb',
+        boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
       }}
     >
       {/* Header */}
       <Box display='flex' alignItems='center' justifyContent='space-between' mb={2}>
         <Box display='flex' alignItems='center' gap={1}>
-          <FilterList color='primary' />
+          <FilterList sx={{ color: '#2f7d32' }} />
           <Typography variant='h6' sx={{ fontSize: '1.125rem' }}>
             Filtros
           </Typography>

@@ -67,6 +67,12 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
   const [submitting, setSubmitting] = useState(false)
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
   const [editingContent, setEditingContent] = useState('')
+  const surfaceSx = {
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    border: '1px solid #e5e7eb',
+    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+  }
 
   const canAddInternalComments = ['admin', 'mantenimiento'].includes(
     currentUserRole
@@ -206,7 +212,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
         gutterBottom
         sx={{
           fontWeight: 600,
-          color: '#6dc662',
+          color: '#0f172a',
           mb: 3
         }}
       >
@@ -223,11 +229,11 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
             width: '6px',
           },
           '&::-webkit-scrollbar-track': {
-            background: 'rgba(0,0,0,0.1)',
+            background: '#e2e8f0',
             borderRadius: '3px',
           },
           '&::-webkit-scrollbar-thumb': {
-            background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+            background: '#94a3b8',
             borderRadius: '3px',
           },
         }}
@@ -237,10 +243,8 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
             severity='info' 
             sx={{ 
               mb: 2,
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
+              backgroundColor: '#ffffff',
               borderRadius: '12px',
-              boxShadow: '0 4px 20px rgba(33, 150, 243, 0.1)',
               border: '1px solid rgba(33, 150, 243, 0.2)'
             }}
           >
@@ -252,25 +256,19 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
               key={comment.id}
               elevation={1}
               sx={{
+                ...surfaceSx,
                 p: 2,
                 mb: 2,
-                background: comment.isInternal
-                  ? 'linear-gradient(135deg, rgba(255, 193, 7, 0.05) 0%, rgba(255, 152, 0, 0.05) 100%)'
-                  : 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '12px',
-                boxShadow: comment.isInternal
-                  ? '0 4px 20px rgba(255, 193, 7, 0.1)'
-                  : '0 4px 20px rgba(0, 0, 0, 0.08)',
+                backgroundColor: comment.isInternal ? '#fffbeb' : '#ffffff',
                 border: comment.isInternal 
-                  ? '1px solid rgba(255, 193, 7, 0.2)' 
-                  : '1px solid rgba(109, 198, 98, 0.1)',
-                transition: 'all 0.3s ease-in-out',
+                  ? '1px solid #fde68a' 
+                  : '1px solid #e5e7eb',
+                transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
                 '&:hover': {
-                  transform: 'translateY(-2px)',
+                  borderColor: comment.isInternal ? '#fcd34d' : '#cbd5e1',
                   boxShadow: comment.isInternal
-                    ? '0 8px 30px rgba(255, 193, 7, 0.15)'
-                    : '0 8px 30px rgba(109, 198, 98, 0.12)'
+                    ? '0 4px 12px rgba(245, 158, 11, 0.12)'
+                    : '0 4px 12px rgba(15, 23, 42, 0.08)'
                 }
               }}
             >
@@ -282,16 +280,26 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                       width: 32,
                       height: 32,
                       fontSize: '0.875rem',
-                      background: `linear-gradient(135deg, ${getRoleColor(comment.authorType || comment.userRole) === 'primary' ? '#6dc662' : 
-                        getRoleColor(comment.authorType || comment.userRole) === 'error' ? '#f44336' :
-                        getRoleColor(comment.authorType || comment.userRole) === 'success' ? '#4caf50' :
-                        getRoleColor(comment.authorType || comment.userRole) === 'info' ? '#2196f3' : '#9e9e9e'} 0%, ${
-                        getRoleColor(comment.authorType || comment.userRole) === 'primary' ? '#5ab052' : 
-                        getRoleColor(comment.authorType || comment.userRole) === 'error' ? '#d32f2f' :
-                        getRoleColor(comment.authorType || comment.userRole) === 'success' ? '#388e3c' :
-                        getRoleColor(comment.authorType || comment.userRole) === 'info' ? '#1976d2' : '#757575'} 100%)`,
-                      color: 'white',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+                      backgroundColor:
+                        getRoleColor(comment.authorType || comment.userRole) === 'primary'
+                          ? '#eef6ee'
+                          : getRoleColor(comment.authorType || comment.userRole) === 'error'
+                            ? '#fef2f2'
+                            : getRoleColor(comment.authorType || comment.userRole) === 'success'
+                              ? '#ecfdf5'
+                              : getRoleColor(comment.authorType || comment.userRole) === 'info'
+                                ? '#eff6ff'
+                                : '#f1f5f9',
+                      color:
+                        getRoleColor(comment.authorType || comment.userRole) === 'primary'
+                          ? '#2f7d32'
+                          : getRoleColor(comment.authorType || comment.userRole) === 'error'
+                            ? '#dc2626'
+                            : getRoleColor(comment.authorType || comment.userRole) === 'success'
+                              ? '#059669'
+                              : getRoleColor(comment.authorType || comment.userRole) === 'info'
+                                ? '#2563eb'
+                                : '#475569'
                     }}
                   >
                     {getInitials(comment.authorName || comment.userName)}
@@ -311,10 +319,10 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                           borderRadius: '6px',
                           fontWeight: 500,
                           background: getRoleColor(comment.authorType || comment.userRole) === 'primary' 
-                            ? 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)'
+                            ? '#eef6ee'
                             : undefined,
                           color: getRoleColor(comment.authorType || comment.userRole) === 'primary' 
-                            ? 'white' 
+                            ? '#2f7d32' 
                             : undefined,
                           border: getRoleColor(comment.authorType || comment.userRole) === 'primary' 
                             ? 'none' 
@@ -336,11 +344,11 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                             sx={{
                               borderRadius: '6px',
                               fontWeight: 500,
-                              background: 'linear-gradient(135deg, #ffc107 0%, #ff8f00 100%)',
-                              color: 'white',
+                              backgroundColor: '#fef3c7',
+                              color: '#b45309',
                               border: 'none',
                               '& .MuiChip-icon': {
-                                color: 'white'
+                                color: '#b45309'
                               }
                             }}
                           />
@@ -440,14 +448,9 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
       {/* Add Comment Form */}
       {!disabled && (
         <Paper 
-          elevation={2} 
           sx={{ 
+            ...surfaceSx,
             p: 2,
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(10px)',
-            borderRadius: '12px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-            border: '1px solid rgba(109, 198, 98, 0.1)'
           }}
         >
           <Typography 
@@ -455,7 +458,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
             gutterBottom
             sx={{
               fontWeight: 600,
-              color: '#6dc662'
+              color: '#0f172a'
             }}
           >
             Agregar comentario
@@ -475,14 +478,14 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '8px',
                   '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#6dc662',
+                    borderColor: '#86c88a',
                   },
                   '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#6dc662',
+                    borderColor: '#2f7d32',
                   },
                 },
                 '& .MuiInputLabel-root.Mui-focused': {
-                  color: '#6dc662',
+                  color: '#2f7d32',
                 }
               }}
             />
@@ -542,14 +545,10 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                 disabled={!newComment.trim() || submitting || loading}
                 size='small'
                 sx={{
-                  background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                  backgroundColor: '#2f7d32',
                   borderRadius: '8px',
-                  boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
-                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
-                    background: 'linear-gradient(135deg, #5ab052 0%, #4a9642 100%)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
+                    backgroundColor: '#27672a'
                   },
                   '&:disabled': {
                     background: 'rgba(0, 0, 0, 0.12)',

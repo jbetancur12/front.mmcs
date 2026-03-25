@@ -112,9 +112,9 @@ const MaintenanceSignaturesDialog: React.FC<MaintenanceSignaturesDialogProps> = 
 
   return (
     <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth='md' fullWidth>
-      <DialogTitle>
+      <DialogTitle sx={{ borderBottom: '1px solid #e5e7eb' }}>
         <Box display='flex' alignItems='center' gap={1}>
-          <Draw color='primary' />
+          <Draw sx={{ color: '#2f7d32' }} />
           <Typography variant='h6'>Registrar firmas de conformidad</Typography>
         </Box>
       </DialogTitle>
@@ -206,7 +206,16 @@ const MaintenanceSignaturesDialog: React.FC<MaintenanceSignaturesDialogProps> = 
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={loading} color='inherit'>
+        <Button
+          onClick={onClose}
+          disabled={loading}
+          color='inherit'
+          sx={{
+            borderColor: '#d1d5db',
+            color: '#334155',
+            '&:hover': { backgroundColor: '#f8fafc' }
+          }}
+        >
           Cancelar
         </Button>
         <Button
@@ -214,6 +223,10 @@ const MaintenanceSignaturesDialog: React.FC<MaintenanceSignaturesDialogProps> = 
           variant='contained'
           startIcon={<Save />}
           disabled={loading}
+          sx={{
+            backgroundColor: '#2f7d32',
+            '&:hover': { backgroundColor: '#27672a' }
+          }}
         >
           {loading ? 'Guardando...' : 'Guardar firmas'}
         </Button>

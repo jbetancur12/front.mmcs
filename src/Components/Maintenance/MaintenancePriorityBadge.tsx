@@ -26,91 +26,74 @@ const MaintenancePriorityBadge: React.FC<MaintenancePriorityBadgeProps> = ({
   const PRIORITY_STYLES = {
     [MaintenancePriority.LOW]: {
       label: 'Baja',
-      color: '#66BB6A',
+      backgroundColor: '#ecfdf5',
+      textColor: '#166534',
+      borderColor: '#bbf7d0',
       icon: <KeyboardArrowDown />
     },
     [MaintenancePriority.MEDIUM]: {
       label: 'Media',
-      color: '#FFA726',
+      backgroundColor: '#fff7ed',
+      textColor: '#c2410c',
+      borderColor: '#fed7aa',
       icon: <KeyboardArrowUp />
     },
     [MaintenancePriority.HIGH]: {
       label: 'Alta',
-      color: '#EF5350',
+      backgroundColor: '#fef2f2',
+      textColor: '#b91c1c',
+      borderColor: '#fecaca',
       icon: <PriorityHigh />
     },
     [MaintenancePriority.URGENT]: {
       label: 'Urgente',
-      color: '#D32F2F',
+      backgroundColor: '#ffe4e6',
+      textColor: '#be123c',
+      borderColor: '#fb7185',
       icon: <Warning />
     }
   }
 
   const config = PRIORITY_STYLES[priority] || {
     label: 'Desconocida',
-    color: '#9E9E9E',
+    backgroundColor: '#f8fafc',
+    textColor: '#475569',
+    borderColor: '#cbd5e1',
     icon: <KeyboardArrowUp />
   }
-
   const isUrgent = priority === MaintenancePriority.URGENT
 
   return (
-    <>
-      <Chip
-        icon={config.icon}
-        label={config.label}
-        size={size}
-        variant={variant}
-        sx={{
-          fontWeight: 500,
-          borderRadius: '8px',
-          transition: 'all 0.25s ease-in-out',
-          backgroundColor: variant === 'filled' ? config.color : 'transparent',
-          color: variant === 'filled' ? '#fff' : config.color,
-          borderColor: variant === 'outlined' ? config.color : undefined,
-          boxShadow:
-            variant === 'filled'
-              ? '0 0 10px rgba(0,0,0,0.25)'
-              : '0 2px 6px rgba(0,0,0,0.1)',
-          '& .MuiChip-icon': {
-            fontSize: size === 'small' ? '1rem' : '1.2rem',
-            color: variant === 'filled' ? '#fff' : config.color
-          },
-          '&:hover': {
-            transform: 'translateY(-2px)',
-            boxShadow:
-              variant === 'filled'
-                ? '0 4px 12px rgba(0,0,0,0.35)'
-                : '0 3px 8px rgba(0,0,0,0.15)'
-          },
-          ...(isUrgent && {
-            animation: 'pulse 2s infinite'
-          })
-        }}
-      />
-
-      {/* Animación para prioridad URGENTE */}
-      {isUrgent && (
-        <style>
-          {`
-            @keyframes pulse {
-              0% {
-                transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.6);
-              }
-              70% {
-                transform: scale(1.05);
-                box-shadow: 0 0 0 10px rgba(211, 47, 47, 0);
-              }
-              100% {
-                transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(211, 47, 47, 0);
-              }
-            }
-          `}
-        </style>
-      )}
-    </>
+    <Chip
+      icon={config.icon}
+      label={config.label}
+      size={size}
+      variant={variant}
+      sx={{
+        fontWeight: 600,
+        borderRadius: '999px',
+        height: size === 'small' ? 24 : 30,
+        fontSize: size === 'small' ? '0.72rem' : '0.8rem',
+        transition: 'border-color 0.2s ease, background-color 0.2s ease',
+        backgroundColor:
+          variant === 'filled' ? config.backgroundColor : '#ffffff',
+        color: config.textColor,
+        border: `1px solid ${config.borderColor}`,
+        boxShadow: isUrgent ? '0 0 0 1px rgba(225, 29, 72, 0.08)' : 'none',
+        '& .MuiChip-icon': {
+          fontSize: size === 'small' ? '0.95rem' : '1.05rem',
+          color: config.textColor
+        },
+        '&:hover': {
+          backgroundColor: config.backgroundColor,
+          borderColor: config.textColor,
+          boxShadow: isUrgent ? '0 4px 10px rgba(190, 18, 60, 0.12)' : 'none'
+        },
+        ...(isUrgent && {
+          fontWeight: 700
+        })
+      }}
+    />
   )
 }
 
