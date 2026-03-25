@@ -111,6 +111,7 @@ import MaintenanceTimeline from '../../Components/Maintenance/MaintenanceTimelin
 import MaintenanceErrorBoundary from '../../Components/Maintenance/MaintenanceErrorBoundary'
 import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
 import MaintenanceSignaturesDialog from '../../Components/Maintenance/MaintenanceSignaturesDialog'
+import { maintenanceSignaturesEnabled } from '../../features/maintenanceFlags'
 import type {
   CompletionPhotoInput,
   CompletionSignatureInput
@@ -213,6 +214,7 @@ const MaintenanceTicketDetails: React.FC = () => {
     ticket?.technicianSignatureData || ticket?.assignedTechnician?.signatureData
   )
   const signaturesMissing =
+    maintenanceSignaturesEnabled &&
     ticket?.status === MaintenanceStatus.COMPLETED &&
     (!hasCustomerSignature || !hasTechnicianSignature)
 
@@ -2816,7 +2818,8 @@ const MaintenanceTicketDetails: React.FC = () => {
               </Paper>
             )}
 
-            {ticket.status === MaintenanceStatus.COMPLETED && (
+            {maintenanceSignaturesEnabled &&
+              ticket.status === MaintenanceStatus.COMPLETED && (
               <Paper
                 sx={{
                   ...surfaceSx,
@@ -3001,7 +3004,8 @@ const MaintenanceTicketDetails: React.FC = () => {
                 >
                   Orden de Servicio
                 </Button>
-                {ticket.status === MaintenanceStatus.COMPLETED && (
+                {maintenanceSignaturesEnabled &&
+                  ticket.status === MaintenanceStatus.COMPLETED && (
                   <Button
                     fullWidth
                     variant='outlined'
@@ -3250,6 +3254,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               ticket?.assignedTechnician?.signatureData
             )
           }
+          signaturesEnabled={maintenanceSignaturesEnabled}
           loading={
             updateTicketMutation.isLoading ||
             uploadFilesMutation.isLoading ||
@@ -3257,33 +3262,35 @@ const MaintenanceTicketDetails: React.FC = () => {
           }
         />
 
-        <MaintenanceSignaturesDialog
-          open={signaturesDialogOpen}
-          onClose={() => setSignaturesDialogOpen(false)}
-          onSave={handleSavePendingSignatures}
-          technicianName={ticket?.assignedTechnician?.name}
-          storedTechnicianSignature={
-            ticket?.technicianSignatureData ||
-            (isTechnician
-              ? currentTechnician?.signatureData ||
+        {maintenanceSignaturesEnabled && (
+          <MaintenanceSignaturesDialog
+            open={signaturesDialogOpen}
+            onClose={() => setSignaturesDialogOpen(false)}
+            onSave={handleSavePendingSignatures}
+            technicianName={ticket?.assignedTechnician?.name}
+            storedTechnicianSignature={
+              ticket?.technicianSignatureData ||
+              (isTechnician
+                ? currentTechnician?.signatureData ||
+                  ticket?.assignedTechnician?.signatureData ||
+                  null
+                : ticket?.assignedTechnician?.signatureData || null)
+            }
+            currentTicketTechnicianSignature={ticket?.technicianSignatureData || null}
+            currentCustomerSignerName={ticket?.customerSignerName || ticket?.customerName || ''}
+            currentCustomerSignature={ticket?.customerSignatureData || null}
+            canCaptureTechnicianSignature={
+              !(
+                currentTechnician?.signatureData ||
                 ticket?.assignedTechnician?.signatureData ||
-                null
-              : ticket?.assignedTechnician?.signatureData || null)
-          }
-          currentTicketTechnicianSignature={ticket?.technicianSignatureData || null}
-          currentCustomerSignerName={ticket?.customerSignerName || ticket?.customerName || ''}
-          currentCustomerSignature={ticket?.customerSignatureData || null}
-          canCaptureTechnicianSignature={
-            !(
-              currentTechnician?.signatureData ||
-              ticket?.assignedTechnician?.signatureData ||
-              ticket?.technicianSignatureData
-            )
-          }
-          loading={
-            updateTicketMutation.isLoading || updateTechnicianMutation.isLoading
-          }
-        />
+                ticket?.technicianSignatureData
+              )
+            }
+            loading={
+              updateTicketMutation.isLoading || updateTechnicianMutation.isLoading
+            }
+          />
+        )}
 
         <CostsListDialog
           open={briefCostsDialogOpen}

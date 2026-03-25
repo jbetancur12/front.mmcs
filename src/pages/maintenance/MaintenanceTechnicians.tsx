@@ -50,6 +50,7 @@ import {
   useDeleteMaintenanceTechnician
 } from '../../hooks/useMaintenance'
 import SignaturePad from '../../Components/Maintenance/SignaturePad'
+import { maintenanceSignaturesEnabled } from '../../features/maintenanceFlags'
 import {
   MaintenanceTechnician,
   TechnicianFormData
@@ -1021,16 +1022,18 @@ const MaintenanceTechnicians: React.FC = () => {
                 />
               </Grid>
 
-              <Grid item xs={12}>
-                <SignaturePad
-                  value={formik.values.signatureData || null}
-                  onChange={(value) =>
-                    formik.setFieldValue('signatureData', value || '')
-                  }
-                  label='Firma guardada del técnico (opcional)'
-                  helperText='Si la guardas aquí, se usará automáticamente al cerrar órdenes de servicio.'
-                />
-              </Grid>
+              {maintenanceSignaturesEnabled && (
+                <Grid item xs={12}>
+                  <SignaturePad
+                    value={formik.values.signatureData || null}
+                    onChange={(value) =>
+                      formik.setFieldValue('signatureData', value || '')
+                    }
+                    label='Firma guardada del técnico (opcional)'
+                    helperText='Si la guardas aquí, se usará automáticamente al cerrar órdenes de servicio.'
+                  />
+                </Grid>
+              )}
 
               <Grid item xs={12}>
                 <FormControlLabel

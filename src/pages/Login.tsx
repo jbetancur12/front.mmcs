@@ -15,6 +15,13 @@ function isAxiosError(obj: any): obj is AxiosError {
   return obj instanceof Error && 'isAxiosError' in obj
 }
 
+const clearStaleAuth = () => {
+  localStorage.removeItem('accessToken')
+  localStorage.removeItem('refreshToken')
+  localStorage.removeItem('user')
+  localStorage.removeItem('userProfile')
+}
+
 const Login: React.FC = () => {
   const posthog = usePostHog()
   const navigate = useNavigate()
@@ -177,9 +184,8 @@ const Login: React.FC = () => {
         // Limpiar lastLocation después de usarla
         sessionStorage.removeItem('lastLocation')
 
-        navigate(lastLocation)
-
         localStorage.setItem('accessToken', token)
+        navigate(lastLocation, { replace: true })
 
         posthog?.capture('clicked_log_in')
         posthog?.identify(response.data.user.id, {
@@ -206,12 +212,43 @@ const Login: React.FC = () => {
   }
 
   useEffect(() => {
-    if (localStorage.getItem('accessToken')) {
-      const lastLocation = sessionStorage.getItem('lastLocation') || '/'
-      sessionStorage.removeItem('lastLocation')
-      navigate(lastLocation)
+    let isMounted = true
+
+    const validateExistingSession = async () => {
+      const token = localStorage.getItem('accessToken')
+
+      if (!token) {
+        setLoading(false)
+        return
+      }
+
+      try {
+        await axiosPublic.get('/auth/validateToken', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+
+        if (!isMounted) return
+
+        const lastLocation = sessionStorage.getItem('lastLocation') || '/'
+        sessionStorage.removeItem('lastLocation')
+        navigate(lastLocation, { replace: true })
+      } catch (error) {
+        clearStaleAuth()
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+        }
+      }
     }
-  }, [])
+
+    validateExistingSession()
+
+    return () => {
+      isMounted = false
+    }
+  }, [navigate])
 
   return (
     <div className='flex flex-col items-center justify-center px-6 pt-8 mx-auto md:h-screen pt:mt-0 dark:bg-gray-900'>

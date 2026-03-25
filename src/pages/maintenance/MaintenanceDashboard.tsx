@@ -72,6 +72,7 @@ import { userStore } from '../../store/userStore'
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import KeyboardShortcutsHelp from '../../Components/Maintenance/KeyboardShortcutsHelp'
 import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
+import { maintenanceSignaturesEnabled } from '../../features/maintenanceFlags'
 import type {
   CompletionPhotoInput
 } from '../../Components/Maintenance/CompletionCostsDialog'
@@ -411,11 +412,13 @@ const MaintenanceDashboard: React.FC = () => {
             workPerformed,
             costs,
             technicianSignatureData:
-              technicianSignature.technicianSignatureData ||
-              selectedTicket.technicianSignatureData ||
-              currentTechnician?.signatureData ||
-              selectedTicket.assignedTechnician?.signatureData ||
-              null
+              maintenanceSignaturesEnabled
+                ? technicianSignature.technicianSignatureData ||
+                  selectedTicket.technicianSignatureData ||
+                  currentTechnician?.signatureData ||
+                  selectedTicket.assignedTechnician?.signatureData ||
+                  null
+                : null
           }
         : {
             ...editData,
@@ -423,10 +426,12 @@ const MaintenanceDashboard: React.FC = () => {
             workPerformed,
             costs,
             technicianSignatureData:
-              technicianSignature.technicianSignatureData ||
-              selectedTicket.technicianSignatureData ||
-              selectedTicket.assignedTechnician?.signatureData ||
-              null
+              maintenanceSignaturesEnabled
+                ? technicianSignature.technicianSignatureData ||
+                  selectedTicket.technicianSignatureData ||
+                  selectedTicket.assignedTechnician?.signatureData ||
+                  null
+                : null
           }
 
       await updateTicketMutation.mutateAsync({
@@ -1620,7 +1625,7 @@ const MaintenanceDashboard: React.FC = () => {
       </Dialog>
 
       {/* Completion Costs Dialog */}
-      <CompletionCostsDialog
+        <CompletionCostsDialog
         open={costsDialogOpen}
         onClose={() => setCostsDialogOpen(false)}
         onComplete={handleCompleteWithCosts}
@@ -1631,14 +1636,15 @@ const MaintenanceDashboard: React.FC = () => {
             ? currentTechnician?.signatureData || selectedTicket?.assignedTechnician?.signatureData || null
             : selectedTicket?.assignedTechnician?.signatureData || null)
         }
-        canCaptureTechnicianSignature={
-          !(
-            selectedTicket?.technicianSignatureData ||
-            currentTechnician?.signatureData ||
-            selectedTicket?.assignedTechnician?.signatureData
-          )
-        }
-        loading={
+          canCaptureTechnicianSignature={
+            !(
+              selectedTicket?.technicianSignatureData ||
+              currentTechnician?.signatureData ||
+              selectedTicket?.assignedTechnician?.signatureData
+            )
+          }
+          signaturesEnabled={maintenanceSignaturesEnabled}
+          loading={
           updateTicketMutation.isLoading ||
           uploadFilesMutation.isLoading ||
           updateTechnicianMutation.isLoading

@@ -14,6 +14,24 @@ interface Role {
 
 const apiUrl = api()
 
+const clearInvalidSession = () => {
+  localStorage.removeItem('accessToken')
+  localStorage.removeItem('refreshToken')
+  localStorage.removeItem('user')
+  localStorage.removeItem('userProfile')
+
+  userStore.set({
+    nombre: '',
+    email: '',
+    rol: [''],
+    customer: {
+      id: 0,
+      nombre: '',
+      modules: []
+    }
+  })
+}
+
 const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
@@ -43,10 +61,10 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
         userStore.set(formattedUser)
       } catch (error) {
         console.log('Error al validar el token:', error)
-        // Si el token es inválido, también debemos guardar la ubicación
         const currentPath = location.pathname + location.search
+        clearInvalidSession()
         sessionStorage.setItem('lastLocation', currentPath)
-        navigate('/login')
+        navigate('/login', { replace: true })
       } finally {
         setLoading(false)
       }
@@ -55,12 +73,11 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     if (localStorage.getItem('accessToken')) {
       validateToken()
     } else {
-      // Guardar la ubicación actual antes de redirigir al login
       const currentPath = location.pathname + location.search
       sessionStorage.setItem('lastLocation', currentPath)
-      navigate('/login')
+      navigate('/login', { replace: true })
     }
-  }, [])
+  }, [axiosPrivate, location.pathname, location.search, navigate])
 
   if (loading) {
     return (

@@ -67,6 +67,7 @@ interface CompletionCostsDialogProps {
   technicianName?: string
   storedTechnicianSignature?: string | null
   canCaptureTechnicianSignature?: boolean
+  signaturesEnabled?: boolean
 }
 
 const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
@@ -76,7 +77,8 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
   loading = false,
   technicianName,
   storedTechnicianSignature,
-  canCaptureTechnicianSignature = false
+  canCaptureTechnicianSignature = false,
+  signaturesEnabled = false
 }) => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
@@ -192,7 +194,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       technicianSignatureData || storedTechnicianSignature || null
 
     if (!isWorkValid || !areCostsValid) return
-    if (!effectiveTechnicianSignature) {
+    if (signaturesEnabled && !effectiveTechnicianSignature) {
       setTechnicianSignatureError(
         'Debes registrar la firma del técnico para completar el ticket'
       )
@@ -206,8 +208,11 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
     }))
 
     await onComplete(workPerformed.trim(), formattedCosts, completionPhotos, {
-      technicianSignatureData: effectiveTechnicianSignature,
+      technicianSignatureData: signaturesEnabled
+        ? effectiveTechnicianSignature
+        : null,
       saveTechnicianSignature:
+        signaturesEnabled &&
         canCaptureTechnicianSignature &&
         !storedTechnicianSignature &&
         Boolean(technicianSignatureData)
@@ -219,7 +224,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       technicianSignatureData || storedTechnicianSignature || null
 
     if (!validateWorkPerformed()) return
-    if (!effectiveTechnicianSignature) {
+    if (signaturesEnabled && !effectiveTechnicianSignature) {
       setTechnicianSignatureError(
         'Debes registrar la firma del técnico para completar el ticket'
       )
@@ -227,8 +232,11 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
     }
 
     await onComplete(workPerformed.trim(), [], completionPhotos, {
-      technicianSignatureData: effectiveTechnicianSignature,
+      technicianSignatureData: signaturesEnabled
+        ? effectiveTechnicianSignature
+        : null,
       saveTechnicianSignature:
+        signaturesEnabled &&
         canCaptureTechnicianSignature &&
         !storedTechnicianSignature &&
         Boolean(technicianSignatureData)
@@ -491,71 +499,73 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
           </Collapse>
         </Box>
 
-        <Paper
-          elevation={0}
-          sx={{
-            p: 3,
-            mb: 3,
-            borderRadius: '12px',
-            border: '1px solid #dbeafe',
-            backgroundColor: '#f8fbff'
-          }}
-        >
-          <Box display='flex' alignItems='center' gap={1} mb={1.5}>
-            <Draw sx={{ color: '#2563eb' }} />
-            <Typography variant='h6' fontWeight={600} sx={{ color: '#0f172a' }}>
-              Firma del técnico
-            </Typography>
-          </Box>
-          <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-            La firma del cliente puede registrarse después. Para completar el ticket necesitamos dejar confirmada la firma del técnico.
-          </Typography>
-
-          {storedTechnicianSignature ? (
-            <Box>
-              <Box
-                sx={{
-                  border: '1px solid #d1d5db',
-                  borderRadius: 2,
-                  backgroundColor: '#ffffff',
-                  minHeight: 180,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  p: 2
-                }}
-              >
-                <Box
-                  component='img'
-                  src={storedTechnicianSignature}
-                  alt={`Firma de ${technicianName || 'técnico'}`}
-                  sx={{ maxWidth: '100%', maxHeight: 140, objectFit: 'contain' }}
-                />
-              </Box>
-              <Typography variant='caption' color='text.secondary' sx={{ mt: 1, display: 'block' }}>
-                Se usará la firma guardada de {technicianName || 'este técnico'}.
+        {signaturesEnabled && (
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              mb: 3,
+              borderRadius: '12px',
+              border: '1px solid #dbeafe',
+              backgroundColor: '#f8fbff'
+            }}
+          >
+            <Box display='flex' alignItems='center' gap={1} mb={1.5}>
+              <Draw sx={{ color: '#2563eb' }} />
+              <Typography variant='h6' fontWeight={600} sx={{ color: '#0f172a' }}>
+                Firma del técnico
               </Typography>
             </Box>
-          ) : canCaptureTechnicianSignature ? (
-            <SignaturePad
-              value={technicianSignatureData}
-              onChange={(value) => {
-                setTechnicianSignatureData(value)
-                if (technicianSignatureError) setTechnicianSignatureError('')
-              }}
-              disabled={loading}
-              label='Firma del técnico *'
-              helperText={
-                technicianSignatureError ||
-                'La guardaremos para reutilizarla automáticamente en próximos cierres.'
-              }
-            />
-          ) : (
-            <Alert severity='warning'>
-              Este ticket no tiene una firma de técnico disponible. Debes registrar una para poder completarlo.
-            </Alert>
-          )}
-        </Paper>
+            <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+              La firma del cliente puede registrarse después. Para completar el ticket necesitamos dejar confirmada la firma del técnico.
+            </Typography>
+
+            {storedTechnicianSignature ? (
+              <Box>
+                <Box
+                  sx={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: 2,
+                    backgroundColor: '#ffffff',
+                    minHeight: 180,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    p: 2
+                  }}
+                >
+                  <Box
+                    component='img'
+                    src={storedTechnicianSignature}
+                    alt={`Firma de ${technicianName || 'técnico'}`}
+                    sx={{ maxWidth: '100%', maxHeight: 140, objectFit: 'contain' }}
+                  />
+                </Box>
+                <Typography variant='caption' color='text.secondary' sx={{ mt: 1, display: 'block' }}>
+                  Se usará la firma guardada de {technicianName || 'este técnico'}.
+                </Typography>
+              </Box>
+            ) : canCaptureTechnicianSignature ? (
+              <SignaturePad
+                value={technicianSignatureData}
+                onChange={(value) => {
+                  setTechnicianSignatureData(value)
+                  if (technicianSignatureError) setTechnicianSignatureError('')
+                }}
+                disabled={loading}
+                label='Firma del técnico *'
+                helperText={
+                  technicianSignatureError ||
+                  'La guardaremos para reutilizarla automáticamente en próximos cierres.'
+                }
+              />
+            ) : (
+              <Alert severity='warning'>
+                Este ticket no tiene una firma de técnico disponible. Debes registrar una para poder completarlo.
+              </Alert>
+            )}
+          </Paper>
+        )}
 
         {/* Costs Section Header */}
         <Typography
