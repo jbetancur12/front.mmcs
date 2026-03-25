@@ -118,7 +118,7 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
             <DialogTitle>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
                     <Box display="flex" alignItems="center">
-                        <AttachMoney sx={{ mr: 1 }} />
+                        <AttachMoney sx={{ mr: 1, color: '#2f7d32' }} />
                         <Typography variant="h6">Costo del Servicio</Typography>
                         <Box ml={2}>{statusChip}</Box> {/* 👈 Colocamos el Chip aquí */}
                     </Box>
@@ -161,7 +161,8 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
                                             sx={{
                                                 width: 32,
                                                 height: 32,
-                                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                                backgroundColor: '#eef6ee',
+                                                color: '#2f7d32',
                                                 fontSize: '0.875rem',
                                                 fontWeight: 700
                                             }}
@@ -205,7 +206,8 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
                             sx={{
                                 p: 2,
                                 borderRadius: '12px',
-                                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%)'
+                                backgroundColor: '#f8fafc',
+                                border: '1px solid #e5e7eb'
                             }}
                         >
                             <Typography variant="h6" fontWeight={600}>
@@ -236,6 +238,10 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
                             <Receipt />
                         )
                     }
+                    sx={{
+                        backgroundColor: '#2f7d32',
+                        '&:hover': { backgroundColor: '#27672a' }
+                    }}
                 >
                     {isProcessingInvoice
                         ? 'Facturando...'

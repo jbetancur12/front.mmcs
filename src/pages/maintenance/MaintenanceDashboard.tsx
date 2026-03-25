@@ -73,8 +73,7 @@ import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import KeyboardShortcutsHelp from '../../Components/Maintenance/KeyboardShortcutsHelp'
 import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
 import type {
-  CompletionPhotoInput,
-  CompletionSignatureInput
+  CompletionPhotoInput
 } from '../../Components/Maintenance/CompletionCostsDialog'
 
 /**
@@ -115,6 +114,21 @@ const MaintenanceDashboard: React.FC = () => {
     useState<MaintenanceTicket | null>(null)
 
   const limit = 12
+  const surfaceSx = {
+    backgroundColor: '#ffffff',
+    borderRadius: '14px',
+    border: '1px solid #e5e7eb',
+    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+  }
+
+  const statCardSx = {
+    ...surfaceSx,
+    transition: 'border-color 0.2s ease',
+    '&:hover': {
+      borderColor: '#cbd5e1',
+      boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+    }
+  }
 
   const showToast = (
     message: string,
@@ -184,6 +198,30 @@ const MaintenanceDashboard: React.FC = () => {
   const updateTechnicianMutation = useUpdateMaintenanceTechnician()
   const deleteTicketMutation = useDeleteMaintenanceTicket()
   const uploadFilesMutation = useUploadMaintenanceFiles()
+
+  const completionRate = useMemo(() => {
+    const total = stats?.metrics?.totalTickets || 0
+    const completed = stats?.metrics?.completedTickets || 0
+    if (!total) return 0
+    return Math.round((completed / total) * 100)
+  }, [stats?.metrics?.completedTickets, stats?.metrics?.totalTickets])
+
+  const urgentTickets = useMemo(() => {
+    return (
+      stats?.priorityStats?.find(
+        ({ priority }) => priority === MaintenancePriority.URGENT
+      )?.count || 0
+    )
+  }, [stats?.priorityStats])
+
+  const activeTickets = useMemo(() => {
+    return stats?.metrics?.pendingTickets || 0
+  }, [stats?.metrics?.pendingTickets])
+
+  const avgResolutionTimeDisplay = useMemo(() => {
+    const value = stats?.metrics?.avgResolutionTimeHours || 0
+    return value >= 100 ? `${Math.round(value)}h` : `${value.toFixed(1)}h`
+  }, [stats?.metrics?.avgResolutionTimeHours])
 
   // WebSocket for real-time updates
   useMaintenanceWebSocket({
@@ -339,20 +377,26 @@ const MaintenanceDashboard: React.FC = () => {
     workPerformed: string,
     costs: any[],
     completionPhotos: CompletionPhotoInput[],
-    signatures: CompletionSignatureInput
+    technicianSignature: {
+      technicianSignatureData?: string | null
+      saveTechnicianSignature?: boolean
+    }
   ) => {
     if (!selectedTicket) return
 
     try {
+      const targetTechnicianId =
+        currentTechnician?.id || selectedTicket.assignedTechnician?.id
+
       if (
-        signatures.saveTechnicianSignature &&
-        currentTechnician?.id &&
-        signatures.technicianSignatureData
+        technicianSignature.saveTechnicianSignature &&
+        targetTechnicianId &&
+        technicianSignature.technicianSignatureData
       ) {
         await updateTechnicianMutation.mutateAsync({
-          id: currentTechnician.id,
+          id: targetTechnicianId,
           data: {
-            signatureData: signatures.technicianSignatureData
+            signatureData: technicianSignature.technicianSignatureData
           }
         })
       }
@@ -362,10 +406,9 @@ const MaintenanceDashboard: React.FC = () => {
             status: MaintenanceStatus.COMPLETED,
             workPerformed,
             costs,
-            customerSignerName: signatures.customerSignerName,
-            customerSignatureData: signatures.customerSignatureData,
             technicianSignatureData:
-              signatures.technicianSignatureData ||
+              technicianSignature.technicianSignatureData ||
+              selectedTicket.technicianSignatureData ||
               currentTechnician?.signatureData ||
               selectedTicket.assignedTechnician?.signatureData ||
               null
@@ -375,11 +418,10 @@ const MaintenanceDashboard: React.FC = () => {
             status: MaintenanceStatus.COMPLETED,
             workPerformed,
             costs,
-            customerSignerName: signatures.customerSignerName,
-            customerSignatureData: signatures.customerSignatureData,
             technicianSignatureData:
+              technicianSignature.technicianSignatureData ||
+              selectedTicket.technicianSignatureData ||
               selectedTicket.assignedTechnician?.signatureData ||
-              signatures.technicianSignatureData ||
               null
           }
 
@@ -466,8 +508,7 @@ const MaintenanceDashboard: React.FC = () => {
       sx={{
         py: { xs: 2, sm: 3, md: 3 },
         px: { xs: 1, sm: 2, md: 3 },
-        background:
-          'linear-gradient(135deg, rgba(109, 198, 98, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)',
+        backgroundColor: '#f8fafc',
         minHeight: '100vh'
       }}
     >
@@ -480,27 +521,25 @@ const MaintenanceDashboard: React.FC = () => {
         mb={{ xs: 2, sm: 3, md: 3 }}
         gap={{ xs: 2, sm: 0 }}
         sx={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)',
-          borderRadius: '16px',
+          backgroundColor: '#ffffff',
+          borderRadius: '14px',
           p: { xs: 2, sm: 3 },
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-          border: '1px solid rgba(109, 198, 98, 0.1)'
+          boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
+          border: '1px solid #e5e7eb'
         }}
       >
         <Box display='flex' alignItems='center' gap={{ xs: 1, sm: 2 }}>
           <Box
             sx={{
-              background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
-              borderRadius: '12px',
+              backgroundColor: '#eef6ee',
+              borderRadius: '10px',
               p: 1.5,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)'
+              justifyContent: 'center'
             }}
           >
-            <Dashboard sx={{ fontSize: { xs: 28, sm: 32 }, color: 'white' }} />
+            <Dashboard sx={{ fontSize: { xs: 28, sm: 32 }, color: '#2f7d32' }} />
           </Box>
           <Box>
             <Typography
@@ -509,10 +548,7 @@ const MaintenanceDashboard: React.FC = () => {
               sx={{
                 fontSize: { xs: '1.5rem', sm: '1.875rem', md: '2.125rem' },
                 fontWeight: 700,
-                background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
+                color: '#0f172a',
                 letterSpacing: '-0.02em'
               }}
             >
@@ -536,16 +572,12 @@ const MaintenanceDashboard: React.FC = () => {
               sx={{
                 minWidth: 48,
                 minHeight: 48,
-                background: 'rgba(109, 198, 98, 0.1)',
-                color: '#6dc662',
+                backgroundColor: '#ffffff',
+                color: '#475569',
                 borderRadius: '12px',
-                transition: 'all 0.2s ease-in-out',
+                border: '1px solid #e5e7eb',
                 '&:hover': {
-                  background:
-                    'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
-                  color: 'white',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 6px 20px rgba(109, 198, 98, 0.3)'
+                  backgroundColor: '#f8fafc'
                 }
               }}
             >
@@ -560,16 +592,12 @@ const MaintenanceDashboard: React.FC = () => {
               sx={{
                 minWidth: 48,
                 minHeight: 48,
-                background: 'rgba(33, 150, 243, 0.1)',
-                color: '#2196F3',
+                backgroundColor: '#ffffff',
+                color: '#475569',
                 borderRadius: '12px',
-                transition: 'all 0.2s ease-in-out',
+                border: '1px solid #e5e7eb',
                 '&:hover': {
-                  background:
-                    'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
-                  color: 'white',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 6px 20px rgba(33, 150, 243, 0.3)'
+                  backgroundColor: '#f8fafc'
                 }
               }}
             >
@@ -588,14 +616,12 @@ const MaintenanceDashboard: React.FC = () => {
             sx={{
               minHeight: 48,
               fontSize: { xs: '0.813rem', sm: '0.875rem' },
-              borderColor: '#6dc662',
-              color: '#6dc662',
+              borderColor: '#d1d5db',
+              color: '#334155',
               borderRadius: '12px',
-              transition: 'all 0.2s ease-in-out',
               '&:hover': {
-                borderColor: '#5ab052',
-                background: 'rgba(109, 198, 98, 0.1)',
-                transform: 'translateY(-1px)'
+                borderColor: '#94a3b8',
+                backgroundColor: '#f8fafc'
               }
             }}
           >
@@ -610,15 +636,10 @@ const MaintenanceDashboard: React.FC = () => {
               sx={{
                 minHeight: 48,
                 fontSize: { xs: '0.813rem', sm: '0.875rem' },
-                background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                backgroundColor: '#2f7d32',
                 borderRadius: '12px',
-                boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
-                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
-                  background:
-                    'linear-gradient(135deg, #5ab052 0%, #4a9642 100%)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
+                  backgroundColor: '#27672a'
                 }
               }}
             >
@@ -657,19 +678,7 @@ const MaintenanceDashboard: React.FC = () => {
               <Card
                 role='article'
                 aria-label='Total de tickets'
-                sx={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: '16px',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                  border: '1px solid rgba(109, 198, 98, 0.1)',
-                  transition: 'all 0.3s ease-in-out',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 8px 30px rgba(109, 198, 98, 0.15)',
-                    border: '1px solid rgba(109, 198, 98, 0.2)'
-                  }
-                }}
+                sx={statCardSx}
               >
                 <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                   <Box
@@ -706,9 +715,8 @@ const MaintenanceDashboard: React.FC = () => {
                     </Box>
                     <Box
                       sx={{
-                        background:
-                          'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
-                        borderRadius: '12px',
+                        backgroundColor: '#eef6ee',
+                        borderRadius: '10px',
                         p: 1.5,
                         display: 'flex',
                         alignItems: 'center',
@@ -716,7 +724,7 @@ const MaintenanceDashboard: React.FC = () => {
                       }}
                     >
                       <Assignment
-                        sx={{ fontSize: { xs: 32, sm: 40 }, color: 'white' }}
+                        sx={{ fontSize: { xs: 32, sm: 40 }, color: '#2f7d32' }}
                         aria-hidden='true'
                       />
                     </Box>
@@ -729,19 +737,7 @@ const MaintenanceDashboard: React.FC = () => {
               <Card
                 role='article'
                 aria-label='Tickets pendientes'
-                sx={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: '16px',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                  border: '1px solid rgba(255, 152, 0, 0.1)',
-                  transition: 'all 0.3s ease-in-out',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 8px 30px rgba(255, 152, 0, 0.15)',
-                    border: '1px solid rgba(255, 152, 0, 0.2)'
-                  }
-                }}
+                sx={statCardSx}
               >
                 <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                   <Box
@@ -778,9 +774,8 @@ const MaintenanceDashboard: React.FC = () => {
                     </Box>
                     <Box
                       sx={{
-                        background:
-                          'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
-                        borderRadius: '12px',
+                        backgroundColor: '#fff4e5',
+                        borderRadius: '10px',
                         p: 1.5,
                         display: 'flex',
                         alignItems: 'center',
@@ -788,7 +783,7 @@ const MaintenanceDashboard: React.FC = () => {
                       }}
                     >
                       <Build
-                        sx={{ fontSize: { xs: 32, sm: 40 }, color: 'white' }}
+                        sx={{ fontSize: { xs: 32, sm: 40 }, color: '#b45309' }}
                         aria-hidden='true'
                       />
                     </Box>
@@ -801,19 +796,7 @@ const MaintenanceDashboard: React.FC = () => {
               <Card
                 role='article'
                 aria-label='Tickets completados'
-                sx={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: '16px',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                  border: '1px solid rgba(76, 175, 80, 0.1)',
-                  transition: 'all 0.3s ease-in-out',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 8px 30px rgba(76, 175, 80, 0.15)',
-                    border: '1px solid rgba(76, 175, 80, 0.2)'
-                  }
-                }}
+                sx={statCardSx}
               >
                 <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                   <Box
@@ -850,9 +833,8 @@ const MaintenanceDashboard: React.FC = () => {
                     </Box>
                     <Box
                       sx={{
-                        background:
-                          'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)',
-                        borderRadius: '12px',
+                        backgroundColor: '#eef6ee',
+                        borderRadius: '10px',
                         p: 1.5,
                         display: 'flex',
                         alignItems: 'center',
@@ -860,7 +842,7 @@ const MaintenanceDashboard: React.FC = () => {
                       }}
                     >
                       <CheckCircle
-                        sx={{ fontSize: { xs: 32, sm: 40 }, color: 'white' }}
+                        sx={{ fontSize: { xs: 32, sm: 40 }, color: '#2f7d32' }}
                         aria-hidden='true'
                       />
                     </Box>
@@ -873,19 +855,7 @@ const MaintenanceDashboard: React.FC = () => {
               <Card
                 role='article'
                 aria-label='Tiempo promedio de resolución'
-                sx={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: '16px',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-                  border: '1px solid rgba(33, 150, 243, 0.1)',
-                  transition: 'all 0.3s ease-in-out',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 8px 30px rgba(33, 150, 243, 0.15)',
-                    border: '1px solid rgba(33, 150, 243, 0.2)'
-                  }
-                }}
+                sx={statCardSx}
               >
                 <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                   <Box
@@ -899,15 +869,15 @@ const MaintenanceDashboard: React.FC = () => {
                         aria-label={`Tiempo promedio de resolución: ${stats?.metrics?.avgResolutionTimeHours || 0} horas`}
                         sx={{
                           fontSize: {
-                            xs: '1.75rem',
-                            sm: '2rem',
-                            md: '2.125rem'
+                            xs: '1.5rem',
+                            sm: '1.75rem',
+                            md: '1.9rem'
                           },
                           fontWeight: 700,
-                          color: '#2196f3'
+                          color: '#2563eb'
                         }}
                       >
-                        {stats?.metrics?.avgResolutionTimeHours || 0}h
+                        {avgResolutionTimeDisplay}
                       </Typography>
                       <Typography
                         variant='body2'
@@ -919,12 +889,21 @@ const MaintenanceDashboard: React.FC = () => {
                       >
                         Tiempo Promedio
                       </Typography>
+                      <Typography
+                        variant='caption'
+                        sx={{
+                          mt: 0.5,
+                          display: 'block',
+                          color: '#64748b'
+                        }}
+                      >
+                        Promedio de cierre
+                      </Typography>
                     </Box>
                     <Box
                       sx={{
-                        background:
-                          'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)',
-                        borderRadius: '12px',
+                        backgroundColor: '#eff6ff',
+                        borderRadius: '10px',
                         p: 1.5,
                         display: 'flex',
                         alignItems: 'center',
@@ -932,7 +911,7 @@ const MaintenanceDashboard: React.FC = () => {
                       }}
                     >
                       <TrendingUp
-                        sx={{ fontSize: { xs: 32, sm: 40 }, color: 'white' }}
+                        sx={{ fontSize: { xs: 28, sm: 34 }, color: '#2563eb' }}
                         aria-hidden='true'
                       />
                     </Box>
@@ -950,51 +929,41 @@ const MaintenanceDashboard: React.FC = () => {
         spacing={{ xs: 2, sm: 2, md: 3 }}
         mb={{ xs: 2, sm: 3, md: 3 }}
       >
-        <Grid item xs={12} md={6}>
+      <Grid item xs={12} md={8}>
           <Paper
-            elevation={2}
             sx={{
               p: { xs: 2, sm: 3 },
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-              border: '1px solid rgba(109, 198, 98, 0.1)',
-              transition: 'all 0.3s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-2px)',
-                boxShadow: '0 8px 30px rgba(109, 198, 98, 0.12)'
-              }
+              ...surfaceSx
             }}
           >
-            <Typography
-              variant='h6'
-              gutterBottom
-              sx={{
-                fontSize: { xs: '1.125rem', sm: '1.25rem' },
-                fontWeight: 600,
-                color: '#6dc662',
-                mb: 3
-              }}
-            >
-              Tickets por Prioridad
-            </Typography>
+            <Box mb={3}>
+              <Typography
+                variant='h6'
+                gutterBottom
+                sx={{
+                  fontSize: { xs: '1.125rem', sm: '1.25rem' },
+                  fontWeight: 600,
+                  color: '#0f172a',
+                  mb: 0.5
+                }}
+              >
+                Tickets por Prioridad
+              </Typography>
+              <Typography variant='body2' sx={{ color: '#64748b' }}>
+                Vista rápida para detectar carga operativa y urgencias sin saturar el tablero.
+              </Typography>
+            </Box>
             <Grid container spacing={{ xs: 1, sm: 2 }}>
               {stats?.priorityStats &&
                 stats.priorityStats.map(({ priority, count }) => (
-                  <Grid item xs={6} sm={3} key={priority}>
+                  <Grid item xs={6} sm={4} key={priority}>
                     <Box
                       textAlign='center'
                       sx={{
-                        p: 2,
+                        p: { xs: 1.75, sm: 2 },
                         borderRadius: '12px',
-                        background: 'rgba(109, 198, 98, 0.05)',
-                        border: '1px solid rgba(109, 198, 98, 0.1)',
-                        transition: 'all 0.2s ease-in-out',
-                        '&:hover': {
-                          background: 'rgba(109, 198, 98, 0.1)',
-                          transform: 'translateY(-2px)'
-                        }
+                        backgroundColor: '#fbfdfb',
+                        border: '1px solid #e5e7eb'
                       }}
                     >
                       <Typography
@@ -1002,7 +971,7 @@ const MaintenanceDashboard: React.FC = () => {
                         sx={{
                           fontSize: { xs: '1.25rem', sm: '1.5rem' },
                           fontWeight: 700,
-                          color: '#6dc662',
+                          color: '#0f172a',
                           mb: 1
                         }}
                       >
@@ -1016,6 +985,103 @@ const MaintenanceDashboard: React.FC = () => {
                   </Grid>
                 ))}
             </Grid>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Paper
+            sx={{
+              p: { xs: 2, sm: 3 },
+              height: '100%',
+              ...surfaceSx
+            }}
+          >
+            <Box mb={2.5}>
+              <Typography
+                variant='h6'
+                gutterBottom
+                sx={{
+                  fontSize: { xs: '1.125rem', sm: '1.25rem' },
+                  fontWeight: 600,
+                  color: '#0f172a',
+                  mb: 0.5
+                }}
+              >
+                Panorama Rápido
+              </Typography>
+              <Typography variant='body2' sx={{ color: '#64748b' }}>
+                Resumen operativo para leer el tablero de un vistazo.
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'grid', gap: 1.5 }}>
+              {[
+                {
+                  label: 'Cierre efectivo',
+                  value: `${completionRate}%`,
+                  helper: 'Tickets completados sobre el total',
+                  color: '#2f7d32',
+                  background: '#eef6ee'
+                },
+                {
+                  label: 'Carga activa',
+                  value: `${activeTickets}`,
+                  helper: 'Tickets que siguen en operación',
+                  color: '#b45309',
+                  background: '#fff7ed'
+                },
+                {
+                  label: 'Urgencias abiertas',
+                  value: `${urgentTickets}`,
+                  helper: 'Casos que necesitan más atención',
+                  color: '#dc2626',
+                  background: '#fef2f2'
+                }
+              ].map((item) => (
+                <Box
+                  key={item.label}
+                  sx={{
+                    borderRadius: '12px',
+                    border: '1px solid #e5e7eb',
+                    p: 1.75,
+                    backgroundColor: '#ffffff'
+                  }}
+                >
+                  <Box
+                    display='flex'
+                    alignItems='center'
+                    justifyContent='space-between'
+                    gap={2}
+                  >
+                    <Box>
+                      <Typography
+                        variant='body2'
+                        sx={{ fontWeight: 600, color: '#0f172a', mb: 0.25 }}
+                      >
+                        {item.label}
+                      </Typography>
+                      <Typography variant='caption' sx={{ color: '#64748b' }}>
+                        {item.helper}
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{
+                        minWidth: 68,
+                        px: 1.25,
+                        py: 0.75,
+                        borderRadius: '999px',
+                        textAlign: 'center',
+                        fontWeight: 700,
+                        color: item.color,
+                        backgroundColor: item.background
+                      }}
+                    >
+                      {item.value}
+                    </Box>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
           </Paper>
         </Grid>
 
@@ -1067,14 +1133,9 @@ const MaintenanceDashboard: React.FC = () => {
 
       {/* Tickets Grid */}
       <Paper
-        elevation={2}
         sx={{
           p: { xs: 2, sm: 3 },
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)',
-          borderRadius: '16px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-          border: '1px solid rgba(109, 198, 98, 0.1)'
+          ...surfaceSx
         }}
       >
         <Box
@@ -1085,29 +1146,36 @@ const MaintenanceDashboard: React.FC = () => {
           mb={{ xs: 2, sm: 3 }}
           gap={{ xs: 1, sm: 0 }}
         >
-          <Typography
-            variant='h6'
-            sx={{
-              fontSize: { xs: '1.125rem', sm: '1.25rem' },
-              fontWeight: 600,
-              color: '#6dc662'
-            }}
-          >
-            Tickets de Mantenimiento
-            {ticketsData?.pagination.totalItems && (
-              <Chip
-                label={`${ticketsData.pagination.totalItems} total`}
-                size='small'
-                sx={{
-                  ml: 1,
-                  background:
-                    'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
-                  color: 'white',
-                  fontWeight: 500
-                }}
-              />
-            )}
-          </Typography>
+          <Box>
+            <Typography
+              variant='h6'
+              sx={{
+                fontSize: { xs: '1.125rem', sm: '1.25rem' },
+                fontWeight: 600,
+                color: '#0f172a',
+                display: 'flex',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 1
+              }}
+            >
+              Tickets de Mantenimiento
+              {ticketsData?.pagination.totalItems && (
+                <Chip
+                  label={`${ticketsData.pagination.totalItems} total`}
+                  size='small'
+                  sx={{
+                    backgroundColor: '#eef6ee',
+                    color: '#2f7d32',
+                    fontWeight: 600
+                  }}
+                />
+              )}
+            </Typography>
+            <Typography variant='body2' sx={{ mt: 0.5, color: '#64748b' }}>
+              Tarjetas más ligeras para priorizar lectura rápida y acciones frecuentes.
+            </Typography>
+          </Box>
         </Box>
 
         {ticketsLoading ? (
@@ -1554,14 +1622,17 @@ const MaintenanceDashboard: React.FC = () => {
         onComplete={handleCompleteWithCosts}
         technicianName={selectedTicket?.assignedTechnician?.name}
         storedTechnicianSignature={
-          isTechnician
-            ? currentTechnician?.signatureData || null
-            : selectedTicket?.assignedTechnician?.signatureData || null
+          selectedTicket?.technicianSignatureData ||
+          (isTechnician
+            ? currentTechnician?.signatureData || selectedTicket?.assignedTechnician?.signatureData || null
+            : selectedTicket?.assignedTechnician?.signatureData || null)
         }
         canCaptureTechnicianSignature={
-          isTechnician &&
-          currentTechnician !== undefined &&
-          !currentTechnician?.signatureData
+          !(
+            selectedTicket?.technicianSignatureData ||
+            currentTechnician?.signatureData ||
+            selectedTicket?.assignedTechnician?.signatureData
+          )
         }
         loading={
           updateTicketMutation.isLoading ||

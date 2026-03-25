@@ -27,21 +27,69 @@ const MaintenanceStatusBadge: React.FC<MaintenanceStatusBadgeProps> = ({
   const getStatusConfig = (status: MaintenanceStatus) => {
     switch (status) {
       case MaintenanceStatus.PENDING:
-        return { label: 'Pendiente', color: '#FFB300', icon: <HourglassEmpty /> }
+        return {
+          label: 'Pendiente',
+          backgroundColor: '#fff7ed',
+          textColor: '#c2410c',
+          borderColor: '#fed7aa',
+          icon: <HourglassEmpty />
+        }
       case MaintenanceStatus.ASSIGNED:
-        return { label: 'Asignado', color: '#1E88E5', icon: <Assignment /> }
+        return {
+          label: 'Asignado',
+          backgroundColor: '#eff6ff',
+          textColor: '#1d4ed8',
+          borderColor: '#bfdbfe',
+          icon: <Assignment />
+        }
       case MaintenanceStatus.IN_PROGRESS:
-        return { label: 'En Progreso', color: '#00E676', icon: <Build /> }
+        return {
+          label: 'En Progreso',
+          backgroundColor: '#ecfdf5',
+          textColor: '#047857',
+          borderColor: '#a7f3d0',
+          icon: <Build />
+        }
       case MaintenanceStatus.ON_HOLD:
-        return { label: 'En Pausa', color: '#9C27B0', icon: <Pause /> }
+        return {
+          label: 'En Pausa',
+          backgroundColor: '#faf5ff',
+          textColor: '#7e22ce',
+          borderColor: '#e9d5ff',
+          icon: <Pause />
+        }
       case MaintenanceStatus.WAITING_PARTS:
-        return { label: 'Esperando Partes', color: '#757575', icon: <Inventory /> }
+        return {
+          label: 'Esperando Partes',
+          backgroundColor: '#f8fafc',
+          textColor: '#475569',
+          borderColor: '#cbd5e1',
+          icon: <Inventory />
+        }
       case MaintenanceStatus.COMPLETED:
-        return { label: 'Completado', color: '#4CAF50', icon: <CheckCircle /> }
+        return {
+          label: 'Completado',
+          backgroundColor: '#ecfdf5',
+          textColor: '#166534',
+          borderColor: '#bbf7d0',
+          icon: <CheckCircle />
+        }
       case MaintenanceStatus.CANCELLED:
-        return { label: 'Cancelado', color: '#E53935', icon: <Cancel /> }
+        return {
+          label: 'Cancelado',
+          backgroundColor: '#fef2f2',
+          textColor: '#b91c1c',
+          borderColor: '#fecaca',
+          icon: <Cancel />
+        }
       default:
-        return { label: 'Desconocido', color: '#BDBDBD', icon: <HourglassEmpty /> }
+        return {
+          label: 'Desconocido',
+          backgroundColor: '#f8fafc',
+          textColor: '#475569',
+          borderColor: '#cbd5e1',
+          icon: <HourglassEmpty />
+        }
     }
   }
 
@@ -54,27 +102,26 @@ const MaintenanceStatusBadge: React.FC<MaintenanceStatusBadgeProps> = ({
       size={size === 'large' ? 'medium' : size}
       variant={variant}
       sx={{
-        backgroundColor: variant === 'filled' ? config.color : 'transparent',
-        color: variant === 'filled' ? '#fff' : config.color,
-        borderColor: config.color,
+        backgroundColor:
+          variant === 'filled' ? config.backgroundColor : '#ffffff',
+        color: config.textColor,
+        border: `1px solid ${config.borderColor}`,
         fontWeight: 600,
-        borderRadius: '12px',
-        fontSize: tvMode ? '1.1rem' : '0.85rem',
-        padding: tvMode ? '0.6rem 0.8rem' : '0.25rem 0.5rem',
+        borderRadius: '999px',
+        fontSize: tvMode ? '1rem' : '0.8rem',
+        padding: tvMode ? '0.55rem 0.75rem' : '0.2rem 0.45rem',
         minHeight: tvMode ? 40 : 28,
-        boxShadow: variant === 'filled'
-          ? '0 3px 10px rgba(0, 0, 0, 0.25)'
-          : 'none',
+        boxShadow: 'none',
         '& .MuiChip-icon': {
-          color: variant === 'filled' ? '#fff' : config.color,
+          color: config.textColor,
           fontSize: tvMode ? '1.3rem' : '1rem',
           marginLeft: '4px'
         },
         '&:hover': {
-          transform: tvMode ? 'none' : 'translateY(-1px)',
-          opacity: tvMode ? 1 : 0.9
+          backgroundColor: config.backgroundColor,
+          borderColor: config.textColor
         },
-        transition: 'all 0.2s ease-in-out'
+        transition: 'border-color 0.2s ease, background-color 0.2s ease'
       }}
     />
   )
