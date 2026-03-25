@@ -220,7 +220,11 @@ const MaintenanceDashboard: React.FC = () => {
 
   const avgResolutionTimeDisplay = useMemo(() => {
     const value = stats?.metrics?.avgResolutionTimeHours || 0
-    return value >= 100 ? `${Math.round(value)}h` : `${value.toFixed(1)}h`
+    if (value >= 24) {
+      const days = value / 24
+      return days >= 10 ? `${Math.round(days)}d` : `${days.toFixed(1)}d`
+    }
+    return value >= 10 ? `${Math.round(value)}h` : `${value.toFixed(1)}h`
   }, [stats?.metrics?.avgResolutionTimeHours])
 
   // WebSocket for real-time updates

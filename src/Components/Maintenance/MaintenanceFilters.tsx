@@ -90,30 +90,57 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
 
   const activeFiltersCount = getActiveFiltersCount()
 
+  const statusSummary =
+    localFilters.status && localFilters.status.length > 0
+      ? localFilters.status.length === 1
+        ? localFilters.status[0]
+        : `${localFilters.status.length} estados`
+      : null
+
+  const prioritySummary =
+    localFilters.priority && localFilters.priority.length > 0
+      ? localFilters.priority.length === 1
+        ? localFilters.priority[0]
+        : `${localFilters.priority.length} prioridades`
+      : null
+
   return (
     <Card
-      elevation={1}
       sx={{
-        p: 2,
+        p: { xs: 2, md: 2.5 },
         backgroundColor: '#ffffff',
-        borderRadius: '12px',
+        borderRadius: '14px',
         border: '1px solid #e5e7eb',
         boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
       }}
     >
       {/* Header */}
-      <Box display='flex' alignItems='center' justifyContent='space-between' mb={2}>
+      <Box
+        display='flex'
+        alignItems='center'
+        justifyContent='space-between'
+        mb={1.75}
+        gap={2}
+        flexWrap='wrap'
+      >
         <Box display='flex' alignItems='center' gap={1}>
           <FilterList sx={{ color: '#2f7d32' }} />
-          <Typography variant='h6' sx={{ fontSize: '1.125rem' }}>
+          <Typography
+            variant='h6'
+            sx={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a' }}
+          >
             Filtros
           </Typography>
           {activeFiltersCount > 0 && (
             <Chip
               size='small'
               label={activeFiltersCount}
-              color='primary'
-              variant='filled'
+              sx={{
+                height: 24,
+                fontWeight: 700,
+                backgroundColor: '#10b981',
+                color: '#ffffff'
+              }}
             />
           )}
         </Box>
@@ -125,14 +152,14 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
             onClick={handleClearFilters}
             startIcon={<Clear />}
             color='error'
+            sx={{ textTransform: 'none', fontWeight: 500 }}
           >
             Limpiar
           </Button>
         )}
       </Box>
 
-      {/* Quick Filters Row - Simplified for Mobile */}
-      <Grid container spacing={2} mb={2}>
+      <Grid container spacing={2} alignItems='stretch'>
         {/* Search - Full width on mobile */}
         <Grid item xs={12} md={6}>
           <TextField
@@ -145,6 +172,12 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
             onChange={(e) => handleFilterChange('search', e.target.value)}
             InputProps={{
               startAdornment: <Search color='action' sx={{ mr: 1 }} />
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '12px',
+                backgroundColor: '#ffffff'
+              }
             }}
           />
         </Grid>
@@ -161,9 +194,18 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
               renderValue={(selected) => {
                 const items = selected as MaintenancePriority[]
                 if (items.length === 0) return ''
-                if (items.length === 1) return <MaintenancePriorityBadge priority={items[0]} size='small' variant='outlined' />
+                if (items.length === 1) {
+                  return (
+                    <MaintenancePriorityBadge
+                      priority={items[0]}
+                      size='small'
+                      variant='outlined'
+                    />
+                  )
+                }
                 return `${items.length} seleccionadas`
               }}
+              sx={{ borderRadius: '12px' }}
             >
               {Object.values(MaintenancePriority).map((priority) => (
                 <MenuItem key={priority} value={priority}>
@@ -186,9 +228,18 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
               renderValue={(selected) => {
                 const items = selected as MaintenanceStatus[]
                 if (items.length === 0) return ''
-                if (items.length === 1) return <MaintenanceStatusBadge status={items[0]} size='small' variant='outlined' />
+                if (items.length === 1) {
+                  return (
+                    <MaintenanceStatusBadge
+                      status={items[0]}
+                      size='small'
+                      variant='outlined'
+                    />
+                  )
+                }
                 return `${items.length} seleccionadas`
               }}
+              sx={{ borderRadius: '12px' }}
             >
               {Object.values(MaintenanceStatus).map((status) => (
                 <MenuItem key={status} value={status}>
@@ -200,32 +251,92 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
         </Grid>
       </Grid>
 
-      {/* Active Filters Summary */}
       {activeFiltersCount > 0 && (
-        <Box mb={2}>
+        <Box
+          mt={2}
+          mb={1}
+          p={1.5}
+          sx={{
+            borderRadius: '12px',
+            backgroundColor: '#f8fafc',
+            border: '1px solid #e5e7eb'
+          }}
+        >
+          <Box
+            display='flex'
+            alignItems='center'
+            justifyContent='space-between'
+            gap={1.5}
+            mb={1}
+            flexWrap='wrap'
+          >
+            <Typography variant='body2' sx={{ fontWeight: 600, color: '#334155' }}>
+              Filtros activos
+            </Typography>
+            {resultsCount !== undefined && (
+              <Typography
+                variant='caption'
+                sx={{ color: '#64748b', fontWeight: 500 }}
+                role='status'
+                aria-live='polite'
+              >
+                {resultsCount} resultado{resultsCount !== 1 ? 's' : ''}
+              </Typography>
+            )}
+          </Box>
           <Box display="flex" flexWrap="wrap" gap={1}>
             {localFilters.search && (
               <Chip
-                label={`Texto: "${localFilters.search}"`}
+                label={`Búsqueda: ${localFilters.search}`}
                 onDelete={() => handleFilterChange('search', '')}
                 size="small"
                 variant="outlined"
+                sx={{ backgroundColor: '#ffffff' }}
               />
             )}
-            {localFilters.priority?.length && (
+            {prioritySummary && (
               <Chip
-                label={`Prioridad: ${localFilters.priority.length}`}
+                label={`Prioridad: ${prioritySummary}`}
                 onDelete={() => handleFilterChange('priority', [])}
                 size="small"
                 variant="outlined"
+                sx={{ backgroundColor: '#ffffff' }}
               />
             )}
-            {localFilters.status?.length && (
+            {statusSummary && (
               <Chip
-                label={`Estado: ${localFilters.status.length}`}
+                label={`Estado: ${statusSummary}`}
                 onDelete={() => handleFilterChange('status', [])}
                 size="small"
                 variant="outlined"
+                sx={{ backgroundColor: '#ffffff' }}
+              />
+            )}
+            {localFilters.assignedTechnician?.length ? (
+              <Chip
+                label={`Técnicos: ${localFilters.assignedTechnician.length} seleccionados`}
+                onDelete={() => handleFilterChange('assignedTechnician', [])}
+                size='small'
+                variant='outlined'
+                sx={{ backgroundColor: '#ffffff' }}
+              />
+            ) : null}
+            {localFilters.equipmentType?.length ? (
+              <Chip
+                label={`Tipo de equipo: ${localFilters.equipmentType.length} seleccionado${localFilters.equipmentType.length > 1 ? 's' : ''}`}
+                onDelete={() => handleFilterChange('equipmentType', [])}
+                size='small'
+                variant='outlined'
+                sx={{ backgroundColor: '#ffffff' }}
+              />
+            ) : null}
+            {localFilters.customerEmail && (
+              <Chip
+                label={`Email: ${localFilters.customerEmail}`}
+                onDelete={() => handleFilterChange('customerEmail', '')}
+                size='small'
+                variant='outlined'
+                sx={{ backgroundColor: '#ffffff' }}
               />
             )}
           </Box>
@@ -233,20 +344,37 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
       )}
 
       {/* Advanced Filters - Collapsible */}
-      <Accordion elevation={0} sx={{ '&:before': { display: 'none' } }}>
+      <Accordion
+        elevation={0}
+        sx={{
+          mt: 1,
+          borderRadius: '12px !important',
+          border: '1px solid #e5e7eb',
+          backgroundColor: '#fcfcfd',
+          '&:before': { display: 'none' }
+        }}
+      >
         <AccordionSummary
           expandIcon={<ExpandMore />}
           sx={{
-            px: 0,
+            px: 1.5,
             minHeight: 'auto',
-            '& .MuiAccordionSummary-content': { margin: '8px 0' }
+            '& .MuiAccordionSummary-content': {
+              margin: '10px 0',
+              alignItems: 'center'
+            }
           }}
         >
-          <Typography variant='body2' color='text.secondary'>
-            Filtros avanzados
-          </Typography>
+          <Box>
+            <Typography variant='body2' sx={{ color: '#334155', fontWeight: 600 }}>
+              Filtros avanzados
+            </Typography>
+            <Typography variant='caption' sx={{ color: '#64748b' }}>
+              Técnico, equipo, cliente y rango de fechas
+            </Typography>
+          </Box>
         </AccordionSummary>
-        <AccordionDetails sx={{ px: 0, pt: 0 }}>
+        <AccordionDetails sx={{ px: 1.5, pt: 0, pb: 1.5 }}>
           <Grid container spacing={2}>
             {/* Technician Filter */}
             <Grid item xs={12} md={6}>
@@ -379,20 +507,6 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
           </Grid>
         </AccordionDetails>
       </Accordion>
-
-      {/* Results Count */}
-      {resultsCount !== undefined && (
-        <Box mt={2} textAlign='center'>
-          <Typography
-            variant='body2'
-            color='text.secondary'
-            role='status'
-            aria-live='polite'
-          >
-            {resultsCount} resultado{resultsCount !== 1 ? 's' : ''} encontrado{resultsCount !== 1 ? 's' : ''}
-          </Typography>
-        </Box>
-      )}
     </Card>
   )
 }
