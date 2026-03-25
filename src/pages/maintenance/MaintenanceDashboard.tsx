@@ -48,6 +48,7 @@ import {
   useMaintenanceTechnicians,
   useTechnicianByEmail,
   useUpdateMaintenanceTicket,
+  useUpdateMaintenanceTechnician,
   useDeleteMaintenanceTicket,
   useUploadMaintenanceFiles
 } from '../../hooks/useMaintenance'
@@ -71,7 +72,10 @@ import { userStore } from '../../store/userStore'
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import KeyboardShortcutsHelp from '../../Components/Maintenance/KeyboardShortcutsHelp'
 import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
-import type { CompletionPhotoInput } from '../../Components/Maintenance/CompletionCostsDialog'
+import type {
+  CompletionPhotoInput,
+  CompletionSignatureInput
+} from '../../Components/Maintenance/CompletionCostsDialog'
 
 /**
  * MaintenanceDashboard component provides an admin interface for managing maintenance tickets
@@ -177,6 +181,7 @@ const MaintenanceDashboard: React.FC = () => {
   // Only admins can access technicians list
   const { data: technicians } = useMaintenanceTechnicians(isAdmin)
   const updateTicketMutation = useUpdateMaintenanceTicket()
+  const updateTechnicianMutation = useUpdateMaintenanceTechnician()
   const deleteTicketMutation = useDeleteMaintenanceTicket()
   const uploadFilesMutation = useUploadMaintenanceFiles()
 
@@ -333,22 +338,49 @@ const MaintenanceDashboard: React.FC = () => {
   const handleCompleteWithCosts = async (
     workPerformed: string,
     costs: any[],
-    completionPhotos: CompletionPhotoInput[]
+    completionPhotos: CompletionPhotoInput[],
+    signatures: CompletionSignatureInput
   ) => {
     if (!selectedTicket) return
 
     try {
+      if (
+        signatures.saveTechnicianSignature &&
+        currentTechnician?.id &&
+        signatures.technicianSignatureData
+      ) {
+        await updateTechnicianMutation.mutateAsync({
+          id: currentTechnician.id,
+          data: {
+            signatureData: signatures.technicianSignatureData
+          }
+        })
+      }
+
       const completionPayload = isTechnician
         ? {
             status: MaintenanceStatus.COMPLETED,
             workPerformed,
-            costs
+            costs,
+            customerSignerName: signatures.customerSignerName,
+            customerSignatureData: signatures.customerSignatureData,
+            technicianSignatureData:
+              signatures.technicianSignatureData ||
+              currentTechnician?.signatureData ||
+              selectedTicket.assignedTechnician?.signatureData ||
+              null
           }
         : {
             ...editData,
             status: MaintenanceStatus.COMPLETED,
             workPerformed,
-            costs
+            costs,
+            customerSignerName: signatures.customerSignerName,
+            customerSignatureData: signatures.customerSignatureData,
+            technicianSignatureData:
+              selectedTicket.assignedTechnician?.signatureData ||
+              signatures.technicianSignatureData ||
+              null
           }
 
       await updateTicketMutation.mutateAsync({
@@ -1520,8 +1552,21 @@ const MaintenanceDashboard: React.FC = () => {
         open={costsDialogOpen}
         onClose={() => setCostsDialogOpen(false)}
         onComplete={handleCompleteWithCosts}
+        technicianName={selectedTicket?.assignedTechnician?.name}
+        storedTechnicianSignature={
+          isTechnician
+            ? currentTechnician?.signatureData || null
+            : selectedTicket?.assignedTechnician?.signatureData || null
+        }
+        canCaptureTechnicianSignature={
+          isTechnician &&
+          currentTechnician !== undefined &&
+          !currentTechnician?.signatureData
+        }
         loading={
-          updateTicketMutation.isLoading || uploadFilesMutation.isLoading
+          updateTicketMutation.isLoading ||
+          uploadFilesMutation.isLoading ||
+          updateTechnicianMutation.isLoading
         }
       />
 

@@ -29,6 +29,7 @@ import {
   AddAPhoto
 } from '@mui/icons-material'
 import MaintenanceFileUpload from './MaintenanceFileUpload'
+import SignaturePad from './SignaturePad'
 import type { MaintenanceFile } from '../../types/maintenance'
 
 interface Cost {
@@ -42,22 +43,36 @@ export interface CompletionPhotoInput {
   description?: string
 }
 
+export interface CompletionSignatureInput {
+  customerSignerName: string
+  customerSignatureData: string
+  technicianSignatureData?: string | null
+  saveTechnicianSignature?: boolean
+}
+
 interface CompletionCostsDialogProps {
   open: boolean
   onClose: () => void
   onComplete: (
     workPerformed: string,
     costs: Cost[],
-    completionPhotos: CompletionPhotoInput[]
+    completionPhotos: CompletionPhotoInput[],
+    signatures: CompletionSignatureInput
   ) => Promise<void>
   loading?: boolean
+  technicianName?: string
+  storedTechnicianSignature?: string | null
+  canCaptureTechnicianSignature?: boolean
 }
 
 const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
   open,
   onClose,
   onComplete,
-  loading = false
+  loading = false,
+  technicianName,
+  storedTechnicianSignature,
+  canCaptureTechnicianSignature = false
 }) => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
@@ -72,6 +87,14 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
   >({})
   const [showPhotoUpload, setShowPhotoUpload] = useState(false)
   const [completionPhotos, setCompletionPhotos] = useState<CompletionPhotoInput[]>([])
+  const [customerSignerName, setCustomerSignerName] = useState('')
+  const [customerSignerNameError, setCustomerSignerNameError] = useState('')
+  const [customerSignatureData, setCustomerSignatureData] = useState<string | null>(null)
+  const [customerSignatureError, setCustomerSignatureError] = useState('')
+  const [technicianSignatureData, setTechnicianSignatureData] = useState<string | null>(
+    storedTechnicianSignature || null
+  )
+  const [technicianSignatureError, setTechnicianSignatureError] = useState('')
 
   useEffect(() => {
     if (!open) {
@@ -81,8 +104,14 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       setErrors({})
       setShowPhotoUpload(false)
       setCompletionPhotos([])
+      setCustomerSignerName('')
+      setCustomerSignerNameError('')
+      setCustomerSignatureData(null)
+      setCustomerSignatureError('')
+      setTechnicianSignatureData(storedTechnicianSignature || null)
+      setTechnicianSignatureError('')
     }
-  }, [open])
+  }, [open, storedTechnicianSignature])
 
   const handleAddCost = () => {
     setCosts([...costs, { name: '', description: '', amount: '' }])
@@ -154,11 +183,39 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
     return isValid
   }
 
+  const validateSignatures = (): boolean => {
+    let valid = true
+
+    if (!customerSignerName.trim() || customerSignerName.trim().length < 2) {
+      setCustomerSignerNameError('Ingresa el nombre de la persona que recibe el servicio')
+      valid = false
+    } else {
+      setCustomerSignerNameError('')
+    }
+
+    if (!customerSignatureData) {
+      setCustomerSignatureError('La firma del cliente es obligatoria para completar el ticket')
+      valid = false
+    } else {
+      setCustomerSignatureError('')
+    }
+
+    if (canCaptureTechnicianSignature && !storedTechnicianSignature && !technicianSignatureData) {
+      setTechnicianSignatureError('Necesitamos guardar la firma del técnico al menos una vez')
+      valid = false
+    } else {
+      setTechnicianSignatureError('')
+    }
+
+    return valid
+  }
+
   const handleSubmit = async () => {
     const isWorkValid = validateWorkPerformed()
     const areCostsValid = validate()
+    const signaturesValid = validateSignatures()
 
-    if (!isWorkValid || !areCostsValid) return
+    if (!isWorkValid || !areCostsValid || !signaturesValid) return
 
     const formattedCosts = costs.map((cost) => ({
       name: cost.name.trim(),
@@ -166,14 +223,30 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       amount: parseFloat(cost.amount as string)
     }))
 
-    await onComplete(workPerformed.trim(), formattedCosts, completionPhotos)
+    await onComplete(workPerformed.trim(), formattedCosts, completionPhotos, {
+      customerSignerName: customerSignerName.trim(),
+      customerSignatureData: customerSignatureData!,
+      technicianSignatureData: technicianSignatureData || storedTechnicianSignature || null,
+      saveTechnicianSignature:
+        canCaptureTechnicianSignature &&
+        !storedTechnicianSignature &&
+        Boolean(technicianSignatureData)
+    })
   }
 
   const handleCompleteWithoutCosts = async () => {
-    if (!validateWorkPerformed()) return
+    if (!validateWorkPerformed() || !validateSignatures()) return
 
     // Complete with empty costs array but with workPerformed
-    await onComplete(workPerformed.trim(), [], completionPhotos)
+    await onComplete(workPerformed.trim(), [], completionPhotos, {
+      customerSignerName: customerSignerName.trim(),
+      customerSignatureData: customerSignatureData!,
+      technicianSignatureData: technicianSignatureData || storedTechnicianSignature || null,
+      saveTechnicianSignature:
+        canCaptureTechnicianSignature &&
+        !storedTechnicianSignature &&
+        Boolean(technicianSignatureData)
+    })
   }
 
   const handlePhotosChange = (newFiles: File[]) => {
@@ -416,6 +489,111 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
             </Paper>
           </Collapse>
         </Box>
+
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            mb: 3,
+            borderRadius: '12px',
+            border: '1px solid #dbeafe',
+            background: 'rgba(59, 130, 246, 0.03)'
+          }}
+        >
+          <Typography
+            variant='h6'
+            fontWeight={600}
+            gutterBottom
+            sx={{ color: '#2563eb' }}
+          >
+            Firmas de conformidad
+          </Typography>
+          <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+            Así evitamos imprimir: guardamos la firma del cliente en este ticket y la del técnico puede reutilizarse en futuros servicios.
+          </Typography>
+
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                required
+                label='Nombre de quien recibe el servicio'
+                placeholder='Ej: Ana Pérez - Coordinadora'
+                value={customerSignerName}
+                onChange={(e) => {
+                  setCustomerSignerName(e.target.value)
+                  if (customerSignerNameError) setCustomerSignerNameError('')
+                }}
+                error={!!customerSignerNameError}
+                helperText={customerSignerNameError || 'Este nombre aparecerá en la orden de servicio'}
+                sx={{ mb: 2 }}
+              />
+              <SignaturePad
+                value={customerSignatureData}
+                onChange={(value) => {
+                  setCustomerSignatureData(value)
+                  if (customerSignatureError) setCustomerSignatureError('')
+                }}
+                disabled={loading}
+                label='Firma del cliente *'
+                helperText={
+                  customerSignatureError ||
+                  'La firma del cliente queda asociada solo a este ticket.'
+                }
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              {storedTechnicianSignature ? (
+                <Box>
+                  <Typography variant='subtitle2' fontWeight={600} sx={{ mb: 1 }}>
+                    Firma del técnico
+                  </Typography>
+                  <Box
+                    sx={{
+                      border: '1px solid #d1d5db',
+                      borderRadius: 2,
+                      backgroundColor: '#ffffff',
+                      minHeight: 180,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      p: 2
+                    }}
+                  >
+                    <Box
+                      component='img'
+                      src={storedTechnicianSignature}
+                      alt={`Firma de ${technicianName || 'técnico'}`}
+                      sx={{ maxWidth: '100%', maxHeight: 140, objectFit: 'contain' }}
+                    />
+                  </Box>
+                  <Typography variant='caption' color='text.secondary' sx={{ mt: 1, display: 'block' }}>
+                    Usaremos la firma guardada de {technicianName || 'este técnico'} en el PDF.
+                  </Typography>
+                </Box>
+              ) : canCaptureTechnicianSignature ? (
+                <SignaturePad
+                  value={technicianSignatureData}
+                  onChange={(value) => {
+                    setTechnicianSignatureData(value)
+                    if (technicianSignatureError) setTechnicianSignatureError('')
+                  }}
+                  disabled={loading}
+                  label='Firma del técnico *'
+                  helperText={
+                    technicianSignatureError ||
+                    'La guardaremos para reutilizarla automáticamente en próximos cierres.'
+                  }
+                />
+              ) : (
+                <Alert severity='warning'>
+                  El técnico asignado aún no tiene firma guardada. El ticket puede cerrarse, pero en el PDF la firma del técnico quedará pendiente.
+                </Alert>
+              )}
+            </Grid>
+          </Grid>
+        </Paper>
 
         {/* Costs Section Header */}
         <Typography

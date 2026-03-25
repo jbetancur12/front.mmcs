@@ -74,6 +74,7 @@ import {
   NotificationsActive,
   TrendingUp,
   Download,
+  Draw,
   // Assessment,
   Lock,
   CheckCircle
@@ -86,6 +87,7 @@ import {
   useDeleteMaintenanceComment,
   useUploadMaintenanceFiles,
   useDeleteMaintenanceFile,
+  useUpdateMaintenanceTechnician,
   useMaintenanceTechnicians,
   useTechnicianByEmail,
   useMaintenanceTimeline,
@@ -108,7 +110,11 @@ import MaintenanceFileUpload from '../../Components/Maintenance/MaintenanceFileU
 import MaintenanceTimeline from '../../Components/Maintenance/MaintenanceTimeline'
 import MaintenanceErrorBoundary from '../../Components/Maintenance/MaintenanceErrorBoundary'
 import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
-import type { CompletionPhotoInput } from '../../Components/Maintenance/CompletionCostsDialog'
+import MaintenanceSignaturesDialog from '../../Components/Maintenance/MaintenanceSignaturesDialog'
+import type {
+  CompletionPhotoInput,
+  CompletionSignatureInput
+} from '../../Components/Maintenance/CompletionCostsDialog'
 import useMaintenanceWebSocket from '../../hooks/useMaintenanceWebSocket'
 import useAxiosPrivate from '../../utils/use-axios-private'
 import { format } from 'date-fns'
@@ -167,6 +173,7 @@ const MaintenanceTicketDetails: React.FC = () => {
   const [pdfMenuAnchor, setPdfMenuAnchor] = useState<null | HTMLElement>(null)
   // const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [costsDialogOpen, setCostsDialogOpen] = useState(false)
+  const [signaturesDialogOpen, setSignaturesDialogOpen] = useState(false)
   const [briefCostsDialogOpen, setBriefCostsDialogOpen] = useState(false)
   const [realTimeUpdatesEnabled, setRealTimeUpdatesEnabled] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
@@ -195,6 +202,13 @@ const MaintenanceTicketDetails: React.FC = () => {
     (ticket?.assignedTechnicianId !== undefined &&
       currentTechnician?.id !== undefined &&
       String(ticket.assignedTechnicianId) === String(currentTechnician.id))
+  const hasCustomerSignature = Boolean(ticket?.customerSignatureData)
+  const hasTechnicianSignature = Boolean(
+    ticket?.technicianSignatureData || ticket?.assignedTechnician?.signatureData
+  )
+  const signaturesMissing =
+    ticket?.status === MaintenanceStatus.COMPLETED &&
+    (!hasCustomerSignature || !hasTechnicianSignature)
 
   const { data: technicians } = useMaintenanceTechnicians(canManageTechnicians)
 
@@ -220,6 +234,7 @@ const MaintenanceTicketDetails: React.FC = () => {
   const deleteCommentMutation = useDeleteMaintenanceComment()
   const uploadFilesMutation = useUploadMaintenanceFiles()
   const deleteFileMutation = useDeleteMaintenanceFile()
+  const updateTechnicianMutation = useUpdateMaintenanceTechnician()
 
   // PDF generation mutations
   const generateServiceOrderMutation = useGenerateServiceOrder()
@@ -460,22 +475,49 @@ const MaintenanceTicketDetails: React.FC = () => {
   const handleCompleteWithCosts = async (
     workPerformed: string,
     costs: any[],
-    completionPhotos: CompletionPhotoInput[]
+    completionPhotos: CompletionPhotoInput[],
+    signatures: CompletionSignatureInput
   ) => {
     if (!ticket) return
 
     try {
+      if (
+        signatures.saveTechnicianSignature &&
+        currentTechnician?.id &&
+        signatures.technicianSignatureData
+      ) {
+        await updateTechnicianMutation.mutateAsync({
+          id: currentTechnician.id,
+          data: {
+            signatureData: signatures.technicianSignatureData
+          }
+        })
+      }
+
       const completionPayload = isTechnician
         ? {
             status: MaintenanceStatus.COMPLETED,
             workPerformed,
-            costs
+            costs,
+            customerSignerName: signatures.customerSignerName,
+            customerSignatureData: signatures.customerSignatureData,
+            technicianSignatureData:
+              signatures.technicianSignatureData ||
+              currentTechnician?.signatureData ||
+              ticket.assignedTechnician?.signatureData ||
+              null
           }
         : {
             ...editData,
             status: MaintenanceStatus.COMPLETED,
             workPerformed,
-            costs
+            costs,
+            customerSignerName: signatures.customerSignerName,
+            customerSignatureData: signatures.customerSignatureData,
+            technicianSignatureData:
+              ticket.assignedTechnician?.signatureData ||
+              signatures.technicianSignatureData ||
+              null
           }
 
       await updateTicketMutation.mutateAsync({
@@ -561,6 +603,53 @@ const MaintenanceTicketDetails: React.FC = () => {
     } catch (error) {
       console.error('Error adding comment:', error)
       showToast('Error al agregar comentario', 'error')
+      throw error
+    }
+  }
+
+  const handleSavePendingSignatures = async (
+    signatures: CompletionSignatureInput
+  ) => {
+    if (!ticket) return
+
+    try {
+      if (
+        signatures.saveTechnicianSignature &&
+        currentTechnician?.id &&
+        signatures.technicianSignatureData
+      ) {
+        await updateTechnicianMutation.mutateAsync({
+          id: currentTechnician.id,
+          data: {
+            signatureData: signatures.technicianSignatureData
+          }
+        })
+      }
+
+      await updateTicketMutation.mutateAsync({
+        id: ticket.id,
+        data: {
+          customerSignerName: signatures.customerSignerName,
+          customerSignatureData: signatures.customerSignatureData,
+          technicianSignatureData:
+            signatures.technicianSignatureData ||
+            currentTechnician?.signatureData ||
+            ticket.assignedTechnician?.signatureData ||
+            null
+        }
+      })
+
+      setSignaturesDialogOpen(false)
+      await refetchTicket()
+      await refetchTimeline()
+      showToast('Firmas registradas exitosamente', 'success')
+    } catch (error: any) {
+      console.error('Error saving signatures:', error)
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Error al guardar las firmas'
+      showToast(errorMessage, 'error')
       throw error
     }
   }
@@ -2841,6 +2930,76 @@ const MaintenanceTicketDetails: React.FC = () => {
               </Paper>
             )}
 
+            {ticket.status === MaintenanceStatus.COMPLETED && (
+              <Paper
+                elevation={2}
+                sx={{
+                  p: 3,
+                  mb: 3,
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                  border: signaturesMissing
+                    ? '1px solid rgba(245, 158, 11, 0.35)'
+                    : '1px solid rgba(16, 185, 129, 0.2)'
+                }}
+              >
+                <Box
+                  display='flex'
+                  justifyContent='space-between'
+                  alignItems={{ xs: 'flex-start', sm: 'center' }}
+                  flexDirection={{ xs: 'column', sm: 'row' }}
+                  gap={2}
+                >
+                  <Box>
+                    <Typography
+                      variant='h6'
+                      sx={{
+                        fontWeight: 600,
+                        color: signaturesMissing ? '#d97706' : '#059669'
+                      }}
+                    >
+                      Firmas de conformidad
+                    </Typography>
+                    <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
+                      {signaturesMissing
+                        ? 'Este ticket ya está completado, pero todavía le faltan firmas para que la orden quede cerrada visualmente.'
+                        : 'Las firmas ya están registradas y listas para aparecer en la orden de servicio PDF.'}
+                    </Typography>
+                    <Stack direction='row' spacing={1} sx={{ mt: 1.5 }} flexWrap='wrap'>
+                      <Chip
+                        size='small'
+                        color={hasTechnicianSignature ? 'success' : 'warning'}
+                        label={
+                          hasTechnicianSignature
+                            ? 'Firma técnico OK'
+                            : 'Falta firma técnico'
+                        }
+                      />
+                      <Chip
+                        size='small'
+                        color={hasCustomerSignature ? 'success' : 'warning'}
+                        label={
+                          hasCustomerSignature
+                            ? 'Firma cliente OK'
+                            : 'Falta firma cliente'
+                        }
+                      />
+                    </Stack>
+                  </Box>
+
+                  <Button
+                    variant={signaturesMissing ? 'contained' : 'outlined'}
+                    startIcon={<Draw />}
+                    onClick={() => setSignaturesDialogOpen(true)}
+                  >
+                    {signaturesMissing ? 'Registrar firmas' : 'Actualizar firmas'}
+                  </Button>
+                </Box>
+              </Paper>
+            )}
+
             {/* Customer Satisfaction */}
             {ticket.customerSatisfaction && (
               <Paper
@@ -2956,6 +3115,17 @@ const MaintenanceTicketDetails: React.FC = () => {
                 >
                   Orden de Servicio
                 </Button>
+                {ticket.status === MaintenanceStatus.COMPLETED && (
+                  <Button
+                    fullWidth
+                    variant='outlined'
+                    startIcon={<Draw />}
+                    onClick={() => setSignaturesDialogOpen(true)}
+                    size='small'
+                  >
+                    {signaturesMissing ? 'Registrar firmas' : 'Actualizar firmas'}
+                  </Button>
+                )}
                 {/* 
                 <Button
                   fullWidth
@@ -3178,8 +3348,50 @@ const MaintenanceTicketDetails: React.FC = () => {
             setEditData((prev) => ({ ...prev, status: ticket.status }))
           }}
           onComplete={handleCompleteWithCosts}
+          technicianName={ticket?.assignedTechnician?.name}
+          storedTechnicianSignature={
+            isTechnician
+              ? currentTechnician?.signatureData ||
+                ticket?.assignedTechnician?.signatureData ||
+                null
+              : ticket?.assignedTechnician?.signatureData || null
+          }
+          canCaptureTechnicianSignature={
+            isTechnician &&
+            currentTechnician !== undefined &&
+            !currentTechnician?.signatureData
+          }
           loading={
-            updateTicketMutation.isLoading || uploadFilesMutation.isLoading
+            updateTicketMutation.isLoading ||
+            uploadFilesMutation.isLoading ||
+            updateTechnicianMutation.isLoading
+          }
+        />
+
+        <MaintenanceSignaturesDialog
+          open={signaturesDialogOpen}
+          onClose={() => setSignaturesDialogOpen(false)}
+          onSave={handleSavePendingSignatures}
+          technicianName={ticket?.assignedTechnician?.name}
+          storedTechnicianSignature={
+            isTechnician
+              ? currentTechnician?.signatureData || null
+              : ticket?.assignedTechnician?.signatureData || null
+          }
+          currentTicketTechnicianSignature={ticket?.technicianSignatureData || null}
+          currentCustomerSignerName={ticket?.customerSignerName || ticket?.customerName || ''}
+          currentCustomerSignature={ticket?.customerSignatureData || null}
+          canCaptureTechnicianSignature={
+            isTechnician &&
+            currentTechnician !== undefined &&
+            !(
+              currentTechnician?.signatureData ||
+              ticket?.assignedTechnician?.signatureData
+            ) &&
+            !ticket?.technicianSignatureData
+          }
+          loading={
+            updateTicketMutation.isLoading || updateTechnicianMutation.isLoading
           }
         />
 

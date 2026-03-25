@@ -36,6 +36,11 @@ export interface MaintenanceTicket {
   timeline: MaintenanceTimelineEntry[]
   costs?: MaintenanceTicketCost[]
   isInvoiced?: boolean
+  technicianSignatureData?: string | null
+  technicianSignedAt?: string | null
+  customerSignatureData?: string | null
+  customerSignedAt?: string | null
+  customerSignerName?: string | null
 }
 
 export interface MaintenanceTicketCreateResponse {
@@ -111,6 +116,8 @@ export interface MaintenanceTechnician {
   isAvailable: boolean
   maxWorkload: number
   notes: string
+  signatureData?: string | null
+  signatureUpdatedAt?: string | null
   createdAt: string
   updatedAt: string
   metrics?: {
@@ -182,6 +189,9 @@ export interface MaintenanceUpdateRequest {
   workPerformed?: string
   costs?: MaintenanceTicketCost[]
   isInvoiced?: boolean
+  technicianSignatureData?: string | null
+  customerSignatureData?: string | null
+  customerSignerName?: string | null
 }
 
 export interface MaintenanceFilters {
@@ -303,6 +313,7 @@ export interface TechnicianFormData {
   isAvailable: boolean
   maxWorkload: number
   notes: string
+  signatureData?: string | null
 }
 
 export interface TechnicianFormErrors {

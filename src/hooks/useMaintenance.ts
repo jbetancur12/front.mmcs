@@ -688,6 +688,7 @@ export const useCreateMaintenanceTechnician = () => {
     mutationFn: maintenanceAPI.createTechnician,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['maintenance-technicians'] })
+      queryClient.invalidateQueries({ queryKey: ['technician-by-email'] })
     }
   })
 }

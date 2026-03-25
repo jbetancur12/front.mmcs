@@ -49,6 +49,7 @@ import {
   useUpdateMaintenanceTechnician,
   useDeleteMaintenanceTechnician
 } from '../../hooks/useMaintenance'
+import SignaturePad from '../../Components/Maintenance/SignaturePad'
 import {
   MaintenanceTechnician,
   TechnicianFormData
@@ -71,7 +72,8 @@ const validationSchema = Yup.object({
   employeeId: Yup.string(),
   isAvailable: Yup.boolean(),
   maxWorkload: Yup.number().min(1).max(50).required(),
-  notes: Yup.string()
+  notes: Yup.string(),
+  signatureData: Yup.string().nullable()
 })
 
 const availableSpecializations = [
@@ -132,7 +134,8 @@ const MaintenanceTechnicians: React.FC = () => {
       employeeId: '',
       isAvailable: true,
       maxWorkload: 10,
-      notes: ''
+      notes: '',
+      signatureData: ''
     },
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
@@ -168,7 +171,8 @@ const MaintenanceTechnicians: React.FC = () => {
       employeeId: technician.employeeId || '',
       isAvailable: technician.isAvailable,
       maxWorkload: technician.maxWorkload,
-      notes: technician.notes || ''
+      notes: technician.notes || '',
+      signatureData: technician.signatureData || ''
     })
     setDialogOpen(true)
   }
@@ -964,6 +968,17 @@ const MaintenanceTechnicians: React.FC = () => {
                   error={formik.touched.notes && Boolean(formik.errors.notes)}
                   helperText={formik.touched.notes && formik.errors.notes}
                   placeholder='Notas adicionales sobre el técnico...'
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <SignaturePad
+                  value={formik.values.signatureData || null}
+                  onChange={(value) =>
+                    formik.setFieldValue('signatureData', value || '')
+                  }
+                  label='Firma guardada del técnico (opcional)'
+                  helperText='Si la guardas aquí, se usará automáticamente al cerrar órdenes de servicio.'
                 />
               </Grid>
 
