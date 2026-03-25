@@ -22,7 +22,8 @@ import {
   Cancel,
   LocationOn,
   Business,
-  Visibility
+  Visibility,
+  Delete
 } from '@mui/icons-material'
 
 import SelectedHq from './SelectedHq'
@@ -33,6 +34,7 @@ interface HeadquartersProps {
   setSelectedSede: (sede: string | null) => void
   selectedSede: string | null
   onDelete: (id: number) => void
+  onDeleteSede: (sede: string) => void
   sedes: string[]
   onAddSede: (newSede: string) => void
   onEditSede: (oldSede: string, newSede: string) => void
@@ -42,6 +44,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
   setSelectedSede,
   selectedSede,
   onDelete,
+  onDeleteSede,
   sedes,
   onAddSede,
   onEditSede
@@ -78,14 +81,12 @@ const Headquarters: React.FC<HeadquartersProps> = ({
   }
 
   const handleEditClick = (index: number, sede: string) => {
-    // Al hacer clic en el botón de editar, se activa el modo edición para ese índice
     setEditingIndex(index)
     setEditingValue(sede)
   }
 
   const handleEditSave = (index: number) => {
     const oldSede = sedes[index]
-    // Llamamos a la función onEditSede para propagar el cambio
     onEditSede(oldSede, editingValue)
     setEditingIndex(null)
   }
@@ -101,8 +102,8 @@ const Headquarters: React.FC<HeadquartersProps> = ({
           {/* Header with Add Button */}
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={4}>
             <Box display="flex" alignItems="center">
-              <Avatar 
-                sx={{ 
+              <Avatar
+                sx={{
                   backgroundColor: '#10b981',
                   mr: 2,
                   width: 40,
@@ -145,9 +146,9 @@ const Headquarters: React.FC<HeadquartersProps> = ({
           {/* Add New Sede Form */}
           {isAdding && (
             <Fade in={isAdding}>
-              <Card 
+              <Card
                 elevation={0}
-                sx={{ 
+                sx={{
                   border: '2px solid #10b981',
                   borderRadius: '12px',
                   mb: 3,
@@ -220,9 +221,9 @@ const Headquarters: React.FC<HeadquartersProps> = ({
 
           {/* Sedes Grid */}
           {sedes.length === 0 ? (
-            <Alert 
-              severity="info" 
-              sx={{ 
+            <Alert
+              severity="info"
+              sx={{
                 borderRadius: '12px',
                 backgroundColor: '#f0f9ff',
                 border: '1px solid #bfdbfe'
@@ -237,9 +238,9 @@ const Headquarters: React.FC<HeadquartersProps> = ({
               {sedes.map((sede, index) => (
                 <Grid item xs={12} sm={6} md={4} key={index}>
                   <Fade in={true} timeout={300 + index * 100}>
-                    <Card 
+                    <Card
                       elevation={0}
-                      sx={{ 
+                      sx={{
                         border: '1px solid #e5e7eb',
                         borderRadius: '12px',
                         transition: 'all 0.3s ease-in-out',
@@ -306,10 +307,10 @@ const Headquarters: React.FC<HeadquartersProps> = ({
                         ) : (
                           // View Mode
                           <Box>
-                            <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                            <Box display="flex" alignItems="start" justifyContent="space-between" mb={2}>
                               <Box display="flex" alignItems="center">
-                                <Avatar 
-                                  sx={{ 
+                                <Avatar
+                                  sx={{
                                     backgroundColor: '#f0fdf4',
                                     mr: 2,
                                     width: 32,
@@ -318,39 +319,59 @@ const Headquarters: React.FC<HeadquartersProps> = ({
                                 >
                                   <LocationOn sx={{ color: '#10b981', fontSize: 18 }} />
                                 </Avatar>
-                                <Typography 
-                                  variant="h6" 
-                                  fontWeight="600" 
-                                  sx={{ 
+                                <Typography
+                                  variant="h6"
+                                  fontWeight="600"
+                                  sx={{
                                     color: '#1f2937',
-                                    fontSize: '1rem'
+                                    fontSize: '1rem',
+                                    wordBreak: 'break-word'
                                   }}
                                 >
                                   {sede.toUpperCase()}
                                 </Typography>
                               </Box>
-                              
+
                               {$userStore.rol.some((role) => ['admin', 'metrologist'].includes(role)) && (
-                                <Tooltip title="Editar sede">
-                                  <IconButton
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      handleEditClick(index, sede)
-                                    }}
-                                    sx={{
-                                      color: '#6b7280',
-                                      '&:hover': {
-                                        backgroundColor: '#f0fdf4',
-                                        color: '#10b981'
-                                      }
-                                    }}
-                                  >
-                                    <Edit fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
+                                <Box display="flex">
+                                  <Tooltip title="Editar sede">
+                                    <IconButton
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        handleEditClick(index, sede)
+                                      }}
+                                      sx={{
+                                        color: '#6b7280',
+                                        '&:hover': {
+                                          backgroundColor: '#f0fdf4',
+                                          color: '#10b981'
+                                        }
+                                      }}
+                                    >
+                                      <Edit fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                  <Tooltip title="Eliminar sede">
+                                    <IconButton
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        onDeleteSede(sede)
+                                      }}
+                                      sx={{
+                                        color: '#ef4444',
+                                        '&:hover': {
+                                          backgroundColor: '#fef2f2',
+                                          color: '#dc2626'
+                                        }
+                                      }}
+                                    >
+                                      <Delete fontSize="small" />
+                                    </IconButton>
+                                  </Tooltip>
+                                </Box>
                               )}
                             </Box>
-                            
+
                             <Box display="flex" justifyContent="space-between" alignItems="center">
                               <Chip
                                 label="Activa"
@@ -362,7 +383,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
                                   fontSize: '0.75rem'
                                 }}
                               />
-                              
+
                               <Button
                                 variant="outlined"
                                 size="small"
@@ -399,9 +420,9 @@ const Headquarters: React.FC<HeadquartersProps> = ({
         // Selected Sede View
         <Box>
           <Box display="flex" alignItems="center" mb={3}>
-            <IconButton 
+            <IconButton
               onClick={() => setSelectedSede(null)}
-              sx={{ 
+              sx={{
                 mr: 2,
                 color: '#374151',
                 '&:hover': { backgroundColor: '#f3f4f6' }
@@ -413,7 +434,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
               Detalles de {selectedSedeString}
             </Typography>
           </Box>
-          
+
           <SelectedHq
             onDelete={onDelete}
             sedes={sedes}

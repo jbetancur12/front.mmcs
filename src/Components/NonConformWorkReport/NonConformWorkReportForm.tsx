@@ -532,7 +532,7 @@ const NonConformWorkReportForm: React.FC<NonConformWorkReportFormProps> = ({
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label='Numeral de ISO 17025 relacionado'
+                  label='Numeral de ISO/IEC 17025 relacionado'
                   name='iso17025Clause'
                   value={formik.values.iso17025Clause || ''}
                   onChange={formik.handleChange}

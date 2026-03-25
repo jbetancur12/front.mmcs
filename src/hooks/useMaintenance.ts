@@ -134,10 +134,13 @@ const maintenanceAPI = {
     data: MaintenanceUpdateRequest
   ): Promise<MaintenanceTicket> => {
     // Map frontend field names to backend field names
-    const requestData = {
-      ...data,
-      // Map assignedTechnician to assignedTechnicianId for backend compatibility
-      assignedTechnicianId: data.assignedTechnician
+    const requestData: Record<string, any> = {
+      ...data
+    }
+
+    // Map assignedTechnician to assignedTechnicianId only when explicitly provided
+    if (Object.prototype.hasOwnProperty.call(data, 'assignedTechnician')) {
+      requestData.assignedTechnicianId = data.assignedTechnician
         ? parseInt(data.assignedTechnician)
         : null
     }
@@ -178,6 +181,21 @@ const maintenanceAPI = {
       { content: comment, isInternal }
     )
     return response.data
+  },
+
+  updateComment: async (
+    commentId: string,
+    data: { content: string; isInternal?: boolean }
+  ): Promise<MaintenanceComment> => {
+    const response = await axiosPrivate.put<MaintenanceComment>(
+      `/maintenance/comments/${commentId}`,
+      data
+    )
+    return response.data
+  },
+
+  deleteComment: async (commentId: string): Promise<void> => {
+    await axiosPrivate.delete(`/maintenance/comments/${commentId}`)
   },
 
   // Files
@@ -462,7 +480,13 @@ export const useMaintenanceTechnicians = (enabled: boolean = true) => {
     queryKey: ['maintenance-technicians'],
     queryFn: maintenanceAPI.getTechnicians,
     enabled: enabled,
-    staleTime: 300000 // 5 minutes
+    staleTime: 300000, // 5 minutes
+    retry: (failureCount, error: any) => {
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        return false
+      }
+      return failureCount < 3
+    }
   })
 }
 
@@ -569,6 +593,36 @@ export const useAddMaintenanceComment = () => {
       queryClient.invalidateQueries({
         queryKey: ['maintenance-ticket', ticketId]
       })
+    }
+  })
+}
+
+export const useUpdateMaintenanceComment = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      commentId,
+      content,
+      isInternal
+    }: {
+      commentId: string
+      content: string
+      isInternal?: boolean
+    }) => maintenanceAPI.updateComment(commentId, { content, isInternal }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['maintenance-ticket'] })
+    }
+  })
+}
+
+export const useDeleteMaintenanceComment = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: maintenanceAPI.deleteComment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['maintenance-ticket'] })
     }
   })
 }

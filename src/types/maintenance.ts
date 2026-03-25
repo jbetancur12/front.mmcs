@@ -47,7 +47,8 @@ export interface MaintenanceTicketCreateResponse {
 export interface MaintenanceComment {
   id: string
   ticketId: string
-  userId: string
+  userId?: string
+  technicianId?: string
   userName: string // Legacy field
   userRole: string // Legacy field
   authorName: string // Backend field
@@ -55,7 +56,19 @@ export interface MaintenanceComment {
   content: string
   commentType: string
   isInternal: boolean
+  isVisible?: boolean
   createdAt: string
+  updatedAt?: string
+  user?: {
+    id: string
+    nombre: string
+    email: string
+  }
+  technician?: {
+    id: string
+    name: string
+    email: string
+  }
 }
 
 export interface MaintenanceFile {

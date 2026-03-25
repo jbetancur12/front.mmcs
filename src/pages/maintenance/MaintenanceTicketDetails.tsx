@@ -81,9 +81,12 @@ import {
   useMaintenanceTicket,
   useUpdateMaintenanceTicket,
   useAddMaintenanceComment,
+  useUpdateMaintenanceComment,
+  useDeleteMaintenanceComment,
   useUploadMaintenanceFiles,
   useDeleteMaintenanceFile,
   useMaintenanceTechnicians,
+  useTechnicianByEmail,
   useMaintenanceTimeline,
   useGenerateServiceOrder,
   useGenerateStatusReport,
@@ -109,6 +112,8 @@ import useAxiosPrivate from '../../utils/use-axios-private'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import CostsListDialog from 'src/Components/Maintenance/CostsList'
+import { useStore } from '@nanostores/react'
+import { userStore } from '../../store/userStore'
 
 export const formatCurrency = (amount: number | undefined) => {
   if (!amount) return 'No especificado'
@@ -125,6 +130,7 @@ const MaintenanceTicketDetails: React.FC = () => {
   const axiosPrivate = useAxiosPrivate() // Initialize axios interceptors for automatic token refresh
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const $userStore = useStore(userStore)
   const { ticketId } = useParams<{ ticketId: string }>()
   const navigate = useNavigate()
 
@@ -134,8 +140,6 @@ const MaintenanceTicketDetails: React.FC = () => {
   const [showTimeline, setShowTimeline] = useState(true)
   const [showComments, setShowComments] = useState(true)
   const [showFiles, setShowFiles] = useState(true)
-  const [currentUserRole] = useState('admin') // This would come from auth context
-
   // New state for enhanced functionality
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean
@@ -160,6 +164,12 @@ const MaintenanceTicketDetails: React.FC = () => {
   const [editErrors, setEditErrors] = useState<Record<string, string>>({})
   const [isEditValid, setIsEditValid] = useState(true)
 
+  const canManageTechnicians =
+    $userStore.rol.includes('admin') ||
+    $userStore.rol.includes('maintenance_coordinator')
+  const currentUserRole = $userStore.rol[0] || 'user'
+  const isTechnician = $userStore.rol.includes('technician')
+
   // API hooks
   const {
     data: ticket,
@@ -167,8 +177,17 @@ const MaintenanceTicketDetails: React.FC = () => {
     error: ticketError,
     refetch: refetchTicket
   } = useMaintenanceTicket(ticketId || '')
+  const { data: currentTechnician } = useTechnicianByEmail(
+    isTechnician ? $userStore.email || '' : ''
+  )
+  const canEditTicket =
+    !isTechnician ||
+    ticket?.assignedTechnician?.email === $userStore.email ||
+    (ticket?.assignedTechnicianId !== undefined &&
+      currentTechnician?.id !== undefined &&
+      String(ticket.assignedTechnicianId) === String(currentTechnician.id))
 
-  const { data: technicians } = useMaintenanceTechnicians()
+  const { data: technicians } = useMaintenanceTechnicians(canManageTechnicians)
   const {
     data: timelineData,
     isLoading: timelineLoading,
@@ -176,6 +195,8 @@ const MaintenanceTicketDetails: React.FC = () => {
   } = useMaintenanceTimeline(ticketId || '')
   const updateTicketMutation = useUpdateMaintenanceTicket()
   const addCommentMutation = useAddMaintenanceComment()
+  const updateCommentMutation = useUpdateMaintenanceComment()
+  const deleteCommentMutation = useDeleteMaintenanceComment()
   const uploadFilesMutation = useUploadMaintenanceFiles()
   const deleteFileMutation = useDeleteMaintenanceFile()
 
@@ -212,17 +233,25 @@ const MaintenanceTicketDetails: React.FC = () => {
   // Initialize edit data when ticket loads
   useEffect(() => {
     if (ticket && !editMode) {
-      setEditData({
-        status: ticket.status,
-        assignedTechnician: ticket.assignedTechnicianId || '',
-        scheduledDate: ticket.scheduledDate || '',
-        priority: ticket.priority,
-        estimatedCost: ticket.estimatedCost,
-        actualCost: ticket.actualCost,
-        location: ticket.location
-      })
+      if (isTechnician) {
+        setEditData({
+          status: ticket.status,
+          priority: ticket.priority,
+          workPerformed: ticket.workPerformed || ''
+        })
+      } else {
+        setEditData({
+          status: ticket.status,
+          assignedTechnician: ticket.assignedTechnicianId || '',
+          scheduledDate: ticket.scheduledDate || '',
+          priority: ticket.priority,
+          estimatedCost: ticket.estimatedCost,
+          actualCost: ticket.actualCost,
+          location: ticket.location
+        })
+      }
     }
-  }, [ticket, editMode])
+  }, [ticket, editMode, isTechnician])
 
   // Validate edit data when it changes
   useEffect(() => {
@@ -296,6 +325,10 @@ const MaintenanceTicketDetails: React.FC = () => {
 
   // Event handlers
   const handleEdit = () => {
+    if (!canEditTicket) {
+      showToast('Solo puedes editar tickets asignados a tu usuario', 'warning')
+      return
+    }
     setEditMode(true)
     setEditErrors({})
     setIsEditValid(true)
@@ -304,15 +337,23 @@ const MaintenanceTicketDetails: React.FC = () => {
   const handleCancelEdit = () => {
     setEditMode(false)
     if (ticket) {
-      setEditData({
-        status: ticket.status,
-        assignedTechnician: ticket.assignedTechnicianId || '',
-        scheduledDate: ticket.scheduledDate || '',
-        priority: ticket.priority,
-        estimatedCost: ticket.estimatedCost,
-        actualCost: ticket.actualCost,
-        location: ticket.location
-      })
+      if (isTechnician) {
+        setEditData({
+          status: ticket.status,
+          priority: ticket.priority,
+          workPerformed: ticket.workPerformed || ''
+        })
+      } else {
+        setEditData({
+          status: ticket.status,
+          assignedTechnician: ticket.assignedTechnicianId || '',
+          scheduledDate: ticket.scheduledDate || '',
+          priority: ticket.priority,
+          estimatedCost: ticket.estimatedCost,
+          actualCost: ticket.actualCost,
+          location: ticket.location
+        })
+      }
     }
   }
 
@@ -368,9 +409,16 @@ const MaintenanceTicketDetails: React.FC = () => {
     }
 
     try {
+      const payload = isTechnician
+        ? {
+            status: editData.status,
+            workPerformed: editData.workPerformed
+          }
+        : editData
+
       await updateTicketMutation.mutateAsync({
         id: ticket.id,
-        data: editData
+        data: payload
       })
       setEditMode(false)
       setEditErrors({})
@@ -463,6 +511,40 @@ const MaintenanceTicketDetails: React.FC = () => {
     } catch (error) {
       console.error('Error adding comment:', error)
       showToast('Error al agregar comentario', 'error')
+      throw error
+    }
+  }
+
+  const handleUpdateComment = async (
+    commentId: string,
+    content: string,
+    isInternal?: boolean
+  ) => {
+    try {
+      await updateCommentMutation.mutateAsync({
+        commentId,
+        content,
+        isInternal
+      })
+      await refetchTicket()
+      await refetchTimeline()
+      showToast('Comentario actualizado exitosamente', 'success')
+    } catch (error) {
+      console.error('Error updating comment:', error)
+      showToast('Error al actualizar comentario', 'error')
+      throw error
+    }
+  }
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      await deleteCommentMutation.mutateAsync(commentId)
+      await refetchTicket()
+      await refetchTimeline()
+      showToast('Comentario eliminado', 'success')
+    } catch (error) {
+      console.error('Error deleting comment:', error)
+      showToast('Error al eliminar comentario', 'error')
       throw error
     }
   }
@@ -1220,6 +1302,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   variant='contained'
                   startIcon={!isMobile && <Edit />}
                   onClick={handleEdit}
+                  disabled={!canEditTicket}
                   size={isMobile ? 'small' : 'medium'}
                   sx={{
                     minHeight: 48,
@@ -1354,9 +1437,9 @@ const MaintenanceTicketDetails: React.FC = () => {
                   </Grid>
 
                   <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth>
+                    <FormControl fullWidth disabled={isTechnician}>
                       <InputLabel id='detail-priority-label'>
-                        Prioridad
+                        Prioridad{isTechnician ? ' (Solo coordinador)' : ''}
                       </InputLabel>
                       <Select
                         labelId='detail-priority-label'
@@ -1368,8 +1451,25 @@ const MaintenanceTicketDetails: React.FC = () => {
                             priority: e.target.value as MaintenancePriority
                           }))
                         }
-                        label='Prioridad'
+                        label={`Prioridad${isTechnician ? ' (Solo coordinador)' : ''}`}
                         aria-label='Seleccionar prioridad del ticket'
+                        startAdornment={
+                          isTechnician ? (
+                            <InputAdornment position='start'>
+                              <Lock sx={{ color: '#10b981' }} />
+                            </InputAdornment>
+                          ) : undefined
+                        }
+                        sx={
+                          isTechnician
+                            ? {
+                                background: 'rgba(16, 185, 129, 0.05)',
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: '#10b981'
+                                }
+                              }
+                            : {}
+                        }
                       >
                         {Object.values(MaintenancePriority).map((priority) => (
                           <MenuItem key={priority} value={priority}>
@@ -1380,6 +1480,15 @@ const MaintenanceTicketDetails: React.FC = () => {
                           </MenuItem>
                         ))}
                       </Select>
+                      {isTechnician && (
+                        <FormHelperText>
+                          <Box display='flex' alignItems='center' gap={0.5}>
+                            <Lock fontSize='small' />
+                            La prioridad solo puede cambiarla un coordinador o
+                            administrador
+                          </Box>
+                        </FormHelperText>
+                      )}
                     </FormControl>
                   </Grid>
                 </Grid>
@@ -1871,7 +1980,10 @@ const MaintenanceTicketDetails: React.FC = () => {
                 <MaintenanceCommentsList
                   comments={ticket.comments || []}
                   onAddComment={handleAddComment}
+                  onUpdateComment={handleUpdateComment}
+                  onDeleteComment={handleDeleteComment}
                   currentUserRole={currentUserRole}
+                  currentUserEmail={$userStore.email}
                   loading={addCommentMutation.isLoading}
                 />
               </Collapse>

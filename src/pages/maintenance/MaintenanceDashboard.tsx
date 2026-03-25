@@ -46,6 +46,7 @@ import {
   useMaintenanceStats,
   useMaintenanceTickets,
   useMaintenanceTechnicians,
+  useTechnicianByEmail,
   useUpdateMaintenanceTicket,
   useDeleteMaintenanceTicket
 } from '../../hooks/useMaintenance'
@@ -168,6 +169,9 @@ const MaintenanceDashboard: React.FC = () => {
     isLoading: ticketsLoading,
     refetch: refetchTickets
   } = useMaintenanceTickets(technicianFilters, page, limit)
+  const { data: currentTechnician } = useTechnicianByEmail(
+    currentTechnicianEmail || ''
+  )
   // Only admins can access technicians list
   const { data: technicians } = useMaintenanceTechnicians(isAdmin)
   const updateTicketMutation = useUpdateMaintenanceTicket()
@@ -265,17 +269,15 @@ const MaintenanceDashboard: React.FC = () => {
   }, [ticketsData?.tickets])
 
   const handleEditTicket = (ticket: MaintenanceTicket) => {
-    // Para técnicos, solo permitir editar tickets que les pertenecen.
-    // Buscamos el técnico en la lista de técnicos usando el email del usuario logueado.
-    const currentTechnician = technicians?.find(
-      (tech) => tech.email === $userStore.email
-    )
-
     if (
       isTechnician &&
-      currentTechnician &&
-      Number(ticket.assignedTechnician?.id) !== Number(currentTechnician.id)
+      ticket.assignedTechnician?.email !== $userStore.email &&
+      Number(ticket.assignedTechnician?.id) !== Number(currentTechnician?.id)
     ) {
+      showToast(
+        'Solo puedes editar tickets asignados a tu usuario',
+        'warning'
+      )
       return
     }
 

@@ -184,8 +184,9 @@ const useAxiosPrivate = () => {
           return Promise.reject(error)
         }
 
-        // Manejar error 403 (token expirado)
-        if (error.response?.status === 403 && !sent.current) {
+        // Solo refrescar token en 401. Un 403 normalmente significa permisos insuficientes,
+        // y reintentar la misma request crea loops en acciones prohibidas.
+        if (error.response?.status === 401 && !sent.current) {
           sent.current = true
           try {
             const newToken = await refresh()
@@ -213,7 +214,7 @@ const useAxiosPrivate = () => {
           }
         }
 
-        // Manejar error 401 (no autorizado)
+        // Si el refresh también falla con 401, cerrar sesión limpiamente.
         if (error.response?.status === 401) {
           try {
             await axiosPrivate.post('/auth/logout')
@@ -242,4 +243,3 @@ const useAxiosPrivate = () => {
 }
 
 export default useAxiosPrivate
-

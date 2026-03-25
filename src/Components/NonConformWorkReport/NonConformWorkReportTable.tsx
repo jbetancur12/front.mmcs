@@ -199,7 +199,7 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
       },
       {
         accessorKey: 'iso17025Clause',
-        header: 'Numeral ISO 17025',
+        header: 'Numeral ISO/IEC 17025',
         size: 180
       },
       {

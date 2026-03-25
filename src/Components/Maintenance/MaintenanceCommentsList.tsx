@@ -11,17 +11,34 @@ import {
   FormControlLabel,
   Checkbox,
   Tooltip,
-  Alert
+  Alert,
+  IconButton
 } from '@mui/material'
-import { Send, Lock, Public, AccessTime } from '@mui/icons-material'
+import {
+  Send,
+  Lock,
+  Public,
+  AccessTime,
+  Edit,
+  Delete,
+  Save,
+  Close
+} from '@mui/icons-material'
 import { MaintenanceComment } from '../../types/maintenance'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
 interface MaintenanceCommentsListProps {
   comments: MaintenanceComment[]
-  onAddComment: (comment: string, isInternal: boolean) => void
+  onAddComment: (comment: string, isInternal: boolean) => Promise<void>
+  onUpdateComment: (
+    commentId: string,
+    content: string,
+    isInternal?: boolean
+  ) => Promise<void>
+  onDeleteComment: (commentId: string) => Promise<void>
   currentUserRole: string
+  currentUserEmail: string
   loading?: boolean
   disabled?: boolean
 }
@@ -38,15 +55,23 @@ interface MaintenanceCommentsListProps {
 const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
   comments,
   onAddComment,
+  onUpdateComment,
+  onDeleteComment,
   currentUserRole,
+  currentUserEmail,
   loading = false,
   disabled = false
 }) => {
   const [newComment, setNewComment] = useState('')
   const [isInternal, setIsInternal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
+  const [editingContent, setEditingContent] = useState('')
 
   const canAddInternalComments = ['admin', 'mantenimiento'].includes(
+    currentUserRole
+  )
+  const isPrivilegedUser = ['admin', 'maintenance_coordinator'].includes(
     currentUserRole
   )
 
@@ -130,6 +155,50 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   )
 
+  const canManageComment = (comment: MaintenanceComment) => {
+    if (!comment.isVisible) {
+      return false
+    }
+
+    if (isPrivilegedUser) {
+      return true
+    }
+
+    return (
+      comment.user?.email === currentUserEmail ||
+      comment.technician?.email === currentUserEmail
+    )
+  }
+
+  const handleStartEdit = (comment: MaintenanceComment) => {
+    setEditingCommentId(comment.id)
+    setEditingContent(comment.content)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null)
+    setEditingContent('')
+  }
+
+  const handleSaveEdit = async (comment: MaintenanceComment) => {
+    if (!editingContent.trim()) return
+
+    try {
+      await onUpdateComment(comment.id, editingContent.trim(), comment.isInternal)
+      handleCancelEdit()
+    } catch (error) {
+      console.error('Error updating comment:', error)
+    }
+  }
+
+  const handleDelete = async (commentId: string) => {
+    try {
+      await onDeleteComment(commentId)
+    } catch (error) {
+      console.error('Error deleting comment:', error)
+    }
+  }
+
   return (
     <Box>
       <Typography 
@@ -206,12 +275,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
               }}
             >
               {/* Comment Header */}
-              <Box
-                display='flex'
-                alignItems='center'
-                justifyContent='space-between'
-                mb={1}
-              >
+              <Box display='flex' alignItems='center' justifyContent='space-between' mb={1}>
                 <Box display='flex' alignItems='center' gap={1}>
                   <Avatar
                     sx={{
@@ -286,29 +350,86 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                   </Box>
                 </Box>
 
-                <Box
-                  display='flex'
-                  alignItems='center'
-                  gap={0.5}
-                  color='text.secondary'
-                >
-                  <AccessTime fontSize='small' />
-                  <Typography variant='caption'>
-                    {formatDate(comment.createdAt)}
-                  </Typography>
+                <Box display='flex' alignItems='center' gap={0.5}>
+                  <Box
+                    display='flex'
+                    alignItems='center'
+                    gap={0.5}
+                    color='text.secondary'
+                  >
+                    <AccessTime fontSize='small' />
+                    <Typography variant='caption'>
+                      {formatDate(comment.createdAt)}
+                    </Typography>
+                  </Box>
+                  {canManageComment(comment) && (
+                    <>
+                      <Tooltip title='Editar comentario'>
+                        <IconButton
+                          size='small'
+                          onClick={() => handleStartEdit(comment)}
+                          disabled={loading}
+                        >
+                          <Edit fontSize='small' />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title='Eliminar comentario'>
+                        <IconButton
+                          size='small'
+                          onClick={() => handleDelete(comment.id)}
+                          disabled={loading}
+                        >
+                          <Delete fontSize='small' />
+                        </IconButton>
+                      </Tooltip>
+                    </>
+                  )}
                 </Box>
               </Box>
 
               {/* Comment Content */}
-              <Typography
-                variant='body2'
-                sx={{
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word'
-                }}
-              >
-                {comment.content}
-              </Typography>
+              {editingCommentId === comment.id ? (
+                <Box>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    value={editingContent}
+                    onChange={(e) => setEditingContent(e.target.value)}
+                    sx={{ mb: 1 }}
+                  />
+                  <Box display='flex' justifyContent='flex-end' gap={1}>
+                    <Button
+                      size='small'
+                      startIcon={<Close />}
+                      onClick={handleCancelEdit}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      size='small'
+                      variant='contained'
+                      startIcon={<Save />}
+                      onClick={() => handleSaveEdit(comment)}
+                      disabled={!editingContent.trim()}
+                    >
+                      Guardar
+                    </Button>
+                  </Box>
+                </Box>
+              ) : (
+                <Typography
+                  variant='body2'
+                  sx={{
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    fontStyle: comment.isVisible === false ? 'italic' : 'normal',
+                    color: comment.isVisible === false ? 'text.secondary' : 'text.primary'
+                  }}
+                >
+                  {comment.content}
+                </Typography>
+              )}
 
               {index < sortedComments.length - 1 && <Divider sx={{ mt: 2 }} />}
             </Paper>
