@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Container,
@@ -73,6 +73,7 @@ import {
   Share,
   NotificationsActive,
   TrendingUp,
+  Download,
   // Assessment,
   Lock,
   CheckCircle
@@ -140,6 +141,13 @@ const MaintenanceTicketDetails: React.FC = () => {
   const [showTimeline, setShowTimeline] = useState(true)
   const [showComments, setShowComments] = useState(true)
   const [showFiles, setShowFiles] = useState(true)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewFile, setPreviewFile] = useState<MaintenanceFile | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+  const [filePreviewCache, setFilePreviewCache] = useState<Record<string, string>>({})
+  const filePreviewCacheRef = useRef<Record<string, string>>({})
   // New state for enhanced functionality
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean
@@ -188,6 +196,18 @@ const MaintenanceTicketDetails: React.FC = () => {
       String(ticket.assignedTechnicianId) === String(currentTechnician.id))
 
   const { data: technicians } = useMaintenanceTechnicians(canManageTechnicians)
+
+  useEffect(() => {
+    filePreviewCacheRef.current = filePreviewCache
+  }, [filePreviewCache])
+
+  useEffect(() => {
+    return () => {
+      Object.values(filePreviewCacheRef.current).forEach((url) => {
+        window.URL.revokeObjectURL(url)
+      })
+    }
+  }, [])
   const {
     data: timelineData,
     isLoading: timelineLoading,
@@ -579,6 +599,14 @@ const MaintenanceTicketDetails: React.FC = () => {
             ticketId,
             fileId
           })
+          if (filePreviewCache[fileId]) {
+            window.URL.revokeObjectURL(filePreviewCache[fileId])
+            setFilePreviewCache((prev) => {
+              const updated = { ...prev }
+              delete updated[fileId]
+              return updated
+            })
+          }
           // Refetch ticket data to update file list
           await refetchTicket()
           await refetchTimeline()
@@ -592,24 +620,71 @@ const MaintenanceTicketDetails: React.FC = () => {
     )
   }
 
-  const handleFileView = async (file: MaintenanceFile) => {
-    try {
-      const response = await axiosPrivate.get(
-        `/maintenance/files/${file.id}/download`,
-        {
-          responseType: 'blob'
-        }
-      )
+  const getFileDisplayName = (file: MaintenanceFile) =>
+    file.originalName || file.fileName || 'archivo'
 
-      const blob = response.data
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = file.originalName || file.fileName || 'archivo'
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      window.URL.revokeObjectURL(url)
+  const getFilePreviewType = (file: MaintenanceFile) => {
+    const fileName = getFileDisplayName(file).toLowerCase()
+
+    if (file.isImage || file.fileType === 'image') return 'image'
+    if (file.isVideo || file.fileType === 'video') return 'video'
+    if (file.fileType === 'document' && fileName.endsWith('.pdf')) return 'pdf'
+    if (fileName.endsWith('.pdf')) return 'pdf'
+
+    return 'other'
+  }
+
+  const getFilePreviewUrl = async (file: MaintenanceFile) => {
+    if (filePreviewCache[file.id]) {
+      return filePreviewCache[file.id]
+    }
+
+    const response = await axiosPrivate.get(`/maintenance/files/${file.id}/download`, {
+      responseType: 'blob'
+    })
+
+    const url = window.URL.createObjectURL(response.data)
+    setFilePreviewCache((prev) => ({ ...prev, [file.id]: url }))
+    return url
+  }
+
+  const handleFileView = async (file: MaintenanceFile) => {
+    setPreviewOpen(true)
+    setPreviewFile(file)
+    setPreviewLoading(true)
+    setPreviewError(null)
+
+    try {
+      const url = await getFilePreviewUrl(file)
+      setPreviewUrl(url)
+    } catch (error) {
+      console.error('Error loading file preview:', error)
+      setPreviewError('No se pudo cargar la vista previa del archivo')
+      showToast('Error al cargar la vista previa del archivo', 'error')
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
+  const handleClosePreview = () => {
+    setPreviewOpen(false)
+    setPreviewFile(null)
+    setPreviewUrl(null)
+    setPreviewLoading(false)
+    setPreviewError(null)
+  }
+
+  const handleDownloadPreviewFile = async () => {
+    if (!previewFile) return
+
+    try {
+      const url = await getFilePreviewUrl(previewFile)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = getFileDisplayName(previewFile)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
     } catch (error) {
       console.error('Error downloading file:', error)
       showToast('Error al descargar el archivo', 'error')
@@ -2035,6 +2110,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   onFilesChange={handleFileUpload}
                   onFileRemove={handleFileDelete}
                   onFileView={handleFileView}
+                  getFilePreviewUrl={getFilePreviewUrl}
                   uploading={uploadFilesMutation.isLoading}
                   disabled={deleteFileMutation.isLoading}
                 />
@@ -2923,6 +2999,108 @@ const MaintenanceTicketDetails: React.FC = () => {
             <LinearProgress color='primary' />
           </Box>
         )}
+
+        <Dialog
+          open={previewOpen}
+          onClose={handleClosePreview}
+          maxWidth='md'
+          fullWidth
+        >
+          <DialogTitle>{previewFile ? getFileDisplayName(previewFile) : 'Vista previa'}</DialogTitle>
+          <DialogContent dividers>
+            {previewLoading && (
+              <Box
+                display='flex'
+                justifyContent='center'
+                alignItems='center'
+                minHeight={320}
+              >
+                <CircularProgress />
+              </Box>
+            )}
+
+            {!previewLoading && previewError && (
+              <Alert severity='error'>{previewError}</Alert>
+            )}
+
+            {!previewLoading &&
+              !previewError &&
+              previewFile &&
+              previewUrl &&
+              getFilePreviewType(previewFile) === 'image' && (
+                <Box
+                  component='img'
+                  src={previewUrl}
+                  alt={getFileDisplayName(previewFile)}
+                  sx={{
+                    width: '100%',
+                    maxHeight: '70vh',
+                    objectFit: 'contain',
+                    borderRadius: 2
+                  }}
+                />
+              )}
+
+            {!previewLoading &&
+              !previewError &&
+              previewFile &&
+              previewUrl &&
+              getFilePreviewType(previewFile) === 'video' && (
+                <Box
+                  component='video'
+                  src={previewUrl}
+                  controls
+                  sx={{
+                    width: '100%',
+                    maxHeight: '70vh',
+                    borderRadius: 2,
+                    backgroundColor: '#000'
+                  }}
+                />
+              )}
+
+            {!previewLoading &&
+              !previewError &&
+              previewFile &&
+              previewUrl &&
+              getFilePreviewType(previewFile) === 'pdf' && (
+                <Box
+                  component='iframe'
+                  src={previewUrl}
+                  title={getFileDisplayName(previewFile)}
+                  sx={{
+                    width: '100%',
+                    height: isMobile ? '60vh' : '75vh',
+                    border: 0,
+                    borderRadius: 2
+                  }}
+                />
+              )}
+
+            {!previewLoading &&
+              !previewError &&
+              previewFile &&
+              getFilePreviewType(previewFile) === 'other' && (
+                <Alert severity='info'>
+                  Este tipo de archivo no tiene vista previa inline. Puedes descargarlo si lo necesitas.
+                </Alert>
+              )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClosePreview} color='inherit'>
+              Cerrar
+            </Button>
+            {previewFile && (
+              <Button
+                onClick={handleDownloadPreviewFile}
+                variant='contained'
+                startIcon={<Download />}
+              >
+                Descargar
+              </Button>
+            )}
+          </DialogActions>
+        </Dialog>
 
         {/* Confirmation Dialog */}
         <Dialog

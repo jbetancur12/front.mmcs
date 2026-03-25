@@ -29,6 +29,7 @@ interface MaintenanceFileUploadProps {
   onFilesChange: (files: File[]) => void
   onFileRemove: (fileId: string) => void
   onFileView?: (file: MaintenanceFile) => void
+  getFilePreviewUrl?: (file: MaintenanceFile) => Promise<string>
   onFileRetry?: (file: MaintenanceFile) => void
   maxFiles?: number
   maxSizeInMB?: number
@@ -59,6 +60,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
   onFilesChange,
   onFileRemove,
   onFileView,
+  getFilePreviewUrl,
   onFileRetry,
   maxFiles = 5,
   maxSizeInMB = 10,
@@ -128,8 +130,19 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
       const newPreviews: Record<string, string> = {}
 
       for (const file of files) {
-        if (file.isImage && file.filePath && !imagePreviews[file.id]) {
+        if (!file.isImage || imagePreviews[file.id]) continue
+
+        if (file.filePath) {
           newPreviews[file.id] = file.filePath
+          continue
+        }
+
+        if (getFilePreviewUrl) {
+          try {
+            newPreviews[file.id] = await getFilePreviewUrl(file)
+          } catch (previewError) {
+            console.error('Error generating image preview:', previewError)
+          }
         }
       }
 
@@ -139,21 +152,114 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
     }
 
     generatePreviews()
-  }, [files, imagePreviews])
+  }, [files, imagePreviews, getFilePreviewUrl])
 
 
   const formatFileSize = (bytes: number | undefined | null) => {
-    if (!bytes || bytes === 0) return '0 Bytes'
+    if (bytes === undefined || bytes === null) return 'Tamaño no disponible'
+    if (bytes === 0) return '0 Bytes'
     const k = 1024
     const sizes = ['Bytes', 'KB', 'MB', 'GB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
+  const getLocalizedFileType = (file: MaintenanceFile) => {
+    if (file.isImage || file.fileType === 'image') return 'Imagen'
+    if (file.isVideo || file.fileType === 'video') return 'Video'
+    if (file.fileType === 'audio') return 'Audio'
+    if (file.fileType === 'document') return 'Documento'
+    return 'Archivo'
+  }
+
   const getFileIcon = (file: MaintenanceFile) => {
     if (file.isImage) return <Image color='primary' />
     if (file.isVideo) return <VideoFile color='secondary' />
     return <InsertDriveFile color='action' />
+  }
+
+  const getFileExtension = (file: MaintenanceFile) => {
+    const fileName = file.originalName || file.fileName || ''
+    const extension = fileName.split('.').pop()
+    return extension ? extension.toUpperCase() : 'FILE'
+  }
+
+  const isPdfFile = (file: MaintenanceFile) => {
+    const fileName = (file.originalName || file.fileName || '').toLowerCase()
+    return file.fileType?.includes('pdf') || fileName.endsWith('.pdf')
+  }
+
+  const renderFilePreview = (file: MaintenanceFile) => {
+    if (file.isImage && imagePreviews[file.id]) {
+      return (
+        <CardMedia
+          component='img'
+          sx={{
+            height: 120,
+            objectFit: 'cover',
+            borderRadius: '12px 12px 0 0'
+          }}
+          image={imagePreviews[file.id]}
+          alt={file.originalName || file.fileName || 'Vista previa'}
+        />
+      )
+    }
+
+    if (file.isVideo) {
+      return (
+        <Box
+          sx={{
+            height: 120,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 1,
+            borderRadius: '12px 12px 0 0',
+            background: 'linear-gradient(135deg, rgba(156, 39, 176, 0.12) 0%, rgba(103, 58, 183, 0.18) 100%)'
+          }}
+        >
+          <VideoFile sx={{ fontSize: 42, color: '#7b1fa2' }} />
+          <Chip
+            size='small'
+            label='Vista previa en modal'
+            sx={{ backgroundColor: 'rgba(255,255,255,0.85)', color: '#6a1b9a' }}
+          />
+        </Box>
+      )
+    }
+
+    return (
+      <Box
+        sx={{
+          height: 120,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 1,
+          borderRadius: '12px 12px 0 0',
+          background: isPdfFile(file)
+            ? 'linear-gradient(135deg, rgba(244, 67, 54, 0.1) 0%, rgba(229, 57, 53, 0.16) 100%)'
+            : 'linear-gradient(135deg, rgba(109, 198, 98, 0.08) 0%, rgba(96, 125, 139, 0.16) 100%)'
+        }}
+      >
+        {isPdfFile(file) ? (
+          <InsertDriveFile sx={{ fontSize: 42, color: '#d32f2f' }} />
+        ) : (
+          <InsertDriveFile sx={{ fontSize: 42, color: '#546e7a' }} />
+        )}
+        <Chip
+          size='small'
+          label={getFileExtension(file)}
+          sx={{
+            backgroundColor: 'rgba(255,255,255,0.85)',
+            color: isPdfFile(file) ? '#c62828' : '#455a64',
+            fontWeight: 700
+          }}
+        />
+      </Box>
+    )
   }
 
   const handleDragEnter = () => setDragActive(true)
@@ -367,19 +473,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                     }
                   }}
                 >
-                  {/* Image Preview */}
-                  {file.isImage && imagePreviews[file.id] && (
-                    <CardMedia
-                      component="img"
-                      sx={{
-                        height: 120,
-                        objectFit: 'cover',
-                        borderRadius: '12px 12px 0 0'
-                      }}
-                      image={imagePreviews[file.id]}
-                      alt={file.originalName || file.fileName || 'Vista previa'}
-                    />
-                  )}
+                  {renderFilePreview(file)}
 
                   <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                     <Box display='flex' alignItems='center' gap={1} mb={1}>
@@ -424,7 +518,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                     >
                       <Chip
                         size='small'
-                        label={file.fileType}
+                        label={getLocalizedFileType(file)}
                         sx={{
                           background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
                           color: 'white',
