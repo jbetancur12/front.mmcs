@@ -48,7 +48,8 @@ import {
   useMaintenanceTechnicians,
   useTechnicianByEmail,
   useUpdateMaintenanceTicket,
-  useDeleteMaintenanceTicket
+  useDeleteMaintenanceTicket,
+  useUploadMaintenanceFiles
 } from '../../hooks/useMaintenance'
 import {
   MaintenanceFilters,
@@ -70,6 +71,7 @@ import { userStore } from '../../store/userStore'
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import KeyboardShortcutsHelp from '../../Components/Maintenance/KeyboardShortcutsHelp'
 import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
+import type { CompletionPhotoInput } from '../../Components/Maintenance/CompletionCostsDialog'
 
 /**
  * MaintenanceDashboard component provides an admin interface for managing maintenance tickets
@@ -176,6 +178,7 @@ const MaintenanceDashboard: React.FC = () => {
   const { data: technicians } = useMaintenanceTechnicians(isAdmin)
   const updateTicketMutation = useUpdateMaintenanceTicket()
   const deleteTicketMutation = useDeleteMaintenanceTicket()
+  const uploadFilesMutation = useUploadMaintenanceFiles()
 
   // WebSocket for real-time updates
   useMaintenanceWebSocket({
@@ -329,27 +332,56 @@ const MaintenanceDashboard: React.FC = () => {
 
   const handleCompleteWithCosts = async (
     workPerformed: string,
-    costs: any[]
+    costs: any[],
+    completionPhotos: CompletionPhotoInput[]
   ) => {
     if (!selectedTicket) return
 
     try {
+      const completionPayload = isTechnician
+        ? {
+            status: MaintenanceStatus.COMPLETED,
+            workPerformed,
+            costs
+          }
+        : {
+            ...editData,
+            status: MaintenanceStatus.COMPLETED,
+            workPerformed,
+            costs
+          }
+
       await updateTicketMutation.mutateAsync({
         id: selectedTicket.id,
-        data: {
-          ...editData,
-          status: MaintenanceStatus.COMPLETED,
-          workPerformed,
-          costs: costs
-        }
+        data: completionPayload
       })
+      if (completionPhotos.length > 0) {
+        await Promise.all(
+          completionPhotos.map((photo) =>
+            uploadFilesMutation.mutateAsync({
+              ticketId: selectedTicket.id,
+              files: [photo.file],
+              category: 'repair_photo',
+              description:
+                photo.description?.trim() ||
+                'Evidencia fotográfica del servicio completado',
+              isPublic: false
+            })
+          )
+        )
+      }
       setCostsDialogOpen(false)
       setEditDialogOpen(false)
       setSelectedTicket(null)
       setEditData({})
       refetchTickets()
       refetchStats()
-      showToast('Ticket completado exitosamente', 'success')
+      showToast(
+        completionPhotos.length > 0
+          ? 'Ticket completado y fotos adjuntadas exitosamente'
+          : 'Ticket completado exitosamente',
+        'success'
+      )
     } catch (error: any) {
       console.error('Error completing ticket:', error)
       const errorMessage =
@@ -1488,7 +1520,9 @@ const MaintenanceDashboard: React.FC = () => {
         open={costsDialogOpen}
         onClose={() => setCostsDialogOpen(false)}
         onComplete={handleCompleteWithCosts}
-        loading={updateTicketMutation.isLoading}
+        loading={
+          updateTicketMutation.isLoading || uploadFilesMutation.isLoading
+        }
       />
 
       {/* Toast Notifications */}

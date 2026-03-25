@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -15,6 +15,7 @@ import {
   Alert,
   AlertTitle,
   CircularProgress,
+  Collapse,
   useMediaQuery,
   useTheme
 } from '@mui/material'
@@ -24,8 +25,11 @@ import {
   AttachMoney,
   Build,
   CheckCircle,
-  Close
+  Close,
+  AddAPhoto
 } from '@mui/icons-material'
+import MaintenanceFileUpload from './MaintenanceFileUpload'
+import type { MaintenanceFile } from '../../types/maintenance'
 
 interface Cost {
   name: string
@@ -33,10 +37,19 @@ interface Cost {
   amount: number | string
 }
 
+export interface CompletionPhotoInput {
+  file: File
+  description?: string
+}
+
 interface CompletionCostsDialogProps {
   open: boolean
   onClose: () => void
-  onComplete: (workPerformed: string, costs: Cost[]) => Promise<void>
+  onComplete: (
+    workPerformed: string,
+    costs: Cost[],
+    completionPhotos: CompletionPhotoInput[]
+  ) => Promise<void>
   loading?: boolean
 }
 
@@ -57,6 +70,19 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
   const [errors, setErrors] = useState<
     Record<number, { name?: string; amount?: string }>
   >({})
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false)
+  const [completionPhotos, setCompletionPhotos] = useState<CompletionPhotoInput[]>([])
+
+  useEffect(() => {
+    if (!open) {
+      setWorkPerformed('')
+      setWorkPerformedError('')
+      setCosts([{ name: '', description: '', amount: '' }])
+      setErrors({})
+      setShowPhotoUpload(false)
+      setCompletionPhotos([])
+    }
+  }, [open])
 
   const handleAddCost = () => {
     setCosts([...costs, { name: '', description: '', amount: '' }])
@@ -140,14 +166,34 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       amount: parseFloat(cost.amount as string)
     }))
 
-    await onComplete(workPerformed.trim(), formattedCosts)
+    await onComplete(workPerformed.trim(), formattedCosts, completionPhotos)
   }
 
   const handleCompleteWithoutCosts = async () => {
     if (!validateWorkPerformed()) return
 
     // Complete with empty costs array but with workPerformed
-    await onComplete(workPerformed.trim(), [])
+    await onComplete(workPerformed.trim(), [], completionPhotos)
+  }
+
+  const handlePhotosChange = (newFiles: File[]) => {
+    setCompletionPhotos((prev) => [
+      ...prev,
+      ...newFiles.map((file) => ({ file, description: '' }))
+    ])
+  }
+
+  const handlePhotoRemove = (fileId: string) => {
+    const fileIndex = parseInt(fileId, 10)
+    setCompletionPhotos((prev) => prev.filter((_, index) => index !== fileIndex))
+  }
+
+  const handlePhotoDescriptionChange = (index: number, value: string) => {
+    setCompletionPhotos((prev) =>
+      prev.map((photo, photoIndex) =>
+        photoIndex === index ? { ...photo, description: value } : photo
+      )
+    )
   }
 
   const calculateTotal = () => {
@@ -282,6 +328,94 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
             }}
           />
         </Paper>
+
+        <Box sx={{ mb: 3 }}>
+          <Typography
+            variant='h6'
+            fontWeight={600}
+            gutterBottom
+            sx={{ mb: 2, color: '#3b82f6' }}
+          >
+            Evidencia fotográfica (opcional)
+          </Typography>
+          <Button
+            variant={showPhotoUpload ? 'contained' : 'outlined'}
+            startIcon={<AddAPhoto />}
+            onClick={() => setShowPhotoUpload((prev) => !prev)}
+            disabled={loading}
+            sx={{
+              borderRadius: '12px',
+              minHeight: 44
+            }}
+          >
+            {showPhotoUpload ? 'Ocultar fotos del servicio' : 'Adjuntar fotos del servicio'}
+          </Button>
+
+          <Collapse in={showPhotoUpload}>
+            <Paper
+              elevation={0}
+              sx={{
+                mt: 2,
+                p: 2,
+                borderRadius: '12px',
+                border: '1px dashed #6dc662',
+                background: 'rgba(109, 198, 98, 0.04)'
+              }}
+            >
+              <Typography variant='subtitle1' fontWeight={600} gutterBottom>
+                Evidencia fotográfica del servicio
+              </Typography>
+              <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                Puedes adjuntar hasta 5 fotos del trabajo realizado. Estas imágenes aparecerán en la orden de servicio PDF.
+              </Typography>
+              <MaintenanceFileUpload
+                files={completionPhotos.map((photo, index) => ({
+                  id: index.toString(),
+                  ticketId: '',
+                  fileName: photo.file.name,
+                  originalName: photo.file.name,
+                  fileType: photo.file.type,
+                  fileSize: photo.file.size,
+                  filePath: '',
+                  uploadedBy: '',
+                  uploadedAt: '',
+                  isImage: photo.file.type.startsWith('image/'),
+                  isVideo: false
+                } as MaintenanceFile))}
+                onFilesChange={handlePhotosChange}
+                onFileRemove={handlePhotoRemove}
+                acceptedFileTypes={['image/*']}
+                maxFiles={5}
+                maxSizeInMB={10}
+                disabled={loading}
+              />
+              {completionPhotos.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant='subtitle2' fontWeight={600} sx={{ mb: 1 }}>
+                    Descripción por foto (opcional)
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {completionPhotos.map((photo, index) => (
+                      <Grid item xs={12} key={`${photo.file.name}-${index}`}>
+                        <TextField
+                          fullWidth
+                          label={`Descripción de ${photo.file.name}`}
+                          placeholder='Ej: Estado final del equipo, pieza reemplazada, prueba de funcionamiento...'
+                          value={photo.description || ''}
+                          onChange={(e) =>
+                            handlePhotoDescriptionChange(index, e.target.value)
+                          }
+                          inputProps={{ maxLength: 250 }}
+                          helperText={`${(photo.description || '').length}/250 caracteres`}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+              )}
+            </Paper>
+          </Collapse>
+        </Box>
 
         {/* Costs Section Header */}
         <Typography

@@ -108,6 +108,7 @@ import MaintenanceFileUpload from '../../Components/Maintenance/MaintenanceFileU
 import MaintenanceTimeline from '../../Components/Maintenance/MaintenanceTimeline'
 import MaintenanceErrorBoundary from '../../Components/Maintenance/MaintenanceErrorBoundary'
 import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
+import type { CompletionPhotoInput } from '../../Components/Maintenance/CompletionCostsDialog'
 import useMaintenanceWebSocket from '../../hooks/useMaintenanceWebSocket'
 import useAxiosPrivate from '../../utils/use-axios-private'
 import { format } from 'date-fns'
@@ -458,26 +459,55 @@ const MaintenanceTicketDetails: React.FC = () => {
 
   const handleCompleteWithCosts = async (
     workPerformed: string,
-    costs: any[]
+    costs: any[],
+    completionPhotos: CompletionPhotoInput[]
   ) => {
     if (!ticket) return
 
     try {
+      const completionPayload = isTechnician
+        ? {
+            status: MaintenanceStatus.COMPLETED,
+            workPerformed,
+            costs
+          }
+        : {
+            ...editData,
+            status: MaintenanceStatus.COMPLETED,
+            workPerformed,
+            costs
+          }
+
       await updateTicketMutation.mutateAsync({
         id: ticket.id,
-        data: {
-          ...editData,
-          status: MaintenanceStatus.COMPLETED,
-          workPerformed,
-          costs: costs
-        }
+        data: completionPayload
       })
+      if (completionPhotos.length > 0) {
+        await Promise.all(
+          completionPhotos.map((photo) =>
+            uploadFilesMutation.mutateAsync({
+              ticketId: ticket.id,
+              files: [photo.file],
+              category: 'repair_photo',
+              description:
+                photo.description?.trim() ||
+                'Evidencia fotográfica del servicio completado',
+              isPublic: false
+            })
+          )
+        )
+      }
       setCostsDialogOpen(false)
       setEditMode(false)
       setEditErrors({})
       await refetchTicket()
       await refetchTimeline()
-      showToast('Ticket completado exitosamente', 'success')
+      showToast(
+        completionPhotos.length > 0
+          ? 'Ticket completado y fotos adjuntadas exitosamente'
+          : 'Ticket completado exitosamente',
+        'success'
+      )
     } catch (error: any) {
       console.error('Error completing ticket:', error)
       const errorMessage =
@@ -3148,7 +3178,9 @@ const MaintenanceTicketDetails: React.FC = () => {
             setEditData((prev) => ({ ...prev, status: ticket.status }))
           }}
           onComplete={handleCompleteWithCosts}
-          loading={updateTicketMutation.isLoading}
+          loading={
+            updateTicketMutation.isLoading || uploadFilesMutation.isLoading
+          }
         />
 
         <CostsListDialog

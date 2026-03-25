@@ -201,14 +201,28 @@ const maintenanceAPI = {
   // Files
   uploadFiles: async (
     ticketId: string,
-    files: File[]
+    files: File[],
+    options?: {
+      category?: string
+      description?: string
+      isPublic?: boolean
+    }
   ): Promise<MaintenanceFile[]> => {
     const formData = new FormData()
     files.forEach((file) => {
       formData.append('files', file)
     })
+    if (options?.category) {
+      formData.append('category', options.category)
+    }
+    if (options?.description) {
+      formData.append('description', options.description)
+    }
+    if (options?.isPublic !== undefined) {
+      formData.append('isPublic', String(options.isPublic))
+    }
 
-    const response = await axiosPrivate.post<MaintenanceFile[]>(
+    const response = await axiosPrivate.post<{ files?: MaintenanceFile[] } | MaintenanceFile[]>(
       `/maintenance/tickets/${ticketId}/files`,
       formData,
       {
@@ -217,7 +231,7 @@ const maintenanceAPI = {
         }
       }
     )
-    return response.data
+    return Array.isArray(response.data) ? response.data : response.data.files || []
   },
 
   deleteFile: async (_ticketId: string, fileId: string): Promise<void> => {
@@ -631,8 +645,19 @@ export const useUploadMaintenanceFiles = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ ticketId, files }: { ticketId: string; files: File[] }) =>
-      maintenanceAPI.uploadFiles(ticketId, files),
+    mutationFn: ({
+      ticketId,
+      files,
+      category,
+      description,
+      isPublic
+    }: {
+      ticketId: string
+      files: File[]
+      category?: string
+      description?: string
+      isPublic?: boolean
+    }) => maintenanceAPI.uploadFiles(ticketId, files, { category, description, isPublic }),
     onSuccess: (_, { ticketId }) => {
       queryClient.invalidateQueries({
         queryKey: ['maintenance-ticket', ticketId]
