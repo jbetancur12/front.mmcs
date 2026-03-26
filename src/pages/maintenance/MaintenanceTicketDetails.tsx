@@ -2449,93 +2449,143 @@ const MaintenanceTicketDetails: React.FC = () => {
 
               {editMode ? (
                 <>
-                  <FormControl fullWidth>
-                    <InputLabel>Técnico</InputLabel>
-                    <Select
-                      value={editData.assignedTechnician || ''}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          assignedTechnician: e.target.value
-                        }))
-                      }
-                      label='Técnico'
-                      disabled={ticket.status === MaintenanceStatus.COMPLETED}
+                  {isTechnician ? (
+                    <Box
+                      sx={{
+                        border: '1px solid #dbe3ef',
+                        borderRadius: 2,
+                        px: 2,
+                        py: 1.5,
+                        backgroundColor: '#f8fafc'
+                      }}
                     >
-                      <MenuItem value=''>Sin asignar</MenuItem>
-                      {technicians
-                        ?.filter((t) => t.status === 'active')
-                        .sort((a, b) => {
-                          const aCapacity = a.maxWorkload - a.workload
-                          const bCapacity = b.maxWorkload - b.workload
-                          return bCapacity - aCapacity
-                        })
-                        .map((technician) => {
-                          const utilizationPct =
-                            (technician.workload / technician.maxWorkload) * 100
-                          const isFull =
-                            technician.workload >= technician.maxWorkload
-                          const isNearFull = utilizationPct >= 80
+                      <Typography
+                        variant='caption'
+                        color='text.secondary'
+                        sx={{ display: 'block', mb: 0.5 }}
+                      >
+                        Técnico
+                      </Typography>
+                      <Typography variant='body1' fontWeight={600}>
+                        {ticket.assignedTechnician?.name || 'No asignado'}
+                      </Typography>
+                      <Typography variant='body2' color='text.secondary'>
+                        La asignación solo puede cambiarla coordinación o
+                        administración.
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <FormControl fullWidth>
+                      <InputLabel>Técnico</InputLabel>
+                      <Select
+                        value={editData.assignedTechnician || ''}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            assignedTechnician: e.target.value
+                          }))
+                        }
+                        label='Técnico'
+                        disabled={ticket.status === MaintenanceStatus.COMPLETED}
+                      >
+                        <MenuItem value=''>Sin asignar</MenuItem>
+                        {technicians
+                          ?.filter((t) => t.status === 'active')
+                          .sort((a, b) => {
+                            const aCapacity = a.maxWorkload - a.workload
+                            const bCapacity = b.maxWorkload - b.workload
+                            return bCapacity - aCapacity
+                          })
+                          .map((technician) => {
+                            const utilizationPct =
+                              (technician.workload / technician.maxWorkload) *
+                              100
+                            const isFull =
+                              technician.workload >= technician.maxWorkload
+                            const isNearFull = utilizationPct >= 80
 
-                          return (
-                            <MenuItem
-                              key={technician.id}
-                              value={technician.id}
-                              disabled={isFull}
-                            >
-                              <Box
-                                display='flex'
-                                flexDirection='column'
-                                width='100%'
+                            return (
+                              <MenuItem
+                                key={technician.id}
+                                value={technician.id}
+                                disabled={isFull}
                               >
                                 <Box
                                   display='flex'
-                                  alignItems='center'
-                                  gap={1}
+                                  flexDirection='column'
                                   width='100%'
                                 >
-                                  <Avatar
-                                    sx={{
-                                      width: 32,
-                                      height: 32,
-                                      fontSize: '0.875rem',
-                                      bgcolor: isFull
-                                        ? 'error.main'
-                                        : isNearFull
-                                          ? 'warning.main'
-                                          : 'success.main'
-                                    }}
-                                  >
-                                    {technician.name
-                                      .split(' ')
-                                      .map((n) => n[0])
-                                      .join('')
-                                      .toUpperCase()}
-                                  </Avatar>
-
-                                  <Box flex={1}>
-                                    <Typography
-                                      variant='body2'
-                                      fontWeight='medium'
-                                    >
-                                      {technician.name}
-                                    </Typography>
-                                    <Typography
-                                      variant='caption'
-                                      color='text.secondary'
-                                    >
-                                      {technician.specialization || 'General'}
-                                    </Typography>
-                                  </Box>
-
                                   <Box
                                     display='flex'
-                                    gap={0.5}
                                     alignItems='center'
+                                    gap={1}
+                                    width='100%'
                                   >
-                                    <Chip
-                                      size='small'
-                                      label={`${technician.workload}/${technician.maxWorkload}`}
+                                    <Avatar
+                                      sx={{
+                                        width: 32,
+                                        height: 32,
+                                        fontSize: '0.875rem',
+                                        bgcolor: isFull
+                                          ? 'error.main'
+                                          : isNearFull
+                                            ? 'warning.main'
+                                            : 'success.main'
+                                      }}
+                                    >
+                                      {technician.name
+                                        .split(' ')
+                                        .map((n) => n[0])
+                                        .join('')
+                                        .toUpperCase()}
+                                    </Avatar>
+
+                                    <Box flex={1}>
+                                      <Typography
+                                        variant='body2'
+                                        fontWeight='medium'
+                                      >
+                                        {technician.name}
+                                      </Typography>
+                                      <Typography
+                                        variant='caption'
+                                        color='text.secondary'
+                                      >
+                                        {technician.specialization || 'General'}
+                                      </Typography>
+                                    </Box>
+
+                                    <Box
+                                      display='flex'
+                                      gap={0.5}
+                                      alignItems='center'
+                                    >
+                                      <Chip
+                                        size='small'
+                                        label={`${technician.workload}/${technician.maxWorkload}`}
+                                        color={
+                                          isFull
+                                            ? 'error'
+                                            : isNearFull
+                                              ? 'warning'
+                                              : 'success'
+                                        }
+                                        variant='outlined'
+                                      />
+                                      {isFull && (
+                                        <Chip
+                                          size='small'
+                                          label='Completo'
+                                          color='error'
+                                        />
+                                      )}
+                                    </Box>
+                                  </Box>
+
+                                  <Box width='100%' mt={1}>
+                                    <LinearProgress
+                                      variant='determinate'
+                                      value={utilizationPct}
                                       color={
                                         isFull
                                           ? 'error'
@@ -2543,38 +2593,16 @@ const MaintenanceTicketDetails: React.FC = () => {
                                             ? 'warning'
                                             : 'success'
                                       }
-                                      variant='outlined'
+                                      sx={{ height: 4, borderRadius: 2 }}
                                     />
-                                    {isFull && (
-                                      <Chip
-                                        size='small'
-                                        label='Completo'
-                                        color='error'
-                                      />
-                                    )}
                                   </Box>
                                 </Box>
-
-                                <Box width='100%' mt={1}>
-                                  <LinearProgress
-                                    variant='determinate'
-                                    value={utilizationPct}
-                                    color={
-                                      isFull
-                                        ? 'error'
-                                        : isNearFull
-                                          ? 'warning'
-                                          : 'success'
-                                    }
-                                    sx={{ height: 4, borderRadius: 2 }}
-                                  />
-                                </Box>
-                              </Box>
-                            </MenuItem>
-                          )
-                        })}
-                    </Select>
-                  </FormControl>
+                              </MenuItem>
+                            )
+                          })}
+                      </Select>
+                    </FormControl>
+                  )}
 
                   {/* Capacity Warning Alert */}
                   {editData.assignedTechnician &&
