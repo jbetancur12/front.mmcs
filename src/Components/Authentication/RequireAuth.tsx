@@ -47,7 +47,8 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
         let token = localStorage.getItem('accessToken')
 
         if (!token) {
-          token = await refresh()
+          const refreshResult = await refresh()
+          token = refreshResult.accessToken
 
           if (!token) {
             throw new Error('Token no encontrado')

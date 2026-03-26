@@ -4,6 +4,7 @@ import {
   Alert,
   Box,
   Button,
+  CircularProgress,
   Collapse,
   Dialog,
   DialogActions,
@@ -13,6 +14,7 @@ import {
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { axiosPublic } from '@utils/api'
+import useRefreshToken from '@utils/use-refresh-token'
 
 interface SessionExpiryBannerProps {
   finalWarningMsBefore?: number
@@ -37,12 +39,14 @@ const SessionExpiryBanner = ({
   warningMsBefore = 30_000
 }: SessionExpiryBannerProps) => {
   const navigate = useNavigate()
+  const refresh = useRefreshToken()
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null)
   const [warningKey, setWarningKey] = useState<string | null>(null)
   const [dismissedKey, setDismissedKey] = useState<string | null>(
     sessionStorage.getItem('session-expiry-banner-dismissed')
   )
   const [finalWarningDismissed, setFinalWarningDismissed] = useState(false)
+  const [isRenewingSession, setIsRenewingSession] = useState(false)
   const hasHandledExpiry = useRef(false)
 
   const handleSessionExpired = useCallback(async () => {
@@ -64,6 +68,22 @@ const SessionExpiryBanner = ({
     sessionStorage.clear()
     navigate('/login', { replace: true })
   }, [navigate])
+
+  const handleContinueSession = useCallback(async () => {
+    try {
+      setIsRenewingSession(true)
+      hasHandledExpiry.current = false
+      await refresh()
+      setFinalWarningDismissed(false)
+      sessionStorage.removeItem('session-expiry-banner-dismissed')
+      setDismissedKey(null)
+    } catch (error) {
+      console.error('Error al renovar la sesión manualmente:', error)
+      await handleSessionExpired()
+    } finally {
+      setIsRenewingSession(false)
+    }
+  }, [handleSessionExpired, refresh])
 
   useEffect(() => {
     const updateBanner = () => {
@@ -187,9 +207,23 @@ const SessionExpiryBanner = ({
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button
+            variant='outlined'
+            color='warning'
+            onClick={handleContinueSession}
+            disabled={isRenewingSession}
+            startIcon={
+              isRenewingSession ? (
+                <CircularProgress size={16} color='inherit' />
+              ) : undefined
+            }
+          >
+            {isRenewingSession ? 'Renovando...' : 'Continuar sesión'}
+          </Button>
+          <Button
             variant='contained'
             color='warning'
             onClick={() => setFinalWarningDismissed(true)}
+            disabled={isRenewingSession}
           >
             Entendido
           </Button>

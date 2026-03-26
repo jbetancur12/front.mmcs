@@ -101,7 +101,8 @@ const useAxiosPrivate = () => {
           isRefreshing.current = true
 
           try {
-            const newToken = await refresh()
+            const refreshResult = await refresh()
+            const newToken = refreshResult.accessToken
 
             if (!newToken) {
               throw new Error('No se pudo renovar el access token')
