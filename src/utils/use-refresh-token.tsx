@@ -1,7 +1,8 @@
+import { useCallback } from 'react'
 import { axiosPublic } from './api'
 
 const useRefreshToken = () => {
-  const refresh = async (): Promise<any> => {
+  const refresh = useCallback(async (): Promise<any> => {
     /**
      * This sends a request to the server to get
      * a new access token. the refresh token is valid (if valid)
@@ -12,7 +13,7 @@ const useRefreshToken = () => {
     })
 
     return response.data.accessToken
-  }
+  }, [])
   return refresh
 }
 

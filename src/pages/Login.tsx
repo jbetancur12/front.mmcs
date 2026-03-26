@@ -166,7 +166,7 @@ const Login: React.FC = () => {
         const expirationDate = new Date(expiresIn)
         Cookies.set('expiresIn', expiresIn.toString(), {
           expires: expirationDate, // Fecha de expiración real
-          secure: true,
+          secure: window.location.protocol === 'https:',
           sameSite: 'strict',
           path: '/'
         })

@@ -1,10 +1,8 @@
-import { axiosPrivate } from '@utils/api'
+import { axiosPublic } from '@utils/api'
 
 const refreshToken = async () => {
   try {
-    const response = await axiosPrivate.get(`/auth/refresh-token`, {
-      withCredentials: true
-    })
+    const response = await axiosPublic.get(`/auth/refresh-token`)
 
     if (response.status !== 200) {
       throw new Error('No se pudo renovar el token')
@@ -18,8 +16,7 @@ const refreshToken = async () => {
     return accessToken
   } catch (error) {
     console.error(error)
-    // Manejo de errores
-    return null
+    throw error
   }
 }
 

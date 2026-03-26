@@ -9,11 +9,28 @@ import {
 } from 'src/store/deviceIotStore'
 
 export const wss = () => {
+  const currentHost = window.location.hostname
+  const isPrivateNetworkHost =
+    /^10\./.test(currentHost) ||
+    /^192\.168\./.test(currentHost) ||
+    /^172\.(1[6-9]|2\d|3[0-1])\./.test(currentHost)
+  const isLocalDevelopmentHost =
+    currentHost === 'localhost' ||
+    currentHost === '127.0.0.1' ||
+    isPrivateNetworkHost
+
   if (import.meta.env.VITE_ENV === 'development') {
-    return window.location.hostname.includes('localhost') ||
-      window.location.hostname.includes('127.0.0.1')
-      ? import.meta.env.VITE_WS_URL // Usar localhost si estás en casa
-      : import.meta.env.VITE_WS_URL_CLOUDFARE // Usar Cloudflare si estás fuera
+    if (isLocalDevelopmentHost) {
+      try {
+        const url = new URL(import.meta.env.VITE_WS_URL)
+        url.hostname = currentHost
+        return url.toString()
+      } catch {
+        return import.meta.env.VITE_WS_URL
+      }
+    }
+
+    return import.meta.env.VITE_WS_URL_CLOUDFARE
   } else {
     return import.meta.env.VITE_WS_URL
   }

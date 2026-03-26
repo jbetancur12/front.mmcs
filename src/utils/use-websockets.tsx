@@ -33,11 +33,29 @@ interface WebSocketProviderProps {
 
 const wss = () => {
   const token = localStorage.getItem('accessToken')
+  const currentHost = window.location.hostname
+  const isPrivateNetworkHost =
+    /^10\./.test(currentHost) ||
+    /^192\.168\./.test(currentHost) ||
+    /^172\.(1[6-9]|2\d|3[0-1])\./.test(currentHost)
+  const isLocalDevelopmentHost =
+    currentHost === 'localhost' ||
+    currentHost === '127.0.0.1' ||
+    isPrivateNetworkHost
+
   if (import.meta.env.VITE_ENV === 'development') {
-    return window.location.hostname.includes('localhost') ||
-      window.location.hostname.includes('127.0.0.1')
-      ? import.meta.env.VITE_WS_URL + '?token=' + token // Usar localhost si estás en casa
-      : import.meta.env.VITE_WS_URL_CLOUDFARE + '?token=' + token // Usar Cloudflare si estás fuera
+    if (isLocalDevelopmentHost) {
+      try {
+        const url = new URL(import.meta.env.VITE_WS_URL)
+        url.hostname = currentHost
+        url.searchParams.set('token', token || '')
+        return url.toString()
+      } catch {
+        return import.meta.env.VITE_WS_URL + '?token=' + token
+      }
+    }
+
+    return import.meta.env.VITE_WS_URL_CLOUDFARE + '?token=' + token
   } else {
     return import.meta.env.VITE_WS_URL + '?token=' + token
   }

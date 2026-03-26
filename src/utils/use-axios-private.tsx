@@ -47,7 +47,7 @@
 //         resolve(token)
 //       }
 //     })
-    
+
 //     failedQueue.current = []
 //   }
 
@@ -99,10 +99,10 @@
 //           try {
 //             const newToken = await refresh()
 //             localStorage.setItem('accessToken', newToken)
-            
+
 //             // Procesar cola de requests pendientes
 //             processQueue(null, newToken)
-            
+
 //             // Reintentar request original
 //             originalConfig.headers.Authorization = `Bearer ${newToken}`
 //             return axiosPrivate(originalConfig)
@@ -190,14 +190,20 @@ const useAxiosPrivate = () => {
           sent.current = true
           try {
             const newToken = await refresh()
+
+            if (!newToken) {
+              throw new Error('No se pudo renovar el access token')
+            }
+
             localStorage.setItem('accessToken', newToken)
 
+            originalConfig.headers = originalConfig.headers || {}
             originalConfig.headers.Authorization = `Bearer ${newToken}`
             return axiosPrivate(originalConfig)
           } catch (refreshError) {
             // Eliminar refresh token del backend y limpiar frontend
             try {
-              await axiosPrivate.post('/auth/logout')
+              await axiosPrivate.post('/auth/logout', {})
             } catch (logoutError) {
               console.error('Error al cerrar sesión:', logoutError)
             }
@@ -217,7 +223,7 @@ const useAxiosPrivate = () => {
         // Si el refresh también falla con 401, cerrar sesión limpiamente.
         if (error.response?.status === 401) {
           try {
-            await axiosPrivate.post('/auth/logout')
+            await axiosPrivate.post('/auth/logout', {})
           } catch (logoutError) {
             console.error('Error al cerrar sesión:', logoutError)
           }
