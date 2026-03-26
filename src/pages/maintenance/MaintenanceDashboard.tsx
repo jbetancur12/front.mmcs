@@ -362,7 +362,7 @@ const MaintenanceDashboard: React.FC = () => {
   }, [ticketsData?.tickets])
 
   const handleEditTicket = (ticket: MaintenanceTicket) => {
-    if (ticket.customerSignatureData) {
+    if (maintenanceSignaturesEnabled && ticket.customerSignatureData) {
       showToast(
         'Este ticket ya fue firmado por el cliente y su contenido técnico quedó bloqueado',
         'warning'
@@ -535,7 +535,7 @@ const MaintenanceDashboard: React.FC = () => {
   }
 
   const handleOpenTechnicalReport = (ticket: MaintenanceTicket) => {
-    if (ticket.customerSignatureData) {
+    if (maintenanceSignaturesEnabled && ticket.customerSignatureData) {
       showToast(
         'El reporte técnico ya no puede editarse después de la firma del cliente',
         'warning'

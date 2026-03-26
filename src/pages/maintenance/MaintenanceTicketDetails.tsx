@@ -222,11 +222,17 @@ const MaintenanceTicketDetails: React.FC = () => {
     (ticket?.assignedTechnicianId !== undefined &&
       currentTechnician?.id !== undefined &&
       String(ticket.assignedTechnicianId) === String(currentTechnician.id))
-  const hasCustomerSignature = Boolean(ticket?.customerSignatureData)
-  const hasTechnicianSignature = Boolean(
-    ticket?.technicianSignatureData || ticket?.assignedTechnician?.signatureData
-  )
-  const isCustomerApprovalLocked = hasCustomerSignature
+  const hasCustomerSignature = maintenanceSignaturesEnabled
+    ? Boolean(ticket?.customerSignatureData)
+    : false
+  const hasTechnicianSignature = maintenanceSignaturesEnabled
+    ? Boolean(
+        ticket?.technicianSignatureData ||
+          ticket?.assignedTechnician?.signatureData
+      )
+    : false
+  const isCustomerApprovalLocked =
+    maintenanceSignaturesEnabled && hasCustomerSignature
   const signaturesMissing =
     maintenanceSignaturesEnabled &&
     ticket?.status === MaintenanceStatus.COMPLETED &&
