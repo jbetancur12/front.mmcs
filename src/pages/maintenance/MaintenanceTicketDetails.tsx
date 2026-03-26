@@ -226,6 +226,7 @@ const MaintenanceTicketDetails: React.FC = () => {
   const hasTechnicianSignature = Boolean(
     ticket?.technicianSignatureData || ticket?.assignedTechnician?.signatureData
   )
+  const isCustomerApprovalLocked = hasCustomerSignature
   const signaturesMissing =
     maintenanceSignaturesEnabled &&
     ticket?.status === MaintenanceStatus.COMPLETED &&
@@ -427,6 +428,13 @@ const MaintenanceTicketDetails: React.FC = () => {
   const handleEdit = () => {
     if (!canEditTicket) {
       showToast('Solo puedes editar tickets asignados a tu usuario', 'warning')
+      return
+    }
+    if (isCustomerApprovalLocked) {
+      showToast(
+        'Este ticket ya fue firmado por el cliente y su contenido técnico quedó bloqueado',
+        'warning'
+      )
       return
     }
     setEditMode(true)
@@ -758,6 +766,35 @@ const MaintenanceTicketDetails: React.FC = () => {
         'Error al guardar las firmas'
       showToast(errorMessage, 'error')
       throw error
+    }
+  }
+
+  const handleRevokeCustomerSignature = async () => {
+    if (!ticket || !canManageTechnicians) return
+
+    try {
+      await updateTicketMutation.mutateAsync({
+        id: ticket.id,
+        data: {
+          customerSignerName: null,
+          customerSignatureData: null
+        }
+      })
+
+      await refetchTicket()
+      await refetchTimeline()
+      await refetchTechnicalReport()
+      showToast(
+        'La firma del cliente fue revocada. El contenido técnico vuelve a estar editable.',
+        'success'
+      )
+    } catch (error: any) {
+      console.error('Error revoking customer signature:', error)
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Error al revocar la firma del cliente'
+      showToast(errorMessage, 'error')
     }
   }
 
@@ -1647,7 +1684,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   variant='contained'
                   startIcon={!isMobile && <Edit />}
                   onClick={handleEdit}
-                  disabled={!canEditTicket}
+                  disabled={!canEditTicket || isCustomerApprovalLocked}
                   size={isMobile ? 'small' : 'medium'}
                   sx={{
                     minHeight: 48,
@@ -3331,13 +3368,30 @@ const MaintenanceTicketDetails: React.FC = () => {
                         />
                       )}
                     </Stack>
+                    {isCustomerApprovalLocked && (
+                      <Alert severity='info' sx={{ mt: 1.5 }}>
+                        El cliente ya firmó la conformidad del servicio. El
+                        reporte técnico quedó bloqueado para proteger la
+                        trazabilidad documental.
+                      </Alert>
+                    )}
                   </Box>
 
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
                     <Button
                       variant='outlined'
                       startIcon={<Description />}
-                      onClick={() => setTechnicalReportDialogOpen(true)}
+                      onClick={() => {
+                        if (isCustomerApprovalLocked) {
+                          showToast(
+                            'El reporte técnico ya no puede editarse después de la firma del cliente',
+                            'warning'
+                          )
+                          return
+                        }
+                        setTechnicalReportDialogOpen(true)
+                      }}
+                      disabled={isCustomerApprovalLocked}
                     >
                       {technicalReport?.updatedAt
                         ? 'Editar reporte'
@@ -3451,6 +3505,23 @@ const MaintenanceTicketDetails: React.FC = () => {
                         ? 'Registrar firmas'
                         : 'Actualizar firmas'}
                     </Button>
+                    {canManageTechnicians && hasCustomerSignature && (
+                      <Button
+                        variant='text'
+                        color='warning'
+                        startIcon={<Lock />}
+                        onClick={() =>
+                          showConfirmDialog(
+                            'Revocar firma del cliente',
+                            'Esta acción quitará la firma del cliente y volverá a habilitar la edición del reporte técnico y del cierre del servicio. ¿Deseas continuar?',
+                            handleRevokeCustomerSignature,
+                            'warning'
+                          )
+                        }
+                      >
+                        Revocar firma cliente
+                      </Button>
+                    )}
                   </Box>
                 </Paper>
               )}
@@ -3570,8 +3641,18 @@ const MaintenanceTicketDetails: React.FC = () => {
                     fullWidth
                     variant='outlined'
                     startIcon={<Science />}
-                    onClick={() => setTechnicalReportDialogOpen(true)}
+                    onClick={() => {
+                      if (isCustomerApprovalLocked) {
+                        showToast(
+                          'El reporte técnico ya no puede editarse después de la firma del cliente',
+                          'warning'
+                        )
+                        return
+                      }
+                      setTechnicalReportDialogOpen(true)
+                    }}
                     size='small'
+                    disabled={isCustomerApprovalLocked}
                   >
                     Reporte Técnico
                   </Button>
