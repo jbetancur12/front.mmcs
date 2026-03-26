@@ -73,6 +73,8 @@ export interface MaintenanceTicket {
   customerSatisfaction?: number
   location: string
   workPerformed?: string
+  intakePhysicalCondition?: string | null
+  receivedAccessories?: string | null
   createdAt: string
   updatedAt: string
   comments: MaintenanceComment[]
@@ -232,6 +234,8 @@ export interface MaintenanceUpdateRequest {
   priority?: MaintenancePriority
   location?: string
   workPerformed?: string
+  intakePhysicalCondition?: string | null
+  receivedAccessories?: string | null
   costs?: MaintenanceTicketCost[]
   isInvoiced?: boolean
   technicianSignatureData?: string | null

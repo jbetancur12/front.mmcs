@@ -375,7 +375,9 @@ const MaintenanceDashboard: React.FC = () => {
       status: ticket.status,
       assignedTechnician: ticket.assignedTechnicianId || '',
       scheduledDate: ticket.scheduledDate || '',
-      priority: ticket.priority
+      priority: ticket.priority,
+      intakePhysicalCondition: ticket.intakePhysicalCondition || '',
+      receivedAccessories: ticket.receivedAccessories || ''
     })
     setEditDialogOpen(true)
   }
@@ -1641,6 +1643,44 @@ const MaintenanceDashboard: React.FC = () => {
                 />
               </Grid>
             )}
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                size={isMobile ? 'small' : 'medium'}
+                id='edit-intake-physical-condition'
+                label='Estado físico inicial'
+                value={editData.intakePhysicalCondition || ''}
+                onChange={(e) =>
+                  setEditData((prev) => ({
+                    ...prev,
+                    intakePhysicalCondition: e.target.value
+                  }))
+                }
+                multiline
+                minRows={3}
+                placeholder='Rayones, golpes, faltantes o condición general al recibir el equipo'
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                size={isMobile ? 'small' : 'medium'}
+                id='edit-received-accessories'
+                label='Accesorios recibidos'
+                value={editData.receivedAccessories || ''}
+                onChange={(e) =>
+                  setEditData((prev) => ({
+                    ...prev,
+                    receivedAccessories: e.target.value
+                  }))
+                }
+                multiline
+                minRows={3}
+                placeholder='Cables, sensores, fuente, batería, adaptadores u otros accesorios entregados'
+              />
+            </Grid>
 
             {/* Capacity Warning Alert */}
             {editData.assignedTechnician &&

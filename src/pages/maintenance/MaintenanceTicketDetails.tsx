@@ -295,7 +295,9 @@ const MaintenanceTicketDetails: React.FC = () => {
         setEditData({
           status: ticket.status,
           priority: ticket.priority,
-          workPerformed: ticket.workPerformed || ''
+          workPerformed: ticket.workPerformed || '',
+          intakePhysicalCondition: ticket.intakePhysicalCondition || '',
+          receivedAccessories: ticket.receivedAccessories || ''
         })
       } else {
         setEditData({
@@ -305,7 +307,9 @@ const MaintenanceTicketDetails: React.FC = () => {
           priority: ticket.priority,
           estimatedCost: ticket.estimatedCost,
           actualCost: ticket.actualCost,
-          location: ticket.location
+          location: ticket.location,
+          intakePhysicalCondition: ticket.intakePhysicalCondition || '',
+          receivedAccessories: ticket.receivedAccessories || ''
         })
       }
     }
@@ -418,7 +422,9 @@ const MaintenanceTicketDetails: React.FC = () => {
         setEditData({
           status: ticket.status,
           priority: ticket.priority,
-          workPerformed: ticket.workPerformed || ''
+          workPerformed: ticket.workPerformed || '',
+          intakePhysicalCondition: ticket.intakePhysicalCondition || '',
+          receivedAccessories: ticket.receivedAccessories || ''
         })
       } else {
         setEditData({
@@ -428,7 +434,9 @@ const MaintenanceTicketDetails: React.FC = () => {
           priority: ticket.priority,
           estimatedCost: ticket.estimatedCost,
           actualCost: ticket.actualCost,
-          location: ticket.location
+          location: ticket.location,
+          intakePhysicalCondition: ticket.intakePhysicalCondition || '',
+          receivedAccessories: ticket.receivedAccessories || ''
         })
       }
     }
@@ -450,6 +458,24 @@ const MaintenanceTicketDetails: React.FC = () => {
       editData.location.trim().length < 5
     ) {
       errors.location = 'La ubicación debe tener al menos 5 caracteres'
+    }
+
+    if (
+      editData.intakePhysicalCondition &&
+      editData.intakePhysicalCondition.trim().length > 0 &&
+      editData.intakePhysicalCondition.trim().length < 3
+    ) {
+      errors.intakePhysicalCondition =
+        'Describe un poco mejor cómo se recibió el equipo'
+    }
+
+    if (
+      editData.receivedAccessories &&
+      editData.receivedAccessories.trim().length > 0 &&
+      editData.receivedAccessories.trim().length < 3
+    ) {
+      errors.receivedAccessories =
+        'Indica mejor los accesorios recibidos o deja el campo vacío'
     }
 
     if (editData.scheduledDate) {
@@ -489,7 +515,9 @@ const MaintenanceTicketDetails: React.FC = () => {
       const payload = isTechnician
         ? {
             status: editData.status,
-            workPerformed: editData.workPerformed
+            workPerformed: editData.workPerformed,
+            intakePhysicalCondition: editData.intakePhysicalCondition,
+            receivedAccessories: editData.receivedAccessories
           }
         : editData
 
@@ -1936,6 +1964,119 @@ const MaintenanceTicketDetails: React.FC = () => {
                   ) : (
                     <Typography variant='body1' sx={{ whiteSpace: 'pre-wrap' }}>
                       {ticket.location}
+                    </Typography>
+                  )}
+                </Grid>
+              </Grid>
+            </Paper>
+
+            <Paper
+              sx={{
+                ...surfaceSx,
+                p: 3,
+                mb: 3,
+              }}
+              role='region'
+              aria-label='Recepción del equipo'
+            >
+              <Box display='flex' alignItems='center' gap={1} mb={2}>
+                <Box
+                  sx={{
+                    backgroundColor: '#fff7ed',
+                    borderRadius: '8px',
+                    p: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <Assignment
+                    sx={{ color: '#c2410c', fontSize: 20 }}
+                    aria-hidden='true'
+                  />
+                </Box>
+                <Typography
+                  variant='h6'
+                  sx={{
+                    fontWeight: 600,
+                    color: '#0f172a'
+                  }}
+                >
+                  Recepción del Equipo
+                </Typography>
+              </Box>
+
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    gutterBottom
+                  >
+                    Estado físico inicial
+                  </Typography>
+                  {editMode ? (
+                    <TextField
+                      fullWidth
+                      label='Estado físico inicial'
+                      value={editData.intakePhysicalCondition || ''}
+                      onChange={(e) =>
+                        setEditData((prev) => ({
+                          ...prev,
+                          intakePhysicalCondition: e.target.value
+                        }))
+                      }
+                      size='small'
+                      multiline
+                      minRows={4}
+                      placeholder='Rayones, golpes, faltantes o condición general del equipo al recibirlo'
+                      error={!!editErrors.intakePhysicalCondition}
+                      helperText={
+                        editErrors.intakePhysicalCondition ||
+                        'Opcional, pero muy útil para la orden de servicio'
+                      }
+                    />
+                  ) : (
+                    <Typography variant='body1' sx={{ whiteSpace: 'pre-wrap' }}>
+                      {ticket.intakePhysicalCondition ||
+                        'Pendiente de registrar en recepción'}
+                    </Typography>
+                  )}
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    gutterBottom
+                  >
+                    Accesorios recibidos
+                  </Typography>
+                  {editMode ? (
+                    <TextField
+                      fullWidth
+                      label='Accesorios recibidos'
+                      value={editData.receivedAccessories || ''}
+                      onChange={(e) =>
+                        setEditData((prev) => ({
+                          ...prev,
+                          receivedAccessories: e.target.value
+                        }))
+                      }
+                      size='small'
+                      multiline
+                      minRows={4}
+                      placeholder='Cables, sensores, adaptadores, batería, mangueras u otros accesorios'
+                      error={!!editErrors.receivedAccessories}
+                      helperText={
+                        editErrors.receivedAccessories ||
+                        'Opcional, pero recomendado para trazabilidad'
+                      }
+                    />
+                  ) : (
+                    <Typography variant='body1' sx={{ whiteSpace: 'pre-wrap' }}>
+                      {ticket.receivedAccessories ||
+                        'Pendiente de registrar en recepción'}
                     </Typography>
                   )}
                 </Grid>
