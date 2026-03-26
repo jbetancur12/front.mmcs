@@ -151,6 +151,102 @@ function Certificates() {
   const handleEdit = async (field: string) => {
     const fieldLabel = fieldLabels[field] || field
 
+    if (field === 'equipo') {
+      try {
+        const response = await axiosPrivate.get('/devices')
+        const devices = Array.isArray(response.data) ? response.data : []
+
+        if (!devices.length) {
+          MySwal.fire(
+            'Sin equipos',
+            'No se encontraron equipos disponibles en el catálogo.',
+            'info'
+          )
+          return
+        }
+
+        const sortedDevices = [...devices].sort((a, b) =>
+          String(a.name || '').localeCompare(String(b.name || ''), 'es', {
+            sensitivity: 'base'
+          })
+        )
+
+        const inputOptions = sortedDevices.reduce(
+          (acc, device) => {
+            acc[String(device.id)] = device.name
+            return acc
+          },
+          {} as Record<string, string>
+        )
+
+        const selectionResult = await MySwal.fire({
+          title: 'Seleccionar equipo',
+          text: 'Elige el equipo correcto para este certificado.',
+          input: 'select',
+          inputOptions,
+          inputValue: certificateData?.deviceId
+            ? String(certificateData.deviceId)
+            : '',
+          inputPlaceholder: 'Selecciona un equipo',
+          showCancelButton: true,
+          confirmButtonText: 'Continuar',
+          cancelButtonText: 'Cancelar',
+          inputValidator: (value) => {
+            if (!value) return 'Debes seleccionar un equipo'
+            return null
+          }
+        })
+
+        if (!selectionResult.isConfirmed) return
+
+        const selectedDeviceId = Number(selectionResult.value)
+        const selectedDevice = sortedDevices.find(
+          (device) => Number(device.id) === selectedDeviceId
+        )
+
+        if (!selectedDevice) {
+          MySwal.fire('Error', 'No se encontró el equipo seleccionado.', 'error')
+          return
+        }
+
+        if (selectedDeviceId === Number(certificateData?.deviceId)) {
+          return
+        }
+
+        const confirmResult = await MySwal.fire({
+          title: '¿Estás seguro?',
+          text: `Este certificado quedará asociado al equipo "${selectedDevice.name}".`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, cambiar equipo',
+          cancelButtonText: 'Cancelar'
+        })
+
+        if (!confirmResult.isConfirmed) return
+
+        const updateResponse = await axiosPrivate.put(`/files/${id}`, {
+          deviceId: selectedDeviceId
+        })
+
+        if (updateResponse.status === 200) {
+          MySwal.fire(
+            'Actualizado',
+            'El equipo asociado al certificado fue actualizado exitosamente.',
+            'success'
+          )
+          getCertificateInfo()
+        }
+      } catch (error) {
+        MySwal.fire(
+          'Error',
+          'No se pudo actualizar el equipo asociado al certificado.',
+          'error'
+        )
+      }
+
+      return
+    }
+
     if (field === 'calibrationDate' || field === 'nextCalibrationDate') {
       // Si el campo es una fecha, usamos DatePicker
       let selectedDate: Date | null = null
@@ -410,7 +506,10 @@ function Certificates() {
                     icon={<Devices />}
                     label="Equipo"
                     value={certificateData?.device?.name}
-                    editable={false}
+                    editable={true}
+                    field="equipo"
+                    onEdit={handleEdit}
+                    userRoles={$userStore.rol}
                   />
                 </Grid>
 
