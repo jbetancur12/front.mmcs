@@ -189,6 +189,17 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
             </Box>
           </Box>
           <Box display='flex' alignItems='center' gap={1} flexWrap='wrap'>
+            {ticket.status === 'completed' && ticket.technicalReport?.updatedAt && (
+              <Chip
+                size='small'
+                label='Reporte técnico'
+                sx={{
+                  backgroundColor: '#eff6ff',
+                  color: '#1d4ed8',
+                  fontWeight: 600
+                }}
+              />
+            )}
             <MaintenancePriorityBadge priority={ticket.priority} size='small' />
             <MaintenanceStatusBadge status={ticket.status} />
           </Box>

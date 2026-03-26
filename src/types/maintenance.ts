@@ -7,6 +7,50 @@ export interface MaintenanceTicketCost {
   createdAt?: string
 }
 
+export interface MaintenanceTechnicalReportPart {
+  description: string
+  quantity: number
+  code?: string
+  notes?: string
+}
+
+export interface MaintenanceTechnicalReportTool {
+  name: string
+  serial?: string | null
+  calibrationDue?: string | null
+}
+
+export interface MaintenanceTechnicalReportTest {
+  parameter: string
+  result: string
+  value?: string
+  notes?: string
+}
+
+export interface MaintenanceTechnicalReport {
+  id?: string | null
+  ticketId: string
+  maintenanceType: string
+  serviceFinalStatus?: string | null
+  deliveryStatus?: string | null
+  riskClass?: string
+  finalDiagnosis?: string
+  rootCause?: string
+  activities: string[]
+  parts: MaintenanceTechnicalReportPart[]
+  verificationProtocolType?: string
+  verificationTools: MaintenanceTechnicalReportTool[]
+  verificationTests: MaintenanceTechnicalReportTest[]
+  recommendations?: string
+  nextMaintenanceDate?: string | null
+  warrantyDays: number
+  warrantyTerms?: string
+  scopeClause?: string
+  responsibilityClause?: string
+  createdAt?: string | null
+  updatedAt?: string | null
+}
+
 export interface MaintenanceTicket {
   id: string
   ticketCode: string
@@ -41,6 +85,7 @@ export interface MaintenanceTicket {
   customerSignatureData?: string | null
   customerSignedAt?: string | null
   customerSignerName?: string | null
+  technicalReport?: MaintenanceTechnicalReport | null
 }
 
 export interface MaintenanceTicketCreateResponse {
@@ -192,6 +237,26 @@ export interface MaintenanceUpdateRequest {
   technicianSignatureData?: string | null
   customerSignatureData?: string | null
   customerSignerName?: string | null
+}
+
+export interface MaintenanceTechnicalReportRequest {
+  maintenanceType?: string
+  serviceFinalStatus?: string | null
+  deliveryStatus?: string | null
+  riskClass?: string
+  finalDiagnosis?: string
+  rootCause?: string
+  activities: string[]
+  parts: MaintenanceTechnicalReportPart[]
+  verificationProtocolType?: string
+  verificationTools: MaintenanceTechnicalReportTool[]
+  verificationTests: MaintenanceTechnicalReportTest[]
+  recommendations?: string
+  nextMaintenanceDate?: string | null
+  warrantyDays?: number
+  warrantyTerms?: string
+  scopeClause?: string
+  responsibilityClause?: string
 }
 
 export interface MaintenanceFilters {

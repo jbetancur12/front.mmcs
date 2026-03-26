@@ -75,6 +75,7 @@ import {
   TrendingUp,
   Download,
   Draw,
+  Science,
   // Assessment,
   Lock,
   CheckCircle
@@ -92,6 +93,9 @@ import {
   useTechnicianByEmail,
   useMaintenanceTimeline,
   useGenerateServiceOrder,
+  useGenerateTechnicalReport,
+  useMaintenanceTechnicalReport,
+  useUpsertMaintenanceTechnicalReport,
   useGenerateStatusReport,
   useGenerateServiceCertificate,
   useGenerateServiceInvoice
@@ -101,7 +105,8 @@ import {
   MaintenanceStatus,
   MaintenancePriority,
   MaintenanceUpdateRequest,
-  MaintenanceFile
+  MaintenanceFile,
+  MaintenanceTechnicalReportRequest
 } from '../../types/maintenance'
 import MaintenanceStatusBadge from '../../Components/Maintenance/MaintenanceStatusBadge'
 import MaintenancePriorityBadge from '../../Components/Maintenance/MaintenancePriorityBadge'
@@ -111,6 +116,7 @@ import MaintenanceTimeline from '../../Components/Maintenance/MaintenanceTimelin
 import MaintenanceErrorBoundary from '../../Components/Maintenance/MaintenanceErrorBoundary'
 import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
 import MaintenanceSignaturesDialog from '../../Components/Maintenance/MaintenanceSignaturesDialog'
+import MaintenanceTechnicalReportDialog from '../../Components/Maintenance/MaintenanceTechnicalReportDialog'
 import { maintenanceSignaturesEnabled } from '../../features/maintenanceFlags'
 import type {
   CompletionPhotoInput,
@@ -176,6 +182,7 @@ const MaintenanceTicketDetails: React.FC = () => {
   const [costsDialogOpen, setCostsDialogOpen] = useState(false)
   const [signaturesDialogOpen, setSignaturesDialogOpen] = useState(false)
   const [briefCostsDialogOpen, setBriefCostsDialogOpen] = useState(false)
+  const [technicalReportDialogOpen, setTechnicalReportDialogOpen] = useState(false)
   const [realTimeUpdatesEnabled, setRealTimeUpdatesEnabled] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [editErrors, setEditErrors] = useState<Record<string, string>>({})
@@ -236,7 +243,13 @@ const MaintenanceTicketDetails: React.FC = () => {
     isLoading: timelineLoading,
     refetch: refetchTimeline
   } = useMaintenanceTimeline(ticketId || '')
+  const {
+    data: technicalReport,
+    isLoading: technicalReportLoading,
+    refetch: refetchTechnicalReport
+  } = useMaintenanceTechnicalReport(ticketId || '')
   const updateTicketMutation = useUpdateMaintenanceTicket()
+  const upsertTechnicalReportMutation = useUpsertMaintenanceTechnicalReport()
   const addCommentMutation = useAddMaintenanceComment()
   const updateCommentMutation = useUpdateMaintenanceComment()
   const deleteCommentMutation = useDeleteMaintenanceComment()
@@ -246,6 +259,7 @@ const MaintenanceTicketDetails: React.FC = () => {
 
   // PDF generation mutations
   const generateServiceOrderMutation = useGenerateServiceOrder()
+  const generateTechnicalReportMutation = useGenerateTechnicalReport()
   const generateStatusReportMutation = useGenerateStatusReport()
   const generateServiceCertificateMutation = useGenerateServiceCertificate()
   const generateServiceInvoiceMutation = useGenerateServiceInvoice()
@@ -324,6 +338,25 @@ const MaintenanceTicketDetails: React.FC = () => {
       />
     )
   }, [ticket?.isInvoiced])
+
+  const technicalReportCompletion = useMemo(() => {
+    if (!technicalReport) return 0
+
+    const checkpoints = [
+      technicalReport.finalDiagnosis,
+      technicalReport.rootCause,
+      technicalReport.activities?.length,
+      technicalReport.parts?.length,
+      technicalReport.verificationProtocolType,
+      technicalReport.verificationTests?.length,
+      technicalReport.recommendations,
+      technicalReport.scopeClause,
+      technicalReport.responsibilityClause
+    ]
+
+    const completed = checkpoints.filter(Boolean).length
+    return Math.round((completed / checkpoints.length) * 100)
+  }, [technicalReport])
 
   // Helper functions
   const formatDate = (dateString: string | undefined) => {
@@ -840,6 +873,52 @@ const MaintenanceTicketDetails: React.FC = () => {
     })
   }
 
+  const handleGenerateTechnicalReport = () => {
+    if (ticket?.status !== MaintenanceStatus.COMPLETED) {
+      showToast(
+        'El reporte técnico solo está disponible para tickets completados',
+        'warning'
+      )
+      return
+    }
+
+    if (!ticketId) return
+    generateTechnicalReportMutation.mutate(ticketId, {
+      onSuccess: () => {
+        showToast('Reporte técnico generado exitosamente', 'success')
+        setPdfMenuAnchor(null)
+      },
+      onError: (error) => {
+        console.error('Error generating technical report:', error)
+        showToast('Error al generar reporte técnico', 'error')
+      }
+    })
+  }
+
+  const handleSaveTechnicalReport = async (
+    reportData: MaintenanceTechnicalReportRequest
+  ) => {
+    if (!ticketId) return
+
+    try {
+      await upsertTechnicalReportMutation.mutateAsync({
+        ticketId,
+        data: reportData
+      })
+      await refetchTechnicalReport()
+      await refetchTicket()
+      showToast('Reporte técnico guardado exitosamente', 'success')
+    } catch (error: any) {
+      console.error('Error saving technical report:', error)
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Error al guardar el reporte técnico'
+      showToast(errorMessage, 'error')
+      throw error
+    }
+  }
+
   // const handleGenerateStatusReport = () => {
   //   if (!ticketId) return
   //   generateStatusReportMutation.mutate(ticketId, {
@@ -1287,11 +1366,38 @@ const MaintenanceTicketDetails: React.FC = () => {
                         sx={{ color: '#6dc662' }}
                       />
                     </ListItemIcon>
-                    <ListItemText
+                  <ListItemText
                       primary='Orden de Servicio'
                       secondary='Documento de trabajo'
                     />
                   </ListItemButton>
+                  {ticket.status === MaintenanceStatus.COMPLETED && (
+                    <ListItemButton
+                      onClick={handleGenerateTechnicalReport}
+                      role='menuitem'
+                      aria-label='Generar reporte técnico'
+                      sx={{
+                        borderRadius: '8px',
+                        mx: 1,
+                        mb: 0.5,
+                        '&:hover': {
+                          backgroundColor: '#f8fafc'
+                        }
+                      }}
+                    >
+                      <ListItemIcon>
+                        <Science
+                          fontSize='small'
+                          aria-hidden='true'
+                          sx={{ color: '#2563eb' }}
+                        />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary='Reporte Técnico'
+                        secondary='Documento técnico de cierre'
+                      />
+                    </ListItemButton>
+                  )}
                   {/* 
                   <ListItemButton
                     onClick={handleGenerateStatusReport}
@@ -2818,6 +2924,79 @@ const MaintenanceTicketDetails: React.FC = () => {
               </Paper>
             )}
 
+            {ticket.status === MaintenanceStatus.COMPLETED && (
+              <Paper
+                sx={{
+                  ...surfaceSx,
+                  p: 3,
+                  mb: 3,
+                  borderColor: '#bfdbfe'
+                }}
+              >
+                <Box
+                  display='flex'
+                  justifyContent='space-between'
+                  alignItems={{ xs: 'flex-start', sm: 'center' }}
+                  flexDirection={{ xs: 'column', sm: 'row' }}
+                  gap={2}
+                >
+                  <Box>
+                    <Typography
+                      variant='h6'
+                      sx={{ fontWeight: 600, color: '#0f172a' }}
+                    >
+                      Reporte técnico de mantenimiento
+                    </Typography>
+                    <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
+                      Documento técnico completo para formalizar el cierre del servicio con diagnóstico, validación y recomendaciones.
+                    </Typography>
+                    <Stack direction='row' spacing={1} sx={{ mt: 1.5 }} flexWrap='wrap'>
+                      <Chip
+                        size='small'
+                        color='primary'
+                        variant='outlined'
+                        label={`${technicalReportCompletion}% completo`}
+                      />
+                      {technicalReport?.serviceFinalStatus && (
+                        <Chip
+                          size='small'
+                          color='success'
+                          label={technicalReport.serviceFinalStatus.replace(/_/g, ' ')}
+                        />
+                      )}
+                      {technicalReport?.verificationProtocolType && (
+                        <Chip
+                          size='small'
+                          variant='outlined'
+                          label={technicalReport.verificationProtocolType}
+                        />
+                      )}
+                    </Stack>
+                  </Box>
+
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                    <Button
+                      variant='outlined'
+                      startIcon={<Description />}
+                      onClick={() => setTechnicalReportDialogOpen(true)}
+                    >
+                      {technicalReport?.updatedAt
+                        ? 'Editar reporte'
+                        : 'Diligenciar reporte'}
+                    </Button>
+                    <Button
+                      variant='contained'
+                      startIcon={<PictureAsPdf />}
+                      onClick={handleGenerateTechnicalReport}
+                      disabled={generateTechnicalReportMutation.isLoading}
+                    >
+                      PDF técnico
+                    </Button>
+                  </Stack>
+                </Box>
+              </Paper>
+            )}
+
             {maintenanceSignaturesEnabled &&
               ticket.status === MaintenanceStatus.COMPLETED && (
               <Paper
@@ -3004,6 +3183,17 @@ const MaintenanceTicketDetails: React.FC = () => {
                 >
                   Orden de Servicio
                 </Button>
+                {ticket.status === MaintenanceStatus.COMPLETED && (
+                  <Button
+                    fullWidth
+                    variant='outlined'
+                    startIcon={<Science />}
+                    onClick={() => setTechnicalReportDialogOpen(true)}
+                    size='small'
+                  >
+                    Reporte Técnico
+                  </Button>
+                )}
                 {maintenanceSignaturesEnabled &&
                   ticket.status === MaintenanceStatus.COMPLETED && (
                   <Button
@@ -3299,6 +3489,18 @@ const MaintenanceTicketDetails: React.FC = () => {
           isProcessingInvoice={updateTicketMutation.isLoading}
           isInitiallyInvoiced={ticket.isInvoiced || false}
           onInvoice={handleInvoice}
+        />
+
+        <MaintenanceTechnicalReportDialog
+          open={technicalReportDialogOpen}
+          onClose={() => setTechnicalReportDialogOpen(false)}
+          report={technicalReport}
+          equipmentType={ticket?.equipmentType}
+          loading={technicalReportLoading}
+          saving={upsertTechnicalReportMutation.isLoading}
+          generatingPdf={generateTechnicalReportMutation.isLoading}
+          onSave={handleSaveTechnicalReport}
+          onGeneratePdf={handleGenerateTechnicalReport}
         />
 
         {/* Toast Notifications */}

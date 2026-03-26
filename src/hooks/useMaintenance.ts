@@ -14,7 +14,9 @@ import {
   MaintenanceTimelineResponse,
   BackendTimelineEntry,
   MaintenanceTimelineEntry,
-  MaintenanceAction
+  MaintenanceAction,
+  MaintenanceTechnicalReport,
+  MaintenanceTechnicalReportRequest
 } from '../types/maintenance'
 
 // API functions
@@ -298,10 +300,38 @@ const maintenanceAPI = {
     return response.data
   },
 
+  getTechnicalReport: async (
+    ticketId: string
+  ): Promise<MaintenanceTechnicalReport> => {
+    const response = await axiosPrivate.get<MaintenanceTechnicalReport>(
+      `/maintenance/tickets/${ticketId}/technical-report`
+    )
+    return response.data
+  },
+
+  upsertTechnicalReport: async (
+    ticketId: string,
+    data: MaintenanceTechnicalReportRequest
+  ): Promise<MaintenanceTechnicalReport> => {
+    const response = await axiosPrivate.put<MaintenanceTechnicalReport>(
+      `/maintenance/tickets/${ticketId}/technical-report`,
+      data
+    )
+    return response.data
+  },
+
   // PDF Generation
   generateServiceOrder: async (ticketId: string): Promise<Blob> => {
     const response = await axiosPrivate.get(
       `/maintenance/tickets/${ticketId}/pdf/service-order`,
+      { responseType: 'blob' }
+    )
+    return response.data
+  },
+
+  generateTechnicalReport: async (ticketId: string): Promise<Blob> => {
+    const response = await axiosPrivate.get(
+      `/maintenance/tickets/${ticketId}/pdf/technical-report`,
       { responseType: 'blob' }
     )
     return response.data
@@ -531,6 +561,14 @@ export const useMaintenanceTimeline = (ticketId: string) => {
   })
 }
 
+export const useMaintenanceTechnicalReport = (ticketId: string) => {
+  return useQuery({
+    queryKey: ['maintenance-technical-report', ticketId],
+    queryFn: () => maintenanceAPI.getTechnicalReport(ticketId),
+    enabled: !!ticketId
+  })
+}
+
 // Public tracking hook (no auth required)
 export const useTrackMaintenanceTicket = (ticketNumber: string) => {
   return useQuery({
@@ -666,6 +704,29 @@ export const useUploadMaintenanceFiles = () => {
   })
 }
 
+export const useUpsertMaintenanceTechnicalReport = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      ticketId,
+      data
+    }: {
+      ticketId: string
+      data: MaintenanceTechnicalReportRequest
+    }) => maintenanceAPI.upsertTechnicalReport(ticketId, data),
+    onSuccess: (report) => {
+      queryClient.invalidateQueries({
+        queryKey: ['maintenance-technical-report', report.ticketId]
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['maintenance-ticket', report.ticketId]
+      })
+      queryClient.invalidateQueries({ queryKey: ['maintenance-tickets'] })
+    }
+  })
+}
+
 export const useDeleteMaintenanceFile = () => {
   const queryClient = useQueryClient()
 
@@ -731,6 +792,22 @@ export const useGenerateServiceOrder = () => {
       const link = document.createElement('a')
       link.href = url
       link.download = `orden-servicio-${ticketId}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    }
+  })
+}
+
+export const useGenerateTechnicalReport = () => {
+  return useMutation({
+    mutationFn: maintenanceAPI.generateTechnicalReport,
+    onSuccess: (pdfBlob, ticketId) => {
+      const url = window.URL.createObjectURL(pdfBlob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `reporte-tecnico-${ticketId}.pdf`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)

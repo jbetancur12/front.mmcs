@@ -40,7 +40,8 @@ import {
   Add,
   FilterList,
   Cancel,
-  Help
+  Help,
+  Science
 } from '@mui/icons-material'
 import {
   useMaintenanceStats,
@@ -50,14 +51,18 @@ import {
   useUpdateMaintenanceTicket,
   useUpdateMaintenanceTechnician,
   useDeleteMaintenanceTicket,
-  useUploadMaintenanceFiles
+  useUploadMaintenanceFiles,
+  useMaintenanceTechnicalReport,
+  useUpsertMaintenanceTechnicalReport,
+  useGenerateTechnicalReport
 } from '../../hooks/useMaintenance'
 import {
   MaintenanceFilters,
   MaintenanceStatus,
   MaintenancePriority,
   MaintenanceTicket,
-  MaintenanceUpdateRequest
+  MaintenanceUpdateRequest,
+  MaintenanceTechnicalReportRequest
 } from '../../types/maintenance'
 import MaintenanceTicketCard from '../../Components/Maintenance/MaintenanceTicketCard'
 import MaintenanceFiltersComponent from '../../Components/Maintenance/MaintenanceFilters'
@@ -72,6 +77,7 @@ import { userStore } from '../../store/userStore'
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import KeyboardShortcutsHelp from '../../Components/Maintenance/KeyboardShortcutsHelp'
 import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
+import MaintenanceTechnicalReportDialog from '../../Components/Maintenance/MaintenanceTechnicalReportDialog'
 import { maintenanceSignaturesEnabled } from '../../features/maintenanceFlags'
 import type {
   CompletionPhotoInput
@@ -100,6 +106,7 @@ const MaintenanceDashboard: React.FC = () => {
     useState<MaintenanceTicket | null>(null)
   const [editData, setEditData] = useState<MaintenanceUpdateRequest>({})
   const [costsDialogOpen, setCostsDialogOpen] = useState(false)
+  const [technicalReportDialogOpen, setTechnicalReportDialogOpen] = useState(false)
   const [toast, setToast] = useState<{
     open: boolean
     message: string
@@ -193,12 +200,23 @@ const MaintenanceDashboard: React.FC = () => {
   const { data: currentTechnician } = useTechnicianByEmail(
     currentTechnicianEmail || ''
   )
+  const {
+    data: technicalReport,
+    isLoading: technicalReportLoading,
+    refetch: refetchTechnicalReport
+  } = useMaintenanceTechnicalReport(
+    selectedTicket?.status === MaintenanceStatus.COMPLETED && selectedTicket?.id
+      ? selectedTicket.id
+      : ''
+  )
   // Only admins can access technicians list
   const { data: technicians } = useMaintenanceTechnicians(isAdmin)
   const updateTicketMutation = useUpdateMaintenanceTicket()
   const updateTechnicianMutation = useUpdateMaintenanceTechnician()
   const deleteTicketMutation = useDeleteMaintenanceTicket()
   const uploadFilesMutation = useUploadMaintenanceFiles()
+  const upsertTechnicalReportMutation = useUpsertMaintenanceTechnicalReport()
+  const generateTechnicalReportMutation = useGenerateTechnicalReport()
 
   const completionRate = useMemo(() => {
     const total = stats?.metrics?.totalTickets || 0
@@ -227,6 +245,25 @@ const MaintenanceDashboard: React.FC = () => {
     }
     return value >= 10 ? `${Math.round(value)}h` : `${value.toFixed(1)}h`
   }, [stats?.metrics?.avgResolutionTimeHours])
+
+  const technicalReportCompletion = useMemo(() => {
+    if (!technicalReport) return 0
+
+    const checkpoints = [
+      technicalReport.finalDiagnosis,
+      technicalReport.rootCause,
+      technicalReport.activities?.length,
+      technicalReport.parts?.length,
+      technicalReport.verificationProtocolType,
+      technicalReport.verificationTests?.length,
+      technicalReport.recommendations,
+      technicalReport.scopeClause,
+      technicalReport.responsibilityClause
+    ]
+
+    const completed = checkpoints.filter(Boolean).length
+    return Math.round((completed / checkpoints.length) * 100)
+  }, [technicalReport])
 
   // WebSocket for real-time updates
   useMaintenanceWebSocket({
@@ -479,6 +516,50 @@ const MaintenanceDashboard: React.FC = () => {
   const handleViewTicket = (ticket: MaintenanceTicket) => {
     // Navigate to ticket details page using React Router
     navigate(`/maintenance/tickets/${ticket.id}`)
+  }
+
+  const handleOpenTechnicalReport = (ticket: MaintenanceTicket) => {
+    setSelectedTicket(ticket)
+    setTechnicalReportDialogOpen(true)
+  }
+
+  const handleSaveTechnicalReport = async (
+    reportData: MaintenanceTechnicalReportRequest
+  ) => {
+    if (!selectedTicket?.id) return
+
+    try {
+      await upsertTechnicalReportMutation.mutateAsync({
+        ticketId: selectedTicket.id,
+        data: reportData
+      })
+      await refetchTechnicalReport()
+      refetchTickets()
+      refetchStats()
+      showToast('Reporte técnico guardado exitosamente', 'success')
+    } catch (error: any) {
+      console.error('Error saving technical report:', error)
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Error al guardar el reporte técnico'
+      showToast(errorMessage, 'error')
+      throw error
+    }
+  }
+
+  const handleGenerateTechnicalReport = () => {
+    if (!selectedTicket?.id) return
+
+    generateTechnicalReportMutation.mutate(selectedTicket.id, {
+      onSuccess: () => {
+        showToast('Reporte técnico generado exitosamente', 'success')
+      },
+      onError: (error: any) => {
+        console.error('Error generating technical report:', error)
+        showToast('Error al generar reporte técnico', 'error')
+      }
+    })
   }
 
   const handleDeleteClick = (ticket: MaintenanceTicket) => {
@@ -1614,6 +1695,17 @@ const MaintenanceDashboard: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
+          {selectedTicket?.status === MaintenanceStatus.COMPLETED && (
+            <Button
+              onClick={() => handleOpenTechnicalReport(selectedTicket)}
+              variant='outlined'
+              startIcon={<Science />}
+            >
+              {technicalReport?.updatedAt
+                ? `Reporte técnico ${technicalReportCompletion}%`
+                : 'Reporte técnico'}
+            </Button>
+          )}
           <Button
             onClick={handleSaveEdit}
             variant='contained'
@@ -1623,6 +1715,18 @@ const MaintenanceDashboard: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <MaintenanceTechnicalReportDialog
+        open={technicalReportDialogOpen}
+        onClose={() => setTechnicalReportDialogOpen(false)}
+        report={technicalReport}
+        equipmentType={selectedTicket?.equipmentType}
+        loading={technicalReportLoading}
+        saving={upsertTechnicalReportMutation.isLoading}
+        generatingPdf={generateTechnicalReportMutation.isLoading}
+        onSave={handleSaveTechnicalReport}
+        onGeneratePdf={handleGenerateTechnicalReport}
+      />
 
       {/* Completion Costs Dialog */}
         <CompletionCostsDialog
