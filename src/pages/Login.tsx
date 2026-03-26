@@ -18,6 +18,7 @@ function isAxiosError(obj: any): obj is AxiosError {
 const clearStaleAuth = () => {
   localStorage.removeItem('accessToken')
   localStorage.removeItem('refreshToken')
+  localStorage.removeItem('sessionExpiresAt')
   localStorage.removeItem('user')
   localStorage.removeItem('userProfile')
 }
@@ -170,6 +171,7 @@ const Login: React.FC = () => {
           sameSite: 'strict',
           path: '/'
         })
+        localStorage.setItem('sessionExpiresAt', expiresIn.toString())
 
         userStore.set(user)
         // Handle successful login

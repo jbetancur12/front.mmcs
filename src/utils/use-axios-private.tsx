@@ -57,6 +57,7 @@ const useAxiosPrivate = () => {
       console.error('Error al cerrar sesión:', logoutError)
     }
 
+    localStorage.removeItem('sessionExpiresAt')
     localStorage.clear()
     sessionStorage.clear()
     Toast.fire('Sesión expirada', '', 'error')
