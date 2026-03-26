@@ -25,12 +25,14 @@ import {
   PictureAsPdf
 } from '@mui/icons-material'
 import type {
+  MaintenanceProtocolTemplate,
   MaintenanceTechnicalReport,
   MaintenanceTechnicalReportPart,
   MaintenanceTechnicalReportRequest,
   MaintenanceTechnicalReportTest,
   MaintenanceTechnicalReportTool
 } from '../../types/maintenance'
+import { useMaintenanceProtocolTemplates } from '../../hooks/useMaintenance'
 
 interface Props {
   open: boolean
@@ -71,138 +73,6 @@ const defaultReportState: MaintenanceTechnicalReportRequest = {
   warrantyTerms: '',
   scopeClause: '',
   responsibilityClause: ''
-}
-
-const PROTOCOL_PRESETS: Record<
-  string,
-  {
-    label: string
-    appliesTo: string[]
-    protocolType: string
-    riskClass: string
-    tools: MaintenanceTechnicalReportTool[]
-    tests: MaintenanceTechnicalReportTest[]
-    recommendations: string
-  }
-> = {
-  electronic_support_life: {
-    label: 'Electrónico / Soporte vital',
-    appliesTo: ['monitor', 'signos vitales', 'spo2', 'desfibrilador', 'bomba'],
-    protocolType: 'ELECTRONICO_SOPORTE_VIDA',
-    riskClass: 'IIb',
-    tools: [
-      {
-        name: 'Analizador de Seguridad Electrica',
-        serial: '',
-        calibrationDue: null
-      },
-      {
-        name: 'Simulador de Signos Vitales',
-        serial: '',
-        calibrationDue: null
-      }
-    ],
-    tests: [
-      { parameter: 'Encendido y POST', result: 'PASA', value: 'N/A', notes: '' },
-      {
-        parameter: 'Fuga de corriente en chasis',
-        result: 'PASA',
-        value: '',
-        notes: ''
-      },
-      {
-        parameter: 'Exactitud de parametros principales',
-        result: 'PASA',
-        value: '',
-        notes: ''
-      },
-      {
-        parameter: 'Alarmas funcionales',
-        result: 'PASA',
-        value: 'Activas',
-        notes: ''
-      }
-    ],
-    recommendations:
-      'Se recomienda operar el equipo en toma regulada con polo a tierra y respetar el plan de mantenimiento preventivo.'
-  },
-  respiratory_general: {
-    label: 'Biomédico / Respiratorio',
-    appliesTo: ['aspirador', 'respiratorio', 'succion', 'secreciones', 'nebulizador'],
-    protocolType: 'BIOMEDICO_RESPIRATORIO',
-    riskClass: 'IIa',
-    tools: [
-      {
-        name: 'Analizador de Seguridad Electrica',
-        serial: '',
-        calibrationDue: null
-      },
-      {
-        name: 'Vacuometro / Medidor de succion',
-        serial: '',
-        calibrationDue: null
-      }
-    ],
-    tests: [
-      { parameter: 'Encendido y verificacion visual', result: 'PASA', value: 'OK', notes: '' },
-      {
-        parameter: 'Nivel de succion',
-        result: 'PASA',
-        value: '',
-        notes: ''
-      },
-      {
-        parameter: 'Estado de mangueras y conexiones',
-        result: 'PASA',
-        value: 'Sin fugas',
-        notes: ''
-      },
-      {
-        parameter: 'Ruido / funcionamiento continuo',
-        result: 'PASA',
-        value: 'Estable',
-        notes: ''
-      }
-    ],
-    recommendations:
-      'Verificar limpieza de filtros, mangueras y recipiente colector antes de cada uso, y mantener el equipo conectado en red estable.'
-  },
-  mechanical_weighing: {
-    label: 'Mecánico / Pesaje',
-    appliesTo: ['balanza', 'bascula', 'pesaje', 'peso'],
-    protocolType: 'MECANICO_PESAJE',
-    riskClass: 'II',
-    tools: [
-      {
-        name: 'Juego de Pesas Patron Clase M1',
-        serial: '',
-        calibrationDue: null
-      }
-    ],
-    tests: [
-      { parameter: 'Ajuste de cero', result: 'PASA', value: '0 kg', notes: '' },
-      {
-        parameter: 'Prueba de excentricidad',
-        result: 'PASA',
-        value: 'Carga en esquinas OK',
-        notes: ''
-      },
-      {
-        parameter: 'Error de indicacion',
-        result: 'PASA',
-        value: '',
-        notes: ''
-      },
-      {
-        parameter: 'Estado de nivelacion',
-        result: 'PASA',
-        value: 'Nivelado',
-        notes: ''
-      }
-    ],
-    recommendations:
-      'Mantener el equipo nivelado, libre de golpes y con verificaciones periodicas de exactitud.'
-  }
 }
 
 const toEditableReport = (
@@ -262,10 +132,24 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
   onSave,
   onGeneratePdf
 }) => {
+  const { data: protocolTemplates = [] } = useMaintenanceProtocolTemplates()
   const [formData, setFormData] = useState<MaintenanceTechnicalReportRequest>(
     defaultReportState
   )
   const [errors, setErrors] = useState<ValidationState>({})
+
+  const activeProtocols = React.useMemo(
+    () => protocolTemplates.filter((protocol) => protocol.isActive),
+    [protocolTemplates]
+  )
+
+  const matchedProtocol = React.useMemo(
+    () =>
+      activeProtocols.find(
+        (protocol) => protocol.code === formData.verificationProtocolType
+      ) || null,
+    [activeProtocols, formData.verificationProtocolType]
+  )
 
   useEffect(() => {
     if (open) {
@@ -274,26 +158,31 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
     }
   }, [open, report])
 
-  const suggestedPresetKey = React.useMemo(() => {
+  const suggestedProtocol = React.useMemo(() => {
     const normalizedType = (equipmentType || '').toLowerCase()
     return (
-      Object.entries(PROTOCOL_PRESETS).find(([, preset]) =>
-        preset.appliesTo.some((keyword) => normalizedType.includes(keyword))
-      )?.[0] || null
+      activeProtocols.find((protocol) =>
+        protocol.appliesTo.some((keyword) =>
+          normalizedType.includes(keyword.toLowerCase())
+        )
+      ) || null
     )
-  }, [equipmentType])
+  }, [activeProtocols, equipmentType])
 
-  const applyPreset = (presetKey: string) => {
-    const preset = PROTOCOL_PRESETS[presetKey]
-    if (!preset) return
+  const applyPreset = (protocol: MaintenanceProtocolTemplate) => {
+    if (!protocol) return
 
     setFormData((prev) => ({
       ...prev,
-      verificationProtocolType: preset.protocolType,
-      riskClass: prev.riskClass || preset.riskClass,
-      verificationTools: preset.tools,
-      verificationTests: preset.tests,
-      recommendations: prev.recommendations || preset.recommendations
+      verificationProtocolType: protocol.code,
+      riskClass: protocol.riskClass || prev.riskClass,
+      verificationTools: protocol.tools.length
+        ? protocol.tools
+        : prev.verificationTools,
+      verificationTests: protocol.tests.length
+        ? protocol.tests
+        : prev.verificationTests,
+      recommendations: prev.recommendations || protocol.recommendations || ''
     }))
   }
 
@@ -574,7 +463,7 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
                   variant='outlined'
                   label={
                     formData.verificationProtocolType?.trim()
-                      ? `Protocolo: ${formData.verificationProtocolType}`
+                      ? `Protocolo: ${matchedProtocol?.name || formData.verificationProtocolType}`
                       : 'Protocolo pendiente'
                   }
                 />
@@ -599,23 +488,29 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
               Puedes cargar una estructura base según el tipo de equipo y luego afinar el reporte.
             </Typography>
             <Stack direction='row' spacing={1} flexWrap='wrap'>
-              {Object.entries(PROTOCOL_PRESETS).map(([key, preset]) => (
+              {activeProtocols.map((protocol) => (
                 <Button
-                  key={key}
+                  key={protocol.id}
                   size='small'
-                  variant={suggestedPresetKey === key ? 'contained' : 'outlined'}
-                  onClick={() => applyPreset(key)}
+                  variant={
+                    suggestedProtocol?.id === protocol.id ? 'contained' : 'outlined'
+                  }
+                  onClick={() => applyPreset(protocol)}
                   sx={{ mb: 1 }}
                 >
-                  {preset.label}
+                  {protocol.name}
                 </Button>
               ))}
             </Stack>
-            {suggestedPresetKey && (
+            {suggestedProtocol && (
               <Alert severity='info' sx={{ mt: 1 }}>
-                Sugerencia automática para este equipo: {
-                  PROTOCOL_PRESETS[suggestedPresetKey].label
-                }.
+                Sugerencia automática para este equipo: {suggestedProtocol.name}.
+              </Alert>
+            )}
+            {!activeProtocols.length && (
+              <Alert severity='warning' sx={{ mt: 1 }}>
+                No hay protocolos activos cargados. Puedes administrarlos desde
+                el menú de mantenimiento.
               </Alert>
             )}
           </Paper>
@@ -831,15 +726,49 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
             <Grid container spacing={2} sx={{ mb: 2 }}>
               <Grid item xs={12} md={6}>
                 <TextField
+                  select
                   fullWidth
                   label='Tipo de protocolo'
                   value={formData.verificationProtocolType || ''}
                   error={Boolean(errors.verificationProtocolType)}
-                  helperText={errors.verificationProtocolType}
-                  onChange={(e) =>
-                    handleFieldChange('verificationProtocolType', e.target.value)
+                  helperText={
+                    errors.verificationProtocolType ||
+                    matchedProtocol?.description ||
+                    'Selecciona un protocolo del catálogo.'
                   }
-                />
+                  onChange={(e) =>
+                    {
+                      const selectedProtocol = activeProtocols.find(
+                        (protocol) => protocol.code === e.target.value
+                      )
+
+                      if (selectedProtocol) {
+                        applyPreset(selectedProtocol)
+                        return
+                      }
+
+                      handleFieldChange(
+                        'verificationProtocolType',
+                        e.target.value
+                      )
+                    }
+                  }
+                >
+                  {activeProtocols.map((protocol) => (
+                    <MenuItem key={protocol.id} value={protocol.code}>
+                      {protocol.name}
+                    </MenuItem>
+                  ))}
+                  {formData.verificationProtocolType &&
+                    !activeProtocols.some(
+                      (protocol) =>
+                        protocol.code === formData.verificationProtocolType
+                    ) && (
+                      <MenuItem value={formData.verificationProtocolType}>
+                        {formData.verificationProtocolType}
+                      </MenuItem>
+                    )}
+                </TextField>
               </Grid>
               <Grid item xs={12} md={6}>
                 <TextField

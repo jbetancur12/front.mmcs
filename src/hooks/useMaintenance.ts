@@ -16,7 +16,9 @@ import {
   MaintenanceTimelineEntry,
   MaintenanceAction,
   MaintenanceTechnicalReport,
-  MaintenanceTechnicalReportRequest
+  MaintenanceTechnicalReportRequest,
+  MaintenanceProtocolTemplate,
+  MaintenanceProtocolTemplateRequest
 } from '../types/maintenance'
 
 // API functions
@@ -320,6 +322,38 @@ const maintenanceAPI = {
     return response.data
   },
 
+  getProtocolTemplates: async (): Promise<MaintenanceProtocolTemplate[]> => {
+    const response = await axiosPrivate.get<MaintenanceProtocolTemplate[]>(
+      `/maintenance/protocols`
+    )
+    return response.data
+  },
+
+  createProtocolTemplate: async (
+    data: MaintenanceProtocolTemplateRequest
+  ): Promise<MaintenanceProtocolTemplate> => {
+    const response = await axiosPrivate.post<MaintenanceProtocolTemplate>(
+      `/maintenance/protocols`,
+      data
+    )
+    return response.data
+  },
+
+  updateProtocolTemplate: async (
+    id: string,
+    data: MaintenanceProtocolTemplateRequest
+  ): Promise<MaintenanceProtocolTemplate> => {
+    const response = await axiosPrivate.put<MaintenanceProtocolTemplate>(
+      `/maintenance/protocols/${id}`,
+      data
+    )
+    return response.data
+  },
+
+  deleteProtocolTemplate: async (id: string): Promise<void> => {
+    await axiosPrivate.delete(`/maintenance/protocols/${id}`)
+  },
+
   // PDF Generation
   generateServiceOrder: async (ticketId: string): Promise<Blob> => {
     const response = await axiosPrivate.get(
@@ -569,6 +603,13 @@ export const useMaintenanceTechnicalReport = (ticketId: string) => {
   })
 }
 
+export const useMaintenanceProtocolTemplates = () => {
+  return useQuery({
+    queryKey: ['maintenance-protocol-templates'],
+    queryFn: maintenanceAPI.getProtocolTemplates
+  })
+}
+
 // Public tracking hook (no auth required)
 export const useTrackMaintenanceTicket = (ticketNumber: string) => {
   return useQuery({
@@ -723,6 +764,51 @@ export const useUpsertMaintenanceTechnicalReport = () => {
         queryKey: ['maintenance-ticket', report.ticketId]
       })
       queryClient.invalidateQueries({ queryKey: ['maintenance-tickets'] })
+    }
+  })
+}
+
+export const useCreateMaintenanceProtocolTemplate = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: maintenanceAPI.createProtocolTemplate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['maintenance-protocol-templates']
+      })
+    }
+  })
+}
+
+export const useUpdateMaintenanceProtocolTemplate = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      data
+    }: {
+      id: string
+      data: MaintenanceProtocolTemplateRequest
+    }) => maintenanceAPI.updateProtocolTemplate(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['maintenance-protocol-templates']
+      })
+    }
+  })
+}
+
+export const useDeleteMaintenanceProtocolTemplate = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: maintenanceAPI.deleteProtocolTemplate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['maintenance-protocol-templates']
+      })
     }
   })
 }

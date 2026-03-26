@@ -27,6 +27,35 @@ export interface MaintenanceTechnicalReportTest {
   notes?: string
 }
 
+export interface MaintenanceProtocolTemplate {
+  id: string
+  name: string
+  code: string
+  description?: string | null
+  appliesTo: string[]
+  riskClass?: string | null
+  tools: MaintenanceTechnicalReportTool[]
+  tests: MaintenanceTechnicalReportTest[]
+  recommendations?: string | null
+  sortOrder: number
+  isActive: boolean
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface MaintenanceProtocolTemplateRequest {
+  name: string
+  code: string
+  description?: string | null
+  appliesTo: string[]
+  riskClass?: string | null
+  tools: MaintenanceTechnicalReportTool[]
+  tests: MaintenanceTechnicalReportTest[]
+  recommendations?: string | null
+  sortOrder?: number
+  isActive?: boolean
+}
+
 export interface MaintenanceTechnicalReport {
   id?: string | null
   ticketId: string

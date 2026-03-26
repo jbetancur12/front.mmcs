@@ -328,6 +328,11 @@ const sidebarItems = ($userStore: UserData) => [
         roles: ['admin', 'maintenance_coordinator']
       },
       {
+        label: 'Protocolos',
+        url: 'maintenance/protocols',
+        roles: ['admin', 'mantenimiento', 'maintenance_coordinator']
+      },
+      {
         label: 'Facturación',
         url: 'maintenance/billing',
         roles: ['admin', 'mantenimiento', 'invoicing']
