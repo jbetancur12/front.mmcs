@@ -160,7 +160,9 @@ const MaintenanceTicketDetails: React.FC = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewError, setPreviewError] = useState<string | null>(null)
-  const [filePreviewCache, setFilePreviewCache] = useState<Record<string, string>>({})
+  const [filePreviewCache, setFilePreviewCache] = useState<
+    Record<string, string>
+  >({})
   const filePreviewCacheRef = useRef<Record<string, string>>({})
   // New state for enhanced functionality
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -182,7 +184,8 @@ const MaintenanceTicketDetails: React.FC = () => {
   const [costsDialogOpen, setCostsDialogOpen] = useState(false)
   const [signaturesDialogOpen, setSignaturesDialogOpen] = useState(false)
   const [briefCostsDialogOpen, setBriefCostsDialogOpen] = useState(false)
-  const [technicalReportDialogOpen, setTechnicalReportDialogOpen] = useState(false)
+  const [technicalReportDialogOpen, setTechnicalReportDialogOpen] =
+    useState(false)
   const [realTimeUpdatesEnabled, setRealTimeUpdatesEnabled] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [editErrors, setEditErrors] = useState<Record<string, string>>({})
@@ -835,9 +838,12 @@ const MaintenanceTicketDetails: React.FC = () => {
       return filePreviewCache[file.id]
     }
 
-    const response = await axiosPrivate.get(`/maintenance/files/${file.id}/download`, {
-      responseType: 'blob'
-    })
+    const response = await axiosPrivate.get(
+      `/maintenance/files/${file.id}/download`,
+      {
+        responseType: 'blob'
+      }
+    )
 
     const url = window.URL.createObjectURL(response.data)
     setFilePreviewCache((prev) => ({ ...prev, [file.id]: url }))
@@ -1144,13 +1150,13 @@ const MaintenanceTicketDetails: React.FC = () => {
         {/* Header with breadcrumbs */}
         <Box
           mb={{ xs: 2, sm: 3 }}
-        sx={{
-          backgroundColor: '#ffffff',
-          borderRadius: '14px',
-          p: { xs: 2, sm: 3 },
-          boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
-          border: '1px solid #e5e7eb'
-        }}
+          sx={{
+            backgroundColor: '#ffffff',
+            borderRadius: '14px',
+            p: { xs: 2, sm: 3 },
+            boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
+            border: '1px solid #e5e7eb'
+          }}
         >
           <Breadcrumbs
             aria-label='breadcrumb'
@@ -1394,7 +1400,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                         sx={{ color: '#6dc662' }}
                       />
                     </ListItemIcon>
-                  <ListItemText
+                    <ListItemText
                       primary='Orden de Servicio'
                       secondary='Documento de trabajo'
                     />
@@ -1647,7 +1653,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               sx={{
                 ...surfaceSx,
                 p: { xs: 2, sm: 3 },
-                mb: { xs: 2, sm: 3 },
+                mb: { xs: 2, sm: 3 }
               }}
             >
               <Box
@@ -1833,7 +1839,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               sx={{
                 ...surfaceSx,
                 p: 3,
-                mb: 3,
+                mb: 3
               }}
             >
               <Box
@@ -1974,10 +1980,10 @@ const MaintenanceTicketDetails: React.FC = () => {
               sx={{
                 ...surfaceSx,
                 p: 3,
-                mb: 3,
+                mb: 3
               }}
               role='region'
-              aria-label='Recepción del equipo'
+              aria-label='Condición inicial del equipo'
             >
               <Box display='flex' alignItems='center' gap={1} mb={2}>
                 <Box
@@ -2002,7 +2008,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                     color: '#0f172a'
                   }}
                 >
-                  Recepción del Equipo
+                  Condición Inicial del Equipo
                 </Typography>
               </Box>
 
@@ -2013,12 +2019,12 @@ const MaintenanceTicketDetails: React.FC = () => {
                     color='text.secondary'
                     gutterBottom
                   >
-                    Estado físico inicial
+                    Condición inicial del equipo
                   </Typography>
                   {editMode ? (
                     <TextField
                       fullWidth
-                      label='Estado físico inicial'
+                      label='Condición inicial del equipo'
                       value={editData.intakePhysicalCondition || ''}
                       onChange={(e) =>
                         setEditData((prev) => ({
@@ -2029,7 +2035,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                       size='small'
                       multiline
                       minRows={4}
-                      placeholder='Rayones, golpes, faltantes o condición general del equipo al recibirlo'
+                      placeholder='Rayones, golpes, faltantes o condición general al iniciar la intervención'
                       error={!!editErrors.intakePhysicalCondition}
                       helperText={
                         editErrors.intakePhysicalCondition ||
@@ -2039,7 +2045,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   ) : (
                     <Typography variant='body1' sx={{ whiteSpace: 'pre-wrap' }}>
                       {ticket.intakePhysicalCondition ||
-                        'Pendiente de registrar en recepción'}
+                        'Pendiente de registrar al inicio del servicio'}
                     </Typography>
                   )}
                 </Grid>
@@ -2050,12 +2056,12 @@ const MaintenanceTicketDetails: React.FC = () => {
                     color='text.secondary'
                     gutterBottom
                   >
-                    Accesorios recibidos
+                    Accesorios disponibles
                   </Typography>
                   {editMode ? (
                     <TextField
                       fullWidth
-                      label='Accesorios recibidos'
+                      label='Accesorios disponibles'
                       value={editData.receivedAccessories || ''}
                       onChange={(e) =>
                         setEditData((prev) => ({
@@ -2066,7 +2072,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                       size='small'
                       multiline
                       minRows={4}
-                      placeholder='Cables, sensores, adaptadores, batería, mangueras u otros accesorios'
+                      placeholder='Cables, sensores, adaptadores, batería, mangueras u otros accesorios disponibles durante el servicio'
                       error={!!editErrors.receivedAccessories}
                       helperText={
                         editErrors.receivedAccessories ||
@@ -2076,7 +2082,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   ) : (
                     <Typography variant='body1' sx={{ whiteSpace: 'pre-wrap' }}>
                       {ticket.receivedAccessories ||
-                        'Pendiente de registrar en recepción'}
+                        'Pendiente de registrar al inicio del servicio'}
                     </Typography>
                   )}
                 </Grid>
@@ -2088,7 +2094,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               sx={{
                 ...surfaceSx,
                 p: 3,
-                mb: 3,
+                mb: 3
               }}
               role='region'
               aria-label='Información del equipo'
@@ -2195,7 +2201,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               sx={{
                 ...surfaceSx,
                 p: 3,
-                mb: 3,
+                mb: 3
               }}
               role='region'
               aria-label='Descripción del problema'
@@ -2249,7 +2255,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               sx={{
                 ...surfaceSx,
                 p: 3,
-                mb: 3,
+                mb: 3
               }}
               role='region'
               aria-label='Historial del ticket'
@@ -2260,7 +2266,10 @@ const MaintenanceTicketDetails: React.FC = () => {
                 alignItems='center'
                 mb={2}
               >
-                <Typography variant='h6' sx={{ color: '#0f172a', fontWeight: 600 }}>
+                <Typography
+                  variant='h6'
+                  sx={{ color: '#0f172a', fontWeight: 600 }}
+                >
                   Historial del Ticket
                 </Typography>
                 <IconButton
@@ -2301,7 +2310,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               sx={{
                 ...surfaceSx,
                 p: 3,
-                mb: 3,
+                mb: 3
               }}
               role='region'
               aria-label='Sección de comentarios'
@@ -2312,7 +2321,10 @@ const MaintenanceTicketDetails: React.FC = () => {
                 alignItems='center'
                 mb={2}
               >
-                <Typography variant='h6' sx={{ color: '#0f172a', fontWeight: 600 }}>
+                <Typography
+                  variant='h6'
+                  sx={{ color: '#0f172a', fontWeight: 600 }}
+                >
                   Comentarios
                 </Typography>
                 <IconButton
@@ -2346,7 +2358,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               sx={{
                 ...surfaceSx,
                 p: 3,
-                mb: 3,
+                mb: 3
               }}
               role='region'
               aria-label='Archivos adjuntos'
@@ -2357,7 +2369,10 @@ const MaintenanceTicketDetails: React.FC = () => {
                 alignItems='center'
                 mb={2}
               >
-                <Typography variant='h6' sx={{ color: '#0f172a', fontWeight: 600 }}>
+                <Typography
+                  variant='h6'
+                  sx={{ color: '#0f172a', fontWeight: 600 }}
+                >
                   Archivos Adjuntos
                 </Typography>
                 <IconButton
@@ -3088,10 +3103,20 @@ const MaintenanceTicketDetails: React.FC = () => {
                     >
                       Reporte técnico de mantenimiento
                     </Typography>
-                    <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
-                      Documento técnico completo para formalizar el cierre del servicio con diagnóstico, validación y recomendaciones.
+                    <Typography
+                      variant='body2'
+                      color='text.secondary'
+                      sx={{ mt: 0.5 }}
+                    >
+                      Documento técnico completo para formalizar el cierre del
+                      servicio con diagnóstico, validación y recomendaciones.
                     </Typography>
-                    <Stack direction='row' spacing={1} sx={{ mt: 1.5 }} flexWrap='wrap'>
+                    <Stack
+                      direction='row'
+                      spacing={1}
+                      sx={{ mt: 1.5 }}
+                      flexWrap='wrap'
+                    >
                       <Chip
                         size='small'
                         color='primary'
@@ -3102,7 +3127,10 @@ const MaintenanceTicketDetails: React.FC = () => {
                         <Chip
                           size='small'
                           color='success'
-                          label={technicalReport.serviceFinalStatus.replace(/_/g, ' ')}
+                          label={technicalReport.serviceFinalStatus.replace(
+                            /_/g,
+                            ' '
+                          )}
                         />
                       )}
                       {technicalReport?.verificationProtocolType && (
@@ -3140,82 +3168,102 @@ const MaintenanceTicketDetails: React.FC = () => {
 
             {maintenanceSignaturesEnabled &&
               ticket.status === MaintenanceStatus.COMPLETED && (
-              <Paper
-                sx={{
-                  ...surfaceSx,
-                  p: 3,
-                  mb: 3,
-                  borderColor: signaturesMissing ? '#fcd34d' : '#bbf7d0'
-                }}
-              >
-                <Box
-                  display='flex'
-                  justifyContent='space-between'
-                  alignItems={{ xs: 'flex-start', sm: 'center' }}
-                  flexDirection={{ xs: 'column', sm: 'row' }}
-                  gap={2}
+                <Paper
+                  sx={{
+                    ...surfaceSx,
+                    p: 3,
+                    mb: 3,
+                    borderColor: signaturesMissing ? '#fcd34d' : '#bbf7d0'
+                  }}
                 >
-                  <Box>
-                    <Typography
-                      variant='h6'
-                      sx={{
-                        fontWeight: 600,
-                        color: signaturesMissing ? '#d97706' : '#059669'
-                      }}
-                    >
-                      Firmas de conformidad
-                    </Typography>
-                    <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
-                      {signaturesMissing
-                        ? 'Este ticket ya está completado, pero todavía le faltan firmas para que la orden quede cerrada visualmente.'
-                        : 'Las firmas ya están registradas y listas para aparecer en la orden de servicio PDF.'}
-                    </Typography>
-                    <Stack direction='row' spacing={1} sx={{ mt: 1.5 }} flexWrap='wrap'>
-                      <Chip
-                        size='small'
-                        color={hasTechnicianSignature ? 'success' : 'warning'}
-                        label={
-                          hasTechnicianSignature
-                            ? 'Firma técnico OK'
-                            : 'Falta firma técnico'
-                        }
-                      />
-                      <Chip
-                        size='small'
-                        color={hasCustomerSignature ? 'success' : 'warning'}
-                        label={
-                          hasCustomerSignature
-                            ? 'Firma cliente OK'
-                            : 'Falta firma cliente'
-                        }
-                      />
-                    </Stack>
-                    {(ticket.technicianSignedAt || ticket.customerSignedAt) && (
-                      <Stack spacing={0.5} sx={{ mt: 1.5 }}>
-                        {ticket.technicianSignedAt && (
-                          <Typography variant='caption' color='text.secondary'>
-                            Firma técnico: {formatDate(ticket.technicianSignedAt)}
-                          </Typography>
-                        )}
-                        {ticket.customerSignedAt && (
-                          <Typography variant='caption' color='text.secondary'>
-                            Firma cliente: {formatDate(ticket.customerSignedAt)}
-                          </Typography>
-                        )}
-                      </Stack>
-                    )}
-                  </Box>
-
-                  <Button
-                    variant={signaturesMissing ? 'contained' : 'outlined'}
-                    startIcon={<Draw />}
-                    onClick={() => setSignaturesDialogOpen(true)}
+                  <Box
+                    display='flex'
+                    justifyContent='space-between'
+                    alignItems={{ xs: 'flex-start', sm: 'center' }}
+                    flexDirection={{ xs: 'column', sm: 'row' }}
+                    gap={2}
                   >
-                    {signaturesMissing ? 'Registrar firmas' : 'Actualizar firmas'}
-                  </Button>
-                </Box>
-              </Paper>
-            )}
+                    <Box>
+                      <Typography
+                        variant='h6'
+                        sx={{
+                          fontWeight: 600,
+                          color: signaturesMissing ? '#d97706' : '#059669'
+                        }}
+                      >
+                        Firmas de conformidad
+                      </Typography>
+                      <Typography
+                        variant='body2'
+                        color='text.secondary'
+                        sx={{ mt: 0.5 }}
+                      >
+                        {signaturesMissing
+                          ? 'Este ticket ya está completado, pero todavía le faltan firmas para que la orden quede cerrada visualmente.'
+                          : 'Las firmas ya están registradas y listas para aparecer en la orden de servicio PDF.'}
+                      </Typography>
+                      <Stack
+                        direction='row'
+                        spacing={1}
+                        sx={{ mt: 1.5 }}
+                        flexWrap='wrap'
+                      >
+                        <Chip
+                          size='small'
+                          color={hasTechnicianSignature ? 'success' : 'warning'}
+                          label={
+                            hasTechnicianSignature
+                              ? 'Firma técnico OK'
+                              : 'Falta firma técnico'
+                          }
+                        />
+                        <Chip
+                          size='small'
+                          color={hasCustomerSignature ? 'success' : 'warning'}
+                          label={
+                            hasCustomerSignature
+                              ? 'Firma cliente OK'
+                              : 'Falta firma cliente'
+                          }
+                        />
+                      </Stack>
+                      {(ticket.technicianSignedAt ||
+                        ticket.customerSignedAt) && (
+                        <Stack spacing={0.5} sx={{ mt: 1.5 }}>
+                          {ticket.technicianSignedAt && (
+                            <Typography
+                              variant='caption'
+                              color='text.secondary'
+                            >
+                              Firma técnico:{' '}
+                              {formatDate(ticket.technicianSignedAt)}
+                            </Typography>
+                          )}
+                          {ticket.customerSignedAt && (
+                            <Typography
+                              variant='caption'
+                              color='text.secondary'
+                            >
+                              Firma cliente:{' '}
+                              {formatDate(ticket.customerSignedAt)}
+                            </Typography>
+                          )}
+                        </Stack>
+                      )}
+                    </Box>
+
+                    <Button
+                      variant={signaturesMissing ? 'contained' : 'outlined'}
+                      startIcon={<Draw />}
+                      onClick={() => setSignaturesDialogOpen(true)}
+                    >
+                      {signaturesMissing
+                        ? 'Registrar firmas'
+                        : 'Actualizar firmas'}
+                    </Button>
+                  </Box>
+                </Paper>
+              )}
 
             {/* Customer Satisfaction */}
             {ticket.customerSatisfaction && (
@@ -3308,7 +3356,10 @@ const MaintenanceTicketDetails: React.FC = () => {
             <Paper sx={{ ...surfaceSx, p: 3 }}>
               <Box display='flex' alignItems='center' gap={1} mb={2}>
                 <TrendingUp sx={{ color: '#64748b' }} />
-                <Typography variant='h6' sx={{ color: '#0f172a', fontWeight: 600 }}>
+                <Typography
+                  variant='h6'
+                  sx={{ color: '#0f172a', fontWeight: 600 }}
+                >
                   Acciones Rápidas
                 </Typography>
               </Box>
@@ -3337,16 +3388,18 @@ const MaintenanceTicketDetails: React.FC = () => {
                 )}
                 {maintenanceSignaturesEnabled &&
                   ticket.status === MaintenanceStatus.COMPLETED && (
-                  <Button
-                    fullWidth
-                    variant='outlined'
-                    startIcon={<Draw />}
-                    onClick={() => setSignaturesDialogOpen(true)}
-                    size='small'
-                  >
-                    {signaturesMissing ? 'Registrar firmas' : 'Actualizar firmas'}
-                  </Button>
-                )}
+                    <Button
+                      fullWidth
+                      variant='outlined'
+                      startIcon={<Draw />}
+                      onClick={() => setSignaturesDialogOpen(true)}
+                      size='small'
+                    >
+                      {signaturesMissing
+                        ? 'Registrar firmas'
+                        : 'Actualizar firmas'}
+                    </Button>
+                  )}
                 {/* 
                 <Button
                   fullWidth
@@ -3427,7 +3480,9 @@ const MaintenanceTicketDetails: React.FC = () => {
           maxWidth='md'
           fullWidth
         >
-          <DialogTitle>{previewFile ? getFileDisplayName(previewFile) : 'Vista previa'}</DialogTitle>
+          <DialogTitle>
+            {previewFile ? getFileDisplayName(previewFile) : 'Vista previa'}
+          </DialogTitle>
           <DialogContent dividers>
             {previewLoading && (
               <Box
@@ -3503,7 +3558,8 @@ const MaintenanceTicketDetails: React.FC = () => {
               previewFile &&
               getFilePreviewType(previewFile) === 'other' && (
                 <Alert severity='info'>
-                  Este tipo de archivo no tiene vista previa inline. Puedes descargarlo si lo necesitas.
+                  Este tipo de archivo no tiene vista previa inline. Puedes
+                  descargarlo si lo necesitas.
                 </Alert>
               )}
           </DialogContent>
@@ -3607,8 +3663,12 @@ const MaintenanceTicketDetails: React.FC = () => {
                   null
                 : ticket?.assignedTechnician?.signatureData || null)
             }
-            currentTicketTechnicianSignature={ticket?.technicianSignatureData || null}
-            currentCustomerSignerName={ticket?.customerSignerName || ticket?.customerName || ''}
+            currentTicketTechnicianSignature={
+              ticket?.technicianSignatureData || null
+            }
+            currentCustomerSignerName={
+              ticket?.customerSignerName || ticket?.customerName || ''
+            }
             currentCustomerSignature={ticket?.customerSignatureData || null}
             canCaptureTechnicianSignature={
               !(
@@ -3618,7 +3678,8 @@ const MaintenanceTicketDetails: React.FC = () => {
               )
             }
             loading={
-              updateTicketMutation.isLoading || updateTechnicianMutation.isLoading
+              updateTicketMutation.isLoading ||
+              updateTechnicianMutation.isLoading
             }
           />
         )}

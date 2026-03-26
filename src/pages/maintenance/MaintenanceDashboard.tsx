@@ -79,9 +79,7 @@ import KeyboardShortcutsHelp from '../../Components/Maintenance/KeyboardShortcut
 import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
 import MaintenanceTechnicalReportDialog from '../../Components/Maintenance/MaintenanceTechnicalReportDialog'
 import { maintenanceSignaturesEnabled } from '../../features/maintenanceFlags'
-import type {
-  CompletionPhotoInput
-} from '../../Components/Maintenance/CompletionCostsDialog'
+import type { CompletionPhotoInput } from '../../Components/Maintenance/CompletionCostsDialog'
 
 /**
  * MaintenanceDashboard component provides an admin interface for managing maintenance tickets
@@ -106,7 +104,8 @@ const MaintenanceDashboard: React.FC = () => {
     useState<MaintenanceTicket | null>(null)
   const [editData, setEditData] = useState<MaintenanceUpdateRequest>({})
   const [costsDialogOpen, setCostsDialogOpen] = useState(false)
-  const [technicalReportDialogOpen, setTechnicalReportDialogOpen] = useState(false)
+  const [technicalReportDialogOpen, setTechnicalReportDialogOpen] =
+    useState(false)
   const [toast, setToast] = useState<{
     open: boolean
     message: string
@@ -362,10 +361,7 @@ const MaintenanceDashboard: React.FC = () => {
       ticket.assignedTechnician?.email !== $userStore.email &&
       Number(ticket.assignedTechnician?.id) !== Number(currentTechnician?.id)
     ) {
-      showToast(
-        'Solo puedes editar tickets asignados a tu usuario',
-        'warning'
-      )
+      showToast('Solo puedes editar tickets asignados a tu usuario', 'warning')
       return
     }
 
@@ -450,27 +446,25 @@ const MaintenanceDashboard: React.FC = () => {
             status: MaintenanceStatus.COMPLETED,
             workPerformed,
             costs,
-            technicianSignatureData:
-              maintenanceSignaturesEnabled
-                ? technicianSignature.technicianSignatureData ||
-                  selectedTicket.technicianSignatureData ||
-                  currentTechnician?.signatureData ||
-                  selectedTicket.assignedTechnician?.signatureData ||
-                  null
-                : null
+            technicianSignatureData: maintenanceSignaturesEnabled
+              ? technicianSignature.technicianSignatureData ||
+                selectedTicket.technicianSignatureData ||
+                currentTechnician?.signatureData ||
+                selectedTicket.assignedTechnician?.signatureData ||
+                null
+              : null
           }
         : {
             ...editData,
             status: MaintenanceStatus.COMPLETED,
             workPerformed,
             costs,
-            technicianSignatureData:
-              maintenanceSignaturesEnabled
-                ? technicianSignature.technicianSignatureData ||
-                  selectedTicket.technicianSignatureData ||
-                  selectedTicket.assignedTechnician?.signatureData ||
-                  null
-                : null
+            technicianSignatureData: maintenanceSignaturesEnabled
+              ? technicianSignature.technicianSignatureData ||
+                selectedTicket.technicianSignatureData ||
+                selectedTicket.assignedTechnician?.signatureData ||
+                null
+              : null
           }
 
       await updateTicketMutation.mutateAsync({
@@ -631,7 +625,9 @@ const MaintenanceDashboard: React.FC = () => {
               justifyContent: 'center'
             }}
           >
-            <Dashboard sx={{ fontSize: { xs: 28, sm: 32 }, color: '#2f7d32' }} />
+            <Dashboard
+              sx={{ fontSize: { xs: 28, sm: 32 }, color: '#2f7d32' }}
+            />
           </Box>
           <Box>
             <Typography
@@ -1021,7 +1017,7 @@ const MaintenanceDashboard: React.FC = () => {
         spacing={{ xs: 2, sm: 2, md: 3 }}
         mb={{ xs: 2, sm: 3, md: 3 }}
       >
-      <Grid item xs={12} md={8}>
+        <Grid item xs={12} md={8}>
           <Paper
             sx={{
               p: { xs: 2, sm: 3 },
@@ -1042,7 +1038,8 @@ const MaintenanceDashboard: React.FC = () => {
                 Tickets por Prioridad
               </Typography>
               <Typography variant='body2' sx={{ color: '#64748b' }}>
-                Vista rápida para detectar carga operativa y urgencias sin saturar el tablero.
+                Vista rápida para detectar carga operativa y urgencias sin
+                saturar el tablero.
               </Typography>
             </Box>
             <Grid container spacing={{ xs: 1, sm: 2 }}>
@@ -1265,7 +1262,8 @@ const MaintenanceDashboard: React.FC = () => {
               )}
             </Typography>
             <Typography variant='body2' sx={{ mt: 0.5, color: '#64748b' }}>
-              Tarjetas más ligeras para priorizar lectura rápida y acciones frecuentes.
+              Tarjetas más ligeras para priorizar lectura rápida y acciones
+              frecuentes.
             </Typography>
           </Box>
         </Box>
@@ -1649,7 +1647,7 @@ const MaintenanceDashboard: React.FC = () => {
                 fullWidth
                 size={isMobile ? 'small' : 'medium'}
                 id='edit-intake-physical-condition'
-                label='Estado físico inicial'
+                label='Condición inicial del equipo'
                 value={editData.intakePhysicalCondition || ''}
                 onChange={(e) =>
                   setEditData((prev) => ({
@@ -1659,7 +1657,7 @@ const MaintenanceDashboard: React.FC = () => {
                 }
                 multiline
                 minRows={3}
-                placeholder='Rayones, golpes, faltantes o condición general al recibir el equipo'
+                placeholder='Rayones, golpes, faltantes o condición general al iniciar la intervención'
               />
             </Grid>
 
@@ -1668,7 +1666,7 @@ const MaintenanceDashboard: React.FC = () => {
                 fullWidth
                 size={isMobile ? 'small' : 'medium'}
                 id='edit-received-accessories'
-                label='Accesorios recibidos'
+                label='Accesorios disponibles'
                 value={editData.receivedAccessories || ''}
                 onChange={(e) =>
                   setEditData((prev) => ({
@@ -1678,7 +1676,7 @@ const MaintenanceDashboard: React.FC = () => {
                 }
                 multiline
                 minRows={3}
-                placeholder='Cables, sensores, fuente, batería, adaptadores u otros accesorios entregados'
+                placeholder='Cables, sensores, fuente, batería, adaptadores u otros accesorios disponibles durante el servicio'
               />
             </Grid>
 
@@ -1769,7 +1767,7 @@ const MaintenanceDashboard: React.FC = () => {
       />
 
       {/* Completion Costs Dialog */}
-        <CompletionCostsDialog
+      <CompletionCostsDialog
         open={costsDialogOpen}
         onClose={() => setCostsDialogOpen(false)}
         onComplete={handleCompleteWithCosts}
@@ -1777,18 +1775,20 @@ const MaintenanceDashboard: React.FC = () => {
         storedTechnicianSignature={
           selectedTicket?.technicianSignatureData ||
           (isTechnician
-            ? currentTechnician?.signatureData || selectedTicket?.assignedTechnician?.signatureData || null
+            ? currentTechnician?.signatureData ||
+              selectedTicket?.assignedTechnician?.signatureData ||
+              null
             : selectedTicket?.assignedTechnician?.signatureData || null)
         }
-          canCaptureTechnicianSignature={
-            !(
-              selectedTicket?.technicianSignatureData ||
-              currentTechnician?.signatureData ||
-              selectedTicket?.assignedTechnician?.signatureData
-            )
-          }
-          signaturesEnabled={maintenanceSignaturesEnabled}
-          loading={
+        canCaptureTechnicianSignature={
+          !(
+            selectedTicket?.technicianSignatureData ||
+            currentTechnician?.signatureData ||
+            selectedTicket?.assignedTechnician?.signatureData
+          )
+        }
+        signaturesEnabled={maintenanceSignaturesEnabled}
+        loading={
           updateTicketMutation.isLoading ||
           uploadFilesMutation.isLoading ||
           updateTechnicianMutation.isLoading
