@@ -3502,15 +3502,17 @@ const MaintenanceTicketDetails: React.FC = () => {
                       )}
                     </Box>
 
-                    <Button
-                      variant={signaturesMissing ? 'contained' : 'outlined'}
-                      startIcon={<Draw />}
-                      onClick={() => setSignaturesDialogOpen(true)}
-                    >
-                      {signaturesMissing
-                        ? 'Registrar firmas'
-                        : 'Actualizar firmas'}
-                    </Button>
+                    {!hasCustomerSignature && (
+                      <Button
+                        variant={signaturesMissing ? 'contained' : 'outlined'}
+                        startIcon={<Draw />}
+                        onClick={() => setSignaturesDialogOpen(true)}
+                      >
+                        {signaturesMissing
+                          ? 'Registrar firmas'
+                          : 'Actualizar firmas'}
+                      </Button>
+                    )}
                     {canManageTechnicians && hasCustomerSignature && (
                       <Button
                         variant='text'
@@ -3664,6 +3666,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   </Button>
                 )}
                 {maintenanceSignaturesEnabled &&
+                  !hasCustomerSignature &&
                   ticket.status === MaintenanceStatus.COMPLETED && (
                     <Button
                       fullWidth
