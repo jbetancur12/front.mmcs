@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Chip,
@@ -30,13 +31,15 @@ import {
   useCreateMaintenanceProtocolTemplate,
   useDeleteMaintenanceProtocolTemplate,
   useMaintenanceProtocolTemplates,
+  useMaintenanceToolEquipmentSearch,
   useUpdateMaintenanceProtocolTemplate
 } from '../../hooks/useMaintenance'
 import type {
   MaintenanceProtocolTemplate,
   MaintenanceProtocolTemplateRequest,
   MaintenanceTechnicalReportTest,
-  MaintenanceTechnicalReportTool
+  MaintenanceTechnicalReportTool,
+  MaintenanceToolEquipmentSummary
 } from '../../types/maintenance'
 
 const surfaceSx = {
@@ -49,7 +52,9 @@ const surfaceSx = {
 const emptyTool = (): MaintenanceTechnicalReportTool => ({
   name: '',
   serial: '',
-  calibrationDue: null
+  calibrationDue: null,
+  internalCode: null,
+  location: null
 })
 
 const emptyTest = (): MaintenanceTechnicalReportTest => ({
@@ -101,6 +106,9 @@ const MaintenanceProtocols = () => {
     useState<MaintenanceProtocolTemplate | null>(null)
   const [formState, setFormState] = useState(defaultFormState)
   const [formError, setFormError] = useState<string | null>(null)
+  const [toolSearch, setToolSearch] = useState('')
+  const { data: toolEquipmentOptions = [], isFetching: toolSearchLoading } =
+    useMaintenanceToolEquipmentSearch(toolSearch)
 
   const activeCount = useMemo(
     () => protocols.filter((protocol) => protocol.isActive).length,
@@ -170,7 +178,9 @@ const MaintenanceProtocols = () => {
       .map((tool) => ({
         name: tool.name.trim(),
         serial: tool.serial?.trim() || null,
-        calibrationDue: tool.calibrationDue || null
+        calibrationDue: tool.calibrationDue || null,
+        internalCode: tool.internalCode?.trim() || null,
+        location: tool.location?.trim() || null
       }))
       .filter((tool) => tool.name),
     tests: formState.tests
@@ -335,9 +345,18 @@ const MaintenanceProtocols = () => {
                   {protocol.description || 'Sin descripción registrada.'}
                 </Typography>
 
-                <Stack direction='row' spacing={1} flexWrap='wrap' sx={{ mt: 1.5 }}>
+                <Stack
+                  direction='row'
+                  spacing={1}
+                  flexWrap='wrap'
+                  sx={{ mt: 1.5 }}
+                >
                   {protocol.riskClass && (
-                    <Chip size='small' variant='outlined' label={protocol.riskClass} />
+                    <Chip
+                      size='small'
+                      variant='outlined'
+                      label={protocol.riskClass}
+                    />
                   )}
                   <Chip
                     size='small'
@@ -355,7 +374,12 @@ const MaintenanceProtocols = () => {
                   <Typography variant='caption' color='text.secondary'>
                     Aplica a:
                   </Typography>
-                  <Stack direction='row' spacing={1} flexWrap='wrap' sx={{ mt: 0.75 }}>
+                  <Stack
+                    direction='row'
+                    spacing={1}
+                    flexWrap='wrap'
+                    sx={{ mt: 0.75 }}
+                  >
                     {protocol.appliesTo.length ? (
                       protocol.appliesTo.map((keyword) => (
                         <Chip
@@ -539,13 +563,75 @@ const MaintenanceProtocols = () => {
                 {formState.tools.map((tool, index) => (
                   <Grid container spacing={1} key={`protocol-tool-${index}`}>
                     <Grid item xs={12} md={5}>
-                      <TextField
-                        fullWidth
-                        label='Nombre'
-                        value={tool.name}
-                        onChange={(e) =>
-                          updateTool(index, 'name', e.target.value)
+                      <Autocomplete<
+                        MaintenanceToolEquipmentSummary,
+                        false,
+                        false,
+                        true
+                      >
+                        freeSolo
+                        options={toolEquipmentOptions}
+                        loading={toolSearchLoading}
+                        value={null}
+                        inputValue={tool.name || ''}
+                        onInputChange={(_, value) => {
+                          setToolSearch(value)
+                          updateTool(index, 'name', value)
+                        }}
+                        onChange={(_, value) => {
+                          if (!value || typeof value === 'string') return
+
+                          updateTool(index, 'name', value.equipmentName)
+                          updateTool(index, 'serial', value.serialNumber || '')
+                          updateTool(
+                            index,
+                            'internalCode',
+                            value.internalCode || ''
+                          )
+                          updateTool(index, 'location', value.location || '')
+                          updateTool(
+                            index,
+                            'calibrationDue',
+                            value.nextCalibrationDate
+                              ? String(value.nextCalibrationDate).slice(0, 10)
+                              : null
+                          )
+                        }}
+                        getOptionLabel={(option) =>
+                          typeof option === 'string'
+                            ? option
+                            : `${option.internalCode} - ${option.equipmentName}`
                         }
+                        isOptionEqualToValue={(option, value) =>
+                          option.id === value.id
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            fullWidth
+                            label='Nombre'
+                            helperText='Busca un equipo del inventario o escribe manualmente.'
+                          />
+                        )}
+                        renderOption={(props, option) => (
+                          <Box component='li' {...props}>
+                            <Box>
+                              <Typography variant='body2' fontWeight={700}>
+                                {option.internalCode} - {option.equipmentName}
+                              </Typography>
+                              <Typography
+                                variant='caption'
+                                color='text.secondary'
+                              >
+                                {option.brand} {option.model} | Serie:{' '}
+                                {option.serialNumber}
+                                {option.nextCalibrationDate
+                                  ? ` | Vence: ${new Date(option.nextCalibrationDate).toLocaleDateString('es-CO')}`
+                                  : ''}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        )}
                       />
                     </Grid>
                     <Grid item xs={12} md={3}>
@@ -574,6 +660,32 @@ const MaintenanceProtocols = () => {
                         }
                       />
                     </Grid>
+                    {(tool.internalCode || tool.location) && (
+                      <Grid item xs={12} md={11}>
+                        <Stack
+                          direction={{ xs: 'column', sm: 'row' }}
+                          spacing={1}
+                          alignItems={{ xs: 'flex-start', sm: 'center' }}
+                        >
+                          {tool.internalCode && (
+                            <Chip
+                              size='small'
+                              color='primary'
+                              variant='outlined'
+                              label={`Código interno: ${tool.internalCode}`}
+                            />
+                          )}
+                          {tool.location && (
+                            <Typography
+                              variant='caption'
+                              color='text.secondary'
+                            >
+                              Ubicación: {tool.location}
+                            </Typography>
+                          )}
+                        </Stack>
+                      </Grid>
+                    )}
                     <Grid item xs={12} md={1}>
                       <IconButton
                         onClick={() =>
@@ -692,7 +804,8 @@ const MaintenanceProtocols = () => {
             variant='contained'
             onClick={handleSave}
             disabled={
-              createProtocolMutation.isLoading || updateProtocolMutation.isLoading
+              createProtocolMutation.isLoading ||
+              updateProtocolMutation.isLoading
             }
           >
             {currentProtocol ? 'Guardar cambios' : 'Crear protocolo'}

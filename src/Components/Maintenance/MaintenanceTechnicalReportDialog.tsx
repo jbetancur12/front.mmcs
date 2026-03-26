@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Chip,
@@ -30,9 +31,13 @@ import type {
   MaintenanceTechnicalReportPart,
   MaintenanceTechnicalReportRequest,
   MaintenanceTechnicalReportTest,
-  MaintenanceTechnicalReportTool
+  MaintenanceTechnicalReportTool,
+  MaintenanceToolEquipmentSummary
 } from '../../types/maintenance'
-import { useMaintenanceProtocolTemplates } from '../../hooks/useMaintenance'
+import {
+  useMaintenanceProtocolTemplates,
+  useMaintenanceToolEquipmentSearch
+} from '../../hooks/useMaintenance'
 
 interface Props {
   open: boolean
@@ -65,7 +70,15 @@ const defaultReportState: MaintenanceTechnicalReportRequest = {
   activities: [''],
   parts: [{ description: '', quantity: 1, code: '', notes: '' }],
   verificationProtocolType: '',
-  verificationTools: [{ name: '', serial: '', calibrationDue: null }],
+  verificationTools: [
+    {
+      name: '',
+      serial: '',
+      calibrationDue: null,
+      internalCode: null,
+      location: null
+    }
+  ],
   verificationTests: [{ parameter: '', result: 'PASA', value: '', notes: '' }],
   recommendations: '',
   nextMaintenanceDate: null,
@@ -94,7 +107,15 @@ const toEditableReport = (
     verificationProtocolType: report.verificationProtocolType || '',
     verificationTools: report.verificationTools.length
       ? report.verificationTools
-      : [{ name: '', serial: '', calibrationDue: null }],
+      : [
+          {
+            name: '',
+            serial: '',
+            calibrationDue: null,
+            internalCode: null,
+            location: null
+          }
+        ],
     verificationTests: report.verificationTests.length
       ? report.verificationTests
       : [{ parameter: '', result: 'PASA', value: '', notes: '' }],
@@ -133,10 +154,12 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
   onGeneratePdf
 }) => {
   const { data: protocolTemplates = [] } = useMaintenanceProtocolTemplates()
-  const [formData, setFormData] = useState<MaintenanceTechnicalReportRequest>(
-    defaultReportState
-  )
+  const [formData, setFormData] =
+    useState<MaintenanceTechnicalReportRequest>(defaultReportState)
   const [errors, setErrors] = useState<ValidationState>({})
+  const [toolSearch, setToolSearch] = useState('')
+  const { data: toolEquipmentOptions = [], isFetching: toolSearchLoading } =
+    useMaintenanceToolEquipmentSearch(toolSearch)
 
   const activeProtocols = React.useMemo(
     () => protocolTemplates.filter((protocol) => protocol.isActive),
@@ -238,7 +261,10 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
   const addPart = () => {
     setFormData((prev) => ({
       ...prev,
-      parts: [...prev.parts, { description: '', quantity: 1, code: '', notes: '' }]
+      parts: [
+        ...prev.parts,
+        { description: '', quantity: 1, code: '', notes: '' }
+      ]
     }))
   }
 
@@ -270,7 +296,13 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
       ...prev,
       verificationTools: [
         ...prev.verificationTools,
-        { name: '', serial: '', calibrationDue: null }
+        {
+          name: '',
+          serial: '',
+          calibrationDue: null,
+          internalCode: null,
+          location: null
+        }
       ]
     }))
   }
@@ -281,7 +313,15 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
       verificationTools:
         prev.verificationTools.length > 1
           ? prev.verificationTools.filter((_, idx) => idx !== index)
-          : [{ name: '', serial: '', calibrationDue: null }]
+          : [
+              {
+                name: '',
+                serial: '',
+                calibrationDue: null,
+                internalCode: null,
+                location: null
+              }
+            ]
     }))
   }
 
@@ -353,8 +393,7 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
     }
 
     if (!normalizedTests.length) {
-      nextErrors.verificationTests =
-        'Agrega al menos una prueba post-servicio.'
+      nextErrors.verificationTests = 'Agrega al menos una prueba post-servicio.'
     }
 
     setErrors(nextErrors)
@@ -403,7 +442,8 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
               Reporte Técnico de Mantenimiento
             </Typography>
             <Typography variant='body2' color='text.secondary'>
-              Documento técnico de cierre con diagnóstico, intervención, verificación y conclusiones.
+              Documento técnico de cierre con diagnóstico, intervención,
+              verificación y conclusiones.
             </Typography>
           </Box>
           <Stack direction='row' spacing={1} flexWrap='wrap'>
@@ -454,7 +494,8 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
                   Resumen de diligenciamiento
                 </Typography>
                 <Typography variant='body2' color='text.secondary'>
-                  Completa diagnóstico, actividades, verificación y conclusiones para dejar el PDF listo para entrega.
+                  Completa diagnóstico, actividades, verificación y conclusiones
+                  para dejar el PDF listo para entrega.
                 </Typography>
               </Box>
               <Stack direction='row' spacing={1} flexWrap='wrap'>
@@ -485,7 +526,8 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
               Asistente de Protocolo
             </Typography>
             <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-              Puedes cargar una estructura base según el tipo de equipo y luego afinar el reporte.
+              Puedes cargar una estructura base según el tipo de equipo y luego
+              afinar el reporte.
             </Typography>
             <Stack direction='row' spacing={1} flexWrap='wrap'>
               {activeProtocols.map((protocol) => (
@@ -493,7 +535,9 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
                   key={protocol.id}
                   size='small'
                   variant={
-                    suggestedProtocol?.id === protocol.id ? 'contained' : 'outlined'
+                    suggestedProtocol?.id === protocol.id
+                      ? 'contained'
+                      : 'outlined'
                   }
                   onClick={() => applyPreset(protocol)}
                   sx={{ mb: 1 }}
@@ -504,7 +548,8 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
             </Stack>
             {suggestedProtocol && (
               <Alert severity='info' sx={{ mt: 1 }}>
-                Sugerencia automática para este equipo: {suggestedProtocol.name}.
+                Sugerencia automática para este equipo: {suggestedProtocol.name}
+                .
               </Alert>
             )}
             {!activeProtocols.length && (
@@ -563,7 +608,9 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
                   fullWidth
                   label='Clase de riesgo'
                   value={formData.riskClass || ''}
-                  onChange={(e) => handleFieldChange('riskClass', e.target.value)}
+                  onChange={(e) =>
+                    handleFieldChange('riskClass', e.target.value)
+                  }
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
@@ -573,7 +620,10 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
                   label='Garantía (días)'
                   value={formData.warrantyDays || 90}
                   onChange={(e) =>
-                    handleFieldChange('warrantyDays', Number(e.target.value) || 90)
+                    handleFieldChange(
+                      'warrantyDays',
+                      Number(e.target.value) || 90
+                    )
                   }
                 />
               </Grid>
@@ -611,7 +661,12 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
           </Paper>
 
           <Paper sx={sectionCardSx}>
-            <Box display='flex' alignItems='center' justifyContent='space-between' mb={2}>
+            <Box
+              display='flex'
+              alignItems='center'
+              justifyContent='space-between'
+              mb={2}
+            >
               <Box display='flex' alignItems='center' gap={1}>
                 <Engineering fontSize='small' sx={{ color: '#2563eb' }} />
                 <Typography variant='subtitle1' sx={{ fontWeight: 700 }}>
@@ -629,7 +684,9 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
                     fullWidth
                     label={`Actividad ${index + 1}`}
                     value={activity}
-                    onChange={(e) => handleActivityChange(index, e.target.value)}
+                    onChange={(e) =>
+                      handleActivityChange(index, e.target.value)
+                    }
                   />
                   <IconButton
                     onClick={() => removeActivity(index)}
@@ -648,7 +705,12 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
 
             <Divider sx={{ my: 2 }} />
 
-            <Box display='flex' alignItems='center' justifyContent='space-between' mb={2}>
+            <Box
+              display='flex'
+              alignItems='center'
+              justifyContent='space-between'
+              mb={2}
+            >
               <Typography variant='subtitle2' sx={{ fontWeight: 700 }}>
                 Repuestos / Materiales
               </Typography>
@@ -715,7 +777,12 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
           </Paper>
 
           <Paper sx={sectionCardSx}>
-            <Box display='flex' alignItems='center' justifyContent='space-between' mb={2}>
+            <Box
+              display='flex'
+              alignItems='center'
+              justifyContent='space-between'
+              mb={2}
+            >
               <Box display='flex' alignItems='center' gap={1}>
                 <Science fontSize='small' sx={{ color: '#059669' }} />
                 <Typography variant='subtitle1' sx={{ fontWeight: 700 }}>
@@ -736,23 +803,21 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
                     matchedProtocol?.description ||
                     'Selecciona un protocolo del catálogo.'
                   }
-                  onChange={(e) =>
-                    {
-                      const selectedProtocol = activeProtocols.find(
-                        (protocol) => protocol.code === e.target.value
-                      )
+                  onChange={(e) => {
+                    const selectedProtocol = activeProtocols.find(
+                      (protocol) => protocol.code === e.target.value
+                    )
 
-                      if (selectedProtocol) {
-                        applyPreset(selectedProtocol)
-                        return
-                      }
-
-                      handleFieldChange(
-                        'verificationProtocolType',
-                        e.target.value
-                      )
+                    if (selectedProtocol) {
+                      applyPreset(selectedProtocol)
+                      return
                     }
-                  }
+
+                    handleFieldChange(
+                      'verificationProtocolType',
+                      e.target.value
+                    )
+                  }}
                 >
                   {activeProtocols.map((protocol) => (
                     <MenuItem key={protocol.id} value={protocol.code}>
@@ -787,7 +852,12 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
               </Grid>
             </Grid>
 
-            <Box display='flex' alignItems='center' justifyContent='space-between' mb={1}>
+            <Box
+              display='flex'
+              alignItems='center'
+              justifyContent='space-between'
+              mb={1}
+            >
               <Typography variant='subtitle2' sx={{ fontWeight: 700 }}>
                 Herramientas usadas
               </Typography>
@@ -799,13 +869,83 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
               {formData.verificationTools.map((tool, index) => (
                 <Grid container spacing={1} key={`tool-${index}`}>
                   <Grid item xs={12} md={5}>
-                    <TextField
-                      fullWidth
-                      label='Nombre'
-                      value={tool.name}
-                      onChange={(e) =>
-                        handleToolChange(index, 'name', e.target.value)
+                    <Autocomplete<
+                      MaintenanceToolEquipmentSummary,
+                      false,
+                      false,
+                      true
+                    >
+                      freeSolo
+                      options={toolEquipmentOptions}
+                      loading={toolSearchLoading}
+                      value={null}
+                      inputValue={tool.name || ''}
+                      onInputChange={(_, value) => {
+                        setToolSearch(value)
+                        handleToolChange(index, 'name', value)
+                      }}
+                      onChange={(_, value) => {
+                        if (!value || typeof value === 'string') return
+
+                        handleToolChange(index, 'name', value.equipmentName)
+                        handleToolChange(
+                          index,
+                          'serial',
+                          value.serialNumber || ''
+                        )
+                        handleToolChange(
+                          index,
+                          'internalCode',
+                          value.internalCode || ''
+                        )
+                        handleToolChange(
+                          index,
+                          'location',
+                          value.location || ''
+                        )
+                        handleToolChange(
+                          index,
+                          'calibrationDue',
+                          value.nextCalibrationDate
+                            ? String(value.nextCalibrationDate).slice(0, 10)
+                            : null
+                        )
+                      }}
+                      getOptionLabel={(option) =>
+                        typeof option === 'string'
+                          ? option
+                          : `${option.internalCode} - ${option.equipmentName}`
                       }
+                      isOptionEqualToValue={(option, value) =>
+                        option.id === value.id
+                      }
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          fullWidth
+                          label='Nombre'
+                          helperText='Busca un equipo del inventario o escribe manualmente.'
+                        />
+                      )}
+                      renderOption={(props, option) => (
+                        <Box component='li' {...props}>
+                          <Box>
+                            <Typography variant='body2' fontWeight={700}>
+                              {option.internalCode} - {option.equipmentName}
+                            </Typography>
+                            <Typography
+                              variant='caption'
+                              color='text.secondary'
+                            >
+                              {option.brand} {option.model} | Serie:{' '}
+                              {option.serialNumber}
+                              {option.nextCalibrationDate
+                                ? ` | Vence: ${new Date(option.nextCalibrationDate).toLocaleDateString('es-CO')}`
+                                : ''}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      )}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
@@ -834,6 +974,29 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
                       }
                     />
                   </Grid>
+                  {(tool.internalCode || tool.location) && (
+                    <Grid item xs={12} md={11}>
+                      <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        spacing={1}
+                        alignItems={{ xs: 'flex-start', sm: 'center' }}
+                      >
+                        {tool.internalCode && (
+                          <Chip
+                            size='small'
+                            color='primary'
+                            variant='outlined'
+                            label={`Código interno: ${tool.internalCode}`}
+                          />
+                        )}
+                        {tool.location && (
+                          <Typography variant='caption' color='text.secondary'>
+                            Ubicación: {tool.location}
+                          </Typography>
+                        )}
+                      </Stack>
+                    </Grid>
+                  )}
                   <Grid item xs={12} md={1}>
                     <IconButton onClick={() => removeTool(index)}>
                       <DeleteOutline />
@@ -848,7 +1011,12 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
               </Alert>
             )}
 
-            <Box display='flex' alignItems='center' justifyContent='space-between' mb={1}>
+            <Box
+              display='flex'
+              alignItems='center'
+              justifyContent='space-between'
+              mb={1}
+            >
               <Typography variant='subtitle2' sx={{ fontWeight: 700 }}>
                 Pruebas ejecutadas
               </Typography>
@@ -950,7 +1118,9 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
                 minRows={3}
                 label='Alcance de la intervención'
                 value={formData.scopeClause || ''}
-                onChange={(e) => handleFieldChange('scopeClause', e.target.value)}
+                onChange={(e) =>
+                  handleFieldChange('scopeClause', e.target.value)
+                }
               />
               <TextField
                 fullWidth
@@ -966,7 +1136,9 @@ const MaintenanceTechnicalReportDialog: React.FC<Props> = ({
           </Paper>
 
           <Alert severity='info'>
-            Esta primera versión deja el reporte técnico bien estructurado y listo para PDF. Después podemos enriquecerlo por tipo de equipo o protocolo sin tocar el ticket base.
+            Esta primera versión deja el reporte técnico bien estructurado y
+            listo para PDF. Después podemos enriquecerlo por tipo de equipo o
+            protocolo sin tocar el ticket base.
           </Alert>
         </Stack>
       </DialogContent>

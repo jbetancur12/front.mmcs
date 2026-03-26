@@ -17,6 +17,8 @@ import {
   MaintenanceAction,
   MaintenanceTechnicalReport,
   MaintenanceTechnicalReportRequest,
+  MaintenanceDataSheetSummary,
+  MaintenanceToolEquipmentSummary,
   MaintenanceProtocolTemplate,
   MaintenanceProtocolTemplateRequest
 } from '../types/maintenance'
@@ -226,16 +228,16 @@ const maintenanceAPI = {
       formData.append('isPublic', String(options.isPublic))
     }
 
-    const response = await axiosPrivate.post<{ files?: MaintenanceFile[] } | MaintenanceFile[]>(
-      `/maintenance/tickets/${ticketId}/files`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+    const response = await axiosPrivate.post<
+      { files?: MaintenanceFile[] } | MaintenanceFile[]
+    >(`/maintenance/tickets/${ticketId}/files`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
       }
-    )
-    return Array.isArray(response.data) ? response.data : response.data.files || []
+    })
+    return Array.isArray(response.data)
+      ? response.data
+      : response.data.files || []
   },
 
   deleteFile: async (_ticketId: string, fileId: string): Promise<void> => {
@@ -318,6 +320,38 @@ const maintenanceAPI = {
     const response = await axiosPrivate.put<MaintenanceTechnicalReport>(
       `/maintenance/tickets/${ticketId}/technical-report`,
       data
+    )
+    return response.data
+  },
+
+  searchDataSheets: async (
+    query: string,
+    limit = 10
+  ): Promise<MaintenanceDataSheetSummary[]> => {
+    const response = await axiosPrivate.get<MaintenanceDataSheetSummary[]>(
+      `/maintenance/datasheets/search`,
+      {
+        params: {
+          q: query,
+          limit
+        }
+      }
+    )
+    return response.data
+  },
+
+  searchToolEquipment: async (
+    query: string,
+    limit = 10
+  ): Promise<MaintenanceToolEquipmentSummary[]> => {
+    const response = await axiosPrivate.get<MaintenanceToolEquipmentSummary[]>(
+      `/maintenance/tools/search`,
+      {
+        params: {
+          q: query,
+          limit
+        }
+      }
     )
     return response.data
   },
@@ -610,6 +644,25 @@ export const useMaintenanceProtocolTemplates = () => {
   })
 }
 
+export const useMaintenanceDataSheetSearch = (query: string, limit = 10) => {
+  return useQuery({
+    queryKey: ['maintenance-datasheets-search', query, limit],
+    queryFn: () => maintenanceAPI.searchDataSheets(query, limit),
+    enabled: query.trim().length >= 2
+  })
+}
+
+export const useMaintenanceToolEquipmentSearch = (
+  query: string,
+  limit = 10
+) => {
+  return useQuery({
+    queryKey: ['maintenance-tool-equipment-search', query, limit],
+    queryFn: () => maintenanceAPI.searchToolEquipment(query, limit),
+    enabled: query.trim().length >= 0
+  })
+}
+
 // Public tracking hook (no auth required)
 export const useTrackMaintenanceTicket = (ticketNumber: string) => {
   return useQuery({
@@ -736,7 +789,12 @@ export const useUploadMaintenanceFiles = () => {
       category?: string
       description?: string
       isPublic?: boolean
-    }) => maintenanceAPI.uploadFiles(ticketId, files, { category, description, isPublic }),
+    }) =>
+      maintenanceAPI.uploadFiles(ticketId, files, {
+        category,
+        description,
+        isPublic
+      }),
     onSuccess: (_, { ticketId }) => {
       queryClient.invalidateQueries({
         queryKey: ['maintenance-ticket', ticketId]

@@ -27,6 +27,7 @@ import {
   Snackbar,
   AlertTitle,
   LinearProgress,
+  Autocomplete,
   useMediaQuery,
   useTheme
 } from '@mui/material'
@@ -54,7 +55,8 @@ import {
   useUploadMaintenanceFiles,
   useMaintenanceTechnicalReport,
   useUpsertMaintenanceTechnicalReport,
-  useGenerateTechnicalReport
+  useGenerateTechnicalReport,
+  useMaintenanceDataSheetSearch
 } from '../../hooks/useMaintenance'
 import {
   MaintenanceFilters,
@@ -62,7 +64,8 @@ import {
   MaintenancePriority,
   MaintenanceTicket,
   MaintenanceUpdateRequest,
-  MaintenanceTechnicalReportRequest
+  MaintenanceTechnicalReportRequest,
+  MaintenanceDataSheetSummary
 } from '../../types/maintenance'
 import MaintenanceTicketCard from '../../Components/Maintenance/MaintenanceTicketCard'
 import MaintenanceFiltersComponent from '../../Components/Maintenance/MaintenanceFilters'
@@ -106,6 +109,7 @@ const MaintenanceDashboard: React.FC = () => {
   const [costsDialogOpen, setCostsDialogOpen] = useState(false)
   const [technicalReportDialogOpen, setTechnicalReportDialogOpen] =
     useState(false)
+  const [dataSheetSearch, setDataSheetSearch] = useState('')
   const [toast, setToast] = useState<{
     open: boolean
     message: string
@@ -199,6 +203,8 @@ const MaintenanceDashboard: React.FC = () => {
   const { data: currentTechnician } = useTechnicianByEmail(
     currentTechnicianEmail || ''
   )
+  const { data: dataSheetOptions = [], isFetching: dataSheetSearchLoading } =
+    useMaintenanceDataSheetSearch(dataSheetSearch)
   const {
     data: technicalReport,
     isLoading: technicalReportLoading,
@@ -370,7 +376,13 @@ const MaintenanceDashboard: React.FC = () => {
     setEditData({
       status: ticket.status,
       assignedTechnician: ticket.assignedTechnicianId || '',
+      dataSheetId: ticket.dataSheetId || null,
       scheduledDate: ticket.scheduledDate || '',
+      equipmentType: ticket.equipmentType || '',
+      equipmentBrand: ticket.equipmentBrand || '',
+      equipmentModel: ticket.equipmentModel || '',
+      equipmentSerial: ticket.equipmentSerial || '',
+      location: ticket.location || '',
       priority: ticket.priority,
       intakePhysicalCondition: ticket.intakePhysicalCondition || '',
       receivedAccessories: ticket.receivedAccessories || ''
@@ -1469,6 +1481,166 @@ const MaintenanceDashboard: React.FC = () => {
                     ))}
                   </Select>
                 </FormControl>
+              </Grid>
+            )}
+
+            {!isTechnician && (
+              <Grid item xs={12}>
+                <Autocomplete<MaintenanceDataSheetSummary, false, false, false>
+                  options={dataSheetOptions}
+                  loading={dataSheetSearchLoading}
+                  value={
+                    dataSheetOptions.find(
+                      (option) => option.id === editData.dataSheetId
+                    ) ||
+                    (selectedTicket?.dataSheet &&
+                    selectedTicket.dataSheet.id === editData.dataSheetId
+                      ? selectedTicket.dataSheet
+                      : null)
+                  }
+                  onInputChange={(_, value) => setDataSheetSearch(value)}
+                  onChange={(_, value) => {
+                    if (!value) {
+                      setEditData((prev) => ({
+                        ...prev,
+                        dataSheetId: null
+                      }))
+                      return
+                    }
+
+                    setEditData((prev) => ({
+                      ...prev,
+                      dataSheetId: value.id,
+                      equipmentType: value.equipmentName || prev.equipmentType,
+                      equipmentBrand: value.brand || '',
+                      equipmentModel: value.model || '',
+                      equipmentSerial: value.serialNumber || '',
+                      location: value.location || prev.location
+                    }))
+                  }}
+                  isOptionEqualToValue={(option, value) =>
+                    option.id === value.id
+                  }
+                  getOptionLabel={(option) =>
+                    `${option.internalCode} - ${option.equipmentName}`
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      size={isMobile ? 'small' : 'medium'}
+                      label='Vincular desde Hoja de Vida'
+                      helperText='Opcional. Puedes buscar un equipo registrado o seguir con diligenciamiento manual.'
+                    />
+                  )}
+                  renderOption={(props, option) => (
+                    <Box component='li' {...props}>
+                      <Box>
+                        <Typography variant='body2' fontWeight={700}>
+                          {option.internalCode} - {option.equipmentName}
+                        </Typography>
+                        <Typography variant='caption' color='text.secondary'>
+                          {option.brand} {option.model} | Serie:{' '}
+                          {option.serialNumber} | {option.location}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  )}
+                />
+              </Grid>
+            )}
+
+            {!isTechnician && (
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  size={isMobile ? 'small' : 'medium'}
+                  label='Tipo de equipo'
+                  value={editData.equipmentType || ''}
+                  onChange={(e) =>
+                    setEditData((prev) => ({
+                      ...prev,
+                      equipmentType: e.target.value
+                    }))
+                  }
+                />
+              </Grid>
+            )}
+
+            {!isTechnician && (
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  size={isMobile ? 'small' : 'medium'}
+                  label='Marca'
+                  value={editData.equipmentBrand || ''}
+                  onChange={(e) =>
+                    setEditData((prev) => ({
+                      ...prev,
+                      equipmentBrand: e.target.value
+                    }))
+                  }
+                />
+              </Grid>
+            )}
+
+            {!isTechnician && (
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  size={isMobile ? 'small' : 'medium'}
+                  label='Modelo'
+                  value={editData.equipmentModel || ''}
+                  onChange={(e) =>
+                    setEditData((prev) => ({
+                      ...prev,
+                      equipmentModel: e.target.value
+                    }))
+                  }
+                />
+              </Grid>
+            )}
+
+            {!isTechnician && (
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  size={isMobile ? 'small' : 'medium'}
+                  label='Número de serie'
+                  value={editData.equipmentSerial || ''}
+                  onChange={(e) =>
+                    setEditData((prev) => ({
+                      ...prev,
+                      equipmentSerial: e.target.value
+                    }))
+                  }
+                />
+              </Grid>
+            )}
+
+            {!isTechnician && (
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  size={isMobile ? 'small' : 'medium'}
+                  label='Ubicación del equipo'
+                  value={editData.location || ''}
+                  onChange={(e) =>
+                    setEditData((prev) => ({
+                      ...prev,
+                      location: e.target.value
+                    }))
+                  }
+                />
+              </Grid>
+            )}
+
+            {!isTechnician && selectedTicket?.dataSheet && (
+              <Grid item xs={12}>
+                <Alert severity='info'>
+                  Equipo vinculado actualmente a Hoja de Vida:{' '}
+                  <strong>{selectedTicket.dataSheet.internalCode}</strong>
+                </Alert>
               </Grid>
             )}
 
