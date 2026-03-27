@@ -255,7 +255,8 @@ const MaintenanceTVDisplayModern: React.FC = () => {
       return {
         totalPages: 1,
         displayColumns: undefined,
-        centerSparsePage: false
+        centerSparsePage: false,
+        sparseCardHeight: undefined
       }
     }
 
@@ -276,6 +277,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
       currentPageTickets.length < sparseThreshold
 
     let displayColumns: number | undefined
+    let sparseCardHeight: number | undefined
     if (shouldRebalance) {
       displayColumns = Math.max(
         2,
@@ -284,12 +286,20 @@ const MaintenanceTVDisplayModern: React.FC = () => {
           Math.ceil(currentPageTickets.length / 2)
         )
       )
+
+      const growthFactor =
+        currentPageTickets.length <= displayColumns
+          ? 1.24
+          : 1.14
+
+      sparseCardHeight = Math.round(gridCalculation.cardHeight * growthFactor)
     }
 
     return {
       totalPages,
       displayColumns,
-      centerSparsePage: Boolean(shouldRebalance)
+      centerSparsePage: Boolean(shouldRebalance),
+      sparseCardHeight
     }
   }, [organizedTickets.paginatedTickets.length, gridCalculation, slideIndex, currentPageTickets.length])
 
@@ -589,6 +599,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
               getElapsedTime={getElapsedTime}
               displayColumns={paginationLayout.displayColumns}
               centerSparsePage={paginationLayout.centerSparsePage}
+              sparseCardHeight={paginationLayout.sparseCardHeight}
             />
           </Box>
         </Box>

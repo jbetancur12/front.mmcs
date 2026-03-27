@@ -97,6 +97,7 @@ export interface RegularTicketsGridProps {
   getElapsedTime: (createdAt: string) => string
   displayColumns?: number
   centerSparsePage?: boolean
+  sparseCardHeight?: number
 }
 
 export interface PaginationProgressProps {
