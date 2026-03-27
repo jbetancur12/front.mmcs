@@ -120,6 +120,7 @@ const ModernHeader: React.FC<ModernHeaderProps> = ({
             }}
           >
             {getConnectionStatusText()}
+            {connectionStatus.usingPollingFallback ? ' · Modo respaldo' : ''}
           </Typography>
         </Box>
 

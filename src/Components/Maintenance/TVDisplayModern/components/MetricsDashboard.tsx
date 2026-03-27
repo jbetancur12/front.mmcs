@@ -1,8 +1,9 @@
 import React from 'react'
-import { Grid, Card, CardContent, Box, Typography } from '@mui/material'
+import { Card, CardContent, Box, Typography } from '@mui/material'
 import {
   Assignment,
   Schedule,
+  PersonAddAlt1,
   Build,
   CheckCircle,
   Warning
@@ -30,6 +31,13 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
       icon: Schedule,
       color: 'warning',
       borderColor: colors.warning
+    },
+    {
+      title: 'Asignados',
+      value: metrics.assignedTickets,
+      icon: PersonAddAlt1,
+      color: 'info',
+      borderColor: colors.info
     },
     {
       title: 'En Progreso',
@@ -63,9 +71,16 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
   ]
 
   return (
-    <Grid container spacing={1.5} sx={{ mb: 0 }}>
+    <Box
+      sx={{
+        mb: 0,
+        display: 'grid',
+        gridTemplateColumns: `repeat(${metricsConfig.length}, minmax(0, 1fr))`,
+        gap: 1.5
+      }}
+    >
       {metricsConfig.map((metric, index) => (
-        <Grid item xs={2} key={index}>
+        <Box key={index}>
           <Card
             sx={{
               ...cardStyles.base,
@@ -129,9 +144,9 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
+        </Box>
       ))}
-    </Grid>
+    </Box>
   )
 }
 

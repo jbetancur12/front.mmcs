@@ -74,7 +74,10 @@ const MaintenanceTVDisplayModern: React.FC = () => {
   const {
     data: tvDisplayData,
     isLoading,
-    error
+    error,
+    isWebSocketConnected,
+    isSocketConnecting,
+    retryCount
   } = useTVDisplayDataWithWebSocket()
 
   // Get responsive grid calculations
@@ -196,6 +199,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
       return {
         totalTickets: 0,
         pendingTickets: 0,
+        assignedTickets: 0,
         inProgressTickets: 0,
         completedTickets: 0,
         urgentTickets: 0,
@@ -212,6 +216,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
     return {
       totalTickets: backendMetrics.totalActive,
       pendingTickets: backendMetrics.pending,
+      assignedTickets: backendMetrics.assigned,
       inProgressTickets: backendMetrics.inProgress,
       completedTickets: backendMetrics.completedToday,
       urgentTickets: backendMetrics.urgent,
@@ -247,9 +252,34 @@ const MaintenanceTVDisplayModern: React.FC = () => {
   // Get connection status
   const connectionStatus: ConnectionStatus = useMemo(() => {
     if (error) return { status: 'disconnected', lastUpdate: new Date() }
-    if (isLoading) return { status: 'connecting', lastUpdate: new Date() }
-    return { status: 'connected', lastUpdate: new Date() }
-  }, [error, isLoading])
+    if (isLoading || isSocketConnecting) {
+      return { status: 'connecting', lastUpdate: new Date(), retryCount }
+    }
+    if (!isWebSocketConnected) {
+      return {
+        status: 'disconnected',
+        lastUpdate: tvDisplayData?.lastUpdated
+          ? new Date(tvDisplayData.lastUpdated)
+          : new Date(),
+        retryCount,
+        usingPollingFallback: true
+      }
+    }
+    return {
+      status: 'connected',
+      lastUpdate: tvDisplayData?.lastUpdated
+        ? new Date(tvDisplayData.lastUpdated)
+        : new Date(),
+      retryCount
+    }
+  }, [
+    error,
+    isLoading,
+    isSocketConnecting,
+    isWebSocketConnected,
+    retryCount,
+    tvDisplayData?.lastUpdated
+  ])
 
   // Error state
   if (error) {

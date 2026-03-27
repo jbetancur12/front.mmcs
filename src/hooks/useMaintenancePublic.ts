@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from 'react-query'
 import { axiosPublic } from '../utils/api'
 import { MaintenanceTicket } from '../types/maintenance'
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 
 // Interface for TV display data - matches actual API response
 interface TVDisplayData {
@@ -10,6 +10,7 @@ interface TVDisplayData {
   metrics: {
     totalActive: number
     pending: number
+    assigned: number
     inProgress: number
     completedToday: number
     urgent: number
@@ -61,13 +62,17 @@ export const useTVDisplayDataWithWebSocket = () => {
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const reconnectAttempts = useRef(0)
   const maxReconnectAttempts = 5
+  const [isWebSocketConnected, setIsWebSocketConnected] = useState(false)
+  const [isSocketConnecting, setIsSocketConnecting] = useState(true)
+  const [retryCount, setRetryCount] = useState(0)
 
   // Initial data fetch
   const queryResult = useQuery({
     queryKey: ['tv-display-data'],
     queryFn: maintenancePublicAPI.getTVDisplayData,
-    staleTime: Infinity, // Don't auto-refetch, rely on WebSocket updates
+    staleTime: isWebSocketConnected ? Infinity : 10000,
     refetchOnWindowFocus: false,
+    refetchInterval: isWebSocketConnected ? false : 30000,
     retry: 3,
     retryDelay: 1000
   })
@@ -77,11 +82,15 @@ export const useTVDisplayDataWithWebSocket = () => {
     const wsWithChannel = `${wsUrl}?channel=tv-display&public=true`
 
     try {
+      setIsSocketConnecting(true)
       wsRef.current = new WebSocket(wsWithChannel)
 
       wsRef.current.onopen = () => {
         console.log('TV Display WebSocket connected')
         reconnectAttempts.current = 0
+        setRetryCount(0)
+        setIsWebSocketConnected(true)
+        setIsSocketConnecting(false)
 
         // Send subscription message for TV display updates
         wsRef.current?.send(
@@ -108,6 +117,8 @@ export const useTVDisplayDataWithWebSocket = () => {
           event.code,
           event.reason
         )
+        setIsWebSocketConnected(false)
+        setIsSocketConnecting(false)
 
         // Only attempt to reconnect if it wasn't a manual close
         if (
@@ -123,6 +134,8 @@ export const useTVDisplayDataWithWebSocket = () => {
           console.log(
             `Reconnecting TV Display WebSocket in ${delay}ms (attempt ${reconnectAttempts.current}/${maxReconnectAttempts})`
           )
+          setRetryCount(reconnectAttempts.current)
+          queryClient.invalidateQueries({ queryKey: ['tv-display-data'] })
 
           reconnectTimeoutRef.current = setTimeout(() => {
             connectWebSocket()
@@ -132,11 +145,14 @@ export const useTVDisplayDataWithWebSocket = () => {
 
       wsRef.current.onerror = (error) => {
         console.error('TV Display WebSocket error:', error)
+        setIsWebSocketConnected(false)
       }
     } catch (error) {
       console.error('Error creating TV Display WebSocket connection:', error)
+      setIsWebSocketConnected(false)
+      setIsSocketConnecting(false)
     }
-  }, [])
+  }, [queryClient])
 
   const handleWebSocketMessage = useCallback(
     (message: any) => {
@@ -174,6 +190,9 @@ export const useTVDisplayDataWithWebSocket = () => {
 
     wsRef.current = null
     reconnectAttempts.current = 0
+    setIsWebSocketConnected(false)
+    setIsSocketConnecting(false)
+    setRetryCount(0)
   }, [])
 
   // Connect WebSocket on mount
@@ -184,11 +203,11 @@ export const useTVDisplayDataWithWebSocket = () => {
     }
   }, [connectWebSocket, disconnect])
 
-  const isWebSocketConnected = wsRef.current?.readyState === WebSocket.OPEN
-
   return {
     ...queryResult,
-    isWebSocketConnected
+    isWebSocketConnected,
+    isSocketConnecting,
+    retryCount
   }
 }
 

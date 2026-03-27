@@ -1,6 +1,7 @@
 export interface TVMetrics {
   totalTickets: number
   pendingTickets: number
+  assignedTickets: number
   inProgressTickets: number
   completedTickets: number
   urgentTickets: number
@@ -25,6 +26,7 @@ export interface ConnectionStatus {
   lastUpdate: Date
   latency?: number
   retryCount?: number
+  usingPollingFallback?: boolean
 }
 
 export interface SmartPagination {
