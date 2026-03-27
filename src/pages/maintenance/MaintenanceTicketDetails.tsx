@@ -15,7 +15,6 @@ import {
   DialogActions,
   TextField,
   FormControl,
-  Autocomplete,
   InputLabel,
   InputAdornment,
   FormHelperText,
@@ -99,8 +98,7 @@ import {
   useUpsertMaintenanceTechnicalReport,
   useGenerateStatusReport,
   useGenerateServiceCertificate,
-  useGenerateServiceInvoice,
-  useMaintenanceDataSheetSearch
+  useGenerateServiceInvoice
   // useGetPDFOptions
 } from '../../hooks/useMaintenance'
 import {
@@ -192,7 +190,6 @@ const MaintenanceTicketDetails: React.FC = () => {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [editErrors, setEditErrors] = useState<Record<string, string>>({})
   const [isEditValid, setIsEditValid] = useState(true)
-  const [dataSheetSearch, setDataSheetSearch] = useState('')
   const surfaceSx = {
     backgroundColor: '#ffffff',
     borderRadius: '14px',
@@ -261,8 +258,6 @@ const MaintenanceTicketDetails: React.FC = () => {
     isLoading: technicalReportLoading,
     refetch: refetchTechnicalReport
   } = useMaintenanceTechnicalReport(ticketId || '')
-  const { data: dataSheetOptions = [], isFetching: dataSheetSearchLoading } =
-    useMaintenanceDataSheetSearch(dataSheetSearch)
   const updateTicketMutation = useUpdateMaintenanceTicket()
   const upsertTechnicalReportMutation = useUpsertMaintenanceTechnicalReport()
   const addCommentMutation = useAddMaintenanceComment()
@@ -310,7 +305,6 @@ const MaintenanceTicketDetails: React.FC = () => {
         setEditData({
           status: ticket.status,
           priority: ticket.priority,
-          dataSheetId: ticket.dataSheetId || null,
           equipmentType: ticket.equipmentType,
           equipmentBrand: ticket.equipmentBrand,
           equipmentModel: ticket.equipmentModel,
@@ -324,7 +318,6 @@ const MaintenanceTicketDetails: React.FC = () => {
         setEditData({
           status: ticket.status,
           assignedTechnician: ticket.assignedTechnicianId || '',
-          dataSheetId: ticket.dataSheetId || null,
           scheduledDate: ticket.scheduledDate || '',
           equipmentType: ticket.equipmentType,
           equipmentBrand: ticket.equipmentBrand,
@@ -452,11 +445,10 @@ const MaintenanceTicketDetails: React.FC = () => {
     setEditMode(false)
     if (ticket) {
       if (isTechnician) {
-        setEditData({
-          status: ticket.status,
-          priority: ticket.priority,
-          dataSheetId: ticket.dataSheetId || null,
-          equipmentType: ticket.equipmentType,
+      setEditData({
+        status: ticket.status,
+        priority: ticket.priority,
+        equipmentType: ticket.equipmentType,
           equipmentBrand: ticket.equipmentBrand,
           equipmentModel: ticket.equipmentModel,
           equipmentSerial: ticket.equipmentSerial,
@@ -466,11 +458,10 @@ const MaintenanceTicketDetails: React.FC = () => {
           receivedAccessories: ticket.receivedAccessories || ''
         })
       } else {
-        setEditData({
-          status: ticket.status,
-          assignedTechnician: ticket.assignedTechnicianId || '',
-          dataSheetId: ticket.dataSheetId || null,
-          scheduledDate: ticket.scheduledDate || '',
+      setEditData({
+        status: ticket.status,
+        assignedTechnician: ticket.assignedTechnicianId || '',
+        scheduledDate: ticket.scheduledDate || '',
           equipmentType: ticket.equipmentType,
           equipmentBrand: ticket.equipmentBrand,
           equipmentModel: ticket.equipmentModel,
@@ -2197,73 +2188,6 @@ const MaintenanceTicketDetails: React.FC = () => {
               </Box>
 
               <Grid container spacing={3}>
-                {editMode && !isTechnician && (
-                  <Grid item xs={12}>
-                    <Autocomplete
-                      options={dataSheetOptions}
-                      loading={dataSheetSearchLoading}
-                      value={
-                        dataSheetOptions.find(
-                          (option) => option.id === editData.dataSheetId
-                        ) ||
-                        (ticket.dataSheet &&
-                        ticket.dataSheet.id === editData.dataSheetId
-                          ? ticket.dataSheet
-                          : null)
-                      }
-                      onInputChange={(_, value) => setDataSheetSearch(value)}
-                      onChange={(_, value) => {
-                        if (!value) {
-                          setEditData((prev) => ({
-                            ...prev,
-                            dataSheetId: null
-                          }))
-                          return
-                        }
-
-                        setEditData((prev) => ({
-                          ...prev,
-                          dataSheetId: value.id,
-                          equipmentType: value.equipmentName,
-                          equipmentBrand: value.brand,
-                          equipmentModel: value.model,
-                          equipmentSerial: value.serialNumber,
-                          location: value.location || prev.location
-                        }))
-                      }}
-                      isOptionEqualToValue={(option, value) =>
-                        option.id === value.id
-                      }
-                      getOptionLabel={(option) =>
-                        `${option.internalCode} - ${option.equipmentName}`
-                      }
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label='Vincular desde Hoja de Vida'
-                          helperText='Opcional. Si seleccionas un equipo, se autocompletan sus datos y el ticket queda vinculado.'
-                        />
-                      )}
-                      renderOption={(props, option) => (
-                        <Box component='li' {...props}>
-                          <Box>
-                            <Typography variant='body2' fontWeight={700}>
-                              {option.internalCode} - {option.equipmentName}
-                            </Typography>
-                            <Typography
-                              variant='caption'
-                              color='text.secondary'
-                            >
-                              {option.brand} {option.model} | Serie:{' '}
-                              {option.serialNumber}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      )}
-                    />
-                  </Grid>
-                )}
-
                 <Grid item xs={12} md={6}>
                   <Box mb={2}>
                     <Typography
@@ -2390,14 +2314,6 @@ const MaintenanceTicketDetails: React.FC = () => {
                     )}
                   </Box>
                 </Grid>
-                {ticket.dataSheet && !editMode && (
-                  <Grid item xs={12}>
-                    <Alert severity='info'>
-                      Equipo vinculado a Hoja de Vida:{' '}
-                      {ticket.dataSheet.internalCode}
-                    </Alert>
-                  </Grid>
-                )}
               </Grid>
             </Paper>
 
@@ -2687,7 +2603,12 @@ const MaintenanceTicketDetails: React.FC = () => {
                         onChange={(e) =>
                           setEditData((prev) => ({
                             ...prev,
-                            assignedTechnician: e.target.value
+                            assignedTechnician: e.target.value,
+                            status:
+                              prev.status === MaintenanceStatus.PENDING &&
+                              Boolean(e.target.value)
+                                ? MaintenanceStatus.ASSIGNED
+                                : prev.status
                           }))
                         }
                         label='Técnico'

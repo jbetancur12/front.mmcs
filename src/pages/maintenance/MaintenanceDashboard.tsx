@@ -27,7 +27,6 @@ import {
   Snackbar,
   AlertTitle,
   LinearProgress,
-  Autocomplete,
   useMediaQuery,
   useTheme
 } from '@mui/material'
@@ -55,8 +54,7 @@ import {
   useUploadMaintenanceFiles,
   useMaintenanceTechnicalReport,
   useUpsertMaintenanceTechnicalReport,
-  useGenerateTechnicalReport,
-  useMaintenanceDataSheetSearch
+  useGenerateTechnicalReport
 } from '../../hooks/useMaintenance'
 import {
   MaintenanceFilters,
@@ -64,8 +62,7 @@ import {
   MaintenancePriority,
   MaintenanceTicket,
   MaintenanceUpdateRequest,
-  MaintenanceTechnicalReportRequest,
-  MaintenanceDataSheetSummary
+  MaintenanceTechnicalReportRequest
 } from '../../types/maintenance'
 import MaintenanceTicketCard from '../../Components/Maintenance/MaintenanceTicketCard'
 import MaintenanceFiltersComponent from '../../Components/Maintenance/MaintenanceFilters'
@@ -109,7 +106,6 @@ const MaintenanceDashboard: React.FC = () => {
   const [costsDialogOpen, setCostsDialogOpen] = useState(false)
   const [technicalReportDialogOpen, setTechnicalReportDialogOpen] =
     useState(false)
-  const [dataSheetSearch, setDataSheetSearch] = useState('')
   const [toast, setToast] = useState<{
     open: boolean
     message: string
@@ -203,8 +199,6 @@ const MaintenanceDashboard: React.FC = () => {
   const { data: currentTechnician } = useTechnicianByEmail(
     currentTechnicianEmail || ''
   )
-  const { data: dataSheetOptions = [], isFetching: dataSheetSearchLoading } =
-    useMaintenanceDataSheetSearch(dataSheetSearch)
   const {
     data: technicalReport,
     isLoading: technicalReportLoading,
@@ -384,7 +378,6 @@ const MaintenanceDashboard: React.FC = () => {
     setEditData({
       status: ticket.status,
       assignedTechnician: ticket.assignedTechnicianId || '',
-      dataSheetId: ticket.dataSheetId || null,
       scheduledDate: ticket.scheduledDate || '',
       equipmentType: ticket.equipmentType || '',
       equipmentBrand: ticket.equipmentBrand || '',
@@ -1436,13 +1429,26 @@ const MaintenanceDashboard: React.FC = () => {
             )}
           </Box>
         </DialogTitle>
-        <DialogContent id='edit-ticket-dialog-description'>
-          <Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mt: 1 }}>
+        <DialogContent
+          id='edit-ticket-dialog-description'
+          sx={{ pt: { xs: 2.5, sm: 3 }, overflowY: 'auto' }}
+        >
+          <Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mt: 0.5 }}>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth size={isMobile ? 'small' : 'medium'}>
-                <InputLabel id='edit-status-label'>Estado</InputLabel>
+                <Typography
+                  variant='caption'
+                  sx={{
+                    mb: 0.75,
+                    px: 0.5,
+                    fontWeight: 600,
+                    color: '#64748b',
+                    letterSpacing: '0.02em'
+                  }}
+                >
+                  Estado
+                </Typography>
                 <Select
-                  labelId='edit-status-label'
                   id='edit-status-select'
                   value={editData.status || ''}
                   onChange={(e) =>
@@ -1451,7 +1457,6 @@ const MaintenanceDashboard: React.FC = () => {
                       status: e.target.value as MaintenanceStatus
                     }))
                   }
-                  label='Estado'
                   aria-label='Seleccionar estado del ticket'
                   disabled={
                     selectedTicket?.status === MaintenanceStatus.COMPLETED
@@ -1469,9 +1474,19 @@ const MaintenanceDashboard: React.FC = () => {
             {!isTechnician && (
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth size={isMobile ? 'small' : 'medium'}>
-                  <InputLabel id='edit-priority-label'>Prioridad</InputLabel>
+                  <Typography
+                    variant='caption'
+                    sx={{
+                      mb: 0.75,
+                      px: 0.5,
+                      fontWeight: 600,
+                      color: '#64748b',
+                      letterSpacing: '0.02em'
+                    }}
+                  >
+                    Prioridad
+                  </Typography>
                   <Select
-                    labelId='edit-priority-label'
                     id='edit-priority-select'
                     value={editData.priority || ''}
                     onChange={(e) =>
@@ -1480,7 +1495,6 @@ const MaintenanceDashboard: React.FC = () => {
                         priority: e.target.value as MaintenancePriority
                       }))
                     }
-                    label='Prioridad'
                     aria-label='Seleccionar prioridad del ticket'
                     disabled={
                       selectedTicket?.status === MaintenanceStatus.COMPLETED
@@ -1496,72 +1510,6 @@ const MaintenanceDashboard: React.FC = () => {
                     ))}
                   </Select>
                 </FormControl>
-              </Grid>
-            )}
-
-            {!isTechnician && (
-              <Grid item xs={12}>
-                <Autocomplete<MaintenanceDataSheetSummary, false, false, false>
-                  options={dataSheetOptions}
-                  loading={dataSheetSearchLoading}
-                  value={
-                    dataSheetOptions.find(
-                      (option) => option.id === editData.dataSheetId
-                    ) ||
-                    (selectedTicket?.dataSheet &&
-                    selectedTicket.dataSheet.id === editData.dataSheetId
-                      ? selectedTicket.dataSheet
-                      : null)
-                  }
-                  onInputChange={(_, value) => setDataSheetSearch(value)}
-                  onChange={(_, value) => {
-                    if (!value) {
-                      setEditData((prev) => ({
-                        ...prev,
-                        dataSheetId: null
-                      }))
-                      return
-                    }
-
-                    setEditData((prev) => ({
-                      ...prev,
-                      dataSheetId: value.id,
-                      equipmentType: value.equipmentName || prev.equipmentType,
-                      equipmentBrand: value.brand || '',
-                      equipmentModel: value.model || '',
-                      equipmentSerial: value.serialNumber || '',
-                      location: value.location || prev.location
-                    }))
-                  }}
-                  isOptionEqualToValue={(option, value) =>
-                    option.id === value.id
-                  }
-                  getOptionLabel={(option) =>
-                    `${option.internalCode} - ${option.equipmentName}`
-                  }
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      fullWidth
-                      size={isMobile ? 'small' : 'medium'}
-                      label='Vincular desde Hoja de Vida'
-                      helperText='Opcional. Puedes buscar un equipo registrado o seguir con diligenciamiento manual.'
-                    />
-                  )}
-                  renderOption={(props, option) => (
-                    <Box component='li' {...props}>
-                      <Box>
-                        <Typography variant='body2' fontWeight={700}>
-                          {option.internalCode} - {option.equipmentName}
-                        </Typography>
-                        <Typography variant='caption' color='text.secondary'>
-                          {option.brand} {option.model} | Serie:{' '}
-                          {option.serialNumber} | {option.location}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  )}
-                />
               </Grid>
             )}
 
@@ -1650,15 +1598,6 @@ const MaintenanceDashboard: React.FC = () => {
               </Grid>
             )}
 
-            {!isTechnician && selectedTicket?.dataSheet && (
-              <Grid item xs={12}>
-                <Alert severity='info'>
-                  Equipo vinculado actualmente a Hoja de Vida:{' '}
-                  <strong>{selectedTicket.dataSheet.internalCode}</strong>
-                </Alert>
-              </Grid>
-            )}
-
             {!isTechnician && (
               <Grid item xs={12}>
                 <FormControl fullWidth size={isMobile ? 'small' : 'medium'}>
@@ -1672,7 +1611,12 @@ const MaintenanceDashboard: React.FC = () => {
                     onChange={(e) =>
                       setEditData((prev) => ({
                         ...prev,
-                        assignedTechnician: e.target.value
+                        assignedTechnician: e.target.value,
+                        status:
+                          prev.status === MaintenanceStatus.PENDING &&
+                          Boolean(e.target.value)
+                            ? MaintenanceStatus.ASSIGNED
+                            : prev.status
                       }))
                     }
                     label='Técnico Asignado'

@@ -29,18 +29,6 @@ export interface MaintenanceTechnicalReportTest {
   notes?: string
 }
 
-export interface MaintenanceDataSheetSummary {
-  id: string
-  internalCode: string
-  equipmentName: string
-  brand: string
-  model: string
-  serialNumber: string
-  location: string
-  serviceType?: string
-  equipmentStatus?: string
-}
-
 export interface MaintenanceToolEquipmentSummary {
   id: string
   internalCode: string
@@ -120,8 +108,6 @@ export interface MaintenanceTicket {
   status: MaintenanceStatus
   assignedTechnician?: MaintenanceTechnician
   assignedTechnicianId?: string
-  dataSheetId?: string | null
-  dataSheet?: MaintenanceDataSheetSummary | null
   scheduledDate?: string
   completedDate?: string
   estimatedCost?: number
@@ -284,7 +270,6 @@ export interface MaintenanceCreateRequest {
 export interface MaintenanceUpdateRequest {
   status?: MaintenanceStatus
   assignedTechnician?: string
-  dataSheetId?: string | null
   scheduledDate?: string
   equipmentType?: string
   equipmentBrand?: string

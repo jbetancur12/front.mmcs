@@ -17,7 +17,6 @@ import {
   MaintenanceAction,
   MaintenanceTechnicalReport,
   MaintenanceTechnicalReportRequest,
-  MaintenanceDataSheetSummary,
   MaintenanceToolEquipmentSummary,
   MaintenanceProtocolTemplate,
   MaintenanceProtocolTemplateRequest
@@ -324,22 +323,6 @@ const maintenanceAPI = {
     return response.data
   },
 
-  searchDataSheets: async (
-    query: string,
-    limit = 10
-  ): Promise<MaintenanceDataSheetSummary[]> => {
-    const response = await axiosPrivate.get<MaintenanceDataSheetSummary[]>(
-      `/maintenance/datasheets/search`,
-      {
-        params: {
-          q: query,
-          limit
-        }
-      }
-    )
-    return response.data
-  },
-
   searchToolEquipment: async (
     query: string,
     limit = 10
@@ -641,14 +624,6 @@ export const useMaintenanceProtocolTemplates = () => {
   return useQuery({
     queryKey: ['maintenance-protocol-templates'],
     queryFn: maintenanceAPI.getProtocolTemplates
-  })
-}
-
-export const useMaintenanceDataSheetSearch = (query: string, limit = 10) => {
-  return useQuery({
-    queryKey: ['maintenance-datasheets-search', query, limit],
-    queryFn: () => maintenanceAPI.searchDataSheets(query, limit),
-    enabled: query.trim().length >= 2
   })
 }
 
