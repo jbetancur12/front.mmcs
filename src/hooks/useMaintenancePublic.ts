@@ -12,6 +12,7 @@ interface TVDisplayData {
     pending: number
     assigned: number
     inProgress: number
+    pendingTechnicalReport: number
     completedToday: number
     urgent: number
     overdue: number

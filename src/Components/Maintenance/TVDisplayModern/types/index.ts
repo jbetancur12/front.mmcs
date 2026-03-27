@@ -3,6 +3,7 @@ export interface TVMetrics {
   pendingTickets: number
   assignedTickets: number
   inProgressTickets: number
+  pendingTechnicalReport: number
   completedTickets: number
   urgentTickets: number
   overdueTickets: number

@@ -117,6 +117,7 @@ export interface MaintenanceTicket {
   workPerformed?: string
   intakePhysicalCondition?: string | null
   receivedAccessories?: string | null
+  requiresTechnicalReport?: boolean
   createdAt: string
   updatedAt: string
   comments: MaintenanceComment[]

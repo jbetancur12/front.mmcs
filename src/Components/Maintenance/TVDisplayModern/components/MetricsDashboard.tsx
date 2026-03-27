@@ -6,7 +6,8 @@ import {
   PersonAddAlt1,
   Build,
   CheckCircle,
-  Warning
+  Warning,
+  Description
 } from '@mui/icons-material'
 import { MetricsDashboardProps } from '../types'
 import { useModernStyles } from '../hooks/useModernStyles'
@@ -45,6 +46,13 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
       icon: Build,
       color: 'info',
       borderColor: colors.info
+    },
+    {
+      title: 'Reporte técnico',
+      value: metrics.pendingTechnicalReport,
+      icon: Description,
+      color: 'warning',
+      borderColor: colors.warning
     },
     {
       title: 'Completados Hoy',

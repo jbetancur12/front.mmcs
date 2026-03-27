@@ -114,6 +114,13 @@ const MaintenanceTVDisplayModern: React.FC = () => {
       ...(tickets.medium || []),
       ...(tickets.low || [])
     ].sort((a, b) => {
+      if (a.requiresTechnicalReport && !b.requiresTechnicalReport) {
+        return -1
+      }
+      if (!a.requiresTechnicalReport && b.requiresTechnicalReport) {
+        return 1
+      }
+
       // Primero por prioridad
       const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 }
       const aPriority =
@@ -201,6 +208,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
         pendingTickets: 0,
         assignedTickets: 0,
         inProgressTickets: 0,
+        pendingTechnicalReport: 0,
         completedTickets: 0,
         urgentTickets: 0,
         overdueTickets: 0,
@@ -218,6 +226,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
       pendingTickets: backendMetrics.pending,
       assignedTickets: backendMetrics.assigned,
       inProgressTickets: backendMetrics.inProgress,
+      pendingTechnicalReport: backendMetrics.pendingTechnicalReport,
       completedTickets: backendMetrics.completedToday,
       urgentTickets: backendMetrics.urgent,
       overdueTickets: backendMetrics.overdue,
@@ -476,8 +485,21 @@ const MaintenanceTVDisplayModern: React.FC = () => {
               <TrendingUp
                 sx={{ fontSize: '2rem', color: modernColors.primary }}
               />
-              Tickets Activos ({organizedTickets.paginatedTickets.length})
+              Tickets en Gestión ({organizedTickets.paginatedTickets.length})
             </Typography>
+
+            {metrics.pendingTechnicalReport > 0 && (
+              <Chip
+                label={`${metrics.pendingTechnicalReport} pendiente(s) de reporte`}
+                sx={{
+                  ml: 1,
+                  backgroundColor: `${modernColors.warning}22`,
+                  color: '#8a5a00',
+                  fontWeight: 700,
+                  border: `1px solid ${modernColors.warning}`
+                }}
+              />
+            )}
 
             {/* Pagination Info */}
             {tvDisplayData &&
@@ -526,7 +548,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
         {gridCalculation &&
           organizedTickets.paginatedTickets.length >
             gridCalculation.ticketsPerPage && (
-            <Box sx={{ flexShrink: 0, mt: 0.5 }}>
+            <Box sx={{ flexShrink: 0, mt: 0.25 }}>
               <PaginationProgress
                 slideIndex={slideIndex}
                 totalTickets={organizedTickets.paginatedTickets.length}
