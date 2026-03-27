@@ -95,6 +95,8 @@ export interface RegularTicketsGridProps {
   gridCalculation: any
   colors: ModernColors
   getElapsedTime: (createdAt: string) => string
+  displayColumns?: number
+  centerSparsePage?: boolean
 }
 
 export interface PaginationProgressProps {

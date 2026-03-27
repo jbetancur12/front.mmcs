@@ -42,13 +42,13 @@ export const useResponsiveTicketGrid = () => {
     const { width, height } = screenSize
 
     // Espacios fijos optimizados para pantalla completa
-    const headerHeight = 60 // Header con reloj
-    const metricsHeight = 80 // Row de métricas compactas
-    const titleHeight = 50 // Título "TICKETS ACTIVOS" más compacto
-    const progressHeight = 30 // Barra de progreso más pequeña
+    const headerHeight = 54
+    const metricsHeight = 72
+    const titleHeight = 42
+    const progressHeight = 22
     const padding = 16 // Padding mínimo del container (8px * 2)
-    const verticalPadding = 16 // Padding vertical mínimo (8px * 2)
-    const marginBetweenSections = 8 // Margen mínimo entre secciones
+    const verticalPadding = 12
+    const marginBetweenSections = 6
 
     // Altura disponible para tickets
     const availableHeight =
@@ -129,13 +129,13 @@ export const useResponsiveTicketGrid = () => {
       cardHeight = 220
     } else if (height >= 1440) {
       // 2K vertical - Más filas
-      cardHeight = 200
+      cardHeight = 194
     } else if (height >= 1080) {
       // Full HD vertical - Optimizado para TV
-      cardHeight = 220
+      cardHeight = 208
     } else if (height >= 768) {
       // Laptop/tablet común
-      cardHeight = 200
+      cardHeight = 188
     } else {
       // Pantallas muy pequeñas
       cardHeight = 160

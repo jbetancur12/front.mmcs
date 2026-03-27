@@ -23,30 +23,30 @@ const PaginationProgress: React.FC<PaginationProgressProps> = ({
         backgroundColor: colors.secondaryBackground,
         border: `1px solid ${colors.border}`,
         borderRadius: '8px',
-        px: 1.25,
-        py: 0.5
+        px: 1,
+        py: 0.35
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
         <Typography
           variant='body2'
           sx={{
             color: colors.textSecondary,
             fontWeight: 600,
-            minWidth: '92px',
-            fontSize: '0.78rem',
+            minWidth: '82px',
+            fontSize: '0.72rem',
             lineHeight: 1.1
           }}
         >
           {showingTickets} de {totalTickets}
         </Typography>
 
-        <Box sx={{ flex: 1, maxWidth: '280px' }}>
+        <Box sx={{ flex: 1, maxWidth: '240px' }}>
           <LinearProgress
             variant='determinate'
             value={progressPercentage}
             sx={{
-              height: '4px',
+              height: '3px',
               borderRadius: '4px',
               backgroundColor: colors.borderLight,
               '& .MuiLinearProgress-bar': {
@@ -62,9 +62,9 @@ const PaginationProgress: React.FC<PaginationProgressProps> = ({
           sx={{
             color: colors.textSecondary,
             fontWeight: 600,
-            minWidth: '34px',
+            minWidth: '30px',
             textAlign: 'right',
-            fontSize: '0.78rem',
+            fontSize: '0.72rem',
             lineHeight: 1.1
           }}
         >

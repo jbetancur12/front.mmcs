@@ -10,7 +10,9 @@ const RegularTicketsGrid: React.FC<RegularTicketsGridProps> = ({
   tickets,
   gridCalculation,
   colors,
-  getElapsedTime
+  getElapsedTime,
+  displayColumns,
+  centerSparsePage = false
 }) => {
   const { cardStyles } = useModernStyles()
 
@@ -39,7 +41,9 @@ const RegularTicketsGrid: React.FC<RegularTicketsGridProps> = ({
         height: '100%',
         overflow: 'hidden',
         margin: 0,
-        width: '100%'
+        width: '100%',
+        justifyContent: centerSparsePage ? 'center' : 'flex-start',
+        alignContent: centerSparsePage ? 'center' : 'flex-start'
       }}
     >
 
@@ -52,7 +56,7 @@ const RegularTicketsGrid: React.FC<RegularTicketsGridProps> = ({
         return (
         <Grid
           item
-          xs={gridCalculation ? 12 / gridCalculation.columns : 3}
+          xs={gridCalculation ? 12 / (displayColumns || gridCalculation.columns) : 3}
           key={ticket.id}
           sx={{
             height: gridCalculation ? `${gridCalculation.cardHeight}px` : 'auto',

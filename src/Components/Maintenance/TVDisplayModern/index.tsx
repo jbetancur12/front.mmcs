@@ -250,6 +250,49 @@ const MaintenanceTVDisplayModern: React.FC = () => {
     )
   }, [organizedTickets.paginatedTickets, slideIndex, gridCalculation])
 
+  const paginationLayout = useMemo(() => {
+    if (!gridCalculation) {
+      return {
+        totalPages: 1,
+        displayColumns: undefined,
+        centerSparsePage: false
+      }
+    }
+
+    const totalPages = Math.max(
+      1,
+      Math.ceil(
+        organizedTickets.paginatedTickets.length / gridCalculation.ticketsPerPage
+      )
+    )
+    const isLastPage = slideIndex === totalPages - 1
+    const sparseThreshold = Math.max(
+      gridCalculation.columns + 1,
+      gridCalculation.ticketsPerPage - gridCalculation.columns
+    )
+    const shouldRebalance =
+      isLastPage &&
+      currentPageTickets.length > 0 &&
+      currentPageTickets.length < sparseThreshold
+
+    let displayColumns: number | undefined
+    if (shouldRebalance) {
+      displayColumns = Math.max(
+        2,
+        Math.min(
+          gridCalculation.columns,
+          Math.ceil(currentPageTickets.length / 2)
+        )
+      )
+    }
+
+    return {
+      totalPages,
+      displayColumns,
+      centerSparsePage: Boolean(shouldRebalance)
+    }
+  }, [organizedTickets.paginatedTickets.length, gridCalculation, slideIndex, currentPageTickets.length])
+
   // Calculate elapsed time since ticket creation
   const getElapsedTime = (createdAt: string) => {
     return formatDistanceToNow(new Date(createdAt), {
@@ -438,8 +481,8 @@ const MaintenanceTVDisplayModern: React.FC = () => {
         maxWidth={false}
         sx={{
           px: 1, // Mínimo padding horizontal para pantalla completa
-          pt: 0.5, // Mínimo padding top
-          pb: 0.5, // Mínimo padding bottom
+          pt: 0.35,
+          pb: 0.25,
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
@@ -448,7 +491,7 @@ const MaintenanceTVDisplayModern: React.FC = () => {
         }}
       >
         {/* Metrics Dashboard - Ultra compacto */}
-        <Box sx={{ flexShrink: 0, mb: 0.5 }}>
+        <Box sx={{ flexShrink: 0, mb: 0.35 }}>
           <MetricsDashboard metrics={metrics} colors={modernColors} />
         </Box>
 
@@ -465,43 +508,50 @@ const MaintenanceTVDisplayModern: React.FC = () => {
           <Box
             sx={{
               display: 'flex',
-              alignItems: 'center',
+              alignItems: 'flex-start',
               justifyContent: 'space-between',
-              mb: 0.5,
+              mb: 0.35,
+              gap: 1,
               flexShrink: 0
             }}
           >
-            <Typography
-              variant='h4'
-              sx={{
-                color: modernColors.textPrimary,
-                fontWeight: 800,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                fontSize: '1.8rem' // Reducir tamaño del título
-              }}
-            >
-              <TrendingUp
-                sx={{ fontSize: '2rem', color: modernColors.primary }}
-              />
-              Tickets en Gestión ({organizedTickets.paginatedTickets.length})
-            </Typography>
-
-            {metrics.pendingTechnicalReport > 0 && (
-              <Chip
-                label={`${metrics.pendingTechnicalReport} pendiente(s) de reporte`}
+            <Box sx={{ minWidth: 0 }}>
+              <Typography
+                variant='h4'
                 sx={{
-                  ml: 1,
-                  backgroundColor: `${modernColors.warning}22`,
-                  color: '#8a5a00',
-                  fontWeight: 700,
-                  border: `1px solid ${modernColors.warning}`
+                  color: modernColors.textPrimary,
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  fontSize: '1.55rem',
+                  lineHeight: 1.1
                 }}
-              />
-            )}
+              >
+                <TrendingUp
+                  sx={{ fontSize: '1.7rem', color: modernColors.primary }}
+                />
+                Tickets en Gestión ({organizedTickets.paginatedTickets.length})
+              </Typography>
 
-            {/* Pagination Info */}
+              {metrics.pendingTechnicalReport > 0 && (
+                <Typography
+                  variant='caption'
+                  sx={{
+                    display: 'block',
+                    mt: 0.15,
+                    ml: '2.45rem',
+                    color: '#8a5a00',
+                    fontWeight: 600,
+                    fontSize: '0.72rem',
+                    letterSpacing: '0.15px'
+                  }}
+                >
+                  {metrics.pendingTechnicalReport} pendiente(s) de reporte técnico
+                </Typography>
+              )}
+            </Box>
+
             {tvDisplayData &&
               gridCalculation &&
               organizedTickets.paginatedTickets.length >
@@ -511,8 +561,9 @@ const MaintenanceTVDisplayModern: React.FC = () => {
                     backgroundColor: modernColors.secondaryBackground,
                     border: `1px solid ${modernColors.primary}`,
                     borderRadius: '6px',
-                    px: 1.5,
-                    py: 0.5
+                    px: 1.25,
+                    py: 0.4,
+                    flexShrink: 0
                   }}
                 >
                   <Typography
@@ -520,14 +571,10 @@ const MaintenanceTVDisplayModern: React.FC = () => {
                     sx={{
                       color: modernColors.primary,
                       fontWeight: 700,
-                      fontSize: '0.85rem'
+                      fontSize: '0.8rem'
                     }}
                   >
-                    Página {slideIndex + 1}/
-                    {Math.ceil(
-                      organizedTickets.paginatedTickets.length /
-                        gridCalculation.ticketsPerPage
-                    )}
+                    Página {slideIndex + 1}/{paginationLayout.totalPages}
                   </Typography>
                 </Card>
               )}
@@ -540,6 +587,8 @@ const MaintenanceTVDisplayModern: React.FC = () => {
               gridCalculation={gridCalculation}
               colors={modernColors}
               getElapsedTime={getElapsedTime}
+              displayColumns={paginationLayout.displayColumns}
+              centerSparsePage={paginationLayout.centerSparsePage}
             />
           </Box>
         </Box>
