@@ -97,7 +97,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
     } else if (metadata.assignmentId) {
       navigate(`/lms/admin/assignments`)
     } else if (metadata.type === 'system_alert') {
-      navigate('/lms/admin/jobs')
+      navigate('/lms/admin/analytics')
     } else {
       navigate('/lms/admin/analytics')
     }

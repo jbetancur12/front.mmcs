@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { Route } from 'react-router-dom'
+import { Navigate, Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
 import { LMS_ADMIN_ROUTE_ROLES } from 'src/utils/lmsIdentity'
 
@@ -34,7 +34,6 @@ const LmsCourseAssignmentInterface = lazy(() => import('../pages/lms/admin/LmsCo
 const LmsComplianceTracker = lazy(() => import('../pages/lms/admin/LmsComplianceTracker'))
 const LmsCertificateTemplates = lazy(() => import('../pages/lms/admin/LmsCertificateTemplates'))
 const LmsCertificateView = lazy(() => import('../pages/lms/course/LmsCertificateView'))
-const LmsJobManagement = lazy(() => import('../pages/lms/admin/LmsJobManagement'))
 
 const LmsRoutes = (role: string[]) => {
   return (
@@ -88,7 +87,7 @@ const LmsRoutes = (role: string[]) => {
         <Route path='lms/admin/assignments' element={<LmsCourseAssignmentInterface />} />
         <Route path='lms/admin/compliance' element={<LmsComplianceTracker />} />
         <Route path='lms/admin/certificate-templates' element={<LmsCertificateTemplates />} />
-        <Route path='lms/admin/jobs' element={<LmsJobManagement />} />
+        <Route path='lms/admin/jobs' element={<Navigate to='/lms/admin' replace />} />
       </Route>
     </>
   )
