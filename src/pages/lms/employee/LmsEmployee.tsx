@@ -43,7 +43,7 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../../../store/userStore'
 import LmsNotificationCenter from '../shared/LmsNotificationCenter'
-import { useAvailableCourses } from '../../../hooks/useLms'
+import { useAvailableCourses, useUserAssignments } from '../../../hooks/useLms'
 import type { Course } from '../../../services/lmsService'
 import {
   getCourseAudienceLabel,
@@ -104,6 +104,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
 
   // Fetch available courses from API
   const { data: coursesData, isLoading, error } = useAvailableCourses()
+  const { data: userAssignments, isLoading: assignmentsLoading, error: assignmentsError } = useUserAssignments()
 
   // Usar el usuario del store si no se proporciona uno
   const currentUser = user || {
@@ -135,6 +136,13 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
 
     // Extract courses array from response
     const courses = coursesData
+    const allAssignments = [
+      ...(userAssignments?.mandatory || []),
+      ...(userAssignments?.optional || [])
+    ]
+    const assignmentsByCourseId = new Map(
+      allAssignments.map((assignment: any) => [assignment.course_id, assignment])
+    )
 
     // Separar cursos obligatorios y opcionales
     const mandatory: any[] = []
@@ -144,6 +152,11 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
       const progress = calculateCourseProgress(course)
       const totalLessons = countTotalLessons(course)
       const completedLessons = countCompletedLessons(course)
+      const assignment = assignmentsByCourseId.get(course.id)
+      const courseIsMandatory = assignment?.course?.is_mandatory ?? course.is_mandatory ?? false
+      const deadline = assignment?.deadline
+      const daysUntilDeadline = getDaysUntilDeadline(deadline)
+      const isOverdue = assignment?.isOverdue ?? (daysUntilDeadline !== undefined && daysUntilDeadline < 0)
 
       const enrichedCourse = {
         ...course,
@@ -153,19 +166,14 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         category: getCourseAudienceLabel(course.audience),
         instructor: course.creator?.nombre || 'Instructor',
         duration: `${totalLessons} lecciones`,
-        rating: 4.5
+        rating: 4.5,
+        deadline,
+        daysUntilDeadline,
+        isOverdue
       }
 
-      // Verificar si el curso es obligatorio usando el campo is_mandatory
-      const isMandatory = (course as any).is_mandatory === true
-
-      if (isMandatory) {
+      if (courseIsMandatory) {
         // Es un curso obligatorio
-        // Usar user_deadline del backend (ya filtrado por el usuario específico)
-        const deadline = (course as any).user_deadline
-        const daysUntilDeadline = getDaysUntilDeadline(deadline)
-        const isOverdue = daysUntilDeadline !== undefined && daysUntilDeadline < 0
-
         mandatory.push({
           ...enrichedCourse,
           isMandatory: true,
@@ -230,7 +238,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         overdueTraining
       }
     }
-  }, [coursesData])
+  }, [coursesData, userAssignments])
 
   const handleLogout = () => {
     localStorage.removeItem('currentUser')
@@ -247,7 +255,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   }
 
   // Loading state
-  if (isLoading) {
+  if (isLoading || assignmentsLoading) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Box sx={{ textAlign: 'center' }}>
@@ -261,7 +269,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   }
 
   // Error state
-  if (error) {
+  if (error || assignmentsError) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Box sx={{ textAlign: 'center', maxWidth: 500 }}>
@@ -270,7 +278,9 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
             Error al cargar los cursos
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            {error instanceof Error ? error.message : 'No se pudieron cargar los cursos disponibles'}
+            {(error instanceof Error && error.message) ||
+              (assignmentsError instanceof Error && assignmentsError.message) ||
+              'No se pudieron cargar los datos del LMS'}
           </Typography>
           <Button variant="contained" onClick={() => window.location.reload()}>
             Reintentar
