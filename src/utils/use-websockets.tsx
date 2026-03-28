@@ -35,7 +35,6 @@ const wss = () => {
   const token = localStorage.getItem('accessToken')
   const currentHost = window.location.hostname
   const isPrivateNetworkHost =
-    currentHost === '::1' ||
     /^10\./.test(currentHost) ||
     /^192\.168\./.test(currentHost) ||
     /^172\.(1[6-9]|2\d|3[0-1])\./.test(currentHost)
@@ -52,11 +51,7 @@ const wss = () => {
         url.searchParams.set('token', token || '')
         return url.toString()
       } catch {
-        return (
-          (import.meta.env.VITE_WS_URL || 'ws://localhost:5050/') +
-          '?token=' +
-          token
-        )
+        return import.meta.env.VITE_WS_URL + '?token=' + token
       }
     }
 

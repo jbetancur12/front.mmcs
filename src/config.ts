@@ -22,7 +22,6 @@ const isPrivateNetworkHost = (hostname: string) => {
 const isLocalDevelopmentHost = (hostname: string) =>
   hostname === 'localhost' ||
   hostname === '127.0.0.1' ||
-  hostname === '::1' ||
   isPrivateNetworkHost(hostname)
 
 const normalizeLocalApiUrl = (baseUrl: string) => {
@@ -44,11 +43,8 @@ const normalizeLocalApiUrl = (baseUrl: string) => {
 export const api = () => {
   if (import.meta.env.VITE_ENV === 'development') {
     return isLocalDevelopmentHost(window.location.hostname)
-      ? normalizeLocalApiUrl(
-          import.meta.env.VITE_API_URL_DEV || 'http://localhost:5050'
-        )
+      ? normalizeLocalApiUrl(import.meta.env.VITE_API_URL_DEV)
       : import.meta.env.VITE_API_URL_CLOUDFLARE
   }
-
   return import.meta.env.VITE_API_URL_PROD
 }
