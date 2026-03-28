@@ -29,7 +29,9 @@ import {
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
+  Download as DownloadIcon,
   Edit as EditIcon,
+  PlayArrow as GenerateIcon,
   Schedule as ScheduleIcon,
   Summarize as SummarizeIcon
 } from '@mui/icons-material'
@@ -260,6 +262,33 @@ const LmsReporting: React.FC = () => {
     }
   )
 
+  const generateReportMutation = useMutation(
+    async ({ templateId, format }: { templateId: number; format: ReportFormat }) => {
+      const response = await axiosPrivate.post('/lms/reporting/generate', {
+        templateId,
+        format,
+        filters: {}
+      })
+      return response.data.data as GeneratedReport
+    },
+    {
+      onSuccess: () => {
+        invalidateReporting()
+        Toast.fire({
+          icon: 'success',
+          title: 'Reporte generado'
+        })
+      },
+      onError: (error: any) => {
+        Toast.fire({
+          icon: 'error',
+          title: 'Error al generar reporte',
+          text: error.response?.data?.error?.message || error.message
+        })
+      }
+    }
+  )
+
   const saveScheduleMutation = useMutation(
     async () => {
       const payload = {
@@ -430,6 +459,33 @@ const LmsReporting: React.FC = () => {
     setScheduleDialogOpen(true)
   }
 
+  const handleDownloadReport = async (report: GeneratedReport) => {
+    try {
+      const response = await axiosPrivate.get(`/lms/reporting/download/${report.id}`, {
+        responseType: 'blob'
+      })
+
+      const blob = new Blob([response.data], {
+        type: response.headers['content-type'] || 'application/octet-stream'
+      })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      const extension = report.format
+      link.href = url
+      link.download = `${report.name}.${extension}`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (error: any) {
+      Toast.fire({
+        icon: 'error',
+        title: 'Error al descargar reporte',
+        text: error.response?.data?.error?.message || error.message
+      })
+    }
+  }
+
   return (
     <Box sx={{ p: 3 }}>
       <Stack spacing={3}>
@@ -544,6 +600,9 @@ const LmsReporting: React.FC = () => {
                       key={template.id}
                       secondaryAction={
                         <Stack direction='row' spacing={1}>
+                          <IconButton onClick={() => generateReportMutation.mutate({ templateId: template.id, format: 'csv' })}>
+                            <GenerateIcon />
+                          </IconButton>
                           <IconButton onClick={() => handleEditTemplate(template)}>
                             <EditIcon />
                           </IconButton>
@@ -564,6 +623,11 @@ const LmsReporting: React.FC = () => {
                             />
                             <Chip
                               label={`${template.columns.length} columnas`}
+                              size='small'
+                              variant='outlined'
+                            />
+                            <Chip
+                              label='Generación rápida en CSV'
                               size='small'
                               variant='outlined'
                             />
@@ -649,7 +713,16 @@ const LmsReporting: React.FC = () => {
               ) : (
                 <List>
                   {recentReports.map((report) => (
-                    <ListItem key={report.id}>
+                    <ListItem
+                      key={report.id}
+                      secondaryAction={
+                        report.status === 'completed' ? (
+                          <IconButton onClick={() => handleDownloadReport(report)}>
+                            <DownloadIcon />
+                          </IconButton>
+                        ) : undefined
+                      }
+                    >
                       <ListItemText
                         primary={report.name}
                         secondary={
@@ -659,6 +732,13 @@ const LmsReporting: React.FC = () => {
                             <Chip label={report.status} size='small' color={report.status === 'completed' ? 'success' : report.status === 'failed' ? 'error' : 'warning'} />
                             {report.record_count !== undefined && (
                               <Chip label={`${report.record_count} registros`} size='small' variant='outlined' />
+                            )}
+                            {report.completed_at && (
+                              <Chip
+                                label={`Completado: ${new Date(report.completed_at).toLocaleString('es-CO')}`}
+                                size='small'
+                                variant='outlined'
+                              />
                             )}
                           </Stack>
                         }
