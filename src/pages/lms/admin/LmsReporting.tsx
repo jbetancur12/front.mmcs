@@ -102,7 +102,7 @@ const emptyTemplateForm = {
   name: '',
   description: '',
   type: 'user_progress' as ReportType,
-  columns: templateColumnsPresets.user_progress.join(', ')
+  columns: [...templateColumnsPresets.user_progress]
 }
 
 const emptyScheduleForm = {
@@ -124,6 +124,8 @@ const LmsReporting: React.FC = () => {
   const [editingSchedule, setEditingSchedule] = useState<ScheduledReport | null>(null)
   const [templateForm, setTemplateForm] = useState(emptyTemplateForm)
   const [scheduleForm, setScheduleForm] = useState(emptyScheduleForm)
+  const availableColumns = templateColumnsPresets[templateForm.type]
+  const isCustomTemplate = templateForm.type === 'custom'
 
   const templatesQuery = useQuery(['lms-reporting', 'templates'], async () => {
     const response = await axiosPrivate.get('/lms/reporting/templates')
@@ -155,7 +157,6 @@ const LmsReporting: React.FC = () => {
         description: templateForm.description.trim(),
         type: templateForm.type,
         columns: templateForm.columns
-          .split(',')
           .map((item) => item.trim())
           .filter(Boolean),
         filters: {}
@@ -290,9 +291,22 @@ const LmsReporting: React.FC = () => {
       name: template.name,
       description: template.description || '',
       type: template.type,
-      columns: (template.columns || []).join(', ')
+      columns: template.columns || []
     })
     setTemplateDialogOpen(true)
+  }
+
+  const toggleTemplateColumn = (column: string) => {
+    setTemplateForm((prev) => {
+      const nextColumns = prev.columns.includes(column)
+        ? prev.columns.filter((item) => item !== column)
+        : [...prev.columns, column]
+
+      return {
+        ...prev,
+        columns: nextColumns
+      }
+    })
   }
 
   const handleCreateSchedule = () => {
@@ -568,15 +582,15 @@ const LmsReporting: React.FC = () => {
               <Select
                 label='Tipo'
                 value={templateForm.type}
-                onChange={(event) => {
-                  const nextType = event.target.value as ReportType
-                  setTemplateForm((prev) => ({
-                    ...prev,
-                    type: nextType,
-                    columns: templateColumnsPresets[nextType].join(', ')
-                  }))
-                }}
-              >
+                  onChange={(event) => {
+                    const nextType = event.target.value as ReportType
+                    setTemplateForm((prev) => ({
+                      ...prev,
+                      type: nextType,
+                      columns: [...templateColumnsPresets[nextType]]
+                    }))
+                  }}
+                >
                 {Object.entries(reportTypeLabels).map(([value, label]) => (
                   <MenuItem key={value} value={value}>
                     {label}
@@ -584,17 +598,54 @@ const LmsReporting: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
-            <TextField
-              label='Columnas'
-              helperText='Separadas por coma'
-              value={templateForm.columns}
-              onChange={(event) => setTemplateForm((prev) => ({ ...prev, columns: event.target.value }))}
-              multiline
-              minRows={2}
-              fullWidth
-            />
-          </Stack>
-        </DialogContent>
+              {isCustomTemplate ? (
+                <TextField
+                  label='Columnas'
+                  helperText='Para reportes personalizados, escribe una columna por coma.'
+                  value={templateForm.columns.join(', ')}
+                  onChange={(event) =>
+                    setTemplateForm((prev) => ({
+                      ...prev,
+                      columns: event.target.value
+                        .split(',')
+                        .map((item) => item.trim())
+                        .filter(Boolean)
+                    }))
+                  }
+                  multiline
+                  minRows={2}
+                  fullWidth
+                />
+              ) : (
+                <Box>
+                  <Typography variant='subtitle2' sx={{ mb: 1 }}>
+                    Columnas disponibles
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                    Selecciona las columnas que quieres incluir. Ya no necesitas escribir los nombres manualmente.
+                  </Typography>
+                  <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
+                    {availableColumns.map((column) => {
+                      const selected = templateForm.columns.includes(column)
+                      return (
+                        <Chip
+                          key={column}
+                          label={column}
+                          clickable
+                          color={selected ? 'primary' : 'default'}
+                          variant={selected ? 'filled' : 'outlined'}
+                          onClick={() => toggleTemplateColumn(column)}
+                        />
+                      )
+                    })}
+                  </Stack>
+                  <Typography variant='caption' color='text.secondary' sx={{ mt: 1.5, display: 'block' }}>
+                    {templateForm.columns.length} columna(s) seleccionada(s)
+                  </Typography>
+                </Box>
+              )}
+            </Stack>
+          </DialogContent>
         <DialogActions>
           <Button onClick={() => setTemplateDialogOpen(false)}>Cancelar</Button>
           <Button variant='contained' onClick={() => saveTemplateMutation.mutate()}>
