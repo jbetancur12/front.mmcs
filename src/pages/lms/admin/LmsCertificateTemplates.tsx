@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import {
   Alert,
+  AlertTitle,
   Box,
   Button,
   Card,
@@ -106,6 +107,15 @@ const DEFAULT_TEMPLATE_HTML = `
   <p style="font-size: 14px; color: #9ca3af;">Certificado N. {{certificateNumber}}</p>
 </div>
 `.trim()
+
+const CERTIFICATE_HTML_SNIPPETS = [
+  { label: 'Nombre del usuario', token: '{{userName}}' },
+  { label: 'Curso', token: '{{courseTitle}}' },
+  { label: 'Fecha', token: '{{completionDate}}' },
+  { label: 'Certificado', token: '{{certificateNumber}}' }
+]
+
+const VARIABLE_NAME_SUGGESTIONS = ['userName', 'courseTitle', 'completionDate', 'certificateNumber', 'organizationName']
 
 const emptyFormState = (): TemplateFormState => ({
   name: '',
@@ -339,6 +349,32 @@ const LmsCertificateTemplates: React.FC = () => {
     }))
   }
 
+  const applyVariableSuggestion = (index: number, value: string) => {
+    const matchingDefault = DEFAULT_VARIABLES.find((variable) => variable.name === value)
+    if (matchingDefault) {
+      const nextVariables = [...form.variables]
+      nextVariables[index] = {
+        ...nextVariables[index],
+        ...matchingDefault,
+        defaultValue: nextVariables[index].defaultValue || matchingDefault.defaultValue || ''
+      }
+      setForm((current) => ({
+        ...current,
+        variables: nextVariables
+      }))
+      return
+    }
+
+    updateVariable(index, 'name', value)
+  }
+
+  const insertTokenIntoHtml = (token: string) => {
+    setForm((current) => ({
+      ...current,
+      templateHtml: `${current.templateHtml}\n${token}`
+    }))
+  }
+
   return (
     <Box sx={{ p: 3 }}>
       <Box
@@ -505,6 +541,21 @@ const LmsCertificateTemplates: React.FC = () => {
           </TabPanel>
 
           <TabPanel value={tab} index={1}>
+            <Alert severity='info' sx={{ mb: 2 }}>
+              <AlertTitle>Tokens rápidos</AlertTitle>
+              Inserta variables conocidas sin escribirlas a mano.
+            </Alert>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+              {CERTIFICATE_HTML_SNIPPETS.map((snippet) => (
+                <Chip
+                  key={snippet.token}
+                  label={snippet.label}
+                  clickable
+                  variant='outlined'
+                  onClick={() => insertTokenIntoHtml(snippet.token)}
+                />
+              ))}
+            </Box>
             <TextField
               fullWidth
               multiline
@@ -518,6 +569,10 @@ const LmsCertificateTemplates: React.FC = () => {
           </TabPanel>
 
           <TabPanel value={tab} index={2}>
+            <Alert severity='info' sx={{ mb: 2 }}>
+              <AlertTitle>Variables guiadas</AlertTitle>
+              Usa primero nombres conocidos del sistema para evitar que el certificado quede con tokens huérfanos.
+            </Alert>
             <Box
               sx={{
                 display: 'flex',
@@ -538,15 +593,25 @@ const LmsCertificateTemplates: React.FC = () => {
                   <ListItem disableGutters sx={{ py: 2 }}>
                     <Grid container spacing={2}>
                       <Grid item xs={12} md={3}>
-                        <TextField
-                          fullWidth
-                          label='Nombre'
-                          value={variable.name}
-                          onChange={(event) =>
-                            updateVariable(index, 'name', event.target.value)
-                          }
-                          placeholder='userName'
-                        />
+                        <FormControl fullWidth>
+                          <InputLabel>Nombre</InputLabel>
+                          <Select
+                            value={variable.name}
+                            label='Nombre'
+                            onChange={(event) =>
+                              applyVariableSuggestion(index, event.target.value)
+                            }
+                          >
+                            <MenuItem value=''>
+                              <em>Seleccionar sugerencia</em>
+                            </MenuItem>
+                            {VARIABLE_NAME_SUGGESTIONS.map((suggestion) => (
+                              <MenuItem key={suggestion} value={suggestion}>
+                                {suggestion}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
                       </Grid>
                       <Grid item xs={12} md={3}>
                         <TextField

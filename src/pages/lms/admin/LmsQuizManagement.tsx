@@ -126,6 +126,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   initialQuizId,
   onQuizSaved
 }) => {
+  const questionCategorySuggestions = ['Seguridad', 'Calidad', 'Cumplimiento', 'Inducción', 'Evaluación técnica']
   const queryClient = useQueryClient()
   const axiosPrivate = useAxiosPrivate()
 
@@ -586,6 +587,10 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     }
     
     return errors
+  }
+
+  const applyQuestionCategorySuggestion = (value: string) => {
+    setNewQuestion((prev) => ({ ...prev, category: value }))
   }
 
   const quizValidationErrors = validateQuizConfig()
@@ -1525,16 +1530,30 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
             </Grid>
             
             <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Categoría"
-                value={newQuestion.category || ''}
-                onChange={(e) => setNewQuestion(prev => ({ ...prev, category: e.target.value }))}
-              />
+              <FormControl fullWidth>
+                <InputLabel>Categoría</InputLabel>
+                <Select
+                  value={newQuestion.category || ''}
+                  label="Categoría"
+                  onChange={(e) => applyQuestionCategorySuggestion(e.target.value)}
+                >
+                  <MenuItem value=''>
+                    <em>Sin categoría</em>
+                  </MenuItem>
+                  {questionCategorySuggestions.map((category) => (
+                    <MenuItem key={category} value={category}>
+                      {category}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
             
             {newQuestion.type !== 'boolean' && (
               <Grid item xs={12}>
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Completa primero las opciones que realmente usarás. Las vacías no se enviarán al backend.
+                </Alert>
                 <Typography variant="subtitle2" gutterBottom>
                   Opciones:
                 </Typography>
