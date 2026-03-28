@@ -197,6 +197,7 @@ const LmsCertificateTemplates: React.FC = () => {
   const [isEditorOpen, setIsEditorOpen] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<CertificateTemplate | null>(null)
   const [previewTemplate, setPreviewTemplate] = useState<CertificateTemplate | null>(null)
+  const [templateToDelete, setTemplateToDelete] = useState<CertificateTemplate | null>(null)
   const [form, setForm] = useState<TemplateFormState>(emptyFormState)
 
   const { data: templates = [], isLoading, refetch } = useCertificateTemplates()
@@ -272,15 +273,16 @@ const LmsCertificateTemplates: React.FC = () => {
   }
 
   const handleDelete = async (template: CertificateTemplate) => {
-    const confirmed = window.confirm(
-      `Vas a eliminar la plantilla "${template.name}". Esta accion no se puede deshacer.`
-    )
+    setTemplateToDelete(template)
+  }
 
-    if (!confirmed) {
+  const handleConfirmDelete = async () => {
+    if (!templateToDelete) {
       return
     }
 
-    await deleteTemplateMutation.mutateAsync(template.id)
+    await deleteTemplateMutation.mutateAsync(templateToDelete.id)
+    setTemplateToDelete(null)
   }
 
   const handleSave = async () => {
@@ -402,14 +404,8 @@ const LmsCertificateTemplates: React.FC = () => {
       </Box>
 
       <Alert severity='info' sx={{ mb: 3 }}>
-        Esta pantalla ya usa el backend real. La plantilla por defecto es la que se usara
-        automaticamente al emitir certificados nuevos.
-      </Alert>
-
-      <Alert severity='warning' sx={{ mb: 3 }}>
-        Variables obligatorias recomendadas: <strong>{'{{userName}}'}</strong>,{' '}
-        <strong>{'{{courseTitle}}'}</strong>, <strong>{'{{completionDate}}'}</strong> y{' '}
-        <strong>{'{{certificateNumber}}'}</strong>.
+        Gestiona aquí el diseño oficial del certificado. La plantilla marcada como{' '}
+        <strong>por defecto</strong> se usará automáticamente al emitir nuevos certificados.
       </Alert>
 
       {isLoading ? (
@@ -506,14 +502,20 @@ const LmsCertificateTemplates: React.FC = () => {
         </DialogTitle>
         <DialogContent>
           <Tabs value={tab} onChange={(_, value) => setTab(value)} sx={{ mt: 1 }}>
-            <Tab label='General' />
-            <Tab label='HTML' />
+            <Tab label='Ficha' />
+            <Tab label='Diseño' />
             <Tab label='Variables' />
             <Tab label='Vista previa' />
           </Tabs>
 
           <TabPanel value={tab} index={0}>
             <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <Alert severity='info'>
+                  Define primero el nombre interno de la plantilla y si será la opción base para
+                  certificados nuevos.
+                </Alert>
+              </Grid>
               <Grid item xs={12} md={8}>
                 <TextField
                   fullWidth
@@ -543,7 +545,8 @@ const LmsCertificateTemplates: React.FC = () => {
           <TabPanel value={tab} index={1}>
             <Alert severity='info' sx={{ mb: 2 }}>
               <AlertTitle>Tokens rápidos</AlertTitle>
-              Inserta variables conocidas sin escribirlas a mano.
+              Inserta variables conocidas sin escribirlas a mano. Usa este paso solo para ajustar
+              el diseño del certificado.
             </Alert>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
               {CERTIFICATE_HTML_SNIPPETS.map((snippet) => (
@@ -571,7 +574,8 @@ const LmsCertificateTemplates: React.FC = () => {
           <TabPanel value={tab} index={2}>
             <Alert severity='info' sx={{ mb: 2 }}>
               <AlertTitle>Variables guiadas</AlertTitle>
-              Usa primero nombres conocidos del sistema para evitar que el certificado quede con tokens huérfanos.
+              Usa primero nombres conocidos del sistema para evitar que el certificado quede con
+              campos sin reemplazar.
             </Alert>
             <Box
               sx={{
@@ -754,6 +758,32 @@ const LmsCertificateTemplates: React.FC = () => {
         <DialogActions>
           <Button onClick={() => setPreviewTemplate(null)}>Cerrar</Button>
           <Button onClick={() => refetch()}>Refrescar listado</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={!!templateToDelete}
+        onClose={() => setTemplateToDelete(null)}
+        maxWidth='sm'
+        fullWidth
+      >
+        <DialogTitle>Eliminar plantilla</DialogTitle>
+        <DialogContent>
+          <Alert severity='warning' sx={{ mt: 1 }}>
+            Vas a eliminar la plantilla "{templateToDelete?.name}". Esta acción no se puede
+            deshacer.
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setTemplateToDelete(null)}>Cancelar</Button>
+          <Button
+            color='error'
+            variant='contained'
+            onClick={handleConfirmDelete}
+            disabled={deleteTemplateMutation.isLoading}
+          >
+            Eliminar plantilla
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>
