@@ -483,15 +483,19 @@ const LmsAnalytics: React.FC = () => {
 
                 <Grid item xs={12}>
                   <Card>
-                    <CardHeader title='Actividad reciente' />
+                    <CardHeader title='Actividad reciente de apoyo' />
                     <CardContent>
+                      <Alert severity='info' sx={{ mb: 2 }}>
+                        Úsala como contexto rápido, no como métrica principal. Las decisiones del módulo
+                        deberían apoyarse primero en finalización, cumplimiento y resultados de quizzes.
+                      </Alert>
                       {recentActivity.length === 0 ? (
                         <Typography color='text.secondary'>
                           No hay actividad reciente reportada por el backend para este rango.
                         </Typography>
                       ) : (
                         <Stack spacing={2}>
-                          {recentActivity.slice(0, 8).map((activity: any, index: number) => (
+                          {recentActivity.slice(0, 5).map((activity: any, index: number) => (
                             <Box
                               key={`${activity.type || 'activity'}-${index}`}
                               sx={{
