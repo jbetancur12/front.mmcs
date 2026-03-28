@@ -106,6 +106,21 @@ const quillFormats = [
   'align', 'link', 'image', 'video', 'blockquote', 'code-block'
 ]
 
+const moduleTypeGuides = {
+  text: {
+    label: 'Texto',
+    helper: 'Ideal para teoría, procedimientos, pasos o políticas con formato enriquecido.'
+  },
+  video: {
+    label: 'Video',
+    helper: 'Úsalo para demostraciones, clases grabadas o walkthroughs con apoyo visual.'
+  },
+  quiz: {
+    label: 'Quiz',
+    helper: 'Sirve para validar comprensión. Después de guardar el curso podrás abrir el editor completo del quiz.'
+  }
+}
+
 const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   modules,
   onModulesChange,
@@ -527,6 +542,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
         <Card>
           <CardHeader
             title="Módulos del Curso"
+            subheader='Agrega módulos en el orden en que el estudiante debe recorrerlos. Puedes arrastrarlos para reorganizar la secuencia.'
             action={
               <Button
                 variant="contained"
@@ -629,7 +645,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                   />
                 }
                 subheader={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, flexWrap: 'wrap' }}>
                     <span>{`Tipo: ${getModuleTypeLabel(selectedModule.type)}`}</span>
                     {hasPendingChanges && !selectedModule.id.startsWith('temp_') && (
                       <Chip
@@ -660,11 +676,18 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                 }
               />
               <CardContent>
+                <Alert severity="info" sx={{ mb: 3 }}>
+                  <strong>{moduleTypeGuides[selectedModule.type].label}:</strong> {moduleTypeGuides[selectedModule.type].helper}
+                </Alert>
+
                 {/* Text Content Editor */}
                 {selectedModule.type === 'text' && (
                   <Box>
                     <Typography variant="h6" gutterBottom>
                       Editor de Contenido
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Redacta el contenido principal del módulo y usa la descripción para orientar al estudiante sobre qué debe aprender o practicar.
                     </Typography>
                     <Box sx={{ mb: 2 }}>
                       <ReactQuill
@@ -707,6 +730,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                   <Box>
                     <Typography variant="h6" gutterBottom>
                       Configuración de Video
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Primero define la fuente del video. Si eliges YouTube, pega la URL completa; si eliges subir archivo, espera a que termine la carga antes de guardar el curso.
                     </Typography>
 
                     {/* Video Source Selection */}
@@ -894,6 +920,10 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                       </Alert>
                     )}
 
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                      Recomendación: guarda primero la estructura del curso, luego abre el editor de quiz para crear preguntas, respuestas correctas y criterios de aprobación.
+                    </Typography>
+
                     <Button
                       variant="contained"
                       size="large"
@@ -940,6 +970,11 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
+              <Alert severity="info">
+                Elige primero el tipo de módulo. Luego podrás completar el contenido detallado desde el editor principal.
+              </Alert>
+            </Grid>
+            <Grid item xs={12}>
               <TextField
                 fullWidth
                 label="Título del módulo"
@@ -967,6 +1002,11 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                   <MenuItem value="quiz">Quiz</MenuItem>
                 </Select>
               </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <Alert severity="info">
+                <strong>{moduleTypeGuides[newModule.type].label}:</strong> {moduleTypeGuides[newModule.type].helper}
+              </Alert>
             </Grid>
             <Grid item xs={12}>
               <TextField

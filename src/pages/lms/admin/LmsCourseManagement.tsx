@@ -102,6 +102,32 @@ interface CreateCourseData {
   estimated_duration_minutes: number
 }
 
+const audienceOptions = [
+  {
+    value: 'internal' as const,
+    label: 'Empleados internos',
+    helper: 'Solo aparecerá para usuarios internos y podrá usarse en asignaciones obligatorias.'
+  },
+  {
+    value: 'client' as const,
+    label: 'Clientes',
+    helper: 'Solo aparecerá para usuarios cliente. Hoy funciona como catálogo, no como asignación obligatoria.'
+  },
+  {
+    value: 'both' as const,
+    label: 'Ambos',
+    helper: 'El curso estará disponible para internos y clientes; las asignaciones obligatorias siguen aplicando solo a internos.'
+  }
+]
+
+const durationPresets = [
+  { label: '15 min', value: 15 },
+  { label: '30 min', value: 30 },
+  { label: '45 min', value: 45 },
+  { label: '1 hora', value: 60 },
+  { label: '2 horas', value: 120 }
+]
+
 const LmsCourseManagement: React.FC = () => {
   const navigate = useNavigate()
   const [openDialog, setOpenDialog] = useState(false)
@@ -394,6 +420,8 @@ const LmsCourseManagement: React.FC = () => {
     return `${mins}m`
   }
 
+  const selectedAudienceOption = audienceOptions.find(option => option.value === formData.audience)
+
   if (isLoading) {
     return (
       <Box
@@ -629,6 +657,11 @@ const LmsCourseManagement: React.FC = () => {
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
+              <Alert severity='info'>
+                Completa primero la ficha base del curso. Luego podrás editar contenido, publicar y configurar asignaciones si la audiencia incluye usuarios internos.
+              </Alert>
+            </Grid>
+            <Grid item xs={12}>
               <TextField
                 fullWidth
                 label='Título del curso'
@@ -658,9 +691,11 @@ const LmsCourseManagement: React.FC = () => {
                   label='Audiencia'
                   onChange={(e) => handleInputChange('audience', e.target.value)}
                 >
-                  <MenuItem value='internal'>Empleados internos</MenuItem>
-                  <MenuItem value='client'>Clientes</MenuItem>
-                  <MenuItem value='both'>Ambos</MenuItem>
+                  {audienceOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Grid>
@@ -676,6 +711,26 @@ const LmsCourseManagement: React.FC = () => {
                 required
                 inputProps={{ min: 1 }}
               />
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1.5 }}>
+                {durationPresets.map((preset) => (
+                  <Chip
+                    key={preset.value}
+                    label={preset.label}
+                    clickable
+                    color={formData.estimated_duration_minutes === preset.value ? 'primary' : 'default'}
+                    variant={formData.estimated_duration_minutes === preset.value ? 'filled' : 'outlined'}
+                    onClick={() => handleInputChange('estimated_duration_minutes', preset.value)}
+                  />
+                ))}
+              </Box>
+              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 1 }}>
+                Usa un preset rápido o ajusta minutos exactos si el curso requiere una duración especial.
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Alert severity='info'>
+                <strong>{selectedAudienceOption?.label}:</strong> {selectedAudienceOption?.helper}
+              </Alert>
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControlLabel
@@ -689,6 +744,9 @@ const LmsCourseManagement: React.FC = () => {
                 }
                 label='Curso obligatorio'
               />
+              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
+                Úsalo cuando el curso deba entrar al flujo de asignaciones y recordatorios para usuarios internos.
+              </Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControlLabel
@@ -702,7 +760,24 @@ const LmsCourseManagement: React.FC = () => {
                 }
                 label='Genera certificado'
               />
+              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
+                Actívalo si al completar el curso se debe emitir un certificado descargable.
+              </Typography>
             </Grid>
+            {formData.audience === 'client' && formData.is_mandatory && (
+              <Grid item xs={12}>
+                <Alert severity='warning'>
+                  Los cursos solo para clientes se manejan hoy como catálogo. Aunque puedas marcarlo como obligatorio, el flujo activo de asignaciones y recordatorios se usa para audiencias internas.
+                </Alert>
+              </Grid>
+            )}
+            {formData.has_certificate && (
+              <Grid item xs={12}>
+                <Alert severity='success'>
+                  Este curso podrá emitir certificados cuando el participante complete el contenido requerido y apruebe los quizzes asociados.
+                </Alert>
+              </Grid>
+            )}
           </Grid>
         </DialogContent>
         <DialogActions>

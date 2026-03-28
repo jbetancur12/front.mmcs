@@ -8,7 +8,8 @@ import {
   Typography,
   Button,
   IconButton,
-  Alert
+  Alert,
+  Chip
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
@@ -167,6 +168,14 @@ const LmsCourseContentEditor: React.FC = () => {
 
   // Si hay error, usar curso vacío por defecto
   const courseData = course || createEmptyCourse(courseId || '1')
+  const moduleCounts = courseData.modules.reduce(
+    (acc, module) => {
+      acc.total += 1
+      acc[module.type] += 1
+      return acc
+    },
+    { total: 0, text: 0, video: 0, quiz: 0 }
+  )
 
   // Mutación para guardar cambios del curso (sin módulos)
   const saveCourseInfoMutation = useMutation(
@@ -481,6 +490,15 @@ const LmsCourseContentEditor: React.FC = () => {
       </Box>
 
       {/* Success/Error Messages */}
+      <Alert severity='info' sx={{ mb: 2 }}>
+        Flujo recomendado: 1) agrega módulos, 2) define si cada uno será texto, video o quiz, 3) guarda el curso para persistir cambios, 4) usa la vista previa para validar la experiencia del estudiante.
+      </Alert>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+        <Chip label={`${moduleCounts.total} módulos`} color='primary' variant='outlined' />
+        <Chip label={`${moduleCounts.text} texto`} variant='outlined' />
+        <Chip label={`${moduleCounts.video} video`} variant='outlined' />
+        <Chip label={`${moduleCounts.quiz} quiz`} variant='outlined' />
+      </Box>
       {saveCourseInfoMutation.isSuccess && saveModulesMutation.isSuccess && (
         <Alert severity='success' sx={{ mb: 2 }}>
           Curso y módulos guardados exitosamente
