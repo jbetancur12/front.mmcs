@@ -101,8 +101,36 @@ const reportTypeLabels: Record<ReportType, string> = {
   course_analytics: 'Analítica de cursos',
   compliance: 'Cumplimiento',
   quiz_performance: 'Rendimiento de quizzes',
-  custom: 'Personalizado'
+  custom: 'Personalizado (avanzado)'
 }
+
+const reportTypeOptions: Array<{ value: ReportType; label: string; helper: string }> = [
+  {
+    value: 'user_progress',
+    label: reportTypeLabels.user_progress,
+    helper: 'Úsalo para seguimiento general de avance por persona.'
+  },
+  {
+    value: 'course_analytics',
+    label: reportTypeLabels.course_analytics,
+    helper: 'Sirve para comparar cursos por inscritos, completados y tasa de cierre.'
+  },
+  {
+    value: 'compliance',
+    label: reportTypeLabels.compliance,
+    helper: 'Es el reporte más útil para cursos obligatorios y vencimientos.'
+  },
+  {
+    value: 'quiz_performance',
+    label: reportTypeLabels.quiz_performance,
+    helper: 'Ayuda a revisar aprobación e intentos en evaluaciones.'
+  },
+  {
+    value: 'custom',
+    label: reportTypeLabels.custom,
+    helper: 'Déjalo para casos puntuales donde ninguna plantilla estándar cubra la necesidad.'
+  }
+]
 
 const knownCustomColumns = Array.from(
   new Set(
@@ -449,6 +477,12 @@ const LmsReporting: React.FC = () => {
           manuales desde esta pantalla y definición final del catálogo de reportes de negocio.
         </Alert>
 
+        <Alert severity='success'>
+          Recomendación actual: usa primero <strong>Progreso de usuarios</strong>, <strong>Cumplimiento</strong>
+          {' '}y <strong>Analítica de cursos</strong>. El modo <strong>Personalizado</strong> queda como opción avanzada,
+          no como punto de partida.
+        </Alert>
+
         <Grid container spacing={2}>
           <Grid item xs={12} md={4}>
             <Card>
@@ -670,13 +704,23 @@ const LmsReporting: React.FC = () => {
                     }))
                   }}
                 >
-                {Object.entries(reportTypeLabels).map(([value, label]) => (
-                  <MenuItem key={value} value={value}>
-                    {label}
+                {reportTypeOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    <Box>
+                      <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                        {option.label}
+                      </Typography>
+                      <Typography variant='caption' color='text.secondary'>
+                        {option.helper}
+                      </Typography>
+                    </Box>
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
+            <Alert severity={isCustomTemplate ? 'warning' : 'info'}>
+              {reportTypeOptions.find((option) => option.value === templateForm.type)?.helper}
+            </Alert>
               {isCustomTemplate ? (
                 <Stack spacing={2}>
                   <Box>
