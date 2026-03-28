@@ -95,6 +95,8 @@ const emptyForm: LmsUserForm = {
   active: true
 }
 
+const isValidEmail = (value: string) => /\S+@\S+\.\S+/.test(value)
+
 const LmsUserManagement: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
@@ -268,6 +270,20 @@ const LmsUserManagement: React.FC = () => {
     return Array.from(roles)
   }, [form.roles, form.lmsOnly, optionsData])
 
+  const normalizedName = form.nombre.trim()
+  const normalizedEmail = form.email.trim()
+  const needsCustomer = form.userType === 'client'
+  const selectedCustomerName = customerOptions.find(
+    (customer) => String(customer.id) === form.customerId
+  )?.name
+  const isSaveDisabled =
+    saveUserMutation.isLoading ||
+    normalizedName.length < 3 ||
+    !isValidEmail(normalizedEmail) ||
+    (!editingUser && form.password.trim().length < 8) ||
+    (needsCustomer && !form.customerId) ||
+    effectiveRoles.filter((role) => role !== 'lms_only').length === 0
+
   const handleToggleRole = (roleName: string) => {
     setForm((prev) => {
       const hasRole = prev.roles.includes(roleName)
@@ -312,7 +328,8 @@ const LmsUserManagement: React.FC = () => {
       </Box>
 
       <Alert severity='info' sx={{ mb: 3 }}>
-        Usa esta pantalla para resolver tres cosas en una sola operación: si el usuario es interno o cliente, si debe quedar restringido al LMS y qué rol operativo tendrá dentro del módulo.
+        Usa esta pantalla para resolver tres cosas en una sola operación: si el usuario es interno
+        o cliente, si debe quedar restringido al LMS y qué rol operativo tendrá dentro del módulo.
       </Alert>
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
@@ -481,7 +498,8 @@ const LmsUserManagement: React.FC = () => {
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
               <Alert severity='info'>
-                Para clientes, selecciona la empresa y mantén el acceso por catálogo. Para usuarios `LMS-only`, activa la restricción y ese usuario quedará redirigido solo a rutas LMS.
+                Define primero el tipo de usuario y luego ajusta el alcance. Si activas
+                <strong> LMS-only</strong>, la persona quedará redirigida solo a rutas del LMS.
               </Alert>
             </Grid>
             {editingUser && (
@@ -553,6 +571,16 @@ const LmsUserManagement: React.FC = () => {
                   : 'Los usuarios internos pueden recibir cursos obligatorios. Usa Training Manager solo para responsables de operación del LMS.'}
               </Alert>
             </Grid>
+            <Grid item xs={12}>
+              <Alert severity='info'>
+                Perfil resultante: <strong>{form.userType === 'client' ? 'Cliente' : 'Interno'}</strong>
+                {needsCustomer ? ` · ${selectedCustomerName || 'Cliente pendiente por seleccionar'}` : ' · Sin empresa asociada'}
+                {form.lmsOnly ? ' · Solo LMS' : ' · Acceso mixto'}
+                {effectiveRoles.filter((role) => role !== 'lms_only').length > 0
+                  ? ` · Roles: ${effectiveRoles.filter((role) => role !== 'lms_only').join(', ')}`
+                  : ' · Selecciona al menos un rol operativo'}
+              </Alert>
+            </Grid>
             <Grid item xs={12} md={6}>
               <FormControlLabel
                 control={
@@ -618,7 +646,7 @@ const LmsUserManagement: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
-          <Button variant='contained' onClick={handleSave} disabled={saveUserMutation.isLoading}>
+          <Button variant='contained' onClick={handleSave} disabled={isSaveDisabled}>
             {saveUserMutation.isLoading ? 'Guardando...' : 'Guardar'}
           </Button>
         </DialogActions>
