@@ -445,6 +445,17 @@ const LmsReporting: React.FC = () => {
     setScheduleDialogOpen(true)
   }
 
+  const handleCreateScheduleFromTemplate = (template: ReportTemplate) => {
+    setEditingSchedule(null)
+    setScheduleForm({
+      ...emptyScheduleForm,
+      templateId: String(template.id),
+      name: `${template.name} programado`
+    })
+    setRecipientInput('')
+    setScheduleDialogOpen(true)
+  }
+
   const handleEditSchedule = (schedule: ScheduledReport) => {
     setEditingSchedule(schedule)
     setScheduleForm({
@@ -599,14 +610,27 @@ const LmsReporting: React.FC = () => {
                     <ListItem
                       key={template.id}
                       secondaryAction={
-                        <Stack direction='row' spacing={1}>
-                          <IconButton onClick={() => generateReportMutation.mutate({ templateId: template.id, format: 'csv' })}>
-                            <GenerateIcon />
-                          </IconButton>
-                          <IconButton onClick={() => handleEditTemplate(template)}>
+                        <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
+                          <Button
+                            size='small'
+                            variant='outlined'
+                            startIcon={<GenerateIcon />}
+                            onClick={() => generateReportMutation.mutate({ templateId: template.id, format: 'csv' })}
+                          >
+                            Generar
+                          </Button>
+                          <Button
+                            size='small'
+                            variant='outlined'
+                            startIcon={<ScheduleIcon />}
+                            onClick={() => handleCreateScheduleFromTemplate(template)}
+                          >
+                            Programar
+                          </Button>
+                          <IconButton onClick={() => handleEditTemplate(template)} title='Editar plantilla'>
                             <EditIcon />
                           </IconButton>
-                          <IconButton onClick={() => deleteTemplateMutation.mutate(template.id)}>
+                          <IconButton onClick={() => deleteTemplateMutation.mutate(template.id)} title='Eliminar plantilla'>
                             <DeleteIcon />
                           </IconButton>
                         </Stack>
@@ -662,7 +686,19 @@ const LmsReporting: React.FC = () => {
                 </Alert>
               )}
               {scheduledReports.length === 0 ? (
-                <Alert severity='info'>No hay reportes programados activos.</Alert>
+                <Stack spacing={2}>
+                  <Alert severity='info'>No hay reportes programados activos.</Alert>
+                  {templates.length > 0 && (
+                    <Button
+                      variant='outlined'
+                      startIcon={<ScheduleIcon />}
+                      onClick={() => handleCreateScheduleFromTemplate(templates[0])}
+                      sx={{ alignSelf: 'flex-start' }}
+                    >
+                      Programar desde la primera plantilla disponible
+                    </Button>
+                  )}
+                </Stack>
               ) : (
                 <List>
                   {scheduledReports.map((schedule) => (
