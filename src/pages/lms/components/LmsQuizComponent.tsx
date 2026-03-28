@@ -32,7 +32,11 @@ interface QuizQuestion {
 
 interface QuizComponentProps {
   questions: QuizQuestion[]
-  onComplete?: (score: number, totalPoints: number) => void
+  onComplete?: (
+    score: number,
+    totalPoints: number,
+    answers: (number | number[])[]
+  ) => void
   isPreview?: boolean
   maxAttempts?: number
   currentAttempt?: number
@@ -115,7 +119,7 @@ const LmsQuizComponent: React.FC<QuizComponentProps> = ({
       setShowResults(true)
 
       if (onComplete) {
-        onComplete(totalScore, totalPossiblePoints)
+        onComplete(totalScore, totalPossiblePoints, [...userAnswers])
       }
     }
   }

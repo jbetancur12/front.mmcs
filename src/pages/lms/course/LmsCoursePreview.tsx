@@ -40,6 +40,7 @@ import { useStore } from '@nanostores/react'
 import { userStore } from 'src/store/userStore'
 import LmsQuizComponent from '../components/LmsQuizComponent'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { createSafeHtmlRenderer } from 'src/utils/htmlSanitizer'
 
 interface CourseUnit {
   id: number
@@ -53,6 +54,9 @@ interface CourseUnit {
     videoUrl?: string
     transcript?: string
     text?: string
+    quizId?: number
+    maxAttempts?: number
+    currentAttempt?: number
     questions?: any[]
     description?: string
   }
@@ -143,6 +147,9 @@ const transformPreviewDataToCourse = (previewData: any): Course => {
         content: {
           videoUrl: convertToEmbedUrl(lesson.video_url),
           text: lesson.content,
+          quizId: lesson.quiz?.id,
+          maxAttempts: lesson.quiz?.max_attempts,
+          currentAttempt: lesson.quiz?.current_attempt,
           description: lesson.description,
           questions: questions
         }
@@ -203,6 +210,9 @@ const transformProgressDataToCourse = (progressData: any): Course => {
         content: {
           videoUrl: convertToEmbedUrl(lesson.video_url),
           text: lesson.content,
+          quizId: lesson.quiz?.id,
+          maxAttempts: lesson.quiz?.max_attempts,
+          currentAttempt: lesson.quiz?.current_attempt,
           description: lesson.description,
           questions: questions
         }
@@ -823,7 +833,16 @@ const { data: courseData, isLoading, error } = useQuery(
                         }
                       }}
                     >
-                      <ReactMarkdown>{currentUnitData.content.text}</ReactMarkdown>
+                      {/<[a-z][\s\S]*>/i.test(currentUnitData.content.text) ? (
+                        <Box
+                          dangerouslySetInnerHTML={createSafeHtmlRenderer(
+                            currentUnitData.content.text,
+                            'richText'
+                          )}
+                        />
+                      ) : (
+                        <ReactMarkdown>{currentUnitData.content.text}</ReactMarkdown>
+                      )}
                     </Box>
                   )}
 
@@ -834,7 +853,7 @@ const { data: courseData, isLoading, error } = useQuery(
                       isPreview={isPreview || previewMode === 'admin'}
                       maxAttempts={currentUnitData.content.maxAttempts || 3}
                       currentAttempt={currentUnitData.content.currentAttempt || 1}
-                      onComplete={async (score, totalPoints) => {
+                      onComplete={async (score, totalPoints, answers) => {
                         const percentage = Math.round((score / totalPoints) * 100);
 
                         if (isPreview || previewMode === 'admin') {
@@ -851,6 +870,10 @@ const { data: courseData, isLoading, error } = useQuery(
 
                         // Completar quiz real
                         try {
+                          if (!currentUnitData.content.quizId) {
+                            throw new Error('No se encontró la configuración del quiz para esta lección')
+                          }
+
                           Swal.fire({
                             title: 'Guardando resultados del quiz...',
                             allowOutsideClick: false,
@@ -859,20 +882,48 @@ const { data: courseData, isLoading, error } = useQuery(
                             }
                           });
 
-                          await axiosPrivate.post(`/lms/progress/lessons/${currentUnitData.id}/complete`, {
-                            timeSpentMinutes: 15, // Tiempo estimado para quiz
-                            quizScore: percentage
+                          const formattedAnswers = (currentUnitData.content.questions ?? []).reduce(
+                            (acc: Record<number, number[]>, question: any, index: number) => {
+                              const answer = answers[index]
+
+                              if (answer !== undefined) {
+                                acc[question.id] = Array.isArray(answer) ? answer : [answer]
+                              }
+
+                              return acc
+                            },
+                            {}
+                          )
+
+                          const quizResult = await axiosPrivate.post(
+                            `/lms/quizzes/${currentUnitData.content.quizId}/attempt`,
+                            {
+                              answers: formattedAnswers,
+                              timeSpent: 15 * 60
+                            }
+                          )
+
+                          const passed = quizResult.data?.data?.results?.passed
+                          const backendPercentage = quizResult.data?.data?.results?.percentage ?? percentage
+
+                          if (passed) {
+                            await axiosPrivate.post(`/lms/progress/lessons/${currentUnitData.id}/complete`, {
+                              timeSpentMinutes: 15
+                            })
+                          }
+
+                          await queryClient.invalidateQueries(['lms-course-preview', courseId])
+
+                          console.log('✅ Quiz completado exitosamente', {
+                            passed,
+                            percentage: backendPercentage
                           });
 
-                          await queryClient.invalidateQueries(['lms-course-preview', courseId]);
-
-                          console.log('✅ Quiz completado exitosamente');
-
                           Swal.fire({
-                            icon: percentage >= 70 ? 'success' : 'warning',
-                            title: percentage >= 70 ? '¡Quiz Aprobado!' : 'Quiz Completado',
-                            html: `<p>Puntuación: <strong>${score}/${totalPoints}</strong> (${percentage}%)</p>
-                                   <p>${percentage >= 70 ? 'La siguiente lección está desbloqueada' : 'Necesitas 70% o más para aprobar'}</p>`,
+                            icon: passed ? 'success' : 'warning',
+                            title: passed ? '¡Quiz Aprobado!' : 'Quiz Completado',
+                            html: `<p>Puntuación: <strong>${score}/${totalPoints}</strong> (${backendPercentage}%)</p>
+                                   <p>${passed ? 'La siguiente lección está desbloqueada' : 'Necesitas 70% o más para aprobar'}</p>`,
                             confirmButtonText: 'OK'
                           });
                         } catch (error: any) {
@@ -959,7 +1010,10 @@ const { data: courseData, isLoading, error } = useQuery(
                       {canNavigateToUnit(index) ? getUnitIcon(unit.type) : <LockIcon />}
                     </ListItemIcon>
                     <ListItemText
-                      primary={unit.title}
+                      disableTypography
+                      primary={
+                        <Typography variant='body1'>{unit.title}</Typography>
+                      }
                       secondary={
                         <Box
                           sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
