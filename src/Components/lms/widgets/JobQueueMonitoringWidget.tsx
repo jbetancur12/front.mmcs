@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   Card,
   CardContent,
@@ -24,8 +24,7 @@ import {
   Alert,
   CircularProgress,
   Stack,
-  Avatar,
-  Divider
+  Avatar
 } from '@mui/material'
 import {
   PlayArrow as RetryIcon,
@@ -37,9 +36,6 @@ import {
   Schedule as PendingIcon,
   PlayCircle as ActiveIcon,
   Cancel as CancelledIcon,
-  TrendingUp as TrendingUpIcon,
-  Storage as StorageIcon,
-  Speed as SpeedIcon,
   Memory as MemoryIcon
 } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
@@ -308,8 +304,8 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
               </Box>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Chip
-                label={(jobQueue.queueHealth || 'unknown').toUpperCase()}
+                <Chip
+                  label={(jobQueue.queueHealth || 'unknown').toUpperCase()}
                 size='small'
                 sx={{
                   bgcolor: getHealthColor(jobQueue.queueHealth || 'unknown'),
@@ -320,7 +316,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
               <IconButton
                 onClick={() => refetch()}
                 size='small'
-                sx={{ color: colors.gray[600] }}
+                sx={{ color: colors.gray[500] }}
               >
                 <RefreshIcon />
               </IconButton>
@@ -347,7 +343,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                 </Typography>
                 <Typography
                   variant='body2'
-                  color={colors.gray[600]}
+                  color={colors.gray[500]}
                   sx={{ fontWeight: 500 }}
                 >
                   Active
@@ -372,7 +368,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                 </Typography>
                 <Typography
                   variant='body2'
-                  color={colors.gray[600]}
+                  color={colors.gray[500]}
                   sx={{ fontWeight: 500 }}
                 >
                   Completed
@@ -397,7 +393,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                 </Typography>
                 <Typography
                   variant='body2'
-                  color={colors.gray[600]}
+                  color={colors.gray[500]}
                   sx={{ fontWeight: 500 }}
                 >
                   Failed
@@ -422,7 +418,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                 </Typography>
                 <Typography
                   variant='body2'
-                  color={colors.gray[600]}
+                  color={colors.gray[500]}
                   sx={{ fontWeight: 500 }}
                 >
                   Avg Time
@@ -476,13 +472,13 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Typography variant='body2' color={colors.gray[600]}>
+                    <Typography variant='body2' color={colors.gray[500]}>
                       {status.active} active
                     </Typography>
-                    <Typography variant='body2' color={colors.gray[600]}>
+                    <Typography variant='body2' color={colors.gray[500]}>
                       {status.successRate.toFixed(1)}% success
                     </Typography>
-                    <Typography variant='body2' color={colors.gray[600]}>
+                    <Typography variant='body2' color={colors.gray[500]}>
                       {formatDuration(status.averageProcessingTime)} avg
                     </Typography>
                   </Box>
@@ -568,7 +564,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                             />
                             <Typography
                               variant='body2'
-                              color={colors.gray[600]}
+                              color={colors.gray[500]}
                               sx={{ fontSize: '0.75rem' }}
                             >
                               {job.progress}%
@@ -576,7 +572,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                           </Box>
                         </TableCell>
                         <TableCell>
-                          <Typography variant='body2' color={colors.gray[600]}>
+                          <Typography variant='body2' color={colors.gray[500]}>
                             {job.processingTime
                               ? formatDuration(job.processingTime)
                               : '-'}
@@ -588,7 +584,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                               <IconButton
                                 size='small'
                                 onClick={() => handleJobDetails(job)}
-                                sx={{ color: colors.gray[600] }}
+                                sx={{ color: colors.gray[500] }}
                               >
                                 <InfoIcon fontSize='small' />
                               </IconButton>
@@ -599,7 +595,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                                   size='small'
                                   onClick={() => handleRetryJob(job.id)}
                                   sx={{ color: colors.warning }}
-                                  disabled={retryJobMutation.isPending}
+                                  disabled={retryJobMutation.isLoading}
                                 >
                                   <RetryIcon fontSize='small' />
                                 </IconButton>
@@ -612,7 +608,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                                   size='small'
                                   onClick={() => handleCancelJob(job.id)}
                                   sx={{ color: colors.error }}
-                                  disabled={cancelJobMutation.isPending}
+                                  disabled={cancelJobMutation.isLoading}
                                 >
                                   <CancelIcon fontSize='small' />
                                 </IconButton>
@@ -668,7 +664,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                 <Grid item xs={12} sm={6}>
                   <Typography
                     variant='body2'
-                    color={colors.gray[600]}
+                    color={colors.gray[500]}
                     sx={{ mb: 0.5 }}
                   >
                     Job ID
@@ -680,7 +676,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                 <Grid item xs={12} sm={6}>
                   <Typography
                     variant='body2'
-                    color={colors.gray[600]}
+                    color={colors.gray[500]}
                     sx={{ mb: 0.5 }}
                   >
                     Type
@@ -692,7 +688,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                 <Grid item xs={12} sm={6}>
                   <Typography
                     variant='body2'
-                    color={colors.gray[600]}
+                    color={colors.gray[500]}
                     sx={{ mb: 0.5 }}
                   >
                     Priority
@@ -704,7 +700,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                 <Grid item xs={12} sm={6}>
                   <Typography
                     variant='body2'
-                    color={colors.gray[600]}
+                    color={colors.gray[500]}
                     sx={{ mb: 0.5 }}
                   >
                     Attempts
@@ -716,7 +712,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                 <Grid item xs={12}>
                   <Typography
                     variant='body2'
-                    color={colors.gray[600]}
+                    color={colors.gray[500]}
                     sx={{ mb: 0.5 }}
                   >
                     Progress
@@ -746,7 +742,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                   <Grid item xs={12}>
                     <Typography
                       variant='body2'
-                      color={colors.gray[600]}
+                      color={colors.gray[500]}
                       sx={{ mb: 0.5 }}
                     >
                       Error
@@ -759,7 +755,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                 <Grid item xs={12}>
                   <Typography
                     variant='body2'
-                    color={colors.gray[600]}
+                    color={colors.gray[500]}
                     sx={{ mb: 0.5 }}
                   >
                     Timestamps
@@ -805,7 +801,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                 handleRetryJob(selectedJob.id)
                 setJobDetailsOpen(false)
               }}
-              disabled={retryJobMutation.isPending}
+              disabled={retryJobMutation.isLoading}
               sx={{
                 bgcolor: colors.warning,
                 '&:hover': { bgcolor: '#ea580c' }

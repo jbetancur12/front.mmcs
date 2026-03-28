@@ -55,17 +55,6 @@ interface UploadedFile {
   };
 }
 
-interface FileValidationResult {
-  isValid: boolean;
-  errors: string[];
-  fileInfo: {
-    name: string;
-    type: string;
-    size: number;
-    sizeFormatted: string;
-  };
-}
-
 const SecureFileUpload: React.FC<FileUploadProps> = ({
   acceptedTypes,
   maxFileSize = 50 * 1024 * 1024, // 50MB default
@@ -154,7 +143,7 @@ const SecureFileUpload: React.FC<FileUploadProps> = ({
       const formData = new FormData();
       
       // Add files to form data
-      files.forEach((file, index) => {
+      files.forEach((file) => {
         formData.append(`files`, file);
       });
 

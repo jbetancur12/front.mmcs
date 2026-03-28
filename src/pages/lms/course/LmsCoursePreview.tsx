@@ -243,9 +243,6 @@ const LmsCoursePreview: React.FC = () => {
 
   const [previewMode, setPreviewMode] = useState<'student' | 'admin'>('student')
 
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
-
   const storeUser = useStore(userStore)
   const queryClient = useQueryClient()
 
@@ -374,7 +371,7 @@ let esEstudiante = true;
   }
 
   // Query para obtener el curso con progreso real
-const { data: courseData, isLoading, error } = useQuery(
+const { data: courseData, isLoading } = useQuery(
   ['lms-course-preview', courseId, previewMode],
   async () => {
     if (previewMode === 'admin') {

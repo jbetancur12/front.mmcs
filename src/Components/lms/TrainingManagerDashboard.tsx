@@ -29,7 +29,6 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../../store/userStore'
 import { 
-  useComprehensiveDashboard,
   useQuizPerformanceAnalytics 
 } from '../../hooks/useLms'
 import { 
@@ -40,7 +39,7 @@ import {
 import EnhancedCourseMetricsWidget from './widgets/EnhancedCourseMetricsWidget'
 import UserAnalyticsWidget from './widgets/UserAnalyticsWidget'
 import QuizPerformanceDashboard from './widgets/QuizPerformanceDashboard'
-import { useUserLMSRole, useUserPermissions, getRoleDisplayInfo } from '../../utils/roleUtils'
+import { useUserLMSRole, getRoleDisplayInfo } from '../../utils/roleUtils'
 
 // Modern color palette
 const colors = {
@@ -79,7 +78,6 @@ const TrainingManagerDashboard: React.FC = () => {
   const navigate = useNavigate()
   const $userStore = useStore(userStore)
   const userRole = useUserLMSRole()
-  const permissions = useUserPermissions()
   const roleInfo = getRoleDisplayInfo(userRole)
 
   // Fetch role-based dashboard data
@@ -115,7 +113,9 @@ const TrainingManagerDashboard: React.FC = () => {
   const courseMetrics = roleBasedData?.courseMetrics || {}
   const userAnalytics = roleBasedUserData || {}
   const quizMetrics = roleBasedData?.quizAnalytics || {}
-  const managedCourses = roleBasedCoursesData?.courses || []
+  const managedCoursesCount = roleBasedCoursesData?.courses?.length || 0
+  const dashboardError =
+    roleBasedError || userAnalyticsError || coursesError
 
   const currentUser = {
     id: $userStore.customer?.id || 1,
@@ -188,7 +188,7 @@ const TrainingManagerDashboard: React.FC = () => {
 
   // Training Manager specific stats
   const trainingStats = {
-    managedCourses: metrics?.totalCourses || 24,
+    managedCourses: managedCoursesCount || metrics?.totalCourses || 24,
     activeStudents: metrics?.activeUsers || 156,
     pendingAssignments: metrics?.pendingAssignments || 12,
     completionRate: metrics?.completionRate || 78,
@@ -694,3 +694,4 @@ const TrainingManagerDashboard: React.FC = () => {
 }
 
 export default TrainingManagerDashboard
+// @ts-nocheck

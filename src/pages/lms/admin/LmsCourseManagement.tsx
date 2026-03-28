@@ -41,7 +41,6 @@ import {
   Analytics as AnalyticsIcon,
   Publish as PublishIcon,
   Archive as ArchiveIcon,
-  Unarchive as UnarchiveIcon
 } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -169,7 +168,7 @@ const LmsCourseManagement: React.FC = () => {
       }
     },
     {
-      onSuccess: (response) => {
+      onSuccess: () => {
         queryClient.invalidateQueries(['lms-courses'])
         handleCloseDialog()
         setSnackbar({

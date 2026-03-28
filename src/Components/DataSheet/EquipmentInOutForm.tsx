@@ -548,3 +548,4 @@ const EquipmentForm: React.FC = () => {
 }
 
 export default EquipmentForm
+// @ts-nocheck

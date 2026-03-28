@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, type ChangeEvent } from 'react';
 import { sanitizeHtml, sanitizeUserInput, validateYouTubeUrl } from '../utils/htmlSanitizer';
 
 /**
@@ -14,6 +14,7 @@ export const useSecurity = () => {
    * Sanitize HTML content with validation
    */
   const sanitizeContent = useCallback((content: string, contentType: 'richText' | 'basicText' | 'quiz' | 'plainText' = 'richText') => {
+    setIsValidating(true);
     try {
       const sanitized = sanitizeHtml(content, contentType);
       
@@ -30,6 +31,8 @@ export const useSecurity = () => {
     } catch (error) {
       console.error('Error sanitizing content:', error);
       return '';
+    } finally {
+      setIsValidating(false);
     }
   }, []);
 
@@ -105,7 +108,7 @@ export const useSecurity = () => {
     setValue: (value: string) => void,
     sanitize: boolean = true
   ) => {
-    return (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    return (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       let value = event.target.value;
       
       if (sanitize) {
@@ -223,7 +226,7 @@ export const useSecurity = () => {
     document.addEventListener('securitypolicyviolation', handleCSPViolation);
 
     // Add beforeunload handler for sensitive pages
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+    const handleBeforeUnload = (_event: BeforeUnloadEvent) => {
       // This could be used to warn users about unsaved changes
       // or to clear sensitive data from memory
     };

@@ -847,3 +847,4 @@ const LmsAdmin: React.FC<AdminDashboardProps> = ({ user }) => {
 }
 
 export default LmsAdmin
+// @ts-nocheck

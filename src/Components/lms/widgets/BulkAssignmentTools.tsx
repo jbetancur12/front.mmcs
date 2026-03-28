@@ -1,8 +1,6 @@
 import React, { useState } from 'react'
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   Button,
   Grid,
@@ -11,16 +9,11 @@ import {
   Paper,
   Divider,
   Stack,
-  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Checkbox,
   FormControlLabel,
   List,
@@ -32,19 +25,15 @@ import {
   Step,
   StepLabel,
   StepContent,
-  Autocomplete,
-  DatePicker
+  Autocomplete
 } from '@mui/material'
 import {
   Add as AddIcon,
   Group as GroupIcon,
   Person as PersonIcon,
-  Schedule as ScheduleIcon,
   Assignment as AssignmentIcon,
-  Check as CheckIcon,
   Close as CloseIcon,
   Send as SendIcon,
-  Preview as PreviewIcon
 } from '@mui/icons-material'
 import { DatePicker as MuiDatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
@@ -486,7 +475,11 @@ const BulkAssignmentTools: React.FC<BulkAssignmentToolsProps> = ({
                         label="Fecha límite (opcional)"
                         value={deadline}
                         onChange={(newValue) => setDeadline(newValue)}
-                        renderInput={(params) => <TextField {...params} fullWidth />}
+                        slotProps={{
+                          textField: {
+                            fullWidth: true
+                          }
+                        }}
                       />
                     </Grid>
 

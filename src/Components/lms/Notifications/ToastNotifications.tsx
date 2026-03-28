@@ -5,7 +5,6 @@ import {
   IconButton,
   Box,
   Typography,
-  Slide,
   Fade,
   Stack,
   Chip
@@ -18,7 +17,6 @@ import {
   Info as InfoIcon,
   Notifications as NotificationIcon
 } from '@mui/icons-material'
-import { TransitionProps } from '@mui/material/transitions'
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info'
 

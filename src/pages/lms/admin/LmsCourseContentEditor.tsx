@@ -255,7 +255,7 @@ const LmsCourseContentEditor: React.FC = () => {
                   break
               }
 
-              const lessonResponse = await axiosPrivate.post(
+              await axiosPrivate.post(
                 `/lms/content/modules/${createdModule.id}/lessons`,
                 lessonData
               )
@@ -339,7 +339,7 @@ const LmsCourseContentEditor: React.FC = () => {
       }
     },
     {
-      onSuccess: (data) => {
+      onSuccess: () => {
         queryClient.invalidateQueries(['lms-course', courseId])
       },
       onError: (error: any) => {

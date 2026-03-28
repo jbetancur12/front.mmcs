@@ -77,6 +77,7 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
   userRole,
   department
 }) => {
+  void userRole
   if (loading) {
     return (
       <Card sx={{ borderRadius: '16px', border: `1px solid ${colors.gray[200]}` }}>
@@ -311,7 +312,7 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
           {/* Progress Bars */}
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="caption" color={colors.gray[600]}>
+              <Typography variant="caption" color={colors.gray[500]}>
                 Completados
               </Typography>
               <Typography variant="caption" sx={{ fontWeight: 600 }}>
@@ -335,7 +336,7 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
 
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="caption" color={colors.gray[600]}>
+              <Typography variant="caption" color={colors.gray[500]}>
                 En Progreso
               </Typography>
               <Typography variant="caption" sx={{ fontWeight: 600 }}>
@@ -359,7 +360,7 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
 
           <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="caption" color={colors.gray[600]}>
+              <Typography variant="caption" color={colors.gray[500]}>
                 Sin Comenzar
               </Typography>
               <Typography variant="caption" sx={{ fontWeight: 600 }}>

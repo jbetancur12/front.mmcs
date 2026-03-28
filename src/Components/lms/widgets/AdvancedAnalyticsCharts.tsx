@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Card,
@@ -15,17 +15,13 @@ import {
   Tooltip,
   Alert,
   Skeleton,
-  Paper,
-  Button,
   Switch,
   FormControlLabel,
   Divider
 } from '@mui/material'
 import {
   TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
   Assessment as AssessmentIcon,
-  Business as BusinessIcon,
   Person as PersonIcon,
   School as SchoolIcon,
   Refresh as RefreshIcon,
@@ -35,9 +31,7 @@ import {
   Insights as InsightsIcon
 } from '@mui/icons-material'
 import {
-  LineChart,
   Line,
-  AreaChart,
   Area,
   BarChart,
   Bar,
@@ -61,7 +55,6 @@ import {
   ReferenceLine
 } from 'recharts'
 import { format, subDays, subMonths, parseISO } from 'date-fns'
-import { es } from 'date-fns/locale'
 import { lmsService } from '../../../services/lmsService'
 
 // Modern color palette
@@ -213,7 +206,7 @@ const AdvancedAnalyticsCharts: React.FC<AdvancedAnalyticsChartsProps> = ({
       })()
 
       // Fetch different types of analytics data
-      const [trendsData, complianceData, courseData] = await Promise.all([
+      await Promise.all([
         lmsService.getLearningTrendsAnalytics({
           timeRange: currentTimeRange,
           startDate: startDate.toISOString(),
@@ -404,7 +397,7 @@ const AdvancedAnalyticsCharts: React.FC<AdvancedAnalyticsChartsProps> = ({
               dataKey="complianceRate"
               nameKey="department"
             >
-              {data!.complianceByDepartment.map((entry, index) => (
+              {data!.complianceByDepartment.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
               ))}
             </Pie>

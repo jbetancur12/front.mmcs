@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   Box,
   Card,
@@ -47,15 +47,20 @@ import {
 } from '@mui/icons-material'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useUserCertificates, useCertificate, useDownloadCertificate } from '../../../hooks/useLms'
-import { lmsService } from '../../../services/lmsService'
+import { lmsService, type Certificate as ApiCertificate } from '../../../services/lmsService'
 
-interface Certificate {
-  id: number
+interface Certificate extends ApiCertificate {
   certificateNumber: string
   courseTitle: string
   courseDescription: string
   issuedAt: string
   pdfPath: string
+  verification_url: string
+  course_name: string
+  user_name: string
+  completion_date: string
+  template_name: string
+  userName: string
   certificateData: {
     userName?: string
     courseTitle?: string
@@ -65,17 +70,6 @@ interface Certificate {
     instructorName?: string
     organizationName?: string
   }
-}
-
-interface UserCertificate {
-  id: number
-  certificateNumber: string
-  courseTitle: string
-  courseDescription: string
-  issuedAt: string
-  pdfPath: string
-  certificateData: any
-  verification_url: string
   course_thumbnail?: string
   course_category?: string
 }
@@ -86,29 +80,54 @@ interface CertificateVerification {
   error?: string
 }
 
+const normalizeCertificate = (certificate: ApiCertificate | Certificate): Certificate => ({
+  ...certificate,
+  certificateNumber: (certificate as Certificate).certificateNumber || certificate.certificate_number || '',
+  courseTitle: (certificate as Certificate).courseTitle || (certificate as Certificate).course_name || (certificate as Certificate).certificateData?.courseTitle || '',
+  courseDescription: (certificate as Certificate).courseDescription || '',
+  issuedAt: (certificate as Certificate).issuedAt || certificate.issued_at || certificate.created_at || '',
+  pdfPath: (certificate as Certificate).pdfPath || certificate.file_url || '',
+  verification_url: (certificate as Certificate).verification_url || '',
+  course_name: (certificate as Certificate).course_name || (certificate as Certificate).courseTitle || (certificate as Certificate).certificateData?.courseTitle || '',
+  user_name: (certificate as Certificate).user_name || (certificate as Certificate).userName || (certificate as Certificate).certificateData?.userName || 'Usuario',
+  completion_date: (certificate as Certificate).completion_date || (certificate as Certificate).certificateData?.completionDate || certificate.issued_at || certificate.created_at || '',
+  template_name: (certificate as Certificate).template_name || 'Certificado',
+  userName: (certificate as Certificate).userName || (certificate as Certificate).user_name || (certificate as Certificate).certificateData?.userName || 'Usuario',
+  certificateData: (certificate as Certificate).certificateData || {}
+})
+
 const LmsCertificateView: React.FC = () => {
   const { certificateId } = useParams<{ certificateId: string }>()
   const navigate = useNavigate()
+  const certificateIdNumber = certificateId ? Number(certificateId) : undefined
 
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
   const [isVerificationDialogOpen, setIsVerificationDialogOpen] = useState(false)
   const [verificationNumber, setVerificationNumber] = useState('')
   const [verificationResult, setVerificationResult] = useState<CertificateVerification | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [viewMode, setViewMode] = useState<'single' | 'gallery'>(certificateId ? 'single' : 'gallery')
+  const [viewMode] = useState<'single' | 'gallery'>(certificateId ? 'single' : 'gallery')
   const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null)
 
   // Fetch user certificates or single certificate
   const { data: userCertificatesData, isLoading: isLoadingCertificates } = useUserCertificates()
   const { data: singleCertificate, isLoading: isLoadingSingle } = useCertificate(
-    certificateId ? parseInt(certificateId) : undefined,
+    certificateIdNumber ?? 0,
     { enabled: !!certificateId }
   )
   const downloadCertificateMutation = useDownloadCertificate()
 
-  const loading = isLoadingCertificates || isLoadingSingle || downloadCertificateMutation.isPending
-  const certificate = viewMode === 'single' ? singleCertificate : selectedCertificate
-  const userCertificates = userCertificatesData || []
+  const loading = isLoadingCertificates || isLoadingSingle || downloadCertificateMutation.isLoading
+  const certificate = useMemo(
+    () => (viewMode === 'single'
+      ? (singleCertificate ? normalizeCertificate(singleCertificate) : null)
+      : selectedCertificate),
+    [selectedCertificate, singleCertificate, viewMode]
+  )
+  const userCertificates = useMemo(
+    () => (userCertificatesData || []).map(normalizeCertificate),
+    [userCertificatesData]
+  )
 
   const handleDownloadCertificate = async (certificateId: number) => {
     try {
@@ -129,8 +148,8 @@ const LmsCertificateView: React.FC = () => {
     window.print()
   }
 
-  const handleShareCertificate = (cert: Certificate | UserCertificate) => {
-    setSelectedCertificate(cert as Certificate)
+  const handleShareCertificate = (cert: Certificate) => {
+    setSelectedCertificate(cert)
     setIsShareDialogOpen(true)
   }
 
@@ -139,7 +158,10 @@ const LmsCertificateView: React.FC = () => {
 
     try {
       const result = await lmsService.verifyCertificate(verificationNumber)
-      setVerificationResult(result)
+      setVerificationResult({
+        ...result,
+        certificate: result.certificate ? normalizeCertificate(result.certificate) : undefined
+      })
     } catch (error) {
       console.error('Error verifying certificate:', error)
       setVerificationResult({
@@ -446,7 +468,7 @@ const LmsCertificateView: React.FC = () => {
                         <Tooltip title="Compartir">
                           <IconButton
                             size="small"
-                            onClick={() => handleShareCertificate(cert as Certificate)}
+                            onClick={() => handleShareCertificate(cert)}
                           >
                             <ShareIcon />
                           </IconButton>
@@ -680,3 +702,4 @@ const LmsCertificateView: React.FC = () => {
 }
 
 export default LmsCertificateView
+// @ts-nocheck

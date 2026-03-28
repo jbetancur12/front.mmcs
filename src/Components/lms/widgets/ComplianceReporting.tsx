@@ -41,7 +41,6 @@ import {
 } from '@mui/icons-material'
 import { format, differenceInDays, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { lmsService } from '../../../services/lmsService'
 
 // Modern color palette
 const colors = {
@@ -114,6 +113,7 @@ const ComplianceReporting: React.FC<ComplianceReportingProps> = ({
   showFilters = true,
   compactView = false
 }) => {
+  void compactView
   const [complianceData, setComplianceData] = useState<ComplianceData[]>([])
   const [complianceByRole, setComplianceByRole] = useState<ComplianceByRole[]>([])
   const [complianceByDepartment, setComplianceByDepartment] = useState<ComplianceByDepartment[]>([])

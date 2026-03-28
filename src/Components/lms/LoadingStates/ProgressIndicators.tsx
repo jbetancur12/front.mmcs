@@ -13,8 +13,6 @@ import {
   Chip
 } from '@mui/material'
 import {
-  CloudUpload as UploadIcon,
-  Assessment as ReportIcon,
   Sync as SyncIcon,
   CheckCircle as CheckIcon,
   Error as ErrorIcon

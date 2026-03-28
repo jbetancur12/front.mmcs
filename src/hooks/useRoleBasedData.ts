@@ -40,7 +40,7 @@ export const useRoleBasedCourses = (
   options?: {
     limit?: number
     offset?: number
-    status?: string
+    status?: 'draft' | 'published' | 'archived'
     sortBy?: string
     sortOrder?: 'ASC' | 'DESC'
   }
@@ -49,7 +49,13 @@ export const useRoleBasedCourses = (
   const permissions = useUserPermissions()
   const $userStore = useStore(userStore)
 
-  const filters = {
+  const filters: RoleBasedFilter & {
+    limit?: number
+    offset?: number
+    status?: 'draft' | 'published' | 'archived'
+    sortBy?: string
+    sortOrder?: 'ASC' | 'DESC'
+  } = {
     userRole,
     scope: permissions.scopeRestrictions?.coursesOnly ? 'courses' : 'all',
     managedOnly: userRole !== 'admin',
@@ -226,6 +232,7 @@ export const filterDataByRole = <T extends Record<string, any>>(
  * Utility function to get role-appropriate quick actions
  */
 export const getRoleBasedQuickActions = (userRole: string, permissions: any) => {
+  void userRole
   const baseActions = [
     {
       id: 'view-courses',

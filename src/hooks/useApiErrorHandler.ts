@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useSnackbar } from 'notistack'
 
 interface ApiError {
@@ -254,7 +254,7 @@ export const useApiOperation = <T>(
   }, [operation, executeWithRetry, clearError])
 
   // Execute immediately if requested
-  React.useEffect(() => {
+  useEffect(() => {
     if (immediate) {
       execute().catch(() => {
         // Error is already handled

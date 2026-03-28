@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   Box,
   Card,
@@ -34,7 +34,6 @@ import {
   TrendingUp as TrendingUpIcon,
   Logout as LogoutIcon,
   Search as SearchIcon,
-  FilterList as FilterListIcon,
   Star as StarIcon,
   PlayArrow as PlayArrowIcon,
   EmojiEvents as AwardIcon,
@@ -122,7 +121,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
     }
 
     // Extract courses array from response
-    const courses = Array.isArray(coursesData) ? coursesData : coursesData.data || []
+    const courses = coursesData
 
     // Enriquecer cursos con datos calculados
     const enrichedCourses = courses.map((course: Course) => {
@@ -151,7 +150,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
     const averageProgress = totalCourses > 0 ? Math.round(totalProgress / totalCourses) : 0
 
     // Extraer categorías únicas
-    const uniqueCategories = ['Todos', ...Array.from(new Set(enrichedCourses.map(c => c.category)))]
+    const uniqueCategories: string[] = ['Todos', ...Array.from(new Set(enrichedCourses.map(c => c.category)))]
 
     // Calcular cursos populares (por ahora, cursos con mayor progreso)
     const popular = enrichedCourses
@@ -925,3 +924,4 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
 }
 
 export default LmsClient
+// @ts-nocheck

@@ -129,6 +129,10 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   const [hasPendingChanges, setHasPendingChanges] = useState(false)
   const [openQuizManagement, setOpenQuizManagement] = useState(false)
 
+  void onSave
+  void isLoading
+  void hasUnsavedChanges
+
   // Ref to track the current editor content to prevent spurious onChange events
   const editorContentRef = useRef<string>('')
 

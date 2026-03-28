@@ -10,10 +10,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  TextField,
   Chip,
   Stack,
-  Alert,
   CircularProgress,
   IconButton,
   Tooltip,
@@ -30,18 +28,16 @@ import {
   PictureAsPdf as PdfIcon,
   TableChart as CsvIcon,
   Assessment as ReportIcon,
-  DateRange as DateIcon,
   FilterList as FilterIcon,
   Refresh as RefreshIcon,
   Delete as DeleteIcon,
-  Visibility as ViewIcon,
-  Schedule as ScheduleIcon
+  Visibility as ViewIcon
 } from '@mui/icons-material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { es } from 'date-fns/locale'
-import { format, subDays, subMonths, subYears } from 'date-fns'
+import { format, subDays, subMonths } from 'date-fns'
 import { lmsService } from '../../../services/lmsService'
 
 // Modern color palette

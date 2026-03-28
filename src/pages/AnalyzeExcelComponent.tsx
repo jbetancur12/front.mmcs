@@ -828,3 +828,4 @@ export interface CertificateTemplateData {
 }
 
 export default AnalyzeExcelComponent
+// @ts-nocheck

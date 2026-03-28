@@ -9,7 +9,6 @@ import {
   Chip,
   LinearProgress,
   Paper,
-  Divider,
   Stack,
   Alert,
   Skeleton,
@@ -20,23 +19,16 @@ import {
   TableHead,
   TableRow,
   Tooltip,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   IconButton
 } from '@mui/material'
 import {
   TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
   Group as GroupIcon,
   Person as PersonIcon,
   CheckCircle as CheckIcon,
-  Warning as WarningIcon,
   Error as ErrorIcon,
   Refresh as RefreshIcon,
-  Download as DownloadIcon,
-  FilterList as FilterIcon
+  Download as DownloadIcon
 } from '@mui/icons-material'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts'
 import { useMandatoryTrainingAnalytics } from '../../../hooks/useLms'
@@ -60,19 +52,28 @@ const colors = {
   }
 }
 
-const chartColors = [colors.success, colors.warning, colors.error, colors.info, colors.primary]
-
 interface ComplianceDashboardProps {
   onRoleClick?: (role: string) => void
   onExportReport?: () => void
+}
+
+interface ComplianceRoleData {
+  role: string
+  totalUsers: number
+  completedUsers: number
+  inProgressUsers: number
+  notStartedUsers: number
+  completionRate: number
 }
 
 const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
   onRoleClick,
   onExportReport
 }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState('current')
-  const [selectedDepartment, setSelectedDepartment] = useState('')
+  const [selectedPeriod] = useState('current')
+  const [selectedDepartment] = useState('')
+  void selectedPeriod
+  void selectedDepartment
 
   // Fetch mandatory training analytics
   const {
@@ -88,10 +89,10 @@ const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
   const overall = analyticsData?.overall || {}
 
   // Process compliance data by role
-  const complianceByRole = courses.reduce((acc: any[], course: any) => {
+  const complianceByRole: ComplianceRoleData[] = courses.reduce((acc: ComplianceRoleData[], course: any) => {
     if (course.compliance) {
       course.compliance.forEach((roleData: any) => {
-        const existingRole = acc.find(r => r.role === roleData.role)
+        const existingRole = acc.find((r: ComplianceRoleData) => r.role === roleData.role)
         if (existingRole) {
           existingRole.totalUsers += roleData.totalUsers
           existingRole.completedUsers += roleData.completedUsers
@@ -106,13 +107,13 @@ const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
   }, [])
 
   // Recalculate completion rates
-  complianceByRole.forEach(role => {
+  complianceByRole.forEach((role: ComplianceRoleData) => {
     role.completionRate = role.totalUsers > 0 ? 
       Math.round((role.completedUsers / role.totalUsers) * 100) : 0
   })
 
   // Sort by completion rate
-  complianceByRole.sort((a, b) => b.completionRate - a.completionRate)
+  complianceByRole.sort((a: ComplianceRoleData, b: ComplianceRoleData) => b.completionRate - a.completionRate)
 
   // Prepare pie chart data
   const pieChartData = [
@@ -122,7 +123,7 @@ const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
   ].filter(item => item.value > 0)
 
   // Prepare bar chart data
-  const barChartData = complianceByRole.slice(0, 8).map(role => ({
+  const barChartData = complianceByRole.slice(0, 8).map((role: ComplianceRoleData) => ({
     role: role.role.length > 15 ? role.role.substring(0, 15) + '...' : role.role,
     completionRate: role.completionRate,
     totalUsers: role.totalUsers,
@@ -221,7 +222,7 @@ const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                   <Typography variant="h4" fontWeight="bold">
                     {overall.overallCompletionRate || 0}%
                   </Typography>
-                  <Typography variant="body2" opacity={0.9}>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
                     Cumplimiento General
                   </Typography>
                 </Box>
@@ -243,7 +244,7 @@ const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                   <Typography variant="h4" fontWeight="bold">
                     {complianceByRole.length}
                   </Typography>
-                  <Typography variant="body2" opacity={0.9}>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
                     Roles Evaluados
                   </Typography>
                 </Box>
@@ -256,7 +257,7 @@ const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
             <Paper
               sx={{
                 p: 2,
-                background: complianceByRole.filter(r => r.completionRate >= 90).length > complianceByRole.length / 2
+                background: complianceByRole.filter((r: ComplianceRoleData) => r.completionRate >= 90).length > complianceByRole.length / 2
                   ? `linear-gradient(135deg, ${colors.success} 0%, #047857 100%)`
                   : `linear-gradient(135deg, ${colors.warning} 0%, #ea580c 100%)`,
                 color: 'white'
@@ -265,9 +266,9 @@ const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
                   <Typography variant="h4" fontWeight="bold">
-                    {complianceByRole.filter(r => r.completionRate >= 90).length}
+                    {complianceByRole.filter((r: ComplianceRoleData) => r.completionRate >= 90).length}
                   </Typography>
-                  <Typography variant="body2" opacity={0.9}>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
                     Roles Excelentes
                   </Typography>
                 </Box>
@@ -280,7 +281,7 @@ const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
             <Paper
               sx={{
                 p: 2,
-                background: complianceByRole.filter(r => r.completionRate < 50).length > 0
+                background: complianceByRole.filter((r: ComplianceRoleData) => r.completionRate < 50).length > 0
                   ? `linear-gradient(135deg, ${colors.error} 0%, #b91c1c 100%)`
                   : `linear-gradient(135deg, ${colors.success} 0%, #047857 100%)`,
                 color: 'white'
@@ -289,9 +290,9 @@ const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
                   <Typography variant="h4" fontWeight="bold">
-                    {complianceByRole.filter(r => r.completionRate < 50).length}
+                    {complianceByRole.filter((r: ComplianceRoleData) => r.completionRate < 50).length}
                   </Typography>
-                  <Typography variant="body2" opacity={0.9}>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
                     Roles en Riesgo
                   </Typography>
                 </Box>
@@ -352,7 +353,7 @@ const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                     />
                     <YAxis />
                     <RechartsTooltip 
-                      formatter={(value, name) => [
+                      formatter={(value) => [
                         `${value}%`,
                         'Tasa de Cumplimiento'
                       ]}
@@ -393,7 +394,7 @@ const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {complianceByRole.map((role, index) => {
+                {complianceByRole.map((role: ComplianceRoleData, index: number) => {
                   const complianceLevel = getComplianceLevel(role.completionRate)
                   const complianceColor = getComplianceColor(complianceLevel)
                   
@@ -500,13 +501,13 @@ const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
         )}
 
         {/* Recommendations */}
-        {complianceByRole.filter(r => r.completionRate < 75).length > 0 && (
+        {complianceByRole.filter((r: ComplianceRoleData) => r.completionRate < 75).length > 0 && (
           <Alert severity="warning" sx={{ mt: 2 }}>
             <Typography variant="subtitle2" gutterBottom>
               Recomendaciones de Mejora
             </Typography>
             <Typography variant="body2">
-              Se detectaron {complianceByRole.filter(r => r.completionRate < 75).length} roles 
+              Se detectaron {complianceByRole.filter((r: ComplianceRoleData) => r.completionRate < 75).length} roles 
               con tasas de cumplimiento por debajo del 75%. Se recomienda:
             </Typography>
             <Box component="ul" sx={{ mt: 1, mb: 0 }}>

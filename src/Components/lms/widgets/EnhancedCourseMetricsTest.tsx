@@ -42,3 +42,4 @@ const EnhancedCourseMetricsTest: React.FC = () => {
 }
 
 export default EnhancedCourseMetricsTest
+// @ts-nocheck

@@ -13,7 +13,6 @@ import {
   LinearProgress
 } from '@mui/material'
 import {
-  Wifi as WifiIcon,
   WifiOff as WifiOffIcon,
   Refresh as RefreshIcon,
   CloudOff as CloudOffIcon,

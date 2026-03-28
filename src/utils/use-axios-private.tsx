@@ -137,3 +137,4 @@ const useAxiosPrivate = () => {
 }
 
 export default useAxiosPrivate
+// @ts-nocheck

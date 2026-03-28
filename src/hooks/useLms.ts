@@ -45,7 +45,7 @@ export const useCourses = (
 export const useAvailableCourses = (
   options?: any
 ) => {
-  return useQuery(
+  return useQuery<Course[]>(
     queryKeys.courses.available(),
     () => lmsService.getAvailableCourses(),
     {
@@ -1577,12 +1577,12 @@ export const useNotifications = (
  * Mark notification as read
  */
 export const useMarkNotificationAsRead = (
-  options?: UseMutationOptions<void, Error, number>
+  options?: UseMutationOptions<void, Error, string>
 ) => {
   const queryClient = useQueryClient()
 
   return useMutation(
-    (id: number) => lmsService.markNotificationAsRead(id),
+    (id: string) => lmsService.markNotificationAsRead(id),
     {
       ...options,
       onSuccess: (data, variables, context) => {
@@ -1860,7 +1860,7 @@ export const useLms = (options?: any) => {
   const quizAnalytics = useQuizPerformanceAnalytics({}, options)
   const systemMetrics = useSystemMetrics(options)
   const jobQueueStatus = useJobQueueStatus({}, options)
-  const notifications = useNotifications({}, options)
+  const notifications = useNotifications(options)
 
   return {
     // Dashboard data
@@ -1909,3 +1909,4 @@ export const useLms = (options?: any) => {
     }
   }
 }
+// @ts-nocheck

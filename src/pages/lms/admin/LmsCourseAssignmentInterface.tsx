@@ -7,7 +7,6 @@ import {
   Typography,
   Button,
   Grid,
-  TextField,
   FormControl,
   InputLabel,
   Select,
@@ -17,13 +16,11 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
-  ListItemSecondaryAction,
   IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Alert,
   Divider,
   Avatar,
   LinearProgress,
@@ -32,17 +29,13 @@ import {
 } from '@mui/material'
 import {
   Assignment as AssignmentIcon,
-  People as PeopleIcon,
   Notifications as NotificationsIcon,
   Warning as WarningIcon,
-  CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
   Add as AddIcon,
   Send as SendIcon,
-  Group as GroupIcon,
-  Person as PersonIcon
 } from '@mui/icons-material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
@@ -136,14 +129,12 @@ const transformAssignment = (backendAssignment: BackendAssignment): Assignment =
 
 const LmsCourseAssignmentInterface: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0)
-  const [openDialog, setOpenDialog] = useState(false)
   const [selectedCourse, setSelectedCourse] = useState<number | ''>('')
   const [selectedRole, setSelectedRole] = useState<string>('')
   const [deadline, setDeadline] = useState<Date | null>(null)
   const [assignmentType, setAssignmentType] = useState<'role' | 'all'>('role')
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(10)
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' })
+  const page = 0
+  const rowsPerPage = 10
 
   // Edit modal states
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -153,7 +144,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
 
-  const { data: coursesResponse, isLoading, error } = useQuery<{ courses: Course[], total: number }>(
+  const { data: coursesResponse } = useQuery<{ courses: Course[], total: number }>(
     ['lms-courses', page, rowsPerPage],
     async () => {
       const response = await axiosPrivate.get('/lms/courses', {
@@ -168,17 +159,17 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     {
       keepPreviousData: true,
       onError: (error: any) => {
-        setSnackbar({
-          open: true,
-          message: 'Error al cargar los cursos: ' + (error.response?.data?.message || error.message),
-          severity: 'error'
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al cargar cursos',
+          text: error.response?.data?.message || error.message || 'Ocurrió un error'
         })
       }
     }
   )
 
 
-    const { data: ownUsersResponse, isLoading:isLoadingOwnUsers, error: errorOwnUsers } = useQuery<User[]>(
+    useQuery<User[]>(
     ['lms-users', page, rowsPerPage],
     async () => {
       const response = await axiosPrivate.get('/users/own-users', {
@@ -193,17 +184,17 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     {
       keepPreviousData: true,
       onError: (error: any) => {
-        setSnackbar({
-          open: true,
-          message: 'Error al cargar los usuarios: ' + (error.response?.data?.message || error.message),
-          severity: 'error'
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al cargar usuarios',
+          text: error.response?.data?.message || error.message || 'Ocurrió un error'
         })
       }
     }
   )
 
   // Get all assignments
-  const { data: assignmentsResponse, isLoading: isLoadingAssignments, error: errorAssignments } = useQuery<{ assignments: BackendAssignment[], total: number, page: number, limit: number }>(
+  const { data: assignmentsResponse } = useQuery<{ assignments: BackendAssignment[], total: number, page: number, limit: number }>(
     ['lms-all-assignments', page, rowsPerPage],
     async () => {
       const response = await axiosPrivate.get('/lms/assignments/all', {
@@ -217,10 +208,10 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     {
       keepPreviousData: true,
       onError: (error: any) => {
-        setSnackbar({
-          open: true,
-          message: 'Error al cargar las asignaciones: ' + (error.response?.data?.message || error.message),
-          severity: 'error'
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al cargar asignaciones',
+          text: error.response?.data?.message || error.message || 'Ocurrió un error'
         })
       }
     }
@@ -347,11 +338,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   )
 
   const courses = coursesResponse?.courses || []
-  const totalCourses = coursesResponse?.total || 0
-  const internalUsers = ownUsersResponse || []
   const assignments = (assignmentsResponse?.assignments || []).map(transformAssignment)
-  const totalAssignments = assignmentsResponse?.total || 0
-  console.log("🚀 ~ LmsCourseAssignmentInterface ~ internalUsers:", internalUsers)
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)

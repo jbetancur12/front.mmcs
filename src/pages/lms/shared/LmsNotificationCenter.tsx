@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   Box,
   Card,
@@ -18,7 +18,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   FormControl,
   InputLabel,
   Select,
@@ -32,10 +31,7 @@ import {
   Warning as WarningIcon,
   CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
-  Close as CloseIcon,
   MarkEmailRead as MarkEmailReadIcon,
-  Send as SendIcon,
-  Add as AddIcon,
   EmojiEvents as AwardIcon
 } from '@mui/icons-material'
 
@@ -120,6 +116,8 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
   userRole = 'employee',
   userId 
 }) => {
+  void userRole
+  void userId
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications)
   const [openDialog, setOpenDialog] = useState(false)
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)

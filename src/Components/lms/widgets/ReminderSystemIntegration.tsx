@@ -6,20 +6,11 @@ import {
   Typography,
   Button,
   Grid,
-  Chip,
-  LinearProgress,
   IconButton,
   Paper,
-  Divider,
   Stack,
   Alert,
   Skeleton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Tooltip,
   Badge,
   Dialog,
@@ -35,25 +26,18 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
-  ListItemSecondaryAction
+  Checkbox
 } from '@mui/material'
 import {
   Notifications as NotificationsIcon,
   Send as SendIcon,
   Schedule as ScheduleIcon,
-  CheckCircle as CheckIcon,
   Error as ErrorIcon,
   Warning as WarningIcon,
   Refresh as RefreshIcon,
   TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
   Email as EmailIcon,
-  Person as PersonIcon,
-  Group as GroupIcon,
-  PlayArrow as PlayArrowIcon,
-  Pause as PauseIcon,
-  Settings as SettingsIcon,
-  Checkbox
+  Settings as SettingsIcon
 } from '@mui/icons-material'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts'
 import { 
@@ -81,8 +65,6 @@ const colors = {
     800: '#1f2937'
   }
 }
-
-const chartColors = [colors.success, colors.warning, colors.error, colors.info, colors.primary]
 
 interface ReminderSystemIntegrationProps {
   onSettingsClick?: () => void
@@ -257,7 +239,7 @@ const ReminderSystemIntegration: React.FC<ReminderSystemIntegrationProps> = ({
                   <Typography variant="h4" fontWeight="bold">
                     {reminderAnalytics?.totalReminders || 0}
                   </Typography>
-                  <Typography variant="body2" opacity={0.9}>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
                     Recordatorios Enviados
                   </Typography>
                 </Box>
@@ -281,7 +263,7 @@ const ReminderSystemIntegration: React.FC<ReminderSystemIntegrationProps> = ({
                   <Typography variant="h4" fontWeight="bold">
                     {pending.total || 0}
                   </Typography>
-                  <Typography variant="body2" opacity={0.9}>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
                     Notificaciones Pendientes
                   </Typography>
                 </Box>
@@ -305,7 +287,7 @@ const ReminderSystemIntegration: React.FC<ReminderSystemIntegrationProps> = ({
                   <Typography variant="h4" fontWeight="bold">
                     {analytics.byPriority?.high?.actionRate || 0}%
                   </Typography>
-                  <Typography variant="body2" opacity={0.9}>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
                     Tasa de Respuesta
                   </Typography>
                 </Box>
@@ -329,7 +311,7 @@ const ReminderSystemIntegration: React.FC<ReminderSystemIntegrationProps> = ({
                   <Typography variant="h4" fontWeight="bold">
                     {pending.averageAge || 0}h
                   </Typography>
-                  <Typography variant="body2" opacity={0.9}>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
                     Tiempo Promedio Pendiente
                   </Typography>
                 </Box>
@@ -515,7 +497,7 @@ const ReminderSystemIntegration: React.FC<ReminderSystemIntegrationProps> = ({
                   <ListItemIcon>
                     <Checkbox
                       checked={selectedAssignments.includes(course.courseId)}
-                      onChange={(e) => {
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                         if (e.target.checked) {
                           setSelectedAssignments(prev => [...prev, course.courseId])
                         } else {

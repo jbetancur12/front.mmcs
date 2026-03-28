@@ -1,13 +1,5 @@
 import React, { ReactNode } from 'react'
 import LmsErrorBoundary from './LmsErrorBoundary'
-import { 
-  Dashboard as DashboardIcon,
-  BarChart as AnalyticsIcon,
-  Assignment as AssignmentIcon,
-  Notifications as NotificationIcon,
-  Assessment as ReportIcon,
-  Settings as SystemIcon
-} from '@mui/icons-material'
 
 // Specific error boundaries for different dashboard sections
 

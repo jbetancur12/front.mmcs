@@ -38,9 +38,15 @@ export interface Course {
   audience: CourseAudience
   is_mandatory: boolean
   has_certificate: boolean
+  estimated_duration_minutes?: number
   intro_content?: string
   intro_type?: ContentType
   created_by: number
+  creator?: {
+    id: number
+    nombre: string
+    email?: string
+  }
   created_at: string
   updated_at: string
   modules?: CourseModule[]

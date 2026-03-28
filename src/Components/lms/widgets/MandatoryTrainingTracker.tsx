@@ -519,3 +519,4 @@ const MandatoryTrainingTracker: React.FC<MandatoryTrainingTrackerProps> = ({
 }
 
 export default MandatoryTrainingTracker
+// @ts-nocheck

@@ -5,7 +5,6 @@ import {
   Typography,
   Button,
   Grid,
-  Paper,
   Card,
   CardContent,
   CardHeader,
@@ -21,16 +20,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Switch,
   FormControlLabel,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Alert,
   Snackbar,
-  Divider,
   List,
   ListItem,
   ListItemText,
@@ -530,7 +523,11 @@ const LmsCourseAssignments: React.FC = () => {
                 label="Fecha límite (opcional)"
                 value={deadline}
                 onChange={(newValue) => setDeadline(newValue)}
-                renderInput={(params) => <TextField {...params} fullWidth />}
+                slotProps={{
+                  textField: {
+                    fullWidth: true
+                  }
+                }}
               />
             </Box>
           </Box>
