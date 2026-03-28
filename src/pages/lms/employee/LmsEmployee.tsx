@@ -344,13 +344,18 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 4 }}>
           <Tab label='Mi Progreso' />
           <Tab label='Cursos Obligatorios' />
-          <Tab label='Cursos Opcionales' />
+          <Tab label='Mis Cursos' />
           <Tab label='Mis Certificados' />
           <Tab label='Notificaciones' />
         </Tabs>
 
         {activeTab === 0 && (
           <Box>
+            <Alert severity='info' sx={{ mb: 3 }}>
+              Como usuario interno, aquí verás tanto cursos obligatorios como cursos disponibles
+              para profundizar tu aprendizaje. Lo urgente siempre aparece primero en
+              <strong> Cursos Obligatorios</strong>.
+            </Alert>
             {/* Alertas importantes */}
             {stats.overdueTraining > 0 && (
               <Alert severity="error" sx={{ mb: 3 }}>
@@ -562,7 +567,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                 </Card>
 
                 <Card>
-                  <CardHeader title="Logros recientes" />
+                  <CardHeader title="Reconocimientos recientes" />
                   <CardContent>
                     {recentRecognitions.length > 0 ? (
                       <List dense>
@@ -578,7 +583,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                       </List>
                     ) : (
                       <Alert severity="info">
-                        Completa cursos o genera certificados para ver logros reales aquí.
+                        Completa cursos o genera certificados para ver reconocimientos reales aquí.
                       </Alert>
                     )}
                   </CardContent>

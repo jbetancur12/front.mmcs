@@ -25,7 +25,8 @@ import {
   ListItemText,
   ListItemIcon,
   Divider,
-  CircularProgress
+  CircularProgress,
+  Alert
 } from '@mui/material'
 import {
   MenuBook as BookOpenIcon,
@@ -312,6 +313,11 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
 
         {activeTab === 0 && (
           <Box>
+            <Alert severity='info' sx={{ mb: 3 }}>
+              Como usuario cliente, aquí verás los cursos disponibles para tu empresa y los cursos
+              compartidos. No manejas asignaciones obligatorias: avanzas desde catálogo y
+              certificados obtenidos.
+            </Alert>
             {/* Estadísticas principales */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
               <Grid item xs={12} sm={6} lg={3}>
@@ -534,7 +540,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                 </Card>
 
                 <Card>
-                  <CardHeader title="Cursos disponibles" />
+                  <CardHeader title="Para seguir aprendiendo" />
                   <CardContent>
                     {newCourses.length > 0 ? (
                       <List dense>
@@ -550,7 +556,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                       </List>
                     ) : (
                       <Typography variant="body2" color="text.secondary">
-                        No hay cursos nuevos
+                        No hay cursos nuevos para este momento
                       </Typography>
                     )}
                   </CardContent>
