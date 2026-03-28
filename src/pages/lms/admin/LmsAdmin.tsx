@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 import {
   Box,
   Card,
@@ -20,7 +20,6 @@ import {
   TrendingUp as AnalyticsIcon,
   Assignment as AssignmentIcon,
   Assessment as AssessmentIcon,
-  Settings as SettingsIcon,
   Add as AddIcon,
   Warning as WarningIcon,
   VideoLibrary as VideoIcon,
@@ -38,7 +37,6 @@ import {
 import EnhancedCourseMetricsWidget from '../../../Components/lms/widgets/EnhancedCourseMetricsWidget'
 import UserAnalyticsWidget from '../../../Components/lms/widgets/UserAnalyticsWidget'
 import QuizPerformanceDashboard from '../../../Components/lms/widgets/QuizPerformanceDashboard'
-import RealTimeDashboard from '../../../Components/lms/widgets/RealTimeDashboard'
 import {
   useUserLMSRole,
   getFilteredQuickActions,
@@ -50,16 +48,12 @@ import {
   DashboardErrorBoundary,
   MetricsErrorBoundary,
   QuickActionsErrorBoundary,
-  RealTimeErrorBoundary,
   WidgetErrorBoundary
 } from '../../../Components/lms/ErrorBoundary/DashboardErrorBoundaries'
 import { useErrorReporting } from '../../../services/errorReportingService'
 import { MetricCardSkeleton } from '../../../Components/lms/LoadingStates/SkeletonComponents'
 import { useToast } from '../../../Components/lms/Notifications/ToastNotifications'
-import {
-  MetricHelp,
-  LMSMetricHelp
-} from '../../../Components/lms/Help/ContextualHelp'
+import { MetricHelp, LMSMetricHelp } from '../../../Components/lms/Help/ContextualHelp'
 
 // Modern color palette following design system
 const colors = {
@@ -142,18 +136,9 @@ const LmsAdmin: React.FC = () => {
   // Role-based quick actions
   const allQuickActions: QuickActionCard[] = [
     {
-      id: 'create-course',
-      title: 'Crear Curso',
-      description: 'Nuevo curso con contenido multimedia',
-      icon: <SchoolIcon />,
-      color: colors.primary,
-      gradient: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`,
-      route: '/lms/admin/courses'
-    },
-    {
       id: 'course-management',
-      title: 'Gestionar Cursos',
-      description: 'Editar y organizar contenido',
+      title: 'Cursos',
+      description: 'Crear, editar y organizar el catalogo',
       icon: <VideoIcon />,
       color: colors.info,
       gradient: `linear-gradient(135deg, ${colors.info} 0%, #2563eb 100%)`,
@@ -195,15 +180,6 @@ const LmsAdmin: React.FC = () => {
       color: '#f59e0b',
       gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
       route: '/lms/admin/certificate-templates'
-    },
-    {
-      id: 'jobs',
-      title: 'Sistema Jobs',
-      description: 'Procesos asíncronos',
-      icon: <SettingsIcon />,
-      color: colors.gray[700],
-      gradient: `linear-gradient(135deg, ${colors.gray[700]} 0%, ${colors.gray[800]} 100%)`,
-      route: '/lms/admin/jobs'
     }
   ]
 
@@ -386,38 +362,6 @@ const LmsAdmin: React.FC = () => {
             </Alert>
           )}
 
-          {/* Real-time Dashboard Section */}
-          <Box sx={{ mb: 4 }}>
-            <RealTimeErrorBoundary
-              onError={(error, errorInfo) => {
-                reportError(error, {
-                  section: 'real_time_dashboard',
-                  severity: 'medium',
-                  componentStack: errorInfo.componentStack,
-                  tags: { userRole: userRole }
-                })
-              }}
-            >
-              <RealTimeDashboard
-                showConnectionStatus={true}
-                refreshInterval={300000}
-                onNotificationClick={useCallback((notification: any) => {
-                  // Handle notification clicks with custom logic
-                  const metadata = notification.metadata || {}
-                  if (metadata.courseId) {
-                    navigate(`/lms/admin/courses/${metadata.courseId}`)
-                  } else if (metadata.assignmentId) {
-                    navigate('/lms/admin/assignments')
-                  } else if (notification.actionUrl) {
-                    navigate(notification.actionUrl)
-                  } else {
-                    navigate('/lms/admin/analytics')
-                  }
-                }, [navigate])}
-              />
-            </RealTimeErrorBoundary>
-          </Box>
-
           {/* Enhanced Widgets Section */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
             {/* Enhanced Course Metrics Widget */}
@@ -586,8 +530,8 @@ const LmsAdmin: React.FC = () => {
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Chip
-                          icon={<AnalyticsIcon />}
-                          label='+234 este mes'
+                          icon={<PeopleIcon />}
+                          label={`${dashboardStats.activeUsers.toLocaleString()} activos`}
                           size='small'
                           sx={{
                             bgcolor: colors.primaryLight,
