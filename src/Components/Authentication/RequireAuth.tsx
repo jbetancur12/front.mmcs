@@ -26,6 +26,8 @@ const clearInvalidSession = () => {
     nombre: '',
     email: '',
     rol: [''],
+    userType: 'internal',
+    lmsOnly: false,
     customer: {
       id: 0,
       nombre: '',
@@ -65,9 +67,18 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
 
         const { ...user } = await response.data
 
+        const resolvedRoles = Array.isArray(user.rol)
+          ? user.rol
+          : Array.isArray(user.roles)
+            ? user.roles.map((role: Role | string) =>
+                typeof role === 'string' ? role : role.name
+              )
+            : []
+
         const formattedUser = {
           ...user,
-          rol: user.roles.map((role: Role) => role.name)
+          rol: resolvedRoles,
+          lmsOnly: Boolean(user.lmsOnly)
         }
         userStore.set(formattedUser)
       } catch (error) {

@@ -3,6 +3,7 @@ import { userStore } from '../store/userStore'
 
 // Define LMS role types
 export type LMSRole = 'admin' | 'training_manager' | 'department_manager' | 'user'
+export const LMS_MANAGEMENT_ROLES = ['admin', 'Training Manager', 'training_manager'] as const
 
 // Define role permissions
 export interface RolePermissions {
@@ -99,13 +100,32 @@ export const getUserLMSRole = (userRoles: string[]): LMSRole => {
   if (userRoles.includes('admin') || userRoles.includes('super_admin')) {
     return 'admin'
   }
-  if (userRoles.includes('training_manager') || userRoles.includes('lms_admin')) {
+  if (
+    userRoles.includes('training_manager') ||
+    userRoles.includes('Training Manager') ||
+    userRoles.includes('lms_admin')
+  ) {
     return 'training_manager'
   }
   if (userRoles.includes('department_manager') || userRoles.includes('manager')) {
     return 'department_manager'
   }
   return 'user'
+}
+
+/**
+ * Map frontend-normalized LMS role to the backend role label when a request
+ * needs to filter by role name.
+ */
+export const getBackendLMSRoleName = (role: LMSRole): string | undefined => {
+  switch (role) {
+    case 'admin':
+      return 'admin'
+    case 'training_manager':
+      return 'Training Manager'
+    default:
+      return undefined
+  }
 }
 
 /**
@@ -228,7 +248,7 @@ export const getRoleBasedNavigation = (userRole: LMSRole) => {
     navigation.push({
       id: 'reports',
       label: 'Reportes',
-      path: '/lms/admin/reports',
+      path: '/lms/admin/reporting',
       icon: 'AssessmentIcon'
     })
   }

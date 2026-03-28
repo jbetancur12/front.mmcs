@@ -192,7 +192,7 @@ const LmsAdmin: React.FC = () => {
       icon: <AssessmentIcon />,
       color: '#8b5cf6',
       gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-      route: '/lms/admin/reports',
+      route: '/lms/admin/reporting',
       isNew: true
     },
     {
@@ -405,13 +405,13 @@ const LmsAdmin: React.FC = () => {
         >
           {/* Role-based Data Filter */}
           <RoleBasedDataFilter
-            scope={
-              userRole === 'admin'
-                ? 'admin'
-                : userRole === 'training_manager'
+              scope={
+                userRole === 'admin'
+                  ? 'admin'
+                  : userRole === 'training_manager'
                   ? 'training_manager'
                   : 'department_manager'
-            }
+              }
             department={$userStore.customer?.nombre}
             showAlert={userRole !== 'admin'}
             showFilterIcon={false}

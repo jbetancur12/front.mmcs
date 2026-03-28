@@ -173,7 +173,18 @@ const Login: React.FC = () => {
         })
         localStorage.setItem('sessionExpiresAt', expiresIn.toString())
 
-        userStore.set(user)
+        userStore.set({
+          nombre: user.name || '',
+          email: user.email || '',
+          rol: user.rol || [],
+          userType: user.userType || 'internal',
+          lmsOnly: Boolean(user.lmsOnly),
+          customer: {
+            id: 0,
+            nombre: '',
+            modules: []
+          }
+        })
         // Handle successful login
         // toast.success("Bienvenido", {
         //   duration: 4000,

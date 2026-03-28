@@ -14,7 +14,8 @@ import type {
   Certificate,
   CourseAssignment,
   CreateAssignmentRequest,
-  CreateQuizRequest
+  CreateQuizRequest,
+  LmsPermissions
 } from 'src/services/lmsService'
 import { Toast } from 'src/Components/ExcelManipulation/Utils'
 
@@ -50,6 +51,22 @@ export const useAvailableCourses = (
     () => lmsService.getAvailableCourses(),
     {
       staleTime: 5 * 60 * 1000, // 5 minutes
+      ...options
+    }
+  )
+}
+
+/**
+ * Get current user's LMS permissions and user type context
+ */
+export const useLmsPermissions = (
+  options?: any
+) => {
+  return useQuery<LmsPermissions>(
+    queryKeys.lms.permissions(),
+    () => lmsService.getMyPermissions(),
+    {
+      staleTime: 5 * 60 * 1000,
       ...options
     }
   )

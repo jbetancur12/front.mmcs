@@ -243,6 +243,18 @@ export interface Notification {
   created_at: string
 }
 
+export interface LmsPermissions {
+  userId: number
+  userType: 'internal' | 'client'
+  canAccessLMS: boolean
+  canManageCourses: boolean
+  canCreateContent: boolean
+  canViewAnalytics: boolean
+  canAssignCourses: boolean
+  canManageUsers: boolean
+  restrictedToCustomer: number | null
+}
+
 /**
  * Job queue status interface
  */
@@ -437,7 +449,15 @@ class LMSService {
    */
   async getAvailableCourses(): Promise<Course[]> {
     const response = await axiosPrivate.get(`${this.baseURL}/courses/available`)
-    return response.data.courses || response.data
+    return response.data.data || response.data.courses || response.data
+  }
+
+  /**
+   * Get current user's LMS permissions and type context
+   */
+  async getMyPermissions(): Promise<LmsPermissions> {
+    const response = await axiosPrivate.get(`${this.baseURL}/training-manager/my-permissions`)
+    return response.data.data || response.data
   }
 
   /**

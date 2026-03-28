@@ -8,12 +8,41 @@ import { useStore } from '@nanostores/react'
 import { UserData, userStore } from 'src/store/userStore'
 import { CarRepair } from '@mui/icons-material'
 
+const LMS_ACCESS_ROLES = [
+  'admin',
+  'employee',
+  'client',
+  'Training Manager',
+  'training_manager',
+  'lms_only'
+]
+
+const LMS_ADMIN_ROLES = ['admin', 'Training Manager', 'training_manager']
+
 const iconClass =
   'w-5 h-5 text-gray-600 transition-all duration-300 group-hover:text-white dark:text-gray-300 dark:group-hover:text-white group-hover:scale-110 group-hover:drop-shadow-sm'
 
 // Helper para verificar si un módulo debe ser visible
 const canViewModule = (roles: string[], userRole: string[]) => {
   return userRole.some((role) => roles.includes(role))
+}
+
+const getEffectiveLmsMenuRoles = ($userStore: UserData) => {
+  const effectiveRoles = new Set($userStore.rol)
+
+  if ($userStore.userType === 'client') {
+    effectiveRoles.add('client')
+  }
+
+  if ($userStore.userType === 'internal' && $userStore.rol.includes('employee')) {
+    effectiveRoles.add('employee')
+  }
+
+  if ($userStore.lmsOnly) {
+    effectiveRoles.add('lms_only')
+  }
+
+  return [...effectiveRoles]
 }
 
 const getLinkToCustomer = (to: string, $userStore: UserData) => {
@@ -129,7 +158,7 @@ const sidebarItems = ($userStore: UserData) => [
   {
     type: 'dropdown',
     buttonText: 'LMS',
-    roles: ['admin', 'employee', 'client'],
+    roles: LMS_ACCESS_ROLES,
     moduleName: 'Basic',
     pathData:
       'M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z',
@@ -137,47 +166,52 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Dashboard',
         url: 'lms',
-        roles: ['admin', 'employee', 'client']
+        roles: LMS_ACCESS_ROLES
       },
       {
         label: 'Administración',
         url: 'lms/admin',
-        roles: ['admin']
+        roles: LMS_ADMIN_ROLES
       },
       {
         label: 'Mis Cursos',
         url: 'lms/admin/dashboard',
-        roles: ['admin']
+        roles: LMS_ADMIN_ROLES
       },
       {
         label: 'Gestión de Cursos',
         url: 'lms/admin/courses',
-        roles: ['admin']
+        roles: LMS_ADMIN_ROLES
       },
       {
         label: 'Gestión de Usuarios',
         url: 'lms/admin/users',
-        roles: ['admin']
+        roles: LMS_ADMIN_ROLES
       },
       {
         label: 'Analíticas',
         url: 'lms/admin/analytics',
-        roles: ['admin']
+        roles: LMS_ADMIN_ROLES
+      },
+      {
+        label: 'Reportes',
+        url: 'lms/admin/reporting',
+        roles: LMS_ADMIN_ROLES
       },
       {
         label: 'Asignacioness',
         url: 'lms/admin/assignments',
-        roles: ['admin']
+        roles: LMS_ADMIN_ROLES
       },
       {
         label: 'Cumplimiento',
         url: 'lms/admin/compliance',
-        roles: ['admin']
+        roles: LMS_ADMIN_ROLES
       },
       {
         label: 'Plantillas de Certificados',
         url: 'lms/admin/certificate-templates',
-        roles: ['admin']
+        roles: LMS_ADMIN_ROLES
       },
       {
         label: 'Mi Aprendizaje',
@@ -190,7 +224,7 @@ const sidebarItems = ($userStore: UserData) => [
         roles: ['employee', 'client']
       },
       {
-        label: 'Cursos Públicos',
+        label: 'Mi Aprendizaje',
         url: 'lms/client',
         roles: ['client']
       }
@@ -370,6 +404,14 @@ const sidebarItems = ($userStore: UserData) => [
   // Otros ítems...
 ]
 
+const isLmsSidebarItem = (item: ReturnType<typeof sidebarItems>[number]) => {
+  if (item.type === 'link') {
+    return item.to?.startsWith('/lms') || item.to?.startsWith('lms')
+  }
+
+  return item.buttonText === 'LMS'
+}
+
 interface SideBarProps {
   sidebarMinimized: boolean
   userMinimized: boolean
@@ -390,6 +432,7 @@ const SideBar = ({
 }: SideBarProps) => {
   const $userStore = useStore(userStore)
   const { pathname } = useLocation()
+  const effectiveLmsMenuRoles = getEffectiveLmsMenuRoles($userStore)
 
   const hasModuleAccess = (moduleName: string) => {
     if (!$userStore.customer) return true
@@ -413,6 +456,10 @@ const SideBar = ({
       <div className='flex-1 overflow-y-auto px-3 py-4 scrollbar-thin scrollbar-thumb-gray-300/50 dark:scrollbar-thumb-gray-600/50 scrollbar-track-transparent hover:scrollbar-thumb-gray-400/70'>
         <ul className='space-y-1.5'>
           {sidebarItems($userStore).map((item, index) => {
+            if ($userStore.lmsOnly && !isLmsSidebarItem(item)) {
+              return null
+            }
+
             if (
               item.type === 'link' &&
               item.to &&
@@ -467,7 +514,10 @@ const SideBar = ({
               )
             } else if (
               item.type === 'dropdown' &&
-              canViewModule(item.roles, $userStore.rol)
+              canViewModule(
+                item.roles,
+                item.buttonText === 'LMS' ? effectiveLmsMenuRoles : $userStore.rol
+              )
             ) {
               return (
                 <DropdownButton
@@ -475,7 +525,11 @@ const SideBar = ({
                   buttonText={item.buttonText ?? ''}
                   menuItems={item.menuItems ?? []}
                   pathData={item.pathData ?? ''}
-                  rol={$userStore.rol}
+                  rol={
+                    item.buttonText === 'LMS'
+                      ? effectiveLmsMenuRoles
+                      : $userStore.rol
+                  }
                   currentPath={pathname}
                   onlyIcons={sidebarMinimized}
                   onItemClick={handleLinkClick}

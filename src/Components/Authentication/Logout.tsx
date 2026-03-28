@@ -2,6 +2,7 @@ import { axiosPublic } from '@utils/api'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { bigToast, Toast } from '../ExcelManipulation/Utils'
+import { userStore } from '../../store/userStore'
 
 const LogoutButton: React.FC = () => {
   const navigate = useNavigate()
@@ -23,6 +24,18 @@ const LogoutButton: React.FC = () => {
     localStorage.removeItem('sessionExpiresAt')
     localStorage.removeItem('columnFiltersCustomers') // Limpiar filtros
     localStorage.removeItem('columnFiltersHV') // Limpiar filtros
+    userStore.set({
+      nombre: '',
+      email: '',
+      rol: [''],
+      userType: 'internal',
+      lmsOnly: false,
+      customer: {
+        id: 0,
+        nombre: '',
+        modules: []
+      }
+    })
     Toast.fire('Sesión cerrada exitosamente', '', 'success')
 
     // Redirige al usuario a la página de inicio de sesión

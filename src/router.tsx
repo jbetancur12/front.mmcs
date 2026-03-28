@@ -6,6 +6,7 @@ import { Route, Routes, Outlet } from 'react-router-dom'
 // Layout y autenticación
 import Layout from './Components/Layout'
 import RequireAuth from './Components/Authentication/RequireAuth'
+import LmsOnlyGuard from './Components/Authentication/LmsOnlyGuard'
 
 // Error pages
 const NotFound = lazy(() => import('./pages/NotFound'))
@@ -44,29 +45,31 @@ function Router() {
           path='/'
           element={
             <RequireAuth>
-              <Layout>
-                <Suspense
-                  fallback={
-                    <Box
-                      display='flex'
-                      justifyContent='center'
-                      alignItems='center'
-                      height='100vh'
-                      flexDirection='column'
-                    >
-                      <CircularProgress />
-                      <Typography
-                        variant='h6'
-                        sx={{ mt: 2, color: 'text.secondary' }}
+              <LmsOnlyGuard>
+                <Layout>
+                  <Suspense
+                    fallback={
+                      <Box
+                        display='flex'
+                        justifyContent='center'
+                        alignItems='center'
+                        height='100vh'
+                        flexDirection='column'
                       >
-                        Cargando...
-                      </Typography>
-                    </Box>
-                  }
-                >
-                  <Outlet />
-                </Suspense>
-              </Layout>
+                        <CircularProgress />
+                        <Typography
+                          variant='h6'
+                          sx={{ mt: 2, color: 'text.secondary' }}
+                        >
+                          Cargando...
+                        </Typography>
+                      </Box>
+                    }
+                  >
+                    <Outlet />
+                  </Suspense>
+                </Layout>
+              </LmsOnlyGuard>
             </RequireAuth>
           }
         >

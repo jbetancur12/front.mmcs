@@ -107,6 +107,12 @@ export const queryKeys = {
     list: () => [...queryKeys.notifications.all, 'list'] as const
   },
 
+  // LMS context
+  lms: {
+    all: ['lms'] as const,
+    permissions: () => [...queryKeys.lms.all, 'permissions'] as const
+  },
+
   // Content
   content: {
     all: ['content'] as const,

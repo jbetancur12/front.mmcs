@@ -1,6 +1,10 @@
 import { useQuery } from 'react-query'
 import { lmsService, RoleBasedFilter } from '../services/lmsService'
-import { useUserLMSRole, useUserPermissions } from '../utils/roleUtils'
+import {
+  getBackendLMSRoleName,
+  useUserLMSRole,
+  useUserPermissions
+} from '../utils/roleUtils'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
 
@@ -11,9 +15,10 @@ export const useRoleBasedDashboard = (additionalFilters?: Partial<RoleBasedFilte
   const userRole = useUserLMSRole()
   const permissions = useUserPermissions()
   const $userStore = useStore(userStore)
+  const backendRole = getBackendLMSRoleName(userRole) ?? userRole
 
   const filters: RoleBasedFilter = {
-    userRole,
+    userRole: backendRole,
     scope: permissions.scopeRestrictions?.departmentOnly ? 'department' : 
            permissions.scopeRestrictions?.coursesOnly ? 'courses' : 'all',
     managedOnly: userRole !== 'admin',
@@ -48,6 +53,7 @@ export const useRoleBasedCourses = (
   const userRole = useUserLMSRole()
   const permissions = useUserPermissions()
   const $userStore = useStore(userStore)
+  const backendRole = getBackendLMSRoleName(userRole) ?? userRole
 
   const filters: RoleBasedFilter & {
     limit?: number
@@ -56,7 +62,7 @@ export const useRoleBasedCourses = (
     sortBy?: string
     sortOrder?: 'ASC' | 'DESC'
   } = {
-    userRole,
+    userRole: backendRole,
     scope: permissions.scopeRestrictions?.coursesOnly ? 'courses' : 'all',
     managedOnly: userRole !== 'admin',
     department: permissions.scopeRestrictions?.departmentOnly ? 
@@ -83,9 +89,10 @@ export const useRoleBasedUserAnalytics = (additionalFilters?: Partial<RoleBasedF
   const userRole = useUserLMSRole()
   const permissions = useUserPermissions()
   const $userStore = useStore(userStore)
+  const backendRole = getBackendLMSRoleName(userRole) ?? userRole
 
   const filters: RoleBasedFilter = {
-    userRole,
+    userRole: backendRole,
     scope: permissions.scopeRestrictions?.departmentOnly ? 'department' : 
            permissions.scopeRestrictions?.usersOnly ? 'users' : 'all',
     managedOnly: userRole !== 'admin',
@@ -148,9 +155,10 @@ export const useRoleBasedAssignments = (additionalFilters?: {
   const userRole = useUserLMSRole()
   const permissions = useUserPermissions()
   const $userStore = useStore(userStore)
+  const backendRole = getBackendLMSRoleName(userRole) ?? userRole
 
   const filters = {
-    role: userRole,
+    role: backendRole,
     department: permissions.scopeRestrictions?.departmentOnly ? 
                 $userStore.customer?.nombre : undefined,
     ...additionalFilters
@@ -177,9 +185,10 @@ export const useRoleBasedMandatoryTraining = (additionalFilters?: {
 }) => {
   const userRole = useUserLMSRole()
   const permissions = useUserPermissions()
+  const backendRole = getBackendLMSRoleName(userRole) ?? userRole
 
   const filters = {
-    role: userRole,
+    role: backendRole,
     ...additionalFilters
   }
 

@@ -169,7 +169,7 @@ const TrainingManagerDashboard: React.FC = () => {
       icon: <AssessmentIcon />,
       color: '#8b5cf6',
       gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-      route: '/lms/admin/reports',
+      route: '/lms/admin/reporting',
     },
     {
       id: 'certificates',
@@ -666,7 +666,7 @@ const TrainingManagerDashboard: React.FC = () => {
                   fullWidth
                   variant="outlined"
                   startIcon={<AssessmentIcon />}
-                  onClick={() => navigate('/lms/admin/reports')}
+                  onClick={() => navigate('/lms/admin/reporting')}
                   sx={{
                     borderColor: colors.gray[300],
                     color: colors.gray[700],
@@ -694,4 +694,3 @@ const TrainingManagerDashboard: React.FC = () => {
 }
 
 export default TrainingManagerDashboard
-// @ts-nocheck

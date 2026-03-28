@@ -43,28 +43,42 @@ const LmsRoutes = (role: string[]) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['admin', 'employee', 'client']}
+            roles={['*']}
           />
         }
       >
         <Route path='lms' element={<LmsDashboard />} />
-        <Route path='lms/admin' element={<LmsAdmin />} />
         <Route path='lms/employee' element={<LmsEmployee />} />
         <Route path='lms/client' element={<LmsClient />} />
+        <Route path='lms/course/:courseId' element={<LmsCourseView />} />
+        <Route
+          path='lms/course/:courseId/preview'
+          element={<LmsCoursePreview />}
+        />
+        <Route path='lms/certificate/:certificateId' element={<LmsCertificateView />} />
+        <Route path='lms/certificates' element={<LmsCertificateView />} />
+      </Route>
+
+      <Route
+        element={
+          <ProtectedRoute
+            isAuthenticated={localStorage.getItem('accessToken') !== null}
+            userRole={role}
+            roles={['admin', 'Training Manager', 'training_manager']}
+          />
+        }
+      >
+        <Route path='lms/admin' element={<LmsAdmin />} />
         <Route path='lms/admin/courses' element={<LmsCourseManagement />} />
         <Route
           path='lms/admin/courses/:courseId/content'
           element={<LmsCourseContentEditor />}
         />
         <Route path='lms/admin/dashboard' element={<LmsCourseDashboard />} />
-        <Route path='lms/course/:courseId' element={<LmsCourseView />} />
-        <Route
-          path='lms/course/:courseId/preview'
-          element={<LmsCoursePreview />}
-        />
         <Route path='lms/admin/users' element={<LmsUserManagement />} />
         <Route path='lms/admin/analytics' element={<LmsAnalytics />} />
         <Route path='lms/admin/reporting' element={<LmsReporting />} />
+        <Route path='lms/admin/reports' element={<LmsReporting />} />
         <Route path='lms/admin/courses/:courseId/assignments' element={<LmsCourseAssignments />} />
         <Route path='lms/admin/quiz-management' element={<LmsQuizManagement />} />
         <Route path='lms/admin/question-bank' element={<LmsQuestionBank />} />
@@ -73,8 +87,6 @@ const LmsRoutes = (role: string[]) => {
         <Route path='lms/admin/assignments' element={<LmsCourseAssignmentInterface />} />
         <Route path='lms/admin/compliance' element={<LmsComplianceTracker />} />
         <Route path='lms/admin/certificate-templates' element={<LmsCertificateTemplates />} />
-        <Route path='lms/certificate/:certificateId' element={<LmsCertificateView />} />
-        <Route path='lms/certificates' element={<LmsCertificateView />} />
         <Route path='lms/admin/jobs' element={<LmsJobManagement />} />
       </Route>
     </>

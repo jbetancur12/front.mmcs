@@ -13,6 +13,8 @@ export interface UserData {
   nombre: string
   email: string
   rol: string[]
+  userType?: 'internal' | 'client'
+  lmsOnly?: boolean
   customer: {
     id: number
     nombre: string
@@ -25,6 +27,8 @@ export const userStore = atom<UserData>({
   nombre: '',
   email: '',
   rol: [''],
+  userType: 'internal',
+  lmsOnly: false,
   customer: {
     id: 0,
     nombre: '',

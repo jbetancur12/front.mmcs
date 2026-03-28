@@ -285,7 +285,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                 component='h1'
                 sx={{ fontWeight: 'bold', color: 'text.primary' }}
               >
-                Cursos Públicos
+                Mi Aprendizaje
               </Typography>
               <Typography variant='body1' color='text.secondary'>
                 Bienvenido, {currentUser.name}
