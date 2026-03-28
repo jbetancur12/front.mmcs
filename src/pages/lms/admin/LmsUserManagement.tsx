@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Alert,
   Box,
@@ -25,6 +25,7 @@ import {
   TableCell,
   TableContainer,
   TableHead,
+  TablePagination,
   TableRow,
   TextField,
   Typography
@@ -60,6 +61,24 @@ type LmsUser = {
   customerName: string | null
   roles: string[]
   lmsOnly: boolean
+}
+
+type LmsUsersSummary = {
+  totalVisible: number
+  totalFiltered: number
+  lmsOnly: number
+  clients: number
+  inactive: number
+}
+
+type LmsUsersResponse = {
+  data: LmsUser[]
+  summary: LmsUsersSummary
+  pagination: {
+    total: number
+    limit: number
+    offset: number
+  }
 }
 
 type LmsUserOptions = {
@@ -130,6 +149,8 @@ const LmsUserManagement: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<LmsUser | null>(null)
   const [form, setForm] = useState<LmsUserForm>(emptyForm)
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -144,8 +165,8 @@ const LmsUserManagement: React.FC = () => {
     }
   )
 
-  const { data: usersData, isLoading } = useQuery<LmsUser[]>(
-    ['lms-users', userTypeFilter, lmsOnlyFilter, activeFilter, search],
+  const { data: usersData, isLoading } = useQuery<LmsUsersResponse>(
+    ['lms-users', userTypeFilter, lmsOnlyFilter, activeFilter, search, page, rowsPerPage],
     async () => {
       const response = await axiosPrivate.get('/lms/users', {
         params: {
@@ -154,16 +175,40 @@ const LmsUserManagement: React.FC = () => {
             lmsOnlyFilter === 'all' ? undefined : lmsOnlyFilter === 'only',
           active:
             activeFilter === 'all' ? undefined : activeFilter === 'active',
-          search: search || undefined
+          search: search || undefined,
+          limit: rowsPerPage,
+          offset: page * rowsPerPage
         }
       })
 
-      return response.data.data || []
+      return {
+        data: response.data.data || [],
+        summary: response.data.summary || {
+          totalVisible: 0,
+          totalFiltered: 0,
+          lmsOnly: 0,
+          clients: 0,
+          inactive: 0
+        },
+        pagination: response.data.pagination || {
+          total: 0,
+          limit: rowsPerPage,
+          offset: page * rowsPerPage
+        }
+      }
     },
     { keepPreviousData: true }
   )
 
-  const users = usersData || []
+  const users = usersData?.data || []
+  const usersSummary = usersData?.summary || {
+    totalVisible: 0,
+    totalFiltered: 0,
+    lmsOnly: 0,
+    clients: 0,
+    inactive: 0
+  }
+  const totalUsers = usersData?.pagination?.total || 0
   const roleOptions = optionsData?.roles || []
   const customerOptions = optionsData?.customers || []
 
@@ -230,14 +275,7 @@ const LmsUserManagement: React.FC = () => {
     }
   )
 
-  const summary = useMemo(() => {
-    const total = users.length
-    const lmsOnly = users.filter((user) => user.lmsOnly).length
-    const clients = users.filter((user) => user.userType === 'client').length
-    const inactive = users.filter((user) => !user.active).length
-
-    return { total, lmsOnly, clients, inactive }
-  }, [users])
+  const summary = useMemo(() => usersSummary, [usersSummary])
 
   const applyUserTypeDefaults = (userType: 'internal' | 'client', currentLmsOnly: boolean) => {
     const defaults = optionsData?.defaults
@@ -354,6 +392,19 @@ const LmsUserManagement: React.FC = () => {
     })
   }
 
+  const handleChangePage = (_event: unknown, nextPage: number) => {
+    setPage(nextPage)
+  }
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
+
+  useEffect(() => {
+    setPage(0)
+  }, [search, userTypeFilter, lmsOnlyFilter, activeFilter])
+
   return (
     <Box sx={{ p: 3 }}>
       <Box
@@ -386,7 +437,8 @@ const LmsUserManagement: React.FC = () => {
       </Alert>
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
-        <Chip label={`${summary.total} usuarios visibles`} variant='outlined' />
+        <Chip label={`${summary.totalFiltered} usuarios filtrados`} variant='outlined' />
+        <Chip label={`${summary.totalVisible} visibles en esta página`} variant='outlined' />
         <Chip label={`${summary.lmsOnly} LMS-only`} variant='outlined' />
         <Chip label={`${summary.clients} clientes`} variant='outlined' />
         <Chip label={`${summary.inactive} inactivos`} variant='outlined' />
@@ -551,6 +603,17 @@ const LmsUserManagement: React.FC = () => {
               </TableBody>
             </Table>
           </TableContainer>
+          <TablePagination
+            component='div'
+            count={totalUsers}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[10, 25, 50]}
+            labelRowsPerPage='Usuarios por página'
+            labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`}
+          />
         </CardContent>
       </Card>
 
