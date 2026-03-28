@@ -110,6 +110,16 @@ const getRoleLabel = (roleName: string, description?: string | null) => {
   return description ? `${baseLabel}: ${description}` : baseLabel
 }
 
+const getCompactRoleLabel = (roleName: string) => {
+  if (roleName === 'Training Manager') return 'Gestor LMS'
+  if (roleName === 'employee') return 'Empleado'
+  if (roleName === 'user') return 'Cliente'
+  if (roleName === 'maintenance_coordinator') return 'Coord. mantenimiento'
+  if (roleName === 'metrologist') return 'Metrólogo'
+  if (roleName === 'technician') return 'Técnico'
+  return roleName
+}
+
 const LmsUserManagement: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
@@ -246,14 +256,44 @@ const LmsUserManagement: React.FC = () => {
     }))
   }
 
-  const handleOpenCreate = () => {
+  const buildCreateForm = (overrides?: Partial<LmsUserForm>) => {
     const defaults = optionsData?.defaults
-    setEditingUser(null)
-    setForm({
+    const fallbackUserType =
+      overrides?.userType
+      || (userTypeFilter === 'client' ? 'client' : 'internal')
+    const fallbackLmsOnly =
+      overrides?.lmsOnly
+      ?? (lmsOnlyFilter === 'only')
+    const baseRoles =
+      fallbackUserType === 'client'
+        ? [...(defaults?.clientRoles || ['user'])]
+        : [...(defaults?.internalRoles || ['employee'])]
+
+    const nextForm: LmsUserForm = {
       ...emptyForm,
       password: defaults?.generatedPassword || '',
-      roles: defaults?.internalRoles || ['employee']
-    })
+      userType: fallbackUserType,
+      lmsOnly: fallbackLmsOnly,
+      roles: baseRoles,
+      ...overrides
+    }
+
+    if (nextForm.userType === 'internal') {
+      nextForm.customerId = ''
+    }
+
+    return nextForm
+  }
+
+  const handleOpenCreate = () => {
+    setEditingUser(null)
+    setForm(buildCreateForm())
+    setDialogOpen(true)
+  }
+
+  const handleOpenCreatePreset = (userType: 'internal' | 'client', lmsOnly: boolean) => {
+    setEditingUser(null)
+    setForm(buildCreateForm({ userType, lmsOnly }))
     setDialogOpen(true)
   }
 
@@ -350,6 +390,15 @@ const LmsUserManagement: React.FC = () => {
         <Chip label={`${summary.lmsOnly} LMS-only`} variant='outlined' />
         <Chip label={`${summary.clients} clientes`} variant='outlined' />
         <Chip label={`${summary.inactive} inactivos`} variant='outlined' />
+      </Box>
+
+      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 3 }}>
+        <Button variant='outlined' size='small' onClick={() => handleOpenCreatePreset('internal', true)}>
+          Nuevo interno solo LMS
+        </Button>
+        <Button variant='outlined' size='small' onClick={() => handleOpenCreatePreset('client', true)}>
+          Nuevo cliente solo LMS
+        </Button>
       </Box>
 
       <Card sx={{ mb: 3 }}>
@@ -458,7 +507,7 @@ const LmsUserManagement: React.FC = () => {
                       <TableCell>
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                           {user.roles.filter((role) => role !== 'lms_only').map((role) => (
-                            <Chip key={role} label={role} size='small' variant='outlined' />
+                            <Chip key={role} label={getCompactRoleLabel(role)} size='small' variant='outlined' />
                           ))}
                         </Box>
                       </TableCell>
