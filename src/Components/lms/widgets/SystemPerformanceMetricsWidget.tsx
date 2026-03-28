@@ -277,7 +277,7 @@ const ProgressMetric: React.FC<ProgressMetricProps> = ({
         <Box>
           <Box display='flex' justifyContent='space-between' mb={1}>
             <Typography variant='body2' color={colors.gray[600]}>
-              Usage
+              Uso
             </Typography>
             <Typography variant='body2' color={colors.gray[600]}>
               {percentage.toFixed(1)}%
@@ -304,7 +304,7 @@ const ProgressMetric: React.FC<ProgressMetricProps> = ({
               display: 'block'
             }}
           >
-              {safeMax.toFixed(1)} {unit} total capacity
+              {safeMax.toFixed(1)} {unit} de capacidad total
             </Typography>
         </Box>
       </Stack>
@@ -370,7 +370,7 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
       <Card sx={{ height: '100%' }}>
         <CardContent>
           <Alert severity='error'>
-            Failed to load system performance metrics. Please try again.
+            No se pudieron cargar las métricas del sistema. Intenta nuevamente.
           </Alert>
         </CardContent>
       </Card>
@@ -440,10 +440,10 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
               variant='h6'
               sx={{ fontWeight: 600, color: colors.gray[900] }}
             >
-              System Performance Metrics
+              Métricas del Sistema
             </Typography>
             <Typography variant='body2' color={colors.gray[600]}>
-              Real-time system health and performance monitoring
+              Salud operativa y rendimiento en tiempo real
             </Typography>
           </Box>
           <Box display='flex' alignItems='center' gap={1}>
@@ -466,7 +466,7 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
                 fontWeight: 600
               }}
             />
-            <Tooltip title='Refresh metrics'>
+            <Tooltip title='Actualizar métricas'>
               <IconButton
                 onClick={handleRefresh}
                 disabled={refreshing}
@@ -490,7 +490,7 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
           {/* Storage Usage */}
           <Grid item xs={12} md={6}>
             <ProgressMetric
-              title='Storage Usage'
+              title='Uso de almacenamiento'
               value={safeMetrics.storageUsage.used}
               max={safeMetrics.storageUsage.total}
               unit='GB'
@@ -502,7 +502,7 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
           {/* Database Connections */}
           <Grid item xs={12} md={6}>
             <ProgressMetric
-              title='Database Connections'
+              title='Conexiones de base de datos'
               value={safeMetrics.databasePerformance.connectionPool}
               max={safeMetrics.databasePerformance.maxConnections}
               unit='connections'
@@ -514,9 +514,9 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
           {/* Video Streaming Stats */}
           <Grid item xs={12} md={6} lg={3}>
             <MetricCard
-              title='Active Streams'
+              title='Streams activos'
               value={safeMetrics.videoStreamingStats.activeStreams}
-              subtitle='Currently streaming'
+              subtitle='Transmitiendo ahora'
               icon={<VideoIcon />}
               color={colors.info}
               status={
@@ -529,9 +529,9 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
 
           <Grid item xs={12} md={6} lg={3}>
             <MetricCard
-              title='Bandwidth Usage'
+              title='Uso de ancho de banda'
               value={formatBandwidth(safeMetrics.videoStreamingStats.bandwidth)}
-              subtitle='Current usage'
+              subtitle='Consumo actual'
               icon={<SpeedIcon />}
               color={colors.primary}
             />
@@ -539,9 +539,9 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
 
           <Grid item xs={12} md={6} lg={3}>
             <MetricCard
-              title='Query Time'
+              title='Tiempo de consulta'
               value={`${safeMetrics.databasePerformance.queryTime}ms`}
-              subtitle='Average response'
+              subtitle='Respuesta promedio'
               icon={<DatabaseIcon />}
               color={colors.success}
               status={
@@ -556,14 +556,14 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
 
           <Grid item xs={12} md={6} lg={3}>
             <MetricCard
-              title='Error Rate'
+              title='Tasa de error'
               value={`${Math.max(
                 safeMetrics.errorRates.api,
                 safeMetrics.errorRates.database,
                 safeMetrics.errorRates.storage,
                 safeMetrics.errorRates.streaming
               ).toFixed(2)}%`}
-              subtitle='System-wide errors'
+              subtitle='Errores globales'
               icon={<ErrorIcon />}
               color={colors.error}
               status={
@@ -605,7 +605,7 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
                   mb: 2
                 }}
               >
-                Error Rate Breakdown
+                Desglose de errores
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={6} md={3}>
@@ -617,7 +617,7 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
                       {safeMetrics.errorRates.api.toFixed(2)}%
                     </Typography>
                     <Typography variant='body2' color={colors.gray[600]}>
-                      API Errors
+                      Errores API
                     </Typography>
                   </Box>
                 </Grid>
@@ -630,7 +630,7 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
                       {safeMetrics.errorRates.database.toFixed(2)}%
                     </Typography>
                     <Typography variant='body2' color={colors.gray[600]}>
-                      Database Errors
+                      Errores BD
                     </Typography>
                   </Box>
                 </Grid>
@@ -643,7 +643,7 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
                       {safeMetrics.errorRates.storage.toFixed(2)}%
                     </Typography>
                     <Typography variant='body2' color={colors.gray[600]}>
-                      Storage Errors
+                      Errores almacenamiento
                     </Typography>
                   </Box>
                 </Grid>
@@ -656,7 +656,7 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
                       {safeMetrics.errorRates.streaming.toFixed(2)}%
                     </Typography>
                     <Typography variant='body2' color={colors.gray[600]}>
-                      Streaming Errors
+                      Errores streaming
                     </Typography>
                   </Box>
                 </Grid>
@@ -674,10 +674,10 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
           gap={2}
         >
           <Typography variant='caption' color={colors.gray[500]}>
-            Last updated: {new Date(safeMetrics.lastUpdated).toLocaleString()}
+            Última actualización: {new Date(safeMetrics.lastUpdated).toLocaleString()}
           </Typography>
           <Typography variant='caption' color={colors.gray[500]}>
-            Auto-refresh every 30 seconds
+            Actualización automática cada 30 segundos
           </Typography>
         </Box>
       </CardContent>

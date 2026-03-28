@@ -231,7 +231,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
       >
         <CardContent sx={{ p: 3 }}>
           <Alert severity='error'>
-            Error loading job queue data. Please try again.
+            Error al cargar la cola de jobs. Intenta nuevamente.
           </Alert>
         </CardContent>
       </Card>
@@ -312,10 +312,10 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                   variant='h6'
                   sx={{ fontWeight: 700, color: colors.gray[800] }}
                 >
-                  Job Queue Monitor
+                  Monitor de Jobs
                 </Typography>
                 <Typography variant='body2' color={colors.gray[500]}>
-                  System job processing status
+                  Estado del procesamiento asíncrono del LMS
                 </Typography>
               </Box>
             </Box>
@@ -362,7 +362,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                   color={colors.gray[500]}
                   sx={{ fontWeight: 500 }}
                 >
-                  Active
+                  Activos
                 </Typography>
               </Box>
             </Grid>
@@ -387,7 +387,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                   color={colors.gray[500]}
                   sx={{ fontWeight: 500 }}
                 >
-                  Completed
+                  Completados
                 </Typography>
               </Box>
             </Grid>
@@ -412,7 +412,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                   color={colors.gray[500]}
                   sx={{ fontWeight: 500 }}
                 >
-                  Failed
+                  Fallidos
                 </Typography>
               </Box>
             </Grid>
@@ -437,7 +437,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                   color={colors.gray[500]}
                   sx={{ fontWeight: 500 }}
                 >
-                  Avg Time
+                  Tiempo prom.
                 </Typography>
               </Box>
             </Grid>
@@ -489,13 +489,13 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Typography variant='body2' color={colors.gray[500]}>
-                      {toNumber(status.active)} active
+                      {toNumber(status.active)} activos
                     </Typography>
                     <Typography variant='body2' color={colors.gray[500]}>
-                      {toNumber(status.successRate).toFixed(1)}% success
+                      {toNumber(status.successRate).toFixed(1)}% éxito
                     </Typography>
                     <Typography variant='body2' color={colors.gray[500]}>
-                      {formatDuration(toNumber(status.averageProcessingTime))} avg
+                      {formatDuration(toNumber(status.averageProcessingTime))} prom.
                     </Typography>
                   </Box>
                 </Box>
@@ -510,7 +510,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                 variant='subtitle1'
                 sx={{ fontWeight: 600, mb: 2, color: colors.gray[800] }}
               >
-                Recent Jobs
+                Jobs recientes
               </Typography>
               <TableContainer
                 component={Paper}
@@ -522,11 +522,11 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                 <Table size='small'>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Progress</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Duration</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Tipo</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Progreso</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Duración</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Acciones</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -596,7 +596,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                         </TableCell>
                         <TableCell>
                           <Box sx={{ display: 'flex', gap: 0.5 }}>
-                            <Tooltip title='View Details'>
+                            <Tooltip title='Ver detalles'>
                               <IconButton
                                 size='small'
                                 onClick={() => handleJobDetails(job)}
@@ -606,7 +606,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                               </IconButton>
                             </Tooltip>
                             {job.status === 'failed' && (
-                              <Tooltip title='Retry Job'>
+                              <Tooltip title='Reintentar job'>
                                 <IconButton
                                   size='small'
                                   onClick={() => handleRetryJob(job.id)}
@@ -619,7 +619,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                             )}
                             {(job.status === 'active' ||
                               job.status === 'pending') && (
-                              <Tooltip title='Cancel Job'>
+                              <Tooltip title='Cancelar job'>
                                 <IconButton
                                   size='small'
                                   onClick={() => handleCancelJob(job.id)}
@@ -658,7 +658,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
             }}
           >
             <Typography variant='h6' sx={{ fontWeight: 700 }}>
-              Job Details
+              Detalle del Job
             </Typography>
             {selectedJob && (
               <Chip
@@ -683,7 +683,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                     color={colors.gray[500]}
                     sx={{ mb: 0.5 }}
                   >
-                    Job ID
+                    ID del job
                   </Typography>
                   <Typography variant='body1' sx={{ fontWeight: 600, mb: 2 }}>
                     {selectedJob.id}
@@ -695,7 +695,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                     color={colors.gray[500]}
                     sx={{ mb: 0.5 }}
                   >
-                    Type
+                    Tipo
                   </Typography>
                   <Typography variant='body1' sx={{ fontWeight: 600, mb: 2 }}>
                     {formatJobType(selectedJob.type)}
@@ -707,7 +707,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                     color={colors.gray[500]}
                     sx={{ mb: 0.5 }}
                   >
-                    Priority
+                    Prioridad
                   </Typography>
                   <Typography variant='body1' sx={{ fontWeight: 600, mb: 2 }}>
                     {selectedJob.priority}
@@ -719,7 +719,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                     color={colors.gray[500]}
                     sx={{ mb: 0.5 }}
                   >
-                    Attempts
+                    Intentos
                   </Typography>
                   <Typography variant='body1' sx={{ fontWeight: 600, mb: 2 }}>
                     {selectedJob.attempts} / {selectedJob.maxAttempts}
@@ -731,7 +731,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                     color={colors.gray[500]}
                     sx={{ mb: 0.5 }}
                   >
-                    Progress
+                    Progreso
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                     <LinearProgress
@@ -774,30 +774,30 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                     color={colors.gray[500]}
                     sx={{ mb: 0.5 }}
                   >
-                    Timestamps
+                    Fechas
                   </Typography>
                   <Box
                     sx={{ bgcolor: colors.gray[50], p: 2, borderRadius: '8px' }}
                   >
                     <Typography variant='body2' sx={{ mb: 1 }}>
-                      <strong>Created:</strong>{' '}
+                      <strong>Creado:</strong>{' '}
                       {new Date(selectedJob.createdAt).toLocaleString()}
                     </Typography>
                     {selectedJob.startedAt && (
                       <Typography variant='body2' sx={{ mb: 1 }}>
-                        <strong>Started:</strong>{' '}
+                        <strong>Iniciado:</strong>{' '}
                         {new Date(selectedJob.startedAt).toLocaleString()}
                       </Typography>
                     )}
                     {selectedJob.completedAt && (
                       <Typography variant='body2' sx={{ mb: 1 }}>
-                        <strong>Completed:</strong>{' '}
+                        <strong>Completado:</strong>{' '}
                         {new Date(selectedJob.completedAt).toLocaleString()}
                       </Typography>
                     )}
                     {selectedJob.failedAt && (
                       <Typography variant='body2'>
-                        <strong>Failed:</strong>{' '}
+                        <strong>Falló:</strong>{' '}
                         {new Date(selectedJob.failedAt).toLocaleString()}
                       </Typography>
                     )}
@@ -808,7 +808,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setJobDetailsOpen(false)}>Close</Button>
+          <Button onClick={() => setJobDetailsOpen(false)}>Cerrar</Button>
           {selectedJob?.status === 'failed' && (
             <Button
               variant='contained'
@@ -823,7 +823,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                 '&:hover': { bgcolor: '#ea580c' }
               }}
             >
-              Retry Job
+              Reintentar job
             </Button>
           )}
         </DialogActions>

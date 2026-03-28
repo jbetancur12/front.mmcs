@@ -90,6 +90,22 @@ const colors = {
   }
 }
 
+const formatActivityTimestamp = (timestamp?: string) => {
+  if (!timestamp) {
+    return 'Reciente'
+  }
+
+  const parsedDate = new Date(timestamp)
+  if (Number.isNaN(parsedDate.getTime())) {
+    return timestamp
+  }
+
+  return parsedDate.toLocaleString('es-CO', {
+    dateStyle: 'short',
+    timeStyle: 'short'
+  })
+}
+
 interface QuickActionCard {
   id: string
   title: string
@@ -1049,7 +1065,7 @@ const LmsAdmin: React.FC = () => {
                             {activity.title}
                           </Typography>
                           <Typography variant='body2' color={colors.gray[500]}>
-                            {activity.user} • {activity.timestamp}
+                            {activity.user} • {formatActivityTimestamp(activity.timestamp)}
                           </Typography>
                         </Box>
                       </Box>
@@ -1176,7 +1192,7 @@ const LmsAdmin: React.FC = () => {
               }}
             >
               <SettingsIcon sx={{ color: colors.primary }} />
-              System Health Monitoring
+              Monitoreo del Sistema
             </Typography>
 
             <Grid container spacing={3}>
