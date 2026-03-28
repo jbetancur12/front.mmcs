@@ -47,14 +47,21 @@ import {
   Assignment as AssignmentIcon,
   EmojiEvents as CertificateIcon
 } from '@mui/icons-material'
-import { useQuery, useMutation, useQueryClient } from 'react-query'
+import { useQueryClient } from 'react-query'
 import { useStore } from '@nanostores/react'
 import { userStore } from 'src/store/userStore'
 import LmsProgressBar from '../shared/LmsProgressBar'
 import LmsVideoPlayer from '../shared/LmsVideoPlayer'
 import LmsQuizPlayer from '../shared/LmsQuizPlayer'
-import { useCourse, useUserCertificates } from '../../../hooks/useLms'
-import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  useCompleteLesson,
+  useCourse,
+  useCourseProgress,
+  useQuizAttempts,
+  useSubmitQuiz,
+  useUserCertificates
+} from '../../../hooks/useLms'
+import { queryKeys } from '../../../config/queryClient'
 import {
   getCourseAudienceLabel,
   normalizeCourseAudience
@@ -131,12 +138,14 @@ const LmsCourseView: React.FC = () => {
   const [lessonStartTime, setLessonStartTime] = useState<Date | null>(null)
 
   const storeUser = useStore(userStore)
-  const axiosPrivate = useAxiosPrivate()
 
   // Obtener curso real de la API
   const { data: courseData, isLoading: isLoadingCourse, error: courseError } = useCourse(
     parseInt(courseId || '0')
   )
+  const { data: progressData } = useCourseProgress(parseInt(courseId || '0'), undefined, {
+    enabled: !!courseId
+  })
   const { data: userCertificates = [] } = useUserCertificates(undefined, {
     enabled: !!courseId
   })
@@ -208,22 +217,12 @@ const LmsCourseView: React.FC = () => {
     }
   }, [courseData])
 
-  // Query para obtener el progreso del usuario
-  const { data: progressData } = useQuery(
-    ['lms-progress', courseId],
-    async () => {
-      const response = await axiosPrivate.get(`/lms/progress/courses/${courseId}`)
-      return response.data
-    },
-    { enabled: !!courseId }
-  )
-
   // Adapt progress data to UserProgress[] format
   const userProgress: UserProgress[] = useMemo(() => {
-    if (!progressData || !progressData.data || !progressData.data.modules) return []
+    if (!progressData || !progressData.modules) return []
 
     const lessons: UserProgress[] = []
-    progressData.data.modules.forEach((module: any) => {
+    progressData.modules.forEach((module: any) => {
       if (module.lessons && Array.isArray(module.lessons)) {
         module.lessons.forEach((lesson: any) => {
           if (lesson.progress && lesson.progress.status === 'completed') {
@@ -242,51 +241,36 @@ const LmsCourseView: React.FC = () => {
   }, [progressData, courseId])
 
   // Mutation para completar lección
-  const updateProgressMutation = useMutation(
-    async (data: { lessonId: number; status: string; timeSpent: number }) => {
-      const response = await axiosPrivate.post(`/lms/progress/lessons/${data.lessonId}/complete`, {
-        timeSpentMinutes: data.timeSpent
-      })
-      return response.data
+  const updateProgressMutation = useCompleteLesson({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries(queryKeys.certificates.user(undefined))
+      setSnackbarMessage('Lección completada correctamente')
+      setShowSnackbar(true)
     },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['lms-progress', courseId])
-        queryClient.invalidateQueries(['lms-courses'])
-        queryClient.invalidateQueries(['certificates'])
-        setSnackbarMessage('Lección completada correctamente')
-        setShowSnackbar(true)
-      },
-      onError: (error: any) => {
-        setSnackbarMessage('Error al completar lección: ' + (error.response?.data?.message || error.message))
-        setShowSnackbar(true)
-      }
+    onError: (error: any) => {
+      setSnackbarMessage(
+        'Error al completar lección: ' +
+          (error.response?.data?.error?.message || error.response?.data?.message || error.message)
+      )
+      setShowSnackbar(true)
     }
-  )
+  })
 
   // Mutation para completar quiz
-  const completeQuizMutation = useMutation(
-    async (data: { quizId: number; answers: any; timeSpent: number }) => {
-      const response = await axiosPrivate.post(`/lms/quizzes/${data.quizId}/attempt`, {
-        answers: data.answers,
-        timeSpent: data.timeSpent
-      })
-      return response.data
+  const completeQuizMutation = useSubmitQuiz({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries(queryKeys.certificates.user(undefined))
+      setSnackbarMessage('Quiz completado correctamente')
+      setShowSnackbar(true)
     },
-    {
-      onSuccess: (_data, variables) => {
-        queryClient.invalidateQueries(['lms-progress', courseId])
-        queryClient.invalidateQueries(['quiz-attempts', variables.quizId])
-        queryClient.invalidateQueries(['certificates'])
-        setSnackbarMessage('Quiz completado correctamente')
-        setShowSnackbar(true)
-      },
-      onError: (error: any) => {
-        setSnackbarMessage('Error al completar quiz: ' + (error.response?.data?.message || error.message))
-        setShowSnackbar(true)
-      }
+    onError: (error: any) => {
+      setSnackbarMessage(
+        'Error al completar quiz: ' +
+          (error.response?.data?.error?.message || error.response?.data?.message || error.message)
+      )
+      setShowSnackbar(true)
     }
-  )
+  })
 
   // Memoize quiz config and empty arrays to prevent infinite loop in LmsQuizPlayer
   const currentQuizConfig = useMemo(() => {
@@ -299,24 +283,16 @@ const LmsCourseView: React.FC = () => {
   }, [course, currentModuleIndex, currentLessonIndex])
 
   // Query para obtener intentos del quiz actual
-  const { data: quizAttemptsData } = useQuery(
-    ['quiz-attempts', currentQuizConfig?.id],
-    async () => {
-      if (!currentQuizConfig?.id) return null
-      const response = await axiosPrivate.get(`/lms/quizzes/${currentQuizConfig.id}/attempts`)
-      return response.data
-    },
-    {
-      enabled: !!currentQuizConfig?.id,
-      staleTime: 30000 // 30 seconds
-    }
-  )
+  const { data: quizAttemptsData } = useQuizAttempts(currentQuizConfig?.id || 0, undefined, {
+    enabled: !!currentQuizConfig?.id,
+    staleTime: 30000
+  })
 
   // Adaptador de intentos del quiz
   const userQuizAttempts = useMemo(() => {
-    if (!quizAttemptsData || !quizAttemptsData.data) return []
+    if (!quizAttemptsData) return []
 
-    return quizAttemptsData.data.map((attempt: any) => ({
+    return quizAttemptsData.map((attempt: any) => ({
       attemptNumber: attempt.attempt_number,
       startedAt: new Date(attempt.started_at),
       answers: attempt.answers,
@@ -401,7 +377,6 @@ const LmsCourseView: React.FC = () => {
   }, [course, currentModuleIndex, currentLessonIndex])
 
   const isLessonCompleted = useCallback((lessonId: number) => {
-    console.log('userProgress:', userProgress, 'checking lessonId:', lessonId)
     return userProgress.some(p => p.lessonId === lessonId && p.status === 'completed')
   }, [userProgress])
 
@@ -508,7 +483,6 @@ const LmsCourseView: React.FC = () => {
     try {
       await updateProgressMutation.mutateAsync({
         lessonId,
-        status: 'completed',
         timeSpent
       })
 
@@ -537,12 +511,14 @@ const LmsCourseView: React.FC = () => {
 
       const result = await completeQuizMutation.mutateAsync({
         quizId: currentQuizConfig.id,
-        answers: formattedAnswers,
-        timeSpent: attempt.timeSpent || 0
+        data: {
+          answers: formattedAnswers,
+          timeSpent: attempt.timeSpent || 0
+        }
       })
 
       // Use backend result to determine if quiz was passed
-      if (result?.data?.results?.passed) {
+      if (result.results.passed) {
         await handleLessonComplete(currentLesson.id)
       }
     } catch (error) {

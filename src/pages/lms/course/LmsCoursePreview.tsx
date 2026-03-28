@@ -33,11 +33,17 @@ import {
   Edit as EditIcon,
   Visibility as ViewIcon
 } from '@mui/icons-material'
-import { useQuery, useQueryClient } from 'react-query'
+import { useQueryClient } from 'react-query'
 import { useStore } from '@nanostores/react'
 import { userStore } from 'src/store/userStore'
 import LmsQuizComponent from '../components/LmsQuizComponent'
-import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  useCompleteLesson,
+  useCoursePreview,
+  useCourseProgress,
+  useSubmitQuiz
+} from 'src/hooks/useLms'
+import { queryKeys } from 'src/config/queryClient'
 import { createSafeHtmlRenderer } from 'src/utils/htmlSanitizer'
 import {
   getCourseAudienceLabel,
@@ -241,49 +247,31 @@ const LmsCoursePreview: React.FC = () => {
 
   const storeUser = useStore(userStore)
   const queryClient = useQueryClient()
-
-  const axiosPrivate = useAxiosPrivate()
-  // Query para obtener el curso con progreso real
-const { data: courseData, isLoading } = useQuery(
-  ['lms-course-preview', courseId, previewMode],
-  async () => {
-    if (previewMode === 'admin') {
-      // En modo admin, obtener estructura completa del curso (preview)
-      const response = await axiosPrivate.get(`/lms/courses/preview/${courseId}`);
-      const previewData = response.data.data;
-
-      console.log('📊 Preview data (admin):', previewData);
-
-      const transformedCourse = transformPreviewDataToCourse(previewData);
-      console.log('✅ Transformed preview course:', transformedCourse);
-
-      return { course: transformedCourse, isPreview: true };
-    } else {
-      // Para modo estudiante, obtener progreso real
-      const response = await axiosPrivate.get(`/lms/progress/courses/${courseId}`);
-      const progressData = response.data.data;
-
-      console.log('📊 Progress data (student):', progressData);
-
-      const transformedCourse = transformProgressDataToCourse(progressData);
-      console.log('✅ Transformed progress course:', transformedCourse);
-
-      return { course: transformedCourse, isPreview: false };
-    }
-  },
-  {
+  const parsedCourseId = parseInt(courseId || '0')
+  const previewQuery = useCoursePreview(parsedCourseId, {
+    enabled: !!courseId && previewMode === 'admin',
     staleTime: 1000 * 60 * 2,
-    refetchOnWindowFocus: false,
-    onError: (err: any) => {
-      console.error('❌ Error fetching course:', err);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error al cargar el curso',
-        text: err.response?.data?.error?.message || 'No se pudo cargar el curso'
-      });
-    }
-  }
-)
+    refetchOnWindowFocus: false
+  })
+  const studentProgressQuery = useCourseProgress(parsedCourseId, undefined, {
+    enabled: !!courseId && previewMode === 'student',
+    staleTime: 1000 * 60 * 2,
+    refetchOnWindowFocus: false
+  })
+  const completeLessonMutation = useCompleteLesson()
+  const submitQuizMutation = useSubmitQuiz()
+
+  const isLoading = previewMode === 'admin'
+    ? previewQuery.isLoading
+    : studentProgressQuery.isLoading
+
+  const courseData = previewMode === 'admin'
+    ? (previewQuery.data
+      ? { course: transformPreviewDataToCourse(previewQuery.data), isPreview: true }
+      : null)
+    : (studentProgressQuery.data
+      ? { course: transformProgressDataToCourse(studentProgressQuery.data), isPreview: false }
+      : null)
 
   useEffect(() => {
     // Verificar que el usuario está autenticado
@@ -359,12 +347,14 @@ const { data: courseData, isLoading } = useQuery(
       });
 
       // Marcar lección como completada en el backend
-      await axiosPrivate.post(`/lms/progress/lessons/${unitId}/complete`, {
-        timeSpentMinutes: 30 // Tiempo estimado por defecto
-      });
+      await completeLessonMutation.mutateAsync({
+        lessonId: unitId,
+        timeSpent: 30
+      })
 
       // Refrescar datos para actualizar el progreso y desbloqueos
-      await queryClient.invalidateQueries(['lms-course-preview', courseId]);
+      await queryClient.invalidateQueries(queryKeys.progress.course(parsedCourseId, undefined))
+      await queryClient.invalidateQueries(queryKeys.certificates.user(undefined))
 
       console.log('✅ Lección completada exitosamente');
 
@@ -769,24 +759,26 @@ const { data: courseData, isLoading } = useQuery(
                             {}
                           )
 
-                          const quizResult = await axiosPrivate.post(
-                            `/lms/quizzes/${currentUnitData.content.quizId}/attempt`,
-                            {
+                          const quizResult = await submitQuizMutation.mutateAsync({
+                            quizId: currentUnitData.content.quizId,
+                            data: {
                               answers: formattedAnswers,
                               timeSpent: 15 * 60
                             }
-                          )
+                          })
 
-                          const passed = quizResult.data?.data?.results?.passed
-                          const backendPercentage = quizResult.data?.data?.results?.percentage ?? percentage
+                          const passed = quizResult.results.passed
+                          const backendPercentage = quizResult.results.percentage ?? percentage
 
                           if (passed) {
-                            await axiosPrivate.post(`/lms/progress/lessons/${currentUnitData.id}/complete`, {
-                              timeSpentMinutes: 15
+                            await completeLessonMutation.mutateAsync({
+                              lessonId: currentUnitData.id,
+                              timeSpent: 15
                             })
                           }
 
-                          await queryClient.invalidateQueries(['lms-course-preview', courseId])
+                          await queryClient.invalidateQueries(queryKeys.progress.course(parsedCourseId, undefined))
+                          await queryClient.invalidateQueries(queryKeys.certificates.user(undefined))
 
                           console.log('✅ Quiz completado exitosamente', {
                             passed,
