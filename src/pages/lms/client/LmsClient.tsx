@@ -306,7 +306,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
       >
         <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 4 }}>
           <Tab label='Mi Progreso' />
-          <Tab label='Explorar Cursos' />
+          <Tab label='Mis Cursos' />
           <Tab label='Mis Certificados' />
         </Tabs>
 
@@ -498,10 +498,10 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                           Aún no tienes cursos con progreso
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          Explora el catálogo y comienza tu aprendizaje
+                          Revisa tus cursos disponibles y comienza tu aprendizaje
                         </Typography>
                         <Button variant="contained" onClick={() => setActiveTab(1)}>
-                          Explorar Cursos
+                          Ver mis cursos
                         </Button>
                       </Box>
                     )}
@@ -511,7 +511,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
 
               <Grid item xs={12} md={4}>
                 <Card sx={{ mb: 2 }}>
-                  <CardHeader title="Para continuar" />
+                  <CardHeader title="Continuar aprendiendo" />
                   <CardContent>
                     {continueCourses.length > 0 ? (
                       <List dense>
@@ -534,7 +534,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                 </Card>
 
                 <Card>
-                  <CardHeader title="Nuevos Cursos" />
+                  <CardHeader title="Cursos disponibles" />
                   <CardContent>
                     {newCourses.length > 0 ? (
                       <List dense>
@@ -762,7 +762,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                   Completa cursos para obtener certificados
                 </Typography>
                 <Button variant="contained" onClick={() => setActiveTab(1)}>
-                  Explorar Cursos
+                  Ver mis cursos
                 </Button>
               </Box>
             )}
@@ -775,4 +775,3 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
 }
 
 export default LmsClient
-// @ts-nocheck
