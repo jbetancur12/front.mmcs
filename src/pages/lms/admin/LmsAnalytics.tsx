@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Alert,
   Box,
@@ -37,6 +37,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { es } from 'date-fns/locale'
+import { useSearchParams } from 'react-router-dom'
 import {
   Area,
   AreaChart,
@@ -55,12 +56,29 @@ import {
   useComprehensiveDashboard,
   useMandatoryTrainingAnalytics
 } from '../../../hooks/useLms'
+import { LmsQuizAnalyticsPanel } from './LmsQuizAnalytics'
 
 type DashboardFilters = {
   startDate?: string
   endDate?: string
   userType?: string
   courseStatus?: string
+}
+
+const ANALYTICS_TABS = [
+  'summary',
+  'courses',
+  'users',
+  'compliance',
+  'quizzes'
+] as const
+
+const getAnalyticsTabIndex = (value: string | null) => {
+  const tabIndex = ANALYTICS_TABS.indexOf(
+    (value as (typeof ANALYTICS_TABS)[number]) || 'summary'
+  )
+
+  return tabIndex >= 0 ? tabIndex : 0
 }
 
 const CHART_COLORS = ['#059669', '#2563eb', '#d97706', '#dc2626']
@@ -90,7 +108,10 @@ const formatDate = (value?: string | null) => {
 }
 
 const LmsAnalytics: React.FC = () => {
-  const [activeTab, setActiveTab] = useState(0)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [activeTab, setActiveTab] = useState(() =>
+    getAnalyticsTabIndex(searchParams.get('tab'))
+  )
   const [filters, setFilters] = useState<{
     startDate: Date | null
     endDate: Date | null
@@ -138,6 +159,13 @@ const LmsAnalytics: React.FC = () => {
   const assignmentStatus = dashboard?.assignmentStatus || {}
   const recentActivity = Array.isArray(dashboard?.recentActivity) ? dashboard.recentActivity : []
   const generatedAt = dashboard?.generatedAt
+
+  useEffect(() => {
+    const nextTab = getAnalyticsTabIndex(searchParams.get('tab'))
+    if (nextTab !== activeTab) {
+      setActiveTab(nextTab)
+    }
+  }, [activeTab, searchParams])
 
   const completionDistribution = [
     {
@@ -188,6 +216,20 @@ const LmsAnalytics: React.FC = () => {
       `lms-analytics-${new Date().toISOString().split('T')[0]}.csv`,
       toCsv(rows)
     )
+  }
+
+  const handleTabChange = (_: React.SyntheticEvent, value: number) => {
+    setActiveTab(value)
+    const nextParams = new URLSearchParams(searchParams)
+    const tabId = ANALYTICS_TABS[value]
+
+    if (tabId === 'summary') {
+      nextParams.delete('tab')
+    } else {
+      nextParams.set('tab', tabId)
+    }
+
+    setSearchParams(nextParams, { replace: true })
   }
 
   return (
@@ -377,11 +419,12 @@ const LmsAnalytics: React.FC = () => {
               </Grid>
             </Grid>
 
-            <Tabs value={activeTab} onChange={(_, value) => setActiveTab(value)} sx={{ mb: 3 }}>
+            <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 3 }}>
               <Tab label='Resumen' />
               <Tab label='Cursos' />
               <Tab label='Usuarios' />
               <Tab label='Cumplimiento' />
+              <Tab label='Quizzes' />
             </Tabs>
 
             {activeTab === 0 ? (
@@ -670,6 +713,8 @@ const LmsAnalytics: React.FC = () => {
                 </Grid>
               </Grid>
             ) : null}
+
+            {activeTab === 4 ? <LmsQuizAnalyticsPanel /> : null}
           </>
         )}
       </Box>

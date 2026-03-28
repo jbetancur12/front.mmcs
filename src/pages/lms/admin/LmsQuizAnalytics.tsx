@@ -29,7 +29,7 @@ import {
   Quiz as QuizIcon,
   Timer as TimerIcon
 } from '@mui/icons-material'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { useQuery } from 'react-query'
 import quizService from '../../../services/quizService'
 import { useManageableQuizzes } from './shared/useManageableQuizzes'
@@ -50,7 +50,7 @@ const getQuestionTypeLabel = (type: string) => {
   }
 }
 
-const LmsQuizAnalytics: React.FC = () => {
+export const LmsQuizAnalyticsPanel: React.FC = () => {
   const navigate = useNavigate()
   const [selectedQuizId, setSelectedQuizId] = useState<number | ''>('')
 
@@ -312,5 +312,9 @@ const LmsQuizAnalytics: React.FC = () => {
     </Box>
   )
 }
+
+const LmsQuizAnalytics: React.FC = () => (
+  <Navigate to='/lms/admin/analytics?tab=quizzes' replace />
+)
 
 export default LmsQuizAnalytics
