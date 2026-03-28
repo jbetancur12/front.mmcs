@@ -24,7 +24,8 @@ import {
   InputAdornment,
   Tooltip,
   Avatar,
-  LinearProgress
+  LinearProgress,
+  Snackbar
 } from '@mui/material'
 import {
   Download as DownloadIcon,
@@ -39,8 +40,6 @@ import {
   Person as PersonIcon,
   Link as LinkIcon,
   Email as EmailIcon,
-  LinkedIn as LinkedInIcon,
-  WhatsApp as WhatsAppIcon,
   Close as CloseIcon,
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon
@@ -108,6 +107,11 @@ const LmsCertificateView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [viewMode] = useState<'single' | 'gallery'>(certificateId ? 'single' : 'gallery')
   const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null)
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error'
+  })
 
   // Fetch user certificates or single certificate
   const { data: userCertificatesData, isLoading: isLoadingCertificates } = useUserCertificates()
@@ -134,7 +138,11 @@ const LmsCertificateView: React.FC = () => {
       await downloadCertificateMutation.mutateAsync(certificateId)
     } catch (error) {
       console.error('Error downloading certificate:', error)
-      alert('Error al descargar el certificado')
+      setSnackbar({
+        open: true,
+        message: 'No se pudo descargar el certificado.',
+        severity: 'error'
+      })
     }
   }
 
@@ -198,9 +206,21 @@ const LmsCertificateView: React.FC = () => {
     {
       name: 'Copiar enlace',
       icon: <LinkIcon />,
-      action: () => {
-        navigator.clipboard.writeText(certificate?.verification_url || '')
-        alert('Enlace copiado al portapapeles')
+      action: async () => {
+        try {
+          await navigator.clipboard.writeText(certificate?.verification_url || '')
+          setSnackbar({
+            open: true,
+            message: 'Enlace de verificación copiado.',
+            severity: 'success'
+          })
+        } catch (error) {
+          setSnackbar({
+            open: true,
+            message: 'No se pudo copiar el enlace.',
+            severity: 'error'
+          })
+        }
       }
     },
     {
@@ -210,23 +230,6 @@ const LmsCertificateView: React.FC = () => {
         const subject = `Mi certificado: ${certificate?.course_name}`
         const body = `He completado el curso "${certificate?.course_name}" y obtenido mi certificado. Puedes verificarlo en: ${certificate?.verification_url}`
         window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)
-      }
-    },
-    {
-      name: 'LinkedIn',
-      icon: <LinkedInIcon />,
-      action: () => {
-        const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(certificate?.verification_url || '')}`
-        window.open(url, '_blank')
-      }
-    },
-    {
-      name: 'WhatsApp',
-      icon: <WhatsAppIcon />,
-      action: () => {
-        const text = `He completado el curso "${certificate?.course_name}" y obtenido mi certificado. Puedes verificarlo en: ${certificate?.verification_url}`
-        const url = `https://wa.me/?text=${encodeURIComponent(text)}`
-        window.open(url, '_blank')
       }
     }
   ]
@@ -511,7 +514,8 @@ const LmsCertificateView: React.FC = () => {
         <DialogContent>
           <Alert severity="info" sx={{ mb: 3 }}>
             <Typography variant="body2">
-              Comparte tu certificado con otros para demostrar tu logro académico.
+              Comparte el enlace de verificación o envíalo por correo cuando necesites validar tu
+              certificado con otra persona.
             </Typography>
           </Alert>
 
@@ -527,7 +531,7 @@ const LmsCertificateView: React.FC = () => {
           </Box>
 
           <Typography variant="subtitle2" gutterBottom>
-            Compartir en:
+            Opciones disponibles:
           </Typography>
           <Grid container spacing={2}>
             {shareOptions.map((option) => (
@@ -691,9 +695,22 @@ const LmsCertificateView: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar((current) => ({ ...current, open: false }))}
+      >
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar((current) => ({ ...current, open: false }))}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }
 
 export default LmsCertificateView
-// @ts-nocheck
