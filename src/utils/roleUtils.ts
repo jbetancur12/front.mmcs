@@ -22,7 +22,6 @@ export interface RolePermissions {
   canManageRoles: boolean
   canViewAnalytics: boolean
   canManageCertificates: boolean
-  canAccessJobQueue: boolean
   scopeRestrictions?: {
     departmentOnly?: boolean
     coursesOnly?: boolean
@@ -43,8 +42,7 @@ export const ROLE_PERMISSIONS: Record<LMSRole, RolePermissions> = {
     canGenerateReports: true,
     canManageRoles: true,
     canViewAnalytics: true,
-    canManageCertificates: true,
-    canAccessJobQueue: true
+    canManageCertificates: true
   },
   training_manager: {
     canViewAllCourses: true,
@@ -58,7 +56,6 @@ export const ROLE_PERMISSIONS: Record<LMSRole, RolePermissions> = {
     canManageRoles: false,
     canViewAnalytics: true,
     canManageCertificates: true,
-    canAccessJobQueue: false,
     scopeRestrictions: {
       coursesOnly: true,
       usersOnly: true
@@ -75,8 +72,7 @@ export const ROLE_PERMISSIONS: Record<LMSRole, RolePermissions> = {
     canGenerateReports: false,
     canManageRoles: false,
     canViewAnalytics: false,
-    canManageCertificates: false,
-    canAccessJobQueue: false
+    canManageCertificates: false
   }
 }
 
@@ -148,8 +144,6 @@ export const canAccessFeature = (userRole: LMSRole, feature: string): boolean =>
       return permissions.canViewAllUsers
     case 'system-health':
       return permissions.canViewSystemHealth
-    case 'job-queue':
-      return permissions.canAccessJobQueue
     case 'analytics':
       return permissions.canViewAnalytics
     case 'reports':
@@ -183,8 +177,6 @@ export const getFilteredQuickActions = (userRole: LMSRole, allActions: any[]) =>
         return permissions.canGenerateReports
       case 'certificates':
         return permissions.canManageCertificates
-      case 'jobs':
-        return permissions.canAccessJobQueue
       default:
         return true // Allow by default for unknown actions
     }
@@ -241,15 +233,6 @@ export const getRoleBasedNavigation = (userRole: LMSRole) => {
       label: 'Certificados',
       path: '/lms/admin/certificate-templates',
       icon: 'CertificateIcon'
-    })
-  }
-  
-  if (permissions.canAccessJobQueue) {
-    navigation.push({
-      id: 'jobs',
-      label: 'Sistema Jobs',
-      path: '/lms/admin/jobs',
-      icon: 'SettingsIcon'
     })
   }
   
