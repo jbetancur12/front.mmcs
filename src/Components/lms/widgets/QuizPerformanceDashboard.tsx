@@ -158,10 +158,7 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
   loading = false,
   error,
   onViewDetails,
-  onQuestionClick,
-  scope = 'admin',
-  userRole,
-  department
+  onQuestionClick
 }) => {
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [activeTab, setActiveTab] = useState(0)

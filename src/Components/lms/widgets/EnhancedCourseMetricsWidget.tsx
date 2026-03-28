@@ -152,7 +152,6 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
   loading = false,
   error,
   scope = 'admin',
-  userRole,
   department,
   onCourseClick,
   onViewAll,

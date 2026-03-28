@@ -23,20 +23,7 @@ import {
   FormControlLabel,
   Tabs,
   Tab,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Divider,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  LinearProgress,
-  Tooltip,
-  Badge,
   CircularProgress,
   RadioGroup,
   Radio,
@@ -48,21 +35,14 @@ import {
   Delete as DeleteIcon,
   DragIndicator as DragIcon,
   Help as HelpIcon,
-  CheckCircle as CheckIcon,
   RadioButtonChecked as RadioIcon,
   CheckBox as CheckboxIcon,
   ToggleOn as ToggleIcon,
   Preview as PreviewIcon,
   Save as SaveIcon,
-  ContentCopy as CopyIcon,
   Analytics as AnalyticsIcon,
-  ExpandMore as ExpandMoreIcon,
-  Timer as TimerIcon,
-  Shuffle as ShuffleIcon,
-  Visibility as VisibilityIcon,
   QuestionAnswer as QuestionIcon,
   Assessment as AssessmentIcon,
-  TrendingUp as TrendingUpIcon,
   Warning as WarningIcon
 } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
@@ -103,19 +83,6 @@ interface QuizConfiguration {
   questions: QuizQuestion[]
 }
 
-interface QuizAttemptStats {
-  totalAttempts: number
-  averageScore: number
-  passRate: number
-  averageTimeSpent: number
-  questionStats: {
-    questionId: number
-    correct_answers: number
-    totalAnswers: number
-    averageTime: number
-  }[]
-}
-
 interface TabPanelProps {
   children?: React.ReactNode
   index: number
@@ -142,15 +109,14 @@ interface LmsQuizManagementProps {
   moduleId?: string
   initialQuizId?: number
   onQuizSaved?: (quizId: number) => void
-  embedded?: boolean  // True cuando se usa dentro de un Dialog
+  embedded?: boolean
 }
 
 const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   courseId,
   moduleId,
   initialQuizId,
-  onQuizSaved,
-  embedded = false
+  onQuizSaved
 }) => {
   const queryClient = useQueryClient()
   const axiosPrivate = useAxiosPrivate()
@@ -317,7 +283,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   // ============================================================================
 
   // Fetch question bank from API
-  const { data: questionBankData, isLoading: isLoadingQuestionBank } = useQuery(
+  const { data: questionBankData } = useQuery(
     ['questionBank', searchTerm, filterCategory, filterDifficulty],
     async () => {
       const params = new URLSearchParams()
@@ -455,7 +421,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     }
   )
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)
   }
 

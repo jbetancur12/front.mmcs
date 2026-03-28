@@ -26,7 +26,6 @@ import {
   IconButton,
   Tooltip,
   LinearProgress,
-  Divider,
   Alert,
   Dialog,
   DialogTitle,
@@ -46,11 +45,7 @@ import {
   Star as StarIcon,
   Refresh as RefreshIcon,
   Download as DownloadIcon,
-  FilterList as FilterIcon,
-  DateRange as DateRangeIcon,
   BarChart as BarChartIcon,
-  PieChart as PieChartIcon,
-  Timeline as TimelineIcon,
   Visibility as VisibilityIcon,
   School as SchoolIcon,
   Assignment as AssignmentIcon,
@@ -191,7 +186,6 @@ const LmsAnalytics: React.FC = () => {
   })
   const [drillDownOpen, setDrillDownOpen] = useState(false)
   const [drillDownData, setDrillDownData] = useState<DrillDownData | null>(null)
-  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null)
   const [lastRefresh, setLastRefresh] = useState(new Date())
 
   // Colors for charts
@@ -414,7 +408,6 @@ const LmsAnalytics: React.FC = () => {
         setLastRefresh(new Date())
         // Trigger data refresh here
       }, 30000) // Refresh every 30 seconds
-      setRefreshInterval(interval)
       
       return () => {
         if (interval) clearInterval(interval)
@@ -457,14 +450,6 @@ const LmsAnalytics: React.FC = () => {
       console.log(`Exporting analytics data in ${format} format`)
       
       // Prepare export data based on current tab and filters
-      const exportData = {
-        tab: activeTab,
-        timeRange,
-        filters,
-        data: analyticsData,
-        generatedAt: new Date().toISOString()
-      }
-
       if (format === 'csv') {
         // Generate CSV data
         let csvContent = ''
@@ -1095,7 +1080,7 @@ const LmsAnalytics: React.FC = () => {
                           fill="#8884d8"
                           dataKey="totalEnrollments"
                         >
-                          {analyticsData.coursePerformance.map((entry, index) => (
+                          {analyticsData.coursePerformance.map((_, index) => (
                             <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
                           ))}
                         </Pie>

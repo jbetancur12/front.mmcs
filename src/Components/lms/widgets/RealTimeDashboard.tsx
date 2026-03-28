@@ -68,6 +68,18 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
   const isConnected = connectionStatus.connected
   const isConnecting = connectionStatus.connecting
   const wsError = connectionStatus.error
+  const wsErrorMessage =
+    typeof wsError === 'string'
+      ? wsError
+      : wsError
+        ? String(wsError)
+        : ''
+  const notificationsErrorMessage =
+    notificationsError instanceof Error
+      ? notificationsError.message
+      : notificationsError
+        ? String(notificationsError)
+        : ''
 
   const handleNotificationClick = (notification: Notification) => {
     // Mark as read
@@ -138,7 +150,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
       )}
 
       {/* Error Alerts */}
-      {(wsError || notificationsError) && (
+      {(wsErrorMessage || notificationsErrorMessage) && (
         <Alert
           severity={isRealTimeEnabled ? 'info' : 'warning'}
           sx={{ mb: 2, borderRadius: 2 }}
@@ -155,9 +167,9 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
           }
         >
           <Stack spacing={1}>
-            {wsError && !isRealTimeEnabled && (
+            {wsErrorMessage && !isRealTimeEnabled && (
               <Typography variant='body2'>
-                Conexión WebSocket no disponible: {wsError}
+                Conexión WebSocket no disponible: {wsErrorMessage}
               </Typography>
             )}
             {isRealTimeEnabled && connectionMethod === 'polling' && (
@@ -166,9 +178,9 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
                 {Math.round(refreshInterval / 1000)}s)
               </Typography>
             )}
-            {notificationsError && (
+            {notificationsErrorMessage && (
               <Typography variant='body2'>
-                Error al cargar notificaciones: {(notificationsError as Error)?.message || 'Error desconocido'}
+                Error al cargar notificaciones: {notificationsErrorMessage}
               </Typography>
             )}
             {!isRealTimeEnabled && (
@@ -189,7 +201,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
             notifications={notifications}
             summary={summary}
             loading={notificationsLoading}
-            error={(notificationsError as Error)?.message}
+            error={notificationsErrorMessage}
             onNotificationClick={handleNotificationClick}
             onMarkAsRead={markAsRead}
             onMarkAllAsRead={markAllAsRead}

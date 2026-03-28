@@ -23,7 +23,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   IconButton,
   Dialog,
   DialogTitle,
@@ -133,7 +132,7 @@ const LmsComplianceTracker: React.FC = () => {
 
     // Deduplicate by userId + courseId (in case backend returns duplicates)
     const seen = new Map<string, ComplianceRecord>()
-    records.forEach(record => {
+    records.forEach((record: ComplianceRecord) => {
       const key = `${record.userId}-${record.courseId}`
       if (!seen.has(key)) {
         seen.set(key, record)

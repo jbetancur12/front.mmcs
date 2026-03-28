@@ -25,52 +25,30 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
   Switch,
   FormControlLabel,
-  Divider,
   Alert,
   LinearProgress,
   IconButton,
   Tooltip,
   Tabs,
-  Tab,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails
+  Tab
 } from '@mui/material'
 import {
   Download as DownloadIcon,
   Schedule as ScheduleIcon,
-  FilterList as FilterIcon,
   Refresh as RefreshIcon,
   Settings as SettingsIcon,
-  Email as EmailIcon,
   PictureAsPdf as PdfIcon,
   TableChart as CsvIcon,
   Assessment as ReportIcon,
-  ExpandMore as ExpandMoreIcon,
-  Save as SaveIcon,
-  Delete as DeleteIcon,
   Share as ShareIcon,
-  Visibility as VisibilityIcon,
-  CalendarToday as CalendarIcon,
-  Group as GroupIcon,
-  School as SchoolIcon,
-  Assignment as AssignmentIcon,
-  CheckCircle as CheckCircleIcon,
-  Warning as WarningIcon,
   GridOn as TableChart
 } from '@mui/icons-material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { es } from 'date-fns/locale'
-import { useQuery } from 'react-query'
-
 interface ReportTemplate {
   id: string
   name: string
@@ -281,22 +259,6 @@ const LmsReporting: React.FC = () => {
       console.log('Downloading report:', report.downloadUrl)
       // window.open(report.downloadUrl, '_blank')
     }
-  }
-
-  const handleSaveTemplate = (template: ReportTemplate) => {
-    if (selectedTemplate) {
-      setReportTemplates(prev => prev.map(t => t.id === template.id ? template : t))
-    } else {
-      setReportTemplates(prev => [...prev, { ...template, id: `template-${Date.now()}`, createdAt: new Date() }])
-    }
-    setTemplateDialogOpen(false)
-    setSelectedTemplate(null)
-  }
-
-  const handleScheduleReport = (template: ReportTemplate, schedule: ScheduleConfig) => {
-    const updatedTemplate = { ...template, schedule }
-    setReportTemplates(prev => prev.map(t => t.id === template.id ? updatedTemplate : t))
-    setScheduleDialogOpen(false)
   }
 
   const formatFileSize = (bytes: number) => {
