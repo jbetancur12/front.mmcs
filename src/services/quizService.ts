@@ -173,6 +173,13 @@ export interface ApiError {
   }
 }
 
+export interface QuizValidationResult {
+  valid: boolean
+  message: string
+  errorCode?: string
+  details?: any
+}
+
 // ============================================================================
 // Quiz Service
 // ============================================================================
@@ -369,13 +376,28 @@ class QuizService {
    * Validate quiz configuration without saving
    * POST /api/lms/quizzes/validate-config
    */
-  async validateQuizConfig(quizData: CreateQuizDTO): Promise<boolean> {
+  async validateQuizConfig(quizData: CreateQuizDTO): Promise<QuizValidationResult> {
     try {
       await axiosPrivate.post(`${API_BASE}/validate-config`, quizData)
-      return true
+      return {
+        valid: true,
+        message: 'La configuración cumple el contrato técnico del backend.'
+      }
     } catch (error: any) {
       console.error('Quiz validation failed:', error)
-      return false
+      if (error.response?.data?.error) {
+        return {
+          valid: false,
+          message: error.response.data.error.message || 'La configuración no es válida.',
+          errorCode: error.response.data.error.code,
+          details: error.response.data.error.details
+        }
+      }
+
+      return {
+        valid: false,
+        message: 'No se pudo validar la configuración del quiz.'
+      }
     }
   }
 
