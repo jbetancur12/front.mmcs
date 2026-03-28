@@ -144,6 +144,8 @@ export interface UserProgress {
   id: number
   user_id: number
   course_id: number
+  lesson_id?: number
+  status?: 'not_started' | 'in_progress' | 'completed'
   progress_percentage: number
   completed_lessons: number[]
   total_lessons: number
@@ -160,13 +162,20 @@ export interface UserProgress {
  */
 export interface Certificate {
   id: number
-  user_id: number
-  course_id: number
-  certificate_number: string
-  issued_at: string
+  user_id?: number
+  course_id?: number
+  certificate_number?: string
+  certificateNumber?: string
+  issued_at?: string
+  issuedAt?: string
   expires_at?: string
-  file_url: string
-  created_at: string
+  file_url?: string
+  pdfPath?: string | null
+  courseTitle?: string
+  courseDescription?: string
+  certificateData?: Record<string, any>
+  verificationUrl?: string
+  created_at?: string
 }
 
 /**
@@ -790,7 +799,7 @@ class LMSService {
    */
   async getCertificate(id: number): Promise<Certificate> {
     const response = await axiosPrivate.get(`${this.baseURL}/certificates/${id}`)
-    return response.data.certificate || response.data
+    return this.unwrapResponse<Certificate>(response.data, 'certificate')
   }
 
   /**
@@ -822,9 +831,9 @@ class LMSService {
    */
   async verifyCertificate(certificateNumber: string): Promise<{ isValid: boolean; certificate?: Certificate; error?: string }> {
     try {
-      const response = await axiosPrivate.get(`${this.baseURL}/certificates/verify/${certificateNumber}`)
+      const response = await axiosPublic.get(`${this.baseURL}/certificates/verify/${certificateNumber}`)
       return {
-        isValid: response.data.success || response.data.isValid,
+        isValid: response.data.data?.valid ?? response.data.valid ?? response.data.success ?? response.data.isValid,
         certificate: response.data.data?.certificate || response.data.certificate
       }
     } catch (error: any) {
