@@ -417,11 +417,11 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
               </Grid>
             </Grid>
 
-            {/* Mis cursos inscritos */}
+            {/* Cursos con progreso */}
             <Grid container spacing={3}>
               <Grid item xs={12} md={8}>
                 <Card>
-                  <CardHeader title='Mis Cursos Inscritos' />
+                  <CardHeader title='Cursos con progreso' />
                   <CardContent>
                     {availableCourses.filter(course => course.progress > 0).length > 0 ? (
                       <List>
@@ -495,10 +495,10 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                       <Box sx={{ textAlign: 'center', py: 4 }}>
                         <BookOpenIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
                         <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
-                          No tienes cursos inscritos
+                          Aún no tienes cursos con progreso
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          Explora nuestros cursos y comienza tu aprendizaje
+                          Explora el catálogo y comienza tu aprendizaje
                         </Typography>
                         <Button variant="contained" onClick={() => setActiveTab(1)}>
                           Explorar Cursos

@@ -31,7 +31,6 @@ import {
   Logout as LogoutIcon,
   Warning as WarningIcon,
   Assignment as AssignmentIcon,
-  Star as StarIcon,
   PlayArrow as PlayArrowIcon,
   EmojiEvents as AwardIcon,
   Error as ErrorIcon,
@@ -150,7 +149,6 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         category: getCourseAudienceLabel(course.audience),
         instructor: course.creator?.nombre || 'Instructor',
         duration: `${totalLessons} lecciones`,
-        rating: 4.5,
         earnedCertificate,
         deadline,
         daysUntilDeadline,
@@ -734,22 +732,12 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                             {course.instructor}
                           </Typography>
                         </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <StarIcon sx={{ fontSize: 16, color: 'warning.main' }} />
-                          <Typography variant='caption'>{course.rating}</Typography>
-                        </Box>
+                        <Chip label={course.category} size='small' variant='outlined' />
                       </Box>
                       
                       <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
                         {course.description}
                       </Typography>
-                      
-                      <Chip 
-                        label={course.category} 
-                        size="small" 
-                        variant="outlined" 
-                        sx={{ mb: 2 }}
-                      />
                       
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                         <Typography variant='caption' color='text.secondary'>
