@@ -522,15 +522,15 @@ const LmsReporting: React.FC = () => {
           </Typography>
           <Typography variant='body1' color='text.secondary'>
             Esta pantalla ahora usa el backend real para plantillas, reportes recientes y
-            programaciones. La generación/exportación avanzada todavía no se expone aquí hasta
-            cerrar el contrato de archivos del módulo.
+            programaciones. También permite generar reportes rápidos desde las plantillas y
+            descargar los reportes ya completados.
           </Typography>
         </Box>
 
         <Alert severity='info'>
           Disponible hoy: CRUD real de plantillas, listado real de reportes generados y
-          programación real de reportes. Pendiente: builder avanzado de filtros, exportaciones
-          manuales desde esta pantalla y definición final del catálogo de reportes de negocio.
+          programación real de reportes. Pendiente: builder avanzado de filtros y definición
+          final del catálogo de reportes de negocio.
         </Alert>
 
         <Alert severity='success'>
