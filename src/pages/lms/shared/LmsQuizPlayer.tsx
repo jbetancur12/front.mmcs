@@ -553,6 +553,9 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
 
   // Show results
   if (showResults && currentAttempt) {
+    const achievedPercentage = Math.round((currentAttempt.score! / currentAttempt.totalPoints!) * 100)
+    const attemptsRemaining = Math.max(0, quizConfig.maxAttempts - userAttempts.length - 1)
+
     return (
       <Card>
         <CardContent>
@@ -567,13 +570,31 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
               </Typography>
             </Box>
             <Typography variant="h6" color={currentAttempt.passed ? 'success.main' : 'error.main'}>
-              {Math.round((currentAttempt.score! / currentAttempt.totalPoints!) * 100)}% - 
+              {achievedPercentage}% -
               {currentAttempt.passed ? ' ¡Aprobado!' : ' No aprobado'}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Tiempo empleado: {formatTime(currentAttempt.timeSpent)}
             </Typography>
           </Box>
+
+          <Alert severity={currentAttempt.passed ? 'success' : 'warning'} sx={{ mb: 3 }}>
+            <Typography variant="body2">
+              {currentAttempt.passed ? (
+                <>
+                  Superaste el puntaje mínimo de <strong>{quizConfig.passingPercentage}%</strong>.
+                  Vuelve a la lección para continuar con el siguiente paso del curso.
+                </>
+              ) : (
+                <>
+                  Necesitas <strong>{quizConfig.passingPercentage}%</strong> para aprobar.
+                  {attemptsRemaining > 0
+                    ? ` Todavía puedes reintentar ${attemptsRemaining} vez${attemptsRemaining === 1 ? '' : 'es'}.`
+                    : ' Ya no quedan más intentos disponibles en este quiz.'}
+                </>
+              )}
+            </Typography>
+          </Alert>
 
           {quizConfig.showCorrectAnswers && (
             <>

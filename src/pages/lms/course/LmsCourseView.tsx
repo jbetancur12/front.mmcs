@@ -118,7 +118,15 @@ interface UserProgress {
   completedAt?: Date
 }
 
-
+interface QuizOutcomeSummary {
+  passed: boolean
+  percentage: number
+  score: number
+  totalPoints: number
+  passingPercentage: number
+  attemptsRemaining: number
+  completesCourse: boolean
+}
 
 const LmsCourseView: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>()
@@ -134,6 +142,7 @@ const LmsCourseView: React.FC = () => {
   const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set([0]))
   const [showCompletionDialog, setShowCompletionDialog] = useState(false)
   const [lessonStartTime, setLessonStartTime] = useState<Date | null>(null)
+  const [latestQuizOutcome, setLatestQuizOutcome] = useState<QuizOutcomeSummary | null>(null)
 
   const storeUser = useStore(userStore)
 
@@ -491,6 +500,7 @@ const LmsCourseView: React.FC = () => {
   useEffect(() => {
     // Start lesson timer
     setLessonStartTime(new Date())
+    setLatestQuizOutcome(null)
   }, [currentModuleIndex, currentLessonIndex])
 
   useEffect(() => {
@@ -536,6 +546,25 @@ const LmsCourseView: React.FC = () => {
         }
       })
 
+      const allLessons = getAllLessons()
+      const completedLessonsCount = allLessons.filter((lesson) => isLessonCompleted(lesson.id)).length
+      const completesCourse =
+        !isLessonCompleted(currentLesson.id) &&
+        completedLessonsCount + 1 >= allLessons.length
+
+      setLatestQuizOutcome({
+        passed: result.results.passed,
+        percentage: result.results.percentage,
+        score: result.results.score,
+        totalPoints: result.results.totalPoints,
+        passingPercentage: currentQuizConfig.passingPercentage,
+        attemptsRemaining: Math.max(
+          0,
+          (currentQuizConfig.maxAttempts || 0) - (userQuizAttempts.length + 1)
+        ),
+        completesCourse
+      })
+
       // Use backend result to determine if quiz was passed
       if (result.results.passed) {
         await handleLessonComplete(currentLesson.id)
@@ -543,7 +572,17 @@ const LmsCourseView: React.FC = () => {
     } catch (error) {
       console.error('Error completing quiz:', error)
     }
-  }, [currentQuizConfig, course, currentModuleIndex, currentLessonIndex, completeQuizMutation, handleLessonComplete])
+  }, [
+    currentQuizConfig,
+    course,
+    currentModuleIndex,
+    currentLessonIndex,
+    completeQuizMutation,
+    handleLessonComplete,
+    userQuizAttempts.length,
+    getAllLessons,
+    isLessonCompleted
+  ])
 
   const handleNavigateToLesson = useCallback((moduleIndex: number, lessonIndex: number) => {
     if (isLessonUnlocked(moduleIndex, lessonIndex)) {
@@ -982,12 +1021,76 @@ const LmsCourseView: React.FC = () => {
                       </Button>
                     )}
                     {course.hasCertificate && !hasGeneratedCertificate && (
-                      <Chip
-                        label="Generando certificado..."
-                        color="success"
-                        size="small"
-                        sx={{ ml: 2, mt: { xs: 2, sm: 0 } }}
-                      />
+                      <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                        <Chip
+                          label="Generando certificado..."
+                          color="success"
+                          size="small"
+                        />
+                        <Button
+                          variant="text"
+                          color="success"
+                          size="small"
+                          onClick={() => navigate('/lms/certificates')}
+                        >
+                          Ir a mis certificados
+                        </Button>
+                      </Box>
+                    )}
+                  </Alert>
+                ) : currentLesson.type === 'quiz' && latestQuizOutcome ? (
+                  <Alert
+                    severity={latestQuizOutcome.passed ? 'success' : 'warning'}
+                    sx={{ mb: 3 }}
+                    action={
+                      latestQuizOutcome.passed ? (
+                        latestQuizOutcome.completesCourse ? (
+                          course.hasCertificate && hasGeneratedCertificate ? (
+                            <Button color="inherit" size="small" onClick={handleOpenCurrentCertificate}>
+                              Abrir certificado
+                            </Button>
+                          ) : (
+                            <Button color="inherit" size="small" onClick={() => navigate('/lms/certificates')}>
+                              Ver certificados
+                            </Button>
+                          )
+                        ) : nextUnlockedLesson ? (
+                          <Button color="inherit" size="small" onClick={handleNextLesson}>
+                            Continuar
+                          </Button>
+                        ) : undefined
+                      ) : undefined
+                    }
+                  >
+                    <AlertTitle>
+                      {latestQuizOutcome.passed ? 'Quiz aprobado' : 'Aún no alcanzas el puntaje mínimo'}
+                    </AlertTitle>
+                    {latestQuizOutcome.passed ? (
+                      latestQuizOutcome.completesCourse ? (
+                        <>
+                          Obtuviste <strong>{latestQuizOutcome.percentage}%</strong> y con eso completaste el curso.
+                          {course.hasCertificate
+                            ? hasGeneratedCertificate
+                              ? ' Tu certificado ya está disponible.'
+                              : ' Tu certificado se está preparando.'
+                            : ' Ya puedes revisar tu progreso final.'}
+                        </>
+                      ) : (
+                        <>
+                          Obtuviste <strong>{latestQuizOutcome.percentage}%</strong> y ya puedes seguir con
+                          {' '}
+                          <strong>{nextUnlockedLesson?.lesson.title || 'la siguiente lección'}</strong>.
+                        </>
+                      )
+                    ) : (
+                      <>
+                        Lograste <strong>{latestQuizOutcome.percentage}%</strong> y necesitas
+                        {' '}
+                        <strong>{latestQuizOutcome.passingPercentage}%</strong> para aprobar.
+                        {latestQuizOutcome.attemptsRemaining > 0
+                          ? ` Aún te quedan ${latestQuizOutcome.attemptsRemaining} intento${latestQuizOutcome.attemptsRemaining === 1 ? '' : 's'}.`
+                          : ' Ya no quedan intentos disponibles para esta evaluación.'}
+                      </>
                     )}
                   </Alert>
                 ) : currentLessonCompleted && nextUnlockedLesson ? (
@@ -1164,14 +1267,19 @@ const LmsCourseView: React.FC = () => {
           <Typography variant="body1" gutterBottom>
             Has completado exitosamente el curso "{course.title}".
           </Typography>
-          {course.hasCertificate && (
+          {course.hasCertificate && hasGeneratedCertificate && (
             <Typography variant="body2" color="text.secondary">
               Tu certificado está listo para descargar.
             </Typography>
           )}
+          {course.hasCertificate && !hasGeneratedCertificate && (
+            <Typography variant="body2" color="text.secondary">
+              Tu certificado se está generando y aparecerá en la sección de certificados en unos momentos.
+            </Typography>
+          )}
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
-          {course.hasCertificate && (
+          {course.hasCertificate && hasGeneratedCertificate && (
             <Button
               variant="contained"
               color="success"
@@ -1181,6 +1289,16 @@ const LmsCourseView: React.FC = () => {
               onClick={handleOpenCurrentCertificate}
             >
               Ver Certificado
+            </Button>
+          )}
+          {course.hasCertificate && !hasGeneratedCertificate && (
+            <Button
+              variant="contained"
+              color="success"
+              sx={{ mr: 1 }}
+              onClick={() => navigate('/lms/certificates')}
+            >
+              Ir a mis certificados
             </Button>
           )}
           <Button
