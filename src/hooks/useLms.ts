@@ -1586,6 +1586,8 @@ export const useTriggerManualReminders = (
         queryClient.invalidateQueries(['analytics', 'reminder-analytics'])
         queryClient.invalidateQueries(['analytics', 'pending-notifications'])
         queryClient.invalidateQueries(['analytics', 'mandatory-training-analytics'])
+        queryClient.invalidateQueries(['analytics', 'mandatory-training'])
+        queryClient.invalidateQueries(queryKeys.assignments.all)
 
         Toast.fire({
           icon: 'success',

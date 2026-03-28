@@ -58,7 +58,8 @@ import {
   Close as CloseIcon,
   School as SchoolIcon
 } from '@mui/icons-material'
-import { useMandatoryTrainingStatus } from '../../../hooks/useLms'
+import { useMandatoryTrainingStatus, useTriggerManualReminders } from '../../../hooks/useLms'
+import { useNavigate } from 'react-router-dom'
 
 interface ComplianceRecord {
   id: number
@@ -86,6 +87,7 @@ interface ComplianceAlert {
 }
 
 const LmsComplianceTracker: React.FC = () => {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState(0)
   const [selectedRecord, setSelectedRecord] = useState<ComplianceRecord | null>(null)
   const [openDialog, setOpenDialog] = useState(false)
@@ -106,6 +108,7 @@ const LmsComplianceTracker: React.FC = () => {
   const { data: trainingData, isLoading, error } = useMandatoryTrainingStatus({
     includeCompleted: true
   })
+  const triggerManualRemindersMutation = useTriggerManualReminders()
 
   // Transform API data to component format
   const complianceRecords = useMemo(() => {
@@ -214,8 +217,17 @@ const LmsComplianceTracker: React.FC = () => {
   }
 
   const handleSendReminderConfirm = () => {
-    // Lógica para enviar recordatorio
-    console.log('Sending reminder to:', selectedRecord?.userEmail, 'Message:', reminderMessage)
+    if (!selectedRecord?.id) {
+      setOpenDialog(false)
+      setReminderMessage('')
+      setSelectedRecord(null)
+      return
+    }
+
+    triggerManualRemindersMutation.mutate({
+      assignmentIds: [selectedRecord.id],
+      customMessage: reminderMessage.trim() || undefined
+    })
     setOpenDialog(false)
     setReminderMessage('')
     setSelectedRecord(null)
@@ -1297,7 +1309,7 @@ const LmsComplianceTracker: React.FC = () => {
             startIcon={<SchoolIcon />}
             onClick={() => {
               if (detailsRecord) {
-                window.open(`/lms/courses/${detailsRecord.courseId}`, '_blank')
+                navigate(`/lms/course/${detailsRecord.courseId}`)
               }
             }}
           >
