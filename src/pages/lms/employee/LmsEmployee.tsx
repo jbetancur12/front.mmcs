@@ -37,18 +37,24 @@ import {
   Error as ErrorIcon,
   Download as DownloadIcon,
   Visibility as VisibilityIcon,
-  Person as PersonIcon
+  Verified as VerifiedIcon
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../../../store/userStore'
 import LmsNotificationCenter from '../shared/LmsNotificationCenter'
-import { useAvailableCourses, useUserAssignments } from '../../../hooks/useLms'
-import type { Course } from '../../../services/lmsService'
+import { useAvailableCourses, useUserAssignments, useUserCertificates } from '../../../hooks/useLms'
+import type { Certificate, Course } from '../../../services/lmsService'
 import {
   getCourseAudienceLabel,
   getLearningVisibilityLabel
 } from '../../../utils/lmsAudience'
+import {
+  getCourseCompletedLessons,
+  getCourseProgressPercentage,
+  getCourseTimeSpentMinutes,
+  getCourseTotalLessons
+} from '../../../utils/lmsProgress'
 
 interface User {
   id: number
@@ -59,33 +65,6 @@ interface User {
 
 interface EmployeeDashboardProps {
   user?: User
-}
-
-// Helper para calcular el progreso de un curso
-const calculateCourseProgress = (course: Course): number => {
-  // Calcular progreso basado en lecciones completadas
-  const totalLessons = countTotalLessons(course)
-  const completedLessons = countCompletedLessons(course)
-
-  if (totalLessons === 0) return 0
-  return Math.round((completedLessons / totalLessons) * 100)
-}
-
-// Helper para contar lecciones completadas
-const countCompletedLessons = (course: Course): number => {
-  if (!course.userProgress || course.userProgress.length === 0) return 0
-
-  // userProgress es un array de progreso de lecciones
-  return course.userProgress.filter((progress: any) => progress.status === 'completed').length
-}
-
-// Helper para contar total de lecciones
-const countTotalLessons = (course: Course): number => {
-  let total = 0
-  course.modules?.forEach(module => {
-    total += module.lessons?.length || 0
-  })
-  return total
 }
 
 // Helper para calcular días hasta deadline
@@ -105,6 +84,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   // Fetch available courses from API
   const { data: coursesData, isLoading, error } = useAvailableCourses()
   const { data: userAssignments, isLoading: assignmentsLoading, error: assignmentsError } = useUserAssignments()
+  const { data: userCertificates = [] } = useUserCertificates()
 
   // Usar el usuario del store si no se proporciona uno
   const currentUser = user || {
@@ -140,6 +120,9 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
       ...(userAssignments?.mandatory || []),
       ...(userAssignments?.optional || [])
     ]
+    const certificatesByCourseId = new Map(
+      userCertificates.map((certificate: Certificate) => [certificate.course_id, certificate])
+    )
     const assignmentsByCourseId = new Map(
       allAssignments.map((assignment: any) => [assignment.course_id, assignment])
     )
@@ -149,10 +132,11 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     const optional: any[] = []
 
     courses.forEach((course: Course) => {
-      const progress = calculateCourseProgress(course)
-      const totalLessons = countTotalLessons(course)
-      const completedLessons = countCompletedLessons(course)
+      const progress = getCourseProgressPercentage(course)
+      const totalLessons = getCourseTotalLessons(course)
+      const completedLessons = getCourseCompletedLessons(course)
       const assignment = assignmentsByCourseId.get(course.id)
+      const earnedCertificate = certificatesByCourseId.get(course.id)
       const courseIsMandatory = assignment?.course?.is_mandatory ?? course.is_mandatory ?? false
       const deadline = assignment?.deadline
       const daysUntilDeadline = getDaysUntilDeadline(deadline)
@@ -167,6 +151,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         instructor: course.creator?.nombre || 'Instructor',
         duration: `${totalLessons} lecciones`,
         rating: 4.5,
+        earnedCertificate,
         deadline,
         daysUntilDeadline,
         isOverdue
@@ -189,35 +174,22 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
 
     // Calcular estadísticas
     const totalCourses = courses.length
-    const completedCourses = courses.filter((c: Course) => calculateCourseProgress(c) === 100).length
+    const completedCourses = courses.filter((c: Course) => getCourseProgressPercentage(c) === 100).length
     const inProgressCourses = courses.filter((c: Course) => {
-      const prog = calculateCourseProgress(c)
+      const prog = getCourseProgressPercentage(c)
       return prog > 0 && prog < 100
     }).length
 
-    const totalProgress = courses.reduce((sum: number, c: Course) => sum + calculateCourseProgress(c), 0)
+    const totalProgress = courses.reduce((sum: number, c: Course) => sum + getCourseProgressPercentage(c), 0)
     const averageProgress = totalCourses > 0 ? Math.round(totalProgress / totalCourses) : 0
 
     const mandatoryCompleted = mandatory.filter(c => c.progress === 100).length
     const overdueTraining = mandatory.filter(c => c.isOverdue && c.progress < 100).length
 
     // Calcular certificados reales: solo cursos completados que emiten certificado
-    const certificatesEarned = courses.filter((c: Course) => {
-      const isCompleted = calculateCourseProgress(c) === 100
-      const hasCertificate = (c as any).has_certificate === true
-      return isCompleted && hasCertificate
-    }).length
-
-    // Calcular horas reales aprendidas desde userProgress
+    const certificatesEarned = userCertificates.length
     const totalHoursLearned = courses.reduce((totalHours: number, course: Course) => {
-      if (!course.userProgress || course.userProgress.length === 0) return totalHours
-
-      // Sumar time_spent_minutes de todas las lecciones completadas
-      const courseMinutes = course.userProgress.reduce((sum: number, progress: any) => {
-        return sum + (progress.time_spent_minutes || 0)
-      }, 0)
-
-      return totalHours + courseMinutes
+      return totalHours + getCourseTimeSpentMinutes(course)
     }, 0)
 
     // Convertir minutos a horas
@@ -238,7 +210,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         overdueTraining
       }
     }
-  }, [coursesData, userAssignments])
+  }, [coursesData, userAssignments, userCertificates])
 
   const handleLogout = () => {
     localStorage.removeItem('currentUser')
@@ -438,7 +410,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                       component='div'
                       sx={{ fontWeight: 'bold' }}
                     >
-                      {stats.certificatesEarned}
+                            {stats.certificatesEarned}
                     </Typography>
                     <Typography variant='body2' color='text.secondary'>
                       Obtenidos
@@ -808,13 +780,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
             </Box>
 
             {(() => {
-              const completedCoursesWithCertificates = [...mandatoryCourses, ...optionalCourses].filter((course) => {
-                const isCompleted = course.progress === 100
-                const hasCertificate = (course as any).has_certificate === true
-                return isCompleted && hasCertificate
-              })
-
-              if (completedCoursesWithCertificates.length === 0) {
+              if (userCertificates.length === 0) {
                 return (
                   <Box
                     sx={{
@@ -838,8 +804,8 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
 
               return (
                 <Grid container spacing={3}>
-                  {completedCoursesWithCertificates.map((course) => (
-                    <Grid item xs={12} md={6} lg={4} key={course.id}>
+                  {userCertificates.map((certificate: Certificate) => (
+                    <Grid item xs={12} md={6} lg={4} key={certificate.id}>
                       <Card
                         variant='outlined'
                         sx={{
@@ -868,36 +834,30 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                                 sx={{ mb: 0.5, fontWeight: 'bold' }}
                               />
                               <Typography variant='caption' color='text.secondary' display='block'>
-                                Completado {course.completedDate ? new Date(course.completedDate).toLocaleDateString() : 'recientemente'}
+                                Emitido {new Date(certificate.issuedAt || certificate.issued_at || '').toLocaleDateString('es-ES')}
                               </Typography>
                             </Box>
                           </Box>
 
                           <Typography variant='h6' gutterBottom>
-                            {course.title}
+                            {certificate.courseTitle}
                           </Typography>
 
                           <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                            {course.description}
+                            {certificate.courseDescription}
                           </Typography>
 
                           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
                             <Chip
                               size='small'
-                              icon={<PersonIcon />}
-                              label={course.instructor}
-                              variant='outlined'
-                            />
-                            <Chip
-                              size='small'
-                              icon={<ScheduleIcon />}
-                              label={course.duration}
+                              icon={<VerifiedIcon />}
+                              label={certificate.certificateNumber || certificate.certificate_number}
                               variant='outlined'
                             />
                             <Chip
                               size='small'
                               icon={<CheckCircleIcon />}
-                              label={`${course.completedLessons}/${course.totalLessons} lecciones`}
+                              label='Verificado'
                               color='success'
                               variant='outlined'
                             />
@@ -910,16 +870,17 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                             color='warning'
                             startIcon={<DownloadIcon />}
                             fullWidth
-                            onClick={() => {
-                              // TODO: Implement download certificate
-                              window.open(`/lms/certificates/${course.id}/view`, '_blank')
-                            }}
+                            onClick={() => navigate(`/lms/certificate/${certificate.id}`)}
                           >
                             Ver Certificado
                           </Button>
                           <IconButton
                             color='primary'
-                            onClick={() => handleCourseClick(course.id)}
+                            onClick={() => {
+                              if (certificate.course_id) {
+                                handleCourseClick(certificate.course_id)
+                              }
+                            }}
                             title='Ver curso'
                           >
                             <VisibilityIcon />

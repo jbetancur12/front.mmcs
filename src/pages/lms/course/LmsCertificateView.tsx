@@ -131,13 +131,7 @@ const LmsCertificateView: React.FC = () => {
 
   const handleDownloadCertificate = async (certificateId: number) => {
     try {
-      const blob = await downloadCertificateMutation.mutateAsync(certificateId)
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `certificate-${certificateId}.pdf`
-      a.click()
-      window.URL.revokeObjectURL(url)
+      await downloadCertificateMutation.mutateAsync(certificateId)
     } catch (error) {
       console.error('Error downloading certificate:', error)
       alert('Error al descargar el certificado')

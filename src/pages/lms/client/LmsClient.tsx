@@ -44,12 +44,18 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../../../store/userStore'
-import { useAvailableCourses } from '../../../hooks/useLms'
-import type { Course } from '../../../services/lmsService'
+import { useAvailableCourses, useUserCertificates } from '../../../hooks/useLms'
+import type { Certificate, Course } from '../../../services/lmsService'
 import {
   getCourseAudienceLabel,
   getLearningVisibilityLabel
 } from '../../../utils/lmsAudience'
+import {
+  getCourseCompletedLessons,
+  getCourseProgressPercentage,
+  getCourseTimeSpentMinutes,
+  getCourseTotalLessons
+} from '../../../utils/lmsProgress'
 
 interface User {
   id: number
@@ -62,31 +68,6 @@ interface ClientDashboardProps {
   user?: User
 }
 
-// Helper para calcular el progreso de un curso
-const calculateCourseProgress = (course: Course): number => {
-  if (course.userProgress && course.userProgress.length > 0) {
-    return course.userProgress[0].progress_percentage || 0
-  }
-  return 0
-}
-
-// Helper para contar lecciones completadas
-const countCompletedLessons = (course: Course): number => {
-  if (course.userProgress && course.userProgress.length > 0) {
-    return course.userProgress[0].completed_lessons?.length || 0
-  }
-  return 0
-}
-
-// Helper para contar total de lecciones
-const countTotalLessons = (course: Course): number => {
-  let total = 0
-  course.modules?.forEach(module => {
-    total += module.lessons?.length || 0
-  })
-  return total
-}
-
 const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
   const [activeTab, setActiveTab] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
@@ -96,6 +77,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
 
   // Fetch available courses from API
   const { data: coursesData, isLoading, error } = useAvailableCourses()
+  const { data: userCertificates = [] } = useUserCertificates()
 
   // Usar el usuario del store si no se proporciona uno
   const currentUser = user || {
@@ -126,18 +108,26 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
 
     // Extract courses array from response
     const courses = coursesData
+    const certificatesByCourseId = new Map(
+      userCertificates.map((certificate: Certificate) => [
+        certificate.course_id,
+        certificate
+      ])
+    )
 
     // Enriquecer cursos con datos calculados
     const enrichedCourses = courses.map((course: Course) => {
-      const progress = calculateCourseProgress(course)
-      const totalLessons = countTotalLessons(course)
-      const completedLessons = countCompletedLessons(course)
+      const progress = getCourseProgressPercentage(course)
+      const totalLessons = getCourseTotalLessons(course)
+      const completedLessons = getCourseCompletedLessons(course)
+      const earnedCertificate = certificatesByCourseId.get(course.id)
 
       return {
         ...course,
         progress,
         totalLessons,
         completedLessons,
+        earnedCertificate,
         category: getCourseAudienceLabel(course.audience),
         instructor: course.creator?.nombre || 'Instructor',
         duration: `${totalLessons} lecciones`,
@@ -188,14 +178,16 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
         completedCourses,
         inProgressCourses,
         averageProgress,
-        certificatesEarned: completedCourses,
-        totalHoursLearned: Math.round(totalCourses * 3)
+        certificatesEarned: userCertificates.length,
+        totalHoursLearned: Math.round(
+          enrichedCourses.reduce((sum, course) => sum + getCourseTimeSpentMinutes(course), 0) / 60
+        )
       },
       categories: uniqueCategories,
       popularCourses: popular,
       newCourses: newest
     }
-  }, [coursesData])
+  }, [coursesData, userCertificates])
 
   // Filtrar cursos basado en búsqueda y categoría
   const filteredCourses = useMemo(() => {
@@ -488,15 +480,20 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                                   }
                                 />
                                 <Button
-                                  variant={course.progress === 100 ? 'outlined' : 'contained'}
+                                  variant={course.progress === 100 && course.earnedCertificate ? 'outlined' : 'contained'}
                                   size="small"
                                   startIcon={course.progress === 100 ? <AwardIcon /> : <PlayArrowIcon />}
                                   onClick={(e) => {
                                     e.stopPropagation()
+                                    if (course.progress === 100 && course.earnedCertificate) {
+                                      navigate(`/lms/certificate/${course.earnedCertificate.id}`)
+                                      return
+                                    }
+
                                     handleCourseClick(course.id)
                                   }}
                                 >
-                                  {course.progress === 100 ? 'Ver Certificado' : 'Continuar'}
+                                  {course.progress === 100 && course.earnedCertificate ? 'Ver Certificado' : 'Continuar'}
                                 </Button>
                               </ListItem>
                               <Divider />
@@ -720,12 +717,10 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
               </Typography>
             </Box>
 
-            {availableCourses.filter(course => course.progress === 100).length > 0 ? (
+            {userCertificates.length > 0 ? (
               <Grid container spacing={3}>
-                {availableCourses
-                  .filter(course => course.progress === 100)
-                  .map((course) => (
-                    <Grid item xs={12} md={6} lg={4} key={course.id}>
+                {userCertificates.map((certificate: Certificate) => (
+                    <Grid item xs={12} md={6} lg={4} key={certificate.id}>
                       <Card variant='outlined'>
                         <CardContent>
                           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -734,28 +729,23 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                             </Avatar>
                             <Box sx={{ flex: 1 }}>
                               <Typography variant='h6' component='div'>
-                                {course.title}
+                                {certificate.courseTitle}
                               </Typography>
                               <Typography variant='body2' color='text.secondary'>
-                                Completado
+                                Emitido {new Date(certificate.issuedAt || certificate.issued_at || '').toLocaleDateString('es-ES')}
                               </Typography>
                             </Box>
                           </Box>
 
                           <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                            Instructor: {course.instructor}
+                            Certificado N°: {certificate.certificateNumber || certificate.certificate_number}
                           </Typography>
 
                           <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                             <Chip
-                              label={course.category}
+                              label='Certificado'
                               size="small"
                               color="success"
-                            />
-                            <Chip
-                              label={`${course.duration}`}
-                              size="small"
-                              variant="outlined"
                             />
                           </Box>
 
@@ -764,7 +754,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                             size="small"
                             fullWidth
                             startIcon={<AwardIcon />}
-                            onClick={() => handleCourseClick(course.id)}
+                            onClick={() => navigate(`/lms/certificate/${certificate.id}`)}
                           >
                             Ver Certificado
                           </Button>

@@ -55,7 +55,7 @@ import { userStore } from 'src/store/userStore'
 import LmsProgressBar from '../shared/LmsProgressBar'
 import LmsVideoPlayer from '../shared/LmsVideoPlayer'
 import LmsQuizPlayer from '../shared/LmsQuizPlayer'
-import { useCourse } from '../../../hooks/useLms'
+import { useCourse, useUserCertificates } from '../../../hooks/useLms'
 import useAxiosPrivate from '@utils/use-axios-private'
 import {
   getCourseAudienceLabel,
@@ -141,6 +141,9 @@ const LmsCourseView: React.FC = () => {
   const { data: courseData, isLoading: isLoadingCourse, error: courseError } = useCourse(
     parseInt(courseId || '0')
   )
+  const { data: userCertificates = [] } = useUserCertificates(undefined, {
+    enabled: !!courseId
+  })
 
   // Adapter: Convert API data to expected Course interface (memoized to prevent infinite loops)
   const course: Course | null = useMemo(() => {
@@ -256,6 +259,7 @@ const LmsCourseView: React.FC = () => {
       onSuccess: () => {
         queryClient.invalidateQueries(['lms-progress', courseId])
         queryClient.invalidateQueries(['lms-courses'])
+        queryClient.invalidateQueries(['certificates'])
         setSnackbarMessage('Lección completada correctamente')
         setShowSnackbar(true)
       },
@@ -279,6 +283,7 @@ const LmsCourseView: React.FC = () => {
       onSuccess: (_data, variables) => {
         queryClient.invalidateQueries(['lms-progress', courseId])
         queryClient.invalidateQueries(['quiz-attempts', variables.quizId])
+        queryClient.invalidateQueries(['certificates'])
         setSnackbarMessage('Quiz completado correctamente')
         setShowSnackbar(true)
       },
@@ -441,6 +446,25 @@ const LmsCourseView: React.FC = () => {
       percentage: allLessons.length > 0 ? (completedLessons.length / allLessons.length) * 100 : 0
     }
   }, [getAllLessons, isLessonCompleted])
+
+  const currentCourseCertificate = useMemo(() => {
+    const normalizedCourseId = parseInt(courseId || '0')
+
+    return userCertificates.find((certificate: any) => {
+      const certificateCourseId = certificate.course_id ?? certificate.courseId
+      return certificateCourseId === normalizedCourseId
+    }) || null
+  }, [courseId, userCertificates])
+
+  const hasGeneratedCertificate = Boolean(currentCourseCertificate?.id)
+
+  const handleOpenCurrentCertificate = useCallback(() => {
+    if (!currentCourseCertificate?.id) {
+      return
+    }
+
+    navigate(`/lms/certificate/${currentCourseCertificate.id}`)
+  }, [currentCourseCertificate, navigate])
 
   const getModuleProgress = useCallback((moduleIndex: number) => {
     if (!course || !course.modules) return { completed: 0, total: 0, percentage: 0 }
@@ -633,6 +657,12 @@ const LmsCourseView: React.FC = () => {
   const courseProgress = getCourseProgress()
   const nextLesson = getNextLesson()
   const prevLesson = getPreviousLesson()
+
+  useEffect(() => {
+    if (courseProgress.percentage === 100) {
+      setShowCompletionDialog(true)
+    }
+  }, [courseProgress.percentage])
 
   // Sidebar content
   const sidebarContent = (
@@ -880,25 +910,33 @@ const LmsCourseView: React.FC = () => {
             />
           </Box>
 
-          {courseProgress.percentage === 100 && (
-            <Alert severity="success" sx={{ mt: 1 }}>
-              <Typography variant="body2">
-                ¡Felicitaciones! Has completado el curso.
-                {course.hasCertificate && (
-                  <Button
-                    variant="contained"
-                    color="success"
-                    size="small"
-                    startIcon={<CertificateIcon />}
-                    sx={{ ml: 2 }}
-                    onClick={() => window.open('/lms/certificate/1', '_blank')}
-                  >
-                    Ver Certificado
-                  </Button>
+                {courseProgress.percentage === 100 && (
+                  <Alert severity="success" sx={{ mt: 1 }}>
+                    <Typography variant="body2">
+                      ¡Felicitaciones! Has completado el curso.
+                      {course.hasCertificate && hasGeneratedCertificate && (
+                        <Button
+                          variant="contained"
+                          color="success"
+                          size="small"
+                          startIcon={<CertificateIcon />}
+                          sx={{ ml: 2 }}
+                          onClick={handleOpenCurrentCertificate}
+                        >
+                          Ver Certificado
+                        </Button>
+                      )}
+                      {course.hasCertificate && !hasGeneratedCertificate && (
+                        <Chip
+                          label="Generando certificado..."
+                          color="success"
+                          size="small"
+                          sx={{ ml: 2 }}
+                        />
+                      )}
+                    </Typography>
+                  </Alert>
                 )}
-              </Typography>
-            </Alert>
-          )}
         </Paper>
 
         {/* Lesson content */}
@@ -1119,10 +1157,8 @@ const LmsCourseView: React.FC = () => {
               color="success"
               startIcon={<CertificateIcon />}
               sx={{ mr: 1 }}
-              onClick={() => {
-                // Navigate to certificate view - in a real app, this would use the actual certificate ID
-                window.open('/lms/certificate/1', '_blank')
-              }}
+              disabled={!hasGeneratedCertificate}
+              onClick={handleOpenCurrentCertificate}
             >
               Ver Certificado
             </Button>
