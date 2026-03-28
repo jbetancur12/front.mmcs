@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import {
+  Alert,
+  AlertTitle,
   Box,
   Card,
   CardContent,
@@ -341,6 +343,11 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   const courses = coursesResponse?.courses || []
   const assignableCourses = courses.filter((course) => course.audience !== 'client')
   const assignments = (assignmentsResponse?.assignments || []).map(transformAssignment)
+  const assignmentGuidance = [
+    'Revisa primero las asignaciones activas para evitar duplicar reglas o fechas límite.',
+    'Crea nuevas asignaciones solo para cursos internos o compartidos que realmente deban ser obligatorios.',
+    'Usa recordatorios como refuerzo de una regla ya creada, no como sustituto de la asignación.'
+  ]
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)
@@ -484,9 +491,34 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   }
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', p: 3 }}>
-        <Box sx={{ mb: 3 }}>
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', p: 3 }}>
+          <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+            <CardContent>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={8}>
+                  <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
+                    Centro de Asignaciones LMS
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Esta pantalla se enfoca en obligatoriedad y fechas límite de usuarios internos. Los clientes siguen en modo catálogo.
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
+                    <Chip color="primary" icon={<AssignmentIcon />} label={`${assignments.length} activa(s)`} />
+                    <Chip color="warning" icon={<NotificationsIcon />} label="Recordatorios manuales" />
+                  </Box>
+                </Grid>
+              </Grid>
+              <Alert severity="info" sx={{ mt: 2 }}>
+                <AlertTitle>Flujo recomendado</AlertTitle>
+                1. Revisa asignaciones activas. 2. Crea o ajusta la regla. 3. Envía recordatorio solo cuando la fecha límite ya esté clara.
+              </Alert>
+            </CardContent>
+          </Card>
+
+          <Box sx={{ mb: 3 }}>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 1 }}>
             Asignaciones de Cursos
           </Typography>
@@ -501,7 +533,11 @@ const LmsCourseAssignmentInterface: React.FC = () => {
           <Tab label="Notificaciones" />
         </Tabs>
 
-        {activeTab === 0 && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          {assignmentGuidance[activeTab]}
+        </Alert>
+
+          {activeTab === 0 && (
           <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
               <Typography variant="h6">

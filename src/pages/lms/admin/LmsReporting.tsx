@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import {
   Alert,
+  AlertTitle,
   Box,
   Button,
   Card,
@@ -271,6 +272,11 @@ const LmsReporting: React.FC = () => {
     }),
     [templates, scheduledReports, recentReports]
   )
+  const reportingTabGuidance = [
+    'Empieza por plantillas. Aquí defines la estructura base de cada reporte.',
+    'Programa envíos solo cuando la plantilla ya esté clara y tenga destinatarios reales.',
+    'Usa el histórico para validar qué sí generó el backend y qué sigue pendiente.'
+  ]
 
   const handleCreateTemplate = () => {
     setEditingTemplate(null)
@@ -311,6 +317,28 @@ const LmsReporting: React.FC = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Stack spacing={3}>
+        <Card sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+          <CardContent>
+            <Stack spacing={2}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+                <Box>
+                  <Typography variant='h5' sx={{ fontWeight: 700, mb: 0.5 }}>
+                    Centro de Reportes LMS
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    Flujo recomendado: plantillas primero, programaciones después y revisión histórica al final.
+                  </Typography>
+                </Box>
+                <Chip color='info' icon={<SummarizeIcon />} label={`${summary.templates} plantilla(s) listas`} />
+              </Box>
+              <Alert severity='info' icon={<ScheduleIcon />}>
+                <AlertTitle>Uso esperado</AlertTitle>
+                Esta superficie ya trabaja con datos reales, pero sigue limitada a lo que el backend soporta hoy.
+              </Alert>
+            </Stack>
+          </CardContent>
+        </Card>
+
         <Box>
           <Typography variant='h4' component='h1' sx={{ fontWeight: 700, mb: 1 }}>
             Reportes LMS
@@ -367,7 +395,11 @@ const LmsReporting: React.FC = () => {
           <Tab label='Recientes' />
         </Tabs>
 
-        {activeTab === 0 && (
+        <Alert severity='info' sx={{ mt: 2 }}>
+          {reportingTabGuidance[activeTab]}
+        </Alert>
+
+          {activeTab === 0 && (
           <Card>
             <CardContent>
               <Stack direction='row' justifyContent='space-between' alignItems='center' sx={{ mb: 2 }}>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import {
   Box,
+  AlertTitle,
   Card,
   CardContent,
   CardHeader,
@@ -214,6 +215,13 @@ const LmsJobManagement: React.FC = () => {
         return <ScheduleIcon />
     }
   }
+  const jobGuidance = [
+    'Usa el resumen para confirmar si el problema realmente está en jobs antes de intervenir.',
+    'La cola sirve para investigar y recuperar fallos, no para limpiar evidencia demasiado pronto.',
+    'El programador ayuda a verificar si las tareas recurrentes siguen vivas.',
+    'Recordatorios se monitorean aquí, pero su lógica de negocio vive en asignaciones y notificaciones.',
+    'Las acciones manuales son operativas: ejecútalas solo con un objetivo concreto.'
+  ]
 
   if (dashboardLoading) {
     return (
@@ -260,6 +268,31 @@ const LmsJobManagement: React.FC = () => {
       </Paper>
 
       <Box sx={{ maxWidth: 'xl', mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: 4 }}>
+        <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+          <CardContent>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={8}>
+                <Typography variant='h5' sx={{ fontWeight: 700, mb: 0.5 }}>
+                  Centro Operativo de Jobs
+                </Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  Esta pantalla es para soporte y monitoreo técnico, no para el flujo normal de administración académica.
+                </Typography>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
+                  <Chip color='primary' icon={<ScheduleIcon />} label={`${queueStats?.waiting || 0} en cola`} />
+                  <Chip color='error' icon={<ErrorIcon />} label={`${failedJobs?.length || 0} fallidos recientes`} />
+                </Box>
+              </Grid>
+            </Grid>
+            <Alert severity='info' sx={{ mt: 2 }}>
+              <AlertTitle>Cuándo usarlo</AlertTitle>
+              Entra aquí cuando haya síntomas concretos: certificados fallando, recordatorios atascados o tareas automáticas detenidas.
+            </Alert>
+          </CardContent>
+        </Card>
+
         <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 4 }}>
           <Tab label='Resumen' />
           <Tab label='Cola de Jobs' />
@@ -267,6 +300,10 @@ const LmsJobManagement: React.FC = () => {
           <Tab label='Recordatorios' />
           <Tab label='Acciones Manuales' />
         </Tabs>
+
+        <Alert severity='info' sx={{ mb: 3 }}>
+          {jobGuidance[activeTab]}
+        </Alert>
 
         {activeTab === 0 && (
           <Box>
