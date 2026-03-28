@@ -19,6 +19,7 @@ import {
   DialogActions,
   Grid,
   Alert,
+  AlertTitle,
   Switch,
   FormControlLabel,
   Tabs,
@@ -27,7 +28,12 @@ import {
   CircularProgress,
   RadioGroup,
   Radio,
-  Checkbox
+  Checkbox,
+  Divider,
+  Stepper,
+  Step,
+  StepLabel,
+  Stack
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -43,7 +49,9 @@ import {
   Analytics as AnalyticsIcon,
   QuestionAnswer as QuestionIcon,
   Assessment as AssessmentIcon,
-  Warning as WarningIcon
+  Warning as WarningIcon,
+  CheckCircle as CheckCircleIcon,
+  AutoAwesome as AutoAwesomeIcon
 } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -580,10 +588,55 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     return errors
   }
 
+  const quizValidationErrors = validateQuizConfig()
+  const totalPoints = quizConfig.questions.reduce((sum, q) => sum + q.points, 0)
+  const pointsToPass = Math.ceil((totalPoints * quizConfig.passingPercentage) / 100)
+  const hasBasicSetup = Boolean(quizConfig.title.trim())
+  const hasQuestions = quizConfig.questions.length > 0
+  const canPreviewQuiz = hasBasicSetup && hasQuestions
+  const canReviewAnalytics = Boolean(initialQuizId)
+
+  const guidedSteps = [
+    {
+      label: 'Configura el quiz',
+      description: hasBasicSetup
+        ? 'El título ya está listo; puedes afinar reglas e instrucciones.'
+        : 'Define al menos el título y las reglas básicas.',
+      complete: hasBasicSetup,
+      tab: 0
+    },
+    {
+      label: 'Agrega preguntas',
+      description: hasQuestions
+        ? `${quizConfig.questions.length} pregunta(s) agregada(s).`
+        : 'Usa el banco de preguntas o crea una nueva.',
+      complete: hasQuestions,
+      tab: 1
+    },
+    {
+      label: 'Prueba la experiencia',
+      description: canPreviewQuiz
+        ? 'Ya puedes ejecutar una vista previa del quiz.'
+        : 'Necesitas configuración básica y al menos una pregunta.',
+      complete: previewMode || false,
+      tab: 2
+    },
+    {
+      label: 'Guarda y mide resultados',
+      description: canReviewAnalytics
+        ? 'El quiz ya existe y puede mostrar métricas reales.'
+        : 'Primero guarda el quiz para habilitar analíticas.',
+      complete: canReviewAnalytics,
+      tab: 3
+    }
+  ]
+
+  const firstIncompleteStep = guidedSteps.find((step) => !step.complete)
+  const activeGuidedStep = firstIncompleteStep ? guidedSteps.indexOf(firstIncompleteStep) : guidedSteps.length - 1
+
   const handleSaveQuiz = () => {
-    const errors = validateQuizConfig()
-    if (errors.length > 0) {
-      alert('Errores de validación:\n' + errors.join('\n'))
+    if (quizValidationErrors.length > 0) {
+      alert('Errores de validación:\n' + quizValidationErrors.join('\n'))
       return
     }
 
@@ -631,6 +684,85 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
         </Alert>
       )}
 
+      <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+        <CardContent>
+          <Stack spacing={2.5}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+              <Box>
+                <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
+                  Constructor de Quiz
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Sigue este flujo: configura, agrega preguntas, prueba la experiencia y luego guarda para medir resultados.
+                </Typography>
+              </Box>
+              <Chip
+                color={quizValidationErrors.length === 0 && hasQuestions ? 'success' : 'warning'}
+                icon={quizValidationErrors.length === 0 && hasQuestions ? <CheckCircleIcon /> : <WarningIcon />}
+                label={
+                  quizValidationErrors.length === 0 && hasQuestions
+                    ? 'Listo para guardar'
+                    : 'Configuración incompleta'
+                }
+              />
+            </Box>
+
+            <Stepper activeStep={activeGuidedStep} alternativeLabel>
+              {guidedSteps.map((step) => (
+                <Step key={step.label} completed={step.complete}>
+                  <StepLabel>{step.label}</StepLabel>
+                </Step>
+              ))}
+            </Stepper>
+
+            <Grid container spacing={2}>
+              {guidedSteps.map((step, index) => (
+                <Grid item xs={12} md={6} key={step.label}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 2,
+                      borderRadius: 2,
+                      height: '100%',
+                      borderColor: index === activeGuidedStep ? 'primary.main' : 'divider',
+                      bgcolor: step.complete ? 'success.50' : 'background.paper'
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 1 }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                        {step.label}
+                      </Typography>
+                      <Chip
+                        size="small"
+                        color={step.complete ? 'success' : index === activeGuidedStep ? 'primary' : 'default'}
+                        label={step.complete ? 'Hecho' : index === activeGuidedStep ? 'Siguiente' : 'Pendiente'}
+                      />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      {step.description}
+                    </Typography>
+                    <Button
+                      size="small"
+                      variant={index === activeGuidedStep ? 'contained' : 'outlined'}
+                      onClick={() => setActiveTab(step.tab)}
+                    >
+                      Ir a este paso
+                    </Button>
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+
+            <Alert severity={quizValidationErrors.length === 0 ? 'info' : 'warning'} icon={<AutoAwesomeIcon />}>
+              <AlertTitle>Recomendación de flujo</AlertTitle>
+              {quizValidationErrors.length === 0
+                ? 'La configuración base está consistente. Si ya agregaste preguntas, prueba la vista previa antes de guardar.'
+                : 'Empieza por completar el título y agregar al menos una pregunta. El editor técnico sigue disponible abajo.'}
+            </Alert>
+          </Stack>
+        </CardContent>
+      </Card>
+
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={activeTab} onChange={handleTabChange}>
           <Tab label="Configuración" icon={<AssessmentIcon />} />
@@ -648,6 +780,9 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
               <CardContent>
                 <Typography variant="h6" gutterBottom>
                   Configuración General del Quiz
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Paso 1 de 4. Define las reglas mínimas para que el quiz quede claro y evaluable.
                 </Typography>
                 
                 <Grid container spacing={2}>
@@ -789,18 +924,37 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                 <Typography variant="h6" gutterBottom>
                   Resumen del Quiz
                 </Typography>
+
+                <Alert severity={quizValidationErrors.length === 0 ? 'success' : 'warning'} sx={{ mb: 2 }}>
+                  {quizValidationErrors.length === 0
+                    ? 'La configuración actual es válida.'
+                    : `Faltan ${quizValidationErrors.length} ajuste(s) para poder guardar.`}
+                </Alert>
                 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                   <Typography variant="body2">
                     <strong>Preguntas:</strong> {quizConfig.questions.length}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Puntos totales:</strong> {quizConfig.questions.reduce((sum, q) => sum + q.points, 0)}
+                    <strong>Puntos totales:</strong> {totalPoints}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Puntos para aprobar:</strong> {Math.ceil((quizConfig.questions.reduce((sum, q) => sum + q.points, 0) * quizConfig.passingPercentage) / 100)}
+                    <strong>Puntos para aprobar:</strong> {pointsToPass}
                   </Typography>
                 </Box>
+
+                {quizValidationErrors.length > 0 && (
+                  <>
+                    <Divider sx={{ my: 2 }} />
+                    <Stack spacing={1}>
+                      {quizValidationErrors.map((error) => (
+                        <Typography key={error} variant="body2" color="warning.main">
+                          • {error}
+                        </Typography>
+                      ))}
+                    </Stack>
+                  </>
+                )}
                 
                 <Button
                   fullWidth
@@ -808,7 +962,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                   startIcon={saveQuizMutation.isLoading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                   onClick={handleSaveQuiz}
                   sx={{ mt: 2 }}
-                  disabled={validateQuizConfig().length > 0 || saveQuizMutation.isLoading}
+                  disabled={quizValidationErrors.length > 0 || saveQuizMutation.isLoading}
                 >
                   {saveQuizMutation.isLoading ? 'Guardando...' : (initialQuizId ? 'Actualizar Quiz' : 'Guardar Quiz')}
                 </Button>
@@ -913,6 +1067,9 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                     Nueva Pregunta
                   </Button>
                 </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Paso 2 de 4. Selecciona preguntas existentes o crea nuevas y luego agrégalas al quiz.
+                </Typography>
                 
                 {/* Filters */}
                 <Grid container spacing={2} sx={{ mb: 2 }}>
@@ -1071,6 +1228,9 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                 {previewMode ? 'Salir de Vista Previa' : 'Iniciar Vista Previa'}
               </Button>
             </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Paso 3 de 4. Usa esta vista para validar el orden, las preguntas y la dificultad antes de guardar.
+            </Typography>
             
             {quizConfig.questions.length === 0 ? (
               <Alert severity="warning">
@@ -1151,6 +1311,9 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
           <Grid item xs={12}>
             <Typography variant="h6" gutterBottom>
               Analíticas del Quiz
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Paso 4 de 4. Esta pestaña muestra resultados reales una vez que el quiz ya fue guardado y usado por estudiantes.
             </Typography>
           </Grid>
 
