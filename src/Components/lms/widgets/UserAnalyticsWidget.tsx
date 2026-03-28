@@ -101,7 +101,7 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
       <Card sx={{ borderRadius: '16px', border: `1px solid ${colors.error}` }}>
         <CardContent sx={{ p: 3 }}>
           <Typography variant="body2" color={colors.error}>
-            Error loading user analytics
+            Error al cargar la analítica de usuarios
           </Typography>
         </CardContent>
       </Card>
@@ -116,7 +116,7 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
       case 'limited':
         return `Usuarios - ${department || 'Vista Operativa'}`
       default:
-        return 'Analytics de Usuarios'
+        return 'Analítica de Usuarios'
     }
   }
 

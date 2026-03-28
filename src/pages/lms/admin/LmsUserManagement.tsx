@@ -97,6 +97,19 @@ const emptyForm: LmsUserForm = {
 
 const isValidEmail = (value: string) => /\S+@\S+\.\S+/.test(value)
 
+const getRoleLabel = (roleName: string, description?: string | null) => {
+  const baseLabel =
+    roleName === 'Training Manager'
+      ? 'Gestor de Capacitación'
+      : roleName === 'employee'
+        ? 'Empleado interno'
+        : roleName === 'user'
+          ? 'Usuario cliente'
+          : roleName
+
+  return description ? `${baseLabel}: ${description}` : baseLabel
+}
+
 const LmsUserManagement: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
@@ -629,7 +642,7 @@ const LmsUserManagement: React.FC = () => {
                                 disabled={disabled}
                               />
                             }
-                            label={`${role.name}${role.description ? `: ${role.description}` : ''}`}
+                            label={getRoleLabel(role.name, role.description)}
                           />
                         </Grid>
                       )
@@ -638,7 +651,12 @@ const LmsUserManagement: React.FC = () => {
               </FormGroup>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
                 {effectiveRoles.map((role) => (
-                  <Chip key={role} label={role} size='small' color={role === 'lms_only' ? 'warning' : 'default'} />
+                  <Chip
+                    key={role}
+                    label={role === 'lms_only' ? 'Solo LMS' : getRoleLabel(role)}
+                    size='small'
+                    color={role === 'lms_only' ? 'warning' : 'default'}
+                  />
                 ))}
               </Box>
             </Grid>

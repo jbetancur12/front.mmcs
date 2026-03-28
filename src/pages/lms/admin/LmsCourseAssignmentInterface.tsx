@@ -682,7 +682,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                           onChange={(e) => setSelectedRole(e.target.value)}
                         >
                           <MenuItem value="admin">Administrador</MenuItem>
-                          <MenuItem value="Training Manager">Gestor de Capacitación (Training Manager)</MenuItem>
+                          <MenuItem value="Training Manager">Gestor de Capacitación</MenuItem>
                           <MenuItem value="metrologist">Metrólogo</MenuItem>
                           <MenuItem value="technician">Técnico de Mantenimiento</MenuItem>
                           <MenuItem value="mantenimiento">Mantenimiento</MenuItem>
