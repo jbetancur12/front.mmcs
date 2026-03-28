@@ -219,7 +219,6 @@ class QuizService {
    */
   async updateQuiz(quizId: number, quizData: CreateQuizDTO): Promise<Quiz> {
     try {
-      console.log("Updating quiz with data:", quizData);
       const response = await axiosPrivate.put(`${API_BASE}/${quizId}`, quizData)
       return response.data.data
     } catch (error: any) {
@@ -294,12 +293,12 @@ class QuizService {
   async submitQuizAttempt(
     quizId: number,
     answers: Record<number, number[]>,
-    startedAt: string
+    timeSpentSeconds: number
   ): Promise<QuizAttemptResult> {
     try {
       const response = await axiosPrivate.post(`${API_BASE}/${quizId}/attempt`, {
         answers,
-        startedAt
+        timeSpent: timeSpentSeconds
       })
       return response.data.data
     } catch (error: any) {
@@ -481,7 +480,6 @@ class QuizService {
     quizConfig: any,
     questions: any[]
   ): CreateQuizDTO {
-    console.log("Building QuizDTO with config:",  questions);
     return {
       title: quizConfig.title,
       instructions: quizConfig.instructions,
@@ -492,7 +490,7 @@ class QuizService {
       randomize_questions: quizConfig.randomizeQuestions,
       shuffle_answers: quizConfig.shuffleAnswers,
       time_limit_minutes: quizConfig.hasTimeLimit ? quizConfig.timeLimitMinutes : null,
-      questions: questions.map((q, index) => this.mapQuestionToDTO(q, index))
+      questions: questions.map((q, index) => this.mapQuestionToDTO(q, index + 1))
     }
   }
 }
