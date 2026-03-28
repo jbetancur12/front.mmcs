@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Alert,
   AlertTitle,
@@ -27,6 +28,8 @@ import {
 } from '@mui/material'
 import {
   Assignment as AssignmentIcon,
+  ArrowForward as ArrowForwardIcon,
+  AutoStories as CourseIcon,
   Notifications as NotificationsIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
@@ -46,14 +49,6 @@ interface Course {
   duration: string
   category: string
   audience?: 'internal' | 'client' | 'both'
-}
-
-interface User {
-  id: number
-  nombre: string
-  email: string
-  roles: string[]
-  department?: string
 }
 
 // Backend response interface
@@ -122,8 +117,14 @@ const transformAssignment = (backendAssignment: BackendAssignment): Assignment =
 }
 
 const LmsCourseAssignmentInterface: React.FC = () => {
-  const [activeTab, setActiveTab] = useState(0)
-  const [selectedCourse, setSelectedCourse] = useState<number | ''>('')
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialTab = searchParams.get('tab') === 'create' ? 1 : 0
+  const courseIdFromSearch = Number(searchParams.get('courseId') || '')
+  const [activeTab, setActiveTab] = useState(initialTab)
+  const [selectedCourse, setSelectedCourse] = useState<number | ''>(
+    Number.isFinite(courseIdFromSearch) && courseIdFromSearch > 0 ? courseIdFromSearch : ''
+  )
   const [selectedRole, setSelectedRole] = useState<string>('')
   const [deadline, setDeadline] = useState<Date | null>(null)
   const [assignmentType, setAssignmentType] = useState<'role' | 'all'>('role')
@@ -161,40 +162,15 @@ const LmsCourseAssignmentInterface: React.FC = () => {
       }
     }
   )
-
-
-    useQuery<User[]>(
-    ['lms-users', page, rowsPerPage],
-    async () => {
-      const response = await axiosPrivate.get('/users/own-users', {
-        params: {
-          page: page + 1,
-          limit: rowsPerPage,
-          include: 'modules,assignments,_count'
-        }
-      })
-      return response.data
-    },
-    {
-      keepPreviousData: true,
-      onError: (error: any) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error al cargar usuarios',
-          text: error.response?.data?.message || error.message || 'Ocurrió un error'
-        })
-      }
-    }
-  )
-
   // Get all assignments
   const { data: assignmentsResponse } = useQuery<{ assignments: BackendAssignment[], total: number, page: number, limit: number }>(
-    ['lms-all-assignments', page, rowsPerPage],
+    ['lms-all-assignments', page, rowsPerPage, selectedCourse],
     async () => {
       const response = await axiosPrivate.get('/lms/assignments/all', {
         params: {
           page: page + 1,
-          limit: rowsPerPage
+          limit: rowsPerPage,
+          courseId: selectedCourse || undefined
         }
       })
       return response.data.data
@@ -238,6 +214,12 @@ const LmsCourseAssignmentInterface: React.FC = () => {
           timer: 2000
         })
         setActiveTab(0) // Volver al tab de asignaciones
+        const nextParams = new URLSearchParams(searchParams)
+        nextParams.set('tab', 'active')
+        if (selectedCourse) {
+          nextParams.set('courseId', String(selectedCourse))
+        }
+        setSearchParams(nextParams, { replace: true })
       },
       onError: (error: any) => {
         Swal.fire({
@@ -334,6 +316,12 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   const courses = coursesResponse?.courses || []
   const assignableCourses = courses.filter((course) => course.audience !== 'client')
   const assignments = (assignmentsResponse?.assignments || []).map(transformAssignment)
+  const selectedCourseData = useMemo(
+    () =>
+      assignableCourses.find((course) => course.id === selectedCourse)
+      || courses.find((course) => course.id === selectedCourse),
+    [assignableCourses, courses, selectedCourse]
+  )
   const assignmentGuidance = [
     'Revisa primero las asignaciones activas para evitar duplicar reglas o fechas límite.',
     'Crea nuevas asignaciones solo para cursos internos o compartidos que realmente deban ser obligatorios.'
@@ -341,6 +329,30 @@ const LmsCourseAssignmentInterface: React.FC = () => {
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('tab', newValue === 1 ? 'create' : 'active')
+    if (selectedCourse) {
+      nextParams.set('courseId', String(selectedCourse))
+    } else {
+      nextParams.delete('courseId')
+    }
+    setSearchParams(nextParams, { replace: true })
+  }
+
+  const syncCourseInSearch = (courseId: number | '') => {
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('tab', activeTab === 1 ? 'create' : 'active')
+    if (courseId) {
+      nextParams.set('courseId', String(courseId))
+    } else {
+      nextParams.delete('courseId')
+    }
+    setSearchParams(nextParams, { replace: true })
+  }
+
+  const handleCourseSelection = (courseId: number | '') => {
+    setSelectedCourse(courseId)
+    syncCourseInSearch(courseId)
   }
 
   const handleCreateAssignment = () => {
@@ -383,8 +395,6 @@ const LmsCourseAssignmentInterface: React.FC = () => {
       deadline: deadlineEndOfDay
     })
 
-    // Reset form
-    setSelectedCourse('')
     setSelectedRole('')
     setDeadline(null)
   }
@@ -480,6 +490,14 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     }
   }
 
+  const goToCoursePreview = (courseId: number) => {
+    navigate(`/lms/course/${courseId}/preview`)
+  }
+
+  const goToCourseContent = (courseId: number) => {
+    navigate(`/lms/admin/courses/${courseId}/content`)
+  }
+
   return (
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', p: 3 }}>
@@ -493,6 +511,11 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                   <Typography variant="body2" color="text.secondary">
                     Esta pantalla se enfoca en obligatoriedad y fechas límite de usuarios internos. Los clientes siguen en modo catálogo.
                   </Typography>
+                  {selectedCourseData && (
+                    <Alert severity="success" sx={{ mt: 2 }}>
+                      Estás trabajando sobre <strong>{selectedCourseData.title}</strong>. Ya no necesitas volver a buscar el curso para crear o revisar sus reglas.
+                    </Alert>
+                  )}
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
@@ -519,17 +542,34 @@ const LmsCourseAssignmentInterface: React.FC = () => {
 
           {activeTab === 0 && (
           <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
               <Typography variant="h6">
                 Asignaciones Activas ({assignments.length})
               </Typography>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => setActiveTab(1)}
-              >
-                Nueva Asignación
-              </Button>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                <FormControl size="small" sx={{ minWidth: 280 }}>
+                  <InputLabel>Filtrar por curso</InputLabel>
+                  <Select
+                    value={selectedCourse}
+                    label="Filtrar por curso"
+                    onChange={(e) => handleCourseSelection((e.target.value as number) || '')}
+                  >
+                    <MenuItem value="">Todos los cursos</MenuItem>
+                    {assignableCourses.map((course) => (
+                      <MenuItem key={course.id} value={course.id}>
+                        {course.title}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => handleTabChange({} as React.SyntheticEvent, 1)}
+                >
+                  Nueva Asignación
+                </Button>
+              </Box>
             </Box>
 
             <Grid container spacing={3}>
@@ -593,7 +633,23 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                           </Grid>
                         </Box>
 
-                        <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<CourseIcon />}
+                            onClick={() => goToCourseContent(assignment.courseId)}
+                          >
+                            Contenido
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<ArrowForwardIcon />}
+                            onClick={() => goToCoursePreview(assignment.courseId)}
+                          >
+                            Vista previa
+                          </Button>
                           <IconButton
                             size="small"
                             onClick={() => handleSendNotification(assignment.id)}
@@ -638,7 +694,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                       <Select
                         value={selectedCourse}
                         label="Seleccionar Curso"
-                        onChange={(e) => setSelectedCourse(e.target.value as number)}
+                        onChange={(e) => handleCourseSelection(e.target.value as number)}
                       >
                         {assignableCourses.map((course) => (
                           <MenuItem key={course.id} value={course.id}>
@@ -697,6 +753,11 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                     <Typography variant="body2" color="text.secondary">
                       Las asignaciones y fechas límite del LMS se aplican solo a usuarios internos. Los cursos de cliente se consumen por catálogo.
                     </Typography>
+                    {selectedCourseData && (
+                      <Alert severity="info" sx={{ mt: 2 }}>
+                        Curso seleccionado: <strong>{selectedCourseData.title}</strong>. Si necesitas ajustar el contenido antes de asignarlo, puedes abrir el editor desde las reglas activas o volver a Gestión de Cursos.
+                      </Alert>
+                    )}
                   </Grid>
 
                   <Grid item xs={12}>

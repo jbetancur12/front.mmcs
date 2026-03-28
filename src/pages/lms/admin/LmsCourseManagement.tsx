@@ -471,7 +471,7 @@ const LmsCourseManagement: React.FC = () => {
   }
 
   const handleAssignCourse = (courseId: number) => {
-    navigate(`/lms/admin/courses/${courseId}/assignments`)
+    navigate(`/lms/admin/assignments?courseId=${courseId}&tab=create`)
   }
 
   const canManageAssignments = (course: Course) => course.audience !== 'client'
