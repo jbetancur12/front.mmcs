@@ -34,10 +34,8 @@ import {
   TrendingUp as TrendingUpIcon,
   Logout as LogoutIcon,
   Search as SearchIcon,
-  Star as StarIcon,
   PlayArrow as PlayArrowIcon,
   EmojiEvents as AwardIcon,
-  Whatshot as WhatshotIcon,
   NewReleases as NewReleasesIcon,
   Error as ErrorIcon
 } from '@mui/icons-material'
@@ -88,7 +86,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
   }
 
   // Process courses data
-  const { availableCourses, stats, categories, popularCourses, newCourses } = useMemo(() => {
+  const { availableCourses, stats, categories, continueCourses, newCourses } = useMemo(() => {
     if (!coursesData) {
       return {
         availableCourses: [],
@@ -101,7 +99,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
           totalHoursLearned: 0
         },
         categories: ['Todos'],
-        popularCourses: [],
+        continueCourses: [],
         newCourses: []
       }
     }
@@ -130,9 +128,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
         earnedCertificate,
         category: getCourseAudienceLabel(course.audience),
         instructor: course.creator?.nombre || 'Instructor',
-        duration: `${totalLessons} lecciones`,
-        rating: 4.5,
-        isPublic: true
+        duration: `${totalLessons} lecciones`
       }
     })
 
@@ -146,20 +142,17 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
     // Extraer categorías únicas
     const uniqueCategories: string[] = ['Todos', ...Array.from(new Set(enrichedCourses.map(c => c.category)))]
 
-    // Calcular cursos populares (por ahora, cursos con mayor progreso)
-    const popular = enrichedCourses
-      .filter(c => c.progress > 0)
+    const continueLearning = enrichedCourses
+      .filter(c => c.progress > 0 && c.progress < 100)
       .sort((a, b) => b.progress - a.progress)
       .slice(0, 3)
-      .map((c, index) => ({
+      .map((c) => ({
         id: c.id,
         title: c.title,
-        enrollments: 100 + (index * 50), // Mock data
-        rating: c.rating,
+        progress: c.progress,
         category: c.category
       }))
 
-    // Cursos nuevos (últimos cursos creados)
     const newest = [...enrichedCourses]
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, 2)
@@ -167,7 +160,6 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
         id: c.id,
         title: c.title,
         releaseDate: c.created_at,
-        rating: c.rating,
         category: c.category
       }))
 
@@ -184,7 +176,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
         )
       },
       categories: uniqueCategories,
-      popularCourses: popular,
+      continueCourses: continueLearning,
       newCourses: newest
     }
   }, [coursesData, userCertificates])
@@ -316,7 +308,6 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
           <Tab label='Mi Progreso' />
           <Tab label='Explorar Cursos' />
           <Tab label='Mis Certificados' />
-          <Tab label='Populares' />
         </Tabs>
 
         {activeTab === 0 && (
@@ -520,23 +511,23 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
 
               <Grid item xs={12} md={4}>
                 <Card sx={{ mb: 2 }}>
-                  <CardHeader title="Cursos Populares" />
+                  <CardHeader title="Para continuar" />
                   <CardContent>
-                    {popularCourses.length > 0 ? (
+                    {continueCourses.length > 0 ? (
                       <List dense>
-                        {popularCourses.map((course) => (
+                        {continueCourses.map((course) => (
                           <ListItem key={course.id} sx={{ px: 0 }}>
-                            <ListItemIcon><WhatshotIcon color="warning" /></ListItemIcon>
+                            <ListItemIcon><PlayArrowIcon color="primary" /></ListItemIcon>
                             <ListItemText
                               primary={course.title}
-                              secondary={`${course.enrollments} inscritos • ${course.rating}⭐`}
+                              secondary={`${course.progress}% completado • ${course.category}`}
                             />
                           </ListItem>
                         ))}
                       </List>
                     ) : (
                       <Typography variant="body2" color="text.secondary">
-                        No hay datos disponibles
+                        Aún no tienes cursos en progreso.
                       </Typography>
                     )}
                   </CardContent>
@@ -552,7 +543,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                             <ListItemIcon><NewReleasesIcon color="info" /></ListItemIcon>
                             <ListItemText
                               primary={course.title}
-                              secondary={`Nuevo • ${course.rating}⭐`}
+                              secondary={`Agregado el ${new Date(course.releaseDate).toLocaleDateString('es-CO')} • ${course.category}`}
                             />
                           </ListItem>
                         ))}
@@ -636,10 +627,8 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                               {course.instructor}
                             </Typography>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-                              <StarIcon sx={{ fontSize: 16, color: 'warning.main' }} />
-                              <Typography variant='caption'>{course.rating}</Typography>
                               <Typography variant='caption' color='text.secondary'>
-                                • {course.duration}
+                                {course.duration}
                               </Typography>
                             </Box>
                           </Box>
@@ -686,7 +675,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                             handleCourseClick(course.id)
                           }}
                         >
-                          {course.progress > 0 ? 'Continuar' : 'Inscribirse'}
+                          {course.progress > 0 ? 'Continuar' : 'Comenzar'}
                         </Button>
                       </CardContent>
                     </Card>
@@ -780,141 +769,6 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
           </Box>
         )}
 
-        {activeTab === 3 && (
-          <Box>
-            <Typography variant='h6' sx={{ mb: 3 }}>
-              Cursos Populares y Destacados
-            </Typography>
-
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <Card>
-                  <CardHeader
-                    title="Más Populares"
-                    avatar={<WhatshotIcon color="warning" />}
-                  />
-                  <CardContent>
-                    {popularCourses.length > 0 ? (
-                      <List>
-                        {popularCourses.map((course, index) => (
-                          <React.Fragment key={course.id}>
-                            <ListItem
-                              button
-                              onClick={() => handleCourseClick(course.id)}
-                              sx={{ px: 0 }}
-                            >
-                              <ListItemIcon>
-                                <Typography variant="h6" color="warning.main">
-                                  #{index + 1}
-                                </Typography>
-                              </ListItemIcon>
-                              <ListItemText
-                                primary={course.title}
-                                secondary={
-                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Typography variant="caption">
-                                      {course.enrollments} inscritos
-                                    </Typography>
-                                    <Chip
-                                      label={course.category}
-                                      size="small"
-                                      variant="outlined"
-                                    />
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                      <StarIcon sx={{ fontSize: 14, color: 'warning.main' }} />
-                                      <Typography variant="caption">{course.rating}</Typography>
-                                    </Box>
-                                  </Box>
-                                }
-                              />
-                              <Button size="small" variant="outlined">
-                                Ver Curso
-                              </Button>
-                            </ListItem>
-                            {index < popularCourses.length - 1 && <Divider />}
-                          </React.Fragment>
-                        ))}
-                      </List>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        No hay datos disponibles
-                      </Typography>
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Card>
-                  <CardHeader
-                    title="Recién Agregados"
-                    avatar={<NewReleasesIcon color="info" />}
-                  />
-                  <CardContent>
-                    {newCourses.length > 0 ? (
-                      <List>
-                        {newCourses.map((course, index) => (
-                          <React.Fragment key={course.id}>
-                            <ListItem
-                              button
-                              onClick={() => handleCourseClick(course.id)}
-                              sx={{ px: 0 }}
-                            >
-                              <ListItemIcon>
-                                <NewReleasesIcon color="info" />
-                              </ListItemIcon>
-                              <ListItemText
-                                primary={course.title}
-                                secondary={
-                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Typography variant="caption">
-                                      Agregado el {new Date(course.releaseDate).toLocaleDateString()}
-                                    </Typography>
-                                    <Chip
-                                      label={course.category}
-                                      size="small"
-                                      variant="outlined"
-                                    />
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                      <StarIcon sx={{ fontSize: 14, color: 'warning.main' }} />
-                                      <Typography variant="caption">{course.rating}</Typography>
-                                    </Box>
-                                  </Box>
-                                }
-                              />
-                              <Button size="small" variant="contained">
-                                Inscribirse
-                              </Button>
-                            </ListItem>
-                            {index < newCourses.length - 1 && <Divider />}
-                          </React.Fragment>
-                        ))}
-                      </List>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        No hay cursos nuevos
-                      </Typography>
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-
-            <Box sx={{ mt: 4, textAlign: 'center' }}>
-              <Typography variant='h6' sx={{ mb: 2 }}>
-                ¿Buscas algo específico?
-              </Typography>
-              <Button
-                variant='contained'
-                size="large"
-                onClick={() => setActiveTab(1)}
-                startIcon={<SearchIcon />}
-              >
-                Explorar Todos los Cursos
-              </Button>
-            </Box>
-          </Box>
-        )}
       </Box>
     </Box>
   )
