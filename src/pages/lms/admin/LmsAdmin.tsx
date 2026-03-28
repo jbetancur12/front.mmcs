@@ -11,7 +11,6 @@ import {
   LinearProgress,
   IconButton,
   Paper,
-  Divider,
   Stack,
   Alert
 } from '@mui/material'
@@ -24,11 +23,8 @@ import {
   Assessment as AssessmentIcon,
   Settings as SettingsIcon,
   Add as AddIcon,
-  CheckCircle as CheckIcon,
   Warning as WarningIcon,
-  Schedule as ScheduleIcon,
   VideoLibrary as VideoIcon,
-  Dashboard as DashboardIcon,
   Logout as LogoutIcon,
   ArrowForward as ArrowForwardIcon
 } from '@mui/icons-material'
@@ -44,8 +40,6 @@ import EnhancedCourseMetricsWidget from '../../../Components/lms/widgets/Enhance
 import UserAnalyticsWidget from '../../../Components/lms/widgets/UserAnalyticsWidget'
 import QuizPerformanceDashboard from '../../../Components/lms/widgets/QuizPerformanceDashboard'
 import RealTimeDashboard from '../../../Components/lms/widgets/RealTimeDashboard'
-import SystemPerformanceMetricsWidget from '../../../Components/lms/widgets/SystemPerformanceMetricsWidget'
-import JobQueueMonitoringWidget from '../../../Components/lms/widgets/JobQueueMonitoringWidget'
 import {
   useUserLMSRole,
   getFilteredQuickActions,
@@ -248,44 +242,21 @@ const LmsAdmin: React.FC = () => {
     }
   }
 
-  // Real data with fallbacks
+  const toNumber = (value: unknown, fallback = 0) => {
+    const parsed = typeof value === 'number' ? value : Number(value)
+    return Number.isFinite(parsed) ? parsed : fallback
+  }
+
+  // Real data with honest fallbacks
   const dashboardStats = {
-    totalUsers: metrics?.totalUsers || 2547,
-    totalCourses: metrics?.totalCourses || 156,
-    totalCertificates: metrics?.totalCertificates || 1203,
-    completionRate: metrics?.completionRate || 87,
-    activeUsers: metrics?.activeUsers || 1834,
-    pendingAssignments: metrics?.pendingAssignments || 45,
-    overdueTraining: metrics?.overdueTraining || 12,
-    recentActivity:
-      recentActivity.length > 0
-        ? recentActivity
-        : [
-          {
-            id: 1,
-            type: 'course_created',
-            title: 'Nuevo curso: Seguridad Laboral 2024',
-            user: 'Dr. Carlos Méndez',
-            timestamp: '2 horas',
-            icon: <SchoolIcon color='success' />
-          },
-          {
-            id: 2,
-            type: 'assignment_created',
-            title: 'Curso asignado a Desarrollo',
-            user: 'Ana López',
-            timestamp: '4 horas',
-            icon: <AssignmentIcon color='primary' />
-          },
-          {
-            id: 3,
-            type: 'certificate_issued',
-            title: 'Certificado emitido: React Fundamentals',
-            user: 'María García',
-            timestamp: '6 horas',
-            icon: <CertificateIcon color='warning' />
-          }
-        ]
+    totalUsers: toNumber(metrics?.totalUsers),
+    totalCourses: toNumber(metrics?.totalCourses),
+    totalCertificates: toNumber(metrics?.totalCertificates),
+    completionRate: toNumber(metrics?.completionRate),
+    activeUsers: toNumber(metrics?.activeUsers),
+    pendingAssignments: toNumber(metrics?.pendingAssignments),
+    overdueTraining: toNumber(metrics?.overdueTraining),
+    recentActivity: Array.isArray(recentActivity) ? recentActivity : []
   }
 
   // Loading state for the entire dashboard
@@ -992,9 +963,9 @@ const LmsAdmin: React.FC = () => {
             </Box>
           </QuickActionsErrorBoundary>
 
-          {/* Recent Activity & System Status */}
+          {/* Recent Activity */}
           <Grid container spacing={3}>
-            <Grid item xs={12} lg={8}>
+            <Grid item xs={12}>
               <Card
                 sx={{
                   borderRadius: '16px',
@@ -1017,196 +988,73 @@ const LmsAdmin: React.FC = () => {
                     >
                       Actividad Reciente
                     </Typography>
-                    <Button
-                      size='small'
-                      onClick={() => navigate('/lms/admin/analytics')}
-                      sx={{
-                        color: colors.primary,
-                        fontWeight: 600,
-                        textTransform: 'none'
-                      }}
-                    >
-                      Ver todo
-                    </Button>
-                  </Box>
-                  <Stack spacing={2}>
-                    {dashboardStats.recentActivity.map((activity: any) => (
-                      <Box
-                        key={activity.id}
+                    {dashboardStats.recentActivity.length > 0 ? (
+                      <Button
+                        size='small'
+                        onClick={() => navigate('/lms/admin/analytics')}
                         sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          p: 2,
-                          borderRadius: '12px',
-                          bgcolor: colors.gray[50],
-                          border: `1px solid ${colors.gray[100]}`
+                          color: colors.primary,
+                          fontWeight: 600,
+                          textTransform: 'none'
                         }}
                       >
-                        <Avatar
+                        Ver todo
+                      </Button>
+                    ) : null}
+                  </Box>
+                  {dashboardStats.recentActivity.length === 0 ? (
+                    <Alert severity='info'>
+                      Aún no hay actividad reciente disponible desde el backend del LMS.
+                    </Alert>
+                  ) : (
+                    <Stack spacing={2}>
+                      {dashboardStats.recentActivity.map((activity: any, index: number) => (
+                        <Box
+                          key={activity.id || `${activity.type || 'activity'}-${index}`}
                           sx={{
-                            bgcolor: 'white',
-                            mr: 2,
-                            width: 40,
-                            height: 40,
-                            border: `2px solid ${colors.gray[200]}`
+                            display: 'flex',
+                            alignItems: 'center',
+                            p: 2,
+                            borderRadius: '12px',
+                            bgcolor: colors.gray[50],
+                            border: `1px solid ${colors.gray[100]}`
                           }}
                         >
-                          {activity.icon || <SchoolIcon />}
-                        </Avatar>
-                        <Box sx={{ flex: 1 }}>
-                          <Typography
-                            variant='body1'
+                          <Avatar
                             sx={{
-                              fontWeight: 600,
-                              color: colors.gray[800],
-                              mb: 0.5
+                              bgcolor: 'white',
+                              mr: 2,
+                              width: 40,
+                              height: 40,
+                              border: `2px solid ${colors.gray[200]}`
                             }}
                           >
-                            {activity.title}
-                          </Typography>
-                          <Typography variant='body2' color={colors.gray[500]}>
-                            {activity.user} • {formatActivityTimestamp(activity.timestamp)}
-                          </Typography>
+                            {activity.icon || <SchoolIcon />}
+                          </Avatar>
+                          <Box sx={{ flex: 1 }}>
+                            <Typography
+                              variant='body1'
+                              sx={{
+                                fontWeight: 600,
+                                color: colors.gray[800],
+                                mb: 0.5
+                              }}
+                            >
+                              {activity.title || activity.description || 'Actividad LMS'}
+                            </Typography>
+                            <Typography variant='body2' color={colors.gray[500]}>
+                              {activity.user || activity.type || 'Sistema'} •{' '}
+                              {formatActivityTimestamp(activity.timestamp || activity.createdAt)}
+                            </Typography>
+                          </Box>
                         </Box>
-                      </Box>
-                    ))}
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} lg={4}>
-              <Card
-                sx={{
-                  borderRadius: '16px',
-                  border: `1px solid ${colors.gray[200]}`,
-                  height: '100%'
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Typography
-                    variant='h6'
-                    sx={{
-                      fontWeight: 700,
-                      mb: 3,
-                      color: colors.gray[800]
-                    }}
-                  >
-                    Estado del Sistema
-                  </Typography>
-                  <Stack spacing={2}>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        p: 2,
-                        borderRadius: '12px',
-                        bgcolor: colors.primaryLight
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <CheckIcon sx={{ color: colors.success, mr: 1 }} />
-                        <Typography variant='body2' sx={{ fontWeight: 600 }}>
-                          Servicios Activos
-                        </Typography>
-                      </Box>
-                      <Chip
-                        label='100%'
-                        size='small'
-                        sx={{
-                          bgcolor: colors.success,
-                          color: 'white',
-                          fontWeight: 700
-                        }}
-                      />
-                    </Box>
-
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        p: 2,
-                        borderRadius: '12px',
-                        bgcolor: '#fef3c7'
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <ScheduleIcon sx={{ color: colors.warning, mr: 1 }} />
-                        <Typography variant='body2' sx={{ fontWeight: 600 }}>
-                          Jobs Pendientes
-                        </Typography>
-                      </Box>
-                      <Chip
-                        label='3'
-                        size='small'
-                        sx={{
-                          bgcolor: colors.warning,
-                          color: 'white',
-                          fontWeight: 700
-                        }}
-                      />
-                    </Box>
-
-                    <Divider sx={{ my: 2 }} />
-
-                    <Button
-                      fullWidth
-                      variant='outlined'
-                      startIcon={<DashboardIcon />}
-                      onClick={() => navigate('/lms/admin/jobs')}
-                      sx={{
-                        borderColor: colors.gray[300],
-                        color: colors.gray[700],
-                        fontWeight: 600,
-                        textTransform: 'none',
-                        borderRadius: '12px',
-                        py: 1.5,
-                        '&:hover': {
-                          borderColor: colors.primary,
-                          color: colors.primary,
-                          bgcolor: colors.primaryLight
-                        }
-                      }}
-                    >
-                      Monitorear Sistema
-                    </Button>
-                  </Stack>
+                      ))}
+                    </Stack>
+                  )}
                 </CardContent>
               </Card>
             </Grid>
           </Grid>
-
-          {/* System Health Monitoring Section */}
-          <Box sx={{ mb: 4 }}>
-            <Typography
-              variant='h5'
-              sx={{
-                fontWeight: 700,
-                color: colors.gray[900],
-                mb: 3,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1
-              }}
-            >
-              <SettingsIcon sx={{ color: colors.primary }} />
-              Monitoreo del Sistema
-            </Typography>
-
-            <Grid container spacing={3}>
-              {/* Job Queue Monitoring Widget */}
-              <Grid item xs={12} lg={6}>
-                <JobQueueMonitoringWidget />
-              </Grid>
-
-              {/* System Performance Metrics Widget */}
-              <Grid item xs={12} lg={6}>
-                <SystemPerformanceMetricsWidget />
-              </Grid>
-            </Grid>
-          </Box>
         </Box>
       </Box>
     </DashboardErrorBoundary>
