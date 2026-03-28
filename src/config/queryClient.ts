@@ -75,7 +75,9 @@ export const queryKeys = {
   certificates: {
     all: ['certificates'] as const,
     user: (userId?: number) => [...queryKeys.certificates.all, 'user', userId] as const,
-    detail: (id: number) => [...queryKeys.certificates.all, 'detail', id] as const
+    detail: (id: number) => [...queryKeys.certificates.all, 'detail', id] as const,
+    templates: () => [...queryKeys.certificates.all, 'templates'] as const,
+    templatePreview: (id: number) => [...queryKeys.certificates.all, 'templates', id, 'preview'] as const
   },
 
   // Assignments

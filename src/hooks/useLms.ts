@@ -12,6 +12,9 @@ import type {
   QuizAttempt,
   SubmitQuizRequest,
   Certificate,
+  CertificateTemplate,
+  SaveCertificateTemplateRequest,
+  CertificateTemplatePreviewResponse,
   CreateAssignmentRequest,
   CreateAssignmentResult,
   CreateQuizRequest,
@@ -759,6 +762,125 @@ export const useDownloadCertificate = (
 
         options?.onError?.(error, variables, context)
       }
+    }
+  )
+}
+
+export const useCertificateTemplates = (options?: any) => {
+  return useQuery(
+    queryKeys.certificates.templates(),
+    () => lmsService.getCertificateTemplates(),
+    {
+      staleTime: 2 * 60 * 1000,
+      ...options
+    }
+  )
+}
+
+export const useCreateCertificateTemplate = (
+  options?: UseMutationOptions<CertificateTemplate, Error, SaveCertificateTemplateRequest>
+) => {
+  const queryClient = useQueryClient()
+
+  return useMutation(
+    (data: SaveCertificateTemplateRequest) => lmsService.createCertificateTemplate(data),
+    {
+      ...options,
+      onSuccess: (data, variables, context) => {
+        queryClient.invalidateQueries(queryKeys.certificates.templates())
+        Toast.fire({
+          icon: 'success',
+          title: 'Plantilla creada exitosamente'
+        })
+        options?.onSuccess?.(data, variables, context)
+      },
+      onError: (error, variables, context) => {
+        Toast.fire({
+          icon: 'error',
+          title: 'Error al crear plantilla',
+          text: error.message
+        })
+        options?.onError?.(error, variables, context)
+      }
+    }
+  )
+}
+
+export const useUpdateCertificateTemplate = (
+  options?: UseMutationOptions<
+    CertificateTemplate,
+    Error,
+    { id: number; data: SaveCertificateTemplateRequest }
+  >
+) => {
+  const queryClient = useQueryClient()
+
+  return useMutation(
+    ({ id, data }: { id: number; data: SaveCertificateTemplateRequest }) =>
+      lmsService.updateCertificateTemplate(id, data),
+    {
+      ...options,
+      onSuccess: (data, variables, context) => {
+        queryClient.invalidateQueries(queryKeys.certificates.templates())
+        queryClient.invalidateQueries(queryKeys.certificates.templatePreview(variables.id))
+        Toast.fire({
+          icon: 'success',
+          title: 'Plantilla actualizada exitosamente'
+        })
+        options?.onSuccess?.(data, variables, context)
+      },
+      onError: (error, variables, context) => {
+        Toast.fire({
+          icon: 'error',
+          title: 'Error al actualizar plantilla',
+          text: error.message
+        })
+        options?.onError?.(error, variables, context)
+      }
+    }
+  )
+}
+
+export const useDeleteCertificateTemplate = (
+  options?: UseMutationOptions<void, Error, number>
+) => {
+  const queryClient = useQueryClient()
+
+  return useMutation(
+    (id: number) => lmsService.deleteCertificateTemplate(id),
+    {
+      ...options,
+      onSuccess: (data, variables, context) => {
+        queryClient.invalidateQueries(queryKeys.certificates.templates())
+        Toast.fire({
+          icon: 'success',
+          title: 'Plantilla eliminada exitosamente'
+        })
+        options?.onSuccess?.(data, variables, context)
+      },
+      onError: (error, variables, context) => {
+        Toast.fire({
+          icon: 'error',
+          title: 'Error al eliminar plantilla',
+          text: error.message
+        })
+        options?.onError?.(error, variables, context)
+      }
+    }
+  )
+}
+
+export const usePreviewCertificateTemplate = (
+  id?: number,
+  options?: any
+) => {
+  return useQuery<CertificateTemplatePreviewResponse>(
+    queryKeys.certificates.templatePreview(id || 0),
+    () => lmsService.previewCertificateTemplate(id || 0),
+    {
+      enabled: !!id,
+      staleTime: 60 * 1000,
+      ...options
     }
   )
 }

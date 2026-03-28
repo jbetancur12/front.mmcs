@@ -178,6 +178,47 @@ export interface Certificate {
   created_at?: string
 }
 
+export interface CertificateTemplateVariable {
+  name: string
+  label: string
+  type: 'text' | 'date' | 'number'
+  required: boolean
+  defaultValue?: string
+  default_value?: string
+  description?: string
+}
+
+export interface CertificateTemplate {
+  id: number
+  name: string
+  templateHtml?: string
+  template_html?: string
+  variables: CertificateTemplateVariable[]
+  isDefault?: boolean
+  is_default?: boolean
+  createdAt?: string
+  created_at?: string
+  updatedAt?: string
+  updated_at?: string
+}
+
+export interface SaveCertificateTemplateRequest {
+  name: string
+  templateHtml: string
+  variables: CertificateTemplateVariable[]
+  isDefault?: boolean
+}
+
+export interface CertificateTemplatePreviewRequest {
+  sampleData?: Record<string, string>
+}
+
+export interface CertificateTemplatePreviewResponse {
+  html: string
+  variables: CertificateTemplateVariable[]
+  templateName: string
+}
+
 /**
  * Course assignment interface
  */
@@ -842,6 +883,59 @@ class LMSService {
         error: error.response?.data?.message || 'Error al verificar el certificado'
       }
     }
+  }
+
+  async getCertificateTemplates(): Promise<CertificateTemplate[]> {
+    const response = await axiosPrivate.get(`${this.baseURL}/certificates/templates`)
+    return this.unwrapResponse<CertificateTemplate[]>(response.data)
+  }
+
+  async createCertificateTemplate(
+    data: SaveCertificateTemplateRequest
+  ): Promise<CertificateTemplate> {
+    const response = await axiosPrivate.post(`${this.baseURL}/certificates/templates`, {
+      name: data.name,
+      templateHtml: data.templateHtml,
+      variables: data.variables,
+      isDefault: data.isDefault ?? false
+    })
+    return this.unwrapResponse<CertificateTemplate>(response.data)
+  }
+
+  async updateCertificateTemplate(
+    id: number,
+    data: SaveCertificateTemplateRequest
+  ): Promise<CertificateTemplate> {
+    const response = await axiosPrivate.put(`${this.baseURL}/certificates/templates/${id}`, {
+      name: data.name,
+      templateHtml: data.templateHtml,
+      variables: data.variables,
+      isDefault: data.isDefault ?? false
+    })
+    return this.unwrapResponse<CertificateTemplate>(response.data)
+  }
+
+  async deleteCertificateTemplate(id: number): Promise<void> {
+    await axiosPrivate.delete(`${this.baseURL}/certificates/templates/${id}`)
+  }
+
+  async previewCertificateTemplate(
+    id: number,
+    data?: CertificateTemplatePreviewRequest
+  ): Promise<CertificateTemplatePreviewResponse> {
+    const response = await axiosPrivate.post(`${this.baseURL}/certificates/templates/${id}/preview`, data || {})
+    return this.unwrapResponse<CertificateTemplatePreviewResponse>(response.data)
+  }
+
+  async validateCertificateTemplate(data: SaveCertificateTemplateRequest): Promise<{
+    isValid: boolean
+    errors: string[]
+  }> {
+    const response = await axiosPrivate.post(`${this.baseURL}/certificates/templates/validate`, {
+      templateHtml: data.templateHtml,
+      variables: data.variables
+    })
+    return this.unwrapResponse<{ isValid: boolean; errors: string[] }>(response.data)
   }
 
   // ===========================
