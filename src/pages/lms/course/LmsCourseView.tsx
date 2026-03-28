@@ -154,6 +154,92 @@ const LmsCourseView: React.FC = () => {
   const course: Course | null = useMemo(() => {
     if (!courseData) return null
 
+    const completedLessonIds = new Set<number>()
+
+    if (progressData?.modules && Array.isArray(progressData.modules)) {
+      progressData.modules.forEach((module: any) => {
+        if (!Array.isArray(module.lessons)) {
+          return
+        }
+
+        module.lessons.forEach((lesson: any) => {
+          if (lesson.progress?.status === 'completed') {
+            completedLessonIds.add(lesson.id)
+          }
+        })
+      })
+    }
+
+    let previousLessonCompleted = true
+    const mappedModules = (courseData.modules || [])
+      .slice()
+      .sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
+      .map((mod: any, modIndex: number) => {
+        const lessons = (mod.lessons || [])
+          .slice()
+          .sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
+          .map((lesson: any, lessonIndex: number) => {
+            const completed = completedLessonIds.has(lesson.id)
+            const unlocked = modIndex === 0 && lessonIndex === 0
+              ? true
+              : previousLessonCompleted
+
+            previousLessonCompleted = completed
+
+            return {
+              id: lesson.id,
+              title: lesson.title,
+              type: lesson.type || 'text',
+              duration: lesson.duration_minutes ? `${lesson.duration_minutes} min` : 'N/A',
+              estimatedMinutes: lesson.duration_minutes || 30,
+              order: lesson.order_index || lessonIndex + 1,
+              completed,
+              unlocked,
+              content: {
+                videoUrl: lesson.video_url,
+                videoSource: lesson.video_source,
+                text: lesson.content,
+                description: lesson.description || '',
+                quiz: lesson.quiz ? {
+                  id: lesson.quiz.id,
+                  title: lesson.quiz.title,
+                  instructions: lesson.quiz.instructions || '',
+                  passingPercentage: lesson.quiz.passing_percentage ?? 70,
+                  maxAttempts: lesson.quiz.max_attempts ?? 10,
+                  cooldownMinutes: lesson.quiz.cooldown_minutes ?? 0,
+                  showCorrectAnswers: lesson.quiz.show_correct_answers ?? true,
+                  randomizeQuestions: lesson.quiz.randomize_questions ?? false,
+                  shuffleAnswers: lesson.quiz.shuffle_answers ?? false,
+                  timeLimitMinutes: lesson.quiz.time_limit_minutes,
+                  allowReview: lesson.quiz.allow_review ?? true,
+                  showProgressBar: lesson.quiz.show_progress_bar ?? true,
+                  questions: (lesson.quiz.questions || []).map((q: any) => ({
+                    id: q.id,
+                    question: q.question,
+                    type: q.type === 'single' ? 'single-choice' : q.type === 'boolean' ? 'true-false' : 'multiple-choice',
+                    options: q.options || [],
+                    correctAnswer: q.type === 'single' || q.type === 'boolean'
+                      ? (q.correct_answers?.[0] ?? 0)
+                      : (q.correct_answers || []),
+                    explanation: q.explanation,
+                    points: q.points || 1
+                  }))
+                } : undefined
+              }
+            }
+          })
+
+        return {
+          id: mod.id,
+          title: mod.title,
+          description: mod.description || '',
+          order: mod.order_index || modIndex + 1,
+          completed: lessons.length > 0 && lessons.every((lesson: any) => lesson.completed),
+          unlocked: lessons.some((lesson: any) => lesson.unlocked),
+          lessons
+        }
+      })
+
     return {
       id: courseData.id,
       title: courseData.title,
@@ -165,57 +251,9 @@ const LmsCourseView: React.FC = () => {
       thumbnail: '/placeholder.svg?height=400&width=600',
       hasCertificate: courseData.has_certificate || false,
       isMandatory: courseData.is_mandatory || false,
-      modules: (courseData.modules || []).map((mod: any, modIndex: number) => ({
-        id: mod.id,
-        title: mod.title,
-        description: mod.description || '',
-        order: mod.order_index || modIndex + 1,
-        completed: false,  // TODO: Calculate from userProgress
-        unlocked: true,  // TODO: Calculate based on completion logic
-        lessons: (mod.lessons || []).map((lesson: any, lessonIndex: number) => ({
-          id: lesson.id,
-          title: lesson.title,
-          type: lesson.type || 'text',
-          duration: lesson.duration_minutes ? `${lesson.duration_minutes} min` : 'N/A',
-          estimatedMinutes: lesson.duration_minutes || 30,
-          order: lesson.order_index || lessonIndex + 1,
-          completed: false,  // TODO: Get from userProgress
-          unlocked: true,  // TODO: Calculate based on completion logic
-          content: {
-            videoUrl: lesson.video_url,
-            videoSource: lesson.video_source,
-            text: lesson.content,
-            description: lesson.description || '',
-            quiz: lesson.quiz ? {
-              id: lesson.quiz.id,
-              title: lesson.quiz.title,
-              instructions: lesson.quiz.instructions || '',
-              passingPercentage: lesson.quiz.passing_percentage ?? 70,
-              maxAttempts: lesson.quiz.max_attempts ?? 10,
-              cooldownMinutes: lesson.quiz.cooldown_minutes ?? 0,
-              showCorrectAnswers: lesson.quiz.show_correct_answers ?? true,
-              randomizeQuestions: lesson.quiz.randomize_questions ?? false,
-              shuffleAnswers: lesson.quiz.shuffle_answers ?? false,
-              timeLimitMinutes: lesson.quiz.time_limit_minutes,
-              allowReview: lesson.quiz.allow_review ?? true,
-              showProgressBar: lesson.quiz.show_progress_bar ?? true,
-              questions: (lesson.quiz.questions || []).map((q: any) => ({
-                id: q.id,
-                question: q.question,
-                type: q.type === 'single' ? 'single-choice' : q.type === 'boolean' ? 'true-false' : 'multiple-choice',
-                options: q.options || [],
-                correctAnswer: q.type === 'single' || q.type === 'boolean'
-                  ? (q.correct_answers?.[0] ?? 0)  // Single answer: take first element
-                  : (q.correct_answers || []),      // Multiple answers: keep as array
-                explanation: q.explanation,
-                points: q.points || 1
-              }))
-            } : undefined
-          }
-        }))
-      }))
+      modules: mappedModules
     }
-  }, [courseData])
+  }, [courseData, progressData])
 
   // Adapt progress data to UserProgress[] format
   const userProgress: UserProgress[] = useMemo(() => {
