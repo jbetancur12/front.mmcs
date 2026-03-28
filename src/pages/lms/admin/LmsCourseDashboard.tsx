@@ -1,874 +1,310 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
+  Avatar,
   Box,
+  Button,
   Card,
   CardContent,
   CardHeader,
-  Typography,
-  Button,
-  Grid,
   Chip,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
   FormControl,
+  Grid,
   InputLabel,
-  Select,
   MenuItem,
-  Tabs,
-  Tab,
-  Avatar,
-  LinearProgress,
-  Rating
+  Paper,
+  Select,
+  Stack,
+  TextField,
+  Typography
 } from '@mui/material'
 import {
-  Add as AddIcon,
+  Article as ContentIcon,
+  CheckCircle as PublishedIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
-  PlayArrow as PlayIcon,
-  Visibility as ViewIcon,
-  Settings as SettingsIcon,
-  People as PeopleIcon,
-  School as SchoolIcon,
-  TrendingUp as TrendingUpIcon,
-  CheckCircle as CheckIcon,
-  Warning as WarningIcon,
-  EditNote as EditContentIcon
+  Preview as PreviewIcon,
+  School as CourseIcon,
+  Visibility as ViewIcon
 } from '@mui/icons-material'
-import { useQuery, useMutation, useQueryClient } from 'react-query'
 import { useNavigate } from 'react-router-dom'
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useCourses } from '../../../hooks/useLms'
+import type { Course } from '../../../services/lmsService'
+import { getCourseAudienceLabel } from '../../../utils/lmsAudience'
 
-interface Course {
-  id: number
-  title: string
-  description: string
-  category: string
-  instructor: string
-  duration: string
-  isActive: boolean
-  isPublic: boolean
-  totalLessons: number
-  enrolledStudents: number
-  rating: number
-  createdAt: string
-  audience: {
-    employees: boolean
-    clients: boolean
+const statusColor = (status: Course['status']) => {
+  switch (status) {
+    case 'published':
+      return 'success'
+    case 'archived':
+      return 'default'
+    default:
+      return 'warning'
   }
-  units: any[]
-  status: 'draft' | 'published' | 'archived'
-  completionRate: number
-  lastUpdated: string
+}
+
+const statusLabel = (status: Course['status']) => {
+  switch (status) {
+    case 'published':
+      return 'Publicado'
+    case 'archived':
+      return 'Archivado'
+    default:
+      return 'Borrador'
+  }
 }
 
 const LmsCourseDashboard: React.FC = () => {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState(0)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filterCategory, setFilterCategory] = useState('all')
-  const [filterStatus, setFilterStatus] = useState('all')
-  const [openCourseDialog, setOpenCourseDialog] = useState(false)
-  const [editingCourse, setEditingCourse] = useState<Course | null>(null)
-  const [newCourse, setNewCourse] = useState({
-    title: '',
-    description: '',
-    category: '',
-    instructor: '',
-    duration: '',
-    audience: {
-      employees: false,
-      clients: false
-    }
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState<'all' | Course['status']>('all')
+  const [audience, setAudience] = useState<'all' | Course['audience']>('all')
+
+  const { data, isLoading } = useCourses({
+    limit: 100,
+    sortBy: 'updated_at',
+    sortOrder: 'DESC'
   })
 
-  const axiosPrivate = useAxiosPrivate()
-  const queryClient = useQueryClient()
+  const courses = data?.courses || []
 
-  // Mock data para cursos del admin
-  const mockCourses: Course[] = [
-    {
-      id: 1,
-      title: 'JavaScript Avanzado',
-      description: 'Aprende conceptos avanzados de JavaScript',
-      category: 'Programación',
-      instructor: 'Dr. Carlos Méndez',
-      duration: '8 horas',
-      isActive: true,
-      isPublic: false,
-      totalLessons: 12,
-      enrolledStudents: 45,
-      rating: 4.8,
-      createdAt: '2024-01-15',
-      audience: {
-        employees: true,
-        clients: false
-      },
-      units: [
-        { id: 1, title: 'Introducción', type: 'video', duration: '45 min' },
-        { id: 2, title: 'Variables', type: 'text', duration: '30 min' },
-        { id: 3, title: 'Quiz', type: 'quiz', duration: '15 min' }
-      ],
-      status: 'published',
-      completionRate: 78,
-      lastUpdated: '2024-01-20'
-    },
-    {
-      id: 2,
-      title: 'React Fundamentals',
-      description: 'Introducción a React y sus conceptos básicos',
-      category: 'Frontend',
-      instructor: 'Ing. María García',
-      duration: '10 horas',
-      isActive: true,
-      isPublic: true,
-      totalLessons: 15,
-      enrolledStudents: 78,
-      rating: 4.6,
-      createdAt: '2024-01-10',
-      audience: {
-        employees: true,
-        clients: true
-      },
-      units: [
-        { id: 1, title: 'Componentes', type: 'video', duration: '60 min' },
-        { id: 2, title: 'Props', type: 'text', duration: '45 min' }
-      ],
-      status: 'published',
-      completionRate: 85,
-      lastUpdated: '2024-01-18'
-    },
-    {
-      id: 3,
-      title: 'Gestión de Proyectos',
-      description: 'Metodologías y herramientas de gestión',
-      category: 'Gestión',
-      instructor: 'Lic. Ana López',
-      duration: '6 horas',
-      isActive: false,
-      isPublic: false,
-      totalLessons: 8,
-      enrolledStudents: 23,
-      rating: 4.9,
-      createdAt: '2024-01-05',
-      audience: {
-        employees: true,
-        clients: false
-      },
-      units: [
-        { id: 1, title: 'Metodologías', type: 'video', duration: '90 min' }
-      ],
-      status: 'draft',
-      completionRate: 0,
-      lastUpdated: '2024-01-12'
-    },
-    {
-      id: 4,
-      title: 'Node.js Backend',
-      description: 'Desarrollo de APIs con Node.js',
-      category: 'Backend',
-      instructor: 'Dr. Juan Pérez',
-      duration: '12 horas',
-      isActive: true,
-      isPublic: false,
-      totalLessons: 18,
-      enrolledStudents: 34,
-      rating: 4.5,
-      createdAt: '2024-01-25',
-      audience: {
-        employees: true,
-        clients: false
-      },
-      units: [
-        { id: 1, title: 'Express.js', type: 'video', duration: '75 min' },
-        { id: 2, title: 'MongoDB', type: 'text', duration: '60 min' }
-      ],
-      status: 'published',
-      completionRate: 65,
-      lastUpdated: '2024-01-28'
-    }
-  ]
+  const filteredCourses = useMemo(() => {
+    return courses.filter((course) => {
+      const matchesSearch =
+        !search ||
+        course.title.toLowerCase().includes(search.toLowerCase()) ||
+        course.description.toLowerCase().includes(search.toLowerCase())
 
-  // Query para obtener cursos del admin
-  const { data: courses = mockCourses, isLoading } = useQuery<Course[]>(
-    'lms-admin-courses',
-    async () => {
-      // En el futuro, esto hará una llamada real a la API
-      // const response = await axiosPrivate.get('/lms/admin/courses')
-      // return response.data
-      return mockCourses
-    }
-  )
+      const matchesStatus = status === 'all' || course.status === status
+      const matchesAudience = audience === 'all' || course.audience === audience
 
-  // Mutación para crear/actualizar curso
-  const saveCourseMutation = useMutation(
-    async (courseData: Partial<Course>) => {
-      if (editingCourse) {
-        return axiosPrivate.put(`/lms/courses/${editingCourse.id}`, courseData)
-      } else {
-        return axiosPrivate.post('/lms/courses', courseData)
-      }
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('lms-admin-courses')
-        setOpenCourseDialog(false)
-        setEditingCourse(null)
-        setNewCourse({
-          title: '',
-          description: '',
-          category: '',
-          instructor: '',
-          duration: '',
-          audience: { employees: false, clients: false }
-        })
-      },
-      onError: (error: any) => {
-        console.error('Error al guardar curso:', error)
-      }
-    }
-  )
-
-  // Mutación para eliminar curso
-  const deleteCourseMutation = useMutation(
-    async (courseId: number) => {
-      return axiosPrivate.delete(`/lms/courses/${courseId}`)
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('lms-admin-courses')
-      },
-      onError: (error: any) => {
-        console.error('Error al eliminar curso:', error)
-      }
-    }
-  )
-
-  const handleCreateCourse = () => {
-    setEditingCourse(null)
-    setOpenCourseDialog(true)
-  }
-
-  const handleEditCourse = (course: Course) => {
-    setEditingCourse(course)
-    setNewCourse({
-      title: course.title,
-      description: course.description,
-      category: course.category,
-      instructor: course.instructor,
-      duration: course.duration,
-      audience: course.audience
+      return matchesSearch && matchesStatus && matchesAudience
     })
-    setOpenCourseDialog(true)
-  }
+  }, [audience, courses, search, status])
 
-  const handleDeleteCourse = (courseId: number) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este curso?')) {
-      deleteCourseMutation.mutate(courseId)
-    }
-  }
-
-  const handleSaveCourse = () => {
-    const courseData = {
-      ...newCourse,
-      status: 'draft' as const,
-      isActive: true,
-      isPublic: false,
-      totalLessons: 0,
-      enrolledStudents: 0,
-      rating: 0,
-      createdAt: new Date().toISOString().split('T')[0],
-      lastUpdated: new Date().toISOString().split('T')[0],
-      completionRate: 0,
-      units: []
-    }
-    saveCourseMutation.mutate(courseData)
-  }
-
-  const handleTestCourse = (courseId: number) => {
-    navigate(`/lms/course/${courseId}/preview`)
-  }
-
-  const handleEditContent = (courseId: number) => {
-    navigate(`/lms/admin/courses/${courseId}/content`)
-  }
-
-  const handleViewCourse = (courseId: number) => {
-    navigate(`/lms/course/${courseId}`)
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'published':
-        return 'success'
-      case 'draft':
-        return 'warning'
-      case 'archived':
-        return 'default'
-      default:
-        return 'default'
-    }
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'published':
-        return <CheckIcon />
-      case 'draft':
-        return <WarningIcon />
-      case 'archived':
-        return <SettingsIcon />
-      default:
-        return <SettingsIcon />
-    }
-  }
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'published':
-        return 'Publicado'
-      case 'draft':
-        return 'Borrador'
-      case 'archived':
-        return 'Archivado'
-      default:
-        return 'Desconocido'
-    }
-  }
-
-  const filteredCourses = courses.filter((course) => {
-    const matchesSearch =
-      course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.instructor.toLowerCase().includes(searchTerm.toLowerCase())
-
-    const matchesCategory =
-      filterCategory === 'all' || course.category === filterCategory
-    const matchesStatus =
-      filterStatus === 'all' || course.status === filterStatus
-
-    return matchesSearch && matchesCategory && matchesStatus
-  })
-
-  const categories = [...new Set(courses.map((course) => course.category))]
-  const totalCourses = courses.length
-  const publishedCourses = courses.filter(
-    (c) => c.status === 'published'
-  ).length
-  // const draftCourses = courses.filter((c) => c.status === 'draft').length
-  const totalStudents = courses.reduce((sum, c) => sum + c.enrolledStudents, 0)
-  const avgRating =
-    courses.reduce((sum, c) => sum + c.rating, 0) / courses.length
-
-  if (isLoading) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '50vh'
-        }}
-      >
-        <Typography>Cargando cursos...</Typography>
-      </Box>
-    )
-  }
+  const publishedCourses = courses.filter((course) => course.status === 'published').length
+  const draftCourses = courses.filter((course) => course.status === 'draft').length
+  const certificateCourses = courses.filter((course) => course.has_certificate).length
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* Header */}
       <Box
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
+          alignItems: { xs: 'flex-start', md: 'center' },
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: 2,
           mb: 3
         }}
       >
         <Box>
-          <Typography variant='h4' component='h1'>
+          <Typography variant='h4' component='h1' gutterBottom>
             Mis Cursos
           </Typography>
-          <Typography variant='body2' color='text.secondary'>
-            Gestiona y prueba todos tus cursos creados
+          <Typography color='text.secondary'>
+            Tablero operativo del catalogo real del LMS con accesos directos a gestion y
+            contenido.
           </Typography>
         </Box>
-        <Button
-          variant='contained'
-          startIcon={<AddIcon />}
-          onClick={handleCreateCourse}
-        >
-          Crear Nuevo Curso
-        </Button>
+
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Button variant='outlined' onClick={() => navigate('/lms/admin/courses')}>
+            Gestion completa
+          </Button>
+          <Button variant='contained' onClick={() => navigate('/lms/admin/courses')}>
+            Crear o editar cursos
+          </Button>
+        </Stack>
       </Box>
 
-      {/* Estadísticas */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <SchoolIcon
-                  sx={{ fontSize: 40, color: 'primary.main', mr: 2 }}
-                />
+              <Stack direction='row' spacing={2} alignItems='center'>
+                <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.main' }}>
+                  <CourseIcon />
+                </Avatar>
                 <Box>
-                  <Typography variant='h4'>{totalCourses}</Typography>
-                  <Typography variant='body2' color='text.secondary'>
-                    Total Cursos
-                  </Typography>
+                  <Typography variant='h4'>{courses.length}</Typography>
+                  <Typography color='text.secondary'>Cursos totales</Typography>
                 </Box>
-              </Box>
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <CheckIcon
-                  sx={{ fontSize: 40, color: 'success.main', mr: 2 }}
-                />
+              <Stack direction='row' spacing={2} alignItems='center'>
+                <Avatar sx={{ bgcolor: 'success.light', color: 'success.main' }}>
+                  <PublishedIcon />
+                </Avatar>
                 <Box>
                   <Typography variant='h4'>{publishedCourses}</Typography>
-                  <Typography variant='body2' color='text.secondary'>
-                    Publicados
-                  </Typography>
+                  <Typography color='text.secondary'>Publicados</Typography>
                 </Box>
-              </Box>
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <PeopleIcon sx={{ fontSize: 40, color: 'info.main', mr: 2 }} />
+              <Stack direction='row' spacing={2} alignItems='center'>
+                <Avatar sx={{ bgcolor: 'warning.light', color: 'warning.main' }}>
+                  <EditIcon />
+                </Avatar>
                 <Box>
-                  <Typography variant='h4'>{totalStudents}</Typography>
-                  <Typography variant='body2' color='text.secondary'>
-                    Estudiantes
-                  </Typography>
+                  <Typography variant='h4'>{draftCourses}</Typography>
+                  <Typography color='text.secondary'>Borradores</Typography>
                 </Box>
-              </Box>
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <TrendingUpIcon
-                  sx={{ fontSize: 40, color: 'warning.main', mr: 2 }}
-                />
+              <Stack direction='row' spacing={2} alignItems='center'>
+                <Avatar sx={{ bgcolor: 'info.light', color: 'info.main' }}>
+                  <PreviewIcon />
+                </Avatar>
                 <Box>
-                  <Typography variant='h4'>{avgRating.toFixed(1)}</Typography>
-                  <Typography variant='body2' color='text.secondary'>
-                    Rating Promedio
-                  </Typography>
+                  <Typography variant='h4'>{certificateCourses}</Typography>
+                  <Typography color='text.secondary'>Con certificado</Typography>
                 </Box>
-              </Box>
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      {/* Filtros */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems='center'>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label='Buscar cursos...'
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                size='small'
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <FormControl fullWidth size='small'>
-                <InputLabel>Categoría</InputLabel>
-                <Select
-                  value={filterCategory}
-                  label='Categoría'
-                  onChange={(e) => setFilterCategory(e.target.value)}
-                >
-                  <MenuItem value='all'>Todas las categorías</MenuItem>
-                  {categories.map((category) => (
-                    <MenuItem key={category} value={category}>
-                      {category}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <FormControl fullWidth size='small'>
-                <InputLabel>Estado</InputLabel>
-                <Select
-                  value={filterStatus}
-                  label='Estado'
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                >
-                  <MenuItem value='all'>Todos los estados</MenuItem>
-                  <MenuItem value='published'>Publicados</MenuItem>
-                  <MenuItem value='draft'>Borradores</MenuItem>
-                  <MenuItem value='archived'>Archivados</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={2}>
-              <Button
-                fullWidth
-                variant='outlined'
-                onClick={() => {
-                  setSearchTerm('')
-                  setFilterCategory('all')
-                  setFilterStatus('all')
-                }}
-              >
-                Limpiar
-              </Button>
-            </Grid>
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={5}>
+            <TextField
+              fullWidth
+              label='Buscar curso'
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
           </Grid>
-        </CardContent>
-      </Card>
-
-      {/* Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs
-          value={activeTab}
-          onChange={(_e, newValue) => setActiveTab(newValue)}
-        >
-          <Tab label={`Todos (${filteredCourses.length})`} />
-          <Tab
-            label={`Publicados (${filteredCourses.filter((c) => c.status === 'published').length})`}
-          />
-          <Tab
-            label={`Borradores (${filteredCourses.filter((c) => c.status === 'draft').length})`}
-          />
-        </Tabs>
-      </Box>
-
-      {/* Lista de cursos */}
-      <Grid container spacing={3}>
-        {filteredCourses
-          .filter((course) => {
-            if (activeTab === 0) return true
-            if (activeTab === 1) return course.status === 'published'
-            if (activeTab === 2) return course.status === 'draft'
-            return true
-          })
-          .map((course) => (
-            <Grid item xs={12} md={6} lg={4} key={course.id}>
-              <Card
-                sx={{
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column'
-                }}
+          <Grid item xs={12} md={3.5}>
+            <FormControl fullWidth>
+              <InputLabel>Estado</InputLabel>
+              <Select
+                value={status}
+                label='Estado'
+                onChange={(event) => setStatus(event.target.value as 'all' | Course['status'])}
               >
+                <MenuItem value='all'>Todos</MenuItem>
+                <MenuItem value='draft'>Borrador</MenuItem>
+                <MenuItem value='published'>Publicado</MenuItem>
+                <MenuItem value='archived'>Archivado</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} md={3.5}>
+            <FormControl fullWidth>
+              <InputLabel>Audiencia</InputLabel>
+              <Select
+                value={audience}
+                label='Audiencia'
+                onChange={(event) =>
+                  setAudience(event.target.value as 'all' | Course['audience'])
+                }
+              >
+                <MenuItem value='all'>Todas</MenuItem>
+                <MenuItem value='internal'>Interno</MenuItem>
+                <MenuItem value='client'>Cliente</MenuItem>
+                <MenuItem value='both'>Ambos</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+      </Paper>
+
+      {isLoading ? (
+        <Typography color='text.secondary'>Cargando catalogo de cursos...</Typography>
+      ) : filteredCourses.length === 0 ? (
+        <Paper sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant='h6' gutterBottom>
+            No hay cursos que coincidan con los filtros
+          </Typography>
+          <Typography color='text.secondary'>
+            Ajusta la busqueda o crea el siguiente curso desde Gestion de Cursos.
+          </Typography>
+        </Paper>
+      ) : (
+        <Grid container spacing={3}>
+          {filteredCourses.map((course) => (
+            <Grid item xs={12} md={6} lg={4} key={course.id}>
+              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <CardHeader
-                  avatar={
-                    <Avatar sx={{ bgcolor: 'primary.main' }}>
-                      {course.title.charAt(0)}
-                    </Avatar>
-                  }
-                  action={
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Chip
-                        icon={getStatusIcon(course.status)}
-                        label={getStatusLabel(course.status)}
-                        color={getStatusColor(course.status)}
-                        size='small'
-                      />
-                    </Box>
-                  }
+                  avatar={<Avatar>{course.title.charAt(0).toUpperCase()}</Avatar>}
                   title={course.title}
-                  subheader={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant='caption'>
-                        {course.instructor}
-                      </Typography>
-                      <Typography variant='caption'>•</Typography>
-                      <Typography variant='caption'>
-                        {course.duration}
-                      </Typography>
-                    </Box>
-                  }
+                  subheader={`Actualizado ${new Date(course.updated_at).toLocaleDateString('es-CO')}`}
                 />
                 <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography
-                    variant='body2'
-                    color='text.secondary'
-                    sx={{ mb: 2 }}
-                  >
+                  <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
                     {course.description}
                   </Typography>
 
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      mb: 2
-                    }}
-                  >
+                  <Stack direction='row' spacing={1} flexWrap='wrap' sx={{ mb: 2 }}>
                     <Chip
-                      label={course.category}
+                      label={statusLabel(course.status)}
+                      color={statusColor(course.status)}
                       size='small'
-                      variant='outlined'
                     />
-                    <Chip
-                      label={
-                        course.audience.employees ? 'Empleados' : 'Clientes'
-                      }
-                      size='small'
-                      color='primary'
-                    />
-                  </Box>
+                    <Chip label={getCourseAudienceLabel(course.audience)} size='small' variant='outlined' />
+                    {course.has_certificate ? (
+                      <Chip label='Certificado' size='small' color='info' variant='outlined' />
+                    ) : null}
+                    {course.is_mandatory ? (
+                      <Chip label='Obligatorio' size='small' color='warning' variant='outlined' />
+                    ) : null}
+                  </Stack>
 
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 2,
-                      mb: 2
-                    }}
-                  >
-                    <Box
-                      sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-                    >
-                      <PeopleIcon fontSize='small' />
-                      <Typography variant='caption'>
-                        {course.enrolledStudents}
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-                    >
-                      <SchoolIcon fontSize='small' />
-                      <Typography variant='caption'>
-                        {course.totalLessons}
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-                    >
-                      <Rating value={course.rating} readOnly size='small' />
-                    </Box>
-                  </Box>
+                  <Typography variant='caption' color='text.secondary' display='block' sx={{ mb: 2 }}>
+                    Modulos: {course.modules?.length || 0}
+                  </Typography>
 
-                  {course.status === 'published' && (
-                    <Box sx={{ mb: 2 }}>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          mb: 1
-                        }}
-                      >
-                        <Typography variant='caption'>
-                          Progreso promedio
-                        </Typography>
-                        <Typography variant='caption'>
-                          {course.completionRate}%
-                        </Typography>
-                      </Box>
-                      <LinearProgress
-                        variant='determinate'
-                        value={course.completionRate}
-                        sx={{ height: 6, borderRadius: 3 }}
-                      />
-                    </Box>
-                  )}
-
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  <Stack direction='row' spacing={1} flexWrap='wrap'>
                     <Button
                       size='small'
-                      variant='outlined'
                       startIcon={<ViewIcon />}
-                      onClick={() => handleViewCourse(course.id)}
+                      onClick={() => navigate(`/lms/course/${course.id}`)}
                     >
                       Ver
                     </Button>
                     <Button
                       size='small'
-                      variant='outlined'
-                      startIcon={<PlayIcon />}
-                      onClick={() => handleTestCourse(course.id)}
+                      startIcon={<PreviewIcon />}
+                      onClick={() => navigate(`/lms/course/${course.id}/preview`)}
                     >
                       Probar
                     </Button>
                     <Button
                       size='small'
-                      variant='outlined'
-                      startIcon={<EditContentIcon />}
-                      onClick={() => handleEditContent(course.id)}
+                      startIcon={<ContentIcon />}
+                      onClick={() => navigate(`/lms/admin/courses/${course.id}/content`)}
                     >
                       Contenido
                     </Button>
                     <Button
                       size='small'
-                      variant='outlined'
                       startIcon={<EditIcon />}
-                      onClick={() => handleEditCourse(course)}
+                      onClick={() => navigate('/lms/admin/courses')}
                     >
-                      Editar
+                      Gestionar
                     </Button>
-                    <IconButton
-                      size='small'
-                      color='error'
-                      onClick={() => handleDeleteCourse(course.id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
+                  </Stack>
                 </CardContent>
               </Card>
             </Grid>
           ))}
-      </Grid>
-
-      {filteredCourses.length === 0 && (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
-          <SchoolIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
-          <Typography variant='h6' color='text.secondary' gutterBottom>
-            No se encontraron cursos
-          </Typography>
-          <Typography color='text.secondary'>
-            {searchTerm || filterCategory !== 'all' || filterStatus !== 'all'
-              ? 'Intenta ajustar los filtros de búsqueda'
-              : 'Crea tu primer curso para comenzar'}
-          </Typography>
-        </Box>
+        </Grid>
       )}
-
-      {/* Dialog para crear/editar curso */}
-      <Dialog
-        open={openCourseDialog}
-        onClose={() => setOpenCourseDialog(false)}
-        maxWidth='md'
-        fullWidth
-      >
-        <DialogTitle>
-          {editingCourse ? 'Editar Curso' : 'Crear Nuevo Curso'}
-        </DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label='Título del curso'
-                value={newCourse.title}
-                onChange={(e) =>
-                  setNewCourse({ ...newCourse, title: e.target.value })
-                }
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                label='Descripción'
-                value={newCourse.description}
-                onChange={(e) =>
-                  setNewCourse({ ...newCourse, description: e.target.value })
-                }
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label='Categoría'
-                value={newCourse.category}
-                onChange={(e) =>
-                  setNewCourse({ ...newCourse, category: e.target.value })
-                }
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label='Instructor'
-                value={newCourse.instructor}
-                onChange={(e) =>
-                  setNewCourse({ ...newCourse, instructor: e.target.value })
-                }
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label='Duración'
-                value={newCourse.duration}
-                onChange={(e) =>
-                  setNewCourse({ ...newCourse, duration: e.target.value })
-                }
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Typography variant='subtitle2' gutterBottom>
-                Audiencia del Curso
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <Button
-                  variant={
-                    newCourse.audience.employees ? 'contained' : 'outlined'
-                  }
-                  onClick={() =>
-                    setNewCourse({
-                      ...newCourse,
-                      audience: {
-                        ...newCourse.audience,
-                        employees: !newCourse.audience.employees
-                      }
-                    })
-                  }
-                >
-                  Empleados
-                </Button>
-                <Button
-                  variant={
-                    newCourse.audience.clients ? 'contained' : 'outlined'
-                  }
-                  onClick={() =>
-                    setNewCourse({
-                      ...newCourse,
-                      audience: {
-                        ...newCourse.audience,
-                        clients: !newCourse.audience.clients
-                      }
-                    })
-                  }
-                >
-                  Clientes
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenCourseDialog(false)}>Cancelar</Button>
-          <Button
-            onClick={handleSaveCourse}
-            variant='contained'
-            disabled={
-              !newCourse.title ||
-              !newCourse.description ||
-              !newCourse.category ||
-              !newCourse.instructor
-            }
-          >
-            {editingCourse ? 'Actualizar' : 'Crear'}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   )
 }
