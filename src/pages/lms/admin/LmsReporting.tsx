@@ -98,6 +98,14 @@ const reportTypeLabels: Record<ReportType, string> = {
   custom: 'Personalizado'
 }
 
+const knownCustomColumns = Array.from(
+  new Set(
+    Object.entries(templateColumnsPresets)
+      .filter(([type]) => type !== 'custom')
+      .flatMap(([, columns]) => columns)
+  )
+)
+
 const emptyTemplateForm = {
   name: '',
   description: '',
@@ -124,6 +132,7 @@ const LmsReporting: React.FC = () => {
   const [editingSchedule, setEditingSchedule] = useState<ScheduledReport | null>(null)
   const [templateForm, setTemplateForm] = useState(emptyTemplateForm)
   const [scheduleForm, setScheduleForm] = useState(emptyScheduleForm)
+  const [customColumnInput, setCustomColumnInput] = useState('')
   const availableColumns = templateColumnsPresets[templateForm.type]
   const isCustomTemplate = templateForm.type === 'custom'
 
@@ -176,6 +185,7 @@ const LmsReporting: React.FC = () => {
         setTemplateDialogOpen(false)
         setEditingTemplate(null)
         setTemplateForm(emptyTemplateForm)
+        setCustomColumnInput('')
         Toast.fire({
           icon: 'success',
           title: editingTemplate ? 'Plantilla actualizada' : 'Plantilla creada'
@@ -282,6 +292,7 @@ const LmsReporting: React.FC = () => {
   const handleCreateTemplate = () => {
     setEditingTemplate(null)
     setTemplateForm(emptyTemplateForm)
+    setCustomColumnInput('')
     setTemplateDialogOpen(true)
   }
 
@@ -293,6 +304,7 @@ const LmsReporting: React.FC = () => {
       type: template.type,
       columns: template.columns || []
     })
+    setCustomColumnInput('')
     setTemplateDialogOpen(true)
   }
 
@@ -307,6 +319,28 @@ const LmsReporting: React.FC = () => {
         columns: nextColumns
       }
     })
+  }
+
+  const addCustomColumns = () => {
+    const incomingColumns = customColumnInput
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean)
+
+    if (incomingColumns.length === 0) return
+
+    setTemplateForm((prev) => ({
+      ...prev,
+      columns: Array.from(new Set([...prev.columns, ...incomingColumns]))
+    }))
+    setCustomColumnInput('')
+  }
+
+  const removeTemplateColumn = (column: string) => {
+    setTemplateForm((prev) => ({
+      ...prev,
+      columns: prev.columns.filter((item) => item !== column)
+    }))
   }
 
   const handleCreateSchedule = () => {
@@ -599,23 +633,68 @@ const LmsReporting: React.FC = () => {
               </Select>
             </FormControl>
               {isCustomTemplate ? (
-                <TextField
-                  label='Columnas'
-                  helperText='Para reportes personalizados, escribe una columna por coma.'
-                  value={templateForm.columns.join(', ')}
-                  onChange={(event) =>
-                    setTemplateForm((prev) => ({
-                      ...prev,
-                      columns: event.target.value
-                        .split(',')
-                        .map((item) => item.trim())
-                        .filter(Boolean)
-                    }))
-                  }
-                  multiline
-                  minRows={2}
-                  fullWidth
-                />
+                <Stack spacing={2}>
+                  <Box>
+                    <Typography variant='subtitle2' sx={{ mb: 1 }}>
+                      Columnas conocidas
+                    </Typography>
+                    <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                      Puedes seleccionar columnas conocidas del LMS y, si hace falta, agregar extras manualmente.
+                    </Typography>
+                    <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
+                      {knownCustomColumns.map((column) => {
+                        const selected = templateForm.columns.includes(column)
+                        return (
+                          <Chip
+                            key={column}
+                            label={column}
+                            clickable
+                            color={selected ? 'primary' : 'default'}
+                            variant={selected ? 'filled' : 'outlined'}
+                            onClick={() => toggleTemplateColumn(column)}
+                          />
+                        )
+                      })}
+                    </Stack>
+                  </Box>
+
+                  <Box>
+                    <Typography variant='subtitle2' sx={{ mb: 1 }}>
+                      Columnas extra
+                    </Typography>
+                    <TextField
+                      label='Agregar columnas manuales'
+                      helperText='Escribe columnas extra separadas por coma y luego agrégalas.'
+                      value={customColumnInput}
+                      onChange={(event) => setCustomColumnInput(event.target.value)}
+                      fullWidth
+                    />
+                    <Button sx={{ mt: 1.5 }} variant='outlined' onClick={addCustomColumns} disabled={!customColumnInput.trim()}>
+                      Agregar columnas manuales
+                    </Button>
+                  </Box>
+
+                  <Box>
+                    <Typography variant='subtitle2' sx={{ mb: 1 }}>
+                      Selección actual
+                    </Typography>
+                    {templateForm.columns.length === 0 ? (
+                      <Alert severity='warning'>Todavía no has seleccionado columnas para este reporte.</Alert>
+                    ) : (
+                      <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
+                        {templateForm.columns.map((column) => (
+                          <Chip
+                            key={column}
+                            label={column}
+                            onDelete={() => removeTemplateColumn(column)}
+                            color='primary'
+                            variant='outlined'
+                          />
+                        ))}
+                      </Stack>
+                    )}
+                  </Box>
+                </Stack>
               ) : (
                 <Box>
                   <Typography variant='subtitle2' sx={{ mb: 1 }}>
