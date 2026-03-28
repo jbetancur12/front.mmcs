@@ -20,7 +20,7 @@ import {
   Fab,
   Collapse,
   Alert,
-  Snackbar,
+  AlertTitle,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -133,8 +133,6 @@ const LmsCourseView: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile)
   const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set([0]))
   const [showCompletionDialog, setShowCompletionDialog] = useState(false)
-  const [snackbarMessage, setSnackbarMessage] = useState('')
-  const [showSnackbar, setShowSnackbar] = useState(false)
   const [lessonStartTime, setLessonStartTime] = useState<Date | null>(null)
 
   const storeUser = useStore(userStore)
@@ -282,15 +280,9 @@ const LmsCourseView: React.FC = () => {
   const updateProgressMutation = useCompleteLesson({
     onSuccess: async () => {
       await queryClient.invalidateQueries(queryKeys.certificates.user(undefined))
-      setSnackbarMessage('Lección completada correctamente')
-      setShowSnackbar(true)
     },
     onError: (error: any) => {
-      setSnackbarMessage(
-        'Error al completar lección: ' +
-          (error.response?.data?.error?.message || error.response?.data?.message || error.message)
-      )
-      setShowSnackbar(true)
+      console.error('Error al completar lección:', error)
     }
   })
 
@@ -298,15 +290,9 @@ const LmsCourseView: React.FC = () => {
   const completeQuizMutation = useSubmitQuiz({
     onSuccess: async () => {
       await queryClient.invalidateQueries(queryKeys.certificates.user(undefined))
-      setSnackbarMessage('Quiz completado correctamente')
-      setShowSnackbar(true)
     },
     onError: (error: any) => {
-      setSnackbarMessage(
-        'Error al completar quiz: ' +
-          (error.response?.data?.error?.message || error.response?.data?.message || error.message)
-      )
-      setShowSnackbar(true)
+      console.error('Error al completar quiz:', error)
     }
   })
 
@@ -523,13 +509,8 @@ const LmsCourseView: React.FC = () => {
         lessonId,
         timeSpent
       })
-
-      setSnackbarMessage('Lección completada exitosamente')
-      setShowSnackbar(true)
     } catch (error) {
       console.error('Error completing lesson:', error)
-      setSnackbarMessage('Error al guardar el progreso')
-      setShowSnackbar(true)
     }
   }, [lessonStartTime, updateProgressMutation])
 
@@ -602,6 +583,22 @@ const LmsCourseView: React.FC = () => {
     })
   }, [])
 
+  const currentLesson = getCurrentLesson()
+  const courseProgress = getCourseProgress()
+  const nextLesson = getNextLesson()
+  const prevLesson = getPreviousLesson()
+  const currentLessonCompleted = currentLesson ? isLessonCompleted(currentLesson.id) : false
+  const nextUnlockedLesson =
+    nextLesson && isLessonUnlocked(nextLesson.moduleIndex, nextLesson.lessonIndex)
+      ? nextLesson
+      : null
+
+  useEffect(() => {
+    if (courseProgress.percentage === 100) {
+      setShowCompletionDialog(true)
+    }
+  }, [courseProgress.percentage])
+
   // Early return states (must be after all hooks)
   if (isLoadingCourse) {
     return (
@@ -645,32 +642,6 @@ const LmsCourseView: React.FC = () => {
         return 'Contenido'
     }
   }
-
-  if (isLoadingCourse) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '50vh'
-        }}
-      >
-        <Typography>Cargando curso...</Typography>
-      </Box>
-    )
-  }
-
-  const currentLesson = getCurrentLesson()
-  const courseProgress = getCourseProgress()
-  const nextLesson = getNextLesson()
-  const prevLesson = getPreviousLesson()
-
-  useEffect(() => {
-    if (courseProgress.percentage === 100) {
-      setShowCompletionDialog(true)
-    }
-  }, [courseProgress.percentage])
 
   // Sidebar content
   const sidebarContent = (
@@ -994,6 +965,56 @@ const LmsCourseView: React.FC = () => {
                 }
               />
               <CardContent>
+                {courseProgress.percentage === 100 ? (
+                  <Alert severity="success" sx={{ mb: 3 }}>
+                    <AlertTitle>Curso completado</AlertTitle>
+                    Ya cerraste todo el recorrido de aprendizaje.
+                    {course.hasCertificate && hasGeneratedCertificate && (
+                      <Button
+                        variant="contained"
+                        color="success"
+                        size="small"
+                        startIcon={<CertificateIcon />}
+                        sx={{ ml: 2, mt: { xs: 2, sm: 0 } }}
+                        onClick={handleOpenCurrentCertificate}
+                      >
+                        Abrir certificado
+                      </Button>
+                    )}
+                    {course.hasCertificate && !hasGeneratedCertificate && (
+                      <Chip
+                        label="Generando certificado..."
+                        color="success"
+                        size="small"
+                        sx={{ ml: 2, mt: { xs: 2, sm: 0 } }}
+                      />
+                    )}
+                  </Alert>
+                ) : currentLessonCompleted && nextUnlockedLesson ? (
+                  <Alert
+                    severity="success"
+                    sx={{ mb: 3 }}
+                    action={
+                      <Button color="inherit" size="small" onClick={handleNextLesson}>
+                        Continuar
+                      </Button>
+                    }
+                  >
+                    <AlertTitle>Lección completada</AlertTitle>
+                    Siguiente paso: continúa con <strong>{nextUnlockedLesson.lesson.title}</strong>.
+                  </Alert>
+                ) : currentLesson.type === 'quiz' ? (
+                  <Alert severity="info" sx={{ mb: 3 }}>
+                    <AlertTitle>Evaluación de la lección</AlertTitle>
+                    Para avanzar necesitas aprobar este quiz. Si no alcanzas el puntaje mínimo, puedes volver a intentarlo.
+                  </Alert>
+                ) : (
+                  <Alert severity="info" sx={{ mb: 3 }}>
+                    <AlertTitle>Siguiente paso</AlertTitle>
+                    Completa esta lección para desbloquear la siguiente parte del curso.
+                  </Alert>
+                )}
+
                 {/* Video content */}
                 {currentLesson.type === 'video' && currentLesson.content.videoUrl && (
                   <Box sx={{ mb: 3 }}>
@@ -1094,7 +1115,7 @@ const LmsCourseView: React.FC = () => {
                       onClick={() => handleLessonComplete(currentLesson.id)}
                       disabled={updateProgressMutation.isLoading}
                     >
-                      {updateProgressMutation.isLoading ? 'Guardando...' : 'Marcar como Completado'}
+                      {updateProgressMutation.isLoading ? 'Guardando...' : 'Completar y continuar'}
                     </Button>
                   </Box>
                 )}
@@ -1171,16 +1192,8 @@ const LmsCourseView: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={showSnackbar}
-        autoHideDuration={3000}
-        onClose={() => setShowSnackbar(false)}
-        message={snackbarMessage}
-      />
     </Box>
   )
 }
 
 export default LmsCourseView
-// @ts-nocheck
