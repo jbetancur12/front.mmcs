@@ -1,11 +1,13 @@
 import React from 'react'
-import { Grid, Card, CardContent, Box, Typography } from '@mui/material'
+import { Card, CardContent, Box, Typography } from '@mui/material'
 import {
   Assignment,
   Schedule,
+  PersonAddAlt1,
   Build,
   CheckCircle,
-  Warning
+  Warning,
+  Description
 } from '@mui/icons-material'
 import { MetricsDashboardProps } from '../types'
 import { useModernStyles } from '../hooks/useModernStyles'
@@ -32,11 +34,26 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
       borderColor: colors.warning
     },
     {
+      title: 'Asignados',
+      value: metrics.assignedTickets,
+      icon: PersonAddAlt1,
+      color: 'info',
+      borderColor: colors.info
+    },
+    {
       title: 'En Progreso',
       value: metrics.inProgressTickets,
       icon: Build,
       color: 'info',
-      borderColor: colors.info
+      borderColor: colors.info,
+      isActive: metrics.inProgressTickets > 0
+    },
+    {
+      title: 'Reporte técnico',
+      value: metrics.pendingTechnicalReport,
+      icon: Description,
+      color: 'warning',
+      borderColor: colors.warning
     },
     {
       title: 'Completados Hoy',
@@ -63,14 +80,27 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
   ]
 
   return (
-    <Grid container spacing={1.5} sx={{ mb: 0 }}>
+    <Box
+      sx={{
+        mb: 0,
+        display: 'grid',
+        gridTemplateColumns: `repeat(${metricsConfig.length}, minmax(0, 1fr))`,
+        gap: 1
+      }}
+    >
       {metricsConfig.map((metric, index) => (
-        <Grid item xs={2} key={index}>
+        <Box key={index}>
           <Card
             sx={{
               ...cardStyles.base,
               ...cardStyles.metric,
               borderLeft: `6px solid ${metric.borderColor}`,
+              ...(metric.isActive && {
+                border: `2px solid ${colors.info}`,
+                background:
+                  'linear-gradient(135deg, rgba(23, 162, 184, 0.08), rgba(23, 162, 184, 0.02))',
+                boxShadow: '0 4px 16px rgba(23, 162, 184, 0.18)'
+              }),
               ...(metric.isUrgent && {
                 border: `2px solid ${colors.danger}`,
                 backgroundColor: 'rgba(220, 53, 69, 0.02)',
@@ -84,7 +114,7 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
           >
             <CardContent
               sx={{
-                p: 3,
+                p: 2,
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
@@ -92,7 +122,7 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
               }}
             >
               <Box
-                sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}
+                sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 0.65 }}
               >
                 <Box
                   sx={{
@@ -102,14 +132,15 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
                     ]
                   }}
                 >
-                  <metric.icon sx={{ fontSize: '1.5rem', color: 'white' }} />
+                  <metric.icon sx={{ fontSize: '1.25rem', color: 'white' }} />
                 </Box>
                 <Typography
                   variant='h3'
                   sx={{
                     fontWeight: 800,
                     color: colors.textPrimary, // Mejor contraste
-                    lineHeight: 1
+                    lineHeight: 1,
+                    fontSize: '2rem'
                   }}
                 >
                   {metric.value}
@@ -120,18 +151,18 @@ const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
                 sx={{
                   color: colors.textSecondary, // Mejor contraste
                   fontWeight: 600,
-                  fontSize: '0.9rem',
+                  fontSize: '0.82rem',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.5px'
+                  letterSpacing: '0.35px'
                 }}
               >
                 {metric.title}
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
+        </Box>
       ))}
-    </Grid>
+    </Box>
   )
 }
 

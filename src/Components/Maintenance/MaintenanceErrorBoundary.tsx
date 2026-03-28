@@ -47,37 +47,34 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
           minHeight='400px'
           p={3}
           sx={{
-            background: 'linear-gradient(135deg, rgba(244, 67, 54, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)'
+            backgroundColor: '#f8fafc'
           }}
         >
           <Paper
-            elevation={3}
             sx={{
               p: 4,
               textAlign: 'center',
               maxWidth: 500,
               width: '100%',
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
+              backgroundColor: '#ffffff',
               borderRadius: '16px',
-              boxShadow: '0 8px 32px rgba(244, 67, 54, 0.15)',
-              border: '1px solid rgba(244, 67, 54, 0.1)'
+              boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
+              border: '1px solid #e5e7eb'
             }}
           >
             <Box
               sx={{
-                background: 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)',
+                backgroundColor: '#fef2f2',
                 borderRadius: '50%',
                 width: 80,
                 height: 80,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                margin: '0 auto 16px',
-                boxShadow: '0 4px 20px rgba(244, 67, 54, 0.3)'
+                margin: '0 auto 16px'
               }}
             >
-              <ErrorIcon sx={{ fontSize: 40, color: 'white' }} />
+              <ErrorIcon sx={{ fontSize: 40, color: '#dc2626' }} />
             </Box>
             <Typography 
               variant='h5' 
@@ -130,14 +127,10 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
                 onClick={this.handleRetry}
                 startIcon={<Refresh />}
                 sx={{
-                  background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                  backgroundColor: '#2f7d32',
                   borderRadius: '12px',
-                  boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
-                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
-                    background: 'linear-gradient(135deg, #5ab052 0%, #4a9642 100%)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
+                    backgroundColor: '#27672a'
                   }
                 }}
               >
@@ -150,11 +143,9 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
                   borderColor: '#f44336',
                   color: '#f44336',
                   borderRadius: '12px',
-                  transition: 'all 0.2s ease-in-out',
                   '&:hover': {
                     borderColor: '#d32f2f',
-                    background: 'rgba(244, 67, 54, 0.1)',
-                    transform: 'translateY(-1px)'
+                    backgroundColor: '#fef2f2'
                   }
                 }}
               >

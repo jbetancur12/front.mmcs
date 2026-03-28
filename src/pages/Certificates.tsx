@@ -30,7 +30,8 @@ import {
   CheckCircle,
   Warning,
   Error as ErrorIcon,
-  Update
+  Update,
+  SwapHoriz
 } from '@mui/icons-material'
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
@@ -150,6 +151,102 @@ function Certificates() {
 
   const handleEdit = async (field: string) => {
     const fieldLabel = fieldLabels[field] || field
+
+    if (field === 'equipo') {
+      try {
+        const response = await axiosPrivate.get('/devices')
+        const devices = Array.isArray(response.data) ? response.data : []
+
+        if (!devices.length) {
+          MySwal.fire(
+            'Sin equipos',
+            'No se encontraron equipos disponibles en el catálogo.',
+            'info'
+          )
+          return
+        }
+
+        const sortedDevices = [...devices].sort((a, b) =>
+          String(a.name || '').localeCompare(String(b.name || ''), 'es', {
+            sensitivity: 'base'
+          })
+        )
+
+        const inputOptions = sortedDevices.reduce(
+          (acc, device) => {
+            acc[String(device.id)] = device.name
+            return acc
+          },
+          {} as Record<string, string>
+        )
+
+        const selectionResult = await MySwal.fire({
+          title: 'Seleccionar equipo',
+          text: 'Elige el equipo correcto para este certificado.',
+          input: 'select',
+          inputOptions,
+          inputValue: certificateData?.deviceId
+            ? String(certificateData.deviceId)
+            : '',
+          inputPlaceholder: 'Selecciona un equipo',
+          showCancelButton: true,
+          confirmButtonText: 'Continuar',
+          cancelButtonText: 'Cancelar',
+          inputValidator: (value) => {
+            if (!value) return 'Debes seleccionar un equipo'
+            return null
+          }
+        })
+
+        if (!selectionResult.isConfirmed) return
+
+        const selectedDeviceId = Number(selectionResult.value)
+        const selectedDevice = sortedDevices.find(
+          (device) => Number(device.id) === selectedDeviceId
+        )
+
+        if (!selectedDevice) {
+          MySwal.fire('Error', 'No se encontró el equipo seleccionado.', 'error')
+          return
+        }
+
+        if (selectedDeviceId === Number(certificateData?.deviceId)) {
+          return
+        }
+
+        const confirmResult = await MySwal.fire({
+          title: '¿Estás seguro?',
+          text: `Este certificado quedará asociado al equipo "${selectedDevice.name}".`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, cambiar equipo',
+          cancelButtonText: 'Cancelar'
+        })
+
+        if (!confirmResult.isConfirmed) return
+
+        const updateResponse = await axiosPrivate.put(`/files/${id}`, {
+          deviceId: selectedDeviceId
+        })
+
+        if (updateResponse.status === 200) {
+          MySwal.fire(
+            'Actualizado',
+            'El equipo asociado al certificado fue actualizado exitosamente.',
+            'success'
+          )
+          getCertificateInfo()
+        }
+      } catch (error) {
+        MySwal.fire(
+          'Error',
+          'No se pudo actualizar el equipo asociado al certificado.',
+          'error'
+        )
+      }
+
+      return
+    }
 
     if (field === 'calibrationDate' || field === 'nextCalibrationDate') {
       // Si el campo es una fecha, usamos DatePicker
@@ -277,6 +374,157 @@ function Certificates() {
     }
   }
 
+  const handleBulkDeviceReassignment = async () => {
+    try {
+      const response = await axiosPrivate.get('/devices')
+      const devices = Array.isArray(response.data) ? response.data : []
+
+      if (!devices.length) {
+        MySwal.fire(
+          'Sin equipos',
+          'No se encontraron equipos disponibles en el catálogo.',
+          'info'
+        )
+        return
+      }
+
+      const sortedDevices = [...devices].sort((a, b) =>
+        String(a.name || '').localeCompare(String(b.name || ''), 'es', {
+          sensitivity: 'base'
+        })
+      )
+
+      const inputOptions = sortedDevices.reduce(
+        (acc, device) => {
+          acc[String(device.id)] = device.name
+          return acc
+        },
+        {} as Record<string, string>
+      )
+
+      const sourceResult = await MySwal.fire({
+        title: 'Equipo origen',
+        text: 'Selecciona el equipo que quieres reemplazar en lote.',
+        input: 'select',
+        inputOptions,
+        inputValue: certificateData?.deviceId
+          ? String(certificateData.deviceId)
+          : '',
+        inputPlaceholder: 'Selecciona un equipo',
+        showCancelButton: true,
+        confirmButtonText: 'Continuar',
+        cancelButtonText: 'Cancelar',
+        inputValidator: (value) =>
+          value ? null : 'Debes seleccionar el equipo origen'
+      })
+
+      if (!sourceResult.isConfirmed) return
+
+      const sourceDeviceId = Number(sourceResult.value)
+      const sourceDevice = sortedDevices.find(
+        (device) => Number(device.id) === sourceDeviceId
+      )
+
+      const targetOptions = sortedDevices
+        .filter((device) => Number(device.id) !== sourceDeviceId)
+        .reduce(
+          (acc, device) => {
+            acc[String(device.id)] = device.name
+            return acc
+          },
+          {} as Record<string, string>
+        )
+
+      const targetResult = await MySwal.fire({
+        title: 'Equipo destino',
+        text: 'Selecciona el equipo correcto al que se reasignarán los certificados.',
+        input: 'select',
+        inputOptions: targetOptions,
+        inputPlaceholder: 'Selecciona un equipo',
+        showCancelButton: true,
+        confirmButtonText: 'Previsualizar',
+        cancelButtonText: 'Cancelar',
+        inputValidator: (value) =>
+          value ? null : 'Debes seleccionar el equipo destino'
+      })
+
+      if (!targetResult.isConfirmed) return
+
+      const targetDeviceId = Number(targetResult.value)
+      const previewResponse = await axiosPrivate.post(
+        '/files/bulk/device-reassignment/preview',
+        {
+          sourceDeviceId,
+          targetDeviceId,
+          customerId: certificateData?.customerId
+        }
+      )
+
+      const preview = previewResponse.data
+
+      if (!preview.totalAffected) {
+        MySwal.fire(
+          'Sin coincidencias',
+          `No hay certificados asociados a "${sourceDevice?.name || 'este equipo'}".`,
+          'info'
+        )
+        return
+      }
+
+      const sampleHtml = (preview.sampleCertificates || [])
+        .map(
+          (item: any) =>
+            `<li><strong>#${item.id}</strong> - ${item.customerName} - Serie: ${item.serie || 'N/A'}</li>`
+        )
+        .join('')
+
+      const confirmResult = await MySwal.fire({
+        title: 'Confirmar cambio masivo',
+        html: `
+          <p>Se reasignarán <strong>${preview.totalAffected}</strong> certificado(s) de <strong>${certificateData?.customer?.nombre || 'esta empresa'}</strong>.</p>
+          <p><strong>Origen:</strong> ${preview.sourceDevice.name}</p>
+          <p><strong>Destino:</strong> ${preview.targetDevice.name}</p>
+          ${
+            sampleHtml
+              ? `<div style="text-align:left;margin-top:12px;"><strong>Muestra:</strong><ul style="margin-top:8px;">${sampleHtml}</ul></div>`
+              : ''
+          }
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, aplicar cambio',
+        cancelButtonText: 'Cancelar'
+      })
+
+      if (!confirmResult.isConfirmed) return
+
+      const updateResponse = await axiosPrivate.post(
+        '/files/bulk/device-reassignment',
+        {
+          sourceDeviceId,
+          targetDeviceId,
+          customerId: certificateData?.customerId
+        }
+      )
+
+      if (updateResponse.status === 200) {
+        MySwal.fire(
+          'Actualizado',
+          `Se reasignaron ${updateResponse.data.updatedCount} certificado(s) correctamente.`,
+          'success'
+        )
+        getCertificateInfo()
+        setRefreshTrigger((prev) => prev + 1)
+      }
+    } catch (error) {
+      MySwal.fire(
+        'Error',
+        'No se pudo completar el cambio masivo de equipo.',
+        'error'
+      )
+    }
+  }
+
   if (loading) {
     return (
       <Container maxWidth="lg" sx={{ py: 2 }}>
@@ -346,24 +594,40 @@ function Certificates() {
         </Box>
 
         {$userStore.rol.some((role) => ['admin', 'metrologist'].includes(role)) && (
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<Update />}
-            onClick={handleOpenModal}
-            sx={{
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              borderRadius: '8px',
-              textTransform: 'none',
-              fontWeight: 600,
-              fontSize: '0.875rem',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-              }
-            }}
-          >
-            Actualizar
-          </Button>
+          <Box display="flex" gap={1}>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<SwapHoriz />}
+              onClick={handleBulkDeviceReassignment}
+              sx={{
+                borderRadius: '8px',
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '0.875rem'
+              }}
+            >
+              Cambio masivo
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Update />}
+              onClick={handleOpenModal}
+              sx={{
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                borderRadius: '8px',
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '0.875rem',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                }
+              }}
+            >
+              Actualizar
+            </Button>
+          </Box>
         )}
       </Box>
 
@@ -410,7 +674,10 @@ function Certificates() {
                     icon={<Devices />}
                     label="Equipo"
                     value={certificateData?.device?.name}
-                    editable={false}
+                    editable={true}
+                    field="equipo"
+                    onEdit={handleEdit}
+                    userRoles={$userStore.rol}
                   />
                 </Grid>
 

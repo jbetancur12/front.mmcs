@@ -45,29 +45,29 @@ const ModernHeader: React.FC<ModernHeaderProps> = ({
       sx={{
         backgroundColor: modernColors.background,
         borderBottom: `2px solid ${modernColors.borderLight}`,
-        py: 2,
-        px: 4,
+        py: 1.25,
+        px: 3,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-        minHeight: '80px'
+        minHeight: '68px'
       }}
     >
       {/* Logo and Title Section */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.25 }}>
         {showLogo && (
           <Box
             sx={{
               backgroundColor: modernColors.primary,
-              borderRadius: '12px',
-              p: 1.5,
+              borderRadius: '10px',
+              p: 1.1,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
             }}
           >
-            <Build sx={{ fontSize: '2rem', color: 'white' }} />
+            <Build sx={{ fontSize: '1.55rem', color: 'white' }} />
           </Box>
         )}
         <Box>
@@ -77,7 +77,8 @@ const ModernHeader: React.FC<ModernHeaderProps> = ({
               fontWeight: 800,
               color: modernColors.textPrimary,
               lineHeight: 1,
-              mb: 0.5
+              mb: 0.25,
+              fontSize: '2rem'
             }}
           >
             <Box component="span" sx={{ color: modernColors.primary }}>
@@ -90,7 +91,8 @@ const ModernHeader: React.FC<ModernHeaderProps> = ({
             sx={{
               color: modernColors.textSecondary,
               fontWeight: 500,
-              lineHeight: 1
+              lineHeight: 1,
+              fontSize: '1rem'
             }}
           >
             Centro de Mantenimiento
@@ -99,7 +101,7 @@ const ModernHeader: React.FC<ModernHeaderProps> = ({
       </Box>
 
       {/* Status and Time Section */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
         {/* Connection Status */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Box
@@ -116,10 +118,11 @@ const ModernHeader: React.FC<ModernHeaderProps> = ({
             sx={{
               color: modernColors.textSecondary,
               fontWeight: 600,
-              fontSize: '0.9rem'
+              fontSize: '0.82rem'
             }}
           >
             {getConnectionStatusText()}
+            {connectionStatus.usingPollingFallback ? ' · Modo respaldo' : ''}
           </Typography>
         </Box>
 
@@ -128,9 +131,9 @@ const ModernHeader: React.FC<ModernHeaderProps> = ({
           sx={{
             backgroundColor: modernColors.secondaryBackground,
             border: `1px solid ${modernColors.border}`,
-            borderRadius: '12px',
-            p: 2,
-            minWidth: '200px',
+            borderRadius: '10px',
+            p: 1.25,
+            minWidth: '172px',
             textAlign: 'center'
           }}
         >
@@ -140,7 +143,8 @@ const ModernHeader: React.FC<ModernHeaderProps> = ({
               fontWeight: 700,
               color: modernColors.textPrimary,
               lineHeight: 1,
-              mb: 0.5,
+              mb: 0.25,
+              fontSize: '2rem',
               fontFamily: 'monospace'
             }}
           >
@@ -150,7 +154,7 @@ const ModernHeader: React.FC<ModernHeaderProps> = ({
             variant='body2'
             sx={{
               color: modernColors.textSecondary,
-              fontSize: '0.85rem',
+              fontSize: '0.78rem',
               fontWeight: 500,
               textTransform: 'capitalize'
             }}

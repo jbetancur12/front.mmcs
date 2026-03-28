@@ -27,6 +27,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { useQuery, useQueryClient } from 'react-query'
 import Modules from 'src/Components/Modules'
 import * as XLSX from 'xlsx'
+import { MySwal } from '@utils/sweetAlert'
 
 // API URL
 const minioUrl = import.meta.env.VITE_MINIO_URL
@@ -48,12 +49,12 @@ export interface ApiResponse {
     term: string
     searchableFields: string[]
   }
-   statistics: {
-        expired: number,
-        expiringSoon: number,
-        active: number,
-        total: number
-    },
+  statistics: {
+    expired: number,
+    expiringSoon: number,
+    active: number,
+    total: number
+  },
 }
 
 type Tab =
@@ -230,13 +231,18 @@ function UserProfile(): React.JSX.Element {
 
   const handleDelete = useCallback(
     async (certificateId: number) => {
-      const isConfirmed = window.confirm(
-        '¿Estás seguro de que deseas eliminar este certificado? Esta acción no se puede deshacer.'
-      )
+      const result = await MySwal.fire({
+        title: '¿Estás seguro?',
+        text: '¿Deseas eliminar este certificado? Esta acción no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6'
+      })
 
-      if (!isConfirmed) {
-        return
-      }
+      if (!result.isConfirmed) return
 
       try {
         const response = await axiosPrivate.delete(`/files/${certificateId}`)
@@ -253,6 +259,49 @@ function UserProfile(): React.JSX.Element {
       }
     },
     [axiosPrivate, refetch, queryClient, id]
+  )
+
+  const handleDeleteSede = useCallback(
+    async (sede: string) => {
+      if (!id) return
+
+      const result = await MySwal.fire({
+        title: '¿Eliminar sede?',
+        text: `¿Estás seguro de que deseas eliminar la sede "${sede}"? Esta acción solo se permitirá si no hay certificados asociados.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6'
+      })
+
+      if (!result.isConfirmed) return
+
+      try {
+        const response = await axiosPrivate.delete(
+          `/customers/${id}/sedes/${sede}`
+        )
+
+        if (response.status === 200) {
+          bigToast('Sede eliminada con éxito', 'success')
+          queryClient.invalidateQueries(['customer-data', id])
+        }
+      } catch (error: any) {
+        console.error('Error al eliminar sede:', error)
+        if (error.response?.status === 409) {
+          MySwal.fire({
+            title: 'No se puede eliminar',
+            text: 'No se puede eliminar la sede porque tiene certificados asociados. Por favor, remueve o transfiere los certificados primero.',
+            icon: 'error',
+            confirmButtonColor: '#3085d6'
+          })
+        } else {
+          bigToast('Error al eliminar sede', 'error')
+        }
+      }
+    },
+    [axiosPrivate, id, queryClient]
   )
 
   const handleImageChange = useCallback(
@@ -544,11 +593,10 @@ function UserProfile(): React.JSX.Element {
           <button
             type='button'
             onClick={() => handleTabChange('certificates')}
-            className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
-              activeTab === 'certificates'
+            className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${activeTab === 'certificates'
                 ? 'border-l border-t border-r rounded-t'
                 : 'text-blue-500 hover:text-blue-800'
-            }`}
+              }`}
           >
             Equipos
           </button>
@@ -557,11 +605,10 @@ function UserProfile(): React.JSX.Element {
           <button
             type='button'
             onClick={() => handleTabChange('headquarters')}
-            className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
-              activeTab === 'headquarters'
+            className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${activeTab === 'headquarters'
                 ? 'border-l border-t border-r rounded-t'
                 : 'text-blue-500 hover:text-blue-800'
-            }`}
+              }`}
           >
             Sedes
           </button>
@@ -570,11 +617,10 @@ function UserProfile(): React.JSX.Element {
           <button
             type='button'
             onClick={() => handleTabChange('calibrationTimeLine')}
-            className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
-              activeTab === 'calibrationTimeLine'
+            className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${activeTab === 'calibrationTimeLine'
                 ? 'border-l border-t border-r rounded-t'
                 : 'text-blue-500 hover:text-blue-800'
-            }`}
+              }`}
           >
             Programación
           </button>
@@ -585,11 +631,10 @@ function UserProfile(): React.JSX.Element {
               <button
                 type='button'
                 onClick={() => handleTabChange('users')}
-                className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
-                  activeTab === 'users'
+                className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${activeTab === 'users'
                     ? 'border-l border-t border-r rounded-t'
                     : 'text-blue-500 hover:text-blue-800'
-                }`}
+                  }`}
               >
                 Usuarios
               </button>
@@ -598,11 +643,10 @@ function UserProfile(): React.JSX.Element {
               <button
                 type='button'
                 onClick={() => handleTabChange('modules')}
-                className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${
-                  activeTab === 'modules'
+                className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${activeTab === 'modules'
                     ? 'border-l border-t border-r rounded-t'
                     : 'text-blue-500 hover:text-blue-800'
-                }`}
+                  }`}
               >
                 Modulos
               </button>
@@ -744,6 +788,7 @@ function UserProfile(): React.JSX.Element {
           selectedSede={selectedSede}
           sedes={customerData.sede}
           onDelete={handleDelete}
+          onDeleteSede={handleDeleteSede}
           onAddSede={handleAddSede}
           onEditSede={handleEditSede}
         />

@@ -1,6 +1,15 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
-import { Divider, IconButton, Stack, Tooltip, Typography } from '@mui/material'
+import {
+  Box,
+  Divider,
+  FormControlLabel,
+  IconButton,
+  Stack,
+  Switch,
+  Tooltip,
+  Typography
+} from '@mui/material'
 import {
   AssignmentTurnedIn,
   FactCheck,
@@ -32,8 +41,16 @@ const PurchaseOrders: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedPurchaseOrder, setSelectedPurchaseOrder] =
     useState<IPurchaseOrder | null>(null)
+  const [showOnlyUnverified, setShowOnlyUnverified] = useState(false)
 
   const purchaseOrders = data ?? []
+
+  const filteredOrders = useMemo(() => {
+    if (showOnlyUnverified) {
+      return purchaseOrders.filter((order) => !order.verified)
+    }
+    return purchaseOrders
+  }, [purchaseOrders, showOnlyUnverified])
 
   // Definir las columnas de la tabla
   const columns: MRT_ColumnDef<IPurchaseOrder>[] = [
@@ -56,9 +73,9 @@ const PurchaseOrders: React.FC = () => {
         const total = cell.getValue() as number
         return total
           ? new Intl.NumberFormat('es-CO', {
-              style: 'currency',
-              currency: 'COP'
-            }).format(total)
+            style: 'currency',
+            currency: 'COP'
+          }).format(total)
           : 'N/A'
       }
     }
@@ -80,13 +97,30 @@ const PurchaseOrders: React.FC = () => {
 
   return (
     <>
-      <Typography variant='h5' sx={{ mb: 2 }}>
-        Órdenes de Compra
-      </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2
+        }}
+      >
+        <Typography variant='h5'>Órdenes de Compra</Typography>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={showOnlyUnverified}
+              onChange={(e) => setShowOnlyUnverified(e.target.checked)}
+              color='primary'
+            />
+          }
+          label='Mostrar solo sin verificar'
+        />
+      </Box>
 
       <MaterialReactTable
         columns={columns}
-        data={purchaseOrders}
+        data={filteredOrders}
         state={{ isLoading }}
         localization={MRT_Localization_ES}
         enableRowActions={true}

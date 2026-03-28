@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -15,6 +15,7 @@ import {
   Alert,
   AlertTitle,
   CircularProgress,
+  Collapse,
   useMediaQuery,
   useTheme
 } from '@mui/material'
@@ -24,8 +25,13 @@ import {
   AttachMoney,
   Build,
   CheckCircle,
-  Close
+  Close,
+  AddAPhoto,
+  Draw
 } from '@mui/icons-material'
+import MaintenanceFileUpload from './MaintenanceFileUpload'
+import SignaturePad from './SignaturePad'
+import type { MaintenanceFile } from '../../types/maintenance'
 
 interface Cost {
   name: string
@@ -33,21 +39,55 @@ interface Cost {
   amount: number | string
 }
 
+export interface CompletionPhotoInput {
+  file: File
+  description?: string
+}
+
+export interface CompletionSignatureInput {
+  customerSignerName: string
+  customerSignatureData: string
+  technicianSignatureData?: string | null
+  saveTechnicianSignature?: boolean
+}
+
 interface CompletionCostsDialogProps {
   open: boolean
   onClose: () => void
-  onComplete: (workPerformed: string, costs: Cost[]) => Promise<void>
+  onComplete: (
+    workPerformed: string,
+    costs: Cost[],
+    completionPhotos: CompletionPhotoInput[],
+    technicianSignature: {
+      technicianSignatureData?: string | null
+      saveTechnicianSignature?: boolean
+    }
+  ) => Promise<void>
   loading?: boolean
+  technicianName?: string
+  storedTechnicianSignature?: string | null
+  canCaptureTechnicianSignature?: boolean
+  signaturesEnabled?: boolean
 }
 
 const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
   open,
   onClose,
   onComplete,
-  loading = false
+  loading = false,
+  technicianName,
+  storedTechnicianSignature,
+  canCaptureTechnicianSignature = false,
+  signaturesEnabled = false
 }) => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const surfaceSx = {
+    backgroundColor: '#ffffff',
+    borderRadius: '14px',
+    border: '1px solid #e5e7eb',
+    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+  }
 
   const [workPerformed, setWorkPerformed] = useState<string>('')
   const [workPerformedError, setWorkPerformedError] = useState<string>('')
@@ -57,6 +97,25 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
   const [errors, setErrors] = useState<
     Record<number, { name?: string; amount?: string }>
   >({})
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false)
+  const [completionPhotos, setCompletionPhotos] = useState<CompletionPhotoInput[]>([])
+  const [technicianSignatureData, setTechnicianSignatureData] = useState<string | null>(
+    storedTechnicianSignature || null
+  )
+  const [technicianSignatureError, setTechnicianSignatureError] = useState('')
+
+  useEffect(() => {
+    if (!open) {
+      setWorkPerformed('')
+      setWorkPerformedError('')
+      setCosts([{ name: '', description: '', amount: '' }])
+      setErrors({})
+      setShowPhotoUpload(false)
+      setCompletionPhotos([])
+      setTechnicianSignatureData(storedTechnicianSignature || null)
+      setTechnicianSignatureError('')
+    }
+  }, [open, storedTechnicianSignature])
 
   const handleAddCost = () => {
     setCosts([...costs, { name: '', description: '', amount: '' }])
@@ -131,8 +190,16 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
   const handleSubmit = async () => {
     const isWorkValid = validateWorkPerformed()
     const areCostsValid = validate()
+    const effectiveTechnicianSignature =
+      technicianSignatureData || storedTechnicianSignature || null
 
     if (!isWorkValid || !areCostsValid) return
+    if (signaturesEnabled && !effectiveTechnicianSignature) {
+      setTechnicianSignatureError(
+        'Debes registrar la firma del técnico para completar el ticket'
+      )
+      return
+    }
 
     const formattedCosts = costs.map((cost) => ({
       name: cost.name.trim(),
@@ -140,14 +207,60 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       amount: parseFloat(cost.amount as string)
     }))
 
-    await onComplete(workPerformed.trim(), formattedCosts)
+    await onComplete(workPerformed.trim(), formattedCosts, completionPhotos, {
+      technicianSignatureData: signaturesEnabled
+        ? effectiveTechnicianSignature
+        : null,
+      saveTechnicianSignature:
+        signaturesEnabled &&
+        canCaptureTechnicianSignature &&
+        !storedTechnicianSignature &&
+        Boolean(technicianSignatureData)
+    })
   }
 
   const handleCompleteWithoutCosts = async () => {
-    if (!validateWorkPerformed()) return
+    const effectiveTechnicianSignature =
+      technicianSignatureData || storedTechnicianSignature || null
 
-    // Complete with empty costs array but with workPerformed
-    await onComplete(workPerformed.trim(), [])
+    if (!validateWorkPerformed()) return
+    if (signaturesEnabled && !effectiveTechnicianSignature) {
+      setTechnicianSignatureError(
+        'Debes registrar la firma del técnico para completar el ticket'
+      )
+      return
+    }
+
+    await onComplete(workPerformed.trim(), [], completionPhotos, {
+      technicianSignatureData: signaturesEnabled
+        ? effectiveTechnicianSignature
+        : null,
+      saveTechnicianSignature:
+        signaturesEnabled &&
+        canCaptureTechnicianSignature &&
+        !storedTechnicianSignature &&
+        Boolean(technicianSignatureData)
+    })
+  }
+
+  const handlePhotosChange = (newFiles: File[]) => {
+    setCompletionPhotos((prev) => [
+      ...prev,
+      ...newFiles.map((file) => ({ file, description: '' }))
+    ])
+  }
+
+  const handlePhotoRemove = (fileId: string) => {
+    const fileIndex = parseInt(fileId, 10)
+    setCompletionPhotos((prev) => prev.filter((_, index) => index !== fileIndex))
+  }
+
+  const handlePhotoDescriptionChange = (index: number, value: string) => {
+    setCompletionPhotos((prev) =>
+      prev.map((photo, photoIndex) =>
+        photoIndex === index ? { ...photo, description: value } : photo
+      )
+    )
   }
 
   const calculateTotal = () => {
@@ -193,17 +306,19 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       {/* Header */}
       <DialogTitle
         sx={{
-          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-          color: 'white',
+          backgroundColor: '#ffffff',
+          color: '#0f172a',
           display: 'flex',
           alignItems: 'center',
           gap: 2,
-          py: 3
+          py: 3,
+          borderBottom: '1px solid #e5e7eb'
         }}
       >
         <Avatar
           sx={{
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            backgroundColor: '#eef6ee',
+            color: '#2f7d32',
             width: 48,
             height: 48
           }}
@@ -214,12 +329,12 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
           <Typography variant='h5' fontWeight={700}>
             Completar Ticket
           </Typography>
-          <Typography variant='body2' sx={{ opacity: 0.9 }}>
+          <Typography variant='body2' sx={{ color: '#64748b' }}>
             Describa el trabajo realizado y registre los costos
           </Typography>
         </Box>
         {isMobile && !loading && (
-          <IconButton onClick={onClose} sx={{ color: 'white' }}>
+          <IconButton onClick={onClose} sx={{ color: '#475569' }}>
             <Close />
           </IconButton>
         )}
@@ -245,15 +360,15 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
             p: 3,
             mb: 3,
             borderRadius: '12px',
-            border: '2px solid #3b82f6',
-            background: 'rgba(59, 130, 246, 0.03)'
+            border: '1px solid #bfdbfe',
+            backgroundColor: '#f8fbff'
           }}
         >
           <Typography
             variant='subtitle1'
             fontWeight={600}
             gutterBottom
-            sx={{ color: '#3b82f6' }}
+            sx={{ color: '#0f172a' }}
           >
             Trabajo Realizado *
           </Typography>
@@ -283,6 +398,175 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
           />
         </Paper>
 
+        <Box sx={{ mb: 3 }}>
+          <Typography
+            variant='h6'
+            fontWeight={600}
+            gutterBottom
+            sx={{ mb: 2, color: '#3b82f6' }}
+          >
+            Evidencia fotográfica (opcional)
+          </Typography>
+          <Button
+            variant={showPhotoUpload ? 'contained' : 'outlined'}
+            startIcon={<AddAPhoto />}
+            onClick={() => setShowPhotoUpload((prev) => !prev)}
+            disabled={loading}
+            sx={{
+              borderRadius: '12px',
+              minHeight: 44,
+              ...(showPhotoUpload
+                ? {
+                    backgroundColor: '#2f7d32',
+                    '&:hover': { backgroundColor: '#27672a' }
+                  }
+                : {
+                    borderColor: '#d1d5db',
+                    color: '#334155',
+                    '&:hover': {
+                      borderColor: '#94a3b8',
+                      backgroundColor: '#f8fafc'
+                    }
+                  })
+            }}
+          >
+            {showPhotoUpload ? 'Ocultar fotos del servicio' : 'Adjuntar fotos del servicio'}
+          </Button>
+
+          <Collapse in={showPhotoUpload}>
+            <Paper
+              elevation={0}
+              sx={{
+                mt: 2,
+                p: 2,
+                borderRadius: '12px',
+                border: '1px dashed #cbd5e1',
+                backgroundColor: '#f8fafc'
+              }}
+            >
+              <Typography variant='subtitle1' fontWeight={600} gutterBottom>
+                Evidencia fotográfica del servicio
+              </Typography>
+              <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                Puedes adjuntar hasta 5 fotos del trabajo realizado. Estas imágenes aparecerán en la orden de servicio PDF.
+              </Typography>
+              <MaintenanceFileUpload
+                files={completionPhotos.map((photo, index) => ({
+                  id: index.toString(),
+                  ticketId: '',
+                  fileName: photo.file.name,
+                  originalName: photo.file.name,
+                  fileType: photo.file.type,
+                  fileSize: photo.file.size,
+                  filePath: '',
+                  uploadedBy: '',
+                  uploadedAt: '',
+                  isImage: photo.file.type.startsWith('image/'),
+                  isVideo: false
+                } as MaintenanceFile))}
+                onFilesChange={handlePhotosChange}
+                onFileRemove={handlePhotoRemove}
+                acceptedFileTypes={['image/*']}
+                maxFiles={5}
+                maxSizeInMB={10}
+                disabled={loading}
+              />
+              {completionPhotos.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant='subtitle2' fontWeight={600} sx={{ mb: 1 }}>
+                    Descripción por foto (opcional)
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {completionPhotos.map((photo, index) => (
+                      <Grid item xs={12} key={`${photo.file.name}-${index}`}>
+                        <TextField
+                          fullWidth
+                          label={`Descripción de ${photo.file.name}`}
+                          placeholder='Ej: Estado final del equipo, pieza reemplazada, prueba de funcionamiento...'
+                          value={photo.description || ''}
+                          onChange={(e) =>
+                            handlePhotoDescriptionChange(index, e.target.value)
+                          }
+                          inputProps={{ maxLength: 250 }}
+                          helperText={`${(photo.description || '').length}/250 caracteres`}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+              )}
+            </Paper>
+          </Collapse>
+        </Box>
+
+        {signaturesEnabled && (
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              mb: 3,
+              borderRadius: '12px',
+              border: '1px solid #dbeafe',
+              backgroundColor: '#f8fbff'
+            }}
+          >
+            <Box display='flex' alignItems='center' gap={1} mb={1.5}>
+              <Draw sx={{ color: '#2563eb' }} />
+              <Typography variant='h6' fontWeight={600} sx={{ color: '#0f172a' }}>
+                Firma del técnico
+              </Typography>
+            </Box>
+            <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+              La firma del cliente puede registrarse después. Para completar el ticket necesitamos dejar confirmada la firma del técnico.
+            </Typography>
+
+            {storedTechnicianSignature ? (
+              <Box>
+                <Box
+                  sx={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: 2,
+                    backgroundColor: '#ffffff',
+                    minHeight: 180,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    p: 2
+                  }}
+                >
+                  <Box
+                    component='img'
+                    src={storedTechnicianSignature}
+                    alt={`Firma de ${technicianName || 'técnico'}`}
+                    sx={{ maxWidth: '100%', maxHeight: 140, objectFit: 'contain' }}
+                  />
+                </Box>
+                <Typography variant='caption' color='text.secondary' sx={{ mt: 1, display: 'block' }}>
+                  Se usará la firma guardada de {technicianName || 'este técnico'}.
+                </Typography>
+              </Box>
+            ) : canCaptureTechnicianSignature ? (
+              <SignaturePad
+                value={technicianSignatureData}
+                onChange={(value) => {
+                  setTechnicianSignatureData(value)
+                  if (technicianSignatureError) setTechnicianSignatureError('')
+                }}
+                disabled={loading}
+                label='Firma del técnico *'
+                helperText={
+                  technicianSignatureError ||
+                  'La guardaremos para reutilizarla automáticamente en próximos cierres.'
+                }
+              />
+            ) : (
+              <Alert severity='warning'>
+                Este ticket no tiene una firma de técnico disponible. Debes registrar una para poder completarlo.
+              </Alert>
+            )}
+          </Paper>
+        )}
+
         {/* Costs Section Header */}
         <Typography
           variant='h6'
@@ -303,7 +587,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
               mb: 2,
               borderRadius: '12px',
               border: '1px solid #e5e7eb',
-              background: '#fafafa',
+              backgroundColor: '#fafafa',
               position: 'relative'
             }}
           >
@@ -397,8 +681,8 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
             borderWidth: 2,
             py: 1.5,
             '&:hover': {
-              borderColor: '#059669',
-              background: 'rgba(16, 185, 129, 0.05)',
+              borderColor: '#2f7d32',
+              backgroundColor: '#f8fafc',
               borderStyle: 'solid'
             }
           }}
@@ -408,14 +692,11 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
 
         {/* Total */}
         <Paper
-          elevation={2}
           sx={{
+            ...surfaceSx,
             p: 2,
             mt: 3,
-            borderRadius: '12px',
-            background:
-              'linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%)',
-            border: '2px solid #10b981'
+            borderColor: '#bbf7d0'
           }}
         >
           <Box
@@ -426,7 +707,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
             <Typography variant='h6' fontWeight={600}>
               Total de Costos
             </Typography>
-            <Typography variant='h4' fontWeight={700} color='#059669'>
+            <Typography variant='h4' fontWeight={700} color='#166534'>
               {formatCurrency(calculateTotal())}
             </Typography>
           </Box>
@@ -454,13 +735,13 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
           variant='outlined'
           sx={{
             borderRadius: '12px',
-            borderColor: '#6dc662',
-            color: '#6dc662',
+            borderColor: '#d1d5db',
+            color: '#334155',
             minHeight: 48,
             fontWeight: 600,
             '&:hover': {
-              borderColor: '#5ab052',
-              background: 'rgba(109, 198, 98, 0.1)'
+              borderColor: '#94a3b8',
+              backgroundColor: '#f8fafc'
             },
             '&:disabled': {
               borderColor: '#e5e7eb',
@@ -478,11 +759,11 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
           startIcon={loading ? <CircularProgress size={20} /> : <CheckCircle />}
           sx={{
             borderRadius: '12px',
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            backgroundColor: '#2f7d32',
             minHeight: 48,
             fontWeight: 600,
             '&:hover': {
-              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+              backgroundColor: '#27672a'
             },
             '&:disabled': {
               background: '#e5e7eb',

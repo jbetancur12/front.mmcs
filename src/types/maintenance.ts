@@ -7,6 +7,92 @@ export interface MaintenanceTicketCost {
   createdAt?: string
 }
 
+export interface MaintenanceTechnicalReportPart {
+  description: string
+  quantity: number
+  code?: string
+  notes?: string
+}
+
+export interface MaintenanceTechnicalReportTool {
+  name: string
+  serial?: string | null
+  calibrationDue?: string | null
+  internalCode?: string | null
+  location?: string | null
+}
+
+export interface MaintenanceTechnicalReportTest {
+  parameter: string
+  result: string
+  value?: string
+  notes?: string
+}
+
+export interface MaintenanceToolEquipmentSummary {
+  id: string
+  internalCode: string
+  equipmentName: string
+  brand: string
+  model: string
+  serialNumber: string
+  location: string
+  nextCalibrationDate?: string | null
+}
+
+export interface MaintenanceProtocolTemplate {
+  id: string
+  name: string
+  code: string
+  description?: string | null
+  appliesTo: string[]
+  riskClass?: string | null
+  tools: MaintenanceTechnicalReportTool[]
+  tests: MaintenanceTechnicalReportTest[]
+  recommendations?: string | null
+  sortOrder: number
+  isActive: boolean
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface MaintenanceProtocolTemplateRequest {
+  name: string
+  code: string
+  description?: string | null
+  appliesTo: string[]
+  riskClass?: string | null
+  tools: MaintenanceTechnicalReportTool[]
+  tests: MaintenanceTechnicalReportTest[]
+  recommendations?: string | null
+  sortOrder?: number
+  isActive?: boolean
+}
+
+export interface MaintenanceTechnicalReport {
+  id?: string | null
+  ticketId: string
+  maintenanceType: string
+  serviceFinalStatus?: string | null
+  deliveryStatus?: string | null
+  riskClass?: string
+  finalDiagnosis?: string
+  rootCause?: string
+  activities: string[]
+  parts: MaintenanceTechnicalReportPart[]
+  verificationProtocolType?: string
+  verificationTools: MaintenanceTechnicalReportTool[]
+  verificationTests: MaintenanceTechnicalReportTest[]
+  recommendations?: string
+  nextMaintenanceDate?: string | null
+  warrantyDays: number
+  warrantyTerms?: string
+  scopeClause?: string
+  responsibilityClause?: string
+  createdAt?: string | null
+  updatedAt?: string | null
+}
+
 export interface MaintenanceTicket {
   id: string
   ticketCode: string
@@ -29,6 +115,9 @@ export interface MaintenanceTicket {
   customerSatisfaction?: number
   location: string
   workPerformed?: string
+  intakePhysicalCondition?: string | null
+  receivedAccessories?: string | null
+  requiresTechnicalReport?: boolean
   createdAt: string
   updatedAt: string
   comments: MaintenanceComment[]
@@ -36,6 +125,12 @@ export interface MaintenanceTicket {
   timeline: MaintenanceTimelineEntry[]
   costs?: MaintenanceTicketCost[]
   isInvoiced?: boolean
+  technicianSignatureData?: string | null
+  technicianSignedAt?: string | null
+  customerSignatureData?: string | null
+  customerSignedAt?: string | null
+  customerSignerName?: string | null
+  technicalReport?: MaintenanceTechnicalReport | null
 }
 
 export interface MaintenanceTicketCreateResponse {
@@ -47,7 +142,8 @@ export interface MaintenanceTicketCreateResponse {
 export interface MaintenanceComment {
   id: string
   ticketId: string
-  userId: string
+  userId?: string
+  technicianId?: string
   userName: string // Legacy field
   userRole: string // Legacy field
   authorName: string // Backend field
@@ -55,7 +151,19 @@ export interface MaintenanceComment {
   content: string
   commentType: string
   isInternal: boolean
+  isVisible?: boolean
   createdAt: string
+  updatedAt?: string
+  user?: {
+    id: string
+    nombre: string
+    email: string
+  }
+  technician?: {
+    id: string
+    name: string
+    email: string
+  }
 }
 
 export interface MaintenanceFile {
@@ -98,6 +206,8 @@ export interface MaintenanceTechnician {
   isAvailable: boolean
   maxWorkload: number
   notes: string
+  signatureData?: string | null
+  signatureUpdatedAt?: string | null
   createdAt: string
   updatedAt: string
   metrics?: {
@@ -162,13 +272,42 @@ export interface MaintenanceUpdateRequest {
   status?: MaintenanceStatus
   assignedTechnician?: string
   scheduledDate?: string
+  equipmentType?: string
+  equipmentBrand?: string
+  equipmentModel?: string
+  equipmentSerial?: string
   estimatedCost?: number
   actualCost?: number
   priority?: MaintenancePriority
   location?: string
   workPerformed?: string
+  intakePhysicalCondition?: string | null
+  receivedAccessories?: string | null
   costs?: MaintenanceTicketCost[]
   isInvoiced?: boolean
+  technicianSignatureData?: string | null
+  customerSignatureData?: string | null
+  customerSignerName?: string | null
+}
+
+export interface MaintenanceTechnicalReportRequest {
+  maintenanceType?: string
+  serviceFinalStatus?: string | null
+  deliveryStatus?: string | null
+  riskClass?: string
+  finalDiagnosis?: string
+  rootCause?: string
+  activities: string[]
+  parts: MaintenanceTechnicalReportPart[]
+  verificationProtocolType?: string
+  verificationTools: MaintenanceTechnicalReportTool[]
+  verificationTests: MaintenanceTechnicalReportTest[]
+  recommendations?: string
+  nextMaintenanceDate?: string | null
+  warrantyDays?: number
+  warrantyTerms?: string
+  scopeClause?: string
+  responsibilityClause?: string
 }
 
 export interface MaintenanceFilters {
@@ -290,6 +429,7 @@ export interface TechnicianFormData {
   isAvailable: boolean
   maxWorkload: number
   notes: string
+  signatureData?: string | null
 }
 
 export interface TechnicianFormErrors {

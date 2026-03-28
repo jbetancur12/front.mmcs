@@ -63,6 +63,7 @@ import { CreateFileModal } from './TableFiles/CreateFileModal/CreateFileModal'
 
 import { bigToast } from './ExcelManipulation/Utils'
 import * as XLSX from 'xlsx'
+import { MySwal } from '@utils/sweetAlert'
 
 // API URL
 const minioUrl = import.meta.env.VITE_MINIO_URL
@@ -513,11 +514,18 @@ const ModernCustomerProfile: React.FC = () => {
 
   const handleDelete = useCallback(
     async (certificateId: number) => {
-      const isConfirmed = window.confirm(
-        '¿Estás seguro de que deseas eliminar este certificado? Esta acción no se puede deshacer.'
-      )
+      const result = await MySwal.fire({
+        title: '¿Estás seguro?',
+        text: '¿Deseas eliminar este certificado? Esta acción no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6'
+      })
 
-      if (!isConfirmed) return
+      if (!result.isConfirmed) return
 
       try {
         const response = await axiosPrivate.delete(`/files/${certificateId}`)
@@ -597,6 +605,49 @@ const ModernCustomerProfile: React.FC = () => {
       } catch (error) {
         console.error('Error al actualizar sede:', error)
         bigToast('Error al actualizar sede', 'error')
+      }
+    },
+    [axiosPrivate, id, queryClient]
+  )
+
+  const handleDeleteSede = useCallback(
+    async (sede: string) => {
+      if (!id) return
+
+      const result = await MySwal.fire({
+        title: '¿Eliminar sede?',
+        text: `¿Estás seguro de que deseas eliminar la sede "${sede}"? Esta acción solo se permitirá si no hay certificados asociados.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6'
+      })
+
+      if (!result.isConfirmed) return
+
+      try {
+        const response = await axiosPrivate.delete(
+          `/customers/${id}/sedes/${sede}`
+        )
+
+        if (response.status === 200) {
+          bigToast('Sede eliminada con éxito', 'success')
+          queryClient.invalidateQueries(['customer-data', id])
+        }
+      } catch (error: any) {
+        console.error('Error al eliminar sede:', error)
+        if (error.response?.status === 409) {
+          MySwal.fire({
+            title: 'No se puede eliminar',
+            text: 'No se puede eliminar la sede porque tiene certificados asociados. Por favor, remueve o transfiere los certificados primero.',
+            icon: 'error',
+            confirmButtonColor: '#3085d6'
+          })
+        } else {
+          bigToast('Error al eliminar sede', 'error')
+        }
       }
     },
     [axiosPrivate, id, queryClient]
@@ -1774,6 +1825,7 @@ const ModernCustomerProfile: React.FC = () => {
                 selectedSede={selectedSede}
                 sedes={customerData?.sede || []}
                 onDelete={handleDelete}
+                onDeleteSede={handleDeleteSede}
                 onAddSede={handleAddSede}
                 onEditSede={handleEditSede}
               />

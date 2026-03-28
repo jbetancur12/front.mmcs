@@ -20,6 +20,7 @@ const LogoutButton: React.FC = () => {
       throw new Error('Error al cerrar sesión')
     }
     localStorage.removeItem('accessToken')
+    localStorage.removeItem('sessionExpiresAt')
     localStorage.removeItem('columnFiltersCustomers') // Limpiar filtros
     localStorage.removeItem('columnFiltersHV') // Limpiar filtros
     Toast.fire('Sesión cerrada exitosamente', '', 'success')

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { userStore } from '../../store/userStore'
 import { api } from '../../config'
 import useAxiosPrivate from '@utils/use-axios-private'
+import useRefreshToken from '@utils/use-refresh-token'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 interface RequireAuthProps {
@@ -14,8 +15,28 @@ interface Role {
 
 const apiUrl = api()
 
+const clearInvalidSession = () => {
+  localStorage.removeItem('accessToken')
+  localStorage.removeItem('refreshToken')
+  localStorage.removeItem('sessionExpiresAt')
+  localStorage.removeItem('user')
+  localStorage.removeItem('userProfile')
+
+  userStore.set({
+    nombre: '',
+    email: '',
+    rol: [''],
+    customer: {
+      id: 0,
+      nombre: '',
+      modules: []
+    }
+  })
+}
+
 const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   const axiosPrivate = useAxiosPrivate()
+  const refresh = useRefreshToken()
   const navigate = useNavigate()
   const location = useLocation()
   const [loading, setLoading] = useState(true)
@@ -23,9 +44,17 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   useEffect(() => {
     const validateToken = async () => {
       try {
-        const token = localStorage.getItem('accessToken')
+        let token = localStorage.getItem('accessToken')
+
         if (!token) {
-          throw new Error('Token no encontrado')
+          const refreshResult = await refresh()
+          token = refreshResult.accessToken
+
+          if (!token) {
+            throw new Error('Token no encontrado')
+          }
+
+          localStorage.setItem('accessToken', token)
         }
 
         const response = await axiosPrivate.get(`${apiUrl}/auth/validateToken`)
@@ -43,24 +72,17 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
         userStore.set(formattedUser)
       } catch (error) {
         console.log('Error al validar el token:', error)
-        // Si el token es inválido, también debemos guardar la ubicación
         const currentPath = location.pathname + location.search
+        clearInvalidSession()
         sessionStorage.setItem('lastLocation', currentPath)
-        navigate('/login')
+        navigate('/login', { replace: true })
       } finally {
         setLoading(false)
       }
     }
 
-    if (localStorage.getItem('accessToken')) {
-      validateToken()
-    } else {
-      // Guardar la ubicación actual antes de redirigir al login
-      const currentPath = location.pathname + location.search
-      sessionStorage.setItem('lastLocation', currentPath)
-      navigate('/login')
-    }
-  }, [])
+    validateToken()
+  }, [axiosPrivate, location.pathname, location.search, navigate, refresh])
 
   if (loading) {
     return (

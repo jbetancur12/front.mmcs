@@ -49,6 +49,8 @@ import {
   useUpdateMaintenanceTechnician,
   useDeleteMaintenanceTechnician
 } from '../../hooks/useMaintenance'
+import SignaturePad from '../../Components/Maintenance/SignaturePad'
+import { maintenanceSignaturesEnabled } from '../../features/maintenanceFlags'
 import {
   MaintenanceTechnician,
   TechnicianFormData
@@ -71,7 +73,8 @@ const validationSchema = Yup.object({
   employeeId: Yup.string(),
   isAvailable: Yup.boolean(),
   maxWorkload: Yup.number().min(1).max(50).required(),
-  notes: Yup.string()
+  notes: Yup.string(),
+  signatureData: Yup.string().nullable()
 })
 
 const availableSpecializations = [
@@ -120,6 +123,20 @@ const MaintenanceTechnicians: React.FC = () => {
   const createTechnicianMutation = useCreateMaintenanceTechnician()
   const updateTechnicianMutation = useUpdateMaintenanceTechnician()
   const deleteTechnicianMutation = useDeleteMaintenanceTechnician()
+  const surfaceSx = {
+    backgroundColor: '#ffffff',
+    borderRadius: '14px',
+    border: '1px solid #e5e7eb',
+    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+  }
+  const statCardSx = {
+    ...surfaceSx,
+    transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+    '&:hover': {
+      borderColor: '#cbd5e1',
+      boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)'
+    }
+  }
 
   const formik = useFormik<TechnicianFormData>({
     initialValues: {
@@ -132,7 +149,8 @@ const MaintenanceTechnicians: React.FC = () => {
       employeeId: '',
       isAvailable: true,
       maxWorkload: 10,
-      notes: ''
+      notes: '',
+      signatureData: ''
     },
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
@@ -168,7 +186,8 @@ const MaintenanceTechnicians: React.FC = () => {
       employeeId: technician.employeeId || '',
       isAvailable: technician.isAvailable,
       maxWorkload: technician.maxWorkload,
-      notes: technician.notes || ''
+      notes: technician.notes || '',
+      signatureData: technician.signatureData || ''
     })
     setDialogOpen(true)
   }
@@ -230,19 +249,6 @@ const MaintenanceTechnicians: React.FC = () => {
       .slice(0, 2)
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'success'
-      case 'inactive':
-        return 'error'
-      case 'on_leave':
-        return 'warning'
-      default:
-        return 'default'
-    }
-  }
-
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'active':
@@ -260,9 +266,8 @@ const MaintenanceTechnicians: React.FC = () => {
     <Container
       maxWidth={false}
       sx={{
-        py: 3,
-        background:
-          'linear-gradient(135deg, rgba(109, 198, 98, 0.02) 0%, rgba(255, 255, 255, 0.8) 100%)',
+        py: { xs: 2, md: 3 },
+        backgroundColor: '#f8fafc',
         minHeight: '100vh'
       }}
     >
@@ -270,30 +275,30 @@ const MaintenanceTechnicians: React.FC = () => {
       <Box
         display='flex'
         justifyContent='space-between'
-        alignItems='center'
+        alignItems={{ xs: 'flex-start', md: 'center' }}
+        flexDirection={{ xs: 'column', md: 'row' }}
+        gap={2}
         mb={3}
         sx={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)',
-          borderRadius: '16px',
+          backgroundColor: '#ffffff',
+          borderRadius: '14px',
           p: 3,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-          border: '1px solid rgba(109, 198, 98, 0.1)'
+          boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
+          border: '1px solid #e5e7eb'
         }}
       >
         <Box display='flex' alignItems='center' gap={2}>
           <Box
             sx={{
-              background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
-              borderRadius: '12px',
+              backgroundColor: '#eef6ee',
+              borderRadius: '10px',
               p: 1.5,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)'
+              justifyContent: 'center'
             }}
           >
-            <People sx={{ fontSize: 32, color: 'white' }} />
+            <People sx={{ fontSize: 32, color: '#2f7d32' }} />
           </Box>
           <Box>
             <Typography
@@ -301,10 +306,7 @@ const MaintenanceTechnicians: React.FC = () => {
               component='h1'
               sx={{
                 fontWeight: 700,
-                background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
+                color: '#0f172a',
                 letterSpacing: '-0.02em'
               }}
             >
@@ -321,14 +323,11 @@ const MaintenanceTechnicians: React.FC = () => {
           startIcon={<Add />}
           onClick={() => setDialogOpen(true)}
           sx={{
-            background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+            backgroundColor: '#2f7d32',
             borderRadius: '12px',
-            boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
-            transition: 'all 0.2s ease-in-out',
+            alignSelf: { xs: 'stretch', md: 'auto' },
             '&:hover': {
-              background: 'linear-gradient(135deg, #5ab052 0%, #4a9642 100%)',
-              transform: 'translateY(-2px)',
-              boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
+              backgroundColor: '#27672a'
             }
           }}
         >
@@ -341,17 +340,7 @@ const MaintenanceTechnicians: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card
             sx={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-              border: '1px solid rgba(109, 198, 98, 0.1)',
-              transition: 'all 0.3s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: '0 8px 30px rgba(109, 198, 98, 0.15)',
-                border: '1px solid rgba(109, 198, 98, 0.2)'
-              }
+              ...statCardSx
             }}
           >
             <CardContent>
@@ -365,7 +354,7 @@ const MaintenanceTechnicians: React.FC = () => {
                     variant='h4'
                     sx={{
                       fontWeight: 700,
-                      color: '#6dc662'
+                          color: '#6dc662'
                     }}
                   >
                     {technicians?.length || 0}
@@ -380,16 +369,15 @@ const MaintenanceTechnicians: React.FC = () => {
                 </Box>
                 <Box
                   sx={{
-                    background:
-                      'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
-                    borderRadius: '12px',
+                    backgroundColor: '#eef6ee',
+                    borderRadius: '10px',
                     p: 1.5,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}
                 >
-                  <People sx={{ fontSize: 40, color: 'white' }} />
+                  <People sx={{ fontSize: 40, color: '#2f7d32' }} />
                 </Box>
               </Box>
             </CardContent>
@@ -399,17 +387,7 @@ const MaintenanceTechnicians: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card
             sx={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-              border: '1px solid rgba(76, 175, 80, 0.1)',
-              transition: 'all 0.3s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: '0 8px 30px rgba(76, 175, 80, 0.15)',
-                border: '1px solid rgba(76, 175, 80, 0.2)'
-              }
+              ...statCardSx
             }}
           >
             <CardContent>
@@ -440,16 +418,15 @@ const MaintenanceTechnicians: React.FC = () => {
                 </Box>
                 <Box
                   sx={{
-                    background:
-                      'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)',
-                    borderRadius: '12px',
+                    backgroundColor: '#eef6ee',
+                    borderRadius: '10px',
                     p: 1.5,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}
                 >
-                  <CheckCircle sx={{ fontSize: 40, color: 'white' }} />
+                  <CheckCircle sx={{ fontSize: 40, color: '#2f7d32' }} />
                 </Box>
               </Box>
             </CardContent>
@@ -459,17 +436,7 @@ const MaintenanceTechnicians: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card
             sx={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-              border: '1px solid rgba(255, 152, 0, 0.1)',
-              transition: 'all 0.3s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: '0 8px 30px rgba(255, 152, 0, 0.15)',
-                border: '1px solid rgba(255, 152, 0, 0.2)'
-              }
+              ...statCardSx
             }}
           >
             <CardContent>
@@ -500,16 +467,15 @@ const MaintenanceTechnicians: React.FC = () => {
                 </Box>
                 <Box
                   sx={{
-                    background:
-                      'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
-                    borderRadius: '12px',
+                    backgroundColor: '#fff4e5',
+                    borderRadius: '10px',
                     p: 1.5,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}
                 >
-                  <Work sx={{ fontSize: 40, color: 'white' }} />
+                  <Work sx={{ fontSize: 40, color: '#b45309' }} />
                 </Box>
               </Box>
             </CardContent>
@@ -519,17 +485,7 @@ const MaintenanceTechnicians: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card
             sx={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-              border: '1px solid rgba(255, 193, 7, 0.1)',
-              transition: 'all 0.3s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: '0 8px 30px rgba(255, 193, 7, 0.15)',
-                border: '1px solid rgba(255, 193, 7, 0.2)'
-              }
+              ...statCardSx
             }}
           >
             <CardContent>
@@ -565,16 +521,15 @@ const MaintenanceTechnicians: React.FC = () => {
                 </Box>
                 <Box
                   sx={{
-                    background:
-                      'linear-gradient(135deg, #ffc107 0%, #ff8f00 100%)',
-                    borderRadius: '12px',
+                    backgroundColor: '#fff7db',
+                    borderRadius: '10px',
                     p: 1.5,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                   }}
                 >
-                  <Star sx={{ fontSize: 40, color: 'white' }} />
+                  <Star sx={{ fontSize: 40, color: '#b45309' }} />
                 </Box>
               </Box>
             </CardContent>
@@ -584,27 +539,45 @@ const MaintenanceTechnicians: React.FC = () => {
 
       {/* Technicians Table */}
       <Paper
-        elevation={2}
         sx={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)',
-          borderRadius: '16px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-          border: '1px solid rgba(109, 198, 98, 0.1)'
+          ...surfaceSx
         }}
       >
         <Box p={3}>
-          <Typography
-            variant='h6'
-            gutterBottom
-            sx={{
-              fontWeight: 600,
-              color: '#6dc662',
-              mb: 3
-            }}
+          <Box
+            display='flex'
+            justifyContent='space-between'
+            alignItems={{ xs: 'flex-start', md: 'center' }}
+            flexDirection={{ xs: 'column', md: 'row' }}
+            gap={1}
+            mb={3}
           >
-            Lista de Técnicos
-          </Typography>
+            <Box>
+              <Typography
+                variant='h6'
+                gutterBottom
+                sx={{
+                  fontWeight: 600,
+                  color: '#0f172a',
+                  mb: 0.5
+                }}
+              >
+                Lista de Técnicos
+              </Typography>
+              <Typography variant='body2' sx={{ color: '#64748b' }}>
+                Tabla más sobria para revisar disponibilidad, carga y acciones sin ruido visual.
+              </Typography>
+            </Box>
+            <Chip
+              size='small'
+              label={`${technicians?.length || 0} registrados`}
+              sx={{
+                backgroundColor: '#eef6ee',
+                color: '#2f7d32',
+                fontWeight: 600
+              }}
+            />
+          </Box>
 
           {isLoading ? (
             <Box display='flex' justifyContent='center' py={4}>
@@ -615,30 +588,62 @@ const MaintenanceTechnicians: React.FC = () => {
               No hay técnicos registrados. Agregue el primer técnico.
             </Alert>
           ) : (
-            <TableContainer>
-              <Table>
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table sx={{ minWidth: 980 }}>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Técnico</TableCell>
-                    <TableCell>Contacto</TableCell>
-                    <TableCell>Especialización</TableCell>
-                    <TableCell>Estado</TableCell>
-                    <TableCell>Disponibilidad</TableCell>
-                    <TableCell>Rating</TableCell>
-                    <TableCell>Carga de Trabajo</TableCell>
-                    <TableCell>Acciones</TableCell>
+                    {[
+                      'Técnico',
+                      'Contacto',
+                      'Especialización',
+                      'Estado',
+                      'Disponibilidad',
+                      'Rating',
+                      'Carga de Trabajo',
+                      'Acciones'
+                    ].map((label) => (
+                      <TableCell
+                        key={label}
+                        sx={{
+                          color: '#64748b',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em',
+                          borderBottom: '1px solid #e5e7eb',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {label}
+                      </TableCell>
+                    ))}
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {technicians.map((technician) => (
-                    <TableRow key={technician.id}>
+                    <TableRow
+                      key={technician.id}
+                      hover
+                      sx={{
+                        '& td': {
+                          borderBottom: '1px solid #eef2f7',
+                          py: 2
+                        }
+                      }}
+                    >
                       <TableCell>
                         <Box display='flex' alignItems='center' gap={2}>
-                          <Avatar sx={{ bgcolor: 'primary.main' }}>
+                          <Avatar
+                            sx={{
+                              bgcolor: '#eef6ee',
+                              color: '#2f7d32',
+                              fontWeight: 700
+                            }}
+                          >
                             {getInitials(technician.name)}
                           </Avatar>
                           <Box>
-                            <Typography variant='body1' fontWeight='medium'>
+                            <Typography variant='body1' fontWeight={600}>
                               {technician.name}
                             </Typography>
                             <Typography
@@ -661,11 +666,27 @@ const MaintenanceTechnicians: React.FC = () => {
                       </TableCell>
 
                       <TableCell>
-                        <Typography variant='body2'>
-                          {technician.specialization || 'No especificado'}
-                        </Typography>
+                        <Chip
+                          size='small'
+                          label={technician.specialization || 'No especificado'}
+                          sx={{
+                            maxWidth: 220,
+                            backgroundColor: '#f8fafc',
+                            color: '#334155',
+                            border: '1px solid #e5e7eb',
+                            '& .MuiChip-label': {
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis'
+                            }
+                          }}
+                        />
                         {technician.certifications && (
-                          <Typography variant='caption' color='text.secondary'>
+                          <Typography
+                            variant='caption'
+                            color='text.secondary'
+                            display='block'
+                            sx={{ mt: 0.75 }}
+                          >
                             Cert: {technician.certifications}
                           </Typography>
                         )}
@@ -674,8 +695,22 @@ const MaintenanceTechnicians: React.FC = () => {
                       <TableCell>
                         <Chip
                           label={getStatusLabel(technician.status)}
-                          color={getStatusColor(technician.status) as any}
                           size='small'
+                          sx={{
+                            backgroundColor:
+                              technician.status === 'active'
+                                ? '#eef6ee'
+                                : technician.status === 'inactive'
+                                  ? '#fef2f2'
+                                  : '#fff7db',
+                            color:
+                              technician.status === 'active'
+                                ? '#2f7d32'
+                                : technician.status === 'inactive'
+                                  ? '#b91c1c'
+                                  : '#b45309',
+                            fontWeight: 600
+                          }}
                         />
                       </TableCell>
 
@@ -686,8 +721,14 @@ const MaintenanceTechnicians: React.FC = () => {
                               ? 'Disponible'
                               : 'No Disponible'
                           }
-                          color={technician.isAvailable ? 'success' : 'error'}
                           size='small'
+                          sx={{
+                            backgroundColor: technician.isAvailable
+                              ? '#ecfdf5'
+                              : '#fff7ed',
+                            color: technician.isAvailable ? '#059669' : '#c2410c',
+                            fontWeight: 600
+                          }}
                         />
                       </TableCell>
 
@@ -706,7 +747,7 @@ const MaintenanceTechnicians: React.FC = () => {
                       </TableCell>
 
                       <TableCell>
-                        <Typography variant='body2'>
+                        <Typography variant='body2' fontWeight={600}>
                           {technician.workload}/{technician.maxWorkload}
                         </Typography>
                         <Typography variant='caption' color='text.secondary'>
@@ -728,7 +769,13 @@ const MaintenanceTechnicians: React.FC = () => {
                           <IconButton
                             size='small'
                             onClick={() => handleEdit(technician)}
-                            color='primary'
+                            sx={{
+                              color: '#0ea5e9',
+                              backgroundColor: '#f8fafc',
+                              border: '1px solid #e5e7eb',
+                              mr: 0.5,
+                              '&:hover': { backgroundColor: '#eff6ff' }
+                            }}
                           >
                             <Edit />
                           </IconButton>
@@ -747,11 +794,14 @@ const MaintenanceTechnicians: React.FC = () => {
                               setTechnicianToToggle(technician)
                               setStatusConfirmDialogOpen(true)
                             }}
-                            color={
-                              technician.status === 'active'
-                                ? 'warning'
-                                : 'success'
-                            }
+                            sx={{
+                              color:
+                                technician.status === 'active' ? '#d97706' : '#2f7d32',
+                              backgroundColor: '#f8fafc',
+                              border: '1px solid #e5e7eb',
+                              mr: 0.5,
+                              '&:hover': { backgroundColor: '#fff7ed' }
+                            }}
                           >
                             {technician.status === 'active' ? (
                               <PowerSettingsNew />
@@ -768,7 +818,12 @@ const MaintenanceTechnicians: React.FC = () => {
                               setTechnicianToDelete(technician)
                               setDeleteDialogOpen(true)
                             }}
-                            color='error'
+                            sx={{
+                              color: '#ef4444',
+                              backgroundColor: '#f8fafc',
+                              border: '1px solid #e5e7eb',
+                              '&:hover': { backgroundColor: '#fef2f2' }
+                            }}
                           >
                             <Delete />
                           </IconButton>
@@ -966,6 +1021,19 @@ const MaintenanceTechnicians: React.FC = () => {
                   placeholder='Notas adicionales sobre el técnico...'
                 />
               </Grid>
+
+              {maintenanceSignaturesEnabled && (
+                <Grid item xs={12}>
+                  <SignaturePad
+                    value={formik.values.signatureData || null}
+                    onChange={(value) =>
+                      formik.setFieldValue('signatureData', value || '')
+                    }
+                    label='Firma guardada del técnico (opcional)'
+                    helperText='Si la guardas aquí, se usará automáticamente al cerrar órdenes de servicio.'
+                  />
+                </Grid>
+              )}
 
               <Grid item xs={12}>
                 <FormControlLabel

@@ -139,16 +139,29 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
     (a, b) =>
       new Date(b.performedAt).getTime() - new Date(a.performedAt).getTime()
   )
+  const getDotColors = (color: 'primary' | 'success' | 'error' | 'secondary' | 'default') => {
+    switch (color) {
+      case 'primary':
+        return { bg: '#eef6ee', fg: '#2f7d32' }
+      case 'success':
+        return { bg: '#ecfdf5', fg: '#059669' }
+      case 'error':
+        return { bg: '#fef2f2', fg: '#dc2626' }
+      case 'secondary':
+        return { bg: '#f3e8ff', fg: '#7c3aed' }
+      default:
+        return { bg: '#f1f5f9', fg: '#475569' }
+    }
+  }
 
   if (timeline.length === 0) {
     return (
       <Card
         sx={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)',
+          backgroundColor: '#ffffff',
           borderRadius: '12px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-          border: '1px solid rgba(109, 198, 98, 0.1)'
+          boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
+          border: '1px solid #e5e7eb'
         }}
       >
         <CardContent>
@@ -176,13 +189,14 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
           }
         },
         '& .MuiTimelineConnector-root': {
-          background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+          backgroundColor: '#cbd5e1',
           width: '3px'
         }
       }}
     >
       {sortedTimeline.map((entry, index) => {
         const config = getActionConfig(entry.action)
+        const dotColors = getDotColors(config.color)
         const isLast = index === sortedTimeline.length - 1
 
         return (
@@ -206,18 +220,10 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
             <TimelineSeparator>
               <TimelineDot
                 sx={{
-                  background: config.color === 'primary' 
-                    ? 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)'
-                    : config.color === 'success'
-                    ? 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)'
-                    : config.color === 'error'
-                    ? 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)'
-                    : config.color === 'secondary'
-                    ? 'linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%)'
-                    : 'linear-gradient(135deg, #9e9e9e 0%, #757575 100%)',
-                  color: 'white',
+                  backgroundColor: dotColors.bg,
+                  color: dotColors.fg,
                   border: 'none',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                  boxShadow: 'none',
                   width: 40,
                   height: 40
                 }}
@@ -234,16 +240,8 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
                     size='small'
                     label={config.label}
                     sx={{
-                      background: config.color === 'primary' 
-                        ? 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)'
-                        : config.color === 'success'
-                        ? 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)'
-                        : config.color === 'error'
-                        ? 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)'
-                        : config.color === 'secondary'
-                        ? 'linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%)'
-                        : 'linear-gradient(135deg, #9e9e9e 0%, #757575 100%)',
-                      color: 'white',
+                      backgroundColor: dotColors.bg,
+                      color: dotColors.fg,
                       borderRadius: '6px',
                       fontWeight: 500,
                       border: 'none'
@@ -257,8 +255,8 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
                           width: 20,
                           height: 20,
                           fontSize: '0.65rem',
-                          background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
-                          color: 'white'
+                          backgroundColor: '#eef6ee',
+                          color: '#2f7d32'
                         }}
                       >
                         {getInitials(entry.performedBy)}
