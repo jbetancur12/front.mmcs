@@ -1144,7 +1144,7 @@ class LMSService {
     courseStatus?: string;
   }): Promise<any> {
     const response = await axiosPrivate.get(`${this.baseURL}/analytics/dashboard`, { params })
-    return response.data.data || response.data
+    return response.data.data
   }
 
   /**
@@ -1158,7 +1158,7 @@ class LMSService {
     includeQuestionAnalysis?: boolean;
   }): Promise<any> {
     const response = await axiosPrivate.get(`${this.baseURL}/analytics/quizzes/performance`, { params })
-    return response.data.data || response.data
+    return response.data.data
   }
 
   /**
@@ -1173,7 +1173,7 @@ class LMSService {
     includeOverdue?: boolean;
   }): Promise<any> {
     const response = await axiosPrivate.get(`${this.baseURL}/analytics/assignments/management`, { params })
-    return response.data.data || response.data
+    return response.data.data
   }
 
   /**
@@ -1187,7 +1187,7 @@ class LMSService {
     sortOrder?: string;
   }): Promise<any> {
     const response = await axiosPrivate.get(`${this.baseURL}/analytics/assignments/mandatory`, { params })
-    return response.data.data || response.data
+    return response.data.data
   }
 
   /**
@@ -1201,7 +1201,7 @@ class LMSService {
     includeEscalation?: boolean;
   }): Promise<any> {
     const response = await axiosPrivate.get(`${this.baseURL}/analytics/assignments/mandatory-training`, { params })
-    return response.data.data || response.data
+    return response.data.data
   }
 
   /**
@@ -1212,7 +1212,7 @@ class LMSService {
     customMessage?: string;
   }): Promise<any> {
     const response = await axiosPrivate.post(`${this.baseURL}/analytics/reminders/trigger-manual`, data)
-    return response.data.data || response.data
+    return response.data.data
   }
 
   // ===========================
