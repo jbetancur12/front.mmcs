@@ -102,6 +102,12 @@ interface CreateCourseData {
   estimated_duration_minutes: number
 }
 
+interface CourseFormErrors {
+  title?: string
+  description?: string
+  estimated_duration_minutes?: string
+}
+
 const audienceOptions = [
   {
     value: 'internal' as const,
@@ -135,6 +141,7 @@ const LmsCourseManagement: React.FC = () => {
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' })
+  const [formErrors, setFormErrors] = useState<CourseFormErrors>({})
   const [formData, setFormData] = useState<CreateCourseData>({
     title: '',
     description: '',
@@ -207,7 +214,7 @@ const LmsCourseManagement: React.FC = () => {
       onError: (error: any) => {
         setSnackbar({
           open: true,
-          message: 'Error al guardar curso: ' + (error.response?.data?.message || error.message),
+          message: 'Error al guardar curso: ' + (error.response?.data?.error?.message || error.response?.data?.message || error.message),
           severity: 'error'
         })
       }
@@ -231,7 +238,7 @@ const LmsCourseManagement: React.FC = () => {
       onError: (error: any) => {
         setSnackbar({
           open: true,
-          message: 'Error al eliminar curso: ' + (error.response?.data?.message || error.message),
+          message: 'Error al eliminar curso: ' + (error.response?.data?.error?.message || error.response?.data?.message || error.message),
           severity: 'error'
         })
       }
@@ -255,7 +262,7 @@ const LmsCourseManagement: React.FC = () => {
       onError: (error: any) => {
         setSnackbar({
           open: true,
-          message: 'Error al publicar curso: ' + (error.response?.data?.message || error.message),
+          message: 'Error al publicar curso: ' + (error.response?.data?.error?.message || error.response?.data?.message || error.message),
           severity: 'error'
         })
       }
@@ -279,7 +286,7 @@ const LmsCourseManagement: React.FC = () => {
       onError: (error: any) => {
         setSnackbar({
           open: true,
-          message: 'Error al archivar curso: ' + (error.response?.data?.message || error.message),
+          message: 'Error al archivar curso: ' + (error.response?.data?.error?.message || error.response?.data?.message || error.message),
           severity: 'error'
         })
       }
@@ -325,10 +332,45 @@ const LmsCourseManagement: React.FC = () => {
   }
 
   const handleSubmit = () => {
+    const nextErrors: CourseFormErrors = {}
+    const trimmedTitle = formData.title.trim()
+    const trimmedDescription = formData.description.trim()
+
+    if (trimmedTitle.length < 5) {
+      nextErrors.title = 'Usa un título más descriptivo, de al menos 5 caracteres.'
+    }
+
+    if (trimmedDescription.length < 20) {
+      nextErrors.description = 'Describe el objetivo del curso con al menos 20 caracteres.'
+    }
+
+    if (!Number.isFinite(formData.estimated_duration_minutes) || formData.estimated_duration_minutes < 1) {
+      nextErrors.estimated_duration_minutes = 'La duración debe ser de al menos 1 minuto.'
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setFormErrors(nextErrors)
+      setSnackbar({
+        open: true,
+        message: 'Revisa los campos obligatorios antes de guardar.',
+        severity: 'error'
+      })
+      return
+    }
+
+    const normalizedFormData: CreateCourseData = {
+      ...formData,
+      title: trimmedTitle,
+      description: trimmedDescription,
+      is_mandatory: formData.audience === 'client' ? false : formData.is_mandatory
+    }
+
+    setFormErrors({})
+
     if (editingCourse) {
-      saveCourseMutation.mutate({ ...editingCourse, ...formData })
+      saveCourseMutation.mutate({ ...editingCourse, ...normalizedFormData })
     } else {
-      saveCourseMutation.mutate(formData)
+      saveCourseMutation.mutate(normalizedFormData)
     }
   }
 
@@ -351,9 +393,21 @@ const LmsCourseManagement: React.FC = () => {
   }
 
   const handleInputChange = (field: keyof CreateCourseData, value: any) => {
-    setFormData((prev) => ({
+    setFormData((prev) => {
+      const nextFormData = {
+        ...prev,
+        [field]: value
+      }
+
+      if (field === 'audience' && value === 'client') {
+        nextFormData.is_mandatory = false
+      }
+
+      return nextFormData
+    })
+    setFormErrors((prev) => ({
       ...prev,
-      [field]: value
+      [field]: undefined
     }))
   }
 
@@ -421,6 +475,10 @@ const LmsCourseManagement: React.FC = () => {
   }
 
   const selectedAudienceOption = audienceOptions.find(option => option.value === formData.audience)
+  const isSaveDisabled = saveCourseMutation.isLoading
+    || formData.title.trim().length === 0
+    || formData.description.trim().length === 0
+    || formData.estimated_duration_minutes < 1
 
   if (isLoading) {
     return (
@@ -667,6 +725,8 @@ const LmsCourseManagement: React.FC = () => {
                 label='Título del curso'
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
+                error={Boolean(formErrors.title)}
+                helperText={formErrors.title || 'Debe ayudar a identificar el curso en catálogo, reportes y certificados.'}
                 required
               />
             </Grid>
@@ -680,6 +740,8 @@ const LmsCourseManagement: React.FC = () => {
                 onChange={(e) =>
                   handleInputChange('description', e.target.value)
                 }
+                error={Boolean(formErrors.description)}
+                helperText={formErrors.description || 'Explica qué aprenderá la persona y cuándo conviene asignar o recomendar este curso.'}
                 required
               />
             </Grid>
@@ -708,6 +770,8 @@ const LmsCourseManagement: React.FC = () => {
                 onChange={(e) =>
                   handleInputChange('estimated_duration_minutes', parseInt(e.target.value) || 0)
                 }
+                error={Boolean(formErrors.estimated_duration_minutes)}
+                helperText={formErrors.estimated_duration_minutes || 'La duración alimenta catálogo, analíticas y expectativas del estudiante.'}
                 required
                 inputProps={{ min: 1 }}
               />
@@ -740,6 +804,7 @@ const LmsCourseManagement: React.FC = () => {
                     onChange={(e) =>
                       handleInputChange('is_mandatory', e.target.checked)
                     }
+                    disabled={formData.audience === 'client'}
                   />
                 }
                 label='Curso obligatorio'
@@ -771,6 +836,13 @@ const LmsCourseManagement: React.FC = () => {
                 </Alert>
               </Grid>
             )}
+            {formData.audience === 'client' && (
+              <Grid item xs={12}>
+                <Alert severity='info'>
+                  Para clientes el curso queda disponible en catálogo. Si necesitas un flujo obligatorio, hoy debe plantearse como audiencia <strong>Ambos</strong> o <strong>Empleados internos</strong>.
+                </Alert>
+              </Grid>
+            )}
             {formData.has_certificate && (
               <Grid item xs={12}>
                 <Alert severity='success'>
@@ -785,7 +857,7 @@ const LmsCourseManagement: React.FC = () => {
           <Button
             onClick={handleSubmit}
             variant='contained'
-            disabled={saveCourseMutation.isLoading}
+            disabled={isSaveDisabled}
           >
             {saveCourseMutation.isLoading ? 'Guardando...' : 'Guardar'}
           </Button>
