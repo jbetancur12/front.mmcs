@@ -82,6 +82,11 @@ interface GeneratedReport {
   }
 }
 
+interface ReportingMetadata {
+  byType: Record<string, { supported: string[]; recommended: string[] }>
+  custom: { supported: string[]; recommended: string[] }
+}
+
 const templateColumnsPresets: Record<ReportType, string[]> = {
   user_progress: ['usuario', 'email', 'rol', 'cursosInscritos', 'cursosCompletados', 'porcentajeProgreso'],
   course_analytics: ['curso', 'categoria', 'inscritos', 'completados', 'porcentajeCompletacion', 'estado'],
@@ -119,7 +124,7 @@ const emptyScheduleForm = {
   frequency: 'weekly' as ReportFrequency,
   time: '09:00',
   format: 'csv' as ReportFormat,
-  recipients: ''
+  recipients: [] as string[]
 }
 
 const LmsReporting: React.FC = () => {
@@ -133,8 +138,19 @@ const LmsReporting: React.FC = () => {
   const [templateForm, setTemplateForm] = useState(emptyTemplateForm)
   const [scheduleForm, setScheduleForm] = useState(emptyScheduleForm)
   const [customColumnInput, setCustomColumnInput] = useState('')
-  const availableColumns = templateColumnsPresets[templateForm.type]
+  const [recipientInput, setRecipientInput] = useState('')
   const isCustomTemplate = templateForm.type === 'custom'
+
+  const metadataQuery = useQuery(['lms-reporting', 'metadata'], async () => {
+    const response = await axiosPrivate.get('/lms/reporting/metadata')
+    return response.data.data as ReportingMetadata
+  })
+
+  const metadata = metadataQuery.data
+  const availableColumns = metadata?.byType?.[templateForm.type]?.recommended
+    || metadata?.byType?.[templateForm.type]?.supported
+    || templateColumnsPresets[templateForm.type]
+  const availableCustomColumns = metadata?.custom?.supported || knownCustomColumns
 
   const templatesQuery = useQuery(['lms-reporting', 'templates'], async () => {
     const response = await axiosPrivate.get('/lms/reporting/templates')
@@ -222,10 +238,7 @@ const LmsReporting: React.FC = () => {
         frequency: scheduleForm.frequency,
         time: scheduleForm.time,
         format: scheduleForm.format,
-        recipients: scheduleForm.recipients
-          .split(',')
-          .map((item) => item.trim())
-          .filter(Boolean),
+        recipients: scheduleForm.recipients,
         filters: {}
       }
 
@@ -243,6 +256,7 @@ const LmsReporting: React.FC = () => {
         setScheduleDialogOpen(false)
         setEditingSchedule(null)
         setScheduleForm(emptyScheduleForm)
+        setRecipientInput('')
         Toast.fire({
           icon: 'success',
           title: editingSchedule ? 'Programación actualizada' : 'Reporte programado'
@@ -343,9 +357,32 @@ const LmsReporting: React.FC = () => {
     }))
   }
 
+  const addRecipients = () => {
+    const incomingRecipients = recipientInput
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean)
+
+    if (incomingRecipients.length === 0) return
+
+    setScheduleForm((prev) => ({
+      ...prev,
+      recipients: Array.from(new Set([...prev.recipients, ...incomingRecipients]))
+    }))
+    setRecipientInput('')
+  }
+
+  const removeRecipient = (recipient: string) => {
+    setScheduleForm((prev) => ({
+      ...prev,
+      recipients: prev.recipients.filter((item) => item !== recipient)
+    }))
+  }
+
   const handleCreateSchedule = () => {
     setEditingSchedule(null)
     setScheduleForm(emptyScheduleForm)
+    setRecipientInput('')
     setScheduleDialogOpen(true)
   }
 
@@ -357,8 +394,9 @@ const LmsReporting: React.FC = () => {
       frequency: schedule.frequency,
       time: schedule.time.slice(0, 5),
       format: schedule.format,
-      recipients: (schedule.recipients || []).join(', ')
+      recipients: schedule.recipients || []
     })
+    setRecipientInput('')
     setScheduleDialogOpen(true)
   }
 
@@ -642,7 +680,7 @@ const LmsReporting: React.FC = () => {
                       Puedes seleccionar columnas conocidas del LMS y, si hace falta, agregar extras manualmente.
                     </Typography>
                     <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
-                      {knownCustomColumns.map((column) => {
+                      {availableCustomColumns.map((column) => {
                         const selected = templateForm.columns.includes(column)
                         return (
                           <Chip
@@ -797,13 +835,38 @@ const LmsReporting: React.FC = () => {
                 </FormControl>
               </Grid>
             </Grid>
-            <TextField
-              label='Destinatarios'
-              helperText='Emails separados por coma'
-              value={scheduleForm.recipients}
-              onChange={(event) => setScheduleForm((prev) => ({ ...prev, recipients: event.target.value }))}
-              fullWidth
-            />
+            <Box>
+              <TextField
+                label='Agregar destinatarios'
+                helperText='Escribe uno o varios correos separados por coma y luego agrégalos.'
+                value={recipientInput}
+                onChange={(event) => setRecipientInput(event.target.value)}
+                fullWidth
+              />
+              <Button sx={{ mt: 1.5 }} variant='outlined' onClick={addRecipients} disabled={!recipientInput.trim()}>
+                Agregar destinatarios
+              </Button>
+            </Box>
+            <Box>
+              <Typography variant='subtitle2' sx={{ mb: 1 }}>
+                Destinatarios actuales
+              </Typography>
+              {scheduleForm.recipients.length === 0 ? (
+                <Alert severity='warning'>Debes agregar al menos un destinatario para programar el reporte.</Alert>
+              ) : (
+                <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
+                  {scheduleForm.recipients.map((recipient) => (
+                    <Chip
+                      key={recipient}
+                      label={recipient}
+                      onDelete={() => removeRecipient(recipient)}
+                      color='primary'
+                      variant='outlined'
+                    />
+                  ))}
+                </Stack>
+              )}
+            </Box>
           </Stack>
         </DialogContent>
         <DialogActions>
