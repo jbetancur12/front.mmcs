@@ -11,7 +11,6 @@ import {
   LinearProgress,
   IconButton,
   Paper,
-  Stack,
   Alert
 } from '@mui/material'
 import {
@@ -84,22 +83,6 @@ const colors = {
   }
 }
 
-const formatActivityTimestamp = (timestamp?: string) => {
-  if (!timestamp) {
-    return 'Reciente'
-  }
-
-  const parsedDate = new Date(timestamp)
-  if (Number.isNaN(parsedDate.getTime())) {
-    return timestamp
-  }
-
-  return parsedDate.toLocaleString('es-CO', {
-    dateStyle: 'short',
-    timeStyle: 'short'
-  })
-}
-
 interface QuickActionCard {
   id: string
   title: string
@@ -149,8 +132,6 @@ const LmsAdmin: React.FC = () => {
   const courseMetrics = dashboardData?.courseMetrics || {}
   const userAnalytics = dashboardData?.userAnalytics || {}
   const quizMetrics = dashboardData?.quizAnalytics || {}
-  const recentActivity = dashboardData?.recentActivity || []
-
   const currentUser = {
     id: $userStore.customer?.id || 1,
     email: $userStore.email || '',
@@ -255,8 +236,7 @@ const LmsAdmin: React.FC = () => {
     completionRate: toNumber(metrics?.completionRate),
     activeUsers: toNumber(metrics?.activeUsers),
     pendingAssignments: toNumber(metrics?.pendingAssignments),
-    overdueTraining: toNumber(metrics?.overdueTraining),
-    recentActivity: Array.isArray(recentActivity) ? recentActivity : []
+    overdueTraining: toNumber(metrics?.overdueTraining)
   }
 
   // Loading state for the entire dashboard
@@ -963,98 +943,6 @@ const LmsAdmin: React.FC = () => {
             </Box>
           </QuickActionsErrorBoundary>
 
-          {/* Recent Activity */}
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Card
-                sx={{
-                  borderRadius: '16px',
-                  border: `1px solid ${colors.gray[200]}`,
-                  height: '100%'
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      mb: 3
-                    }}
-                  >
-                    <Typography
-                      variant='h6'
-                      sx={{ fontWeight: 700, color: colors.gray[800] }}
-                    >
-                      Actividad Reciente
-                    </Typography>
-                    {dashboardStats.recentActivity.length > 0 ? (
-                      <Button
-                        size='small'
-                        onClick={() => navigate('/lms/admin/analytics')}
-                        sx={{
-                          color: colors.primary,
-                          fontWeight: 600,
-                          textTransform: 'none'
-                        }}
-                      >
-                        Ver todo
-                      </Button>
-                    ) : null}
-                  </Box>
-                  {dashboardStats.recentActivity.length === 0 ? (
-                    <Alert severity='info'>
-                      Aún no hay actividad reciente disponible desde el backend del LMS.
-                    </Alert>
-                  ) : (
-                    <Stack spacing={2}>
-                      {dashboardStats.recentActivity.map((activity: any, index: number) => (
-                        <Box
-                          key={activity.id || `${activity.type || 'activity'}-${index}`}
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            p: 2,
-                            borderRadius: '12px',
-                            bgcolor: colors.gray[50],
-                            border: `1px solid ${colors.gray[100]}`
-                          }}
-                        >
-                          <Avatar
-                            sx={{
-                              bgcolor: 'white',
-                              mr: 2,
-                              width: 40,
-                              height: 40,
-                              border: `2px solid ${colors.gray[200]}`
-                            }}
-                          >
-                            {activity.icon || <SchoolIcon />}
-                          </Avatar>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography
-                              variant='body1'
-                              sx={{
-                                fontWeight: 600,
-                                color: colors.gray[800],
-                                mb: 0.5
-                              }}
-                            >
-                              {activity.title || activity.description || 'Actividad LMS'}
-                            </Typography>
-                            <Typography variant='body2' color={colors.gray[500]}>
-                              {activity.user || activity.type || 'Sistema'} •{' '}
-                              {formatActivityTimestamp(activity.timestamp || activity.createdAt)}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      ))}
-                    </Stack>
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
         </Box>
       </Box>
     </DashboardErrorBoundary>
