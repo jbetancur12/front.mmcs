@@ -108,6 +108,15 @@ interface CourseFormErrors {
   estimated_duration_minutes?: string
 }
 
+interface CourseActionDialogState {
+  open: boolean
+  title: string
+  description: string
+  confirmLabel: string
+  tone: 'primary' | 'warning' | 'error'
+  onConfirm: (() => void) | null
+}
+
 const audienceOptions = [
   {
     value: 'internal' as const,
@@ -142,6 +151,14 @@ const LmsCourseManagement: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' })
   const [formErrors, setFormErrors] = useState<CourseFormErrors>({})
+  const [courseActionDialog, setCourseActionDialog] = useState<CourseActionDialogState>({
+    open: false,
+    title: '',
+    description: '',
+    confirmLabel: 'Confirmar',
+    tone: 'primary',
+    onConfirm: null
+  })
   const [formData, setFormData] = useState<CreateCourseData>({
     title: '',
     description: '',
@@ -375,21 +392,55 @@ const LmsCourseManagement: React.FC = () => {
   }
 
   const handleDelete = (courseId: number) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este curso?')) {
-      deleteCourseMutation.mutate(courseId)
-    }
+    const course = courses.find((item) => item.id === courseId)
+    setCourseActionDialog({
+      open: true,
+      title: 'Eliminar curso',
+      description: `Vas a eliminar "${course?.title || 'este curso'}". Esta acción no se puede deshacer.`,
+      confirmLabel: 'Eliminar curso',
+      tone: 'error',
+      onConfirm: () => deleteCourseMutation.mutate(courseId)
+    })
   }
 
   const handlePublishCourse = (courseId: number) => {
-    if (window.confirm('¿Estás seguro de que quieres publicar este curso? Los estudiantes podrán verlo.')) {
-      publishCourseMutation.mutate(courseId)
-    }
+    const course = courses.find((item) => item.id === courseId)
+    setCourseActionDialog({
+      open: true,
+      title: 'Publicar curso',
+      description: `"${course?.title || 'Este curso'}" quedará visible para la audiencia seleccionada. Asegúrate de que el contenido esté listo antes de publicarlo.`,
+      confirmLabel: 'Publicar curso',
+      tone: 'primary',
+      onConfirm: () => publishCourseMutation.mutate(courseId)
+    })
   }
 
   const handleArchiveCourse = (courseId: number) => {
-    if (window.confirm('¿Estás seguro de que quieres archivar este curso? Ya no estará visible para los estudiantes.')) {
-      archiveCourseMutation.mutate(courseId)
-    }
+    const course = courses.find((item) => item.id === courseId)
+    setCourseActionDialog({
+      open: true,
+      title: 'Archivar curso',
+      description: `"${course?.title || 'Este curso'}" dejará de estar disponible para nuevos estudiantes, pero conservará su historial y analíticas.`,
+      confirmLabel: 'Archivar curso',
+      tone: 'warning',
+      onConfirm: () => archiveCourseMutation.mutate(courseId)
+    })
+  }
+
+  const handleCloseCourseActionDialog = () => {
+    setCourseActionDialog({
+      open: false,
+      title: '',
+      description: '',
+      confirmLabel: 'Confirmar',
+      tone: 'primary',
+      onConfirm: null
+    })
+  }
+
+  const handleConfirmCourseAction = () => {
+    courseActionDialog.onConfirm?.()
+    handleCloseCourseActionDialog()
   }
 
   const handleInputChange = (field: keyof CreateCourseData, value: any) => {
@@ -529,6 +580,11 @@ const LmsCourseManagement: React.FC = () => {
         </Button>
       </Box>
 
+      <Alert severity='info' sx={{ mb: 3 }}>
+        Define aquí la ficha base del curso. Después podrás editar contenido, publicar el curso y
+        configurar asignaciones desde las acciones de cada fila.
+      </Alert>
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -573,6 +629,12 @@ const LmsCourseManagement: React.FC = () => {
                         {course.description}
                       </Typography>
                       <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                        <Chip
+                          label={getStatusLabel(course.status)}
+                          color={getStatusColor(course.status) as any}
+                          size='small'
+                          variant='outlined'
+                        />
                         {course.is_mandatory && (
                           <Chip label='Obligatorio' color='error' size='small' />
                         )}
@@ -860,6 +922,39 @@ const LmsCourseManagement: React.FC = () => {
             disabled={isSaveDisabled}
           >
             {saveCourseMutation.isLoading ? 'Guardando...' : 'Guardar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={courseActionDialog.open}
+        onClose={handleCloseCourseActionDialog}
+        maxWidth='sm'
+        fullWidth
+      >
+        <DialogTitle>{courseActionDialog.title}</DialogTitle>
+        <DialogContent>
+          <Alert
+            severity={
+              courseActionDialog.tone === 'error'
+                ? 'error'
+                : courseActionDialog.tone === 'warning'
+                  ? 'warning'
+                  : 'info'
+            }
+            sx={{ mt: 1 }}
+          >
+            {courseActionDialog.description}
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCourseActionDialog}>Cancelar</Button>
+          <Button
+            onClick={handleConfirmCourseAction}
+            color={courseActionDialog.tone}
+            variant='contained'
+          >
+            {courseActionDialog.confirmLabel}
           </Button>
         </DialogActions>
       </Dialog>
