@@ -1369,25 +1369,6 @@ class LMSService {
     return response.data
   }
 
-  // ===========================
-  // Health & Info
-  // ===========================
-
-  /**
-   * Check LMS health
-   */
-  async checkHealth(): Promise<{ success: boolean; message: string; timestamp: string }> {
-    const response = await axiosPublic.get(`${this.baseURL}/health`)
-    return response.data
-  }
-
-  /**
-   * Get LMS system info
-   */
-  async getSystemInfo(): Promise<any> {
-    const response = await axiosPublic.get(`${this.baseURL}/info`)
-    return response.data
-  }
 }
 
 // Export singleton instance
