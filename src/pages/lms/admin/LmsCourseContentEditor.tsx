@@ -18,7 +18,11 @@ import {
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import LmsContentEditor from '../shared/LmsContentEditor'
-import { lmsService, type Course as BackendCourse } from '../../../services/lmsService'
+import {
+  lmsService,
+  type Course as BackendCourse,
+  type CourseAudience
+} from '../../../services/lmsService'
 
 interface ContentModule {
   id: string
@@ -46,10 +50,7 @@ interface FrontendCourse {
   id: number
   title: string
   description: string
-  audience: {
-    employees: boolean
-    clients: boolean
-  }
+  audience: CourseAudience
   is_mandatory?: boolean
   has_certificate?: boolean
   modules: ContentModule[]
@@ -70,10 +71,7 @@ const LmsCourseContentEditor: React.FC = () => {
     id: parseInt(courseId),
     title: `Curso ${courseId}`,
     description: 'Descripción del curso',
-    audience: {
-      employees: true,
-      clients: false
-    },
+    audience: 'internal',
     is_mandatory: false,
     has_certificate: false,
     modules: [] // Siempre empezar con módulos vacíos
@@ -113,18 +111,11 @@ const LmsCourseContentEditor: React.FC = () => {
       }
     })
 
-    // Transformar audience del backend al formato del frontend
-    const audienceMapping = {
-      internal: { employees: true, clients: false },
-      client: { employees: false, clients: true },
-      both: { employees: true, clients: true }
-    }
-
     return {
       id: backendCourse.id,
       title: backendCourse.title,
       description: backendCourse.description,
-      audience: audienceMapping[backendCourse.audience] || { employees: true, clients: false },
+      audience: backendCourse.audience || 'internal',
       is_mandatory: backendCourse.is_mandatory,
       has_certificate: backendCourse.has_certificate,
       modules: transformedModules
@@ -180,21 +171,11 @@ const LmsCourseContentEditor: React.FC = () => {
   // Mutación para guardar cambios del curso (sin módulos)
   const saveCourseInfoMutation = useMutation(
     async (courseData: FrontendCourse) => {
-      // Transformar audience del frontend al formato del backend
-      let backendAudience: 'internal' | 'client' | 'both' = 'internal'
-      if (courseData.audience.employees && courseData.audience.clients) {
-        backendAudience = 'both'
-      } else if (courseData.audience.clients) {
-        backendAudience = 'client'
-      } else {
-        backendAudience = 'internal'
-      }
-
       // Solo actualizar información básica del curso, no los módulos
       const response = await axiosPrivate.put(`/lms/courses/${courseId}`, {
         title: courseData.title,
         description: courseData.description,
-        audience: backendAudience,
+        audience: courseData.audience,
         is_mandatory: courseData.is_mandatory,
         has_certificate: courseData.has_certificate
       })
