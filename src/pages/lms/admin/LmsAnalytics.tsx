@@ -228,7 +228,17 @@ const LmsAnalytics: React.FC = () => {
           </Stack>
         </Box>
 
+        <Alert severity='info' sx={{ mb: 3 }}>
+          Usa este panel para responder tres preguntas rápidas: cuántos usuarios están activos, qué cursos están funcionando mejor y dónde se está frenando la finalización. Ajusta fechas y tipo de usuario antes de exportar.
+        </Alert>
+
         <Paper sx={{ p: 2, mb: 3 }}>
+          <Typography variant='subtitle2' sx={{ mb: 1.5 }}>
+            Filtros de análisis
+          </Typography>
+          <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+            El rango de fechas define la ventana del reporte. Tipo de usuario y estado del curso te ayudan a aislar si el comportamiento cambia entre internos, clientes o contenidos todavía no publicados.
+          </Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} md={3}>
               <DatePicker
@@ -306,6 +316,12 @@ const LmsAnalytics: React.FC = () => {
           <Typography color='text.secondary'>Cargando analiticas reales...</Typography>
         ) : (
           <>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} sx={{ mb: 3 }}>
+              <Chip label={`Ventana: ${filters.startDate ? filters.startDate.toLocaleDateString('es-CO') : 'Sin inicio'} - ${filters.endDate ? filters.endDate.toLocaleDateString('es-CO') : 'Sin fin'}`} variant='outlined' />
+              <Chip label={`Usuarios: ${filters.userType === 'all' ? 'Todos' : filters.userType === 'internal' ? 'Internos' : 'Clientes'}`} variant='outlined' />
+              <Chip label={`Cursos: ${filters.courseStatus === 'all' ? 'Todos' : filters.courseStatus === 'draft' ? 'Borrador' : filters.courseStatus === 'published' ? 'Publicados' : 'Archivados'}`} variant='outlined' />
+            </Stack>
+
             <Grid container spacing={3} sx={{ mb: 3 }}>
               <Grid item xs={12} sm={6} md={3}>
                 <Card>

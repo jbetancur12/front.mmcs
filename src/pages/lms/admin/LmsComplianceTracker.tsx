@@ -431,6 +431,12 @@ const LmsComplianceTracker: React.FC = () => {
   }, [filters])
 
   const openFiltersPopover = Boolean(filterAnchorEl)
+  const currentTabSummary = [
+    `${filteredRecords.length} registros visibles`,
+    `${overdueRecords.length} vencidos`,
+    `${approachingDeadline.length} por vencer`,
+    `${completedRecords.length} completados`
+  ]
 
   // Loading state
   if (isLoading) {
@@ -477,6 +483,16 @@ const LmsComplianceTracker: React.FC = () => {
         </Typography>
       </Box>
 
+      <Alert severity="info" sx={{ mb: 3 }}>
+        Revisa primero las alertas de vencimiento, luego aplica filtros para encontrar a quién recordarle qué curso. Esta vista corresponde al flujo obligatorio de usuarios internos; los clientes siguen un modelo de catálogo.
+      </Alert>
+
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
+        {currentTabSummary.map((item) => (
+          <Chip key={item} label={item} variant="outlined" />
+        ))}
+      </Box>
+
       {/* Alertas de cumplimiento */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         {complianceAlerts.map((alert) => (
@@ -513,6 +529,7 @@ const LmsComplianceTracker: React.FC = () => {
         <Card>
           <CardHeader 
             title="Todos los Registros de Cumplimiento"
+            subheader="Usa filtros para aislar áreas, cursos o estados antes de exportar o disparar recordatorios manuales."
             action={
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Button
@@ -655,7 +672,10 @@ const LmsComplianceTracker: React.FC = () => {
 
       {activeTab === 1 && (
         <Card>
-          <CardHeader title="Cursos Vencidos - Acción Requerida" />
+          <CardHeader
+            title="Cursos Vencidos - Acción Requerida"
+            subheader="Prioriza estos casos: ya pasaron la fecha límite y conviene recordar, revisar avance o confirmar si la asignación sigue vigente."
+          />
           <CardContent>
             {overdueRecords.length === 0 ? (
               <Box sx={{ py: 8, textAlign: 'center' }}>
@@ -698,7 +718,10 @@ const LmsComplianceTracker: React.FC = () => {
 
       {activeTab === 2 && (
         <Card>
-          <CardHeader title="Próximos Vencimientos (7 días)" />
+          <CardHeader
+            title="Próximos Vencimientos (7 días)"
+            subheader="Esta vista te ayuda a prevenir retrasos antes de que el curso entre en estado vencido."
+          />
           <CardContent>
             {approachingDeadline.length === 0 ? (
               <Box sx={{ py: 8, textAlign: 'center' }}>
@@ -741,7 +764,10 @@ const LmsComplianceTracker: React.FC = () => {
 
       {activeTab === 3 && (
         <Card>
-          <CardHeader title="Cursos Completados" />
+          <CardHeader
+            title="Cursos Completados"
+            subheader="Úsalo para confirmar cierres exitosos y validar qué audiencias ya no requieren seguimiento manual."
+          />
           <CardContent>
             {completedRecords.length === 0 ? (
               <Box sx={{ py: 8, textAlign: 'center' }}>
