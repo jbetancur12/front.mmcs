@@ -33,6 +33,7 @@ import {
   Schedule as ScheduleIcon,
   Summarize as SummarizeIcon
 } from '@mui/icons-material'
+import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { Toast } from 'src/Components/ExcelManipulation/Utils'
@@ -128,6 +129,7 @@ const emptyScheduleForm = {
 }
 
 const LmsReporting: React.FC = () => {
+  const navigate = useNavigate()
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState(0)
@@ -415,7 +417,12 @@ const LmsReporting: React.FC = () => {
                     Flujo recomendado: plantillas primero, programaciones después y revisión histórica al final.
                   </Typography>
                 </Box>
-                <Chip color='info' icon={<SummarizeIcon />} label={`${summary.templates} plantilla(s) listas`} />
+                <Stack direction='row' spacing={1} alignItems='center'>
+                  <Chip color='info' icon={<SummarizeIcon />} label={`${summary.templates} plantilla(s) listas`} />
+                  <Button variant='text' onClick={() => navigate('/lms/admin/analytics')}>
+                    Ver analíticas
+                  </Button>
+                </Stack>
               </Box>
               <Alert severity='info' icon={<ScheduleIcon />}>
                 <AlertTitle>Uso esperado</AlertTitle>

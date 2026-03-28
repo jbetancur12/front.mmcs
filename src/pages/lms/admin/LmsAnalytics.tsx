@@ -37,7 +37,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { es } from 'date-fns/locale'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Area,
   AreaChart,
@@ -108,6 +108,7 @@ const formatDate = (value?: string | null) => {
 }
 
 const LmsAnalytics: React.FC = () => {
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState(() =>
     getAnalyticsTabIndex(searchParams.get('tab'))
@@ -256,6 +257,12 @@ const LmsAnalytics: React.FC = () => {
           </Box>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+            <Button
+              variant='text'
+              onClick={() => navigate('/lms/admin/reporting')}
+            >
+              Ir a reportes
+            </Button>
             <Button
               variant='outlined'
               startIcon={<RefreshIcon />}
