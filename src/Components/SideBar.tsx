@@ -385,9 +385,9 @@ const SideBar = ({
 
   return (
     <aside
-      className={`fixed top-0 left-0 z-20 flex flex-col flex-shrink-0 h-full pt-16 font-normal bg-white/98 backdrop-blur-lg border-r border-gray-200/50 dark:bg-gray-900/98 dark:border-gray-700/50 shadow-xl shadow-gray-200/30 dark:shadow-gray-900/30 transition-all duration-300 ease-out ${
+      className={`fixed top-0 left-0 z-30 flex flex-col flex-shrink-0 h-full pt-16 font-normal bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 shadow-2xl shadow-gray-300/30 dark:shadow-black/30 transition-all duration-300 ease-out ${
         mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-      } lg:translate-x-0 lg:flex ${userMinimized ? 'lg:w-20' : 'lg:w-64'} w-64`}
+      } lg:z-20 lg:translate-x-0 lg:flex lg:bg-white/98 lg:backdrop-blur-lg lg:border-gray-200/50 lg:dark:bg-gray-900/98 lg:dark:border-gray-700/50 lg:shadow-xl lg:shadow-gray-200/30 lg:dark:shadow-gray-900/30 ${userMinimized ? 'lg:w-20' : 'lg:w-64'} w-64`}
     >
       {/* Contenedor con scroll para los items del sidebar */}
       <div className='flex-1 overflow-y-auto px-3 py-4 scrollbar-thin scrollbar-thumb-gray-300/50 dark:scrollbar-thumb-gray-600/50 scrollbar-track-transparent hover:scrollbar-thumb-gray-400/70'>
