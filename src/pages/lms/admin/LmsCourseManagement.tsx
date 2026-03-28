@@ -385,8 +385,9 @@ const LmsCourseManagement: React.FC = () => {
   }
 
   const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
+    const safeMinutes = Number.isFinite(minutes) ? minutes : 0
+    const hours = Math.floor(safeMinutes / 60)
+    const mins = safeMinutes % 60
     if (hours > 0) {
       return `${hours}h ${mins}m`
     }

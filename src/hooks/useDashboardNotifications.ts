@@ -171,9 +171,18 @@ export const useDashboardNotifications = (options: DashboardNotificationsOptions
         }
     }
 
+    const summary = {
+        total: Number(data?.summary?.total ?? data?.notifications?.length ?? 0),
+        unread: Number(data?.summary?.unread ?? 0),
+        critical: Number(data?.summary?.critical ?? 0),
+        warning: Number(data?.summary?.warning ?? 0),
+        info: Number(data?.summary?.info ?? 0),
+        system: Number(data?.summary?.system ?? 0)
+    }
+
     return {
         notifications: data?.notifications || [],
-        summary: data?.summary || { unread: 0, critical: 0 },
+        summary,
         isLoading,
         error,
         connectionStatus: {

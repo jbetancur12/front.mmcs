@@ -175,10 +175,26 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
     }
   }
 
+  const getHealthLabel = (health?: string) => {
+    if (!health) return 'SIN DATOS'
+    return health.toUpperCase()
+  }
+
+  const getStatusLabel = (status?: string) => {
+    if (!status) return 'SIN ESTADO'
+    return status.toUpperCase()
+  }
+
+  const toNumber = (value: unknown, fallback = 0) => {
+    const parsed = typeof value === 'number' ? value : Number(value)
+    return Number.isFinite(parsed) ? parsed : fallback
+  }
+
   const formatDuration = (milliseconds: number) => {
-    if (milliseconds < 1000) return `${milliseconds}ms`
-    if (milliseconds < 60000) return `${(milliseconds / 1000).toFixed(1)}s`
-    return `${(milliseconds / 60000).toFixed(1)}m`
+    const safeMilliseconds = toNumber(milliseconds)
+    if (safeMilliseconds < 1000) return `${safeMilliseconds}ms`
+    if (safeMilliseconds < 60000) return `${(safeMilliseconds / 1000).toFixed(1)}s`
+    return `${(safeMilliseconds / 60000).toFixed(1)}m`
   }
 
   const formatJobType = (type: string) => {
@@ -305,7 +321,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Chip
-                  label={(jobQueue.queueHealth || 'unknown').toUpperCase()}
+                  label={getHealthLabel(jobQueue.queueHealth)}
                 size='small'
                 sx={{
                   bgcolor: getHealthColor(jobQueue.queueHealth || 'unknown'),
@@ -456,9 +472,9 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                         height: 8,
                         borderRadius: '50%',
                         bgcolor:
-                          status.successRate > 90
+                          toNumber(status.successRate) > 90
                             ? colors.success
-                            : status.successRate > 70
+                            : toNumber(status.successRate) > 70
                               ? colors.warning
                               : colors.error,
                         mr: 2
@@ -473,13 +489,13 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Typography variant='body2' color={colors.gray[500]}>
-                      {status.active} active
+                      {toNumber(status.active)} active
                     </Typography>
                     <Typography variant='body2' color={colors.gray[500]}>
-                      {status.successRate.toFixed(1)}% success
+                      {toNumber(status.successRate).toFixed(1)}% success
                     </Typography>
                     <Typography variant='body2' color={colors.gray[500]}>
-                      {formatDuration(status.averageProcessingTime)} avg
+                      {formatDuration(toNumber(status.averageProcessingTime))} avg
                     </Typography>
                   </Box>
                 </Box>
@@ -525,7 +541,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                           <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             {getStatusIcon(job.status)}
                             <Chip
-                              label={(job.status || 'unknown').toUpperCase()}
+                              label={getStatusLabel(job.status)}
                               size='small'
                               sx={{
                                 ml: 1,
@@ -549,7 +565,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                           >
                             <LinearProgress
                               variant='determinate'
-                              value={job.progress}
+                              value={toNumber(job.progress)}
                               sx={{
                                 flex: 1,
                                 mr: 1,
@@ -567,7 +583,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
                               color={colors.gray[500]}
                               sx={{ fontSize: '0.75rem' }}
                             >
-                              {job.progress}%
+                              {toNumber(job.progress)}%
                             </Typography>
                           </Box>
                         </TableCell>
@@ -646,7 +662,7 @@ const JobQueueMonitoringWidget: React.FC<JobQueueMonitoringWidgetProps> = ({
             </Typography>
             {selectedJob && (
               <Chip
-                label={(selectedJob.status || 'unknown').toUpperCase()}
+                label={getStatusLabel(selectedJob.status)}
                 size='small'
                 sx={{
                   bgcolor: getStatusColor(selectedJob.status || 'unknown'),

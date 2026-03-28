@@ -220,7 +220,9 @@ const ProgressMetric: React.FC<ProgressMetricProps> = ({
   icon,
   color
 }) => {
-  const percentage = (value / max) * 100
+  const safeValue = Number.isFinite(value) ? value : 0
+  const safeMax = Number.isFinite(max) && max > 0 ? max : 0
+  const percentage = safeMax > 0 ? (safeValue / safeMax) * 100 : 0
 
   const getProgressColor = () => {
     if (percentage > 90) return colors.error
@@ -261,8 +263,8 @@ const ProgressMetric: React.FC<ProgressMetricProps> = ({
               {title}
             </Typography>
           </Box>
-          <Chip
-            label={`${value.toFixed(1)} ${unit}`}
+            <Chip
+              label={`${safeValue.toFixed(1)} ${unit}`}
             size='small'
             sx={{
               bgcolor: `${getProgressColor()}15`,
@@ -302,8 +304,8 @@ const ProgressMetric: React.FC<ProgressMetricProps> = ({
               display: 'block'
             }}
           >
-            {max.toFixed(1)} {unit} total capacity
-          </Typography>
+              {safeMax.toFixed(1)} {unit} total capacity
+            </Typography>
         </Box>
       </Stack>
     </Paper>
@@ -311,8 +313,13 @@ const ProgressMetric: React.FC<ProgressMetricProps> = ({
 }
 
 export const SystemPerformanceMetricsWidget: React.FC = () => {
-  const [refreshing, setRefreshing] = useState(false)
-  const { systemMetrics, isLoading, error, refetch } = useLms()
+    const [refreshing, setRefreshing] = useState(false)
+    const { systemMetrics, isLoading, error, refetch } = useLms()
+
+    const toNumber = (value: unknown, fallback = 0) => {
+      const parsed = typeof value === 'number' ? value : Number(value)
+      return Number.isFinite(parsed) ? parsed : fallback
+    }
 
   const handleRefresh = async () => {
     setRefreshing(true)
@@ -390,12 +397,30 @@ export const SystemPerformanceMetricsWidget: React.FC = () => {
   }
 
   const safeMetrics: SystemPerformanceMetrics = {
-    storageUsage: systemMetrics?.storageUsage || defaultMetrics.storageUsage,
-    videoStreamingStats:
-      systemMetrics?.videoStreamingStats || defaultMetrics.videoStreamingStats,
-    databasePerformance:
-      systemMetrics?.databasePerformance || defaultMetrics.databasePerformance,
-    errorRates: systemMetrics?.errorRates || defaultMetrics.errorRates,
+    storageUsage: {
+      total: toNumber(systemMetrics?.storageUsage?.total),
+      used: toNumber(systemMetrics?.storageUsage?.used),
+      available: toNumber(systemMetrics?.storageUsage?.available),
+      percentage: toNumber(systemMetrics?.storageUsage?.percentage)
+    },
+    videoStreamingStats: {
+      activeStreams: toNumber(systemMetrics?.videoStreamingStats?.activeStreams),
+      bandwidth: toNumber(systemMetrics?.videoStreamingStats?.bandwidth),
+      errors: toNumber(systemMetrics?.videoStreamingStats?.errors),
+      totalViews: toNumber(systemMetrics?.videoStreamingStats?.totalViews)
+    },
+    databasePerformance: {
+      connectionPool: toNumber(systemMetrics?.databasePerformance?.connectionPool),
+      maxConnections: toNumber(systemMetrics?.databasePerformance?.maxConnections, 100),
+      queryTime: toNumber(systemMetrics?.databasePerformance?.queryTime),
+      slowQueries: toNumber(systemMetrics?.databasePerformance?.slowQueries)
+    },
+    errorRates: {
+      api: toNumber(systemMetrics?.errorRates?.api),
+      database: toNumber(systemMetrics?.errorRates?.database),
+      storage: toNumber(systemMetrics?.errorRates?.storage),
+      streaming: toNumber(systemMetrics?.errorRates?.streaming)
+    },
     lastUpdated: systemMetrics?.lastUpdated || defaultMetrics.lastUpdated
   }
 

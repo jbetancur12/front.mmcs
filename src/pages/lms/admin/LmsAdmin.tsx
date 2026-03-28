@@ -408,7 +408,8 @@ const LmsAdmin: React.FC = () => {
               scope={
                 userRole === 'admin'
                   ? 'admin'
-                  : userRole === 'training_manager'
+                  : String(userRole) === 'Training Manager' ||
+                    userRole === 'training_manager'
                   ? 'training_manager'
                   : 'department_manager'
               }

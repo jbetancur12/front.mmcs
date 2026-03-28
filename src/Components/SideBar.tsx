@@ -199,7 +199,7 @@ const sidebarItems = ($userStore: UserData) => [
         roles: LMS_ADMIN_ROLES
       },
       {
-        label: 'Asignacioness',
+        label: 'Asignaciones',
         url: 'lms/admin/assignments',
         roles: LMS_ADMIN_ROLES
       },
