@@ -87,7 +87,7 @@ const normalizeCertificate = (certificate: ApiCertificate | Certificate): Certif
   courseDescription: (certificate as Certificate).courseDescription || '',
   issuedAt: (certificate as Certificate).issuedAt || certificate.issued_at || certificate.created_at || '',
   pdfPath: (certificate as Certificate).pdfPath || certificate.file_url || '',
-  verification_url: (certificate as Certificate).verification_url || '',
+  verification_url: (certificate as Certificate).verification_url || certificate.verificationUrl || '',
   course_name: (certificate as Certificate).course_name || (certificate as Certificate).courseTitle || (certificate as Certificate).certificateData?.courseTitle || '',
   user_name: (certificate as Certificate).user_name || (certificate as Certificate).userName || (certificate as Certificate).certificateData?.userName || 'Usuario',
   completion_date: (certificate as Certificate).completion_date || (certificate as Certificate).certificateData?.completionDate || certificate.issued_at || certificate.created_at || '',

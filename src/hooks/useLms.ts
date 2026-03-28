@@ -6,10 +6,11 @@ import type {
   CourseQueryParams,
   CreateCourseRequest,
   UpdateCourseRequest,
-  UserProgress,
+  OverallUserProgressResponse,
+  ProgressUpdateResult,
   UpdateProgressRequest,
   Quiz,
-  QuizAttempt,
+  QuizSubmissionResult,
   SubmitQuizRequest,
   Certificate,
   CertificateTemplate,
@@ -19,7 +20,8 @@ import type {
   CreateAssignmentResult,
   CreateQuizRequest,
   LmsPermissions,
-  UpdateAssignmentResult
+  UpdateAssignmentResult,
+  CourseProgressResponse
 } from 'src/services/lmsService'
 import { Toast } from 'src/Components/ExcelManipulation/Utils'
 
@@ -362,7 +364,7 @@ export const useUserProgress = (
   userId?: number,
   options?: any
 ) => {
-  return useQuery(
+  return useQuery<OverallUserProgressResponse>(
     queryKeys.progress.user(userId),
     () => lmsService.getUserProgress(userId),
     {
@@ -380,7 +382,7 @@ export const useCourseProgress = (
   userId?: number,
   options?: any
 ) => {
-  return useQuery(
+  return useQuery<CourseProgressResponse>(
     queryKeys.progress.course(courseId, userId),
     () => lmsService.getCourseProgress(courseId, userId),
     {
@@ -395,7 +397,7 @@ export const useCourseProgress = (
  * Update progress (mark lesson as completed)
  */
 export const useUpdateProgress = (
-  options?: UseMutationOptions<UserProgress, Error, UpdateProgressRequest>
+  options?: UseMutationOptions<ProgressUpdateResult, Error, UpdateProgressRequest>
 ) => {
   const queryClient = useQueryClient()
 
@@ -408,7 +410,7 @@ export const useUpdateProgress = (
         queryClient.invalidateQueries(queryKeys.progress.all)
 
         // Optionally show success message
-        if (variables.completed) {
+        if (variables.action === 'complete') {
           Toast.fire({
             icon: 'success',
             title: 'Progreso actualizado',
@@ -435,7 +437,7 @@ export const useUpdateProgress = (
  * Complete a lesson
  */
 export const useCompleteLesson = (
-  options?: UseMutationOptions<UserProgress, Error, { lessonId: number; timeSpent?: number }>
+  options?: UseMutationOptions<ProgressUpdateResult, Error, { lessonId: number; timeSpent?: number }>
 ) => {
   const queryClient = useQueryClient()
 
@@ -593,7 +595,7 @@ export const useDeleteQuiz = (
  * Submit quiz attempt
  */
 export const useSubmitQuiz = (
-  options?: UseMutationOptions<QuizAttempt, Error, { quizId: number; data: SubmitQuizRequest }>
+  options?: UseMutationOptions<QuizSubmissionResult, Error, { quizId: number; data: SubmitQuizRequest }>
 ) => {
   const queryClient = useQueryClient()
 
@@ -607,11 +609,11 @@ export const useSubmitQuiz = (
         queryClient.invalidateQueries(queryKeys.quizzes.attempts(variables.quizId))
         queryClient.invalidateQueries(queryKeys.progress.all)
 
-        const passed = data.passed
+        const passed = data.results.passed
         Toast.fire({
           icon: passed ? 'success' : 'warning',
           title: passed ? '¡Quiz aprobado!' : 'Quiz no aprobado',
-          text: `Puntuación: ${data.score}%`
+          text: `Puntuación: ${data.results.percentage}%`
         })
 
         options?.onSuccess?.(data, variables, context)

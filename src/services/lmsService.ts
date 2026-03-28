@@ -130,8 +130,10 @@ export interface QuizAttempt {
   quiz_id: number
   user_id: number
   score: number
+  total_points?: number
   passed: boolean
   answers: Record<string, any>
+  attempt_number?: number
   started_at: string
   completed_at?: string
   created_at: string
@@ -155,6 +157,96 @@ export interface UserProgress {
   last_accessed_at: string
   created_at: string
   updated_at: string
+}
+
+export interface CourseProgressSummary {
+  totalLessons: number
+  completedLessons: number
+  progressPercentage: number
+  isCompleted: boolean
+  totalTimeSpent: number
+}
+
+export interface CourseProgressResponse {
+  course: {
+    id: number
+    title: string
+    description: string
+    has_certificate: boolean
+  }
+  progress: CourseProgressSummary
+  modules: Array<{
+    id: number
+    title: string
+    order_index: number
+    lessons: Array<{
+      id: number
+      title: string
+      type: ContentType | 'quiz'
+      content?: string
+      video_url?: string
+      description?: string
+      order_index: number
+      estimated_minutes?: number
+      quiz?: Quiz | null
+      progress: null | {
+        status: 'not_started' | 'in_progress' | 'completed'
+        started_at?: string
+        completed_at?: string
+        time_spent_minutes?: number
+      }
+    }>
+  }>
+}
+
+export interface OverallCourseProgressSummary {
+  courseId: number
+  title: string
+  hasCertificate: boolean
+  totalLessons: number
+  completedLessons: number
+  progressPercentage: number
+  isCompleted: boolean
+  totalTimeSpent: number
+}
+
+export interface OverallUserProgressResponse {
+  totalCourses: number
+  completedCourses: number
+  totalTimeSpent: number
+  courses: OverallCourseProgressSummary[]
+}
+
+export interface ProgressUpdateResult {
+  lessonProgress: UserProgress
+  courseProgress: CourseProgressSummary
+  nextLesson: null | {
+    lessonId: number
+    title: string
+    type: ContentType | 'quiz'
+    moduleTitle: string
+    moduleId: number
+    orderIndex: number
+    estimatedMinutes?: number
+  }
+}
+
+export interface QuizSubmissionResult {
+  attempt: QuizAttempt
+  quiz: {
+    id: number
+    title: string
+    passing_percentage: number
+    show_correct_answers: boolean
+  }
+  results: {
+    score: number
+    totalPoints: number
+    passed: boolean
+    percentage: number
+    timeSpentMinutes: number
+    correctAnswers: Record<string, any> | null
+  }
 }
 
 /**
@@ -519,12 +611,13 @@ export interface CreateLessonRequest {
 
 export interface CreateQuizRequest {
   lesson_id?: number
-  course_id?: number
   title: string
   description?: string
-  passing_score: number
+  passing_percentage: number
   max_attempts?: number
+  cooldown_minutes?: number
   time_limit_minutes?: number
+  questions?: QuizQuestion[]
 }
 
 export interface CreateAssignmentRequest {
@@ -536,12 +629,14 @@ export interface CreateAssignmentRequest {
 
 export interface SubmitQuizRequest {
   answers: Record<string, any>
+  timeSpent?: number
 }
 
 export interface UpdateProgressRequest {
-  lesson_id: number
-  completed: boolean
-  time_spent_minutes?: number
+  lessonId: number
+  action: 'start' | 'complete' | 'update_time'
+  timeSpentMinutes?: number
+  additionalData?: Record<string, any>
 }
 
 // ===========================
@@ -727,41 +822,46 @@ class LMSService {
   /**
    * Get user progress for a course
    */
-  async getCourseProgress(courseId: number, userId?: number): Promise<UserProgress> {
+  async getCourseProgress(courseId: number, userId?: number): Promise<CourseProgressResponse> {
     const url = userId
-      ? `${this.baseURL}/progress/course/${courseId}/user/${userId}`
-      : `${this.baseURL}/progress/course/${courseId}`
+      ? `${this.baseURL}/progress/users/${userId}/courses/${courseId}`
+      : `${this.baseURL}/progress/courses/${courseId}`
     const response = await axiosPrivate.get(url)
-    return response.data.progress || response.data
+    return this.unwrapResponse<CourseProgressResponse>(response.data)
   }
 
   /**
    * Get all progress for a user
    */
-  async getUserProgress(userId?: number): Promise<UserProgress[]> {
+  async getUserProgress(userId?: number): Promise<OverallUserProgressResponse> {
     const url = userId
-      ? `${this.baseURL}/progress/user/${userId}`
-      : `${this.baseURL}/progress/user/me`
+      ? `${this.baseURL}/progress/users/${userId}/overview`
+      : `${this.baseURL}/progress/overview`
     const response = await axiosPrivate.get(url)
-    return response.data.progress || response.data
+    return this.unwrapResponse<OverallUserProgressResponse>(response.data)
   }
 
   /**
    * Update progress (mark lesson as completed)
    */
-  async updateProgress(data: UpdateProgressRequest): Promise<UserProgress> {
-    const response = await axiosPrivate.post(`${this.baseURL}/progress/update`, data)
-    return response.data.progress || response.data
+  async updateProgress(data: UpdateProgressRequest): Promise<ProgressUpdateResult> {
+    const response = await axiosPrivate.post(`${this.baseURL}/progress`, {
+      lessonId: data.lessonId,
+      action: data.action,
+      timeSpentMinutes: data.timeSpentMinutes,
+      additionalData: data.additionalData
+    })
+    return this.unwrapResponse<ProgressUpdateResult>(response.data)
   }
 
   /**
    * Complete a lesson
    */
-  async completeLesson(lessonId: number, timeSpent?: number): Promise<UserProgress> {
+  async completeLesson(lessonId: number, timeSpent?: number): Promise<ProgressUpdateResult> {
     return this.updateProgress({
-      lesson_id: lessonId,
-      completed: true,
-      time_spent_minutes: timeSpent
+      lessonId,
+      action: 'complete',
+      timeSpentMinutes: timeSpent
     })
   }
 
@@ -781,8 +881,15 @@ class LMSService {
    * Create a quiz
    */
   async createQuiz(data: CreateQuizRequest): Promise<Quiz> {
-    const response = await axiosPrivate.post(`${this.baseURL}/quizzes`, data)
-    return response.data.quiz || response.data
+    if (!data.lesson_id) {
+      throw new Error('lesson_id es requerido para crear un quiz')
+    }
+
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/quizzes/lessons/${data.lesson_id}/quiz`,
+      data
+    )
+    return this.unwrapResponse<Quiz>(response.data)
   }
 
   /**
@@ -803,20 +910,22 @@ class LMSService {
   /**
    * Submit quiz attempt
    */
-  async submitQuiz(quizId: number, data: SubmitQuizRequest): Promise<QuizAttempt> {
-    const response = await axiosPrivate.post(`${this.baseURL}/quizzes/${quizId}/submit`, data)
-    return response.data.attempt || response.data
+  async submitQuiz(quizId: number, data: SubmitQuizRequest): Promise<QuizSubmissionResult> {
+    const response = await axiosPrivate.post(`${this.baseURL}/quizzes/${quizId}/attempt`, data)
+    return this.unwrapResponse<QuizSubmissionResult>(response.data)
   }
 
   /**
    * Get quiz attempts for a user
    */
   async getQuizAttempts(quizId: number, userId?: number): Promise<QuizAttempt[]> {
-    const url = userId
-      ? `${this.baseURL}/quizzes/${quizId}/attempts/user/${userId}`
-      : `${this.baseURL}/quizzes/${quizId}/attempts`
+    if (userId) {
+      throw new Error('La API LMS actual solo expone intentos del usuario autenticado')
+    }
+
+    const url = `${this.baseURL}/quizzes/${quizId}/attempts`
     const response = await axiosPrivate.get(url)
-    return response.data.attempts || response.data
+    return this.unwrapResponse<QuizAttempt[]>(response.data)
   }
 
   // ===========================
@@ -831,8 +940,7 @@ class LMSService {
       ? `${this.baseURL}/certificates/users/${userId}`
       : `${this.baseURL}/certificates/my-certificates`
     const response = await axiosPrivate.get(url)
-    // Backend returns { success: true, data: [...] } where data is the array
-    return response.data.data || response.data.certificates || response.data
+    return this.unwrapResponse<Certificate[]>(response.data)
   }
 
   /**
@@ -847,11 +955,14 @@ class LMSService {
    * Generate certificate for a course
    */
   async generateCertificate(courseId: number, userId?: number): Promise<Certificate> {
-    const response = await axiosPrivate.post(`${this.baseURL}/certificates/generate`, {
-      course_id: courseId,
-      user_id: userId
-    })
-    return response.data.certificate || response.data
+    if (!userId) {
+      throw new Error('userId es requerido para generar un certificado manualmente')
+    }
+
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/certificates/generate/${userId}/${courseId}`
+    )
+    return this.unwrapResponse<Certificate>(response.data)
   }
 
   /**
