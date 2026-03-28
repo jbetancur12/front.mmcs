@@ -46,6 +46,10 @@ import { useStore } from '@nanostores/react'
 import { userStore } from '../../../store/userStore'
 import { useAvailableCourses } from '../../../hooks/useLms'
 import type { Course } from '../../../services/lmsService'
+import {
+  getCourseAudienceLabel,
+  getLearningVisibilityLabel
+} from '../../../utils/lmsAudience'
 
 interface User {
   id: number
@@ -134,7 +138,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
         progress,
         totalLessons,
         completedLessons,
-        category: course.audience || 'General',
+        category: getCourseAudienceLabel(course.audience),
         instructor: course.creator?.nombre || 'Instructor',
         duration: `${totalLessons} lecciones`,
         rating: 4.5,
@@ -289,6 +293,9 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
               </Typography>
               <Typography variant='body1' color='text.secondary'>
                 Bienvenido, {currentUser.name}
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                {getLearningVisibilityLabel('client')}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>

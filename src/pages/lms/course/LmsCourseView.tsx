@@ -57,6 +57,10 @@ import LmsVideoPlayer from '../shared/LmsVideoPlayer'
 import LmsQuizPlayer from '../shared/LmsQuizPlayer'
 import { useCourse } from '../../../hooks/useLms'
 import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  getCourseAudienceLabel,
+  normalizeCourseAudience
+} from '../../../utils/lmsAudience'
 
 interface CourseLesson {
   id: number
@@ -146,12 +150,12 @@ const LmsCourseView: React.FC = () => {
       id: courseData.id,
       title: courseData.title,
       description: courseData.description,
-      category: courseData.audience || 'General',
+      category: getCourseAudienceLabel(courseData.audience),
       instructor: 'Instructor',  // TODO: Get from courseData.creator
       duration: courseData.estimated_duration_minutes ? `${courseData.estimated_duration_minutes} min` : 'N/A',
       rating: 4.5,  // TODO: Get from courseData.stats
       enrolledUsers: 0,  // TODO: Get from courseData.stats
-      audience: courseData.audience || 'both',
+      audience: normalizeCourseAudience(courseData.audience),
       thumbnail: '/placeholder.svg?height=400&width=600',
       hasCertificate: courseData.has_certificate || false,
       isMandatory: courseData.is_mandatory || false,

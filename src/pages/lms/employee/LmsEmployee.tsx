@@ -45,6 +45,10 @@ import { userStore } from '../../../store/userStore'
 import LmsNotificationCenter from '../shared/LmsNotificationCenter'
 import { useAvailableCourses } from '../../../hooks/useLms'
 import type { Course } from '../../../services/lmsService'
+import {
+  getCourseAudienceLabel,
+  getLearningVisibilityLabel
+} from '../../../utils/lmsAudience'
 
 interface User {
   id: number
@@ -146,7 +150,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         progress,
         totalLessons,
         completedLessons,
-        category: course.audience || 'General',
+        category: getCourseAudienceLabel(course.audience),
         instructor: course.creator?.nombre || 'Instructor',
         duration: `${totalLessons} lecciones`,
         rating: 4.5
@@ -305,6 +309,9 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
               </Typography>
               <Typography variant='body1' color='text.secondary'>
                 Bienvenido, {currentUser.name}
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                {getLearningVisibilityLabel('internal')}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>

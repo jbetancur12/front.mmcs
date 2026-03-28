@@ -44,6 +44,7 @@ import {
 } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { getCourseAudienceLabel } from '../../../utils/lmsAudience'
 
 interface Course {
   id: number
@@ -381,19 +382,6 @@ const LmsCourseManagement: React.FC = () => {
     }
   }
 
-  const getAudienceLabel = (audience: string) => {
-    switch (audience) {
-      case 'internal':
-        return 'Interno'
-      case 'client':
-        return 'Cliente'
-      case 'both':
-        return 'Ambos'
-      default:
-        return audience
-    }
-  }
-
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60)
     const mins = minutes % 60
@@ -507,7 +495,7 @@ const LmsCourseManagement: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Chip 
-                      label={getAudienceLabel(course.audience)} 
+                      label={getCourseAudienceLabel(course.audience)} 
                       color={course.audience === 'both' ? 'primary' : 'default'}
                       size='small' 
                     />

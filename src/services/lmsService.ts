@@ -432,6 +432,18 @@ export interface UpdateProgressRequest {
 class LMSService {
   private readonly baseURL = '/lms'
 
+  private unwrapResponse<T>(payload: any, nestedKey?: string): T {
+    if (payload?.data !== undefined) {
+      return payload.data as T
+    }
+
+    if (nestedKey && payload?.[nestedKey] !== undefined) {
+      return payload[nestedKey] as T
+    }
+
+    return payload as T
+  }
+
   // ===========================
   // Course Management
   // ===========================
@@ -449,7 +461,7 @@ class LMSService {
    */
   async getAvailableCourses(): Promise<Course[]> {
     const response = await axiosPrivate.get(`${this.baseURL}/courses/available`)
-    return response.data.data || response.data.courses || response.data
+    return this.unwrapResponse<Course[]>(response.data, 'courses')
   }
 
   /**
@@ -457,7 +469,7 @@ class LMSService {
    */
   async getMyPermissions(): Promise<LmsPermissions> {
     const response = await axiosPrivate.get(`${this.baseURL}/training-manager/my-permissions`)
-    return response.data.data || response.data
+    return this.unwrapResponse<LmsPermissions>(response.data)
   }
 
   /**
@@ -465,7 +477,7 @@ class LMSService {
    */
   async getCourse(id: number): Promise<Course> {
     const response = await axiosPrivate.get(`${this.baseURL}/courses/${id}`)
-    return response.data.data || response.data.course || response.data
+    return this.unwrapResponse<Course>(response.data, 'course')
   }
 
   /**
@@ -473,7 +485,7 @@ class LMSService {
    */
   async getCoursePreview(id: number): Promise<Course> {
     const response = await axiosPublic.get(`${this.baseURL}/courses/preview/${id}`)
-    return response.data.course || response.data
+    return this.unwrapResponse<Course>(response.data, 'course')
   }
 
   /**
@@ -481,7 +493,7 @@ class LMSService {
    */
   async createCourse(data: CreateCourseRequest): Promise<Course> {
     const response = await axiosPrivate.post(`${this.baseURL}/courses`, data)
-    return response.data.course || response.data
+    return this.unwrapResponse<Course>(response.data, 'course')
   }
 
   /**
@@ -489,7 +501,7 @@ class LMSService {
    */
   async updateCourse(id: number, data: UpdateCourseRequest): Promise<Course> {
     const response = await axiosPrivate.put(`${this.baseURL}/courses/${id}`, data)
-    return response.data.course || response.data
+    return this.unwrapResponse<Course>(response.data, 'course')
   }
 
   /**
@@ -504,7 +516,7 @@ class LMSService {
    */
   async publishCourse(id: number): Promise<Course> {
     const response = await axiosPrivate.post(`${this.baseURL}/courses/${id}/publish`)
-    return response.data.course || response.data
+    return this.unwrapResponse<Course>(response.data, 'course')
   }
 
   /**
@@ -512,7 +524,7 @@ class LMSService {
    */
   async archiveCourse(id: number): Promise<Course> {
     const response = await axiosPrivate.post(`${this.baseURL}/courses/${id}/archive`)
-    return response.data.course || response.data
+    return this.unwrapResponse<Course>(response.data, 'course')
   }
 
   /**
@@ -522,7 +534,7 @@ class LMSService {
     const response = await axiosPrivate.post(`${this.baseURL}/courses/${id}/duplicate`, {
       title: newTitle
     })
-    return response.data.course || response.data
+    return this.unwrapResponse<Course>(response.data, 'course')
   }
 
   /**
@@ -530,7 +542,7 @@ class LMSService {
    */
   async getCourseStats(id: number): Promise<CourseStats> {
     const response = await axiosPrivate.get(`${this.baseURL}/courses/${id}/stats`)
-    return response.data.stats || response.data
+    return this.unwrapResponse<CourseStats>(response.data, 'stats')
   }
 
   // ===========================
@@ -541,8 +553,11 @@ class LMSService {
    * Create a module
    */
   async createModule(data: CreateModuleRequest): Promise<CourseModule> {
-    const response = await axiosPrivate.post(`${this.baseURL}/content/modules`, data)
-    return response.data.module || response.data
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/content/courses/${data.course_id}/modules`,
+      data
+    )
+    return this.unwrapResponse<CourseModule>(response.data, 'module')
   }
 
   /**
@@ -550,7 +565,7 @@ class LMSService {
    */
   async updateModule(id: number, data: Partial<CreateModuleRequest>): Promise<CourseModule> {
     const response = await axiosPrivate.put(`${this.baseURL}/content/modules/${id}`, data)
-    return response.data.module || response.data
+    return this.unwrapResponse<CourseModule>(response.data, 'module')
   }
 
   /**
@@ -564,8 +579,11 @@ class LMSService {
    * Create a lesson
    */
   async createLesson(data: CreateLessonRequest): Promise<CourseLesson> {
-    const response = await axiosPrivate.post(`${this.baseURL}/content/lessons`, data)
-    return response.data.lesson || response.data
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/content/modules/${data.module_id}/lessons`,
+      data
+    )
+    return this.unwrapResponse<CourseLesson>(response.data, 'lesson')
   }
 
   /**
@@ -573,7 +591,7 @@ class LMSService {
    */
   async updateLesson(id: number, data: Partial<CreateLessonRequest>): Promise<CourseLesson> {
     const response = await axiosPrivate.put(`${this.baseURL}/content/lessons/${id}`, data)
-    return response.data.lesson || response.data
+    return this.unwrapResponse<CourseLesson>(response.data, 'lesson')
   }
 
   /**

@@ -41,6 +41,10 @@ import { userStore } from 'src/store/userStore'
 import LmsQuizComponent from '../components/LmsQuizComponent'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { createSafeHtmlRenderer } from 'src/utils/htmlSanitizer'
+import {
+  getCourseAudienceLabel,
+  normalizeCourseAudience
+} from 'src/utils/lmsAudience'
 
 interface CourseUnit {
   id: number
@@ -161,12 +165,12 @@ const transformPreviewDataToCourse = (previewData: any): Course => {
     id: previewData.id,
     title: previewData.title,
     description: previewData.description,
-    category: previewData.category || 'Programación',
+    category: getCourseAudienceLabel(previewData.audience),
     instructor: previewData.instructor || 'Instructor',
     duration: previewData.duration || '8 horas',
     rating: previewData.rating || 4.5,
     enrolledUsers: previewData.enrolledUsers || 0,
-    audience: previewData.audience,
+    audience: normalizeCourseAudience(previewData.audience),
     thumbnail: previewData.thumbnail || '/placeholder.svg?height=400&width=600',
     status: previewData.status,
     units
@@ -224,12 +228,12 @@ const transformProgressDataToCourse = (progressData: any): Course => {
     id: progressData.course?.id || progressData.id,
     title: progressData.course?.title || progressData.title,
     description: progressData.course?.description || progressData.description,
-    category: 'Programación',
+    category: getCourseAudienceLabel(progressData.course?.audience),
     instructor: 'Instructor',
     duration: `${Math.ceil((progressData.progress?.totalTimeSpent || 0) / 60)} horas`,
     rating: 4.5,
     enrolledUsers: 0,
-    audience: 'employee',
+    audience: normalizeCourseAudience(progressData.course?.audience),
     thumbnail: '/placeholder.svg?height=400&width=600',
     status: 'published',
     units
@@ -259,8 +263,8 @@ const LmsCoursePreview: React.FC = () => {
     duration: '8 horas',
     rating: 4.8,
     enrolledUsers: 245,
-    category: 'Programación',
-    audience: 'employee',
+    category: getCourseAudienceLabel('internal'),
+    audience: 'internal',
     thumbnail: '/placeholder.svg?height=400&width=600',
     status: 'published',
     units: [
