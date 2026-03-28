@@ -155,7 +155,6 @@ const LmsAnalytics: React.FC = () => {
   const courseMetrics = dashboard?.courseMetrics || {}
   const quizAnalytics = dashboard?.quizAnalytics || {}
   const assignmentStatus = dashboard?.assignmentStatus || {}
-  const recentActivity = Array.isArray(dashboard?.recentActivity) ? dashboard.recentActivity : []
   const generatedAt = dashboard?.generatedAt
 
   useEffect(() => {
@@ -266,13 +265,15 @@ const LmsAnalytics: React.FC = () => {
               Refrescar
             </Button>
             <Button variant='contained' startIcon={<DownloadIcon />} onClick={handleExport}>
-              Exportar CSV
+              Exportar resumen
             </Button>
           </Stack>
         </Box>
 
         <Alert severity='info' sx={{ mb: 3 }}>
-          Usa este panel para responder tres preguntas rápidas: cuántos usuarios están activos, qué cursos están funcionando mejor y dónde se está frenando la finalización. Ajusta fechas y tipo de usuario antes de exportar.
+          Usa este panel para responder tres preguntas rápidas: cuántas personas están activas,
+          qué cursos funcionan mejor y dónde se está frenando la finalización. Ajusta fechas y tipo
+          de usuario antes de exportar el resumen.
         </Alert>
 
         <Paper sx={{ p: 2, mb: 3 }}>
@@ -421,7 +422,7 @@ const LmsAnalytics: React.FC = () => {
             </Grid>
 
             <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 3 }}>
-              <Tab label='Resumen ejecutivo' />
+              <Tab label='Resumen' />
               <Tab label='Cursos' />
               <Tab label='Cumplimiento' />
               <Tab label='Quizzes' />
@@ -479,52 +480,6 @@ const LmsAnalytics: React.FC = () => {
                     3) vencimientos y pendientes, 4) comportamiento de quizzes. Con eso cubres la mayor parte
                     de las decisiones operativas del LMS actual.
                   </Alert>
-                </Grid>
-
-                <Grid item xs={12}>
-                  <Card>
-                    <CardHeader title='Actividad reciente de apoyo' />
-                    <CardContent>
-                      <Alert severity='info' sx={{ mb: 2 }}>
-                        Úsala como contexto rápido, no como métrica principal. Las decisiones del módulo
-                        deberían apoyarse primero en finalización, cumplimiento y resultados de quizzes.
-                      </Alert>
-                      {recentActivity.length === 0 ? (
-                        <Typography color='text.secondary'>
-                          No hay actividad reciente reportada por el backend para este rango.
-                        </Typography>
-                      ) : (
-                        <Stack spacing={2}>
-                          {recentActivity.slice(0, 5).map((activity: any, index: number) => (
-                            <Box
-                              key={`${activity.type || 'activity'}-${index}`}
-                              sx={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                p: 2,
-                                border: '1px solid',
-                                borderColor: 'divider',
-                                borderRadius: 2
-                              }}
-                            >
-                              <Box>
-                                <Typography fontWeight='bold'>
-                                  {activity.title || activity.description || 'Actividad LMS'}
-                                </Typography>
-                                <Typography variant='body2' color='text.secondary'>
-                                  {activity.user || activity.type || 'Sistema'}
-                                </Typography>
-                              </Box>
-                              <Typography variant='caption' color='text.secondary'>
-                                {formatDate(activity.timestamp || activity.createdAt)}
-                              </Typography>
-                            </Box>
-                          ))}
-                        </Stack>
-                      )}
-                    </CardContent>
-                  </Card>
                 </Grid>
               </Grid>
             ) : null}
