@@ -212,6 +212,31 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     }
   }, [coursesData, userAssignments, userCertificates])
 
+  const recentRecognitions = useMemo(() => {
+    const certificateRecognitions = userCertificates.slice(0, 3).map((certificate: Certificate) => ({
+      id: `certificate-${certificate.id}`,
+      icon: <AwardIcon color="warning" />,
+      primary: 'Certificado obtenido',
+      secondary: certificate.courseTitle
+    }))
+
+    if (certificateRecognitions.length > 0) {
+      return certificateRecognitions
+    }
+
+    const completedCourseRecognitions = [...mandatoryCourses, ...optionalCourses]
+      .filter((course) => course.progress === 100)
+      .slice(0, 3)
+      .map((course) => ({
+        id: `course-${course.id}`,
+        icon: <CheckCircleIcon color="success" />,
+        primary: 'Curso completado',
+        secondary: course.title
+      }))
+
+    return completedCourseRecognitions
+  }, [mandatoryCourses, optionalCourses, userCertificates])
+
   const handleLogout = () => {
     localStorage.removeItem('currentUser')
     navigate('/')
@@ -539,24 +564,25 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                 </Card>
 
                 <Card>
-                  <CardHeader title="Logros Recientes" />
+                  <CardHeader title="Logros recientes" />
                   <CardContent>
-                    <List dense>
-                      <ListItem sx={{ px: 0 }}>
-                        <ListItemIcon><AwardIcon color="warning" /></ListItemIcon>
-                        <ListItemText 
-                          primary="Certificado obtenido"
-                          secondary="Gestión de Proyectos"
-                        />
-                      </ListItem>
-                      <ListItem sx={{ px: 0 }}>
-                        <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
-                        <ListItemText 
-                          primary="Curso completado"
-                          secondary="React Fundamentals"
-                        />
-                      </ListItem>
-                    </List>
+                    {recentRecognitions.length > 0 ? (
+                      <List dense>
+                        {recentRecognitions.map((recognition) => (
+                          <ListItem key={recognition.id} sx={{ px: 0 }}>
+                            <ListItemIcon>{recognition.icon}</ListItemIcon>
+                            <ListItemText
+                              primary={recognition.primary}
+                              secondary={recognition.secondary}
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    ) : (
+                      <Alert severity="info">
+                        Completa cursos o genera certificados para ver logros reales aquí.
+                      </Alert>
+                    )}
                   </CardContent>
                 </Card>
               </Grid>
