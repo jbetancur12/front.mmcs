@@ -103,7 +103,7 @@ const reportTypeLabels: Record<ReportType, string> = {
   course_analytics: 'Analítica de cursos',
   compliance: 'Cumplimiento',
   quiz_performance: 'Rendimiento de quizzes',
-  custom: 'Personalizado (avanzado)'
+  custom: 'Personalizado'
 }
 
 const reportTypeOptions: Array<{ value: ReportType; label: string; helper: string }> = [
@@ -529,13 +529,13 @@ const LmsReporting: React.FC = () => {
 
         <Alert severity='info'>
           Disponible hoy: CRUD real de plantillas, listado real de reportes generados y
-          programación real de reportes. Pendiente: builder avanzado de filtros y definición
+          programación real de reportes. Pendiente: configuración más profunda de filtros y definición
           final del catálogo de reportes de negocio.
         </Alert>
 
         <Alert severity='success'>
           Recomendación actual: usa primero <strong>Progreso de usuarios</strong>, <strong>Cumplimiento</strong>
-          {' '}y <strong>Analítica de cursos</strong>. El modo <strong>Personalizado</strong> queda como opción avanzada,
+          {' '}y <strong>Analítica de cursos</strong>. El modo <strong>Personalizado</strong> queda como opción de uso puntual,
           no como punto de partida.
         </Alert>
 

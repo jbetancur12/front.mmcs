@@ -164,7 +164,7 @@ const LmsAdmin: React.FC = () => {
     },
     {
       id: 'reports',
-      title: 'Reportes Avanzados',
+      title: 'Reportes',
       description: 'Generación y análisis de reportes',
       icon: <AssessmentIcon />,
       color: '#8b5cf6',
