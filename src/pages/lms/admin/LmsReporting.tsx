@@ -158,6 +158,18 @@ const emptyScheduleForm = {
   recipients: [] as string[]
 }
 
+const getApiMessage = (error: any, fallback: string) =>
+  error?.response?.data?.error?.message
+  || error?.response?.data?.message
+  || error?.message
+  || fallback
+
+const getReportStatusLabel = (status: GeneratedReport['status']) => {
+  if (status === 'completed') return 'Completado'
+  if (status === 'failed') return 'Fallido'
+  return 'Generando'
+}
+
 const LmsReporting: React.FC = () => {
   const navigate = useNavigate()
   const axiosPrivate = useAxiosPrivate()
@@ -236,14 +248,17 @@ const LmsReporting: React.FC = () => {
         setCustomColumnInput('')
         Toast.fire({
           icon: 'success',
-          title: editingTemplate ? 'Plantilla actualizada' : 'Plantilla creada'
+          title: editingTemplate ? 'Plantilla actualizada' : 'Plantilla creada',
+          text: editingTemplate
+            ? 'La plantilla quedó lista para seguir generando o programando reportes.'
+            : 'La plantilla ya puede usarse para generar o programar reportes.'
         })
       },
       onError: (error: any) => {
         Toast.fire({
           icon: 'error',
           title: 'Error al guardar plantilla',
-          text: error.response?.data?.error?.message || error.message
+          text: getApiMessage(error, 'No se pudo guardar la plantilla.')
         })
       }
     }
@@ -256,7 +271,15 @@ const LmsReporting: React.FC = () => {
         invalidateReporting()
         Toast.fire({
           icon: 'success',
-          title: 'Plantilla eliminada'
+          title: 'Plantilla eliminada',
+          text: 'La plantilla ya no aparecerá en generación ni programación.'
+        })
+      },
+      onError: (error: any) => {
+        Toast.fire({
+          icon: 'error',
+          title: 'Error al eliminar plantilla',
+          text: getApiMessage(error, 'No se pudo eliminar la plantilla.')
         })
       }
     }
@@ -276,14 +299,15 @@ const LmsReporting: React.FC = () => {
         invalidateReporting()
         Toast.fire({
           icon: 'success',
-          title: 'Reporte generado'
+          title: 'Reporte generado',
+          text: 'Quedó registrado en reportes recientes y podrás descargarlo cuando termine.'
         })
       },
       onError: (error: any) => {
         Toast.fire({
           icon: 'error',
           title: 'Error al generar reporte',
-          text: error.response?.data?.error?.message || error.message
+          text: getApiMessage(error, 'No se pudo generar el reporte.')
         })
       }
     }
@@ -318,14 +342,17 @@ const LmsReporting: React.FC = () => {
         setRecipientInput('')
         Toast.fire({
           icon: 'success',
-          title: editingSchedule ? 'Programación actualizada' : 'Reporte programado'
+          title: editingSchedule ? 'Programación actualizada' : 'Reporte programado',
+          text: editingSchedule
+            ? 'La programación quedó ajustada con los nuevos datos.'
+            : 'La programación quedó activa para futuros envíos.'
         })
       },
       onError: (error: any) => {
         Toast.fire({
           icon: 'error',
           title: 'Error al guardar programación',
-          text: error.response?.data?.error?.message || error.message
+          text: getApiMessage(error, 'No se pudo guardar la programación.')
         })
       }
     }
@@ -338,7 +365,15 @@ const LmsReporting: React.FC = () => {
         invalidateReporting()
         Toast.fire({
           icon: 'success',
-          title: 'Programación eliminada'
+          title: 'Programación eliminada',
+          text: 'Ese envío ya no se ejecutará automáticamente.'
+        })
+      },
+      onError: (error: any) => {
+        Toast.fire({
+          icon: 'error',
+          title: 'Error al eliminar programación',
+          text: getApiMessage(error, 'No se pudo eliminar la programación.')
         })
       }
     }
@@ -492,7 +527,7 @@ const LmsReporting: React.FC = () => {
       Toast.fire({
         icon: 'error',
         title: 'Error al descargar reporte',
-        text: error.response?.data?.error?.message || error.message
+        text: getApiMessage(error, 'No se pudo descargar el reporte.')
       })
     }
   }
@@ -765,7 +800,7 @@ const LmsReporting: React.FC = () => {
                           <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap sx={{ mt: 0.5 }}>
                             <Chip label={report.template?.name || 'Sin plantilla'} size='small' />
                             <Chip label={report.format.toUpperCase()} size='small' variant='outlined' />
-                            <Chip label={report.status} size='small' color={report.status === 'completed' ? 'success' : report.status === 'failed' ? 'error' : 'warning'} />
+                            <Chip label={getReportStatusLabel(report.status)} size='small' color={report.status === 'completed' ? 'success' : report.status === 'failed' ? 'error' : 'warning'} />
                             {report.record_count !== undefined && (
                               <Chip label={`${report.record_count} registros`} size='small' variant='outlined' />
                             )}

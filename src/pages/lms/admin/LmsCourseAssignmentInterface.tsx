@@ -116,6 +116,12 @@ const transformAssignment = (backendAssignment: BackendAssignment): Assignment =
   }
 }
 
+const getApiMessage = (error: any, fallback: string) =>
+  error?.response?.data?.error?.message
+  || error?.response?.data?.message
+  || error?.message
+  || fallback
+
 const LmsCourseAssignmentInterface: React.FC = () => {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -217,7 +223,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
         Swal.fire({
           icon: 'success',
           title: 'Asignación creada',
-          text: 'La asignación se creó exitosamente',
+          text: 'La regla quedó lista y ya puedes revisar su progreso o reenviar recordatorios.',
           timer: 2000
         })
         setActiveTab(0) // Volver al tab de asignaciones
@@ -235,7 +241,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
         Swal.fire({
           icon: 'error',
           title: 'Error al crear asignación',
-          text: error.response?.data?.message || error.message || 'Ocurrió un error'
+          text: getApiMessage(error, 'No se pudo crear la asignación.')
         })
       }
     }
@@ -257,7 +263,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
         Swal.fire({
           icon: 'success',
           title: 'Asignación actualizada',
-          text: 'La asignación se actualizó exitosamente',
+          text: 'La nueva fecha límite ya quedó guardada.',
           timer: 2000
         })
       },
@@ -265,7 +271,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
         Swal.fire({
           icon: 'error',
           title: 'Error al actualizar asignación',
-          text: error.response?.data?.message || error.message || 'Ocurrió un error'
+          text: getApiMessage(error, 'No se pudo actualizar la asignación.')
         })
       }
     }
@@ -281,7 +287,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
         Swal.fire({
           icon: 'success',
           title: 'Asignación eliminada',
-          text: 'La asignación se eliminó exitosamente',
+          text: 'La regla ya no estará activa para ese curso.',
           timer: 2000
         })
       },
@@ -289,7 +295,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
         Swal.fire({
           icon: 'error',
           title: 'Error al eliminar asignación',
-          text: error.response?.data?.message || error.message || 'Ocurrió un error'
+          text: getApiMessage(error, 'No se pudo eliminar la asignación.')
         })
       }
     }
@@ -308,7 +314,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
         Swal.fire({
           icon: 'success',
           title: 'Recordatorio enviado',
-          text: 'El recordatorio se envió exitosamente',
+          text: 'Se reenviaron las alertas para esta asignación.',
           timer: 2000
         })
         queryClient.invalidateQueries(['lms-all-assignments'])
@@ -317,7 +323,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
         Swal.fire({
           icon: 'error',
           title: 'Error al enviar recordatorio',
-          text: error.response?.data?.message || error.message || 'Ocurrió un error'
+          text: getApiMessage(error, 'No se pudo enviar el recordatorio.')
         })
       }
     }
@@ -728,6 +734,13 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                   </Card>
                 </Grid>
               ))}
+              {assignments.length === 0 && (
+                <Grid item xs={12}>
+                  <Alert severity="info">
+                    No hay asignaciones para los filtros actuales. Ajusta el curso, el estado o crea una nueva regla.
+                  </Alert>
+                </Grid>
+              )}
             </Grid>
           </Box>
         )}
