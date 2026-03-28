@@ -121,9 +121,15 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const initialTab = searchParams.get('tab') === 'create' ? 1 : 0
   const courseIdFromSearch = Number(searchParams.get('courseId') || '')
+  const statusFromSearch = searchParams.get('status') || 'all'
   const [activeTab, setActiveTab] = useState(initialTab)
   const [selectedCourse, setSelectedCourse] = useState<number | ''>(
     Number.isFinite(courseIdFromSearch) && courseIdFromSearch > 0 ? courseIdFromSearch : ''
+  )
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'completed' | 'overdue'>(
+    statusFromSearch === 'active' || statusFromSearch === 'completed' || statusFromSearch === 'overdue'
+      ? statusFromSearch
+      : 'all'
   )
   const [selectedRole, setSelectedRole] = useState<string>('')
   const [deadline, setDeadline] = useState<Date | null>(null)
@@ -164,13 +170,14 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   )
   // Get all assignments
   const { data: assignmentsResponse } = useQuery<{ assignments: BackendAssignment[], total: number, page: number, limit: number }>(
-    ['lms-all-assignments', page, rowsPerPage, selectedCourse],
+    ['lms-all-assignments', page, rowsPerPage, selectedCourse, selectedStatus],
     async () => {
       const response = await axiosPrivate.get('/lms/assignments/all', {
         params: {
           page: page + 1,
           limit: rowsPerPage,
-          courseId: selectedCourse || undefined
+          courseId: selectedCourse || undefined,
+          status: selectedStatus === 'all' ? undefined : selectedStatus
         }
       })
       return response.data.data
@@ -218,6 +225,9 @@ const LmsCourseAssignmentInterface: React.FC = () => {
         nextParams.set('tab', 'active')
         if (selectedCourse) {
           nextParams.set('courseId', String(selectedCourse))
+        }
+        if (selectedStatus !== 'all') {
+          nextParams.set('status', selectedStatus)
         }
         setSearchParams(nextParams, { replace: true })
       },
@@ -336,6 +346,11 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     } else {
       nextParams.delete('courseId')
     }
+    if (selectedStatus !== 'all') {
+      nextParams.set('status', selectedStatus)
+    } else {
+      nextParams.delete('status')
+    }
     setSearchParams(nextParams, { replace: true })
   }
 
@@ -347,12 +362,34 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     } else {
       nextParams.delete('courseId')
     }
+    if (selectedStatus !== 'all') {
+      nextParams.set('status', selectedStatus)
+    } else {
+      nextParams.delete('status')
+    }
     setSearchParams(nextParams, { replace: true })
   }
 
   const handleCourseSelection = (courseId: number | '') => {
     setSelectedCourse(courseId)
     syncCourseInSearch(courseId)
+  }
+
+  const handleStatusSelection = (status: 'all' | 'active' | 'completed' | 'overdue') => {
+    setSelectedStatus(status)
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('tab', activeTab === 1 ? 'create' : 'active')
+    if (selectedCourse) {
+      nextParams.set('courseId', String(selectedCourse))
+    } else {
+      nextParams.delete('courseId')
+    }
+    if (status !== 'all') {
+      nextParams.set('status', status)
+    } else {
+      nextParams.delete('status')
+    }
+    setSearchParams(nextParams, { replace: true })
   }
 
   const handleCreateAssignment = () => {
@@ -560,6 +597,19 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                         {course.title}
                       </MenuItem>
                     ))}
+                  </Select>
+                </FormControl>
+                <FormControl size="small" sx={{ minWidth: 180 }}>
+                  <InputLabel>Estado</InputLabel>
+                  <Select
+                    value={selectedStatus}
+                    label="Estado"
+                    onChange={(e) => handleStatusSelection(e.target.value as 'all' | 'active' | 'completed' | 'overdue')}
+                  >
+                    <MenuItem value="all">Todos</MenuItem>
+                    <MenuItem value="active">Activas</MenuItem>
+                    <MenuItem value="completed">Completadas</MenuItem>
+                    <MenuItem value="overdue">Vencidas</MenuItem>
                   </Select>
                 </FormControl>
                 <Button
