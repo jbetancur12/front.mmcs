@@ -187,7 +187,7 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
       <Card sx={{ borderRadius: '16px', border: `1px solid ${colors.error}` }}>
         <CardContent sx={{ p: 3 }}>
           <Typography variant="body2" color={colors.error}>
-            Error loading quiz performance data
+            No se pudieron cargar los datos de rendimiento de quizzes
           </Typography>
         </CardContent>
       </Card>
@@ -557,18 +557,18 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
             </Avatar>
             <Box sx={{ flex: 1 }}>
               <Typography variant="h6" sx={{ fontWeight: 700, color: colors.gray[800] }}>
-                Performance de Quizzes
+                Rendimiento de quizzes
               </Typography>
               <Typography variant="body2" color={colors.gray[500]}>
-                Análisis avanzado de dificultad y rendimiento
+                Panorama de dificultad, aprobación y reintentos
               </Typography>
             </Box>
-            <Tooltip title="Ver análisis detallado">
+            <Tooltip title="Abrir detalle rápido">
               <IconButton onClick={() => setDetailsOpen(true)} size="small">
                 <VisibilityIcon />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Ver análisis completo">
+            <Tooltip title="Ir al módulo completo">
               <IconButton onClick={onViewDetails} size="small">
                 <AssessmentIcon />
               </IconButton>
@@ -593,7 +593,7 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
                   {data.averageScore || 0}
                 </Typography>
                 <Typography variant="body2" color="#8b5cf6">
-                  Score Prom.
+                  Puntaje prom.
                 </Typography>
               </Box>
             </Grid>
@@ -622,18 +622,18 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
           {/* Performance Indicator */}
           <Box sx={{ mb: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="body2" sx={{ fontWeight: 600, color: colors.gray[700] }}>
-                Rendimiento General
-              </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: colors.gray[700] }}>
+                Rendimiento general
+                </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 {(data.averageScore || 0) >= 75 ? 
                   <TrendingUpIcon sx={{ color: colors.success, fontSize: 16, mr: 0.5 }} /> :
                   <TrendingDownIcon sx={{ color: colors.error, fontSize: 16, mr: 0.5 }} />
                 }
-                <Chip
-                  label={performanceLevel === 'excellent' ? 'Excelente' :
+                  <Chip
+                    label={performanceLevel === 'excellent' ? 'Excelente' :
                         performanceLevel === 'good' ? 'Bueno' :
-                        performanceLevel === 'average' ? 'Promedio' : 'Necesita Mejora'}
+                        performanceLevel === 'average' ? 'Promedio' : 'Requiere atención'}
                   size="small"
                   sx={{
                     bgcolor: performanceColor,
@@ -680,6 +680,7 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
                 </Typography>
                 <Typography variant="caption" color={colors.gray[500]}>
                   Preguntas Difíciles
+                  
                 </Typography>
               </Box>
             </Grid>
@@ -691,6 +692,7 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
                 </Typography>
                 <Typography variant="caption" color={colors.gray[500]}>
                   Tiempo Prom.
+                  
                 </Typography>
               </Box>
             </Grid>
@@ -723,9 +725,10 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
               <Box>
                 <Typography variant="h6" sx={{ fontWeight: 700 }}>
                   Análisis Detallado de Quizzes
+                  
                 </Typography>
                 <Typography variant="body2" color={colors.gray[500]}>
-                  Visualizaciones avanzadas y recomendaciones
+                  Visualizaciones ampliadas y recomendaciones accionables
                 </Typography>
               </Box>
             </Box>
@@ -749,12 +752,12 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
             />
             <Tab 
               icon={<RefreshIcon />} 
-              label="Patrones de Reintento" 
+              label="Reintentos" 
               iconPosition="start"
             />
             <Tab 
               icon={<LightbulbIcon />} 
-              label="Recomendaciones" 
+              label="Acciones sugeridas" 
               iconPosition="start"
             />
           </Tabs>
@@ -781,7 +784,7 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
               }
             }}
           >
-            Ver Análisis Completo
+            Ir al análisis completo
           </Button>
         </DialogActions>
       </Dialog>

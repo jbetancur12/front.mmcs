@@ -296,6 +296,7 @@ const NotificationWidget: React.FC<NotificationWidgetProps> = ({
             <Chip
               icon={<InfoIcon />}
               label={`${summary.info} Info`}
+              
               size="small"
               sx={{
                 bgcolor: '#eff6ff',
@@ -323,12 +324,12 @@ const NotificationWidget: React.FC<NotificationWidgetProps> = ({
         {/* Recent Notifications Preview */}
         {recentNotifications.length > 0 ? (
           <Box>
-            <Typography variant="body2" sx={{ 
+              <Typography variant="body2" sx={{ 
               fontWeight: 600, 
               color: colors.gray[700], 
               mb: 2 
             }}>
-              Recientes
+              Más recientes
             </Typography>
             <Stack spacing={1}>
               {recentNotifications.map((notification) => (
@@ -465,7 +466,7 @@ const NotificationWidget: React.FC<NotificationWidgetProps> = ({
         >
           <Box sx={{ p: 2, borderBottom: `1px solid ${colors.gray[200]}` }}>
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              Todas las Notificaciones
+              Todas las notificaciones
             </Typography>
             {summary.unread > 0 && (
               <Button

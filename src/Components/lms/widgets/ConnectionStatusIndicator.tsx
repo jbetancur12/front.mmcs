@@ -72,15 +72,15 @@ const ConnectionStatusIndicator: React.FC<ConnectionStatusIndicatorProps> = ({
     if (isConnecting) {
       return connectionAttempts > 0
         ? `Reintentando conexión WebSocket (${connectionAttempts}/${maxAttempts})`
-        : 'Estableciendo conexión WebSocket para actualizaciones en tiempo real'
+        : 'Estableciendo conexión WebSocket para actualizaciones en tiempo real.'
     }
     if (isConnected) {
-      return 'Conexión WebSocket activa - Recibiendo actualizaciones en tiempo real'
+      return 'Conexión WebSocket activa. Recibiendo actualizaciones en tiempo real.'
     }
     if (error) {
-      return `Error en conexión WebSocket: ${error}. Las notificaciones pueden no actualizarse automáticamente.`
+      return `Error en la conexión WebSocket: ${error}. Las notificaciones pueden no actualizarse automáticamente.`
     }
-    return 'Sin conexión WebSocket - Las notificaciones no se actualizarán automáticamente'
+    return 'Sin conexión WebSocket. Las notificaciones no se actualizarán automáticamente.'
   }
 
   const shouldShowWarning = connectionAttempts > 0 && connectionAttempts < maxAttempts

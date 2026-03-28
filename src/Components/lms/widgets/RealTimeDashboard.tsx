@@ -38,7 +38,6 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
     show: false
   })
 
-  // New consolidated hook
   const {
     notifications,
     summary,
@@ -55,7 +54,6 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
     enabled: showConnectionStatus, // Only connect if status is shown (or always true if preferred)
     refreshInterval: refreshInterval,
     onNewNotification: (notification) => {
-      // Show real-time alert for new notifications
       setRealtimeAlert({
         message: `Nueva notificación: ${notification.title}`,
         severity: notification.severity === 'critical' ? 'error' : 'info',
@@ -64,7 +62,6 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
     }
   })
 
-  // Connection status for display
   const isConnected = connectionStatus.connected
   const isConnecting = connectionStatus.connecting
   const wsError = connectionStatus.error
@@ -82,18 +79,15 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
         : ''
 
   const handleNotificationClick = (notification: Notification) => {
-    // Mark as read
     if (!notification.read) {
       markAsRead(notification.id)
     }
 
-    // Handle custom click action
     if (onNotificationClick) {
       onNotificationClick(notification)
       return
     }
 
-    // Default navigation based on notification metadata
     const metadata = notification.metadata || {}
 
     if (notification.actionUrl) {
@@ -119,7 +113,6 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
 
   return (
     <Box>
-      {/* Connection Status */}
       {showConnectionStatus && (
         <Box
           sx={{
@@ -134,8 +127,8 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
             {connectionMethod === 'websocket'
               ? 'Tiempo real (WebSocket)'
               : connectionMethod === 'polling'
-                ? 'Actualización automática'
-                : 'Solo actualización manual'}
+                ? 'Actualización automática de respaldo'
+                : 'Actualización manual'}
           </Typography>
           <ConnectionStatusIndicator
             isConnected={isConnected}
@@ -149,7 +142,6 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
         </Box>
       )}
 
-      {/* Error Alerts */}
       {(wsErrorMessage || notificationsErrorMessage) && (
         <Alert
           severity={isRealTimeEnabled ? 'info' : 'warning'}
@@ -186,16 +178,14 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
             {!isRealTimeEnabled && (
               <Typography variant='caption' color='text.secondary'>
                 Las notificaciones requieren actualización manual. Algunas
-                funciones pueden estar limitadas.
+                funciones de monitoreo pueden estar limitadas.
               </Typography>
             )}
           </Stack>
         </Alert>
       )}
 
-      {/* Main Dashboard Grid */}
       <Grid container spacing={3}>
-        {/* Notification Widget */}
         <Grid item xs={12} md={6} lg={4}>
           <NotificationWidget
             notifications={notifications}
@@ -209,7 +199,6 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
           />
         </Grid>
 
-        {/* Real-time Status Card */}
         <Grid item xs={12} md={6} lg={4}>
           <Card
             sx={{
@@ -220,7 +209,11 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
           >
             <CardContent sx={{ p: 3 }}>
               <Typography variant='h6' sx={{ fontWeight: 700, mb: 2 }}>
-                Estado en Tiempo Real
+                Estado del monitoreo en tiempo real
+              </Typography>
+              <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                Este resumen te ayuda a confirmar si las notificaciones se están recibiendo al
+                instante o si el panel está funcionando con respaldo automático.
               </Typography>
 
               <Stack spacing={2}>
@@ -238,7 +231,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
                     {connectionMethod === 'websocket'
                       ? 'WebSocket'
                       : connectionMethod === 'polling'
-                        ? 'Polling'
+                        ? 'Respaldo automático'
                         : 'Manual'}
                   </Typography>
                 </Box>
@@ -318,7 +311,7 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
                         display: 'block'
                       }}
                     >
-                      {lastNotificationTime.toLocaleTimeString()}
+                      {lastNotificationTime.toLocaleTimeString('es-CO')}
                     </Typography>
                   </Box>
                 )}
@@ -350,14 +343,27 @@ const RealTimeDashboard: React.FC<RealTimeDashboardProps> = ({
           </Card>
         </Grid>
 
-        {/* Additional widgets can be added here */}
         <Grid item xs={12} lg={4}>
-          {/* Placeholder for future widgets */}
-          <Box sx={{ height: '100%', minHeight: 200 }} />
+          <Card
+            sx={{
+              borderRadius: '16px',
+              border: '1px dashed #d1d5db',
+              height: '100%'
+            }}
+          >
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant='h6' sx={{ fontWeight: 700, mb: 1 }}>
+                Siguiente capa del monitoreo
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                Este espacio queda reservado para ampliar el monitoreo operativo del LMS cuando
+                definamos un panel adicional de jobs, alertas o integraciones en vivo.
+              </Typography>
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
 
-      {/* Real-time Alert Snackbar */}
       <Snackbar
         open={realtimeAlert.show}
         autoHideDuration={6000}

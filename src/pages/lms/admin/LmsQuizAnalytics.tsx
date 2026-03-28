@@ -83,7 +83,7 @@ const LmsQuizAnalytics: React.FC = () => {
       <Stack spacing={3}>
         <Box>
           <Typography variant='h4' component='h1' sx={{ fontWeight: 700, mb: 1 }}>
-            Analíticas de Quizzes
+            Analíticas de quizzes
           </Typography>
           <Typography variant='body1' color='text.secondary'>
             Esta pantalla usa métricas reales del backend. Hoy muestra estadísticas por quiz y
@@ -95,7 +95,7 @@ const LmsQuizAnalytics: React.FC = () => {
         <Alert severity='info' icon={<HelpOutlineIcon />}>
           Disponible hoy: intentos, usuarios únicos, puntaje promedio, tasa de aprobación,
           tiempo promedio y listado real de preguntas. Pendiente: tendencias temporales,
-          análisis de distractores y recomendaciones automáticas por pregunta.
+          análisis de opciones distractoras y recomendaciones automáticas por pregunta.
         </Alert>
 
         <Card>
@@ -129,7 +129,7 @@ const LmsQuizAnalytics: React.FC = () => {
                       navigate(`/lms/admin/courses/${selectedQuiz.courseId}/content`)
                     }
                   >
-                    Ir al contenido
+                    Abrir contenido
                   </Button>
                   <Button
                     variant='contained'
@@ -257,7 +257,7 @@ const LmsQuizAnalytics: React.FC = () => {
                 <Card>
                   <CardContent>
                     <Typography variant='subtitle2' color='text.secondary'>
-                      Intentos sospechosos
+                      Intentos atípicos
                     </Typography>
                     <Typography variant='h5' sx={{ mt: 1 }}>
                       {analytics.statistics.suspiciousAttempts}

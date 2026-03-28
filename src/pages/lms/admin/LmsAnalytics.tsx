@@ -205,10 +205,10 @@ const LmsAnalytics: React.FC = () => {
         >
           <Box>
             <Typography variant='h4' component='h1' gutterBottom>
-              Analiticas LMS
+              Analíticas LMS
             </Typography>
             <Typography color='text.secondary'>
-              Panel real basado en el backend actual del LMS. Sin datos demo ni resumentes
+              Panel real basado en el backend actual del LMS. Sin datos demo ni resúmenes
               simulados.
             </Typography>
           </Box>
@@ -308,12 +308,12 @@ const LmsAnalytics: React.FC = () => {
 
         {error ? (
           <Alert severity='error' sx={{ mb: 3 }}>
-            No se pudieron cargar las analiticas reales del LMS.
+            No se pudieron cargar las analíticas reales del LMS.
           </Alert>
         ) : null}
 
         {isLoading ? (
-          <Typography color='text.secondary'>Cargando analiticas reales...</Typography>
+          <Typography color='text.secondary'>Cargando analíticas reales...</Typography>
         ) : (
           <>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} sx={{ mb: 3 }}>
@@ -369,7 +369,7 @@ const LmsAnalytics: React.FC = () => {
                       <AssignmentIcon color='warning' />
                       <Box>
                         <Typography variant='h4'>{formatPercent(metrics.completionRate)}</Typography>
-                        <Typography color='text.secondary'>Finalizacion</Typography>
+                        <Typography color='text.secondary'>Finalización</Typography>
                       </Box>
                     </Stack>
                   </CardContent>
@@ -388,7 +388,7 @@ const LmsAnalytics: React.FC = () => {
               <Grid container spacing={3}>
                 <Grid item xs={12} lg={8}>
                   <Card>
-                    <CardHeader title='Distribucion de finalizacion por tipo de usuario' />
+                    <CardHeader title='Distribución de finalización por tipo de usuario' />
                     <CardContent sx={{ height: 320 }}>
                       <ResponsiveContainer width='100%' height='100%'>
                         <BarChart data={completionDistribution}>
@@ -545,8 +545,8 @@ const LmsAnalytics: React.FC = () => {
             {activeTab === 2 ? (
               <Grid container spacing={3}>
                 <Grid item xs={12} lg={6}>
-                  <Card>
-                    <CardHeader title='Distribucion de progreso' />
+                    <Card>
+                    <CardHeader title='Distribución de progreso' />
                     <CardContent sx={{ height: 320 }}>
                       {progressDistribution.length > 0 ? (
                         <ResponsiveContainer width='100%' height='100%'>
@@ -588,7 +588,7 @@ const LmsAnalytics: React.FC = () => {
                           <Typography variant='h5'>{safeNumber(userAnalytics.activeUsers)}</Typography>
                         </Box>
                         <Alert severity='info'>
-                          El backend actual entrega resumen confiable de usuarios, pero no aun un ranking
+                          El backend actual entrega un resumen confiable de usuarios, pero no aún un ranking
                           rico de engagement por persona en esta pantalla.
                         </Alert>
                       </Stack>
@@ -645,13 +645,13 @@ const LmsAnalytics: React.FC = () => {
                   </Card>
                 </Grid>
                 <Grid item xs={12} lg={5}>
-                  <Card>
-                    <CardHeader title='Resumen de alertas obligatorias' />
-                    <CardContent>
-                      <Stack spacing={2}>
-                        <Typography>
-                          Criticas: {safeNumber(mandatoryTraining?.escalationSummary?.totalCritical)}
-                        </Typography>
+                    <Card>
+                      <CardHeader title='Resumen de alertas obligatorias' />
+                      <CardContent>
+                        <Stack spacing={2}>
+                          <Typography>
+                          Críticas: {safeNumber(mandatoryTraining?.escalationSummary?.totalCritical)}
+                          </Typography>
                         <Typography>
                           Advertencias: {safeNumber(mandatoryTraining?.escalationSummary?.totalWarning)}
                         </Typography>
