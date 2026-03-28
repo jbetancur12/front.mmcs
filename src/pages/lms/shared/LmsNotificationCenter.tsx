@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   Box,
   Card,
@@ -23,205 +23,178 @@ import {
   Select,
   MenuItem,
   Alert,
-  Divider
+  Divider,
+  CircularProgress
 } from '@mui/material'
 import {
   Notifications as NotificationsIcon,
   Assignment as AssignmentIcon,
   Warning as WarningIcon,
-  CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
   MarkEmailRead as MarkEmailReadIcon,
-  EmojiEvents as AwardIcon
+  EmojiEvents as AwardIcon,
+  Info as InfoIcon,
+  Settings as SettingsIcon
 } from '@mui/icons-material'
-
-interface Notification {
-  id: number
-  type: 'assignment' | 'reminder' | 'deadline' | 'completion' | 'certificate'
-  title: string
-  message: string
-  timestamp: string
-  isRead: boolean
-  priority: 'low' | 'medium' | 'high'
-  courseId?: number
-  userId?: number
-  actionRequired?: boolean
-}
-
-// Mock data para notificaciones
-const mockNotifications: Notification[] = [
-  {
-    id: 1,
-    type: 'deadline',
-    title: 'Curso próximo a vencer',
-    message: 'El curso "Protección de Datos" vence en 2 días. Completa las lecciones restantes.',
-    timestamp: '2024-01-20T10:30:00Z',
-    isRead: false,
-    priority: 'high',
-    courseId: 2,
-    actionRequired: true
-  },
-  {
-    id: 2,
-    type: 'assignment',
-    title: 'Nuevo curso asignado',
-    message: 'Se te ha asignado el curso "Seguridad en el Trabajo". Fecha límite: 15 de Febrero.',
-    timestamp: '2024-01-19T14:15:00Z',
-    isRead: false,
-    priority: 'medium',
-    courseId: 1,
-    actionRequired: true
-  },
-  {
-    id: 3,
-    type: 'completion',
-    title: 'Curso completado',
-    message: 'Has completado exitosamente el curso "Comunicación Efectiva".',
-    timestamp: '2024-01-18T16:45:00Z',
-    isRead: true,
-    priority: 'low',
-    courseId: 3,
-    actionRequired: false
-  },
-  {
-    id: 4,
-    type: 'certificate',
-    title: 'Certificado disponible',
-    message: 'Tu certificado para "Comunicación Efectiva" está listo para descargar.',
-    timestamp: '2024-01-18T17:00:00Z',
-    isRead: false,
-    priority: 'medium',
-    courseId: 3,
-    actionRequired: true
-  },
-  {
-    id: 5,
-    type: 'reminder',
-    title: 'Recordatorio de progreso',
-    message: 'Llevas 3 días sin avanzar en "JavaScript Avanzado". ¡Continúa tu aprendizaje!',
-    timestamp: '2024-01-17T09:00:00Z',
-    isRead: true,
-    priority: 'low',
-    courseId: 4,
-    actionRequired: false
-  }
-]
+import { useNavigate } from 'react-router-dom'
+import {
+  useNotifications,
+  useMarkAllNotificationsAsRead,
+  useMarkNotificationAsRead
+} from '../../../hooks/useLms'
+import type { Notification } from '../../../types/notifications'
 
 interface LmsNotificationCenterProps {
   userRole?: 'admin' | 'employee' | 'client'
   userId?: number
 }
 
-const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({ 
+const getNotificationIcon = (notification: Notification) => {
+  const type = notification.metadata?.type
+
+  switch (type) {
+    case 'new_assignment':
+      return <AssignmentIcon color='primary' />
+    case 'mandatory_deadline':
+      return <WarningIcon color='error' />
+    case 'certificate_expiry':
+      return <AwardIcon color='warning' />
+    case 'system_alert':
+    case 'job_failure':
+    case 'performance_issue':
+      return <SettingsIcon color='warning' />
+    default:
+      switch (notification.severity) {
+        case 'critical':
+          return <WarningIcon color='error' />
+        case 'warning':
+          return <ScheduleIcon color='warning' />
+        case 'system':
+          return <SettingsIcon color='action' />
+        default:
+          return <InfoIcon color='info' />
+      }
+  }
+}
+
+const getPriorityColor = (notification: Notification) => {
+  switch (notification.severity) {
+    case 'critical':
+      return 'error'
+    case 'warning':
+      return 'warning'
+    case 'system':
+      return 'default'
+    default:
+      return 'info'
+  }
+}
+
+const formatTimestamp = (timestamp: Notification['timestamp']) => {
+  const date = new Date(timestamp)
+  const now = new Date()
+  const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
+
+  if (diffInHours < 1) {
+    return 'Hace unos minutos'
+  }
+
+  if (diffInHours < 24) {
+    return `Hace ${diffInHours} horas`
+  }
+
+  const diffInDays = Math.floor(diffInHours / 24)
+  return `Hace ${diffInDays} días`
+}
+
+const hasNotificationAction = (notification: Notification) => {
+  return Boolean(
+    notification.actionUrl ||
+      notification.metadata?.courseId ||
+      notification.metadata?.assignmentId ||
+      notification.metadata?.certificateId
+  )
+}
+
+const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
   userRole = 'employee',
-  userId 
+  userId
 }) => {
   void userRole
   void userId
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications)
+
+  const navigate = useNavigate()
   const [openDialog, setOpenDialog] = useState(false)
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
   const [filter, setFilter] = useState<'all' | 'unread' | 'actionRequired'>('all')
 
-  const unreadCount = notifications.filter(n => !n.isRead).length
-  const actionRequiredCount = notifications.filter(n => n.actionRequired && !n.isRead).length
+  const { data, isLoading, error } = useNotifications({
+    refetchOnWindowFocus: false
+  })
+  const markAsReadMutation = useMarkNotificationAsRead()
+  const markAllAsReadMutation = useMarkAllNotificationsAsRead()
 
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'assignment':
-        return <AssignmentIcon color="primary" />
-      case 'deadline':
-        return <WarningIcon color="error" />
-      case 'reminder':
-        return <ScheduleIcon color="warning" />
-      case 'completion':
-        return <CheckCircleIcon color="success" />
-      case 'certificate':
-        return <AwardIcon color="warning" />
-      default:
-        return <NotificationsIcon />
-    }
-  }
+  const notifications = data?.notifications || []
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'error'
-      case 'medium':
-        return 'warning'
-      case 'low':
-        return 'info'
-      default:
-        return 'default'
-    }
-  }
+  const unreadCount = notifications.filter((notification) => !notification.read).length
+  const actionRequiredCount = notifications.filter(
+    (notification) => hasNotificationAction(notification) && !notification.read
+  ).length
 
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp)
-    const now = new Date()
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
-    
-    if (diffInHours < 1) {
-      return 'Hace unos minutos'
-    } else if (diffInHours < 24) {
-      return `Hace ${diffInHours} horas`
-    } else {
-      const diffInDays = Math.floor(diffInHours / 24)
-      return `Hace ${diffInDays} días`
-    }
-  }
+  const filteredNotifications = useMemo(() => {
+    return notifications.filter((notification) => {
+      switch (filter) {
+        case 'unread':
+          return !notification.read
+        case 'actionRequired':
+          return hasNotificationAction(notification) && !notification.read
+        default:
+          return true
+      }
+    })
+  }, [filter, notifications])
 
-  const handleMarkAsRead = (notificationId: number) => {
-    setNotifications(prev => 
-      prev.map(n => 
-        n.id === notificationId ? { ...n, isRead: true } : n
-      )
-    )
+  const handleMarkAsRead = (notificationId: string) => {
+    markAsReadMutation.mutate(notificationId)
   }
 
   const handleMarkAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(n => ({ ...n, isRead: true }))
-    )
+    markAllAsReadMutation.mutate()
   }
 
   const handleNotificationClick = (notification: Notification) => {
     setSelectedNotification(notification)
     setOpenDialog(true)
-    if (!notification.isRead) {
+
+    if (!notification.read) {
       handleMarkAsRead(notification.id)
     }
   }
 
   const handleTakeAction = (notification: Notification) => {
-    // Lógica para manejar acciones específicas según el tipo de notificación
-    switch (notification.type) {
-      case 'assignment':
-      case 'deadline':
-      case 'reminder':
-        // Navegar al curso
-        console.log('Navigating to course:', notification.courseId)
-        break
-      case 'certificate':
-        // Descargar certificado
-        console.log('Downloading certificate for course:', notification.courseId)
-        break
-      default:
-        break
+    if (notification.actionUrl) {
+      navigate(notification.actionUrl)
+      setOpenDialog(false)
+      return
     }
-    setOpenDialog(false)
-  }
 
-  const filteredNotifications = notifications.filter(notification => {
-    switch (filter) {
-      case 'unread':
-        return !notification.isRead
-      case 'actionRequired':
-        return notification.actionRequired && !notification.isRead
-      default:
-        return true
+    if (notification.metadata?.certificateId) {
+      navigate(`/lms/certificate/${notification.metadata.certificateId}`)
+      setOpenDialog(false)
+      return
     }
-  })
+
+    if (notification.metadata?.courseId) {
+      navigate(`/lms/course/${notification.metadata.courseId}`)
+      setOpenDialog(false)
+      return
+    }
+
+    if (notification.metadata?.assignmentId) {
+      navigate('/lms/employee')
+      setOpenDialog(false)
+    }
+  }
 
   return (
     <Box>
@@ -229,54 +202,67 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
         <CardHeader
           title={
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Badge badgeContent={unreadCount} color="error">
+              <Badge badgeContent={unreadCount} color='error'>
                 <NotificationsIcon />
               </Badge>
-              <Typography variant="h6">
-                Centro de Notificaciones
-              </Typography>
+              <Typography variant='h6'>Centro de notificaciones</Typography>
             </Box>
           }
           action={
             <Box sx={{ display: 'flex', gap: 1 }}>
-              <FormControl size="small" sx={{ minWidth: 120 }}>
+              <FormControl size='small' sx={{ minWidth: 150 }}>
                 <InputLabel>Filtrar</InputLabel>
                 <Select
                   value={filter}
-                  label="Filtrar"
-                  onChange={(e) => setFilter(e.target.value as any)}
+                  label='Filtrar'
+                  onChange={(event) =>
+                    setFilter(event.target.value as 'all' | 'unread' | 'actionRequired')
+                  }
                 >
-                  <MenuItem value="all">Todas</MenuItem>
-                  <MenuItem value="unread">No leídas ({unreadCount})</MenuItem>
-                  <MenuItem value="actionRequired">Acción requerida ({actionRequiredCount})</MenuItem>
+                  <MenuItem value='all'>Todas</MenuItem>
+                  <MenuItem value='unread'>No leídas ({unreadCount})</MenuItem>
+                  <MenuItem value='actionRequired'>
+                    Requieren acción ({actionRequiredCount})
+                  </MenuItem>
                 </Select>
               </FormControl>
               {unreadCount > 0 && (
                 <Button
-                  size="small"
+                  size='small'
                   onClick={handleMarkAllAsRead}
                   startIcon={<MarkEmailReadIcon />}
+                  disabled={markAllAsReadMutation.isLoading}
                 >
-                  Marcar todas como leídas
+                  Marcar todas
                 </Button>
               )}
             </Box>
           }
         />
         <CardContent sx={{ p: 0 }}>
-          {filteredNotifications.length === 0 ? (
+          {isLoading ? (
+            <Box sx={{ p: 4, textAlign: 'center' }}>
+              <CircularProgress sx={{ mb: 2 }} />
+              <Typography color='text.secondary'>Cargando notificaciones...</Typography>
+            </Box>
+          ) : error ? (
+            <Box sx={{ p: 3 }}>
+              <Alert severity='error'>
+                No se pudieron cargar las notificaciones reales del LMS.
+              </Alert>
+            </Box>
+          ) : filteredNotifications.length === 0 ? (
             <Box sx={{ p: 3, textAlign: 'center' }}>
               <NotificationsIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h6" color="text.secondary">
+              <Typography variant='h6' color='text.secondary'>
                 No hay notificaciones
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {filter === 'unread' 
-                  ? 'No tienes notificaciones sin leer'
+              <Typography variant='body2' color='text.secondary'>
+                {filter === 'unread'
+                  ? 'No tienes notificaciones sin leer.'
                   : filter === 'actionRequired'
-                  ? 'No hay notificaciones que requieran acción'
-                  : 'No tienes notificaciones en este momento'
-                }
+                    ? 'No hay notificaciones que requieran una acción inmediata.'
+                    : 'No tienes notificaciones en este momento.'}
               </Typography>
             </Box>
           ) : (
@@ -287,35 +273,33 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
                     button
                     onClick={() => handleNotificationClick(notification)}
                     sx={{
-                      backgroundColor: notification.isRead ? 'transparent' : 'action.hover',
+                      backgroundColor: notification.read ? 'transparent' : 'action.hover',
                       '&:hover': {
                         backgroundColor: 'action.selected'
                       }
                     }}
                   >
-                    <ListItemIcon>
-                      {getNotificationIcon(notification.type)}
-                    </ListItemIcon>
+                    <ListItemIcon>{getNotificationIcon(notification)}</ListItemIcon>
                     <ListItemText
                       primary={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                           <Typography
-                            variant="body1"
-                            fontWeight={notification.isRead ? 'normal' : 'bold'}
+                            variant='body1'
+                            fontWeight={notification.read ? 'normal' : 'bold'}
                           >
                             {notification.title}
                           </Typography>
                           <Chip
-                            label={notification.priority}
-                            size="small"
-                            color={getPriorityColor(notification.priority) as any}
+                            label={notification.severity}
+                            size='small'
+                            color={getPriorityColor(notification)}
                             sx={{ fontSize: '0.7rem' }}
                           />
-                          {notification.actionRequired && !notification.isRead && (
+                          {hasNotificationAction(notification) && !notification.read && (
                             <Chip
-                              label="Acción requerida"
-                              size="small"
-                              color="error"
+                              label='Acción disponible'
+                              size='small'
+                              color='primary'
                               sx={{ fontSize: '0.7rem' }}
                             />
                           )}
@@ -323,24 +307,24 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
                       }
                       secondary={
                         <Box>
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography variant='body2' color='text.secondary'>
                             {notification.message}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant='caption' color='text.secondary'>
                             {formatTimestamp(notification.timestamp)}
                           </Typography>
                         </Box>
                       }
                     />
                     <ListItemSecondaryAction>
-                      {!notification.isRead && (
+                      {!notification.read && (
                         <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation()
+                          size='small'
+                          onClick={(event) => {
+                            event.stopPropagation()
                             handleMarkAsRead(notification.id)
                           }}
-                          title="Marcar como leída"
+                          title='Marcar como leída'
                         >
                           <MarkEmailReadIcon />
                         </IconButton>
@@ -355,60 +339,49 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
         </CardContent>
       </Card>
 
-      {/* Dialog para detalles de notificación */}
-      <Dialog
-        open={openDialog}
-        onClose={() => setOpenDialog(false)}
-        maxWidth="sm"
-        fullWidth
-      >
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth='sm' fullWidth>
         {selectedNotification && (
           <>
             <DialogTitle>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                {getNotificationIcon(selectedNotification.type)}
-                <Typography variant="h6">
-                  {selectedNotification.title}
-                </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                {getNotificationIcon(selectedNotification)}
+                <Typography variant='h6'>{selectedNotification.title}</Typography>
                 <Chip
-                  label={selectedNotification.priority}
-                  size="small"
-                  color={getPriorityColor(selectedNotification.priority) as any}
+                  label={selectedNotification.severity}
+                  size='small'
+                  color={getPriorityColor(selectedNotification)}
                 />
               </Box>
             </DialogTitle>
             <DialogContent>
-              <Typography variant="body1" sx={{ mb: 2 }}>
+              <Typography variant='body1' sx={{ mb: 2 }}>
                 {selectedNotification.message}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant='caption' color='text.secondary'>
                 {formatTimestamp(selectedNotification.timestamp)}
               </Typography>
-              
-              {selectedNotification.actionRequired && (
-                <Alert severity="info" sx={{ mt: 2 }}>
-                  Esta notificación requiere que tomes una acción.
+
+              {hasNotificationAction(selectedNotification) && (
+                <Alert severity='info' sx={{ mt: 2 }}>
+                  Esta notificación tiene una acción asociada dentro del LMS.
                 </Alert>
               )}
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setOpenDialog(false)}>
-                Cerrar
-              </Button>
-              {selectedNotification.actionRequired && (
+              <Button onClick={() => setOpenDialog(false)}>Cerrar</Button>
+              {hasNotificationAction(selectedNotification) && (
                 <Button
-                  variant="contained"
+                  variant='contained'
                   onClick={() => handleTakeAction(selectedNotification)}
                   startIcon={
-                    selectedNotification.type === 'certificate' ? <AwardIcon /> : <AssignmentIcon />
+                    selectedNotification.metadata?.certificateId ? (
+                      <AwardIcon />
+                    ) : (
+                      <AssignmentIcon />
+                    )
                   }
                 >
-                  {selectedNotification.type === 'certificate' 
-                    ? 'Descargar Certificado'
-                    : selectedNotification.type === 'assignment'
-                    ? 'Ir al Curso'
-                    : 'Continuar Curso'
-                  }
+                  {selectedNotification.actionLabel || 'Abrir en LMS'}
                 </Button>
               )}
             </DialogActions>
