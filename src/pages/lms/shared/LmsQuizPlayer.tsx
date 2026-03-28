@@ -44,6 +44,7 @@ interface QuizQuestion {
   correctAnswer: number | number[]
   explanation?: string
   points: number
+  originalOptionIndices?: number[]
 }
 
 interface QuizConfiguration {
@@ -67,6 +68,7 @@ interface QuizAttempt {
   startedAt: Date
   answers: (number | number[])[]
   timeSpent: number
+  questionIds?: number[]
   score?: number
   totalPoints?: number
   passed?: boolean
@@ -150,7 +152,8 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
         return {
           ...q,
           options: shuffledOptions,
-          correctAnswer: newCorrectAnswer
+          correctAnswer: newCorrectAnswer,
+          originalOptionIndices: originalIndices
         }
       })
     }
@@ -291,10 +294,27 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
     })
 
     const passed = (totalScore / totalPossiblePoints) * 100 >= quizConfig.passingPercentage
+
+    const submissionAnswers = userAnswers.map((answer, index) => {
+      const question = shuffledQuestions[index]
+      if (answer === undefined || !question?.originalOptionIndices) {
+        return answer
+      }
+
+      const toOriginalIndex = (selectedIndex: number) =>
+        question.originalOptionIndices?.[selectedIndex] ?? selectedIndex
+
+      if (Array.isArray(answer)) {
+        return answer.map(toOriginalIndex)
+      }
+
+      return toOriginalIndex(answer)
+    })
     
     const completedAttempt: QuizAttempt = {
       ...currentAttempt!,
-      answers: userAnswers,
+      answers: submissionAnswers,
+      questionIds: shuffledQuestions.map((question) => question.id),
       timeSpent,
       score: totalScore,
       totalPoints: totalPossiblePoints,

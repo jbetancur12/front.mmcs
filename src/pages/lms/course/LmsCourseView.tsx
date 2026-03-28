@@ -533,7 +533,7 @@ const LmsCourseView: React.FC = () => {
       // Transform answers to service schema: object with questionId as key, answer array as value
       const formattedAnswers: Record<number, number[]> = {}
       attempt.answers.forEach((answer: any, index: number) => {
-        const questionId = currentQuizConfig.questions[index].id
+        const questionId = attempt.questionIds?.[index] ?? currentQuizConfig.questions[index].id
         // Ensure answer is always an array
         formattedAnswers[questionId] = Array.isArray(answer) ? answer : [answer]
       })
