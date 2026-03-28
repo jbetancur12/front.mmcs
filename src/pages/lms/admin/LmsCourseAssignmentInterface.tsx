@@ -14,10 +14,6 @@ import {
   Select,
   MenuItem,
   Chip,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
   IconButton,
   Dialog,
   DialogTitle,
@@ -32,12 +28,9 @@ import {
 import {
   Assignment as AssignmentIcon,
   Notifications as NotificationsIcon,
-  Warning as WarningIcon,
-  Schedule as ScheduleIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
   Add as AddIcon,
-  Send as SendIcon,
 } from '@mui/icons-material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
@@ -111,7 +104,6 @@ interface Assignment {
   status: 'active' | 'completed' | 'overdue'
   progress: number
   createdAt: string
-  notificationsSent: number
 }
 
 // Transform backend assignment to frontend format
@@ -125,8 +117,7 @@ const transformAssignment = (backendAssignment: BackendAssignment): Assignment =
     deadline: backendAssignment.deadline || '',
     status: backendAssignment.status,
     progress: Math.round(backendAssignment.progress_stats.avgProgress || 0),
-    createdAt: backendAssignment.created_at,
-    notificationsSent: 0 // TODO: Add from backend when available
+    createdAt: backendAssignment.created_at
   }
 }
 
@@ -345,8 +336,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   const assignments = (assignmentsResponse?.assignments || []).map(transformAssignment)
   const assignmentGuidance = [
     'Revisa primero las asignaciones activas para evitar duplicar reglas o fechas límite.',
-    'Crea nuevas asignaciones solo para cursos internos o compartidos que realmente deban ser obligatorios.',
-    'Usa recordatorios como refuerzo de una regla ya creada, no como sustituto de la asignación.'
+    'Crea nuevas asignaciones solo para cursos internos o compartidos que realmente deban ser obligatorios.'
   ]
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -507,30 +497,20 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                 <Grid item xs={12} md={4}>
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
                     <Chip color="primary" icon={<AssignmentIcon />} label={`${assignments.length} activa(s)`} />
-                    <Chip color="warning" icon={<NotificationsIcon />} label="Recordatorios manuales" />
+                    <Chip color="warning" icon={<NotificationsIcon />} label="Recordatorios desde cada regla" />
                   </Box>
                 </Grid>
               </Grid>
               <Alert severity="info" sx={{ mt: 2 }}>
                 <AlertTitle>Flujo recomendado</AlertTitle>
-                1. Revisa asignaciones activas. 2. Crea o ajusta la regla. 3. Envía recordatorio solo cuando la fecha límite ya esté clara.
+                1. Revisa asignaciones activas. 2. Crea o ajusta la regla. 3. Si hace falta, envía el recordatorio desde la misma asignación.
               </Alert>
             </CardContent>
           </Card>
 
-          <Box sx={{ mb: 3 }}>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 1 }}>
-            Asignaciones de Cursos
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Gestiona las asignaciones de cursos y notificaciones
-          </Typography>
-        </Box>
-
         <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 3 }}>
           <Tab label="Asignaciones Activas" />
           <Tab label="Crear Asignación" />
-          <Tab label="Notificaciones" />
         </Tabs>
 
         <Alert severity="info" sx={{ mb: 3 }}>
@@ -609,14 +589,6 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                                   {assignment.progress}%
                                 </Typography>
                               </Box>
-                            </Grid>
-                            <Grid item xs={12} sm={6} md={3}>
-                              <Typography variant="caption" color="text.secondary">
-                                Notificaciones enviadas:
-                              </Typography>
-                              <Typography variant="body2">
-                                {assignment.notificationsSent}
-                              </Typography>
                             </Grid>
                           </Grid>
                         </Box>
@@ -748,78 +720,6 @@ const LmsCourseAssignmentInterface: React.FC = () => {
           </Box>
         )}
 
-        {activeTab === 2 && (
-          <Box>
-            <Typography variant="h6" sx={{ mb: 3 }}>
-              Centro de Notificaciones
-            </Typography>
-
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <Card>
-                  <CardHeader
-                    title="Notificaciones Pendientes"
-                    avatar={<NotificationsIcon color="warning" />}
-                  />
-                  <CardContent>
-                    <List>
-                      <ListItem>
-                        <ListItemIcon>
-                          <WarningIcon color="warning" />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary="Recordatorio de vencimiento"
-                          secondary="Protección de Datos - Vence en 2 días"
-                        />
-                        <Button size="small" startIcon={<SendIcon />}>
-                          Enviar
-                        </Button>
-                      </ListItem>
-                      <Divider />
-                      <ListItem>
-                        <ListItemIcon>
-                          <ScheduleIcon color="info" />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary="Recordatorio semanal"
-                          secondary="Seguridad en el Trabajo - Progreso 65%"
-                        />
-                        <Button size="small" startIcon={<SendIcon />}>
-                          Enviar
-                        </Button>
-                      </ListItem>
-                    </List>
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Card>
-                  <CardHeader
-                    title="Estadísticas de Notificaciones"
-                    avatar={<NotificationsIcon color="primary" />}
-                  />
-                  <CardContent>
-                    <Box sx={{ space: 2 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body2">Enviadas hoy</Typography>
-                        <Typography variant="h6" color="primary.main">23</Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body2">Esta semana</Typography>
-                        <Typography variant="h6" color="success.main">156</Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body2">Tasa de apertura</Typography>
-                        <Typography variant="h6" color="info.main">78%</Typography>
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-          </Box>
-        )}
       </Box>
 
       {/* Edit Assignment Modal */}
