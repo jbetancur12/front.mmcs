@@ -410,7 +410,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                       {stats.totalHoursLearned}h
                     </Typography>
                     <Typography variant='body2' color='text.secondary'>
-                      Este año
+                      Tiempo registrado
                     </Typography>
                   </CardContent>
                 </Card>

@@ -388,7 +388,7 @@ const LmsCertificateView: React.FC = () => {
           <Box sx={{ mb: 3 }}>
             <TextField
               fullWidth
-              placeholder="Buscar certificados por nombre del curso, número o categoría..."
+              placeholder="Buscar certificados por nombre del curso o número..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
@@ -574,7 +574,7 @@ const LmsCertificateView: React.FC = () => {
               label="Número de Certificado"
               value={verificationNumber}
               onChange={(e) => setVerificationNumber(e.target.value)}
-              placeholder="Ej: CERT-2024-001"
+              placeholder="Ej: MMCS-2026-ABCD1234"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
