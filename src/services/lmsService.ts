@@ -175,14 +175,84 @@ export interface Certificate {
 export interface CourseAssignment {
   id: number
   course_id: number
-  assigned_to_user_id?: number
-  assigned_to_role?: string
-  assigned_by: number
+  all_employees: boolean
+  role?: string
   deadline?: string
-  is_mandatory: boolean
-  status: 'pending' | 'in_progress' | 'completed' | 'overdue'
+  created_by?: number
   created_at: string
   updated_at: string
+  course?: {
+    id: number
+    title: string
+    description?: string
+    is_mandatory: boolean
+    audience: CourseAudience
+  }
+  userProgress?: {
+    totalLessons: number
+    completedLessons: number
+    completionPercentage: number
+    isCompleted: boolean
+    lastActivity: number | null
+  }
+  isOverdue?: boolean
+  daysUntilDeadline?: number | null
+}
+
+export interface AssignmentSupport {
+  userType: 'internal' | 'client'
+  supportsAssignments: boolean
+  strategy: 'internal-role-assignment' | 'catalog-only'
+  message: string
+}
+
+export interface UserAssignmentsResponse {
+  userId: number
+  totalAssignments: number
+  mandatoryCount?: number
+  optionalCount?: number
+  support: AssignmentSupport
+  assignments: {
+    mandatory: CourseAssignment[]
+    optional: CourseAssignment[]
+  }
+}
+
+export interface MandatoryAssignmentsResponse {
+  userId: number
+  totalMandatory: number
+  overdue: number
+  urgent: number
+  upcoming: number
+  noDeadline: number
+  support: AssignmentSupport
+  courses: {
+    overdue: CourseAssignment[]
+    urgent: CourseAssignment[]
+    upcoming: CourseAssignment[]
+    noDeadline: CourseAssignment[]
+  }
+}
+
+export interface CourseAssignmentsResponse {
+  courseId: number
+  totalAssignments: number
+  assignments: CourseAssignment[]
+}
+
+export interface CreateAssignmentResult {
+  assignment: CourseAssignment
+  affectedUsersCount: number
+  affectedUsers: Array<{
+    id: number
+    name: string
+    email: string
+  }>
+}
+
+export interface UpdateAssignmentResult {
+  assignment: CourseAssignment
+  affectedUsersCount: number
 }
 
 /**
@@ -409,10 +479,9 @@ export interface CreateQuizRequest {
 
 export interface CreateAssignmentRequest {
   course_id: number
-  assigned_to_user_id?: number
-  assigned_to_role?: string
+  role?: string
+  all_employees?: boolean
   deadline?: string
-  is_mandatory: boolean
 }
 
 export interface SubmitQuizRequest {
@@ -773,28 +842,43 @@ class LMSService {
   /**
    * Get course assignments
    */
-  async getCourseAssignments(courseId: number): Promise<CourseAssignment[]> {
-    const response = await axiosPrivate.get(`${this.baseURL}/assignments/course/${courseId}`)
-    return response.data.assignments || response.data
+  async getCourseAssignments(courseId: number): Promise<CourseAssignmentsResponse> {
+    const response = await axiosPrivate.get(`${this.baseURL}/assignments/courses/${courseId}/assignments`)
+    return this.unwrapResponse<CourseAssignmentsResponse>(response.data)
   }
 
   /**
    * Get user assignments
    */
-  async getUserAssignments(userId?: number): Promise<CourseAssignment[]> {
+  async getUserAssignments(userId?: number): Promise<UserAssignmentsResponse> {
     const url = userId
-      ? `${this.baseURL}/assignments/user/${userId}`
-      : `${this.baseURL}/assignments/user/me`
+      ? `${this.baseURL}/assignments/users/${userId}/assignments`
+      : `${this.baseURL}/assignments/my-assignments`
     const response = await axiosPrivate.get(url)
-    return response.data.assignments || response.data
+    return this.unwrapResponse<UserAssignmentsResponse>(response.data)
+  }
+
+  /**
+   * Get mandatory assignments for current user
+   */
+  async getMandatoryAssignments(): Promise<MandatoryAssignmentsResponse> {
+    const response = await axiosPrivate.get(`${this.baseURL}/assignments/my-mandatory-courses`)
+    return this.unwrapResponse<MandatoryAssignmentsResponse>(response.data)
   }
 
   /**
    * Create assignment
    */
-  async createAssignment(data: CreateAssignmentRequest): Promise<CourseAssignment> {
-    const response = await axiosPrivate.post(`${this.baseURL}/assignments`, data)
-    return response.data.assignment || response.data
+  async createAssignment(data: CreateAssignmentRequest): Promise<CreateAssignmentResult> {
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/assignments/courses/${data.course_id}/assign`,
+      {
+        role: data.role,
+        all_employees: data.all_employees,
+        deadline: data.deadline ?? null
+      }
+    )
+    return this.unwrapResponse<CreateAssignmentResult>(response.data)
   }
 
   /**
@@ -803,16 +887,16 @@ class LMSService {
   async updateAssignment(
     id: number,
     data: Partial<CreateAssignmentRequest>
-  ): Promise<CourseAssignment> {
-    const response = await axiosPrivate.put(`${this.baseURL}/assignments/${id}`, data)
-    return response.data.assignment || response.data
+  ): Promise<UpdateAssignmentResult> {
+    const response = await axiosPrivate.put(`${this.baseURL}/assignments/assignments/${id}`, data)
+    return this.unwrapResponse<UpdateAssignmentResult>(response.data)
   }
 
   /**
    * Delete assignment
    */
   async deleteAssignment(id: number): Promise<void> {
-    await axiosPrivate.delete(`${this.baseURL}/assignments/${id}`)
+    await axiosPrivate.delete(`${this.baseURL}/assignments/assignments/${id}`)
   }
 
   // ===========================

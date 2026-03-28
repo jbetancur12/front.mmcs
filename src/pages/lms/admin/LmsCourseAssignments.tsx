@@ -42,6 +42,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
+import { getCourseAudienceLabel } from '../../../utils/lmsAudience'
 
 interface Course {
   id: number
@@ -57,11 +58,9 @@ interface CourseAssignment {
   all_employees: boolean
   role?: string
   deadline?: string
-  assigned_at: string
-  assigned_by: number
-  _count?: {
-    users: number
-  }
+  created_at: string
+  created_by?: number
+  affectedUsersCount?: number
 }
 
 interface Role {
@@ -70,11 +69,10 @@ interface Role {
   description: string
 }
 
-interface User {
-  id: number
-  nombre: string
-  email: string
-  roles: Role[]
+interface CourseAssignmentsResponse {
+  courseId: number
+  totalAssignments: number
+  assignments: CourseAssignment[]
 }
 
 const LmsCourseAssignments: React.FC = () => {
@@ -98,7 +96,7 @@ const LmsCourseAssignments: React.FC = () => {
     ['lms-course', courseId],
     async () => {
       const response = await axiosPrivate.get(`/lms/courses/${courseId}`)
-      return response.data
+      return response.data.data
     }
   )
 
@@ -106,8 +104,9 @@ const LmsCourseAssignments: React.FC = () => {
   const { data: assignments = [], isLoading: assignmentsLoading } = useQuery<CourseAssignment[]>(
     ['lms-course-assignments', courseId],
     async () => {
-      const response = await axiosPrivate.get(`/lms/courses/${courseId}/assignments`)
-      return response.data
+      const response = await axiosPrivate.get(`/lms/assignments/courses/${courseId}/assignments`)
+      const data = response.data.data as CourseAssignmentsResponse
+      return data.assignments || []
     }
   )
 
@@ -120,28 +119,18 @@ const LmsCourseAssignments: React.FC = () => {
     }
   )
 
-  // Query para obtener usuarios asignados
-  const { data: assignedUsers = [] } = useQuery<User[]>(
-    ['lms-course-assigned-users', courseId],
-    async () => {
-      const response = await axiosPrivate.get(`/lms/courses/${courseId}/assigned-users`)
-      return response.data
-    }
-  )
-
   // Mutación para crear asignación
   const createAssignmentMutation = useMutation(
     async (assignmentData: {
       all_employees: boolean
-      roles?: string[]
+      role?: string
       deadline?: string
     }) => {
-      return axiosPrivate.post(`/lms/courses/${courseId}/assignments`, assignmentData)
+      return axiosPrivate.post(`/lms/assignments/courses/${courseId}/assign`, assignmentData)
     },
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['lms-course-assignments', courseId])
-        queryClient.invalidateQueries(['lms-course-assigned-users', courseId])
         handleCloseDialog()
         setSnackbar({
           open: true,
@@ -162,12 +151,11 @@ const LmsCourseAssignments: React.FC = () => {
   // Mutación para eliminar asignación
   const deleteAssignmentMutation = useMutation(
     async (assignmentId: number) => {
-      return axiosPrivate.delete(`/lms/assignments/${assignmentId}`)
+      return axiosPrivate.delete(`/lms/assignments/assignments/${assignmentId}`)
     },
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['lms-course-assignments', courseId])
-        queryClient.invalidateQueries(['lms-course-assigned-users', courseId])
         setSnackbar({
           open: true,
           message: 'Asignación eliminada exitosamente',
@@ -185,6 +173,10 @@ const LmsCourseAssignments: React.FC = () => {
   )
 
   const handleOpenDialog = () => {
+    if (course?.audience === 'client') {
+      return
+    }
+
     setSelectedRoles([])
     setAssignToAll(false)
     setDeadline(null)
@@ -209,7 +201,7 @@ const LmsCourseAssignments: React.FC = () => {
   const handleSubmit = () => {
     const assignmentData = {
       all_employees: assignToAll,
-      roles: assignToAll ? undefined : selectedRoles,
+      role: assignToAll ? undefined : selectedRoles[0],
       deadline: deadline ? deadline.toISOString() : undefined
     }
 
@@ -250,8 +242,19 @@ const LmsCourseAssignments: React.FC = () => {
     )
   }
 
+  const assignmentsSupported = course.audience !== 'client'
+  const estimatedAssignedUsers = assignments.reduce((total, assignment) => {
+    return total + (assignment.affectedUsersCount || 0)
+  }, 0)
+
   return (
     <Box sx={{ p: 3 }}>
+      {!assignmentsSupported && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          Los cursos para clientes funcionan por catálogo. Las asignaciones y fechas límite del LMS solo aplican a usuarios internos.
+        </Alert>
+      )}
+
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <IconButton
@@ -272,6 +275,7 @@ const LmsCourseAssignments: React.FC = () => {
           variant='contained'
           startIcon={<AddIcon />}
           onClick={handleOpenDialog}
+          disabled={!assignmentsSupported}
         >
           Nueva Asignación
         </Button>
@@ -296,7 +300,7 @@ const LmsCourseAssignments: React.FC = () => {
                   Audiencia
                 </Typography>
                 <Chip 
-                  label={course.audience === 'internal' ? 'Empleados' : course.audience === 'client' ? 'Clientes' : 'Ambos'}
+                  label={getCourseAudienceLabel(course.audience)}
                   size="small"
                 />
               </Box>
@@ -332,10 +336,10 @@ const LmsCourseAssignments: React.FC = () => {
                 <PersonIcon sx={{ mr: 1, color: 'success.main' }} />
                 <Box>
                   <Typography variant="h6">
-                    {assignedUsers.length}
+                    {estimatedAssignedUsers}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Usuarios asignados
+                    Usuarios alcanzados
                   </Typography>
                 </Box>
               </Box>
@@ -354,10 +358,12 @@ const LmsCourseAssignments: React.FC = () => {
                 <Box sx={{ textAlign: 'center', py: 4 }}>
                   <AssignmentIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
                   <Typography color="text.secondary" gutterBottom>
-                    No hay asignaciones configuradas
+                    {assignmentsSupported ? 'No hay asignaciones configuradas' : 'Este curso no usa asignaciones'}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Crea una asignación para que los usuarios puedan acceder al curso
+                    {assignmentsSupported
+                      ? 'Crea una asignación para definir vencimientos y obligatoriedad para usuarios internos'
+                      : 'Los usuarios cliente acceden a estos cursos por catálogo según la audiencia'}
                   </Typography>
                 </Box>
               ) : (
@@ -417,7 +423,7 @@ const LmsCourseAssignments: React.FC = () => {
                           </TableCell>
                           <TableCell>
                             <Typography variant="caption">
-                              {formatDate(assignment.assigned_at)}
+                              {formatDate(assignment.created_at)}
                             </Typography>
                           </TableCell>
                           <TableCell>
@@ -439,34 +445,13 @@ const LmsCourseAssignments: React.FC = () => {
           </Card>
 
           {/* Lista de usuarios asignados */}
-          {assignedUsers.length > 0 && (
+          {estimatedAssignedUsers > 0 && (
             <Card sx={{ mt: 2 }}>
-              <CardHeader title={`Usuarios Asignados (${assignedUsers.length})`} />
+              <CardHeader title={`Usuarios Alcanzados (${estimatedAssignedUsers})`} />
               <CardContent>
-                <List dense>
-                  {assignedUsers.slice(0, 10).map((user) => (
-                    <ListItem key={user.id}>
-                      <ListItemIcon>
-                        <PersonIcon />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={user.nombre}
-                        secondary={`${user.email} • ${user.roles.map(r => r.name).join(', ')}`}
-                      />
-                    </ListItem>
-                  ))}
-                  {assignedUsers.length > 10 && (
-                    <ListItem>
-                      <ListItemText
-                        primary={
-                          <Typography variant="caption" color="text.secondary">
-                            Y {assignedUsers.length - 10} usuarios más...
-                          </Typography>
-                        }
-                      />
-                    </ListItem>
-                  )}
-                </List>
+                <Typography variant="body2" color="text.secondary">
+                  El backend activo expone el conteo de usuarios impactados por cada asignación, pero no la lista nominal. Este resumen refleja ese alcance agregado.
+                </Typography>
               </CardContent>
             </Card>
           )}
@@ -537,7 +522,7 @@ const LmsCourseAssignments: React.FC = () => {
           <Button
             onClick={handleSubmit}
             variant="contained"
-            disabled={createAssignmentMutation.isLoading || (!assignToAll && selectedRoles.length === 0)}
+            disabled={!assignmentsSupported || createAssignmentMutation.isLoading || (!assignToAll && selectedRoles.length === 0)}
           >
             {createAssignmentMutation.isLoading ? 'Creando...' : 'Crear Asignación'}
           </Button>

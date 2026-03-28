@@ -343,6 +343,8 @@ const LmsCourseManagement: React.FC = () => {
     navigate(`/lms/admin/courses/${courseId}/assignments`)
   }
 
+  const canManageAssignments = (course: Course) => course.audience !== 'client'
+
   const handleViewAnalytics = (courseId: number) => {
     navigate(`/lms/admin/analytics?courseId=${courseId}`)
   }
@@ -539,13 +541,16 @@ const LmsCourseManagement: React.FC = () => {
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Asignar curso">
-                        <IconButton
-                          size='small'
-                          color='secondary'
-                          onClick={() => handleAssignCourse(course.id)}
-                        >
-                          <AssignIcon />
-                        </IconButton>
+                        <span>
+                          <IconButton
+                            size='small'
+                            color='secondary'
+                            disabled={!canManageAssignments(course)}
+                            onClick={() => handleAssignCourse(course.id)}
+                          >
+                            <AssignIcon />
+                          </IconButton>
+                        </span>
                       </Tooltip>
                       <Tooltip title="Ver analíticas">
                         <IconButton

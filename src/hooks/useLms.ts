@@ -12,10 +12,11 @@ import type {
   QuizAttempt,
   SubmitQuizRequest,
   Certificate,
-  CourseAssignment,
   CreateAssignmentRequest,
+  CreateAssignmentResult,
   CreateQuizRequest,
-  LmsPermissions
+  LmsPermissions,
+  UpdateAssignmentResult
 } from 'src/services/lmsService'
 import { Toast } from 'src/Components/ExcelManipulation/Utils'
 
@@ -775,7 +776,7 @@ export const useCourseAssignments = (
 ) => {
   return useQuery(
     queryKeys.assignments.course(courseId),
-    () => lmsService.getCourseAssignments(courseId),
+    async () => (await lmsService.getCourseAssignments(courseId)).assignments,
     {
       enabled: !!courseId,
       staleTime: 3 * 60 * 1000, // 3 minutes
@@ -793,7 +794,7 @@ export const useUserAssignments = (
 ) => {
   return useQuery(
     queryKeys.assignments.user(userId),
-    () => lmsService.getUserAssignments(userId),
+    async () => (await lmsService.getUserAssignments(userId)).assignments,
     {
       staleTime: 3 * 60 * 1000, // 3 minutes
       ...options
@@ -805,7 +806,7 @@ export const useUserAssignments = (
  * Create assignment
  */
 export const useCreateAssignment = (
-  options?: UseMutationOptions<CourseAssignment, Error, CreateAssignmentRequest>
+  options?: UseMutationOptions<CreateAssignmentResult, Error, CreateAssignmentRequest>
 ) => {
   const queryClient = useQueryClient()
 
@@ -816,9 +817,7 @@ export const useCreateAssignment = (
       onSuccess: (data, variables, context) => {
         // Invalidate assignments
         queryClient.invalidateQueries(queryKeys.assignments.course(variables.course_id))
-        if (variables.assigned_to_user_id) {
-          queryClient.invalidateQueries(queryKeys.assignments.user(variables.assigned_to_user_id))
-        }
+        queryClient.invalidateQueries(queryKeys.assignments.all)
 
         Toast.fire({
           icon: 'success',
@@ -844,7 +843,7 @@ export const useCreateAssignment = (
  * Update assignment
  */
 export const useUpdateAssignment = (
-  options?: UseMutationOptions<CourseAssignment, Error, { id: number; data: Partial<CreateAssignmentRequest> }>
+  options?: UseMutationOptions<UpdateAssignmentResult, Error, { id: number; data: Partial<CreateAssignmentRequest> }>
 ) => {
   const queryClient = useQueryClient()
 

@@ -50,6 +50,7 @@ interface Course {
   description: string
   duration: string
   category: string
+  audience?: 'internal' | 'client' | 'both'
 }
 
 interface User {
@@ -338,6 +339,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   )
 
   const courses = coursesResponse?.courses || []
+  const assignableCourses = courses.filter((course) => course.audience !== 'client')
   const assignments = (assignmentsResponse?.assignments || []).map(transformAssignment)
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -359,6 +361,16 @@ const LmsCourseAssignmentInterface: React.FC = () => {
         icon: 'warning',
         title: 'Rol requerido',
         text: 'Debes seleccionar un rol'
+      })
+      return
+    }
+
+    const selectedCourseData = assignableCourses.find((course) => course.id === selectedCourse)
+    if (!selectedCourseData) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Curso no asignable',
+        text: 'Las asignaciones LMS solo aplican a cursos internos o de audiencia mixta.'
       })
       return
     }
@@ -620,7 +632,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                         label="Seleccionar Curso"
                         onChange={(e) => setSelectedCourse(e.target.value as number)}
                       >
-                        {courses.map((course) => (
+                        {assignableCourses.map((course) => (
                           <MenuItem key={course.id} value={course.id}>
                             {course.title} ({course.duration})
                           </MenuItem>
@@ -672,6 +684,12 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                       </FormControl>
                     </Grid>
                   )}
+
+                  <Grid item xs={12}>
+                    <Typography variant="body2" color="text.secondary">
+                      Las asignaciones y fechas límite del LMS se aplican solo a usuarios internos. Los cursos de cliente se consumen por catálogo.
+                    </Typography>
+                  </Grid>
 
                   <Grid item xs={12}>
                     <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
