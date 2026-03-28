@@ -54,14 +54,6 @@ export const createSidebarItems = (_userStore: any): ModernSidebarItem[] => [
         moduleName: 'Basic'
       },
       {
-        id: 'lms-my-courses',
-        type: 'link',
-        label: 'Mis Cursos',
-        to: '/lms/admin/dashboard',
-        roles: ['admin'],
-        moduleName: 'Basic'
-      },
-      {
         id: 'lms-course-management',
         type: 'link',
         label: 'Gestión de Cursos',

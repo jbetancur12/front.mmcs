@@ -146,11 +146,6 @@ const sidebarItems = ($userStore: UserData) => [
         roles: [...LMS_ACCESS_MENU_ROLES]
       },
       {
-        label: 'Cursos',
-        url: 'lms/admin/dashboard',
-        roles: [...LMS_ADMIN_ROUTE_ROLES]
-      },
-      {
         label: 'Gestión de Cursos',
         url: 'lms/admin/courses',
         roles: [...LMS_ADMIN_ROUTE_ROLES]

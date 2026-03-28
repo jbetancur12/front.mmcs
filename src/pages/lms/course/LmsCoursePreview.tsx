@@ -462,7 +462,7 @@ const LmsCoursePreview: React.FC = () => {
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <IconButton onClick={() => navigate('/lms/admin/dashboard')}>
+            <IconButton onClick={() => navigate('/lms/admin/courses')}>
               <ArrowBackIcon />
             </IconButton>
             <Box>
