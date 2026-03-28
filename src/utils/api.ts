@@ -1,10 +1,9 @@
 import axios from 'axios'
 import { api } from 'src/config'
 
-
-
 export const axiosPublic = axios.create({
   baseURL: api(),
+  withCredentials: true,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
@@ -21,5 +20,6 @@ axiosPublic.interceptors.response.use(
 )
 
 export const axiosPrivate = axios.create({
-  baseURL: api()
+  baseURL: api(),
+  withCredentials: true
 })

@@ -10,8 +10,6 @@ import RequireAuth from './Components/Authentication/RequireAuth'
 // Error pages
 const NotFound = lazy(() => import('./pages/NotFound'))
 
-// Utils
-// import useSessionTimeoutWarning from '@utils/use-expiry-time'
 import { useStore } from '@nanostores/react'
 import { userStore } from './store/userStore'
 
@@ -33,7 +31,6 @@ import NonConformRoutes from './routes/NonConformRoutes'
 import MaintenanceRoutes from './routes/MaintenanceRoutes'
 
 function Router() {
-  // useSessionTimeoutWarning({ warningMinutesBefore: 5 })
   const $userStore = useStore(userStore)
 
   return (

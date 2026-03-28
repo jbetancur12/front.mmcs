@@ -33,26 +33,31 @@ interface WebSocketProviderProps {
 
 const wss = () => {
   const token = localStorage.getItem('accessToken')
-  const hostname = window.location.hostname
+  const currentHost = window.location.hostname
   const isPrivateNetworkHost =
-    hostname.includes('localhost') ||
-    hostname.includes('127.0.0.1') ||
-    hostname === '::1' ||
-    hostname.startsWith('192.168.') ||
-    hostname.startsWith('10.') ||
-    /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname)
+    currentHost === '::1' ||
+    /^10\./.test(currentHost) ||
+    /^192\.168\./.test(currentHost) ||
+    /^172\.(1[6-9]|2\d|3[0-1])\./.test(currentHost)
+  const isLocalDevelopmentHost =
+    currentHost === 'localhost' ||
+    currentHost === '127.0.0.1' ||
+    isPrivateNetworkHost
 
   if (import.meta.env.VITE_ENV === 'development') {
-    if (isPrivateNetworkHost) {
-      if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
+    if (isLocalDevelopmentHost) {
+      try {
+        const url = new URL(import.meta.env.VITE_WS_URL)
+        url.hostname = currentHost
+        url.searchParams.set('token', token || '')
+        return url.toString()
+      } catch {
         return (
           (import.meta.env.VITE_WS_URL || 'ws://localhost:5050/') +
           '?token=' +
           token
         )
       }
-
-      return `ws://${hostname}:5050/?token=${token}`
     }
 
     return import.meta.env.VITE_WS_URL_CLOUDFARE + '?token=' + token

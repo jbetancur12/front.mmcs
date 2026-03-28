@@ -19,19 +19,35 @@ const isPrivateNetworkHost = (hostname: string) => {
   return false
 }
 
-export const api = () => {
-  if (import.meta.env.VITE_ENV === 'development') {
-    const hostname = window.location.hostname
+const isLocalDevelopmentHost = (hostname: string) =>
+  hostname === 'localhost' ||
+  hostname === '127.0.0.1' ||
+  hostname === '::1' ||
+  isPrivateNetworkHost(hostname)
 
-    if (isPrivateNetworkHost(hostname)) {
-      if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
-        return import.meta.env.VITE_API_URL_DEV || 'http://localhost:5050'
-      }
+const normalizeLocalApiUrl = (baseUrl: string) => {
+  try {
+    const currentHost = window.location.hostname
+    const parsedUrl = new URL(baseUrl)
 
-      return `http://${hostname}:5050`
+    if (!isLocalDevelopmentHost(currentHost)) {
+      return baseUrl
     }
 
-    return import.meta.env.VITE_API_URL_CLOUDFLARE
+    parsedUrl.hostname = currentHost
+    return parsedUrl.toString().replace(/\/$/, '')
+  } catch {
+    return baseUrl
+  }
+}
+
+export const api = () => {
+  if (import.meta.env.VITE_ENV === 'development') {
+    return isLocalDevelopmentHost(window.location.hostname)
+      ? normalizeLocalApiUrl(
+          import.meta.env.VITE_API_URL_DEV || 'http://localhost:5050'
+        )
+      : import.meta.env.VITE_API_URL_CLOUDFLARE
   }
 
   return import.meta.env.VITE_API_URL_PROD

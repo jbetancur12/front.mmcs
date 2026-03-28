@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { userStore } from '../../store/userStore'
 import { api } from '../../config'
 import useAxiosPrivate from '@utils/use-axios-private'
+import useRefreshToken from '@utils/use-refresh-token'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 interface RequireAuthProps {
@@ -17,6 +18,7 @@ const apiUrl = api()
 const clearInvalidSession = () => {
   localStorage.removeItem('accessToken')
   localStorage.removeItem('refreshToken')
+  localStorage.removeItem('sessionExpiresAt')
   localStorage.removeItem('user')
   localStorage.removeItem('userProfile')
 
@@ -34,6 +36,7 @@ const clearInvalidSession = () => {
 
 const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   const axiosPrivate = useAxiosPrivate()
+  const refresh = useRefreshToken()
   const navigate = useNavigate()
   const location = useLocation()
   const [loading, setLoading] = useState(true)
@@ -41,9 +44,17 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   useEffect(() => {
     const validateToken = async () => {
       try {
-        const token = localStorage.getItem('accessToken')
+        let token = localStorage.getItem('accessToken')
+
         if (!token) {
-          throw new Error('Token no encontrado')
+          const refreshResult = await refresh()
+          token = refreshResult.accessToken
+
+          if (!token) {
+            throw new Error('Token no encontrado')
+          }
+
+          localStorage.setItem('accessToken', token)
         }
 
         const response = await axiosPrivate.get(`${apiUrl}/auth/validateToken`)
@@ -70,14 +81,8 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
       }
     }
 
-    if (localStorage.getItem('accessToken')) {
-      validateToken()
-    } else {
-      const currentPath = location.pathname + location.search
-      sessionStorage.setItem('lastLocation', currentPath)
-      navigate('/login', { replace: true })
-    }
-  }, [axiosPrivate, location.pathname, location.search, navigate])
+    validateToken()
+  }, [axiosPrivate, location.pathname, location.search, navigate, refresh])
 
   if (loading) {
     return (
