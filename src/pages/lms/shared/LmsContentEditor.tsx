@@ -19,6 +19,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Snackbar,
   List,
   ListItem,
   ListItemText,
@@ -143,6 +144,11 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   const [isSavingLesson, setIsSavingLesson] = useState(false)
   const [hasPendingChanges, setHasPendingChanges] = useState(false)
   const [openQuizManagement, setOpenQuizManagement] = useState(false)
+  const [editorNotice, setEditorNotice] = useState<{ open: boolean; message: string; severity: 'info' | 'success' | 'warning' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'info'
+  })
 
   void onSave
   void isLoading
@@ -157,7 +163,6 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   // Update editorContentRef when selectedModule changes
   useEffect(() => {
     if (selectedModule?.content.text) {
-      console.log('📝 Updating editor content ref:', selectedModule.content.text)
       editorContentRef.current = selectedModule.content.text
     } else {
       editorContentRef.current = ''
@@ -183,14 +188,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
     if (selectedModule) {
       const updatedModule = modules.find(m => m.id === selectedModule.id)
       if (updatedModule) {
-        console.log('🔍 Module sync check:', {
-          selectedId: selectedModule.id,
-          selectedContent: selectedModule.content.text,
-          updatedContent: updatedModule.content.text,
-          areEqual: JSON.stringify(updatedModule) === JSON.stringify(selectedModule)
-        })
         if (JSON.stringify(updatedModule) !== JSON.stringify(selectedModule)) {
-          console.log('🔄 Syncing selectedModule with updated data')
           setSelectedModule(updatedModule)
         }
       }
@@ -245,13 +243,21 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
     acceptedFiles.forEach((file) => {
       // Validate file type
       if (!file.type.startsWith('video/')) {
-        alert('Solo se permiten archivos de video')
+        setEditorNotice({
+          open: true,
+          message: 'Solo se permiten archivos de video.',
+          severity: 'error'
+        })
         return
       }
 
       // Validate file size (100MB limit)
       if (file.size > 100 * 1024 * 1024) {
-        alert('El archivo es demasiado grande. Máximo 100MB')
+        setEditorNotice({
+          open: true,
+          message: 'El archivo es demasiado grande. Máximo 100MB por video.',
+          severity: 'error'
+        })
         return
       }
 
@@ -310,6 +316,11 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
             : upload
         )
       )
+      setEditorNotice({
+        open: true,
+        message: `Video "${file.name}" cargado correctamente.`,
+        severity: 'success'
+      })
 
       // Add video to selected module if applicable
       if (selectedModule && selectedModule.type === 'video') {
@@ -340,13 +351,25 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
 
   // Module management
   const addModule = () => {
+    const trimmedTitle = newModule.title.trim()
+    const trimmedDescription = newModule.description.trim()
+
+    if (!trimmedTitle) {
+      setEditorNotice({
+        open: true,
+        message: 'Agrega un título para el módulo antes de continuar.',
+        severity: 'warning'
+      })
+      return
+    }
+
     const module: ContentModule = {
       id: `temp_${Date.now()}`,
-      title: newModule.title,
+      title: trimmedTitle,
       type: newModule.type,
       order: modules.length,
       content: {
-        description: newModule.description,
+        description: trimmedDescription,
         ...(newModule.type === 'text' && { text: '' }),
         ...(newModule.type === 'video' && { videoUrl: '', videoSource: 'youtube' as const })
       }
@@ -443,7 +466,6 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
             video_url: module.content.videoUrl || null,
             is_mandatory: true
           }
-          console.log('💾 Auto-saving lesson:', { moduleId, content: module.content.text })
           try {
             await onUpdateLesson({ moduleId, lessonData })
             setHasPendingChanges(false)
@@ -557,6 +579,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
           <CardContent>
             <List>
               {modules
+                .slice()
                 .sort((a, b) => a.order - b.order)
                 .map((module) => (
                   <ListItem
@@ -577,11 +600,6 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                       }
                     }}
                     onClick={() => {
-                      console.log('📌 Module clicked:', {
-                        id: module.id,
-                        title: module.title,
-                        content: module.content.text
-                      })
                       setSelectedModule(module)
                     }}
                   >
@@ -593,6 +611,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                     </ListItemIcon>
                     <ListItemText
                       primary={module.title}
+                      secondaryTypographyProps={{ component: 'div' }}
                       secondary={
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Chip
@@ -695,7 +714,6 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                         theme="snow"
                         value={selectedModule.content.text || ''}
                         onChange={(content) => {
-                          console.log('✏️ Editor onChange fired:', content)
                           const sanitizedContent = sanitizeHtml(content)
                           updateModuleContent(selectedModule.id, {
                             ...selectedModule.content,
@@ -962,7 +980,10 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       {/* Add Module Dialog */}
       < Dialog
         open={openModuleDialog}
-        onClose={() => setOpenModuleDialog(false)}
+        onClose={() => {
+          setOpenModuleDialog(false)
+          setNewModule({ title: '', type: 'text', description: '' })
+        }}
         maxWidth="sm"
         fullWidth
       >
@@ -1023,7 +1044,12 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenModuleDialog(false)}>
+          <Button
+            onClick={() => {
+              setOpenModuleDialog(false)
+              setNewModule({ title: '', type: 'text', description: '' })
+            }}
+          >
             Cancelar
           </Button>
           <Button
@@ -1035,6 +1061,20 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
           </Button>
         </DialogActions>
       </Dialog >
+
+      <Snackbar
+        open={editorNotice.open}
+        autoHideDuration={4000}
+        onClose={() => setEditorNotice((prev) => ({ ...prev, open: false }))}
+      >
+        <Alert
+          severity={editorNotice.severity}
+          onClose={() => setEditorNotice((prev) => ({ ...prev, open: false }))}
+          sx={{ width: '100%' }}
+        >
+          {editorNotice.message}
+        </Alert>
+      </Snackbar>
 
       {/* Quiz Management Dialog */}
       < Dialog

@@ -87,15 +87,6 @@ const LmsCourseContentEditor: React.FC = () => {
       // Determinar el tipo de contenido: si hay lección usar su 'type', sino 'text' por defecto
       const contentType = firstLesson?.type || 'text'
 
-      console.log(`📦 Módulo "${module.title}":`, {
-        hasLesson: !!firstLesson,
-        type: firstLesson?.type,
-        finalType: contentType,
-        videoUrl: firstLesson?.video_url,
-        hasQuiz: !!firstLesson?.quiz,
-        quizId: firstLesson?.quiz?.id
-      })
-
       return {
         id: module.id.toString(),
         title: module.title,
@@ -137,8 +128,6 @@ const LmsCourseContentEditor: React.FC = () => {
         // Hacer llamada real a la API
         const backendCourse = await lmsService.getCourse(parseInt(courseId))
         
-        console.log('Course data from API:', backendCourse)
-
         // Transformar el curso del backend al formato del frontend
         return transformCourseFromBackend(backendCourse)
       } catch (error) {
