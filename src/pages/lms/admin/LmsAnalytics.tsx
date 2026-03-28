@@ -39,8 +39,6 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { es } from 'date-fns/locale'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -68,7 +66,6 @@ type DashboardFilters = {
 const ANALYTICS_TABS = [
   'summary',
   'courses',
-  'users',
   'compliance',
   'quizzes'
 ] as const
@@ -149,7 +146,7 @@ const LmsAnalytics: React.FC = () => {
       endDate: filters.endDate?.toISOString()
     },
     {
-      enabled: activeTab === 3
+      enabled: activeTab === 2
     }
   )
 
@@ -189,9 +186,6 @@ const LmsAnalytics: React.FC = () => {
     : []
   const underperformingCourses = Array.isArray(courseMetrics.underperformingCourses)
     ? courseMetrics.underperformingCourses
-    : []
-  const progressDistribution = Array.isArray(userAnalytics.progressDistribution)
-    ? userAnalytics.progressDistribution
     : []
   const complianceByRole = Array.isArray(assignmentStatus.complianceByRole)
     ? assignmentStatus.complianceByRole
@@ -427,9 +421,8 @@ const LmsAnalytics: React.FC = () => {
             </Grid>
 
             <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 3 }}>
-              <Tab label='Resumen' />
+              <Tab label='Resumen ejecutivo' />
               <Tab label='Cursos' />
-              <Tab label='Usuarios' />
               <Tab label='Cumplimiento' />
               <Tab label='Quizzes' />
             </Tabs>
@@ -478,6 +471,14 @@ const LmsAnalytics: React.FC = () => {
                       )}
                     </CardContent>
                   </Card>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Alert severity='info'>
+                    Prioriza este orden de lectura: 1) tasa de finalización, 2) cursos con bajo desempeño,
+                    3) vencimientos y pendientes, 4) comportamiento de quizzes. Con eso cubres la mayor parte
+                    de las decisiones operativas del LMS actual.
+                  </Alert>
                 </Grid>
 
                 <Grid item xs={12}>
@@ -594,62 +595,6 @@ const LmsAnalytics: React.FC = () => {
 
             {activeTab === 2 ? (
               <Grid container spacing={3}>
-                <Grid item xs={12} lg={6}>
-                    <Card>
-                    <CardHeader title='Distribución de progreso' />
-                    <CardContent sx={{ height: 320 }}>
-                      {progressDistribution.length > 0 ? (
-                        <ResponsiveContainer width='100%' height='100%'>
-                          <AreaChart data={progressDistribution}>
-                            <CartesianGrid strokeDasharray='3 3' />
-                            <XAxis dataKey='range' />
-                            <YAxis />
-                            <RechartsTooltip />
-                            <Area type='monotone' dataKey='count' stroke={CHART_COLORS[1]} fill={CHART_COLORS[1]} />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <Typography color='text.secondary'>Sin distribucion de progreso disponible.</Typography>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} lg={6}>
-                  <Card>
-                    <CardHeader title='Estado real del aprendizaje' />
-                    <CardContent>
-                      <Stack spacing={2}>
-                        <Box>
-                          <Typography variant='body2' color='text.secondary'>
-                            Usuarios internos
-                          </Typography>
-                          <Typography variant='h5'>{safeNumber(userAnalytics.internalUsers)}</Typography>
-                        </Box>
-                        <Box>
-                          <Typography variant='body2' color='text.secondary'>
-                            Usuarios cliente
-                          </Typography>
-                          <Typography variant='h5'>{safeNumber(userAnalytics.clientUsers)}</Typography>
-                        </Box>
-                        <Box>
-                          <Typography variant='body2' color='text.secondary'>
-                            Usuarios activos
-                          </Typography>
-                          <Typography variant='h5'>{safeNumber(userAnalytics.activeUsers)}</Typography>
-                        </Box>
-                        <Alert severity='info'>
-                          El backend actual entrega un resumen confiable de usuarios, pero no aún un ranking
-                          rico de engagement por persona en esta pantalla.
-                        </Alert>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              </Grid>
-            ) : null}
-
-            {activeTab === 3 ? (
-              <Grid container spacing={3}>
                 <Grid item xs={12}>
                   <Alert
                     severity={safeNumber(assignmentStatus.overdueAssignments) > 0 ? 'warning' : 'success'}
@@ -721,7 +666,7 @@ const LmsAnalytics: React.FC = () => {
               </Grid>
             ) : null}
 
-            {activeTab === 4 ? <LmsQuizAnalyticsPanel /> : null}
+            {activeTab === 3 ? <LmsQuizAnalyticsPanel /> : null}
           </>
         )}
       </Box>
