@@ -14,7 +14,12 @@ import {
   MaintenanceTimelineResponse,
   BackendTimelineEntry,
   MaintenanceTimelineEntry,
-  MaintenanceAction
+  MaintenanceAction,
+  MaintenanceTechnicalReport,
+  MaintenanceTechnicalReportRequest,
+  MaintenanceToolEquipmentSummary,
+  MaintenanceProtocolTemplate,
+  MaintenanceProtocolTemplateRequest
 } from '../types/maintenance'
 
 // API functions
@@ -222,16 +227,16 @@ const maintenanceAPI = {
       formData.append('isPublic', String(options.isPublic))
     }
 
-    const response = await axiosPrivate.post<{ files?: MaintenanceFile[] } | MaintenanceFile[]>(
-      `/maintenance/tickets/${ticketId}/files`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+    const response = await axiosPrivate.post<
+      { files?: MaintenanceFile[] } | MaintenanceFile[]
+    >(`/maintenance/tickets/${ticketId}/files`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
       }
-    )
-    return Array.isArray(response.data) ? response.data : response.data.files || []
+    })
+    return Array.isArray(response.data)
+      ? response.data
+      : response.data.files || []
   },
 
   deleteFile: async (_ticketId: string, fileId: string): Promise<void> => {
@@ -298,10 +303,86 @@ const maintenanceAPI = {
     return response.data
   },
 
+  getTechnicalReport: async (
+    ticketId: string
+  ): Promise<MaintenanceTechnicalReport> => {
+    const response = await axiosPrivate.get<MaintenanceTechnicalReport>(
+      `/maintenance/tickets/${ticketId}/technical-report`
+    )
+    return response.data
+  },
+
+  upsertTechnicalReport: async (
+    ticketId: string,
+    data: MaintenanceTechnicalReportRequest
+  ): Promise<MaintenanceTechnicalReport> => {
+    const response = await axiosPrivate.put<MaintenanceTechnicalReport>(
+      `/maintenance/tickets/${ticketId}/technical-report`,
+      data
+    )
+    return response.data
+  },
+
+  searchToolEquipment: async (
+    query: string,
+    limit = 10
+  ): Promise<MaintenanceToolEquipmentSummary[]> => {
+    const response = await axiosPrivate.get<MaintenanceToolEquipmentSummary[]>(
+      `/maintenance/tools/search`,
+      {
+        params: {
+          q: query,
+          limit
+        }
+      }
+    )
+    return response.data
+  },
+
+  getProtocolTemplates: async (): Promise<MaintenanceProtocolTemplate[]> => {
+    const response = await axiosPrivate.get<MaintenanceProtocolTemplate[]>(
+      `/maintenance/protocols`
+    )
+    return response.data
+  },
+
+  createProtocolTemplate: async (
+    data: MaintenanceProtocolTemplateRequest
+  ): Promise<MaintenanceProtocolTemplate> => {
+    const response = await axiosPrivate.post<MaintenanceProtocolTemplate>(
+      `/maintenance/protocols`,
+      data
+    )
+    return response.data
+  },
+
+  updateProtocolTemplate: async (
+    id: string,
+    data: MaintenanceProtocolTemplateRequest
+  ): Promise<MaintenanceProtocolTemplate> => {
+    const response = await axiosPrivate.put<MaintenanceProtocolTemplate>(
+      `/maintenance/protocols/${id}`,
+      data
+    )
+    return response.data
+  },
+
+  deleteProtocolTemplate: async (id: string): Promise<void> => {
+    await axiosPrivate.delete(`/maintenance/protocols/${id}`)
+  },
+
   // PDF Generation
   generateServiceOrder: async (ticketId: string): Promise<Blob> => {
     const response = await axiosPrivate.get(
       `/maintenance/tickets/${ticketId}/pdf/service-order`,
+      { responseType: 'blob' }
+    )
+    return response.data
+  },
+
+  generateTechnicalReport: async (ticketId: string): Promise<Blob> => {
+    const response = await axiosPrivate.get(
+      `/maintenance/tickets/${ticketId}/pdf/technical-report`,
       { responseType: 'blob' }
     )
     return response.data
@@ -531,6 +612,32 @@ export const useMaintenanceTimeline = (ticketId: string) => {
   })
 }
 
+export const useMaintenanceTechnicalReport = (ticketId: string) => {
+  return useQuery({
+    queryKey: ['maintenance-technical-report', ticketId],
+    queryFn: () => maintenanceAPI.getTechnicalReport(ticketId),
+    enabled: !!ticketId
+  })
+}
+
+export const useMaintenanceProtocolTemplates = () => {
+  return useQuery({
+    queryKey: ['maintenance-protocol-templates'],
+    queryFn: maintenanceAPI.getProtocolTemplates
+  })
+}
+
+export const useMaintenanceToolEquipmentSearch = (
+  query: string,
+  limit = 10
+) => {
+  return useQuery({
+    queryKey: ['maintenance-tool-equipment-search', query, limit],
+    queryFn: () => maintenanceAPI.searchToolEquipment(query, limit),
+    enabled: query.trim().length >= 0
+  })
+}
+
 // Public tracking hook (no auth required)
 export const useTrackMaintenanceTicket = (ticketNumber: string) => {
   return useQuery({
@@ -657,10 +764,83 @@ export const useUploadMaintenanceFiles = () => {
       category?: string
       description?: string
       isPublic?: boolean
-    }) => maintenanceAPI.uploadFiles(ticketId, files, { category, description, isPublic }),
+    }) =>
+      maintenanceAPI.uploadFiles(ticketId, files, {
+        category,
+        description,
+        isPublic
+      }),
     onSuccess: (_, { ticketId }) => {
       queryClient.invalidateQueries({
         queryKey: ['maintenance-ticket', ticketId]
+      })
+    }
+  })
+}
+
+export const useUpsertMaintenanceTechnicalReport = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      ticketId,
+      data
+    }: {
+      ticketId: string
+      data: MaintenanceTechnicalReportRequest
+    }) => maintenanceAPI.upsertTechnicalReport(ticketId, data),
+    onSuccess: (report) => {
+      queryClient.invalidateQueries({
+        queryKey: ['maintenance-technical-report', report.ticketId]
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['maintenance-ticket', report.ticketId]
+      })
+      queryClient.invalidateQueries({ queryKey: ['maintenance-tickets'] })
+    }
+  })
+}
+
+export const useCreateMaintenanceProtocolTemplate = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: maintenanceAPI.createProtocolTemplate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['maintenance-protocol-templates']
+      })
+    }
+  })
+}
+
+export const useUpdateMaintenanceProtocolTemplate = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      data
+    }: {
+      id: string
+      data: MaintenanceProtocolTemplateRequest
+    }) => maintenanceAPI.updateProtocolTemplate(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['maintenance-protocol-templates']
+      })
+    }
+  })
+}
+
+export const useDeleteMaintenanceProtocolTemplate = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: maintenanceAPI.deleteProtocolTemplate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['maintenance-protocol-templates']
       })
     }
   })
@@ -731,6 +911,22 @@ export const useGenerateServiceOrder = () => {
       const link = document.createElement('a')
       link.href = url
       link.download = `orden-servicio-${ticketId}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    }
+  })
+}
+
+export const useGenerateTechnicalReport = () => {
+  return useMutation({
+    mutationFn: maintenanceAPI.generateTechnicalReport,
+    onSuccess: (pdfBlob, ticketId) => {
+      const url = window.URL.createObjectURL(pdfBlob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `reporte-tecnico-${ticketId}.pdf`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)

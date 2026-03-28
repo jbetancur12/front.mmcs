@@ -40,7 +40,8 @@ import {
   Add,
   FilterList,
   Cancel,
-  Help
+  Help,
+  Science
 } from '@mui/icons-material'
 import {
   useMaintenanceStats,
@@ -50,14 +51,18 @@ import {
   useUpdateMaintenanceTicket,
   useUpdateMaintenanceTechnician,
   useDeleteMaintenanceTicket,
-  useUploadMaintenanceFiles
+  useUploadMaintenanceFiles,
+  useMaintenanceTechnicalReport,
+  useUpsertMaintenanceTechnicalReport,
+  useGenerateTechnicalReport
 } from '../../hooks/useMaintenance'
 import {
   MaintenanceFilters,
   MaintenanceStatus,
   MaintenancePriority,
   MaintenanceTicket,
-  MaintenanceUpdateRequest
+  MaintenanceUpdateRequest,
+  MaintenanceTechnicalReportRequest
 } from '../../types/maintenance'
 import MaintenanceTicketCard from '../../Components/Maintenance/MaintenanceTicketCard'
 import MaintenanceFiltersComponent from '../../Components/Maintenance/MaintenanceFilters'
@@ -72,10 +77,9 @@ import { userStore } from '../../store/userStore'
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import KeyboardShortcutsHelp from '../../Components/Maintenance/KeyboardShortcutsHelp'
 import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
+import MaintenanceTechnicalReportDialog from '../../Components/Maintenance/MaintenanceTechnicalReportDialog'
 import { maintenanceSignaturesEnabled } from '../../features/maintenanceFlags'
-import type {
-  CompletionPhotoInput
-} from '../../Components/Maintenance/CompletionCostsDialog'
+import type { CompletionPhotoInput } from '../../Components/Maintenance/CompletionCostsDialog'
 
 /**
  * MaintenanceDashboard component provides an admin interface for managing maintenance tickets
@@ -100,6 +104,8 @@ const MaintenanceDashboard: React.FC = () => {
     useState<MaintenanceTicket | null>(null)
   const [editData, setEditData] = useState<MaintenanceUpdateRequest>({})
   const [costsDialogOpen, setCostsDialogOpen] = useState(false)
+  const [technicalReportDialogOpen, setTechnicalReportDialogOpen] =
+    useState(false)
   const [toast, setToast] = useState<{
     open: boolean
     message: string
@@ -193,12 +199,23 @@ const MaintenanceDashboard: React.FC = () => {
   const { data: currentTechnician } = useTechnicianByEmail(
     currentTechnicianEmail || ''
   )
+  const {
+    data: technicalReport,
+    isLoading: technicalReportLoading,
+    refetch: refetchTechnicalReport
+  } = useMaintenanceTechnicalReport(
+    selectedTicket?.status === MaintenanceStatus.COMPLETED && selectedTicket?.id
+      ? selectedTicket.id
+      : ''
+  )
   // Only admins can access technicians list
   const { data: technicians } = useMaintenanceTechnicians(isAdmin)
   const updateTicketMutation = useUpdateMaintenanceTicket()
   const updateTechnicianMutation = useUpdateMaintenanceTechnician()
   const deleteTicketMutation = useDeleteMaintenanceTicket()
   const uploadFilesMutation = useUploadMaintenanceFiles()
+  const upsertTechnicalReportMutation = useUpsertMaintenanceTechnicalReport()
+  const generateTechnicalReportMutation = useGenerateTechnicalReport()
 
   const completionRate = useMemo(() => {
     const total = stats?.metrics?.totalTickets || 0
@@ -227,6 +244,25 @@ const MaintenanceDashboard: React.FC = () => {
     }
     return value >= 10 ? `${Math.round(value)}h` : `${value.toFixed(1)}h`
   }, [stats?.metrics?.avgResolutionTimeHours])
+
+  const technicalReportCompletion = useMemo(() => {
+    if (!technicalReport) return 0
+
+    const checkpoints = [
+      technicalReport.finalDiagnosis,
+      technicalReport.rootCause,
+      technicalReport.activities?.length,
+      technicalReport.parts?.length,
+      technicalReport.verificationProtocolType,
+      technicalReport.verificationTests?.length,
+      technicalReport.recommendations,
+      technicalReport.scopeClause,
+      technicalReport.responsibilityClause
+    ]
+
+    const completed = checkpoints.filter(Boolean).length
+    return Math.round((completed / checkpoints.length) * 100)
+  }, [technicalReport])
 
   // WebSocket for real-time updates
   useMaintenanceWebSocket({
@@ -320,15 +356,20 @@ const MaintenanceDashboard: React.FC = () => {
   }, [ticketsData?.tickets])
 
   const handleEditTicket = (ticket: MaintenanceTicket) => {
+    if (maintenanceSignaturesEnabled && ticket.customerSignatureData) {
+      showToast(
+        'Este ticket ya fue firmado por el cliente y su contenido técnico quedó bloqueado',
+        'warning'
+      )
+      return
+    }
+
     if (
       isTechnician &&
       ticket.assignedTechnician?.email !== $userStore.email &&
       Number(ticket.assignedTechnician?.id) !== Number(currentTechnician?.id)
     ) {
-      showToast(
-        'Solo puedes editar tickets asignados a tu usuario',
-        'warning'
-      )
+      showToast('Solo puedes editar tickets asignados a tu usuario', 'warning')
       return
     }
 
@@ -338,7 +379,14 @@ const MaintenanceDashboard: React.FC = () => {
       status: ticket.status,
       assignedTechnician: ticket.assignedTechnicianId || '',
       scheduledDate: ticket.scheduledDate || '',
-      priority: ticket.priority
+      equipmentType: ticket.equipmentType || '',
+      equipmentBrand: ticket.equipmentBrand || '',
+      equipmentModel: ticket.equipmentModel || '',
+      equipmentSerial: ticket.equipmentSerial || '',
+      location: ticket.location || '',
+      priority: ticket.priority,
+      intakePhysicalCondition: ticket.intakePhysicalCondition || '',
+      receivedAccessories: ticket.receivedAccessories || ''
     })
     setEditDialogOpen(true)
   }
@@ -411,27 +459,25 @@ const MaintenanceDashboard: React.FC = () => {
             status: MaintenanceStatus.COMPLETED,
             workPerformed,
             costs,
-            technicianSignatureData:
-              maintenanceSignaturesEnabled
-                ? technicianSignature.technicianSignatureData ||
-                  selectedTicket.technicianSignatureData ||
-                  currentTechnician?.signatureData ||
-                  selectedTicket.assignedTechnician?.signatureData ||
-                  null
-                : null
+            technicianSignatureData: maintenanceSignaturesEnabled
+              ? technicianSignature.technicianSignatureData ||
+                selectedTicket.technicianSignatureData ||
+                currentTechnician?.signatureData ||
+                selectedTicket.assignedTechnician?.signatureData ||
+                null
+              : null
           }
         : {
             ...editData,
             status: MaintenanceStatus.COMPLETED,
             workPerformed,
             costs,
-            technicianSignatureData:
-              maintenanceSignaturesEnabled
-                ? technicianSignature.technicianSignatureData ||
-                  selectedTicket.technicianSignatureData ||
-                  selectedTicket.assignedTechnician?.signatureData ||
-                  null
-                : null
+            technicianSignatureData: maintenanceSignaturesEnabled
+              ? technicianSignature.technicianSignatureData ||
+                selectedTicket.technicianSignatureData ||
+                selectedTicket.assignedTechnician?.signatureData ||
+                null
+              : null
           }
 
       await updateTicketMutation.mutateAsync({
@@ -479,6 +525,57 @@ const MaintenanceDashboard: React.FC = () => {
   const handleViewTicket = (ticket: MaintenanceTicket) => {
     // Navigate to ticket details page using React Router
     navigate(`/maintenance/tickets/${ticket.id}`)
+  }
+
+  const handleOpenTechnicalReport = (ticket: MaintenanceTicket) => {
+    if (maintenanceSignaturesEnabled && ticket.customerSignatureData) {
+      showToast(
+        'El reporte técnico ya no puede editarse después de la firma del cliente',
+        'warning'
+      )
+      return
+    }
+    setSelectedTicket(ticket)
+    setTechnicalReportDialogOpen(true)
+  }
+
+  const handleSaveTechnicalReport = async (
+    reportData: MaintenanceTechnicalReportRequest
+  ) => {
+    if (!selectedTicket?.id) return
+
+    try {
+      await upsertTechnicalReportMutation.mutateAsync({
+        ticketId: selectedTicket.id,
+        data: reportData
+      })
+      await refetchTechnicalReport()
+      refetchTickets()
+      refetchStats()
+      showToast('Reporte técnico guardado exitosamente', 'success')
+    } catch (error: any) {
+      console.error('Error saving technical report:', error)
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Error al guardar el reporte técnico'
+      showToast(errorMessage, 'error')
+      throw error
+    }
+  }
+
+  const handleGenerateTechnicalReport = () => {
+    if (!selectedTicket?.id) return
+
+    generateTechnicalReportMutation.mutate(selectedTicket.id, {
+      onSuccess: () => {
+        showToast('Reporte técnico generado exitosamente', 'success')
+      },
+      onError: (error: any) => {
+        console.error('Error generating technical report:', error)
+        showToast('Error al generar reporte técnico', 'error')
+      }
+    })
   }
 
   const handleDeleteClick = (ticket: MaintenanceTicket) => {
@@ -548,7 +645,9 @@ const MaintenanceDashboard: React.FC = () => {
               justifyContent: 'center'
             }}
           >
-            <Dashboard sx={{ fontSize: { xs: 28, sm: 32 }, color: '#2f7d32' }} />
+            <Dashboard
+              sx={{ fontSize: { xs: 28, sm: 32 }, color: '#2f7d32' }}
+            />
           </Box>
           <Box>
             <Typography
@@ -938,7 +1037,7 @@ const MaintenanceDashboard: React.FC = () => {
         spacing={{ xs: 2, sm: 2, md: 3 }}
         mb={{ xs: 2, sm: 3, md: 3 }}
       >
-      <Grid item xs={12} md={8}>
+        <Grid item xs={12} md={8}>
           <Paper
             sx={{
               p: { xs: 2, sm: 3 },
@@ -959,7 +1058,8 @@ const MaintenanceDashboard: React.FC = () => {
                 Tickets por Prioridad
               </Typography>
               <Typography variant='body2' sx={{ color: '#64748b' }}>
-                Vista rápida para detectar carga operativa y urgencias sin saturar el tablero.
+                Vista rápida para detectar carga operativa y urgencias sin
+                saturar el tablero.
               </Typography>
             </Box>
             <Grid container spacing={{ xs: 1, sm: 2 }}>
@@ -1182,7 +1282,8 @@ const MaintenanceDashboard: React.FC = () => {
               )}
             </Typography>
             <Typography variant='body2' sx={{ mt: 0.5, color: '#64748b' }}>
-              Tarjetas más ligeras para priorizar lectura rápida y acciones frecuentes.
+              Tarjetas más ligeras para priorizar lectura rápida y acciones
+              frecuentes.
             </Typography>
           </Box>
         </Box>
@@ -1328,13 +1429,26 @@ const MaintenanceDashboard: React.FC = () => {
             )}
           </Box>
         </DialogTitle>
-        <DialogContent id='edit-ticket-dialog-description'>
-          <Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mt: 1 }}>
+        <DialogContent
+          id='edit-ticket-dialog-description'
+          sx={{ pt: { xs: 2.5, sm: 3 }, overflowY: 'auto' }}
+        >
+          <Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mt: 0.5 }}>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth size={isMobile ? 'small' : 'medium'}>
-                <InputLabel id='edit-status-label'>Estado</InputLabel>
+                <Typography
+                  variant='caption'
+                  sx={{
+                    mb: 0.75,
+                    px: 0.5,
+                    fontWeight: 600,
+                    color: '#64748b',
+                    letterSpacing: '0.02em'
+                  }}
+                >
+                  Estado
+                </Typography>
                 <Select
-                  labelId='edit-status-label'
                   id='edit-status-select'
                   value={editData.status || ''}
                   onChange={(e) =>
@@ -1343,7 +1457,6 @@ const MaintenanceDashboard: React.FC = () => {
                       status: e.target.value as MaintenanceStatus
                     }))
                   }
-                  label='Estado'
                   aria-label='Seleccionar estado del ticket'
                   disabled={
                     selectedTicket?.status === MaintenanceStatus.COMPLETED
@@ -1361,9 +1474,19 @@ const MaintenanceDashboard: React.FC = () => {
             {!isTechnician && (
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth size={isMobile ? 'small' : 'medium'}>
-                  <InputLabel id='edit-priority-label'>Prioridad</InputLabel>
+                  <Typography
+                    variant='caption'
+                    sx={{
+                      mb: 0.75,
+                      px: 0.5,
+                      fontWeight: 600,
+                      color: '#64748b',
+                      letterSpacing: '0.02em'
+                    }}
+                  >
+                    Prioridad
+                  </Typography>
                   <Select
-                    labelId='edit-priority-label'
                     id='edit-priority-select'
                     value={editData.priority || ''}
                     onChange={(e) =>
@@ -1372,7 +1495,6 @@ const MaintenanceDashboard: React.FC = () => {
                         priority: e.target.value as MaintenancePriority
                       }))
                     }
-                    label='Prioridad'
                     aria-label='Seleccionar prioridad del ticket'
                     disabled={
                       selectedTicket?.status === MaintenanceStatus.COMPLETED
@@ -1392,6 +1514,91 @@ const MaintenanceDashboard: React.FC = () => {
             )}
 
             {!isTechnician && (
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  size={isMobile ? 'small' : 'medium'}
+                  label='Tipo de equipo'
+                  value={editData.equipmentType || ''}
+                  onChange={(e) =>
+                    setEditData((prev) => ({
+                      ...prev,
+                      equipmentType: e.target.value
+                    }))
+                  }
+                />
+              </Grid>
+            )}
+
+            {!isTechnician && (
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  size={isMobile ? 'small' : 'medium'}
+                  label='Marca'
+                  value={editData.equipmentBrand || ''}
+                  onChange={(e) =>
+                    setEditData((prev) => ({
+                      ...prev,
+                      equipmentBrand: e.target.value
+                    }))
+                  }
+                />
+              </Grid>
+            )}
+
+            {!isTechnician && (
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  size={isMobile ? 'small' : 'medium'}
+                  label='Modelo'
+                  value={editData.equipmentModel || ''}
+                  onChange={(e) =>
+                    setEditData((prev) => ({
+                      ...prev,
+                      equipmentModel: e.target.value
+                    }))
+                  }
+                />
+              </Grid>
+            )}
+
+            {!isTechnician && (
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  size={isMobile ? 'small' : 'medium'}
+                  label='Número de serie'
+                  value={editData.equipmentSerial || ''}
+                  onChange={(e) =>
+                    setEditData((prev) => ({
+                      ...prev,
+                      equipmentSerial: e.target.value
+                    }))
+                  }
+                />
+              </Grid>
+            )}
+
+            {!isTechnician && (
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  size={isMobile ? 'small' : 'medium'}
+                  label='Ubicación del equipo'
+                  value={editData.location || ''}
+                  onChange={(e) =>
+                    setEditData((prev) => ({
+                      ...prev,
+                      location: e.target.value
+                    }))
+                  }
+                />
+              </Grid>
+            )}
+
+            {!isTechnician && (
               <Grid item xs={12}>
                 <FormControl fullWidth size={isMobile ? 'small' : 'medium'}>
                   <InputLabel id='edit-technician-label'>
@@ -1404,7 +1611,12 @@ const MaintenanceDashboard: React.FC = () => {
                     onChange={(e) =>
                       setEditData((prev) => ({
                         ...prev,
-                        assignedTechnician: e.target.value
+                        assignedTechnician: e.target.value,
+                        status:
+                          prev.status === MaintenanceStatus.PENDING &&
+                          Boolean(e.target.value)
+                            ? MaintenanceStatus.ASSIGNED
+                            : prev.status
                       }))
                     }
                     label='Técnico Asignado'
@@ -1561,6 +1773,44 @@ const MaintenanceDashboard: React.FC = () => {
               </Grid>
             )}
 
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                size={isMobile ? 'small' : 'medium'}
+                id='edit-intake-physical-condition'
+                label='Condición inicial del equipo'
+                value={editData.intakePhysicalCondition || ''}
+                onChange={(e) =>
+                  setEditData((prev) => ({
+                    ...prev,
+                    intakePhysicalCondition: e.target.value
+                  }))
+                }
+                multiline
+                minRows={3}
+                placeholder='Rayones, golpes, faltantes o condición general al iniciar la intervención'
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                size={isMobile ? 'small' : 'medium'}
+                id='edit-received-accessories'
+                label='Accesorios disponibles'
+                value={editData.receivedAccessories || ''}
+                onChange={(e) =>
+                  setEditData((prev) => ({
+                    ...prev,
+                    receivedAccessories: e.target.value
+                  }))
+                }
+                multiline
+                minRows={3}
+                placeholder='Cables, sensores, fuente, batería, adaptadores u otros accesorios disponibles durante el servicio'
+              />
+            </Grid>
+
             {/* Capacity Warning Alert */}
             {editData.assignedTechnician &&
               (() => {
@@ -1614,6 +1864,17 @@ const MaintenanceDashboard: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
+          {selectedTicket?.status === MaintenanceStatus.COMPLETED && (
+            <Button
+              onClick={() => handleOpenTechnicalReport(selectedTicket)}
+              variant='outlined'
+              startIcon={<Science />}
+            >
+              {technicalReport?.updatedAt
+                ? `Reporte técnico ${technicalReportCompletion}%`
+                : 'Reporte técnico'}
+            </Button>
+          )}
           <Button
             onClick={handleSaveEdit}
             variant='contained'
@@ -1624,8 +1885,20 @@ const MaintenanceDashboard: React.FC = () => {
         </DialogActions>
       </Dialog>
 
+      <MaintenanceTechnicalReportDialog
+        open={technicalReportDialogOpen}
+        onClose={() => setTechnicalReportDialogOpen(false)}
+        report={technicalReport}
+        equipmentType={selectedTicket?.equipmentType}
+        loading={technicalReportLoading}
+        saving={upsertTechnicalReportMutation.isLoading}
+        generatingPdf={generateTechnicalReportMutation.isLoading}
+        onSave={handleSaveTechnicalReport}
+        onGeneratePdf={handleGenerateTechnicalReport}
+      />
+
       {/* Completion Costs Dialog */}
-        <CompletionCostsDialog
+      <CompletionCostsDialog
         open={costsDialogOpen}
         onClose={() => setCostsDialogOpen(false)}
         onComplete={handleCompleteWithCosts}
@@ -1633,18 +1906,20 @@ const MaintenanceDashboard: React.FC = () => {
         storedTechnicianSignature={
           selectedTicket?.technicianSignatureData ||
           (isTechnician
-            ? currentTechnician?.signatureData || selectedTicket?.assignedTechnician?.signatureData || null
+            ? currentTechnician?.signatureData ||
+              selectedTicket?.assignedTechnician?.signatureData ||
+              null
             : selectedTicket?.assignedTechnician?.signatureData || null)
         }
-          canCaptureTechnicianSignature={
-            !(
-              selectedTicket?.technicianSignatureData ||
-              currentTechnician?.signatureData ||
-              selectedTicket?.assignedTechnician?.signatureData
-            )
-          }
-          signaturesEnabled={maintenanceSignaturesEnabled}
-          loading={
+        canCaptureTechnicianSignature={
+          !(
+            selectedTicket?.technicianSignatureData ||
+            currentTechnician?.signatureData ||
+            selectedTicket?.assignedTechnician?.signatureData
+          )
+        }
+        signaturesEnabled={maintenanceSignaturesEnabled}
+        loading={
           updateTicketMutation.isLoading ||
           uploadFilesMutation.isLoading ||
           updateTechnicianMutation.isLoading

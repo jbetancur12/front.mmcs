@@ -1,7 +1,9 @@
 export interface TVMetrics {
   totalTickets: number
   pendingTickets: number
+  assignedTickets: number
   inProgressTickets: number
+  pendingTechnicalReport: number
   completedTickets: number
   urgentTickets: number
   overdueTickets: number
@@ -25,6 +27,7 @@ export interface ConnectionStatus {
   lastUpdate: Date
   latency?: number
   retryCount?: number
+  usingPollingFallback?: boolean
 }
 
 export interface SmartPagination {
@@ -92,6 +95,9 @@ export interface RegularTicketsGridProps {
   gridCalculation: any
   colors: ModernColors
   getElapsedTime: (createdAt: string) => string
+  displayColumns?: number
+  centerSparsePage?: boolean
+  sparseCardHeight?: number
 }
 
 export interface PaginationProgressProps {

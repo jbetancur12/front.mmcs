@@ -75,6 +75,7 @@ import {
   TrendingUp,
   Download,
   Draw,
+  Science,
   // Assessment,
   Lock,
   CheckCircle
@@ -92,6 +93,9 @@ import {
   useTechnicianByEmail,
   useMaintenanceTimeline,
   useGenerateServiceOrder,
+  useGenerateTechnicalReport,
+  useMaintenanceTechnicalReport,
+  useUpsertMaintenanceTechnicalReport,
   useGenerateStatusReport,
   useGenerateServiceCertificate,
   useGenerateServiceInvoice
@@ -101,7 +105,8 @@ import {
   MaintenanceStatus,
   MaintenancePriority,
   MaintenanceUpdateRequest,
-  MaintenanceFile
+  MaintenanceFile,
+  MaintenanceTechnicalReportRequest
 } from '../../types/maintenance'
 import MaintenanceStatusBadge from '../../Components/Maintenance/MaintenanceStatusBadge'
 import MaintenancePriorityBadge from '../../Components/Maintenance/MaintenancePriorityBadge'
@@ -111,6 +116,7 @@ import MaintenanceTimeline from '../../Components/Maintenance/MaintenanceTimelin
 import MaintenanceErrorBoundary from '../../Components/Maintenance/MaintenanceErrorBoundary'
 import CompletionCostsDialog from '../../Components/Maintenance/CompletionCostsDialog'
 import MaintenanceSignaturesDialog from '../../Components/Maintenance/MaintenanceSignaturesDialog'
+import MaintenanceTechnicalReportDialog from '../../Components/Maintenance/MaintenanceTechnicalReportDialog'
 import { maintenanceSignaturesEnabled } from '../../features/maintenanceFlags'
 import type {
   CompletionPhotoInput,
@@ -154,7 +160,9 @@ const MaintenanceTicketDetails: React.FC = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewError, setPreviewError] = useState<string | null>(null)
-  const [filePreviewCache, setFilePreviewCache] = useState<Record<string, string>>({})
+  const [filePreviewCache, setFilePreviewCache] = useState<
+    Record<string, string>
+  >({})
   const filePreviewCacheRef = useRef<Record<string, string>>({})
   // New state for enhanced functionality
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -176,6 +184,8 @@ const MaintenanceTicketDetails: React.FC = () => {
   const [costsDialogOpen, setCostsDialogOpen] = useState(false)
   const [signaturesDialogOpen, setSignaturesDialogOpen] = useState(false)
   const [briefCostsDialogOpen, setBriefCostsDialogOpen] = useState(false)
+  const [technicalReportDialogOpen, setTechnicalReportDialogOpen] =
+    useState(false)
   const [realTimeUpdatesEnabled, setRealTimeUpdatesEnabled] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [editErrors, setEditErrors] = useState<Record<string, string>>({})
@@ -209,10 +219,17 @@ const MaintenanceTicketDetails: React.FC = () => {
     (ticket?.assignedTechnicianId !== undefined &&
       currentTechnician?.id !== undefined &&
       String(ticket.assignedTechnicianId) === String(currentTechnician.id))
-  const hasCustomerSignature = Boolean(ticket?.customerSignatureData)
-  const hasTechnicianSignature = Boolean(
-    ticket?.technicianSignatureData || ticket?.assignedTechnician?.signatureData
-  )
+  const hasCustomerSignature = maintenanceSignaturesEnabled
+    ? Boolean(ticket?.customerSignatureData)
+    : false
+  const hasTechnicianSignature = maintenanceSignaturesEnabled
+    ? Boolean(
+        ticket?.technicianSignatureData ||
+          ticket?.assignedTechnician?.signatureData
+      )
+    : false
+  const isCustomerApprovalLocked =
+    maintenanceSignaturesEnabled && hasCustomerSignature
   const signaturesMissing =
     maintenanceSignaturesEnabled &&
     ticket?.status === MaintenanceStatus.COMPLETED &&
@@ -236,7 +253,13 @@ const MaintenanceTicketDetails: React.FC = () => {
     isLoading: timelineLoading,
     refetch: refetchTimeline
   } = useMaintenanceTimeline(ticketId || '')
+  const {
+    data: technicalReport,
+    isLoading: technicalReportLoading,
+    refetch: refetchTechnicalReport
+  } = useMaintenanceTechnicalReport(ticketId || '')
   const updateTicketMutation = useUpdateMaintenanceTicket()
+  const upsertTechnicalReportMutation = useUpsertMaintenanceTechnicalReport()
   const addCommentMutation = useAddMaintenanceComment()
   const updateCommentMutation = useUpdateMaintenanceComment()
   const deleteCommentMutation = useDeleteMaintenanceComment()
@@ -246,6 +269,7 @@ const MaintenanceTicketDetails: React.FC = () => {
 
   // PDF generation mutations
   const generateServiceOrderMutation = useGenerateServiceOrder()
+  const generateTechnicalReportMutation = useGenerateTechnicalReport()
   const generateStatusReportMutation = useGenerateStatusReport()
   const generateServiceCertificateMutation = useGenerateServiceCertificate()
   const generateServiceInvoiceMutation = useGenerateServiceInvoice()
@@ -281,17 +305,30 @@ const MaintenanceTicketDetails: React.FC = () => {
         setEditData({
           status: ticket.status,
           priority: ticket.priority,
-          workPerformed: ticket.workPerformed || ''
+          equipmentType: ticket.equipmentType,
+          equipmentBrand: ticket.equipmentBrand,
+          equipmentModel: ticket.equipmentModel,
+          equipmentSerial: ticket.equipmentSerial,
+          location: ticket.location,
+          workPerformed: ticket.workPerformed || '',
+          intakePhysicalCondition: ticket.intakePhysicalCondition || '',
+          receivedAccessories: ticket.receivedAccessories || ''
         })
       } else {
         setEditData({
           status: ticket.status,
           assignedTechnician: ticket.assignedTechnicianId || '',
           scheduledDate: ticket.scheduledDate || '',
+          equipmentType: ticket.equipmentType,
+          equipmentBrand: ticket.equipmentBrand,
+          equipmentModel: ticket.equipmentModel,
+          equipmentSerial: ticket.equipmentSerial,
           priority: ticket.priority,
           estimatedCost: ticket.estimatedCost,
           actualCost: ticket.actualCost,
-          location: ticket.location
+          location: ticket.location,
+          intakePhysicalCondition: ticket.intakePhysicalCondition || '',
+          receivedAccessories: ticket.receivedAccessories || ''
         })
       }
     }
@@ -324,6 +361,25 @@ const MaintenanceTicketDetails: React.FC = () => {
       />
     )
   }, [ticket?.isInvoiced])
+
+  const technicalReportCompletion = useMemo(() => {
+    if (!technicalReport) return 0
+
+    const checkpoints = [
+      technicalReport.finalDiagnosis,
+      technicalReport.rootCause,
+      technicalReport.activities?.length,
+      technicalReport.parts?.length,
+      technicalReport.verificationProtocolType,
+      technicalReport.verificationTests?.length,
+      technicalReport.recommendations,
+      technicalReport.scopeClause,
+      technicalReport.responsibilityClause
+    ]
+
+    const completed = checkpoints.filter(Boolean).length
+    return Math.round((completed / checkpoints.length) * 100)
+  }, [technicalReport])
 
   // Helper functions
   const formatDate = (dateString: string | undefined) => {
@@ -373,6 +429,13 @@ const MaintenanceTicketDetails: React.FC = () => {
       showToast('Solo puedes editar tickets asignados a tu usuario', 'warning')
       return
     }
+    if (isCustomerApprovalLocked) {
+      showToast(
+        'Este ticket ya fue firmado por el cliente y su contenido técnico quedó bloqueado',
+        'warning'
+      )
+      return
+    }
     setEditMode(true)
     setEditErrors({})
     setIsEditValid(true)
@@ -382,20 +445,33 @@ const MaintenanceTicketDetails: React.FC = () => {
     setEditMode(false)
     if (ticket) {
       if (isTechnician) {
-        setEditData({
-          status: ticket.status,
-          priority: ticket.priority,
-          workPerformed: ticket.workPerformed || ''
+      setEditData({
+        status: ticket.status,
+        priority: ticket.priority,
+        equipmentType: ticket.equipmentType,
+          equipmentBrand: ticket.equipmentBrand,
+          equipmentModel: ticket.equipmentModel,
+          equipmentSerial: ticket.equipmentSerial,
+          location: ticket.location,
+          workPerformed: ticket.workPerformed || '',
+          intakePhysicalCondition: ticket.intakePhysicalCondition || '',
+          receivedAccessories: ticket.receivedAccessories || ''
         })
       } else {
-        setEditData({
-          status: ticket.status,
-          assignedTechnician: ticket.assignedTechnicianId || '',
-          scheduledDate: ticket.scheduledDate || '',
+      setEditData({
+        status: ticket.status,
+        assignedTechnician: ticket.assignedTechnicianId || '',
+        scheduledDate: ticket.scheduledDate || '',
+          equipmentType: ticket.equipmentType,
+          equipmentBrand: ticket.equipmentBrand,
+          equipmentModel: ticket.equipmentModel,
+          equipmentSerial: ticket.equipmentSerial,
           priority: ticket.priority,
           estimatedCost: ticket.estimatedCost,
           actualCost: ticket.actualCost,
-          location: ticket.location
+          location: ticket.location,
+          intakePhysicalCondition: ticket.intakePhysicalCondition || '',
+          receivedAccessories: ticket.receivedAccessories || ''
         })
       }
     }
@@ -417,6 +493,24 @@ const MaintenanceTicketDetails: React.FC = () => {
       editData.location.trim().length < 5
     ) {
       errors.location = 'La ubicación debe tener al menos 5 caracteres'
+    }
+
+    if (
+      editData.intakePhysicalCondition &&
+      editData.intakePhysicalCondition.trim().length > 0 &&
+      editData.intakePhysicalCondition.trim().length < 3
+    ) {
+      errors.intakePhysicalCondition =
+        'Describe un poco mejor cómo se recibió el equipo'
+    }
+
+    if (
+      editData.receivedAccessories &&
+      editData.receivedAccessories.trim().length > 0 &&
+      editData.receivedAccessories.trim().length < 3
+    ) {
+      errors.receivedAccessories =
+        'Indica mejor los accesorios recibidos o deja el campo vacío'
     }
 
     if (editData.scheduledDate) {
@@ -456,7 +550,9 @@ const MaintenanceTicketDetails: React.FC = () => {
       const payload = isTechnician
         ? {
             status: editData.status,
-            workPerformed: editData.workPerformed
+            workPerformed: editData.workPerformed,
+            intakePhysicalCondition: editData.intakePhysicalCondition,
+            receivedAccessories: editData.receivedAccessories
           }
         : editData
 
@@ -670,6 +766,35 @@ const MaintenanceTicketDetails: React.FC = () => {
     }
   }
 
+  const handleRevokeCustomerSignature = async () => {
+    if (!ticket || !canManageTechnicians) return
+
+    try {
+      await updateTicketMutation.mutateAsync({
+        id: ticket.id,
+        data: {
+          customerSignerName: null,
+          customerSignatureData: null
+        }
+      })
+
+      await refetchTicket()
+      await refetchTimeline()
+      await refetchTechnicalReport()
+      showToast(
+        'La firma del cliente fue revocada. El contenido técnico vuelve a estar editable.',
+        'success'
+      )
+    } catch (error: any) {
+      console.error('Error revoking customer signature:', error)
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Error al revocar la firma del cliente'
+      showToast(errorMessage, 'error')
+    }
+  }
+
   const handleUpdateComment = async (
     commentId: string,
     content: string,
@@ -774,9 +899,12 @@ const MaintenanceTicketDetails: React.FC = () => {
       return filePreviewCache[file.id]
     }
 
-    const response = await axiosPrivate.get(`/maintenance/files/${file.id}/download`, {
-      responseType: 'blob'
-    })
+    const response = await axiosPrivate.get(
+      `/maintenance/files/${file.id}/download`,
+      {
+        responseType: 'blob'
+      }
+    )
 
     const url = window.URL.createObjectURL(response.data)
     setFilePreviewCache((prev) => ({ ...prev, [file.id]: url }))
@@ -838,6 +966,52 @@ const MaintenanceTicketDetails: React.FC = () => {
         showToast('Error al generar orden de servicio', 'error')
       }
     })
+  }
+
+  const handleGenerateTechnicalReport = () => {
+    if (ticket?.status !== MaintenanceStatus.COMPLETED) {
+      showToast(
+        'El reporte técnico solo está disponible para tickets completados',
+        'warning'
+      )
+      return
+    }
+
+    if (!ticketId) return
+    generateTechnicalReportMutation.mutate(ticketId, {
+      onSuccess: () => {
+        showToast('Reporte técnico generado exitosamente', 'success')
+        setPdfMenuAnchor(null)
+      },
+      onError: (error) => {
+        console.error('Error generating technical report:', error)
+        showToast('Error al generar reporte técnico', 'error')
+      }
+    })
+  }
+
+  const handleSaveTechnicalReport = async (
+    reportData: MaintenanceTechnicalReportRequest
+  ) => {
+    if (!ticketId) return
+
+    try {
+      await upsertTechnicalReportMutation.mutateAsync({
+        ticketId,
+        data: reportData
+      })
+      await refetchTechnicalReport()
+      await refetchTicket()
+      showToast('Reporte técnico guardado exitosamente', 'success')
+    } catch (error: any) {
+      console.error('Error saving technical report:', error)
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Error al guardar el reporte técnico'
+      showToast(errorMessage, 'error')
+      throw error
+    }
   }
 
   // const handleGenerateStatusReport = () => {
@@ -1037,13 +1211,13 @@ const MaintenanceTicketDetails: React.FC = () => {
         {/* Header with breadcrumbs */}
         <Box
           mb={{ xs: 2, sm: 3 }}
-        sx={{
-          backgroundColor: '#ffffff',
-          borderRadius: '14px',
-          p: { xs: 2, sm: 3 },
-          boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
-          border: '1px solid #e5e7eb'
-        }}
+          sx={{
+            backgroundColor: '#ffffff',
+            borderRadius: '14px',
+            p: { xs: 2, sm: 3 },
+            boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
+            border: '1px solid #e5e7eb'
+          }}
         >
           <Breadcrumbs
             aria-label='breadcrumb'
@@ -1292,6 +1466,33 @@ const MaintenanceTicketDetails: React.FC = () => {
                       secondary='Documento de trabajo'
                     />
                   </ListItemButton>
+                  {ticket.status === MaintenanceStatus.COMPLETED && (
+                    <ListItemButton
+                      onClick={handleGenerateTechnicalReport}
+                      role='menuitem'
+                      aria-label='Generar reporte técnico'
+                      sx={{
+                        borderRadius: '8px',
+                        mx: 1,
+                        mb: 0.5,
+                        '&:hover': {
+                          backgroundColor: '#f8fafc'
+                        }
+                      }}
+                    >
+                      <ListItemIcon>
+                        <Science
+                          fontSize='small'
+                          aria-hidden='true'
+                          sx={{ color: '#2563eb' }}
+                        />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary='Reporte Técnico'
+                        secondary='Documento técnico de cierre'
+                      />
+                    </ListItemButton>
+                  )}
                   {/* 
                   <ListItemButton
                     onClick={handleGenerateStatusReport}
@@ -1480,7 +1681,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   variant='contained'
                   startIcon={!isMobile && <Edit />}
                   onClick={handleEdit}
-                  disabled={!canEditTicket}
+                  disabled={!canEditTicket || isCustomerApprovalLocked}
                   size={isMobile ? 'small' : 'medium'}
                   sx={{
                     minHeight: 48,
@@ -1513,7 +1714,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               sx={{
                 ...surfaceSx,
                 p: { xs: 2, sm: 3 },
-                mb: { xs: 2, sm: 3 },
+                mb: { xs: 2, sm: 3 }
               }}
             >
               <Box
@@ -1699,7 +1900,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               sx={{
                 ...surfaceSx,
                 p: 3,
-                mb: 3,
+                mb: 3
               }}
             >
               <Box
@@ -1836,12 +2037,125 @@ const MaintenanceTicketDetails: React.FC = () => {
               </Grid>
             </Paper>
 
+            <Paper
+              sx={{
+                ...surfaceSx,
+                p: 3,
+                mb: 3
+              }}
+              role='region'
+              aria-label='Condición inicial del equipo'
+            >
+              <Box display='flex' alignItems='center' gap={1} mb={2}>
+                <Box
+                  sx={{
+                    backgroundColor: '#fff7ed',
+                    borderRadius: '8px',
+                    p: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <Assignment
+                    sx={{ color: '#c2410c', fontSize: 20 }}
+                    aria-hidden='true'
+                  />
+                </Box>
+                <Typography
+                  variant='h6'
+                  sx={{
+                    fontWeight: 600,
+                    color: '#0f172a'
+                  }}
+                >
+                  Condición Inicial del Equipo
+                </Typography>
+              </Box>
+
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    gutterBottom
+                  >
+                    Condición inicial del equipo
+                  </Typography>
+                  {editMode ? (
+                    <TextField
+                      fullWidth
+                      label='Condición inicial del equipo'
+                      value={editData.intakePhysicalCondition || ''}
+                      onChange={(e) =>
+                        setEditData((prev) => ({
+                          ...prev,
+                          intakePhysicalCondition: e.target.value
+                        }))
+                      }
+                      size='small'
+                      multiline
+                      minRows={4}
+                      placeholder='Rayones, golpes, faltantes o condición general al iniciar la intervención'
+                      error={!!editErrors.intakePhysicalCondition}
+                      helperText={
+                        editErrors.intakePhysicalCondition ||
+                        'Opcional, pero muy útil para la orden de servicio'
+                      }
+                    />
+                  ) : (
+                    <Typography variant='body1' sx={{ whiteSpace: 'pre-wrap' }}>
+                      {ticket.intakePhysicalCondition ||
+                        'Pendiente de registrar al inicio del servicio'}
+                    </Typography>
+                  )}
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    gutterBottom
+                  >
+                    Accesorios disponibles
+                  </Typography>
+                  {editMode ? (
+                    <TextField
+                      fullWidth
+                      label='Accesorios disponibles'
+                      value={editData.receivedAccessories || ''}
+                      onChange={(e) =>
+                        setEditData((prev) => ({
+                          ...prev,
+                          receivedAccessories: e.target.value
+                        }))
+                      }
+                      size='small'
+                      multiline
+                      minRows={4}
+                      placeholder='Cables, sensores, adaptadores, batería, mangueras u otros accesorios disponibles durante el servicio'
+                      error={!!editErrors.receivedAccessories}
+                      helperText={
+                        editErrors.receivedAccessories ||
+                        'Opcional, pero recomendado para trazabilidad'
+                      }
+                    />
+                  ) : (
+                    <Typography variant='body1' sx={{ whiteSpace: 'pre-wrap' }}>
+                      {ticket.receivedAccessories ||
+                        'Pendiente de registrar al inicio del servicio'}
+                    </Typography>
+                  )}
+                </Grid>
+              </Grid>
+            </Paper>
+
             {/* Equipment Information */}
             <Paper
               sx={{
                 ...surfaceSx,
                 p: 3,
-                mb: 3,
+                mb: 3
               }}
               role='region'
               aria-label='Información del equipo'
@@ -1883,16 +2197,31 @@ const MaintenanceTicketDetails: React.FC = () => {
                     >
                       Tipo de Equipo
                     </Typography>
-                    <Chip
-                      label={ticket.equipmentType}
-                      sx={{
-                        fontWeight: 'medium',
-                        backgroundColor: '#eef6ee',
-                        color: '#2f7d32',
-                        borderRadius: '8px',
-                        border: '1px solid #dbeedb'
-                      }}
-                    />
+                    {editMode && !isTechnician ? (
+                      <TextField
+                        fullWidth
+                        size='small'
+                        label='Tipo de equipo'
+                        value={editData.equipmentType || ''}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            equipmentType: e.target.value
+                          }))
+                        }
+                      />
+                    ) : (
+                      <Chip
+                        label={ticket.equipmentType}
+                        sx={{
+                          fontWeight: 'medium',
+                          backgroundColor: '#eef6ee',
+                          color: '#2f7d32',
+                          borderRadius: '8px',
+                          border: '1px solid #dbeedb'
+                        }}
+                      />
+                    )}
                   </Box>
                 </Grid>
 
@@ -1905,9 +2234,24 @@ const MaintenanceTicketDetails: React.FC = () => {
                     >
                       Marca
                     </Typography>
-                    <Typography variant='body1' fontWeight='medium'>
-                      {ticket.equipmentBrand}
-                    </Typography>
+                    {editMode && !isTechnician ? (
+                      <TextField
+                        fullWidth
+                        size='small'
+                        label='Marca'
+                        value={editData.equipmentBrand || ''}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            equipmentBrand: e.target.value
+                          }))
+                        }
+                      />
+                    ) : (
+                      <Typography variant='body1' fontWeight='medium'>
+                        {ticket.equipmentBrand}
+                      </Typography>
+                    )}
                   </Box>
                 </Grid>
 
@@ -1920,9 +2264,24 @@ const MaintenanceTicketDetails: React.FC = () => {
                     >
                       Modelo
                     </Typography>
-                    <Typography variant='body1'>
-                      {ticket.equipmentModel}
-                    </Typography>
+                    {editMode && !isTechnician ? (
+                      <TextField
+                        fullWidth
+                        size='small'
+                        label='Modelo'
+                        value={editData.equipmentModel || ''}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            equipmentModel: e.target.value
+                          }))
+                        }
+                      />
+                    ) : (
+                      <Typography variant='body1'>
+                        {ticket.equipmentModel}
+                      </Typography>
+                    )}
                   </Box>
                 </Grid>
 
@@ -1935,9 +2294,24 @@ const MaintenanceTicketDetails: React.FC = () => {
                     >
                       Número de Serie
                     </Typography>
-                    <Typography variant='body1' fontWeight='medium'>
-                      {ticket.equipmentSerial}
-                    </Typography>
+                    {editMode && !isTechnician ? (
+                      <TextField
+                        fullWidth
+                        size='small'
+                        label='Número de serie'
+                        value={editData.equipmentSerial || ''}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            equipmentSerial: e.target.value
+                          }))
+                        }
+                      />
+                    ) : (
+                      <Typography variant='body1' fontWeight='medium'>
+                        {ticket.equipmentSerial}
+                      </Typography>
+                    )}
                   </Box>
                 </Grid>
               </Grid>
@@ -1948,7 +2322,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               sx={{
                 ...surfaceSx,
                 p: 3,
-                mb: 3,
+                mb: 3
               }}
               role='region'
               aria-label='Descripción del problema'
@@ -2002,7 +2376,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               sx={{
                 ...surfaceSx,
                 p: 3,
-                mb: 3,
+                mb: 3
               }}
               role='region'
               aria-label='Historial del ticket'
@@ -2013,7 +2387,10 @@ const MaintenanceTicketDetails: React.FC = () => {
                 alignItems='center'
                 mb={2}
               >
-                <Typography variant='h6' sx={{ color: '#0f172a', fontWeight: 600 }}>
+                <Typography
+                  variant='h6'
+                  sx={{ color: '#0f172a', fontWeight: 600 }}
+                >
                   Historial del Ticket
                 </Typography>
                 <IconButton
@@ -2054,7 +2431,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               sx={{
                 ...surfaceSx,
                 p: 3,
-                mb: 3,
+                mb: 3
               }}
               role='region'
               aria-label='Sección de comentarios'
@@ -2065,7 +2442,10 @@ const MaintenanceTicketDetails: React.FC = () => {
                 alignItems='center'
                 mb={2}
               >
-                <Typography variant='h6' sx={{ color: '#0f172a', fontWeight: 600 }}>
+                <Typography
+                  variant='h6'
+                  sx={{ color: '#0f172a', fontWeight: 600 }}
+                >
                   Comentarios
                 </Typography>
                 <IconButton
@@ -2099,7 +2479,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               sx={{
                 ...surfaceSx,
                 p: 3,
-                mb: 3,
+                mb: 3
               }}
               role='region'
               aria-label='Archivos adjuntos'
@@ -2110,7 +2490,10 @@ const MaintenanceTicketDetails: React.FC = () => {
                 alignItems='center'
                 mb={2}
               >
-                <Typography variant='h6' sx={{ color: '#0f172a', fontWeight: 600 }}>
+                <Typography
+                  variant='h6'
+                  sx={{ color: '#0f172a', fontWeight: 600 }}
+                >
                   Archivos Adjuntos
                 </Typography>
                 <IconButton
@@ -2187,93 +2570,148 @@ const MaintenanceTicketDetails: React.FC = () => {
 
               {editMode ? (
                 <>
-                  <FormControl fullWidth>
-                    <InputLabel>Técnico</InputLabel>
-                    <Select
-                      value={editData.assignedTechnician || ''}
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          assignedTechnician: e.target.value
-                        }))
-                      }
-                      label='Técnico'
-                      disabled={ticket.status === MaintenanceStatus.COMPLETED}
+                  {isTechnician ? (
+                    <Box
+                      sx={{
+                        border: '1px solid #dbe3ef',
+                        borderRadius: 2,
+                        px: 2,
+                        py: 1.5,
+                        backgroundColor: '#f8fafc'
+                      }}
                     >
-                      <MenuItem value=''>Sin asignar</MenuItem>
-                      {technicians
-                        ?.filter((t) => t.status === 'active')
-                        .sort((a, b) => {
-                          const aCapacity = a.maxWorkload - a.workload
-                          const bCapacity = b.maxWorkload - b.workload
-                          return bCapacity - aCapacity
-                        })
-                        .map((technician) => {
-                          const utilizationPct =
-                            (technician.workload / technician.maxWorkload) * 100
-                          const isFull =
-                            technician.workload >= technician.maxWorkload
-                          const isNearFull = utilizationPct >= 80
+                      <Typography
+                        variant='caption'
+                        color='text.secondary'
+                        sx={{ display: 'block', mb: 0.5 }}
+                      >
+                        Técnico
+                      </Typography>
+                      <Typography variant='body1' fontWeight={600}>
+                        {ticket.assignedTechnician?.name || 'No asignado'}
+                      </Typography>
+                      <Typography variant='body2' color='text.secondary'>
+                        La asignación solo puede cambiarla coordinación o
+                        administración.
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <FormControl fullWidth>
+                      <InputLabel>Técnico</InputLabel>
+                      <Select
+                        value={editData.assignedTechnician || ''}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            assignedTechnician: e.target.value,
+                            status:
+                              prev.status === MaintenanceStatus.PENDING &&
+                              Boolean(e.target.value)
+                                ? MaintenanceStatus.ASSIGNED
+                                : prev.status
+                          }))
+                        }
+                        label='Técnico'
+                        disabled={ticket.status === MaintenanceStatus.COMPLETED}
+                      >
+                        <MenuItem value=''>Sin asignar</MenuItem>
+                        {technicians
+                          ?.filter((t) => t.status === 'active')
+                          .sort((a, b) => {
+                            const aCapacity = a.maxWorkload - a.workload
+                            const bCapacity = b.maxWorkload - b.workload
+                            return bCapacity - aCapacity
+                          })
+                          .map((technician) => {
+                            const utilizationPct =
+                              (technician.workload / technician.maxWorkload) *
+                              100
+                            const isFull =
+                              technician.workload >= technician.maxWorkload
+                            const isNearFull = utilizationPct >= 80
 
-                          return (
-                            <MenuItem
-                              key={technician.id}
-                              value={technician.id}
-                              disabled={isFull}
-                            >
-                              <Box
-                                display='flex'
-                                flexDirection='column'
-                                width='100%'
+                            return (
+                              <MenuItem
+                                key={technician.id}
+                                value={technician.id}
+                                disabled={isFull}
                               >
                                 <Box
                                   display='flex'
-                                  alignItems='center'
-                                  gap={1}
+                                  flexDirection='column'
                                   width='100%'
                                 >
-                                  <Avatar
-                                    sx={{
-                                      width: 32,
-                                      height: 32,
-                                      fontSize: '0.875rem',
-                                      bgcolor: isFull
-                                        ? 'error.main'
-                                        : isNearFull
-                                          ? 'warning.main'
-                                          : 'success.main'
-                                    }}
-                                  >
-                                    {technician.name
-                                      .split(' ')
-                                      .map((n) => n[0])
-                                      .join('')
-                                      .toUpperCase()}
-                                  </Avatar>
-
-                                  <Box flex={1}>
-                                    <Typography
-                                      variant='body2'
-                                      fontWeight='medium'
-                                    >
-                                      {technician.name}
-                                    </Typography>
-                                    <Typography
-                                      variant='caption'
-                                      color='text.secondary'
-                                    >
-                                      {technician.specialization || 'General'}
-                                    </Typography>
-                                  </Box>
-
                                   <Box
                                     display='flex'
-                                    gap={0.5}
                                     alignItems='center'
+                                    gap={1}
+                                    width='100%'
                                   >
-                                    <Chip
-                                      size='small'
-                                      label={`${technician.workload}/${technician.maxWorkload}`}
+                                    <Avatar
+                                      sx={{
+                                        width: 32,
+                                        height: 32,
+                                        fontSize: '0.875rem',
+                                        bgcolor: isFull
+                                          ? 'error.main'
+                                          : isNearFull
+                                            ? 'warning.main'
+                                            : 'success.main'
+                                      }}
+                                    >
+                                      {technician.name
+                                        .split(' ')
+                                        .map((n) => n[0])
+                                        .join('')
+                                        .toUpperCase()}
+                                    </Avatar>
+
+                                    <Box flex={1}>
+                                      <Typography
+                                        variant='body2'
+                                        fontWeight='medium'
+                                      >
+                                        {technician.name}
+                                      </Typography>
+                                      <Typography
+                                        variant='caption'
+                                        color='text.secondary'
+                                      >
+                                        {technician.specialization || 'General'}
+                                      </Typography>
+                                    </Box>
+
+                                    <Box
+                                      display='flex'
+                                      gap={0.5}
+                                      alignItems='center'
+                                    >
+                                      <Chip
+                                        size='small'
+                                        label={`${technician.workload}/${technician.maxWorkload}`}
+                                        color={
+                                          isFull
+                                            ? 'error'
+                                            : isNearFull
+                                              ? 'warning'
+                                              : 'success'
+                                        }
+                                        variant='outlined'
+                                      />
+                                      {isFull && (
+                                        <Chip
+                                          size='small'
+                                          label='Completo'
+                                          color='error'
+                                        />
+                                      )}
+                                    </Box>
+                                  </Box>
+
+                                  <Box width='100%' mt={1}>
+                                    <LinearProgress
+                                      variant='determinate'
+                                      value={utilizationPct}
                                       color={
                                         isFull
                                           ? 'error'
@@ -2281,38 +2719,16 @@ const MaintenanceTicketDetails: React.FC = () => {
                                             ? 'warning'
                                             : 'success'
                                       }
-                                      variant='outlined'
+                                      sx={{ height: 4, borderRadius: 2 }}
                                     />
-                                    {isFull && (
-                                      <Chip
-                                        size='small'
-                                        label='Completo'
-                                        color='error'
-                                      />
-                                    )}
                                   </Box>
                                 </Box>
-
-                                <Box width='100%' mt={1}>
-                                  <LinearProgress
-                                    variant='determinate'
-                                    value={utilizationPct}
-                                    color={
-                                      isFull
-                                        ? 'error'
-                                        : isNearFull
-                                          ? 'warning'
-                                          : 'success'
-                                    }
-                                    sx={{ height: 4, borderRadius: 2 }}
-                                  />
-                                </Box>
-                              </Box>
-                            </MenuItem>
-                          )
-                        })}
-                    </Select>
-                  </FormControl>
+                              </MenuItem>
+                            )
+                          })}
+                      </Select>
+                    </FormControl>
+                  )}
 
                   {/* Capacity Warning Alert */}
                   {editData.assignedTechnician &&
@@ -2818,14 +3234,13 @@ const MaintenanceTicketDetails: React.FC = () => {
               </Paper>
             )}
 
-            {maintenanceSignaturesEnabled &&
-              ticket.status === MaintenanceStatus.COMPLETED && (
+            {ticket.status === MaintenanceStatus.COMPLETED && (
               <Paper
                 sx={{
                   ...surfaceSx,
                   p: 3,
                   mb: 3,
-                  borderColor: signaturesMissing ? '#fcd34d' : '#bbf7d0'
+                  borderColor: '#bfdbfe'
                 }}
               >
                 <Box
@@ -2838,64 +3253,207 @@ const MaintenanceTicketDetails: React.FC = () => {
                   <Box>
                     <Typography
                       variant='h6'
-                      sx={{
-                        fontWeight: 600,
-                        color: signaturesMissing ? '#d97706' : '#059669'
-                      }}
+                      sx={{ fontWeight: 600, color: '#0f172a' }}
                     >
-                      Firmas de conformidad
+                      Reporte técnico de mantenimiento
                     </Typography>
-                    <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
-                      {signaturesMissing
-                        ? 'Este ticket ya está completado, pero todavía le faltan firmas para que la orden quede cerrada visualmente.'
-                        : 'Las firmas ya están registradas y listas para aparecer en la orden de servicio PDF.'}
+                    <Typography
+                      variant='body2'
+                      color='text.secondary'
+                      sx={{ mt: 0.5 }}
+                    >
+                      Documento técnico completo para formalizar el cierre del
+                      servicio con diagnóstico, validación y recomendaciones.
                     </Typography>
-                    <Stack direction='row' spacing={1} sx={{ mt: 1.5 }} flexWrap='wrap'>
+                    <Stack
+                      direction='row'
+                      spacing={1}
+                      sx={{ mt: 1.5 }}
+                      flexWrap='wrap'
+                    >
                       <Chip
                         size='small'
-                        color={hasTechnicianSignature ? 'success' : 'warning'}
-                        label={
-                          hasTechnicianSignature
-                            ? 'Firma técnico OK'
-                            : 'Falta firma técnico'
-                        }
+                        color='primary'
+                        variant='outlined'
+                        label={`${technicalReportCompletion}% completo`}
                       />
-                      <Chip
-                        size='small'
-                        color={hasCustomerSignature ? 'success' : 'warning'}
-                        label={
-                          hasCustomerSignature
-                            ? 'Firma cliente OK'
-                            : 'Falta firma cliente'
-                        }
-                      />
+                      {technicalReport?.serviceFinalStatus && (
+                        <Chip
+                          size='small'
+                          color='success'
+                          label={technicalReport.serviceFinalStatus.replace(
+                            /_/g,
+                            ' '
+                          )}
+                        />
+                      )}
+                      {technicalReport?.verificationProtocolType && (
+                        <Chip
+                          size='small'
+                          variant='outlined'
+                          label={technicalReport.verificationProtocolType}
+                        />
+                      )}
                     </Stack>
-                    {(ticket.technicianSignedAt || ticket.customerSignedAt) && (
-                      <Stack spacing={0.5} sx={{ mt: 1.5 }}>
-                        {ticket.technicianSignedAt && (
-                          <Typography variant='caption' color='text.secondary'>
-                            Firma técnico: {formatDate(ticket.technicianSignedAt)}
-                          </Typography>
-                        )}
-                        {ticket.customerSignedAt && (
-                          <Typography variant='caption' color='text.secondary'>
-                            Firma cliente: {formatDate(ticket.customerSignedAt)}
-                          </Typography>
-                        )}
-                      </Stack>
+                    {isCustomerApprovalLocked && (
+                      <Alert severity='info' sx={{ mt: 1.5 }}>
+                        El cliente ya firmó la conformidad del servicio. El
+                        reporte técnico quedó bloqueado para proteger la
+                        trazabilidad documental.
+                      </Alert>
                     )}
                   </Box>
 
-                  <Button
-                    variant={signaturesMissing ? 'contained' : 'outlined'}
-                    startIcon={<Draw />}
-                    onClick={() => setSignaturesDialogOpen(true)}
-                  >
-                    {signaturesMissing ? 'Registrar firmas' : 'Actualizar firmas'}
-                  </Button>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                    <Button
+                      variant='outlined'
+                      startIcon={<Description />}
+                      onClick={() => {
+                        if (isCustomerApprovalLocked) {
+                          showToast(
+                            'El reporte técnico ya no puede editarse después de la firma del cliente',
+                            'warning'
+                          )
+                          return
+                        }
+                        setTechnicalReportDialogOpen(true)
+                      }}
+                      disabled={isCustomerApprovalLocked}
+                    >
+                      {technicalReport?.updatedAt
+                        ? 'Editar reporte'
+                        : 'Diligenciar reporte'}
+                    </Button>
+                    <Button
+                      variant='contained'
+                      startIcon={<PictureAsPdf />}
+                      onClick={handleGenerateTechnicalReport}
+                      disabled={generateTechnicalReportMutation.isLoading}
+                    >
+                      PDF técnico
+                    </Button>
+                  </Stack>
                 </Box>
               </Paper>
             )}
+
+            {maintenanceSignaturesEnabled &&
+              ticket.status === MaintenanceStatus.COMPLETED && (
+                <Paper
+                  sx={{
+                    ...surfaceSx,
+                    p: 3,
+                    mb: 3,
+                    borderColor: signaturesMissing ? '#fcd34d' : '#bbf7d0'
+                  }}
+                >
+                  <Box
+                    display='flex'
+                    justifyContent='space-between'
+                    alignItems={{ xs: 'flex-start', sm: 'center' }}
+                    flexDirection={{ xs: 'column', sm: 'row' }}
+                    gap={2}
+                  >
+                    <Box>
+                      <Typography
+                        variant='h6'
+                        sx={{
+                          fontWeight: 600,
+                          color: signaturesMissing ? '#d97706' : '#059669'
+                        }}
+                      >
+                        Firmas de conformidad
+                      </Typography>
+                      <Typography
+                        variant='body2'
+                        color='text.secondary'
+                        sx={{ mt: 0.5 }}
+                      >
+                        {signaturesMissing
+                          ? 'Este ticket ya está completado, pero todavía le faltan firmas para que la orden quede cerrada visualmente.'
+                          : 'Las firmas ya están registradas y listas para aparecer en la orden de servicio PDF.'}
+                      </Typography>
+                      <Stack
+                        direction='row'
+                        spacing={1}
+                        sx={{ mt: 1.5 }}
+                        flexWrap='wrap'
+                      >
+                        <Chip
+                          size='small'
+                          color={hasTechnicianSignature ? 'success' : 'warning'}
+                          label={
+                            hasTechnicianSignature
+                              ? 'Firma técnico OK'
+                              : 'Falta firma técnico'
+                          }
+                        />
+                        <Chip
+                          size='small'
+                          color={hasCustomerSignature ? 'success' : 'warning'}
+                          label={
+                            hasCustomerSignature
+                              ? 'Firma cliente OK'
+                              : 'Falta firma cliente'
+                          }
+                        />
+                      </Stack>
+                      {(ticket.technicianSignedAt ||
+                        ticket.customerSignedAt) && (
+                        <Stack spacing={0.5} sx={{ mt: 1.5 }}>
+                          {ticket.technicianSignedAt && (
+                            <Typography
+                              variant='caption'
+                              color='text.secondary'
+                            >
+                              Firma técnico:{' '}
+                              {formatDate(ticket.technicianSignedAt)}
+                            </Typography>
+                          )}
+                          {ticket.customerSignedAt && (
+                            <Typography
+                              variant='caption'
+                              color='text.secondary'
+                            >
+                              Firma cliente:{' '}
+                              {formatDate(ticket.customerSignedAt)}
+                            </Typography>
+                          )}
+                        </Stack>
+                      )}
+                    </Box>
+
+                    {!hasCustomerSignature && (
+                      <Button
+                        variant={signaturesMissing ? 'contained' : 'outlined'}
+                        startIcon={<Draw />}
+                        onClick={() => setSignaturesDialogOpen(true)}
+                      >
+                        {signaturesMissing
+                          ? 'Registrar firmas'
+                          : 'Actualizar firmas'}
+                      </Button>
+                    )}
+                    {canManageTechnicians && hasCustomerSignature && (
+                      <Button
+                        variant='text'
+                        color='warning'
+                        startIcon={<Lock />}
+                        onClick={() =>
+                          showConfirmDialog(
+                            'Revocar firma del cliente',
+                            'Esta acción quitará la firma del cliente y volverá a habilitar la edición del reporte técnico y del cierre del servicio. ¿Deseas continuar?',
+                            handleRevokeCustomerSignature,
+                            'warning'
+                          )
+                        }
+                      >
+                        Revocar firma cliente
+                      </Button>
+                    )}
+                  </Box>
+                </Paper>
+              )}
 
             {/* Customer Satisfaction */}
             {ticket.customerSatisfaction && (
@@ -2988,7 +3546,10 @@ const MaintenanceTicketDetails: React.FC = () => {
             <Paper sx={{ ...surfaceSx, p: 3 }}>
               <Box display='flex' alignItems='center' gap={1} mb={2}>
                 <TrendingUp sx={{ color: '#64748b' }} />
-                <Typography variant='h6' sx={{ color: '#0f172a', fontWeight: 600 }}>
+                <Typography
+                  variant='h6'
+                  sx={{ color: '#0f172a', fontWeight: 600 }}
+                >
                   Acciones Rápidas
                 </Typography>
               </Box>
@@ -3004,18 +3565,42 @@ const MaintenanceTicketDetails: React.FC = () => {
                 >
                   Orden de Servicio
                 </Button>
-                {maintenanceSignaturesEnabled &&
-                  ticket.status === MaintenanceStatus.COMPLETED && (
+                {ticket.status === MaintenanceStatus.COMPLETED && (
                   <Button
                     fullWidth
                     variant='outlined'
-                    startIcon={<Draw />}
-                    onClick={() => setSignaturesDialogOpen(true)}
+                    startIcon={<Science />}
+                    onClick={() => {
+                      if (isCustomerApprovalLocked) {
+                        showToast(
+                          'El reporte técnico ya no puede editarse después de la firma del cliente',
+                          'warning'
+                        )
+                        return
+                      }
+                      setTechnicalReportDialogOpen(true)
+                    }}
                     size='small'
+                    disabled={isCustomerApprovalLocked}
                   >
-                    {signaturesMissing ? 'Registrar firmas' : 'Actualizar firmas'}
+                    Reporte Técnico
                   </Button>
                 )}
+                {maintenanceSignaturesEnabled &&
+                  !hasCustomerSignature &&
+                  ticket.status === MaintenanceStatus.COMPLETED && (
+                    <Button
+                      fullWidth
+                      variant='outlined'
+                      startIcon={<Draw />}
+                      onClick={() => setSignaturesDialogOpen(true)}
+                      size='small'
+                    >
+                      {signaturesMissing
+                        ? 'Registrar firmas'
+                        : 'Actualizar firmas'}
+                    </Button>
+                  )}
                 {/* 
                 <Button
                   fullWidth
@@ -3096,7 +3681,9 @@ const MaintenanceTicketDetails: React.FC = () => {
           maxWidth='md'
           fullWidth
         >
-          <DialogTitle>{previewFile ? getFileDisplayName(previewFile) : 'Vista previa'}</DialogTitle>
+          <DialogTitle>
+            {previewFile ? getFileDisplayName(previewFile) : 'Vista previa'}
+          </DialogTitle>
           <DialogContent dividers>
             {previewLoading && (
               <Box
@@ -3172,7 +3759,8 @@ const MaintenanceTicketDetails: React.FC = () => {
               previewFile &&
               getFilePreviewType(previewFile) === 'other' && (
                 <Alert severity='info'>
-                  Este tipo de archivo no tiene vista previa inline. Puedes descargarlo si lo necesitas.
+                  Este tipo de archivo no tiene vista previa inline. Puedes
+                  descargarlo si lo necesitas.
                 </Alert>
               )}
           </DialogContent>
@@ -3276,8 +3864,12 @@ const MaintenanceTicketDetails: React.FC = () => {
                   null
                 : ticket?.assignedTechnician?.signatureData || null)
             }
-            currentTicketTechnicianSignature={ticket?.technicianSignatureData || null}
-            currentCustomerSignerName={ticket?.customerSignerName || ticket?.customerName || ''}
+            currentTicketTechnicianSignature={
+              ticket?.technicianSignatureData || null
+            }
+            currentCustomerSignerName={
+              ticket?.customerSignerName || ticket?.customerName || ''
+            }
             currentCustomerSignature={ticket?.customerSignatureData || null}
             canCaptureTechnicianSignature={
               !(
@@ -3287,7 +3879,8 @@ const MaintenanceTicketDetails: React.FC = () => {
               )
             }
             loading={
-              updateTicketMutation.isLoading || updateTechnicianMutation.isLoading
+              updateTicketMutation.isLoading ||
+              updateTechnicianMutation.isLoading
             }
           />
         )}
@@ -3299,6 +3892,18 @@ const MaintenanceTicketDetails: React.FC = () => {
           isProcessingInvoice={updateTicketMutation.isLoading}
           isInitiallyInvoiced={ticket.isInvoiced || false}
           onInvoice={handleInvoice}
+        />
+
+        <MaintenanceTechnicalReportDialog
+          open={technicalReportDialogOpen}
+          onClose={() => setTechnicalReportDialogOpen(false)}
+          report={technicalReport}
+          equipmentType={ticket?.equipmentType}
+          loading={technicalReportLoading}
+          saving={upsertTechnicalReportMutation.isLoading}
+          generatingPdf={generateTechnicalReportMutation.isLoading}
+          onSave={handleSaveTechnicalReport}
+          onGeneratePdf={handleGenerateTechnicalReport}
         />
 
         {/* Toast Notifications */}

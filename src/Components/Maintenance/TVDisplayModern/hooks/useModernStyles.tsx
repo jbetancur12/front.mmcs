@@ -33,8 +33,8 @@ export const useModernStyles = () => {
       }
     },
     metric: {
-      height: '100px', // Más compacto para evitar scroll
-      p: 2, // Padding reducido
+      height: '92px',
+      p: 1.5,
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center'
@@ -67,7 +67,7 @@ export const useModernStyles = () => {
       border: `2px solid ${modernColors.border}`,
       borderRadius: '12px',
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-      height: '160px', // Altura reducida para evitar scroll
+      height: '154px',
       '&:hover': {
         boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
         transform: 'translateY(-2px)'

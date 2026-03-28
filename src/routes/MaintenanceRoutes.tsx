@@ -15,6 +15,9 @@ const MaintenanceTicketDetails = lazy(
 const MaintenanceBilling = lazy(
   () => import('../Components/Maintenance/MaintenanceBilling')
 )
+const MaintenanceProtocols = lazy(
+  () => import('../pages/maintenance/MaintenanceProtocols')
+)
 
 /**
  * MaintenanceRoutes defines the private routes for the maintenance module
@@ -62,6 +65,10 @@ const MaintenanceRoutes = (role: string[]) => {
         <Route
           path='maintenance/technicians'
           element={<MaintenanceTechnicians />}
+        />
+        <Route
+          path='maintenance/protocols'
+          element={<MaintenanceProtocols />}
         />
       </Route>
 
