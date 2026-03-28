@@ -9,7 +9,6 @@ import {
   Button,
   Chip,
   LinearProgress,
-  Rating,
   List,
   ListItem,
   ListItemIcon,
@@ -42,7 +41,6 @@ import {
   MenuBook as BookIcon,
   VideoLibrary as VideoIcon,
   Quiz as QuizIcon,
-  People as PeopleIcon,
   Menu as MenuIcon,
   Close as CloseIcon,
   AccessTime as AccessTimeIcon,
@@ -98,8 +96,6 @@ interface Course {
   category: string
   instructor: string
   duration: string
-  rating: number
-  enrolledUsers: number
   audience: string
   thumbnail: string
   hasCertificate: boolean
@@ -154,10 +150,8 @@ const LmsCourseView: React.FC = () => {
       title: courseData.title,
       description: courseData.description,
       category: getCourseAudienceLabel(courseData.audience),
-      instructor: 'Instructor',  // TODO: Get from courseData.creator
+      instructor: courseData.creator?.nombre || 'Instructor',
       duration: courseData.estimated_duration_minutes ? `${courseData.estimated_duration_minutes} min` : 'N/A',
-      rating: 4.5,  // TODO: Get from courseData.stats
-      enrolledUsers: 0,  // TODO: Get from courseData.stats
       audience: normalizeCourseAudience(courseData.audience),
       thumbnail: '/placeholder.svg?height=400&width=600',
       hasCertificate: courseData.has_certificate || false,
@@ -860,19 +854,10 @@ const LmsCourseView: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                 <Chip label={course.category} color='primary' size="small" />
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <PeopleIcon fontSize='small' />
-                  <Typography variant='caption'>
-                    {course.enrolledUsers} estudiantes
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <AccessTimeIcon fontSize='small' />
                   <Typography variant='caption'>{course.duration}</Typography>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Rating value={course.rating} readOnly size='small' />
-                  <Typography variant='caption'>({course.rating})</Typography>
-                </Box>
+                <Chip label={`Instructor: ${course.instructor}`} size="small" variant="outlined" />
                 {course.hasCertificate && (
                   <Chip 
                     icon={<CertificateIcon />} 

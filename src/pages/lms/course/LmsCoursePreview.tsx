@@ -12,7 +12,6 @@ import {
   Grid,
   Chip,
   LinearProgress,
-  Rating,
   List,
   ListItem,
   ListItemIcon,
@@ -31,7 +30,6 @@ import {
   VideoLibrary as VideoIcon,
   Quiz as QuizIcon,
   Schedule as ScheduleIcon,
-  People as PeopleIcon,
   Edit as EditIcon,
   Visibility as ViewIcon
 } from '@mui/icons-material'
@@ -73,8 +71,6 @@ interface Course {
   category: string
   instructor: string
   duration: string
-  rating: number
-  enrolledUsers: number
   audience: string
   thumbnail: string
   units: CourseUnit[]
@@ -168,8 +164,6 @@ const transformPreviewDataToCourse = (previewData: any): Course => {
     category: getCourseAudienceLabel(previewData.audience),
     instructor: previewData.instructor || 'Instructor',
     duration: previewData.duration || '8 horas',
-    rating: previewData.rating || 4.5,
-    enrolledUsers: previewData.enrolledUsers || 0,
     audience: normalizeCourseAudience(previewData.audience),
     thumbnail: previewData.thumbnail || '/placeholder.svg?height=400&width=600',
     status: previewData.status,
@@ -231,8 +225,6 @@ const transformProgressDataToCourse = (progressData: any): Course => {
     category: getCourseAudienceLabel(progressData.course?.audience),
     instructor: 'Instructor',
     duration: `${Math.ceil((progressData.progress?.totalTimeSpent || 0) / 60)} horas`,
-    rating: 4.5,
-    enrolledUsers: 0,
     audience: normalizeCourseAudience(progressData.course?.audience),
     thumbnail: '/placeholder.svg?height=400&width=600',
     status: 'published',
@@ -251,129 +243,6 @@ const LmsCoursePreview: React.FC = () => {
   const queryClient = useQueryClient()
 
   const axiosPrivate = useAxiosPrivate()
-
-
-  // Mock data para el curso
-  const mockCourse: Course = {
-    id: 1,
-    title: 'JavaScript Avanzado',
-    description:
-      'Aprende conceptos avanzados de JavaScript para desarrollo web moderno',
-    instructor: 'Dr. Carlos Méndez',
-    duration: '8 horas',
-    rating: 4.8,
-    enrolledUsers: 245,
-    category: getCourseAudienceLabel('internal'),
-    audience: 'internal',
-    thumbnail: '/placeholder.svg?height=400&width=600',
-    status: 'published',
-    units: [
-      {
-        id: 1,
-        title: 'Introducción a JavaScript',
-        type: 'video',
-        duration: '45 min',
-        order: 1,
-        completed: true,
-        unlocked: true,
-        content: {
-          videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-          transcript:
-            'En esta unidad exploraremos los fundamentos básicos de JavaScript...',
-          description:
-            'Introducción a los conceptos fundamentales de JavaScript'
-        }
-      },
-      {
-        id: 2,
-        title: 'Variables y Tipos de Datos',
-        type: 'text',
-        duration: '30 min',
-        order: 2,
-        completed: true,
-        unlocked: true,
-        content: {
-          text: `# Variables y Tipos de Datos
-
-## Declaración de Variables
-En JavaScript, puedes declarar variables usando var, let o const...
-
-## Tipos de Datos Primitivos
-- **String**: Para texto
-- **Number**: Para números
-- **Boolean**: Para valores true/false
-- **Undefined**: Variable sin valor asignado
-- **Null**: Valor nulo intencional
-
-## Ejemplos Prácticos
-\`\`\`javascript
-let nombre = "Juan";
-const edad = 25;
-let esEstudiante = true;
-\`\`\``,
-          description: 'Aprende sobre variables y tipos de datos en JavaScript'
-        }
-      },
-      {
-        id: 3,
-        title: 'Quiz: Fundamentos de JavaScript',
-        type: 'quiz',
-        duration: '15 min',
-        order: 3,
-        completed: false,
-        unlocked: true,
-        content: {
-          questions: [
-            {
-              id: 1,
-              question:
-                '¿Cuál es la forma correcta de declarar una variable en JavaScript?',
-              type: 'single-choice',
-              options: [
-                'var nombre = "Juan"',
-                'let nombre = "Juan"',
-                'const nombre = "Juan"',
-                'Todas las anteriores'
-              ],
-              correctAnswer: 3,
-              explanation: 'Todas las formas son válidas en JavaScript moderno',
-              points: 2
-            }
-          ],
-          description:
-            'Evalúa tu conocimiento sobre los fundamentos de JavaScript'
-        }
-      },
-      {
-        id: 4,
-        title: 'Comunicación Efectiva',
-        type: 'video',
-        duration: '50 min',
-        order: 4,
-        completed: false,
-        unlocked: false,
-        content: {
-          videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-          transcript: 'La comunicación es fundamental para el desarrollo...',
-          description: 'Aprende sobre comunicación efectiva en desarrollo'
-        }
-      },
-      {
-        id: 5,
-        title: 'Técnicas Avanzadas',
-        type: 'text',
-        duration: '35 min',
-        order: 5,
-        completed: false,
-        unlocked: false,
-        content: {
-          text: '# Técnicas Avanzadas\n\nLas técnicas avanzadas son clave para el desarrollo...',
-          description: 'Explora técnicas avanzadas de JavaScript'
-        }
-      }
-    ]
-  }
-
   // Query para obtener el curso con progreso real
 const { data: courseData, isLoading } = useQuery(
   ['lms-course-preview', courseId, previewMode],
@@ -445,8 +314,21 @@ const { data: courseData, isLoading } = useQuery(
     )
   }
 
-  const course = courseData?.course || mockCourse;
+  const course = courseData?.course;
   const isPreview = courseData?.isPreview || false;
+
+  if (!course) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity='error' sx={{ mb: 2 }}>
+          No se pudo cargar la vista previa real del curso.
+        </Alert>
+        <Button variant='outlined' onClick={() => navigate(-1)}>
+          Volver
+        </Button>
+      </Box>
+    )
+  }
   
   const completedUnits = course.units.filter((unit) => unit.completed).length
   const progressPercentage = (completedUnits / course.units.length) * 100
@@ -655,19 +537,10 @@ const { data: courseData, isLoading } = useQuery(
                   color={course.status === 'published' ? 'success' : 'warning'}
                 />
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <PeopleIcon fontSize='small' />
-                  <Typography variant='body2'>
-                    {course.enrolledUsers} estudiantes
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <ScheduleIcon fontSize='small' />
                   <Typography variant='body2'>{course.duration}</Typography>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Rating value={course.rating} readOnly size='small' />
-                  <Typography variant='body2'>({course.rating})</Typography>
-                </Box>
+                <Chip label={`Instructor: ${course.instructor}`} variant='outlined' />
               </Box>
 
               <Box sx={{ mb: 2 }}>
