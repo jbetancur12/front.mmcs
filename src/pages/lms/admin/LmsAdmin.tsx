@@ -51,6 +51,7 @@ import {
   getFilteredQuickActions,
   getRoleDisplayInfo
 } from '../../../utils/roleUtils'
+import { getLmsDashboardScope } from '../../../utils/lmsIdentity'
 import RoleBasedDataFilter from '../../../Components/lms/widgets/RoleBasedDataFilter'
 import {
   DashboardErrorBoundary,
@@ -405,14 +406,7 @@ const LmsAdmin: React.FC = () => {
         >
           {/* Role-based Data Filter */}
           <RoleBasedDataFilter
-              scope={
-                userRole === 'admin'
-                  ? 'admin'
-                  : String(userRole) === 'Training Manager' ||
-                    userRole === 'training_manager'
-                  ? 'training_manager'
-                  : 'department_manager'
-              }
+              scope={getLmsDashboardScope(userRole)}
             department={$userStore.customer?.nombre}
             showAlert={userRole !== 'admin'}
             showFilterIcon={false}

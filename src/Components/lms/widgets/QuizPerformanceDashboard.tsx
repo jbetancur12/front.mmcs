@@ -54,6 +54,7 @@ import {
   Bar,
   Legend
 } from 'recharts'
+import { LmsDashboardScope } from '../../../utils/lmsIdentity'
 
 
 // Modern color palette
@@ -148,7 +149,7 @@ interface QuizPerformanceDashboardProps {
   error?: string
   onViewDetails?: () => void
   onQuestionClick?: (questionId: number) => void
-  scope?: 'admin' | 'training_manager' | 'department_manager'
+  scope?: LmsDashboardScope
   userRole?: string
   department?: string
 }

@@ -9,15 +9,16 @@ import {
 } from '@mui/material'
 import {
   FilterList as FilterIcon,
-  Business as BusinessIcon,
   School as SchoolIcon,
   AdminPanelSettings as AdminIcon,
+  Visibility as VisibilityIcon,
   Info as InfoIcon
 } from '@mui/icons-material'
 import { useUserLMSRole, useUserPermissions, getRoleDisplayInfo } from '../../../utils/roleUtils'
+import { LmsDashboardScope } from '../../../utils/lmsIdentity'
 
 interface RoleBasedDataFilterProps {
-  scope?: 'admin' | 'training_manager' | 'department_manager'
+  scope?: LmsDashboardScope
   department?: string
   showAlert?: boolean
   showFilterIcon?: boolean
@@ -55,11 +56,11 @@ const RoleBasedDataFilter: React.FC<RoleBasedDataFilterProps> = ({
           icon: <SchoolIcon sx={{ fontSize: 16 }} />,
           color: colors.primary
         }
-      case 'department_manager':
+      case 'limited':
         return {
-          label: `Vista Departamento${department ? ` - ${department}` : ''}`,
-          description: 'Datos filtrados para su departamento',
-          icon: <BusinessIcon sx={{ fontSize: 16 }} />,
+          label: `Vista Operativa${department ? ` - ${department}` : ''}`,
+          description: 'Datos acotados al contexto operativo disponible',
+          icon: <VisibilityIcon sx={{ fontSize: 16 }} />,
           color: colors.info
         }
       default:
@@ -77,9 +78,6 @@ const RoleBasedDataFilter: React.FC<RoleBasedDataFilterProps> = ({
   const getFilterDescription = () => {
     const restrictions = []
     
-    if (permissions.scopeRestrictions?.departmentOnly) {
-      restrictions.push('departamento')
-    }
     if (permissions.scopeRestrictions?.coursesOnly) {
       restrictions.push('cursos gestionados')
     }

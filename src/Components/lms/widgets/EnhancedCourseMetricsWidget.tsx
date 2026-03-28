@@ -40,6 +40,7 @@ import {
   Timeline as TimelineIcon,
   Visibility as VisibilityIcon
 } from '@mui/icons-material'
+import { LmsDashboardScope } from '../../../utils/lmsIdentity'
 
 // Modern color palette
 const colors = {
@@ -122,7 +123,7 @@ interface EnhancedCourseMetricsWidgetProps {
   onCourseClick?: (courseId: number) => void
   onViewAll?: () => void
   onDrillDown?: (type: 'performance' | 'popularity' | 'time-analysis', courseId?: number) => void
-  scope?: 'admin' | 'training_manager' | 'department_manager'
+  scope?: LmsDashboardScope
   userRole?: string
   department?: string
 }
@@ -196,8 +197,8 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
     switch (scope) {
       case 'training_manager':
         return 'Cursos Gestionados'
-      case 'department_manager':
-        return `Cursos - ${department || 'Departamento'}`
+      case 'limited':
+        return `Cursos - ${department || 'Vista Operativa'}`
       default:
         return 'Métricas de Cursos'
     }
@@ -207,8 +208,8 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
     switch (scope) {
       case 'training_manager':
         return 'Cursos bajo su gestión'
-      case 'department_manager':
-        return 'Cursos asignados a su departamento'
+      case 'limited':
+        return 'Cursos visibles para la operación actual'
       default:
         return 'Vista completa del sistema'
     }
@@ -271,7 +272,7 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
             </Typography>
             {scope !== 'admin' && (
               <Chip
-                label={scope === 'training_manager' ? 'Gestor' : 'Departamento'}
+                label={scope === 'training_manager' ? 'Gestor' : 'Vista Acotada'}
                 size="small"
                 sx={{
                   mt: 0.5,

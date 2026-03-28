@@ -4,6 +4,7 @@ import { useStore } from '@nanostores/react'
 import { userStore } from '../../store/userStore'
 import { Box, CircularProgress, Typography } from '@mui/material'
 import { useLmsPermissions } from '../../hooks/useLms'
+import { getLmsExperienceRole } from '../../utils/lmsIdentity'
 
 interface User {
   id: number
@@ -36,18 +37,11 @@ const LmsDashboard: React.FC = () => {
         const isClientUser = lmsPermissions
           ? lmsPermissions.userType === 'client'
           : Boolean(storeUser.customer?.id)
-        let lmsRole = isClientUser ? 'client' : 'employee'
-
-        if (
-          lmsPermissions?.canManageCourses ||
-          roles.includes('admin') ||
-          roles.includes('Training Manager') ||
-          roles.includes('training_manager')
-        ) {
-          lmsRole = 'admin'
-        } else if (!isClientUser) {
-          lmsRole = 'employee'
-        }
+        const lmsRole = getLmsExperienceRole({
+          roles,
+          userType: isClientUser ? 'client' : 'internal',
+          canManageCourses: lmsPermissions?.canManageCourses
+        })
 
         setCurrentUser({
           id: storeUser.customer?.id || 1,

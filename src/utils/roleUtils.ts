@@ -1,9 +1,13 @@
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
+import {
+  hasTrainingManagerRole,
+  normalizeLmsRoles
+} from './lmsIdentity'
 
 // Define LMS role types
-export type LMSRole = 'admin' | 'training_manager' | 'department_manager' | 'user'
-export const LMS_MANAGEMENT_ROLES = ['admin', 'Training Manager', 'training_manager'] as const
+export type LMSRole = 'admin' | 'training_manager' | 'user'
+export const LMS_MANAGEMENT_ROLES = ['admin', 'Training Manager'] as const
 
 // Define role permissions
 export interface RolePermissions {
@@ -60,23 +64,6 @@ export const ROLE_PERMISSIONS: Record<LMSRole, RolePermissions> = {
       usersOnly: true
     }
   },
-  department_manager: {
-    canViewAllCourses: false,
-    canCreateCourses: false,
-    canEditCourses: false,
-    canDeleteCourses: false,
-    canViewAllUsers: false,
-    canManageAssignments: true,
-    canViewSystemHealth: false,
-    canGenerateReports: true,
-    canManageRoles: false,
-    canViewAnalytics: true,
-    canManageCertificates: false,
-    canAccessJobQueue: false,
-    scopeRestrictions: {
-      departmentOnly: true
-    }
-  },
   user: {
     canViewAllCourses: false,
     canCreateCourses: false,
@@ -97,18 +84,13 @@ export const ROLE_PERMISSIONS: Record<LMSRole, RolePermissions> = {
  * Get user's LMS role based on their roles array
  */
 export const getUserLMSRole = (userRoles: string[]): LMSRole => {
-  if (userRoles.includes('admin') || userRoles.includes('super_admin')) {
+  const normalizedRoles = normalizeLmsRoles(userRoles)
+
+  if (normalizedRoles.includes('admin') || normalizedRoles.includes('super_admin')) {
     return 'admin'
   }
-  if (
-    userRoles.includes('training_manager') ||
-    userRoles.includes('Training Manager') ||
-    userRoles.includes('lms_admin')
-  ) {
+  if (hasTrainingManagerRole(normalizedRoles)) {
     return 'training_manager'
-  }
-  if (userRoles.includes('department_manager') || userRoles.includes('manager')) {
-    return 'department_manager'
   }
   return 'user'
 }
@@ -288,11 +270,6 @@ export const getRoleDisplayInfo = (role: LMSRole) => {
       label: 'Gestor de Capacitación',
       description: 'Gestión de cursos y capacitación',
       color: '#059669'
-    },
-    department_manager: {
-      label: 'Gestor de Departamento',
-      description: 'Gestión de su departamento',
-      color: '#d97706'
     },
     user: {
       label: 'Usuario',

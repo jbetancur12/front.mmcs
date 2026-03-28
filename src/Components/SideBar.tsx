@@ -7,17 +7,12 @@ import DropdownButton from './DropdownButton' // Importa el componente del dropd
 import { useStore } from '@nanostores/react'
 import { UserData, userStore } from 'src/store/userStore'
 import { CarRepair } from '@mui/icons-material'
-
-const LMS_ACCESS_ROLES = [
-  'admin',
-  'employee',
-  'client',
-  'Training Manager',
-  'training_manager',
-  'lms_only'
-]
-
-const LMS_ADMIN_ROLES = ['admin', 'Training Manager', 'training_manager']
+import {
+  getEffectiveLmsMenuRoles,
+  isLmsOnlyUser,
+  LMS_ACCESS_MENU_ROLES,
+  LMS_ADMIN_ROUTE_ROLES
+} from 'src/utils/lmsIdentity'
 
 const iconClass =
   'w-5 h-5 text-gray-600 transition-all duration-300 group-hover:text-white dark:text-gray-300 dark:group-hover:text-white group-hover:scale-110 group-hover:drop-shadow-sm'
@@ -25,24 +20,6 @@ const iconClass =
 // Helper para verificar si un módulo debe ser visible
 const canViewModule = (roles: string[], userRole: string[]) => {
   return userRole.some((role) => roles.includes(role))
-}
-
-const getEffectiveLmsMenuRoles = ($userStore: UserData) => {
-  const effectiveRoles = new Set($userStore.rol)
-
-  if ($userStore.userType === 'client') {
-    effectiveRoles.add('client')
-  }
-
-  if ($userStore.userType === 'internal' && $userStore.rol.includes('employee')) {
-    effectiveRoles.add('employee')
-  }
-
-  if ($userStore.lmsOnly) {
-    effectiveRoles.add('lms_only')
-  }
-
-  return [...effectiveRoles]
 }
 
 const getLinkToCustomer = (to: string, $userStore: UserData) => {
@@ -158,7 +135,7 @@ const sidebarItems = ($userStore: UserData) => [
   {
     type: 'dropdown',
     buttonText: 'LMS',
-    roles: LMS_ACCESS_ROLES,
+    roles: [...LMS_ACCESS_MENU_ROLES],
     moduleName: 'Basic',
     pathData:
       'M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z',
@@ -166,52 +143,52 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Dashboard',
         url: 'lms',
-        roles: LMS_ACCESS_ROLES
+        roles: [...LMS_ACCESS_MENU_ROLES]
       },
       {
         label: 'Administración',
         url: 'lms/admin',
-        roles: LMS_ADMIN_ROLES
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
       },
       {
         label: 'Mis Cursos',
         url: 'lms/admin/dashboard',
-        roles: LMS_ADMIN_ROLES
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
       },
       {
         label: 'Gestión de Cursos',
         url: 'lms/admin/courses',
-        roles: LMS_ADMIN_ROLES
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
       },
       {
         label: 'Gestión de Usuarios',
         url: 'lms/admin/users',
-        roles: LMS_ADMIN_ROLES
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
       },
       {
         label: 'Analíticas',
         url: 'lms/admin/analytics',
-        roles: LMS_ADMIN_ROLES
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
       },
       {
         label: 'Reportes',
         url: 'lms/admin/reporting',
-        roles: LMS_ADMIN_ROLES
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
       },
       {
         label: 'Asignaciones',
         url: 'lms/admin/assignments',
-        roles: LMS_ADMIN_ROLES
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
       },
       {
         label: 'Cumplimiento',
         url: 'lms/admin/compliance',
-        roles: LMS_ADMIN_ROLES
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
       },
       {
         label: 'Plantillas de Certificados',
         url: 'lms/admin/certificate-templates',
-        roles: LMS_ADMIN_ROLES
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
       },
       {
         label: 'Mi Aprendizaje',
@@ -456,7 +433,7 @@ const SideBar = ({
       <div className='flex-1 overflow-y-auto px-3 py-4 scrollbar-thin scrollbar-thumb-gray-300/50 dark:scrollbar-thumb-gray-600/50 scrollbar-track-transparent hover:scrollbar-thumb-gray-400/70'>
         <ul className='space-y-1.5'>
           {sidebarItems($userStore).map((item, index) => {
-            if ($userStore.lmsOnly && !isLmsSidebarItem(item)) {
+            if (isLmsOnlyUser($userStore.rol, $userStore.lmsOnly) && !isLmsSidebarItem(item)) {
               return null
             }
 

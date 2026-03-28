@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
+import { LMS_ADMIN_ROUTE_ROLES } from 'src/utils/lmsIdentity'
 
 const LmsDashboard = lazy(() => import('../pages/lms/LmsDashboard'))
 const LmsAdmin = lazy(() => import('../pages/lms/admin/LmsAdmin'))
@@ -64,7 +65,7 @@ const LmsRoutes = (role: string[]) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['admin', 'Training Manager', 'training_manager']}
+            roles={[...LMS_ADMIN_ROUTE_ROLES]}
           />
         }
       >

@@ -19,6 +19,7 @@ import {
   TrendingUp as TrendingUpIcon,
   Assessment as AssessmentIcon
 } from '@mui/icons-material'
+import { LmsDashboardScope } from '../../../utils/lmsIdentity'
 
 // Modern color palette
 const colors = {
@@ -62,7 +63,7 @@ interface UserAnalyticsWidgetProps {
   error?: string
   onViewDetails?: () => void
   onUserTypeClick?: (userType: 'internal' | 'client') => void
-  scope?: 'admin' | 'training_manager' | 'department_manager'
+  scope?: LmsDashboardScope
   userRole?: string
   department?: string
 }
@@ -112,8 +113,8 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
     switch (scope) {
       case 'training_manager':
         return 'Usuarios en Capacitación'
-      case 'department_manager':
-        return `Usuarios - ${department || 'Departamento'}`
+      case 'limited':
+        return `Usuarios - ${department || 'Vista Operativa'}`
       default:
         return 'Analytics de Usuarios'
     }
@@ -123,8 +124,8 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
     switch (scope) {
       case 'training_manager':
         return 'Usuarios en cursos gestionados'
-      case 'department_manager':
-        return 'Usuarios de su departamento'
+      case 'limited':
+        return 'Usuarios visibles en la operación actual'
       default:
         return 'Segmentación y engagement'
     }
@@ -177,7 +178,7 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
                   borderRadius: 1,
                   fontSize: '0.7rem'
                 }}>
-                  {scope === 'training_manager' ? 'Vista Gestor' : 'Vista Departamento'}
+                  {scope === 'training_manager' ? 'Vista Gestor' : 'Vista Acotada'}
                 </Typography>
               </Box>
             )}
