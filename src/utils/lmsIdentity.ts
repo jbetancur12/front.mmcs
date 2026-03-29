@@ -129,22 +129,8 @@ const getPreferredLmsHomeRoute = (
   userType: UserData['userType'] = 'internal',
   lmsOnly = false
 ): string | null => {
-  if (hasLmsAdminAccess(roles)) {
-    return '/lms/admin'
-  }
-
   if (isLmsOnlyUser(roles, lmsOnly)) {
     return userType === 'client' ? '/lms/client' : '/lms/employee'
-  }
-
-  const normalizedRoles = normalizeLmsRoles(roles)
-
-  if (userType === 'client' || normalizedRoles.includes('client')) {
-    return '/lms/client'
-  }
-
-  if (normalizedRoles.includes('employee')) {
-    return '/lms/employee'
   }
 
   return null
