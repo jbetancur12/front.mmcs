@@ -7,6 +7,7 @@ import * as Yup from 'yup' // Importa Yup para la validación
 import { usePostHog } from 'posthog-js/react'
 
 import { userStore } from 'src/store/userStore'
+import { getPreferredPostLoginRoute } from 'src/utils/lmsIdentity'
 import { axiosPublic } from '@utils/api'
 import Cookies from 'js-cookie'
 
@@ -192,13 +193,19 @@ const Login: React.FC = () => {
         // });
 
         // Toast.fire('Bienvenido', '', 'success')
-        const lastLocation = sessionStorage.getItem('lastLocation') || '/'
+        const lastLocation = sessionStorage.getItem('lastLocation')
+        const preferredDestination = getPreferredPostLoginRoute({
+          lastLocation,
+          roles: user.rol || [],
+          userType: user.userType || 'internal',
+          lmsOnly: Boolean(user.lmsOnly)
+        })
 
         // Limpiar lastLocation después de usarla
         sessionStorage.removeItem('lastLocation')
 
         localStorage.setItem('accessToken', token)
-        navigate(lastLocation, { replace: true })
+        navigate(preferredDestination, { replace: true })
 
         posthog?.capture('clicked_log_in')
         posthog?.identify(response.data.user.id, {
@@ -236,7 +243,7 @@ const Login: React.FC = () => {
       }
 
       try {
-        await axiosPublic.get('/auth/validateToken', {
+        const response = await axiosPublic.get('/auth/validateToken', {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -244,9 +251,23 @@ const Login: React.FC = () => {
 
         if (!isMounted) return
 
-        const lastLocation = sessionStorage.getItem('lastLocation') || '/'
+        const user = response.data || {}
+        const lastLocation = sessionStorage.getItem('lastLocation')
+        const resolvedRoles = Array.isArray(user.rol)
+          ? user.rol
+          : Array.isArray(user.roles)
+            ? user.roles.map((role: { name?: string } | string) =>
+                typeof role === 'string' ? role : role?.name || ''
+              )
+            : []
+        const preferredDestination = getPreferredPostLoginRoute({
+          lastLocation,
+          roles: resolvedRoles,
+          userType: user.userType || 'internal',
+          lmsOnly: Boolean(user.lmsOnly)
+        })
         sessionStorage.removeItem('lastLocation')
-        navigate(lastLocation, { replace: true })
+        navigate(preferredDestination, { replace: true })
       } catch (error) {
         clearStaleAuth()
       } finally {

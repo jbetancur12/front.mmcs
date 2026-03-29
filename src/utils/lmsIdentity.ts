@@ -108,3 +108,35 @@ export const getLmsDashboardScope = (
 
   return 'limited'
 }
+
+interface PreferredLmsDestinationOptions {
+  lastLocation?: string | null
+  roles?: string[]
+  userType?: UserData['userType']
+  lmsOnly?: boolean
+}
+
+const isMeaningfulLastLocation = (lastLocation?: string | null): boolean => {
+  if (!lastLocation) {
+    return false
+  }
+
+  return !['/', '/login'].includes(lastLocation)
+}
+
+export const getPreferredPostLoginRoute = ({
+  lastLocation,
+  roles = [],
+  userType = 'internal',
+  lmsOnly = false
+}: PreferredLmsDestinationOptions): string => {
+  if (isMeaningfulLastLocation(lastLocation)) {
+    return lastLocation as string
+  }
+
+  if (isLmsOnlyUser(roles, lmsOnly)) {
+    return userType === 'client' ? '/lms/client' : '/lms/employee'
+  }
+
+  return lastLocation || '/'
+}
