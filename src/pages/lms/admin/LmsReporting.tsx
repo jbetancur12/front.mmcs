@@ -382,6 +382,7 @@ const LmsReporting: React.FC = () => {
   const templates = templatesQuery.data || []
   const recentReports = recentReportsQuery.data || []
   const scheduledReports = scheduledReportsQuery.data || []
+  const complianceTemplate = templates.find((template) => template.type === 'compliance') || null
 
   const summary = useMemo(
     () => ({
@@ -400,6 +401,17 @@ const LmsReporting: React.FC = () => {
   const handleCreateTemplate = () => {
     setEditingTemplate(null)
     setTemplateForm(emptyTemplateForm)
+    setCustomColumnInput('')
+    setTemplateDialogOpen(true)
+  }
+
+  const handleCreateComplianceTemplate = () => {
+    setEditingTemplate(null)
+    setTemplateForm({
+      ...emptyTemplateForm,
+      type: 'compliance',
+      columns: [...templateColumnsPresets.compliance]
+    })
     setCustomColumnInput('')
     setTemplateDialogOpen(true)
   }
@@ -585,6 +597,30 @@ const LmsReporting: React.FC = () => {
           no como punto de partida.
         </Alert>
 
+        <Alert severity='info'>
+          Si tu prioridad hoy es seguimiento operativo, empieza por <strong>Cumplimiento</strong>.
+          {complianceTemplate ? (
+            <>
+              {' '}Ya tienes una plantilla lista para generar o programar ese reporte.
+            </>
+          ) : (
+            <>
+              {' '}Si todavía no existe, crea primero una plantilla de ese tipo y úsala como base.
+            </>
+          )}
+        </Alert>
+
+        {!complianceTemplate && (
+          <Button
+            variant='outlined'
+            startIcon={<AddIcon />}
+            onClick={handleCreateComplianceTemplate}
+            sx={{ alignSelf: 'flex-start' }}
+          >
+            Crear plantilla de cumplimiento
+          </Button>
+        )}
+
         <Grid container spacing={2}>
           <Grid item xs={12} md={4}>
             <Card>
@@ -633,9 +669,34 @@ const LmsReporting: React.FC = () => {
             <CardContent>
               <Stack direction='row' justifyContent='space-between' alignItems='center' sx={{ mb: 2 }}>
                 <Typography variant='h6'>Plantillas Reales</Typography>
-                <Button startIcon={<AddIcon />} variant='contained' onClick={handleCreateTemplate}>
-                  Nueva plantilla
-                </Button>
+                <Stack direction='row' spacing={1}>
+                  {complianceTemplate && (
+                    <Button
+                      variant='outlined'
+                      startIcon={<GenerateIcon />}
+                      onClick={() =>
+                        generateReportMutation.mutate({
+                          templateId: complianceTemplate.id,
+                          format: 'csv'
+                        })
+                      }
+                    >
+                      Generar cumplimiento
+                    </Button>
+                  )}
+                  {!complianceTemplate && (
+                    <Button
+                      variant='outlined'
+                      startIcon={<AddIcon />}
+                      onClick={handleCreateComplianceTemplate}
+                    >
+                      Crear cumplimiento
+                    </Button>
+                  )}
+                  <Button startIcon={<AddIcon />} variant='contained' onClick={handleCreateTemplate}>
+                    Nueva plantilla
+                  </Button>
+                </Stack>
               </Stack>
               {templates.length === 0 ? (
                 <Alert severity='warning'>Aún no tienes plantillas de reportes creadas.</Alert>
