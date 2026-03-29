@@ -135,6 +135,15 @@ const formatFollowUpLabel = (record: Pick<ComplianceRecord, 'reminderSummary'>) 
   })
 }
 
+const getCompliancePriority = (record: ComplianceRecord) => {
+  if (record.status === 'overdue') return 0
+  if (hasUpcomingDeadline(record)) return 1
+  if ((record.reminderSummary?.lastReminderAt || record.reminderSummary?.lastNotificationAt) == null && record.status !== 'completed') return 2
+  if (record.status === 'in_progress') return 3
+  if (record.status === 'pending') return 4
+  return 5
+}
+
 const LmsComplianceTracker: React.FC = () => {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState(0)
@@ -382,6 +391,16 @@ const LmsComplianceTracker: React.FC = () => {
 
   // Apply user filters to each category
   const filteredRecords = useMemo(() => applyUserFilters(complianceRecords), [complianceRecords, applyUserFilters])
+  const prioritizedRecords = useMemo(() => {
+    return [...filteredRecords].sort((left, right) => {
+      const priorityDiff = getCompliancePriority(left) - getCompliancePriority(right)
+      if (priorityDiff !== 0) return priorityDiff
+
+      const leftDeadline = left.deadline ? new Date(left.deadline).getTime() : Number.MAX_SAFE_INTEGER
+      const rightDeadline = right.deadline ? new Date(right.deadline).getTime() : Number.MAX_SAFE_INTEGER
+      return leftDeadline - rightDeadline
+    })
+  }, [filteredRecords])
   const overdueRecords = useMemo(() => applyUserFilters(baseOverdueRecords), [baseOverdueRecords, applyUserFilters])
   const approachingDeadline = useMemo(() => applyUserFilters(baseApproachingDeadline), [baseApproachingDeadline, applyUserFilters])
   const completedRecords = useMemo(() => applyUserFilters(baseCompletedRecords), [baseCompletedRecords, applyUserFilters])
@@ -498,6 +517,10 @@ const LmsComplianceTracker: React.FC = () => {
     `${approachingDeadline.length} por vencer`,
     `${completedRecords.length} completados`
   ]
+  const recordsWithoutFollowUp = useMemo(
+    () => filteredRecords.filter((record) => !record.reminderSummary?.lastReminderAt && !record.reminderSummary?.lastNotificationAt && record.status !== 'completed').length,
+    [filteredRecords]
+  )
 
   // Loading state
   if (isLoading) {
@@ -552,7 +575,14 @@ const LmsComplianceTracker: React.FC = () => {
         {currentTabSummary.map((item) => (
           <Chip key={item} label={item} variant="outlined" />
         ))}
+        <Chip label={`${recordsWithoutFollowUp} sin seguimiento`} color="info" variant="outlined" />
       </Box>
+
+      {prioritizedRecords[0] && (
+        <Alert severity={prioritizedRecords[0].isOverdue ? 'error' : hasUpcomingDeadline(prioritizedRecords[0]) ? 'warning' : 'info'} sx={{ mb: 3 }}>
+          Prioridad actual: <strong>{prioritizedRecords[0].userName}</strong> con <strong>{prioritizedRecords[0].courseTitle}</strong>. {formatDeadlineLabel(prioritizedRecords[0])}. Seguimiento: {formatFollowUpLabel(prioritizedRecords[0])}.
+        </Alert>
+      )}
 
       {/* Alertas de cumplimiento */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
@@ -645,7 +675,7 @@ const LmsComplianceTracker: React.FC = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredRecords.map((record) => (
+                    prioritizedRecords.map((record) => (
                     <TableRow key={record.id}>
                       <TableCell>
                         <Box>

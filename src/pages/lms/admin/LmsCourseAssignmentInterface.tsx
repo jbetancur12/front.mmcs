@@ -84,6 +84,12 @@ interface BackendAssignment {
     avgProgress: number
   }
   status: 'active' | 'completed' | 'overdue'
+  days_until_deadline?: number | null
+  urgency?: {
+    level: 'critical' | 'high' | 'medium' | 'normal' | 'resolved'
+    label: string
+    daysUntilDeadline: number | null
+  }
   assigned_to: string[]
   affected_users_count: number
   reminder_summary?: {
@@ -107,6 +113,12 @@ interface Assignment {
   assignedBy: string
   deadline: string
   status: 'active' | 'completed' | 'overdue'
+  daysUntilDeadline: number | null
+  urgency: {
+    level: 'critical' | 'high' | 'medium' | 'normal' | 'resolved'
+    label: string
+    daysUntilDeadline: number | null
+  }
   progress: number
   createdAt: string
   reminderSummary: {
@@ -131,6 +143,12 @@ const transformAssignment = (backendAssignment: BackendAssignment): Assignment =
     assignedBy: backendAssignment.creator?.nombre || 'Admin',
     deadline: backendAssignment.deadline || '',
     status: backendAssignment.status,
+    daysUntilDeadline: backendAssignment.days_until_deadline ?? backendAssignment.urgency?.daysUntilDeadline ?? null,
+    urgency: backendAssignment.urgency || {
+      level: backendAssignment.status === 'overdue' ? 'critical' : backendAssignment.status === 'completed' ? 'resolved' : 'normal',
+      label: backendAssignment.status === 'overdue' ? 'Vencida' : backendAssignment.status === 'completed' ? 'Completada' : 'Activa',
+      daysUntilDeadline: backendAssignment.days_until_deadline ?? null
+    },
     progress: Math.round(backendAssignment.progress_stats.avgProgress || 0),
     createdAt: backendAssignment.created_at,
     reminderSummary: backendAssignment.reminder_summary || {
@@ -165,6 +183,33 @@ const formatRelativeDate = (value?: string | null) => {
     hour: 'numeric',
     minute: '2-digit'
   })
+}
+
+const getUrgencyColor = (level: Assignment['urgency']['level']) => {
+  switch (level) {
+    case 'critical':
+      return 'error'
+    case 'high':
+      return 'warning'
+    case 'medium':
+      return 'info'
+    case 'resolved':
+      return 'success'
+    default:
+      return 'default'
+  }
+}
+
+const formatDeadlineInsight = (assignment: Assignment) => {
+  if (!assignment.deadline) return 'Sin fecha límite'
+  if (assignment.status === 'completed') return 'Completada'
+  if (assignment.status === 'overdue' && typeof assignment.daysUntilDeadline === 'number') {
+    return `Vencida hace ${Math.abs(assignment.daysUntilDeadline)} día(s)`
+  }
+  if (typeof assignment.daysUntilDeadline === 'number' && assignment.daysUntilDeadline <= 7) {
+    return `Vence en ${assignment.daysUntilDeadline} día(s)`
+  }
+  return new Date(assignment.deadline).toLocaleDateString()
 }
 
 const LmsCourseAssignmentInterface: React.FC = () => {
@@ -220,7 +265,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     }
   )
   // Get all assignments
-  const { data: assignmentsResponse } = useQuery<{ assignments: BackendAssignment[], total: number, page: number, limit: number }>(
+  const { data: assignmentsResponse } = useQuery<{ assignments: BackendAssignment[], total: number, page: number, limit: number, summary?: { total: number, active: number, completed: number, overdue: number, withoutFollowUp: number, needingAttention: number } }>(
     ['lms-all-assignments', page, rowsPerPage, selectedCourse, selectedStatus],
     async () => {
       const response = await axiosPrivate.get('/lms/assignments/all', {
@@ -377,6 +422,14 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   const courses = coursesResponse?.courses || []
   const assignableCourses = courses.filter((course) => course.audience !== 'client')
   const assignments = (assignmentsResponse?.assignments || []).map(transformAssignment)
+  const assignmentSummary = assignmentsResponse?.summary || {
+    total: assignments.length,
+    active: assignments.filter((assignment) => assignment.status === 'active').length,
+    completed: assignments.filter((assignment) => assignment.status === 'completed').length,
+    overdue: assignments.filter((assignment) => assignment.status === 'overdue').length,
+    withoutFollowUp: assignments.filter((assignment) => assignment.urgency.level === 'medium').length,
+    needingAttention: assignments.filter((assignment) => assignment.urgency.level === 'critical' || assignment.urgency.level === 'high').length
+  }
   const selectedCourseData = useMemo(
     () =>
       assignableCourses.find((course) => course.id === selectedCourse)
@@ -607,7 +660,10 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
-                    <Chip color="primary" icon={<AssignmentIcon />} label={`${assignments.length} activa(s)`} />
+                    <Chip color="primary" icon={<AssignmentIcon />} label={`${assignmentSummary.total} regla(s)`} />
+                    <Chip color="error" label={`${assignmentSummary.overdue} vencida(s)`} variant="outlined" />
+                    <Chip color="warning" label={`${assignmentSummary.needingAttention} por atender`} variant="outlined" />
+                    <Chip color="info" label={`${assignmentSummary.withoutFollowUp} sin seguimiento`} variant="outlined" />
                     <Chip color="warning" icon={<NotificationsIcon />} label="Recordatorios desde cada regla" />
                   </Box>
                 </Grid>
@@ -697,6 +753,12 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                               color={getStatusColor(assignment.status) as any}
                               size="small"
                             />
+                            <Chip
+                              label={assignment.urgency.label}
+                              color={getUrgencyColor(assignment.urgency.level) as any}
+                              size="small"
+                              variant="outlined"
+                            />
                           </Box>
 
                           <Grid container spacing={2} sx={{ mb: 2 }}>
@@ -713,7 +775,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                                 Fecha límite:
                               </Typography>
                               <Typography variant="body2">
-                                {new Date(assignment.deadline).toLocaleDateString()}
+                                {formatDeadlineInsight(assignment)}
                               </Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={3}>
@@ -768,9 +830,9 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                             {assignment.status !== 'completed' && assignment.reminderSummary.lastReminderAt === null && (
                               <Chip
                                 size="small"
-                                color="default"
+                                color="info"
                                 variant="outlined"
-                                label="Sin seguimiento enviado"
+                                label="Enviar primer seguimiento"
                               />
                             )}
                           </Box>
@@ -796,7 +858,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                           <IconButton
                             size="small"
                             onClick={() => handleSendNotification(assignment.id)}
-                            title="Enviar recordatorio"
+                            title={assignment.reminderSummary.lastReminderAt ? 'Reenviar recordatorio' : 'Enviar primer recordatorio'}
                           >
                             <NotificationsIcon />
                           </IconButton>
