@@ -1,5 +1,6 @@
 import { axiosPrivate, axiosPublic } from 'src/utils/api'
 import type { AxiosProgressEvent } from 'axios'
+import type { Notification as UiNotification } from '../types/notifications'
 
 // ===========================
 // TypeScript Interfaces
@@ -444,6 +445,70 @@ export interface Notification {
   read: boolean
   created_at: string
 }
+
+interface BackendNotificationResponseItem {
+  id: number | string
+  type: string
+  title: string
+  message: string
+  data?: Record<string, any>
+  priority?: 'high' | 'normal' | 'low'
+  actionUrl?: string | null
+  readAt?: string | null
+  createdAt?: string
+}
+
+const getUiNotificationSeverity = (
+  notification: BackendNotificationResponseItem
+): UiNotification['severity'] => {
+  switch (notification.type) {
+    case 'deadline_reminder':
+    case 'course_overdue':
+      return 'critical'
+    case 'mandatory_reminder':
+    case 'course_assigned':
+      return 'warning'
+    case 'system_test':
+      return 'system'
+    default:
+      return notification.priority === 'high' ? 'warning' : 'info'
+  }
+}
+
+const getUiNotificationActionLabel = (
+  notification: BackendNotificationResponseItem
+): string | undefined => {
+  switch (notification.type) {
+    case 'certificate_earned':
+      return 'Ver certificado'
+    case 'course_completed':
+      return notification.data?.hasCertificate ? 'Abrir certificados' : 'Ver curso'
+    case 'course_assigned':
+    case 'mandatory_reminder':
+    case 'deadline_reminder':
+    case 'course_overdue':
+      return 'Continuar curso'
+    default:
+      return notification.actionUrl ? 'Abrir en LMS' : undefined
+  }
+}
+
+const normalizeUiNotification = (
+  notification: BackendNotificationResponseItem
+): UiNotification => ({
+  id: String(notification.id),
+  title: notification.title,
+  message: notification.message,
+  severity: getUiNotificationSeverity(notification),
+  timestamp: notification.createdAt ? new Date(notification.createdAt) : new Date(),
+  read: Boolean(notification.readAt),
+  actionUrl: notification.actionUrl || undefined,
+  actionLabel: getUiNotificationActionLabel(notification),
+  metadata: {
+    ...(notification.data || {}),
+    type: notification.type
+  }
+})
 
 export interface LmsPermissions {
   userId: number
@@ -1236,13 +1301,40 @@ class LMSService {
     unreadOnly?: boolean;
     type?: string;
   }): Promise<{
-    notifications: any[];
-    summary: any;
-    systemAlerts: any[];
-    trainingAlerts: any[];
+    notifications: UiNotification[];
+    summary: {
+      total: number;
+      unread: number;
+      actionRequired: number;
+    };
   }> {
     const response = await axiosPrivate.get(`${this.baseURL}/notifications`, { params })
-    return response.data
+    const payload = response.data?.data || {}
+    const notifications = Array.isArray(payload.notifications)
+      ? payload.notifications.map(normalizeUiNotification)
+      : []
+    const unread = Number(
+      payload.unreadCount ?? notifications.filter((item: UiNotification) => !item.read).length
+    )
+
+    return {
+      notifications,
+      summary: {
+        total: Number(payload.total ?? notifications.length),
+        unread,
+        actionRequired: notifications.filter(
+          (item: UiNotification) =>
+            !item.read &&
+            Boolean(
+              item.actionUrl ||
+                item.metadata?.courseId ||
+                item.metadata?.assignmentId ||
+                item.metadata?.certificateId ||
+                item.metadata?.certificateNumber
+            )
+        ).length
+      }
+    }
   }
 
   /**

@@ -44,6 +44,7 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../../../store/userStore'
 import { useAvailableCourses, useUserCertificates } from '../../../hooks/useLms'
+import LmsNotificationCenter from '../shared/LmsNotificationCenter'
 import type { Certificate, Course } from '../../../services/lmsService'
 import {
   getCourseAudienceLabel,
@@ -309,6 +310,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
           <Tab label='Mi Progreso' />
           <Tab label='Mis Cursos' />
           <Tab label='Mis Certificados' />
+          <Tab label='Notificaciones' />
         </Tabs>
 
         {activeTab === 0 && (
@@ -777,6 +779,12 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                 </Box>
               </Box>
             )}
+          </Box>
+        )}
+
+        {activeTab === 3 && (
+          <Box>
+            <LmsNotificationCenter userRole="client" userId={currentUser.id} />
           </Box>
         )}
 

@@ -90,6 +90,83 @@ const getPriorityColor = (notification: Notification) => {
   }
 }
 
+const getNotificationContextLabel = (notification: Notification) => {
+  const type = notification.metadata?.type
+
+  switch (type) {
+    case 'course_assigned':
+      return notification.metadata?.isMandatory ? 'Curso obligatorio asignado' : 'Curso asignado'
+    case 'mandatory_reminder':
+      return 'Recordatorio obligatorio'
+    case 'deadline_reminder':
+      return 'Fecha límite próxima'
+    case 'course_overdue':
+      return 'Curso vencido'
+    case 'course_completed':
+      return 'Curso completado'
+    case 'certificate_earned':
+      return 'Certificado generado'
+    default:
+      return 'Aviso LMS'
+  }
+}
+
+const getNotificationDisplayTitle = (notification: Notification) => {
+  const type = notification.metadata?.type
+
+  switch (type) {
+    case 'course_assigned':
+      return notification.metadata?.isMandatory ? 'Nuevo curso obligatorio' : 'Nuevo curso disponible'
+    case 'mandatory_reminder':
+      return 'Recordatorio de curso obligatorio'
+    case 'deadline_reminder':
+      return 'Curso próximo a vencer'
+    case 'course_overdue':
+      return 'Curso vencido'
+    case 'course_completed':
+      return 'Curso completado'
+    case 'certificate_earned':
+      return 'Certificado disponible'
+    default:
+      return notification.title
+  }
+}
+
+const getNotificationDisplayMessage = (notification: Notification) => {
+  const type = notification.metadata?.type
+  const courseTitle = notification.metadata?.courseTitle
+  const certificateNumber = notification.metadata?.certificateNumber
+
+  switch (type) {
+    case 'course_assigned':
+      return courseTitle
+        ? `Ya puedes comenzar "${courseTitle}" desde tu ruta de aprendizaje.`
+        : 'Ya puedes comenzar el curso asignado desde tu ruta de aprendizaje.'
+    case 'mandatory_reminder':
+      return courseTitle
+        ? `Aun tienes pendiente "${courseTitle}". Conviene retomarlo cuanto antes.`
+        : 'Tienes un curso obligatorio pendiente. Conviene retomarlo cuanto antes.'
+    case 'deadline_reminder':
+      return courseTitle
+        ? `"${courseTitle}" está cerca de su fecha límite.`
+        : 'Un curso asignado está cerca de su fecha límite.'
+    case 'course_overdue':
+      return courseTitle
+        ? `"${courseTitle}" ya venció y requiere atención inmediata.`
+        : 'Un curso asignado ya venció y requiere atención inmediata.'
+    case 'course_completed':
+      return notification.metadata?.hasCertificate
+        ? 'Completaste el curso y tu certificado ya está disponible.'
+        : 'Completaste el curso correctamente.'
+    case 'certificate_earned':
+      return certificateNumber
+        ? `Tu certificado ${certificateNumber} ya está listo para consultar o compartir.`
+        : 'Tu certificado ya está listo para consultar o compartir.'
+    default:
+      return notification.message
+  }
+}
+
 const formatTimestamp = (timestamp: Notification['timestamp']) => {
   const date = new Date(timestamp)
   const now = new Date()
@@ -136,7 +213,9 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
 
   const notifications = data?.notifications || []
 
-  const unreadCount = notifications.filter((notification) => !notification.read).length
+  const unreadCount = Number(
+    data?.summary?.unread ?? notifications.filter((notification) => !notification.read).length
+  )
   const actionRequiredCount = notifications.filter(
     (notification) => hasNotificationAction(notification) && !notification.read
   ).length
@@ -287,12 +366,18 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
                             variant='body1'
                             fontWeight={notification.read ? 'normal' : 'bold'}
                           >
-                            {notification.title}
+                            {getNotificationDisplayTitle(notification)}
                           </Typography>
                           <Chip
                             label={notification.severity}
                             size='small'
                             color={getPriorityColor(notification)}
+                            sx={{ fontSize: '0.7rem' }}
+                          />
+                          <Chip
+                            label={getNotificationContextLabel(notification)}
+                            size='small'
+                            variant='outlined'
                             sx={{ fontSize: '0.7rem' }}
                           />
                           {hasNotificationAction(notification) && !notification.read && (
@@ -308,7 +393,13 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
                       secondary={
                         <Box>
                           <Typography variant='body2' color='text.secondary'>
-                            {notification.message}
+                            {getNotificationDisplayMessage(notification)}
+                          </Typography>
+                          <Typography variant='caption' color='text.secondary' sx={{ display: 'block' }}>
+                            {notification.metadata?.courseTitle ||
+                              notification.metadata?.certificateNumber ||
+                              (notification.metadata?.isMandatory ? 'Capacitación obligatoria' : null) ||
+                              'Notificación del LMS'}
                           </Typography>
                           <Typography variant='caption' color='text.secondary'>
                             {formatTimestamp(notification.timestamp)}
@@ -345,7 +436,9 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
             <DialogTitle>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                 {getNotificationIcon(selectedNotification)}
-                <Typography variant='h6'>{selectedNotification.title}</Typography>
+                <Typography variant='h6'>
+                  {getNotificationDisplayTitle(selectedNotification)}
+                </Typography>
                 <Chip
                   label={selectedNotification.severity}
                   size='small'
@@ -355,15 +448,37 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
             </DialogTitle>
             <DialogContent>
               <Typography variant='body1' sx={{ mb: 2 }}>
-                {selectedNotification.message}
+                {getNotificationDisplayMessage(selectedNotification)}
               </Typography>
               <Typography variant='caption' color='text.secondary'>
                 {formatTimestamp(selectedNotification.timestamp)}
               </Typography>
 
+              <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                <Chip
+                  label={getNotificationContextLabel(selectedNotification)}
+                  size='small'
+                  variant='outlined'
+                />
+                {selectedNotification.metadata?.courseTitle && (
+                  <Chip
+                    label={selectedNotification.metadata.courseTitle}
+                    size='small'
+                    variant='outlined'
+                  />
+                )}
+                {selectedNotification.metadata?.certificateNumber && (
+                  <Chip
+                    label={`Certificado ${selectedNotification.metadata.certificateNumber}`}
+                    size='small'
+                    variant='outlined'
+                  />
+                )}
+              </Box>
+
               {hasNotificationAction(selectedNotification) && (
                 <Alert severity='info' sx={{ mt: 2 }}>
-                  Esta notificación tiene una acción asociada dentro del LMS.
+                  Esta notificación te puede devolver al punto correcto del LMS para continuar.
                 </Alert>
               )}
             </DialogContent>
