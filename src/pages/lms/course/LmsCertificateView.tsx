@@ -118,6 +118,14 @@ const LmsCertificateView: React.FC = () => {
     severity: 'success' as 'success' | 'error'
   })
 
+  const showSnackbar = (message: string, severity: 'success' | 'error' = 'success') => {
+    setSnackbar({
+      open: true,
+      message,
+      severity
+    })
+  }
+
   // Fetch user certificates or single certificate
   const { data: userCertificatesData, isLoading: isLoadingCertificates } = useUserCertificates(undefined, {
     enabled: isAuthenticated && !certificateId && !isPublicVerificationMode
@@ -145,11 +153,7 @@ const LmsCertificateView: React.FC = () => {
       await downloadCertificateMutation.mutateAsync(certificateId)
     } catch (error) {
       console.error('Error downloading certificate:', error)
-      setSnackbar({
-        open: true,
-        message: 'No se pudo descargar el certificado.',
-        severity: 'error'
-      })
+      showSnackbar('No se pudo descargar el certificado.', 'error')
     }
   }
 
@@ -177,6 +181,20 @@ const LmsCertificateView: React.FC = () => {
         isValid: false,
         error: 'Error al verificar el certificado'
       })
+    }
+  }
+
+  const copyVerificationLink = async (verificationUrl?: string) => {
+    if (!verificationUrl) {
+      showSnackbar('Este certificado aún no tiene un enlace de verificación disponible.', 'error')
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(verificationUrl)
+      showSnackbar('Enlace de verificación copiado.')
+    } catch (error) {
+      showSnackbar('No se pudo copiar el enlace.', 'error')
     }
   }
 
@@ -240,20 +258,7 @@ const LmsCertificateView: React.FC = () => {
       name: 'Copiar enlace',
       icon: <LinkIcon />,
       action: async () => {
-        try {
-          await navigator.clipboard.writeText(certificate?.verification_url || '')
-          setSnackbar({
-            open: true,
-            message: 'Enlace de verificación copiado.',
-            severity: 'success'
-          })
-        } catch (error) {
-          setSnackbar({
-            open: true,
-            message: 'No se pudo copiar el enlace.',
-            severity: 'error'
-          })
-        }
+        await copyVerificationLink(certificate?.verification_url)
       }
     },
     {
@@ -455,6 +460,15 @@ const LmsCertificateView: React.FC = () => {
                     </ListItem>
                     <ListItem>
                       <ListItemIcon>
+                        <CalendarIcon />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Fecha de emisión"
+                        secondary={certificate.issuedAt ? new Date(certificate.issuedAt).toLocaleDateString('es-ES') : 'N/A'}
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemIcon>
                         <VerifiedIcon />
                       </ListItemIcon>
                       <ListItemText
@@ -480,11 +494,25 @@ const LmsCertificateView: React.FC = () => {
               </Card>
 
               <Card>
-                <CardHeader title="Verificar Certificado" />
+                <CardHeader title="Compartir y Verificar" />
                 <CardContent>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Ingresa el número de certificado para verificar su autenticidad
+                    Usa este enlace cuando necesites compartir el certificado o validar su autenticidad.
                   </Typography>
+                  <Paper sx={{ p: 2, bgcolor: 'grey.50', border: '1px dashed', borderColor: 'grey.300', mb: 2 }}>
+                    <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
+                      {certificate.verification_url}
+                    </Typography>
+                  </Paper>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    startIcon={<LinkIcon />}
+                    sx={{ mb: 1 }}
+                    onClick={() => copyVerificationLink(certificate.verification_url)}
+                  >
+                    Copiar enlace de verificación
+                  </Button>
                   <Button
                     variant="outlined"
                     fullWidth
@@ -551,7 +579,7 @@ const LmsCertificateView: React.FC = () => {
                       }
                       action={
                         <Chip
-                          label={cert.template_name}
+                          label={`Emitido ${new Date(cert.issuedAt).toLocaleDateString('es-ES')}`}
                           size="small"
                           color="primary"
                           variant="outlined"
@@ -562,13 +590,19 @@ const LmsCertificateView: React.FC = () => {
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                         Certificado N°: {cert.certificateNumber}
                       </Typography>
+
+                      {cert.courseDescription && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                          {cert.courseDescription}
+                        </Typography>
+                      )}
                       
                       <Typography variant="body2" sx={{ mb: 1 }}>
                         <strong>Completado:</strong> {new Date(cert.completion_date).toLocaleDateString('es-ES')}
                       </Typography>
                       
                       <Typography variant="body2" sx={{ mb: 2 }}>
-                        <strong>Plantilla:</strong> {cert.template_name}
+                        <strong>Emitido:</strong> {cert.issuedAt ? new Date(cert.issuedAt).toLocaleDateString('es-ES') : 'N/A'}
                       </Typography>
 
                       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
