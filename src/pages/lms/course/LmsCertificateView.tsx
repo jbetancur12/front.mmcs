@@ -95,6 +95,9 @@ const normalizeCertificate = (certificate: ApiCertificate | Certificate): Certif
   certificateData: (certificate as Certificate).certificateData || {}
 })
 
+const getOrganizationName = (certificate?: Certificate | null) =>
+  certificate?.certificateData?.organizationName || 'MMCS Learning Management System'
+
 const LmsCertificateView: React.FC = () => {
   const { certificateId, certificateNumber: certificateNumberParam } = useParams<{ certificateId: string; certificateNumber: string }>()
   const navigate = useNavigate()
@@ -346,6 +349,20 @@ const LmsCertificateView: React.FC = () => {
                     </Typography>
                   </Grid>
                   <Grid item xs={12} md={6}>
+                    <Typography variant="caption" color="text.secondary">Organización</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                      {getOrganizationName(verificationResult.certificate)}
+                    </Typography>
+                  </Grid>
+                  {verificationResult.certificate.courseDescription && (
+                    <Grid item xs={12}>
+                      <Typography variant="caption" color="text.secondary">Descripción del curso</Typography>
+                      <Typography variant="body2">
+                        {verificationResult.certificate.courseDescription}
+                      </Typography>
+                    </Grid>
+                  )}
+                  <Grid item xs={12} md={6}>
                     <Typography variant="caption" color="text.secondary">Fecha de finalización</Typography>
                     <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
                       {verificationResult.certificate.certificateData?.completionDate
@@ -465,6 +482,15 @@ const LmsCertificateView: React.FC = () => {
                       <ListItemText
                         primary="Fecha de emisión"
                         secondary={certificate.issuedAt ? new Date(certificate.issuedAt).toLocaleDateString('es-ES') : 'N/A'}
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemIcon>
+                        <CertificateIcon />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Organización"
+                        secondary={getOrganizationName(certificate)}
                       />
                     </ListItem>
                     <ListItem>
@@ -596,6 +622,10 @@ const LmsCertificateView: React.FC = () => {
                           {cert.courseDescription}
                         </Typography>
                       )}
+
+                      <Typography variant="body2" sx={{ mb: 1 }}>
+                        <strong>Organización:</strong> {getOrganizationName(cert)}
+                      </Typography>
                       
                       <Typography variant="body2" sx={{ mb: 1 }}>
                         <strong>Completado:</strong> {new Date(cert.completion_date).toLocaleDateString('es-ES')}
