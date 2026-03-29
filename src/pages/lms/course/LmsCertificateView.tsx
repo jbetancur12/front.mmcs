@@ -238,23 +238,41 @@ const LmsCertificateView: React.FC = () => {
   }, [verificationParam])
 
   const generateCertificateHtml = (cert: Certificate) => {
-    // This would normally use the template from the database
     return `
-      <div style="width: 800px; height: 600px; border: 2px solid #2196F3; padding: 40px; font-family: Arial, sans-serif; text-align: center; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); margin: 0 auto;">
-        <h1 style="color: #2196F3; margin-bottom: 20px; font-size: 36px;">CERTIFICADO DE FINALIZACIÓN</h1>
-        <div style="margin: 40px 0;">
-          <p style="font-size: 18px; margin-bottom: 10px;">Se certifica que</p>
-          <h2 style="color: #333; font-size: 28px; margin: 20px 0; border-bottom: 2px solid #2196F3; padding-bottom: 10px;">${cert.certificateData?.userName || 'Usuario'}</h2>
-          <p style="font-size: 18px; margin-bottom: 10px;">ha completado exitosamente el curso</p>
-          <h3 style="color: #2196F3; font-size: 24px; margin: 20px 0;">${cert.certificateData?.courseTitle || cert.courseTitle}</h3>
-        </div>
-        <div style="margin: 40px 0;">
-          <p style="font-size: 16px;">Fecha de finalización: ${cert.certificateData?.completionDate || new Date(cert.issuedAt).toLocaleDateString()}</p>
-          <p style="font-size: 14px; color: #666;">Certificado N°: ${cert.certificateData?.certificateNumber || cert.certificateNumber}</p>
-        </div>
-        <div style="margin-top: 60px;">
-          <div style="border-top: 1px solid #333; width: 200px; margin: 0 auto; padding-top: 10px;">
-            <p style="font-size: 14px; margin: 0;">Firma Autorizada</p>
+      <div style="width: 800px; min-height: 600px; box-sizing: border-box; border: 8px solid #0f766e; padding: 48px; font-family: Georgia, 'Times New Roman', serif; text-align: center; background: linear-gradient(135deg, #fdfcf7 0%, #f1f5f9 100%); margin: 0 auto; position: relative; overflow: hidden;">
+        <div style="position: absolute; inset: 16px; border: 1px solid rgba(15,118,110,0.18);"></div>
+        <div style="position: relative; z-index: 1;">
+          <p style="letter-spacing: 0.4em; text-transform: uppercase; color: #0f766e; font-size: 12px; margin: 0 0 16px;">${getOrganizationName(cert)}</p>
+          <h1 style="color: #0f172a; margin: 0 0 10px; font-size: 38px; font-weight: 700;">Certificado de Finalización</h1>
+          <p style="font-size: 17px; color: #475569; margin-bottom: 40px;">Reconocimiento oficial por completar satisfactoriamente esta experiencia de aprendizaje.</p>
+          <p style="font-size: 18px; margin-bottom: 8px; color: #334155;">Se certifica que</p>
+          <h2 style="color: #111827; font-size: 30px; margin: 18px auto; padding-bottom: 14px; border-bottom: 2px solid rgba(15,118,110,0.35); width: fit-content; max-width: 100%;">${cert.certificateData?.userName || 'Usuario'}</h2>
+          <p style="font-size: 18px; margin: 0; color: #334155;">ha completado el curso</p>
+          <h3 style="color: #0f766e; font-size: 26px; margin: 20px 0 12px;">${cert.certificateData?.courseTitle || cert.courseTitle}</h3>
+          <p style="font-size: 15px; color: #64748b; margin-bottom: 28px;">${cert.courseDescription || 'Curso certificado dentro del entorno de aprendizaje MMCS.'}</p>
+          <div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin: 36px 0; color: #334155;">
+            <div>
+              <p style="font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 6px; color: #64748b;">Finalización</p>
+              <p style="font-size: 16px; margin: 0;">${cert.certificateData?.completionDate || new Date(cert.issuedAt).toLocaleDateString()}</p>
+            </div>
+            <div>
+              <p style="font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 6px; color: #64748b;">Duración</p>
+              <p style="font-size: 16px; margin: 0;">${getCourseDurationLabel(cert)}</p>
+            </div>
+            <div>
+              <p style="font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 6px; color: #64748b;">Certificado</p>
+              <p style="font-size: 16px; margin: 0;">${cert.certificateData?.certificateNumber || cert.certificateNumber}</p>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; gap: 32px; margin-top: 56px; align-items: flex-end;">
+            <div style="flex: 1; text-align: left;">
+              <p style="margin: 0 0 8px; color: #0f766e; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase;">Verificación pública</p>
+              <p style="margin: 0; color: #475569; font-size: 13px; word-break: break-word;">${cert.verification_url || 'Disponible desde el panel LMS'}</p>
+            </div>
+            <div style="width: 220px; border-top: 1px solid #334155; padding-top: 10px;">
+              <p style="font-size: 14px; margin: 0; color: #0f172a;">Firma autorizada</p>
+              <p style="font-size: 12px; margin: 4px 0 0; color: #64748b;">${getOrganizationName(cert)}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -406,11 +424,25 @@ const LmsCertificateView: React.FC = () => {
       {viewMode === 'single' && certificate ? (
         // Single Certificate View
         <Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h4" component="h1">
-              Certificado de Finalización
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1 }}>
+          <Alert
+            severity='success'
+            sx={{ mb: 3 }}
+          >
+            Tu certificado ya está listo para descargar, compartir o verificar con un enlace público.
+          </Alert>
+
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+            <Box>
+              <Typography variant="h4" component="h1">
+                Certificado de Finalización
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1.5 }}>
+                <Chip label={getOrganizationName(certificate)} color='success' variant='outlined' />
+                <Chip label={getCourseDurationLabel(certificate)} variant='outlined' />
+                <Chip label={certificate.certificateNumber} variant='outlined' />
+              </Box>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               <Button
                 variant="outlined"
                 startIcon={<PrintIcon />}
@@ -544,6 +576,9 @@ const LmsCertificateView: React.FC = () => {
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                     Usa este enlace cuando necesites compartir el certificado o validar su autenticidad.
                   </Typography>
+                  <Alert severity='info' sx={{ mb: 2 }}>
+                    El enlace público permite verificar este certificado sin iniciar sesión.
+                  </Alert>
                   <Paper sx={{ p: 2, bgcolor: 'grey.50', border: '1px dashed', borderColor: 'grey.300', mb: 2 }}>
                     <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
                       {certificate.verification_url}
@@ -612,7 +647,17 @@ const LmsCertificateView: React.FC = () => {
             <Grid container spacing={3}>
               {filteredCertificates.map((cert) => (
                 <Grid item xs={12} md={6} lg={4} key={cert.id}>
-                  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <Card
+                    sx={{
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      background:
+                        'linear-gradient(180deg, rgba(248,250,252,1) 0%, rgba(255,255,255,1) 42%)'
+                    }}
+                  >
                     <CardHeader
                       title={
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -641,6 +686,11 @@ const LmsCertificateView: React.FC = () => {
                           {cert.courseDescription}
                         </Typography>
                       )}
+
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+                        <Chip size='small' label={getOrganizationName(cert)} variant='outlined' />
+                        <Chip size='small' label={getCourseDurationLabel(cert)} variant='outlined' />
+                      </Box>
 
                       <Typography variant="body2" sx={{ mb: 1 }}>
                         <strong>Organización:</strong> {getOrganizationName(cert)}
@@ -741,6 +791,13 @@ const LmsCertificateView: React.FC = () => {
               certificado con otra persona.
             </Typography>
           </Alert>
+
+          <Paper sx={{ p: 2, mb: 3, bgcolor: 'grey.50', borderRadius: 2 }}>
+            <Typography variant='subtitle2'>{certificate?.courseTitle}</Typography>
+            <Typography variant='body2' color='text.secondary'>
+              {certificate?.certificateNumber} · {getOrganizationName(certificate)}
+            </Typography>
+          </Paper>
 
           <Box sx={{ mb: 3 }}>
             <Typography variant="subtitle2" gutterBottom>
