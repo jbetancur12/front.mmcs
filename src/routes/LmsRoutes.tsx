@@ -21,6 +21,7 @@ const LmsUserManagement = lazy(
   () => import('../pages/lms/admin/LmsUserManagement')
 )
 const LmsAnalytics = lazy(() => import('../pages/lms/admin/LmsAnalytics'))
+const LmsAdminNotifications = lazy(() => import('../pages/lms/admin/LmsAdminNotifications'))
 const LmsReporting = lazy(() => import('../pages/lms/admin/LmsReporting'))
 const LmsCourseAssignments = lazy(() => import('../pages/lms/admin/LmsCourseAssignments'))
 const LmsQuizManagement = lazy(() => import('../pages/lms/admin/LmsQuizManagement'))
@@ -73,6 +74,7 @@ const LmsRoutes = (role: string[]) => {
         <Route path='lms/admin/dashboard' element={<Navigate to='/lms/admin/courses' replace />} />
         <Route path='lms/admin/users' element={<LmsUserManagement />} />
         <Route path='lms/admin/analytics' element={<LmsAnalytics />} />
+        <Route path='lms/admin/notifications' element={<LmsAdminNotifications />} />
         <Route path='lms/admin/reporting' element={<LmsReporting />} />
         <Route path='lms/admin/reports' element={<LmsReporting />} />
         <Route path='lms/admin/courses/:courseId/assignments' element={<LmsCourseAssignments />} />

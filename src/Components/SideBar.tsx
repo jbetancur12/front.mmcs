@@ -161,6 +161,11 @@ const sidebarItems = ($userStore: UserData) => [
         roles: [...LMS_ADMIN_ROUTE_ROLES]
       },
       {
+        label: 'Notificaciones',
+        url: 'lms/admin/notifications',
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
+      },
+      {
         label: 'Reportes',
         url: 'lms/admin/reporting',
         roles: [...LMS_ADMIN_ROUTE_ROLES]

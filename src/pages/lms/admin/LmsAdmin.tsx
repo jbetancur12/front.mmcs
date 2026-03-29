@@ -163,6 +163,15 @@ const LmsAdmin: React.FC = () => {
       route: '/lms/admin/analytics'
     },
     {
+      id: 'notifications',
+      title: 'Notificaciones',
+      description: 'Avisos y seguimiento reciente',
+      icon: <AssignmentIcon />,
+      color: '#0891b2',
+      gradient: 'linear-gradient(135deg, #0891b2 0%, #0f766e 100%)',
+      route: '/lms/admin/notifications'
+    },
+    {
       id: 'reports',
       title: 'Reportes',
       description: 'Generación y análisis de reportes',
