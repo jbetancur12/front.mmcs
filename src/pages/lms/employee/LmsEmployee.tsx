@@ -259,6 +259,50 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     return completedCourseRecognitions
   }, [mandatoryCourses, optionalCourses, userCertificates])
 
+  const nextLearningAction = useMemo(() => {
+    const priorityMandatory = mandatoryCourses.find((course) => course.progress < 100)
+    if (priorityMandatory) {
+      return {
+        kind: 'mandatory' as const,
+        title: priorityMandatory.title,
+        description: priorityMandatory.isOverdue
+          ? 'Este curso obligatorio está vencido y conviene retomarlo primero.'
+          : typeof priorityMandatory.daysUntilDeadline === 'number' && priorityMandatory.daysUntilDeadline <= 7
+            ? `Este curso obligatorio vence en ${priorityMandatory.daysUntilDeadline} día(s).`
+            : 'Este curso obligatorio sigue pendiente dentro de tu ruta de aprendizaje.',
+        cta: priorityMandatory.progress > 0 ? 'Retomar curso obligatorio' : 'Comenzar curso obligatorio',
+        courseId: priorityMandatory.id
+      }
+    }
+
+    const inProgressOptional = optionalCourses
+      .filter((course) => course.progress > 0 && course.progress < 100)
+      .sort((left, right) => right.progress - left.progress)[0]
+
+    if (inProgressOptional) {
+      return {
+        kind: 'progress' as const,
+        title: inProgressOptional.title,
+        description: `Ya avanzaste ${inProgressOptional.progress}% en este curso. Retomarlo te ayudará a cerrar progreso más rápido.`,
+        cta: 'Continuar curso',
+        courseId: inProgressOptional.id
+      }
+    }
+
+    const nextOptional = optionalCourses[0]
+    if (nextOptional) {
+      return {
+        kind: 'catalog' as const,
+        title: nextOptional.title,
+        description: 'No tienes cursos activos en progreso. Este es un buen punto para seguir aprendiendo.',
+        cta: 'Comenzar curso',
+        courseId: nextOptional.id
+      }
+    }
+
+    return null
+  }, [mandatoryCourses, optionalCourses])
+
   const handleLogout = () => {
     localStorage.removeItem('currentUser')
     navigate('/')
@@ -380,6 +424,38 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
               para profundizar tu aprendizaje. Lo urgente siempre aparece primero en
               <strong> Cursos Obligatorios</strong>.
             </Alert>
+            {nextLearningAction && (
+              <Card sx={{ mb: 3, border: '1px solid', borderColor: 'divider' }}>
+                <CardContent>
+                  <Typography variant='overline' color='text.secondary'>
+                    Siguiente paso recomendado
+                  </Typography>
+                  <Typography variant='h6' sx={{ mt: 0.5 }}>
+                    {nextLearningAction.title}
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                    {nextLearningAction.description}
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    <Button
+                      variant='contained'
+                      startIcon={<PlayArrowIcon />}
+                      onClick={() => handleCourseClick(nextLearningAction.courseId)}
+                    >
+                      {nextLearningAction.cta}
+                    </Button>
+                    <Button
+                      variant='outlined'
+                      onClick={() =>
+                        setActiveTab(nextLearningAction.kind === 'mandatory' ? 1 : 2)
+                      }
+                    >
+                      Ver esta sección
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            )}
             {/* Alertas importantes */}
             {stats.overdueTraining > 0 && (
               <Alert severity="error" sx={{ mb: 3 }}>
@@ -503,9 +579,18 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                 <Card>
                   <CardHeader title='Cursos en Progreso' />
                   <CardContent>
-                    <List>
-                      {[...mandatoryCourses, ...optionalCourses]
+                    {([...
+                      mandatoryCourses,
+                      ...optionalCourses
+                    ].filter((course) => course.progress > 0 && course.progress < 100).length > 0) ? (
+                      <List>
+                        {[...mandatoryCourses, ...optionalCourses]
                         .filter((course) => course.progress > 0 && course.progress < 100)
+                        .sort((left, right) => {
+                          const priorityDifference = getMandatoryPriority(left) - getMandatoryPriority(right)
+                          if (priorityDifference !== 0) return priorityDifference
+                          return right.progress - left.progress
+                        })
                         .slice(0, 4)
                         .map((course) => (
                           <React.Fragment key={course.id}>
@@ -563,7 +648,12 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                             <Divider />
                           </React.Fragment>
                         ))}
-                    </List>
+                      </List>
+                    ) : (
+                      <Alert severity="info">
+                        Todavía no tienes cursos en progreso. Cuando comiences uno, aquí aparecerá el mejor punto para retomarlo.
+                      </Alert>
+                    )}
                   </CardContent>
                 </Card>
               </Grid>
@@ -585,8 +675,20 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                               : `Vence en ${course.daysUntilDeadline} días`
                             }
                           </Typography>
+                          <Button
+                            size="small"
+                            sx={{ mt: 1, px: 0 }}
+                            onClick={() => handleCourseClick(course.id)}
+                          >
+                            Retomar ahora
+                          </Button>
                         </Box>
                       ))}
+                    {mandatoryCourses.filter(course => typeof course.daysUntilDeadline === 'number' && course.daysUntilDeadline <= 7 && course.progress < 100).length === 0 && (
+                      <Alert severity="success">
+                        No tienes vencimientos próximos. Si aparece uno, aquí verás el siguiente curso a priorizar.
+                      </Alert>
+                    )}
                   </CardContent>
                 </Card>
 

@@ -202,6 +202,35 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
     return filtered
   }, [availableCourses, selectedCategory, searchTerm])
 
+  const nextLearningAction = useMemo(() => {
+    const inProgress = availableCourses
+      .filter((course) => course.progress > 0 && course.progress < 100)
+      .sort((left, right) => right.progress - left.progress)[0]
+
+    if (inProgress) {
+      return {
+        title: inProgress.title,
+        description: `Ya avanzaste ${inProgress.progress}% en este curso. Retomarlo es la forma más rápida de seguir aprendiendo.`,
+        cta: 'Continuar curso',
+        courseId: inProgress.id,
+        section: 0
+      }
+    }
+
+    const recommended = availableCourses[0]
+    if (recommended) {
+      return {
+        title: recommended.title,
+        description: 'Aún no tienes cursos en progreso. Este es un buen punto para comenzar.',
+        cta: 'Comenzar curso',
+        courseId: recommended.id,
+        section: 1
+      }
+    }
+
+    return null
+  }, [availableCourses])
+
   const handleLogout = () => {
     localStorage.removeItem('currentUser')
     navigate('/')
@@ -320,6 +349,36 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
               compartidos. No manejas asignaciones obligatorias: avanzas desde catálogo y
               certificados obtenidos.
             </Alert>
+            {nextLearningAction && (
+              <Card sx={{ mb: 3, border: '1px solid', borderColor: 'divider' }}>
+                <CardContent>
+                  <Typography variant='overline' color='text.secondary'>
+                    Siguiente paso recomendado
+                  </Typography>
+                  <Typography variant='h6' sx={{ mt: 0.5 }}>
+                    {nextLearningAction.title}
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                    {nextLearningAction.description}
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    <Button
+                      variant='contained'
+                      startIcon={<PlayArrowIcon />}
+                      onClick={() => handleCourseClick(nextLearningAction.courseId)}
+                    >
+                      {nextLearningAction.cta}
+                    </Button>
+                    <Button
+                      variant='outlined'
+                      onClick={() => setActiveTab(nextLearningAction.section)}
+                    >
+                      Ver esta sección
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            )}
             {/* Estadísticas principales */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
               <Grid item xs={12} sm={6} lg={3}>
@@ -530,6 +589,9 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                               primary={course.title}
                               secondary={`${course.progress}% completado • ${course.category}`}
                             />
+                            <Button size="small" onClick={() => handleCourseClick(course.id)}>
+                              Retomar
+                            </Button>
                           </ListItem>
                         ))}
                       </List>
@@ -553,6 +615,9 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                               primary={course.title}
                               secondary={`Agregado el ${new Date(course.releaseDate).toLocaleDateString('es-CO')} • ${course.category}`}
                             />
+                            <Button size="small" onClick={() => handleCourseClick(course.id)}>
+                              Ver curso
+                            </Button>
                           </ListItem>
                         ))}
                       </List>
