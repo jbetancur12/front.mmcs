@@ -86,6 +86,16 @@ interface BackendAssignment {
   status: 'active' | 'completed' | 'overdue'
   assigned_to: string[]
   affected_users_count: number
+  reminder_summary?: {
+    totalNotifications: number
+    reminderNotifications: number
+    manualReminderNotifications: number
+    unreadReminderNotifications: number
+    lastNotificationAt: string | null
+    lastReminderAt: string | null
+    lastManualReminderAt: string | null
+    lastReminderType: string | null
+  }
 }
 
 // Frontend interface (for compatibility)
@@ -99,6 +109,16 @@ interface Assignment {
   status: 'active' | 'completed' | 'overdue'
   progress: number
   createdAt: string
+  reminderSummary: {
+    totalNotifications: number
+    reminderNotifications: number
+    manualReminderNotifications: number
+    unreadReminderNotifications: number
+    lastNotificationAt: string | null
+    lastReminderAt: string | null
+    lastManualReminderAt: string | null
+    lastReminderType: string | null
+  }
 }
 
 // Transform backend assignment to frontend format
@@ -112,7 +132,17 @@ const transformAssignment = (backendAssignment: BackendAssignment): Assignment =
     deadline: backendAssignment.deadline || '',
     status: backendAssignment.status,
     progress: Math.round(backendAssignment.progress_stats.avgProgress || 0),
-    createdAt: backendAssignment.created_at
+    createdAt: backendAssignment.created_at,
+    reminderSummary: backendAssignment.reminder_summary || {
+      totalNotifications: 0,
+      reminderNotifications: 0,
+      manualReminderNotifications: 0,
+      unreadReminderNotifications: 0,
+      lastNotificationAt: null,
+      lastReminderAt: null,
+      lastManualReminderAt: null,
+      lastReminderType: null
+    }
   }
 }
 
@@ -121,6 +151,21 @@ const getApiMessage = (error: any, fallback: string) =>
   || error?.response?.data?.message
   || error?.message
   || fallback
+
+const formatRelativeDate = (value?: string | null) => {
+  if (!value) return 'Sin seguimiento todavía'
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'Sin seguimiento todavía'
+
+  return date.toLocaleString('es-CO', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  })
+}
 
 const LmsCourseAssignmentInterface: React.FC = () => {
   const navigate = useNavigate()
@@ -303,21 +348,21 @@ const LmsCourseAssignmentInterface: React.FC = () => {
 
   const sendNotificationMutation = useMutation(
     async (assignmentId: number) => {
-      // TODO: Implementar endpoint de notificaciones cuando esté disponible
-      const response = await axiosPrivate.post(
-        `/lms/notifications/assignments/${assignmentId}/reminder`
-      )
-      return response.data
+      const response = await axiosPrivate.post('/lms/analytics/reminders/trigger-manual', {
+        assignmentIds: [assignmentId]
+      })
+      return response.data.data
     },
     {
-      onSuccess: () => {
+      onSuccess: (data: any) => {
         Swal.fire({
           icon: 'success',
           title: 'Recordatorio enviado',
-          text: 'Se reenviaron las alertas para esta asignación.',
+          text: `${data?.totalNotifications || 0} notificación(es) enviadas para esta asignación.`,
           timer: 2000
         })
         queryClient.invalidateQueries(['lms-all-assignments'])
+        queryClient.invalidateQueries(['analytics', 'mandatory-training'])
       },
       onError: (error: any) => {
         Swal.fire({
@@ -686,7 +731,49 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                                 </Typography>
                               </Box>
                             </Grid>
+                            <Grid item xs={12} sm={6} md={3}>
+                              <Typography variant="caption" color="text.secondary">
+                                Seguimiento:
+                              </Typography>
+                              <Typography variant="body2">
+                                {assignment.reminderSummary.reminderNotifications > 0
+                                  ? `${assignment.reminderSummary.reminderNotifications} recordatorio(s)`
+                                  : 'Sin recordatorios'}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                Último: {formatRelativeDate(
+                                  assignment.reminderSummary.lastReminderAt
+                                  || assignment.reminderSummary.lastNotificationAt
+                                )}
+                              </Typography>
+                            </Grid>
                           </Grid>
+
+                          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+                            {assignment.reminderSummary.manualReminderNotifications > 0 && (
+                              <Chip
+                                size="small"
+                                color="info"
+                                variant="outlined"
+                                label={`${assignment.reminderSummary.manualReminderNotifications} manual(es)`}
+                              />
+                            )}
+                            {assignment.reminderSummary.unreadReminderNotifications > 0 && (
+                              <Chip
+                                size="small"
+                                color="warning"
+                                label={`${assignment.reminderSummary.unreadReminderNotifications} sin leer`}
+                              />
+                            )}
+                            {assignment.status !== 'completed' && assignment.reminderSummary.lastReminderAt === null && (
+                              <Chip
+                                size="small"
+                                color="default"
+                                variant="outlined"
+                                label="Sin seguimiento enviado"
+                              />
+                            )}
+                          </Box>
                         </Box>
 
                         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'flex-end' }}>

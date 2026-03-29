@@ -76,6 +76,16 @@ interface ComplianceRecord {
   progress: number
   daysUntilDeadline: number | null
   isOverdue: boolean
+  reminderSummary?: {
+    totalNotifications: number
+    reminderNotifications: number
+    manualReminderNotifications: number
+    unreadReminderNotifications: number
+    lastNotificationAt: string | null
+    lastReminderAt: string | null
+    lastManualReminderAt: string | null
+    lastReminderType: string | null
+  }
 }
 
 interface ComplianceAlert {
@@ -106,6 +116,23 @@ const formatDeadlineLabel = (record: Pick<ComplianceRecord, 'deadline' | 'isOver
   }
 
   return new Date(record.deadline).toLocaleDateString()
+}
+
+const formatFollowUpLabel = (record: Pick<ComplianceRecord, 'reminderSummary'>) => {
+  const lastReminder = record.reminderSummary?.lastReminderAt
+    || record.reminderSummary?.lastNotificationAt
+
+  if (!lastReminder) {
+    return 'Sin seguimiento enviado'
+  }
+
+  return new Date(lastReminder).toLocaleString('es-CO', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  })
 }
 
 const LmsComplianceTracker: React.FC = () => {
@@ -152,7 +179,17 @@ const LmsComplianceTracker: React.FC = () => {
       progress: training.progress || 0,
       status: training.status,
       daysUntilDeadline: training.daysUntilDeadline ?? null,
-      isOverdue: training.isOverdue || false
+      isOverdue: training.isOverdue || false,
+      reminderSummary: training.reminderSummary || {
+        totalNotifications: 0,
+        reminderNotifications: 0,
+        manualReminderNotifications: 0,
+        unreadReminderNotifications: 0,
+        lastNotificationAt: null,
+        lastReminderAt: null,
+        lastManualReminderAt: null,
+        lastReminderType: null
+      }
     }))
 
     // Deduplicate by userId + courseId (in case backend returns duplicates)
@@ -587,13 +624,14 @@ const LmsComplianceTracker: React.FC = () => {
                     <TableCell>Progreso</TableCell>
                     <TableCell>Estado</TableCell>
                     <TableCell>Fecha límite</TableCell>
+                    <TableCell>Seguimiento</TableCell>
                     <TableCell>Acciones</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {filteredRecords.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} align="center" sx={{ py: 8 }}>
+                      <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
                         <Typography variant="body1" color="text.secondary">
                           No se encontraron registros con los filtros aplicados
                         </Typography>
@@ -665,6 +703,14 @@ const LmsComplianceTracker: React.FC = () => {
                         )}
                       </TableCell>
                       <TableCell>
+                        <Typography variant="body2">
+                          {record.reminderSummary?.reminderNotifications || 0} recordatorio(s)
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {formatFollowUpLabel(record)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
                         <Box sx={{ display: 'flex', gap: 0.5 }}>
                           <IconButton
                             size="small"
@@ -720,7 +766,7 @@ const LmsComplianceTracker: React.FC = () => {
                   </ListItemIcon>
                   <ListItemText
                     primary={`${record.userName} - ${record.courseTitle}`}
-                    secondary={`${formatDeadlineLabel(record)} • Progreso: ${record.progress}%`}
+                    secondary={`${formatDeadlineLabel(record)} • Progreso: ${record.progress}% • ${formatFollowUpLabel(record)}`}
                   />
                   <ListItemSecondaryAction>
                     <Button
@@ -766,7 +812,7 @@ const LmsComplianceTracker: React.FC = () => {
                   </ListItemIcon>
                   <ListItemText
                     primary={`${record.userName} - ${record.courseTitle}`}
-                    secondary={`${formatDeadlineLabel(record)} • Progreso: ${record.progress}%`}
+                    secondary={`${formatDeadlineLabel(record)} • Progreso: ${record.progress}% • ${formatFollowUpLabel(record)}`}
                   />
                   <ListItemSecondaryAction>
                     <Button
@@ -890,6 +936,7 @@ const LmsComplianceTracker: React.FC = () => {
                           <TableCell>Progreso</TableCell>
                           <TableCell>Estado</TableCell>
                           <TableCell>Fecha límite</TableCell>
+                          <TableCell>Seguimiento</TableCell>
                           <TableCell>Acciones</TableCell>
                         </TableRow>
                       </TableHead>
@@ -945,6 +992,14 @@ const LmsComplianceTracker: React.FC = () => {
                                   {formatDeadlineLabel(record)}
                                 </Typography>
                               )}
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">
+                                {record.reminderSummary?.reminderNotifications || 0} recordatorio(s)
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {formatFollowUpLabel(record)}
+                              </Typography>
                             </TableCell>
                             <TableCell>
                               <Box sx={{ display: 'flex', gap: 0.5 }}>
@@ -1289,6 +1344,44 @@ const LmsComplianceTracker: React.FC = () => {
                     </Typography>
                   )}
                 </Alert>
+              </Box>
+
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 2 }}>
+                  Seguimiento enviado
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={4}>
+                    <Box sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        Recordatorios
+                      </Typography>
+                      <Typography variant="h6" fontWeight="bold">
+                        {detailsRecord.reminderSummary?.reminderNotifications || 0}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Box sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        Manuales
+                      </Typography>
+                      <Typography variant="h6" fontWeight="bold">
+                        {detailsRecord.reminderSummary?.manualReminderNotifications || 0}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Box sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        Último seguimiento
+                      </Typography>
+                      <Typography variant="body2" fontWeight="medium">
+                        {formatFollowUpLabel(detailsRecord)}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
               </Box>
 
               {/* Información adicional */}
