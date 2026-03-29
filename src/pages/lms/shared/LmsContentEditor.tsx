@@ -455,36 +455,48 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
         complementarios.
       </Alert>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} lg={4}>
-          <Card variant="outlined">
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-                <Box>
-                  <Typography variant="h6">Secciones del curso</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Organiza el curso por bloques temáticos o momentos del aprendizaje.
-                  </Typography>
-                </Box>
-                <Button size="small" startIcon={<AddIcon />} onClick={() => setModuleDialogOpen(true)}>
-                  Agregar sección
-                </Button>
-              </Stack>
+      <Stack spacing={3}>
+        <Card variant="outlined">
+          <CardContent>
+            <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }} spacing={2} sx={{ mb: 2 }}>
+              <Box>
+                <Typography variant="h6">Secciones del curso</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Organiza el curso por bloques temáticos o momentos del aprendizaje.
+                </Typography>
+              </Box>
+              <Button size="small" startIcon={<AddIcon />} onClick={() => setModuleDialogOpen(true)}>
+                Agregar sección
+              </Button>
+            </Stack>
 
-              {modules.length === 0 ? (
-                <Alert severity="info">Este curso aún no tiene secciones. Crea la primera para empezar.</Alert>
-              ) : (
-                <List disablePadding>
-                  {modules.map((module) => (
-                    <Paper key={module.id} variant={module.id === selectedModuleId ? 'elevation' : 'outlined'} sx={{ mb: 1 }}>
-                      <ListItemButton onClick={() => setSelectedModuleId(module.id)}>
-                        <ListItemIcon>
+            {modules.length === 0 ? (
+              <Alert severity="info">Este curso aún no tiene secciones. Crea la primera para empezar.</Alert>
+            ) : (
+              <Grid container spacing={2}>
+                {modules.map((module) => (
+                  <Grid key={module.id} item xs={12} md={6} xl={4}>
+                    <Paper
+                      variant={module.id === selectedModuleId ? 'elevation' : 'outlined'}
+                      sx={{
+                        p: 2,
+                        borderColor: module.id === selectedModuleId ? 'primary.main' : 'divider',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => setSelectedModuleId(module.id)}
+                    >
+                      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
+                        <Stack direction="row" spacing={1.5} alignItems="flex-start" sx={{ minWidth: 0 }}>
                           <SectionIcon color={module.id === selectedModuleId ? 'primary' : 'inherit'} />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={module.title}
-                          secondary={pluralize(module.lessons.length, 'lección', 'lecciones')}
-                        />
+                          <Box sx={{ minWidth: 0 }}>
+                            <Typography variant="subtitle2" noWrap>
+                              {module.title}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {pluralize(module.lessons.length, 'lección', 'lecciones')}
+                            </Typography>
+                          </Box>
+                        </Stack>
                         <IconButton
                           edge="end"
                           size="small"
@@ -495,101 +507,100 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                         >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
-                      </ListItemButton>
+                      </Stack>
                     </Paper>
-                  ))}
-                </List>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+                  </Grid>
+                ))}
+              </Grid>
+            )}
+          </CardContent>
+        </Card>
 
-        <Grid item xs={12} lg={8}>
-          <Card variant="outlined">
-            <CardContent>
-              {selectedModule ? (
-                <Stack spacing={3}>
+        <Card variant="outlined">
+          <CardContent>
+            {selectedModule ? (
+              <Stack spacing={3}>
+                <Box>
+                  <Typography variant="overline" color="primary">
+                    Sección {selectedModule.order}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                    Agrupa aquí las lecciones que pertenecen al mismo tema, unidad o momento del curso.
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    label="Título de la sección"
+                    value={selectedModule.title}
+                    onChange={(event) =>
+                      replaceModule(selectedModule.id, (module) => ({
+                        ...module,
+                        title: event.target.value
+                      }))
+                    }
+                    sx={{ mt: 1, mb: 2 }}
+                  />
+                  <TextField
+                    fullWidth
+                    multiline
+                    minRows={2}
+                    label="Descripción de la sección"
+                    value={selectedModule.description || ''}
+                    onChange={(event) =>
+                      replaceModule(selectedModule.id, (module) => ({
+                        ...module,
+                        description: event.target.value
+                      }))
+                    }
+                  />
+                </Box>
+
+                <Divider />
+
+                <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }} spacing={2}>
                   <Box>
-                    <Typography variant="overline" color="primary">
-                      Sección {selectedModule.order}
+                    <Typography variant="h6">Lecciones de la sección</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Puedes combinar texto, video y quiz dentro de la misma sección.
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                      Agrupa aquí las lecciones que pertenecen al mismo tema, unidad o momento del curso.
-                    </Typography>
-                    <TextField
-                      fullWidth
-                      label="Título de la sección"
-                      value={selectedModule.title}
-                      onChange={(event) =>
-                        replaceModule(selectedModule.id, (module) => ({
-                          ...module,
-                          title: event.target.value
-                        }))
-                      }
-                      sx={{ mt: 1, mb: 2 }}
-                    />
-                    <TextField
-                      fullWidth
-                      multiline
-                      minRows={2}
-                      label="Descripción de la sección"
-                      value={selectedModule.description || ''}
-                      onChange={(event) =>
-                        replaceModule(selectedModule.id, (module) => ({
-                          ...module,
-                          description: event.target.value
-                        }))
-                      }
-                    />
                   </Box>
+                  <Button startIcon={<AddIcon />} onClick={() => setLessonDialogOpen(true)}>
+                    Agregar lección
+                  </Button>
+                </Stack>
 
-                  <Divider />
+                {selectedModule.lessons.length === 0 ? (
+                  <Alert severity="info">Esta sección aún no tiene lecciones. Agrega la primera para editar contenido.</Alert>
+                ) : (
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} xl={4}>
+                      <List disablePadding>
+                        {selectedModule.lessons.map((lesson) => (
+                          <Paper key={lesson.id} variant={lesson.id === selectedLessonId ? 'elevation' : 'outlined'} sx={{ mb: 1 }}>
+                            <ListItemButton onClick={() => setSelectedLessonId(lesson.id)}>
+                              <ListItemIcon>{lessonTypeMeta[lesson.type].icon}</ListItemIcon>
+                              <ListItemText
+                                primary={lesson.title}
+                                secondary={`${lessonTypeMeta[lesson.type].label} · ${lesson.estimatedMinutes} min`}
+                              />
+                              <IconButton
+                                edge="end"
+                                size="small"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  handleDeleteLesson(selectedModule.id, lesson.id)
+                                }}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </ListItemButton>
+                          </Paper>
+                        ))}
+                      </List>
+                    </Grid>
 
-                  <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <Box>
-                      <Typography variant="h6">Lecciones de la sección</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Puedes combinar texto, video y quiz dentro de la misma sección.
-                      </Typography>
-                    </Box>
-                    <Button startIcon={<AddIcon />} onClick={() => setLessonDialogOpen(true)}>
-                      Agregar lección
-                    </Button>
-                  </Stack>
-
-                  {selectedModule.lessons.length === 0 ? (
-                    <Alert severity="info">Esta sección aún no tiene lecciones. Agrega la primera para editar contenido.</Alert>
-                  ) : (
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} md={4}>
-                        <List disablePadding>
-                          {selectedModule.lessons.map((lesson) => (
-                            <Paper key={lesson.id} variant={lesson.id === selectedLessonId ? 'elevation' : 'outlined'} sx={{ mb: 1 }}>
-                              <ListItemButton onClick={() => setSelectedLessonId(lesson.id)}>
-                                <ListItemIcon>{lessonTypeMeta[lesson.type].icon}</ListItemIcon>
-                                <ListItemText
-                                  primary={lesson.title}
-                                  secondary={`${lessonTypeMeta[lesson.type].label} · ${lesson.estimatedMinutes} min`}
-                                />
-                                <IconButton
-                                  edge="end"
-                                  size="small"
-                                  onClick={(event) => {
-                                    event.stopPropagation()
-                                    handleDeleteLesson(selectedModule.id, lesson.id)
-                                  }}
-                                >
-                                  <DeleteIcon fontSize="small" />
-                                </IconButton>
-                              </ListItemButton>
-                            </Paper>
-                          ))}
-                        </List>
-                      </Grid>
-
-                      <Grid item xs={12} md={8}>
-                        {selectedLesson ? (
-                          <Stack spacing={2}>
+                    <Grid item xs={12} xl={8}>
+                      {selectedLesson ? (
+                        <Stack spacing={2}>
                             <TextField
                               fullWidth
                               label="Título de la lección"
@@ -763,20 +774,19 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                               )}
                             </Box>
                           </Stack>
-                        ) : (
-                          <Alert severity="info">Selecciona una lección para editar su contenido.</Alert>
-                        )}
-                      </Grid>
+                      ) : (
+                        <Alert severity="info">Selecciona una lección para editar su contenido.</Alert>
+                      )}
                     </Grid>
-                  )}
-                </Stack>
-              ) : (
-                <Alert severity="info">Selecciona una sección para editarla o crea la primera.</Alert>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+                  </Grid>
+                )}
+              </Stack>
+            ) : (
+              <Alert severity="info">Selecciona una sección para editarla o crea la primera.</Alert>
+            )}
+          </CardContent>
+        </Card>
+      </Stack>
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Stack direction="row" spacing={1}>
