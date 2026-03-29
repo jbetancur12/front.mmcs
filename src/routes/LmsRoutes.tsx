@@ -32,6 +32,8 @@ const LmsCertificateView = lazy(() => import('../pages/lms/course/LmsCertificate
 const LmsRoutes = (role: string[]) => {
   return (
     <>
+      <Route path='lms/certificates/verify/:certificateNumber' element={<LmsCertificateView />} />
+
       <Route
         element={
           <ProtectedRoute

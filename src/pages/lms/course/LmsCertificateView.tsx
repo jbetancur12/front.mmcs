@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Box,
   Card,
@@ -44,7 +44,7 @@ import {
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon
 } from '@mui/icons-material'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useUserCertificates, useCertificate, useDownloadCertificate } from '../../../hooks/useLms'
 import { lmsService, type Certificate as ApiCertificate } from '../../../services/lmsService'
 
@@ -96,13 +96,18 @@ const normalizeCertificate = (certificate: ApiCertificate | Certificate): Certif
 })
 
 const LmsCertificateView: React.FC = () => {
-  const { certificateId } = useParams<{ certificateId: string }>()
+  const { certificateId, certificateNumber: certificateNumberParam } = useParams<{ certificateId: string; certificateNumber: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const certificateIdNumber = certificateId ? Number(certificateId) : undefined
+  const verificationParam = certificateNumberParam || searchParams.get('verify') || ''
+  const isAuthenticated = localStorage.getItem('accessToken') !== null
+  const isPublicVerificationMode = Boolean(verificationParam && !certificateId)
+  const hasAutoVerified = useRef(false)
 
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
   const [isVerificationDialogOpen, setIsVerificationDialogOpen] = useState(false)
-  const [verificationNumber, setVerificationNumber] = useState('')
+  const [verificationNumber, setVerificationNumber] = useState(verificationParam)
   const [verificationResult, setVerificationResult] = useState<CertificateVerification | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [viewMode] = useState<'single' | 'gallery'>(certificateId ? 'single' : 'gallery')
@@ -114,10 +119,12 @@ const LmsCertificateView: React.FC = () => {
   })
 
   // Fetch user certificates or single certificate
-  const { data: userCertificatesData, isLoading: isLoadingCertificates } = useUserCertificates()
+  const { data: userCertificatesData, isLoading: isLoadingCertificates } = useUserCertificates(undefined, {
+    enabled: isAuthenticated && !certificateId && !isPublicVerificationMode
+  })
   const { data: singleCertificate, isLoading: isLoadingSingle } = useCertificate(
     certificateIdNumber ?? 0,
-    { enabled: !!certificateId }
+    { enabled: !!certificateId && isAuthenticated }
   )
   const downloadCertificateMutation = useDownloadCertificate()
 
@@ -172,6 +179,32 @@ const LmsCertificateView: React.FC = () => {
       })
     }
   }
+
+  useEffect(() => {
+    if (!verificationParam) {
+      return
+    }
+
+    setVerificationNumber(verificationParam)
+    setIsVerificationDialogOpen(true)
+
+    if (!hasAutoVerified.current) {
+      hasAutoVerified.current = true
+      void lmsService.verifyCertificate(verificationParam)
+        .then((result) => {
+          setVerificationResult({
+            ...result,
+            certificate: result.certificate ? normalizeCertificate(result.certificate) : undefined
+          })
+        })
+        .catch(() => {
+          setVerificationResult({
+            isValid: false,
+            error: 'Error al verificar el certificado'
+          })
+        })
+    }
+  }, [verificationParam])
 
   const generateCertificateHtml = (cert: Certificate) => {
     // This would normally use the template from the database
@@ -239,6 +272,99 @@ const LmsCertificateView: React.FC = () => {
       <Box sx={{ p: 3, textAlign: 'center' }}>
         <LinearProgress sx={{ mb: 2 }} />
         <Typography>Cargando certificado...</Typography>
+      </Box>
+    )
+  }
+
+  if (isPublicVerificationMode) {
+    return (
+      <Box sx={{ p: 3, maxWidth: 900, mx: 'auto' }}>
+        <Typography variant="h4" component="h1" sx={{ mb: 2 }}>
+          Verificación de Certificado
+        </Typography>
+        <Alert severity="info" sx={{ mb: 3 }}>
+          Este enlace permite validar la autenticidad del certificado sin iniciar sesión.
+        </Alert>
+
+        <Paper sx={{ p: 3 }}>
+          <Box sx={{ mb: 3 }}>
+            <TextField
+              fullWidth
+              label="Número de Certificado"
+              value={verificationNumber}
+              onChange={(e) => setVerificationNumber(e.target.value)}
+              placeholder="Ej: MMCS-2026-ABCD1234"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <VerifiedIcon />
+                  </InputAdornment>
+                )
+              }}
+            />
+          </Box>
+
+          <Button
+            variant="contained"
+            onClick={handleVerifyCertificate}
+            disabled={!verificationNumber.trim()}
+            sx={{ mb: 3 }}
+          >
+            Verificar Certificado
+          </Button>
+
+          {verificationResult && (
+            <Paper sx={{ p: 3, border: '1px solid', borderColor: verificationResult.isValid ? 'success.main' : 'error.main' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                {verificationResult.isValid ? (
+                  <CheckCircleIcon color="success" />
+                ) : (
+                  <ErrorIcon color="error" />
+                )}
+                <Typography variant="h6" color={verificationResult.isValid ? 'success.main' : 'error.main'}>
+                  {verificationResult.isValid ? 'Certificado válido' : 'Certificado no válido'}
+                </Typography>
+              </Box>
+
+              {verificationResult.isValid && verificationResult.certificate ? (
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="caption" color="text.secondary">Estudiante</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                      {verificationResult.certificate.userName}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="caption" color="text.secondary">Curso</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                      {verificationResult.certificate.courseTitle}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="caption" color="text.secondary">Fecha de finalización</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                      {verificationResult.certificate.certificateData?.completionDate
+                        ? new Date(verificationResult.certificate.certificateData.completionDate).toLocaleDateString('es-ES')
+                        : 'N/A'}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="caption" color="text.secondary">Fecha de emisión</Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                      {verificationResult.certificate.issuedAt
+                        ? new Date(verificationResult.certificate.issuedAt).toLocaleDateString('es-ES')
+                        : 'N/A'}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              ) : (
+                <Typography variant="body2" color="error">
+                  {verificationResult.error || 'El certificado no pudo ser verificado.'}
+                </Typography>
+              )}
+            </Paper>
+          )}
+        </Paper>
       </Box>
     )
   }
