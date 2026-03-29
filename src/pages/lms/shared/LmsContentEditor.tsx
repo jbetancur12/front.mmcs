@@ -1,126 +1,166 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
+  Alert,
   Box,
+  Button,
   Card,
   CardContent,
-  CardHeader,
-  Typography,
-  Button,
-  Grid,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  LinearProgress,
-  Alert,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Snackbar,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
   Chip,
-  CircularProgress
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  FormControl,
+  Grid,
+  IconButton,
+  InputLabel,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  MenuItem,
+  Paper,
+  Select,
+  Snackbar,
+  Stack,
+  TextField,
+  Typography
 } from '@mui/material'
 import {
-  CloudUpload as CloudUploadIcon,
-  VideoLibrary as VideoLibraryIcon,
-  YouTube as YouTubeIcon,
-  Delete as DeleteIcon,
-  DragIndicator as DragIndicatorIcon,
   Add as AddIcon,
-  Edit as EditIcon,
-  Settings as SettingsIcon
+  Article as ArticleIcon,
+  Delete as DeleteIcon,
+  FolderOpen as SectionIcon,
+  Link as LinkIcon,
+  OndemandVideo as VideoIcon,
+  PictureAsPdf as PdfIcon,
+  Quiz as QuizIcon
 } from '@mui/icons-material'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import './quill-custom.css'
-import DOMPurify from 'dompurify'
-import { useDropzone } from 'react-dropzone'
 import LmsQuizManagement from '../admin/LmsQuizManagement'
-import Swal from 'sweetalert2'
 
-// Types
-interface ContentModule {
+export type LessonDraftType = 'text' | 'video' | 'quiz'
+export type LessonResourceType = 'pdf' | 'document' | 'link'
+
+export interface LessonResourceDraft {
   id: string
   title: string
-  type: 'text' | 'video' | 'quiz'
+  description?: string
+  resourceType: LessonResourceType
+  fileUrl?: string
+  externalUrl?: string
   order: number
+}
+
+export interface ContentLessonDraft {
+  id: string
+  title: string
+  type: LessonDraftType
+  order: number
+  estimatedMinutes: number
   content: {
     text?: string
     videoUrl?: string
-    videoSource?: 'minio' | 'youtube'
-    videoFile?: File
+    videoSource?: 'youtube' | 'minio'
     description?: string
-    // Quiz - NEW: Reference to quiz in LmsQuizManagement
     quizId?: number
-    // DEPRECATED: Use quizId instead (legacy inline quiz editor)
-    // @deprecated - Will be removed in future version
-    quizConfig?: any
-    // @deprecated - Will be removed in future version
-    quizQuestions?: any[]
+    resources: LessonResourceDraft[]
   }
 }
 
-interface VideoUploadProgress {
-  file: File
-  progress: number
-  status: 'uploading' | 'processing' | 'completed' | 'error'
-  url?: string
-  error?: string
+export interface ContentModuleDraft {
+  id: string
+  title: string
+  description?: string
+  order: number
+  lessons: ContentLessonDraft[]
+}
+
+interface ResourceDraftDialogState {
+  open: boolean
+  editingResourceId: string | null
+  lessonId: string | null
+  values: {
+    title: string
+    description: string
+    resourceType: LessonResourceType
+    fileUrl: string
+    externalUrl: string
+  }
 }
 
 interface LmsContentEditorProps {
-  modules: ContentModule[]
-  onModulesChange: (modules: ContentModule[]) => void
+  modules: ContentModuleDraft[]
+  onModulesChange: (modules: ContentModuleDraft[]) => void
   onSave?: () => void
   isLoading?: boolean
   hasUnsavedChanges?: boolean
-  onUpdateLesson?: (params: { moduleId: string, lessonData: any }) => void
   onDeleteModule?: (moduleId: string) => void
-  courseId?: string  // Nuevo: ID del curso para integración con quiz
+  onDeleteLesson?: (lessonId: string) => void
+  onDeleteResource?: (resourceId: string) => void
+  courseId?: string
 }
 
-// WYSIWYG Editor configuration
 const quillModules = {
   toolbar: [
-    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-    ['bold', 'italic', 'underline', 'strike'],
-    [{ 'color': [] }, { 'background': [] }],
-    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-    [{ 'indent': '-1' }, { 'indent': '+1' }],
-    [{ 'align': [] }],
-    ['link', 'image', 'video'],
-    ['blockquote', 'code-block'],
+    [{ header: [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline'],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    ['link', 'blockquote', 'code-block'],
     ['clean']
   ]
 }
 
 const quillFormats = [
-  'header', 'bold', 'italic', 'underline', 'strike',
-  'color', 'background', 'list', 'bullet', 'indent',
-  'align', 'link', 'image', 'video', 'blockquote', 'code-block'
+  'header',
+  'bold',
+  'italic',
+  'underline',
+  'list',
+  'bullet',
+  'link',
+  'blockquote',
+  'code-block'
 ]
 
-const moduleTypeGuides = {
+const lessonTypeMeta: Record<LessonDraftType, { label: string; helper: string; icon: React.ReactNode }> = {
   text: {
     label: 'Texto',
-    helper: 'Ideal para teoría, procedimientos, pasos o políticas con formato enriquecido.'
+    helper: 'Úsalo para explicar conceptos, pasos o procedimientos.',
+    icon: <ArticleIcon fontSize="small" />
   },
   video: {
     label: 'Video',
-    helper: 'Úsalo para demostraciones, clases grabadas o walkthroughs con apoyo visual.'
+    helper: 'Ideal para demostraciones o clases grabadas.',
+    icon: <VideoIcon fontSize="small" />
   },
   quiz: {
     label: 'Quiz',
-    helper: 'Sirve para validar comprensión. Después de guardar el curso podrás abrir el editor completo del quiz.'
+    helper: 'Valida aprendizaje y permite aprobar la sección.',
+    icon: <QuizIcon fontSize="small" />
   }
 }
+
+const resourceTypeMeta: Record<LessonResourceType, { label: string; icon: React.ReactNode }> = {
+  pdf: {
+    label: 'PDF',
+    icon: <PdfIcon fontSize="small" />
+  },
+  document: {
+    label: 'Documento',
+    icon: <ArticleIcon fontSize="small" />
+  },
+  link: {
+    label: 'Enlace',
+    icon: <LinkIcon fontSize="small" />
+  }
+}
+
+const createTempId = (prefix: string) =>
+  `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 
 const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   modules,
@@ -128,1010 +168,713 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   onSave,
   isLoading = false,
   hasUnsavedChanges = false,
-  onUpdateLesson,
   onDeleteModule,
+  onDeleteLesson,
+  onDeleteResource,
   courseId
 }) => {
-  const [selectedModule, setSelectedModule] = useState<ContentModule | null>(null)
-  const [videoUploads, setVideoUploads] = useState<VideoUploadProgress[]>([])
-  const [openModuleDialog, setOpenModuleDialog] = useState(false)
-  const [newModule, setNewModule] = useState({
+  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(modules[0]?.id ?? null)
+  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(modules[0]?.lessons[0]?.id ?? null)
+  const [moduleDialogOpen, setModuleDialogOpen] = useState(false)
+  const [lessonDialogOpen, setLessonDialogOpen] = useState(false)
+  const [moduleDraft, setModuleDraft] = useState({ title: '', description: '' })
+  const [lessonDraft, setLessonDraft] = useState({
     title: '',
-    type: 'text' as 'text' | 'video' | 'quiz',
+    type: 'text' as LessonDraftType,
+    estimatedMinutes: 10,
     description: ''
   })
-  const [draggedModule, setDraggedModule] = useState<string | null>(null)
-  const [isSavingLesson, setIsSavingLesson] = useState(false)
-  const [hasPendingChanges, setHasPendingChanges] = useState(false)
-  const [openQuizManagement, setOpenQuizManagement] = useState(false)
-  const [editorNotice, setEditorNotice] = useState<{ open: boolean; message: string; severity: 'info' | 'success' | 'warning' | 'error' }>({
+  const [resourceDialog, setResourceDialog] = useState<ResourceDraftDialogState>({
     open: false,
-    message: '',
-    severity: 'info'
+    editingResourceId: null,
+    lessonId: null,
+    values: {
+      title: '',
+      description: '',
+      resourceType: 'pdf',
+      fileUrl: '',
+      externalUrl: ''
+    }
   })
+  const [editorNotice, setEditorNotice] = useState<string | null>(null)
+  const [quizEditorLessonId, setQuizEditorLessonId] = useState<string | null>(null)
 
-  void onSave
-  void isLoading
-  void hasUnsavedChanges
-
-  // Ref to track the current editor content to prevent spurious onChange events
-  const editorContentRef = useRef<string>('')
-
-  // Ref to track the debounce timeout for auto-save
-  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-  // Update editorContentRef when selectedModule changes
   useEffect(() => {
-    if (selectedModule?.content.text) {
-      editorContentRef.current = selectedModule.content.text
-    } else {
-      editorContentRef.current = ''
-    }
-    // Reset pending changes state when switching modules
-    setHasPendingChanges(false)
-    setIsSavingLesson(false)
-  }, [selectedModule])
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current)
-      }
-    }
-  }, [])
-
-  // Sync selectedModule with modules when modules change
-  // This ensures that when the parent component updates modules (e.g., from API),
-  // the selectedModule gets updated with the latest data
-  useEffect(() => {
-    if (selectedModule) {
-      const updatedModule = modules.find(m => m.id === selectedModule.id)
-      if (updatedModule) {
-        if (JSON.stringify(updatedModule) !== JSON.stringify(selectedModule)) {
-          setSelectedModule(updatedModule)
-        }
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modules])
-
-  // Sanitize HTML content
-  const sanitizeHtml = useCallback((html: string): string => {
-    return DOMPurify.sanitize(html, {
-      ALLOWED_TAGS: [
-        'p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-        'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'a', 'img', 'video',
-        'span', 'div'
-      ],
-      ALLOWED_ATTR: [
-        'href', 'src', 'alt', 'title', 'width', 'height', 'style', 'class',
-        'target', 'rel', 'controls', 'autoplay', 'muted', 'loop'
-      ],
-      ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
-    })
-  }, [])
-
-  // Convert YouTube URL to embed format
-  const getYouTubeEmbedUrl = useCallback((url: string): string => {
-    if (!url) return ''
-
-    try {
-      // Match various YouTube URL formats
-      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
-      const match = url.match(regExp)
-
-      if (match && match[2].length === 11) {
-        const videoId = match[2]
-        return `https://www.youtube.com/embed/${videoId}`
-      }
-
-      // If already an embed URL, return as is
-      if (url.includes('/embed/')) {
-        return url
-      }
-
-      return url
-    } catch (error) {
-      console.error('Error parsing YouTube URL:', error)
-      return url
-    }
-  }, [])
-
-  // Video upload handling
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    acceptedFiles.forEach((file) => {
-      // Validate file type
-      if (!file.type.startsWith('video/')) {
-        setEditorNotice({
-          open: true,
-          message: 'Solo se permiten archivos de video.',
-          severity: 'error'
-        })
-        return
-      }
-
-      // Validate file size (100MB limit)
-      if (file.size > 100 * 1024 * 1024) {
-        setEditorNotice({
-          open: true,
-          message: 'El archivo es demasiado grande. Máximo 100MB por video.',
-          severity: 'error'
-        })
-        return
-      }
-
-      const newUpload: VideoUploadProgress = {
-        file,
-        progress: 0,
-        status: 'uploading'
-      }
-
-      setVideoUploads(prev => [...prev, newUpload])
-
-      // Simulate upload progress (replace with actual MinIO upload)
-      simulateVideoUpload(file)
-    })
-  }, [])
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'video/*': ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.mkv']
-    },
-    multiple: true
-  })
-
-  const simulateVideoUpload = async (file: File) => {
-    try {
-      // Simulate upload progress
-      for (let progress = 0; progress <= 100; progress += 10) {
-        await new Promise(resolve => setTimeout(resolve, 200))
-        setVideoUploads(prev =>
-          prev.map(upload =>
-            upload.file === file
-              ? { ...upload, progress }
-              : upload
-          )
-        )
-      }
-
-      // Simulate processing
-      setVideoUploads(prev =>
-        prev.map(upload =>
-          upload.file === file
-            ? { ...upload, status: 'processing' }
-            : upload
-        )
-      )
-
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      // Complete upload
-      const videoUrl = URL.createObjectURL(file) // In real implementation, this would be the MinIO URL
-      setVideoUploads(prev =>
-        prev.map(upload =>
-          upload.file === file
-            ? { ...upload, status: 'completed', url: videoUrl }
-            : upload
-        )
-      )
-      setEditorNotice({
-        open: true,
-        message: `Video "${file.name}" cargado correctamente.`,
-        severity: 'success'
-      })
-
-      // Add video to selected module if applicable
-      if (selectedModule && selectedModule.type === 'video') {
-        updateModuleContent(selectedModule.id, {
-          ...selectedModule.content,
-          videoUrl,
-          videoSource: 'minio' as const,
-          videoFile: file
-        })
-      }
-
-    } catch (error) {
-      setVideoUploads(prev =>
-        prev.map(upload =>
-          upload.file === file
-            ? { ...upload, status: 'error', error: 'Error al subir el video' }
-            : upload
-        )
-      )
-    }
-  }
-
-  // YouTube URL validation
-  const validateYouTubeUrl = (url: string): boolean => {
-    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/
-    return youtubeRegex.test(url)
-  }
-
-  // Module management
-  const addModule = () => {
-    const trimmedTitle = newModule.title.trim()
-    const trimmedDescription = newModule.description.trim()
-
-    if (!trimmedTitle) {
-      setEditorNotice({
-        open: true,
-        message: 'Agrega un título para el módulo antes de continuar.',
-        severity: 'warning'
-      })
+    if (!modules.length) {
+      setSelectedModuleId(null)
+      setSelectedLessonId(null)
       return
     }
 
-    const module: ContentModule = {
-      id: `temp_${Date.now()}`,
-      title: trimmedTitle,
-      type: newModule.type,
-      order: modules.length,
-      content: {
-        description: trimmedDescription,
-        ...(newModule.type === 'text' && { text: '' }),
-        ...(newModule.type === 'video' && { videoUrl: '', videoSource: 'youtube' as const })
-      }
-    }
+    const selectedModuleExists = modules.some((module) => module.id === selectedModuleId)
+    const nextModuleId = selectedModuleExists ? selectedModuleId : modules[0].id
+    setSelectedModuleId(nextModuleId)
 
-    onModulesChange([...modules, module])
-    setNewModule({ title: '', type: 'text', description: '' })
-    setOpenModuleDialog(false)
-    setSelectedModule(module)
-  }
-
-  const deleteModule = async (moduleId: string) => {
-    const moduleToDelete = modules.find(m => m.id === moduleId)
-
-    const result = await Swal.fire({
-      title: '¿Eliminar módulo?',
-      html: `
-        <div style="text-align: left;">
-          <p>Estás a punto de eliminar el módulo:</p>
-          <p><strong>${moduleToDelete?.title || 'Sin título'}</strong></p>
-          <p style="color: #d32f2f; margin-top: 16px;">
-            ⚠️ Esta acción no se puede deshacer. Se eliminará el módulo y todo su contenido.
-          </p>
-        </div>
-      `,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d32f2f',
-      cancelButtonColor: '#757575',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      reverseButtons: true,
-      focusCancel: true
-    })
-
-    if (result.isConfirmed) {
-      // Primero actualizar el estado local
-      const updatedModules = modules.filter(m => m.id !== moduleId)
-      onModulesChange(updatedModules)
-
-      // Si el módulo seleccionado es el que se está eliminando, limpiar la selección
-      if (selectedModule?.id === moduleId) {
-        setSelectedModule(null)
-      }
-
-      // Si hay callback de eliminación y el módulo no es temporal, llamar al backend
-      if (onDeleteModule) {
-        onDeleteModule(moduleId)
-      }
-
-      // Mostrar mensaje de éxito
-      Swal.fire({
-        title: '¡Eliminado!',
-        text: 'El módulo ha sido eliminado correctamente.',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
-      })
-    }
-  }
-
-  const updateModuleContent = (moduleId: string, content: ContentModule['content']) => {
-    const updatedModules = modules.map(module =>
-      module.id === moduleId
-        ? { ...module, content }
-        : module
-    )
-    onModulesChange(updatedModules)
-
-    if (selectedModule?.id === moduleId) {
-      setSelectedModule({ ...selectedModule, content })
-    }
-
-    // Auto-save the lesson content with debounce (only for existing modules)
-    if (onUpdateLesson && moduleId && !moduleId.startsWith('temp_')) {
-      // Mark that there are pending changes
-      setHasPendingChanges(true)
-
-      // Clear previous timeout
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current)
-      }
-
-      // Set new timeout for auto-save (2 seconds after user stops typing)
-      updateTimeoutRef.current = setTimeout(async () => {
-        const module = updatedModules.find(m => m.id === moduleId)
-        if (module) {
-          setIsSavingLesson(true)
-          const lessonData: {
-            title: string
-            type: ContentModule['type']
-            order_index: number
-            is_mandatory: boolean
-            content?: string
-            video_url?: string | null
-            video_source?: 'minio' | 'youtube'
-          } = {
-            title: module.title,
-            type: module.type, // El backend espera 'type', no 'content_type'
-            order_index: 0,
-            is_mandatory: true
-          }
-
-          if (module.type === 'text') {
-            lessonData.content = module.content.text || ''
-          }
-
-          if (module.type === 'video') {
-            lessonData.video_url = module.content.videoUrl || null
-            lessonData.video_source = module.content.videoSource || 'youtube'
-          }
-
-          try {
-            await onUpdateLesson({ moduleId, lessonData })
-            setHasPendingChanges(false)
-          } catch (error) {
-            console.error('Error auto-saving:', error)
-          } finally {
-            setIsSavingLesson(false)
-          }
-        }
-      }, 2000) // 2 seconds debounce
-    }
-  }
-
-  const updateModuleTitle = (moduleId: string, title: string) => {
-    const updatedModules = modules.map(module =>
-      module.id === moduleId
-        ? { ...module, title }
-        : module
-    )
-    onModulesChange(updatedModules)
-
-    if (selectedModule?.id === moduleId) {
-      setSelectedModule({ ...selectedModule, title })
-    }
-  }
-
-  // Drag and drop for reordering
-  const handleDragStart = (moduleId: string) => {
-    setDraggedModule(moduleId)
-  }
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-  }
-
-  const handleDrop = (e: React.DragEvent, targetModuleId: string) => {
-    e.preventDefault()
-
-    if (!draggedModule || draggedModule === targetModuleId) {
-      setDraggedModule(null)
+    const nextModule = modules.find((module) => module.id === nextModuleId) ?? modules[0]
+    if (!nextModule.lessons.length) {
+      setSelectedLessonId(null)
       return
     }
 
-    const draggedIndex = modules.findIndex(m => m.id === draggedModule)
-    const targetIndex = modules.findIndex(m => m.id === targetModuleId)
+    const selectedLessonExists = nextModule.lessons.some((lesson) => lesson.id === selectedLessonId)
+    setSelectedLessonId(selectedLessonExists ? selectedLessonId : nextModule.lessons[0].id)
+  }, [modules, selectedLessonId, selectedModuleId])
 
-    if (draggedIndex === -1 || targetIndex === -1) {
-      setDraggedModule(null)
-      return
-    }
+  const selectedModule = useMemo(
+    () => modules.find((module) => module.id === selectedModuleId) ?? null,
+    [modules, selectedModuleId]
+  )
 
-    const newModules = [...modules]
-    const [draggedItem] = newModules.splice(draggedIndex, 1)
-    newModules.splice(targetIndex, 0, draggedItem)
+  const selectedLesson = useMemo(
+    () => selectedModule?.lessons.find((lesson) => lesson.id === selectedLessonId) ?? null,
+    [selectedLessonId, selectedModule]
+  )
 
-    // Update order
-    const reorderedModules = newModules.map((module, index) => ({
+  const replaceModule = (moduleId: string, updater: (module: ContentModuleDraft) => ContentModuleDraft) => {
+    onModulesChange(modules.map((module) => (module.id === moduleId ? updater(module) : module)))
+  }
+
+  const replaceLesson = (
+    moduleId: string,
+    lessonId: string,
+    updater: (lesson: ContentLessonDraft) => ContentLessonDraft
+  ) => {
+    replaceModule(moduleId, (module) => ({
       ...module,
-      order: index
+      lessons: module.lessons.map((lesson) => (lesson.id === lessonId ? updater(lesson) : lesson))
+    }))
+  }
+
+  const updateSelectedLesson = (updater: (lesson: ContentLessonDraft) => ContentLessonDraft) => {
+    if (!selectedModule || !selectedLesson) {
+      return
+    }
+
+    replaceLesson(selectedModule.id, selectedLesson.id, updater)
+  }
+
+  const handleAddModule = () => {
+    if (!moduleDraft.title.trim()) {
+      setEditorNotice('Agrega un título para crear la sección.')
+      return
+    }
+
+    const newModule: ContentModuleDraft = {
+      id: createTempId('module'),
+      title: moduleDraft.title.trim(),
+      description: moduleDraft.description.trim(),
+      order: modules.length + 1,
+      lessons: []
+    }
+
+    onModulesChange([...modules, newModule])
+    setSelectedModuleId(newModule.id)
+    setSelectedLessonId(null)
+    setModuleDraft({ title: '', description: '' })
+    setModuleDialogOpen(false)
+    setEditorNotice('Sección creada. Ahora agrega la primera lección.')
+  }
+
+  const handleDeleteModule = (moduleId: string) => {
+    onModulesChange(
+      modules
+        .filter((module) => module.id !== moduleId)
+        .map((module, index) => ({ ...module, order: index + 1 }))
+    )
+    onDeleteModule?.(moduleId)
+    setEditorNotice('Se eliminó la sección seleccionada.')
+  }
+
+  const handleAddLesson = () => {
+    if (!selectedModule || !lessonDraft.title.trim()) {
+      setEditorNotice('Selecciona una sección y agrega un título para la lección.')
+      return
+    }
+
+    const newLesson: ContentLessonDraft = {
+      id: createTempId('lesson'),
+      title: lessonDraft.title.trim(),
+      type: lessonDraft.type,
+      order: selectedModule.lessons.length + 1,
+      estimatedMinutes: Math.max(1, Number(lessonDraft.estimatedMinutes) || 1),
+      content: {
+        description: lessonDraft.description.trim(),
+        text: lessonDraft.type === 'text' ? '<p>Nuevo contenido</p>' : '',
+        videoUrl: '',
+        videoSource: 'youtube',
+        quizId: undefined,
+        resources: []
+      }
+    }
+
+    replaceModule(selectedModule.id, (module) => ({
+      ...module,
+      lessons: [...module.lessons, newLesson]
+    }))
+    setSelectedLessonId(newLesson.id)
+    setLessonDraft({ title: '', type: 'text', estimatedMinutes: 10, description: '' })
+    setLessonDialogOpen(false)
+    setEditorNotice('Lección creada. Completa ahora su contenido.')
+  }
+
+  const handleDeleteLesson = (moduleId: string, lessonId: string) => {
+    replaceModule(moduleId, (module) => ({
+      ...module,
+      lessons: module.lessons
+        .filter((lesson) => lesson.id !== lessonId)
+        .map((lesson, index) => ({ ...lesson, order: index + 1 }))
+    }))
+    onDeleteLesson?.(lessonId)
+    setEditorNotice('Se eliminó la lección seleccionada.')
+  }
+
+  const openCreateResourceDialog = () => {
+    if (!selectedLesson) {
+      setEditorNotice('Selecciona una lección para agregar recursos.')
+      return
+    }
+
+    setResourceDialog({
+      open: true,
+      editingResourceId: null,
+      lessonId: selectedLesson.id,
+      values: {
+        title: '',
+        description: '',
+        resourceType: 'pdf',
+        fileUrl: '',
+        externalUrl: ''
+      }
+    })
+  }
+
+  const openEditResourceDialog = (resourceId: string) => {
+    if (!selectedLesson) {
+      return
+    }
+
+    const resource = selectedLesson.content.resources.find((item) => item.id === resourceId)
+    if (!resource) {
+      return
+    }
+
+    setResourceDialog({
+      open: true,
+      editingResourceId: resourceId,
+      lessonId: selectedLesson.id,
+      values: {
+        title: resource.title,
+        description: resource.description || '',
+        resourceType: resource.resourceType,
+        fileUrl: resource.fileUrl || '',
+        externalUrl: resource.externalUrl || ''
+      }
+    })
+  }
+
+  const handleSaveResource = () => {
+    if (!selectedModule || !selectedLesson || !resourceDialog.lessonId) {
+      return
+    }
+
+    const normalizedTitle = resourceDialog.values.title.trim()
+    const normalizedFileUrl = resourceDialog.values.fileUrl.trim()
+    const normalizedExternalUrl = resourceDialog.values.externalUrl.trim()
+
+    if (!normalizedTitle) {
+      setEditorNotice('Cada recurso necesita un título claro.')
+      return
+    }
+
+    if (!normalizedFileUrl && !normalizedExternalUrl) {
+      setEditorNotice('Agrega un enlace o una URL de archivo para el recurso.')
+      return
+    }
+
+    const resourcePayload: LessonResourceDraft = {
+      id: resourceDialog.editingResourceId || createTempId('resource'),
+      title: normalizedTitle,
+      description: resourceDialog.values.description.trim(),
+      resourceType: resourceDialog.values.resourceType,
+      fileUrl: normalizedFileUrl || undefined,
+      externalUrl: normalizedExternalUrl || undefined,
+      order:
+        resourceDialog.editingResourceId
+          ? selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.order || 1
+          : selectedLesson.content.resources.length + 1
+    }
+
+    updateSelectedLesson((lesson) => ({
+      ...lesson,
+      content: {
+        ...lesson.content,
+        resources: resourceDialog.editingResourceId
+          ? lesson.content.resources.map((resource) =>
+              resource.id === resourceDialog.editingResourceId ? resourcePayload : resource
+            )
+          : [...lesson.content.resources, resourcePayload]
+      }
     }))
 
-    onModulesChange(reorderedModules)
-    setDraggedModule(null)
+    setResourceDialog((current) => ({ ...current, open: false }))
+    setEditorNotice(
+      resourceDialog.editingResourceId
+        ? 'Recurso actualizado dentro de la lección.'
+        : 'Recurso agregado a la lección.'
+    )
   }
 
-  const getModuleIcon = (type: string) => {
-    switch (type) {
-      case 'video':
-        return <VideoLibraryIcon />
-      case 'text':
-        return <EditIcon />
-      case 'quiz':
-        return <EditIcon />
-      default:
-        return <EditIcon />
-    }
+  const handleDeleteResource = (resourceId: string) => {
+    updateSelectedLesson((lesson) => ({
+      ...lesson,
+      content: {
+        ...lesson.content,
+        resources: lesson.content.resources
+          .filter((resource) => resource.id !== resourceId)
+          .map((resource, index) => ({ ...resource, order: index + 1 }))
+      }
+    }))
+    onDeleteResource?.(resourceId)
+    setEditorNotice('Recurso eliminado.')
   }
 
-  const getModuleTypeLabel = (type: string) => {
-    switch (type) {
-      case 'video':
-        return 'Video'
-      case 'text':
-        return 'Texto'
-      case 'quiz':
-        return 'Quiz'
-      default:
-        return 'Texto'
-    }
-  }
+  const canOpenQuizBuilder = Boolean(
+    selectedLesson &&
+    !selectedLesson.id.startsWith('temp_') &&
+    !selectedLesson.id.startsWith('lesson_')
+  )
 
   return (
-    <Grid container spacing={3}>
-      {/* Module List */}
-      <Grid item xs={12} md={4}>
-        <Card>
-          <CardHeader
-            title="Módulos del Curso"
-            subheader='Agrega módulos en el orden en que el estudiante debe recorrerlos. Puedes arrastrarlos para reorganizar la secuencia.'
-            action={
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<AddIcon />}
-                onClick={() => setOpenModuleDialog(true)}
-              >
-                Agregar
-              </Button>
-            }
-          />
-          <CardContent>
-            <List>
-              {modules
-                .slice()
-                .sort((a, b) => a.order - b.order)
-                .map((module) => (
-                  <ListItem
-                    key={module.id}
-                    draggable
-                    onDragStart={() => handleDragStart(module.id)}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, module.id)}
-                    sx={{
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      borderRadius: 1,
-                      mb: 1,
-                      cursor: 'pointer',
-                      backgroundColor: selectedModule?.id === module.id ? 'primary.light' : 'background.paper',
-                      '&:hover': {
-                        backgroundColor: 'action.hover'
-                      }
-                    }}
-                    onClick={() => {
-                      setSelectedModule(module)
-                    }}
-                  >
-                    <ListItemIcon>
-                      <DragIndicatorIcon sx={{ cursor: 'grab' }} />
-                    </ListItemIcon>
-                    <ListItemIcon>
-                      {getModuleIcon(module.type)}
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={module.title}
-                      secondaryTypographyProps={{ component: 'div' }}
-                      secondary={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Chip
-                            label={getModuleTypeLabel(module.type)}
-                            size="small"
-                          />
-                        </Box>
-                      }
-                    />
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        deleteModule(module.id)
-                      }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </ListItem>
-                ))}
-              {modules.length === 0 && (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <EditIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
-                  <Typography color="text.secondary">
-                    No hay módulos creados
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Agrega tu primer módulo para comenzar
+    <Stack spacing={3}>
+      <Alert severity="info">
+        Estructura recomendada: crea una <strong>sección</strong>, agrega varias
+        <strong> lecciones</strong> dentro de ella y luego adjunta
+        <strong> recursos</strong> como PDFs, documentos o enlaces de apoyo.
+      </Alert>
+
+      <Grid container spacing={3}>
+        <Grid item xs={12} lg={4}>
+          <Card variant="outlined">
+            <CardContent>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                <Box>
+                  <Typography variant="h6">Secciones del curso</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Organiza el contenido por bloques temáticos.
                   </Typography>
                 </Box>
-              )}
-            </List>
-          </CardContent>
-        </Card >
-      </Grid >
+                <Button size="small" startIcon={<AddIcon />} onClick={() => setModuleDialogOpen(true)}>
+                  Sección
+                </Button>
+              </Stack>
 
-      {/* Content Editor */}
-      < Grid item xs={12} md={8} >
-        {
-          selectedModule ? (
-            <Card>
-              <CardHeader
-                title={
-                  <TextField
-                    variant="standard"
-                    value={selectedModule.title}
-                    onChange={(e) => updateModuleTitle(selectedModule.id, e.target.value)}
-                    sx={{ fontSize: '1.25rem', fontWeight: 500 }}
-                  />
-                }
-                subheader={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, flexWrap: 'wrap' }}>
-                    <span>{`Tipo: ${getModuleTypeLabel(selectedModule.type)}`}</span>
-                    {hasPendingChanges && !selectedModule.id.startsWith('temp_') && (
-                      <Chip
-                        label="Guardando en 2s..."
-                        size="small"
-                        color="warning"
-                        sx={{ fontSize: '0.7rem' }}
-                      />
-                    )}
-                    {isSavingLesson && (
-                      <Chip
-                        icon={<CircularProgress size={12} sx={{ color: 'white' }} />}
-                        label="Guardando..."
-                        size="small"
-                        color="primary"
-                        sx={{ fontSize: '0.7rem' }}
-                      />
-                    )}
-                    {!hasPendingChanges && !isSavingLesson && !selectedModule.id.startsWith('temp_') && (
-                      <Chip
-                        label="Guardado"
-                        size="small"
-                        color="success"
-                        sx={{ fontSize: '0.7rem' }}
-                      />
-                    )}
-                  </Box>
-                }
-              />
-              <CardContent>
-                <Alert severity="info" sx={{ mb: 3 }}>
-                  <strong>{moduleTypeGuides[selectedModule.type].label}:</strong> {moduleTypeGuides[selectedModule.type].helper}
-                </Alert>
-
-                {/* Text Content Editor */}
-                {selectedModule.type === 'text' && (
-                  <Box>
-                    <Typography variant="h6" gutterBottom>
-                      Editor de Contenido
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Redacta el contenido principal del módulo y usa la descripción para orientar al estudiante sobre qué debe aprender o practicar.
-                    </Typography>
-                    <Box sx={{ mb: 2 }}>
-                      <ReactQuill
-                        key={selectedModule.id}
-                        theme="snow"
-                        value={selectedModule.content.text || ''}
-                        onChange={(content) => {
-                          const sanitizedContent = sanitizeHtml(content)
-                          updateModuleContent(selectedModule.id, {
-                            ...selectedModule.content,
-                            text: sanitizedContent
-                          })
-                        }}
-                        modules={quillModules}
-                        formats={quillFormats}
-                        style={{ height: '300px', marginBottom: '50px' }}
-                      />
-                    </Box>
-
-                    <TextField
-                      fullWidth
-                      multiline
-                      rows={3}
-                      label="Descripción del módulo"
-                      value={selectedModule.content.description || ''}
-                      onChange={(e) =>
-                        updateModuleContent(selectedModule.id, {
-                          ...selectedModule.content,
-                          description: e.target.value
-                        })
-                      }
-                      sx={{ mt: 2 }}
-                    />
-                  </Box>
-                )}
-
-                {/* Video Content Editor */}
-                {selectedModule.type === 'video' && (
-                  <Box>
-                    <Typography variant="h6" gutterBottom>
-                      Configuración de Video
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Primero define la fuente del video. Si eliges YouTube, pega la URL completa; si eliges subir archivo, espera a que termine la carga antes de guardar el curso.
-                    </Typography>
-
-                    {/* Video Source Selection */}
-                    <FormControl fullWidth sx={{ mb: 2 }}>
-                      <InputLabel>Fuente del Video</InputLabel>
-                      <Select
-                        value={selectedModule.content.videoSource || 'youtube'}
-                        label="Fuente del Video"
-                        onChange={(e) =>
-                          updateModuleContent(selectedModule.id, {
-                            ...selectedModule.content,
-                            videoSource: e.target.value as 'minio' | 'youtube'
-                          })
-                        }
-                      >
-                        <MenuItem value="youtube">
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <YouTubeIcon />
-                            YouTube
-                          </Box>
-                        </MenuItem>
-                        <MenuItem value="minio">
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <CloudUploadIcon />
-                            Subir Video
-                          </Box>
-                        </MenuItem>
-                      </Select>
-                    </FormControl>
-
-                    {/* YouTube URL Input */}
-                    {selectedModule.content.videoSource === 'youtube' && (
-                      <TextField
-                        fullWidth
-                        label="URL de YouTube"
-                        value={selectedModule.content.videoUrl || ''}
-                        onChange={(e) => {
-                          const url = e.target.value
-                          updateModuleContent(selectedModule.id, {
-                            ...selectedModule.content,
-                            videoUrl: url
-                          })
-                        }}
-                        error={selectedModule.content.videoUrl ? !validateYouTubeUrl(selectedModule.content.videoUrl) : false}
-                        helperText={
-                          selectedModule.content.videoUrl && !validateYouTubeUrl(selectedModule.content.videoUrl)
-                            ? "URL de YouTube no válida"
-                            : "Ingresa la URL completa del video de YouTube"
-                        }
-                        sx={{ mb: 2 }}
-                      />
-                    )}
-
-                    {/* Video Upload */}
-                    {selectedModule.content.videoSource === 'minio' && (
-                      <Box>
-                        <Box
-                          {...getRootProps()}
-                          sx={{
-                            border: '2px dashed',
-                            borderColor: isDragActive ? 'primary.main' : 'divider',
-                            borderRadius: 2,
-                            p: 3,
-                            textAlign: 'center',
-                            cursor: 'pointer',
-                            backgroundColor: isDragActive ? 'action.hover' : 'background.paper',
-                            mb: 2
+              {modules.length === 0 ? (
+                <Alert severity="info">Este curso aún no tiene secciones. Crea la primera para empezar.</Alert>
+              ) : (
+                <List disablePadding>
+                  {modules.map((module) => (
+                    <Paper key={module.id} variant={module.id === selectedModuleId ? 'elevation' : 'outlined'} sx={{ mb: 1 }}>
+                      <ListItemButton onClick={() => setSelectedModuleId(module.id)}>
+                        <ListItemIcon>
+                          <SectionIcon color={module.id === selectedModuleId ? 'primary' : 'inherit'} />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={module.title}
+                          secondary={`${module.lessons.length} lección${module.lessons.length === 1 ? '' : 'es'}`}
+                        />
+                        <IconButton
+                          edge="end"
+                          size="small"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            handleDeleteModule(module.id)
                           }}
                         >
-                          <input {...getInputProps()} />
-                          <CloudUploadIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
-                          <Typography variant="h6" gutterBottom>
-                            {isDragActive ? 'Suelta los archivos aquí' : 'Arrastra videos aquí o haz clic para seleccionar'}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Formatos soportados: MP4, AVI, MOV, WMV, FLV, WebM, MKV
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            Tamaño máximo: 100MB por archivo
-                          </Typography>
-                        </Box>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </ListItemButton>
+                    </Paper>
+                  ))}
+                </List>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
 
-                        {/* Upload Progress */}
-                        {videoUploads.length > 0 && (
-                          <Box sx={{ mb: 2 }}>
-                            <Typography variant="subtitle2" gutterBottom>
-                              Subidas en Progreso
-                            </Typography>
-                            {videoUploads.map((upload, index) => (
-                              <Box key={index} sx={{ mb: 2 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                                  <Typography variant="body2" sx={{ flexGrow: 1 }}>
-                                    {upload.file.name}
-                                  </Typography>
-                                  <Chip
-                                    label={upload.status}
-                                    size="small"
-                                    color={
-                                      upload.status === 'completed' ? 'success' :
-                                        upload.status === 'error' ? 'error' : 'primary'
-                                    }
-                                  />
-                                </Box>
-                                {upload.status === 'uploading' && (
-                                  <LinearProgress
-                                    variant="determinate"
-                                    value={upload.progress}
-                                    sx={{ mb: 1 }}
-                                  />
-                                )}
-                                {upload.status === 'processing' && (
-                                  <LinearProgress sx={{ mb: 1 }} />
-                                )}
-                                {upload.status === 'error' && upload.error && (
-                                  <Alert severity="error" sx={{ mb: 1 }}>
-                                    {upload.error}
-                                  </Alert>
-                                )}
-                                {upload.status === 'completed' && upload.url && (
-                                  <Alert severity="success" sx={{ mb: 1 }}>
-                                    Video subido exitosamente
-                                  </Alert>
-                                )}
-                              </Box>
-                            ))}
-                          </Box>
-                        )}
-                      </Box>
-                    )}
-
-                    {/* Video Preview */}
-                    {selectedModule.content.videoUrl && validateYouTubeUrl(selectedModule.content.videoUrl) && (
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="subtitle2" gutterBottom>
-                          Vista Previa
-                        </Typography>
-                        <Box
-                          component="iframe"
-                          src={getYouTubeEmbedUrl(selectedModule.content.videoUrl)}
-                          title="YouTube video preview"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          sx={{
-                            width: '100%',
-                            height: 300,
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            borderRadius: 1
-                          }}
-                        />
-                      </Box>
-                    )}
-
+        <Grid item xs={12} lg={8}>
+          <Card variant="outlined">
+            <CardContent>
+              {selectedModule ? (
+                <Stack spacing={3}>
+                  <Box>
+                    <Typography variant="overline" color="primary">
+                      Sección {selectedModule.order}
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      label="Título de la sección"
+                      value={selectedModule.title}
+                      onChange={(event) =>
+                        replaceModule(selectedModule.id, (module) => ({
+                          ...module,
+                          title: event.target.value
+                        }))
+                      }
+                      sx={{ mt: 1, mb: 2 }}
+                    />
                     <TextField
                       fullWidth
                       multiline
-                      rows={3}
-                      label="Descripción del video"
-                      value={selectedModule.content.description || ''}
-                      onChange={(e) =>
-                        updateModuleContent(selectedModule.id, {
-                          ...selectedModule.content,
-                          description: e.target.value
-                        })
+                      minRows={2}
+                      label="Descripción de la sección"
+                      value={selectedModule.description || ''}
+                      onChange={(event) =>
+                        replaceModule(selectedModule.id, (module) => ({
+                          ...module,
+                          description: event.target.value
+                        }))
                       }
                     />
                   </Box>
-                )}
 
-                {/* Quiz Content Editor */}
-                {selectedModule.type === 'quiz' && (
-                  <Box sx={{ textAlign: 'center', py: 4 }}>
-                    {selectedModule.id.startsWith('temp_') ? (
-                      <Alert severity="warning" sx={{ mb: 3, maxWidth: 600, mx: 'auto' }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                          Módulo no guardado
-                        </Typography>
-                        Para poder agregar preguntas y configurar el quiz, primero debes guardar el curso.
-                        Esto creará el módulo en el sistema y habilitará el editor completo.
-                      </Alert>
-                    ) : (
-                      <Alert severity="info" sx={{ mb: 3 }}>
-                        Este módulo usa el sistema completo de gestión de quizzes con banco de preguntas,
-                        analíticas y validación automática.
-                      </Alert>
-                    )}
+                  <Divider />
 
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                      Recomendación: guarda primero la estructura del curso, luego abre el editor de quiz para crear preguntas, respuestas correctas y criterios de aprobación.
-                    </Typography>
-
-                    <Button
-                      variant="contained"
-                      size="large"
-                      startIcon={<SettingsIcon />}
-                      onClick={() => setOpenQuizManagement(true)}
-                      sx={{ mb: 2 }}
-                      disabled={selectedModule.id.startsWith('temp_')}
-                    >
-                      Abrir Editor de Quiz Completo
-                    </Button>
-
-                    {selectedModule.content.quizId && (
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Box>
+                      <Typography variant="h6">Lecciones de la sección</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Quiz ID: {selectedModule.content.quizId}
+                        Cada sección puede tener texto, video y quiz.
                       </Typography>
-                    )}
-                  </Box>
-                )}
-              </CardContent>
-            </Card >
-          ) : (
-            <Card>
-              <CardContent sx={{ textAlign: 'center', py: 8 }}>
-                <EditIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
-                <Typography variant="h6" color="text.secondary" gutterBottom>
-                  Selecciona un módulo para editar
-                </Typography>
-                <Typography color="text.secondary">
-                  O crea un nuevo módulo para comenzar
-                </Typography>
-              </CardContent>
-            </Card>
-          )}
-      </Grid >
+                    </Box>
+                    <Button startIcon={<AddIcon />} onClick={() => setLessonDialogOpen(true)}>
+                      Lección
+                    </Button>
+                  </Stack>
 
-      {/* Add Module Dialog */}
-      < Dialog
-        open={openModuleDialog}
-        onClose={() => {
-          setOpenModuleDialog(false)
-          setNewModule({ title: '', type: 'text', description: '' })
-        }}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Agregar Nuevo Módulo</DialogTitle>
+                  {selectedModule.lessons.length === 0 ? (
+                    <Alert severity="info">Esta sección aún no tiene lecciones. Agrega la primera para editar contenido.</Alert>
+                  ) : (
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} md={4}>
+                        <List disablePadding>
+                          {selectedModule.lessons.map((lesson) => (
+                            <Paper key={lesson.id} variant={lesson.id === selectedLessonId ? 'elevation' : 'outlined'} sx={{ mb: 1 }}>
+                              <ListItemButton onClick={() => setSelectedLessonId(lesson.id)}>
+                                <ListItemIcon>{lessonTypeMeta[lesson.type].icon}</ListItemIcon>
+                                <ListItemText
+                                  primary={lesson.title}
+                                  secondary={`${lessonTypeMeta[lesson.type].label} · ${lesson.estimatedMinutes} min`}
+                                />
+                                <IconButton
+                                  edge="end"
+                                  size="small"
+                                  onClick={(event) => {
+                                    event.stopPropagation()
+                                    handleDeleteLesson(selectedModule.id, lesson.id)
+                                  }}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </ListItemButton>
+                            </Paper>
+                          ))}
+                        </List>
+                      </Grid>
+
+                      <Grid item xs={12} md={8}>
+                        {selectedLesson ? (
+                          <Stack spacing={2}>
+                            <TextField
+                              fullWidth
+                              label="Título de la lección"
+                              value={selectedLesson.title}
+                              onChange={(event) =>
+                                updateSelectedLesson((lesson) => ({
+                                  ...lesson,
+                                  title: event.target.value
+                                }))
+                              }
+                            />
+                            <Grid container spacing={2}>
+                              <Grid item xs={12} sm={6}>
+                                <FormControl fullWidth>
+                                  <InputLabel id="lesson-type-label">Tipo de lección</InputLabel>
+                                  <Select
+                                    labelId="lesson-type-label"
+                                    label="Tipo de lección"
+                                    value={selectedLesson.type}
+                                    onChange={(event) =>
+                                      updateSelectedLesson((lesson) => ({
+                                        ...lesson,
+                                        type: event.target.value as LessonDraftType
+                                      }))
+                                    }
+                                  >
+                                    {Object.entries(lessonTypeMeta).map(([value, meta]) => (
+                                      <MenuItem key={value} value={value}>
+                                        {meta.label}
+                                      </MenuItem>
+                                    ))}
+                                  </Select>
+                                </FormControl>
+                              </Grid>
+                              <Grid item xs={12} sm={6}>
+                                <TextField
+                                  fullWidth
+                                  type="number"
+                                  label="Duración estimada (min)"
+                                  value={selectedLesson.estimatedMinutes}
+                                  onChange={(event) =>
+                                    updateSelectedLesson((lesson) => ({
+                                      ...lesson,
+                                      estimatedMinutes: Math.max(1, Number(event.target.value) || 1)
+                                    }))
+                                  }
+                                />
+                              </Grid>
+                            </Grid>
+
+                            <Alert severity="info">{lessonTypeMeta[selectedLesson.type].helper}</Alert>
+
+                            {selectedLesson.type === 'text' && (
+                              <ReactQuill
+                                theme="snow"
+                                modules={quillModules}
+                                formats={quillFormats}
+                                value={selectedLesson.content.text || ''}
+                                onChange={(value) =>
+                                  updateSelectedLesson((lesson) => ({
+                                    ...lesson,
+                                    content: { ...lesson.content, text: value }
+                                  }))
+                                }
+                              />
+                            )}
+
+                            {selectedLesson.type === 'video' && (
+                              <Stack spacing={2}>
+                                <TextField
+                                  fullWidth
+                                  label="URL del video"
+                                  placeholder="https://youtu.be/... o URL embebible"
+                                  value={selectedLesson.content.videoUrl || ''}
+                                  onChange={(event) =>
+                                    updateSelectedLesson((lesson) => ({
+                                      ...lesson,
+                                      content: { ...lesson.content, videoUrl: event.target.value }
+                                    }))
+                                  }
+                                />
+                                <FormControl fullWidth>
+                                  <InputLabel id="video-source-label">Origen del video</InputLabel>
+                                  <Select
+                                    labelId="video-source-label"
+                                    label="Origen del video"
+                                    value={selectedLesson.content.videoSource || 'youtube'}
+                                    onChange={(event) =>
+                                      updateSelectedLesson((lesson) => ({
+                                        ...lesson,
+                                        content: {
+                                          ...lesson.content,
+                                          videoSource: event.target.value as 'youtube' | 'minio'
+                                        }
+                                      }))
+                                    }
+                                  >
+                                    <MenuItem value="youtube">YouTube</MenuItem>
+                                    <MenuItem value="minio">Archivo alojado</MenuItem>
+                                  </Select>
+                                </FormControl>
+                              </Stack>
+                            )}
+
+                            {selectedLesson.type === 'quiz' && (
+                              <Stack spacing={2}>
+                                <Alert severity={canOpenQuizBuilder ? 'info' : 'warning'}>
+                                  {canOpenQuizBuilder
+                                    ? 'Crea preguntas nuevas dentro del quiz y usa el banco solo si te aporta reutilización.'
+                                    : 'Guarda el curso primero para persistir esta lección y luego abrir el constructor del quiz.'}
+                                </Alert>
+                                <Button
+                                  variant="contained"
+                                  startIcon={<QuizIcon />}
+                                  onClick={() => setQuizEditorLessonId(selectedLesson.id)}
+                                  disabled={!canOpenQuizBuilder}
+                                >
+                                  {selectedLesson.content.quizId ? 'Editar quiz de la lección' : 'Crear quiz para esta lección'}
+                                </Button>
+                                {selectedLesson.content.quizId && (
+                                  <Chip label={`Quiz asociado #${selectedLesson.content.quizId}`} color="success" variant="outlined" />
+                                )}
+                              </Stack>
+                            )}
+
+                            <Divider />
+
+                            <Box>
+                              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                                <Box>
+                                  <Typography variant="subtitle1">Recursos adjuntos</Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    Agrega PDFs, documentos o enlaces de apoyo.
+                                  </Typography>
+                                </Box>
+                                <Button size="small" startIcon={<AddIcon />} onClick={openCreateResourceDialog}>
+                                  Recurso
+                                </Button>
+                              </Stack>
+
+                              {selectedLesson.content.resources.length === 0 ? (
+                                <Alert severity="info">Esta lección aún no tiene recursos.</Alert>
+                              ) : (
+                                <List disablePadding>
+                                  {selectedLesson.content.resources
+                                    .slice()
+                                    .sort((left, right) => left.order - right.order)
+                                    .map((resource) => (
+                                      <Paper key={resource.id} variant="outlined" sx={{ mb: 1 }}>
+                                        <ListItemButton onClick={() => openEditResourceDialog(resource.id)}>
+                                          <ListItemIcon>{resourceTypeMeta[resource.resourceType].icon}</ListItemIcon>
+                                          <ListItemText
+                                            primary={resource.title}
+                                            secondary={resource.externalUrl || resource.fileUrl || resource.description || resourceTypeMeta[resource.resourceType].label}
+                                          />
+                                          <Chip size="small" label={resourceTypeMeta[resource.resourceType].label} sx={{ mr: 1 }} />
+                                          <IconButton
+                                            edge="end"
+                                            size="small"
+                                            onClick={(event) => {
+                                              event.stopPropagation()
+                                              handleDeleteResource(resource.id)
+                                            }}
+                                          >
+                                            <DeleteIcon fontSize="small" />
+                                          </IconButton>
+                                        </ListItemButton>
+                                      </Paper>
+                                    ))}
+                                </List>
+                              )}
+                            </Box>
+                          </Stack>
+                        ) : (
+                          <Alert severity="info">Selecciona una lección para editar su contenido.</Alert>
+                        )}
+                      </Grid>
+                    </Grid>
+                  )}
+                </Stack>
+              ) : (
+                <Alert severity="info">Selecciona una sección para editarla o crea la primera.</Alert>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Stack direction="row" spacing={1}>
+          <Chip label={`${modules.length} secciones`} color="primary" variant="outlined" />
+          <Chip label={`${modules.reduce((total, module) => total + module.lessons.length, 0)} lecciones`} variant="outlined" />
+          <Chip label={`${modules.reduce((total, module) => total + module.lessons.reduce((resourceTotal, lesson) => resourceTotal + lesson.content.resources.length, 0), 0)} recursos`} variant="outlined" />
+        </Stack>
+        <Button variant="contained" onClick={onSave} disabled={isLoading || !hasUnsavedChanges}>
+          {isLoading ? 'Guardando...' : hasUnsavedChanges ? 'Guardar curso' : 'Sin cambios'}
+        </Button>
+      </Box>
+
+      <Dialog open={moduleDialogOpen} onClose={() => setModuleDialogOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Nueva sección</DialogTitle>
         <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
-              <Alert severity="info">
-                Elige primero el tipo de módulo. Luego podrás completar el contenido detallado desde el editor principal.
-              </Alert>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Título del módulo"
-                value={newModule.title}
-                onChange={(e) =>
-                  setNewModule({ ...newModule, title: e.target.value })
-                }
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Tipo de contenido</InputLabel>
-                <Select
-                  value={newModule.type}
-                  label="Tipo de contenido"
-                  onChange={(e) =>
-                    setNewModule({
-                      ...newModule,
-                      type: e.target.value as 'text' | 'video' | 'quiz'
-                    })
-                  }
-                >
-                  <MenuItem value="text">Texto</MenuItem>
-                  <MenuItem value="video">Video</MenuItem>
-                  <MenuItem value="quiz">Quiz</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <Alert severity="info">
-                <strong>{moduleTypeGuides[newModule.type].label}:</strong> {moduleTypeGuides[newModule.type].helper}
-              </Alert>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                label="Descripción"
-                value={newModule.description}
-                onChange={(e) =>
-                  setNewModule({ ...newModule, description: e.target.value })
-                }
-              />
-            </Grid>
-          </Grid>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField fullWidth label="Título de la sección" value={moduleDraft.title} onChange={(event) => setModuleDraft((current) => ({ ...current, title: event.target.value }))} />
+            <TextField fullWidth multiline minRows={3} label="Descripción" value={moduleDraft.description} onChange={(event) => setModuleDraft((current) => ({ ...current, description: event.target.value }))} />
+          </Stack>
         </DialogContent>
         <DialogActions>
-          <Button
-            onClick={() => {
-              setOpenModuleDialog(false)
-              setNewModule({ title: '', type: 'text', description: '' })
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={addModule}
-            variant="contained"
-            disabled={!newModule.title}
-          >
-            Agregar
-          </Button>
+          <Button onClick={() => setModuleDialogOpen(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={handleAddModule}>Crear sección</Button>
         </DialogActions>
-      </Dialog >
+      </Dialog>
 
-      <Snackbar
-        open={editorNotice.open}
-        autoHideDuration={4000}
-        onClose={() => setEditorNotice((prev) => ({ ...prev, open: false }))}
-      >
-        <Alert
-          severity={editorNotice.severity}
-          onClose={() => setEditorNotice((prev) => ({ ...prev, open: false }))}
-          sx={{ width: '100%' }}
-        >
-          {editorNotice.message}
-        </Alert>
-      </Snackbar>
-
-      {/* Quiz Management Dialog */}
-      < Dialog
-        open={openQuizManagement}
-        onClose={() => setOpenQuizManagement(false)}
-        maxWidth="xl"
-        fullWidth
-        keepMounted={true}
-        PaperProps={{
-          sx: { height: '90vh' }
-        }}
-      >
-        <DialogTitle>
-          Editor de Quiz: {selectedModule?.title}
-          <IconButton
-            onClick={() => setOpenQuizManagement(false)}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
-          >
-            <DeleteIcon />
-          </IconButton>
-        </DialogTitle>
+      <Dialog open={lessonDialogOpen} onClose={() => setLessonDialogOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Nueva lección</DialogTitle>
         <DialogContent>
-          <LmsQuizManagement
-            courseId={courseId ? parseInt(courseId) : undefined}
-            moduleId={selectedModule?.id}
-            initialQuizId={selectedModule?.content.quizId}
-            onQuizSaved={(quizId) => {
-              // Actualizar el módulo con el quizId guardado
-              if (selectedModule) {
-                updateModuleContent(selectedModule.id, {
-                  ...selectedModule.content,
-                  quizId
-                })
-              }
-              setOpenQuizManagement(false)
-            }}
-            embedded={true}
-          />
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField fullWidth label="Título de la lección" value={lessonDraft.title} onChange={(event) => setLessonDraft((current) => ({ ...current, title: event.target.value }))} />
+            <FormControl fullWidth>
+              <InputLabel id="new-lesson-type-label">Tipo</InputLabel>
+              <Select labelId="new-lesson-type-label" label="Tipo" value={lessonDraft.type} onChange={(event) => setLessonDraft((current) => ({ ...current, type: event.target.value as LessonDraftType }))}>
+                {Object.entries(lessonTypeMeta).map(([value, meta]) => (
+                  <MenuItem key={value} value={value}>{meta.label}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField fullWidth type="number" label="Duración estimada (min)" value={lessonDraft.estimatedMinutes} onChange={(event) => setLessonDraft((current) => ({ ...current, estimatedMinutes: Math.max(1, Number(event.target.value) || 1) }))} />
+            <TextField fullWidth multiline minRows={2} label="Descripción breve" value={lessonDraft.description} onChange={(event) => setLessonDraft((current) => ({ ...current, description: event.target.value }))} />
+          </Stack>
         </DialogContent>
-      </Dialog >
-    </Grid >
+        <DialogActions>
+          <Button onClick={() => setLessonDialogOpen(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={handleAddLesson}>Crear lección</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={resourceDialog.open} onClose={() => setResourceDialog((current) => ({ ...current, open: false }))} fullWidth maxWidth="sm">
+        <DialogTitle>{resourceDialog.editingResourceId ? 'Editar recurso adjunto' : 'Nuevo recurso adjunto'}</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField fullWidth label="Título" value={resourceDialog.values.title} onChange={(event) => setResourceDialog((current) => ({ ...current, values: { ...current.values, title: event.target.value } }))} />
+            <FormControl fullWidth>
+              <InputLabel id="resource-type-label">Tipo de recurso</InputLabel>
+              <Select labelId="resource-type-label" label="Tipo de recurso" value={resourceDialog.values.resourceType} onChange={(event) => setResourceDialog((current) => ({ ...current, values: { ...current.values, resourceType: event.target.value as LessonResourceType } }))}>
+                <MenuItem value="pdf">PDF</MenuItem>
+                <MenuItem value="document">Documento</MenuItem>
+                <MenuItem value="link">Enlace</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField fullWidth label="URL del archivo" placeholder="https://..." value={resourceDialog.values.fileUrl} onChange={(event) => setResourceDialog((current) => ({ ...current, values: { ...current.values, fileUrl: event.target.value } }))} />
+            <TextField fullWidth label="Enlace externo" placeholder="https://..." value={resourceDialog.values.externalUrl} onChange={(event) => setResourceDialog((current) => ({ ...current, values: { ...current.values, externalUrl: event.target.value } }))} />
+            <TextField fullWidth multiline minRows={2} label="Descripción" value={resourceDialog.values.description} onChange={(event) => setResourceDialog((current) => ({ ...current, values: { ...current.values, description: event.target.value } }))} />
+            <Alert severity="info">
+              Usa <strong>URL del archivo</strong> para PDFs o documentos alojados y <strong>enlace externo</strong> cuando el material vive en otra plataforma.
+            </Alert>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setResourceDialog((current) => ({ ...current, open: false }))}>Cancelar</Button>
+          <Button variant="contained" onClick={handleSaveResource}>Guardar recurso</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={Boolean(quizEditorLessonId)} onClose={() => setQuizEditorLessonId(null)} fullWidth maxWidth="lg">
+        <DialogTitle>Constructor del quiz de la lección</DialogTitle>
+        <DialogContent dividers>
+          {quizEditorLessonId && courseId ? (
+            <LmsQuizManagement
+              courseId={Number(courseId)}
+              lessonId={Number(quizEditorLessonId)}
+              initialQuizId={selectedLesson?.content.quizId}
+              onQuizSaved={(quizId) => {
+                updateSelectedLesson((lesson) => ({
+                  ...lesson,
+                  content: { ...lesson.content, quizId }
+                }))
+                setQuizEditorLessonId(null)
+                setEditorNotice('Quiz guardado y asociado a esta lección.')
+              }}
+            />
+          ) : (
+            <Alert severity="warning">Guarda el curso primero para abrir el constructor del quiz.</Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setQuizEditorLessonId(null)}>Cerrar</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar open={Boolean(editorNotice)} autoHideDuration={3500} onClose={() => setEditorNotice(null)} message={editorNotice} />
+    </Stack>
   )
 }
 

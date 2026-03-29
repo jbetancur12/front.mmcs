@@ -30,7 +30,8 @@ import {
   StepLabel,
   StepContent,
   Paper,
-  Tooltip
+  Tooltip,
+  Stack
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
@@ -83,6 +84,13 @@ interface CourseLesson {
     text?: string
     quiz?: any
     description?: string
+    resources?: Array<{
+      id: number
+      title: string
+      description?: string
+      resourceType: 'pdf' | 'document' | 'link'
+      href: string
+    }>
   }
 }
 
@@ -198,8 +206,10 @@ const LmsCourseView: React.FC = () => {
               id: lesson.id,
               title: lesson.title,
               type: lesson.type || 'text',
-              duration: lesson.duration_minutes ? `${lesson.duration_minutes} min` : 'N/A',
-              estimatedMinutes: lesson.duration_minutes || 30,
+              duration: (lesson.estimated_minutes || lesson.duration_minutes)
+                ? `${lesson.estimated_minutes || lesson.duration_minutes} min`
+                : 'N/A',
+              estimatedMinutes: lesson.estimated_minutes || lesson.duration_minutes || 30,
               order: lesson.order_index || lessonIndex + 1,
               completed,
               unlocked,
@@ -232,7 +242,16 @@ const LmsCourseView: React.FC = () => {
                     explanation: q.explanation,
                     points: q.points || 1
                   }))
-                } : undefined
+                } : undefined,
+                resources: (lesson.resources || [])
+                  .filter((resource: any) => resource.file_url || resource.external_url)
+                  .map((resource: any) => ({
+                    id: resource.id,
+                    title: resource.title,
+                    description: resource.description || '',
+                    resourceType: resource.resource_type,
+                    href: resource.external_url || resource.file_url
+                  }))
               }
             }
           })
@@ -1246,6 +1265,55 @@ const LmsCourseView: React.FC = () => {
                     userAttempts={userQuizAttempts}
                     onComplete={handleQuizComplete}
                   />
+                )}
+
+                {!!currentLesson.content.resources?.length && (
+                  <Paper variant='outlined' sx={{ p: 2, mb: 3 }}>
+                    <Typography variant='h6' gutterBottom>
+                      Recursos de apoyo
+                    </Typography>
+                    <Stack spacing={1.5}>
+                      {currentLesson.content.resources.map((resource) => (
+                        <Box
+                          key={resource.id}
+                          sx={{
+                            p: 1.5,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 1
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: { xs: 'flex-start', sm: 'center' },
+                              gap: 1,
+                              flexDirection: { xs: 'column', sm: 'row' }
+                            }}
+                          >
+                            <Box>
+                              <Typography variant='subtitle2'>{resource.title}</Typography>
+                              {resource.description && (
+                                <Typography variant='body2' color='text.secondary'>
+                                  {resource.description}
+                                </Typography>
+                              )}
+                            </Box>
+                            <Button
+                              size='small'
+                              variant='outlined'
+                              href={resource.href}
+                              target='_blank'
+                              rel='noopener noreferrer'
+                            >
+                              Abrir recurso
+                            </Button>
+                          </Box>
+                        </Box>
+                      ))}
+                    </Stack>
+                  </Paper>
                 )}
 
                 {/* Completion button for non-quiz content */}

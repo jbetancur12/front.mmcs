@@ -18,7 +18,8 @@ import {
   ListItemText,
   Alert,
   IconButton,
-  Paper
+  Paper,
+  Stack
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
@@ -39,7 +40,7 @@ import { userStore } from 'src/store/userStore'
 import LmsQuizComponent from '../components/LmsQuizComponent'
 import {
   useCompleteLesson,
-  useCoursePreview,
+  useCourse,
   useCourseProgress,
   useSubmitQuiz
 } from 'src/hooks/useLms'
@@ -67,6 +68,13 @@ interface CourseUnit {
     currentAttempt?: number
     questions?: any[]
     description?: string
+    resources?: Array<{
+      id: number
+      title: string
+      description?: string
+      resourceType: 'pdf' | 'document' | 'link'
+      href: string
+    }>
   }
 }
 
@@ -157,6 +165,15 @@ const transformPreviewDataToCourse = (previewData: any): Course => {
           maxAttempts: lesson.quiz?.max_attempts,
           currentAttempt: lesson.quiz?.current_attempt,
           description: lesson.description,
+          resources: (lesson.resources || [])
+            .filter((resource: any) => resource.file_url || resource.external_url)
+            .map((resource: any) => ({
+              id: resource.id,
+              title: resource.title,
+              description: resource.description || '',
+              resourceType: resource.resource_type,
+              href: resource.external_url || resource.file_url
+            })),
           questions: questions
         }
       }
@@ -218,6 +235,15 @@ const transformProgressDataToCourse = (progressData: any): Course => {
           maxAttempts: lesson.quiz?.max_attempts,
           currentAttempt: lesson.quiz?.current_attempt,
           description: lesson.description,
+          resources: (lesson.resources || [])
+            .filter((resource: any) => resource.file_url || resource.external_url)
+            .map((resource: any) => ({
+              id: resource.id,
+              title: resource.title,
+              description: resource.description || '',
+              resourceType: resource.resource_type,
+              href: resource.external_url || resource.file_url
+            })),
           questions: questions
         }
       }
@@ -248,7 +274,7 @@ const LmsCoursePreview: React.FC = () => {
   const storeUser = useStore(userStore)
   const queryClient = useQueryClient()
   const parsedCourseId = parseInt(courseId || '0')
-  const previewQuery = useCoursePreview(parsedCourseId, {
+  const previewQuery = useCourse(parsedCourseId, {
     enabled: !!courseId && previewMode === 'admin',
     staleTime: 1000 * 60 * 2,
     refetchOnWindowFocus: false
@@ -805,6 +831,52 @@ const LmsCoursePreview: React.FC = () => {
                       }}
                     />
                   )}
+
+                {!!currentUnitData.content.resources?.length && (
+                  <Paper variant='outlined' sx={{ p: 2, mb: 3 }}>
+                    <Typography variant='h6' gutterBottom>
+                      Recursos de apoyo
+                    </Typography>
+                    <Stack spacing={1.5}>
+                      {currentUnitData.content.resources.map((resource) => (
+                        <Box
+                          key={resource.id}
+                          sx={{
+                            p: 1.5,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 1
+                          }}
+                        >
+                          <Stack
+                            direction={{ xs: 'column', sm: 'row' }}
+                            spacing={1}
+                            justifyContent='space-between'
+                            alignItems={{ xs: 'flex-start', sm: 'center' }}
+                          >
+                            <Box>
+                              <Typography variant='subtitle2'>{resource.title}</Typography>
+                              {resource.description && (
+                                <Typography variant='body2' color='text.secondary'>
+                                  {resource.description}
+                                </Typography>
+                              )}
+                            </Box>
+                            <Button
+                              size='small'
+                              variant='outlined'
+                              href={resource.href}
+                              target='_blank'
+                              rel='noopener noreferrer'
+                            >
+                              Abrir recurso
+                            </Button>
+                          </Stack>
+                        </Box>
+                      ))}
+                    </Stack>
+                  </Paper>
+                )}
 
                 {!currentUnitData.completed &&
                   currentUnitData.type !== 'quiz' && (

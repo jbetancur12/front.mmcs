@@ -117,6 +117,7 @@ function TabPanel(props: TabPanelProps) {
 interface LmsQuizManagementProps {
   courseId?: number
   moduleId?: string
+  lessonId?: number
   initialQuizId?: number
   onQuizSaved?: (quizId: number) => void
   embedded?: boolean
@@ -125,6 +126,7 @@ interface LmsQuizManagementProps {
 const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   courseId,
   moduleId,
+  lessonId,
   initialQuizId,
   onQuizSaved
 }) => {
@@ -245,32 +247,34 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   // Save quiz mutation (create or update)
   const saveQuizMutation = useMutation(
     async () => {
-      if (!moduleId) {
-        throw new Error('Module ID is required')
+      let targetLessonId = lessonId
+      if (!targetLessonId) {
+        if (!moduleId) {
+          throw new Error('Lesson ID is required')
+        }
+
+        const lessonsResponse = await axiosPrivate.get(`/lms/content/modules/${moduleId}/lessons`)
+        const lessons = lessonsResponse.data.data || lessonsResponse.data || []
+
+        if (lessons.length === 0) {
+          throw new Error('Este módulo no tiene lecciones. Por favor, crea una lección primero.')
+        }
+
+        targetLessonId = lessons[0].id
       }
 
-
-      // Get lesson ID from module
-      const lessonsResponse = await axiosPrivate.get(`/lms/content/modules/${moduleId}/lessons`)
-      const lessons = lessonsResponse.data.data || lessonsResponse.data || []
-
-      if (lessons.length === 0) {
-        throw new Error('Este módulo no tiene lecciones. Por favor, crea una lección primero.')
+      if (!targetLessonId) {
+        throw new Error('No se pudo resolver la lección del quiz.')
       }
-
-      const lessonId = lessons[0].id
 
       // Build quiz DTO
-      console.log("🚀 ~ LmsQuizManagement ~ quizConfig:", quizConfig) 
       const quizDTO = quizService.buildQuizDTO(quizConfig, quizConfig.questions)
-
-      console.log('📤 Sending quiz to backend:', { lessonId, quizDTO })
 
       // Create or Update
       if (initialQuizId) {
         return await quizService.updateQuiz(initialQuizId, quizDTO)
       } else {
-        return await quizService.createQuiz(lessonId, quizDTO)
+        return await quizService.createQuiz(targetLessonId, quizDTO)
       }
     },
     {

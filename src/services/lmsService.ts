@@ -20,6 +20,7 @@ export type CourseAudience = 'internal' | 'client' | 'both'
  * Content type enum
  */
 export type ContentType = 'text' | 'video'
+export type LessonType = ContentType | 'quiz'
 
 /**
  * Question type enum
@@ -83,6 +84,19 @@ export interface CourseModule {
   updated_at: string
 }
 
+export interface LessonResource {
+  id: number
+  lesson_id: number
+  title: string
+  description?: string | null
+  resource_type: 'pdf' | 'document' | 'link'
+  file_url?: string | null
+  external_url?: string | null
+  order_index: number
+  created_at?: string
+  updated_at?: string
+}
+
 /**
  * Course lesson interface
  */
@@ -91,13 +105,15 @@ export interface CourseLesson {
   module_id: number
   title: string
   content: string
-  type: ContentType
+  type: LessonType
   video_url?: string
   video_source?: 'youtube' | 'minio'
   duration_minutes?: number
+  estimated_minutes?: number
   order_index: number
   is_mandatory: boolean
   quiz?: Quiz  // Quiz asociado a la lección (si type es 'quiz')
+  resources?: LessonResource[]
   created_at: string
   updated_at: string
 }
@@ -195,13 +211,14 @@ export interface CourseProgressResponse {
     lessons: Array<{
       id: number
       title: string
-      type: ContentType | 'quiz'
+      type: LessonType
       content?: string
       video_url?: string
       description?: string
       order_index: number
       estimated_minutes?: number
       quiz?: Quiz | null
+      resources?: LessonResource[]
       progress: null | {
         status: 'not_started' | 'in_progress' | 'completed'
         started_at?: string
@@ -236,7 +253,7 @@ export interface ProgressUpdateResult {
   nextLesson: null | {
     lessonId: number
     title: string
-    type: ContentType | 'quiz'
+    type: LessonType
     moduleTitle: string
     moduleId: number
     orderIndex: number
