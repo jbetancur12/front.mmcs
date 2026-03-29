@@ -83,6 +83,8 @@ interface CourseLesson {
   content_type: 'text' | 'video' | 'quiz'
   order: number
   module_id: number
+  estimated_minutes?: number
+  duration_minutes?: number
 }
 
 interface CourseAssignment {
@@ -91,6 +93,27 @@ interface CourseAssignment {
   all_employees: boolean
   role?: string
   assigned_at: string
+}
+
+const getDerivedCourseDuration = (course?: Pick<Course, 'estimated_duration_minutes' | 'modules'> | null) => {
+  if (!course) {
+    return 0
+  }
+
+  if (Number.isFinite(course.estimated_duration_minutes) && course.estimated_duration_minutes > 0) {
+    return course.estimated_duration_minutes
+  }
+
+  const totalMinutes = (course.modules || []).reduce((courseMinutes, module) => {
+    const moduleMinutes = (module.lessons || []).reduce((lessonMinutes, lesson) => {
+      const estimatedMinutes = lesson.estimated_minutes ?? lesson.duration_minutes ?? 0
+      return lessonMinutes + (Number.isFinite(estimatedMinutes) ? estimatedMinutes : 0)
+    }, 0)
+
+    return courseMinutes + moduleMinutes
+  }, 0)
+
+  return totalMinutes > 0 ? totalMinutes : 0
 }
 
 interface CreateCourseData {
@@ -319,7 +342,7 @@ const LmsCourseManagement: React.FC = () => {
         audience: course.audience,
         is_mandatory: course.is_mandatory,
         has_certificate: course.has_certificate,
-        estimated_duration_minutes: course.estimated_duration_minutes
+        estimated_duration_minutes: getDerivedCourseDuration(course)
       })
     } else {
       setEditingCourse(null)
@@ -651,7 +674,7 @@ const LmsCourseManagement: React.FC = () => {
                       size='small' 
                     />
                   </TableCell>
-                  <TableCell>{formatDuration(course.estimated_duration_minutes)}</TableCell>
+                  <TableCell>{formatDuration(getDerivedCourseDuration(course))}</TableCell>
                   <TableCell>{course._count?.modules || 0}</TableCell>
                   <TableCell>{course._count?.progress || 0} usuarios</TableCell>
                   <TableCell>
