@@ -650,6 +650,16 @@ const LmsCertificateView: React.FC = () => {
                   : 'Completa cursos para obtener tus primeros certificados'
                 }
               </Typography>
+              {!searchTerm && (
+                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap' }}>
+                  <Button variant="contained" onClick={() => navigate('/lms')}>
+                    Volver al LMS
+                  </Button>
+                  <Button variant="outlined" onClick={() => setIsVerificationDialogOpen(true)}>
+                    Verificar un certificado
+                  </Button>
+                </Box>
+              )}
             </Paper>
           )}
         </Box>

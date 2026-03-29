@@ -767,9 +767,14 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                   Completa cursos para obtener certificados
                 </Typography>
-                <Button variant="contained" onClick={() => setActiveTab(1)}>
-                  Ver mis cursos
-                </Button>
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap' }}>
+                  <Button variant="contained" onClick={() => setActiveTab(1)}>
+                    Ver mi aprendizaje
+                  </Button>
+                  <Button variant="outlined" onClick={() => navigate('/lms/certificates')}>
+                    Ir a certificados
+                  </Button>
+                </Box>
               </Box>
             )}
           </Box>

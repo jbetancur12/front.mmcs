@@ -817,6 +817,14 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                     <Typography variant='body2' color='text.secondary'>
                       Completa cursos que otorgan certificados para verlos aquí
                     </Typography>
+                    <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap' }}>
+                      <Button variant='contained' onClick={() => setActiveTab(1)}>
+                        Ver mis cursos
+                      </Button>
+                      <Button variant='outlined' onClick={() => navigate('/lms/certificates')}>
+                        Ir a certificados
+                      </Button>
+                    </Box>
                   </Box>
                 )
               }

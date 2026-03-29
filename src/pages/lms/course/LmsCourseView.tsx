@@ -936,12 +936,16 @@ const LmsCourseView: React.FC = () => {
                         </Button>
                       )}
                       {course.hasCertificate && !hasGeneratedCertificate && (
-                        <Chip
-                          label="Generando certificado..."
-                          color="success"
-                          size="small"
-                          sx={{ ml: 2 }}
-                        />
+                        <Box sx={{ ml: 2, display: 'inline-flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                          <Chip
+                            label="Generando certificado..."
+                            color="success"
+                            size="small"
+                          />
+                          <Typography variant="caption" color="text.secondary">
+                            Esto puede tardar unos segundos.
+                          </Typography>
+                        </Box>
                       )}
                     </Typography>
                   </Alert>
@@ -1027,6 +1031,9 @@ const LmsCourseView: React.FC = () => {
                           color="success"
                           size="small"
                         />
+                        <Typography variant="body2" color="text.secondary">
+                          Puedes revisar esta sección de nuevo en unos segundos.
+                        </Typography>
                         <Button
                           variant="text"
                           color="success"
@@ -1034,6 +1041,14 @@ const LmsCourseView: React.FC = () => {
                           onClick={() => navigate('/lms/certificates')}
                         >
                           Ir a mis certificados
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          color="success"
+                          size="small"
+                          onClick={() => window.location.reload()}
+                        >
+                          Actualizar
                         </Button>
                       </Box>
                     )}
@@ -1299,6 +1314,15 @@ const LmsCourseView: React.FC = () => {
               onClick={() => navigate('/lms/certificates')}
             >
               Ir a mis certificados
+            </Button>
+          )}
+          {course.hasCertificate && !hasGeneratedCertificate && (
+            <Button
+              variant="outlined"
+              color="success"
+              onClick={() => window.location.reload()}
+            >
+              Actualizar
             </Button>
           )}
           <Button
