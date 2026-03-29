@@ -143,6 +143,7 @@ const LmsCourseView: React.FC = () => {
   const [showCompletionDialog, setShowCompletionDialog] = useState(false)
   const [lessonStartTime, setLessonStartTime] = useState<Date | null>(null)
   const [latestQuizOutcome, setLatestQuizOutcome] = useState<QuizOutcomeSummary | null>(null)
+  const [certificateReadyNoticeVisible, setCertificateReadyNoticeVisible] = useState(false)
 
   const storeUser = useStore(userStore)
 
@@ -638,6 +639,24 @@ const LmsCourseView: React.FC = () => {
     }
   }, [courseProgress.percentage])
 
+  useEffect(() => {
+    if (!course?.hasCertificate || courseProgress.percentage !== 100 || hasGeneratedCertificate) {
+      return
+    }
+
+    const interval = window.setInterval(() => {
+      void queryClient.invalidateQueries(queryKeys.certificates.user(undefined))
+    }, 5000)
+
+    return () => window.clearInterval(interval)
+  }, [course?.hasCertificate, courseProgress.percentage, hasGeneratedCertificate, queryClient])
+
+  useEffect(() => {
+    if (course && courseProgress.percentage === 100 && course.hasCertificate && hasGeneratedCertificate) {
+      setCertificateReadyNoticeVisible(true)
+    }
+  }, [course, courseProgress.percentage, hasGeneratedCertificate])
+
   // Early return states (must be after all hooks)
   if (isLoadingCourse) {
     return (
@@ -1027,12 +1046,12 @@ const LmsCourseView: React.FC = () => {
                     {course.hasCertificate && !hasGeneratedCertificate && (
                       <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                         <Chip
-                          label="Generando certificado..."
+                          label="Preparando certificado..."
                           color="success"
                           size="small"
                         />
                         <Typography variant="body2" color="text.secondary">
-                          Puedes revisar esta sección de nuevo en unos segundos.
+                          Seguiremos revisando automáticamente hasta que esté disponible.
                         </Typography>
                         <Button
                           variant="text"
@@ -1042,16 +1061,22 @@ const LmsCourseView: React.FC = () => {
                         >
                           Ir a mis certificados
                         </Button>
-                        <Button
-                          variant="outlined"
-                          color="success"
-                          size="small"
-                          onClick={() => window.location.reload()}
-                        >
-                          Actualizar
-                        </Button>
                       </Box>
                     )}
+                  </Alert>
+                ) : certificateReadyNoticeVisible ? (
+                  <Alert
+                    severity="success"
+                    sx={{ mb: 3 }}
+                    action={course.hasCertificate ? (
+                      <Button color="inherit" size="small" onClick={handleOpenCurrentCertificate}>
+                        Abrir certificado
+                      </Button>
+                    ) : undefined}
+                    onClose={() => setCertificateReadyNoticeVisible(false)}
+                  >
+                    <AlertTitle>Certificado disponible</AlertTitle>
+                    Tu certificado ya quedó listo y puedes abrirlo desde aquí o desde la sección de certificados.
                   </Alert>
                 ) : currentLesson.type === 'quiz' && latestQuizOutcome ? (
                   <Alert
@@ -1282,6 +1307,9 @@ const LmsCourseView: React.FC = () => {
           <Typography variant="body1" gutterBottom>
             Has completado exitosamente el curso "{course.title}".
           </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Ya puedes cerrar esta etapa del aprendizaje y revisar tu certificado o volver a tu ruta.
+          </Typography>
           {course.hasCertificate && hasGeneratedCertificate && (
             <Typography variant="body2" color="text.secondary">
               Tu certificado está listo para descargar.
@@ -1289,7 +1317,7 @@ const LmsCourseView: React.FC = () => {
           )}
           {course.hasCertificate && !hasGeneratedCertificate && (
             <Typography variant="body2" color="text.secondary">
-              Tu certificado se está generando y aparecerá en la sección de certificados en unos momentos.
+              Tu certificado se está preparando y lo seguiremos revisando automáticamente en esta pantalla.
             </Typography>
           )}
         </DialogContent>
@@ -1314,15 +1342,6 @@ const LmsCourseView: React.FC = () => {
               onClick={() => navigate('/lms/certificates')}
             >
               Ir a mis certificados
-            </Button>
-          )}
-          {course.hasCertificate && !hasGeneratedCertificate && (
-            <Button
-              variant="outlined"
-              color="success"
-              onClick={() => window.location.reload()}
-            >
-              Actualizar
             </Button>
           )}
           <Button

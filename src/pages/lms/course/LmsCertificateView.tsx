@@ -98,6 +98,16 @@ const normalizeCertificate = (certificate: ApiCertificate | Certificate): Certif
 const getOrganizationName = (certificate?: Certificate | null) =>
   certificate?.certificateData?.organizationName || 'MMCS Learning Management System'
 
+const getCourseDurationLabel = (certificate?: Certificate | null) => {
+  const duration = certificate?.certificateData?.courseDuration
+
+  if (!duration || duration <= 0) {
+    return 'Duración no registrada'
+  }
+
+  return `${duration} minuto${duration === 1 ? '' : 's'}`
+}
+
 const LmsCertificateView: React.FC = () => {
   const { certificateId, certificateNumber: certificateNumberParam } = useParams<{ certificateId: string; certificateNumber: string }>()
   const navigate = useNavigate()
@@ -471,6 +481,15 @@ const LmsCertificateView: React.FC = () => {
                         <CalendarIcon />
                       </ListItemIcon>
                       <ListItemText
+                        primary="Duración del curso"
+                        secondary={getCourseDurationLabel(certificate)}
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemIcon>
+                        <CalendarIcon />
+                      </ListItemIcon>
+                      <ListItemText
                         primary="Fecha de finalización"
                         secondary={new Date(certificate.completion_date).toLocaleDateString('es-ES')}
                       />
@@ -625,6 +644,10 @@ const LmsCertificateView: React.FC = () => {
 
                       <Typography variant="body2" sx={{ mb: 1 }}>
                         <strong>Organización:</strong> {getOrganizationName(cert)}
+                      </Typography>
+
+                      <Typography variant="body2" sx={{ mb: 1 }}>
+                        <strong>Duración:</strong> {getCourseDurationLabel(cert)}
                       </Typography>
                       
                       <Typography variant="body2" sx={{ mb: 1 }}>
