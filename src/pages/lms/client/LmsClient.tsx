@@ -68,6 +68,22 @@ interface ClientDashboardProps {
   user?: User
 }
 
+const formatLastAccess = (lastAccessedAt?: string | null) => {
+  if (!lastAccessedAt) return null
+
+  return new Date(lastAccessedAt).toLocaleString('es-CO', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  })
+}
+
+const getNextLessonLabel = (course: Course & { learningContinuity?: Course['learningContinuity'] }) => {
+  const nextLesson = course.learningContinuity?.nextLesson
+  if (!nextLesson) return null
+
+  return `${nextLesson.moduleTitle}: ${nextLesson.title}`
+}
+
 const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
   const [activeTab, setActiveTab] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
@@ -130,7 +146,9 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
         earnedCertificate,
         category: getCourseAudienceLabel(course.audience),
         instructor: course.creator?.nombre || 'Instructor',
-        duration: `${totalLessons} lecciones`
+        duration: `${totalLessons} lecciones`,
+        nextLessonLabel: getNextLessonLabel(course),
+        lastAccessLabel: formatLastAccess(course.learningContinuity?.lastAccessedAt)
       }
     })
 
@@ -152,7 +170,8 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
         id: c.id,
         title: c.title,
         progress: c.progress,
-        category: c.category
+        category: c.category,
+        nextLessonLabel: c.nextLessonLabel
       }))
 
     const newest = [...enrichedCourses]
@@ -210,7 +229,9 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
     if (inProgress) {
       return {
         title: inProgress.title,
-        description: `Ya avanzaste ${inProgress.progress}% en este curso. Retomarlo es la forma más rápida de seguir aprendiendo.`,
+        description: inProgress.nextLessonLabel
+          ? `Vas en ${inProgress.progress}% y tu siguiente lección es ${inProgress.nextLessonLabel}.`
+          : `Ya avanzaste ${inProgress.progress}% en este curso. Retomarlo es la forma más rápida de seguir aprendiendo.`,
         cta: 'Continuar curso',
         courseId: inProgress.id,
         section: 0
@@ -524,6 +545,16 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                                       <Typography variant="body2" color="text.secondary">
                                         {course.instructor} • {course.duration}
                                       </Typography>
+                                      {course.nextLessonLabel && (
+                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                                          Sigue: {course.nextLessonLabel}
+                                        </Typography>
+                                      )}
+                                      {course.lastAccessLabel && (
+                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                          Última actividad: {course.lastAccessLabel}
+                                        </Typography>
+                                      )}
                                       <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                                         <LinearProgress
                                           variant="determinate"
@@ -587,7 +618,11 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                             <ListItemIcon><PlayArrowIcon color="primary" /></ListItemIcon>
                             <ListItemText
                               primary={course.title}
-                              secondary={`${course.progress}% completado • ${course.category}`}
+                              secondary={
+                                course.nextLessonLabel
+                                  ? `${course.progress}% completado • Sigue con ${course.nextLessonLabel}`
+                                  : `${course.progress}% completado • ${course.category}`
+                              }
                             />
                             <Button size="small" onClick={() => handleCourseClick(course.id)}>
                               Retomar
@@ -699,6 +734,16 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                             <Typography variant='body2' color='text.secondary'>
                               {course.instructor}
                             </Typography>
+                            {course.nextLessonLabel && (
+                              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
+                                Sigue: {course.nextLessonLabel}
+                              </Typography>
+                            )}
+                            {course.lastAccessLabel && (
+                              <Typography variant='caption' color='text.secondary' sx={{ display: 'block' }}>
+                                Última actividad: {course.lastAccessLabel}
+                              </Typography>
+                            )}
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
                               <Typography variant='caption' color='text.secondary'>
                                 {course.duration}

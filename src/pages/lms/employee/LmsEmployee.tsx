@@ -90,6 +90,22 @@ const getDeadlineTone = (course: { isOverdue?: boolean; daysUntilDeadline?: numb
   return 'default'
 }
 
+const formatLastAccess = (lastAccessedAt?: string | null) => {
+  if (!lastAccessedAt) return null
+
+  return new Date(lastAccessedAt).toLocaleString('es-CO', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  })
+}
+
+const getNextLessonLabel = (course: Course & { learningContinuity?: Course['learningContinuity'] }) => {
+  const nextLesson = course.learningContinuity?.nextLesson
+  if (!nextLesson) return null
+
+  return `${nextLesson.moduleTitle}: ${nextLesson.title}`
+}
+
 const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   const [activeTab, setActiveTab] = useState(0)
   const navigate = useNavigate()
@@ -167,7 +183,9 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         earnedCertificate,
         deadline,
         daysUntilDeadline,
-        isOverdue
+        isOverdue,
+        nextLessonLabel: getNextLessonLabel(course),
+        lastAccessLabel: formatLastAccess(course.learningContinuity?.lastAccessedAt)
       }
 
       if (courseIsMandatory) {
@@ -269,7 +287,9 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
           ? 'Este curso obligatorio está vencido y conviene retomarlo primero.'
           : typeof priorityMandatory.daysUntilDeadline === 'number' && priorityMandatory.daysUntilDeadline <= 7
             ? `Este curso obligatorio vence en ${priorityMandatory.daysUntilDeadline} día(s).`
-            : 'Este curso obligatorio sigue pendiente dentro de tu ruta de aprendizaje.',
+            : priorityMandatory.nextLessonLabel
+              ? `Tu siguiente paso es ${priorityMandatory.nextLessonLabel}.`
+              : 'Este curso obligatorio sigue pendiente dentro de tu ruta de aprendizaje.',
         cta: priorityMandatory.progress > 0 ? 'Retomar curso obligatorio' : 'Comenzar curso obligatorio',
         courseId: priorityMandatory.id
       }
@@ -283,7 +303,9 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
       return {
         kind: 'progress' as const,
         title: inProgressOptional.title,
-        description: `Ya avanzaste ${inProgressOptional.progress}% en este curso. Retomarlo te ayudará a cerrar progreso más rápido.`,
+        description: inProgressOptional.nextLessonLabel
+          ? `Vas en ${inProgressOptional.progress}% y tu siguiente lección es ${inProgressOptional.nextLessonLabel}.`
+          : `Ya avanzaste ${inProgressOptional.progress}% en este curso. Retomarlo te ayudará a cerrar progreso más rápido.`,
         cta: 'Continuar curso',
         courseId: inProgressOptional.id
       }
@@ -620,6 +642,16 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                                     <Typography variant="body2" color="text.secondary">
                                       {course.instructor} • {course.duration}
                                     </Typography>
+                                    {course.nextLessonLabel && (
+                                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                                        Sigue: {course.nextLessonLabel}
+                                      </Typography>
+                                    )}
+                                    {course.lastAccessLabel && (
+                                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                        Última actividad: {course.lastAccessLabel}
+                                      </Typography>
+                                    )}
                                     <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                                       <LinearProgress
                                         variant="determinate"
@@ -806,6 +838,16 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                           <Typography variant='body2' color='text.secondary'>
                             {course.instructor} • {course.duration}
                           </Typography>
+                          {course.nextLessonLabel && (
+                            <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
+                              Sigue: {course.nextLessonLabel}
+                            </Typography>
+                          )}
+                          {course.lastAccessLabel && (
+                            <Typography variant='caption' color='text.secondary' sx={{ display: 'block' }}>
+                              Última actividad: {course.lastAccessLabel}
+                            </Typography>
+                          )}
                           {course.deadline && (
                             <Typography 
                               variant='caption' 
@@ -903,6 +945,11 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                           <Typography variant='body2' color='text.secondary'>
                             {course.instructor}
                           </Typography>
+                          {course.nextLessonLabel && (
+                            <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
+                              Sigue: {course.nextLessonLabel}
+                            </Typography>
+                          )}
                         </Box>
                         <Chip label={course.category} size='small' variant='outlined' />
                       </Box>

@@ -55,6 +55,18 @@ export interface Course {
   assignments?: CourseAssignment[]
   userProgress?: UserProgress[]
   user_deadline?: string  // Deadline específico del usuario (calculado por el backend)
+  learningContinuity?: null | {
+    lastAccessedAt: string | null
+    nextLesson: null | {
+      lessonId: number
+      title: string
+      type: ContentType | 'quiz'
+      moduleId: number
+      moduleTitle: string
+      orderIndex: number
+      estimatedMinutes?: number | null
+    }
+  }
 }
 
 /**
