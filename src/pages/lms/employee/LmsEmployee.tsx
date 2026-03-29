@@ -351,7 +351,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
       }
     }
 
-    const nextOptional = optionalCourses[0]
+    const nextOptional = optionalCourses.find((course) => course.progress < 100)
     if (nextOptional) {
       return {
         kind: 'catalog' as const,
@@ -359,6 +359,24 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         description: 'No tienes cursos activos en progreso. Este es un buen punto para seguir aprendiendo.',
         cta: 'Comenzar curso',
         courseId: nextOptional.id
+      }
+    }
+
+    const completedCourseToReview = [...mandatoryCourses, ...optionalCourses]
+      .filter((course) => course.progress === 100)
+      .sort((left, right) => {
+        const leftTimestamp = left.lastAccessLabel ? new Date(left.lastAccessLabel).getTime() : 0
+        const rightTimestamp = right.lastAccessLabel ? new Date(right.lastAccessLabel).getTime() : 0
+        return rightTimestamp - leftTimestamp
+      })[0]
+
+    if (completedCourseToReview) {
+      return {
+        kind: 'completed' as const,
+        title: completedCourseToReview.title,
+        description: 'Ya completaste tu ruta activa. Si quieres, puedes volver a este curso para repasar el contenido o revisar una lección específica.',
+        cta: 'Repasar curso',
+        courseId: completedCourseToReview.id
       }
     }
 
@@ -560,6 +578,8 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                       label={
                         nextLearningAction.kind === 'mandatory'
                           ? 'Prioridad alta'
+                          : nextLearningAction.kind === 'completed'
+                            ? 'Ruta completada'
                           : nextLearningAction.kind === 'progress'
                             ? 'Retoma tu avance'
                             : 'Disponible para comenzar'
@@ -568,6 +588,8 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                       color={
                         nextLearningAction.kind === 'mandatory'
                           ? 'error'
+                          : nextLearningAction.kind === 'completed'
+                            ? 'success'
                           : nextLearningAction.kind === 'progress'
                             ? 'info'
                             : 'success'
@@ -581,7 +603,9 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                     {nextLearningAction.description}
                   </Typography>
                   <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 2 }}>
-                    Tu panel seguirá priorizando esta recomendación hasta que completes el siguiente hito.
+                    {nextLearningAction.kind === 'completed'
+                      ? 'Como ya terminaste lo activo, este panel te deja a mano un curso completado para repasar sin perder el contexto.'
+                      : 'Tu panel seguirá priorizando esta recomendación hasta que completes el siguiente hito.'}
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                     <Button
