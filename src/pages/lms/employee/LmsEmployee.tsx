@@ -105,6 +105,47 @@ const getNextLessonLabel = (course: Course & { learningContinuity?: Course['lear
   return `${nextLesson.moduleTitle}: ${nextLesson.title}`
 }
 
+const getAssignmentBackedProgress = (
+  course: Course,
+  assignment?: {
+    userProgress?: {
+      totalLessons: number
+      completedLessons: number
+      completionPercentage: number
+      isCompleted: boolean
+    }
+  } | null,
+  earnedCertificate?: Certificate
+) => {
+  const courseProgress = getCourseProgressPercentage(course)
+  const courseTotalLessons = getCourseTotalLessons(course)
+  const courseCompletedLessons = getCourseCompletedLessons(course)
+  const assignmentProgress = assignment?.userProgress
+
+  const progress = assignmentProgress?.isCompleted
+    ? 100
+    : assignmentProgress?.completionPercentage ?? courseProgress
+
+  const totalLessons = assignmentProgress?.totalLessons || courseTotalLessons
+  const completedLessons = assignmentProgress?.isCompleted
+    ? totalLessons
+    : assignmentProgress?.completedLessons ?? courseCompletedLessons
+
+  if (earnedCertificate && progress === 0) {
+    return {
+      progress: 100,
+      totalLessons,
+      completedLessons: totalLessons
+    }
+  }
+
+  return {
+    progress,
+    totalLessons,
+    completedLessons
+  }
+}
+
 const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   const [activeTab, setActiveTab] = useState(0)
   const navigate = useNavigate()
@@ -161,11 +202,13 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     const optional: any[] = []
 
     courses.forEach((course: Course) => {
-      const progress = getCourseProgressPercentage(course)
-      const totalLessons = getCourseTotalLessons(course)
-      const completedLessons = getCourseCompletedLessons(course)
       const assignment = assignmentsByCourseId.get(course.id)
       const earnedCertificate = certificatesByCourseId.get(course.id)
+      const { progress, totalLessons, completedLessons } = getAssignmentBackedProgress(
+        course,
+        assignment,
+        earnedCertificate
+      )
       const courseIsMandatory = assignment?.course?.is_mandatory ?? course.is_mandatory ?? false
       const deadline = assignment?.deadline
       const daysUntilDeadline = getDaysUntilDeadline(deadline)
@@ -213,13 +256,11 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     })
 
     const totalCourses = courses.length
-    const completedCourses = courses.filter((c: Course) => getCourseProgressPercentage(c) === 100).length
-    const inProgressCourses = courses.filter((c: Course) => {
-      const prog = getCourseProgressPercentage(c)
-      return prog > 0 && prog < 100
-    }).length
+    const allEnrichedCourses = [...mandatory, ...optional]
+    const completedCourses = allEnrichedCourses.filter((course) => course.progress === 100).length
+    const inProgressCourses = allEnrichedCourses.filter((course) => course.progress > 0 && course.progress < 100).length
 
-    const totalProgress = courses.reduce((sum: number, c: Course) => sum + getCourseProgressPercentage(c), 0)
+    const totalProgress = allEnrichedCourses.reduce((sum: number, course) => sum + course.progress, 0)
     const averageProgress = totalCourses > 0 ? Math.round(totalProgress / totalCourses) : 0
 
     const mandatoryCompleted = mandatory.filter(c => c.progress === 100).length
@@ -977,17 +1018,17 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                       
                       <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
                         <Button
-                          variant={course.progress > 0 ? 'outlined' : 'contained'}
+                          variant={course.progress === 100 ? 'outlined' : course.progress > 0 ? 'outlined' : 'contained'}
                           size="small"
                           fullWidth
-                          startIcon={<PlayArrowIcon />}
-                          color={course.isOverdue ? 'error' : 'primary'}
+                          startIcon={course.progress === 100 ? <CheckCircleIcon /> : <PlayArrowIcon />}
+                          color={course.progress === 100 ? 'success' : course.isOverdue ? 'error' : 'primary'}
                           onClick={(e) => {
                             e.stopPropagation()
                             handleCourseClick(course.id)
                           }}
                         >
-                          {course.progress > 0 ? 'Continuar' : 'Comenzar'}
+                          {course.progress === 100 ? 'Repasar contenido' : course.progress > 0 ? 'Continuar' : 'Comenzar'}
                         </Button>
                       </Box>
                     </CardContent>
@@ -1041,6 +1082,12 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                       <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
                         {course.description}
                       </Typography>
+
+                      {course.progress === 100 && (
+                        <Alert severity='success' sx={{ mb: 2 }}>
+                          Ya completaste este curso obligatorio. Puedes volver a entrar cuando quieras para repasar su contenido.
+                        </Alert>
+                      )}
                       
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                         <Typography variant='caption' color='text.secondary'>
