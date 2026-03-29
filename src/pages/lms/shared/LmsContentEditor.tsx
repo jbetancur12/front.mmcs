@@ -458,14 +458,30 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
         const module = updatedModules.find(m => m.id === moduleId)
         if (module) {
           setIsSavingLesson(true)
-          const lessonData = {
+          const lessonData: {
+            title: string
+            type: ContentModule['type']
+            order_index: number
+            is_mandatory: boolean
+            content?: string
+            video_url?: string | null
+            video_source?: 'minio' | 'youtube'
+          } = {
             title: module.title,
             type: module.type, // El backend espera 'type', no 'content_type'
             order_index: 0,
-            content: module.content.text || '',
-            video_url: module.content.videoUrl || null,
             is_mandatory: true
           }
+
+          if (module.type === 'text') {
+            lessonData.content = module.content.text || ''
+          }
+
+          if (module.type === 'video') {
+            lessonData.video_url = module.content.videoUrl || null
+            lessonData.video_source = module.content.videoSource || 'youtube'
+          }
+
           try {
             await onUpdateLesson({ moduleId, lessonData })
             setHasPendingChanges(false)
