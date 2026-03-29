@@ -28,9 +28,7 @@ import {
   CheckCircle as CheckCircleIcon,
   Download as DownloadIcon,
   Groups as GroupsIcon,
-  MenuBook as CoursesIcon,
   Refresh as RefreshIcon,
-  School as CertificateIcon,
   Warning as WarningIcon
 } from '@mui/icons-material'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
@@ -42,9 +40,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
-  Pie,
-  PieChart,
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
   XAxis,
@@ -175,20 +170,40 @@ const LmsAnalytics: React.FC = () => {
     }
   ]
 
-  const userMix = [
-    { name: 'Internos', value: safeNumber(userAnalytics.internalUsers) },
-    { name: 'Clientes', value: safeNumber(userAnalytics.clientUsers) }
-  ].filter((item) => item.value > 0)
-
   const topCourses = Array.isArray(courseMetrics.topPerformingCourses)
     ? courseMetrics.topPerformingCourses
     : []
   const underperformingCourses = Array.isArray(courseMetrics.underperformingCourses)
     ? courseMetrics.underperformingCourses
     : []
+  const upcomingDeadlines = Array.isArray(assignmentStatus.upcomingDeadlines)
+    ? assignmentStatus.upcomingDeadlines
+    : []
   const complianceByRole = Array.isArray(assignmentStatus.complianceByRole)
     ? assignmentStatus.complianceByRole
     : []
+  const operationalSummary = [
+    {
+      label: 'Asignaciones obligatorias',
+      value: safeNumber(assignmentStatus.totalAssignments),
+      helper: 'Total activo para el rango seleccionado.'
+    },
+    {
+      label: 'Cumplimiento',
+      value: `${safeNumber(assignmentStatus.complianceRate)}%`,
+      helper: 'Porcentaje completado dentro del seguimiento obligatorio.'
+    },
+    {
+      label: 'Pendientes',
+      value: safeNumber(assignmentStatus.pendingAssignments || metrics.pendingAssignments),
+      helper: 'Personas o cursos que todavía requieren acción.'
+    },
+    {
+      label: 'En riesgo',
+      value: safeNumber(assignmentStatus.usersAtRisk),
+      helper: 'Incluye vencidos y próximos a vencer.'
+    }
+  ]
 
   const handleExport = () => {
     const rows: Array<Array<string | number>> = [
@@ -374,33 +389,7 @@ const LmsAnalytics: React.FC = () => {
                       <GroupsIcon color='primary' />
                       <Box>
                         <Typography variant='h4'>{safeNumber(metrics.totalUsers)}</Typography>
-                        <Typography color='text.secondary'>Usuarios</Typography>
-                      </Box>
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card>
-                  <CardContent>
-                    <Stack direction='row' spacing={2} alignItems='center'>
-                      <CoursesIcon color='success' />
-                      <Box>
-                        <Typography variant='h4'>{safeNumber(metrics.totalCourses)}</Typography>
-                        <Typography color='text.secondary'>Cursos</Typography>
-                      </Box>
-                    </Stack>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card>
-                  <CardContent>
-                    <Stack direction='row' spacing={2} alignItems='center'>
-                      <CertificateIcon color='info' />
-                      <Box>
-                        <Typography variant='h4'>{safeNumber(metrics.totalCertificates)}</Typography>
-                        <Typography color='text.secondary'>Certificados</Typography>
+                        <Typography color='text.secondary'>Usuarios LMS</Typography>
                       </Box>
                     </Stack>
                   </CardContent>
@@ -412,8 +401,34 @@ const LmsAnalytics: React.FC = () => {
                     <Stack direction='row' spacing={2} alignItems='center'>
                       <AssignmentIcon color='warning' />
                       <Box>
-                        <Typography variant='h4'>{formatPercent(metrics.completionRate)}</Typography>
-                        <Typography color='text.secondary'>Finalización</Typography>
+                        <Typography variant='h4'>{safeNumber(assignmentStatus.totalAssignments)}</Typography>
+                        <Typography color='text.secondary'>Asignaciones obligatorias</Typography>
+                      </Box>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card>
+                  <CardContent>
+                    <Stack direction='row' spacing={2} alignItems='center'>
+                      <CheckCircleIcon color='success' />
+                      <Box>
+                        <Typography variant='h4'>{formatPercent(assignmentStatus.complianceRate)}</Typography>
+                        <Typography color='text.secondary'>Cumplimiento obligatorio</Typography>
+                      </Box>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card>
+                  <CardContent>
+                    <Stack direction='row' spacing={2} alignItems='center'>
+                      <WarningIcon color='error' />
+                      <Box>
+                        <Typography variant='h4'>{safeNumber(assignmentStatus.usersAtRisk)}</Typography>
+                        <Typography color='text.secondary'>Usuarios en riesgo</Typography>
                       </Box>
                     </Stack>
                   </CardContent>
@@ -448,36 +463,39 @@ const LmsAnalytics: React.FC = () => {
                 </Grid>
                 <Grid item xs={12} lg={4}>
                   <Card sx={{ height: '100%' }}>
-                    <CardHeader title='Mezcla de usuarios LMS' />
+                    <CardHeader title='Resumen operativo' />
                     <CardContent sx={{ height: 320 }}>
-                      {userMix.length > 0 ? (
-                        <ResponsiveContainer width='100%' height='100%'>
-                          <PieChart>
-                            <Pie
-                              data={userMix}
-                              dataKey='value'
-                              nameKey='name'
-                              outerRadius={90}
-                              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                            >
-                              {userMix.map((entry, index) => (
-                                <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                              ))}
-                            </Pie>
-                            <RechartsTooltip />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <Typography color='text.secondary'>Sin datos de usuarios para el rango seleccionado.</Typography>
-                      )}
+                      <Stack spacing={2.5} justifyContent='space-between' sx={{ height: '100%' }}>
+                        {operationalSummary.map((item) => (
+                          <Box key={item.label}>
+                            <Typography variant='overline' color='text.secondary'>
+                              {item.label}
+                            </Typography>
+                            <Typography variant='h5' sx={{ fontWeight: 700 }}>
+                              {item.value}
+                            </Typography>
+                            <Typography variant='body2' color='text.secondary'>
+                              {item.helper}
+                            </Typography>
+                          </Box>
+                        ))}
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                          <Button variant='outlined' onClick={() => navigate('/lms/admin/compliance')}>
+                            Ver cumplimiento
+                          </Button>
+                          <Button variant='text' onClick={() => navigate('/lms/admin/reporting')}>
+                            Ir a reportes
+                          </Button>
+                        </Stack>
+                      </Stack>
                     </CardContent>
                   </Card>
                 </Grid>
 
                 <Grid item xs={12}>
                   <Alert severity='info'>
-                    Prioriza este orden de lectura: 1) tasa de finalización, 2) cursos con bajo desempeño,
-                    3) vencimientos y pendientes, 4) comportamiento de quizzes. Con eso cubres la mayor parte
+                    Prioriza este orden de lectura: 1) cumplimiento obligatorio, 2) usuarios en riesgo,
+                    3) cursos con bajo desempeño, 4) comportamiento de quizzes. Con eso cubres la mayor parte
                     de las decisiones operativas del LMS actual.
                   </Alert>
                 </Grid>
@@ -600,25 +618,68 @@ const LmsAnalytics: React.FC = () => {
                 </Grid>
                 <Grid item xs={12} lg={5}>
                     <Card>
-                      <CardHeader title='Resumen de alertas obligatorias' />
+                      <CardHeader title='Resumen de riesgo operativo' />
                       <CardContent>
                         <Stack spacing={2}>
                           <Typography>
-                          Críticas: {safeNumber(mandatoryTraining?.escalationSummary?.totalCritical)}
+                            Críticas: {safeNumber(mandatoryTraining?.escalationSummary?.totalCritical)}
                           </Typography>
-                        <Typography>
-                          Advertencias: {safeNumber(mandatoryTraining?.escalationSummary?.totalWarning)}
-                        </Typography>
-                        <Typography>
-                          Usuarios vencidos: {safeNumber(mandatoryTraining?.escalationSummary?.overdueUsers)}
-                        </Typography>
-                        <Typography>
-                          Fechas urgentes: {safeNumber(mandatoryTraining?.escalationSummary?.urgentDeadlines)}
-                        </Typography>
-                        <Typography>
-                          Promedio quiz: {formatPercent(quizAnalytics.averageScore)}
-                        </Typography>
-                      </Stack>
+                          <Typography>
+                            Advertencias: {safeNumber(mandatoryTraining?.escalationSummary?.totalWarning)}
+                          </Typography>
+                          <Typography>
+                            Usuarios vencidos: {safeNumber(mandatoryTraining?.escalationSummary?.overdueUsers)}
+                          </Typography>
+                          <Typography>
+                            Fechas urgentes: {safeNumber(mandatoryTraining?.escalationSummary?.urgentDeadlines)}
+                          </Typography>
+                          <Typography>
+                            Usuarios en riesgo: {safeNumber(assignmentStatus.usersAtRisk)}
+                          </Typography>
+                          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                            <Button size='small' variant='outlined' onClick={() => navigate('/lms/admin/compliance')}>
+                              Abrir cumplimiento
+                            </Button>
+                            <Button size='small' variant='text' onClick={() => navigate('/lms/admin/assignments')}>
+                              Revisar asignaciones
+                            </Button>
+                          </Stack>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                </Grid>
+                <Grid item xs={12}>
+                  <Card>
+                    <CardHeader title='Próximas fechas que requieren seguimiento' />
+                    <CardContent>
+                      {upcomingDeadlines.length === 0 ? (
+                        <Alert severity='success'>
+                          No hay fechas próximas que requieran seguimiento urgente en este rango.
+                        </Alert>
+                      ) : (
+                        <TableContainer>
+                          <Table>
+                            <TableHead>
+                              <TableRow>
+                                <TableCell>Curso</TableCell>
+                                <TableCell align='right'>Pendientes</TableCell>
+                                <TableCell align='right'>Días restantes</TableCell>
+                                <TableCell align='right'>Fecha límite</TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {upcomingDeadlines.map((deadline: any) => (
+                                <TableRow key={`${deadline.courseId}-${deadline.deadline}`}>
+                                  <TableCell>{deadline.courseTitle}</TableCell>
+                                  <TableCell align='right'>{safeNumber(deadline.pendingUsers || deadline.assignedUsers)}</TableCell>
+                                  <TableCell align='right'>{safeNumber(deadline.daysUntilDeadline)}</TableCell>
+                                  <TableCell align='right'>{formatDate(deadline.deadline)}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      )}
                     </CardContent>
                   </Card>
                 </Grid>
