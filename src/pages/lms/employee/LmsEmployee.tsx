@@ -75,6 +75,21 @@ const getDaysUntilDeadline = (deadline?: string): number | undefined => {
   return Math.ceil(diff / (1000 * 60 * 60 * 24))
 }
 
+const getMandatoryPriority = (course: { isOverdue?: boolean; daysUntilDeadline?: number; progress?: number }) => {
+  if (course.progress === 100) return 4
+  if (course.isOverdue) return 0
+  if (typeof course.daysUntilDeadline === 'number' && course.daysUntilDeadline <= 7) return 1
+  if (typeof course.daysUntilDeadline === 'number') return 2
+  return 3
+}
+
+const getDeadlineTone = (course: { isOverdue?: boolean; daysUntilDeadline?: number; progress?: number }) => {
+  if (course.progress === 100) return 'success'
+  if (course.isOverdue) return 'error'
+  if (typeof course.daysUntilDeadline === 'number' && course.daysUntilDeadline <= 7) return 'warning'
+  return 'default'
+}
+
 const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   const [activeTab, setActiveTab] = useState(0)
   const navigate = useNavigate()
@@ -171,6 +186,15 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     })
 
     // Calcular estadísticas
+    mandatory.sort((a, b) => {
+      const priorityDifference = getMandatoryPriority(a) - getMandatoryPriority(b)
+      if (priorityDifference !== 0) return priorityDifference
+
+      const aDeadline = a.deadline ? new Date(a.deadline).getTime() : Number.MAX_SAFE_INTEGER
+      const bDeadline = b.deadline ? new Date(b.deadline).getTime() : Number.MAX_SAFE_INTEGER
+      return aDeadline - bDeadline
+    })
+
     const totalCourses = courses.length
     const completedCourses = courses.filter((c: Course) => getCourseProgressPercentage(c) === 100).length
     const inProgressCourses = courses.filter((c: Course) => {
@@ -549,7 +573,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                   <CardHeader title="Próximos Vencimientos" />
                   <CardContent>
                     {mandatoryCourses
-                      .filter(course => course.daysUntilDeadline && course.daysUntilDeadline <= 7)
+                      .filter(course => typeof course.daysUntilDeadline === 'number' && course.daysUntilDeadline <= 7 && course.progress < 100)
                       .map(course => (
                         <Box key={course.id} sx={{ mb: 2, p: 2, border: 1, borderColor: course.isOverdue ? 'error.main' : 'warning.main', borderRadius: 1 }}>
                           <Typography variant="body2" fontWeight="medium" color={course.isOverdue ? 'error.main' : 'warning.main'}>
@@ -599,16 +623,43 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
               <Typography variant='h6'>
                 Cursos Obligatorios
               </Typography>
-              <Chip
-                label={`${stats.overdueTraining} vencidos`}
-                color="error"
-                size="small"
-                sx={{ display: stats.overdueTraining > 0 ? 'flex' : 'none' }}
-              />
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {stats.overdueTraining > 0 && (
+                  <Chip
+                    label={`${stats.overdueTraining} vencidos`}
+                    color="error"
+                    size="small"
+                  />
+                )}
+                <Chip
+                  label={`${mandatoryCourses.filter(course => typeof course.daysUntilDeadline === 'number' && course.daysUntilDeadline <= 7 && course.progress < 100 && !course.isOverdue).length} próximos`}
+                  color="warning"
+                  size="small"
+                  variant="outlined"
+                />
+                <Chip
+                  label={`${stats.mandatoryCompleted} completados`}
+                  color="success"
+                  size="small"
+                  variant="outlined"
+                />
+              </Box>
             </Box>
 
+            <Alert severity={stats.overdueTraining > 0 ? 'warning' : 'info'} sx={{ mb: 3 }}>
+              {stats.overdueTraining > 0
+                ? 'Tus cursos obligatorios están ordenados por prioridad: primero vencidos, luego próximos a vencer y después el resto.'
+                : 'Aquí verás primero los cursos con fecha más cercana. Si un curso vence o se atrasa, quedará destacado al inicio.'}
+            </Alert>
+
             <Grid container spacing={3}>
-              {mandatoryCourses.map((course) => (
+              {mandatoryCourses.length === 0 ? (
+                <Grid item xs={12}>
+                  <Alert severity="success">
+                    No tienes cursos obligatorios activos en este momento.
+                  </Alert>
+                </Grid>
+              ) : mandatoryCourses.map((course) => (
                 <Grid item xs={12} md={6} key={course.id}>
                   <Card 
                     variant='outlined'
@@ -634,6 +685,20 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                               size="small" 
                               color="error"
                               sx={{ fontSize: '0.7rem' }}
+                            />
+                            <Chip
+                              label={
+                                course.progress === 100
+                                  ? 'Completado'
+                                  : course.isOverdue
+                                    ? 'Vencido'
+                                    : typeof course.daysUntilDeadline === 'number' && course.daysUntilDeadline <= 7
+                                      ? 'Próximo a vencer'
+                                      : 'Activo'
+                              }
+                              size="small"
+                              color={getDeadlineTone(course) as any}
+                              variant={course.progress === 100 ? 'filled' : 'outlined'}
                             />
                           </Box>
                           <Typography variant='body2' color='text.secondary'>
@@ -664,7 +729,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                         </Typography>
                         <Chip
                           label={`${course.progress}%`}
-                          color={course.progress > 0 ? 'success' : 'default'}
+                          color={course.progress === 100 ? 'success' : course.isOverdue ? 'error' : course.progress > 0 ? 'warning' : 'default'}
                           size='small'
                         />
                       </Box>

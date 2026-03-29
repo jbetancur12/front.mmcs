@@ -1058,7 +1058,11 @@ class LMSService {
     const url = userId
       ? `${this.baseURL}/assignments/users/${userId}/assignments`
       : `${this.baseURL}/assignments/my-assignments`
-    const response = await axiosPrivate.get(url)
+    const response = await axiosPrivate.get(url, {
+      params: {
+        includeExpired: true
+      }
+    })
     return this.unwrapResponse<UserAssignmentsResponse>(response.data)
   }
 
@@ -1066,7 +1070,11 @@ class LMSService {
    * Get mandatory assignments for current user
    */
   async getMandatoryAssignments(): Promise<MandatoryAssignmentsResponse> {
-    const response = await axiosPrivate.get(`${this.baseURL}/assignments/my-mandatory-courses`)
+    const response = await axiosPrivate.get(`${this.baseURL}/assignments/my-mandatory-courses`, {
+      params: {
+        includeExpired: true
+      }
+    })
     return this.unwrapResponse<MandatoryAssignmentsResponse>(response.data)
   }
 

@@ -74,7 +74,7 @@ interface ComplianceRecord {
   completedDate?: string
   status: 'pending' | 'in_progress' | 'completed' | 'overdue'
   progress: number
-  daysUntilDeadline: number
+  daysUntilDeadline: number | null
   isOverdue: boolean
 }
 
@@ -84,6 +84,28 @@ interface ComplianceAlert {
   message: string
   count: number
   severity: 'warning' | 'error' | 'info'
+}
+
+const hasUpcomingDeadline = (record: Pick<ComplianceRecord, 'isOverdue' | 'daysUntilDeadline' | 'status'>) =>
+  !record.isOverdue
+  && record.status !== 'completed'
+  && typeof record.daysUntilDeadline === 'number'
+  && record.daysUntilDeadline <= 7
+
+const formatDeadlineLabel = (record: Pick<ComplianceRecord, 'deadline' | 'isOverdue' | 'daysUntilDeadline' | 'status'>) => {
+  if (!record.deadline) {
+    return 'Sin fecha límite'
+  }
+
+  if (record.isOverdue && typeof record.daysUntilDeadline === 'number') {
+    return `Vencido hace ${Math.abs(record.daysUntilDeadline)} días`
+  }
+
+  if (hasUpcomingDeadline(record) && typeof record.daysUntilDeadline === 'number') {
+    return `Vence en ${record.daysUntilDeadline} días`
+  }
+
+  return new Date(record.deadline).toLocaleDateString()
 }
 
 const LmsComplianceTracker: React.FC = () => {
@@ -129,7 +151,7 @@ const LmsComplianceTracker: React.FC = () => {
       completedDate: training.completedDate,
       progress: training.progress || 0,
       status: training.status,
-      daysUntilDeadline: training.daysUntilDeadline || 0,
+      daysUntilDeadline: training.daysUntilDeadline ?? null,
       isOverdue: training.isOverdue || false
     }))
 
@@ -163,7 +185,7 @@ const LmsComplianceTracker: React.FC = () => {
         id: 2,
         type: 'deadline_approaching',
         message: 'Cursos que vencen en los próximos 7 días',
-        count: complianceRecords.filter(r => !r.isOverdue && r.daysUntilDeadline <= 7 && r.status !== 'completed').length,
+        count: complianceRecords.filter(hasUpcomingDeadline).length,
         severity: 'warning'
       },
       {
@@ -297,7 +319,9 @@ const LmsComplianceTracker: React.FC = () => {
 
     // Filter by days until deadline
     if (filters.daysUntilDeadline !== null) {
-      filtered = filtered.filter(r => r.daysUntilDeadline <= filters.daysUntilDeadline!)
+      filtered = filtered.filter(
+        r => typeof r.daysUntilDeadline === 'number' && r.daysUntilDeadline <= filters.daysUntilDeadline!
+      )
     }
 
     return filtered
@@ -310,7 +334,7 @@ const LmsComplianceTracker: React.FC = () => {
   )
 
   const baseApproachingDeadline = useMemo(() =>
-    complianceRecords.filter(r => !r.isOverdue && r.daysUntilDeadline <= 7 && r.status !== 'completed'),
+    complianceRecords.filter(hasUpcomingDeadline),
     [complianceRecords]
   )
 
@@ -376,7 +400,7 @@ const LmsComplianceTracker: React.FC = () => {
       getStatusLabel(r.status),
       `${r.progress}%`,
       new Date(r.deadline).toLocaleDateString(),
-      r.isOverdue ? `Vencido hace ${Math.abs(r.daysUntilDeadline)} días` : `${r.daysUntilDeadline} días`
+      formatDeadlineLabel(r)
     ])
 
     const csvContent = [
@@ -625,18 +649,18 @@ const LmsComplianceTracker: React.FC = () => {
                       <TableCell>
                         <Typography 
                           variant="body2"
-                          color={record.isOverdue ? 'error.main' : record.daysUntilDeadline <= 7 ? 'warning.main' : 'text.primary'}
+                          color={record.isOverdue ? 'error.main' : hasUpcomingDeadline(record) ? 'warning.main' : 'text.primary'}
                         >
-                          {new Date(record.deadline).toLocaleDateString()}
+                          {record.deadline ? new Date(record.deadline).toLocaleDateString() : 'Sin fecha límite'}
                         </Typography>
                         {record.isOverdue && (
                           <Typography variant="caption" color="error.main">
-                            Vencido hace {Math.abs(record.daysUntilDeadline)} días
+                            {formatDeadlineLabel(record)}
                           </Typography>
                         )}
-                        {!record.isOverdue && record.daysUntilDeadline <= 7 && record.status !== 'completed' && (
+                        {hasUpcomingDeadline(record) && (
                           <Typography variant="caption" color="warning.main">
-                            Vence en {record.daysUntilDeadline} días
+                            {formatDeadlineLabel(record)}
                           </Typography>
                         )}
                       </TableCell>
@@ -696,7 +720,7 @@ const LmsComplianceTracker: React.FC = () => {
                   </ListItemIcon>
                   <ListItemText
                     primary={`${record.userName} - ${record.courseTitle}`}
-                    secondary={`Vencido hace ${Math.abs(record.daysUntilDeadline)} días • Progreso: ${record.progress}%`}
+                    secondary={`${formatDeadlineLabel(record)} • Progreso: ${record.progress}%`}
                   />
                   <ListItemSecondaryAction>
                     <Button
@@ -742,7 +766,7 @@ const LmsComplianceTracker: React.FC = () => {
                   </ListItemIcon>
                   <ListItemText
                     primary={`${record.userName} - ${record.courseTitle}`}
-                    secondary={`Vence en ${record.daysUntilDeadline} días • Progreso: ${record.progress}%`}
+                    secondary={`${formatDeadlineLabel(record)} • Progreso: ${record.progress}%`}
                   />
                   <ListItemSecondaryAction>
                     <Button
@@ -907,18 +931,18 @@ const LmsComplianceTracker: React.FC = () => {
                             <TableCell>
                               <Typography
                                 variant="body2"
-                                color={record.isOverdue ? 'error.main' : record.daysUntilDeadline <= 7 ? 'warning.main' : 'text.primary'}
+                                color={record.isOverdue ? 'error.main' : hasUpcomingDeadline(record) ? 'warning.main' : 'text.primary'}
                               >
-                                {new Date(record.deadline).toLocaleDateString()}
+                                {record.deadline ? new Date(record.deadline).toLocaleDateString() : 'Sin fecha límite'}
                               </Typography>
                               {record.isOverdue && (
                                 <Typography variant="caption" color="error.main">
-                                  Vencido hace {Math.abs(record.daysUntilDeadline)} días
+                                  {formatDeadlineLabel(record)}
                                 </Typography>
                               )}
-                              {!record.isOverdue && record.daysUntilDeadline <= 7 && record.status !== 'completed' && (
+                              {hasUpcomingDeadline(record) && (
                                 <Typography variant="caption" color="warning.main">
-                                  Vence en {record.daysUntilDeadline} días
+                                  {formatDeadlineLabel(record)}
                                 </Typography>
                               )}
                             </TableCell>
@@ -1228,9 +1252,9 @@ const LmsComplianceTracker: React.FC = () => {
                       <Typography
                         variant="body1"
                         fontWeight="medium"
-                        color={detailsRecord.isOverdue ? 'error.main' : detailsRecord.daysUntilDeadline <= 7 ? 'warning.main' : 'inherit'}
+                        color={detailsRecord.isOverdue ? 'error.main' : hasUpcomingDeadline(detailsRecord) ? 'warning.main' : 'inherit'}
                       >
-                        {new Date(detailsRecord.deadline).toLocaleDateString()}
+                        {detailsRecord.deadline ? new Date(detailsRecord.deadline).toLocaleDateString() : 'Sin fecha límite'}
                       </Typography>
                     </Box>
                   </Grid>
@@ -1240,12 +1264,12 @@ const LmsComplianceTracker: React.FC = () => {
               {/* Información de tiempo */}
               <Box sx={{ mb: 3 }}>
                 <Alert
-                  severity={detailsRecord.isOverdue ? 'error' : detailsRecord.daysUntilDeadline <= 7 ? 'warning' : 'info'}
+                  severity={detailsRecord.isOverdue ? 'error' : hasUpcomingDeadline(detailsRecord) ? 'warning' : 'info'}
                   icon={detailsRecord.isOverdue ? <WarningIcon /> : <ScheduleIcon />}
                 >
                   {detailsRecord.isOverdue ? (
                     <Typography variant="body2">
-                      <strong>Vencido hace {Math.abs(detailsRecord.daysUntilDeadline)} días</strong> - Se requiere acción inmediata
+                      <strong>{formatDeadlineLabel(detailsRecord)}</strong> - Se requiere acción inmediata
                     </Typography>
                   ) : detailsRecord.status === 'completed' ? (
                     <Typography variant="body2">
@@ -1253,13 +1277,13 @@ const LmsComplianceTracker: React.FC = () => {
                     </Typography>
                   ) : (
                     <Typography variant="body2">
-                      {detailsRecord.daysUntilDeadline <= 7 ? (
+                      {hasUpcomingDeadline(detailsRecord) ? (
                         <>
-                          <strong>Vence en {detailsRecord.daysUntilDeadline} días</strong> - Fecha límite próxima
+                          <strong>{formatDeadlineLabel(detailsRecord)}</strong> - Fecha límite próxima
                         </>
                       ) : (
                         <>
-                          Vence en {detailsRecord.daysUntilDeadline} días
+                          {formatDeadlineLabel(detailsRecord)}
                         </>
                       )}
                     </Typography>
