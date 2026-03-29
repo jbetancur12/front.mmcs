@@ -72,6 +72,8 @@ interface QuizQuestion {
   tags?: string[]
   usageCount?: number
   successRate?: number
+  source?: 'quiz' | 'bank'
+  bankQuestionId?: number
 }
 
 interface QuizConfiguration {
@@ -150,6 +152,8 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   const [questionBank, setQuestionBank] = useState<QuizQuestion[]>([])
   const [openQuestionDialog, setOpenQuestionDialog] = useState(false)
   const [editingQuestion, setEditingQuestion] = useState<QuizQuestion | null>(null)
+  const [questionEditorMode, setQuestionEditorMode] = useState<'quiz' | 'bank'>('quiz')
+  const [saveQuestionToBank, setSaveQuestionToBank] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)
   const [selectedQuestions, setSelectedQuestions] = useState<number[]>([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -209,7 +213,8 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
             options: q.options,
             correct_answers: q.correct_answers,
             points: q.points,
-            explanation: q.explanation || undefined
+            explanation: q.explanation || undefined,
+            source: 'quiz'
           }))
         })
       },
@@ -359,16 +364,54 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
 
   // Create question mutation
   const createQuestionMutation = useMutation(
-    async (questionData: Partial<QuizQuestion>) => {
+    async ({
+      questionData
+    }: {
+      questionData: Partial<QuizQuestion>
+      addToQuiz?: boolean
+    }) => {
       const response = await axiosPrivate.post('/lms/question-bank', questionData)
       return response.data
     },
     {
-      onSuccess: (data) => {
+      onSuccess: (data, variables) => {
         console.log('✅ Question created:', data)
-        Swal.fire('Éxito', 'Pregunta creada exitosamente', 'success')
+        const createdQuestion = data.data
+
+        if (variables.addToQuiz && createdQuestion) {
+          setQuizConfig(prev => ({
+            ...prev,
+            questions: [
+              ...prev.questions,
+              {
+                id: createdQuestion.id,
+                question: createdQuestion.question,
+                type: createdQuestion.type,
+                options: createdQuestion.options,
+                correct_answers: createdQuestion.correct_answers,
+                points: createdQuestion.points,
+                explanation: createdQuestion.explanation || undefined,
+                difficulty: createdQuestion.difficulty,
+                category: createdQuestion.category,
+                tags: createdQuestion.tags,
+                source: 'quiz',
+                bankQuestionId: createdQuestion.id
+              }
+            ]
+          }))
+        }
+
+        Swal.fire(
+          'Éxito',
+          variables.addToQuiz
+            ? 'Pregunta creada y agregada al quiz'
+            : 'Pregunta creada en el banco exitosamente',
+          'success'
+        )
         queryClient.invalidateQueries(['questionBank'])
         // Close modal and reset form after successful creation
+        setQuestionEditorMode('quiz')
+        setSaveQuestionToBank(false)
         resetQuestionForm()
         setOpenQuestionDialog(false)
       },
@@ -438,26 +481,66 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     setQuizConfig(prev => ({ ...prev, [field]: value }))
   }
 
+  const buildQuestionPayload = () => ({
+    question: newQuestion.question?.trim() || '',
+    type: newQuestion.type || 'single',
+    options: newQuestion.options?.filter(opt => opt.trim() !== '') || [],
+    correct_answers: newQuestion.correct_answers || [0],
+    explanation: newQuestion.explanation,
+    points: newQuestion.points || 1,
+    difficulty: newQuestion.difficulty || 'medium',
+    category: newQuestion.category || '',
+    tags: newQuestion.tags || []
+  })
+
+  const createLocalQuizQuestion = (questionData: ReturnType<typeof buildQuestionPayload>): QuizQuestion => ({
+    id: -Date.now(),
+    ...questionData,
+    source: 'quiz'
+  })
+
+  const openNewQuizQuestionDialog = () => {
+    setEditingQuestion(null)
+    setQuestionEditorMode('quiz')
+    setSaveQuestionToBank(false)
+    resetQuestionForm()
+    setOpenQuestionDialog(true)
+  }
+
+  const openBankQuestionDialog = () => {
+    setEditingQuestion(null)
+    setQuestionEditorMode('bank')
+    setSaveQuestionToBank(true)
+    resetQuestionForm()
+    setOpenQuestionDialog(true)
+  }
+
   const handleAddQuestion = () => {
     if (!newQuestion.question?.trim()) return
 
-    const questionData = {
-      question: newQuestion.question,
-      type: newQuestion.type || 'single',
-      options: newQuestion.options?.filter(opt => opt.trim() !== '') || [],
-      correct_answers: newQuestion.correct_answers || [0],
-      explanation: newQuestion.explanation,
-      points: newQuestion.points || 1,
-      difficulty: newQuestion.difficulty || 'medium',
-      category: newQuestion.category || '',
-      tags: newQuestion.tags || []
+    const questionData = buildQuestionPayload()
+
+    if (questionEditorMode === 'quiz' && !saveQuestionToBank) {
+      setQuizConfig(prev => ({
+        ...prev,
+        questions: [...prev.questions, createLocalQuizQuestion(questionData)]
+      }))
+      Swal.fire('Éxito', 'Pregunta agregada al quiz', 'success')
+      resetQuestionForm()
+      setOpenQuestionDialog(false)
+      return
     }
 
-    createQuestionMutation.mutate(questionData)
+    createQuestionMutation.mutate({
+      questionData,
+      addToQuiz: questionEditorMode === 'quiz'
+    })
   }
 
-  const handleEditQuestion = (question: QuizQuestion) => {
+  const handleEditQuestion = (question: QuizQuestion, mode: 'quiz' | 'bank' = 'quiz') => {
     setEditingQuestion(question)
+    setQuestionEditorMode(mode)
+    setSaveQuestionToBank(mode === 'bank' || Boolean(question.bankQuestionId))
     setNewQuestion({
       question: question.question,
       type: question.type,
@@ -476,15 +559,34 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
     if (!editingQuestion || !newQuestion.question?.trim()) return
 
     const questionData = {
-      question: newQuestion.question,
+      ...buildQuestionPayload(),
       type: newQuestion.type || editingQuestion.type,
       options: newQuestion.options?.filter(opt => opt.trim() !== '') || editingQuestion.options,
       correct_answers: newQuestion.correct_answers || editingQuestion.correct_answers,
-      explanation: newQuestion.explanation,
       points: newQuestion.points || editingQuestion.points,
       difficulty: newQuestion.difficulty || editingQuestion.difficulty,
       category: newQuestion.category || editingQuestion.category,
       tags: newQuestion.tags || editingQuestion.tags
+    }
+
+    if (questionEditorMode === 'quiz') {
+      const updatedQuestion: QuizQuestion = {
+        ...editingQuestion,
+        ...questionData,
+        source: 'quiz'
+      }
+
+      setQuizConfig(prev => ({
+        ...prev,
+        questions: prev.questions.map(q => q.id === editingQuestion.id ? updatedQuestion : q)
+      }))
+      Swal.fire('Éxito', 'Pregunta del quiz actualizada', 'success')
+      setEditingQuestion(null)
+      setQuestionEditorMode('quiz')
+      setSaveQuestionToBank(false)
+      resetQuestionForm()
+      setOpenQuestionDialog(false)
+      return
     }
 
     // Check if this question is in the quiz
@@ -515,12 +617,24 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   }
 
   const handleAddQuestionsToQuiz = () => {
-    const questionsToAdd = questionBank.filter(q => selectedQuestions.includes(q.id))
+    const questionsToAdd = questionBank
+      .filter(q => selectedQuestions.includes(q.id))
+      .map((question, index) => ({
+        ...question,
+        id: -(Date.now() + index),
+        source: 'quiz' as const,
+        bankQuestionId: question.id
+      }))
+
     setQuizConfig(prev => ({
       ...prev,
-      questions: [...prev.questions, ...questionsToAdd.filter(q => !prev.questions.find(existing => existing.id === q.id))]
+      questions: [
+        ...prev.questions,
+        ...questionsToAdd.filter(q => !prev.questions.find(existing => existing.bankQuestionId === q.bankQuestionId))
+      ]
     }))
     setSelectedQuestions([])
+    Swal.fire('Éxito', 'Preguntas agregadas al quiz', 'success')
   }
 
   const handleRemoveQuestionFromQuiz = (questionId: number) => {
@@ -614,7 +728,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       label: 'Agrega preguntas',
       description: hasQuestions
         ? `${quizConfig.questions.length} pregunta(s) agregada(s).`
-        : 'Usa el banco de preguntas o crea una nueva.',
+        : 'Crea preguntas para este quiz o reutiliza algunas del banco.',
       complete: hasQuestions,
       tab: 1
     },
@@ -771,7 +885,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={activeTab} onChange={handleTabChange}>
           <Tab label="Configuración" icon={<AssessmentIcon />} />
-          <Tab label="Banco de Preguntas" icon={<QuestionIcon />} />
+          <Tab label="Preguntas" icon={<QuestionIcon />} />
           <Tab label="Vista Previa" icon={<PreviewIcon />} />
           <Tab label="Analíticas" icon={<AnalyticsIcon />} />
         </Tabs>
@@ -983,18 +1097,27 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                   <Typography variant="h6">
                     Preguntas del Quiz ({quizConfig.questions.length})
                   </Typography>
-                  <Button
-                    variant="outlined"
-                    startIcon={<AddIcon />}
-                    onClick={() => setActiveTab(1)}
-                  >
-                    Agregar desde Banco
-                  </Button>
+                  <Stack direction='row' spacing={1}>
+                    <Button
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={openNewQuizQuestionDialog}
+                    >
+                      Nueva pregunta
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      startIcon={<QuestionIcon />}
+                      onClick={() => setActiveTab(1)}
+                    >
+                      Usar banco
+                    </Button>
+                  </Stack>
                 </Box>
                 
                 {quizConfig.questions.length === 0 ? (
                   <Alert severity="info">
-                    No hay preguntas en este quiz. Ve al banco de preguntas para agregar algunas.
+                    Este quiz todavía no tiene preguntas. Lo más rápido es crear una aquí misma. El banco queda disponible si quieres reutilizar preguntas existentes.
                   </Alert>
                 ) : (
                   <List>
@@ -1033,7 +1156,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                             </Box>
                             
                             <Box sx={{ display: 'flex', gap: 1 }}>
-                              <IconButton size="small" onClick={() => handleEditQuestion(question)}>
+                              <IconButton size="small" onClick={() => handleEditQuestion(question, 'quiz')}>
                                 <EditIcon />
                               </IconButton>
                               <IconButton 
@@ -1062,18 +1185,38 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
           <Grid item xs={12}>
             <Card>
               <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6">Banco de Preguntas</Typography>
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => setOpenQuestionDialog(true)}
-                  >
-                    Nueva Pregunta
-                  </Button>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap', mb: 2 }}>
+                  <Typography variant="h6">Preguntas del Quiz</Typography>
+                  <Stack direction='row' spacing={1}>
+                    <Button
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={openNewQuizQuestionDialog}
+                    >
+                      Nueva pregunta para este quiz
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      startIcon={<QuestionIcon />}
+                      onClick={openBankQuestionDialog}
+                    >
+                      Crear solo en banco
+                    </Button>
+                  </Stack>
                 </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Paso 2 de 4. Selecciona preguntas existentes o crea nuevas y luego agrégalas al quiz.
+                  Paso 2 de 4. Crea primero las preguntas propias de este quiz. Si ya tienes preguntas reutilizables, puedes agregarlas desde el banco en la parte inferior.
+                </Typography>
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  El banco de preguntas es opcional. Úsalo cuando quieras reutilizar preguntas en varios quizzes; no hace falta alimentarlo para poder crear uno nuevo.
+                </Alert>
+
+                <Divider sx={{ my: 3 }} />
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+                  Reutilizar desde el banco de preguntas
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Selecciona preguntas existentes y agrégalas al quiz como copia editable. Cambiarlas aquí no modifica el banco global.
                 </Typography>
                 
                 {/* Filters */}
@@ -1196,10 +1339,10 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                             </Box>
                           </Box>
                           
-                          <Box sx={{ display: 'flex', gap: 1 }}>
-                            <IconButton size="small" onClick={() => handleEditQuestion(question)}>
-                              <EditIcon />
-                            </IconButton>
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                            <IconButton size="small" onClick={() => handleEditQuestion(question, 'bank')}>
+                                <EditIcon />
+                              </IconButton>
                             <IconButton 
                               size="small" 
                               color="error" 
@@ -1458,17 +1601,37 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
         onClose={() => {
           setOpenQuestionDialog(false)
           setEditingQuestion(null)
+          setQuestionEditorMode('quiz')
+          setSaveQuestionToBank(false)
           resetQuestionForm()
         }}
         maxWidth="md"
         fullWidth
       >
         <DialogTitle>
-          {editingQuestion ? 'Editar Pregunta' : 'Nueva Pregunta'}
+          {editingQuestion
+            ? questionEditorMode === 'bank'
+              ? 'Editar pregunta del banco'
+              : 'Editar pregunta del quiz'
+            : questionEditorMode === 'bank'
+              ? 'Nueva pregunta para el banco'
+              : 'Nueva pregunta para este quiz'}
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
+              {!editingQuestion && questionEditorMode === 'quiz' && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Esta pregunta se agregará directamente al quiz. Si quieres reutilizarla más adelante, también puedes guardarla en el banco.
+                </Alert>
+              )}
+
+              {!editingQuestion && questionEditorMode === 'bank' && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Esta pantalla crea una pregunta reusable en el banco global para futuros quizzes.
+                </Alert>
+              )}
+
               <TextField
                 fullWidth
                 multiline
@@ -1657,6 +1820,20 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
                 helperText="Explicación que se mostrará después de responder"
               />
             </Grid>
+
+            {!editingQuestion && questionEditorMode === 'quiz' && (
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={saveQuestionToBank}
+                      onChange={(e) => setSaveQuestionToBank(e.target.checked)}
+                    />
+                  }
+                  label="Guardar también esta pregunta en el banco para reutilizarla después"
+                />
+              </Grid>
+            )}
           </Grid>
         </DialogContent>
         <DialogActions>
@@ -1664,6 +1841,8 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
             onClick={() => {
               setOpenQuestionDialog(false)
               setEditingQuestion(null)
+              setQuestionEditorMode('quiz')
+              setSaveQuestionToBank(false)
               resetQuestionForm()
             }}
           >
@@ -1674,7 +1853,13 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
             variant="contained"
             disabled={!newQuestion.question?.trim()}
           >
-            {editingQuestion ? 'Actualizar' : 'Agregar'}
+            {editingQuestion
+              ? 'Actualizar'
+              : questionEditorMode === 'bank'
+                ? 'Guardar en banco'
+                : saveQuestionToBank
+                  ? 'Agregar y guardar en banco'
+                  : 'Agregar al quiz'}
           </Button>
         </DialogActions>
       </Dialog>
