@@ -162,6 +162,9 @@ const resourceTypeMeta: Record<LessonResourceType, { label: string; icon: React.
 const createTempId = (prefix: string) =>
   `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 
+const pluralize = (count: number, singular: string, plural?: string) =>
+  `${count} ${count === 1 ? singular : plural || `${singular}s`}`
+
 const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   modules,
   onModulesChange,
@@ -447,9 +450,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   return (
     <Stack spacing={3}>
       <Alert severity="info">
-        Estructura recomendada: crea una <strong>sección</strong>, agrega varias
-        <strong> lecciones</strong> dentro de ella y luego adjunta
-        <strong> recursos</strong> como PDFs, documentos o enlaces de apoyo.
+        Flujo recomendado dentro del contenido: crea una <strong>sección</strong>, agrega una o varias
+        <strong> lecciones</strong> y usa <strong>recursos de apoyo</strong> para PDFs, documentos o enlaces
+        complementarios.
       </Alert>
 
       <Grid container spacing={3}>
@@ -460,11 +463,11 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                 <Box>
                   <Typography variant="h6">Secciones del curso</Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Organiza el contenido por bloques temáticos.
+                    Organiza el curso por bloques temáticos o momentos del aprendizaje.
                   </Typography>
                 </Box>
                 <Button size="small" startIcon={<AddIcon />} onClick={() => setModuleDialogOpen(true)}>
-                  Sección
+                  Agregar sección
                 </Button>
               </Stack>
 
@@ -480,7 +483,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                         </ListItemIcon>
                         <ListItemText
                           primary={module.title}
-                          secondary={`${module.lessons.length} lección${module.lessons.length === 1 ? '' : 'es'}`}
+                          secondary={pluralize(module.lessons.length, 'lección', 'lecciones')}
                         />
                         <IconButton
                           edge="end"
@@ -509,6 +512,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                   <Box>
                     <Typography variant="overline" color="primary">
                       Sección {selectedModule.order}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                      Agrupa aquí las lecciones que pertenecen al mismo tema, unidad o momento del curso.
                     </Typography>
                     <TextField
                       fullWidth
@@ -543,11 +549,11 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                     <Box>
                       <Typography variant="h6">Lecciones de la sección</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Cada sección puede tener texto, video y quiz.
+                        Puedes combinar texto, video y quiz dentro de la misma sección.
                       </Typography>
                     </Box>
                     <Button startIcon={<AddIcon />} onClick={() => setLessonDialogOpen(true)}>
-                      Lección
+                      Agregar lección
                     </Button>
                   </Stack>
 
@@ -714,13 +720,13 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                             <Box>
                               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
                                 <Box>
-                                  <Typography variant="subtitle1">Recursos adjuntos</Typography>
+                                  <Typography variant="subtitle1">Recursos de apoyo</Typography>
                                   <Typography variant="body2" color="text.secondary">
-                                    Agrega PDFs, documentos o enlaces de apoyo.
+                                    Adjunta PDFs, documentos o enlaces para complementar esta lección.
                                   </Typography>
                                 </Box>
                                 <Button size="small" startIcon={<AddIcon />} onClick={openCreateResourceDialog}>
-                                  Recurso
+                                  Agregar recurso
                                 </Button>
                               </Stack>
 
@@ -774,12 +780,12 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Stack direction="row" spacing={1}>
-          <Chip label={`${modules.length} secciones`} color="primary" variant="outlined" />
-          <Chip label={`${modules.reduce((total, module) => total + module.lessons.length, 0)} lecciones`} variant="outlined" />
-          <Chip label={`${modules.reduce((total, module) => total + module.lessons.reduce((resourceTotal, lesson) => resourceTotal + lesson.content.resources.length, 0), 0)} recursos`} variant="outlined" />
+          <Chip label={pluralize(modules.length, 'sección', 'secciones')} color="primary" variant="outlined" />
+          <Chip label={pluralize(modules.reduce((total, module) => total + module.lessons.length, 0), 'lección', 'lecciones')} variant="outlined" />
+          <Chip label={pluralize(modules.reduce((total, module) => total + module.lessons.reduce((resourceTotal, lesson) => resourceTotal + lesson.content.resources.length, 0), 0), 'recurso')} variant="outlined" />
         </Stack>
         <Button variant="contained" onClick={onSave} disabled={isLoading || !hasUnsavedChanges}>
-          {isLoading ? 'Guardando...' : hasUnsavedChanges ? 'Guardar curso' : 'Sin cambios'}
+          {isLoading ? 'Guardando cambios...' : hasUnsavedChanges ? 'Guardar cambios del contenido' : 'Sin cambios por guardar'}
         </Button>
       </Box>
 
@@ -787,6 +793,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
         <DialogTitle>Nueva sección</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
+            <Alert severity="info">
+              Usa una sección para agrupar varias lecciones relacionadas dentro del mismo bloque del curso.
+            </Alert>
             <TextField fullWidth label="Título de la sección" value={moduleDraft.title} onChange={(event) => setModuleDraft((current) => ({ ...current, title: event.target.value }))} />
             <TextField fullWidth multiline minRows={3} label="Descripción" value={moduleDraft.description} onChange={(event) => setModuleDraft((current) => ({ ...current, description: event.target.value }))} />
           </Stack>
@@ -801,6 +810,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
         <DialogTitle>Nueva lección</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
+            <Alert severity="info">
+              Crea primero la lección y luego completa su contenido, recursos o quiz desde el editor principal.
+            </Alert>
             <TextField fullWidth label="Título de la lección" value={lessonDraft.title} onChange={(event) => setLessonDraft((current) => ({ ...current, title: event.target.value }))} />
             <FormControl fullWidth>
               <InputLabel id="new-lesson-type-label">Tipo</InputLabel>
@@ -810,7 +822,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                 ))}
               </Select>
             </FormControl>
-            <TextField fullWidth type="number" label="Duración estimada (min)" value={lessonDraft.estimatedMinutes} onChange={(event) => setLessonDraft((current) => ({ ...current, estimatedMinutes: Math.max(1, Number(event.target.value) || 1) }))} />
+            <TextField fullWidth type="number" label="Duración estimada (min)" helperText="Usa una estimación corta y realista para orientar al alumno." value={lessonDraft.estimatedMinutes} onChange={(event) => setLessonDraft((current) => ({ ...current, estimatedMinutes: Math.max(1, Number(event.target.value) || 1) }))} />
             <TextField fullWidth multiline minRows={2} label="Descripción breve" value={lessonDraft.description} onChange={(event) => setLessonDraft((current) => ({ ...current, description: event.target.value }))} />
           </Stack>
         </DialogContent>
@@ -824,6 +836,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
         <DialogTitle>{resourceDialog.editingResourceId ? 'Editar recurso adjunto' : 'Nuevo recurso adjunto'}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
+            <Alert severity="info">
+              Usa recursos para materiales de apoyo. El contenido principal debe vivir en la lección.
+            </Alert>
             <TextField fullWidth label="Título" value={resourceDialog.values.title} onChange={(event) => setResourceDialog((current) => ({ ...current, values: { ...current.values, title: event.target.value } }))} />
             <FormControl fullWidth>
               <InputLabel id="resource-type-label">Tipo de recurso</InputLabel>

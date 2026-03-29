@@ -33,6 +33,9 @@ interface FrontendCourseDraft {
 
 const getApiData = <T,>(response: any): T => response?.data ?? response
 
+const pluralize = (count: number, singular: string, plural?: string) =>
+  `${count} ${count === 1 ? singular : plural || `${singular}s`}`
+
 const transformCourseFromBackend = (backendCourse: BackendCourse): FrontendCourseDraft => ({
   id: backendCourse.id,
   title: backendCourse.title,
@@ -256,9 +259,9 @@ const LmsCourseContentEditor: React.FC = () => {
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flexGrow: 1 }}>
-          <Typography variant="h4">Editor de Contenido: {draftCourse.title}</Typography>
+          <Typography variant="h4">Contenido del curso: {draftCourse.title}</Typography>
           <Typography variant="body2" color="text.secondary">
-            Ahora puedes estructurar el curso como secciones con varias lecciones y recursos adjuntos.
+            Estructura este curso como secciones, lecciones y recursos de apoyo sin salir de la misma pantalla.
           </Typography>
         </Box>
         <Button
@@ -267,22 +270,22 @@ const LmsCourseContentEditor: React.FC = () => {
           onClick={handleSave}
           disabled={saveCourseMutation.isLoading || !hasUnsavedChanges}
         >
-          {saveCourseMutation.isLoading ? 'Guardando...' : hasUnsavedChanges ? 'Guardar curso' : 'Sin cambios'}
+          {saveCourseMutation.isLoading ? 'Guardando cambios...' : hasUnsavedChanges ? 'Guardar cambios del contenido' : 'Sin cambios por guardar'}
         </Button>
       </Stack>
 
       <Alert severity="info" sx={{ mb: 2 }}>
-        Flujo recomendado: 1) crea secciones, 2) agrega varias lecciones dentro de cada una, 3) usa recursos para PDFs o enlaces, 4) guarda y valida en vista previa.
+        Flujo recomendado: 1) crea una sección, 2) agrega las lecciones que harán parte de ella, 3) usa recursos de apoyo para PDFs o enlaces, 4) guarda y revisa la vista previa.
       </Alert>
 
       <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap' }}>
-        <Chip label={`${moduleCounts.modules} secciones`} color="primary" variant="outlined" />
-        <Chip label={`${moduleCounts.lessons} lecciones`} variant="outlined" />
-        <Chip label={`${moduleCounts.resources} recursos`} variant="outlined" />
+        <Chip label={pluralize(moduleCounts.modules, 'sección', 'secciones')} color="primary" variant="outlined" />
+        <Chip label={pluralize(moduleCounts.lessons, 'lección', 'lecciones')} variant="outlined" />
+        <Chip label={pluralize(moduleCounts.resources, 'recurso')} variant="outlined" />
       </Stack>
 
       <Card>
-        <CardHeader title="Estructura del curso" subheader="Secciones, lecciones y recursos del contenido" />
+        <CardHeader title="Estructura del curso" subheader="Organiza el aprendizaje por secciones, lecciones y recursos de apoyo." />
         <CardContent>
           <LmsContentEditor
             modules={draftCourse.modules}
