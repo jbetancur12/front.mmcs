@@ -6,7 +6,6 @@ import {
   CardHeader,
   Typography,
   Button,
-  Badge,
   LinearProgress,
   Grid,
   Tabs,
@@ -325,6 +324,24 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     return null
   }, [mandatoryCourses, optionalCourses])
 
+  const heroSummaryChips = useMemo(
+    () => [
+      {
+        label: `${stats.mandatoryCourses} obligatorios`,
+        color: stats.overdueTraining > 0 ? 'error' : 'warning'
+      },
+      {
+        label: `${stats.inProgressCourses} en progreso`,
+        color: 'info'
+      },
+      {
+        label: `${stats.certificatesEarned} certificados`,
+        color: 'success'
+      }
+    ],
+    [stats]
+  )
+
   const handleLogout = () => {
     localStorage.removeItem('currentUser')
     navigate('/')
@@ -378,43 +395,78 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
       {/* Header */}
-      <Paper elevation={1} sx={{ borderBottom: 1, borderColor: 'divider' }}>
+      <Paper
+        elevation={0}
+        sx={{
+          borderBottom: 1,
+          borderColor: 'divider',
+          background:
+            'linear-gradient(135deg, rgba(13,148,136,0.12) 0%, rgba(255,255,255,1) 55%, rgba(14,116,144,0.08) 100%)'
+        }}
+      >
         <Box
           sx={{
             maxWidth: 'xl',
             mx: 'auto',
             px: { xs: 2, sm: 3, lg: 4 },
-            py: 2
+            py: { xs: 3, md: 4 }
           }}
         >
           <Box
             sx={{
               display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'center'
+              alignItems: { xs: 'flex-start', md: 'center' },
+              gap: 2,
+              flexWrap: 'wrap'
             }}
           >
-            <Box>
+            <Box sx={{ maxWidth: 760 }}>
+              <Typography variant='overline' color='primary.main' sx={{ fontWeight: 700 }}>
+                Ruta interna de aprendizaje
+              </Typography>
               <Typography
                 variant='h4'
                 component='h1'
-                sx={{ fontWeight: 'bold', color: 'text.primary' }}
+                sx={{ fontWeight: 'bold', color: 'text.primary', mt: 0.5 }}
               >
                 Mi Aprendizaje
               </Typography>
-              <Typography variant='body1' color='text.secondary'>
+              <Typography variant='body1' color='text.secondary' sx={{ mt: 0.5 }}>
                 Bienvenido, {currentUser.name}
               </Typography>
-              <Typography variant='body2' color='text.secondary'>
+              <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
                 {getLearningVisibilityLabel('internal')}
               </Typography>
+              <Typography
+                variant='body2'
+                color='text.secondary'
+                sx={{ mt: 1.5, maxWidth: 640 }}
+              >
+                Aquí verás primero lo obligatorio, luego lo que ya traes en progreso y, al final,
+                el resto de cursos disponibles para seguir fortaleciendo tu ruta.
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
+                <Chip label='Empleado interno' color='secondary' />
+                {heroSummaryChips.map((chip) => (
+                  <Chip
+                    key={chip.label}
+                    label={chip.label}
+                    color={chip.color as 'error' | 'warning' | 'info' | 'success'}
+                    variant='outlined'
+                  />
+                ))}
+              </Box>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Badge
-                badgeContent='Empleado'
-                color='secondary'
-                sx={{ '& .MuiBadge-badge': { fontSize: '0.75rem' } }}
-              />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+              <Button
+                variant='contained'
+                color='primary'
+                startIcon={<AwardIcon />}
+                onClick={() => navigate('/lms/certificates')}
+              >
+                Ver certificados
+              </Button>
               <Button
                 variant='outlined'
                 startIcon={<LogoutIcon />}
@@ -447,16 +499,48 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
               <strong> Cursos Obligatorios</strong>.
             </Alert>
             {nextLearningAction && (
-              <Card sx={{ mb: 3, border: '1px solid', borderColor: 'divider' }}>
+              <Card
+                sx={{
+                  mb: 3,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  background:
+                    nextLearningAction.kind === 'mandatory'
+                      ? 'linear-gradient(135deg, rgba(254,242,242,1) 0%, rgba(255,255,255,1) 100%)'
+                      : 'linear-gradient(135deg, rgba(239,246,255,1) 0%, rgba(255,255,255,1) 100%)'
+                }}
+              >
                 <CardContent>
-                  <Typography variant='overline' color='text.secondary'>
-                    Siguiente paso recomendado
-                  </Typography>
-                  <Typography variant='h6' sx={{ mt: 0.5 }}>
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <Typography variant='overline' color='text.secondary'>
+                      Siguiente paso recomendado
+                    </Typography>
+                    <Chip
+                      label={
+                        nextLearningAction.kind === 'mandatory'
+                          ? 'Prioridad alta'
+                          : nextLearningAction.kind === 'progress'
+                            ? 'Retoma tu avance'
+                            : 'Disponible para comenzar'
+                      }
+                      size='small'
+                      color={
+                        nextLearningAction.kind === 'mandatory'
+                          ? 'error'
+                          : nextLearningAction.kind === 'progress'
+                            ? 'info'
+                            : 'success'
+                      }
+                    />
+                  </Box>
+                  <Typography variant='h6' sx={{ mt: 1 }}>
                     {nextLearningAction.title}
                   </Typography>
                   <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
                     {nextLearningAction.description}
+                  </Typography>
+                  <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 2 }}>
+                    Tu panel seguirá priorizando esta recomendación hasta que completes el siguiente hito.
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                     <Button
