@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Box,
   Card,
@@ -193,23 +193,50 @@ const hasNotificationAction = (notification: Notification) => {
   )
 }
 
+const getEmptyStateMessage = (
+  filter: 'all' | 'unread' | 'actionRequired',
+  userRole: 'admin' | 'employee' | 'client'
+) => {
+  if (filter === 'unread') {
+    return 'No tienes notificaciones sin leer.'
+  }
+
+  if (filter === 'actionRequired') {
+    return userRole === 'admin'
+      ? 'No hay avisos que requieran una acción inmediata. Si reaparece riesgo, lo verás aquí antes de volver a asignaciones o cumplimiento.'
+      : 'No hay notificaciones que requieran una acción inmediata.'
+  }
+
+  return userRole === 'admin'
+    ? 'No hay avisos recientes del LMS para operación en este momento.'
+    : 'No tienes notificaciones en este momento.'
+}
+
 const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
   userRole = 'employee',
   userId
 }) => {
-  void userRole
   void userId
 
   const navigate = useNavigate()
   const [openDialog, setOpenDialog] = useState(false)
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
   const [filter, setFilter] = useState<'all' | 'unread' | 'actionRequired'>('all')
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
 
   const { data, isLoading, error } = useNotifications({
     refetchOnWindowFocus: false
   })
-  const markAsReadMutation = useMarkNotificationAsRead()
-  const markAllAsReadMutation = useMarkAllNotificationsAsRead()
+  const markAsReadMutation = useMarkNotificationAsRead({
+    onSuccess: () => {
+      setFeedbackMessage('Notificación marcada como leída.')
+    }
+  })
+  const markAllAsReadMutation = useMarkAllNotificationsAsRead({
+    onSuccess: () => {
+      setFeedbackMessage('Se actualizó tu bandeja y ya no quedan avisos sin leer.')
+    }
+  })
 
   const notifications = data?.notifications || []
 
@@ -219,9 +246,11 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
   const actionRequiredCount = notifications.filter(
     (notification) => hasNotificationAction(notification) && !notification.read
   ).length
+  const reviewedCount = notifications.filter((notification) => notification.read).length
 
   const filteredNotifications = useMemo(() => {
-    return notifications.filter((notification) => {
+    return notifications
+      .filter((notification) => {
       switch (filter) {
         case 'unread':
           return !notification.read
@@ -230,8 +259,32 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
         default:
           return true
       }
-    })
+      })
+      .sort((left, right) => {
+        const leftPriority =
+          (hasNotificationAction(left) && !left.read ? 2 : 0) + (!left.read ? 1 : 0)
+        const rightPriority =
+          (hasNotificationAction(right) && !right.read ? 2 : 0) + (!right.read ? 1 : 0)
+
+        if (leftPriority !== rightPriority) {
+          return rightPriority - leftPriority
+        }
+
+        return new Date(right.timestamp).getTime() - new Date(left.timestamp).getTime()
+      })
   }, [filter, notifications])
+
+  useEffect(() => {
+    if (!feedbackMessage) {
+      return
+    }
+
+    const timeout = window.setTimeout(() => {
+      setFeedbackMessage(null)
+    }, 3500)
+
+    return () => window.clearTimeout(timeout)
+  }, [feedbackMessage])
 
   const handleMarkAsRead = (notificationId: string) => {
     markAsReadMutation.mutate(notificationId)
@@ -319,6 +372,22 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
           }
         />
         <CardContent sx={{ p: 0 }}>
+          {!isLoading && !error && (
+            <Box sx={{ px: 3, pt: 2 }}>
+              {feedbackMessage ? (
+                <Alert severity='success' sx={{ mb: 2 }}>
+                  {feedbackMessage}
+                </Alert>
+              ) : null}
+              <Alert severity={actionRequiredCount > 0 ? 'warning' : 'info'} sx={{ mb: 2 }}>
+                {actionRequiredCount > 0
+                  ? `Tienes ${actionRequiredCount} aviso(s) que te pueden devolver a una acción concreta del LMS.`
+                  : unreadCount > 0
+                    ? `Tienes ${unreadCount} aviso(s) por revisar.`
+                    : `Bandeja al día. ${reviewedCount} aviso(s) revisado(s) recientemente.`}
+              </Alert>
+            </Box>
+          )}
           {isLoading ? (
             <Box sx={{ p: 4, textAlign: 'center' }}>
               <CircularProgress sx={{ mb: 2 }} />
@@ -337,11 +406,7 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
                 No hay notificaciones
               </Typography>
               <Typography variant='body2' color='text.secondary'>
-                {filter === 'unread'
-                  ? 'No tienes notificaciones sin leer.'
-                  : filter === 'actionRequired'
-                    ? 'No hay notificaciones que requieran una acción inmediata.'
-                    : 'No tienes notificaciones en este momento.'}
+                {getEmptyStateMessage(filter, userRole)}
               </Typography>
             </Box>
           ) : (
