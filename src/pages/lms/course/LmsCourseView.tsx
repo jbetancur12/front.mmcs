@@ -174,6 +174,17 @@ const LmsCourseView: React.FC = () => {
   const { data: userCertificates = [] } = useUserCertificates(undefined, {
     enabled: !!courseId
   })
+  const normalizedCourseId = parseInt(courseId || '0')
+  const currentCourseCertificate = useMemo(() => {
+    return userCertificates.find((certificate: any) => {
+      const certificateCourseId = certificate.course_id ?? certificate.courseId
+      return certificateCourseId === normalizedCourseId
+    }) || null
+  }, [normalizedCourseId, userCertificates])
+  const hasGeneratedCertificate = Boolean(currentCourseCertificate?.id)
+  const hasReviewAccess = hasGeneratedCertificate
+    || progressData?.progress?.isCompleted === true
+    || Number(progressData?.progress?.progressPercentage ?? 0) >= 100
 
   // Adapter: Convert API data to expected Course interface (memoized to prevent infinite loops)
   const course: Course | null = useMemo(() => {
@@ -204,10 +215,10 @@ const LmsCourseView: React.FC = () => {
           .slice()
           .sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
           .map((lesson: any, lessonIndex: number) => {
-            const completed = completedLessonIds.has(lesson.id)
-            const unlocked = modIndex === 0 && lessonIndex === 0
+            const completed = hasReviewAccess || completedLessonIds.has(lesson.id)
+            const unlocked = hasReviewAccess || (modIndex === 0 && lessonIndex === 0
               ? true
-              : previousLessonCompleted
+              : previousLessonCompleted)
 
             previousLessonCompleted = completed
 
@@ -289,10 +300,32 @@ const LmsCourseView: React.FC = () => {
       isMandatory: courseData.is_mandatory || false,
       modules: mappedModules
     }
-  }, [courseData, progressData])
+  }, [courseData, hasReviewAccess, progressData])
 
   // Adapt progress data to UserProgress[] format
   const userProgress: UserProgress[] = useMemo(() => {
+    if (!courseData?.modules) return []
+
+    if (hasReviewAccess) {
+      const reviewProgress = progressData?.progress as {
+        completedAt?: string
+        completed_at?: string
+      } | undefined
+      const completedAt = reviewProgress?.completedAt
+        || reviewProgress?.completed_at
+        || new Date().toISOString()
+
+      return (courseData.modules || []).flatMap((module: any) =>
+        (module.lessons || []).map((lesson: any) => ({
+          courseId: normalizedCourseId,
+          lessonId: lesson.id,
+          status: 'completed' as const,
+          timeSpent: lesson.estimated_minutes || lesson.duration_minutes || 0,
+          completedAt: new Date(completedAt)
+        }))
+      )
+    }
+
     if (!progressData || !progressData.modules) return []
 
     const lessons: UserProgress[] = []
@@ -301,7 +334,7 @@ const LmsCourseView: React.FC = () => {
         module.lessons.forEach((lesson: any) => {
           if (lesson.progress && lesson.progress.status === 'completed') {
             lessons.push({
-              courseId: parseInt(courseId || '0'),
+              courseId: normalizedCourseId,
               lessonId: lesson.id,
               status: lesson.progress.status,
               timeSpent: lesson.progress.time_spent_minutes || 0,
@@ -312,7 +345,7 @@ const LmsCourseView: React.FC = () => {
       }
     })
     return lessons
-  }, [progressData, courseId])
+  }, [courseData?.modules, hasReviewAccess, normalizedCourseId, progressData])
 
   // Mutation para completar lección
   const updateProgressMutation = useCompleteLesson({
@@ -456,6 +489,8 @@ const LmsCourseView: React.FC = () => {
   }, [course])
 
   const isLessonUnlocked = useCallback((moduleIndex: number, lessonIndex: number) => {
+    if (hasReviewAccess) return true
+
     // First lesson of first module is always unlocked
     if (moduleIndex === 0 && lessonIndex === 0) return true
 
@@ -466,7 +501,7 @@ const LmsCourseView: React.FC = () => {
     }
 
     return false
-  }, [getPreviousLessonByIndex, isLessonCompleted])
+  }, [getPreviousLessonByIndex, hasReviewAccess, isLessonCompleted])
 
   const getCourseProgress = useCallback(() => {
     const allLessons = getAllLessons()
@@ -477,17 +512,6 @@ const LmsCourseView: React.FC = () => {
       percentage: allLessons.length > 0 ? (completedLessons.length / allLessons.length) * 100 : 0
     }
   }, [getAllLessons, isLessonCompleted])
-
-  const currentCourseCertificate = useMemo(() => {
-    const normalizedCourseId = parseInt(courseId || '0')
-
-    return userCertificates.find((certificate: any) => {
-      const certificateCourseId = certificate.course_id ?? certificate.courseId
-      return certificateCourseId === normalizedCourseId
-    }) || null
-  }, [courseId, userCertificates])
-
-  const hasGeneratedCertificate = Boolean(currentCourseCertificate?.id)
 
   const handleOpenCurrentCertificate = useCallback(() => {
     if (!currentCourseCertificate?.id) {
