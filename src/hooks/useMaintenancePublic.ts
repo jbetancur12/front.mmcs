@@ -50,7 +50,12 @@ const maintenancePublicAPI = {
   // Get TV display data - single endpoint with all data
   getTVDisplayData: async (): Promise<TVDisplayData> => {
     const response = await axiosPublic.get<TVDisplayData>(
-      `/public/maintenance/tv-display`
+      `/public/maintenance/tv-display`,
+      {
+        // This endpoint is intentionally public and must not send auth cookies,
+        // otherwise browsers reject wildcard/public CORS responses.
+        withCredentials: false
+      }
     )
     return response.data
   }
