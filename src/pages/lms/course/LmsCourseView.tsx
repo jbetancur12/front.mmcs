@@ -9,7 +9,6 @@ import {
   Button,
   Chip,
   LinearProgress,
-  CircularProgress,
   List,
   ListItem,
   ListItemIcon,
@@ -1012,7 +1011,7 @@ const LmsCourseView: React.FC = () => {
         <Paper
           elevation={0}
           sx={{
-            p: { xs: 2, md: 3 },
+            p: { xs: 1.5, md: 2.25 },
             borderRadius: 0,
             borderBottom: '1px solid',
             borderColor: 'rgba(24, 49, 83, 0.08)',
@@ -1021,7 +1020,7 @@ const LmsCourseView: React.FC = () => {
           }}
         >
           <Box sx={{ maxWidth: 1320, mx: 'auto' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1.25 }}>
             <IconButton onClick={() => navigate(-1)} sx={{ mr: 2 }}>
               <ArrowBackIcon />
             </IconButton>
@@ -1041,18 +1040,18 @@ const LmsCourseView: React.FC = () => {
                 variant={isMobile ? 'h5' : 'h4'}
                 component='h1'
                 gutterBottom
-                sx={{ fontWeight: 800, color: '#183153', maxWidth: 980 }}
+                sx={{ fontWeight: 800, color: '#183153', maxWidth: 980, mb: 0.5 }}
               >
                 {course.title}
               </Typography>
               <Typography
-                variant='body1'
+                variant='body2'
                 color='text.secondary'
-                sx={{ maxWidth: 900, mb: 1.75, lineHeight: 1.65 }}
+                sx={{ maxWidth: 900, mb: 1.1, lineHeight: 1.6 }}
               >
                 {course.description}
               </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                 <Chip
                   label={course.category}
                   size='small'
@@ -1093,44 +1092,27 @@ const LmsCourseView: React.FC = () => {
 
           <Box
             sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1.7fr) 190px' },
-              gap: 2,
-              alignItems: 'stretch'
-            }}
-          >
-          <Box
-            sx={{
-              p: 2.25,
-              borderRadius: 5,
+              p: 1.5,
+              borderRadius: 4,
               border: '1px solid rgba(24, 49, 83, 0.08)',
               bgcolor: 'rgba(255,255,255,0.74)',
               backdropFilter: 'blur(10px)',
-              boxShadow: '0 20px 42px rgba(24, 49, 83, 0.06)',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              minHeight: 136
+              boxShadow: '0 16px 30px rgba(24, 49, 83, 0.05)'
             }}
           >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 1.25 }}>
-              <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 1 }}>
               <Typography variant='body2' color='text.secondary'>
                 Progreso del curso
               </Typography>
-              <Typography variant='h5' sx={{ fontWeight: 800, color: '#1e2d22', mt: 0.5 }}>
-                {courseProgress.completed} de {courseProgress.total} lecciones
-              </Typography>
-              </Box>
-              <Typography variant='body2' sx={{ color: '#5b6b7d', fontWeight: 600 }}>
-                {Math.round(courseProgress.percentage)}% completado
+              <Typography variant='body2' sx={{ color: '#5b6b7d', fontWeight: 700 }}>
+                {courseProgress.completed} de {courseProgress.total} lecciones ({Math.round(courseProgress.percentage)}%)
               </Typography>
             </Box>
             <LinearProgress
               variant='determinate'
               value={courseProgress.percentage}
               sx={{
-                height: 10,
+                height: 8,
                 borderRadius: 999,
                 bgcolor: 'rgba(24,49,83,0.08)',
                 '& .MuiLinearProgress-bar': {
@@ -1139,58 +1121,11 @@ const LmsCourseView: React.FC = () => {
                 }
               }}
             />
-            <Typography variant='body2' color='text.secondary' sx={{ mt: 1.25 }}>
+            <Typography variant='caption' color='text.secondary' sx={{ mt: 0.75, display: 'block' }}>
               {courseProgress.percentage === 100
                 ? 'Ruta completada. Ya puedes revisar el resultado final y tu certificado.'
                 : 'Completa cada lección para mantener el avance desbloqueado.'}
             </Typography>
-          </Box>
-          <Box
-            sx={{
-              p: 2.25,
-              borderRadius: 5,
-              border: '1px solid rgba(24, 49, 83, 0.08)',
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(244,250,247,0.96) 100%)',
-              backdropFilter: 'blur(10px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: 136
-            }}
-          >
-            <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-              <CircularProgress
-                variant='determinate'
-                value={100}
-                size={126}
-                thickness={3.2}
-                sx={{ color: 'rgba(24,49,83,0.12)', position: 'absolute' }}
-              />
-              <CircularProgress
-                variant='determinate'
-                value={courseProgress.percentage}
-                size={126}
-                thickness={3.2}
-                sx={{
-                  color: '#6e675e',
-                  '& .MuiCircularProgress-circle': {
-                    strokeLinecap: 'round'
-                  }
-                }}
-              />
-              <Box sx={{ position: 'absolute', textAlign: 'center', px: 2 }}>
-                <Typography variant='h4' sx={{ fontWeight: 800, color: '#20241f', lineHeight: 1 }}>
-                  {Math.round(courseProgress.percentage)}%
-                </Typography>
-                <Typography variant='subtitle2' sx={{ fontWeight: 700, color: '#20241f', mt: 0.5 }}>
-                  completo
-                </Typography>
-                <Typography variant='body2' color='text.secondary'>
-                  {courseProgress.completed} de {courseProgress.total} lecciones
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
           </Box>
           </Box>
 
