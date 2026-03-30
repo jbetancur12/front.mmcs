@@ -44,6 +44,13 @@ export interface Course {
   estimated_duration_minutes?: number
   certificate_duration_text?: string | null
   show_duration_on_certificate?: boolean
+  certificate_template_id?: number | null
+  certificate_signer_left_name?: string | null
+  certificate_signer_left_role?: string | null
+  certificate_signer_left_signature?: string | null
+  certificate_signer_right_name?: string | null
+  certificate_signer_right_role?: string | null
+  certificate_signer_right_signature?: string | null
   intro_content?: string
   intro_type?: ContentType
   created_by: number
@@ -54,6 +61,11 @@ export interface Course {
   }
   created_at: string
   updated_at: string
+  certificateTemplate?: {
+    id: number
+    name: string
+    is_default?: boolean
+  }
   modules?: CourseModule[]
   stats?: CourseStats
   assignments?: CourseAssignment[]
@@ -666,6 +678,13 @@ export interface CreateCourseRequest {
   estimated_duration_minutes?: number
   certificate_duration_text?: string | null
   show_duration_on_certificate?: boolean
+  certificate_template_id?: number | null
+  certificate_signer_left_name?: string | null
+  certificate_signer_left_role?: string | null
+  certificate_signer_left_signature?: string | null
+  certificate_signer_right_name?: string | null
+  certificate_signer_right_role?: string | null
+  certificate_signer_right_signature?: string | null
   intro_content?: string
   intro_type?: ContentType
 }
@@ -679,6 +698,13 @@ export interface UpdateCourseRequest {
   estimated_duration_minutes?: number
   certificate_duration_text?: string | null
   show_duration_on_certificate?: boolean
+  certificate_template_id?: number | null
+  certificate_signer_left_name?: string | null
+  certificate_signer_left_role?: string | null
+  certificate_signer_left_signature?: string | null
+  certificate_signer_right_name?: string | null
+  certificate_signer_right_role?: string | null
+  certificate_signer_right_signature?: string | null
   intro_content?: string
   intro_type?: ContentType
   status?: CourseStatus

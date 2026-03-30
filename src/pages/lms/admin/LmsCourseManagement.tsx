@@ -45,6 +45,8 @@ import {
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { getCourseAudienceLabel } from '../../../utils/lmsAudience'
+import SignaturePad from '../../../Components/Maintenance/SignaturePad'
+import { useCertificateTemplates } from '../../../hooks/useLms'
 
 interface Course {
   id: number
@@ -58,9 +60,21 @@ interface Course {
   estimated_duration_minutes: number
   certificate_duration_text?: string | null
   show_duration_on_certificate?: boolean
+  certificate_template_id?: number | null
+  certificate_signer_left_name?: string | null
+  certificate_signer_left_role?: string | null
+  certificate_signer_left_signature?: string | null
+  certificate_signer_right_name?: string | null
+  certificate_signer_right_role?: string | null
+  certificate_signer_right_signature?: string | null
   created_by: number
   created_at: string
   updated_at: string
+  certificateTemplate?: {
+    id: number
+    name: string
+    is_default?: boolean
+  }
   modules?: CourseModule[]
   assignments?: CourseAssignment[]
   _count?: {
@@ -127,6 +141,13 @@ interface CreateCourseData {
   estimated_duration_minutes: number
   certificate_duration_text: string
   show_duration_on_certificate: boolean
+  certificate_template_id: number | null | ''
+  certificate_signer_left_name: string
+  certificate_signer_left_role: string
+  certificate_signer_left_signature: string | null
+  certificate_signer_right_name: string
+  certificate_signer_right_role: string
+  certificate_signer_right_signature: string | null
 }
 
 interface CourseFormErrors {
@@ -134,6 +155,7 @@ interface CourseFormErrors {
   description?: string
   estimated_duration_minutes?: string
   certificate_duration_text?: string
+  certificate_template_id?: string
 }
 
 interface CourseActionDialogState {
@@ -195,11 +217,19 @@ const LmsCourseManagement: React.FC = () => {
     has_certificate: false,
     estimated_duration_minutes: 60,
     certificate_duration_text: '',
-    show_duration_on_certificate: false
+    show_duration_on_certificate: false,
+    certificate_template_id: '',
+    certificate_signer_left_name: '',
+    certificate_signer_left_role: '',
+    certificate_signer_left_signature: '',
+    certificate_signer_right_name: '',
+    certificate_signer_right_role: '',
+    certificate_signer_right_signature: ''
   })
 
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
+  const { data: certificateTemplates = [] } = useCertificateTemplates()
 
   // Query para obtener cursos
   const { data: coursesResponse, isLoading, error } = useQuery<{courses: Course[], total: number}>(
@@ -242,7 +272,14 @@ const LmsCourseManagement: React.FC = () => {
           has_certificate: courseData.has_certificate,
           estimated_duration_minutes: courseData.estimated_duration_minutes,
           certificate_duration_text: courseData.certificate_duration_text,
-          show_duration_on_certificate: courseData.show_duration_on_certificate
+          show_duration_on_certificate: courseData.show_duration_on_certificate,
+          certificate_template_id: courseData.certificate_template_id || null,
+          certificate_signer_left_name: courseData.certificate_signer_left_name || '',
+          certificate_signer_left_role: courseData.certificate_signer_left_role || '',
+          certificate_signer_left_signature: courseData.certificate_signer_left_signature || null,
+          certificate_signer_right_name: courseData.certificate_signer_right_name || '',
+          certificate_signer_right_role: courseData.certificate_signer_right_role || '',
+          certificate_signer_right_signature: courseData.certificate_signer_right_signature || null
         }
         return axiosPrivate.put(`/lms/courses/${courseData.id}`, updateData)
       } else {
@@ -353,7 +390,14 @@ const LmsCourseManagement: React.FC = () => {
         has_certificate: course.has_certificate,
         estimated_duration_minutes: getDerivedCourseDuration(course),
         certificate_duration_text: course.certificate_duration_text || '',
-        show_duration_on_certificate: Boolean(course.show_duration_on_certificate)
+        show_duration_on_certificate: Boolean(course.show_duration_on_certificate),
+        certificate_template_id: course.certificate_template_id || '',
+        certificate_signer_left_name: course.certificate_signer_left_name || '',
+        certificate_signer_left_role: course.certificate_signer_left_role || '',
+        certificate_signer_left_signature: course.certificate_signer_left_signature || '',
+        certificate_signer_right_name: course.certificate_signer_right_name || '',
+        certificate_signer_right_role: course.certificate_signer_right_role || '',
+        certificate_signer_right_signature: course.certificate_signer_right_signature || ''
       })
     } else {
       setEditingCourse(null)
@@ -365,7 +409,14 @@ const LmsCourseManagement: React.FC = () => {
         has_certificate: false,
         estimated_duration_minutes: 60,
         certificate_duration_text: '',
-        show_duration_on_certificate: false
+        show_duration_on_certificate: false,
+        certificate_template_id: '',
+        certificate_signer_left_name: '',
+        certificate_signer_left_role: '',
+        certificate_signer_left_signature: '',
+        certificate_signer_right_name: '',
+        certificate_signer_right_role: '',
+        certificate_signer_right_signature: ''
       })
     }
     setOpenDialog(true)
@@ -382,7 +433,14 @@ const LmsCourseManagement: React.FC = () => {
       has_certificate: false,
       estimated_duration_minutes: 60,
       certificate_duration_text: '',
-      show_duration_on_certificate: false
+      show_duration_on_certificate: false,
+      certificate_template_id: '',
+      certificate_signer_left_name: '',
+      certificate_signer_left_role: '',
+      certificate_signer_left_signature: '',
+      certificate_signer_right_name: '',
+      certificate_signer_right_role: '',
+      certificate_signer_right_signature: ''
     })
   }
 
@@ -407,6 +465,10 @@ const LmsCourseManagement: React.FC = () => {
       nextErrors.certificate_duration_text = 'Usa un texto corto, de máximo 120 caracteres.'
     }
 
+    if (formData.has_certificate && !formData.certificate_template_id) {
+      nextErrors.certificate_template_id = 'Selecciona la plantilla que emitirá este curso.'
+    }
+
     if (Object.keys(nextErrors).length > 0) {
       setFormErrors(nextErrors)
       setSnackbar({
@@ -423,6 +485,15 @@ const LmsCourseManagement: React.FC = () => {
       description: trimmedDescription,
       is_mandatory: formData.audience === 'client' ? false : formData.is_mandatory,
       certificate_duration_text: formData.certificate_duration_text.trim(),
+      certificate_template_id: formData.has_certificate && formData.certificate_template_id
+        ? Number(formData.certificate_template_id)
+        : null,
+      certificate_signer_left_name: formData.certificate_signer_left_name.trim(),
+      certificate_signer_left_role: formData.certificate_signer_left_role.trim(),
+      certificate_signer_left_signature: formData.certificate_signer_left_signature || null,
+      certificate_signer_right_name: formData.certificate_signer_right_name.trim(),
+      certificate_signer_right_role: formData.certificate_signer_right_role.trim(),
+      certificate_signer_right_signature: formData.certificate_signer_right_signature || null,
       show_duration_on_certificate: formData.has_certificate
         ? formData.show_duration_on_certificate
         : false
@@ -502,6 +573,7 @@ const LmsCourseManagement: React.FC = () => {
 
       if (field === 'has_certificate' && value === false) {
         nextFormData.show_duration_on_certificate = false
+        nextFormData.certificate_template_id = ''
       }
 
       return nextFormData
@@ -972,6 +1044,106 @@ const LmsCourseManagement: React.FC = () => {
                 Cuando esté activo, el certificado mostrará el texto anterior o, si está vacío, la duración calculada del curso.
               </Typography>
             </Grid>
+            {formData.has_certificate && (
+              <Grid item xs={12}>
+                <FormControl fullWidth error={Boolean(formErrors.certificate_template_id)}>
+                  <InputLabel>Plantilla del certificado</InputLabel>
+                  <Select
+                    value={formData.certificate_template_id}
+                    label='Plantilla del certificado'
+                    onChange={(e) => handleInputChange('certificate_template_id', e.target.value)}
+                  >
+                    <MenuItem value=''>
+                      <em>Selecciona una plantilla</em>
+                    </MenuItem>
+                    {certificateTemplates.map((template) => (
+                      <MenuItem key={template.id} value={template.id}>
+                        {template.name}
+                        {template.isDefault || template.is_default ? ' (Por defecto)' : ''}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  <Typography variant='caption' color={formErrors.certificate_template_id ? 'error' : 'text.secondary'} sx={{ mt: 0.75 }}>
+                    {formErrors.certificate_template_id || 'Cada curso puede apuntar a una plantilla distinta, sin depender de una sola global.'}
+                  </Typography>
+                </FormControl>
+              </Grid>
+            )}
+            {formData.has_certificate && (
+              <>
+                <Grid item xs={12}>
+                  <Alert severity='info'>
+                    Los firmantes quedan guardados en el curso. Así puedes reutilizar la misma plantilla en varios cursos, pero cambiar personas, cargos y firmas según cada capacitación.
+                  </Alert>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Paper variant='outlined' sx={{ p: 2.5, height: '100%' }}>
+                    <Typography variant='h6' sx={{ mb: 1 }}>Firma izquierda</Typography>
+                    <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                      Úsala para instructor, facilitador o responsable académico.
+                    </Typography>
+                    <SignaturePad
+                      value={formData.certificate_signer_left_signature}
+                      onChange={(nextValue) => handleInputChange('certificate_signer_left_signature', nextValue || '')}
+                      label='Firma izquierda'
+                      helperText='Puedes dibujarla o subir una imagen.'
+                      height={150}
+                    />
+                    <Grid container spacing={2} sx={{ mt: 1 }}>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label='Nombre firmante izquierda'
+                          value={formData.certificate_signer_left_name}
+                          onChange={(e) => handleInputChange('certificate_signer_left_name', e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label='Cargo firmante izquierda'
+                          value={formData.certificate_signer_left_role}
+                          onChange={(e) => handleInputChange('certificate_signer_left_role', e.target.value)}
+                        />
+                      </Grid>
+                    </Grid>
+                  </Paper>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Paper variant='outlined' sx={{ p: 2.5, height: '100%' }}>
+                    <Typography variant='h6' sx={{ mb: 1 }}>Firma derecha</Typography>
+                    <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                      Úsala para director técnico, gerente o aprobador final.
+                    </Typography>
+                    <SignaturePad
+                      value={formData.certificate_signer_right_signature}
+                      onChange={(nextValue) => handleInputChange('certificate_signer_right_signature', nextValue || '')}
+                      label='Firma derecha'
+                      helperText='Puedes dibujarla o subir una imagen.'
+                      height={150}
+                    />
+                    <Grid container spacing={2} sx={{ mt: 1 }}>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label='Nombre firmante derecha'
+                          value={formData.certificate_signer_right_name}
+                          onChange={(e) => handleInputChange('certificate_signer_right_name', e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label='Cargo firmante derecha'
+                          value={formData.certificate_signer_right_role}
+                          onChange={(e) => handleInputChange('certificate_signer_right_role', e.target.value)}
+                        />
+                      </Grid>
+                    </Grid>
+                  </Paper>
+                </Grid>
+              </>
+            )}
             {formData.audience === 'client' && formData.is_mandatory && (
               <Grid item xs={12}>
                 <Alert severity='warning'>

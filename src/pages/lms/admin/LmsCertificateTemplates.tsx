@@ -51,6 +51,7 @@ import type {
   SaveCertificateTemplateRequest
 } from '../../../services/lmsService'
 import { sanitizeHtml } from '../../../utils/htmlSanitizer'
+import certificateTemplateBackground from 'src/assets/template.png'
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -95,19 +96,74 @@ const DEFAULT_VARIABLES: CertificateTemplateVariable[] = [
     description: 'Texto libre para la duracion visible en el certificado'
   },
   {
-    name: 'organizationSignature',
-    label: 'Firma institucional',
+    name: 'certificateBackgroundImage',
+    label: 'Fondo oficial del certificado',
     type: 'text',
     required: false,
-    description: 'Imagen base64 de la firma que se mostrara en el certificado'
+    defaultValue: '/images/template.png',
+    description: 'Imagen base que se usara como arte principal del certificado'
   },
   {
-    name: 'organizationSignatureDisplay',
-    label: 'Visualizacion de firma institucional',
+    name: 'leftSignatureImage',
+    label: 'Firma izquierda',
+    type: 'text',
+    required: false,
+    description: 'Imagen base64 de la firma izquierda'
+  },
+  {
+    name: 'leftSignatureDisplay',
+    label: 'Visualizacion de firma izquierda',
     type: 'text',
     required: false,
     defaultValue: 'none',
-    description: 'Control interno para mostrar u ocultar la firma institucional'
+    description: 'Control interno para mostrar u ocultar la firma izquierda'
+  },
+  {
+    name: 'leftSignerName',
+    label: 'Nombre izquierda',
+    type: 'text',
+    required: false,
+    defaultValue: 'Daniel Paredes',
+    description: 'Nombre que se mostrara bajo la firma izquierda'
+  },
+  {
+    name: 'leftSignerRole',
+    label: 'Cargo izquierda',
+    type: 'text',
+    required: false,
+    defaultValue: 'Instructor',
+    description: 'Cargo que se mostrara bajo la firma izquierda'
+  },
+  {
+    name: 'rightSignatureImage',
+    label: 'Firma derecha',
+    type: 'text',
+    required: false,
+    description: 'Imagen base64 de la firma derecha'
+  },
+  {
+    name: 'rightSignatureDisplay',
+    label: 'Visualizacion de firma derecha',
+    type: 'text',
+    required: false,
+    defaultValue: 'none',
+    description: 'Control interno para mostrar u ocultar la firma derecha'
+  },
+  {
+    name: 'rightSignerName',
+    label: 'Nombre derecha',
+    type: 'text',
+    required: false,
+    defaultValue: 'Andres Felipe Espitia',
+    description: 'Nombre que se mostrara bajo la firma derecha'
+  },
+  {
+    name: 'rightSignerRole',
+    label: 'Cargo derecha',
+    type: 'text',
+    required: false,
+    defaultValue: 'Director Tecnico',
+    description: 'Cargo que se mostrara bajo la firma derecha'
   },
   {
     name: 'certificateNumber',
@@ -119,21 +175,50 @@ const DEFAULT_VARIABLES: CertificateTemplateVariable[] = [
 ]
 
 const DEFAULT_TEMPLATE_HTML = `
-<div style="width: 100%; max-width: 900px; margin: 0 auto; padding: 48px; background: #ffffff; border: 8px solid #1f2937; border-radius: 24px; text-align: center; font-family: Arial, sans-serif;">
-  <p style="font-size: 16px; letter-spacing: 4px; color: #059669; margin-bottom: 16px;">MMCS LMS</p>
-  <h1 style="font-size: 42px; color: #111827; margin-bottom: 12px;">CERTIFICADO DE FINALIZACION</h1>
-  <p style="font-size: 18px; color: #4b5563; margin-bottom: 32px;">Se certifica que</p>
-  <h2 style="font-size: 34px; color: #059669; margin-bottom: 24px;">{{userName}}</h2>
-  <p style="font-size: 18px; color: #4b5563; margin-bottom: 16px;">completo satisfactoriamente el curso</p>
-  <h3 style="font-size: 28px; color: #111827; margin-bottom: 28px;">{{courseTitle}}</h3>
-  <p style="font-size: 16px; color: #6b7280; margin-bottom: 8px;">Fecha de finalizacion: {{completionDate}}</p>
-  <div style="margin: 32px auto 20px; width: 220px; display: {{organizationSignatureDisplay}}; align-items: flex-end; justify-content: center; min-height: 56px;">
-    <img src="{{organizationSignature}}" alt="Firma institucional" style="max-width: 100%; max-height: 52px; object-fit: contain;" />
+<div class="certificate-layout certificate-template-official" style="background-image: url('{{certificateBackgroundImage}}');">
+  <div class="certificate-official-field certificate-official-recipient">
+    <span class="certificate-official-field-text certificate-official-recipient-text">{{userName}}</span>
   </div>
-  <div style="width: 240px; margin: 0 auto 8px; border-top: 1px solid #111827;"></div>
-  <p style="font-size: 14px; color: #111827; font-weight: 600; margin-bottom: 4px;">Metromedics SAS</p>
-  <p style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">Direccion de Formacion</p>
-  <p style="font-size: 14px; color: #9ca3af;">Certificado N. {{certificateNumber}}</p>
+
+  <div class="certificate-official-copy">
+    <p>Se certifica que:</p>
+    <p>Ha participado y aprobado satisfactoriamente la capacitacion en:</p>
+  </div>
+
+  <div class="certificate-official-field certificate-official-course">
+    <span class="certificate-official-field-text certificate-official-course-text">{{courseTitle}}</span>
+  </div>
+
+  <div class="certificate-official-summary">
+    con una intensidad de <strong>{{courseDuration}}</strong>, realizada el dia <strong>{{completionDate}}</strong>
+  </div>
+
+  <div class="certificate-official-verification">
+    <div class="certificate-official-verification-label">Codigo de verificacion</div>
+    <div class="certificate-official-verification-value">{{certificateNumber}}</div>
+  </div>
+
+  <div class="certificate-official-signature certificate-official-signature--left">
+    <div class="certificate-official-signature-image-shell" style="display: {{leftSignatureDisplay}};">
+      <img class="certificate-official-signature-image" src="{{leftSignatureImage}}" alt="Firma izquierda" />
+    </div>
+    <div class="certificate-official-signature-mask">
+      <div class="certificate-official-signature-line"></div>
+      <div class="certificate-official-signature-name">{{leftSignerName}}</div>
+      <div class="certificate-official-signature-role">{{leftSignerRole}}</div>
+    </div>
+  </div>
+
+  <div class="certificate-official-signature certificate-official-signature--right">
+    <div class="certificate-official-signature-image-shell" style="display: {{rightSignatureDisplay}};">
+      <img class="certificate-official-signature-image" src="{{rightSignatureImage}}" alt="Firma derecha" />
+    </div>
+    <div class="certificate-official-signature-mask">
+      <div class="certificate-official-signature-line"></div>
+      <div class="certificate-official-signature-name">{{rightSignerName}}</div>
+      <div class="certificate-official-signature-role">{{rightSignerRole}}</div>
+    </div>
+  </div>
 </div>
 `.trim()
 
@@ -142,7 +227,9 @@ const CERTIFICATE_HTML_SNIPPETS = [
   { label: 'Curso', token: '{{courseTitle}}' },
   { label: 'Fecha', token: '{{completionDate}}' },
   { label: 'Duracion', token: '{{courseDuration}}' },
-  { label: 'Firma institucional', token: '{{organizationSignature}}' },
+  { label: 'Fondo', token: '{{certificateBackgroundImage}}' },
+  { label: 'Firma izquierda', token: '{{leftSignatureImage}}' },
+  { label: 'Firma derecha', token: '{{rightSignatureImage}}' },
   { label: 'Certificado', token: '{{certificateNumber}}' }
 ]
 
@@ -156,6 +243,15 @@ const VARIABLE_NAME_SUGGESTIONS = [
   'certificateNumber',
   'organizationName',
   'organizationLogo',
+  'certificateBackgroundImage',
+  'leftSignatureImage',
+  'leftSignatureDisplay',
+  'leftSignerName',
+  'leftSignerRole',
+  'rightSignatureImage',
+  'rightSignatureDisplay',
+  'rightSignerName',
+  'rightSignerRole',
   'organizationSignature',
   'organizationSignatureDisplay'
 ]
@@ -185,6 +281,21 @@ const ensureVariable = (
   return [...variables, fallback]
 }
 
+const setManagedVariable = (
+  variables: CertificateTemplateVariable[],
+  variableName: string,
+  fallback: CertificateTemplateVariable,
+  nextValue: string
+) =>
+  ensureVariable(variables, variableName, fallback).map((variable) =>
+    variable.name === variableName
+      ? {
+          ...variable,
+          defaultValue: nextValue
+        }
+      : variable
+  )
+
 function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props
 
@@ -201,18 +312,101 @@ function TabPanel(props: TabPanelProps) {
   )
 }
 
-const normalizeTemplate = (template: CertificateTemplate): TemplateFormState => ({
-  name: template.name || '',
-  templateHtml: template.templateHtml || template.template_html || '',
-  isDefault: template.isDefault ?? template.is_default ?? false,
-  variables:
+const normalizeTemplate = (template: CertificateTemplate): TemplateFormState => {
+  const normalizedVariables =
     template.variables?.length > 0
       ? template.variables.map((variable) => ({
           ...variable,
           defaultValue: variable.defaultValue ?? variable.default_value ?? ''
         }))
       : DEFAULT_VARIABLES
-})
+
+  const legacySignature = normalizedVariables.find((variable) => variable.name === 'organizationSignature')
+  const withBackground = ensureVariable(normalizedVariables, 'certificateBackgroundImage', {
+    name: 'certificateBackgroundImage',
+    label: 'Fondo oficial del certificado',
+    type: 'text',
+    required: false,
+    defaultValue: '/images/template.png',
+    description: 'Imagen base que se usara como arte principal del certificado'
+  })
+  const withLeftSignature = ensureVariable(withBackground, 'leftSignatureImage', {
+    name: 'leftSignatureImage',
+    label: 'Firma izquierda',
+    type: 'text',
+    required: false,
+    defaultValue: legacySignature?.defaultValue || '',
+    description: 'Imagen base64 de la firma izquierda'
+  })
+  const withLeftDisplay = ensureVariable(withLeftSignature, 'leftSignatureDisplay', {
+    name: 'leftSignatureDisplay',
+    label: 'Visualizacion de firma izquierda',
+    type: 'text',
+    required: false,
+    defaultValue: legacySignature?.defaultValue ? 'flex' : 'none',
+    description: 'Control interno para mostrar u ocultar la firma izquierda'
+  })
+  const withSignerMeta = ([
+    {
+      name: 'leftSignerName',
+      label: 'Nombre izquierda',
+      type: 'text',
+      required: false,
+      defaultValue: 'Daniel Paredes',
+      description: 'Nombre que se mostrara bajo la firma izquierda'
+    },
+    {
+      name: 'leftSignerRole',
+      label: 'Cargo izquierda',
+      type: 'text',
+      required: false,
+      defaultValue: 'Instructor',
+      description: 'Cargo que se mostrara bajo la firma izquierda'
+    },
+    {
+      name: 'rightSignatureImage',
+      label: 'Firma derecha',
+      type: 'text',
+      required: false,
+      defaultValue: '',
+      description: 'Imagen base64 de la firma derecha'
+    },
+    {
+      name: 'rightSignatureDisplay',
+      label: 'Visualizacion de firma derecha',
+      type: 'text',
+      required: false,
+      defaultValue: 'none',
+      description: 'Control interno para mostrar u ocultar la firma derecha'
+    },
+    {
+      name: 'rightSignerName',
+      label: 'Nombre derecha',
+      type: 'text',
+      required: false,
+      defaultValue: 'Andres Felipe Espitia',
+      description: 'Nombre que se mostrara bajo la firma derecha'
+    },
+    {
+      name: 'rightSignerRole',
+      label: 'Cargo derecha',
+      type: 'text',
+      required: false,
+      defaultValue: 'Director Tecnico',
+      description: 'Cargo que se mostrara bajo la firma derecha'
+    }
+  ] as CertificateTemplateVariable[]).reduce(
+    (acc, variable) => ensureVariable(acc, variable.name, variable),
+    withLeftDisplay
+  )
+
+  return {
+    name: template.name || '',
+    templateHtml: template.templateHtml || template.template_html || '',
+    isDefault: template.isDefault ?? template.is_default ?? false,
+    variables: withSignerMeta
+  }
+}
 
 const buildSamplePreviewHtml = (templateHtml: string, variables: CertificateTemplateVariable[]) => {
   const sampleValues = variables.reduce<Record<string, string>>((acc, variable) => {
@@ -266,7 +460,12 @@ const buildSamplePreviewHtml = (templateHtml: string, variables: CertificateTemp
       return acc
     }
 
-    if (variable.name === 'organizationSignature') {
+    if (variable.name === 'certificateBackgroundImage') {
+      acc[variable.name] = certificateTemplateBackground
+      return acc
+    }
+
+    if (variable.name === 'leftSignatureImage' || variable.name === 'rightSignatureImage' || variable.name === 'organizationSignature') {
       acc[variable.name] =
         variable.defaultValue ||
         variable.default_value ||
@@ -274,8 +473,20 @@ const buildSamplePreviewHtml = (templateHtml: string, variables: CertificateTemp
       return acc
     }
 
+    if (variable.name === 'leftSignatureDisplay') {
+      const signatureValue = acc.leftSignatureImage
+      acc[variable.name] = signatureValue ? 'flex' : 'none'
+      return acc
+    }
+
+    if (variable.name === 'rightSignatureDisplay') {
+      const signatureValue = acc.rightSignatureImage
+      acc[variable.name] = signatureValue ? 'flex' : 'none'
+      return acc
+    }
+
     if (variable.name === 'organizationSignatureDisplay') {
-      const signatureValue = acc.organizationSignature
+      const signatureValue = acc.organizationSignature || acc.leftSignatureImage
       acc[variable.name] = signatureValue ? 'flex' : 'none'
       return acc
     }
@@ -284,7 +495,231 @@ const buildSamplePreviewHtml = (templateHtml: string, variables: CertificateTemp
     return acc
   }, {})
 
-  return templateHtml.replace(/\{\{(\w+)\}\}/g, (_, variableName: string) => sampleValues[variableName] || '')
+  const renderedHtml = templateHtml.replace(/\{\{(\w+)\}\}/g, (_, variableName: string) => sampleValues[variableName] || '')
+  const shellClass = renderedHtml.includes('certificate-template-official')
+    ? 'certificate-preview-shell certificate-preview-shell--artwork'
+    : 'certificate-preview-shell'
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #eef6f1;
+      font-family: Arial, sans-serif;
+    }
+
+    .certificate-preview-shell {
+      width: 100%;
+      min-height: 620px;
+      padding: 24px;
+      background:
+        radial-gradient(circle at top right, rgba(49, 177, 99, 0.14), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(24, 49, 83, 0.10), transparent 32%),
+        linear-gradient(180deg, #fbfffc 0%, #eef7f2 100%);
+      border: 4px solid #1f3958;
+      border-radius: 18px;
+      box-sizing: border-box;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .certificate-preview-shell--artwork {
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      background: #ffffff;
+      min-height: 680px;
+    }
+
+    .certificate-template-official {
+      position: relative;
+      width: 100%;
+      min-height: 680px;
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: center;
+      font-family: Arial, sans-serif;
+      color: #073b28;
+    }
+
+    .certificate-official-field {
+      position: absolute;
+      left: 23.5%;
+      width: 52%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 16px 24px;
+      border: 3px solid rgba(4, 76, 55, 0.95);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 4px 12px rgba(7, 59, 40, 0.15);
+      box-sizing: border-box;
+    }
+
+    .certificate-official-field-text {
+      display: block;
+      width: 100%;
+    }
+
+    .certificate-official-recipient {
+      top: 40.8%;
+      min-height: 9.5%;
+    }
+
+    .certificate-official-recipient-text {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 38px;
+      line-height: 1.08;
+      font-style: italic;
+      font-weight: 700;
+      color: #0a563f;
+    }
+
+    .certificate-official-copy {
+      position: absolute;
+      top: 32.6%;
+      left: 23%;
+      width: 54%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+      text-align: center;
+      font-size: 18px;
+      color: #102b22;
+    }
+
+    .certificate-official-course {
+      top: 56.6%;
+      min-height: 8.2%;
+    }
+
+    .certificate-official-course-text {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 34px;
+      line-height: 1.12;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #0b4f38;
+    }
+
+    .certificate-official-summary {
+      position: absolute;
+      top: 67.8%;
+      left: 19%;
+      width: 62%;
+      text-align: center;
+      font-size: 18px;
+      line-height: 1.4;
+      color: #102b22;
+    }
+
+    .certificate-official-summary strong {
+      color: #0b4f38;
+    }
+
+    .certificate-official-verification {
+      position: absolute;
+      bottom: 7.5%;
+      left: 39%;
+      width: 22%;
+      padding: 16px 20px 14px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 3px solid rgba(6, 72, 52, 0.82);
+      text-align: center;
+      box-shadow: 0 6px 16px rgba(7, 59, 40, 0.14);
+      box-sizing: border-box;
+    }
+
+    .certificate-official-verification-label {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #1a513f;
+      margin-bottom: 6px;
+    }
+
+    .certificate-official-verification-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #083d2b;
+    }
+
+    .certificate-official-signature {
+      position: absolute;
+      bottom: 6.4%;
+      width: 24%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .certificate-official-signature--left {
+      left: 4.4%;
+    }
+
+    .certificate-official-signature--right {
+      right: 4.6%;
+    }
+
+    .certificate-official-signature-image-shell {
+      min-height: 72px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .certificate-official-signature-image {
+      max-width: 210px;
+      max-height: 72px;
+      object-fit: contain;
+      object-position: center bottom;
+      background: transparent;
+    }
+
+    .certificate-official-signature-mask {
+      width: 100%;
+      padding: 10px 14px 8px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.9));
+      border-radius: 12px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+
+    .certificate-official-signature-line {
+      border-top: 1px solid rgba(160, 116, 40, 0.95);
+      margin-bottom: 6px;
+    }
+
+    .certificate-official-signature-name {
+      font-size: 18px;
+      line-height: 1.12;
+      color: #102b22;
+    }
+
+    .certificate-official-signature-role {
+      font-size: 14px;
+      line-height: 1.15;
+      font-weight: 700;
+      color: #0d6b49;
+    }
+  </style>
+</head>
+<body>
+  <div class="${shellClass}">
+    ${sanitizeHtml(renderedHtml, 'richText')}
+  </div>
+</body>
+</html>`
 }
 
 const LmsCertificateTemplates: React.FC = () => {
@@ -311,7 +746,7 @@ const LmsCertificateTemplates: React.FC = () => {
   })
 
   const localPreviewHtml = useMemo(
-    () => sanitizeHtml(buildSamplePreviewHtml(form.templateHtml, form.variables), 'richText'),
+    () => buildSamplePreviewHtml(form.templateHtml, form.variables),
     [form.templateHtml, form.variables]
   )
 
@@ -446,33 +881,43 @@ const LmsCertificateTemplates: React.FC = () => {
     }))
   }
 
-  const handleSignatureChange = (nextValue: string | null) => {
+  const handleSignatureChange = (
+    signatureName: 'leftSignatureImage' | 'rightSignatureImage',
+    displayName: 'leftSignatureDisplay' | 'rightSignatureDisplay',
+    nextValue: string | null
+  ) => {
     setForm((current) => {
-      const withSignature = ensureVariable(current.variables, 'organizationSignature', {
-        name: 'organizationSignature',
-        label: 'Firma institucional',
+      const signatureLabel = signatureName === 'leftSignatureImage' ? 'Firma izquierda' : 'Firma derecha'
+      const displayLabel =
+        displayName === 'leftSignatureDisplay'
+          ? 'Visualizacion de firma izquierda'
+          : 'Visualizacion de firma derecha'
+
+      const withSignature = ensureVariable(current.variables, signatureName, {
+        name: signatureName,
+        label: signatureLabel,
         type: 'text',
         required: false,
         defaultValue: nextValue || '',
-        description: 'Imagen base64 de la firma que se mostrara en el certificado'
+        description: `Imagen base64 de la ${signatureLabel.toLowerCase()}`
       })
 
-      const withDisplay = ensureVariable(withSignature, 'organizationSignatureDisplay', {
-        name: 'organizationSignatureDisplay',
-        label: 'Visualizacion de firma institucional',
+      const withDisplay = ensureVariable(withSignature, displayName, {
+        name: displayName,
+        label: displayLabel,
         type: 'text',
         required: false,
         defaultValue: nextValue ? 'flex' : 'none',
-        description: 'Control interno para mostrar u ocultar la firma institucional'
+        description: `Control interno para mostrar u ocultar la ${signatureLabel.toLowerCase()}`
       }).map((variable) => {
-        if (variable.name === 'organizationSignature') {
+        if (variable.name === signatureName) {
           return {
             ...variable,
             defaultValue: nextValue || ''
           }
         }
 
-        if (variable.name === 'organizationSignatureDisplay') {
+        if (variable.name === displayName) {
           return {
             ...variable,
             defaultValue: nextValue ? 'flex' : 'none'
@@ -489,8 +934,39 @@ const LmsCertificateTemplates: React.FC = () => {
     })
   }
 
-  const signatureVariable = useMemo(
-    () => form.variables.find((variable) => variable.name === 'organizationSignature'),
+  const updateManagedTextVariable = (
+    variableName: string,
+    fallback: CertificateTemplateVariable,
+    nextValue: string
+  ) => {
+    setForm((current) => ({
+      ...current,
+      variables: setManagedVariable(current.variables, variableName, fallback, nextValue)
+    }))
+  }
+
+  const leftSignatureVariable = useMemo(
+    () => form.variables.find((variable) => variable.name === 'leftSignatureImage'),
+    [form.variables]
+  )
+  const rightSignatureVariable = useMemo(
+    () => form.variables.find((variable) => variable.name === 'rightSignatureImage'),
+    [form.variables]
+  )
+  const leftSignerNameVariable = useMemo(
+    () => form.variables.find((variable) => variable.name === 'leftSignerName'),
+    [form.variables]
+  )
+  const leftSignerRoleVariable = useMemo(
+    () => form.variables.find((variable) => variable.name === 'leftSignerRole'),
+    [form.variables]
+  )
+  const rightSignerNameVariable = useMemo(
+    () => form.variables.find((variable) => variable.name === 'rightSignerName'),
+    [form.variables]
+  )
+  const rightSignerRoleVariable = useMemo(
+    () => form.variables.find((variable) => variable.name === 'rightSignerRole'),
     [form.variables]
   )
 
@@ -685,17 +1161,179 @@ const LmsCertificateTemplates: React.FC = () => {
               <Grid item xs={12}>
                 <Card variant='outlined'>
                   <CardHeader
-                    title='Firma institucional'
-                    subheader='Se usara en el pie del certificado cuando la plantilla incluya la variable correspondiente.'
+                    title='Plantilla oficial y firmas'
+                    subheader='La base del certificado usa una imagen oficial y dos bloques de firma configurables para nombre, cargo e imagen.'
                   />
                   <CardContent>
-                    <SignaturePad
-                      value={signatureVariable?.defaultValue || signatureVariable?.default_value || ''}
-                      onChange={handleSignatureChange}
-                      label='Firma autorizada'
-                      helperText='Puedes dibujarla o subir una imagen. Quedara guardada dentro de la configuracion de la plantilla.'
-                      height={160}
-                    />
+                    <Grid container spacing={3}>
+                      <Grid item xs={12}>
+                        <Alert severity='success'>
+                          Fondo oficial activo: <strong>/images/template.png</strong>. Si mañana
+                          cambian las personas, solo actualizas nombre, cargo o la firma
+                          correspondiente.
+                        </Alert>
+                      </Grid>
+
+                      <Grid item xs={12} md={6}>
+                        <Card variant='outlined'>
+                          <CardHeader
+                            title='Firma izquierda'
+                            subheader='Normalmente usada para instructor o responsable academico.'
+                          />
+                          <CardContent>
+                            <SignaturePad
+                              value={
+                                leftSignatureVariable?.defaultValue ||
+                                leftSignatureVariable?.default_value ||
+                                ''
+                              }
+                              onChange={(nextValue) =>
+                                handleSignatureChange(
+                                  'leftSignatureImage',
+                                  'leftSignatureDisplay',
+                                  nextValue
+                                )
+                              }
+                              label='Firma izquierda'
+                              helperText='Puedes dibujarla o subir una imagen con fondo transparente.'
+                              height={150}
+                            />
+                            <Grid container spacing={2} sx={{ mt: 1 }}>
+                              <Grid item xs={12}>
+                                <TextField
+                                  fullWidth
+                                  label='Nombre'
+                                  value={
+                                    leftSignerNameVariable?.defaultValue ||
+                                    leftSignerNameVariable?.default_value ||
+                                    ''
+                                  }
+                                  onChange={(event) =>
+                                    updateManagedTextVariable(
+                                      'leftSignerName',
+                                      {
+                                        name: 'leftSignerName',
+                                        label: 'Nombre izquierda',
+                                        type: 'text',
+                                        required: false,
+                                        defaultValue: 'Daniel Paredes',
+                                        description: 'Nombre que se mostrara bajo la firma izquierda'
+                                      },
+                                      event.target.value
+                                    )
+                                  }
+                                />
+                              </Grid>
+                              <Grid item xs={12}>
+                                <TextField
+                                  fullWidth
+                                  label='Cargo'
+                                  value={
+                                    leftSignerRoleVariable?.defaultValue ||
+                                    leftSignerRoleVariable?.default_value ||
+                                    ''
+                                  }
+                                  onChange={(event) =>
+                                    updateManagedTextVariable(
+                                      'leftSignerRole',
+                                      {
+                                        name: 'leftSignerRole',
+                                        label: 'Cargo izquierda',
+                                        type: 'text',
+                                        required: false,
+                                        defaultValue: 'Instructor',
+                                        description: 'Cargo que se mostrara bajo la firma izquierda'
+                                      },
+                                      event.target.value
+                                    )
+                                  }
+                                />
+                              </Grid>
+                            </Grid>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+
+                      <Grid item xs={12} md={6}>
+                        <Card variant='outlined'>
+                          <CardHeader
+                            title='Firma derecha'
+                            subheader='Normalmente usada para director tecnico, gerente o aprobador final.'
+                          />
+                          <CardContent>
+                            <SignaturePad
+                              value={
+                                rightSignatureVariable?.defaultValue ||
+                                rightSignatureVariable?.default_value ||
+                                ''
+                              }
+                              onChange={(nextValue) =>
+                                handleSignatureChange(
+                                  'rightSignatureImage',
+                                  'rightSignatureDisplay',
+                                  nextValue
+                                )
+                              }
+                              label='Firma derecha'
+                              helperText='Puedes dibujarla o subir una imagen con fondo transparente.'
+                              height={150}
+                            />
+                            <Grid container spacing={2} sx={{ mt: 1 }}>
+                              <Grid item xs={12}>
+                                <TextField
+                                  fullWidth
+                                  label='Nombre'
+                                  value={
+                                    rightSignerNameVariable?.defaultValue ||
+                                    rightSignerNameVariable?.default_value ||
+                                    ''
+                                  }
+                                  onChange={(event) =>
+                                    updateManagedTextVariable(
+                                      'rightSignerName',
+                                      {
+                                        name: 'rightSignerName',
+                                        label: 'Nombre derecha',
+                                        type: 'text',
+                                        required: false,
+                                        defaultValue: 'Andres Felipe Espitia',
+                                        description: 'Nombre que se mostrara bajo la firma derecha'
+                                      },
+                                      event.target.value
+                                    )
+                                  }
+                                />
+                              </Grid>
+                              <Grid item xs={12}>
+                                <TextField
+                                  fullWidth
+                                  label='Cargo'
+                                  value={
+                                    rightSignerRoleVariable?.defaultValue ||
+                                    rightSignerRoleVariable?.default_value ||
+                                    ''
+                                  }
+                                  onChange={(event) =>
+                                    updateManagedTextVariable(
+                                      'rightSignerRole',
+                                      {
+                                        name: 'rightSignerRole',
+                                        label: 'Cargo derecha',
+                                        type: 'text',
+                                        required: false,
+                                        defaultValue: 'Director Tecnico',
+                                        description: 'Cargo que se mostrara bajo la firma derecha'
+                                      },
+                                      event.target.value
+                                    )
+                                  }
+                                />
+                              </Grid>
+                            </Grid>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    </Grid>
                   </CardContent>
                 </Card>
               </Grid>
@@ -861,12 +1499,19 @@ const LmsCertificateTemplates: React.FC = () => {
                 border: '1px solid',
                 borderColor: 'grey.300',
                 overflow: 'auto',
-                maxHeight: 600
+                maxHeight: 700
               }}
             >
-              <div
-                dangerouslySetInnerHTML={{ __html: localPreviewHtml }}
-                style={{ transform: 'scale(0.88)', transformOrigin: 'top left', width: '114%' }}
+              <Box
+                component='iframe'
+                title='Vista previa local del certificado'
+                srcDoc={localPreviewHtml}
+                sx={{
+                  width: '100%',
+                  minHeight: 680,
+                  border: 'none',
+                  bgcolor: 'common.white'
+                }}
               />
             </Paper>
           </TabPanel>
