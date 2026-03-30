@@ -349,6 +349,7 @@ export interface CertificateTemplatePreviewRequest {
 
 export interface CertificateTemplatePreviewResponse {
   html: string
+  fullHtml?: string
   variables: CertificateTemplateVariable[]
   templateName: string
 }

@@ -259,8 +259,8 @@ const LmsCertificateTemplates: React.FC = () => {
   )
 
   const serverPreviewHtml = useMemo(
-    () => sanitizeHtml(previewData?.html || '', 'richText'),
-    [previewData?.html]
+    () => previewData?.fullHtml || previewData?.html || '',
+    [previewData?.fullHtml, previewData?.html]
   )
 
   const isSaving =
@@ -786,9 +786,16 @@ const LmsCertificateTemplates: React.FC = () => {
             {isPreviewLoading ? (
               <Typography color='text.secondary'>Generando vista previa...</Typography>
             ) : (
-              <div
-                dangerouslySetInnerHTML={{ __html: serverPreviewHtml }}
-                style={{ transform: 'scale(0.9)', transformOrigin: 'top center', width: '111%' }}
+              <Box
+                component='iframe'
+                title='Vista previa del certificado'
+                srcDoc={serverPreviewHtml}
+                sx={{
+                  width: '100%',
+                  minHeight: 680,
+                  border: 'none',
+                  bgcolor: 'common.white'
+                }}
               />
             )}
           </Paper>
