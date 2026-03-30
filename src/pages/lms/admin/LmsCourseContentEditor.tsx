@@ -19,7 +19,12 @@ import LmsContentEditor, {
   ContentLessonDraft,
   ContentModuleDraft
 } from '../shared/LmsContentEditor'
-import { lmsService, type Course as BackendCourse, type CourseAudience } from '../../../services/lmsService'
+import {
+  buildLessonResourceDownloadUrl,
+  lmsService,
+  type Course as BackendCourse,
+  type CourseAudience
+} from '../../../services/lmsService'
 
 interface FrontendCourseDraft {
   id: number
@@ -31,7 +36,7 @@ interface FrontendCourseDraft {
   modules: ContentModuleDraft[]
 }
 
-const getApiData = <T,>(response: any): T => response?.data ?? response
+const getApiData = <T,>(response: any): T => response?.data?.data ?? response?.data ?? response
 
 const pluralize = (count: number, singular: string, plural?: string) =>
   `${count} ${count === 1 ? singular : plural || `${singular}s`}`
@@ -65,8 +70,17 @@ const transformCourseFromBackend = (backendCourse: BackendCourse): FrontendCours
           title: resource.title,
           description: resource.description || '',
           resourceType: resource.resource_type,
-          fileUrl: resource.file_url || '',
+          fileUrl: resource.external_url
+            ? ''
+            : resource.download_url ||
+              (resource.object_key ? buildLessonResourceDownloadUrl(resource.id) : resource.file_url || ''),
           externalUrl: resource.external_url || '',
+          bucketName: resource.bucket_name || '',
+          objectKey: resource.object_key || '',
+          mimeType: resource.mime_type || '',
+          fileSize: resource.file_size || undefined,
+          originalFilename: resource.original_filename || '',
+          localFile: null,
           order: resource.order_index || resourceIndex + 1
         }))
       }
@@ -184,19 +198,73 @@ const LmsCourseContentEditor: React.FC = () => {
         const persistedLessonId = persistedLesson.id
 
         for (const resource of lesson.content.resources) {
-          const resourcePayload = {
+          const isUploadedResource = resource.resourceType !== 'link'
+          const baseResourcePayload = {
             title: resource.title,
             description: resource.description || '',
             resource_type: resource.resourceType,
-            file_url: resource.fileUrl || null,
-            external_url: resource.externalUrl || null,
             order_index: resource.order
           }
 
+          if (isUploadedResource && resource.localFile) {
+            const formData = new FormData()
+            formData.append('file', resource.localFile)
+            formData.append('title', resource.title)
+            formData.append('description', resource.description || '')
+            formData.append('resource_type', resource.resourceType)
+            formData.append('order_index', String(resource.order))
+
+            if (resource.id.startsWith('temp_') || resource.id.startsWith('resource_')) {
+              await axiosPrivate.post(`/lms/content/lessons/${persistedLessonId}/resources/upload`, formData, {
+                headers: {
+                  'Content-Type': 'multipart/form-data'
+                }
+              })
+            } else {
+              await axiosPrivate.put(`/lms/content/resources/${resource.id}/upload`, formData, {
+                headers: {
+                  'Content-Type': 'multipart/form-data'
+                }
+              })
+            }
+            continue
+          }
+
+          if (isUploadedResource) {
+            const storedResourcePayload = {
+              ...baseResourcePayload,
+              file_url: null,
+              bucket_name: resource.bucketName || null,
+              object_key: resource.objectKey || null,
+              mime_type: resource.mimeType || null,
+              file_size: resource.fileSize || null,
+              original_filename: resource.originalFilename || null,
+              external_url: null
+            }
+
+            if (resource.id.startsWith('temp_') || resource.id.startsWith('resource_')) {
+              await axiosPrivate.post(`/lms/content/lessons/${persistedLessonId}/resources`, storedResourcePayload)
+            } else {
+              await axiosPrivate.put(`/lms/content/resources/${resource.id}`, storedResourcePayload)
+            }
+            continue
+          }
+
+          const linkResourcePayload = {
+            ...baseResourcePayload,
+            file_url: null,
+            external_url: resource.externalUrl || null,
+            bucket_name: null,
+            object_key: null,
+            mime_type: null,
+            file_size: null,
+            original_filename: null
+          }
+
           if (resource.id.startsWith('temp_') || resource.id.startsWith('resource_')) {
-            await axiosPrivate.post(`/lms/content/lessons/${persistedLessonId}/resources`, resourcePayload)
+            await axiosPrivate.post(`/lms/content/lessons/${persistedLessonId}/resources`, linkResourcePayload)
           } else {
-            await axiosPrivate.put(`/lms/content/resources/${resource.id}`, resourcePayload)
+            await axiosPrivate.put(`/lms/content/resources/${resource.id}`, linkResourcePayload)
           }
         }
       }

@@ -67,6 +67,7 @@ import {
   getCourseAudienceLabel,
   normalizeCourseAudience
 } from '../../../utils/lmsAudience'
+import { buildLessonResourceDownloadUrl } from '../../../services/lmsService'
 
 interface CourseLesson {
   id: number
@@ -125,6 +126,11 @@ interface UserProgress {
   timeSpent: number
   completedAt?: Date
 }
+
+const getResourceHref = (resource: any) =>
+  resource.external_url ||
+  resource.download_url ||
+  (resource.object_key ? buildLessonResourceDownloadUrl(resource.id) : resource.file_url)
 
 interface QuizOutcomeSummary {
   passed: boolean
@@ -244,13 +250,13 @@ const LmsCourseView: React.FC = () => {
                   }))
                 } : undefined,
                 resources: (lesson.resources || [])
-                  .filter((resource: any) => resource.file_url || resource.external_url)
+                  .filter((resource: any) => resource.external_url || resource.download_url || resource.object_key || resource.file_url)
                   .map((resource: any) => ({
                     id: resource.id,
                     title: resource.title,
                     description: resource.description || '',
                     resourceType: resource.resource_type,
-                    href: resource.external_url || resource.file_url
+                    href: getResourceHref(resource)
                   }))
               }
             }

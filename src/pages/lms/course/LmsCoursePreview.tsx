@@ -50,6 +50,7 @@ import {
   getCourseAudienceLabel,
   normalizeCourseAudience
 } from 'src/utils/lmsAudience'
+import { buildLessonResourceDownloadUrl } from 'src/services/lmsService'
 
 interface CourseUnit {
   id: number
@@ -90,6 +91,11 @@ interface Course {
   units: CourseUnit[]
   status: 'draft' | 'published' | 'archived'
 }
+
+const getResourceHref = (resource: any) =>
+  resource.external_url ||
+  resource.download_url ||
+  (resource.object_key ? buildLessonResourceDownloadUrl(resource.id) : resource.file_url)
 
 // ==================== HELPER FUNCTIONS ====================
 
@@ -166,13 +172,13 @@ const transformPreviewDataToCourse = (previewData: any): Course => {
           currentAttempt: lesson.quiz?.current_attempt,
           description: lesson.description,
           resources: (lesson.resources || [])
-            .filter((resource: any) => resource.file_url || resource.external_url)
+            .filter((resource: any) => resource.external_url || resource.download_url || resource.object_key || resource.file_url)
             .map((resource: any) => ({
               id: resource.id,
               title: resource.title,
               description: resource.description || '',
               resourceType: resource.resource_type,
-              href: resource.external_url || resource.file_url
+              href: getResourceHref(resource)
             })),
           questions: questions
         }
@@ -236,13 +242,13 @@ const transformProgressDataToCourse = (progressData: any): Course => {
           currentAttempt: lesson.quiz?.current_attempt,
           description: lesson.description,
           resources: (lesson.resources || [])
-            .filter((resource: any) => resource.file_url || resource.external_url)
+            .filter((resource: any) => resource.external_url || resource.download_url || resource.object_key || resource.file_url)
             .map((resource: any) => ({
               id: resource.id,
               title: resource.title,
               description: resource.description || '',
               resourceType: resource.resource_type,
-              href: resource.external_url || resource.file_url
+              href: getResourceHref(resource)
             })),
           questions: questions
         }

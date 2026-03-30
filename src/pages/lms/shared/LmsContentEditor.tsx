@@ -35,7 +35,8 @@ import {
   Link as LinkIcon,
   OndemandVideo as VideoIcon,
   PictureAsPdf as PdfIcon,
-  Quiz as QuizIcon
+  Quiz as QuizIcon,
+  UploadFile as UploadFileIcon
 } from '@mui/icons-material'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
@@ -52,6 +53,12 @@ export interface LessonResourceDraft {
   resourceType: LessonResourceType
   fileUrl?: string
   externalUrl?: string
+  bucketName?: string
+  objectKey?: string
+  mimeType?: string
+  fileSize?: number
+  originalFilename?: string
+  localFile?: File | null
   order: number
 }
 
@@ -87,8 +94,9 @@ interface ResourceDraftDialogState {
     title: string
     description: string
     resourceType: LessonResourceType
-    fileUrl: string
     externalUrl: string
+    localFile: File | null
+    existingFileName: string
   }
 }
 
@@ -195,8 +203,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       title: '',
       description: '',
       resourceType: 'pdf',
-      fileUrl: '',
-      externalUrl: ''
+      externalUrl: '',
+      localFile: null,
+      existingFileName: ''
     }
   })
   const [editorNotice, setEditorNotice] = useState<string | null>(null)
@@ -345,8 +354,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
         title: '',
         description: '',
         resourceType: 'pdf',
-        fileUrl: '',
-        externalUrl: ''
+        externalUrl: '',
+        localFile: null,
+        existingFileName: ''
       }
     })
   }
@@ -369,8 +379,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
         title: resource.title,
         description: resource.description || '',
         resourceType: resource.resourceType,
-        fileUrl: resource.fileUrl || '',
-        externalUrl: resource.externalUrl || ''
+        externalUrl: resource.externalUrl || '',
+        localFile: null,
+        existingFileName: resource.originalFilename || resource.fileUrl || ''
       }
     })
   }
@@ -381,16 +392,30 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
     }
 
     const normalizedTitle = resourceDialog.values.title.trim()
-    const normalizedFileUrl = resourceDialog.values.fileUrl.trim()
     const normalizedExternalUrl = resourceDialog.values.externalUrl.trim()
+    const isLinkResource = resourceDialog.values.resourceType === 'link'
+    const hasUploadedFile = Boolean(resourceDialog.values.localFile)
+    const hasExistingStoredFile = Boolean(
+      resourceDialog.editingResourceId &&
+      selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.objectKey
+    )
+    const hasLegacyFileUrl = Boolean(
+      resourceDialog.editingResourceId &&
+      selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.fileUrl
+    )
 
     if (!normalizedTitle) {
       setEditorNotice('Cada recurso necesita un título claro.')
       return
     }
 
-    if (!normalizedFileUrl && !normalizedExternalUrl) {
-      setEditorNotice('Agrega un enlace o una URL de archivo para el recurso.')
+    if (isLinkResource && !normalizedExternalUrl) {
+      setEditorNotice('Agrega el enlace externo para este recurso.')
+      return
+    }
+
+    if (!isLinkResource && !hasUploadedFile && !hasExistingStoredFile && !hasLegacyFileUrl) {
+      setEditorNotice('Sube un archivo para este recurso.')
       return
     }
 
@@ -399,8 +424,16 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
       title: normalizedTitle,
       description: resourceDialog.values.description.trim(),
       resourceType: resourceDialog.values.resourceType,
-      fileUrl: normalizedFileUrl || undefined,
-      externalUrl: normalizedExternalUrl || undefined,
+      fileUrl: isLinkResource ? undefined : selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.fileUrl,
+      externalUrl: isLinkResource ? normalizedExternalUrl || undefined : undefined,
+      bucketName: isLinkResource ? undefined : selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.bucketName,
+      objectKey: isLinkResource ? undefined : selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.objectKey,
+      mimeType: isLinkResource ? undefined : (resourceDialog.values.localFile?.type || selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.mimeType),
+      fileSize: isLinkResource ? undefined : (resourceDialog.values.localFile?.size || selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.fileSize),
+      originalFilename: isLinkResource
+        ? undefined
+        : (resourceDialog.values.localFile?.name || selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.originalFilename),
+      localFile: isLinkResource ? null : resourceDialog.values.localFile,
       order:
         resourceDialog.editingResourceId
           ? selectedLesson.content.resources.find((item) => item.id === resourceDialog.editingResourceId)?.order || 1
@@ -752,9 +785,14 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                                       <Paper key={resource.id} variant="outlined" sx={{ mb: 1 }}>
                                         <ListItemButton onClick={() => openEditResourceDialog(resource.id)}>
                                           <ListItemIcon>{resourceTypeMeta[resource.resourceType].icon}</ListItemIcon>
-                                          <ListItemText
+                                            <ListItemText
                                             primary={resource.title}
-                                            secondary={resource.externalUrl || resource.fileUrl || resource.description || resourceTypeMeta[resource.resourceType].label}
+                                            secondary={
+                                              resource.externalUrl ||
+                                              resource.originalFilename ||
+                                              resource.description ||
+                                              resourceTypeMeta[resource.resourceType].label
+                                            }
                                           />
                                           <Chip size="small" label={resourceTypeMeta[resource.resourceType].label} sx={{ mr: 1 }} />
                                           <IconButton
@@ -858,11 +896,39 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                 <MenuItem value="link">Enlace</MenuItem>
               </Select>
             </FormControl>
-            <TextField fullWidth label="URL del archivo" placeholder="https://..." value={resourceDialog.values.fileUrl} onChange={(event) => setResourceDialog((current) => ({ ...current, values: { ...current.values, fileUrl: event.target.value } }))} />
-            <TextField fullWidth label="Enlace externo" placeholder="https://..." value={resourceDialog.values.externalUrl} onChange={(event) => setResourceDialog((current) => ({ ...current, values: { ...current.values, externalUrl: event.target.value } }))} />
+            {resourceDialog.values.resourceType === 'link' ? (
+              <TextField fullWidth label="Enlace externo" placeholder="https://..." value={resourceDialog.values.externalUrl} onChange={(event) => setResourceDialog((current) => ({ ...current, values: { ...current.values, externalUrl: event.target.value } }))} />
+            ) : (
+              <Stack spacing={1}>
+                <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
+                  {resourceDialog.values.localFile ? 'Cambiar archivo' : 'Seleccionar archivo'}
+                  <input
+                    hidden
+                    type="file"
+                    accept={resourceDialog.values.resourceType === 'pdf' ? '.pdf,application/pdf' : '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0] || null
+                      setResourceDialog((current) => ({
+                        ...current,
+                        values: {
+                          ...current.values,
+                          localFile: file,
+                          existingFileName: file?.name || current.values.existingFileName
+                        }
+                      }))
+                    }}
+                  />
+                </Button>
+                {(resourceDialog.values.localFile || resourceDialog.values.existingFileName) && (
+                  <Alert severity="success">
+                    Archivo listo: {resourceDialog.values.localFile?.name || resourceDialog.values.existingFileName}
+                  </Alert>
+                )}
+              </Stack>
+            )}
             <TextField fullWidth multiline minRows={2} label="Descripción" value={resourceDialog.values.description} onChange={(event) => setResourceDialog((current) => ({ ...current, values: { ...current.values, description: event.target.value } }))} />
             <Alert severity="info">
-              Usa <strong>URL del archivo</strong> para PDFs o documentos alojados y <strong>enlace externo</strong> cuando el material vive en otra plataforma.
+              Los PDFs y documentos se subirán al almacenamiento seguro del LMS. Usa enlace externo solo cuando el material viva fuera de la plataforma.
             </Alert>
           </Stack>
         </DialogContent>

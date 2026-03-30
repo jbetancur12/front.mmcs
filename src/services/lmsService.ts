@@ -1,6 +1,7 @@
 import { axiosPrivate, axiosPublic } from 'src/utils/api'
 import type { AxiosProgressEvent } from 'axios'
 import type { Notification as UiNotification } from '../types/notifications'
+import { api } from 'src/config'
 
 // ===========================
 // TypeScript Interfaces
@@ -92,10 +93,19 @@ export interface LessonResource {
   resource_type: 'pdf' | 'document' | 'link'
   file_url?: string | null
   external_url?: string | null
+  bucket_name?: string | null
+  object_key?: string | null
+  mime_type?: string | null
+  file_size?: number | null
+  original_filename?: string | null
+  download_url?: string | null
   order_index: number
   created_at?: string
   updated_at?: string
 }
+
+export const buildLessonResourceDownloadUrl = (resourceId: number | string) =>
+  `${api()}/lms/content/resources/${resourceId}/download`
 
 /**
  * Course lesson interface
