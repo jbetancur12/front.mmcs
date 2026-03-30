@@ -42,6 +42,8 @@ export interface Course {
   is_mandatory: boolean
   has_certificate: boolean
   estimated_duration_minutes?: number
+  certificate_duration_text?: string | null
+  show_duration_on_certificate?: boolean
   intro_content?: string
   intro_type?: ContentType
   created_by: number
@@ -660,6 +662,9 @@ export interface CreateCourseRequest {
   audience: CourseAudience
   is_mandatory?: boolean
   has_certificate?: boolean
+  estimated_duration_minutes?: number
+  certificate_duration_text?: string | null
+  show_duration_on_certificate?: boolean
   intro_content?: string
   intro_type?: ContentType
 }
@@ -670,6 +675,9 @@ export interface UpdateCourseRequest {
   audience?: CourseAudience
   is_mandatory?: boolean
   has_certificate?: boolean
+  estimated_duration_minutes?: number
+  certificate_duration_text?: string | null
+  show_duration_on_certificate?: boolean
   intro_content?: string
   intro_type?: ContentType
   status?: CourseStatus

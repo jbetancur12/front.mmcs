@@ -56,6 +56,8 @@ interface Course {
   is_mandatory: boolean
   has_certificate: boolean
   estimated_duration_minutes: number
+  certificate_duration_text?: string | null
+  show_duration_on_certificate?: boolean
   created_by: number
   created_at: string
   updated_at: string
@@ -123,12 +125,15 @@ interface CreateCourseData {
   is_mandatory: boolean
   has_certificate: boolean
   estimated_duration_minutes: number
+  certificate_duration_text: string
+  show_duration_on_certificate: boolean
 }
 
 interface CourseFormErrors {
   title?: string
   description?: string
   estimated_duration_minutes?: string
+  certificate_duration_text?: string
 }
 
 interface CourseActionDialogState {
@@ -188,7 +193,9 @@ const LmsCourseManagement: React.FC = () => {
     audience: 'internal',
     is_mandatory: false,
     has_certificate: false,
-    estimated_duration_minutes: 60
+    estimated_duration_minutes: 60,
+    certificate_duration_text: '',
+    show_duration_on_certificate: false
   })
 
   const axiosPrivate = useAxiosPrivate()
@@ -233,7 +240,9 @@ const LmsCourseManagement: React.FC = () => {
           audience: courseData.audience,
           is_mandatory: courseData.is_mandatory,
           has_certificate: courseData.has_certificate,
-          estimated_duration_minutes: courseData.estimated_duration_minutes
+          estimated_duration_minutes: courseData.estimated_duration_minutes,
+          certificate_duration_text: courseData.certificate_duration_text,
+          show_duration_on_certificate: courseData.show_duration_on_certificate
         }
         return axiosPrivate.put(`/lms/courses/${courseData.id}`, updateData)
       } else {
@@ -342,7 +351,9 @@ const LmsCourseManagement: React.FC = () => {
         audience: course.audience,
         is_mandatory: course.is_mandatory,
         has_certificate: course.has_certificate,
-        estimated_duration_minutes: getDerivedCourseDuration(course)
+        estimated_duration_minutes: getDerivedCourseDuration(course),
+        certificate_duration_text: course.certificate_duration_text || '',
+        show_duration_on_certificate: Boolean(course.show_duration_on_certificate)
       })
     } else {
       setEditingCourse(null)
@@ -352,7 +363,9 @@ const LmsCourseManagement: React.FC = () => {
         audience: 'internal',
         is_mandatory: false,
         has_certificate: false,
-        estimated_duration_minutes: 60
+        estimated_duration_minutes: 60,
+        certificate_duration_text: '',
+        show_duration_on_certificate: false
       })
     }
     setOpenDialog(true)
@@ -367,7 +380,9 @@ const LmsCourseManagement: React.FC = () => {
       audience: 'internal',
       is_mandatory: false,
       has_certificate: false,
-      estimated_duration_minutes: 60
+      estimated_duration_minutes: 60,
+      certificate_duration_text: '',
+      show_duration_on_certificate: false
     })
   }
 
@@ -388,6 +403,10 @@ const LmsCourseManagement: React.FC = () => {
       nextErrors.estimated_duration_minutes = 'La duración debe ser de al menos 1 minuto.'
     }
 
+    if (formData.show_duration_on_certificate && formData.certificate_duration_text.trim().length > 120) {
+      nextErrors.certificate_duration_text = 'Usa un texto corto, de máximo 120 caracteres.'
+    }
+
     if (Object.keys(nextErrors).length > 0) {
       setFormErrors(nextErrors)
       setSnackbar({
@@ -402,7 +421,11 @@ const LmsCourseManagement: React.FC = () => {
       ...formData,
       title: trimmedTitle,
       description: trimmedDescription,
-      is_mandatory: formData.audience === 'client' ? false : formData.is_mandatory
+      is_mandatory: formData.audience === 'client' ? false : formData.is_mandatory,
+      certificate_duration_text: formData.certificate_duration_text.trim(),
+      show_duration_on_certificate: formData.has_certificate
+        ? formData.show_duration_on_certificate
+        : false
     }
 
     setFormErrors({})
@@ -475,6 +498,10 @@ const LmsCourseManagement: React.FC = () => {
 
       if (field === 'audience' && value === 'client') {
         nextFormData.is_mandatory = false
+      }
+
+      if (field === 'has_certificate' && value === false) {
+        nextFormData.show_duration_on_certificate = false
       }
 
       return nextFormData
@@ -877,6 +904,20 @@ const LmsCourseManagement: React.FC = () => {
               </Typography>
             </Grid>
             <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label='Texto para duración en certificado'
+                value={formData.certificate_duration_text}
+                onChange={(e) => handleInputChange('certificate_duration_text', e.target.value)}
+                error={Boolean(formErrors.certificate_duration_text)}
+                helperText={
+                  formErrors.certificate_duration_text
+                    || 'Ejemplo: 40 horas, 16 horas intensivas o 3 jornadas. Si lo dejas vacío, usaremos la duración calculada.'
+                }
+                disabled={!formData.has_certificate}
+              />
+            </Grid>
+            <Grid item xs={12}>
               <Alert severity='info'>
                 <strong>{selectedAudienceOption?.label}:</strong> {selectedAudienceOption?.helper}
               </Alert>
@@ -914,6 +955,23 @@ const LmsCourseManagement: React.FC = () => {
                 Actívalo si al completar el curso se debe emitir un certificado descargable.
               </Typography>
             </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.show_duration_on_certificate}
+                    onChange={(e) =>
+                      handleInputChange('show_duration_on_certificate', e.target.checked)
+                    }
+                    disabled={!formData.has_certificate}
+                  />
+                }
+                label='Mostrar duración en certificado'
+              />
+              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
+                Cuando esté activo, el certificado mostrará el texto anterior o, si está vacío, la duración calculada del curso.
+              </Typography>
+            </Grid>
             {formData.audience === 'client' && formData.is_mandatory && (
               <Grid item xs={12}>
                 <Alert severity='warning'>
@@ -931,7 +989,7 @@ const LmsCourseManagement: React.FC = () => {
             {formData.has_certificate && (
               <Grid item xs={12}>
                 <Alert severity='success'>
-                  Este curso podrá emitir certificados cuando el participante complete el contenido requerido y apruebe los quizzes asociados.
+                  Este curso podrá emitir certificados cuando el participante complete el contenido requerido y apruebe los quizzes asociados. También podrás decidir si la duración aparece o no en el documento.
                 </Alert>
               </Grid>
             )}

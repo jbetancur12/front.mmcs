@@ -87,6 +87,13 @@ const DEFAULT_VARIABLES: CertificateTemplateVariable[] = [
     description: 'Fecha en que se completo el curso'
   },
   {
+    name: 'courseDuration',
+    label: 'Duracion del curso',
+    type: 'text',
+    required: false,
+    description: 'Texto libre para la duracion visible en el certificado'
+  },
+  {
     name: 'certificateNumber',
     label: 'Numero de certificado',
     type: 'text',
@@ -112,10 +119,21 @@ const CERTIFICATE_HTML_SNIPPETS = [
   { label: 'Nombre del usuario', token: '{{userName}}' },
   { label: 'Curso', token: '{{courseTitle}}' },
   { label: 'Fecha', token: '{{completionDate}}' },
+  { label: 'Duracion', token: '{{courseDuration}}' },
   { label: 'Certificado', token: '{{certificateNumber}}' }
 ]
 
-const VARIABLE_NAME_SUGGESTIONS = ['userName', 'courseTitle', 'completionDate', 'certificateNumber', 'organizationName']
+const VARIABLE_NAME_SUGGESTIONS = [
+  'userName',
+  'courseTitle',
+  'completionDate',
+  'courseDuration',
+  'courseDurationDisplay',
+  'certificateMetaGridColumns',
+  'certificateNumber',
+  'organizationName',
+  'organizationLogo'
+]
 
 const emptyFormState = (): TemplateFormState => ({
   name: '',
@@ -182,6 +200,26 @@ const buildSamplePreviewHtml = (templateHtml: string, variables: CertificateTemp
 
     if (variable.name === 'certificateNumber') {
       acc[variable.name] = 'MMCS-PREVIEW-001'
+      return acc
+    }
+
+    if (variable.name === 'courseDuration') {
+      acc[variable.name] = '40 horas'
+      return acc
+    }
+
+    if (variable.name === 'courseDurationDisplay') {
+      acc[variable.name] = 'flex'
+      return acc
+    }
+
+    if (variable.name === 'certificateMetaGridColumns') {
+      acc[variable.name] = 'repeat(3, minmax(0, 1fr))'
+      return acc
+    }
+
+    if (variable.name === 'organizationLogo') {
+      acc[variable.name] = 'http://localhost:5173/images/logo2.png'
       return acc
     }
 
