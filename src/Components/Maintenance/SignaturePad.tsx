@@ -33,7 +33,12 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
 
     const ratio = window.devicePixelRatio || 1
     const width = container.clientWidth || 400
-    const previousData = hasSignature ? canvas.toDataURL('image/png') : value
+    const hasExternalValue = Boolean(value)
+    const previousData = hasExternalValue
+      ? value
+      : hasSignature
+        ? canvas.toDataURL('image/png')
+        : null
 
     canvas.width = width * ratio
     canvas.height = height * ratio
@@ -117,9 +122,32 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
   }
 
   const clearSignature = () => {
+    const canvas = canvasRef.current
+    const container = containerRef.current
+
     setHasSignature(false)
     onChange(null)
-    resizeCanvas()
+
+    if (!canvas || !container) return
+
+    const ratio = window.devicePixelRatio || 1
+    const width = container.clientWidth || 400
+    const context = canvas.getContext('2d')
+    if (!context) return
+
+    context.setTransform(1, 0, 0, 1, 0, 0)
+    canvas.width = width * ratio
+    canvas.height = height * ratio
+    canvas.style.width = `${width}px`
+    canvas.style.height = `${height}px`
+
+    context.scale(ratio, ratio)
+    context.lineCap = 'round'
+    context.lineJoin = 'round'
+    context.lineWidth = 2
+    context.strokeStyle = strokeColor
+    context.fillStyle = '#ffffff'
+    context.fillRect(0, 0, width, height)
   }
 
   return (
