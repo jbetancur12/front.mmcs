@@ -51,7 +51,6 @@ import {
 import { useQueryClient } from 'react-query'
 import { useStore } from '@nanostores/react'
 import { userStore } from 'src/store/userStore'
-import LmsProgressBar from '../shared/LmsProgressBar'
 import LmsVideoPlayer from '../shared/LmsVideoPlayer'
 import LmsQuizPlayer from '../shared/LmsQuizPlayer'
 import {
@@ -730,21 +729,9 @@ const LmsCourseView: React.FC = () => {
   const sidebarContent = (
     <Box sx={{ width: isMobile ? '100vw' : 350, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="h6">
           Contenido del Curso
         </Typography>
-        <LmsProgressBar
-          steps={getAllLessons().map(lesson => ({
-            id: lesson.id.toString(),
-            title: lesson.title,
-            type: lesson.type,
-            completed: isLessonCompleted(lesson.id),
-            current: lesson.id === currentLesson?.id
-          }))}
-          currentStepId={currentLesson?.id.toString()}
-          variant="vertical"
-          showLabels={true}
-        />
       </Box>
 
       <Box sx={{ flex: 1, overflow: 'auto', p: 1 }}>

@@ -104,6 +104,16 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
 
   // Initialize quiz
   useEffect(() => {
+    setCanStartQuiz(true)
+    setCooldownEndTime(null)
+    setShowResults(false)
+    setShowInstructions(true)
+    setCurrentQuestionIndex(0)
+    setCurrentAttempt(null)
+    setStartTime(null)
+    setTimeRemaining(null)
+    setFlaggedQuestions(new Set())
+
     // Check if user can start quiz (cooldown and max attempts)
     if (!isPreview && userAttempts.length > 0) {
       const lastAttempt = userAttempts[userAttempts.length - 1]
@@ -884,7 +894,7 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
               </Box>
             ) : (
               <RadioGroup
-                value={userAnswers[currentQuestionIndex] || ''}
+                value={userAnswers[currentQuestionIndex] ?? ''}
                 onChange={(e) => handleAnswerChange(Number(e.target.value))}
               >
                 {currentQuestion.options.map((option, index) => (
