@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Box, Button, Stack, Typography } from '@mui/material'
-import { BorderColor, Clear } from '@mui/icons-material'
+import { BorderColor, Clear, UploadFile } from '@mui/icons-material'
 
 interface SignaturePadProps {
   value?: string | null
@@ -21,10 +21,97 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [isDrawing, setIsDrawing] = useState(false)
   const [hasSignature, setHasSignature] = useState(Boolean(value))
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   const strokeColor = useMemo(() => '#111827', [])
+
+  const normalizeSignatureImage = React.useCallback(
+    (dataUrl: string): Promise<string> =>
+      new Promise((resolve) => {
+        const image = new Image()
+        image.onload = () => {
+          const sourceCanvas = document.createElement('canvas')
+          sourceCanvas.width = image.width
+          sourceCanvas.height = image.height
+          const sourceContext = sourceCanvas.getContext('2d')
+
+          if (!sourceContext) {
+            resolve(dataUrl)
+            return
+          }
+
+          sourceContext.drawImage(image, 0, 0)
+          const { data, width, height } = sourceContext.getImageData(0, 0, image.width, image.height)
+
+          let minX = width
+          let minY = height
+          let maxX = -1
+          let maxY = -1
+
+          for (let y = 0; y < height; y += 1) {
+            for (let x = 0; x < width; x += 1) {
+              const index = (y * width + x) * 4
+              const r = data[index]
+              const g = data[index + 1]
+              const b = data[index + 2]
+              const a = data[index + 3]
+              const isVisibleInk = a > 10 && !(r > 245 && g > 245 && b > 245)
+
+              if (isVisibleInk) {
+                minX = Math.min(minX, x)
+                minY = Math.min(minY, y)
+                maxX = Math.max(maxX, x)
+                maxY = Math.max(maxY, y)
+              }
+            }
+          }
+
+          if (maxX < minX || maxY < minY) {
+            resolve(dataUrl)
+            return
+          }
+
+          const padding = 12
+          const cropX = Math.max(0, minX - padding)
+          const cropY = Math.max(0, minY - padding)
+          const cropWidth = Math.min(width - cropX, maxX - minX + 1 + padding * 2)
+          const cropHeight = Math.min(height - cropY, maxY - minY + 1 + padding * 2)
+
+          const outputCanvas = document.createElement('canvas')
+          outputCanvas.width = cropWidth
+          outputCanvas.height = cropHeight
+          const outputContext = outputCanvas.getContext('2d')
+
+          if (!outputContext) {
+            resolve(dataUrl)
+            return
+          }
+
+          outputContext.fillStyle = '#ffffff'
+          outputContext.fillRect(0, 0, cropWidth, cropHeight)
+          outputContext.drawImage(
+            sourceCanvas,
+            cropX,
+            cropY,
+            cropWidth,
+            cropHeight,
+            0,
+            0,
+            cropWidth,
+            cropHeight
+          )
+
+          resolve(outputCanvas.toDataURL('image/png'))
+        }
+
+        image.onerror = () => resolve(dataUrl)
+        image.src = dataUrl
+      }),
+    []
+  )
 
   const resizeCanvas = React.useCallback(() => {
     const canvas = canvasRef.current
@@ -109,7 +196,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     context.stroke()
   }
 
-  const finishDrawing = () => {
+  const finishDrawing = async () => {
     if (!isDrawing) return
     setIsDrawing(false)
 
@@ -117,8 +204,9 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     if (!canvas) return
 
     const dataUrl = canvas.toDataURL('image/png')
+    const normalizedDataUrl = await normalizeSignatureImage(dataUrl)
     setHasSignature(true)
-    onChange(dataUrl)
+    onChange(normalizedDataUrl)
   }
 
   const clearSignature = () => {
@@ -126,6 +214,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     const container = containerRef.current
 
     setHasSignature(false)
+    setUploadError(null)
     onChange(null)
 
     if (!canvas || !container) return
@@ -150,6 +239,47 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     context.fillRect(0, 0, width, height)
   }
 
+  const handleUploadClick = () => {
+    if (disabled) return
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Solo puedes subir imágenes para la firma.')
+      return
+    }
+
+    const maxSizeInBytes = 4 * 1024 * 1024
+    if (file.size > maxSizeInBytes) {
+      setUploadError('La imagen de la firma no debe superar 4 MB.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const result = typeof reader.result === 'string' ? reader.result : null
+      if (!result) {
+        setUploadError('No se pudo leer la imagen seleccionada.')
+        return
+      }
+
+      const normalizedDataUrl = await normalizeSignatureImage(result)
+      setUploadError(null)
+      setHasSignature(true)
+      onChange(normalizedDataUrl)
+    }
+    reader.onerror = () => {
+      setUploadError('No se pudo cargar la imagen seleccionada.')
+    }
+    reader.readAsDataURL(file)
+  }
+
   return (
     <Box>
       {label && (
@@ -157,6 +287,13 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
           {label}
         </Typography>
       )}
+      <input
+        ref={fileInputRef}
+        type='file'
+        accept='image/png,image/jpeg,image/webp'
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+      />
       <Box
         ref={containerRef}
         sx={{
@@ -202,20 +339,35 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
         direction='row'
         justifyContent='space-between'
         alignItems='center'
+        flexWrap='wrap'
+        gap={1}
         sx={{ mt: 1 }}
       >
-        <Typography variant='caption' color='text.secondary'>
-          {helperText || 'La firma se guarda como imagen para el PDF.'}
-        </Typography>
-        <Button
-          size='small'
-          color='inherit'
-          startIcon={<Clear />}
-          onClick={clearSignature}
-          disabled={disabled || !hasSignature}
-        >
-          Limpiar
-        </Button>
+        <Box>
+          <Typography variant='caption' color={uploadError ? 'error.main' : 'text.secondary'}>
+            {uploadError || helperText || 'La firma se guarda como imagen para el PDF.'}
+          </Typography>
+        </Box>
+        <Stack direction='row' spacing={1}>
+          <Button
+            size='small'
+            color='inherit'
+            startIcon={<UploadFile />}
+            onClick={handleUploadClick}
+            disabled={disabled}
+          >
+            Subir imagen
+          </Button>
+          <Button
+            size='small'
+            color='inherit'
+            startIcon={<Clear />}
+            onClick={clearSignature}
+            disabled={disabled || !hasSignature}
+          >
+            Limpiar
+          </Button>
+        </Stack>
       </Stack>
     </Box>
   )
