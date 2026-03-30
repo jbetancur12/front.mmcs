@@ -195,17 +195,17 @@ export interface MaintenanceTechnician {
   name: string
   email: string
   phone: string
-  specialization: string
-  certifications: string
+  specialization?: string | null
+  certifications?: string | null
   status: 'active' | 'inactive' | 'on_leave'
-  employeeId: string
-  hireDate: string
+  employeeId?: string | null
+  hireDate?: string | null
   workload: number
   rating: number
   totalTicketsCompleted: number
   isAvailable: boolean
   maxWorkload: number
-  notes: string
+  notes?: string | null
   signatureData?: string | null
   signatureUpdatedAt?: string | null
   createdAt: string

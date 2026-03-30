@@ -65,9 +65,7 @@ const validationSchema = Yup.object({
   phone: Yup.string()
     .min(10, 'El teléfono debe tener al menos 10 dígitos')
     .required('El teléfono es requerido'),
-  specialization: Yup.string()
-    .min(2, 'La especialización es requerida')
-    .required('La especialización es requerida'),
+  specialization: Yup.string(),
   certifications: Yup.string(),
   status: Yup.string().oneOf(['active', 'inactive', 'on_leave']).required(),
   employeeId: Yup.string(),
@@ -174,20 +172,22 @@ const MaintenanceTechnicians: React.FC = () => {
     }
   })
 
+  const safeText = (value: string | null | undefined) => value ?? ''
+
   const handleEdit = (technician: MaintenanceTechnician) => {
     setEditingTechnician(technician)
     formik.setValues({
-      name: technician.name,
-      email: technician.email,
-      phone: technician.phone,
-      specialization: technician.specialization,
-      certifications: technician.certifications || '',
+      name: safeText(technician.name),
+      email: safeText(technician.email),
+      phone: safeText(technician.phone),
+      specialization: safeText(technician.specialization),
+      certifications: safeText(technician.certifications),
       status: technician.status,
-      employeeId: technician.employeeId || '',
+      employeeId: safeText(technician.employeeId),
       isAvailable: technician.isAvailable,
       maxWorkload: technician.maxWorkload,
-      notes: technician.notes || '',
-      signatureData: technician.signatureData || ''
+      notes: safeText(technician.notes),
+      signatureData: safeText(technician.signatureData)
     })
     setDialogOpen(true)
   }
@@ -856,7 +856,7 @@ const MaintenanceTechnicians: React.FC = () => {
                   fullWidth
                   name='name'
                   label='Nombre Completo'
-                  value={formik.values.name}
+                  value={formik.values.name ?? ''}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={formik.touched.name && Boolean(formik.errors.name)}
@@ -871,7 +871,7 @@ const MaintenanceTechnicians: React.FC = () => {
                   name='email'
                   label='Email'
                   type='email'
-                  value={formik.values.email}
+                  value={formik.values.email ?? ''}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={formik.touched.email && Boolean(formik.errors.email)}
@@ -885,7 +885,7 @@ const MaintenanceTechnicians: React.FC = () => {
                   fullWidth
                   name='phone'
                   label='Teléfono'
-                  value={formik.values.phone}
+                  value={formik.values.phone ?? ''}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={formik.touched.phone && Boolean(formik.errors.phone)}
@@ -900,7 +900,7 @@ const MaintenanceTechnicians: React.FC = () => {
                   select
                   name='status'
                   label='Estado'
-                  value={formik.values.status}
+                  value={formik.values.status ?? 'active'}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={formik.touched.status && Boolean(formik.errors.status)}
@@ -920,7 +920,7 @@ const MaintenanceTechnicians: React.FC = () => {
                   fullWidth
                   name='employeeId'
                   label='ID Empleado'
-                  value={formik.values.employeeId}
+                  value={formik.values.employeeId ?? ''}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={
@@ -939,7 +939,7 @@ const MaintenanceTechnicians: React.FC = () => {
                   type='number'
                   name='maxWorkload'
                   label='Carga Máxima de Trabajo'
-                  value={formik.values.maxWorkload}
+                  value={formik.values.maxWorkload ?? 10}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={
@@ -958,7 +958,7 @@ const MaintenanceTechnicians: React.FC = () => {
                 <Autocomplete
                   freeSolo
                   options={availableSpecializations}
-                  value={formik.values.specialization}
+                  value={formik.values.specialization ?? ''}
                   onChange={(_, value) =>
                     formik.setFieldValue('specialization', value || '')
                   }
@@ -968,7 +968,7 @@ const MaintenanceTechnicians: React.FC = () => {
                       {...params}
                       label='Especialización'
                       name='specialization'
-                      value={formik.values.specialization}
+                      value={formik.values.specialization ?? ''}
                       onChange={formik.handleChange}
                       error={
                         formik.touched.specialization &&
@@ -978,7 +978,6 @@ const MaintenanceTechnicians: React.FC = () => {
                         formik.touched.specialization &&
                         formik.errors.specialization
                       }
-                      required
                     />
                   )}
                 />
@@ -991,7 +990,7 @@ const MaintenanceTechnicians: React.FC = () => {
                   rows={2}
                   name='certifications'
                   label='Certificaciones'
-                  value={formik.values.certifications}
+                  value={formik.values.certifications ?? ''}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={
@@ -1013,7 +1012,7 @@ const MaintenanceTechnicians: React.FC = () => {
                   rows={3}
                   name='notes'
                   label='Notas'
-                  value={formik.values.notes}
+                  value={formik.values.notes ?? ''}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={formik.touched.notes && Boolean(formik.errors.notes)}
@@ -1025,7 +1024,7 @@ const MaintenanceTechnicians: React.FC = () => {
               {maintenanceSignaturesEnabled && (
                 <Grid item xs={12}>
                   <SignaturePad
-                    value={formik.values.signatureData || null}
+                    value={formik.values.signatureData ?? null}
                     onChange={(value) =>
                       formik.setFieldValue('signatureData', value || '')
                     }
