@@ -37,6 +37,7 @@ import {
   Edit as EditIcon,
   Preview as PreviewIcon
 } from '@mui/icons-material'
+import SignaturePad from '../../../Components/Maintenance/SignaturePad'
 import {
   useCertificateTemplates,
   useCreateCertificateTemplate,
@@ -94,6 +95,21 @@ const DEFAULT_VARIABLES: CertificateTemplateVariable[] = [
     description: 'Texto libre para la duracion visible en el certificado'
   },
   {
+    name: 'organizationSignature',
+    label: 'Firma institucional',
+    type: 'text',
+    required: false,
+    description: 'Imagen base64 de la firma que se mostrara en el certificado'
+  },
+  {
+    name: 'organizationSignatureDisplay',
+    label: 'Visualizacion de firma institucional',
+    type: 'text',
+    required: false,
+    defaultValue: 'none',
+    description: 'Control interno para mostrar u ocultar la firma institucional'
+  },
+  {
     name: 'certificateNumber',
     label: 'Numero de certificado',
     type: 'text',
@@ -111,6 +127,12 @@ const DEFAULT_TEMPLATE_HTML = `
   <p style="font-size: 18px; color: #4b5563; margin-bottom: 16px;">completo satisfactoriamente el curso</p>
   <h3 style="font-size: 28px; color: #111827; margin-bottom: 28px;">{{courseTitle}}</h3>
   <p style="font-size: 16px; color: #6b7280; margin-bottom: 8px;">Fecha de finalizacion: {{completionDate}}</p>
+  <div style="margin: 32px auto 20px; width: 220px; display: {{organizationSignatureDisplay}}; align-items: flex-end; justify-content: center; min-height: 56px;">
+    <img src="{{organizationSignature}}" alt="Firma institucional" style="max-width: 100%; max-height: 52px; object-fit: contain;" />
+  </div>
+  <div style="width: 240px; margin: 0 auto 8px; border-top: 1px solid #111827;"></div>
+  <p style="font-size: 14px; color: #111827; font-weight: 600; margin-bottom: 4px;">Metromedics SAS</p>
+  <p style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">Direccion de Formacion</p>
   <p style="font-size: 14px; color: #9ca3af;">Certificado N. {{certificateNumber}}</p>
 </div>
 `.trim()
@@ -120,6 +142,7 @@ const CERTIFICATE_HTML_SNIPPETS = [
   { label: 'Curso', token: '{{courseTitle}}' },
   { label: 'Fecha', token: '{{completionDate}}' },
   { label: 'Duracion', token: '{{courseDuration}}' },
+  { label: 'Firma institucional', token: '{{organizationSignature}}' },
   { label: 'Certificado', token: '{{certificateNumber}}' }
 ]
 
@@ -132,7 +155,9 @@ const VARIABLE_NAME_SUGGESTIONS = [
   'certificateMetaGridColumns',
   'certificateNumber',
   'organizationName',
-  'organizationLogo'
+  'organizationLogo',
+  'organizationSignature',
+  'organizationSignatureDisplay'
 ]
 
 const emptyFormState = (): TemplateFormState => ({
@@ -141,6 +166,24 @@ const emptyFormState = (): TemplateFormState => ({
   isDefault: false,
   variables: DEFAULT_VARIABLES
 })
+
+const ensureVariable = (
+  variables: CertificateTemplateVariable[],
+  variableName: string,
+  fallback: CertificateTemplateVariable
+) => {
+  const existingIndex = variables.findIndex((variable) => variable.name === variableName)
+  if (existingIndex >= 0) {
+    const nextVariables = [...variables]
+    nextVariables[existingIndex] = {
+      ...fallback,
+      ...nextVariables[existingIndex]
+    }
+    return nextVariables
+  }
+
+  return [...variables, fallback]
+}
 
 function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props
@@ -220,6 +263,20 @@ const buildSamplePreviewHtml = (templateHtml: string, variables: CertificateTemp
 
     if (variable.name === 'organizationLogo') {
       acc[variable.name] = 'http://localhost:5173/images/logo2.png'
+      return acc
+    }
+
+    if (variable.name === 'organizationSignature') {
+      acc[variable.name] =
+        variable.defaultValue ||
+        variable.default_value ||
+        ''
+      return acc
+    }
+
+    if (variable.name === 'organizationSignatureDisplay') {
+      const signatureValue = acc.organizationSignature
+      acc[variable.name] = signatureValue ? 'flex' : 'none'
       return acc
     }
 
@@ -388,6 +445,54 @@ const LmsCertificateTemplates: React.FC = () => {
       variables: current.variables.filter((_, variableIndex) => variableIndex !== index)
     }))
   }
+
+  const handleSignatureChange = (nextValue: string | null) => {
+    setForm((current) => {
+      const withSignature = ensureVariable(current.variables, 'organizationSignature', {
+        name: 'organizationSignature',
+        label: 'Firma institucional',
+        type: 'text',
+        required: false,
+        defaultValue: nextValue || '',
+        description: 'Imagen base64 de la firma que se mostrara en el certificado'
+      })
+
+      const withDisplay = ensureVariable(withSignature, 'organizationSignatureDisplay', {
+        name: 'organizationSignatureDisplay',
+        label: 'Visualizacion de firma institucional',
+        type: 'text',
+        required: false,
+        defaultValue: nextValue ? 'flex' : 'none',
+        description: 'Control interno para mostrar u ocultar la firma institucional'
+      }).map((variable) => {
+        if (variable.name === 'organizationSignature') {
+          return {
+            ...variable,
+            defaultValue: nextValue || ''
+          }
+        }
+
+        if (variable.name === 'organizationSignatureDisplay') {
+          return {
+            ...variable,
+            defaultValue: nextValue ? 'flex' : 'none'
+          }
+        }
+
+        return variable
+      })
+
+      return {
+        ...current,
+        variables: withDisplay
+      }
+    })
+  }
+
+  const signatureVariable = useMemo(
+    () => form.variables.find((variable) => variable.name === 'organizationSignature'),
+    [form.variables]
+  )
 
   const applyVariableSuggestion = (index: number, value: string) => {
     const matchingDefault = DEFAULT_VARIABLES.find((variable) => variable.name === value)
@@ -576,6 +681,23 @@ const LmsCertificateTemplates: React.FC = () => {
                   }
                   label='Plantilla por defecto'
                 />
+              </Grid>
+              <Grid item xs={12}>
+                <Card variant='outlined'>
+                  <CardHeader
+                    title='Firma institucional'
+                    subheader='Se usara en el pie del certificado cuando la plantilla incluya la variable correspondiente.'
+                  />
+                  <CardContent>
+                    <SignaturePad
+                      value={signatureVariable?.defaultValue || signatureVariable?.default_value || ''}
+                      onChange={handleSignatureChange}
+                      label='Firma autorizada'
+                      helperText='Puedes dibujarla o subir una imagen. Quedara guardada dentro de la configuracion de la plantilla.'
+                      height={160}
+                    />
+                  </CardContent>
+                </Card>
               </Grid>
             </Grid>
           </TabPanel>
