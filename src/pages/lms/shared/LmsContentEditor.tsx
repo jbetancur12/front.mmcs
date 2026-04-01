@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Alert,
   Box,
@@ -15,6 +15,7 @@ import {
   Grid,
   IconButton,
   InputLabel,
+  LinearProgress,
   List,
   ListItemButton,
   ListItemIcon,
@@ -38,10 +39,11 @@ import {
   Quiz as QuizIcon,
   UploadFile as UploadFileIcon
 } from '@mui/icons-material'
-import ReactQuill from 'react-quill'
-import 'react-quill/dist/quill.snow.css'
+import Quill from 'quill'
+import 'quill/dist/quill.snow.css'
 import './quill-custom.css'
 import LmsQuizManagement from '../admin/LmsQuizManagement'
+import { lmsService } from '../../../services/lmsService'
 
 export type LessonDraftType = 'text' | 'video' | 'quiz'
 export type LessonResourceType = 'pdf' | 'document' | 'link'
@@ -128,11 +130,72 @@ const quillFormats = [
   'italic',
   'underline',
   'list',
-  'bullet',
   'link',
   'blockquote',
   'code-block'
 ]
+
+interface QuillEditorProps {
+  value: string
+  onChange: (value: string) => void
+}
+
+const QuillEditor: React.FC<QuillEditorProps> = ({ value, onChange }) => {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const quillRef = useRef<Quill | null>(null)
+  const onChangeRef = useRef(onChange)
+
+  useEffect(() => {
+    onChangeRef.current = onChange
+  }, [onChange])
+
+  useEffect(() => {
+    if (!containerRef.current || quillRef.current) {
+      return
+    }
+
+    const host = document.createElement('div')
+    containerRef.current.appendChild(host)
+
+    const quill = new Quill(host, {
+      theme: 'snow',
+      modules: quillModules,
+      formats: quillFormats
+    })
+
+    quill.root.innerHTML = value || ''
+    quill.on('text-change', () => {
+      onChangeRef.current(quill.root.innerHTML)
+    })
+
+    quillRef.current = quill
+
+    return () => {
+      quillRef.current = null
+      if (containerRef.current && host.parentNode === containerRef.current) {
+        containerRef.current.removeChild(host)
+      }
+    }
+  }, [value])
+
+  useEffect(() => {
+    const quill = quillRef.current
+    if (!quill) {
+      return
+    }
+
+    const nextValue = value || ''
+    if (quill.root.innerHTML !== nextValue) {
+      const selection = quill.getSelection()
+      quill.root.innerHTML = nextValue
+      if (selection) {
+        quill.setSelection(selection)
+      }
+    }
+  }, [value])
+
+  return <Box className="quill-editor-shell" ref={containerRef} />
+}
 
 const lessonTypeMeta: Record<LessonDraftType, { label: string; helper: string; icon: React.ReactNode }> = {
   text: {
@@ -210,6 +273,17 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   })
   const [editorNotice, setEditorNotice] = useState<string | null>(null)
   const [quizEditorLessonId, setQuizEditorLessonId] = useState<string | null>(null)
+  const [videoUploadState, setVideoUploadState] = useState<{
+    lessonId: string | null
+    isUploading: boolean
+    progress: number
+    fileName: string
+  }>({
+    lessonId: null,
+    isUploading: false,
+    progress: 0,
+    fileName: ''
+  })
 
   useEffect(() => {
     if (!modules.length) {
@@ -263,6 +337,69 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
     }
 
     replaceLesson(selectedModule.id, selectedLesson.id, updater)
+  }
+
+  const isPersistedCourse = Boolean(courseId && /^\d+$/.test(courseId))
+  const isPersistedLesson = Boolean(selectedLesson && /^\d+$/.test(selectedLesson.id))
+  const canUploadLessonVideo = isPersistedCourse && isPersistedLesson
+
+  const handleUploadLessonVideo = async (file: File | null) => {
+    if (!file) {
+      return
+    }
+
+    if (!selectedLesson || !canUploadLessonVideo || !courseId) {
+      setEditorNotice('Guarda el curso y la lección primero para subir el video al LMS.')
+      return
+    }
+
+    try {
+      setVideoUploadState({
+        lessonId: selectedLesson.id,
+        isUploading: true,
+        progress: 0,
+        fileName: file.name
+      })
+
+      const uploadResult = await lmsService.uploadLessonVideo(
+        Number(courseId),
+        Number(selectedLesson.id),
+        file,
+        (progressEvent) => {
+          const total = progressEvent.total || file.size || 1
+          const loaded = progressEvent.loaded || 0
+          setVideoUploadState((current) => ({
+            ...current,
+            progress: Math.round((loaded / total) * 100)
+          }))
+        }
+      )
+
+      updateSelectedLesson((lesson) => ({
+        ...lesson,
+        type: 'video',
+        content: {
+          ...lesson.content,
+          videoSource: 'minio',
+          videoUrl: uploadResult.videoPath
+        }
+      }))
+
+      const optimizationMessage = uploadResult.optimized
+        ? ' El archivo fue optimizado antes de guardarse.'
+        : ''
+      setEditorNotice(`Video cargado correctamente en MinIO.${optimizationMessage}`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No fue posible subir el video.'
+      setEditorNotice(message)
+    } finally {
+      setVideoUploadState({
+        lessonId: null,
+        isUploading: false,
+        progress: 0,
+        fileName: ''
+      })
+    }
   }
 
   const handleAddModule = () => {
@@ -687,10 +824,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                             <Alert severity="info">{lessonTypeMeta[selectedLesson.type].helper}</Alert>
 
                             {selectedLesson.type === 'text' && (
-                              <ReactQuill
-                                theme="snow"
-                                modules={quillModules}
-                                formats={quillFormats}
+                              <QuillEditor
                                 value={selectedLesson.content.text || ''}
                                 onChange={(value) =>
                                   updateSelectedLesson((lesson) => ({
@@ -703,18 +837,6 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
 
                             {selectedLesson.type === 'video' && (
                               <Stack spacing={2}>
-                                <TextField
-                                  fullWidth
-                                  label="URL del video"
-                                  placeholder="https://youtu.be/... o URL embebible"
-                                  value={selectedLesson.content.videoUrl || ''}
-                                  onChange={(event) =>
-                                    updateSelectedLesson((lesson) => ({
-                                      ...lesson,
-                                      content: { ...lesson.content, videoUrl: event.target.value }
-                                    }))
-                                  }
-                                />
                                 <FormControl fullWidth>
                                   <InputLabel id="video-source-label">Origen del video</InputLabel>
                                   <Select
@@ -726,7 +848,12 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                                         ...lesson,
                                         content: {
                                           ...lesson.content,
-                                          videoSource: event.target.value as 'youtube' | 'minio'
+                                          videoSource: event.target.value as 'youtube' | 'minio',
+                                          videoUrl:
+                                            event.target.value === 'youtube' &&
+                                            (lesson.content.videoUrl || '').startsWith('course_')
+                                              ? ''
+                                              : lesson.content.videoUrl
                                         }
                                       }))
                                     }
@@ -735,6 +862,82 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                                     <MenuItem value="minio">Archivo alojado</MenuItem>
                                   </Select>
                                 </FormControl>
+
+                                {selectedLesson.content.videoSource === 'youtube' ? (
+                                  <TextField
+                                    fullWidth
+                                    label="URL del video"
+                                    placeholder="https://youtu.be/... o URL embebible"
+                                    value={selectedLesson.content.videoUrl || ''}
+                                    onChange={(event) =>
+                                      updateSelectedLesson((lesson) => ({
+                                        ...lesson,
+                                        content: { ...lesson.content, videoUrl: event.target.value }
+                                      }))
+                                    }
+                                  />
+                                ) : (
+                                  <Stack spacing={1.5}>
+                                    <Alert severity={canUploadLessonVideo ? 'info' : 'warning'}>
+                                      {canUploadLessonVideo
+                                        ? 'Sube el archivo del video y el LMS lo optimizará antes de almacenarlo en MinIO.'
+                                        : 'Guarda el curso y la lección primero para habilitar la carga del video alojado.'}
+                                    </Alert>
+
+                                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
+                                      <Button
+                                        variant="outlined"
+                                        component="label"
+                                        startIcon={<UploadFileIcon />}
+                                        disabled={!canUploadLessonVideo || videoUploadState.isUploading}
+                                      >
+                                        {videoUploadState.isUploading && videoUploadState.lessonId === selectedLesson.id
+                                          ? 'Subiendo video...'
+                                          : selectedLesson.content.videoUrl
+                                            ? 'Reemplazar video'
+                                            : 'Subir video'}
+                                        <input
+                                          hidden
+                                          type="file"
+                                          accept="video/mp4,video/avi,video/mov,video/wmv,video/flv,video/webm,video/mkv"
+                                          onChange={(event) => {
+                                            const file = event.target.files?.[0] || null
+                                            void handleUploadLessonVideo(file)
+                                            event.target.value = ''
+                                          }}
+                                        />
+                                      </Button>
+                                      {selectedLesson.content.videoUrl && (
+                                        <Chip
+                                          color="success"
+                                          variant="outlined"
+                                          label={
+                                            selectedLesson.content.videoUrl.startsWith('course_')
+                                              ? 'Video alojado en MinIO'
+                                              : 'Ruta de video configurada'
+                                          }
+                                        />
+                                      )}
+                                    </Stack>
+
+                                    {videoUploadState.isUploading && videoUploadState.lessonId === selectedLesson.id && (
+                                      <Box>
+                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.75 }}>
+                                          {videoUploadState.fileName} · {videoUploadState.progress}%
+                                        </Typography>
+                                        <LinearProgress variant="determinate" value={videoUploadState.progress} />
+                                      </Box>
+                                    )}
+
+                                    <TextField
+                                      fullWidth
+                                      label="Ruta interna del video"
+                                      value={selectedLesson.content.videoUrl || ''}
+                                      InputProps={{ readOnly: true }}
+                                      helperText="Esta ruta se genera automáticamente cuando cargas el archivo al LMS."
+                                    />
+                                  </Stack>
+                                )}
                               </Stack>
                             )}
 

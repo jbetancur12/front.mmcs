@@ -15,6 +15,7 @@ import {
   Fullscreen as FullscreenIcon,
   FullscreenExit as FullscreenExitIcon
 } from '@mui/icons-material'
+import { api } from 'src/config'
 
 interface LmsVideoPlayerProps {
   src: string
@@ -45,6 +46,7 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [resolvedSrc, setResolvedSrc] = useState(src)
 
   // YouTube video handling
   const getYouTubeEmbedUrl = (url: string): string => {
@@ -163,6 +165,57 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
     }
   }, [])
 
+  useEffect(() => {
+    if (videoSource !== 'minio') {
+      setResolvedSrc(src)
+      setIsLoading(false)
+      setError(null)
+      return
+    }
+
+    let isCancelled = false
+    let objectUrl: string | null = null
+
+    const loadProtectedVideo = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        const token = localStorage.getItem('accessToken')
+        const response = await fetch(src.startsWith('http') ? src : `${api()}${src.startsWith('/') ? src : `/${src}`}`, {
+          method: 'GET',
+          credentials: 'include',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined
+        })
+
+        if (!response.ok) {
+          throw new Error(`No se pudo cargar el video (${response.status})`)
+        }
+
+        const blob = await response.blob()
+        objectUrl = URL.createObjectURL(blob)
+
+        if (!isCancelled) {
+          setResolvedSrc(objectUrl)
+        }
+      } catch (loadError) {
+        if (!isCancelled) {
+          setError(loadError instanceof Error ? loadError.message : 'Error al cargar el video')
+          setIsLoading(false)
+        }
+      }
+    }
+
+    void loadProtectedVideo()
+
+    return () => {
+      isCancelled = true
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl)
+      }
+    }
+  }, [src, videoSource])
+
   // Handle video errors
   const handleError = () => {
     setError('Error al cargar el video')
@@ -228,7 +281,7 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
         <>
           <video
             ref={videoRef}
-            src={src}
+            src={resolvedSrc}
             style={{
               width: '100%',
               height: 'auto',

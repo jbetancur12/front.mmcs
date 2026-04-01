@@ -121,6 +121,15 @@ export interface LessonResource {
 export const buildLessonResourceDownloadUrl = (resourceId: number | string) =>
   `${api()}/lms/content/resources/${resourceId}/download`
 
+export const buildLmsVideoStreamUrl = (videoPath: string) => {
+  if (!videoPath) return ''
+  if (/^https?:\/\//i.test(videoPath)) return videoPath
+  if (videoPath.startsWith('/api/lms/videos/stream/')) {
+    return `${api()}${videoPath}`
+  }
+  return `${api()}/lms/videos/stream/${encodeURIComponent(videoPath)}`
+}
+
 /**
  * Course lesson interface
  */
@@ -1501,7 +1510,7 @@ class LMSService {
     const formData = new FormData()
     formData.append('video', file)
 
-    const response = await axiosPrivate.post(`${this.baseURL}/uploads/video`, formData, {
+    const response = await axiosPrivate.post(`${this.baseURL}/uploads/videos`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       },
@@ -1509,6 +1518,42 @@ class LMSService {
     })
 
     return response.data
+  }
+
+  async uploadLessonVideo(
+    courseId: number,
+    lessonId: number,
+    file: File,
+    onProgress?: (progressEvent: AxiosProgressEvent) => void
+  ): Promise<{
+    lessonId: number
+    courseId: number
+    videoPath: string
+    originalName: string
+    size: number
+    originalSize?: number
+    mimetype: string
+    optimized?: boolean
+    metadata?: Record<string, any>
+    streamUrl: string
+    thumbnailUrl?: string
+    description?: string | null
+  }> {
+    const formData = new FormData()
+    formData.append('video', file)
+
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/videos/upload/${courseId}/${lessonId}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        onUploadProgress: onProgress
+      }
+    )
+
+    return this.unwrapResponse(response.data)
   }
 
   /**

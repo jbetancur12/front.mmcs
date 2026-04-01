@@ -70,7 +70,7 @@ import {
   getCourseAudienceLabel,
   normalizeCourseAudience
 } from '../../../utils/lmsAudience'
-import { buildLessonResourceDownloadUrl } from '../../../services/lmsService'
+import { buildLessonResourceDownloadUrl, buildLmsVideoStreamUrl } from '../../../services/lmsService'
 
 interface CourseLesson {
   id: number
@@ -234,7 +234,10 @@ const LmsCourseView: React.FC = () => {
               completed,
               unlocked,
               content: {
-                videoUrl: lesson.video_url,
+                videoUrl:
+                  lesson.video_source === 'minio'
+                    ? buildLmsVideoStreamUrl(lesson.video_url || '')
+                    : lesson.video_url,
                 videoSource: lesson.video_source,
                 text: lesson.content,
                 description: lesson.description || '',

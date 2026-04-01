@@ -38,6 +38,7 @@ import { useQueryClient } from 'react-query'
 import { useStore } from '@nanostores/react'
 import { userStore } from 'src/store/userStore'
 import LmsQuizComponent from '../components/LmsQuizComponent'
+import LmsVideoPlayer from '../shared/LmsVideoPlayer'
 import {
   useCompleteLesson,
   useCourse,
@@ -50,7 +51,7 @@ import {
   getCourseAudienceLabel,
   normalizeCourseAudience
 } from 'src/utils/lmsAudience'
-import { buildLessonResourceDownloadUrl } from 'src/services/lmsService'
+import { buildLessonResourceDownloadUrl, buildLmsVideoStreamUrl } from 'src/services/lmsService'
 
 interface CourseUnit {
   id: number
@@ -62,6 +63,7 @@ interface CourseUnit {
   unlocked: boolean
   content: {
     videoUrl?: string
+    videoSource?: 'minio' | 'youtube'
     transcript?: string
     text?: string
     quizId?: number
@@ -136,6 +138,13 @@ const convertToEmbedUrl = (url: string): string => {
   return url
 }
 
+const resolveLessonVideoUrl = (lesson: any): string => {
+  if (!lesson?.video_url) return ''
+  return lesson.video_source === 'minio'
+    ? buildLmsVideoStreamUrl(lesson.video_url)
+    : convertToEmbedUrl(lesson.video_url)
+}
+
 /**
  * Transforma datos de preview (modo admin) al formato Course
  */
@@ -165,7 +174,8 @@ const transformPreviewDataToCourse = (previewData: any): Course => {
         completed: false, // Nada completado en preview admin
         unlocked: true, // Todo desbloqueado en preview admin
         content: {
-          videoUrl: convertToEmbedUrl(lesson.video_url),
+          videoUrl: resolveLessonVideoUrl(lesson),
+          videoSource: lesson.video_source || 'youtube',
           text: lesson.content,
           quizId: lesson.quiz?.id,
           maxAttempts: lesson.quiz?.max_attempts,
@@ -204,13 +214,19 @@ const transformPreviewDataToCourse = (previewData: any): Course => {
  * Transforma datos de progreso (modo estudiante) al formato Course
  */
 const transformProgressDataToCourse = (progressData: any): Course => {
+  const hasReviewAccess = progressData?.progress?.isCompleted === true ||
+    Number(progressData?.progress?.progressPercentage ?? progressData?.progress?.progress_percentage ?? 0) >= 100
+
+  let previousLessonCompleted = true
+
   const units = progressData.modules.flatMap((module: any, moduleIndex: number) =>
     module.lessons.map((lesson: any, lessonIndex: number) => {
       const isCompleted = lesson.progress?.status === 'completed'
-      const hasProgress = lesson.progress !== null && lesson.progress !== undefined
+      const isUnlocked = hasReviewAccess || (moduleIndex === 0 && lessonIndex === 0
+        ? true
+        : previousLessonCompleted)
 
-      // Primera lección siempre desbloqueada, o si tiene progreso
-      const isUnlocked = lessonIndex === 0 || hasProgress
+      previousLessonCompleted = hasReviewAccess || isCompleted
 
       // Transformar quiz questions si existen
       let questions: any[] = []
@@ -232,10 +248,11 @@ const transformProgressDataToCourse = (progressData: any): Course => {
         type: lesson.type === 'video' ? 'video' : lesson.type === 'quiz' ? 'quiz' : 'text',
         duration: `${lesson.estimated_minutes || 30} min`,
         order: moduleIndex * 100 + lessonIndex + 1,
-        completed: isCompleted,
+        completed: hasReviewAccess || isCompleted,
         unlocked: isUnlocked,
         content: {
-          videoUrl: convertToEmbedUrl(lesson.video_url),
+          videoUrl: resolveLessonVideoUrl(lesson),
+          videoSource: lesson.video_source || 'youtube',
           text: lesson.content,
           quizId: lesson.quiz?.id,
           maxAttempts: lesson.quiz?.max_attempts,
@@ -662,16 +679,10 @@ const LmsCoursePreview: React.FC = () => {
                 {currentUnitData.type === 'video' &&
                   currentUnitData.content.videoUrl && (
                     <Box sx={{ mb: 3 }}>
-                      <Box
-                        component='iframe'
+                      <LmsVideoPlayer
                         src={currentUnitData.content.videoUrl}
-                        sx={{
-                          width: '100%',
-                          height: 400,
-                          border: '1px solid',
-                          borderColor: 'divider',
-                          borderRadius: 1
-                        }}
+                        videoSource={currentUnitData.content.videoSource || 'youtube'}
+                        title={currentUnitData.title}
                       />
                       {currentUnitData.content.transcript && (
                         <Box sx={{ mt: 2 }}>
