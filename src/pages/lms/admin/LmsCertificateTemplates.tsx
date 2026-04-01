@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import Editor from '@monaco-editor/react'
 import {
   Alert,
   AlertTitle,
@@ -62,6 +63,7 @@ interface TabPanelProps {
 interface TemplateFormState {
   name: string
   templateHtml: string
+  templateCss: string
   isDefault: boolean
   variables: CertificateTemplateVariable[]
 }
@@ -293,6 +295,184 @@ const DEFAULT_TEMPLATE_HTML = `
 </div>
 `.trim()
 
+const DEFAULT_TEMPLATE_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Cinzel:wght@400;600;700;900&family=Lato:wght@300;400;700&display=swap');
+
+:root {
+  --gold-light: #e8c96a;
+  --gold-mid: #c9a84c;
+  --green-deep: #0d4a1c;
+  --green-rich: #1a6b2a;
+  --green-mid: #2d9e45;
+  --cream: #fdfaf4;
+}
+
+@page {
+  size: A4 landscape;
+  margin: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #ffffff;
+}
+
+.certificate-template-official.certificate {
+  width: 297mm;
+  height: 210mm;
+  margin: 0;
+  background: var(--cream);
+  position: relative;
+  overflow: hidden;
+  box-shadow: none;
+  font-family: 'Lato', sans-serif;
+}
+
+.certificate-template-official .side-left,
+.certificate-template-official .side-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 7px;
+  z-index: 3;
+  background: linear-gradient(180deg, var(--green-deep) 0%, var(--green-mid) 35%, var(--gold-mid) 50%, var(--green-mid) 65%, var(--green-deep) 100%);
+}
+
+.certificate-template-official .side-left { left: 0; }
+.certificate-template-official .side-right { right: 0; }
+.certificate-template-official .top-band {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 118px;
+  z-index: 1;
+  background: linear-gradient(180deg, var(--green-deep) 0%, var(--green-rich) 75%, transparent 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 78%, 53% 100%, 47% 100%, 0 78%);
+}
+
+.certificate-template-official .top-band::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold-light) 30%, var(--gold-mid) 50%, var(--gold-light) 70%, transparent);
+}
+
+.certificate-template-official .inner-border { position: absolute; inset: 18px; border: 1px solid rgba(201,168,76,.45); z-index: 2; pointer-events: none; }
+.certificate-template-official .inner-border-2 { position: absolute; inset: 23px; border: .5px solid rgba(201,168,76,.2); z-index: 2; pointer-events: none; }
+.certificate-template-official .corner { position: absolute; width: 88px; height: 88px; z-index: 5; pointer-events: none; }
+.certificate-template-official .corner-tl { top: 8px; left: 8px; }
+.certificate-template-official .corner-tr { top: 8px; right: 8px; transform: scaleX(-1); }
+.certificate-template-official .corner-bl { bottom: 8px; left: 8px; transform: scaleY(-1); }
+.certificate-template-official .corner-br { bottom: 8px; right: 8px; transform: scale(-1,-1); }
+.certificate-template-official .wave-l, .certificate-template-official .wave-r { position: absolute; top: 115px; bottom: 80px; width: 55px; z-index: 2; opacity: .14; pointer-events: none; }
+.certificate-template-official .wave-l { left: 26px; }
+.certificate-template-official .wave-r { right: 26px; transform: scaleX(-1); }
+
+.certificate-template-official .web-strip {
+  position: absolute;
+  bottom: 0;
+  left: 7px;
+  right: 7px;
+  height: 20px;
+  z-index: 10;
+  background: linear-gradient(90deg, var(--green-deep), var(--green-rich), var(--green-deep));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.certificate-template-official .ws-text {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  color: rgba(255,255,255,.65);
+  text-transform: uppercase;
+}
+
+.certificate-template-official .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--gold-mid); opacity: .7; }
+.certificate-template-official .verification { position: absolute; bottom: 13px; right: 44px; z-index: 10; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
+.certificate-template-official .verif-box { border: none; padding: 0; background: transparent; box-shadow: none; }
+.certificate-template-official .verif-gem, .certificate-template-official .verif-dots { display: none; }
+.certificate-template-official .verif-label { font-size: 7px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(184,168,122,.8); }
+.certificate-template-official .verif-code { font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600; letter-spacing: 1.6px; color: rgba(26,107,42,.9); line-height: 1.1; }
+
+.certificate-template-official .content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 210mm;
+  padding: 10px 88px 68px;
+  box-sizing: border-box;
+}
+
+.certificate-template-official .logo-area { padding-top: 34px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.certificate-template-official .logo-image { width: 280px; max-width: 100%; object-fit: contain; display: block; }
+.certificate-template-official .logo-tagline { font-size: 8px; font-weight: 700; letter-spacing: 5px; color: rgba(255,255,255,.6); text-transform: uppercase; }
+.certificate-template-official .orn-divider { margin-top: 8px; width: 260px; height: 12px; opacity: .65; }
+.certificate-template-official .heading-certificado { font-family: 'Cinzel', serif; font-size: 58px; font-weight: 900; letter-spacing: 9px; text-transform: uppercase; line-height: 1; margin-top: 26px; background: linear-gradient(90deg, var(--green-rich) 0%, var(--gold-light) 35%, var(--gold-mid) 50%, var(--gold-light) 65%, var(--green-rich) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.certificate-template-official .subheading-row { display: flex; align-items: center; gap: 12px; margin-top: 3px; width: 580px; }
+.certificate-template-official .orn-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-mid)); }
+.certificate-template-official .orn-line.r { background: linear-gradient(90deg, var(--gold-mid), transparent); }
+.certificate-template-official .subheading-text { font-family: 'Cinzel', serif; font-size: 10.5px; font-weight: 600; letter-spacing: 5.5px; color: var(--green-rich); text-transform: uppercase; white-space: nowrap; }
+.certificate-template-official .certifica-label { font-family: 'Cormorant Garamond', serif; font-size: 13.5px; font-style: italic; color: #777; letter-spacing: .5px; margin-top: 10px; }
+
+.certificate-template-official .field-name,
+.certificate-template-official .field-course {
+  width: 620px;
+  border: 1.5px solid var(--green-mid);
+  border-radius: 4px;
+  background: rgba(45,158,69,.05);
+  text-align: center;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(7,59,40,.14);
+}
+
+.certificate-template-official .field-name { margin-top: 6px; min-height: 58px; padding: 5px 28px; position: relative; }
+.certificate-template-official .field-course { margin-top: 7px; min-height: 58px; padding: 5px 22px; }
+.certificate-template-official .field-name::before,
+.certificate-template-official .field-name::after { content: '◆'; position: absolute; top: 50%; transform: translateY(-50%); font-size: 7px; color: var(--gold-mid); opacity: .6; }
+.certificate-template-official .field-name::before { left: 10px; }
+.certificate-template-official .field-name::after { right: 10px; }
+.certificate-template-official .official-fit { display: block; width: 100%; text-align: center; word-break: break-word; hyphens: auto; }
+.certificate-template-official .name-value { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; font-style: italic; color: var(--green-deep); letter-spacing: .5px; line-height: 1.02; }
+.certificate-template-official .course-value { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: var(--green-deep); letter-spacing: 3px; text-transform: uppercase; line-height: 1.12; }
+.certificate-template-official .official-fit--recipient.is-compact { font-size: 19px; }
+.certificate-template-official .official-fit--recipient.is-xcompact { font-size: 17px; }
+.certificate-template-official .official-fit--course.is-compact { font-size: 12px; }
+.certificate-template-official .official-fit--course.is-xcompact { font-size: 11px; }
+.certificate-template-official .official-fit--course.is-xxcompact { font-size: 9.8px; letter-spacing: 2px; }
+.certificate-template-official .desc-block { margin-top: 7px; text-align: center; line-height: 1.55; }
+.certificate-template-official .desc-block p { font-size: 11.5px; color: #444; }
+.certificate-template-official .detail-text { margin-top: 7px; text-align: center; font-size: 11px; color: #555; line-height: 1.6; }
+.certificate-template-official .center-divider { margin-top: 16px; width: 100%; display: flex; align-items: center; gap: 10px; }
+.certificate-template-official .cdiv-line { flex: 1; height: .5px; background: rgba(201,168,76,.4); }
+.certificate-template-official .cdiv-orn { font-size: 9px; color: var(--gold-mid); letter-spacing: 4px; font-family: 'Cinzel', serif; opacity: .85; }
+.certificate-template-official .footer { margin-top: 56px; padding-bottom: 6px; display: flex; align-items: flex-end; justify-content: space-between; width: 100%; }
+.certificate-template-official .footer-block { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 180px; }
+.certificate-template-official .signature-stage { min-height: 52px; display: flex; align-items: flex-end; justify-content: center; width: 100%; }
+.certificate-template-official .signature-image { max-width: 150px; max-height: 46px; object-fit: contain; object-position: center bottom; background: transparent; }
+.certificate-template-official .footer-person { font-size: 11px; color: #555; }
+.certificate-template-official .footer-sig-line { width: 130px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-mid), transparent); }
+.certificate-template-official .footer-role-title { font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; color: var(--green-rich); letter-spacing: 1.5px; }
+.certificate-template-official .seal { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.certificate-template-official .seal-ring { width: 74px; height: 74px; }
+.certificate-template-official .seal-name { font-family: 'Cinzel', serif; font-size: 9.5px; font-weight: 700; color: var(--green-rich); letter-spacing: 1.5px; }
+.certificate-template-official .seal-nit { font-size: 8.5px; color: #888; letter-spacing: 1px; }
+`.trim()
+
 const CERTIFICATE_HTML_SNIPPETS = [
   { label: 'Nombre del usuario', token: '{{userName}}' },
   { label: 'Curso', token: '{{courseTitle}}' },
@@ -330,6 +510,7 @@ const VARIABLE_NAME_SUGGESTIONS = [
 const emptyFormState = (): TemplateFormState => ({
   name: '',
   templateHtml: DEFAULT_TEMPLATE_HTML,
+  templateCss: DEFAULT_TEMPLATE_CSS,
   isDefault: false,
   variables: DEFAULT_VARIABLES
 })
@@ -474,12 +655,22 @@ const normalizeTemplate = (template: CertificateTemplate): TemplateFormState => 
   return {
     name: template.name || '',
     templateHtml: template.templateHtml || template.template_html || '',
+    templateCss:
+      template.templateCss ||
+      template.template_css ||
+      ((template.templateHtml || template.template_html || '').includes('certificate-template-official')
+        ? DEFAULT_TEMPLATE_CSS
+        : ''),
     isDefault: template.isDefault ?? template.is_default ?? false,
     variables: withSignerMeta
   }
 }
 
-const buildSamplePreviewHtml = (templateHtml: string, variables: CertificateTemplateVariable[]) => {
+const buildSamplePreviewHtml = (
+  templateHtml: string,
+  templateCss: string,
+  variables: CertificateTemplateVariable[]
+) => {
   const sampleValues = variables.reduce<Record<string, string>>((acc, variable) => {
     if (variable.defaultValue || variable.default_value) {
       acc[variable.name] = variable.defaultValue || variable.default_value || ''
@@ -569,6 +760,10 @@ const buildSamplePreviewHtml = (templateHtml: string, variables: CertificateTemp
   }, {})
 
   const renderedHtml = templateHtml.replace(/\{\{(\w+)\}\}/g, (_, variableName: string) => sampleValues[variableName] || '')
+  const renderedCss = templateCss.replace(
+    /\{\{(\w+)\}\}/g,
+    (_, variableName: string) => sampleValues[variableName] || ''
+  )
   const shellClass = renderedHtml.includes('certificate-template-official')
     ? 'certificate-preview-shell certificate-preview-shell--artwork'
     : 'certificate-preview-shell'
@@ -1199,6 +1394,7 @@ const buildSamplePreviewHtml = (templateHtml: string, variables: CertificateTemp
     .certificate-template-official .seal-ring { width: 74px; height: 74px; }
     .certificate-template-official .seal-name { font-family: 'Cinzel', serif; font-size: 9.5px; font-weight: 700; color: #1a6b2a; letter-spacing: 1.5px; }
     .certificate-template-official .seal-nit { font-family: 'Lato', sans-serif; font-size: 8.5px; color: #888; letter-spacing: 1px; }
+${renderedCss}
   </style>
 </head>
 <body>
@@ -1233,8 +1429,8 @@ const LmsCertificateTemplates: React.FC = () => {
   })
 
   const localPreviewHtml = useMemo(
-    () => buildSamplePreviewHtml(form.templateHtml, form.variables),
-    [form.templateHtml, form.variables]
+    () => buildSamplePreviewHtml(form.templateHtml, form.templateCss, form.variables),
+    [form.templateHtml, form.templateCss, form.variables]
   )
 
   const serverPreviewHtml = useMemo(
@@ -1306,6 +1502,7 @@ const LmsCertificateTemplates: React.FC = () => {
     const payload: SaveCertificateTemplateRequest = {
       name: form.name.trim(),
       templateHtml: form.templateHtml.trim(),
+      templateCss: form.templateCss,
       isDefault: form.isDefault,
       variables: form.variables
         .filter((variable) => variable.name.trim())
@@ -1609,7 +1806,8 @@ const LmsCertificateTemplates: React.FC = () => {
         <DialogContent>
           <Tabs value={tab} onChange={(_, value) => setTab(value)} sx={{ mt: 1 }}>
             <Tab label='Ficha' />
-            <Tab label='Diseño' />
+            <Tab label='HTML' />
+            <Tab label='CSS' />
             <Tab label='Variables' />
             <Tab label='Vista previa' />
           </Tabs>
@@ -1844,19 +2042,89 @@ const LmsCertificateTemplates: React.FC = () => {
                 />
               ))}
             </Box>
-            <TextField
-              fullWidth
-              multiline
-              minRows={18}
-              label='HTML del certificado'
-              value={form.templateHtml}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, templateHtml: event.target.value }))
-              }
-            />
+            <Paper
+              variant='outlined'
+              sx={{ overflow: 'hidden', borderRadius: 2, borderColor: 'divider' }}
+            >
+              <Box sx={{ px: 2, py: 1, bgcolor: 'grey.100', borderBottom: '1px solid', borderColor: 'divider' }}>
+                <Typography variant='subtitle2'>HTML del certificado</Typography>
+              </Box>
+              <Editor
+                height='560px'
+                defaultLanguage='html'
+                language='html'
+                theme='vs-light'
+                value={form.templateHtml}
+                onChange={(value) =>
+                  setForm((current) => ({ ...current, templateHtml: value || '' }))
+                }
+                options={{
+                  minimap: { enabled: false },
+                  wordWrap: 'on',
+                  scrollBeyondLastLine: false,
+                  fontSize: 14,
+                  lineNumbersMinChars: 3,
+                  automaticLayout: true,
+                  tabSize: 2,
+                  formatOnPaste: true,
+                  formatOnType: true
+                }}
+              />
+            </Paper>
           </TabPanel>
 
           <TabPanel value={tab} index={2}>
+            <Alert severity='info' sx={{ mb: 2 }}>
+              <AlertTitle>CSS del certificado</AlertTitle>
+              Este bloque controla posiciones, tamaños, colores y espaciados. Lo que guardes aqui
+              se usara tanto en la vista previa como en el PDF real.
+            </Alert>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1.5 }}>
+              <Button
+                size='small'
+                variant='outlined'
+                onClick={() =>
+                  setForm((current) => ({
+                    ...current,
+                    templateCss: DEFAULT_TEMPLATE_CSS
+                  }))
+                }
+              >
+                Cargar estilos base
+              </Button>
+            </Box>
+            <Paper
+              variant='outlined'
+              sx={{ overflow: 'hidden', borderRadius: 2, borderColor: 'divider' }}
+            >
+              <Box sx={{ px: 2, py: 1, bgcolor: 'grey.100', borderBottom: '1px solid', borderColor: 'divider' }}>
+                <Typography variant='subtitle2'>CSS del certificado</Typography>
+              </Box>
+              <Editor
+                height='560px'
+                defaultLanguage='css'
+                language='css'
+                theme='vs-light'
+                value={form.templateCss}
+                onChange={(value) =>
+                  setForm((current) => ({ ...current, templateCss: value || '' }))
+                }
+                options={{
+                  minimap: { enabled: false },
+                  wordWrap: 'on',
+                  scrollBeyondLastLine: false,
+                  fontSize: 14,
+                  lineNumbersMinChars: 3,
+                  automaticLayout: true,
+                  tabSize: 2,
+                  formatOnPaste: true,
+                  formatOnType: true
+                }}
+              />
+            </Paper>
+          </TabPanel>
+
+          <TabPanel value={tab} index={3}>
             <Alert severity='info' sx={{ mb: 2 }}>
               <AlertTitle>Variables guiadas</AlertTitle>
               Usa primero nombres conocidos del sistema para evitar que el certificado quede con
@@ -1974,7 +2242,7 @@ const LmsCertificateTemplates: React.FC = () => {
             </List>
           </TabPanel>
 
-          <TabPanel value={tab} index={3}>
+          <TabPanel value={tab} index={4}>
             <Alert severity='info' sx={{ mb: 2 }}>
               La vista previa del editor usa datos de ejemplo locales para que puedas iterar antes
               de guardar.

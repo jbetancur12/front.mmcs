@@ -339,6 +339,8 @@ export interface CertificateTemplate {
   name: string
   templateHtml?: string
   template_html?: string
+  templateCss?: string
+  template_css?: string
   variables: CertificateTemplateVariable[]
   isDefault?: boolean
   is_default?: boolean
@@ -351,6 +353,7 @@ export interface CertificateTemplate {
 export interface SaveCertificateTemplateRequest {
   name: string
   templateHtml: string
+  templateCss?: string
   variables: CertificateTemplateVariable[]
   isDefault?: boolean
 }
@@ -362,6 +365,8 @@ export interface CertificateTemplatePreviewRequest {
 export interface CertificateTemplatePreviewResponse {
   html: string
   fullHtml?: string
+  templateCss?: string
+  template_css?: string
   variables: CertificateTemplateVariable[]
   templateName: string
 }
@@ -1136,6 +1141,7 @@ class LMSService {
     const response = await axiosPrivate.post(`${this.baseURL}/certificates/templates`, {
       name: data.name,
       templateHtml: data.templateHtml,
+      templateCss: data.templateCss,
       variables: data.variables,
       isDefault: data.isDefault ?? false
     })
@@ -1149,6 +1155,7 @@ class LMSService {
     const response = await axiosPrivate.put(`${this.baseURL}/certificates/templates/${id}`, {
       name: data.name,
       templateHtml: data.templateHtml,
+      templateCss: data.templateCss,
       variables: data.variables,
       isDefault: data.isDefault ?? false
     })
@@ -1173,6 +1180,7 @@ class LMSService {
   }> {
     const response = await axiosPrivate.post(`${this.baseURL}/certificates/templates/validate`, {
       templateHtml: data.templateHtml,
+      templateCss: data.templateCss,
       variables: data.variables
     })
     return this.unwrapResponse<{ isValid: boolean; errors: string[] }>(response.data)
