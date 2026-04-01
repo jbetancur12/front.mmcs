@@ -19,7 +19,9 @@ import {
   MaintenanceTechnicalReportRequest,
   MaintenanceToolEquipmentSummary,
   MaintenanceProtocolTemplate,
-  MaintenanceProtocolTemplateRequest
+  MaintenanceProtocolTemplateRequest,
+  MaintenanceAnalyticsResponse,
+  MaintenanceAnalyticsFilters
 } from '../types/maintenance'
 
 // API functions
@@ -171,6 +173,27 @@ const maintenanceAPI = {
     const response = await axiosPrivate.get<MaintenanceStats>(
       `/maintenance/stats`,
       { params }
+    )
+    return response.data
+  },
+
+  getAnalytics: async (
+    filters?: MaintenanceAnalyticsFilters
+  ): Promise<MaintenanceAnalyticsResponse> => {
+    const params = new URLSearchParams()
+
+    if (filters?.startDate) {
+      params.append('startDate', filters.startDate)
+    }
+    if (filters?.endDate) {
+      params.append('endDate', filters.endDate)
+    }
+    if (filters?.technicianId) {
+      params.append('technicianId', filters.technicianId)
+    }
+
+    const response = await axiosPrivate.get<MaintenanceAnalyticsResponse>(
+      `/maintenance/analytics?${params.toString()}`
     )
     return response.data
   },
@@ -567,6 +590,16 @@ export const useMaintenanceStats = (technicianEmail?: string | null) => {
     queryKey: ['maintenance-stats', technicianEmail],
     queryFn: () => maintenanceAPI.getStats(technicianEmail),
     staleTime: 60000 // 1 minute
+  })
+}
+
+export const useMaintenanceAnalytics = (
+  filters?: MaintenanceAnalyticsFilters
+) => {
+  return useQuery({
+    queryKey: ['maintenance-analytics', filters],
+    queryFn: () => maintenanceAPI.getAnalytics(filters),
+    staleTime: 60000
   })
 }
 

@@ -18,6 +18,9 @@ const MaintenanceBilling = lazy(
 const MaintenanceProtocols = lazy(
   () => import('../pages/maintenance/MaintenanceProtocols')
 )
+const MaintenanceAnalytics = lazy(
+  () => import('../pages/maintenance/MaintenanceAnalytics')
+)
 
 /**
  * MaintenanceRoutes defines the private routes for the maintenance module
@@ -44,6 +47,7 @@ const MaintenanceRoutes = (role: string[]) => {
       >
         {/* Dashboard - Main maintenance overview */}
         <Route path='maintenance' element={<MaintenanceDashboard />} />
+        <Route path='maintenance/analytics' element={<MaintenanceAnalytics />} />
 
         {/* Individual ticket view - Available to admin, maintenance, and technician roles */}
         <Route

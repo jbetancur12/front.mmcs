@@ -254,6 +254,86 @@ export interface MaintenanceStats {
   metrics: Metrics
 }
 
+export interface MaintenanceAnalyticsFilters {
+  startDate?: string
+  endDate?: string
+  technicianId?: string
+}
+
+export interface MaintenanceAnalyticsOverview {
+  totalTickets: number
+  openTickets: number
+  completedTickets: number
+  cancelledTickets: number
+  urgentOpenTickets: number
+  avgResolutionTimeHours: number
+  avgActualCost: number
+  avgCustomerSatisfaction: number
+  invoicedCompletedTickets: number
+  notInvoicedCompletedTickets: number
+}
+
+export interface MaintenanceAnalyticsBreakdownItem {
+  status?: string
+  priority?: string
+  label: string
+  count: number
+}
+
+export interface MaintenanceTechnicianPerformance {
+  technicianId: string
+  name: string
+  email: string
+  status: string
+  workload: number
+  maxWorkload: number
+  isAvailable: boolean
+  openTickets: number
+  assignedTickets: number
+  pendingTickets: number
+  completedTickets: number
+  cancelledTickets: number
+  totalAssignedTickets: number
+  completionRate: number
+  avgResolutionTimeHours: number
+  avgCustomerSatisfaction: number
+  totalActualCost: number
+  historicalCompletedTickets: number
+  rating: number
+}
+
+export interface MaintenanceAnalyticsTrendPoint {
+  date: string
+  created: number
+  completed: number
+}
+
+export interface MaintenanceAnalyticsEquipmentType {
+  equipmentType: string
+  count: number
+  completedCount: number
+}
+
+export interface MaintenanceAnalyticsAgingBucket {
+  bucket: string
+  count: number
+}
+
+export interface MaintenanceAnalyticsResponse {
+  filters: {
+    startDate: string | null
+    endDate: string | null
+    technicianId: string | null
+  }
+  overview: MaintenanceAnalyticsOverview
+  statusBreakdown: MaintenanceAnalyticsBreakdownItem[]
+  priorityBreakdown: MaintenanceAnalyticsBreakdownItem[]
+  technicianPerformance: MaintenanceTechnicianPerformance[]
+  dailyTrend: MaintenanceAnalyticsTrendPoint[]
+  topEquipmentTypes: MaintenanceAnalyticsEquipmentType[]
+  agingBuckets: MaintenanceAnalyticsAgingBucket[]
+}
+
 export interface MaintenanceCreateRequest {
   customerName: string
   customerEmail: string

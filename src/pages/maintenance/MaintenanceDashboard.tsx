@@ -41,7 +41,8 @@ import {
   FilterList,
   Cancel,
   Help,
-  Science
+  Science,
+  Assessment
 } from '@mui/icons-material'
 import {
   useMaintenanceStats,
@@ -734,6 +735,25 @@ const MaintenanceDashboard: React.FC = () => {
             }}
           >
             {isMobile ? <FilterList /> : 'Filtros'}
+          </Button>
+          <Button
+            variant='outlined'
+            startIcon={!isMobile && <Assessment />}
+            href='/maintenance/analytics'
+            size={isMobile ? 'small' : 'medium'}
+            sx={{
+              minHeight: 48,
+              fontSize: { xs: '0.813rem', sm: '0.875rem' },
+              borderColor: '#d1d5db',
+              color: '#334155',
+              borderRadius: '12px',
+              '&:hover': {
+                borderColor: '#94a3b8',
+                backgroundColor: '#f8fafc'
+              }
+            }}
+          >
+            {isMobile ? <Assessment /> : 'Analíticas'}
           </Button>
           {!isTechnician && (
             <Button
