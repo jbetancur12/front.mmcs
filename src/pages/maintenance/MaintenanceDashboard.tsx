@@ -429,6 +429,7 @@ const MaintenanceDashboard: React.FC = () => {
 
   const handleCompleteWithCosts = async (
     workPerformed: string,
+    technicianWorkMinutes: number,
     costs: any[],
     completionPhotos: CompletionPhotoInput[],
     technicianSignature: {
@@ -459,6 +460,7 @@ const MaintenanceDashboard: React.FC = () => {
         ? {
             status: MaintenanceStatus.COMPLETED,
             workPerformed,
+            technicianWorkMinutes,
             costs,
             technicianSignatureData: maintenanceSignaturesEnabled
               ? technicianSignature.technicianSignatureData ||
@@ -472,6 +474,7 @@ const MaintenanceDashboard: React.FC = () => {
             ...editData,
             status: MaintenanceStatus.COMPLETED,
             workPerformed,
+            technicianWorkMinutes,
             costs,
             technicianSignatureData: maintenanceSignaturesEnabled
               ? technicianSignature.technicianSignatureData ||

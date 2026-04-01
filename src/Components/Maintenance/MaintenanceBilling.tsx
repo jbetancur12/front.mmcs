@@ -55,6 +55,7 @@ interface BillingTicket {
   equipmentBrand: string
   equipmentModel: string
   actualCompletionDate: string
+  technicianWorkMinutes?: number | null
   isInvoiced: boolean
   createdAt: string
   updatedAt: string
@@ -174,6 +175,27 @@ const MaintenanceBilling: React.FC = () => {
       month: 'short',
       day: 'numeric'
     })
+  }
+
+  const formatWorkMinutes = (value?: number | null) => {
+    const minutes = Number(value)
+
+    if (!Number.isFinite(minutes) || minutes <= 0) {
+      return 'No registrado'
+    }
+
+    const hours = Math.floor(minutes / 60)
+    const remainingMinutes = minutes % 60
+
+    if (hours <= 0) {
+      return `${remainingMinutes} min`
+    }
+
+    if (remainingMinutes <= 0) {
+      return `${hours} h`
+    }
+
+    return `${hours} h ${remainingMinutes} min`
   }
 
   if (error) {
@@ -495,6 +517,16 @@ const MaintenanceBilling: React.FC = () => {
                             fontWeight={600}
                           >
                             Desglose de Costos
+                          </Typography>
+                          <Typography
+                            variant='body2'
+                            color='text.secondary'
+                            sx={{ mb: 1 }}
+                          >
+                            Tiempo técnico registrado:{' '}
+                            <strong>
+                              {formatWorkMinutes(ticket.technicianWorkMinutes)}
+                            </strong>
                           </Typography>
                           <Divider sx={{ mb: 2 }} />
                           <Grid container spacing={2}>

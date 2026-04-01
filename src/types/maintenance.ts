@@ -85,6 +85,7 @@ export interface MaintenanceTechnicalReport {
   verificationTests: MaintenanceTechnicalReportTest[]
   recommendations?: string
   nextMaintenanceDate?: string | null
+  technicianWorkMinutes?: number | null
   warrantyDays: number
   warrantyTerms?: string
   scopeClause?: string
@@ -112,6 +113,7 @@ export interface MaintenanceTicket {
   completedDate?: string
   estimatedCost?: number
   actualCost?: number
+  technicianWorkMinutes?: number | null
   customerSatisfaction?: number
   location: string
   workPerformed?: string
@@ -358,6 +360,7 @@ export interface MaintenanceUpdateRequest {
   equipmentSerial?: string
   estimatedCost?: number
   actualCost?: number
+  technicianWorkMinutes?: number | null
   priority?: MaintenancePriority
   location?: string
   workPerformed?: string

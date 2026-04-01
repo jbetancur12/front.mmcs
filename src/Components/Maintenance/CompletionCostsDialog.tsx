@@ -56,6 +56,7 @@ interface CompletionCostsDialogProps {
   onClose: () => void
   onComplete: (
     workPerformed: string,
+    technicianWorkMinutes: number,
     costs: Cost[],
     completionPhotos: CompletionPhotoInput[],
     technicianSignature: {
@@ -91,6 +92,9 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
 
   const [workPerformed, setWorkPerformed] = useState<string>('')
   const [workPerformedError, setWorkPerformedError] = useState<string>('')
+  const [technicianWorkMinutes, setTechnicianWorkMinutes] = useState<string>('')
+  const [technicianWorkMinutesError, setTechnicianWorkMinutesError] =
+    useState<string>('')
   const [costs, setCosts] = useState<Cost[]>([
     { name: '', description: '', amount: '' }
   ])
@@ -108,6 +112,8 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
     if (!open) {
       setWorkPerformed('')
       setWorkPerformedError('')
+      setTechnicianWorkMinutes('')
+      setTechnicianWorkMinutesError('')
       setCosts([{ name: '', description: '', amount: '' }])
       setErrors({})
       setShowPhotoUpload(false)
@@ -160,6 +166,25 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
     return true
   }
 
+  const validateTechnicianWorkMinutes = (): boolean => {
+    const value = Number(technicianWorkMinutes)
+
+    if (!technicianWorkMinutes.trim()) {
+      setTechnicianWorkMinutesError(
+        'El tiempo invertido por el técnico es requerido'
+      )
+      return false
+    }
+
+    if (!Number.isFinite(value) || value <= 0) {
+      setTechnicianWorkMinutesError('Ingresa un tiempo válido en minutos')
+      return false
+    }
+
+    setTechnicianWorkMinutesError('')
+    return true
+  }
+
   const validate = (): boolean => {
     const newErrors: Record<number, { name?: string; amount?: string }> = {}
     let isValid = true
@@ -189,11 +214,12 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
 
   const handleSubmit = async () => {
     const isWorkValid = validateWorkPerformed()
+    const isTimeValid = validateTechnicianWorkMinutes()
     const areCostsValid = validate()
     const effectiveTechnicianSignature =
       technicianSignatureData || storedTechnicianSignature || null
 
-    if (!isWorkValid || !areCostsValid) return
+    if (!isWorkValid || !isTimeValid || !areCostsValid) return
     if (signaturesEnabled && !effectiveTechnicianSignature) {
       setTechnicianSignatureError(
         'Debes registrar la firma del técnico para completar el ticket'
@@ -207,7 +233,12 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       amount: parseFloat(cost.amount as string)
     }))
 
-    await onComplete(workPerformed.trim(), formattedCosts, completionPhotos, {
+    await onComplete(
+      workPerformed.trim(),
+      Number(technicianWorkMinutes),
+      formattedCosts,
+      completionPhotos,
+      {
       technicianSignatureData: signaturesEnabled
         ? effectiveTechnicianSignature
         : null,
@@ -216,14 +247,15 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
         canCaptureTechnicianSignature &&
         !storedTechnicianSignature &&
         Boolean(technicianSignatureData)
-    })
+      }
+    )
   }
 
   const handleCompleteWithoutCosts = async () => {
     const effectiveTechnicianSignature =
       technicianSignatureData || storedTechnicianSignature || null
 
-    if (!validateWorkPerformed()) return
+    if (!validateWorkPerformed() || !validateTechnicianWorkMinutes()) return
     if (signaturesEnabled && !effectiveTechnicianSignature) {
       setTechnicianSignatureError(
         'Debes registrar la firma del técnico para completar el ticket'
@@ -231,7 +263,12 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       return
     }
 
-    await onComplete(workPerformed.trim(), [], completionPhotos, {
+    await onComplete(
+      workPerformed.trim(),
+      Number(technicianWorkMinutes),
+      [],
+      completionPhotos,
+      {
       technicianSignatureData: signaturesEnabled
         ? effectiveTechnicianSignature
         : null,
@@ -240,7 +277,8 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
         canCaptureTechnicianSignature &&
         !storedTechnicianSignature &&
         Boolean(technicianSignatureData)
-    })
+      }
+    )
   }
 
   const handlePhotosChange = (newFiles: File[]) => {
@@ -280,6 +318,10 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
 
   const isFormValid = useMemo(() => {
     const workValid = workPerformed.trim().length >= 20
+    const timeValid =
+      technicianWorkMinutes.trim().length > 0 &&
+      Number.isFinite(Number(technicianWorkMinutes)) &&
+      Number(technicianWorkMinutes) > 0
     const costsValid = costs.every(
       (cost) =>
         cost.name.trim().length >= 3 &&
@@ -287,12 +329,17 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
         !isNaN(parseFloat(cost.amount as string)) &&
         parseFloat(cost.amount as string) >= 0
     )
-    return workValid && costsValid
-  }, [costs, workPerformed])
+    return workValid && timeValid && costsValid
+  }, [costs, workPerformed, technicianWorkMinutes])
 
   const isWorkPerformedValid = useMemo(() => {
-    return workPerformed.trim().length >= 20
-  }, [workPerformed])
+    return (
+      workPerformed.trim().length >= 20 &&
+      technicianWorkMinutes.trim().length > 0 &&
+      Number.isFinite(Number(technicianWorkMinutes)) &&
+      Number(technicianWorkMinutes) > 0
+    )
+  }, [workPerformed, technicianWorkMinutes])
 
   return (
     <Dialog
@@ -390,6 +437,55 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
               `${workPerformed.length}/500 caracteres (mínimo 20)`
             }
             inputProps={{ maxLength: 500 }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: 'white'
+              }
+            }}
+          />
+        </Paper>
+
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
+            mb: 3,
+            borderRadius: '12px',
+            border: '1px solid #dbeafe',
+            backgroundColor: '#f8fbff'
+          }}
+        >
+          <Typography
+            variant='subtitle1'
+            fontWeight={600}
+            gutterBottom
+            sx={{ color: '#0f172a' }}
+          >
+            Tiempo invertido por el técnico *
+          </Typography>
+          <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+            Este dato quedará como referencia interna para analíticas, reporte
+            técnico y consulta de facturación.
+          </Typography>
+          <TextField
+            fullWidth
+            required
+            type='number'
+            label='Minutos invertidos'
+            placeholder='Ej: 90'
+            value={technicianWorkMinutes}
+            onChange={(e) => {
+              setTechnicianWorkMinutes(e.target.value)
+              if (technicianWorkMinutesError) {
+                setTechnicianWorkMinutesError('')
+              }
+            }}
+            error={!!technicianWorkMinutesError}
+            helperText={
+              technicianWorkMinutesError ||
+              'Registra el tiempo total aproximado de trabajo efectivo'
+            }
+            inputProps={{ min: 1, step: 1 }}
             sx={{
               '& .MuiOutlinedInput-root': {
                 backgroundColor: 'white'
