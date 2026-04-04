@@ -1,5 +1,5 @@
 import React from 'react'
-import { Container, Typography, Paper, Box } from '@mui/material'
+import { Container, Typography, Paper } from '@mui/material'
 import { userStore } from 'src/store/userStore'
 import { useStore } from '@nanostores/react'
 
@@ -34,19 +34,7 @@ const Welcome: React.FC = () => {
           Para empezar, selecciona una de las opciones del menú de la izquierda.
         </Typography>
       </Paper>
-      <Box sx={{ mt: 4, textAlign: 'center' }}>
-        <video
-          id='main-video'
-          style={{ width: '100%', height: 'auto', maxHeight: '500px' }}
-          autoPlay
-          loop
-          muted
-          playsInline
-        >
-          <source src='/videos/videommcs.mp4' type='video/mp4' />
-          Your browser does not support the video tag.
-        </video>
-      </Box>
+
     </Container>
   )
 }

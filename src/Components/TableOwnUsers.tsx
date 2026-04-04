@@ -1231,7 +1231,7 @@ const CreateNewAccountModal = ({
     }
 
     try {
-      await onSubmit(values)
+      await onSubmit({...values, roles: [...values.roles, rolesList?.find(r => r.name === 'employee')]})
       // Reset form on success
       setValues(initialValues)
       setErrors({})
@@ -1685,6 +1685,7 @@ const EditUserModal = ({
     }
 
     try {
+      
       await onSubmit(values)
       // Reset form state on success
       setErrors({})

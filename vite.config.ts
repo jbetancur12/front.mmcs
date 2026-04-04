@@ -19,6 +19,19 @@ export default defineConfig({
     // })
   ],
 
+  // server: {
+  //   proxy: {
+  //     '/lms': {
+  //       target: 'http://localhost:5050',
+  //       changeOrigin: true
+  //     },
+  //     '/api': {
+  //       target: 'http://localhost:5050',
+  //       changeOrigin: true
+  //     }
+  //   }
+  // },
+
   build: {
     sourcemap: false,
     outDir: 'dist',

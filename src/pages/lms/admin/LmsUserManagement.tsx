@@ -1,269 +1,409 @@
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
+  Alert,
   Box,
-  Typography,
   Button,
+  Card,
+  CardContent,
+  CardHeader,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
   Grid,
-  Paper,
+  InputLabel,
+  MenuItem,
+  Select,
+  Snackbar,
+  Switch,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
+  TablePagination,
   TableRow,
-  IconButton,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Switch,
-  FormControlLabel,
-  Avatar
+  Typography
 } from '@mui/material'
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
-  Person as PersonIcon,
-  Email as EmailIcon,
-  School as SchoolIcon,
-  Work as WorkIcon
+  PersonOff as PersonOffIcon,
+  Person as PersonIcon
 } from '@mui/icons-material'
-import { useQuery, useMutation, useQueryClient } from 'react-query'
+import { useMutation, useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 
-interface User {
+type LmsRoleOption = {
+  id: number
+  name: string
+  description?: string | null
+}
+
+type CustomerOption = {
+  id: number
+  name: string
+  isActive: boolean
+}
+
+type LmsUser = {
   id: number
   name: string
   email: string
-  role: string
-  isActive: boolean
-  enrolledCourses: number
-  completedCourses: number
-  certificatesEarned: number
-  lastLogin: string
-  createdAt: string
+  active: boolean
+  userType: 'internal' | 'client'
+  customerId: number | null
+  customerName: string | null
+  roles: string[]
+  lmsOnly: boolean
 }
 
-interface CreateUserData {
-  name: string
+type LmsUsersSummary = {
+  totalVisible: number
+  totalFiltered: number
+  lmsOnly: number
+  clients: number
+  inactive: number
+}
+
+type LmsUsersResponse = {
+  data: LmsUser[]
+  summary: LmsUsersSummary
+  pagination: {
+    total: number
+    limit: number
+    offset: number
+  }
+}
+
+type LmsUserOptions = {
+  roles: LmsRoleOption[]
+  customers: CustomerOption[]
+  defaults: {
+    internalRoles: string[]
+    clientRoles: string[]
+    lmsOnlyRole: string
+    generatedPassword: string
+  }
+}
+
+type LmsUserForm = {
+  nombre: string
   email: string
-  role: string
-  isActive: boolean
+  password: string
+  userType: 'internal' | 'client'
+  customerId: string
+  roles: string[]
+  lmsOnly: boolean
+  active: boolean
+}
+
+const emptyForm: LmsUserForm = {
+  nombre: '',
+  email: '',
+  password: '',
+  userType: 'internal',
+  customerId: '',
+  roles: ['employee'],
+  lmsOnly: false,
+  active: true
+}
+
+const isValidEmail = (value: string) => /\S+@\S+\.\S+/.test(value)
+
+const getRoleLabel = (roleName: string, description?: string | null) => {
+  const baseLabel =
+    roleName === 'Training Manager'
+      ? 'Gestor de Capacitación'
+      : roleName === 'employee'
+        ? 'Empleado interno'
+        : roleName === 'user'
+          ? 'Usuario cliente'
+          : roleName
+
+  return description ? `${baseLabel}: ${description}` : baseLabel
+}
+
+const getCompactRoleLabel = (roleName: string) => {
+  if (roleName === 'Training Manager') return 'Gestor LMS'
+  if (roleName === 'employee') return 'Empleado'
+  if (roleName === 'user') return 'Cliente'
+  if (roleName === 'maintenance_coordinator') return 'Coord. mantenimiento'
+  if (roleName === 'metrologist') return 'Metrólogo'
+  if (roleName === 'technician') return 'Técnico'
+  return roleName
 }
 
 const LmsUserManagement: React.FC = () => {
-  const [openDialog, setOpenDialog] = useState(false)
-  const [editingUser, setEditingUser] = useState<User | null>(null)
-  const [formData, setFormData] = useState<CreateUserData>({
-    name: '',
-    email: '',
-    role: 'client',
-    isActive: true
-  })
-
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
+  const [search, setSearch] = useState('')
+  const [userTypeFilter, setUserTypeFilter] = useState<'all' | 'internal' | 'client'>('all')
+  const [lmsOnlyFilter, setLmsOnlyFilter] = useState<'all' | 'only' | 'mixed'>('all')
+  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingUser, setEditingUser] = useState<LmsUser | null>(null)
+  const [form, setForm] = useState<LmsUserForm>(emptyForm)
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error'
+  })
 
-  // Mock data para usuarios
-  const mockUsers: User[] = [
-    {
-      id: 1,
-      name: 'Juan Pérez',
-      email: 'juan.perez@empresa.com',
-      role: 'employee',
-      isActive: true,
-      enrolledCourses: 5,
-      completedCourses: 3,
-      certificatesEarned: 2,
-      lastLogin: '2024-01-20',
-      createdAt: '2024-01-01'
-    },
-    {
-      id: 2,
-      name: 'María García',
-      email: 'maria.garcia@empresa.com',
-      role: 'employee',
-      isActive: true,
-      enrolledCourses: 8,
-      completedCourses: 6,
-      certificatesEarned: 4,
-      lastLogin: '2024-01-19',
-      createdAt: '2024-01-02'
-    },
-    {
-      id: 3,
-      name: 'Carlos López',
-      email: 'carlos.lopez@cliente.com',
-      role: 'client',
-      isActive: true,
-      enrolledCourses: 3,
-      completedCourses: 1,
-      certificatesEarned: 1,
-      lastLogin: '2024-01-18',
-      createdAt: '2024-01-03'
-    },
-    {
-      id: 4,
-      name: 'Ana Rodríguez',
-      email: 'ana.rodriguez@empresa.com',
-      role: 'employee',
-      isActive: false,
-      enrolledCourses: 2,
-      completedCourses: 0,
-      certificatesEarned: 0,
-      lastLogin: '2024-01-10',
-      createdAt: '2024-01-04'
-    }
-  ]
-
-  // Query para obtener usuarios (usando mock data por ahora)
-  const { data: users = mockUsers, isLoading } = useQuery<User[]>(
-    'lms-users',
+  const { data: optionsData } = useQuery<LmsUserOptions>(
+    ['lms-user-options'],
     async () => {
-      // En el futuro, esto hará una llamada real a la API
-      // const response = await axiosPrivate.get('/lms/users')
-      // return response.data
-      return mockUsers
+      const response = await axiosPrivate.get('/lms/users/options')
+      return response.data.data
     }
   )
 
-  // Mutación para crear/actualizar usuario
+  const { data: usersData, isLoading } = useQuery<LmsUsersResponse>(
+    ['lms-users', userTypeFilter, lmsOnlyFilter, activeFilter, search, page, rowsPerPage],
+    async () => {
+      const response = await axiosPrivate.get('/lms/users', {
+        params: {
+          userType: userTypeFilter === 'all' ? undefined : userTypeFilter,
+          lmsOnly:
+            lmsOnlyFilter === 'all' ? undefined : lmsOnlyFilter === 'only',
+          active:
+            activeFilter === 'all' ? undefined : activeFilter === 'active',
+          search: search || undefined,
+          limit: rowsPerPage,
+          offset: page * rowsPerPage
+        }
+      })
+
+      return {
+        data: response.data.data || [],
+        summary: response.data.summary || {
+          totalVisible: 0,
+          totalFiltered: 0,
+          lmsOnly: 0,
+          clients: 0,
+          inactive: 0
+        },
+        pagination: response.data.pagination || {
+          total: 0,
+          limit: rowsPerPage,
+          offset: page * rowsPerPage
+        }
+      }
+    },
+    { keepPreviousData: true }
+  )
+
+  const users = usersData?.data || []
+  const usersSummary = usersData?.summary || {
+    totalVisible: 0,
+    totalFiltered: 0,
+    lmsOnly: 0,
+    clients: 0,
+    inactive: 0
+  }
+  const totalUsers = usersData?.pagination?.total || 0
+  const roleOptions = optionsData?.roles || []
+  const customerOptions = optionsData?.customers || []
+
   const saveUserMutation = useMutation(
-    async (userData: CreateUserData | User) => {
-      if ('id' in userData) {
-        // Actualizar usuario existente
-        return axiosPrivate.put(`/lms/users/${userData.id}`, userData)
-      } else {
-        // Crear nuevo usuario
-        return axiosPrivate.post('/lms/users', userData)
+    async (payload: LmsUserForm) => {
+      const body = {
+        nombre: payload.nombre,
+        email: payload.email,
+        password: payload.password || undefined,
+        userType: payload.userType,
+        customerId: payload.userType === 'client' ? Number(payload.customerId) : null,
+        roles: payload.roles,
+        lmsOnly: payload.lmsOnly,
+        active: payload.active
       }
+
+      if (editingUser) {
+        return axiosPrivate.put(`/lms/users/${editingUser.id}`, body)
+      }
+
+      return axiosPrivate.post('/lms/users', body)
     },
     {
       onSuccess: () => {
-        queryClient.invalidateQueries('lms-users')
-        handleCloseDialog()
+        queryClient.invalidateQueries(['lms-users'])
+        setDialogOpen(false)
+        setEditingUser(null)
+        setForm(emptyForm)
+        setSnackbar({
+          open: true,
+          message: editingUser ? 'Usuario LMS actualizado' : 'Usuario LMS creado',
+          severity: 'success'
+        })
       },
       onError: (error: any) => {
-        console.error('Error al guardar usuario:', error)
+        setSnackbar({
+          open: true,
+          message: error.response?.data?.error?.message || error.response?.data?.message || 'No se pudo guardar el usuario LMS',
+          severity: 'error'
+        })
       }
     }
   )
 
-  // Mutación para eliminar usuario
-  const deleteUserMutation = useMutation(
-    async (userId: number) => {
-      return axiosPrivate.delete(`/lms/users/${userId}`)
-    },
+  const toggleActiveMutation = useMutation(
+    async ({ userId, active }: { userId: number; active: boolean }) =>
+      axiosPrivate.patch(`/lms/users/${userId}/active`, { active }),
     {
-      onSuccess: () => {
-        queryClient.invalidateQueries('lms-users')
+      onSuccess: (_, variables) => {
+        queryClient.invalidateQueries(['lms-users'])
+        setSnackbar({
+          open: true,
+          message: variables.active ? 'Usuario activado' : 'Usuario desactivado',
+          severity: 'success'
+        })
       },
-      onError: (error: any) => {
-        console.error('Error al eliminar usuario:', error)
+      onError: () => {
+        setSnackbar({
+          open: true,
+          message: 'No se pudo actualizar el estado del usuario',
+          severity: 'error'
+        })
       }
     }
   )
 
-  const handleOpenDialog = (user?: User) => {
-    if (user) {
-      setEditingUser(user)
-      setFormData({
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isActive: user.isActive
-      })
-    } else {
-      setEditingUser(null)
-      setFormData({
-        name: '',
-        email: '',
-        role: 'client',
-        isActive: true
-      })
+  const summary = useMemo(() => usersSummary, [usersSummary])
+
+  const applyUserTypeDefaults = (userType: 'internal' | 'client', currentLmsOnly: boolean) => {
+    const defaults = optionsData?.defaults
+    if (!defaults) return
+
+    const roles = userType === 'client' ? [...defaults.clientRoles] : [...defaults.internalRoles]
+    if (currentLmsOnly && !roles.includes(defaults.lmsOnlyRole)) {
+      roles.push(defaults.lmsOnlyRole)
     }
-    setOpenDialog(true)
-  }
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false)
-    setEditingUser(null)
-    setFormData({
-      name: '',
-      email: '',
-      role: 'client',
-      isActive: true
-    })
-  }
-
-  const handleSubmit = () => {
-    if (editingUser) {
-      saveUserMutation.mutate({ ...editingUser, ...formData })
-    } else {
-      saveUserMutation.mutate(formData)
-    }
-  }
-
-  const handleDelete = (userId: number) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
-      deleteUserMutation.mutate(userId)
-    }
-  }
-
-  const handleInputChange = (field: keyof CreateUserData, value: any) => {
-    setFormData((prev) => ({
+    setForm((prev) => ({
       ...prev,
-      [field]: value
+      userType,
+      customerId: userType === 'client' ? prev.customerId : '',
+      roles
     }))
   }
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return 'error'
-      case 'employee':
-        return 'primary'
-      case 'client':
-        return 'success'
-      default:
-        return 'default'
+  const buildCreateForm = (overrides?: Partial<LmsUserForm>) => {
+    const defaults = optionsData?.defaults
+    const fallbackUserType =
+      overrides?.userType
+      || (userTypeFilter === 'client' ? 'client' : 'internal')
+    const fallbackLmsOnly =
+      overrides?.lmsOnly
+      ?? (lmsOnlyFilter === 'only')
+    const baseRoles =
+      fallbackUserType === 'client'
+        ? [...(defaults?.clientRoles || ['user'])]
+        : [...(defaults?.internalRoles || ['employee'])]
+
+    const nextForm: LmsUserForm = {
+      ...emptyForm,
+      password: defaults?.generatedPassword || '',
+      userType: fallbackUserType,
+      lmsOnly: fallbackLmsOnly,
+      roles: baseRoles,
+      ...overrides
     }
+
+    if (nextForm.userType === 'internal') {
+      nextForm.customerId = ''
+    }
+
+    return nextForm
   }
 
-  const getRoleLabel = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return 'Administrador'
-      case 'employee':
-        return 'Empleado'
-      case 'client':
-        return 'Cliente'
-      default:
-        return role
-    }
+  const handleOpenCreate = () => {
+    setEditingUser(null)
+    setForm(buildCreateForm())
+    setDialogOpen(true)
   }
 
-  if (isLoading) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '50vh'
-        }}
-      >
-        <Typography>Cargando usuarios...</Typography>
-      </Box>
-    )
+  const handleOpenCreatePreset = (userType: 'internal' | 'client', lmsOnly: boolean) => {
+    setEditingUser(null)
+    setForm(buildCreateForm({ userType, lmsOnly }))
+    setDialogOpen(true)
   }
+
+  const handleOpenEdit = (user: LmsUser) => {
+    setEditingUser(user)
+    setForm({
+      nombre: user.name,
+      email: user.email,
+      password: '',
+      userType: user.userType,
+      customerId: user.customerId ? String(user.customerId) : '',
+      roles: user.roles.filter((role) => role !== 'lms_only'),
+      lmsOnly: user.lmsOnly,
+      active: user.active
+    })
+    setDialogOpen(true)
+  }
+
+  const effectiveRoles = useMemo(() => {
+    const roles = new Set(form.roles)
+    const lmsOnlyRole = optionsData?.defaults?.lmsOnlyRole || 'lms_only'
+    if (form.lmsOnly) {
+      roles.add(lmsOnlyRole)
+    } else {
+      roles.delete(lmsOnlyRole)
+    }
+    return Array.from(roles)
+  }, [form.roles, form.lmsOnly, optionsData])
+
+  const normalizedName = form.nombre.trim()
+  const normalizedEmail = form.email.trim()
+  const needsCustomer = form.userType === 'client'
+  const selectedCustomerName = customerOptions.find(
+    (customer) => String(customer.id) === form.customerId
+  )?.name
+  const isSaveDisabled =
+    saveUserMutation.isLoading ||
+    normalizedName.length < 3 ||
+    !isValidEmail(normalizedEmail) ||
+    (!editingUser && form.password.trim().length < 8) ||
+    (needsCustomer && !form.customerId) ||
+    effectiveRoles.filter((role) => role !== 'lms_only').length === 0
+
+  const handleToggleRole = (roleName: string) => {
+    setForm((prev) => {
+      const hasRole = prev.roles.includes(roleName)
+      return {
+        ...prev,
+        roles: hasRole ? prev.roles.filter((role) => role !== roleName) : [...prev.roles, roleName]
+      }
+    })
+  }
+
+  const handleSave = () => {
+    saveUserMutation.mutate({
+      ...form,
+      roles: effectiveRoles
+    })
+  }
+
+  const handleChangePage = (_event: unknown, nextPage: number) => {
+    setPage(nextPage)
+  }
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
+
+  useEffect(() => {
+    setPage(0)
+  }, [search, userTypeFilter, lmsOnlyFilter, activeFilter])
 
   return (
     <Box sx={{ p: 3 }}>
@@ -271,185 +411,390 @@ const LmsUserManagement: React.FC = () => {
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
+          alignItems: { xs: 'flex-start', md: 'center' },
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: 2,
           mb: 3
         }}
       >
-        <Typography variant='h4' component='h1'>
-          Gestión de Usuarios
-        </Typography>
-        <Button
-          variant='contained'
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-        >
-          Agregar Usuario
+        <Box>
+          <Typography variant='h4' component='h1' gutterBottom>
+            Gestión de Usuarios LMS
+          </Typography>
+          <Typography color='text.secondary'>
+            Crea y administra accesos LMS reales para internos, clientes y usuarios restringidos solo al LMS.
+          </Typography>
+        </Box>
+
+        <Button variant='contained' startIcon={<AddIcon />} onClick={handleOpenCreate}>
+          Nuevo Usuario LMS
         </Button>
       </Box>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Usuario</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Rol</TableCell>
-              <TableCell>Cursos Inscritos</TableCell>
-              <TableCell>Cursos Completados</TableCell>
-              <TableCell>Certificados</TableCell>
-              <TableCell>Último Acceso</TableCell>
-              <TableCell>Estado</TableCell>
-              <TableCell>Acciones</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
-                      <PersonIcon />
-                    </Avatar>
-                    <Box>
-                      <Typography variant='subtitle2' fontWeight='bold'>
-                        {user.name}
-                      </Typography>
-                      <Typography variant='caption' color='text.secondary'>
-                        ID: {user.id}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <EmailIcon sx={{ mr: 1, fontSize: 'small' }} />
-                    {user.email}
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={getRoleLabel(user.role)}
-                    color={getRoleColor(user.role) as any}
-                    size='small'
-                  />
-                </TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <SchoolIcon sx={{ mr: 1, fontSize: 'small' }} />
-                    {user.enrolledCourses}
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <WorkIcon sx={{ mr: 1, fontSize: 'small' }} />
-                    {user.completedCourses}
-                  </Box>
-                </TableCell>
-                <TableCell>{user.certificatesEarned}</TableCell>
-                <TableCell>
-                  <Typography variant='caption'>
-                    {new Date(user.lastLogin).toLocaleDateString()}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={user.isActive ? 'Activo' : 'Inactivo'}
-                    color={user.isActive ? 'success' : 'default'}
-                    size='small'
-                  />
-                </TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <IconButton
-                      size='small'
-                      onClick={() => handleOpenDialog(user)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      size='small'
-                      color='error'
-                      onClick={() => handleDelete(user.id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Alert severity='info' sx={{ mb: 3 }}>
+        Usa esta pantalla para resolver tres cosas en una sola operación: si el usuario es interno
+        o cliente, si debe quedar restringido al LMS y qué rol operativo tendrá dentro del módulo.
+      </Alert>
 
-      {/* Dialog para crear/editar usuario */}
-      <Dialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        maxWidth='sm'
-        fullWidth
-      >
-        <DialogTitle>
-          {editingUser ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
-        </DialogTitle>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
+        <Chip label={`${summary.totalFiltered} usuarios filtrados`} variant='outlined' />
+        <Chip label={`${summary.totalVisible} visibles en esta página`} variant='outlined' />
+        <Chip label={`${summary.lmsOnly} LMS-only`} variant='outlined' />
+        <Chip label={`${summary.clients} clientes`} variant='outlined' />
+        <Chip label={`${summary.inactive} inactivos`} variant='outlined' />
+      </Box>
+
+      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 3 }}>
+        <Button variant='outlined' size='small' onClick={() => handleOpenCreatePreset('internal', true)}>
+          Nuevo interno solo LMS
+        </Button>
+        <Button variant='outlined' size='small' onClick={() => handleOpenCreatePreset('client', true)}>
+          Nuevo cliente solo LMS
+        </Button>
+      </Box>
+
+      <Card sx={{ mb: 3 }}>
+        <CardHeader title='Filtros' subheader='Aísla el segmento que quieres revisar antes de crear, editar o activar accesos.' />
+        <CardContent>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label='Buscar por nombre o correo'
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <TextField
+                select
+                fullWidth
+                label='Tipo de usuario'
+                value={userTypeFilter}
+                onChange={(event) => setUserTypeFilter(event.target.value as 'all' | 'internal' | 'client')}
+              >
+                <MenuItem value='all'>Todos</MenuItem>
+                <MenuItem value='internal'>Internos</MenuItem>
+                <MenuItem value='client'>Clientes</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={2.5}>
+              <TextField
+                select
+                fullWidth
+                label='Acceso LMS'
+                value={lmsOnlyFilter}
+                onChange={(event) => setLmsOnlyFilter(event.target.value as 'all' | 'only' | 'mixed')}
+              >
+                <MenuItem value='all'>Todos</MenuItem>
+                <MenuItem value='only'>Solo LMS</MenuItem>
+                <MenuItem value='mixed'>Acceso mixto</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={2.5}>
+              <TextField
+                select
+                fullWidth
+                label='Estado'
+                value={activeFilter}
+                onChange={(event) => setActiveFilter(event.target.value as 'all' | 'active' | 'inactive')}
+              >
+                <MenuItem value='all'>Todos</MenuItem>
+                <MenuItem value='active'>Activos</MenuItem>
+                <MenuItem value='inactive'>Inactivos</MenuItem>
+              </TextField>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title='Usuarios LMS'
+          subheader='Aquí puedes ajustar customer, roles y restricción LMS-only sin salir del módulo.'
+        />
+        <CardContent sx={{ p: 0 }}>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Usuario</TableCell>
+                  <TableCell>Tipo</TableCell>
+                  <TableCell>Cliente</TableCell>
+                  <TableCell>Roles</TableCell>
+                  <TableCell>Acceso</TableCell>
+                  <TableCell>Estado</TableCell>
+                  <TableCell>Acciones</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {!isLoading && users.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} align='center' sx={{ py: 8 }}>
+                      <Typography color='text.secondary'>
+                        No hay usuarios LMS para los filtros actuales.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  users.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <Typography variant='body2' fontWeight={600}>
+                          {user.name}
+                        </Typography>
+                        <Typography variant='caption' color='text.secondary'>
+                          {user.email}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={user.userType === 'client' ? 'Cliente' : 'Interno'}
+                          size='small'
+                          color={user.userType === 'client' ? 'secondary' : 'primary'}
+                          variant='outlined'
+                        />
+                      </TableCell>
+                      <TableCell>{user.customerName || 'Sin cliente'}</TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {user.roles.filter((role) => role !== 'lms_only').map((role) => (
+                            <Chip key={role} label={getCompactRoleLabel(role)} size='small' variant='outlined' />
+                          ))}
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={user.lmsOnly ? 'Solo LMS' : 'Acceso mixto'}
+                          size='small'
+                          color={user.lmsOnly ? 'warning' : 'default'}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={user.active ? 'Activo' : 'Inactivo'}
+                          size='small'
+                          color={user.active ? 'success' : 'default'}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Button size='small' startIcon={<EditIcon />} onClick={() => handleOpenEdit(user)}>
+                            Editar
+                          </Button>
+                          <Button
+                            size='small'
+                            color={user.active ? 'warning' : 'success'}
+                            startIcon={user.active ? <PersonOffIcon /> : <PersonIcon />}
+                            onClick={() =>
+                              toggleActiveMutation.mutate({
+                                userId: user.id,
+                                active: !user.active
+                              })
+                            }
+                          >
+                            {user.active ? 'Desactivar' : 'Activar'}
+                          </Button>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <TablePagination
+            component='div'
+            count={totalUsers}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[10, 25, 50]}
+            labelRowsPerPage='Usuarios por página'
+            labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`}
+          />
+        </CardContent>
+      </Card>
+
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth='md'>
+        <DialogTitle>{editingUser ? 'Editar usuario LMS' : 'Nuevo usuario LMS'}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
+              <Alert severity='info'>
+                Define primero el tipo de usuario y luego ajusta el alcance. Si activas
+                <strong> LMS-only</strong>, la persona quedará redirigida solo a rutas del LMS.
+              </Alert>
+            </Grid>
+            {editingUser && (
+              <Grid item xs={12}>
+                <Alert severity='warning'>
+                  Esta pantalla ajusta la capa LMS del usuario. Si la persona ya tiene roles de otros módulos, se conservarán al guardar.
+                </Alert>
+              </Grid>
+            )}
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label='Nombre completo'
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
+                label='Nombre'
+                value={form.nombre}
+                onChange={(event) => setForm((prev) => ({ ...prev, nombre: event.target.value }))}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                type='email'
-                label='Email'
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
+                label='Correo'
+                value={form.email}
+                onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
               />
             </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label={editingUser ? 'Nueva contraseña (opcional)' : 'Contraseña inicial'}
+                value={form.password}
+                onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
+                helperText={editingUser ? 'Déjalo vacío si no quieres cambiarla.' : 'Puedes usar la sugerida o escribir una propia de 8+ caracteres.'}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                select
+                fullWidth
+                label='Tipo de usuario'
+                value={form.userType}
+                onChange={(event) => applyUserTypeDefaults(event.target.value as 'internal' | 'client', form.lmsOnly)}
+              >
+                <MenuItem value='internal'>Interno</MenuItem>
+                <MenuItem value='client'>Cliente</MenuItem>
+              </TextField>
+            </Grid>
+            {form.userType === 'client' && (
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Cliente</InputLabel>
+                  <Select
+                    value={form.customerId}
+                    label='Cliente'
+                    onChange={(event) => setForm((prev) => ({ ...prev, customerId: event.target.value }))}
+                  >
+                    {customerOptions.map((customer) => (
+                      <MenuItem key={customer.id} value={String(customer.id)}>
+                        {customer.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
             <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Rol</InputLabel>
-                <Select
-                  value={formData.role}
-                  label='Rol'
-                  onChange={(e) => handleInputChange('role', e.target.value)}
-                >
-                  <MenuItem value='admin'>Administrador</MenuItem>
-                  <MenuItem value='employee'>Empleado</MenuItem>
-                  <MenuItem value='client'>Cliente</MenuItem>
-                </Select>
-              </FormControl>
+              <Alert severity={form.userType === 'client' ? 'warning' : 'info'}>
+                {form.userType === 'client'
+                  ? 'Los usuarios cliente acceden a cursos con audiencia client o both. Si activas LMS-only, no podrán entrar a otros módulos del sistema.'
+                  : 'Los usuarios internos pueden recibir cursos obligatorios. Usa Training Manager solo para responsables de operación del LMS.'}
+              </Alert>
             </Grid>
             <Grid item xs={12}>
+              <Alert severity='info'>
+                Perfil resultante: <strong>{form.userType === 'client' ? 'Cliente' : 'Interno'}</strong>
+                {needsCustomer ? ` · ${selectedCustomerName || 'Cliente pendiente por seleccionar'}` : ' · Sin empresa asociada'}
+                {form.lmsOnly ? ' · Solo LMS' : ' · Acceso mixto'}
+                {effectiveRoles.filter((role) => role !== 'lms_only').length > 0
+                  ? ` · Roles: ${effectiveRoles.filter((role) => role !== 'lms_only').join(', ')}`
+                  : ' · Selecciona al menos un rol operativo'}
+              </Alert>
+            </Grid>
+            <Grid item xs={12} md={6}>
               <FormControlLabel
                 control={
                   <Switch
-                    checked={formData.isActive}
-                    onChange={(e) =>
-                      handleInputChange('isActive', e.target.checked)
-                    }
+                    checked={form.lmsOnly}
+                    onChange={(event) => {
+                      const checked = event.target.checked
+                      setForm((prev) => ({ ...prev, lmsOnly: checked }))
+                    }}
+                  />
+                }
+                label='Restringir a LMS-only'
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={form.active}
+                    onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))}
                   />
                 }
                 label='Usuario activo'
               />
             </Grid>
+            <Grid item xs={12}>
+              <Typography variant='subtitle2' sx={{ mb: 1 }}>
+                Roles operativos
+              </Typography>
+              <FormGroup>
+                <Grid container spacing={1}>
+                  {roleOptions
+                    .filter((role) => role.name !== 'lms_only')
+                    .map((role) => {
+                      const disabled =
+                        form.userType === 'client' &&
+                        (role.name === 'admin' || role.name === 'Training Manager' || role.name === 'employee')
+
+                      return (
+                        <Grid item xs={12} md={6} key={role.id}>
+                          <FormControlLabel
+                            control={
+                              <Switch
+                                checked={form.roles.includes(role.name)}
+                                onChange={() => handleToggleRole(role.name)}
+                                disabled={disabled}
+                              />
+                            }
+                            label={getRoleLabel(role.name, role.description)}
+                          />
+                        </Grid>
+                      )
+                    })}
+                </Grid>
+              </FormGroup>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+                {effectiveRoles.map((role) => (
+                  <Chip
+                    key={role}
+                    label={role === 'lms_only' ? 'Solo LMS' : getRoleLabel(role)}
+                    size='small'
+                    color={role === 'lms_only' ? 'warning' : 'default'}
+                  />
+                ))}
+              </Box>
+            </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancelar</Button>
-          <Button
-            onClick={handleSubmit}
-            variant='contained'
-            disabled={saveUserMutation.isLoading}
-          >
+          <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
+          <Button variant='contained' onClick={handleSave} disabled={isSaveDisabled}>
             {saveUserMutation.isLoading ? 'Guardando...' : 'Guardar'}
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={5000}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+      >
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../../store/userStore'
 import { Box, CircularProgress, Typography } from '@mui/material'
+import { useLmsPermissions } from '../../hooks/useLms'
+import { getLmsExperienceRole } from '../../utils/lmsIdentity'
 
 interface User {
   id: number
@@ -15,27 +17,31 @@ const LmsDashboard: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const navigate = useNavigate()
   const $userStore = useStore(userStore)
+  const { data: lmsPermissions } = useLmsPermissions({
+    retry: false,
+    refetchOnWindowFocus: false
+  })
 
   useEffect(() => {
-    // Simular la obtención del usuario actual
+    // Prefer currentUser from localStorage when present, otherwise derive
+    // the LMS experience from the authenticated store user.
     const user = localStorage.getItem('currentUser')
     if (user) {
       setCurrentUser(JSON.parse(user))
     } else {
-      // Si no hay usuario en localStorage, usar el del store
       const storeUser = $userStore
       if (storeUser && storeUser.rol) {
-        // Determinar el rol basado en los roles del store
         const roles = Array.isArray(storeUser.rol)
           ? storeUser.rol
           : [storeUser.rol]
-        let lmsRole = 'client' // default
-
-        if (roles.includes('admin')) {
-          lmsRole = 'admin'
-        } else if (roles.includes('employee')) {
-          lmsRole = 'employee'
-        }
+        const isClientUser = lmsPermissions
+          ? lmsPermissions.userType === 'client'
+          : Boolean(storeUser.customer?.id)
+        const lmsRole = getLmsExperienceRole({
+          roles,
+          userType: isClientUser ? 'client' : 'internal',
+          canManageCourses: lmsPermissions?.canManageCourses
+        })
 
         setCurrentUser({
           id: storeUser.customer?.id || 1,
@@ -48,7 +54,7 @@ const LmsDashboard: React.FC = () => {
         return
       }
     }
-  }, [navigate, $userStore])
+  }, [navigate, $userStore, lmsPermissions])
 
   useEffect(() => {
     if (currentUser) {

@@ -9,14 +9,15 @@ import { theme } from './theme.tsx'
 
 import { PostHogProvider } from 'posthog-js/react'
 
-import { QueryClient, QueryClientProvider } from 'react-query'
+import { QueryClientProvider } from 'react-query'
+import { ReactQueryDevtools } from 'react-query/devtools'
 import { WebSocketProvider } from '@utils/use-websockets.tsx'
+import { queryClient } from './config/queryClient'
+import { ToastProvider } from './Components/lms/Notifications/ToastNotifications'
 
 const options = {
   api_host: import.meta.env.VITE_POSTHOG_HOST
 }
-
-const queryClient = new QueryClient()
 
 // Sentry.init({
 //   dsn: 'https://5023f73ba5a170f91cba618b6a135cd9@o4509155116253184.ingest.us.sentry.io/4509155117432832',
@@ -61,11 +62,19 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <ThemeProvider theme={theme}>
-            <WebSocketProvider>
-              <Router />
-            </WebSocketProvider>
+            <ToastProvider
+              maxToasts={5}
+              defaultDuration={5000}
+              position={{ vertical: 'top', horizontal: 'right' }}
+            >
+              <WebSocketProvider>
+                <Router />
+              </WebSocketProvider>
+            </ToastProvider>
           </ThemeProvider>
         </BrowserRouter>
+        {/* React Query DevTools - only in development */}
+        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
       </QueryClientProvider>
     </PostHogProvider>
   </React.StrictMode>

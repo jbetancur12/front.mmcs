@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Box, Button, Stack, Typography } from '@mui/material'
+import { Alert, Box, Button, Stack, Typography } from '@mui/material'
 import { BorderColor, Clear, UploadFile } from '@mui/icons-material'
 
 interface SignaturePadProps {
@@ -29,87 +29,94 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
   const strokeColor = useMemo(() => '#111827', [])
 
   const normalizeSignatureImage = React.useCallback(
-    (dataUrl: string): Promise<string> =>
-      new Promise((resolve) => {
-        const image = new Image()
-        image.onload = () => {
-          const sourceCanvas = document.createElement('canvas')
-          sourceCanvas.width = image.width
-          sourceCanvas.height = image.height
-          const sourceContext = sourceCanvas.getContext('2d')
+    (source: HTMLCanvasElement | HTMLImageElement) => {
+      const sourceWidth =
+        source instanceof HTMLCanvasElement ? source.width : source.naturalWidth || source.width
+      const sourceHeight =
+        source instanceof HTMLCanvasElement ? source.height : source.naturalHeight || source.height
 
-          if (!sourceContext) {
-            resolve(dataUrl)
-            return
+      if (!sourceWidth || !sourceHeight) {
+        return null
+      }
+
+      const workCanvas = document.createElement('canvas')
+      workCanvas.width = sourceWidth
+      workCanvas.height = sourceHeight
+
+      const workContext = workCanvas.getContext('2d', { willReadFrequently: true })
+      if (!workContext) {
+        return null
+      }
+
+      workContext.clearRect(0, 0, sourceWidth, sourceHeight)
+      workContext.drawImage(source, 0, 0, sourceWidth, sourceHeight)
+
+      const imageData = workContext.getImageData(0, 0, sourceWidth, sourceHeight)
+      const pixels = imageData.data
+      let minX = sourceWidth
+      let minY = sourceHeight
+      let maxX = -1
+      let maxY = -1
+
+      for (let y = 0; y < sourceHeight; y += 1) {
+        for (let x = 0; x < sourceWidth; x += 1) {
+          const index = (y * sourceWidth + x) * 4
+          const red = pixels[index]
+          const green = pixels[index + 1]
+          const blue = pixels[index + 2]
+          const alpha = pixels[index + 3]
+
+          const isNearWhite = red > 245 && green > 245 && blue > 245
+          if (alpha > 0 && isNearWhite) {
+            pixels[index + 3] = 0
+            continue
           }
 
-          sourceContext.drawImage(image, 0, 0)
-          const { data, width, height } = sourceContext.getImageData(0, 0, image.width, image.height)
-
-          let minX = width
-          let minY = height
-          let maxX = -1
-          let maxY = -1
-
-          for (let y = 0; y < height; y += 1) {
-            for (let x = 0; x < width; x += 1) {
-              const index = (y * width + x) * 4
-              const r = data[index]
-              const g = data[index + 1]
-              const b = data[index + 2]
-              const a = data[index + 3]
-              const isVisibleInk = a > 10 && !(r > 245 && g > 245 && b > 245)
-
-              if (isVisibleInk) {
-                minX = Math.min(minX, x)
-                minY = Math.min(minY, y)
-                maxX = Math.max(maxX, x)
-                maxY = Math.max(maxY, y)
-              }
-            }
+          if (pixels[index + 3] > 0) {
+            minX = Math.min(minX, x)
+            minY = Math.min(minY, y)
+            maxX = Math.max(maxX, x)
+            maxY = Math.max(maxY, y)
           }
-
-          if (maxX < minX || maxY < minY) {
-            resolve(dataUrl)
-            return
-          }
-
-          const padding = 12
-          const cropX = Math.max(0, minX - padding)
-          const cropY = Math.max(0, minY - padding)
-          const cropWidth = Math.min(width - cropX, maxX - minX + 1 + padding * 2)
-          const cropHeight = Math.min(height - cropY, maxY - minY + 1 + padding * 2)
-
-          const outputCanvas = document.createElement('canvas')
-          outputCanvas.width = cropWidth
-          outputCanvas.height = cropHeight
-          const outputContext = outputCanvas.getContext('2d')
-
-          if (!outputContext) {
-            resolve(dataUrl)
-            return
-          }
-
-          outputContext.fillStyle = '#ffffff'
-          outputContext.fillRect(0, 0, cropWidth, cropHeight)
-          outputContext.drawImage(
-            sourceCanvas,
-            cropX,
-            cropY,
-            cropWidth,
-            cropHeight,
-            0,
-            0,
-            cropWidth,
-            cropHeight
-          )
-
-          resolve(outputCanvas.toDataURL('image/png'))
         }
+      }
 
-        image.onerror = () => resolve(dataUrl)
-        image.src = dataUrl
-      }),
+      workContext.putImageData(imageData, 0, 0)
+
+      if (maxX < minX || maxY < minY) {
+        return null
+      }
+
+      const padding = 8
+      const cropX = Math.max(0, minX - padding)
+      const cropY = Math.max(0, minY - padding)
+      const cropWidth = Math.min(sourceWidth - cropX, maxX - minX + padding * 2 + 1)
+      const cropHeight = Math.min(sourceHeight - cropY, maxY - minY + padding * 2 + 1)
+
+      const outputCanvas = document.createElement('canvas')
+      outputCanvas.width = cropWidth
+      outputCanvas.height = cropHeight
+
+      const outputContext = outputCanvas.getContext('2d')
+      if (!outputContext) {
+        return null
+      }
+
+      outputContext.clearRect(0, 0, cropWidth, cropHeight)
+      outputContext.drawImage(
+        workCanvas,
+        cropX,
+        cropY,
+        cropWidth,
+        cropHeight,
+        0,
+        0,
+        cropWidth,
+        cropHeight
+      )
+
+      return outputCanvas.toDataURL('image/png')
+    },
     []
   )
 
@@ -120,12 +127,8 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
 
     const ratio = window.devicePixelRatio || 1
     const width = container.clientWidth || 400
-    const hasExternalValue = Boolean(value)
-    const previousData = hasExternalValue
-      ? value
-      : hasSignature
-        ? canvas.toDataURL('image/png')
-        : null
+    const normalizedValue = typeof value === 'string' && value.trim().length > 0 ? value : null
+    const previousData = normalizedValue || (hasSignature ? canvas.toDataURL('image/png') : null)
 
     canvas.width = width * ratio
     canvas.height = height * ratio
@@ -140,8 +143,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     context.lineJoin = 'round'
     context.lineWidth = 2
     context.strokeStyle = strokeColor
-    context.fillStyle = '#ffffff'
-    context.fillRect(0, 0, width, height)
+    context.clearRect(0, 0, width, height)
 
     if (previousData) {
       const image = new Image()
@@ -203,40 +205,22 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const dataUrl = canvas.toDataURL('image/png')
-    const normalizedDataUrl = await normalizeSignatureImage(dataUrl)
+    const dataUrl = normalizeSignatureImage(canvas) || canvas.toDataURL('image/png')
     setHasSignature(true)
-    onChange(normalizedDataUrl)
+    onChange(dataUrl)
   }
 
   const clearSignature = () => {
     const canvas = canvasRef.current
-    const container = containerRef.current
+    const context = canvas?.getContext('2d')
+
+    if (canvas && context) {
+      context.clearRect(0, 0, canvas.width, canvas.height)
+    }
 
     setHasSignature(false)
     setUploadError(null)
     onChange(null)
-
-    if (!canvas || !container) return
-
-    const ratio = window.devicePixelRatio || 1
-    const width = container.clientWidth || 400
-    const context = canvas.getContext('2d')
-    if (!context) return
-
-    context.setTransform(1, 0, 0, 1, 0, 0)
-    canvas.width = width * ratio
-    canvas.height = height * ratio
-    canvas.style.width = `${width}px`
-    canvas.style.height = `${height}px`
-
-    context.scale(ratio, ratio)
-    context.lineCap = 'round'
-    context.lineJoin = 'round'
-    context.lineWidth = 2
-    context.strokeStyle = strokeColor
-    context.fillStyle = '#ffffff'
-    context.fillRect(0, 0, width, height)
   }
 
   const handleUploadClick = () => {
@@ -248,34 +232,42 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     const file = event.target.files?.[0]
     event.target.value = ''
 
-    if (!file) return
-
-    if (!file.type.startsWith('image/')) {
-      setUploadError('Solo puedes subir imágenes para la firma.')
+    if (!file) {
       return
     }
 
-    const maxSizeInBytes = 4 * 1024 * 1024
-    if (file.size > maxSizeInBytes) {
-      setUploadError('La imagen de la firma no debe superar 4 MB.')
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      setUploadError('Solo se permiten imagenes PNG, JPG o WEBP.')
+      return
+    }
+
+    if (file.size > 4 * 1024 * 1024) {
+      setUploadError('La imagen de firma no puede superar 4 MB.')
       return
     }
 
     const reader = new FileReader()
-    reader.onload = async () => {
-      const result = typeof reader.result === 'string' ? reader.result : null
-      if (!result) {
-        setUploadError('No se pudo leer la imagen seleccionada.')
+    reader.onload = () => {
+      const rawValue = typeof reader.result === 'string' ? reader.result : null
+      if (!rawValue) {
+        setUploadError('No se pudo procesar la imagen seleccionada.')
         return
       }
 
-      const normalizedDataUrl = await normalizeSignatureImage(result)
-      setUploadError(null)
-      setHasSignature(true)
-      onChange(normalizedDataUrl)
+      const image = new Image()
+      image.onload = () => {
+        const nextValue = normalizeSignatureImage(image) || rawValue
+        setUploadError(null)
+        setHasSignature(Boolean(nextValue))
+        onChange(nextValue)
+      }
+      image.onerror = () => {
+        setUploadError('No se pudo procesar la imagen seleccionada.')
+      }
+      image.src = rawValue
     }
     reader.onerror = () => {
-      setUploadError('No se pudo cargar la imagen seleccionada.')
+      setUploadError('No se pudo leer la imagen seleccionada.')
     }
     reader.readAsDataURL(file)
   }
@@ -300,7 +292,8 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
           border: '1px solid #d1d5db',
           borderRadius: 2,
           overflow: 'hidden',
-          backgroundColor: '#ffffff',
+          background:
+            'linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(248,250,252,0.88) 100%)',
           position: 'relative'
         }}
       >
@@ -329,12 +322,15 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
             }}
           >
             <BorderColor fontSize='small' />
-            <Typography variant='body2'>
-              Firma aquí con mouse o touch
-            </Typography>
+            <Typography variant='body2'>Firma aquí con mouse o touch</Typography>
           </Stack>
         )}
       </Box>
+      {uploadError ? (
+        <Alert severity='warning' sx={{ mt: 1.5 }}>
+          {uploadError}
+        </Alert>
+      ) : null}
       <Stack
         direction='row'
         justifyContent='space-between'
@@ -343,11 +339,9 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
         gap={1}
         sx={{ mt: 1 }}
       >
-        <Box>
-          <Typography variant='caption' color={uploadError ? 'error.main' : 'text.secondary'}>
-            {uploadError || helperText || 'La firma se guarda como imagen para el PDF.'}
-          </Typography>
-        </Box>
+        <Typography variant='caption' color='text.secondary'>
+          {helperText || 'La firma se guarda como imagen para el PDF.'}
+        </Typography>
         <Stack direction='row' spacing={1}>
           <Button
             size='small'

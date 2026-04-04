@@ -1,819 +1,373 @@
-import React, { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
+  Alert,
   Box,
+  Button,
   Card,
   CardContent,
   CardHeader,
-  Typography,
-  Button,
-  Grid,
-  Paper,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Tabs,
-  Tab,
   Chip,
-  Divider
+  IconButton,
+  Stack,
+  Typography
 } from '@mui/material'
-import {
-  ArrowBack as ArrowBackIcon,
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  PlayArrow as PlayIcon,
-  Description as TextIcon,
-  Quiz as QuizIcon,
-  Save as SaveIcon
-} from '@mui/icons-material'
-import { useQuery, useMutation, useQueryClient } from 'react-query'
+import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material'
+import { useMutation, useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
-import LmsQuizEditor from './LmsQuizEditor'
+import LmsContentEditor, {
+  ContentLessonDraft,
+  ContentModuleDraft
+} from '../shared/LmsContentEditor'
+import {
+  buildLessonResourceDownloadUrl,
+  lmsService,
+  type Course as BackendCourse,
+  type CourseAudience
+} from '../../../services/lmsService'
 
-interface CourseUnit {
-  id: number
-  title: string
-  type: 'video' | 'text' | 'quiz'
-  duration: string
-  order: number
-  content: {
-    videoUrl?: string
-    transcript?: string
-    text?: string
-    questions?: QuizQuestion[]
-    description?: string
-  }
-}
-
-interface QuizQuestion {
-  id: number
-  question: string
-  type: 'true-false' | 'single-choice' | 'multiple-choice'
-  options: string[]
-  correctAnswer: number | number[] // Para single-choice es un número, para multiple-choice es un array
-  explanation?: string
-  points: number
-}
-
-interface Course {
+interface FrontendCourseDraft {
   id: number
   title: string
   description: string
-  category: string
-  instructor: string
-  duration: string
-  isActive: boolean
-  isPublic: boolean
-  totalLessons: number
-  enrolledStudents: number
-  rating: number
-  createdAt: string
-  audience: {
-    employees: boolean
-    clients: boolean
+  audience: CourseAudience
+  is_mandatory?: boolean
+  has_certificate?: boolean
+  modules: ContentModuleDraft[]
+}
+
+const getApiData = <T,>(response: any): T => response?.data?.data ?? response?.data ?? response
+
+const pluralize = (count: number, singular: string, plural?: string) =>
+  `${count} ${count === 1 ? singular : plural || `${singular}s`}`
+
+const transformCourseFromBackend = (backendCourse: BackendCourse): FrontendCourseDraft => ({
+  id: backendCourse.id,
+  title: backendCourse.title,
+  description: backendCourse.description,
+  audience: backendCourse.audience || 'internal',
+  is_mandatory: backendCourse.is_mandatory,
+  has_certificate: backendCourse.has_certificate,
+  modules: (backendCourse.modules || []).map((module, moduleIndex) => ({
+    id: String(module.id),
+    title: module.title,
+    description: module.description || '',
+    order: module.order_index || moduleIndex + 1,
+    lessons: (module.lessons || []).map((lesson, lessonIndex) => ({
+      id: String(lesson.id),
+      title: lesson.title,
+      type: lesson.type === 'quiz' ? 'quiz' : lesson.type === 'video' ? 'video' : 'text',
+      order: lesson.order_index || lessonIndex + 1,
+      estimatedMinutes: lesson.estimated_minutes || lesson.duration_minutes || 10,
+      content: {
+        text: lesson.content || '',
+        description: '',
+        videoUrl: lesson.video_url || '',
+        videoSource: lesson.video_source || 'youtube',
+        quizId: lesson.quiz?.id,
+        resources: (lesson.resources || []).map((resource, resourceIndex) => ({
+          id: String(resource.id),
+          title: resource.title,
+          description: resource.description || '',
+          resourceType: resource.resource_type,
+          fileUrl: resource.external_url
+            ? ''
+            : resource.download_url ||
+              (resource.object_key ? buildLessonResourceDownloadUrl(resource.id) : resource.file_url || ''),
+          externalUrl: resource.external_url || '',
+          bucketName: resource.bucket_name || '',
+          objectKey: resource.object_key || '',
+          mimeType: resource.mime_type || '',
+          fileSize: resource.file_size || undefined,
+          originalFilename: resource.original_filename || '',
+          localFile: null,
+          order: resource.order_index || resourceIndex + 1
+        }))
+      }
+    }))
+  }))
+})
+
+const normalizeLessonPayload = (lesson: ContentLessonDraft) => {
+  const basePayload: Record<string, any> = {
+    title: lesson.title,
+    type: lesson.type,
+    order_index: lesson.order,
+    estimated_minutes: lesson.estimatedMinutes,
+    is_mandatory: true
   }
-  units: CourseUnit[]
+
+  if (lesson.type === 'text') {
+    basePayload.content = lesson.content.text || '<p>Contenido pendiente</p>'
+  }
+
+  if (lesson.type === 'video') {
+    basePayload.video_url = lesson.content.videoUrl || ''
+    basePayload.video_source = lesson.content.videoSource || 'youtube'
+    basePayload.content = lesson.content.description || ''
+  }
+
+  if (lesson.type === 'quiz') {
+    basePayload.content = lesson.content.description || 'Evaluación del módulo'
+  }
+
+  return basePayload
 }
 
 const LmsCourseContentEditor: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState(0)
-  const [selectedUnit, setSelectedUnit] = useState<CourseUnit | null>(null)
-  const [openUnitDialog, setOpenUnitDialog] = useState(false)
-  const [editingUnit, setEditingUnit] = useState<CourseUnit | null>(null)
-  const [newUnit, setNewUnit] = useState({
-    title: '',
-    type: 'video' as 'video' | 'text' | 'quiz',
-    duration: '',
-    description: ''
-  })
-
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
+  const [draftCourse, setDraftCourse] = useState<FrontendCourseDraft | null>(null)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const draftCourseRef = useRef<FrontendCourseDraft | null>(null)
 
-  // Mock data para el curso con unidades
-  const mockCourse: Course = {
-    id: 1,
-    title: 'JavaScript Avanzado',
-    description: 'Aprende conceptos avanzados de JavaScript',
-    category: 'Programación',
-    instructor: 'Dr. Carlos Méndez',
-    duration: '8 horas',
-    isActive: true,
-    isPublic: false,
-    totalLessons: 12,
-    enrolledStudents: 45,
-    rating: 4.8,
-    createdAt: '2024-01-15',
-    audience: {
-      employees: true,
-      clients: false
-    },
-    units: [
-      {
-        id: 1,
-        title: 'Introducción a JavaScript',
-        type: 'video',
-        duration: '45 min',
-        order: 1,
-        content: {
-          videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-          transcript:
-            'En esta unidad exploraremos los fundamentos básicos de JavaScript...',
-          description:
-            'Introducción a los conceptos fundamentales de JavaScript'
-        }
-      },
-      {
-        id: 2,
-        title: 'Variables y Tipos de Datos',
-        type: 'text',
-        duration: '30 min',
-        order: 2,
-        content: {
-          text: `# Variables y Tipos de Datos
-
-## Declaración de Variables
-En JavaScript, puedes declarar variables usando var, let o const...
-
-## Tipos de Datos Primitivos
-- **String**: Para texto
-- **Number**: Para números
-- **Boolean**: Para valores true/false
-- **Undefined**: Variable sin valor asignado
-- **Null**: Valor nulo intencional
-
-## Ejemplos Prácticos
-\`\`\`javascript
-let nombre = "Juan";
-const edad = 25;
-let esEstudiante = true;
-\`\`\``,
-          description: 'Aprende sobre variables y tipos de datos en JavaScript'
-        }
-      },
-      {
-        id: 3,
-        title: 'Quiz: Fundamentos de JavaScript',
-        type: 'quiz',
-        duration: '15 min',
-        order: 3,
-        content: {
-          questions: [
-            {
-              id: 1,
-              question:
-                '¿Cuál es la forma correcta de declarar una variable en JavaScript?',
-              type: 'single-choice',
-              options: [
-                'var nombre = "Juan"',
-                'let nombre = "Juan"',
-                'const nombre = "Juan"',
-                'Todas las anteriores'
-              ],
-              correctAnswer: 3,
-              explanation: 'Todas las formas son válidas en JavaScript moderno',
-              points: 2
-            },
-            {
-              id: 2,
-              question: '¿JavaScript es un lenguaje de programación tipado?',
-              type: 'single-choice',
-              options: [
-                'Sí, es fuertemente tipado',
-                'No, es dinámicamente tipado'
-              ],
-              correctAnswer: 1,
-              explanation:
-                'JavaScript es dinámicamente tipado, no necesitas declarar tipos',
-              points: 1
-            },
-            {
-              id: 3,
-              question:
-                'JavaScript es un lenguaje de programación interpretado.',
-              type: 'true-false',
-              options: ['Falso', 'Verdadero'],
-              correctAnswer: 1,
-              explanation:
-                'JavaScript es un lenguaje interpretado que se ejecuta en el navegador',
-              points: 1
-            },
-            {
-              id: 4,
-              question: 'Selecciona todas las características de JavaScript:',
-              type: 'multiple-choice',
-              options: [
-                'Es orientado a objetos',
-                'Es funcional',
-                'Es tipado estáticamente',
-                'Es dinámicamente tipado'
-              ],
-              correctAnswer: [0, 1, 3],
-              explanation:
-                'JavaScript es orientado a objetos, funcional y dinámicamente tipado, pero no es tipado estáticamente',
-              points: 3
-            }
-          ],
-          description:
-            'Evalúa tu conocimiento sobre los fundamentos de JavaScript'
-        }
-      }
-    ]
-  }
-
-  // Query para obtener el curso
-  const { data: course = mockCourse, isLoading } = useQuery<Course>(
+  const { data: course, isLoading } = useQuery<FrontendCourseDraft>(
     ['lms-course', courseId],
     async () => {
-      // En el futuro, esto hará una llamada real a la API
-      // const response = await axiosPrivate.get(`/lms/courses/${courseId}`)
-      // return response.data
-      return mockCourse
-    }
-  )
-
-  // Mutación para guardar cambios
-  const saveCourseMutation = useMutation(
-    async (courseData: Course) => {
-      return axiosPrivate.put(`/lms/courses/${courseId}`, courseData)
+      if (!courseId) throw new Error('Course ID is required')
+      const backendCourse = await lmsService.getCourse(Number(courseId))
+      return transformCourseFromBackend(backendCourse)
     },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['lms-course', courseId])
-        alert('Curso guardado exitosamente')
-      },
-      onError: (error: any) => {
-        console.error('Error al guardar curso:', error)
-        alert('Error al guardar el curso')
-      }
-    }
+    { enabled: !!courseId }
   )
 
-  const handleAddUnit = () => {
-    const unit: CourseUnit = {
-      id: Date.now(),
-      ...newUnit,
-      order: course.units.length + 1,
-      content: {
-        description: newUnit.description,
-        ...(newUnit.type === 'video' && {
-          videoUrl: '',
-          transcript: ''
-        }),
-        ...(newUnit.type === 'text' && {
-          text: ''
-        }),
-        ...(newUnit.type === 'quiz' && {
-          questions: []
-        })
+  useEffect(() => {
+    if (course) {
+      setDraftCourse(course)
+      draftCourseRef.current = course
+      setHasUnsavedChanges(false)
+    }
+  }, [course])
+
+  const deleteModuleMutation = useMutation(async (moduleId: string) => {
+    if (!moduleId.startsWith('temp_') && !moduleId.startsWith('module_')) {
+      await axiosPrivate.delete(`/lms/content/modules/${moduleId}`)
+    }
+  })
+
+  const deleteLessonMutation = useMutation(async (lessonId: string) => {
+    if (!lessonId.startsWith('temp_') && !lessonId.startsWith('lesson_')) {
+      await axiosPrivate.delete(`/lms/content/lessons/${lessonId}`)
+    }
+  })
+
+  const deleteResourceMutation = useMutation(async (resourceId: string) => {
+    if (!resourceId.startsWith('temp_') && !resourceId.startsWith('resource_')) {
+      await axiosPrivate.delete(`/lms/content/resources/${resourceId}`)
+    }
+  })
+
+  const saveCourseMutation = useMutation(async (courseData: FrontendCourseDraft) => {
+    await axiosPrivate.put(`/lms/courses/${courseData.id}`, {
+      title: courseData.title,
+      description: courseData.description,
+      audience: courseData.audience,
+      is_mandatory: courseData.is_mandatory,
+      has_certificate: courseData.has_certificate
+    })
+
+    for (const module of courseData.modules) {
+      const modulePayload = {
+        title: module.title,
+        description: module.description || '',
+        order_index: module.order
+      }
+
+      const persistedModule = module.id.startsWith('temp_') || module.id.startsWith('module_')
+        ? getApiData<{ id: number }>(
+            await axiosPrivate.post(`/lms/content/courses/${courseData.id}/modules`, modulePayload)
+          )
+        : getApiData<{ id: number }>(
+            await axiosPrivate.put(`/lms/content/modules/${module.id}`, modulePayload)
+          )
+
+      const persistedModuleId = persistedModule.id
+
+      for (const lesson of module.lessons) {
+        const lessonPayload = normalizeLessonPayload(lesson)
+        const persistedLesson = lesson.id.startsWith('temp_') || lesson.id.startsWith('lesson_')
+          ? getApiData<{ id: number }>(
+              await axiosPrivate.post(`/lms/content/modules/${persistedModuleId}/lessons`, lessonPayload)
+            )
+          : getApiData<{ id: number }>(
+              await axiosPrivate.put(`/lms/content/lessons/${lesson.id}`, lessonPayload)
+            )
+
+        const persistedLessonId = persistedLesson.id
+
+        for (const resource of lesson.content.resources) {
+          const isUploadedResource = resource.resourceType !== 'link'
+          const baseResourcePayload = {
+            title: resource.title,
+            description: resource.description || '',
+            resource_type: resource.resourceType,
+            order_index: resource.order
+          }
+
+          if (isUploadedResource && resource.localFile) {
+            const formData = new FormData()
+            formData.append('file', resource.localFile)
+            formData.append('title', resource.title)
+            formData.append('description', resource.description || '')
+            formData.append('resource_type', resource.resourceType)
+            formData.append('order_index', String(resource.order))
+
+            if (resource.id.startsWith('temp_') || resource.id.startsWith('resource_')) {
+              await axiosPrivate.post(`/lms/content/lessons/${persistedLessonId}/resources/upload`, formData, {
+                headers: {
+                  'Content-Type': 'multipart/form-data'
+                }
+              })
+            } else {
+              await axiosPrivate.put(`/lms/content/resources/${resource.id}/upload`, formData, {
+                headers: {
+                  'Content-Type': 'multipart/form-data'
+                }
+              })
+            }
+            continue
+          }
+
+          if (isUploadedResource) {
+            const storedResourcePayload = {
+              ...baseResourcePayload,
+              file_url: null,
+              bucket_name: resource.bucketName || null,
+              object_key: resource.objectKey || null,
+              mime_type: resource.mimeType || null,
+              file_size: resource.fileSize || null,
+              original_filename: resource.originalFilename || null,
+              external_url: null
+            }
+
+            if (resource.id.startsWith('temp_') || resource.id.startsWith('resource_')) {
+              await axiosPrivate.post(`/lms/content/lessons/${persistedLessonId}/resources`, storedResourcePayload)
+            } else {
+              await axiosPrivate.put(`/lms/content/resources/${resource.id}`, storedResourcePayload)
+            }
+            continue
+          }
+
+          const linkResourcePayload = {
+            ...baseResourcePayload,
+            file_url: null,
+            external_url: resource.externalUrl || null,
+            bucket_name: null,
+            object_key: null,
+            mime_type: null,
+            file_size: null,
+            original_filename: null
+          }
+
+          if (resource.id.startsWith('temp_') || resource.id.startsWith('resource_')) {
+            await axiosPrivate.post(`/lms/content/lessons/${persistedLessonId}/resources`, linkResourcePayload)
+          } else {
+            await axiosPrivate.put(`/lms/content/resources/${resource.id}`, linkResourcePayload)
+          }
+        }
       }
     }
-
-    const updatedCourse = {
-      ...course,
-      units: [...course.units, unit]
+  }, {
+    onSuccess: async () => {
+      await queryClient.invalidateQueries(['lms-course', courseId])
+      await queryClient.invalidateQueries(['lms-courses'])
+      setHasUnsavedChanges(false)
     }
+  })
 
-    saveCourseMutation.mutate(updatedCourse)
-    setNewUnit({ title: '', type: 'video', duration: '', description: '' })
-    setOpenUnitDialog(false)
-    setSelectedUnit(unit)
-  }
-
-  const handleDeleteUnit = (unitId: number) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta unidad?')) {
-      const updatedCourse = {
-        ...course,
-        units: course.units.filter((unit) => unit.id !== unitId)
+  const handleModulesChange = (modules: ContentModuleDraft[]) => {
+    setDraftCourse((current) => {
+      if (!current) {
+        return current
       }
-      saveCourseMutation.mutate(updatedCourse)
-      if (selectedUnit?.id === unitId) {
-        setSelectedUnit(null)
-      }
+
+      const nextDraft = { ...current, modules }
+      draftCourseRef.current = nextDraft
+      return nextDraft
+    })
+    setHasUnsavedChanges(true)
+  }
+
+  const handleSave = () => {
+    if (draftCourseRef.current) {
+      saveCourseMutation.mutate(draftCourseRef.current)
     }
   }
 
-  const handleUpdateUnit = (unitId: number, updatedUnit: CourseUnit) => {
-    const updatedCourse = {
-      ...course,
-      units: course.units.map((unit) =>
-        unit.id === unitId ? updatedUnit : unit
-      )
-    }
-    saveCourseMutation.mutate(updatedCourse)
-  }
+  const moduleCounts = useMemo(() => {
+    const modules = draftCourse?.modules || []
+    const lessonCount = modules.reduce((total, module) => total + module.lessons.length, 0)
+    const resourceCount = modules.reduce(
+      (total, module) =>
+        total + module.lessons.reduce((lessonTotal, lesson) => lessonTotal + lesson.content.resources.length, 0),
+      0
+    )
 
-  const getUnitIcon = (type: string) => {
-    switch (type) {
-      case 'video':
-        return <PlayIcon />
-      case 'text':
-        return <TextIcon />
-      case 'quiz':
-        return <QuizIcon />
-      default:
-        return <TextIcon />
+    return {
+      modules: modules.length,
+      lessons: lessonCount,
+      resources: resourceCount
     }
-  }
+  }, [draftCourse])
 
-  const getUnitTypeLabel = (type: string) => {
-    switch (type) {
-      case 'video':
-        return 'Video'
-      case 'text':
-        return 'Texto'
-      case 'quiz':
-        return 'Quiz'
-      default:
-        return 'Texto'
-    }
-  }
-
-  if (isLoading) {
+  if (isLoading || !draftCourse) {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '50vh'
-        }}
-      >
-        <Typography>Cargando curso...</Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <Typography>Cargando contenido del curso...</Typography>
       </Box>
     )
   }
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <IconButton
-          onClick={() => navigate('/lms/admin/courses')}
-          sx={{ mr: 2 }}
-        >
+      <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
+        <IconButton onClick={() => navigate('/lms/admin/courses')}>
           <ArrowBackIcon />
         </IconButton>
-        <Box>
-          <Typography variant='h4' component='h1'>
-            Editor de Contenido: {course.title}
-          </Typography>
-          <Typography variant='body2' color='text.secondary'>
-            {course.description}
+        <Box sx={{ flexGrow: 1 }}>
+          <Typography variant="h4">Contenido del curso: {draftCourse.title}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Estructura este curso como secciones, lecciones y recursos de apoyo sin salir de la misma pantalla.
           </Typography>
         </Box>
-      </Box>
+        <Button
+          variant="contained"
+          startIcon={<SaveIcon />}
+          onClick={handleSave}
+          disabled={saveCourseMutation.isLoading || !hasUnsavedChanges}
+        >
+          {saveCourseMutation.isLoading ? 'Guardando cambios...' : hasUnsavedChanges ? 'Guardar cambios del contenido' : 'Sin cambios por guardar'}
+        </Button>
+      </Stack>
 
-      <Grid container spacing={3}>
-        {/* Lista de unidades */}
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardHeader
-              title='Unidades del Curso'
-              action={
-                <Button
-                  variant='contained'
-                  size='small'
-                  startIcon={<AddIcon />}
-                  onClick={() => setOpenUnitDialog(true)}
-                >
-                  Agregar Unidad
-                </Button>
-              }
-            />
-            <CardContent>
-              <List>
-                {course.units.map((unit) => (
-                  <ListItem
-                    key={unit.id}
-                    button
-                    selected={selectedUnit?.id === unit.id}
-                    onClick={() => setSelectedUnit(unit)}
-                    sx={{
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      borderRadius: 1,
-                      mb: 1,
-                      '&.Mui-selected': {
-                        backgroundColor: 'primary.light',
-                        color: 'primary.contrastText'
-                      }
-                    }}
-                  >
-                    <ListItemIcon>{getUnitIcon(unit.type)}</ListItemIcon>
-                    <ListItemText
-                      primary={unit.title}
-                      secondary={
-                        <Box
-                          sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-                        >
-                          <Chip
-                            label={getUnitTypeLabel(unit.type)}
-                            size='small'
-                          />
-                          <Typography variant='caption'>
-                            {unit.duration}
-                          </Typography>
-                        </Box>
-                      }
-                    />
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <IconButton
-                        size='small'
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setEditingUnit(unit)
-                          setOpenUnitDialog(true)
-                        }}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        size='small'
-                        color='error'
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDeleteUnit(unit.id)
-                        }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Box>
-                  </ListItem>
-                ))}
-                {course.units.length === 0 && (
-                  <Box sx={{ textAlign: 'center', py: 4 }}>
-                    <TextIcon
-                      sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }}
-                    />
-                    <Typography color='text.secondary'>
-                      No hay unidades creadas
-                    </Typography>
-                    <Typography variant='caption' color='text.secondary'>
-                      Agrega tu primera unidad para comenzar
-                    </Typography>
-                  </Box>
-                )}
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
+      <Alert severity="info" sx={{ mb: 2 }}>
+        Flujo recomendado: 1) crea una sección, 2) agrega las lecciones que harán parte de ella, 3) usa recursos de apoyo para PDFs o enlaces, 4) guarda y revisa la vista previa.
+      </Alert>
 
-        {/* Editor de contenido */}
-        <Grid item xs={12} md={8}>
-          {selectedUnit ? (
-            <Card>
-              <CardHeader
-                title={`Editando: ${selectedUnit.title}`}
-                subheader={`Tipo: ${getUnitTypeLabel(selectedUnit.type)}`}
-                action={
-                  <Button
-                    variant='contained'
-                    startIcon={<SaveIcon />}
-                    onClick={() =>
-                      handleUpdateUnit(selectedUnit.id, selectedUnit)
-                    }
-                  >
-                    Guardar Cambios
-                  </Button>
-                }
-              />
-              <CardContent>
-                <Tabs
-                  value={activeTab}
-                  onChange={(_e, newValue) => setActiveTab(newValue)}
-                >
-                  <Tab label='Información Básica' />
-                  <Tab label='Contenido' />
-                  <Tab label='Vista Previa' />
-                </Tabs>
+      <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap' }}>
+        <Chip label={pluralize(moduleCounts.modules, 'sección', 'secciones')} color="primary" variant="outlined" />
+        <Chip label={pluralize(moduleCounts.lessons, 'lección', 'lecciones')} variant="outlined" />
+        <Chip label={pluralize(moduleCounts.resources, 'recurso')} variant="outlined" />
+      </Stack>
 
-                <Box sx={{ mt: 2 }}>
-                  {activeTab === 0 && (
-                    <Grid container spacing={2}>
-                      <Grid item xs={12}>
-                        <TextField
-                          fullWidth
-                          label='Título de la unidad'
-                          value={selectedUnit.title}
-                          onChange={(e) =>
-                            setSelectedUnit({
-                              ...selectedUnit,
-                              title: e.target.value
-                            })
-                          }
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label='Duración'
-                          value={selectedUnit.duration}
-                          onChange={(e) =>
-                            setSelectedUnit({
-                              ...selectedUnit,
-                              duration: e.target.value
-                            })
-                          }
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <FormControl fullWidth>
-                          <InputLabel>Tipo de contenido</InputLabel>
-                          <Select
-                            value={selectedUnit.type}
-                            label='Tipo de contenido'
-                            onChange={(e) =>
-                              setSelectedUnit({
-                                ...selectedUnit,
-                                type: e.target.value as
-                                  | 'video'
-                                  | 'text'
-                                  | 'quiz'
-                              })
-                            }
-                          >
-                            <MenuItem value='video'>Video</MenuItem>
-                            <MenuItem value='text'>Texto</MenuItem>
-                            <MenuItem value='quiz'>Quiz</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField
-                          fullWidth
-                          multiline
-                          rows={3}
-                          label='Descripción'
-                          value={selectedUnit.content.description || ''}
-                          onChange={(e) =>
-                            setSelectedUnit({
-                              ...selectedUnit,
-                              content: {
-                                ...selectedUnit.content,
-                                description: e.target.value
-                              }
-                            })
-                          }
-                        />
-                      </Grid>
-                    </Grid>
-                  )}
-
-                  {activeTab === 1 && (
-                    <Box>
-                      {selectedUnit.type === 'video' && (
-                        <Grid container spacing={2}>
-                          <Grid item xs={12}>
-                            <TextField
-                              fullWidth
-                              label='URL del video (YouTube, Vimeo, etc.)'
-                              value={selectedUnit.content.videoUrl || ''}
-                              onChange={(e) =>
-                                setSelectedUnit({
-                                  ...selectedUnit,
-                                  content: {
-                                    ...selectedUnit.content,
-                                    videoUrl: e.target.value
-                                  }
-                                })
-                              }
-                              helperText='Soporta YouTube, Vimeo y enlaces directos a archivos de video'
-                            />
-                          </Grid>
-                          <Grid item xs={12}>
-                            <TextField
-                              fullWidth
-                              multiline
-                              rows={4}
-                              label='Transcripción del video'
-                              value={selectedUnit.content.transcript || ''}
-                              onChange={(e) =>
-                                setSelectedUnit({
-                                  ...selectedUnit,
-                                  content: {
-                                    ...selectedUnit.content,
-                                    transcript: e.target.value
-                                  }
-                                })
-                              }
-                            />
-                          </Grid>
-                        </Grid>
-                      )}
-
-                      {selectedUnit.type === 'text' && (
-                        <TextField
-                          fullWidth
-                          multiline
-                          rows={12}
-                          label='Contenido del texto'
-                          value={selectedUnit.content.text || ''}
-                          onChange={(e) =>
-                            setSelectedUnit({
-                              ...selectedUnit,
-                              content: {
-                                ...selectedUnit.content,
-                                text: e.target.value
-                              }
-                            })
-                          }
-                          helperText='Puedes usar Markdown para formatear el texto'
-                        />
-                      )}
-
-                      {selectedUnit.type === 'quiz' && (
-                        <Box>
-                          <Typography variant='h6' gutterBottom>
-                            Preguntas del Quiz
-                          </Typography>
-                          <LmsQuizEditor
-                            questions={selectedUnit.content.questions || []}
-                            onQuestionsChange={(questions) =>
-                              setSelectedUnit({
-                                ...selectedUnit,
-                                content: {
-                                  ...selectedUnit.content,
-                                  questions
-                                }
-                              })
-                            }
-                          />
-                        </Box>
-                      )}
-                    </Box>
-                  )}
-
-                  {activeTab === 2 && (
-                    <Box>
-                      <Typography variant='h6' gutterBottom>
-                        Vista previa de: {selectedUnit.title}
-                      </Typography>
-                      <Divider sx={{ mb: 2 }} />
-
-                      {selectedUnit.type === 'video' &&
-                        selectedUnit.content.videoUrl && (
-                          <Box sx={{ mb: 2 }}>
-                            <Typography variant='subtitle2' gutterBottom>
-                              Video:
-                            </Typography>
-                            <Box
-                              component='iframe'
-                              src={selectedUnit.content.videoUrl}
-                              sx={{
-                                width: '100%',
-                                height: 300,
-                                border: '1px solid',
-                                borderColor: 'divider',
-                                borderRadius: 1
-                              }}
-                            />
-                          </Box>
-                        )}
-
-                      {selectedUnit.type === 'text' &&
-                        selectedUnit.content.text && (
-                          <Box sx={{ mb: 2 }}>
-                            <Typography variant='subtitle2' gutterBottom>
-                              Contenido:
-                            </Typography>
-                            <Paper sx={{ p: 2, backgroundColor: 'grey.50' }}>
-                              <Typography
-                                component='div'
-                                sx={{
-                                  whiteSpace: 'pre-wrap',
-                                  fontFamily: 'monospace'
-                                }}
-                              >
-                                {selectedUnit.content.text}
-                              </Typography>
-                            </Paper>
-                          </Box>
-                        )}
-
-                      {selectedUnit.content.description && (
-                        <Box>
-                          <Typography variant='subtitle2' gutterBottom>
-                            Descripción:
-                          </Typography>
-                          <Typography variant='body2' color='text.secondary'>
-                            {selectedUnit.content.description}
-                          </Typography>
-                        </Box>
-                      )}
-                    </Box>
-                  )}
-                </Box>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent sx={{ textAlign: 'center', py: 8 }}>
-                <EditIcon
-                  sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }}
-                />
-                <Typography variant='h6' color='text.secondary' gutterBottom>
-                  Selecciona una unidad para editar
-                </Typography>
-                <Typography color='text.secondary'>
-                  O crea una nueva unidad para comenzar
-                </Typography>
-              </CardContent>
-            </Card>
-          )}
-        </Grid>
-      </Grid>
-
-      {/* Dialog para agregar/editar unidad */}
-      <Dialog
-        open={openUnitDialog}
-        onClose={() => setOpenUnitDialog(false)}
-        maxWidth='sm'
-        fullWidth
-      >
-        <DialogTitle>
-          {editingUnit ? 'Editar Unidad' : 'Agregar Nueva Unidad'}
-        </DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label='Título de la unidad'
-                value={newUnit.title}
-                onChange={(e) =>
-                  setNewUnit({ ...newUnit, title: e.target.value })
-                }
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label='Duración'
-                value={newUnit.duration}
-                onChange={(e) =>
-                  setNewUnit({ ...newUnit, duration: e.target.value })
-                }
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Tipo de contenido</InputLabel>
-                <Select
-                  value={newUnit.type}
-                  label='Tipo de contenido'
-                  onChange={(e) =>
-                    setNewUnit({
-                      ...newUnit,
-                      type: e.target.value as 'video' | 'text' | 'quiz'
-                    })
-                  }
-                >
-                  <MenuItem value='video'>Video</MenuItem>
-                  <MenuItem value='text'>Texto</MenuItem>
-                  <MenuItem value='quiz'>Quiz</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                label='Descripción'
-                value={newUnit.description}
-                onChange={(e) =>
-                  setNewUnit({ ...newUnit, description: e.target.value })
-                }
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenUnitDialog(false)}>Cancelar</Button>
-          <Button
-            onClick={handleAddUnit}
-            variant='contained'
-            disabled={!newUnit.title || !newUnit.duration}
-          >
-            {editingUnit ? 'Actualizar' : 'Agregar'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <Card>
+        <CardHeader title="Estructura del curso" subheader="Organiza el aprendizaje por secciones, lecciones y recursos de apoyo." />
+        <CardContent>
+          <LmsContentEditor
+            modules={draftCourse.modules}
+            onModulesChange={handleModulesChange}
+            onSave={handleSave}
+            isLoading={saveCourseMutation.isLoading}
+            hasUnsavedChanges={hasUnsavedChanges}
+            onDeleteModule={(moduleId) => deleteModuleMutation.mutate(moduleId)}
+            onDeleteLesson={(lessonId) => deleteLessonMutation.mutate(lessonId)}
+            onDeleteResource={(resourceId) => deleteResourceMutation.mutate(resourceId)}
+            courseId={courseId}
+          />
+        </CardContent>
+      </Card>
     </Box>
   )
 }

@@ -7,6 +7,12 @@ import DropdownButton from './DropdownButton' // Importa el componente del dropd
 import { useStore } from '@nanostores/react'
 import { UserData, userStore } from 'src/store/userStore'
 import { CarRepair } from '@mui/icons-material'
+import {
+  getEffectiveLmsMenuRoles,
+  isLmsOnlyUser,
+  LMS_ACCESS_MENU_ROLES,
+  LMS_ADMIN_ROUTE_ROLES
+} from 'src/utils/lmsIdentity'
 
 const iconClass =
   'w-5 h-5 text-gray-600 transition-all duration-300 group-hover:text-white dark:text-gray-300 dark:group-hover:text-white group-hover:scale-110 group-hover:drop-shadow-sm'
@@ -126,56 +132,76 @@ const sidebarItems = ($userStore: UserData) => [
       }
     ]
   },
-  // {
-  //   type: 'dropdown',
-  //   buttonText: 'LMS',
-  //   roles: ['admin', 'employee', 'client'],
-  //   moduleName: 'Basic',
-  //   pathData:
-  //     'M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z',
-  //   menuItems: [
-  //     {
-  //       label: 'Dashboard',
-  //       url: 'lms',
-  //       roles: ['admin', 'employee', 'client']
-  //     },
-  //     {
-  //       label: 'Administración',
-  //       url: 'lms/admin',
-  //       roles: ['admin']
-  //     },
-  //     {
-  //       label: 'Mis Cursos',
-  //       url: 'lms/admin/dashboard',
-  //       roles: ['admin']
-  //     },
-  //     {
-  //       label: 'Gestión de Cursos',
-  //       url: 'lms/admin/courses',
-  //       roles: ['admin']
-  //     },
-  //     {
-  //       label: 'Gestión de Usuarios',
-  //       url: 'lms/admin/users',
-  //       roles: ['admin']
-  //     },
-  //     {
-  //       label: 'Analíticas',
-  //       url: 'lms/admin/analytics',
-  //       roles: ['admin']
-  //     },
-  //     {
-  //       label: 'Mi Aprendizaje',
-  //       url: 'lms/employee',
-  //       roles: ['employee']
-  //     },
-  //     {
-  //       label: 'Cursos Públicos',
-  //       url: 'lms/client',
-  //       roles: ['client']
-  //     }
-  //   ]
-  // },
+  {
+    type: 'dropdown',
+    buttonText: 'LMS',
+    roles: [...LMS_ACCESS_MENU_ROLES],
+    moduleName: 'Basic',
+    pathData:
+      'M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z',
+    menuItems: [
+      {
+        label: 'Dashboard',
+        url: 'lms',
+        roles: [...LMS_ACCESS_MENU_ROLES]
+      },
+      {
+        label: 'Gestión de Cursos',
+        url: 'lms/admin/courses',
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
+      },
+      {
+        label: 'Gestión de Usuarios',
+        url: 'lms/admin/users',
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
+      },
+      {
+        label: 'Analíticas',
+        url: 'lms/admin/analytics',
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
+      },
+      {
+        label: 'Notificaciones',
+        url: 'lms/admin/notifications',
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
+      },
+      {
+        label: 'Reportes',
+        url: 'lms/admin/reporting',
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
+      },
+      {
+        label: 'Asignaciones',
+        url: 'lms/admin/assignments',
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
+      },
+      {
+        label: 'Cumplimiento',
+        url: 'lms/admin/compliance',
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
+      },
+      {
+        label: 'Plantillas de Certificados',
+        url: 'lms/admin/certificate-templates',
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
+      },
+      {
+        label: 'Mi Aprendizaje',
+        url: 'lms/employee',
+        roles: ['employee']
+      },
+      {
+        label: 'Mis Certificados',
+        url: 'lms/certificates',
+        roles: ['employee', 'client']
+      },
+      {
+        label: 'Mi Aprendizaje',
+        url: 'lms/client',
+        roles: ['client']
+      }
+    ]
+  },
   {
     type: 'link',
     label: 'Biomedicos',
@@ -350,6 +376,14 @@ const sidebarItems = ($userStore: UserData) => [
   // Otros ítems...
 ]
 
+const isLmsSidebarItem = (item: ReturnType<typeof sidebarItems>[number]) => {
+  if (item.type === 'link') {
+    return item.to?.startsWith('/lms') || item.to?.startsWith('lms')
+  }
+
+  return item.buttonText === 'LMS'
+}
+
 interface SideBarProps {
   sidebarMinimized: boolean
   userMinimized: boolean
@@ -370,6 +404,7 @@ const SideBar = ({
 }: SideBarProps) => {
   const $userStore = useStore(userStore)
   const { pathname } = useLocation()
+  const effectiveLmsMenuRoles = getEffectiveLmsMenuRoles($userStore)
 
   const hasModuleAccess = (moduleName: string) => {
     if (!$userStore.customer) return true
@@ -393,6 +428,10 @@ const SideBar = ({
       <div className='flex-1 overflow-y-auto px-3 py-4 scrollbar-thin scrollbar-thumb-gray-300/50 dark:scrollbar-thumb-gray-600/50 scrollbar-track-transparent hover:scrollbar-thumb-gray-400/70'>
         <ul className='space-y-1.5'>
           {sidebarItems($userStore).map((item, index) => {
+            if (isLmsOnlyUser($userStore.rol, $userStore.lmsOnly) && !isLmsSidebarItem(item)) {
+              return null
+            }
+
             if (
               item.type === 'link' &&
               item.to &&
@@ -447,7 +486,10 @@ const SideBar = ({
               )
             } else if (
               item.type === 'dropdown' &&
-              canViewModule(item.roles, $userStore.rol)
+              canViewModule(
+                item.roles,
+                item.buttonText === 'LMS' ? effectiveLmsMenuRoles : $userStore.rol
+              )
             ) {
               return (
                 <DropdownButton
@@ -455,7 +497,11 @@ const SideBar = ({
                   buttonText={item.buttonText ?? ''}
                   menuItems={item.menuItems ?? []}
                   pathData={item.pathData ?? ''}
-                  rol={$userStore.rol}
+                  rol={
+                    item.buttonText === 'LMS'
+                      ? effectiveLmsMenuRoles
+                      : $userStore.rol
+                  }
                   currentPath={pathname}
                   onlyIcons={sidebarMinimized}
                   onItemClick={handleLinkClick}

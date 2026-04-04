@@ -122,7 +122,7 @@ function Header({ toggleMobileMenu }: HeaderProps) {
         {/* Controles del header */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {/* Botón de alertas - Solo para admins */}
-          {$userStore.rol.some((role) => ['admin'].includes(role)) && (
+          {!$userStore.lmsOnly && $userStore.rol.some((role) => ['admin'].includes(role)) && (
             <Tooltip 
               title={hasAlerts ? `${totalAlerts} alertas pendientes` : 'No hay alertas'}
             >
