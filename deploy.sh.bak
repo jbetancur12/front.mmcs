@@ -49,28 +49,7 @@ ssh metromedics@209.97.156.169 << 'EOF'
     exit 1
   fi
 
-  # Hacer backup del sitio actualmente publicado antes de reemplazarlo
-  if [ -d /var/www/app.metromedics.co/html ] && [ "$(ls -A /var/www/app.metromedics.co/html 2>/dev/null)" ]; then
-    sudo mkdir -p /var/www/app.metromedics.co/backups
-    sudo mkdir -p "/var/www/app.metromedics.co/backups/$timestamp"
-    sudo cp -a /var/www/app.metromedics.co/html/. "/var/www/app.metromedics.co/backups/$timestamp/"
-
-    if [ $? -ne 0 ]; then
-      echo "Error al crear el backup del sitio actual." >&2
-      exit 1
-    fi
-  fi
-
-  # Limpiar el contenido actual para no mezclar assets de builds anteriores
-  sudo mkdir -p /var/www/app.metromedics.co/html
-  sudo find /var/www/app.metromedics.co/html -mindepth 1 -maxdepth 1 -exec rm -rf {} +
-
-  if [ $? -ne 0 ]; then
-    echo "Error al limpiar el directorio de producción." >&2
-    exit 1
-  fi
-
-  sudo cp -a "build$timestamp"/. /var/www/app.metromedics.co/html/
+  sudo cp -r "build$timestamp"/* /var/www/app.metromedics.co/html/
   
   # Verificar el resultado del cp
   if [ $? -ne 0 ]; then
