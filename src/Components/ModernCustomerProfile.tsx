@@ -62,7 +62,6 @@ import EquipmentCard from './EquipmentCard'
 import { CreateFileModal } from './TableFiles/CreateFileModal/CreateFileModal'
 
 import { bigToast } from './ExcelManipulation/Utils'
-import * as XLSX from 'xlsx'
 import { MySwal } from '@utils/sweetAlert'
 
 // API URL
@@ -130,11 +129,16 @@ type TabValue =
   | 'modules'
 
 // Función para exportar a Excel
-const exportToExcel = (data: Certificate[], customerName: string = '') => {
+const exportToExcel = async (
+  data: Certificate[],
+  customerName: string = ''
+) => {
   if (data.length === 0) {
     bigToast('No hay datos para exportar', 'info')
     return
   }
+
+  const XLSX = await import('xlsx')
 
   const excelData = data.map((cert) => ({
     Sede: cert.headquarter || '',
@@ -176,7 +180,7 @@ const exportToExcel = (data: Certificate[], customerName: string = '') => {
 }
 
 // Función para exportar reporte completo del cliente (Overview)
-const exportOverviewReport = (
+const exportOverviewReport = async (
   customerData: UserData,
   allEquipment: Certificate[],
   stats: { total: number; expired: number; upcoming: number; active: number }
@@ -185,6 +189,8 @@ const exportOverviewReport = (
     bigToast('No hay datos del cliente para exportar', 'error')
     return
   }
+
+  const XLSX = await import('xlsx')
 
   const workbook = XLSX.utils.book_new()
   const now = new Date()
@@ -716,7 +722,7 @@ const ModernCustomerProfile: React.FC = () => {
       if (allData.length === 0) {
         bigToast('No hay datos para exportar', 'info')
       } else {
-        exportToExcel(allData, customerData?.nombre)
+        await exportToExcel(allData, customerData?.nombre)
       }
     } catch (error) {
       console.error('Error al descargar Excel:', error)
@@ -735,7 +741,7 @@ const ModernCustomerProfile: React.FC = () => {
     setIsDownloading(true)
     try {
       const allData = await fetchAllDataForDownload('all')
-      exportOverviewReport(customerData, allData, stats)
+      await exportOverviewReport(customerData, allData, stats)
     } catch (error) {
       console.error('Error al descargar reporte completo:', error)
       bigToast('Error al descargar el reporte completo', 'error')

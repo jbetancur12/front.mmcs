@@ -26,7 +26,6 @@ import { ArrowBack, Clear, Download } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useQuery, useQueryClient } from 'react-query'
 import Modules from 'src/Components/Modules'
-import * as XLSX from 'xlsx'
 import { MySwal } from '@utils/sweetAlert'
 
 // API URL
@@ -65,11 +64,16 @@ type Tab =
   | 'modules'
 
 // Función para exportar a Excel usando XLSX
-const exportToExcel = (data: Certificate[], customerName: string = '') => {
+const exportToExcel = async (
+  data: Certificate[],
+  customerName: string = ''
+) => {
   if (data.length === 0) {
     alert('No hay datos para exportar')
     return
   }
+
+  const XLSX = await import('xlsx')
 
   // Preparar los datos para Excel
   const excelData = data.map((cert) => ({
@@ -438,7 +442,7 @@ function UserProfile(): React.JSX.Element {
       if (allData.length === 0) {
         bigToast('No hay datos para exportar', 'info')
       } else {
-        exportToExcel(allData, customerData.nombre)
+        await exportToExcel(allData, customerData.nombre)
         bigToast('Archivo Excel descargado exitosamente', 'success')
       }
     } catch (error) {

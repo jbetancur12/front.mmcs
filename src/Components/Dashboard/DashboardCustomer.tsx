@@ -37,7 +37,6 @@ import { useStore } from '@nanostores/react'
 import { userStore } from 'src/store/userStore'
 import { FileData } from '../TableFiles'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import Swal from 'sweetalert2'
 
@@ -173,7 +172,7 @@ const Dashboard: React.FC = () => {
     }
   }
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (filteredData.length === 0) {
       Swal.fire({
         title: 'Sin datos',
@@ -183,6 +182,8 @@ const Dashboard: React.FC = () => {
       })
       return
     }
+
+    const XLSX = await import('xlsx')
 
     const exportData = filteredData.map((row) => ({
       'Compañía': row.customer?.nombre || '',

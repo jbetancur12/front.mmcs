@@ -36,7 +36,6 @@ interface ApiResponse {
 }
 import { axiosPrivate } from '@utils/api'
 import { Download, Search, Clear } from '@mui/icons-material'
-import * as XLSX from 'xlsx'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
 
@@ -47,11 +46,16 @@ interface SelectedHqProps {
 }
 
 // Función para exportar a Excel real usando SheetJS
-const exportToExcel = (data: Certificate[], selectedSede: string | null) => {
+const exportToExcel = async (
+  data: Certificate[],
+  selectedSede: string | null
+) => {
   if (data.length === 0) {
     alert('No hay datos para exportar')
     return
   }
+
+  const XLSX = await import('xlsx')
 
   // Preparar los datos para Excel
   const excelData = data.map((cert) => ({
@@ -213,7 +217,7 @@ const SelectedHq: React.FC<SelectedHqProps> = ({
         if (allData.length === 0) {
           alert('No hay datos para exportar')
         } else {
-          exportToExcel(allData, selectedSede)
+          await exportToExcel(allData, selectedSede)
         }
       } catch (error) {
         console.error('Error al descargar Excel:', error)

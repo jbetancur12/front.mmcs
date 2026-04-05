@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import JSZip from 'jszip'
-import * as XLSX from 'xlsx'
 import {
   TextField,
   Select,
@@ -78,7 +77,8 @@ const Zip = () => {
 
         const zipObject = zip.file(selectedFile)
         if (zipObject) {
-          zipObject.async('binarystring').then((data) => {
+          zipObject.async('binarystring').then(async (data) => {
+            const XLSX = await import('xlsx')
             const workbook = XLSX.read(data, { type: 'binary' })
             const worksheet = workbook.Sheets['CC']
             const jsonData = XLSX.utils.sheet_to_json(worksheet, {

@@ -1,7 +1,6 @@
 // Frontend (React con TypeScript)
 
 import React, { useState } from 'react'
-import * as XLSX from 'xlsx'
 
 const AnalyzeExcelComponent: React.FC = () => {
   const [, setFile] = useState<File | null>(null)
@@ -14,8 +13,9 @@ const AnalyzeExcelComponent: React.FC = () => {
       setFile(uploadedFile)
 
       const reader = new FileReader()
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         if (e.target) {
+          const XLSX = await import('xlsx')
           const binaryString = e.target.result
           const workbook = XLSX.read(binaryString, { type: 'binary' })
           const worksheet = workbook.Sheets[workbook.SheetNames[0]]

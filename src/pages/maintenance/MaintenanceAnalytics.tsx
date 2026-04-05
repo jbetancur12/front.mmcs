@@ -29,7 +29,6 @@ import {
   Refresh
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
-import * as XLSX from 'xlsx'
 import {
   useMaintenanceAnalytics,
   useMaintenanceTechnicians
@@ -86,8 +85,10 @@ const MaintenanceAnalytics: React.FC = () => {
       .slice(0, 5)
   }, [analytics?.technicianPerformance])
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     if (!analytics) return
+
+    const XLSX = await import('xlsx')
 
     const workbook = XLSX.utils.book_new()
 
