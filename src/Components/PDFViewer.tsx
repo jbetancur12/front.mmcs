@@ -1,12 +1,7 @@
-import { useState } from 'react'
-import { Document, Page, pdfjs } from 'react-pdf'
-import 'react-pdf/dist/Page/TextLayer.css'
-import 'react-pdf/dist/Page/AnnotationLayer.css'
+import { useMemo } from 'react'
 import { Box, Button, Typography } from '@mui/material'
-import { NavigateBefore, NavigateNext } from '@mui/icons-material'
+import { Download, OpenInNew, PictureAsPdf } from '@mui/icons-material'
 import { buildMinioObjectUrl } from '@utils/minio'
-
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
 
 const PDFViewer = ({
   path,
@@ -19,150 +14,145 @@ const PDFViewer = ({
   view?: 'preview' | 'default'
   buttons?: boolean
 }) => {
-  const [numPages, setNumPages] = useState<number>(1)
-  const [pageNumber, setPageNumber] = useState<number>(1)
-  const pdfData = buildMinioObjectUrl(bucket, path)
+  const pdfUrl = useMemo(() => buildMinioObjectUrl(bucket, path), [bucket, path])
 
-  function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
-    setNumPages(numPages)
+  if (!pdfUrl) {
+    return (
+      <Box
+        sx={{
+          p: 3,
+          borderRadius: 2,
+          border: '1px solid #e0e0e0',
+          bgcolor: '#fafafa',
+          textAlign: 'center'
+        }}
+      >
+        <Typography color='text.secondary'>
+          No se pudo cargar el documento PDF.
+        </Typography>
+      </Box>
+    )
   }
 
-  const changePage = (
-    offset: number,
-    event: React.MouseEvent<HTMLButtonElement>
-  ) => {
-    event.preventDefault()
-    setPageNumber((prevPageNumber) => prevPageNumber + offset)
-  }
+  const viewerHeight = view === 'preview' ? '900px' : '500px'
 
   return (
-    <>
-      {view === 'preview' && pdfData && (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        width: '100%'
+      }}
+    >
+      {buttons && (
         <Box
           sx={{
             display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center'
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '100%',
+            gap: 2,
+            mb: 2,
+            p: 2,
+            bgcolor: '#f8f9fa',
+            borderRadius: 3,
+            border: '1px solid #e0e0e0',
+            flexWrap: 'wrap'
           }}
         >
-          {buttons && (
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 2,
-              mb: 3,
-              p: 2,
-              bgcolor: '#f8f9fa',
-              borderRadius: 3,
-              border: '1px solid #e0e0e0'
-            }}>
-              <Button
-                onClick={(event) => changePage(-1, event)}
-                disabled={pageNumber <= 1}
-                variant="contained"
-                startIcon={<NavigateBefore />}
-                sx={{
-                  bgcolor: pageNumber <= 1 ? '#e0e0e0' : '#00BFA5',
-                  color: pageNumber <= 1 ? '#9e9e9e' : 'white',
-                  '&:hover': {
-                    bgcolor: pageNumber <= 1 ? '#e0e0e0' : '#00ACC1'
-                  },
-                  borderRadius: 2,
-                  px: 3,
-                  py: 1,
-                  fontWeight: 600,
-                  textTransform: 'none',
-                  boxShadow: 'none',
-                  '&:disabled': {
-                    bgcolor: '#e0e0e0',
-                    color: '#9e9e9e'
-                  }
-                }}
-              >
-                Anterior
-              </Button>
-              
-              <Box sx={{ 
-                bgcolor: 'white',
-                border: '2px solid #00BFA5',
-                borderRadius: 2,
-                px: 3,
-                py: 1.5,
-                minWidth: 140,
-                textAlign: 'center',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-              }}>
-                <Typography variant="body1" sx={{ 
-                  fontWeight: 600,
-                  color: '#00BFA5',
-                  fontSize: '0.95rem'
-                }}>
-                  Página {pageNumber} de {numPages}
-                </Typography>
-              </Box>
-              
-              <Button
-                onClick={(event) => changePage(1, event)}
-                disabled={pageNumber >= numPages}
-                variant="contained"
-                endIcon={<NavigateNext />}
-                sx={{
-                  bgcolor: pageNumber >= numPages ? '#e0e0e0' : '#00BFA5',
-                  color: pageNumber >= numPages ? '#9e9e9e' : 'white',
-                  '&:hover': {
-                    bgcolor: pageNumber >= numPages ? '#e0e0e0' : '#00ACC1'
-                  },
-                  borderRadius: 2,
-                  px: 3,
-                  py: 1,
-                  fontWeight: 600,
-                  textTransform: 'none',
-                  boxShadow: 'none',
-                  '&:disabled': {
-                    bgcolor: '#e0e0e0',
-                    color: '#9e9e9e'
-                  }
-                }}
-              >
-                Siguiente
-              </Button>
-            </Box>
-          )}
-          <Box sx={{ 
-            mb: 4,
-            border: '1px solid #e0e0e0',
-            borderRadius: 2,
-            overflow: 'hidden',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            bgcolor: 'white'
-          }}>
-            <Document file={pdfData} onLoadSuccess={onDocumentLoadSuccess}>
-              <Page 
-                scale={1.5} 
-                pageNumber={pageNumber}
-                renderTextLayer={true}
-                renderAnnotationLayer={true}
-              />
-            </Document>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <PictureAsPdf sx={{ color: '#d32f2f' }} />
+            <Typography variant='body2' sx={{ fontWeight: 600, color: '#424242' }}>
+              Vista previa del documento
+            </Typography>
           </Box>
-       
+
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Button
+              component='a'
+              href={pdfUrl}
+              target='_blank'
+              rel='noreferrer'
+              variant='outlined'
+              startIcon={<OpenInNew />}
+              sx={{ textTransform: 'none' }}
+            >
+              Abrir
+            </Button>
+            <Button
+              component='a'
+              href={pdfUrl}
+              download={path}
+              variant='contained'
+              startIcon={<Download />}
+              sx={{
+                textTransform: 'none',
+                bgcolor: '#00BFA5',
+                '&:hover': {
+                  bgcolor: '#00ACC1'
+                }
+              }}
+            >
+              Descargar
+            </Button>
+          </Box>
         </Box>
       )}
-      {view === 'default' && pdfData && (
+
+      <Box
+        sx={{
+          width: '100%',
+          border: '1px solid #e0e0e0',
+          borderRadius: 2,
+          overflow: 'hidden',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+          bgcolor: 'white'
+        }}
+      >
         <object
-          data={pdfData}
+          data={pdfUrl}
           type='application/pdf'
           width='100%'
-          height='500px'
+          height={viewerHeight}
+          aria-label='Vista previa del PDF'
         >
-          <br />
-          <a href={pdfData} id='enlaceDescargarPdf' download='ReactJS.pdf'>
-            No es posible visualizar el PDF en dispositios moviles, da click
-            aquí para descargarlo
-          </a>
+          <Box
+            sx={{
+              minHeight: 220,
+              p: 3,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              gap: 2
+            }}
+          >
+            <PictureAsPdf sx={{ fontSize: 48, color: '#d32f2f' }} />
+            <Typography variant='body1'>
+              No es posible visualizar el PDF en este dispositivo.
+            </Typography>
+            <Button
+              component='a'
+              href={pdfUrl}
+              download={path}
+              variant='contained'
+              startIcon={<Download />}
+              sx={{
+                textTransform: 'none',
+                bgcolor: '#00BFA5',
+                '&:hover': {
+                  bgcolor: '#00ACC1'
+                }
+              }}
+            >
+              Descargar PDF
+            </Button>
+          </Box>
         </object>
-      )}
-    </>
+      </Box>
+    </Box>
   )
 }
 
