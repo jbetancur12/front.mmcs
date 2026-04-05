@@ -114,6 +114,8 @@ const normalizeLessonPayload = (lesson: ContentLessonDraft) => {
   return basePayload
 }
 
+const isPersistedEntityId = (id: string) => /^\d+$/.test(id)
+
 const LmsCourseContentEditor: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
@@ -158,6 +160,38 @@ const LmsCourseContentEditor: React.FC = () => {
       await axiosPrivate.delete(`/lms/content/resources/${resourceId}`)
     }
   })
+
+  const reorderModulesMutation = useMutation(async (modules: ContentModuleDraft[]) => {
+    if (!courseId || modules.some((module) => !isPersistedEntityId(module.id))) {
+      return
+    }
+
+    await axiosPrivate.put(`/lms/content/courses/${courseId}/modules/reorder`, {
+      moduleOrder: modules.map((module) => Number(module.id))
+    })
+  }, {
+    onSuccess: async () => {
+      await queryClient.invalidateQueries(['lms-course', courseId])
+      await queryClient.invalidateQueries(['lms-courses'])
+    }
+  })
+
+  const reorderLessonsMutation = useMutation(
+    async ({ moduleId, lessons }: { moduleId: string; lessons: ContentLessonDraft[] }) => {
+      if (!isPersistedEntityId(moduleId) || lessons.some((lesson) => !isPersistedEntityId(lesson.id))) {
+        return
+      }
+
+      await axiosPrivate.put(`/lms/content/modules/${moduleId}/lessons/reorder`, {
+        lessonOrder: lessons.map((lesson) => Number(lesson.id))
+      })
+    },
+    {
+      onSuccess: async () => {
+        await queryClient.invalidateQueries(['lms-course', courseId])
+      }
+    }
+  )
 
   const saveCourseMutation = useMutation(async (courseData: FrontendCourseDraft) => {
     await axiosPrivate.put(`/lms/courses/${courseData.id}`, {
@@ -277,7 +311,7 @@ const LmsCourseContentEditor: React.FC = () => {
     }
   })
 
-  const handleModulesChange = (modules: ContentModuleDraft[]) => {
+  const handleModulesChange = (modules: ContentModuleDraft[], options?: { markUnsaved?: boolean }) => {
     setDraftCourse((current) => {
       if (!current) {
         return current
@@ -287,13 +321,27 @@ const LmsCourseContentEditor: React.FC = () => {
       draftCourseRef.current = nextDraft
       return nextDraft
     })
-    setHasUnsavedChanges(true)
+    setHasUnsavedChanges((current) => {
+      if (options?.markUnsaved === false) {
+        return current
+      }
+
+      return true
+    })
   }
 
   const handleSave = () => {
     if (draftCourseRef.current) {
       saveCourseMutation.mutate(draftCourseRef.current)
     }
+  }
+
+  const handleModulesReorder = async (modules: ContentModuleDraft[]) => {
+    await reorderModulesMutation.mutateAsync(modules)
+  }
+
+  const handleLessonsReorder = async (moduleId: string, lessons: ContentLessonDraft[]) => {
+    await reorderLessonsMutation.mutateAsync({ moduleId, lessons })
   }
 
   const moduleCounts = useMemo(() => {
@@ -358,6 +406,8 @@ const LmsCourseContentEditor: React.FC = () => {
           <LmsContentEditor
             modules={draftCourse.modules}
             onModulesChange={handleModulesChange}
+            onModulesReorder={handleModulesReorder}
+            onLessonsReorder={handleLessonsReorder}
             onSave={handleSave}
             isLoading={saveCourseMutation.isLoading}
             hasUnsavedChanges={hasUnsavedChanges}

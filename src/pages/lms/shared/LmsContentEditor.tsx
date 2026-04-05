@@ -32,6 +32,7 @@ import {
   Add as AddIcon,
   Article as ArticleIcon,
   Delete as DeleteIcon,
+  DragIndicator as DragIndicatorIcon,
   FolderOpen as SectionIcon,
   Link as LinkIcon,
   OndemandVideo as VideoIcon,
@@ -104,7 +105,9 @@ interface ResourceDraftDialogState {
 
 interface LmsContentEditorProps {
   modules: ContentModuleDraft[]
-  onModulesChange: (modules: ContentModuleDraft[]) => void
+  onModulesChange: (modules: ContentModuleDraft[], options?: { markUnsaved?: boolean }) => void
+  onModulesReorder?: (modules: ContentModuleDraft[]) => Promise<void> | void
+  onLessonsReorder?: (moduleId: string, lessons: ContentLessonDraft[]) => Promise<void> | void
   onSave?: () => void
   isLoading?: boolean
   hasUnsavedChanges?: boolean
@@ -236,9 +239,25 @@ const createTempId = (prefix: string) =>
 const pluralize = (count: number, singular: string, plural?: string) =>
   `${count} ${count === 1 ? singular : plural || `${singular}s`}`
 
+const isPersistedEntityId = (id: string) => /^\d+$/.test(id)
+
+const reorderItems = <T extends { order: number }>(items: T[], startIndex: number, endIndex: number) => {
+  const nextItems = [...items]
+  const [movedItem] = nextItems.splice(startIndex, 1)
+
+  if (!movedItem) {
+    return items
+  }
+
+  nextItems.splice(endIndex, 0, movedItem)
+  return nextItems.map((item, index) => ({ ...item, order: index + 1 }))
+}
+
 const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
   modules,
   onModulesChange,
+  onModulesReorder,
+  onLessonsReorder,
   onSave,
   isLoading = false,
   hasUnsavedChanges = false,
@@ -284,6 +303,8 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
     progress: 0,
     fileName: ''
   })
+  const [draggedModuleId, setDraggedModuleId] = useState<string | null>(null)
+  const [draggedLessonId, setDraggedLessonId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!modules.length) {
@@ -477,6 +498,79 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
     setEditorNotice('Se eliminó la lección seleccionada.')
   }
 
+  const handleModuleReorder = async (targetModuleId: string) => {
+    if (!draggedModuleId || draggedModuleId === targetModuleId) {
+      return
+    }
+
+    const startIndex = modules.findIndex((module) => module.id === draggedModuleId)
+    const endIndex = modules.findIndex((module) => module.id === targetModuleId)
+
+    if (startIndex < 0 || endIndex < 0) {
+      return
+    }
+
+    const reorderedModules = reorderItems(modules, startIndex, endIndex)
+    onModulesChange(reorderedModules, { markUnsaved: false })
+    const canPersistReorder = reorderedModules.every((module) => isPersistedEntityId(module.id))
+
+    if (!canPersistReorder) {
+      setSelectedModuleId(draggedModuleId)
+      setEditorNotice('Orden de secciones actualizado. Guarda el contenido para persistir también las nuevas secciones.')
+      return
+    }
+
+    try {
+      await onModulesReorder?.(reorderedModules)
+      setEditorNotice('Orden de secciones actualizado y guardado.')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No se pudo guardar el nuevo orden de las secciones.'
+      setEditorNotice(message)
+    }
+    setSelectedModuleId(draggedModuleId)
+  }
+
+  const handleLessonReorder = async (targetLessonId: string) => {
+    if (!selectedModule || !draggedLessonId || draggedLessonId === targetLessonId) {
+      return
+    }
+
+    const startIndex = selectedModule.lessons.findIndex((lesson) => lesson.id === draggedLessonId)
+    const endIndex = selectedModule.lessons.findIndex((lesson) => lesson.id === targetLessonId)
+
+    if (startIndex < 0 || endIndex < 0) {
+      return
+    }
+
+    const reorderedLessons = reorderItems(selectedModule.lessons, startIndex, endIndex)
+
+    onModulesChange(
+      modules.map((module) =>
+        module.id === selectedModule.id
+          ? { ...module, lessons: reorderedLessons }
+          : module
+      ),
+      { markUnsaved: false }
+    )
+    const canPersistReorder = isPersistedEntityId(selectedModule.id) &&
+      reorderedLessons.every((lesson) => isPersistedEntityId(lesson.id))
+
+    if (!canPersistReorder) {
+      setSelectedLessonId(draggedLessonId)
+      setEditorNotice('Orden de lecciones actualizado. Guarda el contenido para persistir también las nuevas lecciones.')
+      return
+    }
+
+    try {
+      await onLessonsReorder?.(selectedModule.id, reorderedLessons)
+      setEditorNotice('Orden de lecciones actualizado y guardado.')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No se pudo guardar el nuevo orden de las lecciones.'
+      setEditorNotice(message)
+    }
+    setSelectedLessonId(draggedLessonId)
+  }
+
   const openCreateResourceDialog = () => {
     if (!selectedLesson) {
       setEditorNotice('Selecciona una lección para agregar recursos.')
@@ -648,15 +742,27 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                   <Grid key={module.id} item xs={12} md={6} xl={4}>
                     <Paper
                       variant={module.id === selectedModuleId ? 'elevation' : 'outlined'}
+                      draggable
+                      onDragStart={() => setDraggedModuleId(module.id)}
+                      onDragEnd={() => setDraggedModuleId(null)}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={() => {
+                        void handleModuleReorder(module.id)
+                        setDraggedModuleId(null)
+                      }}
                       sx={{
                         p: 2,
                         borderColor: module.id === selectedModuleId ? 'primary.main' : 'divider',
-                        cursor: 'pointer'
+                        cursor: draggedModuleId === module.id ? 'grabbing' : 'grab',
+                        opacity: draggedModuleId === module.id ? 0.7 : 1,
+                        transition: 'border-color 0.2s ease, opacity 0.2s ease',
+                        borderStyle: draggedModuleId && draggedModuleId !== module.id ? 'dashed' : 'solid'
                       }}
                       onClick={() => setSelectedModuleId(module.id)}
                     >
                       <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
                         <Stack direction="row" spacing={1.5} alignItems="flex-start" sx={{ minWidth: 0 }}>
+                          <DragIndicatorIcon fontSize="small" color="action" sx={{ mt: 0.25 }} />
                           <SectionIcon color={module.id === selectedModuleId ? 'primary' : 'inherit'} />
                           <Box sx={{ minWidth: 0 }}>
                             <Typography variant="subtitle2" noWrap>
@@ -730,7 +836,7 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                   <Box>
                     <Typography variant="h6">Lecciones de la sección</Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Puedes combinar texto, video y quiz dentro de la misma sección.
+                      Puedes combinar texto, video y quiz dentro de la misma sección. Arrastra para reorganizar el orden.
                     </Typography>
                   </Box>
                   <Button startIcon={<AddIcon />} onClick={() => setLessonDialogOpen(true)}>
@@ -745,8 +851,29 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                     <Grid item xs={12} xl={4}>
                       <List disablePadding>
                         {selectedModule.lessons.map((lesson) => (
-                          <Paper key={lesson.id} variant={lesson.id === selectedLessonId ? 'elevation' : 'outlined'} sx={{ mb: 1 }}>
+                          <Paper
+                            key={lesson.id}
+                            variant={lesson.id === selectedLessonId ? 'elevation' : 'outlined'}
+                            draggable
+                            onDragStart={() => setDraggedLessonId(lesson.id)}
+                            onDragEnd={() => setDraggedLessonId(null)}
+                            onDragOver={(event) => event.preventDefault()}
+                            onDrop={() => {
+                              void handleLessonReorder(lesson.id)
+                              setDraggedLessonId(null)
+                            }}
+                            sx={{
+                              mb: 1,
+                              cursor: draggedLessonId === lesson.id ? 'grabbing' : 'grab',
+                              opacity: draggedLessonId === lesson.id ? 0.7 : 1,
+                              transition: 'border-color 0.2s ease, opacity 0.2s ease',
+                              borderStyle: draggedLessonId && draggedLessonId !== lesson.id ? 'dashed' : 'solid'
+                            }}
+                          >
                             <ListItemButton onClick={() => setSelectedLessonId(lesson.id)}>
+                              <ListItemIcon sx={{ minWidth: 30 }}>
+                                <DragIndicatorIcon fontSize="small" color="action" />
+                              </ListItemIcon>
                               <ListItemIcon>{lessonTypeMeta[lesson.type].icon}</ListItemIcon>
                               <ListItemText
                                 primary={lesson.title}
