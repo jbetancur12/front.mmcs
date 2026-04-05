@@ -42,7 +42,6 @@ import AutoComplete from './AutoComplete'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import Loader from './Loader2'
 import { Link } from 'react-router-dom'
-import { Document, Page } from '@react-pdf/renderer'
 import PDFViewer from './PDFViewer'
 import AsyncSelect from 'react-select/async'
 import { RepositoryData } from './Repository'
@@ -56,8 +55,6 @@ import {
 } from './ExcelManipulation/Utils'
 import { customerStore } from '../store/customerStore'
 import useAxiosPrivate from '@utils/use-axios-private'
-
-const minioUrl = import.meta.env.VITE_MINIO_URL
 
 export function convertirCadena(cadena) {
   // Reemplazar espacios con guiones y convertir a minúsculas
@@ -562,11 +559,6 @@ const Table: React.FC = () => {
 
   return (
     <>
-      <Document
-        file={`${minioUrl}/first-bucket/1694483679897-56373cert-balanzacc-mcs-m-4624-23 (2) (1).pdf`}
-      >
-        <Page pageNumber={1} />
-      </Document>
       <Toaster />
       <Loader loading={loading} />
       {/* <Pdf/> */}

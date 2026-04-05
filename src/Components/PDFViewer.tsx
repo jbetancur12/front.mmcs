@@ -19,8 +19,6 @@ const PDFViewer = ({
   view?: 'preview' | 'default'
   buttons?: boolean
 }) => {
-  console.log('PDFViewer path:', path)
-  console.log('PDFViewer bucket:', bucket)
   const [numPages, setNumPages] = useState<number>(1)
   const [pageNumber, setPageNumber] = useState<number>(1)
   const pdfData = buildMinioObjectUrl(bucket, path)
