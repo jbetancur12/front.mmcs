@@ -7,7 +7,6 @@ import WelcomeScreen from 'src/pages/Welcome' // Asegúrate de tener este compon
 const Dashboard = lazy(() => import('../pages/Dashboard'))
 const Settings = lazy(() => import('../pages/Settings'))
 const Clientes = lazy(() => import('../pages/Clientes'))
-const Zip = lazy(() => import('../pages/Zip'))
 const Repository = lazy(() => import('../pages/Repository'))
 const ExcelManipulation = lazy(
   () => import('../Components/ExcelManipulation/ExcelManipulation')
@@ -33,7 +32,6 @@ const OtherRoutes = (role: string[]) => {
         <Route path='settings' element={<Settings />} />
 
         <Route path='users' element={<Clientes />} />
-        <Route path='/zip' element={<Zip />} />
         <Route path='/repository' element={<Repository />} />
         <Route path='/excel-manipulation' element={<ExcelManipulation />} />
         <Route path='/pdf-script' element={<ScriptGenerator />} />
