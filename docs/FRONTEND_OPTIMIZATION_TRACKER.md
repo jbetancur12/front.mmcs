@@ -213,6 +213,23 @@ Conclusión:
 - El chunk `pdf-renderer` mantiene su peso global.
 - Sí mejora el comportamiento de entrada: cotizaciones y datasheets ahora pagan ese costo solo cuando el usuario pide la vista previa.
 
+### Vista previa PDF bajo demanda en flota
+- La hoja de vida de vehículos ya no importa el renderer PDF pesado en el chunk base de la ruta.
+- `VehicleDataSheetPDF` quedó como contenedor liviano y `VehicleDataSheetPreview` se carga con `lazy` solo cuando el usuario pulsa `Ver PDF`.
+
+Componentes tocados:
+- `src/Components/Fleet/VehicleDataSheetPDF.tsx`
+- `src/Components/Fleet/VehicleDataSheetPreview.tsx`
+
+Probar:
+- `/fleet/:id/data-sheet`
+
+Validar:
+- La ruta abra rápido sin montar el visor de inmediato
+- El botón `Ver PDF` cargue correctamente la hoja de vida
+- El botón `Ocultar vista previa` vuelva al estado liviano
+- La navegación de regreso a documentos siga funcionando
+
 ### Estado observado tras aislar mejor `excel-populate`
 - `index`: ~382.36 kB
 - `excel-populate`: ~1,004.30 kB
@@ -234,6 +251,17 @@ Conclusión:
 - El flujo útil `calibraciones/subir-excel` se mantiene.
 - La pantalla quedó alineada con el uso real: solo modo `Archivo`.
 - Se eliminó el acceso duplicado `/zip` y el chunk base de `Zip` bajó aún más.
+
+### Estado observado tras diferir la vista previa PDF en flota
+- `index`: ~382.06 kB
+- `VehicleDataSheetPDF`: ~2.14 kB
+- `VehicleDataSheetPreview`: ~10.71 kB
+- `pdf-renderer`: ~1,404.96 kB
+
+Conclusión:
+- El chunk `pdf-renderer` se mantiene globalmente pesado.
+- La ruta de flota ya no paga ese costo al entrar: primero carga un contenedor muy liviano y solo trae el preview pesado bajo demanda.
+- Flota queda alineado con la misma estrategia ya aplicada en cotizaciones y datasheets.
 
 ## Pendientes de mayor impacto
 
@@ -279,6 +307,7 @@ Posibles caminos:
 - `/quotes/:id`
 - `/fleet/:id/documents/:docId`
 - `/fleet/:id/data-sheet`
+- volver desde la hoja de vida de flota a documentos
 - `/maintenance/analytics`
 - repositorio de archivos
 - generación de Excel
@@ -298,3 +327,4 @@ Posibles caminos:
 - `9afd09e` `chore: remove unused react-pdf dependency`
 - `db7c1be` `perf: lazy load pdf document views`
 - `5673769` `docs: add frontend optimization tracker`
+- `c3d01e8` `refactor: simplify excel upload route`
