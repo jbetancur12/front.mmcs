@@ -71,7 +71,7 @@ const SimplifiedModernSidebar: React.FC<ModernSidebarProps> = ({ onItemClick }) 
     },
     {
       id: 'lms',
-      label: 'LMS',
+      label: 'Academia',
       icon: <SchoolIcon />,
       to: '/lms',
       roles: ['admin', 'employee', 'client']

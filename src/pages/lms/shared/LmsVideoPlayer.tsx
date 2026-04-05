@@ -16,6 +16,7 @@ import {
   FullscreenExit as FullscreenExitIcon
 } from '@mui/icons-material'
 import { api } from 'src/config'
+import useAxiosPrivate from 'src/utils/use-axios-private'
 
 interface LmsVideoPlayerProps {
   src: string
@@ -36,6 +37,7 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
   autoPlay = false,
   controls = true
 }) => {
+  const axiosPrivate = useAxiosPrivate()
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -46,7 +48,7 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [resolvedSrc, setResolvedSrc] = useState(src)
+  const [resolvedSrc, setResolvedSrc] = useState(videoSource === 'minio' ? '' : src)
 
   // YouTube video handling
   const getYouTubeEmbedUrl = (url: string): string => {
@@ -180,19 +182,25 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
       try {
         setIsLoading(true)
         setError(null)
+        setResolvedSrc('')
 
-        const token = localStorage.getItem('accessToken')
-        const response = await fetch(src.startsWith('http') ? src : `${api()}${src.startsWith('/') ? src : `/${src}`}`, {
-          method: 'GET',
-          credentials: 'include',
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined
-        })
+        const response = await axiosPrivate.get<ArrayBuffer>(
+          src.startsWith('http') ? src : `${api()}${src.startsWith('/') ? src : `/${src}`}`,
+          {
+            responseType: 'arraybuffer',
+            withCredentials: true
+          }
+        )
 
-        if (!response.ok) {
-          throw new Error(`No se pudo cargar el video (${response.status})`)
+        const contentType =
+          response.headers['content-type'] ||
+          response.headers['Content-Type'] ||
+          'video/mp4'
+        const blob = new Blob([response.data], { type: contentType })
+
+        if (!blob.size) {
+          throw new Error('El video llegó vacío')
         }
-
-        const blob = await response.blob()
         objectUrl = URL.createObjectURL(blob)
 
         if (!isCancelled) {
@@ -218,7 +226,12 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
 
   // Handle video errors
   const handleError = () => {
-    setError('Error al cargar el video')
+    const mediaError = videoRef.current?.error
+    const mediaErrorMessage = mediaError
+      ? `Error al cargar el video (codigo ${mediaError.code})`
+      : 'Error al cargar el video'
+
+    setError(mediaErrorMessage)
     setIsLoading(false)
   }
 
@@ -275,26 +288,47 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
     >
       {error ? (
         <Alert severity="error" sx={{ m: 2 }}>
-          {error}
+          {error} [video-auth-v2]
         </Alert>
       ) : (
         <>
-          <video
-            ref={videoRef}
-            src={resolvedSrc}
-            style={{
-              width: '100%',
-              height: 'auto',
-              display: 'block'
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              zIndex: 2,
+              px: 1,
+              py: 0.5,
+              borderRadius: 1,
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              color: '#7CFFB2',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              letterSpacing: '0.04em'
             }}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onTimeUpdate={handleTimeUpdate}
-            onLoadedMetadata={handleLoadedMetadata}
-            onError={handleError}
-            autoPlay={autoPlay}
-            preload="metadata"
-          />
+          >
+            VIDEO AUTH V2
+          </Box>
+          {resolvedSrc ? (
+            <video
+              key={resolvedSrc}
+              ref={videoRef}
+              src={resolvedSrc}
+              style={{
+                width: '100%',
+                height: 'auto',
+                display: 'block'
+              }}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onTimeUpdate={handleTimeUpdate}
+              onLoadedMetadata={handleLoadedMetadata}
+              onError={handleError}
+              autoPlay={autoPlay}
+              preload="metadata"
+            />
+          ) : null}
 
           {controls && (
             <Box

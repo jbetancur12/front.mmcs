@@ -32,7 +32,7 @@ export const createSidebarItems = (_userStore: any): ModernSidebarItem[] => [
   {
     id: 'lms',
     type: 'dropdown',
-    label: 'LMS',
+    label: 'Academia',
     icon: sidebarIcons.school,
     roles: ['admin', 'employee', 'client'],
     moduleName: 'Basic',

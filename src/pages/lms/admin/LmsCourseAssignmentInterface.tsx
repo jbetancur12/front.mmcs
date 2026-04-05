@@ -110,6 +110,9 @@ interface Assignment {
   courseId: number
   courseTitle: string
   assignedTo: string[]
+  assignmentType: 'role' | 'all'
+  role?: string
+  allEmployees: boolean
   assignedBy: string
   deadline: string
   status: 'active' | 'completed' | 'overdue'
@@ -140,6 +143,9 @@ const transformAssignment = (backendAssignment: BackendAssignment): Assignment =
     courseId: backendAssignment.course_id,
     courseTitle: backendAssignment.course.title,
     assignedTo: backendAssignment.assigned_to,
+    assignmentType: backendAssignment.all_employees ? 'all' : 'role',
+    role: backendAssignment.role || undefined,
+    allEmployees: backendAssignment.all_employees,
     assignedBy: backendAssignment.creator?.nombre || 'Admin',
     deadline: backendAssignment.deadline || '',
     status: backendAssignment.status,
@@ -237,6 +243,8 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null)
   const [editDeadline, setEditDeadline] = useState<Date | null>(null)
+  const [editAssignmentType, setEditAssignmentType] = useState<'role' | 'all'>('role')
+  const [editSelectedRole, setEditSelectedRole] = useState<string>('')
 
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
@@ -338,11 +346,13 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   )
 
   const updateAssignmentMutation = useMutation(
-    async (data: { id: number; deadline?: string }) => {
+    async (data: { id: number; deadline?: string; role?: string | null; all_employees?: boolean }) => {
       const response = await axiosPrivate.put(
         `/lms/assignments/assignments/${data.id}`,
         {
-          deadline: data.deadline
+          deadline: data.deadline,
+          role: data.role,
+          all_employees: data.all_employees
         }
       )
       return response.data
@@ -574,6 +584,8 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   const handleOpenEditDialog = (assignment: Assignment) => {
     setEditingAssignment(assignment)
     setEditDeadline(assignment.deadline ? new Date(assignment.deadline) : null)
+    setEditAssignmentType(assignment.allEmployees ? 'all' : 'role')
+    setEditSelectedRole(assignment.role || '')
     setEditDialogOpen(true)
   }
 
@@ -581,6 +593,8 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     setEditDialogOpen(false)
     setEditingAssignment(null)
     setEditDeadline(null)
+    setEditAssignmentType('role')
+    setEditSelectedRole('')
   }
 
   const handleSaveEdit = () => {
@@ -593,13 +607,24 @@ const LmsCourseAssignmentInterface: React.FC = () => {
       return
     }
 
+    if (editAssignmentType === 'role' && !editSelectedRole) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Rol requerido',
+        text: 'Debes seleccionar un rol para esta asignación.'
+      })
+      return
+    }
+
     // Set deadline to end of day (23:59:59) to avoid timezone issues
     const deadlineEndOfDay = new Date(editDeadline)
     deadlineEndOfDay.setHours(23, 59, 59, 999)
 
     updateAssignmentMutation.mutate({
       id: editingAssignment.id,
-      deadline: deadlineEndOfDay.toISOString()
+      deadline: deadlineEndOfDay.toISOString(),
+      role: editAssignmentType === 'role' ? editSelectedRole : null,
+      all_employees: editAssignmentType === 'all'
     })
 
     handleCloseEditDialog()
@@ -1024,6 +1049,45 @@ const LmsCourseAssignmentInterface: React.FC = () => {
               <Typography variant="body1" sx={{ mb: 3 }}>
                 {editingAssignment.assignedTo.join(', ')}
               </Typography>
+
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                Tipo de asignación
+              </Typography>
+              <FormControl fullWidth sx={{ mb: 3 }}>
+                <InputLabel>Tipo de Asignación</InputLabel>
+                <Select
+                  value={editAssignmentType}
+                  label="Tipo de Asignación"
+                  onChange={(e) => setEditAssignmentType(e.target.value as 'role' | 'all')}
+                >
+                  <MenuItem value="role">Por Rol</MenuItem>
+                  <MenuItem value="all">Todos los Empleados</MenuItem>
+                </Select>
+              </FormControl>
+
+              {editAssignmentType === 'role' && (
+                <>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Rol
+                  </Typography>
+                  <FormControl fullWidth sx={{ mb: 3 }}>
+                    <InputLabel>Rol</InputLabel>
+                    <Select
+                      value={editSelectedRole}
+                      label="Rol"
+                      onChange={(e) => setEditSelectedRole(e.target.value)}
+                    >
+                      <MenuItem value="admin">Administrador</MenuItem>
+                      <MenuItem value="Training Manager">Gestor de Capacitación</MenuItem>
+                      <MenuItem value="metrologist">Metrólogo</MenuItem>
+                      <MenuItem value="technician">Técnico de Mantenimiento</MenuItem>
+                      <MenuItem value="mantenimiento">Mantenimiento</MenuItem>
+                      <MenuItem value="maintenance_coordinator">Coordinador de Mantenimiento</MenuItem>
+                      <MenuItem value="comp_admin">Administrador de Compras</MenuItem>
+                    </Select>
+                  </FormControl>
+                </>
+              )}
 
               <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                 Fecha límite actual

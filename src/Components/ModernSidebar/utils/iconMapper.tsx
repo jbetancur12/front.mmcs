@@ -63,6 +63,7 @@ export const moduleIconMap: Record<string, React.ComponentType> = {
   'Cotizaciones': AssignmentIcon,
   'Compras': ShoppingCartIcon,
   'LMS': SchoolIcon,
+  'Academia': SchoolIcon,
   'Biomedicos': PeopleIcon,
   'Trazabilidades': AssessmentIcon,
   'Calidad': StarIcon,

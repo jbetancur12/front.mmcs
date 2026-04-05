@@ -134,7 +134,7 @@ const sidebarItems = ($userStore: UserData) => [
   },
   {
     type: 'dropdown',
-    buttonText: 'LMS',
+    buttonText: 'Academia',
     roles: [...LMS_ACCESS_MENU_ROLES],
     moduleName: 'Basic',
     pathData:
@@ -381,7 +381,7 @@ const isLmsSidebarItem = (item: ReturnType<typeof sidebarItems>[number]) => {
     return item.to?.startsWith('/lms') || item.to?.startsWith('lms')
   }
 
-  return item.buttonText === 'LMS'
+  return item.buttonText === 'Academia' || item.buttonText === 'LMS'
 }
 
 interface SideBarProps {
@@ -488,7 +488,7 @@ const SideBar = ({
               item.type === 'dropdown' &&
               canViewModule(
                 item.roles,
-                item.buttonText === 'LMS' ? effectiveLmsMenuRoles : $userStore.rol
+                (item.buttonText === 'Academia' || item.buttonText === 'LMS') ? effectiveLmsMenuRoles : $userStore.rol
               )
             ) {
               return (
@@ -498,7 +498,7 @@ const SideBar = ({
                   menuItems={item.menuItems ?? []}
                   pathData={item.pathData ?? ''}
                   rol={
-                    item.buttonText === 'LMS'
+                    (item.buttonText === 'Academia' || item.buttonText === 'LMS')
                       ? effectiveLmsMenuRoles
                       : $userStore.rol
                   }
