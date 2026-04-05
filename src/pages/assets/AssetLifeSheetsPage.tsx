@@ -520,6 +520,12 @@ const AssetLifeSheetsPage = () => {
                 <Chip size='small' label={selectedAsset?.assetCode || 'Sin código'} />
                 <Chip size='small' variant='outlined' label={selectedAsset?.assetType || 'Sin tipo'} />
                 <Chip size='small' variant='outlined' label={selectedAsset?.status || 'Sin estado'} />
+                <Chip
+                  size='small'
+                  color='info'
+                  variant='outlined'
+                  label={`${selectedAsset?.documentCode || 'FOT-MMCS-05'} v${selectedAsset?.documentVersion || '02'}`}
+                />
               </Stack>
             </Box>
             <IconButton onClick={() => setSelectedAsset(null)}><Close /></IconButton>
@@ -561,6 +567,18 @@ const AssetLifeSheetsPage = () => {
                 <Box sx={{ flex: 1 }}>
                   <Typography variant='caption' color='text.secondary'>Puesta en servicio</Typography>
                   <Typography fontWeight={600}>{selectedAsset?.inServiceDate || 'N/D'}</Typography>
+                </Box>
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant='caption' color='text.secondary'>Formato documental</Typography>
+                  <Typography fontWeight={600}>
+                    {selectedAsset?.documentCode || 'FOT-MMCS-05'} v{selectedAsset?.documentVersion || '02'}
+                  </Typography>
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant='caption' color='text.secondary'>Fecha formato</Typography>
+                  <Typography fontWeight={600}>{selectedAsset?.documentDate || '2017-12-05'}</Typography>
                 </Box>
               </Stack>
             </Stack>

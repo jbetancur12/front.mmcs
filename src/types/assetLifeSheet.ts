@@ -48,6 +48,9 @@ export interface AssetLifeSheet {
   warrantyExpiresAt?: string | null
   hasManual: boolean
   hasWarranty: boolean
+  documentCode?: string
+  documentVersion?: string
+  documentDate?: string | null
   maintenanceFrequency?: string | null
   maintenanceTasks: AssetLifeSheetMaintenanceTask[]
   imagePath?: string | null
