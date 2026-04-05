@@ -51,7 +51,7 @@ const Profile: React.FC = () => {
   const [isEditing, setIsEditing] = useState<boolean>(false)
   const [editedProfile, setEditedProfile] = useState<Profile | null>(null)
   const [image, setImage] = useState<string>('')
-  const [selectedCV, setSelectedCV] = useState<File | undefined>(undefined)
+  const [selectedCV, setSelectedCV] = useState<string>('')
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -89,7 +89,9 @@ const Profile: React.FC = () => {
   const handleSaveClick = async () => {
     try {
       await axiosPrivate.put(`/profiles/${idProfile}`, editedProfile, {})
-      setProfile(editedProfile)
+      setProfile((prevState) =>
+        prevState ? { ...prevState, ...editedProfile! } : prevState
+      )
       setIsEditing(false)
       Swal.fire({
         title: '¡Actualizado!',
@@ -513,8 +515,16 @@ const Profile: React.FC = () => {
               overflow: 'hidden',
               bgcolor: 'white'
             }}>
-              {/* @ts-ignore */}
-              <PDFViewer bucket='cvs' path={selectedCV} view='preview' />
+              <PDFViewer
+                bucket='cvs'
+                path={selectedCV}
+                view='preview'
+                buttons={false}
+                allowDownload={false}
+                allowOpen={false}
+                downloadUrl={`/profiles/${idProfile}/cv/download`}
+                watermarkText={`CONFIDENCIAL | ${$userStore.nombre || $userStore.email || 'usuario'} | ${new Date().toLocaleDateString('es-CO')}`}
+              />
             </Box>
           </Box>
         </Box>
