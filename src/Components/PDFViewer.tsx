@@ -9,13 +9,21 @@ const PDFViewer = ({
   bucket = 'first-bucket',
   view = 'preview',
   buttons = true,
-  compactActions = false
+  compactActions = false,
+  downloadUrl,
+  allowDownload = true,
+  allowOpen = true,
+  watermarkText
 }: {
   path: string
   bucket?: string
   view?: 'preview' | 'default'
   buttons?: boolean
   compactActions?: boolean
+  downloadUrl?: string
+  allowDownload?: boolean
+  allowOpen?: boolean
+  watermarkText?: string
 }) => {
   const axiosPrivate = useAxiosPrivate()
   const pdfUrl = useMemo(() => buildMinioObjectUrl(bucket, path), [bucket, path])
@@ -45,9 +53,12 @@ const PDFViewer = ({
       setError('')
 
       try {
-        const response = await axiosPrivate.get(`/files/download/${path}`, {
+        const response = await axiosPrivate.get(
+          downloadUrl || `/files/download/${path}`,
+          {
           responseType: 'blob'
-        })
+          }
+        )
         const objectUrl = URL.createObjectURL(
           new Blob([response.data], { type: 'application/pdf' })
         )
@@ -77,7 +88,7 @@ const PDFViewer = ({
         URL.revokeObjectURL(objectUrlToRevoke)
       }
     }
-  }, [axiosPrivate, path, pdfUrl])
+  }, [axiosPrivate, downloadUrl, path, pdfUrl])
 
   if (loading) {
     return (
@@ -154,33 +165,37 @@ const PDFViewer = ({
           </Box>
 
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-            <Button
-              component='a'
-              href={viewerUrl}
-              target='_blank'
-              rel='noreferrer'
-              variant='outlined'
-              startIcon={<OpenInNew />}
-              sx={{ textTransform: 'none' }}
-            >
-              Abrir
-            </Button>
-            <Button
-              component='a'
-              href={viewerUrl}
-              download={path}
-              variant='contained'
-              startIcon={<Download />}
-              sx={{
-                textTransform: 'none',
-                bgcolor: '#00BFA5',
-                '&:hover': {
-                  bgcolor: '#00ACC1'
-                }
-              }}
-            >
-              Descargar
-            </Button>
+            {allowOpen && (
+              <Button
+                component='a'
+                href={viewerUrl}
+                target='_blank'
+                rel='noreferrer'
+                variant='outlined'
+                startIcon={<OpenInNew />}
+                sx={{ textTransform: 'none' }}
+              >
+                Abrir
+              </Button>
+            )}
+            {allowDownload && (
+              <Button
+                component='a'
+                href={viewerUrl}
+                download={path}
+                variant='contained'
+                startIcon={<Download />}
+                sx={{
+                  textTransform: 'none',
+                  bgcolor: '#00BFA5',
+                  '&:hover': {
+                    bgcolor: '#00ACC1'
+                  }
+                }}
+              >
+                Descargar
+              </Button>
+            )}
           </Box>
         </Box>
       )}
@@ -197,40 +212,45 @@ const PDFViewer = ({
             flexWrap: 'wrap'
           }}
         >
-          <Button
-            component='a'
-            href={viewerUrl}
-            target='_blank'
-            rel='noreferrer'
-            variant='outlined'
-            size='small'
-            startIcon={<OpenInNew />}
-            sx={{ textTransform: 'none' }}
-          >
-            Abrir
-          </Button>
-          <Button
-            component='a'
-            href={viewerUrl}
-            download={path}
-            variant='contained'
-            size='small'
-            startIcon={<Download />}
-            sx={{
-              textTransform: 'none',
-              bgcolor: '#00BFA5',
-              '&:hover': {
-                bgcolor: '#00ACC1'
-              }
-            }}
-          >
-            Descargar
-          </Button>
+          {allowOpen && (
+            <Button
+              component='a'
+              href={viewerUrl}
+              target='_blank'
+              rel='noreferrer'
+              variant='outlined'
+              size='small'
+              startIcon={<OpenInNew />}
+              sx={{ textTransform: 'none' }}
+            >
+              Abrir
+            </Button>
+          )}
+          {allowDownload && (
+            <Button
+              component='a'
+              href={viewerUrl}
+              download={path}
+              variant='contained'
+              size='small'
+              startIcon={<Download />}
+              sx={{
+                textTransform: 'none',
+                bgcolor: '#00BFA5',
+                '&:hover': {
+                  bgcolor: '#00ACC1'
+                }
+              }}
+            >
+              Descargar
+            </Button>
+          )}
         </Box>
       )}
 
       <Box
         sx={{
+          position: 'relative',
           width: '100%',
           border: '1px solid #e0e0e0',
           borderRadius: 2,
@@ -238,10 +258,26 @@ const PDFViewer = ({
           boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
           bgcolor: 'white'
         }}
-      >
-        <object
-          data={embeddedViewerUrl}
-          type='application/pdf'
+        >
+          {watermarkText && (
+            <Box
+              aria-hidden='true'
+              sx={{
+                position: 'absolute',
+                inset: 0,
+                pointerEvents: 'none',
+                zIndex: 1,
+                opacity: 0.18,
+                backgroundImage: `repeating-linear-gradient(-28deg, transparent 0 110px, rgba(0,0,0,0.02) 110px 220px), url("data:image/svg+xml,${encodeURIComponent(
+                  `<svg xmlns='http://www.w3.org/2000/svg' width='420' height='260' viewBox='0 0 420 260'><g transform='rotate(-24 210 130)'><text x='36' y='130' fill='%23000' fill-opacity='1' font-family='Arial, sans-serif' font-size='26' font-weight='700'>${watermarkText}</text></g></svg>`
+                )}")`,
+                backgroundRepeat: 'repeat'
+              }}
+            />
+          )}
+          <object
+            data={embeddedViewerUrl}
+            type='application/pdf'
           width='100%'
           height={viewerHeight}
           aria-label='Vista previa del PDF'
@@ -262,22 +298,24 @@ const PDFViewer = ({
             <Typography variant='body1'>
               No es posible visualizar el PDF en este dispositivo.
             </Typography>
-            <Button
-              component='a'
-              href={viewerUrl}
-              download={path}
-              variant='contained'
-              startIcon={<Download />}
-              sx={{
-                textTransform: 'none',
-                bgcolor: '#00BFA5',
-                '&:hover': {
-                  bgcolor: '#00ACC1'
-                }
-              }}
-            >
-              Descargar PDF
-            </Button>
+            {allowDownload && (
+              <Button
+                component='a'
+                href={viewerUrl}
+                download={path}
+                variant='contained'
+                startIcon={<Download />}
+                sx={{
+                  textTransform: 'none',
+                  bgcolor: '#00BFA5',
+                  '&:hover': {
+                    bgcolor: '#00ACC1'
+                  }
+                }}
+              >
+                Descargar PDF
+              </Button>
+            )}
           </Box>
         </object>
       </Box>

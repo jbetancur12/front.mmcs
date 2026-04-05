@@ -213,6 +213,27 @@ Validar:
 - Descargar, ver archivo y eliminar sigan funcionando
 - En DevTools Network no aparezca una ráfaga continua de `GET /files?page=...` al cambiar de página
 
+### Vista protegida de CV en perfiles
+- `/profiles/:id` ya no intenta abrir el PDF del CV por URL directa de MinIO.
+- El preview del CV ahora usa descarga autenticada por backend.
+- En la vista de perfil se ocultaron acciones de abrir/descargar.
+- Se agregó marca de agua visible sobre el preview del CV para desincentivar reutilización directa.
+
+Componentes tocados:
+- `api.mmcs/routes/profiles.routes.js`
+- `api.mmcs/controllers/profile.controller.js`
+- `src/Components/PDFViewer.tsx`
+- `src/pages/Profile.tsx`
+
+Probar:
+- `/profiles/:id`
+
+Validar:
+- El CV cargue en vista previa sin `403` de MinIO
+- No aparezcan botones de abrir o descargar
+- La marca de agua se vea por encima del preview
+- La actualización de CV siga funcionando para `admin`
+
 ## Métricas observadas
 
 ### Antes de esta ronda
