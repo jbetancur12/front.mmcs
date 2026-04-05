@@ -47,6 +47,8 @@ export type EquipmentData = {
   isInspectionDueSoon: boolean
   calibrationDueDate?: string
   inspectionDueDate?: string
+  calibrationDaysRemaining?: number | null
+  inspectionDaysRemaining?: number | null
   priority?: 'high' | 'medium' | 'low'
 }
 
@@ -62,8 +64,9 @@ const EquipmentAlertsPage: React.FC = () => {
   const fetchEquipmentData = async () => {
     try {
       setLoading(true)
-      const response = await axiosPrivate('/dataSheet/')
+      const response = await axiosPrivate('/dataSheet/alerts')
       setEquipments(response.data)
+      return true
     } catch (error) {
       console.error('Error fetching equipment data:', error)
       Swal.fire({
@@ -72,6 +75,7 @@ const EquipmentAlertsPage: React.FC = () => {
         icon: 'error',
         confirmButtonText: 'Entendido'
       })
+      return false
     } finally {
       setLoading(false)
     }
@@ -83,15 +87,17 @@ const EquipmentAlertsPage: React.FC = () => {
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    await fetchEquipmentData()
+    const success = await fetchEquipmentData()
     setRefreshing(false)
-    Swal.fire({
-      title: '¡Actualizado!',
-      text: 'Las alertas han sido actualizadas',
-      icon: 'success',
-      timer: 2000,
-      showConfirmButton: false
-    })
+    if (success) {
+      Swal.fire({
+        title: '¡Actualizado!',
+        text: 'Las alertas han sido actualizadas',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      })
+    }
   }
 
   const filteredEquipments = useMemo(() => {
@@ -111,7 +117,7 @@ const EquipmentAlertsPage: React.FC = () => {
     (equipment) => equipment.isInspectionDueSoon
   )
 
-  const totalAlerts = calibrationDueSoon.length + inspectionDueSoon.length
+  const totalAlerts = filteredEquipments.length
 
   const clearSearch = () => {
     setSearchTerm('')
@@ -133,6 +139,16 @@ const EquipmentAlertsPage: React.FC = () => {
       case 'low': return 'Baja'
       default: return 'Normal'
     }
+  }
+
+  const getDaysLabel = (daysRemaining?: number | null) => {
+    if (daysRemaining === null || daysRemaining === undefined) return null
+    if (daysRemaining < 0) {
+      return `Vencido hace ${Math.abs(daysRemaining)} día${Math.abs(daysRemaining) === 1 ? '' : 's'}`
+    }
+    if (daysRemaining === 0) return 'Vence hoy'
+    if (daysRemaining === 1) return 'Vence en 1 día'
+    return `Vence en ${daysRemaining} días`
   }
 
   if (loading) {
@@ -259,7 +275,7 @@ const EquipmentAlertsPage: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
                   <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                    Total de Alertas
+                    Equipos con Alertas
                   </Typography>
                   <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
                     {totalAlerts}
@@ -329,7 +345,26 @@ const EquipmentAlertsPage: React.FC = () => {
       </Grid>
 
       {/* Empty State */}
-      {totalAlerts === 0 && (
+      {searchTerm && filteredEquipments.length === 0 && (
+        <Paper 
+          elevation={2} 
+          sx={{ 
+            p: 6, 
+            textAlign: 'center',
+            background: 'linear-gradient(135deg, #fff8e1 0%, #fffde7 100%)'
+          }}
+        >
+          <SearchIcon sx={{ fontSize: 64, color: '#ff9800', mb: 2 }} />
+          <Typography variant="h5" sx={{ fontWeight: 600, mb: 2, color: '#e65100' }}>
+            Sin resultados
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            No encontramos equipos con alertas que coincidan con tu búsqueda.
+          </Typography>
+        </Paper>
+      )}
+
+      {!searchTerm && totalAlerts === 0 && (
         <Paper 
           elevation={2} 
           sx={{ 
@@ -471,7 +506,7 @@ const EquipmentAlertsPage: React.FC = () => {
 
                           <Alert severity="warning" sx={{ mt: 2 }}>
                             <Typography variant="body2">
-                              Calibración próxima requerida
+                              {getDaysLabel(equipment.calibrationDaysRemaining) || 'Calibración próxima requerida'}
                             </Typography>
                           </Alert>
                         </CardContent>
@@ -626,7 +661,7 @@ const EquipmentAlertsPage: React.FC = () => {
 
                           <Alert severity="info" sx={{ mt: 2 }}>
                             <Typography variant="body2">
-                              Inspección próxima requerida
+                              {getDaysLabel(equipment.inspectionDaysRemaining) || 'Inspección próxima requerida'}
                             </Typography>
                           </Alert>
                         </CardContent>

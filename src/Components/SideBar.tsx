@@ -252,7 +252,7 @@ const sidebarItems = ($userStore: UserData) => [
         url: 'asset-life-sheets',
         roles: ['admin']
       },
-      { label: 'Alertas', url: 'datasheets/alerts', roles: ['admin'] }
+      { label: 'Alertas', url: 'datasheets/alerts', roles: ['admin', 'metrologist'] }
     ]
   },
   {
