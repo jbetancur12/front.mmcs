@@ -175,6 +175,20 @@ Validar:
 - apertura del modal de contraseñas
 - que `/zip` ya no sea una entrada pública necesaria
 
+### Limpieza final de rutas generales
+- La pantalla de bienvenida ahora tambien entra con `lazy`.
+- Esto evita que `Welcome` quede en la carga base de `OtherRoutes` aunque no sea la primera ruta usada tras login.
+
+Componentes tocados:
+- `src/routes/OtherRoutes.tsx`
+
+Probar:
+- `/welcome`
+
+Validar:
+- La pantalla de bienvenida abra sin errores
+- El fallback global de `Suspense` siga funcionando al navegar
+
 ## Métricas observadas
 
 ### Antes de esta ronda
@@ -263,6 +277,14 @@ Conclusión:
 - La ruta de flota ya no paga ese costo al entrar: primero carga un contenedor muy liviano y solo trae el preview pesado bajo demanda.
 - Flota queda alineado con la misma estrategia ya aplicada en cotizaciones y datasheets.
 
+### Estado observado tras diferir `Welcome`
+- `index`: ~381.53 kB
+- `Welcome`: ~0.97 kB
+
+Conclusión:
+- La mejora es pequeña pero real: `Welcome` ya no queda en la carga base.
+- Las rutas generales quedan alineadas con la estrategia de carga diferida del resto del router.
+
 ## Pendientes de mayor impacto
 
 ### 1. `pdf-renderer`
@@ -311,6 +333,7 @@ Posibles caminos:
 - `/maintenance/analytics`
 - repositorio de archivos
 - generación de Excel
+- `/welcome`
 
 ## Checklist de validación técnica
 - Ejecutar `npm run build`
@@ -328,3 +351,4 @@ Posibles caminos:
 - `db7c1be` `perf: lazy load pdf document views`
 - `5673769` `docs: add frontend optimization tracker`
 - `c3d01e8` `refactor: simplify excel upload route`
+- `75a9b61` `perf: defer fleet pdf preview until requested`
