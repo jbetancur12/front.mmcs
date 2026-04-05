@@ -36,6 +36,22 @@ export default defineConfig({
     sourcemap: false,
     outDir: 'dist',
     emptyOutDir: true,
-    chunkSizeWarningLimit: 2000
+    chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+
+          if (id.includes('minio')) return 'minio'
+          if (id.includes('react-pdf') || id.includes('pdfjs-dist')) return 'react-pdf'
+          if (id.includes('@react-pdf/renderer') || id.includes('react-pdf-tailwind')) return 'pdf-renderer'
+          if (id.includes('xlsx-populate') || id.includes('/xlsx/')) return 'excel'
+          if (id.includes('monaco-editor') || id.includes('@monaco-editor/react')) return 'monaco'
+          if (id.includes('recharts') || id.includes('victory')) return 'charts'
+          if (id.includes('@mui') || id.includes('@emotion')) return 'mui'
+          if (id.includes('react-router') || id.includes('react-dom') || id.includes('/react/')) return 'react-vendor'
+        }
+      }
+    }
   }
 })
