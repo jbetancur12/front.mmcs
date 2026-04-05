@@ -383,7 +383,11 @@ function CertificatesList({ refreshTrigger }: CertificatesListProps) {
                           border: '1px solid #e5e7eb'
                         }}
                       >
-                        <PDFViewer path={certificatePath} buttons={false} />
+                        <PDFViewer
+                          path={certificatePath}
+                          buttons={false}
+                          compactActions
+                        />
                       </Box>
                     </Box>
                   </Collapse>
