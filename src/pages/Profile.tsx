@@ -523,7 +523,7 @@ const Profile: React.FC = () => {
                 allowDownload={false}
                 allowOpen={false}
                 downloadUrl={`/profiles/${idProfile}/cv/download`}
-                watermarkText={`CONFIDENCIAL | ${$userStore.nombre || $userStore.email || 'usuario'} | ${new Date().toLocaleDateString('es-CO')}`}
+                disableContextMenu
               />
             </Box>
           </Box>
