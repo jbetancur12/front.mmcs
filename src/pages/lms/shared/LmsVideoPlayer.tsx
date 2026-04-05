@@ -288,28 +288,10 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
     >
       {error ? (
         <Alert severity="error" sx={{ m: 2 }}>
-          {error} [video-auth-v2]
+          {error}
         </Alert>
       ) : (
         <>
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 8,
-              right: 8,
-              zIndex: 2,
-              px: 1,
-              py: 0.5,
-              borderRadius: 1,
-              backgroundColor: 'rgba(0, 0, 0, 0.7)',
-              color: '#7CFFB2',
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              letterSpacing: '0.04em'
-            }}
-          >
-            VIDEO AUTH V2
-          </Box>
           {resolvedSrc ? (
             <video
               key={resolvedSrc}

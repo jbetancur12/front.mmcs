@@ -3,6 +3,9 @@
 # Nombre del archivo de registro de errores
 error_log="error.log"
 
+# Limpiar errores viejos para no confundir este despliegue con uno anterior
+: > "$error_log"
+
 # Función para mostrar los errores
 show_errors() {
   if [ -s "$error_log" ]; then
@@ -25,6 +28,14 @@ fi
 
 
 # Copiar la carpeta al servidor remoto
+echo "Limpiando carpeta 'dist' remota previa..."
+ssh metromedics@209.97.156.169 'rm -rf /home/metromedics/mmcs/frontend/dist' 2>>"$error_log"
+if [ $? -ne 0 ]; then
+  echo "Error al limpiar la carpeta 'dist' remota."
+  show_errors
+  exit 1
+fi
+
 echo "Copiando la carpeta 'dist' al servidor remoto..."
 scp -r "dist" metromedics@209.97.156.169:/home/metromedics/mmcs/frontend 2>>"$error_log"
 if [ $? -ne 0 ]; then
@@ -36,7 +47,7 @@ fi
 # Conectarse al servidor remoto y mover archivos al directorio de producción.
 echo "Conectándose al servidor remoto y moviendo archivos..."
 ssh metromedics@209.97.156.169 << 'EOF'
-  set -x
+  set -euxo pipefail
   cd /home/metromedics/mmcs/frontend
   
   # Obtener la fecha y hora actual
@@ -51,9 +62,9 @@ ssh metromedics@209.97.156.169 << 'EOF'
 
   # Hacer backup del sitio actualmente publicado antes de reemplazarlo
   if [ -d /var/www/app.metromedics.co/html ] && [ "$(ls -A /var/www/app.metromedics.co/html 2>/dev/null)" ]; then
-    sudo mkdir -p /var/www/app.metromedics.co/backups
-    sudo mkdir -p "/var/www/app.metromedics.co/backups/$timestamp"
-    sudo cp -a /var/www/app.metromedics.co/html/. "/var/www/app.metromedics.co/backups/$timestamp/"
+    mkdir -p /var/www/app.metromedics.co/backups
+    mkdir -p "/var/www/app.metromedics.co/backups/$timestamp"
+    cp -a /var/www/app.metromedics.co/html/. "/var/www/app.metromedics.co/backups/$timestamp/"
 
     if [ $? -ne 0 ]; then
       echo "Error al crear el backup del sitio actual." >&2
@@ -62,21 +73,24 @@ ssh metromedics@209.97.156.169 << 'EOF'
   fi
 
   # Limpiar el contenido actual para no mezclar assets de builds anteriores
-  sudo mkdir -p /var/www/app.metromedics.co/html
-  sudo find /var/www/app.metromedics.co/html -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+  mkdir -p /var/www/app.metromedics.co/html
+  find /var/www/app.metromedics.co/html -mindepth 1 -maxdepth 1 -exec rm -rf {} +
 
   if [ $? -ne 0 ]; then
     echo "Error al limpiar el directorio de producción." >&2
     exit 1
   fi
 
-  sudo cp -a "build$timestamp"/. /var/www/app.metromedics.co/html/
+  cp -a "build$timestamp"/. /var/www/app.metromedics.co/html/
   
   # Verificar el resultado del cp
   if [ $? -ne 0 ]; then
     echo "Error al copiar los archivos al directorio de producción." >&2
     exit 1
   fi
+
+  echo "Build publicado:"
+  ls -1 /var/www/app.metromedics.co/html/assets/index-*.js 2>/dev/null | tail -n 1
 
   # Conservar solo las dos carpetas más recientes en el directorio /home/metromedics/mmcs/frontend
   cd /home/metromedics/mmcs/frontend
@@ -90,6 +104,12 @@ ssh metromedics@209.97.156.169 << 'EOF'
   fi
 
 EOF
+
+if [ $? -ne 0 ]; then
+  echo "Error durante la publicación remota."
+  show_errors
+  exit 1
+fi
 
 # Mostrar errores
 show_errors
