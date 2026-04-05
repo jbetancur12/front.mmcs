@@ -1,14 +1,6 @@
-import { useEffect, useState } from 'react'
-import * as minioExports from 'minio'
+import { useMemo } from 'react'
 import { Avatar } from '@mui/material'
-
-const minioClient = new minioExports.Client({
-  endPoint: import.meta.env.VITE_MINIO_ENDPOINT || 'localhost',
-  port: import.meta.env.VITE_ENV === 'development' ? 9000 : undefined,
-  useSSL: import.meta.env.VITE_MINIO_USESSL === 'true',
-  accessKey: import.meta.env.VITE_MINIO_ACCESSKEY,
-  secretKey: import.meta.env.VITE_MINIO_SECRETKEY
-})
+import { buildMinioObjectUrl } from '@utils/minio'
 
 const IMGViewer = ({
   path,
@@ -17,29 +9,8 @@ const IMGViewer = ({
   path: string
   bucket: string
 }) => {
-  const [imageUrl, setImageUrl] = useState<string>('')
+  const imageUrl = useMemo(() => buildMinioObjectUrl(bucket, path), [bucket, path])
 
-  useEffect(() => {
-    // Nombre de tu archivo de imagen en el bucket
-
-    const getImageFromBucket = async () => {
-      try {
-        const objectStream = await minioClient.getObject(bucket, path)
-        const chunks: Uint8Array[] = []
-
-        objectStream.on('data', (chunk: Uint8Array) => chunks.push(chunk))
-        objectStream.on('end', () => {
-          const imageBlob = new Blob(chunks, { type: 'image/jpeg' }) // Cambia el tipo de imagen según corresponda (jpeg, png, etc.)
-          const imageUrl = URL.createObjectURL(imageBlob)
-          setImageUrl(imageUrl)
-        })
-      } catch (error) {
-        console.error('Error al obtener la imagen del bucket:', error)
-      }
-    }
-
-    getImageFromBucket()
-  }, [path])
   return (
     <Avatar
       src={imageUrl}
