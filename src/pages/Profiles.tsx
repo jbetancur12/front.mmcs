@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 
-import * as minioExports from 'minio'
 import {
   Button,
   IconButton,
@@ -35,6 +34,7 @@ import { useStore } from '@nanostores/react'
 import useAxiosPrivate from '@utils/use-axios-private'
 import toast, { Toaster } from 'react-hot-toast'
 import Swal from 'sweetalert2'
+import { buildMinioObjectUrl } from '@utils/minio'
 
 export interface Profile {
   id: number
@@ -45,16 +45,6 @@ export interface Profile {
   description: string
   imageProfile: string
 }
-
-const minioClient = new minioExports.Client({
-  endPoint: import.meta.env.VITE_MINIO_ENDPOINT || 'localhost',
-  port: import.meta.env.VITE_ENV === 'development' ? 9000 : undefined,
-  useSSL: import.meta.env.VITE_MINIO_USESSL === 'true',
-  accessKey: import.meta.env.VITE_MINIO_ACCESSKEY,
-  secretKey: import.meta.env.VITE_MINIO_SECRETKEY
-})
-
-
 
 const Profiles: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
@@ -67,81 +57,24 @@ const Profiles: React.FC = () => {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
   const [isSearching, setIsSearching] = useState(false)
 
-  const getBucket = async (data: any) => {
-    const profilePromises = data.map((item: any) => {
-      return new Promise((resolve) => {
-        if (!item.avatarUrl) {
-          // Si no hay avatarUrl, generar avatar con iniciales
-          const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name || 'Usuario')}&background=00BFA5&color=fff&size=200`
-          resolve({ ...item, imageProfile: defaultAvatar })
-          return
-        }
+  const getDefaultAvatar = (name?: string) =>
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Usuario')}&background=00BFA5&color=fff&size=200`
 
-        minioClient.getObject(
-          'images',
-          item.avatarUrl,
-          (err: Error | null, dataStream: any) => {
-            if (err) {
-              console.warn(`MinIO: Image not found for profile ${item.id} (${item.name}):`, err.message)
-              // En caso de error, usar imagen por defecto o generar avatar con iniciales
-              const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name || 'Usuario')}&background=00BFA5&color=fff&size=200`
-              resolve({ ...item, imageProfile: defaultAvatar })
-            } else {
-              // Crear URL del blob para la imagen
-              const chunks: any[] = []
-              dataStream.on('data', (chunk: any) => chunks.push(chunk))
-              dataStream.on('end', () => {
-                try {
-                  const imageBlob = new Blob(chunks, { type: 'image/jpeg' })
-                  const imageUrl = URL.createObjectURL(imageBlob)
-                  resolve({ ...item, imageProfile: imageUrl })
-                } catch (blobError) {
-                  console.error('Error creating blob URL:', blobError)
-                  const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name || 'Usuario')}&background=00BFA5&color=fff&size=200`
-                  resolve({ ...item, imageProfile: defaultAvatar })
-                }
-              })
-              dataStream.on('error', (streamError: any) => {
-                console.error('Stream error:', streamError)
-                const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name || 'Usuario')}&background=00BFA5&color=fff&size=200`
-                resolve({ ...item, imageProfile: defaultAvatar })
-              })
-            }
-          }
-        )
-      })
-    })
+  const mapProfilesWithImageUrl = (data: any[]) =>
+    data.map((item: any) => ({
+      ...item,
+      imageProfile: item.avatarUrl
+        ? buildMinioObjectUrl('images', item.avatarUrl)
+        : getDefaultAvatar(item.name)
+    }))
 
-    try {
-      const profiles = await Promise.all(profilePromises)
-      return profiles
-    } catch (error) {
-      console.error('Error in getBucket:', error)
-      // Fallback: devolver los datos originales con imagen por defecto
-      return data.map((item: any) => ({
-        ...item,
-        imageProfile: '/default-avatar.png'
-      }))
-    }
-  }
   const fetchProfiles = async () => {
     try {
       setLoading(true)
       const response = await axiosPrivate.get(`/profiles`, {})
       
       if (response.data && response.data.length > 0) {
-        try {
-          const pro = await getBucket(response.data)
-          setProfiles(pro as Profile[])
-        } catch (bucketError) {
-          console.error('Error processing images, using profiles without images:', bucketError)
-          // Si falla MinIO, usar los perfiles sin las imágenes procesadas
-          const profilesWithoutImages = response.data.map((item: any) => ({
-            ...item,
-            imageProfile: item.avatarUrl || '/default-avatar.png' // Fallback image
-          }))
-          setProfiles(profilesWithoutImages)
-        }
+        setProfiles(mapProfilesWithImageUrl(response.data) as Profile[])
       } else {
         setProfiles([])
       }
@@ -445,6 +378,12 @@ const Profiles: React.FC = () => {
                       <Avatar
                         src={profile.imageProfile}
                         alt={profile.name}
+                        imgProps={{
+                          onError: (event) => {
+                            const target = event.currentTarget as HTMLImageElement
+                            target.src = getDefaultAvatar(profile.name)
+                          }
+                        }}
                         sx={{ 
                           width: 80, 
                           height: 80, 
