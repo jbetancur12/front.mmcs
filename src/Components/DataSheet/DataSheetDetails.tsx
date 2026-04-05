@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { Box, CircularProgress } from '@mui/material'
 
 import { DataSheetData } from './ListDataSheet'
-import DataSheetPDF from './DataSheetPDF'
 import useAxiosPrivate from '@utils/use-axios-private'
+
+const DataSheetPDF = lazy(() => import('./DataSheetPDF'))
 
 const DataSheetDetail: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
@@ -31,7 +33,17 @@ const DataSheetDetail: React.FC = () => {
 
   if (!dataSheet) return <div>Loading...</div>
 
-  return <DataSheetPDF dataSheet={dataSheet} />
+  return (
+    <Suspense
+      fallback={
+        <Box display='flex' justifyContent='center' py={6}>
+          <CircularProgress />
+        </Box>
+      }
+    >
+      <DataSheetPDF dataSheet={dataSheet} />
+    </Suspense>
+  )
 }
 
 export default DataSheetDetail

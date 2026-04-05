@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { Box, Button } from '@mui/material'
+import { Box, Button, CircularProgress } from '@mui/material'
 
 import { ArrowBack } from '@mui/icons-material'
 
-import QuotePDFGenerator from '../Components/QuotePDFGenerator'
 import { QuoteData } from '../Components/TableQuotes'
 import useAxiosPrivate from '@utils/use-axios-private'
+
+const QuotePDFGenerator = lazy(() => import('../Components/QuotePDFGenerator'))
 
 // interface Product {
 //   name: string;
@@ -78,7 +79,15 @@ const Quote = () => {
         sx={{ mb: 2 }}
       />
 
-      <QuotePDFGenerator quoteData={quoteData} />
+      <Suspense
+        fallback={
+          <Box display='flex' justifyContent='center' py={6}>
+            <CircularProgress />
+          </Box>
+        }
+      >
+        <QuotePDFGenerator quoteData={quoteData} />
+      </Suspense>
     </Box>
   )
 }
