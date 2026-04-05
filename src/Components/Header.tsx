@@ -22,7 +22,7 @@ import { useNavigate } from 'react-router-dom'
 import { userStore } from '../store/userStore'
 import LogoutButton from './Authentication/Logout'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { EquipmentData } from './DataSheet/EquipmentAlertPage'
+import type { EquipmentData } from './DataSheet/EquipmentAlertPage'
 
 interface HeaderProps {
   toggleMobileMenu: () => void
