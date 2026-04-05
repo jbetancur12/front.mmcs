@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { Suspense, lazy, useState } from 'react'
 import JSZip from 'jszip'
 import {
   TextField,
@@ -16,8 +16,6 @@ import {
   Tooltip,
   Divider
 } from '@mui/material'
-import AnalyzeExcelComponent from './AnalyzeExcelComponent'
-
 import {
   Check,
   Close,
@@ -27,6 +25,8 @@ import {
 } from '@mui/icons-material'
 
 import ModalPasswordForm from '../Components/ModalPasswordForm'
+
+const AnalyzeExcelComponent = lazy(() => import('./AnalyzeExcelComponent'))
 
 const Zip = () => {
   const [file, setFile] = useState<File | null>(null)
@@ -227,25 +227,29 @@ const Zip = () => {
               </div>
             )}
             {data.length > 0 && (
-              <AnalyzeExcelComponent
-                dataReceived={data}
-                hideUpload={fileNames.length > 0}
-                fileNames={fileNames}
-                selectedFile={selectedFile}
-                setFileNames={setFileNames}
-                isFile={false}
-                wbPasswords={wbPasswords}
-              />
+              <Suspense fallback={<Box py={4}>Cargando analizador...</Box>}>
+                <AnalyzeExcelComponent
+                  dataReceived={data}
+                  hideUpload={fileNames.length > 0}
+                  fileNames={fileNames}
+                  selectedFile={selectedFile}
+                  setFileNames={setFileNames}
+                  isFile={false}
+                  wbPasswords={wbPasswords}
+                />
+              </Suspense>
             )}
           </Stack>
         </Box>
       )}
       {value === 'file' && (
-        <AnalyzeExcelComponent
-          hideUpload={fileNames.length > 0}
-          isFile={true}
-          wbPasswords={wbPasswords}
-        />
+        <Suspense fallback={<Box py={4}>Cargando analizador...</Box>}>
+          <AnalyzeExcelComponent
+            hideUpload={fileNames.length > 0}
+            isFile={true}
+            wbPasswords={wbPasswords}
+          />
+        </Suspense>
       )}
     </Box>
   )

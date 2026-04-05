@@ -139,6 +139,24 @@ Validar:
 - El botón `Ocultar vista previa` vuelva al estado liviano en datasheets
 - Sin errores de chunks o fallback en consola
 
+### Reducción de trabajo innecesario en `excel-populate`
+- `Repository` ya no rehidrata archivos de Excel con `xlsx-populate` para abrirlos o descargarlos si basta con el blob original.
+- `Zip` ahora carga `AnalyzeExcelComponent` con `lazy`, así que el flujo pesado de análisis no entra hasta que el usuario realmente lo usa.
+
+Componentes tocados:
+- `src/Components/Repository.tsx`
+- `src/pages/Zip.tsx`
+
+Probar:
+- `/repository`
+- `/zip`
+
+Validar:
+- Descargar archivo desde repositorio
+- Abrir archivo del repositorio en nueva pestaña
+- Entrar a `/zip` sin iniciar análisis
+- Cargar el analizador al procesar archivo o usar modo `file`
+
 ## Métricas observadas
 
 ### Antes de esta ronda
@@ -176,6 +194,17 @@ Conclusión:
 Conclusión:
 - El chunk `pdf-renderer` mantiene su peso global.
 - Sí mejora el comportamiento de entrada: cotizaciones y datasheets ahora pagan ese costo solo cuando el usuario pide la vista previa.
+
+### Estado observado tras aislar mejor `excel-populate`
+- `index`: ~382.36 kB
+- `excel-populate`: ~1,004.30 kB
+- `Repository`: ~4.66 kB
+- `Zip`: ~6.44 kB
+- `AnalyzeExcelComponent`: ~12.87 kB
+
+Conclusión:
+- `excel-populate` mantiene su peso global porque sigue siendo necesario en los flujos pesados.
+- Sí mejoró el aislamiento: `Repository` dejó de depender de `xlsx-populate` para abrir/descargar y `Zip` ya no carga el analizador hasta que realmente se usa.
 
 ## Pendientes de mayor impacto
 
