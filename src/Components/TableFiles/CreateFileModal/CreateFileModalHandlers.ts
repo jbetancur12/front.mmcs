@@ -4,7 +4,7 @@ export const handleCreateFile = async (
   values: FileData,
   file: File | null,
   axiosPrivate: any,
-  fetchFiles: () => Promise<void>
+  fetchFiles: (options?: { force?: boolean }) => Promise<void>
 ) => {
   try {
     if (!file) throw new Error('Debe seleccionar un archivo PDF')
@@ -23,7 +23,7 @@ export const handleCreateFile = async (
     })
 
     if (response.status === 201) {
-      await fetchFiles()
+      await fetchFiles({ force: true })
       return true
     }
   } catch (error) {

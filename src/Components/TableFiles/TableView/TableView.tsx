@@ -1,7 +1,6 @@
 import {
   MaterialReactTable,
   MRT_PaginationState,
-  MRT_ColumnFiltersState,
   MRT_SortingState
 } from 'material-react-table'
 import { FileData } from '../types/fileTypes'
@@ -29,13 +28,23 @@ const TABLE_STATE_KEY = 'calibration-table-state'
 
 interface TableViewProps {
   data: FileData[]
-  fetchFiles: () => Promise<void>
+  rowCount: number
+  loading: boolean
+  fetchFiles: (options?: {
+    pageIndex?: number
+    pageSize?: number
+    globalFilter?: string
+    sorting?: MRT_SortingState
+    force?: boolean
+  }) => Promise<void>
   axiosPrivate: ReturnType<typeof useAxiosPrivate>
   openModal: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export const TableView = ({
   data,
+  rowCount,
+  loading,
   fetchFiles,
   axiosPrivate,
   openModal
@@ -69,13 +78,13 @@ export const TableView = ({
   const [pagination, setPagination] = useState<MRT_PaginationState>(
     savedState?.pagination || { pageSize: 15, pageIndex: 0 }
   )
-  const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>(
-    savedState?.columnFilters || []
-  )
   const [sorting, setSorting] = useState<MRT_SortingState>(
-    savedState?.sorting || []
+    savedState?.sorting || [{ id: 'nextCalibrationDate', desc: false }]
   )
   const [globalFilter, setGlobalFilter] = useState<string>(
+    savedState?.globalFilter || ''
+  )
+  const [debouncedGlobalFilter, setDebouncedGlobalFilter] = useState(
     savedState?.globalFilter || ''
   )
 
@@ -83,7 +92,6 @@ export const TableView = ({
   useEffect(() => {
     const state = {
       pagination,
-      columnFilters,
       sorting,
       globalFilter
     }
@@ -92,20 +100,60 @@ export const TableView = ({
     } catch (error) {
       console.error('Error saving table state:', error)
     }
-  }, [pagination, columnFilters, sorting, globalFilter])
+  }, [pagination, sorting, globalFilter])
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedGlobalFilter(globalFilter)
+    }, 300)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [globalFilter])
+
+  useEffect(() => {
+    fetchFiles({
+      pageIndex: pagination.pageIndex,
+      pageSize: pagination.pageSize,
+      globalFilter: debouncedGlobalFilter,
+      sorting
+    })
+  }, [
+    fetchFiles,
+    pagination.pageIndex,
+    pagination.pageSize,
+    debouncedGlobalFilter,
+    sorting
+  ])
 
   // Function to clear all filters and reset state
   const handleClearFilters = () => {
     setPagination({ pageSize: 15, pageIndex: 0 })
-    setColumnFilters([])
     setSorting([])
     setGlobalFilter('')
     localStorage.removeItem(TABLE_STATE_KEY)
   }
 
   // Check if any filters are active
-  const hasActiveFilters =
-    columnFilters.length > 0 || globalFilter !== '' || sorting.length > 0
+  const hasActiveFilters = globalFilter !== '' || sorting.length > 0
+
+  const handlePaginationChange = (
+    updater:
+      | MRT_PaginationState
+      | ((prevState: MRT_PaginationState) => MRT_PaginationState)
+  ) => {
+    setPagination((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+
+      if (
+        next.pageIndex === prev.pageIndex &&
+        next.pageSize === prev.pageSize
+      ) {
+        return prev
+      }
+
+      return next
+    })
+  }
 
   const columns = useMemo(
     () => createTableColumns(getCommonEditTextFieldProps),
@@ -123,15 +171,22 @@ export const TableView = ({
       enablePagination
       // Controlled state
       state={{
+        isLoading: loading,
         pagination,
-        columnFilters,
         sorting,
         globalFilter
       }}
-      onPaginationChange={setPagination}
-      onColumnFiltersChange={setColumnFilters}
-      onSortingChange={setSorting}
-      onGlobalFilterChange={setGlobalFilter}
+      onPaginationChange={handlePaginationChange}
+      onSortingChange={(updater) => {
+        const nextSorting =
+          typeof updater === 'function' ? updater(sorting) : updater
+        setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+        setSorting(nextSorting)
+      }}
+      onGlobalFilterChange={(value) => {
+        setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+        setGlobalFilter(value ?? '')
+      }}
       initialState={{
         density: 'comfortable',
         columnVisibility: { filePath: false },
@@ -139,10 +194,12 @@ export const TableView = ({
       }}
       enableRowVirtualization
       enableColumnResizing
+      enableColumnFilters={false}
       columnResizeMode='onChange'
-      manualPagination={false}
-      manualFiltering={false}
-      manualSorting={false}
+      manualPagination
+      manualFiltering
+      manualSorting
+      rowCount={rowCount}
       autoResetPageIndex={false}
       muiTablePaperProps={{
         elevation: 0,
@@ -316,7 +373,7 @@ export const TableView = ({
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             {hasActiveFilters && (
               <Chip
-                label={`${columnFilters.length + (globalFilter ? 1 : 0)} filtro(s) activo(s)`}
+                label={`${(globalFilter ? 1 : 0) + (sorting.length > 0 ? 1 : 0)} filtro(s) activo(s)`}
                 onDelete={handleClearFilters}
                 deleteIcon={<FilterAltOff />}
                 sx={{

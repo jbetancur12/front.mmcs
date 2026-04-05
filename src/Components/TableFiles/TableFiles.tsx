@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useFileData } from './hooks/useFileData'
 import { TableView } from './TableView/TableView'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -9,20 +9,17 @@ import Loader from '../Loader2'
 
 const TableFiles = () => {
   const axiosPrivate = useAxiosPrivate()
-  const { tableData, loading, fetchFiles } = useFileData()
+  const { tableData, loading, rowCount, fetchFiles } = useFileData()
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const $user = useStore(userStore)
 
-  useEffect(() => {
-    fetchFiles()
-  }, [])
-
-  if (loading) return <Loader loading={loading} />
-
   return (
     <>
+      <Loader loading={loading} />
       <TableView
         data={tableData}
+        rowCount={rowCount}
+        loading={loading}
         fetchFiles={fetchFiles}
         axiosPrivate={axiosPrivate}
         openModal={() => setCreateModalOpen(true)}
