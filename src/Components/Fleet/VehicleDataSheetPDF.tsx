@@ -13,29 +13,22 @@ import { format } from 'date-fns'
 import { useEffect, useState } from 'react'
 import { createTw } from 'react-pdf-tailwind'
 import { useLocation, useNavigate } from 'react-router-dom'
-import * as minioExports from 'minio'
 
 import { MaintenanceRecord, Document as DocumentType } from './types'
 import useAxiosPrivate from '@utils/use-axios-private'
-
-const minioClient = new minioExports.Client({
-  endPoint: import.meta.env.VITE_MINIO_ENDPOINT || 'localhost',
-  port: import.meta.env.VITE_ENV === 'development' ? 9000 : undefined,
-  useSSL: import.meta.env.VITE_MINIO_USESSL === 'true',
-  accessKey: import.meta.env.VITE_MINIO_ACCESSKEY,
-  secretKey: import.meta.env.VITE_MINIO_SECRETKEY
-})
+import { buildMinioObjectUrl } from '@utils/minio'
 
 const VehicleDataSheetPDF = () => {
   const axiosPrivate = useAxiosPrivate()
   const { state } = useLocation()
   const navigate = useNavigate()
-  const [imageUrl, setImageUrl] = useState<string>('')
+  const { vehicleData, documents } = state
+  const imageUrl = vehicleData?.pictureUrl
+    ? buildMinioObjectUrl('images', vehicleData.pictureUrl)
+    : ''
   const [maintenanceRecords, setMaintenanceRecords] = useState<
     MaintenanceRecord[]
   >([])
-
-  const { vehicleData, documents } = state
 
   const soat = documents.find((doc: any) => doc.documentType === 'SOAT')
   const rtm = documents.find((doc: any) => doc.documentType === 'RTM')
@@ -186,29 +179,6 @@ const VehicleDataSheetPDF = () => {
   useEffect(() => {
     getMaintenanceRecords()
   }, [vehicleData.id])
-
-  useEffect(() => {
-    // Nombre de tu archivo de imagen en el bucket
-
-    const getImageFromBucket = async (picture: any) => {
-      try {
-        const objectStream = await minioClient.getObject('images', picture)
-        const chunks: Uint8Array[] = []
-
-        objectStream.on('data', (chunk: Uint8Array) => chunks.push(chunk))
-        objectStream.on('end', () => {
-          const imageBlob = new Blob(chunks, { type: 'image/jpeg' }) // Cambia el tipo de imagen según corresponda (jpeg, png, etc.)
-          const imageUrl = URL.createObjectURL(imageBlob)
-          setImageUrl(imageUrl)
-        })
-      } catch (error) {
-        console.error('Error al obtener la imagen del bucket:', error)
-      }
-    }
-    if (vehicleData?.pictureUrl) {
-      getImageFromBucket(vehicleData.pictureUrl)
-    }
-  }, [vehicleData?.pictureUrl])
 
   const Footer = () => (
     <View
