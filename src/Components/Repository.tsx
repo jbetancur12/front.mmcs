@@ -18,7 +18,6 @@ import {
 } from '@mui/material'
 import { CloudUpload, Delete, Download, Visibility } from '@mui/icons-material'
 
-import XlsxPopulate from 'xlsx-populate'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { fetchMinioObjectBlob } from '@utils/minio'
 
@@ -136,6 +135,7 @@ const Repository = () => {
 
   const downloadFileFromMinio = async (file: string) => {
     try {
+      const XlsxPopulate = (await import('xlsx-populate')).default
       const sourceBlob = await fetchMinioObjectBlob('repositories', file)
       const workbook = await XlsxPopulate.fromDataAsync(sourceBlob)
       const wbout = await workbook.outputAsync()
@@ -159,6 +159,7 @@ const Repository = () => {
 
   const openExcelViewerFromMinio = async (file: string): Promise<string> => {
     try {
+      const XlsxPopulate = (await import('xlsx-populate')).default
       const sourceBlob = await fetchMinioObjectBlob('repositories', file)
       const workbook = await XlsxPopulate.fromDataAsync(sourceBlob)
       const wbout = await workbook.outputAsync()

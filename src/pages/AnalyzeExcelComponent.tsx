@@ -21,7 +21,6 @@ import { ResourceOption } from '../utils/loadOptions'
 import { bigToast, styles } from '../Components/ExcelManipulation/Utils'
 import ModalDevice from '../Components/ModalDevice'
 import { VisuallyHiddenInput } from '../Components/TableFiles'
-import XlsxPopulate from 'xlsx-populate'
 import Loader from '../Components/Loader2'
 import { addMonths, set } from 'date-fns'
 import Select from 'react-select'
@@ -134,6 +133,7 @@ const AnalyzeExcelComponent: React.FC<AnalyzeExcelComponentProps> = ({
   const readExcel = async (file: File) => {
     const passwords = [...wbPasswords] // Replace with your passwords
     let workbook: any
+    const XlsxPopulate = (await import('xlsx-populate')).default
 
     try {
       // Primero intenta abrir el archivo sin contraseña

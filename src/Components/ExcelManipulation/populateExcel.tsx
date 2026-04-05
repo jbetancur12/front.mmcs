@@ -1,8 +1,8 @@
-import XlsxPopulate from 'xlsx-populate'
 import { populateCell } from './Utils'
 
 export const populateExcel = async (excelBlob: Blob, data: any) => {
   const { formData, rows } = data
+  const XlsxPopulate = (await import('xlsx-populate')).default
 
   const workbook = await XlsxPopulate.fromDataAsync(excelBlob)
 
