@@ -157,6 +157,24 @@ Validar:
 - Entrar a `/zip` sin iniciar análisis
 - Cargar el analizador al procesar archivo o usar modo `file`
 
+### Simplificación de `subir-excel`
+- Se conservó `calibraciones/subir-excel` como flujo real de negocio.
+- Se eliminó el acceso duplicado `/zip` desde rutas generales.
+- La pantalla `Zip` quedó reducida al modo `Archivo`, que es el único flujo activo; el modo `Directorio` estaba desactivado y solo aportaba código muerto.
+
+Componentes tocados:
+- `src/routes/OtherRoutes.tsx`
+- `src/pages/Zip.tsx`
+
+Probar:
+- `/calibraciones/subir-excel`
+- menú lateral en `Calibraciones`
+
+Validar:
+- carga de Excel y PDF asociado
+- apertura del modal de contraseñas
+- que `/zip` ya no sea una entrada pública necesaria
+
 ## Métricas observadas
 
 ### Antes de esta ronda
@@ -206,6 +224,17 @@ Conclusión:
 - `excel-populate` mantiene su peso global porque sigue siendo necesario en los flujos pesados.
 - Sí mejoró el aislamiento: `Repository` dejó de depender de `xlsx-populate` para abrir/descargar y `Zip` ya no carga el analizador hasta que realmente se usa.
 
+### Estado observado tras simplificar `subir-excel`
+- `index`: ~382.12 kB
+- `Zip`: ~4.06 kB
+- `AnalyzeExcelComponent`: ~12.87 kB
+- `excel-populate`: ~1,004.23 kB
+
+Conclusión:
+- El flujo útil `calibraciones/subir-excel` se mantiene.
+- La pantalla quedó alineada con el uso real: solo modo `Archivo`.
+- Se eliminó el acceso duplicado `/zip` y el chunk base de `Zip` bajó aún más.
+
 ## Pendientes de mayor impacto
 
 ### 1. `pdf-renderer`
@@ -251,7 +280,6 @@ Posibles caminos:
 - `/fleet/:id/documents/:docId`
 - `/fleet/:id/data-sheet`
 - `/maintenance/analytics`
-- `/zip`
 - repositorio de archivos
 - generación de Excel
 
