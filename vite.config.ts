@@ -52,7 +52,8 @@ export default defineConfig({
           if (id.includes('react-pdf') || id.includes('pdfjs-dist')) {
             return 'react-pdf-viewer'
           }
-          if (id.includes('xlsx-populate') || id.includes('/xlsx/')) return 'excel'
+          if (id.includes('xlsx-populate')) return 'excel-populate'
+          if (id.includes('/xlsx/') || id.includes('\\xlsx\\')) return 'excel-utils'
           if (id.includes('monaco-editor') || id.includes('@monaco-editor/react')) return 'monaco'
           if (id.includes('recharts') || id.includes('victory')) return 'charts'
           if (id.includes('@mui') || id.includes('@emotion')) return 'mui'

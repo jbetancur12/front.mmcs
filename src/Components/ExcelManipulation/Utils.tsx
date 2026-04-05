@@ -1,4 +1,3 @@
-import XlsxPopulate from 'xlsx-populate'
 import { RepositoryData, ResourceOption } from './Types'
 
 import Swal from 'sweetalert2'
@@ -77,7 +76,12 @@ export const numberFormat = (value: number) =>
   decimalPlaces(value) > 0 ? '0.' + '0'.repeat(decimalPlaces(value)) : '0'
 
 export const populateCell = (
-  sheet: XlsxPopulate.Sheet,
+  sheet: {
+    cell: (cell: string) => {
+      value: (value: number | string | undefined) => void
+      style: (name: string, value: string) => void
+    }
+  },
   cell: string,
   value: number | string | undefined,
   isNumberFormat: boolean,
