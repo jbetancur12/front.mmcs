@@ -135,13 +135,7 @@ const Repository = () => {
 
   const downloadFileFromMinio = async (file: string) => {
     try {
-      const XlsxPopulate = (await import('xlsx-populate')).default
-      const sourceBlob = await fetchMinioObjectBlob('repositories', file)
-      const workbook = await XlsxPopulate.fromDataAsync(sourceBlob)
-      const wbout = await workbook.outputAsync()
-      const blob = new Blob([wbout], {
-        type: 'application/octet-stream'
-      })
+      const blob = await fetchMinioObjectBlob('repositories', file)
 
       const url = URL.createObjectURL(blob)
 
@@ -152,6 +146,7 @@ const Repository = () => {
       a.click()
 
       document.body.removeChild(a)
+      URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Error downloading file from Minio:', error)
     }
@@ -159,13 +154,7 @@ const Repository = () => {
 
   const openExcelViewerFromMinio = async (file: string): Promise<string> => {
     try {
-      const XlsxPopulate = (await import('xlsx-populate')).default
-      const sourceBlob = await fetchMinioObjectBlob('repositories', file)
-      const workbook = await XlsxPopulate.fromDataAsync(sourceBlob)
-      const wbout = await workbook.outputAsync()
-      const blob = new Blob([wbout], {
-        type: 'application/octet-stream'
-      })
+      const blob = await fetchMinioObjectBlob('repositories', file)
 
       return URL.createObjectURL(blob)
     } catch (error) {
