@@ -44,6 +44,7 @@ export default defineConfig({
 
           if (id.includes('minio')) return 'minio'
           if (
+            id.includes('@react-pdf/') ||
             id.includes('@react-pdf/renderer') ||
             id.includes('react-pdf-tailwind')
           ) {
