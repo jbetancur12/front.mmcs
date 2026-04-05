@@ -13,7 +13,8 @@ const PDFViewer = ({
   downloadUrl,
   allowDownload = true,
   allowOpen = true,
-  watermarkText
+  watermarkText,
+  disableContextMenu = false
 }: {
   path: string
   bucket?: string
@@ -24,6 +25,7 @@ const PDFViewer = ({
   allowDownload?: boolean
   allowOpen?: boolean
   watermarkText?: string
+  disableContextMenu?: boolean
 }) => {
   const axiosPrivate = useAxiosPrivate()
   const pdfUrl = useMemo(() => buildMinioObjectUrl(bucket, path), [bucket, path])
@@ -131,6 +133,11 @@ const PDFViewer = ({
   }
 
   const viewerHeight = view === 'preview' ? '900px' : '500px'
+  const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (disableContextMenu) {
+      event.preventDefault()
+    }
+  }
 
   return (
     <Box
@@ -140,6 +147,7 @@ const PDFViewer = ({
         alignItems: 'center',
         width: '100%'
       }}
+      onContextMenu={handleContextMenu}
     >
       {buttons && (
         <Box
@@ -271,7 +279,8 @@ const PDFViewer = ({
                 backgroundImage: `repeating-linear-gradient(-28deg, transparent 0 110px, rgba(0,0,0,0.02) 110px 220px), url("data:image/svg+xml,${encodeURIComponent(
                   `<svg xmlns='http://www.w3.org/2000/svg' width='420' height='260' viewBox='0 0 420 260'><g transform='rotate(-24 210 130)'><text x='36' y='130' fill='%23000' fill-opacity='1' font-family='Arial, sans-serif' font-size='26' font-weight='700'>${watermarkText}</text></g></svg>`
                 )}")`,
-                backgroundRepeat: 'repeat'
+                backgroundRepeat: 'repeat',
+                userSelect: 'none'
               }}
             />
           )}
