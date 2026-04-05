@@ -121,6 +121,24 @@ Validar:
 - Descarga con nombre correcto
 - Sin errores de import dinámico en consola
 
+### Vista previa PDF bajo demanda
+- Las pantallas de cotización y hoja de vida de datasheet ya no montan el stack de `@react-pdf/renderer` apenas entra la ruta.
+- Ahora muestran una acción explícita para cargar la vista previa, mejorando la entrada inicial de esas pantallas.
+
+Componentes tocados:
+- `src/pages/Quote.tsx`
+- `src/Components/DataSheet/DataSheetDetails.tsx`
+
+Probar:
+- `/quotes/:id`
+- `/datasheets/:id`
+
+Validar:
+- La pantalla cargue sin montar el visor de inmediato
+- El botón `Ver PDF` cargue la vista previa correctamente
+- El botón `Ocultar vista previa` vuelva al estado liviano en datasheets
+- Sin errores de chunks o fallback en consola
+
 ## Métricas observadas
 
 ### Antes de esta ronda
@@ -149,6 +167,15 @@ Validar:
 Conclusión:
 - `excel-utils` no bajó de forma material como chunk global.
 - Sí mejoró el aislamiento: las vistas cliente, mantenimiento y ZIP ya no cargan `xlsx` en su chunk base.
+
+### Estado observado después de diferir la vista previa PDF
+- `pdf-renderer`: ~1,404.93 kB
+- `Quote`: la ruta ya no monta el visor PDF apenas entra
+- `DataSheetDetails`: la ruta ya no monta el visor PDF apenas entra
+
+Conclusión:
+- El chunk `pdf-renderer` mantiene su peso global.
+- Sí mejora el comportamiento de entrada: cotizaciones y datasheets ahora pagan ese costo solo cuando el usuario pide la vista previa.
 
 ## Pendientes de mayor impacto
 
