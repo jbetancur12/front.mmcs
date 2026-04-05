@@ -44,3 +44,21 @@ export const ASSET_INTERVENTION_TYPE_OPTIONS = [
   { value: 'relocation', label: 'Reubicación' },
   { value: 'other', label: 'Otra' }
 ]
+
+export const ASSET_MAINTENANCE_FREQUENCY_OPTIONS = [
+  { value: 'Diaria', label: 'Diaria' },
+  { value: 'Semanal', label: 'Semanal' },
+  { value: 'Quincenal', label: 'Quincenal' },
+  { value: 'Mensual', label: 'Mensual' },
+  { value: 'Bimestral', label: 'Bimestral' },
+  { value: 'Trimestral', label: 'Trimestral' },
+  { value: 'Semestral', label: 'Semestral' },
+  { value: 'Anual', label: 'Anual' },
+  { value: 'Según condición', label: 'Según condición' }
+]
+
+export const DEFAULT_ASSET_MAINTENANCE_TASKS = [
+  { taskName: 'Escaneo de virus', frequency: 'Semanal', notes: '' },
+  { taskName: 'Desfragmentar disco', frequency: 'Mensual', notes: '' },
+  { taskName: 'Limpieza', frequency: 'Semanal', notes: '' }
+]

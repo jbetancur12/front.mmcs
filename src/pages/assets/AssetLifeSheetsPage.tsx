@@ -40,20 +40,28 @@ import { useStore } from '@nanostores/react'
 import { bigToast } from 'src/Components/ExcelManipulation/Utils'
 import {
   ASSET_CATEGORY_OPTIONS,
+  ASSET_MAINTENANCE_FREQUENCY_OPTIONS,
   ASSET_INTERVENTION_TYPE_OPTIONS,
   ASSET_TYPE_OPTIONS,
-  ASSET_STATUS_OPTIONS
+  ASSET_STATUS_OPTIONS,
+  DEFAULT_ASSET_MAINTENANCE_TASKS
 } from 'src/constants/assetLifeSheets'
 import { userStore } from 'src/store/userStore'
 import type {
   AssetInterventionFormValues,
   AssetLifeSheet,
   AssetLifeSheetAccessory,
+  AssetLifeSheetMaintenanceTask,
   AssetLifeSheetFormValues
 } from 'src/types/assetLifeSheet'
 import useAxiosPrivate from '@utils/use-axios-private'
 
 const emptyAccessory = (): AssetLifeSheetAccessory => ({ accessoryType: '' })
+const emptyMaintenanceTask = (): AssetLifeSheetMaintenanceTask => ({
+  taskName: '',
+  frequency: '',
+  notes: ''
+})
 
 const emptyAssetForm = (): AssetLifeSheetFormValues => ({
   assetCode: '',
@@ -78,6 +86,7 @@ const emptyAssetForm = (): AssetLifeSheetFormValues => ({
   hasManual: false,
   hasWarranty: false,
   maintenanceFrequency: '',
+  maintenanceTasks: DEFAULT_ASSET_MAINTENANCE_TASKS.map((task) => ({ ...task })),
   generalComments: '',
   technicalSpecifications: '',
   accessories: []
@@ -165,6 +174,9 @@ const AssetLifeSheetsPage = () => {
       hasManual: asset.hasManual,
       hasWarranty: asset.hasWarranty,
       maintenanceFrequency: asset.maintenanceFrequency || '',
+      maintenanceTasks: asset.maintenanceTasks?.length
+        ? asset.maintenanceTasks.map((task) => ({ ...task }))
+        : [],
       generalComments: asset.generalComments || '',
       technicalSpecifications: asset.technicalSpecifications || '',
       accessories: asset.accessories?.length ? asset.accessories : []
@@ -193,13 +205,27 @@ const AssetLifeSheetsPage = () => {
     })
   }
 
+  const updateMaintenanceTask = (
+    index: number,
+    field: keyof AssetLifeSheetMaintenanceTask,
+    value: string
+  ) => {
+    setAssetForm((current) => {
+      const next = [...current.maintenanceTasks]
+      next[index] = { ...next[index], [field]: value }
+      return { ...current, maintenanceTasks: next }
+    })
+  }
+
   const saveAsset = async () => {
     try {
       const formData = new FormData()
       Object.entries(assetForm).forEach(([key, value]) => {
         formData.append(
           key,
-          key === 'accessories' ? JSON.stringify(value) : String(value ?? '')
+          key === 'accessories' || key === 'maintenanceTasks'
+            ? JSON.stringify(value)
+            : String(value ?? '')
         )
       })
       if (selectedImageFile) formData.append('image', selectedImageFile)
@@ -343,6 +369,82 @@ const AssetLifeSheetsPage = () => {
               <TextField {...textFieldProps('assetWarrantyExpiresAt')} type='date' label='Vence garantía' value={assetForm.warrantyExpiresAt} onChange={(event) => updateField('warrantyExpiresAt', event.target.value)} InputLabelProps={{ shrink: true }} fullWidth />
             </Stack>
             <TextField {...textFieldProps('assetMaintenanceFrequency')} label='Frecuencia de mantenimiento' value={assetForm.maintenanceFrequency} onChange={(event) => updateField('maintenanceFrequency', event.target.value)} fullWidth />
+            <Stack spacing={1}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent='space-between' spacing={1}>
+                <Box>
+                  <Typography variant='subtitle1' fontWeight={700}>
+                    Base de mantenimiento
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    Acciones periódicas que deben quedar programadas para este equipo.
+                  </Typography>
+                </Box>
+                <Button onClick={() => updateField('maintenanceTasks', [...assetForm.maintenanceTasks, emptyMaintenanceTask()])}>
+                  Agregar acción
+                </Button>
+              </Stack>
+              {assetForm.maintenanceTasks.map((task, index) => (
+                <Paper key={`maintenance-task-${index}`} variant='outlined' sx={{ p: 2 }}>
+                  <Stack spacing={2}>
+                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                      <TextField
+                        {...textFieldProps(`maintenanceTaskName-${index}`)}
+                        label='Acción de mantenimiento'
+                        value={task.taskName || ''}
+                        onChange={(event) =>
+                          updateMaintenanceTask(index, 'taskName', event.target.value)
+                        }
+                        fullWidth
+                      />
+                      <TextField
+                        {...textFieldProps(`maintenanceTaskFrequency-${index}`)}
+                        select
+                        label='Periodicidad'
+                        value={task.frequency || ''}
+                        onChange={(event) =>
+                          updateMaintenanceTask(index, 'frequency', event.target.value)
+                        }
+                        sx={{ minWidth: { md: 220 } }}
+                        fullWidth
+                      >
+                        {ASSET_MAINTENANCE_FREQUENCY_OPTIONS.map((option) => (
+                          <MenuItem key={option.value} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    </Stack>
+                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                      <TextField
+                        {...textFieldProps(`maintenanceTaskNotes-${index}`)}
+                        label='Notas'
+                        value={task.notes || ''}
+                        onChange={(event) =>
+                          updateMaintenanceTask(index, 'notes', event.target.value)
+                        }
+                        fullWidth
+                      />
+                      <Button
+                        color='error'
+                        onClick={() =>
+                          updateField(
+                            'maintenanceTasks',
+                            assetForm.maintenanceTasks.filter(
+                              (_, currentIndex) => currentIndex !== index
+                            )
+                          )
+                        }
+                      >
+                        Quitar
+                      </Button>
+                    </Stack>
+                  </Stack>
+                </Paper>
+              ))}
+              {!assetForm.maintenanceTasks.length && (
+                <Alert severity='info'>Aun no hay acciones base configuradas.</Alert>
+              )}
+            </Stack>
             <Box>
               <InputLabel htmlFor='assetImageUpload' sx={{ mb: 1 }}>
                 Imagen del activo
@@ -463,6 +565,31 @@ const AssetLifeSheetsPage = () => {
               </Stack>
             </Stack>
           </Paper>
+
+          <Box sx={{ mt: 2 }}>
+            <Typography variant='subtitle2' color='text.secondary' sx={{ mb: 0.75 }}>
+              Mantenimiento base
+            </Typography>
+            {selectedAsset?.maintenanceTasks?.length ? (
+              <Stack spacing={1.25}>
+                {selectedAsset.maintenanceTasks.map((task, index) => (
+                  <Paper key={`${task.taskName}-${index}`} variant='outlined' sx={{ p: 1.75, borderRadius: 2, backgroundColor: '#fafafa' }}>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent='space-between' spacing={1}>
+                      <Typography fontWeight={700}>{task.taskName}</Typography>
+                      <Chip size='small' color='success' variant='outlined' label={task.frequency || 'Sin periodicidad'} />
+                    </Stack>
+                    {task.notes && (
+                      <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
+                        {task.notes}
+                      </Typography>
+                    )}
+                  </Paper>
+                ))}
+              </Stack>
+            ) : (
+              <Alert severity='info'>Sin acciones base registradas.</Alert>
+            )}
+          </Box>
 
           <Box sx={{ mt: 2 }}>
             <Typography variant='subtitle2' color='text.secondary' sx={{ mb: 0.75 }}>

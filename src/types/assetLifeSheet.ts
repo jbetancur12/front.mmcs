@@ -7,6 +7,13 @@ export interface AssetLifeSheetAccessory {
   notes?: string
 }
 
+export interface AssetLifeSheetMaintenanceTask {
+  id?: number
+  taskName: string
+  frequency: string
+  notes?: string
+}
+
 export interface AssetLifeSheetIntervention {
   id: number
   interventionDate: string
@@ -42,6 +49,7 @@ export interface AssetLifeSheet {
   hasManual: boolean
   hasWarranty: boolean
   maintenanceFrequency?: string | null
+  maintenanceTasks: AssetLifeSheetMaintenanceTask[]
   imagePath?: string | null
   generalComments?: string | null
   technicalSpecifications?: string | null
@@ -74,6 +82,7 @@ export interface AssetLifeSheetFormValues {
   hasManual: boolean
   hasWarranty: boolean
   maintenanceFrequency: string
+  maintenanceTasks: AssetLifeSheetMaintenanceTask[]
   generalComments: string
   technicalSpecifications: string
   accessories: AssetLifeSheetAccessory[]
