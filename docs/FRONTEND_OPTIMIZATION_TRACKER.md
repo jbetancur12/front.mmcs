@@ -94,6 +94,33 @@ Validar:
 - PDF renderizado correcto
 - Sin errores de chunks faltantes
 
+### Carga diferida de exports XLSX
+- Se reemplazaron imports estáticos de `xlsx` por imports dinámicos en flujos de exportación y lectura puntual.
+- Esto evita que varias vistas administrativas y analíticas arrastren `excel-utils` desde el arranque.
+
+Componentes tocados:
+- `src/pages/Customer.tsx`
+- `src/Components/ModernCustomerProfile.tsx`
+- `src/pages/maintenance/MaintenanceAnalytics.tsx`
+- `src/Components/Dashboard/DashboardCustomer.tsx`
+- `src/Components/SelectedHq.tsx`
+- `src/pages/Zip.tsx`
+- `src/Components/Excel.tsx`
+
+Probar:
+- `/customers/:id`
+- perfil moderno de cliente
+- `/maintenance/analytics`
+- dashboard de cliente con certificados por vencer
+- flujo de sede seleccionada
+- `/zip`
+
+Validar:
+- Botones de exportar Excel
+- Lectura de archivos Excel dentro de ZIP
+- Descarga con nombre correcto
+- Sin errores de import dinámico en consola
+
 ## Métricas observadas
 
 ### Antes de esta ronda
@@ -109,6 +136,19 @@ Validar:
 - `pdf-renderer`: ~1,404.93 kB
 - `react-pdf-viewer`: eliminado
 - `minio`: residual
+
+### Estado observado después de diferir `xlsx`
+- `index`: ~382.69 kB
+- `excel-utils`: ~429.60 kB
+- `Customer`: ~13.08 kB
+- `ModernCustomer`: ~29.71 kB
+- `DashboardCustomer`: ~19.10 kB
+- `MaintenanceAnalytics`: ~12.26 kB
+- `Zip`: ~18.46 kB
+
+Conclusión:
+- `excel-utils` no bajó de forma material como chunk global.
+- Sí mejoró el aislamiento: las vistas cliente, mantenimiento y ZIP ya no cargan `xlsx` en su chunk base.
 
 ## Pendientes de mayor impacto
 
@@ -154,6 +194,8 @@ Posibles caminos:
 - `/quotes/:id`
 - `/fleet/:id/documents/:docId`
 - `/fleet/:id/data-sheet`
+- `/maintenance/analytics`
+- `/zip`
 - repositorio de archivos
 - generación de Excel
 
@@ -171,4 +213,4 @@ Posibles caminos:
 - `b5beac2` `refactor: replace heavy pdf preview runtime`
 - `9afd09e` `chore: remove unused react-pdf dependency`
 - `db7c1be` `perf: lazy load pdf document views`
-
+- `5673769` `docs: add frontend optimization tracker`
