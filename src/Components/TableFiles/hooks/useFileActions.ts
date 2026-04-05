@@ -4,14 +4,14 @@ import { bigToast } from '../../ExcelManipulation/Utils'
 
 export const useFileActions = (
   axiosPrivate: ReturnType<typeof useAxiosPrivate>,
-  fetchFiles: () => Promise<void>
+  fetchFiles: (options?: { force?: boolean }) => Promise<void>
 ) => {
   const deleteFile = useCallback(
     async (id: number) => {
       try {
         await axiosPrivate.delete(`/files/${id}`)
         bigToast('Archivo eliminado exitosamente', 'success')
-        await fetchFiles()
+        await fetchFiles({ force: true })
       } catch (error) {
         bigToast('Error al eliminar archivo', 'error')
         console.error('Delete error:', error)

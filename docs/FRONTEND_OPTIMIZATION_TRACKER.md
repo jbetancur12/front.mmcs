@@ -189,6 +189,30 @@ Validar:
 - La pantalla de bienvenida abra sin errores
 - El fallback global de `Suspense` siga funcionando al navegar
 
+### Paginación remota en certificados
+- `/calibraciones/certificados` dejó de bajar todos los certificados de una sola vez.
+- La tabla ahora consulta `/files` con paginación, búsqueda global y ordenamiento del lado servidor.
+- El backend también limita atributos e incluye solo los campos necesarios de cliente, equipo y tipo de certificado.
+- Se corrigió un ciclo de refetch en frontend que seguía disparando consultas repetidas al paginar.
+- Se agregó deduplicación de queries en `useFileData` para evitar consultas idénticas encadenadas, incluyendo el doble montaje de desarrollo bajo `React.StrictMode`.
+
+Componentes tocados:
+- `api.mmcs/controllers/files.controller.js`
+- `src/Components/TableFiles/hooks/useFileData.ts`
+- `src/Components/TableFiles/TableFiles.tsx`
+- `src/Components/TableFiles/TableView/TableView.tsx`
+
+Probar:
+- `/calibraciones/certificados`
+
+Validar:
+- La entrada inicial cargue notablemente más rápido
+- La tabla cambie de página sin recargar todo el dataset
+- La búsqueda global filtre desde servidor
+- El ordenamiento por columnas siga funcionando
+- Descargar, ver archivo y eliminar sigan funcionando
+- En DevTools Network no aparezca una ráfaga continua de `GET /files?page=...` al cambiar de página
+
 ## Métricas observadas
 
 ### Antes de esta ronda
@@ -285,6 +309,24 @@ Conclusión:
 - La mejora es pequeña pero real: `Welcome` ya no queda en la carga base.
 - Las rutas generales quedan alineadas con la estrategia de carga diferida del resto del router.
 
+### Estado esperado tras paginar `/calibraciones/certificados`
+- Menos datos transferidos al entrar
+- Menor tiempo hasta render de la tabla
+- Menor presión de memoria en navegador al no hidratar todos los certificados
+
+Conclusión esperada:
+- Esta mejora apunta más a tráfico y TTI de la pantalla que al peso del bundle.
+- Es uno de los cambios con más impacto real para esa ruta en producción.
+
+### Validación MCP sobre `/calibraciones/certificados`
+- Se navegó con MCP a `http://localhost:5173/calibraciones/certificados`.
+- Antes del ajuste final, paginar seguía generando múltiples `GET /files?page=...` repetidos.
+- Después de la deduplicación y del ajuste del loader, la secuencia quedó acotada a pocas peticiones y desapareció el bucle continuo observado en red.
+
+Conclusión:
+- El problema principal ya no es “descargar demasiado dataset”, sino estabilizar el ciclo de vida de la tabla en desarrollo.
+- La ruta quedó materialmente más usable y con mucho menos tráfico redundante.
+
 ## Pendientes de mayor impacto
 
 ### 1. `pdf-renderer`
@@ -334,6 +376,7 @@ Posibles caminos:
 - repositorio de archivos
 - generación de Excel
 - `/welcome`
+- `/calibraciones/certificados`
 
 ## Checklist de validación técnica
 - Ejecutar `npm run build`
@@ -352,3 +395,4 @@ Posibles caminos:
 - `5673769` `docs: add frontend optimization tracker`
 - `c3d01e8` `refactor: simplify excel upload route`
 - `75a9b61` `perf: defer fleet pdf preview until requested`
+- `2e8d2fd` `perf: lazy load welcome route`

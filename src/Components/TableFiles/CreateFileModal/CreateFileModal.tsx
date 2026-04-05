@@ -59,7 +59,7 @@ import { SelectOption } from 'src/types'
 interface CreateFileModalProps {
   open: boolean
   onClose: () => void
-  fetchFiles: () => Promise<void>
+  fetchFiles: (options?: { force?: boolean }) => Promise<void>
   axiosPrivate: any
   preSelectedCustomer?: {
     id: number
