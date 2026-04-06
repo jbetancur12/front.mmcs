@@ -6,15 +6,20 @@ import EquipmentCard, { Certificate } from '../Components/EquipmentCard'
 import { bigToast } from '../Components/ExcelManipulation/Utils'
 import Headquarters from '../Components/Headquarters'
 import {
+  Alert,
   Box,
   Button,
+  Chip,
   CircularProgress,
   Divider,
+  FormControl,
+  InputLabel,
   IconButton,
   InputAdornment,
   Menu,
   MenuItem,
   Paper,
+  Select,
   TextField,
   Typography,
   Grid
@@ -63,6 +68,27 @@ type Tab =
   | 'headquarters'
   | 'calibrationTimeLine'
   | 'modules'
+  | 'lmsCourses'
+
+type CustomerLmsCourse = {
+  id: number
+  title: string
+  description: string
+  status: 'draft' | 'published' | 'archived'
+  audience: 'client' | 'both'
+  all_clients: boolean
+  isAssignedToCustomer: boolean
+}
+
+type CustomerLmsCoursesResponse = {
+  customer: {
+    id: number
+    nombre: string
+    isActive: boolean
+  }
+  visibleCourses: CustomerLmsCourse[]
+  assignableCourses: CustomerLmsCourse[]
+}
 
 // Función para exportar a Excel usando XLSX
 const exportToExcel = (data: Certificate[], customerName: string = '') => {
@@ -147,6 +173,10 @@ function UserProfile(): React.JSX.Element {
   const $userStore = useStore(userStore)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const isAdmin = $userStore.rol.some((role) =>
+    ['admin', 'metrologist'].includes(role)
+  )
+  const canManageLmsCourses = $userStore.rol.includes('admin')
 
   const [customerData, setCustomerData] = useState<UserData>({
     nombre: '',
@@ -163,7 +193,8 @@ function UserProfile(): React.JSX.Element {
       'certificates',
       'headquarters',
       'calibrationTimeLine',
-      'modules'
+      'modules',
+      'lmsCourses'
     ]
     return validTabs.includes(tabParam as Tab)
       ? (tabParam as Tab)
@@ -178,6 +209,7 @@ function UserProfile(): React.JSX.Element {
   const [selectedSede, setSelectedSede] = useState<string | null>('')
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [selectedLmsCourseId, setSelectedLmsCourseId] = useState('')
 
   // Fetch customer data
   useQuery<UserData>(
@@ -214,6 +246,21 @@ function UserProfile(): React.JSX.Element {
   )
 
   const certificatesData = apiResponse?.files || []
+
+  const {
+    data: customerLmsCourses,
+    isLoading: isLoadingCustomerLmsCourses
+  } = useQuery<CustomerLmsCoursesResponse>(
+    ['customer-lms-courses', id],
+    async () => {
+      if (!id) throw new Error('No customer ID provided')
+      const response = await axiosPrivate.get(`/customers/${id}/lms-courses`)
+      return response.data
+    },
+    {
+      enabled: Boolean(id && canManageLmsCourses)
+    }
+  )
 
   // Función para obtener todos los datos para descarga
   const fetchAllDataForDownload = useCallback(
@@ -449,6 +496,39 @@ function UserProfile(): React.JSX.Element {
     }
   }
 
+  const handleAssignLmsCourse = useCallback(async () => {
+    if (!id || !selectedLmsCourseId) return
+
+    try {
+      await axiosPrivate.post(`/customers/${id}/lms-courses/${selectedLmsCourseId}`)
+      bigToast('Curso LMS asignado con éxito', 'success')
+      setSelectedLmsCourseId('')
+      queryClient.invalidateQueries(['customer-lms-courses', id])
+    } catch (error: any) {
+      console.error('Error al asignar curso LMS:', error)
+      bigToast(
+        error.response?.data?.error || 'Error al asignar curso LMS',
+        'error'
+      )
+    }
+  }, [axiosPrivate, id, queryClient, selectedLmsCourseId])
+
+  const handleRemoveLmsCourse = useCallback(async (courseId: number) => {
+    if (!id) return
+
+    try {
+      await axiosPrivate.delete(`/customers/${id}/lms-courses/${courseId}`)
+      bigToast('Curso LMS removido con éxito', 'success')
+      queryClient.invalidateQueries(['customer-lms-courses', id])
+    } catch (error: any) {
+      console.error('Error al quitar curso LMS:', error)
+      bigToast(
+        error.response?.data?.error || 'Error al quitar curso LMS',
+        'error'
+      )
+    }
+  }, [axiosPrivate, id, queryClient])
+
   // Update search params when search term changes
   useEffect(() => {
     if (searchTerm) {
@@ -465,6 +545,12 @@ function UserProfile(): React.JSX.Element {
       })
     }
   }, [searchTerm, setSearchParams])
+
+  useEffect(() => {
+    if (activeTab === 'lmsCourses' && !canManageLmsCourses) {
+      handleTabChange('certificates')
+    }
+  }, [activeTab, canManageLmsCourses, handleTabChange])
 
   // Permission check
   useEffect(() => {
@@ -496,10 +582,6 @@ function UserProfile(): React.JSX.Element {
       setLoading(true)
     }
   }, [id, $userStore.rol, $userStore.customer, navigate])
-
-  const isAdmin = $userStore.rol.some((role) =>
-    ['admin', 'metrologist'].includes(role)
-  )
 
   const getMatchedFields = (files: Certificate[]) => {
     if (!files || files.length === 0) return []
@@ -651,6 +733,20 @@ function UserProfile(): React.JSX.Element {
                 Modulos
               </button>
             </li>
+            {canManageLmsCourses && (
+              <li className='mr-1'>
+                <button
+                  type='button'
+                  onClick={() => handleTabChange('lmsCourses')}
+                  className={`bg-white inline-block py-2 px-4 text-blue-500 hover:text-blue-800 font-semibold ${activeTab === 'lmsCourses'
+                      ? 'border-l border-t border-r rounded-t'
+                      : 'text-blue-500 hover:text-blue-800'
+                    }`}
+                >
+                  Academia
+                </button>
+              </li>
+            )}
           </>
         )}
       </ul>
@@ -797,6 +893,106 @@ function UserProfile(): React.JSX.Element {
         <CalibrationTimeline customerId={id} />
       )}
       {activeTab === 'modules' && id && <Modules customerId={id} />}
+      {activeTab === 'lmsCourses' && canManageLmsCourses && (
+        <Paper elevation={3} sx={{ p: 3 }}>
+          <Typography variant='h6' sx={{ mb: 2 }}>
+            Cursos LMS del cliente
+          </Typography>
+
+          <Alert severity='info' sx={{ mb: 3 }}>
+            Aquí puedes ver los cursos LMS disponibles para esta empresa y asignar cursos específicos de cliente. Los cursos abiertos para todos los clientes se muestran, pero no se pueden quitar ni añadir manualmente.
+          </Alert>
+
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-end', mb: 3, flexWrap: 'wrap' }}>
+            <FormControl sx={{ minWidth: 320 }}>
+              <InputLabel>Asignar curso específico</InputLabel>
+              <Select
+                value={selectedLmsCourseId}
+                label='Asignar curso específico'
+                onChange={(event) => setSelectedLmsCourseId(String(event.target.value))}
+              >
+                {(customerLmsCourses?.assignableCourses || []).map((course) => (
+                  <MenuItem key={course.id} value={String(course.id)}>
+                    {course.title} ({course.status})
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Button
+              variant='contained'
+              onClick={handleAssignLmsCourse}
+              disabled={!selectedLmsCourseId}
+            >
+              Asignar curso
+            </Button>
+          </Box>
+
+          {isLoadingCustomerLmsCourses ? (
+            <Box display='flex' justifyContent='center' alignItems='center' py={6}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <>
+              {(customerLmsCourses?.visibleCourses || []).length === 0 ? (
+                <Typography color='text.secondary'>
+                  Esta empresa no tiene cursos LMS visibles en este momento.
+                </Typography>
+              ) : (
+                <Grid container spacing={2}>
+                  {(customerLmsCourses?.visibleCourses || []).map((course) => (
+                    <Grid item xs={12} md={6} key={course.id}>
+                      <Paper variant='outlined' sx={{ p: 2, height: '100%' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mb: 1.5 }}>
+                          <Box>
+                            <Typography variant='subtitle1' fontWeight={600}>
+                              {course.title}
+                            </Typography>
+                            <Typography variant='body2' color='text.secondary'>
+                              {course.description}
+                            </Typography>
+                          </Box>
+                          {!course.all_clients && (
+                            <Button
+                              color='error'
+                              variant='outlined'
+                              onClick={() => handleRemoveLmsCourse(course.id)}
+                            >
+                              Quitar
+                            </Button>
+                          )}
+                        </Box>
+
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                          <Chip
+                            label={course.status === 'published' ? 'Publicado' : course.status === 'draft' ? 'Borrador' : 'Archivado'}
+                            size='small'
+                            variant='outlined'
+                          />
+                          <Chip
+                            label={course.audience === 'both' ? 'Ambos' : 'Clientes'}
+                            size='small'
+                          />
+                          <Chip
+                            label={course.all_clients ? 'Todos los clientes' : 'Asignado por empresa'}
+                            size='small'
+                            color={course.all_clients ? 'default' : 'primary'}
+                          />
+                        </Box>
+                      </Paper>
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
+
+              {(customerLmsCourses?.assignableCourses || []).length === 0 && (
+                <Alert severity='success' sx={{ mt: 3 }}>
+                  No hay más cursos específicos disponibles para asignar a esta empresa.
+                </Alert>
+              )}
+            </>
+          )}
+        </Paper>
+      )}
     </div>
   )
 }

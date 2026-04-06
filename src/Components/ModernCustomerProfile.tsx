@@ -25,7 +25,10 @@ import {
   Alert,
   Switch,
   SwitchProps,
-  styled
+  styled,
+  FormControl,
+  InputLabel,
+  Select
 } from '@mui/material'
 import {
   ArrowBack,
@@ -46,7 +49,8 @@ import {
   Clear,
   Edit,
   HelpOutline,
-  Add
+  Add,
+  School
 } from '@mui/icons-material'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
@@ -128,6 +132,27 @@ type TabValue =
   | 'schedule'
   | 'users'
   | 'modules'
+  | 'lmsCourses'
+
+type CustomerLmsCourse = {
+  id: number
+  title: string
+  description: string
+  status: 'draft' | 'published' | 'archived'
+  audience: 'client' | 'both'
+  all_clients: boolean
+  isAssignedToCustomer: boolean
+}
+
+type CustomerLmsCoursesResponse = {
+  customer: {
+    id: number
+    nombre: string
+    isActive: boolean
+  }
+  visibleCourses: CustomerLmsCourse[]
+  assignableCourses: CustomerLmsCourse[]
+}
 
 // Función para exportar a Excel
 const exportToExcel = (data: Certificate[], customerName: string = '') => {
@@ -416,6 +441,7 @@ const ModernCustomerProfile: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
   const queryClient = useQueryClient()
+  const canManageLmsCourses = $userStore.rol.includes('admin')
 
   // State
   const [activeTab, setActiveTab] = useState<TabValue>(() => {
@@ -426,7 +452,8 @@ const ModernCustomerProfile: React.FC = () => {
       'headquarters',
       'schedule',
       'users',
-      'modules'
+      'modules',
+      'lmsCourses'
     ]
     return validTabs.includes(tabParam as TabValue)
       ? (tabParam as TabValue)
@@ -442,6 +469,7 @@ const ModernCustomerProfile: React.FC = () => {
   const [hasPermission, setHasPermission] = useState(false)
   const [loading, setLoading] = useState(true)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [selectedLmsCourseId, setSelectedLmsCourseId] = useState('')
 
   // Fetch customer data
   const { data: customerData, isLoading: loadingCustomer } = useQuery<UserData>(
@@ -484,6 +512,21 @@ const ModernCustomerProfile: React.FC = () => {
   )
 
   const certificatesData = apiResponse?.files || []
+
+  const {
+    data: customerLmsCourses,
+    isLoading: isLoadingCustomerLmsCourses
+  } = useQuery<CustomerLmsCoursesResponse>(
+    ['customer-lms-courses', id],
+    async () => {
+      if (!id) throw new Error('No customer ID provided')
+      const response = await axiosPrivate.get(`/customers/${id}/lms-courses`)
+      return response.data
+    },
+    {
+      enabled: Boolean(id && canManageLmsCourses)
+    }
+  )
 
   // Calculate statistics
   const stats = React.useMemo(() => {
@@ -744,6 +787,36 @@ const ModernCustomerProfile: React.FC = () => {
     }
   }
 
+  const handleAssignLmsCourse = useCallback(async () => {
+    if (!id || !selectedLmsCourseId) return
+
+    try {
+      await axiosPrivate.post(`/customers/${id}/lms-courses/${selectedLmsCourseId}`)
+      bigToast('Curso LMS asignado con éxito', 'success')
+      setSelectedLmsCourseId('')
+      queryClient.invalidateQueries(['customer-lms-courses', id])
+    } catch (error) {
+      console.error('Error al asignar curso LMS:', error)
+      bigToast('Error al asignar el curso LMS', 'error')
+    }
+  }, [axiosPrivate, id, queryClient, selectedLmsCourseId])
+
+  const handleRemoveLmsCourse = useCallback(
+    async (courseId: number) => {
+      if (!id) return
+
+      try {
+        await axiosPrivate.delete(`/customers/${id}/lms-courses/${courseId}`)
+        bigToast('Curso LMS removido con éxito', 'success')
+        queryClient.invalidateQueries(['customer-lms-courses', id])
+      } catch (error) {
+        console.error('Error al quitar curso LMS:', error)
+        bigToast('Error al quitar el curso LMS', 'error')
+      }
+    },
+    [axiosPrivate, id, queryClient]
+  )
+
   const handleTabChange = useCallback(
     (newTab: TabValue) => {
       console.log('handleTabChange called:', { currentTab: activeTab, newTab })
@@ -772,6 +845,12 @@ const ModernCustomerProfile: React.FC = () => {
       })
     }
   }, [searchTerm, setSearchParams])
+
+  useEffect(() => {
+    if (activeTab === 'lmsCourses' && !canManageLmsCourses) {
+      handleTabChange('equipment')
+    }
+  }, [activeTab, canManageLmsCourses, handleTabChange])
 
   // Permission check
   useEffect(() => {
@@ -1395,6 +1474,17 @@ const ModernCustomerProfile: React.FC = () => {
               }}
             />
           )}
+          {canManageLmsCourses && (
+            <Tab
+              value='lmsCourses'
+              label='Academia'
+              icon={<School />}
+              iconPosition='start'
+              onClick={() => {
+                handleTabChange('lmsCourses')
+              }}
+            />
+          )}
         </Tabs>
       </Card>
 
@@ -1911,6 +2001,149 @@ const ModernCustomerProfile: React.FC = () => {
                     <Modules customerId={id} />
                   </React.Suspense>
                 </Box>
+              )}
+            </Box>
+          )}
+
+          {activeTab === 'lmsCourses' && canManageLmsCourses && (
+            <Box>
+              <Typography variant='h5' fontWeight='bold' gutterBottom>
+                Cursos LMS del cliente
+              </Typography>
+              <Typography variant='body1' color='text.secondary' paragraph>
+                Gestiona los cursos LMS visibles para esta empresa. Los cursos abiertos para todos los clientes se muestran aquí, pero no se pueden modificar manualmente.
+              </Typography>
+
+              <Alert severity='info' sx={{ mb: 3 }}>
+                Desde esta pestaña solo se pueden asignar o quitar cursos habilitados para clientes específicos.
+              </Alert>
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 2,
+                  alignItems: 'flex-end',
+                  mb: 3,
+                  flexWrap: 'wrap'
+                }}
+              >
+                <FormControl sx={{ minWidth: 320 }}>
+                  <InputLabel htmlFor='customer-lms-course-select'>
+                    Asignar curso específico
+                  </InputLabel>
+                  <Select
+                    native
+                    value={selectedLmsCourseId}
+                    label='Asignar curso específico'
+                    inputProps={{ id: 'customer-lms-course-select' }}
+                    onChange={(event) =>
+                      setSelectedLmsCourseId(String(event.target.value))
+                    }
+                  >
+                    <option value=''></option>
+                    {(customerLmsCourses?.assignableCourses || []).map((course) => (
+                      <option key={course.id} value={String(course.id)}>
+                        {course.title} ({course.status})
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+                <Button
+                  variant='contained'
+                  startIcon={<Add />}
+                  onClick={handleAssignLmsCourse}
+                  disabled={!selectedLmsCourseId}
+                  sx={{ textTransform: 'none', fontWeight: 600 }}
+                >
+                  Asignar curso
+                </Button>
+              </Box>
+
+              {isLoadingCustomerLmsCourses ? (
+                <Box display='flex' justifyContent='center' alignItems='center' py={6}>
+                  <CircularProgress />
+                </Box>
+              ) : (customerLmsCourses?.visibleCourses || []).length === 0 ? (
+                <Typography color='text.secondary'>
+                  Esta empresa no tiene cursos LMS visibles en este momento.
+                </Typography>
+              ) : (
+                <Grid container spacing={2}>
+                  {(customerLmsCourses?.visibleCourses || []).map((course) => (
+                    <Grid item xs={12} md={6} key={course.id}>
+                      <Card
+                        elevation={0}
+                        sx={{
+                          borderRadius: '16px',
+                          border: '1px solid #e5e7eb',
+                          height: '100%'
+                        }}
+                      >
+                        <CardContent>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              gap: 2,
+                              mb: 1.5
+                            }}
+                          >
+                            <Box>
+                              <Typography variant='subtitle1' fontWeight={700}>
+                                {course.title}
+                              </Typography>
+                              <Typography variant='body2' color='text.secondary'>
+                                {course.description || 'Sin descripcion'}
+                              </Typography>
+                            </Box>
+                            {!course.all_clients && (
+                              <Button
+                                color='error'
+                                variant='outlined'
+                                onClick={() => handleRemoveLmsCourse(course.id)}
+                                sx={{ textTransform: 'none', height: 'fit-content' }}
+                              >
+                                Quitar
+                              </Button>
+                            )}
+                          </Box>
+
+                          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                            <Chip
+                              label={
+                                course.status === 'published'
+                                  ? 'Publicado'
+                                  : course.status === 'draft'
+                                    ? 'Borrador'
+                                    : 'Archivado'
+                              }
+                              size='small'
+                              variant='outlined'
+                            />
+                            <Chip
+                              label={
+                                course.all_clients
+                                  ? 'Todos los clientes'
+                                  : 'Asignado por empresa'
+                              }
+                              size='small'
+                              color={course.all_clients ? 'success' : 'primary'}
+                            />
+                            <Chip
+                              label={
+                                course.audience === 'both'
+                                  ? 'Internos y clientes'
+                                  : 'Solo clientes'
+                              }
+                              size='small'
+                              variant='outlined'
+                            />
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
               )}
             </Box>
           )}
