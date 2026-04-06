@@ -25,6 +25,9 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Checkbox,
+  ListItemText,
+  OutlinedInput,
   Alert,
   Snackbar,
   TablePagination,
@@ -55,6 +58,8 @@ interface Course {
   slug: string
   status: 'draft' | 'published' | 'archived'
   audience: 'internal' | 'client' | 'both'
+  all_clients?: boolean
+  target_customer_ids?: number[]
   is_mandatory: boolean
   has_certificate: boolean
   estimated_duration_minutes: number
@@ -75,6 +80,11 @@ interface Course {
     name: string
     is_default?: boolean
   }
+  targetCustomers?: Array<{
+    id: number
+    nombre: string
+    isActive?: boolean
+  }>
   modules?: CourseModule[]
   assignments?: CourseAssignment[]
   _count?: {
@@ -136,6 +146,8 @@ interface CreateCourseData {
   title: string
   description: string
   audience: 'internal' | 'client' | 'both'
+  all_clients: boolean
+  target_customer_ids: number[]
   is_mandatory: boolean
   has_certificate: boolean
   estimated_duration_minutes: number
@@ -153,9 +165,20 @@ interface CreateCourseData {
 interface CourseFormErrors {
   title?: string
   description?: string
+  target_customer_ids?: string
   estimated_duration_minutes?: string
   certificate_duration_text?: string
   certificate_template_id?: string
+}
+
+type CustomerOption = {
+  id: number
+  name: string
+  isActive: boolean
+}
+
+type LmsUserOptions = {
+  customers: CustomerOption[]
 }
 
 interface CourseActionDialogState {
@@ -213,6 +236,8 @@ const LmsCourseManagement: React.FC = () => {
     title: '',
     description: '',
     audience: 'internal',
+    all_clients: true,
+    target_customer_ids: [],
     is_mandatory: false,
     has_certificate: false,
     estimated_duration_minutes: 60,
@@ -230,6 +255,14 @@ const LmsCourseManagement: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
   const { data: certificateTemplates = [] } = useCertificateTemplates()
+  const { data: optionsData } = useQuery<LmsUserOptions>(
+    ['lms-course-customer-options'],
+    async () => {
+      const response = await axiosPrivate.get('/lms/users/options')
+      return response.data.data
+    }
+  )
+  const customerOptions = optionsData?.customers || []
 
   // Query para obtener cursos
   const { data: coursesResponse, isLoading, error } = useQuery<{courses: Course[], total: number}>(
@@ -268,6 +301,8 @@ const LmsCourseManagement: React.FC = () => {
           title: courseData.title,
           description: courseData.description,
           audience: courseData.audience,
+          all_clients: courseData.all_clients,
+          target_customer_ids: courseData.target_customer_ids,
           is_mandatory: courseData.is_mandatory,
           has_certificate: courseData.has_certificate,
           estimated_duration_minutes: courseData.estimated_duration_minutes,
@@ -386,6 +421,8 @@ const LmsCourseManagement: React.FC = () => {
         title: course.title,
         description: course.description,
         audience: course.audience,
+        all_clients: course.all_clients ?? true,
+        target_customer_ids: (course.targetCustomers || []).map((customer) => customer.id),
         is_mandatory: course.is_mandatory,
         has_certificate: course.has_certificate,
         estimated_duration_minutes: getDerivedCourseDuration(course),
@@ -405,6 +442,8 @@ const LmsCourseManagement: React.FC = () => {
         title: '',
         description: '',
         audience: 'internal',
+        all_clients: true,
+        target_customer_ids: [],
         is_mandatory: false,
         has_certificate: false,
         estimated_duration_minutes: 60,
@@ -429,6 +468,8 @@ const LmsCourseManagement: React.FC = () => {
       title: '',
       description: '',
       audience: 'internal',
+      all_clients: true,
+      target_customer_ids: [],
       is_mandatory: false,
       has_certificate: false,
       estimated_duration_minutes: 60,
@@ -461,6 +502,11 @@ const LmsCourseManagement: React.FC = () => {
       nextErrors.estimated_duration_minutes = 'La duración debe ser de al menos 1 minuto.'
     }
 
+    const includesClientAudience = formData.audience === 'client' || formData.audience === 'both'
+    if (includesClientAudience && !formData.all_clients && formData.target_customer_ids.length === 0) {
+      nextErrors.target_customer_ids = 'Selecciona al menos una empresa o marca el curso para todos los clientes.'
+    }
+
     if (formData.show_duration_on_certificate && formData.certificate_duration_text.trim().length > 120) {
       nextErrors.certificate_duration_text = 'Usa un texto corto, de máximo 120 caracteres.'
     }
@@ -484,6 +530,8 @@ const LmsCourseManagement: React.FC = () => {
       title: trimmedTitle,
       description: trimmedDescription,
       is_mandatory: formData.audience === 'client' ? false : formData.is_mandatory,
+      all_clients: includesClientAudience ? formData.all_clients : true,
+      target_customer_ids: includesClientAudience && !formData.all_clients ? formData.target_customer_ids : [],
       certificate_duration_text: formData.certificate_duration_text.trim(),
       certificate_template_id: formData.has_certificate && formData.certificate_template_id
         ? Number(formData.certificate_template_id)
@@ -571,9 +619,18 @@ const LmsCourseManagement: React.FC = () => {
         nextFormData.is_mandatory = false
       }
 
+      if (field === 'audience' && value === 'internal') {
+        nextFormData.all_clients = true
+        nextFormData.target_customer_ids = []
+      }
+
       if (field === 'has_certificate' && value === false) {
         nextFormData.show_duration_on_certificate = false
         nextFormData.certificate_template_id = ''
+      }
+
+      if (field === 'all_clients' && value === true) {
+        nextFormData.target_customer_ids = []
       }
 
       return nextFormData
@@ -648,10 +705,15 @@ const LmsCourseManagement: React.FC = () => {
   }
 
   const selectedAudienceOption = audienceOptions.find(option => option.value === formData.audience)
+  const includesClientAudience = formData.audience === 'client' || formData.audience === 'both'
+  const selectedCustomerNames = customerOptions
+    .filter((customer) => formData.target_customer_ids.includes(customer.id))
+    .map((customer) => customer.name)
   const isSaveDisabled = saveCourseMutation.isLoading
     || formData.title.trim().length === 0
     || formData.description.trim().length === 0
     || formData.estimated_duration_minutes < 1
+    || (includesClientAudience && !formData.all_clients && formData.target_customer_ids.length === 0)
 
   if (isLoading) {
     return (
@@ -762,6 +824,17 @@ const LmsCourseManagement: React.FC = () => {
                         )}
                         {course.has_certificate && (
                           <Chip label='Con certificado' color='info' size='small' />
+                        )}
+                        {(course.audience === 'client' || course.audience === 'both') && (
+                          <Chip
+                            label={
+                              course.all_clients === false
+                                ? `${course.targetCustomers?.length || 0} empresa(s)`
+                                : 'Todos los clientes'
+                            }
+                            size='small'
+                            variant='outlined'
+                          />
                         )}
                       </Box>
                     </Box>
@@ -994,6 +1067,64 @@ const LmsCourseManagement: React.FC = () => {
                 <strong>{selectedAudienceOption?.label}:</strong> {selectedAudienceOption?.helper}
               </Alert>
             </Grid>
+            {includesClientAudience && (
+              <>
+                <Grid item xs={12} sm={6}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.all_clients}
+                        onChange={(e) => handleInputChange('all_clients', e.target.checked)}
+                      />
+                    }
+                    label='Disponible para todos los clientes'
+                  />
+                  <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
+                    Desactívalo si el curso solo debe aparecer para ciertas empresas cliente.
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth error={Boolean(formErrors.target_customer_ids)} disabled={formData.all_clients}>
+                    <InputLabel>Empresas habilitadas</InputLabel>
+                    <Select
+                      multiple
+                      value={formData.target_customer_ids}
+                      onChange={(event) =>
+                        handleInputChange(
+                          'target_customer_ids',
+                          (event.target.value as Array<string | number>).map((value) => Number(value))
+                        )
+                      }
+                      input={<OutlinedInput label='Empresas habilitadas' />}
+                      renderValue={(selected) => {
+                        const selectedIds = selected as number[]
+                        const labels = customerOptions
+                          .filter((customer) => selectedIds.includes(customer.id))
+                          .map((customer) => customer.name)
+                        return labels.join(', ')
+                      }}
+                    >
+                      {customerOptions.map((customer) => (
+                        <MenuItem key={customer.id} value={customer.id}>
+                          <Checkbox checked={formData.target_customer_ids.includes(customer.id)} />
+                          <ListItemText primary={customer.name} />
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    <Typography variant='caption' color={formErrors.target_customer_ids ? 'error' : 'text.secondary'} sx={{ mt: 0.75 }}>
+                      {formErrors.target_customer_ids || 'Selecciona una o varias empresas cuando el curso no deba aparecer para todos los clientes.'}
+                    </Typography>
+                  </FormControl>
+                </Grid>
+                {!formData.all_clients && selectedCustomerNames.length > 0 && (
+                  <Grid item xs={12}>
+                    <Alert severity='success'>
+                      El curso quedará visible para: <strong>{selectedCustomerNames.join(', ')}</strong>.
+                    </Alert>
+                  </Grid>
+                )}
+              </>
+            )}
             <Grid item xs={12} sm={6}>
               <FormControlLabel
                 control={
@@ -1151,10 +1282,10 @@ const LmsCourseManagement: React.FC = () => {
                 </Alert>
               </Grid>
             )}
-            {formData.audience === 'client' && (
+            {includesClientAudience && (
               <Grid item xs={12}>
                 <Alert severity='info'>
-                  Para clientes el curso queda disponible en catálogo. Si necesitas un flujo obligatorio, hoy debe plantearse como audiencia <strong>Ambos</strong> o <strong>Empleados internos</strong>.
+                  Para usuarios cliente el curso queda disponible en catálogo. Ahora puedes dejarlo abierto para todas las empresas o limitarlo a compañías específicas.
                 </Alert>
               </Grid>
             )}

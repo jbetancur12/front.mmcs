@@ -39,6 +39,8 @@ export interface Course {
   status: CourseStatus
   version: number
   audience: CourseAudience
+  all_clients?: boolean
+  target_customer_ids?: number[]
   is_mandatory: boolean
   has_certificate: boolean
   estimated_duration_minutes?: number
@@ -66,6 +68,11 @@ export interface Course {
     name: string
     is_default?: boolean
   }
+  targetCustomers?: Array<{
+    id: number
+    nombre: string
+    isActive?: boolean
+  }>
   modules?: CourseModule[]
   stats?: CourseStats
   assignments?: CourseAssignment[]
@@ -687,6 +694,8 @@ export interface CreateCourseRequest {
   title: string
   description: string
   audience: CourseAudience
+  all_clients?: boolean
+  target_customer_ids?: number[]
   is_mandatory?: boolean
   has_certificate?: boolean
   estimated_duration_minutes?: number
@@ -707,6 +716,8 @@ export interface UpdateCourseRequest {
   title?: string
   description?: string
   audience?: CourseAudience
+  all_clients?: boolean
+  target_customer_ids?: number[]
   is_mandatory?: boolean
   has_certificate?: boolean
   estimated_duration_minutes?: number

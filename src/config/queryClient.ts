@@ -56,7 +56,7 @@ export const queryKeys = {
     all: ['courses'] as const,
     lists: () => [...queryKeys.courses.all, 'list'] as const,
     list: (filters?: any) => [...queryKeys.courses.lists(), filters] as const,
-    available: () => [...queryKeys.courses.all, 'available'] as const,
+    available: (scope?: string) => [...queryKeys.courses.all, 'available', scope] as const,
     details: () => [...queryKeys.courses.all, 'detail'] as const,
     detail: (id: number) => [...queryKeys.courses.details(), id] as const,
     stats: (id: number) => [...queryKeys.courses.detail(id), 'stats'] as const,

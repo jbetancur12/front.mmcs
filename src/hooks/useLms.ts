@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient, UseMutationOptions } from 'react-query'
+import { useStore } from '@nanostores/react'
 import { lmsService } from 'src/services/lmsService'
 import { queryKeys } from 'src/config/queryClient'
+import { userStore } from 'src/store/userStore'
 import type {
   Course,
   CourseQueryParams,
@@ -52,11 +54,15 @@ export const useCourses = (
 export const useAvailableCourses = (
   options?: any
 ) => {
+  const $userStore = useStore(userStore)
+  const scopeKey = `${$userStore.email || 'anonymous'}-${$userStore.customer?.id || 'internal'}-${$userStore.userType || 'unknown'}`
+
   return useQuery<Course[]>(
-    queryKeys.courses.available(),
+    queryKeys.courses.available(scopeKey),
     () => lmsService.getAvailableCourses(),
     {
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 0,
+      refetchOnMount: 'always',
       ...options
     }
   )
