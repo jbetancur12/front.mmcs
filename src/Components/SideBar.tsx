@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { FaHospitalUser, FaUser } from 'react-icons/fa'
 import { MdMicrowave, MdDashboard, MdOutlineSettings } from 'react-icons/md'
@@ -16,6 +17,8 @@ import {
 
 const iconClass =
   'w-5 h-5 text-gray-600 transition-all duration-300 group-hover:text-white dark:text-gray-300 dark:group-hover:text-white group-hover:scale-110 group-hover:drop-shadow-sm'
+
+const LMS_SIDEBAR_HINT_DISMISSED_KEY = 'lms-sidebar-hint-dismissed'
 
 // Helper para verificar si un módulo debe ser visible
 const canViewModule = (roles: string[], userRole: string[]) => {
@@ -405,6 +408,34 @@ const SideBar = ({
   const $userStore = useStore(userStore)
   const { pathname } = useLocation()
   const effectiveLmsMenuRoles = getEffectiveLmsMenuRoles($userStore)
+  const [isLmsHintDismissed, setIsLmsHintDismissed] = useState(true)
+  const isLmsRoute = pathname.startsWith('/lms')
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    try {
+      setIsLmsHintDismissed(window.localStorage.getItem(LMS_SIDEBAR_HINT_DISMISSED_KEY) === 'true')
+    } catch {
+      setIsLmsHintDismissed(false)
+    }
+  }, [])
+
+  const dismissLmsHint = () => {
+    setIsLmsHintDismissed(true)
+
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    try {
+      window.localStorage.setItem(LMS_SIDEBAR_HINT_DISMISSED_KEY, 'true')
+    } catch {
+      // Ignore localStorage failures and keep the hint dismissed for this session.
+    }
+  }
 
   const hasModuleAccess = (moduleName: string) => {
     if (!$userStore.customer) return true
@@ -515,6 +546,49 @@ const SideBar = ({
 
       {/* Botón de minimizar/expandir fijo en la parte inferior */}
       <div className='flex-shrink-0 border-t border-gray-200/40 dark:border-gray-700/40 p-3 bg-gray-50/30 dark:bg-gray-800/30'>
+        {isLmsRoute && !userMinimized && !isLmsHintDismissed && (
+          <div className='mb-3 rounded-2xl border border-[#6dc662]/20 bg-gradient-to-br from-[#f5fff2] via-white to-[#eef9ff] p-3 shadow-sm shadow-[#6dc662]/10 dark:border-[#6dc662]/25 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900'>
+            <div className='flex items-start gap-3'>
+              <div className='mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#6dc662]/15 text-[#4f9f45] dark:bg-[#6dc662]/20 dark:text-[#8be27f]'>
+                <svg className='h-4 w-4' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={1.8}
+                    d='M15 19l-7-7 7-7'
+                  />
+                </svg>
+              </div>
+              <div className='min-w-0 flex-1'>
+                <div className='flex items-start justify-between gap-2'>
+                  <div>
+                    <p className='text-sm font-semibold text-gray-900 dark:text-white'>
+                      Tip rapido del LMS
+                    </p>
+                    <p className='mt-1 text-xs leading-5 text-gray-600 dark:text-gray-300'>
+                      Puedes presionar este boton para ocultar el menu y ganar mas espacio mientras trabajas en Academia.
+                    </p>
+                  </div>
+                  <button
+                    type='button'
+                    onClick={dismissLmsHint}
+                    className='rounded-full p-1 text-gray-400 transition hover:bg-white/80 hover:text-gray-600 dark:hover:bg-gray-700/80 dark:hover:text-gray-200'
+                    aria-label='Cerrar ayuda del LMS'
+                  >
+                    <svg className='h-4 w-4' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M6 18L18 6M6 6l12 12'
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         <div
           className={`flex items-center ${userMinimized ? 'justify-center' : 'justify-between'}`}
         >
