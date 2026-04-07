@@ -31,6 +31,7 @@ import LaboratoryRoutes from './routes/LaboratoryRoutes'
 import NonConformRoutes from './routes/NonConformRoutes'
 import MaintenanceRoutes from './routes/MaintenanceRoutes'
 import AssetLifeSheetRoutes from './routes/AssetLifeSheetRoutes'
+import CalibrationServiceRoutes from './routes/CalibrationServiceRoutes'
 
 function Router() {
   const $userStore = useStore(userStore)
@@ -88,6 +89,7 @@ function Router() {
           {NonConformRoutes($userStore.rol)}
           {MaintenanceRoutes($userStore.rol)}
           {AssetLifeSheetRoutes($userStore.rol)}
+          {CalibrationServiceRoutes($userStore.rol)}
           {OtherRoutes($userStore.rol)}
         </Route>
 
