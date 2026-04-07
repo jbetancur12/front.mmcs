@@ -77,6 +77,14 @@ const toNumber = (value: number | string | null | undefined) => {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
+const getQueryErrorMessage = (error: unknown, fallbackMessage: string) => {
+  if (error instanceof Error && error.message) {
+    return `${fallbackMessage} ${error.message}`
+  }
+
+  return fallbackMessage
+}
+
 const createEmptyItem = (): FormItem => ({
   localId: createLocalId(),
   productId: null,
@@ -182,22 +190,35 @@ const CalibrationServiceWorkspacePage = () => {
   const navigate = useNavigate()
   const { serviceId } = useParams<{ serviceId?: string }>()
   const isEditing = Boolean(serviceId)
+  const canAccessWorkspace = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const { data: service, isLoading: isLoadingService } = useCalibrationService(serviceId)
   const { createService, updateService, uploadDocument } = useCalibrationServiceMutations()
-  const { data: customers = [], isLoading: isLoadingCustomers } = useQuery({
+  const {
+    data: customers = [],
+    error: customersError,
+    isError: hasCustomersError,
+    isLoading: isLoadingCustomers
+  } = useQuery({
     queryKey: ['calibration-service-customers'],
     queryFn: async () => {
       const response = await axiosPrivate.get<CalibrationServiceCustomer[]>('/customers')
       return response.data
     },
+    enabled: canAccessWorkspace,
     staleTime: 5 * 60 * 1000
   })
-  const { data: products = [], isLoading: isLoadingProducts } = useQuery({
+  const {
+    data: products = [],
+    error: productsError,
+    isError: hasProductsError,
+    isLoading: isLoadingProducts
+  } = useQuery({
     queryKey: ['calibration-service-products'],
     queryFn: async () => {
       const response = await axiosPrivate.get<CalibrationServiceProductSummary[]>('/products')
       return response.data
     },
+    enabled: canAccessWorkspace,
     staleTime: 5 * 60 * 1000
   })
 
@@ -205,7 +226,6 @@ const CalibrationServiceWorkspacePage = () => {
   const [requestEvidenceFile, setRequestEvidenceFile] = useState<File | null>(null)
   const [requestEvidenceTitle, setRequestEvidenceTitle] = useState('')
   const [hydrated, setHydrated] = useState(false)
-  const canAccessWorkspace = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
 
   useEffect(() => {
     if (!service || hydrated) return
@@ -256,7 +276,39 @@ const CalibrationServiceWorkspacePage = () => {
     setHydrated(true)
   }, [hydrated, service])
 
-  const selectedCustomer = customers.find((customer) => customer.id === formState.customerId) || null
+  const customerOptions =
+    customers.length > 0
+      ? customers
+      : service?.customer
+        ? [service.customer]
+        : []
+  const productFallbackOptions = (service?.items || [])
+    .map((item) => item.product)
+    .filter(
+      (product): product is CalibrationServiceProductSummary =>
+        Boolean(product?.id)
+    )
+    .filter(
+      (product, index, array) =>
+        array.findIndex((candidate) => candidate.id === product.id) === index
+    )
+  const productOptions = products.length > 0 ? products : productFallbackOptions
+  const catalogErrors = [
+    hasCustomersError
+      ? getQueryErrorMessage(
+          customersError,
+          'No pudimos cargar el catalogo de clientes para este formulario.'
+        )
+      : null,
+    hasProductsError
+      ? getQueryErrorMessage(
+          productsError,
+          'No pudimos cargar el catalogo de productos para este formulario.'
+        )
+      : null
+  ].filter(Boolean) as string[]
+  const selectedCustomer =
+    customerOptions.find((customer) => customer.id === formState.customerId) || null
   const customerSites = selectedCustomer?.sede ?? []
   const requestEvidenceDocuments =
     service?.documents?.filter((document) => document.documentType === 'request_evidence') || []
@@ -452,6 +504,12 @@ const CalibrationServiceWorkspacePage = () => {
         </Alert>
       ) : null}
 
+      {catalogErrors.length ? (
+        <Alert severity='error' sx={{ mb: 3 }}>
+          {catalogErrors.join(' ')}
+        </Alert>
+      ) : null}
+
       <Grid container spacing={2}>
         <Grid item xs={12} lg={8}>
           <Card sx={{ borderRadius: 3, mb: 2 }}>
@@ -462,11 +520,15 @@ const CalibrationServiceWorkspacePage = () => {
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
                   <Autocomplete
-                    options={customers}
+                    options={customerOptions}
                     value={selectedCustomer}
                     getOptionLabel={(option) => option.nombre || ''}
                     onChange={(_, value) => handleCustomerChange(value)}
-                    disabled={!canEdit || isBusy}
+                    disabled={
+                      !canEdit ||
+                      isBusy ||
+                      (hasCustomersError && customerOptions.length === 0)
+                    }
                     renderInput={(params) => <TextField {...params} label='Cliente' required />}
                   />
                 </Grid>
@@ -691,7 +753,7 @@ const CalibrationServiceWorkspacePage = () => {
             <CardContent>
               <CalibrationServiceItemsEditor
                 items={formState.items}
-                products={products}
+                products={productOptions}
                 serviceTypeOptions={SERVICE_TYPE_OPTIONS}
                 canEdit={canEdit}
                 isBusy={isBusy}
