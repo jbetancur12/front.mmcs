@@ -137,6 +137,29 @@ const CalibrationServiceDetailsPage = () => {
   ])
   const canGenerateQuotePdf = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const canGenerateOdsPdf = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
+  const requestedAction = searchParams.get('open')
+  const canIssueOds =
+    canIssueOdsRole &&
+    service?.status === 'approved' &&
+    service?.approvalStatus === 'approved' &&
+    !service?.odsCode
+
+  useEffect(() => {
+    if (requestedAction !== 'ods' || !canIssueOds || isOdsDialogOpen) {
+      return
+    }
+
+    setIsOdsDialogOpen(true)
+    const nextSearchParams = new URLSearchParams(searchParams)
+    nextSearchParams.delete('open')
+    setSearchParams(nextSearchParams, { replace: true })
+  }, [
+    canIssueOds,
+    isOdsDialogOpen,
+    requestedAction,
+    searchParams,
+    setSearchParams
+  ])
 
   if (isLoading) {
     return (
@@ -169,12 +192,6 @@ const CalibrationServiceDetailsPage = () => {
     canEditService && service.status === 'draft'
   const canDecideApproval =
     canTakeApprovalDecision && service.status === 'pending_approval'
-  const canIssueOds =
-    canIssueOdsRole &&
-    service.status === 'approved' &&
-    service.approvalStatus === 'approved' &&
-    !service.odsCode
-  const requestedAction = searchParams.get('open')
   const approvalNotes = getOtherFieldText(service.otherFields, 'approvalNotes')
   const odsDetails = getOtherFieldRecord(service.otherFields, 'ods')
   const odsScheduleWindow =
@@ -267,23 +284,6 @@ const CalibrationServiceDetailsPage = () => {
       toast.error('No pudimos enviar el servicio a aprobación.')
     }
   }
-
-  useEffect(() => {
-    if (requestedAction !== 'ods' || !canIssueOds || isOdsDialogOpen) {
-      return
-    }
-
-    setIsOdsDialogOpen(true)
-    const nextSearchParams = new URLSearchParams(searchParams)
-    nextSearchParams.delete('open')
-    setSearchParams(nextSearchParams, { replace: true })
-  }, [
-    canIssueOds,
-    isOdsDialogOpen,
-    requestedAction,
-    searchParams,
-    setSearchParams
-  ])
 
   const handleDecisionSubmit = async (
     values: CalibrationServiceDecisionValues
