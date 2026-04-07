@@ -207,7 +207,7 @@ const CalibrationServiceDetailsPage = () => {
     approveService.isLoading ||
     rejectService.isLoading ||
     uploadDocument.isLoading
-  const isOdsLoading = issueOds.isLoading
+  const isOdsLoading = issueOds.isLoading || generateOdsPdf.isLoading
   const isDocumentBusy =
     uploadDocument.isLoading ||
     generateQuotePdf.isLoading ||
@@ -259,7 +259,8 @@ const CalibrationServiceDetailsPage = () => {
     receptionNotes:
       typeof odsDetails?.receptionNotes === 'string'
         ? odsDetails.receptionNotes
-        : ''
+        : '',
+    generatePdfImmediately: true
   }
 
   const handleRequestApproval = async () => {
@@ -381,7 +382,7 @@ const CalibrationServiceDetailsPage = () => {
 
   const handleIssueOds = async (values: CalibrationServiceOdsDialogValues) => {
     try {
-      await issueOds.mutateAsync({
+      const updatedService = await issueOds.mutateAsync({
         serviceId: String(service.id),
         issuedAt: values.issuedAt
           ? new Date(`${values.issuedAt}T12:00:00`).toISOString()
@@ -408,7 +409,28 @@ const CalibrationServiceDetailsPage = () => {
         receptionNotes: values.receptionNotes.trim() || null
       })
 
-      toast.success('La ODS quedó emitida y el semáforo ya está activo.')
+      if (values.generatePdfImmediately) {
+        try {
+          const document = await generateOdsPdf.mutateAsync({
+            serviceId: String(service.id)
+          })
+          toast.success('La ODS quedó emitida y el PDF oficial ya está listo.')
+          await handleDownloadDocument(
+            document.id,
+            document.originalFileName ||
+              `ods-${updatedService.odsCode || service.serviceCode}.pdf`
+          )
+        } catch (pdfError) {
+          console.error(pdfError)
+          toast.success('La ODS quedó emitida y el semáforo ya está activo.')
+          toast.error(
+            'La ODS se emitió, pero no pudimos generar el PDF oficial.'
+          )
+        }
+      } else {
+        toast.success('La ODS quedó emitida y el semáforo ya está activo.')
+      }
+
       setIsOdsDialogOpen(false)
     } catch (odsError) {
       console.error(odsError)

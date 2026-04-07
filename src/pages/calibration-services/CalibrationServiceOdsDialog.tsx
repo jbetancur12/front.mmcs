@@ -1,10 +1,12 @@
 import {
   Alert,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Button,
+  FormControlLabel,
   Grid,
   Stack,
   TextField,
@@ -32,6 +34,7 @@ export interface CalibrationServiceOdsDialogValues {
   signerRole: string
   externalReference: string
   receptionNotes: string
+  generatePdfImmediately: boolean
 }
 
 interface CalibrationServiceOdsDialogProps {
@@ -61,9 +64,9 @@ const CalibrationServiceOdsDialog = ({
     }
   }, [initialValues, open])
 
-  const setField = (
-    field: keyof CalibrationServiceOdsDialogValues,
-    value: string
+  const setField = <K extends keyof CalibrationServiceOdsDialogValues>(
+    field: K,
+    value: CalibrationServiceOdsDialogValues[K]
   ) => {
     setValues((previous) => ({
       ...previous,
@@ -79,6 +82,19 @@ const CalibrationServiceOdsDialog = ({
           <Alert severity='info'>
             Esta acción genera la Orden de Servicio y activa el primer semáforo de seguimiento.
           </Alert>
+
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={values.generatePdfImmediately}
+                disabled={isLoading}
+                onChange={(event) =>
+                  setField('generatePdfImmediately', event.target.checked)
+                }
+              />
+            }
+            label='Generar el PDF oficial de la ODS en este mismo paso'
+          />
 
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
@@ -303,7 +319,11 @@ const CalibrationServiceOdsDialog = ({
           disabled={isLoading}
           onClick={() => void onSubmit(values)}
         >
-          {isLoading ? 'Emitiendo ODS...' : 'Emitir ODS'}
+          {isLoading
+            ? 'Emitiendo ODS...'
+            : values.generatePdfImmediately
+              ? 'Emitir ODS y generar PDF'
+              : 'Emitir ODS'}
         </Button>
       </DialogActions>
     </Dialog>
