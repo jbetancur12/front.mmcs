@@ -39,6 +39,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import HistoricalCharts from './HistoricalCharts'
 import html2canvas from 'html2canvas'
 import { FileDownloadOutlined } from '@mui/icons-material'
+import LaboratoryMqttGuide from '../LaboratoryMqttGuide'
 
 // --- INTERFACES (MANTENEMOS LAS EXISTENTES Y AÑADIMOS NUEVAS) ---
 
@@ -384,6 +385,8 @@ const LaboratoryMonitor: React.FC = () => {
   // Render principal si la lista de sensores cargó
   return (
     <div className='container mx-auto p-6'>
+      <LaboratoryMqttGuide variant='conditions' />
+
       {/* Cabecera: Título, Agregar Sensor */}
       <Box className='flex justify-between items-center mb-8'>
         <Typography

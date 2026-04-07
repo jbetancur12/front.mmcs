@@ -41,6 +41,7 @@ import { useCalibrationRealtimeUpdates } from '@utils/useCalibrationRealtimeUpda
 import Swal from 'sweetalert2'
 import { PatternConfigModal } from '../PatternConfigModal'
 import { useDeviceNotifications } from '@utils/useDeviceNotifications'
+import LaboratoryMqttGuide from 'src/Components/LaboratoryMqttGuide'
 
 // Función para generar el resumen de sensores
 export const generateSensorSummary = (
@@ -573,6 +574,10 @@ const CalibrationChamberView: React.FC = () => {
     <Container maxWidth='xl' sx={{ py: 3 }}>
       <ReactQueryDevtools initialIsOpen={false} />
       <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <LaboratoryMqttGuide variant='patterns' />
+        </Grid>
+
         <Grid item xs={12}>
           <Box
             sx={{
