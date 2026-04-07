@@ -17,6 +17,36 @@ export const CALIBRATION_SERVICE_ALLOWED_ROLES = [
   'invoicing'
 ] as const
 
+export const CALIBRATION_SERVICE_EDIT_ROLES = [
+  'admin',
+  'super_admin',
+  'comp_admin',
+  'comp_requester',
+  'comp_supervisor'
+] as const
+
+export const CALIBRATION_SERVICE_APPROVAL_ROLES = [
+  'admin',
+  'super_admin',
+  'comp_admin',
+  'comp_supervisor'
+] as const
+
+export const CALIBRATION_SERVICE_ODS_ROLES = [
+  'admin',
+  'super_admin',
+  'comp_admin',
+  'comp_supervisor'
+] as const
+
+export const CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES = [
+  'admin',
+  'super_admin',
+  'comp_admin',
+  'comp_requester',
+  'comp_supervisor'
+] as const
+
 export const CALIBRATION_SERVICE_STATUS_LABELS: Record<
 CalibrationServiceStatus,
 string

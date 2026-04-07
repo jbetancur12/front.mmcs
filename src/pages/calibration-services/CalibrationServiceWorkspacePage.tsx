@@ -30,6 +30,7 @@ import { Toaster, toast } from 'react-hot-toast'
 import { axiosPrivate } from '@utils/api'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
+  CALIBRATION_SERVICE_EDIT_ROLES,
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
   CALIBRATION_SERVICE_STATUS_COLORS,
@@ -45,6 +46,7 @@ import {
   CalibrationServicePayload,
   CalibrationServiceProductSummary
 } from '../../types/calibrationService'
+import { useHasRole } from '../../utils/functions'
 import CalibrationServiceItemsEditor from './CalibrationServiceItemsEditor'
 
 type FormItem = CalibrationServiceItemPayload & { localId: string }
@@ -203,6 +205,7 @@ const CalibrationServiceWorkspacePage = () => {
   const [requestEvidenceFile, setRequestEvidenceFile] = useState<File | null>(null)
   const [requestEvidenceTitle, setRequestEvidenceTitle] = useState('')
   const [hydrated, setHydrated] = useState(false)
+  const canAccessWorkspace = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
 
   useEffect(() => {
     if (!service || hydrated) return
@@ -257,7 +260,9 @@ const CalibrationServiceWorkspacePage = () => {
   const customerSites = selectedCustomer?.sede ?? []
   const requestEvidenceDocuments =
     service?.documents?.filter((document) => document.documentType === 'request_evidence') || []
-  const canEdit = !service || ['draft', 'pending_approval'].includes(service.status)
+  const canEdit =
+    canAccessWorkspace &&
+    (!service || ['draft', 'pending_approval'].includes(service.status))
   const isBusy = createService.isLoading || updateService.isLoading || uploadDocument.isLoading
 
   const subtotal = formState.items.reduce((acc, item) => acc + getItemTotals(item).subtotal, 0)
@@ -390,6 +395,17 @@ const CalibrationServiceWorkspacePage = () => {
     return (
       <Box display='flex' justifyContent='center' alignItems='center' minHeight='55vh'>
         <CircularProgress />
+      </Box>
+    )
+  }
+
+  if (!canAccessWorkspace) {
+    return (
+      <Box p={3}>
+        <Alert severity='warning'>
+          Tu rol actual puede consultar servicios, pero no crear ni editar esta
+          etapa del flujo.
+        </Alert>
       </Box>
     )
   }

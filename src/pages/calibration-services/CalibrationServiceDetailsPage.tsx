@@ -28,8 +28,12 @@ import { Toaster, toast } from 'react-hot-toast'
 import { ReactNode, useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
+  CALIBRATION_SERVICE_APPROVAL_ROLES,
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
+  CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES,
+  CALIBRATION_SERVICE_EDIT_ROLES,
+  CALIBRATION_SERVICE_ODS_ROLES,
   CALIBRATION_SERVICE_SLA_COLORS,
   CALIBRATION_SERVICE_STATUS_COLORS,
   CALIBRATION_SERVICE_STATUS_LABELS
@@ -50,21 +54,6 @@ import CalibrationServiceDocumentsPanel from './CalibrationServiceDocumentsPanel
 import CalibrationServiceTimeline from './CalibrationServiceTimeline'
 
 type DetailTab = 'summary' | 'items' | 'documents' | 'history'
-
-const COMMERCIAL_WORKSPACE_ROLES = [
-  'admin',
-  'super_admin',
-  'comp_admin',
-  'comp_requester',
-  'comp_supervisor'
-]
-
-const APPROVAL_DECISION_ROLES = [
-  'admin',
-  'super_admin',
-  'comp_admin',
-  'comp_supervisor'
-]
 
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -140,8 +129,12 @@ const CalibrationServiceDetailsPage = () => {
     useState<CalibrationServiceDecisionMode | null>(null)
   const [isOdsDialogOpen, setIsOdsDialogOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<DetailTab>('summary')
-  const canManageCommercialStage = useHasRole(COMMERCIAL_WORKSPACE_ROLES)
-  const canTakeApprovalDecision = useHasRole(APPROVAL_DECISION_ROLES)
+  const canEditService = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
+  const canTakeApprovalDecision = useHasRole([...CALIBRATION_SERVICE_APPROVAL_ROLES])
+  const canIssueOdsRole = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
+  const canUploadDocuments = useHasRole([
+    ...CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES
+  ])
 
   if (isLoading) {
     return (
@@ -168,14 +161,14 @@ const CalibrationServiceDetailsPage = () => {
   }
 
   const canEdit =
-    canManageCommercialStage &&
+    canEditService &&
     ['draft', 'pending_approval'].includes(service.status)
   const canRequestApproval =
-    canManageCommercialStage && service.status === 'draft'
+    canEditService && service.status === 'draft'
   const canDecideApproval =
     canTakeApprovalDecision && service.status === 'pending_approval'
   const canIssueOds =
-    canManageCommercialStage &&
+    canIssueOdsRole &&
     service.status === 'approved' &&
     service.approvalStatus === 'approved' &&
     !service.odsCode
@@ -935,6 +928,7 @@ const CalibrationServiceDetailsPage = () => {
                   hasCustomer={Boolean(service.customerId)}
                   hasItems={Boolean(service.items?.length)}
                   hasOds={Boolean(service.odsCode)}
+                  canUploadDocuments={canUploadDocuments}
                   officialPdfDocuments={officialPdfDocuments || []}
                   supportDocuments={supportDocuments || []}
                   decisionDocuments={decisionDocuments || []}

@@ -39,6 +39,7 @@ interface CalibrationServiceDocumentsPanelProps {
   hasCustomer: boolean
   hasItems: boolean
   hasOds: boolean
+  canUploadDocuments?: boolean
   officialPdfDocuments: CalibrationServiceDocument[]
   supportDocuments: CalibrationServiceDocument[]
   decisionDocuments: CalibrationServiceDocument[]
@@ -62,6 +63,7 @@ const CalibrationServiceDocumentsPanel = ({
   hasCustomer,
   hasItems,
   hasOds,
+  canUploadDocuments = false,
   officialPdfDocuments,
   supportDocuments,
   decisionDocuments,
@@ -185,79 +187,86 @@ const CalibrationServiceDocumentsPanel = ({
         )}
       </Box>
 
-      <Box>
-        <Typography variant='subtitle2' fontWeight={700} gutterBottom>
-          Cargar evidencia o soporte
-        </Typography>
-        <Stack spacing={2}>
-          <TextField
-            select
-            fullWidth
+      {canUploadDocuments ? (
+        <Box>
+          <Typography variant='subtitle2' fontWeight={700} gutterBottom>
+            Cargar evidencia o soporte
+          </Typography>
+          <Stack spacing={2}>
+            <TextField
+              select
+              fullWidth
               label='Tipo documental'
               value={selectedType}
               onChange={(event) =>
                 setSelectedType(event.target.value as ManualCalibrationDocumentType)
-            }
-            disabled={isBusy}
-          >
-            {MANUAL_DOCUMENT_TYPES.map((type) => (
-              <MenuItem key={type} value={type}>
-                {CALIBRATION_SERVICE_DOCUMENT_LABELS[type]}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            fullWidth
-            label='Título'
-            value={title}
-            disabled={isBusy}
-            onChange={(event) => setTitle(event.target.value)}
-          />
-          <TextField
-            fullWidth
-            multiline
-            minRows={2}
-            label='Notas'
-            value={notes}
-            disabled={isBusy}
-            onChange={(event) => setNotes(event.target.value)}
-          />
-          <Stack
-            direction={{ xs: 'column', md: 'row' }}
-            spacing={1}
-            alignItems={{ xs: 'flex-start', md: 'center' }}
-          >
-            <Button
-              component='label'
-              variant='outlined'
-              startIcon={<UploadFileOutlinedIcon />}
+              }
               disabled={isBusy}
             >
-              Seleccionar archivo
-              <input
-                hidden
-                type='file'
-                accept='.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx'
-                onChange={(event) =>
-                  setSelectedFile(event.target.files?.[0] || null)
-                }
-              />
+              {MANUAL_DOCUMENT_TYPES.map((type) => (
+                <MenuItem key={type} value={type}>
+                  {CALIBRATION_SERVICE_DOCUMENT_LABELS[type]}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              fullWidth
+              label='Título'
+              value={title}
+              disabled={isBusy}
+              onChange={(event) => setTitle(event.target.value)}
+            />
+            <TextField
+              fullWidth
+              multiline
+              minRows={2}
+              label='Notas'
+              value={notes}
+              disabled={isBusy}
+              onChange={(event) => setNotes(event.target.value)}
+            />
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              spacing={1}
+              alignItems={{ xs: 'flex-start', md: 'center' }}
+            >
+              <Button
+                component='label'
+                variant='outlined'
+                startIcon={<UploadFileOutlinedIcon />}
+                disabled={isBusy}
+              >
+                Seleccionar archivo
+                <input
+                  hidden
+                  type='file'
+                  accept='.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx'
+                  onChange={(event) =>
+                    setSelectedFile(event.target.files?.[0] || null)
+                  }
+                />
+              </Button>
+              <Typography variant='body2' color='text.secondary'>
+                {selectedFile
+                  ? selectedFile.name
+                  : 'Adjunta correo, captura, acta o cualquier soporte útil del servicio.'}
+              </Typography>
+            </Stack>
+            <Button
+              variant='contained'
+              onClick={() => void handleUpload()}
+              disabled={isBusy || !selectedFile}
+            >
+              Subir documento
             </Button>
-            <Typography variant='body2' color='text.secondary'>
-              {selectedFile
-                ? selectedFile.name
-                : 'Adjunta correo, captura, acta o cualquier soporte útil del servicio.'}
-            </Typography>
           </Stack>
-          <Button
-            variant='contained'
-            onClick={() => void handleUpload()}
-            disabled={isBusy || !selectedFile}
-          >
-            Subir documento
-          </Button>
-        </Stack>
-      </Box>
+        </Box>
+      ) : (
+        <Alert severity='info'>
+          Tu rol actual puede consultar documentos, pero no cargar soportes en
+          esta fase.
+        </Alert>
+      )}
 
       <Box>
         <Typography variant='subtitle2' fontWeight={700} gutterBottom>

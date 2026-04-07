@@ -25,8 +25,11 @@ import { Toaster, toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import {
   CALIBRATION_SERVICE_ALLOWED_ROLES,
+  CALIBRATION_SERVICE_APPROVAL_ROLES,
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
+  CALIBRATION_SERVICE_EDIT_ROLES,
+  CALIBRATION_SERVICE_ODS_ROLES,
   CALIBRATION_SERVICE_SLA_COLORS,
   CALIBRATION_SERVICE_STATUS_COLORS,
   CALIBRATION_SERVICE_STATUS_LABELS
@@ -44,21 +47,6 @@ import {
   CalibrationServiceStatus
 } from '../../types/calibrationService'
 import { useHasRole } from '../../utils/functions'
-
-const COMMERCIAL_WORKSPACE_ROLES = [
-  'admin',
-  'super_admin',
-  'comp_admin',
-  'comp_requester',
-  'comp_supervisor'
-]
-
-const APPROVAL_DECISION_ROLES = [
-  'admin',
-  'super_admin',
-  'comp_admin',
-  'comp_supervisor'
-]
 
 const FILTER_ALL = 'all'
 
@@ -149,9 +137,11 @@ const matchesSiteFilter = (service: CalibrationService, siteSearch: string) => {
 const CalibrationServicesPage = () => {
   const navigate = useNavigate()
   const { requestApproval } = useCalibrationServiceMutations()
-  const canCreateServices = useHasRole(COMMERCIAL_WORKSPACE_ROLES)
-  const canTakeApprovalDecision = useHasRole(APPROVAL_DECISION_ROLES)
-  const canIssueOds = useHasRole(COMMERCIAL_WORKSPACE_ROLES)
+  const canCreateServices = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
+  const canTakeApprovalDecision = useHasRole([
+    ...CALIBRATION_SERVICE_APPROVAL_ROLES
+  ])
+  const canIssueOds = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
   const canViewModule = useHasRole([...CALIBRATION_SERVICE_ALLOWED_ROLES])
 
   const [search, setSearch] = useState('')
