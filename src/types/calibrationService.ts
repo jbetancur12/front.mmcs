@@ -11,6 +11,12 @@ export type CalibrationServiceApprovalStatus =
   | 'approved'
   | 'rejected'
 
+export type CalibrationServiceCustomerResponseType =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'changes_requested'
+
 export type CalibrationServiceScopeType = 'general' | 'site'
 export type CalibrationServiceSlaIndicatorColor =
   | 'gray'
@@ -293,6 +299,15 @@ export interface CalibrationServiceRejectPayload {
   approvalReference?: string | null
   rejectionReason: string
   rejectedAt?: string
+  evidenceDocumentId?: number | null
+}
+
+export interface CalibrationServiceRequestChangesPayload {
+  serviceId: string
+  approvalChannel: string
+  approvalReference?: string | null
+  changeRequestReason: string
+  requestedAt?: string
   evidenceDocumentId?: number | null
 }
 

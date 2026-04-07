@@ -24,7 +24,10 @@ const APPROVAL_CHANNEL_OPTIONS = [
   'Por WhatsApp'
 ]
 
-export type CalibrationServiceDecisionMode = 'approve' | 'reject'
+export type CalibrationServiceDecisionMode =
+  | 'approve'
+  | 'reject'
+  | 'request_changes'
 
 export interface CalibrationServiceDecisionValues {
   approvalChannel: string
@@ -72,25 +75,30 @@ const CalibrationServiceApprovalDialog = ({
   }, [open, mode])
 
   const isRejectMode = mode === 'reject'
+  const isRequestChangesMode = mode === 'request_changes'
 
   return (
     <Dialog open={open} onClose={isLoading ? undefined : onClose} fullWidth maxWidth='sm'>
-      <DialogTitle>
+        <DialogTitle>
         {isRejectMode
           ? 'Registrar rechazo del cliente'
-          : 'Registrar aprobación del cliente'}
+          : isRequestChangesMode
+            ? 'Registrar solicitud de modificación'
+            : 'Registrar aprobación del cliente'}
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2}>
           <Alert severity={isRejectMode ? 'warning' : 'success'}>
             {isRejectMode
               ? `Esta acción registra formalmente la respuesta del cliente para ${serviceCode}.`
+              : isRequestChangesMode
+                ? `Esta acción deja trazada la solicitud de modificación del cliente para ${serviceCode}.`
               : `Esta acción registra formalmente la aprobación del cliente para ${serviceCode}.`}
           </Alert>
 
           <FormControl fullWidth required>
             <InputLabel>
-              {isRejectMode ? 'Medio de respuesta del cliente' : 'Medio de respuesta del cliente'}
+              Medio de respuesta del cliente
             </InputLabel>
             <Select
               value={values.approvalChannel}
@@ -128,7 +136,7 @@ const CalibrationServiceApprovalDialog = ({
 
           <TextField
             fullWidth
-            required={!isRejectMode}
+            required={!isRejectMode && !isRequestChangesMode}
             label='Email o teléfono de referencia'
             value={values.approvalReference}
             disabled={isLoading}
@@ -141,16 +149,24 @@ const CalibrationServiceApprovalDialog = ({
             helperText={
               isRejectMode
                 ? 'Opcional si la respuesta no llegó por un contacto específico.'
+                : isRequestChangesMode
+                  ? 'Opcional si la solicitud no llegó por un contacto específico.'
                 : 'Campo obligatorio para dejar la referencia del contacto que aprobó.'
             }
           />
 
           <TextField
             fullWidth
-            required={isRejectMode}
+            required={isRejectMode || isRequestChangesMode}
             multiline
             minRows={4}
-            label={isRejectMode ? 'Motivo u observación' : 'Observación'}
+            label={
+              isRejectMode
+                ? 'Motivo u observación'
+                : isRequestChangesMode
+                  ? 'Qué pidió modificar el cliente'
+                  : 'Observación'
+            }
             value={values.notes}
             disabled={isLoading}
             onChange={(event) =>
@@ -162,6 +178,8 @@ const CalibrationServiceApprovalDialog = ({
             helperText={
               isRejectMode
                 ? 'Describe brevemente por qué el cliente rechazó la cotización.'
+                : isRequestChangesMode
+                  ? 'Describe qué pidió cambiar el cliente para poder rehacer y reenviar la cotización.'
                 : 'Úsalo para dejar contexto adicional de la respuesta del cliente.'
             }
           />
@@ -208,6 +226,10 @@ const CalibrationServiceApprovalDialog = ({
             ? isLoading
               ? 'Registrando rechazo...'
               : 'Registrar rechazo cliente'
+            : isRequestChangesMode
+              ? isLoading
+                ? 'Registrando solicitud...'
+                : 'Registrar solicitud de modificación'
             : isLoading
               ? 'Registrando aprobación cliente...'
               : 'Registrar aprobación cliente'}

@@ -330,6 +330,14 @@ const CalibrationServiceWorkspacePage = () => {
   const customerSites = selectedCustomer?.sede ?? []
   const requestEvidenceDocuments =
     service?.documents?.filter((document) => document.documentType === 'request_evidence') || []
+  const hasCustomerChangeRequest =
+    service?.otherFields?.customerResponseType === 'changes_requested'
+  const latestChangeRequest =
+    service?.otherFields?.latestChangeRequest &&
+    typeof service.otherFields.latestChangeRequest === 'object' &&
+    !Array.isArray(service.otherFields.latestChangeRequest)
+      ? (service.otherFields.latestChangeRequest as Record<string, unknown>)
+      : null
   const canEdit =
     canAccessWorkspace &&
     (!service || ['draft', 'pending_approval'].includes(service.status))
@@ -533,6 +541,15 @@ const CalibrationServiceWorkspacePage = () => {
       {!canEdit ? (
         <Alert severity='warning' sx={{ mb: 3 }}>
           Este servicio ya no puede editarse desde el formulario base porque supero la etapa comercial inicial.
+        </Alert>
+      ) : null}
+
+      {canEdit && hasCustomerChangeRequest ? (
+        <Alert severity='warning' sx={{ mb: 3 }}>
+          El cliente pidió modificar esta cotización.
+          {typeof latestChangeRequest?.changeRequestReason === 'string'
+            ? ` Motivo: ${latestChangeRequest.changeRequestReason}`
+            : ''}
         </Alert>
       ) : null}
 

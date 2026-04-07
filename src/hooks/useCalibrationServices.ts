@@ -10,6 +10,7 @@ import {
   CalibrationServiceIssueOdsPayload,
   CalibrationServiceListResponse,
   CalibrationServicePayload,
+  CalibrationServiceRequestChangesPayload,
   CalibrationServiceRejectPayload,
   CalibrationServiceRequestApprovalPayload,
   CalibrationServiceSequenceConfig,
@@ -132,6 +133,17 @@ const calibrationServiceApi = {
   }: CalibrationServiceRejectPayload): Promise<CalibrationService> => {
     const response = await axiosPrivate.post<CalibrationService>(
       `/calibration-services/${serviceId}/reject`,
+      payload
+    )
+    return response.data
+  },
+
+  requestChanges: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServiceRequestChangesPayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/request-changes`,
       payload
     )
     return response.data
@@ -278,6 +290,16 @@ export const useCalibrationServiceMutations = () => {
     }
   })
 
+  const requestChanges = useMutation(calibrationServiceApi.requestChanges, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
   const issueOds = useMutation(calibrationServiceApi.issueOds, {
     onSuccess: (service) => {
       queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
@@ -327,6 +349,7 @@ export const useCalibrationServiceMutations = () => {
     requestApproval,
     approveService,
     rejectService,
+    requestChanges,
     issueOds,
     generateQuotePdf,
     generateOdsPdf,

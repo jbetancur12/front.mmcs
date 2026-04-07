@@ -147,6 +147,9 @@ const matchesSiteFilter = (service: CalibrationService, siteSearch: string) => {
   return haystack.includes(siteSearch.trim().toLowerCase())
 }
 
+const hasCustomerChangeRequest = (service: CalibrationService) =>
+  service.otherFields?.customerResponseType === 'changes_requested'
+
 const CalibrationServicesPage = () => {
   const navigate = useNavigate()
   const { requestApproval, upsertSequenceConfig } =
@@ -254,6 +257,9 @@ const CalibrationServicesPage = () => {
 
   const pendingApprovalCount = visibleServices.filter(
     (service) => service.status === 'pending_approval'
+  ).length
+  const requestedChangesCount = visibleServices.filter((service) =>
+    hasCustomerChangeRequest(service)
   ).length
   const odsIssuedCount = visibleServices.filter(
     (service) => service.status === 'ods_issued'
@@ -467,7 +473,9 @@ const CalibrationServicesPage = () => {
                 {urgentCount}
               </Typography>
               <Typography variant='body2' color='text.secondary'>
-                SLA amarillo o rojo
+                {isTechnicalOnlyView
+                  ? 'SLA amarillo o rojo'
+                  : `${requestedChangesCount} con solicitud de modificación`}
               </Typography>
             </CardContent>
           </Card>
@@ -696,6 +704,14 @@ const CalibrationServicesPage = () => {
                             label={service.odsCode}
                           />
                         ) : null}
+                        {!isTechnicalOnlyView && hasCustomerChangeRequest(service) ? (
+                          <Chip
+                            size='small'
+                            color='warning'
+                            variant='outlined'
+                            label='Cliente pidió modificación'
+                          />
+                        ) : null}
                       </Stack>
 
                       <Typography variant='body1' fontWeight={700}>
@@ -717,8 +733,10 @@ const CalibrationServicesPage = () => {
                         color='text.secondary'
                         sx={{ mt: 1 }}
                       >
-                        {service.slaIndicator?.message ||
-                          'Todavía no hay una alerta operativa activa.'}
+                        {hasCustomerChangeRequest(service)
+                          ? 'La cotización volvió a edición porque el cliente pidió cambios.'
+                          : service.slaIndicator?.message ||
+                            'Todavía no hay una alerta operativa activa.'}
                       </Typography>
 
                       <Divider sx={{ my: 2 }} />

@@ -24,6 +24,7 @@ import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined'
+import AutorenewOutlinedIcon from '@mui/icons-material/AutorenewOutlined'
 import { Toaster, toast } from 'react-hot-toast'
 import { ReactNode, useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -97,6 +98,22 @@ const formatDateValue = (value?: string | null) =>
 
 const buildTodayValue = () => new Date().toISOString().slice(0, 10)
 
+const getCustomerResponseType = (
+  otherFields: Record<string, unknown> | undefined
+) => {
+  const value = otherFields?.customerResponseType
+  return typeof value === 'string' ? value : null
+}
+
+const getLatestChangeRequest = (
+  otherFields: Record<string, unknown> | undefined
+) => {
+  const value = otherFields?.latestChangeRequest
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined
+}
+
 const DetailTabPanel = ({
   value,
   tab,
@@ -128,6 +145,7 @@ const CalibrationServiceDetailsPage = () => {
     requestApproval,
     approveService,
     rejectService,
+    requestChanges,
     uploadDocument,
     issueOds,
     generateQuotePdf,
@@ -220,6 +238,12 @@ const CalibrationServiceDetailsPage = () => {
   const canDecideApproval =
     canTakeApprovalDecision && service.status === 'pending_approval'
   const approvalNotes = getOtherFieldText(service.otherFields, 'approvalNotes')
+  const customerResponseType = getCustomerResponseType(service.otherFields)
+  const latestChangeRequest = getLatestChangeRequest(service.otherFields)
+  const latestChangeRequestReason =
+    typeof latestChangeRequest?.changeRequestReason === 'string'
+      ? latestChangeRequest.changeRequestReason
+      : ''
   const odsDetails = getOtherFieldRecord(service.otherFields, 'ods')
   const odsScheduleWindow =
     typeof odsDetails?.scheduleWindow === 'string' ? odsDetails.scheduleWindow : ''
@@ -245,6 +269,7 @@ const CalibrationServiceDetailsPage = () => {
     requestApproval.isLoading ||
     approveService.isLoading ||
     rejectService.isLoading ||
+    requestChanges.isLoading ||
     uploadDocument.isLoading
   const isOdsLoading = issueOds.isLoading || generateOdsPdf.isLoading
   const isDocumentBusy =
@@ -340,6 +365,18 @@ const CalibrationServiceDetailsPage = () => {
         }
       }
 
+      if (decisionMode === 'request_changes') {
+        if (!values.approvalChannel.trim()) {
+          toast.error('Selecciona el medio por el que respondió el cliente.')
+          return
+        }
+
+        if (!values.notes.trim() || values.notes.trim().length < 5) {
+          toast.error('Describe brevemente qué pidió modificar el cliente.')
+          return
+        }
+      }
+
       let evidenceDocumentId: number | null = null
 
       if (values.evidenceFile) {
@@ -349,11 +386,15 @@ const CalibrationServiceDetailsPage = () => {
           documentType:
             decisionMode === 'approve'
               ? 'approval_evidence'
-              : 'rejection_evidence',
+              : decisionMode === 'reject'
+                ? 'rejection_evidence'
+                : 'supporting_attachment',
           title:
             decisionMode === 'approve'
               ? `Aprobación cliente ${service.serviceCode}`
-              : `Rechazo cliente ${service.serviceCode}`,
+              : decisionMode === 'reject'
+                ? `Rechazo cliente ${service.serviceCode}`
+                : `Solicitud modificación cliente ${service.serviceCode}`,
           notes: values.notes?.trim() || undefined
         })
 
@@ -391,13 +432,28 @@ const CalibrationServiceDetailsPage = () => {
         toast.success('El rechazo del cliente quedó registrado.')
       }
 
+      if (decisionMode === 'request_changes') {
+        await requestChanges.mutateAsync({
+          serviceId: String(service.id),
+          approvalChannel: values.approvalChannel.trim(),
+          approvalReference: values.approvalReference.trim() || null,
+          changeRequestReason: values.notes.trim(),
+          requestedAt: decisionIsoDate,
+          evidenceDocumentId
+        })
+
+        toast.success('La solicitud de modificación del cliente quedó registrada.')
+      }
+
       setDecisionMode(null)
     } catch (decisionError) {
       console.error(decisionError)
       toast.error(
         decisionMode === 'approve'
           ? 'No pudimos registrar la aprobación del cliente.'
-          : 'No pudimos registrar el rechazo del cliente.'
+          : decisionMode === 'reject'
+            ? 'No pudimos registrar el rechazo del cliente.'
+            : 'No pudimos registrar la solicitud de modificación.'
       )
     }
   }
@@ -595,6 +651,9 @@ const CalibrationServiceDetailsPage = () => {
         </Box>
 
         <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
+          {customerResponseType === 'changes_requested' ? (
+            <Chip color='warning' variant='outlined' label='Cliente pidió modificación' />
+          ) : null}
           {canRequestApproval ? (
             <Button
               variant='contained'
@@ -607,6 +666,15 @@ const CalibrationServiceDetailsPage = () => {
           ) : null}
           {canDecideApproval ? (
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Button
+                variant='outlined'
+                color='warning'
+                startIcon={<AutorenewOutlinedIcon />}
+                onClick={() => setDecisionMode('request_changes')}
+                disabled={isDecisionLoading}
+              >
+                Registrar solicitud de modificación
+              </Button>
               <Button
                 variant='outlined'
                 color='warning'
@@ -755,6 +823,12 @@ const CalibrationServiceDetailsPage = () => {
               </Tabs>
 
               <DetailTabPanel value={activeTab} tab='summary'>
+                {!isTechnicalOnlyView && customerResponseType === 'changes_requested' ? (
+                  <Alert severity='warning' sx={{ mb: 2 }}>
+                    El cliente pidió modificar la cotización. El servicio volvió a edición para
+                    ajustar la propuesta y reenviarla sin perder la trazabilidad.
+                  </Alert>
+                ) : null}
                 <Grid container spacing={2}>
                   <Grid item xs={12} md={6}>
                     <Typography variant='caption' color='text.secondary'>
@@ -836,7 +910,9 @@ const CalibrationServiceDetailsPage = () => {
                   </Grid>
                 </Grid>
 
-                {!isTechnicalOnlyView && service.approvalStatus !== 'pending' ? (
+                {!isTechnicalOnlyView &&
+                (service.approvalStatus !== 'pending' ||
+                  customerResponseType === 'changes_requested') ? (
                   <>
                     <Divider sx={{ my: 2 }} />
                     <Typography variant='subtitle2' fontWeight={700} gutterBottom>
@@ -874,6 +950,17 @@ const CalibrationServiceDetailsPage = () => {
                           </Typography>
                           <Typography variant='body1'>
                             {service.rejectionReason}
+                          </Typography>
+                        </Grid>
+                      ) : null}
+                      {customerResponseType === 'changes_requested' &&
+                      latestChangeRequestReason ? (
+                        <Grid item xs={12}>
+                          <Typography variant='caption' color='text.secondary'>
+                            Solicitud de modificación
+                          </Typography>
+                          <Typography variant='body1'>
+                            {latestChangeRequestReason}
                           </Typography>
                         </Grid>
                       ) : null}
