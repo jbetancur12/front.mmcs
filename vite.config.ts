@@ -56,8 +56,8 @@ export default defineConfig({
           if (id.includes('xlsx-populate')) return 'excel-populate'
           if (id.includes('/xlsx/') || id.includes('\\xlsx\\')) return 'excel-utils'
           if (id.includes('monaco-editor') || id.includes('@monaco-editor/react')) return 'monaco'
-          if (id.includes('recharts') || id.includes('victory')) return 'charts'
-          if (id.includes('@mui') || id.includes('@emotion')) return 'mui'
+          if (id.includes('recharts')) return 'recharts-vendor'
+          if (id.includes('victory')) return 'victory-vendor'
           if (id.includes('react-router') || id.includes('react-dom') || id.includes('/react/')) return 'react-vendor'
         }
       }
