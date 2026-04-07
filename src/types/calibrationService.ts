@@ -239,3 +239,25 @@ export interface CalibrationServiceDocumentUploadPayload {
   notes?: string
   generatedBySystem?: boolean
 }
+
+export interface CalibrationServiceRequestApprovalPayload {
+  serviceId: string
+}
+
+export interface CalibrationServiceApprovePayload {
+  serviceId: string
+  approvalChannel: string
+  approvalReference: string
+  approvalNotes?: string | null
+  approvedAt?: string
+  evidenceDocumentId?: number | null
+}
+
+export interface CalibrationServiceRejectPayload {
+  serviceId: string
+  approvalChannel: string
+  approvalReference?: string | null
+  rejectionReason: string
+  rejectedAt?: string
+  evidenceDocumentId?: number | null
+}

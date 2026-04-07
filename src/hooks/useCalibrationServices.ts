@@ -1,12 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { axiosPrivate } from '@utils/api'
 import {
+  CalibrationServiceApprovePayload,
   CalibrationService,
   CalibrationServiceDocument,
   CalibrationServiceDocumentUploadPayload,
   CalibrationServiceFilters,
   CalibrationServiceListResponse,
-  CalibrationServicePayload
+  CalibrationServicePayload,
+  CalibrationServiceRejectPayload,
+  CalibrationServiceRequestApprovalPayload
 } from '../types/calibrationService'
 
 export const CALIBRATION_SERVICE_QUERY_KEYS = {
@@ -90,6 +93,37 @@ const calibrationServiceApi = {
       }
     )
     return response.data
+  },
+
+  requestApproval: async ({
+    serviceId
+  }: CalibrationServiceRequestApprovalPayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/request-approval`
+    )
+    return response.data
+  },
+
+  approveService: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServiceApprovePayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/approve`,
+      payload
+    )
+    return response.data
+  },
+
+  rejectService: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServiceRejectPayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/reject`,
+      payload
+    )
+    return response.data
   }
 }
 
@@ -141,9 +175,42 @@ export const useCalibrationServiceMutations = () => {
     }
   })
 
+  const requestApproval = useMutation(calibrationServiceApi.requestApproval, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
+  const approveService = useMutation(calibrationServiceApi.approveService, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
+  const rejectService = useMutation(calibrationServiceApi.rejectService, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
   return {
     createService,
     updateService,
-    uploadDocument
+    uploadDocument,
+    requestApproval,
+    approveService,
+    rejectService
   }
 }

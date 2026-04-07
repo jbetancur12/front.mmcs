@@ -20,7 +20,12 @@ import {
   Typography
 } from '@mui/material'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
+import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
+import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
+import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined'
+import { Toaster, toast } from 'react-hot-toast'
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   CALIBRATION_SERVICE_APPROVAL_COLORS,
@@ -28,7 +33,14 @@ import {
   CALIBRATION_SERVICE_STATUS_COLORS,
   CALIBRATION_SERVICE_STATUS_LABELS
 } from '../../constants/calibrationServices'
-import { useCalibrationService } from '../../hooks/useCalibrationServices'
+import {
+  useCalibrationService,
+  useCalibrationServiceMutations
+} from '../../hooks/useCalibrationServices'
+import CalibrationServiceApprovalDialog, {
+  CalibrationServiceDecisionMode,
+  CalibrationServiceDecisionValues
+} from './CalibrationServiceApprovalDialog'
 
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -45,11 +57,27 @@ const toNumber = (value: number | string | null | undefined) => {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
+const getOtherFieldText = (
+  otherFields: Record<string, unknown> | undefined,
+  fieldName: string
+) => {
+  const fieldValue = otherFields?.[fieldName]
+  return typeof fieldValue === 'string' ? fieldValue : ''
+}
+
 const CalibrationServiceDetailsPage = () => {
   const navigate = useNavigate()
   const { serviceId } = useParams<{ serviceId: string }>()
   const { data: service, isLoading, isError, error } =
     useCalibrationService(serviceId)
+  const {
+    requestApproval,
+    approveService,
+    rejectService,
+    uploadDocument
+  } = useCalibrationServiceMutations()
+  const [decisionMode, setDecisionMode] =
+    useState<CalibrationServiceDecisionMode | null>(null)
 
   if (isLoading) {
     return (
@@ -76,9 +104,121 @@ const CalibrationServiceDetailsPage = () => {
   }
 
   const canEdit = ['draft', 'pending_approval'].includes(service.status)
+  const canRequestApproval = service.status === 'draft'
+  const canDecideApproval = service.status === 'pending_approval'
+  const approvalNotes = getOtherFieldText(service.otherFields, 'approvalNotes')
+  const isDecisionLoading =
+    requestApproval.isLoading ||
+    approveService.isLoading ||
+    rejectService.isLoading ||
+    uploadDocument.isLoading
+  const decisionDocuments = service.documents?.filter((document) =>
+    ['approval_evidence', 'rejection_evidence'].includes(document.documentType)
+  )
+
+  const handleRequestApproval = async () => {
+    try {
+      await requestApproval.mutateAsync({ serviceId: String(service.id) })
+      toast.success('El servicio quedó enviado a aprobación.')
+    } catch (requestError) {
+      console.error(requestError)
+      toast.error('No pudimos enviar el servicio a aprobación.')
+    }
+  }
+
+  const handleDecisionSubmit = async (
+    values: CalibrationServiceDecisionValues
+  ) => {
+    try {
+      if (decisionMode === 'approve') {
+        if (!values.approvalChannel.trim()) {
+          toast.error('Selecciona el medio de aprobación.')
+          return
+        }
+
+        if (!values.approvalReference.trim()) {
+          toast.error('Indica el email o teléfono que aprobó la cotización.')
+          return
+        }
+      }
+
+      if (decisionMode === 'reject') {
+        if (!values.approvalChannel.trim()) {
+          toast.error('Selecciona el medio de rechazo.')
+          return
+        }
+
+        if (!values.notes.trim() || values.notes.trim().length < 5) {
+          toast.error('Describe brevemente el motivo del rechazo.')
+          return
+        }
+      }
+
+      let evidenceDocumentId: number | null = null
+
+      if (values.evidenceFile) {
+        const uploadedDocument = await uploadDocument.mutateAsync({
+          serviceId: String(service.id),
+          file: values.evidenceFile,
+          documentType:
+            decisionMode === 'approve'
+              ? 'approval_evidence'
+              : 'rejection_evidence',
+          title:
+            decisionMode === 'approve'
+              ? `Aprobación ${service.serviceCode}`
+              : `Rechazo ${service.serviceCode}`,
+          notes: values.notes?.trim() || undefined
+        })
+
+        evidenceDocumentId = uploadedDocument.id
+      }
+
+      const decisionIsoDate = values.decisionDate
+        ? new Date(`${values.decisionDate}T12:00:00`).toISOString()
+        : undefined
+
+      if (decisionMode === 'approve') {
+        await approveService.mutateAsync({
+          serviceId: String(service.id),
+          approvalChannel: values.approvalChannel.trim(),
+          approvalReference: values.approvalReference.trim(),
+          approvalNotes: values.notes.trim() || null,
+          approvedAt: decisionIsoDate,
+          evidenceDocumentId
+        })
+
+        toast.success('La cotización quedó aprobada formalmente.')
+      }
+
+      if (decisionMode === 'reject') {
+
+        await rejectService.mutateAsync({
+          serviceId: String(service.id),
+          approvalChannel: values.approvalChannel.trim(),
+          approvalReference: values.approvalReference.trim() || null,
+          rejectionReason: values.notes.trim(),
+          rejectedAt: decisionIsoDate,
+          evidenceDocumentId
+        })
+
+        toast.success('La cotización quedó rechazada formalmente.')
+      }
+
+      setDecisionMode(null)
+    } catch (decisionError) {
+      console.error(decisionError)
+      toast.error(
+        decisionMode === 'approve'
+          ? 'No pudimos registrar la aprobación.'
+          : 'No pudimos registrar el rechazo.'
+      )
+    }
+  }
 
   return (
     <Box p={{ xs: 2, md: 3 }}>
+      <Toaster position='top-center' />
       <Stack
         direction={{ xs: 'column', md: 'row' }}
         justifyContent='space-between'
@@ -104,6 +244,38 @@ const CalibrationServiceDetailsPage = () => {
         </Box>
 
         <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
+          {canRequestApproval ? (
+            <Button
+              variant='contained'
+              startIcon={<SendOutlinedIcon />}
+              onClick={() => void handleRequestApproval()}
+              disabled={isDecisionLoading}
+            >
+              Solicitar aprobación
+            </Button>
+          ) : null}
+          {canDecideApproval ? (
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Button
+                variant='outlined'
+                color='warning'
+                startIcon={<HighlightOffOutlinedIcon />}
+                onClick={() => setDecisionMode('reject')}
+                disabled={isDecisionLoading}
+              >
+                Rechazar cotización
+              </Button>
+              <Button
+                variant='contained'
+                color='success'
+                startIcon={<CheckCircleOutlineOutlinedIcon />}
+                onClick={() => setDecisionMode('approve')}
+                disabled={isDecisionLoading}
+              >
+                Aprobar cotización
+              </Button>
+            </Stack>
+          ) : null}
           {canEdit ? (
             <Button
               variant='outlined'
@@ -174,6 +346,65 @@ const CalibrationServiceDetailsPage = () => {
                 </Grid>
               </Grid>
 
+              {service.approvalStatus !== 'pending' ? (
+                <>
+                  <Divider sx={{ my: 2 }} />
+                  <Typography variant='subtitle2' fontWeight={700} gutterBottom>
+                    Decisión comercial
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant='caption' color='text.secondary'>
+                        Medio
+                      </Typography>
+                      <Typography variant='body1'>
+                        {service.approvalChannel || 'Sin registrar'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant='caption' color='text.secondary'>
+                        Referencia
+                      </Typography>
+                      <Typography variant='body1'>
+                        {service.approvalReference || 'Sin registrar'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant='caption' color='text.secondary'>
+                        Fecha
+                      </Typography>
+                      <Typography variant='body1'>
+                        {service.approvedAt || service.rejectedAt
+                          ? new Date(
+                              service.approvedAt || service.rejectedAt || ''
+                            ).toLocaleDateString('es-CO')
+                          : 'Sin registrar'}
+                      </Typography>
+                    </Grid>
+                    {service.rejectionReason ? (
+                      <Grid item xs={12}>
+                        <Typography variant='caption' color='text.secondary'>
+                          Motivo de rechazo
+                        </Typography>
+                        <Typography variant='body1'>
+                          {service.rejectionReason}
+                        </Typography>
+                      </Grid>
+                    ) : null}
+                    {approvalNotes ? (
+                      <Grid item xs={12}>
+                        <Typography variant='caption' color='text.secondary'>
+                          Observación de aprobación
+                        </Typography>
+                        <Typography variant='body1'>
+                          {approvalNotes}
+                        </Typography>
+                      </Grid>
+                    ) : null}
+                  </Grid>
+                </>
+              ) : null}
+
               {service.commercialComments ? (
                 <>
                   <Divider sx={{ my: 2 }} />
@@ -234,6 +465,12 @@ const CalibrationServiceDetailsPage = () => {
               <Typography variant='h6' fontWeight={700} gutterBottom>
                 Documentos
               </Typography>
+              {decisionDocuments?.length ? (
+                <Alert severity='success' sx={{ mb: 2 }}>
+                  Este servicio ya tiene {decisionDocuments.length} evidencia(s)
+                  de aprobación o rechazo.
+                </Alert>
+              ) : null}
               {service.documents?.length ? (
                 <List dense disablePadding>
                   {service.documents.map((document) => (
@@ -280,6 +517,16 @@ const CalibrationServiceDetailsPage = () => {
           </Card>
         </Grid>
       </Grid>
+      {decisionMode ? (
+        <CalibrationServiceApprovalDialog
+          open={Boolean(decisionMode)}
+          mode={decisionMode}
+          serviceCode={service.serviceCode}
+          isLoading={isDecisionLoading}
+          onClose={() => setDecisionMode(null)}
+          onSubmit={handleDecisionSubmit}
+        />
+      ) : null}
     </Box>
   )
 }
