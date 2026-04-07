@@ -305,10 +305,10 @@ const CalibrationServiceDetailsPage = () => {
   const handleRequestApproval = async () => {
     try {
       await requestApproval.mutateAsync({ serviceId: String(service.id) })
-      toast.success('El servicio quedó enviado a aprobación.')
+      toast.success('La cotización quedó enviada al cliente.')
     } catch (requestError) {
       console.error(requestError)
-      toast.error('No pudimos enviar el servicio a aprobación.')
+      toast.error('No pudimos marcar la cotización como enviada al cliente.')
     }
   }
 
@@ -318,19 +318,19 @@ const CalibrationServiceDetailsPage = () => {
     try {
       if (decisionMode === 'approve') {
         if (!values.approvalChannel.trim()) {
-          toast.error('Selecciona el medio de aprobación.')
+          toast.error('Selecciona el medio por el que respondió el cliente.')
           return
         }
 
         if (!values.approvalReference.trim()) {
-          toast.error('Indica el email o teléfono que aprobó la cotización.')
+          toast.error('Indica el email o teléfono del contacto que aprobó la cotización.')
           return
         }
       }
 
       if (decisionMode === 'reject') {
         if (!values.approvalChannel.trim()) {
-          toast.error('Selecciona el medio de rechazo.')
+          toast.error('Selecciona el medio por el que respondió el cliente.')
           return
         }
 
@@ -352,8 +352,8 @@ const CalibrationServiceDetailsPage = () => {
               : 'rejection_evidence',
           title:
             decisionMode === 'approve'
-              ? `Aprobación ${service.serviceCode}`
-              : `Rechazo ${service.serviceCode}`,
+              ? `Aprobación cliente ${service.serviceCode}`
+              : `Rechazo cliente ${service.serviceCode}`,
           notes: values.notes?.trim() || undefined
         })
 
@@ -374,7 +374,7 @@ const CalibrationServiceDetailsPage = () => {
           evidenceDocumentId
         })
 
-        toast.success('La cotización quedó aprobada formalmente.')
+        toast.success('La aprobación del cliente quedó registrada.')
       }
 
       if (decisionMode === 'reject') {
@@ -388,7 +388,7 @@ const CalibrationServiceDetailsPage = () => {
           evidenceDocumentId
         })
 
-        toast.success('La cotización quedó rechazada formalmente.')
+        toast.success('El rechazo del cliente quedó registrado.')
       }
 
       setDecisionMode(null)
@@ -396,8 +396,8 @@ const CalibrationServiceDetailsPage = () => {
       console.error(decisionError)
       toast.error(
         decisionMode === 'approve'
-          ? 'No pudimos registrar la aprobación.'
-          : 'No pudimos registrar el rechazo.'
+          ? 'No pudimos registrar la aprobación del cliente.'
+          : 'No pudimos registrar el rechazo del cliente.'
       )
     }
   }
@@ -602,7 +602,7 @@ const CalibrationServiceDetailsPage = () => {
               onClick={() => void handleRequestApproval()}
               disabled={isDecisionLoading}
             >
-              Solicitar aprobación
+              Enviar cotización
             </Button>
           ) : null}
           {canDecideApproval ? (
@@ -614,7 +614,7 @@ const CalibrationServiceDetailsPage = () => {
                 onClick={() => setDecisionMode('reject')}
                 disabled={isDecisionLoading}
               >
-                Rechazar cotización
+                Registrar rechazo cliente
               </Button>
               <Button
                 variant='contained'
@@ -623,7 +623,7 @@ const CalibrationServiceDetailsPage = () => {
                 onClick={() => setDecisionMode('approve')}
                 disabled={isDecisionLoading}
               >
-                Aprobar cotización
+                Registrar aprobación cliente
               </Button>
             </Stack>
           ) : null}
@@ -840,12 +840,12 @@ const CalibrationServiceDetailsPage = () => {
                   <>
                     <Divider sx={{ my: 2 }} />
                     <Typography variant='subtitle2' fontWeight={700} gutterBottom>
-                      Decisión comercial
+                      Respuesta del cliente
                     </Typography>
                     <Grid container spacing={2}>
                       <Grid item xs={12} md={6}>
                         <Typography variant='caption' color='text.secondary'>
-                          Medio
+                          Medio de respuesta
                         </Typography>
                         <Typography variant='body1'>
                           {service.approvalChannel || 'Sin registrar'}
@@ -853,7 +853,7 @@ const CalibrationServiceDetailsPage = () => {
                       </Grid>
                       <Grid item xs={12} md={6}>
                         <Typography variant='caption' color='text.secondary'>
-                          Referencia
+                          Contacto de referencia
                         </Typography>
                         <Typography variant='body1'>
                           {service.approvalReference || 'Sin registrar'}
@@ -880,7 +880,7 @@ const CalibrationServiceDetailsPage = () => {
                       {approvalNotes ? (
                         <Grid item xs={12}>
                           <Typography variant='caption' color='text.secondary'>
-                            Observación de aprobación
+                            Observación de la respuesta
                           </Typography>
                           <Typography variant='body1'>
                             {approvalNotes}

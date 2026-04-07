@@ -451,7 +451,7 @@ const CalibrationServiceWorkspacePage = () => {
       }
       toast.success(
         targetStatus === 'pending_approval'
-          ? 'Servicio guardado y enviado a aprobacion.'
+          ? 'Servicio guardado y cotización marcada como enviada al cliente.'
           : 'Servicio guardado como borrador.'
       )
       navigate(`/calibration-services/${savedService.id}`)
@@ -518,8 +518,8 @@ const CalibrationServiceWorkspacePage = () => {
             {isEditing ? 'Editar servicio de calibracion' : 'Nuevo servicio de calibracion'}
           </Typography>
           <Typography variant='body1' color='text.secondary' sx={{ mt: 1 }}>
-            Cotizacion base del servicio con cliente, sede, condiciones comerciales,
-            items y evidencia de solicitud.
+            Cotización base del servicio con cliente, sede, condiciones comerciales,
+            ítems y evidencia de solicitud.
           </Typography>
         </Box>
         {service ? (
@@ -892,7 +892,7 @@ const CalibrationServiceWorkspacePage = () => {
                   onClick={() => void handleSave('pending_approval')}
                   disabled={!canEdit || isBusy || !sequenceConfig?.initialized}
                 >
-                  Guardar y enviar a aprobacion
+                  Guardar y enviar cotización
                 </Button>
               </Stack>
             </CardContent>

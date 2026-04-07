@@ -63,9 +63,9 @@ CalibrationServiceStatus,
 string
 > = {
   draft: 'Borrador',
-  pending_approval: 'Pendiente de aprobación',
+  pending_approval: 'Cotización enviada',
   rejected: 'Rechazada',
-  approved: 'Aprobada',
+  approved: 'Aprobada por cliente',
   ods_issued: 'ODS emitida',
   pending_programming: 'Pendiente de programación'
 }
@@ -74,9 +74,9 @@ export const CALIBRATION_SERVICE_APPROVAL_LABELS: Record<
 CalibrationServiceApprovalStatus,
 string
 > = {
-  pending: 'Pendiente',
-  approved: 'Aprobada',
-  rejected: 'Rechazada'
+  pending: 'Pendiente respuesta cliente',
+  approved: 'Aprobada por cliente',
+  rejected: 'Rechazada por cliente'
 }
 
 export const CALIBRATION_SERVICE_STATUS_COLORS: Record<
@@ -116,8 +116,8 @@ export const CALIBRATION_SERVICE_DOCUMENT_LABELS: Record<
   string
 > = {
   request_evidence: 'Evidencia de solicitud',
-  approval_evidence: 'Evidencia de aprobación',
-  rejection_evidence: 'Evidencia de rechazo',
+  approval_evidence: 'Evidencia aprobación cliente',
+  rejection_evidence: 'Evidencia rechazo cliente',
   quote_pdf: 'PDF de cotización',
   ods_pdf: 'PDF de ODS',
   supporting_attachment: 'Soporte adjunto'
@@ -141,9 +141,9 @@ export const CALIBRATION_SERVICE_EVENT_LABELS: Record<
 > = {
   service_created: 'Servicio creado',
   service_updated: 'Servicio actualizado',
-  approval_requested: 'Aprobación solicitada',
-  service_approved: 'Servicio aprobado',
-  service_rejected: 'Servicio rechazado',
+  approval_requested: 'Cotización enviada',
+  service_approved: 'Aprobación cliente registrada',
+  service_rejected: 'Rechazo cliente registrado',
   ods_issued: 'ODS emitida',
   document_uploaded: 'Documento cargado'
 }

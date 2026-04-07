@@ -292,7 +292,7 @@ const CalibrationServiceDocumentsPanel = ({
         {decisionDocuments.length ? (
           <Alert severity='success' sx={{ mb: 2 }}>
             Este servicio ya tiene {decisionDocuments.length} evidencia(s) de
-            aprobación o rechazo.
+            respuesta del cliente.
           </Alert>
         ) : null}
         {supportDocuments.length ? (

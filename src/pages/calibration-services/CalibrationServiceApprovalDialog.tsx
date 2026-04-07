@@ -76,23 +76,25 @@ const CalibrationServiceApprovalDialog = ({
   return (
     <Dialog open={open} onClose={isLoading ? undefined : onClose} fullWidth maxWidth='sm'>
       <DialogTitle>
-        {isRejectMode ? 'Registrar rechazo formal' : 'Registrar aprobación formal'}
+        {isRejectMode
+          ? 'Registrar rechazo del cliente'
+          : 'Registrar aprobación del cliente'}
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2}>
           <Alert severity={isRejectMode ? 'warning' : 'success'}>
             {isRejectMode
-              ? `Esta acción deja trazabilidad formal del rechazo para ${serviceCode}.`
-              : `Esta acción deja trazabilidad formal de la aprobación para ${serviceCode}.`}
+              ? `Esta acción registra formalmente la respuesta del cliente para ${serviceCode}.`
+              : `Esta acción registra formalmente la aprobación del cliente para ${serviceCode}.`}
           </Alert>
 
           <FormControl fullWidth required>
             <InputLabel>
-              {isRejectMode ? 'Medio de rechazo' : 'Medio de aprobación'}
+              {isRejectMode ? 'Medio de respuesta del cliente' : 'Medio de respuesta del cliente'}
             </InputLabel>
             <Select
               value={values.approvalChannel}
-              label={isRejectMode ? 'Medio de rechazo' : 'Medio de aprobación'}
+              label='Medio de respuesta del cliente'
               disabled={isLoading}
               onChange={(event) =>
                 setValues((previous) => ({
@@ -127,7 +129,7 @@ const CalibrationServiceApprovalDialog = ({
           <TextField
             fullWidth
             required={!isRejectMode}
-            label='Email o teléfono'
+            label='Email o teléfono de referencia'
             value={values.approvalReference}
             disabled={isLoading}
             onChange={(event) =>
@@ -138,8 +140,8 @@ const CalibrationServiceApprovalDialog = ({
             }
             helperText={
               isRejectMode
-                ? 'Opcional si el rechazo no llegó por un contacto específico.'
-                : 'Campo obligatorio para dejar la referencia del visto bueno.'
+                ? 'Opcional si la respuesta no llegó por un contacto específico.'
+                : 'Campo obligatorio para dejar la referencia del contacto que aprobó.'
             }
           />
 
@@ -159,8 +161,8 @@ const CalibrationServiceApprovalDialog = ({
             }
             helperText={
               isRejectMode
-                ? 'Describe brevemente por qué la cotización fue rechazada.'
-                : 'Úsalo para dejar contexto adicional de la aprobación.'
+                ? 'Describe brevemente por qué el cliente rechazó la cotización.'
+                : 'Úsalo para dejar contexto adicional de la respuesta del cliente.'
             }
           />
 
@@ -187,7 +189,7 @@ const CalibrationServiceApprovalDialog = ({
             <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
               {values.evidenceFile
                 ? values.evidenceFile.name
-                : 'Puedes adjuntar correo, captura, acta o soporte documental.'}
+                : 'Puedes adjuntar correo, captura, acta o soporte de la respuesta del cliente.'}
             </Typography>
           </Box>
         </Stack>
@@ -205,10 +207,10 @@ const CalibrationServiceApprovalDialog = ({
           {isRejectMode
             ? isLoading
               ? 'Registrando rechazo...'
-              : 'Registrar rechazo'
+              : 'Registrar rechazo cliente'
             : isLoading
-              ? 'Registrando aprobación...'
-              : 'Registrar aprobación'}
+              ? 'Registrando aprobación cliente...'
+              : 'Registrar aprobación cliente'}
         </Button>
       </DialogActions>
     </Dialog>

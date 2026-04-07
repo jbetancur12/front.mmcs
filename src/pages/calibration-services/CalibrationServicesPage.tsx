@@ -60,9 +60,9 @@ const STATUS_OPTIONS: Array<{
 }> = [
   { value: FILTER_ALL, label: 'Todos los estados' },
   { value: 'draft', label: 'Borrador' },
-  { value: 'pending_approval', label: 'Pendiente de aprobación' },
+  { value: 'pending_approval', label: 'Cotización enviada' },
   { value: 'rejected', label: 'Rechazada' },
-  { value: 'approved', label: 'Aprobada' },
+  { value: 'approved', label: 'Aprobada por cliente' },
   { value: 'ods_issued', label: 'ODS emitida' },
   { value: 'pending_programming', label: 'Pendiente de programación' }
 ]
@@ -80,10 +80,10 @@ const APPROVAL_OPTIONS: Array<{
   value: CalibrationServiceApprovalStatus | typeof FILTER_ALL
   label: string
 }> = [
-  { value: FILTER_ALL, label: 'Toda la aprobación' },
-  { value: 'pending', label: 'Pendiente' },
-  { value: 'approved', label: 'Aprobada' },
-  { value: 'rejected', label: 'Rechazada' }
+  { value: FILTER_ALL, label: 'Toda la respuesta cliente' },
+  { value: 'pending', label: 'Pendiente respuesta' },
+  { value: 'approved', label: 'Aprobada por cliente' },
+  { value: 'rejected', label: 'Rechazada por cliente' }
 ]
 
 const SCOPE_OPTIONS: Array<{
@@ -284,10 +284,10 @@ const CalibrationServicesPage = () => {
   const handleRequestApproval = async (service: CalibrationService) => {
     try {
       await requestApproval.mutateAsync({ serviceId: String(service.id) })
-      toast.success(`${service.serviceCode} quedó enviado a aprobación.`)
+      toast.success(`${service.serviceCode} quedó marcado como cotización enviada al cliente.`)
     } catch (requestError) {
       console.error(requestError)
-      toast.error('No pudimos enviar el servicio a aprobación.')
+      toast.error('No pudimos marcar la cotización como enviada al cliente.')
     }
   }
 
@@ -364,7 +364,7 @@ const CalibrationServicesPage = () => {
           <Typography variant='body1' color='text.secondary' sx={{ mt: 1 }}>
             {isTechnicalOnlyView
               ? 'Bandeja técnica para ODS, programación y seguimiento operativo del servicio.'
-              : 'Bandeja operativa para cotización, aprobación, emisión de ODS y seguimiento base del servicio.'}
+              : 'Bandeja operativa para cotización, respuesta del cliente, emisión de ODS y seguimiento base del servicio.'}
           </Typography>
         </Box>
 
@@ -427,7 +427,7 @@ const CalibrationServicesPage = () => {
           <Card sx={{ borderRadius: 3 }}>
             <CardContent>
               <Typography variant='overline' color='text.secondary'>
-                {isTechnicalOnlyView ? 'ODS emitidas' : 'Pendientes aprobación'}
+                {isTechnicalOnlyView ? 'ODS emitidas' : 'Pendientes respuesta cliente'}
               </Typography>
               <Typography variant='h4' fontWeight={700}>
                 {isTechnicalOnlyView ? odsIssuedCount : pendingApprovalCount}
@@ -435,7 +435,7 @@ const CalibrationServicesPage = () => {
               <Typography variant='body2' color='text.secondary'>
                 {isTechnicalOnlyView
                   ? 'Servicios ya liberados al frente técnico'
-                  : 'Requieren decisión comercial formal'}
+                  : 'Cotizaciones enviadas que aún esperan respuesta del cliente'}
               </Typography>
             </CardContent>
           </Card>
@@ -452,7 +452,7 @@ const CalibrationServicesPage = () => {
               <Typography variant='body2' color='text.secondary'>
                 {isTechnicalOnlyView
                   ? 'Requieren agenda o coordinación operativa'
-                  : 'Aprobados y pendientes de emisión'}
+                  : 'Con aprobación del cliente y pendientes de emisión'}
               </Typography>
             </CardContent>
           </Card>
@@ -532,7 +532,7 @@ const CalibrationServicesPage = () => {
                 <TextField
                   select
                   fullWidth
-                  label='Aprobación'
+                  label='Respuesta cliente'
                   value={approvalFilter}
                   onChange={(event) =>
                     setApprovalFilter(
@@ -792,7 +792,7 @@ const CalibrationServicesPage = () => {
                           onClick={() => void handleRequestApproval(service)}
                           disabled={requestApproval.isLoading}
                         >
-                          Solicitar aprobación
+                          Enviar cotización
                         </Button>
                       ) : null}
                       {canResolveApproval ? (
@@ -802,7 +802,7 @@ const CalibrationServicesPage = () => {
                           startIcon={<WarningAmberOutlinedIcon />}
                           onClick={() => openServiceDetail(service.id)}
                         >
-                          Resolver aprobación
+                          Registrar respuesta cliente
                         </Button>
                       ) : null}
                       {canOpenOds ? (
