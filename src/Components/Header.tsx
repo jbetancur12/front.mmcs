@@ -22,7 +22,7 @@ import { useNavigate } from 'react-router-dom'
 import { userStore } from '../store/userStore'
 import LogoutButton from './Authentication/Logout'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { EquipmentData } from './DataSheet/EquipmentAlertPage'
+import type { EquipmentData } from './DataSheet/EquipmentAlertPage'
 
 interface HeaderProps {
   toggleMobileMenu: () => void
@@ -50,10 +50,10 @@ function Header({ toggleMobileMenu }: HeaderProps) {
 
   useEffect(() => {
     // Only fetch alerts for admin users to avoid authentication issues
-    if ($userStore.rol.some((role) => ['admin'].includes(role)) && $userStore.email) {
+    if ($userStore.rol.some((role) => ['admin', 'metrologist'].includes(role)) && $userStore.email) {
       const fetchAlerts = async () => {
         try {
-          const response = await axiosPrivate('/dataSheet')
+          const response = await axiosPrivate('/dataSheet/alerts')
           setHasAlert(response.data || [])
         } catch (error) {
           console.error('Error fetching alerts:', error)
@@ -68,9 +68,7 @@ function Header({ toggleMobileMenu }: HeaderProps) {
     }
   }, [axiosPrivate, $userStore.rol, $userStore.email])
 
-  const calibrationDueSoon = hasAlert?.filter((equipment) => equipment.isCalibrationDueSoon) || []
-  const inspectionDueSoon = hasAlert?.filter((equipment) => equipment.isInspectionDueSoon) || []
-  const totalAlerts = calibrationDueSoon.length + inspectionDueSoon.length
+  const totalAlerts = hasAlert.length
   const hasAlerts = totalAlerts > 0
 
   const handleAlertsClick = () => {
@@ -122,9 +120,9 @@ function Header({ toggleMobileMenu }: HeaderProps) {
         {/* Controles del header */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {/* Botón de alertas - Solo para admins */}
-          {!$userStore.lmsOnly && $userStore.rol.some((role) => ['admin'].includes(role)) && (
+          {!$userStore.lmsOnly && $userStore.rol.some((role) => ['admin', 'metrologist'].includes(role)) && (
             <Tooltip 
-              title={hasAlerts ? `${totalAlerts} alertas pendientes` : 'No hay alertas'}
+              title={hasAlerts ? `${totalAlerts} equipos con alertas pendientes` : 'No hay alertas'}
             >
               <IconButton
                 color="inherit"

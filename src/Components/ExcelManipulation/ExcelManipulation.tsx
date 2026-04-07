@@ -7,7 +7,6 @@ import {
   Typography
 } from '@mui/material'
 import React, { useState } from 'react'
-import * as Minio from 'minio'
 
 import toast, { Toaster } from 'react-hot-toast'
 import Loader from '../Loader2'
@@ -25,14 +24,7 @@ import CustomerInformation from './Components/CustomerInformation'
 import InitialConditions from './Components/InitialConditions'
 import ResolutionAndExactitude from './Components/ResolutionAndExactitude'
 import useAxiosPrivate from '@utils/use-axios-private'
-
-const minioClient = new Minio.Client({
-  endPoint: import.meta.env.VITE_MINIO_ENDPOINT || 'localhost',
-  port: import.meta.env.VITE_ENV === 'development' ? 9000 : undefined,
-  useSSL: import.meta.env.VITE_MINIO_USESSL === 'true',
-  accessKey: import.meta.env.VITE_MINIO_ACCESSKEY,
-  secretKey: import.meta.env.VITE_MINIO_SECRETKEY
-})
+import { fetchMinioObjectBlob } from '@utils/minio'
 
 const ExcelManipulation: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
@@ -59,82 +51,71 @@ const ExcelManipulation: React.FC = () => {
     }
     setLoading(true)
     if (formData.format) {
-      minioClient.getObject(
-        'repositories',
-        formData.format.path,
+      try {
+        const excelBlob = await fetchMinioObjectBlob(
+          'repositories',
+          formData.format.path
+        )
 
-        async function (err: Error | null, dataStream: any) {
-          if (err) {
-            console.error(err)
-            return
-          }
+        const blob = await populateExcel(excelBlob, {
+          formData,
+          rows
+        })
 
-          const chunks: Uint8Array[] = []
-          dataStream.on('data', (chunk: Uint8Array) => chunks.push(chunk))
-          dataStream.on('end', async () => {
-            const excelBlob = new Blob(chunks, {
-              type: 'application/octet-stream'
-            })
+        const nextCalibrationDate = new Date(formData.calibrationDate)
+        nextCalibrationDate.setFullYear(
+          nextCalibrationDate.getFullYear() + 1
+        )
 
-            const blob = await populateExcel(excelBlob, {
-              formData,
-              rows
-            })
+        const formDataFile = new FormData()
+        formDataFile.append('file', blob, `${formData.name}.xlsx`)
+        formDataFile.append('customerId', formData.customer?.value || '')
+        formDataFile.append('deviceId', formData.device?.value || '')
+        formDataFile.append(
+          'certificateTypeId',
+          formData.typeOfCertificate?.value || ''
+        )
+        formDataFile.append('city', formData.city)
+        formDataFile.append('location', formData.location)
+        formDataFile.append('sede', formData.sede)
+        formDataFile.append('activoFijo', formData.activoFijo)
+        formDataFile.append('serie', formData.serie)
+        formDataFile.append('name', formData.name)
+        formDataFile.append('filePath', `${formData.name}.pdf`)
+        formDataFile.append('calibrationDate', formData.calibrationDate)
+        formDataFile.append(
+          'nextCalibrationDate',
+          nextCalibrationDate.toString()
+        )
 
-            const nextCalibrationDate = new Date(formData.calibrationDate)
-            nextCalibrationDate.setFullYear(
-              nextCalibrationDate.getFullYear() + 1
-            )
-
-            const formDataFile = new FormData()
-            formDataFile.append('file', blob, `${formData.name}.xlsx`)
-            formDataFile.append('customerId', formData.customer?.value || '')
-            formDataFile.append('deviceId', formData.device?.value || '')
-            formDataFile.append(
-              'certificateTypeId',
-              formData.typeOfCertificate?.value || ''
-            )
-            formDataFile.append('city', formData.city)
-            formDataFile.append('location', formData.location)
-            formDataFile.append('sede', formData.sede)
-            formDataFile.append('activoFijo', formData.activoFijo)
-            formDataFile.append('serie', formData.serie)
-            formDataFile.append('name', formData.name)
-            formDataFile.append('filePath', `${formData.name}.pdf`)
-            formDataFile.append('calibrationDate', formData.calibrationDate)
-            formDataFile.append(
-              'nextCalibrationDate',
-              nextCalibrationDate.toString()
-            )
-
-            try {
-              await axiosPrivate.post(`/utils/upload`, formDataFile, {
-                headers: {
-                  'Content-Type': 'multipart/form-data'
-                }
-              })
-              toast.success('Certificado creado correctamente')
-            } catch (error) {
-              console.error('Error al subir el archivo:', error)
-            } finally {
-              setLoading(false)
-            }
-
-            if (checked) {
-              const url = URL.createObjectURL(blob)
-
-              const a = document.createElement('a')
-              a.href = url
-              a.download = `${formData.name}.xlsx`
-              document.body.appendChild(a)
-              a.click()
-
-              document.body.removeChild(a)
-              setLoading(false)
+        try {
+          await axiosPrivate.post(`/utils/upload`, formDataFile, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
             }
           })
+          toast.success('Certificado creado correctamente')
+        } catch (error) {
+          console.error('Error al subir el archivo:', error)
         }
-      )
+
+        if (checked) {
+          const url = URL.createObjectURL(blob)
+
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `${formData.name}.xlsx`
+          document.body.appendChild(a)
+          a.click()
+
+          document.body.removeChild(a)
+        }
+      } catch (error) {
+        console.error(error)
+        toast.error('No se pudo descargar la plantilla seleccionada')
+      } finally {
+        setLoading(false)
+      }
     } else {
       toast.error('No se ha seleccionado un formato')
       setLoading(false)

@@ -30,6 +30,7 @@ import { Box, CircularProgress, Typography } from '@mui/material'
 import LaboratoryRoutes from './routes/LaboratoryRoutes'
 import NonConformRoutes from './routes/NonConformRoutes'
 import MaintenanceRoutes from './routes/MaintenanceRoutes'
+import AssetLifeSheetRoutes from './routes/AssetLifeSheetRoutes'
 
 function Router() {
   const $userStore = useStore(userStore)
@@ -86,6 +87,7 @@ function Router() {
           {LaboratoryRoutes($userStore.rol)}
           {NonConformRoutes($userStore.rol)}
           {MaintenanceRoutes($userStore.rol)}
+          {AssetLifeSheetRoutes($userStore.rol)}
           {OtherRoutes($userStore.rol)}
         </Route>
 

@@ -18,16 +18,8 @@ import {
 } from '@mui/material'
 import { CloudUpload, Delete, Download, Visibility } from '@mui/icons-material'
 
-import * as Minio from 'minio'
-import XlsxPopulate from 'xlsx-populate'
 import useAxiosPrivate from '@utils/use-axios-private'
-const minioClient = new Minio.Client({
-  endPoint: import.meta.env.VITE_MINIO_ENDPOINT || 'localhost',
-  port: import.meta.env.VITE_ENV === 'development' ? 9000 : undefined,
-  useSSL: import.meta.env.VITE_MINIO_USESSL === 'true',
-  accessKey: import.meta.env.VITE_MINIO_ACCESSKEY,
-  secretKey: import.meta.env.VITE_MINIO_SECRETKEY
-})
+import { fetchMinioObjectBlob } from '@utils/minio'
 
 export interface FileData {
   name: string
@@ -143,41 +135,18 @@ const Repository = () => {
 
   const downloadFileFromMinio = async (file: string) => {
     try {
-      await minioClient.getObject(
-        'repositories',
-        file,
-        async function (err: Error | null, dataStream: any) {
-          if (err) {
-            console.error(err)
-            return
-          }
+      const blob = await fetchMinioObjectBlob('repositories', file)
 
-          const chunks: Uint8Array[] = []
-          dataStream.on('data', (chunk: Uint8Array) => chunks.push(chunk))
-          dataStream.on('end', async () => {
-            const pdfBlob = new Blob(chunks, {
-              type: 'application/octet-stream'
-            })
+      const url = URL.createObjectURL(blob)
 
-            const workbook = await XlsxPopulate.fromDataAsync(pdfBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = file
+      document.body.appendChild(a)
+      a.click()
 
-            const wbout = await workbook.outputAsync()
-            const blob = new Blob([wbout], {
-              type: 'application/octet-stream'
-            })
-
-            const url = URL.createObjectURL(blob)
-
-            const a = document.createElement('a')
-            a.href = url
-            a.download = file
-            document.body.appendChild(a)
-            a.click()
-
-            document.body.removeChild(a)
-          })
-        }
-      )
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Error downloading file from Minio:', error)
     }
@@ -185,44 +154,9 @@ const Repository = () => {
 
   const openExcelViewerFromMinio = async (file: string): Promise<string> => {
     try {
-      return new Promise((resolve, reject) => {
-        // Obtener el archivo Excel de Minio
-        minioClient.getObject(
-          'repositories',
-          file,
-          async function (err: Error | null, dataStream: any) {
-            if (err) {
-              console.error('Error fetching Excel file from Minio:', err)
-              reject(err)
-              return
-            }
+      const blob = await fetchMinioObjectBlob('repositories', file)
 
-            const chunks: Uint8Array[] = []
-            dataStream.on('data', (chunk: Uint8Array) => chunks.push(chunk))
-            dataStream.on('end', async () => {
-              // Convertir los chunks en un blob
-              const pdfBlob = new Blob(chunks, {
-                type: 'application/octet-stream'
-              })
-
-              // Leer el archivo Excel con XlsxPopulate
-              const workbook = await XlsxPopulate.fromDataAsync(pdfBlob)
-
-              // Convertir el workbook en un blob nuevamente
-              const wbout = await workbook.outputAsync()
-              const blob = new Blob([wbout], {
-                type: 'application/octet-stream'
-              })
-
-              // Crear una URL para el blob
-              const fileURL = URL.createObjectURL(blob)
-
-              // Resolver con la URL del archivo
-              resolve(fileURL)
-            })
-          }
-        )
-      })
+      return URL.createObjectURL(blob)
     } catch (error) {
       console.error('Error opening Excel file in viewer:', error)
       throw error

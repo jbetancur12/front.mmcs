@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import {
   Document,
   Image,
@@ -14,15 +14,7 @@ import { createTw } from 'react-pdf-tailwind'
 import { Box, CircularProgress, IconButton, Typography } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { useNavigate } from 'react-router-dom'
-import * as minioExports from 'minio'
-
-const minioClient = new minioExports.Client({
-  endPoint: import.meta.env.VITE_MINIO_ENDPOINT || 'localhost',
-  port: import.meta.env.VITE_ENV === 'development' ? 9000 : undefined,
-  useSSL: import.meta.env.VITE_MINIO_USESSL === 'true',
-  accessKey: import.meta.env.VITE_MINIO_ACCESSKEY,
-  secretKey: import.meta.env.VITE_MINIO_SECRETKEY
-})
+import { buildMinioObjectUrl } from '@utils/minio'
 
 interface Props {
   dataSheet: DataSheetData | null
@@ -35,7 +27,9 @@ const truncateText = (text: string, maxLength: number) => {
 }
 
 const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
-  const [imageUrl, setImageUrl] = useState<string>('')
+  const imageUrl = dataSheet?.pictureUrl
+    ? buildMinioObjectUrl('images', dataSheet.pictureUrl)
+    : ''
   let calibrationHistories: CalibrationHistory[] = []
   const navigate = useNavigate()
   const tw = createTw({
@@ -50,29 +44,6 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
       }
     }
   })
-
-  useEffect(() => {
-    // Nombre de tu archivo de imagen en el bucket
-
-    const getImageFromBucket = async (picture: any) => {
-      try {
-        const objectStream = await minioClient.getObject('images', picture)
-        const chunks: Uint8Array[] = []
-
-        objectStream.on('data', (chunk: Uint8Array) => chunks.push(chunk))
-        objectStream.on('end', () => {
-          const imageBlob = new Blob(chunks, { type: 'image/jpeg' }) // Cambia el tipo de imagen según corresponda (jpeg, png, etc.)
-          const imageUrl = URL.createObjectURL(imageBlob)
-          setImageUrl(imageUrl)
-        })
-      } catch (error) {
-        console.error('Error al obtener la imagen del bucket:', error)
-      }
-    }
-    if (dataSheet?.pictureUrl) {
-      getImageFromBucket(dataSheet.pictureUrl)
-    }
-  }, [dataSheet?.pictureUrl])
 
   if (dataSheet && dataSheet.calibrationHistories.length > 0) {
     calibrationHistories = dataSheet.calibrationHistories

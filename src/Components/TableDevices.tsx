@@ -35,11 +35,11 @@ export interface DeviceData {
   id: number
   name: string
   magnitude: string
-  repository: {
+  repository?: {
     id: number
     name: string
   }
-  certificateTemplate: {
+  certificateTemplate?: {
     id: number
     name: string
   }
@@ -77,7 +77,7 @@ const Table: React.FC = () => {
 
       if (response.status === 201) {
         bigToast('Equipo Creado Exitosamente!', 'success')
-        fetchUsers() // Refresh data after creation
+        await fetchUsers()
       } else {
         console.error('Error al crear equipo')
       }
@@ -102,7 +102,7 @@ const Table: React.FC = () => {
 
   useEffect(() => {
     fetchUsers()
-  }, [tableData])
+  }, [])
 
   const handleCreateNewRow = (values: DeviceData) => {
     onCreateDevice(values)
@@ -110,7 +110,7 @@ const Table: React.FC = () => {
   }
 
   const handleSaveRowEdits: MaterialReactTableProps<DeviceData>['onEditingRowSave'] =
-    async ({ exitEditingMode, row, values }) => {
+    async ({ exitEditingMode, values }) => {
       if (!Object.keys(validationErrors).length) {
         const updatedValues = {
           ...values,
@@ -127,11 +127,7 @@ const Table: React.FC = () => {
 
           if (response.status >= 200 && response.status < 300) {
             bigToast('Equipo Modificado Exitosamente!', 'success')
-
-            const updatedTableData = [...tableData]
-            updatedTableData[row.index] = { ...response.data }
-
-            setTableData(updatedTableData)
+            await fetchUsers()
           } else {
             console.error('Error al crear equipo')
           }
@@ -147,14 +143,13 @@ const Table: React.FC = () => {
     setValidationErrors({})
   }
 
-  const deleteUser = async (rowIndex: number, id: number) => {
+  const deleteUser = async (id: number) => {
     try {
       const response = await axiosPrivate.delete(`/devices/${id}`, {})
 
       if (response.status === 204) {
         bigToast('Equipo Eliminado Exitosamente!', 'success')
-        tableData.splice(rowIndex, 1)
-        setTableData([...tableData])
+        await fetchUsers()
       } else {
         console.error('Error al crear equipo')
       }
@@ -170,11 +165,9 @@ const Table: React.FC = () => {
       ) {
         return
       }
-      deleteUser(row.index, row.getValue('id'))
-      tableData.splice(row.index, 1)
-      setTableData([...tableData])
+      deleteUser(row.getValue('id'))
     },
-    [tableData]
+    [deleteUser]
   )
 
   const getCommonEditTextFieldProps = useCallback(
@@ -237,8 +230,10 @@ const Table: React.FC = () => {
         })
       },
       {
-        accessorKey: 'certificateTemplate.name',
+        id: 'certificateTemplateName',
+        accessorFn: (row) => row.certificateTemplate?.name || 'Sin plantilla',
         header: 'Plantilla de Certificado',
+        Cell: ({ row }) => row.original.certificateTemplate?.name || 'Sin plantilla',
 
         Edit: () => (
           <AsyncSelect
@@ -393,10 +388,10 @@ export const CreateNewDeviceModal = ({
                 if (column.accessorKey === 'id') {
                   return null
                 }
-                if (column.accessorKey === 'certificateTemplate.name') {
+                if (column.id === 'certificateTemplateName') {
                   return (
                     <AsyncSelect
-                      key={column.accessorKey}
+                      key={column.id}
                       cacheOptions
                       // defaultOptions
                       placeholder='Buscar Plantilla de Certificado'
@@ -450,7 +445,7 @@ export const CreateNewDeviceModal = ({
                 } else {
                   return (
                     <TextField
-                      key={column.accessorKey}
+                      key={column.id ?? column.accessorKey}
                       label={column.header}
                       name={column.accessorKey}
                       onChange={(e) =>

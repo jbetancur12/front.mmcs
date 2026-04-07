@@ -1207,6 +1207,11 @@ const Traceability = () => {
                 path={selectedPdfDocument.filePath}
                 bucket="traceabilities"
                 view="preview"
+                buttons={false}
+                allowDownload={false}
+                allowOpen={false}
+                downloadUrl={`/traceabilities/${selectedPdfDocument.id}/download`}
+                disableContextMenu
               />
             </Box>
           )}
