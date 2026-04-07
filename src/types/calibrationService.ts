@@ -304,3 +304,8 @@ export interface CalibrationServiceIssueOdsPayload {
   externalReference?: string | null
   receptionNotes?: string | null
 }
+
+export interface CalibrationServiceDocumentActionPayload {
+  serviceId: string
+  documentId?: string
+}

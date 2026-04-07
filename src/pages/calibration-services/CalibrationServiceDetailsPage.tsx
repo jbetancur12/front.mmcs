@@ -23,8 +23,10 @@ import {
 } from '@mui/material'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
 import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined'
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
+import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined'
 import { Toaster, toast } from 'react-hot-toast'
@@ -131,7 +133,10 @@ const CalibrationServiceDetailsPage = () => {
     approveService,
     rejectService,
     uploadDocument,
-    issueOds
+    issueOds,
+    generateQuotePdf,
+    generateOdsPdf,
+    downloadDocument
   } = useCalibrationServiceMutations()
   const [decisionMode, setDecisionMode] =
     useState<CalibrationServiceDecisionMode | null>(null)
@@ -204,8 +209,18 @@ const CalibrationServiceDetailsPage = () => {
     rejectService.isLoading ||
     uploadDocument.isLoading
   const isOdsLoading = issueOds.isLoading
+  const isPdfLoading =
+    generateQuotePdf.isLoading ||
+    generateOdsPdf.isLoading ||
+    downloadDocument.isLoading
   const decisionDocuments = service.documents?.filter((document) =>
     ['approval_evidence', 'rejection_evidence'].includes(document.documentType)
+  )
+  const officialPdfDocuments = service.documents?.filter((document) =>
+    ['quote_pdf', 'ods_pdf'].includes(document.documentType)
+  )
+  const supportDocuments = service.documents?.filter(
+    (document) => !['quote_pdf', 'ods_pdf'].includes(document.documentType)
   )
   const odsDialogInitialValues: CalibrationServiceOdsDialogValues = {
     issuedAt: buildTodayValue(),
@@ -381,6 +396,62 @@ const CalibrationServiceDetailsPage = () => {
     } catch (odsError) {
       console.error(odsError)
       toast.error('No pudimos emitir la ODS.')
+    }
+  }
+
+  const handleDownloadDocument = async (
+    documentId: number,
+    fileName: string
+  ) => {
+    try {
+      const fileBlob = await downloadDocument.mutateAsync({
+        serviceId: String(service.id),
+        documentId: String(documentId)
+      })
+
+      const objectUrl = window.URL.createObjectURL(fileBlob)
+      const anchor = window.document.createElement('a')
+      anchor.href = objectUrl
+      anchor.download = fileName
+      anchor.target = '_blank'
+      anchor.rel = 'noopener'
+      anchor.click()
+      window.URL.revokeObjectURL(objectUrl)
+    } catch (downloadError) {
+      console.error(downloadError)
+      toast.error('No pudimos descargar el documento.')
+    }
+  }
+
+  const handleGenerateQuotePdf = async () => {
+    try {
+      const document = await generateQuotePdf.mutateAsync({
+        serviceId: String(service.id)
+      })
+      toast.success('La cotización PDF quedó generada.')
+      await handleDownloadDocument(
+        document.id,
+        document.originalFileName || `cotizacion-${service.serviceCode}.pdf`
+      )
+    } catch (pdfError) {
+      console.error(pdfError)
+      toast.error('No pudimos generar la cotización PDF.')
+    }
+  }
+
+  const handleGenerateOdsPdf = async () => {
+    try {
+      const document = await generateOdsPdf.mutateAsync({
+        serviceId: String(service.id)
+      })
+      toast.success('La ODS PDF quedó generada.')
+      await handleDownloadDocument(
+        document.id,
+        document.originalFileName || `ods-${service.serviceCode}.pdf`
+      )
+    } catch (pdfError) {
+      console.error(pdfError)
+      toast.error('No pudimos generar la ODS PDF.')
     }
   }
 
@@ -789,16 +860,98 @@ const CalibrationServiceDetailsPage = () => {
               </DetailTabPanel>
 
               <DetailTabPanel value={activeTab} tab='documents'>
+                <Stack
+                  direction={{ xs: 'column', md: 'row' }}
+                  spacing={1}
+                  mb={2}
+                >
+                  <Button
+                    variant='outlined'
+                    startIcon={<PictureAsPdfOutlinedIcon />}
+                    onClick={() => void handleGenerateQuotePdf()}
+                    disabled={isPdfLoading || !service.items?.length || !service.customerId}
+                  >
+                    Generar cotización PDF
+                  </Button>
+                  <Button
+                    variant='outlined'
+                    startIcon={<PictureAsPdfOutlinedIcon />}
+                    onClick={() => void handleGenerateOdsPdf()}
+                    disabled={isPdfLoading || !service.odsCode}
+                  >
+                    Generar ODS PDF
+                  </Button>
+                </Stack>
+
+                <Typography variant='subtitle2' fontWeight={700} gutterBottom>
+                  PDFs oficiales
+                </Typography>
+                {officialPdfDocuments?.length ? (
+                  <List dense disablePadding sx={{ mb: 2 }}>
+                    {officialPdfDocuments.map((document) => (
+                      <ListItem
+                        key={document.id}
+                        disableGutters
+                        secondaryAction={
+                          <Button
+                            size='small'
+                            startIcon={<DownloadOutlinedIcon />}
+                            onClick={() =>
+                              void handleDownloadDocument(
+                                document.id,
+                                document.originalFileName
+                              )
+                            }
+                            disabled={isPdfLoading}
+                          >
+                            Descargar
+                          </Button>
+                        }
+                      >
+                        <ListItemText
+                          primary={document.title || document.originalFileName}
+                          secondary={`${document.documentType} · v${document.version} · ${formatDateValue(document.uploadedAt)}`}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                ) : (
+                  <Alert severity='info' sx={{ mb: 2 }}>
+                    Aún no hay PDFs oficiales generados para este servicio.
+                  </Alert>
+                )}
+
+                <Typography variant='subtitle2' fontWeight={700} gutterBottom>
+                  Evidencias y soportes
+                </Typography>
                 {decisionDocuments?.length ? (
                   <Alert severity='success' sx={{ mb: 2 }}>
                     Este servicio ya tiene {decisionDocuments.length} evidencia(s)
                     de aprobación o rechazo.
                   </Alert>
                 ) : null}
-                {service.documents?.length ? (
+                {supportDocuments?.length ? (
                   <List dense disablePadding>
-                    {service.documents.map((document) => (
-                      <ListItem key={document.id} disableGutters>
+                    {supportDocuments.map((document) => (
+                      <ListItem
+                        key={document.id}
+                        disableGutters
+                        secondaryAction={
+                          <Button
+                            size='small'
+                            startIcon={<DownloadOutlinedIcon />}
+                            onClick={() =>
+                              void handleDownloadDocument(
+                                document.id,
+                                document.originalFileName
+                              )
+                            }
+                            disabled={isPdfLoading}
+                          >
+                            Descargar
+                          </Button>
+                        }
+                      >
                         <ListItemText
                           primary={document.title || document.originalFileName}
                           secondary={`${document.documentType} · v${document.version} · ${formatDateValue(document.uploadedAt)}`}
@@ -808,7 +961,7 @@ const CalibrationServiceDetailsPage = () => {
                   </List>
                 ) : (
                   <Alert severity='info'>
-                    Aún no hay documentos asociados al servicio.
+                    Aún no hay evidencias ni soportes asociados al servicio.
                   </Alert>
                 )}
               </DetailTabPanel>

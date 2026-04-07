@@ -3,6 +3,7 @@ import { axiosPrivate } from '@utils/api'
 import {
   CalibrationServiceApprovePayload,
   CalibrationService,
+  CalibrationServiceDocumentActionPayload,
   CalibrationServiceDocument,
   CalibrationServiceDocumentUploadPayload,
   CalibrationServiceFilters,
@@ -136,6 +137,37 @@ const calibrationServiceApi = {
       payload
     )
     return response.data
+  },
+
+  generateQuotePdf: async ({
+    serviceId
+  }: CalibrationServiceDocumentActionPayload): Promise<CalibrationServiceDocument> => {
+    const response = await axiosPrivate.post<CalibrationServiceDocument>(
+      `/calibration-services/${serviceId}/generate-quote-pdf`
+    )
+    return response.data
+  },
+
+  generateOdsPdf: async ({
+    serviceId
+  }: CalibrationServiceDocumentActionPayload): Promise<CalibrationServiceDocument> => {
+    const response = await axiosPrivate.post<CalibrationServiceDocument>(
+      `/calibration-services/${serviceId}/generate-ods-pdf`
+    )
+    return response.data
+  },
+
+  downloadDocument: async ({
+    serviceId,
+    documentId
+  }: CalibrationServiceDocumentActionPayload): Promise<Blob> => {
+    const response = await axiosPrivate.get(
+      `/calibration-services/${serviceId}/documents/${documentId}/download`,
+      {
+        responseType: 'blob'
+      }
+    )
+    return response.data
   }
 }
 
@@ -227,6 +259,26 @@ export const useCalibrationServiceMutations = () => {
     }
   })
 
+  const generateQuotePdf = useMutation(calibrationServiceApi.generateQuotePdf, {
+    onSuccess: (_document, variables) => {
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        variables.serviceId
+      ])
+    }
+  })
+
+  const generateOdsPdf = useMutation(calibrationServiceApi.generateOdsPdf, {
+    onSuccess: (_document, variables) => {
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        variables.serviceId
+      ])
+    }
+  })
+
+  const downloadDocument = useMutation(calibrationServiceApi.downloadDocument)
+
   return {
     createService,
     updateService,
@@ -234,6 +286,9 @@ export const useCalibrationServiceMutations = () => {
     requestApproval,
     approveService,
     rejectService,
-    issueOds
+    issueOds,
+    generateQuotePdf,
+    generateOdsPdf,
+    downloadDocument
   }
 }
