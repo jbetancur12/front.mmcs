@@ -23,6 +23,7 @@ import {
 } from '@mui/material'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
 import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined'
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined'
@@ -45,6 +46,9 @@ import CalibrationServiceApprovalDialog, {
   CalibrationServiceDecisionMode,
   CalibrationServiceDecisionValues
 } from './CalibrationServiceApprovalDialog'
+import CalibrationServiceOdsDialog, {
+  CalibrationServiceOdsDialogValues
+} from './CalibrationServiceOdsDialog'
 
 type DetailTab = 'summary' | 'items' | 'documents' | 'history'
 
@@ -86,8 +90,20 @@ const getOtherFieldText = (
   return typeof fieldValue === 'string' ? fieldValue : ''
 }
 
+const getOtherFieldRecord = (
+  otherFields: Record<string, unknown> | undefined,
+  fieldName: string
+) => {
+  const fieldValue = otherFields?.[fieldName]
+  return fieldValue && typeof fieldValue === 'object' && !Array.isArray(fieldValue)
+    ? (fieldValue as Record<string, unknown>)
+    : undefined
+}
+
 const formatDateValue = (value?: string | null) =>
   value ? new Date(value).toLocaleDateString('es-CO') : 'Sin registrar'
+
+const buildTodayValue = () => new Date().toISOString().slice(0, 10)
 
 const DetailTabPanel = ({
   value,
@@ -114,10 +130,12 @@ const CalibrationServiceDetailsPage = () => {
     requestApproval,
     approveService,
     rejectService,
-    uploadDocument
+    uploadDocument,
+    issueOds
   } = useCalibrationServiceMutations()
   const [decisionMode, setDecisionMode] =
     useState<CalibrationServiceDecisionMode | null>(null)
+  const [isOdsDialogOpen, setIsOdsDialogOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<DetailTab>('summary')
   const canManageCommercialStage = useHasRole(COMMERCIAL_WORKSPACE_ROLES)
   const canTakeApprovalDecision = useHasRole(APPROVAL_DECISION_ROLES)
@@ -153,7 +171,21 @@ const CalibrationServiceDetailsPage = () => {
     canManageCommercialStage && service.status === 'draft'
   const canDecideApproval =
     canTakeApprovalDecision && service.status === 'pending_approval'
+  const canIssueOds =
+    canManageCommercialStage &&
+    service.status === 'approved' &&
+    service.approvalStatus === 'approved' &&
+    !service.odsCode
   const approvalNotes = getOtherFieldText(service.otherFields, 'approvalNotes')
+  const odsDetails = getOtherFieldRecord(service.otherFields, 'ods')
+  const odsScheduleWindow =
+    typeof odsDetails?.scheduleWindow === 'string' ? odsDetails.scheduleWindow : ''
+  const odsSignerName =
+    typeof odsDetails?.signerName === 'string' ? odsDetails.signerName : ''
+  const odsCustomerAgreements =
+    typeof odsDetails?.customerAgreements === 'string'
+      ? odsDetails.customerAgreements
+      : ''
   const subtotal = (service.items || []).reduce(
     (accumulator, item) => accumulator + toNumber(item.subtotal),
     0
@@ -171,9 +203,49 @@ const CalibrationServiceDetailsPage = () => {
     approveService.isLoading ||
     rejectService.isLoading ||
     uploadDocument.isLoading
+  const isOdsLoading = issueOds.isLoading
   const decisionDocuments = service.documents?.filter((document) =>
     ['approval_evidence', 'rejection_evidence'].includes(document.documentType)
   )
+  const odsDialogInitialValues: CalibrationServiceOdsDialogValues = {
+    issuedAt: buildTodayValue(),
+    executionCustomerName:
+      service.executionCustomerName || service.customer?.nombre || '',
+    executionSiteName:
+      service.executionSiteName || service.customerSite || '',
+    contactName: service.contactName || '',
+    contactEmail: service.contactEmail || '',
+    contactPhone: service.contactPhone || '',
+    city: service.city || '',
+    department: service.department || '',
+    address: service.address || '',
+    internalNotes: service.internalNotes || '',
+    scheduledFor:
+      typeof odsDetails?.scheduledFor === 'string'
+        ? odsDetails.scheduledFor.slice(0, 10)
+        : '',
+    scheduleWindow: odsScheduleWindow,
+    serviceComments:
+      typeof odsDetails?.serviceComments === 'string'
+        ? odsDetails.serviceComments
+        : '',
+    modificationReason:
+      typeof odsDetails?.modificationReason === 'string'
+        ? odsDetails.modificationReason
+        : '',
+    customerAgreements: odsCustomerAgreements,
+    signerName: odsSignerName,
+    signerRole:
+      typeof odsDetails?.signerRole === 'string' ? odsDetails.signerRole : '',
+    externalReference:
+      typeof odsDetails?.externalReference === 'string'
+        ? odsDetails.externalReference
+        : '',
+    receptionNotes:
+      typeof odsDetails?.receptionNotes === 'string'
+        ? odsDetails.receptionNotes
+        : ''
+  }
 
   const handleRequestApproval = async () => {
     try {
@@ -275,6 +347,43 @@ const CalibrationServiceDetailsPage = () => {
     }
   }
 
+  const handleIssueOds = async (values: CalibrationServiceOdsDialogValues) => {
+    try {
+      await issueOds.mutateAsync({
+        serviceId: String(service.id),
+        issuedAt: values.issuedAt
+          ? new Date(`${values.issuedAt}T12:00:00`).toISOString()
+          : undefined,
+        executionCustomerName: values.executionCustomerName.trim() || null,
+        executionSiteName: values.executionSiteName.trim() || null,
+        contactName: values.contactName.trim() || null,
+        contactEmail: values.contactEmail.trim() || null,
+        contactPhone: values.contactPhone.trim() || null,
+        city: values.city.trim() || null,
+        department: values.department.trim() || null,
+        address: values.address.trim() || null,
+        internalNotes: values.internalNotes.trim() || null,
+        scheduledFor: values.scheduledFor
+          ? new Date(`${values.scheduledFor}T12:00:00`).toISOString()
+          : null,
+        scheduleWindow: values.scheduleWindow.trim() || null,
+        serviceComments: values.serviceComments.trim() || null,
+        modificationReason: values.modificationReason.trim() || null,
+        customerAgreements: values.customerAgreements.trim() || null,
+        signerName: values.signerName.trim() || null,
+        signerRole: values.signerRole.trim() || null,
+        externalReference: values.externalReference.trim() || null,
+        receptionNotes: values.receptionNotes.trim() || null
+      })
+
+      toast.success('La ODS quedó emitida y el semáforo ya está activo.')
+      setIsOdsDialogOpen(false)
+    } catch (odsError) {
+      console.error(odsError)
+      toast.error('No pudimos emitir la ODS.')
+    }
+  }
+
   return (
     <Box p={{ xs: 2, md: 3 }}>
       <Toaster position='top-center' />
@@ -340,6 +449,17 @@ const CalibrationServiceDetailsPage = () => {
                 Aprobar cotización
               </Button>
             </Stack>
+          ) : null}
+          {canIssueOds ? (
+            <Button
+              variant='contained'
+              color='info'
+              startIcon={<DescriptionOutlinedIcon />}
+              onClick={() => setIsOdsDialogOpen(true)}
+              disabled={isOdsLoading}
+            >
+              Emitir ODS
+            </Button>
           ) : null}
           {canEdit ? (
             <Button
@@ -486,6 +606,22 @@ const CalibrationServiceDetailsPage = () => {
                       {service.contactEmail || 'Sin registrar'}
                     </Typography>
                   </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='caption' color='text.secondary'>
+                      Código ODS
+                    </Typography>
+                    <Typography variant='body1'>
+                      {service.odsCode || 'ODS pendiente'}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='caption' color='text.secondary'>
+                      Fecha emisión ODS
+                    </Typography>
+                    <Typography variant='body1'>
+                      {formatDateValue(service.odsGeneratedAt)}
+                    </Typography>
+                  </Grid>
                 </Grid>
 
                 {service.approvalStatus !== 'pending' ? (
@@ -552,6 +688,65 @@ const CalibrationServiceDetailsPage = () => {
                     <Typography variant='body1' sx={{ mt: 0.5 }}>
                       {service.commercialComments}
                     </Typography>
+                  </>
+                ) : null}
+
+                {service.odsCode ? (
+                  <>
+                    <Divider sx={{ my: 2 }} />
+                    <Typography variant='subtitle2' fontWeight={700} gutterBottom>
+                      Datos ODS
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} md={6}>
+                        <Typography variant='caption' color='text.secondary'>
+                          Programada para
+                        </Typography>
+                        <Typography variant='body1'>
+                          {formatDateValue(
+                            typeof odsDetails?.scheduledFor === 'string'
+                              ? odsDetails.scheduledFor
+                              : null
+                          )}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <Typography variant='caption' color='text.secondary'>
+                          Franja
+                        </Typography>
+                        <Typography variant='body1'>
+                          {odsScheduleWindow || 'Sin registrar'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <Typography variant='caption' color='text.secondary'>
+                          Firmante
+                        </Typography>
+                        <Typography variant='body1'>
+                          {odsSignerName || 'Sin registrar'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <Typography variant='caption' color='text.secondary'>
+                          Referencia externa
+                        </Typography>
+                        <Typography variant='body1'>
+                          {typeof odsDetails?.externalReference === 'string'
+                            ? odsDetails.externalReference
+                            : 'Sin registrar'}
+                        </Typography>
+                      </Grid>
+                      {odsCustomerAgreements ? (
+                        <Grid item xs={12}>
+                          <Typography variant='caption' color='text.secondary'>
+                            Acuerdos con el cliente
+                          </Typography>
+                          <Typography variant='body1'>
+                            {odsCustomerAgreements}
+                          </Typography>
+                        </Grid>
+                      ) : null}
+                    </Grid>
                   </>
                 ) : null}
               </DetailTabPanel>
@@ -710,6 +905,16 @@ const CalibrationServiceDetailsPage = () => {
           isLoading={isDecisionLoading}
           onClose={() => setDecisionMode(null)}
           onSubmit={handleDecisionSubmit}
+        />
+      ) : null}
+      {isOdsDialogOpen ? (
+        <CalibrationServiceOdsDialog
+          open={isOdsDialogOpen}
+          serviceCode={service.serviceCode}
+          initialValues={odsDialogInitialValues}
+          isLoading={isOdsLoading}
+          onClose={() => setIsOdsDialogOpen(false)}
+          onSubmit={handleIssueOds}
         />
       ) : null}
     </Box>

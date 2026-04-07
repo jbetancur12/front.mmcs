@@ -6,6 +6,7 @@ import {
   CalibrationServiceDocument,
   CalibrationServiceDocumentUploadPayload,
   CalibrationServiceFilters,
+  CalibrationServiceIssueOdsPayload,
   CalibrationServiceListResponse,
   CalibrationServicePayload,
   CalibrationServiceRejectPayload,
@@ -124,6 +125,17 @@ const calibrationServiceApi = {
       payload
     )
     return response.data
+  },
+
+  issueOds: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServiceIssueOdsPayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/issue-ods`,
+      payload
+    )
+    return response.data
   }
 }
 
@@ -205,12 +217,23 @@ export const useCalibrationServiceMutations = () => {
     }
   })
 
+  const issueOds = useMutation(calibrationServiceApi.issueOds, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
   return {
     createService,
     updateService,
     uploadDocument,
     requestApproval,
     approveService,
-    rejectService
+    rejectService,
+    issueOds
   }
 }

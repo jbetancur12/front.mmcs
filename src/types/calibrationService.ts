@@ -281,3 +281,26 @@ export interface CalibrationServiceRejectPayload {
   rejectedAt?: string
   evidenceDocumentId?: number | null
 }
+
+export interface CalibrationServiceIssueOdsPayload {
+  serviceId: string
+  issuedAt?: string
+  executionCustomerName?: string | null
+  executionSiteName?: string | null
+  contactName?: string | null
+  contactEmail?: string | null
+  contactPhone?: string | null
+  city?: string | null
+  department?: string | null
+  address?: string | null
+  internalNotes?: string | null
+  scheduledFor?: string | null
+  scheduleWindow?: string | null
+  serviceComments?: string | null
+  modificationReason?: string | null
+  customerAgreements?: string | null
+  signerName?: string | null
+  signerRole?: string | null
+  externalReference?: string | null
+  receptionNotes?: string | null
+}
