@@ -31,12 +31,14 @@ import {
   CALIBRATION_SERVICE_APPROVAL_ROLES,
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
+  CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES,
   CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES,
   CALIBRATION_SERVICE_EDIT_ROLES,
   CALIBRATION_SERVICE_ODS_ROLES,
   CALIBRATION_SERVICE_SLA_COLORS,
   CALIBRATION_SERVICE_STATUS_COLORS,
-  CALIBRATION_SERVICE_STATUS_LABELS
+  CALIBRATION_SERVICE_STATUS_LABELS,
+  CALIBRATION_SERVICE_TECHNICAL_ROLES
 } from '../../constants/calibrationServices'
 import {
   useCalibrationService,
@@ -135,9 +137,14 @@ const CalibrationServiceDetailsPage = () => {
   const canUploadDocuments = useHasRole([
     ...CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES
   ])
+  const hasTechnicalRole = useHasRole([...CALIBRATION_SERVICE_TECHNICAL_ROLES])
+  const hasCommercialVisibility = useHasRole([
+    ...CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES
+  ])
   const canGenerateQuotePdf = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const canGenerateOdsPdf = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
   const requestedAction = searchParams.get('open')
+  const isTechnicalOnlyView = hasTechnicalRole && !hasCommercialVisibility
   const canIssueOds =
     canIssueOdsRole &&
     service?.status === 'approved' &&
@@ -613,14 +620,16 @@ const CalibrationServiceDetailsPage = () => {
               color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]}
               label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]}
             />
-            <Chip
-              color={
-                CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]
-              }
-              label={
-                CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]
-              }
-            />
+            {!isTechnicalOnlyView ? (
+              <Chip
+                color={
+                  CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]
+                }
+                label={
+                  CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]
+                }
+              />
+            ) : null}
             <Chip
               color={
                 CALIBRATION_SERVICE_SLA_COLORS[
@@ -635,6 +644,12 @@ const CalibrationServiceDetailsPage = () => {
 
       <Card sx={{ borderRadius: 3, mb: 2 }}>
         <CardContent>
+          {isTechnicalOnlyView ? (
+            <Alert severity='info' sx={{ mb: 2 }}>
+              Vista técnica activa: aquí solo ves la ODS, el semáforo y los
+              datos operativos del servicio.
+            </Alert>
+          ) : null}
           <Grid container spacing={2} alignItems='center'>
             <Grid item xs={12} md={7}>
               <Typography variant='subtitle2' color='text.secondary'>
@@ -702,14 +717,6 @@ const CalibrationServiceDetailsPage = () => {
                   </Grid>
                   <Grid item xs={12} md={6}>
                     <Typography variant='caption' color='text.secondary'>
-                      Canal de solicitud
-                    </Typography>
-                    <Typography variant='body1'>
-                      {service.requestChannel || 'Sin definir'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant='caption' color='text.secondary'>
                       Sede
                     </Typography>
                     <Typography variant='body1'>
@@ -718,14 +725,16 @@ const CalibrationServiceDetailsPage = () => {
                         'Sin sede definida'}
                     </Typography>
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant='caption' color='text.secondary'>
-                      Forma de pago
-                    </Typography>
-                    <Typography variant='body1'>
-                      {service.paymentMethod || 'Sin definir'}
-                    </Typography>
-                  </Grid>
+                  {!isTechnicalOnlyView ? (
+                    <Grid item xs={12} md={6}>
+                      <Typography variant='caption' color='text.secondary'>
+                        Canal de solicitud
+                      </Typography>
+                      <Typography variant='body1'>
+                        {service.requestChannel || 'Sin definir'}
+                      </Typography>
+                    </Grid>
+                  ) : null}
                   <Grid item xs={12} md={6}>
                     <Typography variant='caption' color='text.secondary'>
                       Fecha creación
@@ -744,6 +753,24 @@ const CalibrationServiceDetailsPage = () => {
                   </Grid>
                   <Grid item xs={12} md={6}>
                     <Typography variant='caption' color='text.secondary'>
+                      Teléfono de contacto
+                    </Typography>
+                    <Typography variant='body1'>
+                      {service.contactPhone || 'Sin registrar'}
+                    </Typography>
+                  </Grid>
+                  {!isTechnicalOnlyView ? (
+                    <Grid item xs={12} md={6}>
+                      <Typography variant='caption' color='text.secondary'>
+                        Forma de pago
+                      </Typography>
+                      <Typography variant='body1'>
+                        {service.paymentMethod || 'Sin definir'}
+                      </Typography>
+                    </Grid>
+                  ) : null}
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='caption' color='text.secondary'>
                       Código ODS
                     </Typography>
                     <Typography variant='body1'>
@@ -760,7 +787,7 @@ const CalibrationServiceDetailsPage = () => {
                   </Grid>
                 </Grid>
 
-                {service.approvalStatus !== 'pending' ? (
+                {!isTechnicalOnlyView && service.approvalStatus !== 'pending' ? (
                   <>
                     <Divider sx={{ my: 2 }} />
                     <Typography variant='subtitle2' fontWeight={700} gutterBottom>
@@ -815,7 +842,7 @@ const CalibrationServiceDetailsPage = () => {
                   </>
                 ) : null}
 
-                {service.commercialComments ? (
+                {!isTechnicalOnlyView && service.commercialComments ? (
                   <>
                     <Divider sx={{ my: 2 }} />
                     <Typography variant='caption' color='text.secondary'>
@@ -897,8 +924,12 @@ const CalibrationServiceDetailsPage = () => {
                           <TableCell>Instrumento</TableCell>
                           <TableCell>Tipo servicio</TableCell>
                           <TableCell align='right'>Cantidad</TableCell>
-                          <TableCell align='right'>Subtotal</TableCell>
-                          <TableCell align='right'>Total</TableCell>
+                          {!isTechnicalOnlyView ? (
+                            <TableCell align='right'>Subtotal</TableCell>
+                          ) : null}
+                          {!isTechnicalOnlyView ? (
+                            <TableCell align='right'>Total</TableCell>
+                          ) : null}
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -908,12 +939,16 @@ const CalibrationServiceDetailsPage = () => {
                             <TableCell>{item.instrumentName || 'N/A'}</TableCell>
                             <TableCell>{item.serviceType || 'N/A'}</TableCell>
                             <TableCell align='right'>{item.quantity}</TableCell>
-                            <TableCell align='right'>
-                              {currencyFormatter.format(toNumber(item.subtotal))}
-                            </TableCell>
-                            <TableCell align='right'>
-                              {currencyFormatter.format(toNumber(item.total))}
-                            </TableCell>
+                            {!isTechnicalOnlyView ? (
+                              <TableCell align='right'>
+                                {currencyFormatter.format(toNumber(item.subtotal))}
+                              </TableCell>
+                            ) : null}
+                            {!isTechnicalOnlyView ? (
+                              <TableCell align='right'>
+                                {currencyFormatter.format(toNumber(item.total))}
+                              </TableCell>
+                            ) : null}
                           </TableRow>
                         ))}
                       </TableBody>
@@ -976,25 +1011,29 @@ const CalibrationServiceDetailsPage = () => {
                     {service.events?.length || 0}
                   </Typography>
                 </Stack>
-                <Divider />
-                <Stack direction='row' justifyContent='space-between'>
-                  <Typography color='text.secondary'>Subtotal</Typography>
-                  <Typography fontWeight={600}>
-                    {currencyFormatter.format(subtotal)}
-                  </Typography>
-                </Stack>
-                <Stack direction='row' justifyContent='space-between'>
-                  <Typography color='text.secondary'>IVA</Typography>
-                  <Typography fontWeight={600}>
-                    {currencyFormatter.format(taxTotal)}
-                  </Typography>
-                </Stack>
-                <Stack direction='row' justifyContent='space-between'>
-                  <Typography variant='subtitle1'>Total</Typography>
-                  <Typography variant='subtitle1' fontWeight={700}>
-                    {currencyFormatter.format(grandTotal)}
-                  </Typography>
-                </Stack>
+                {!isTechnicalOnlyView ? (
+                  <>
+                    <Divider />
+                    <Stack direction='row' justifyContent='space-between'>
+                      <Typography color='text.secondary'>Subtotal</Typography>
+                      <Typography fontWeight={600}>
+                        {currencyFormatter.format(subtotal)}
+                      </Typography>
+                    </Stack>
+                    <Stack direction='row' justifyContent='space-between'>
+                      <Typography color='text.secondary'>IVA</Typography>
+                      <Typography fontWeight={600}>
+                        {currencyFormatter.format(taxTotal)}
+                      </Typography>
+                    </Stack>
+                    <Stack direction='row' justifyContent='space-between'>
+                      <Typography variant='subtitle1'>Total</Typography>
+                      <Typography variant='subtitle1' fontWeight={700}>
+                        {currencyFormatter.format(grandTotal)}
+                      </Typography>
+                    </Stack>
+                  </>
+                ) : null}
                 <Divider />
                 <Typography variant='subtitle2' fontWeight={700}>
                   Próximo foco

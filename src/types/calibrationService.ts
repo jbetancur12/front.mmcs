@@ -69,11 +69,11 @@ export interface CalibrationServiceItem {
   intervalText?: string | null
   quantity: number
   serviceType?: string | null
-  unitPrice: number | string
-  taxRate: number | string
-  subtotal: number | string
-  taxTotal: number | string
-  total: number | string
+  unitPrice: number | string | null
+  taxRate: number | string | null
+  subtotal: number | string | null
+  taxTotal: number | string | null
+  total: number | string | null
   notes?: string | null
   sortOrder: number
   otherFields?: Record<string, unknown>

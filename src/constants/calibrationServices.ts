@@ -17,6 +17,17 @@ export const CALIBRATION_SERVICE_ALLOWED_ROLES = [
   'invoicing'
 ] as const
 
+export const CALIBRATION_SERVICE_TECHNICAL_ROLES = ['metrologist'] as const
+
+export const CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES = [
+  'admin',
+  'super_admin',
+  'comp_admin',
+  'comp_requester',
+  'comp_supervisor',
+  'invoicing'
+] as const
+
 export const CALIBRATION_SERVICE_EDIT_ROLES = [
   'admin',
   'super_admin',

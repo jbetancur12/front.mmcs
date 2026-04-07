@@ -28,11 +28,13 @@ import {
   CALIBRATION_SERVICE_APPROVAL_ROLES,
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
+  CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES,
   CALIBRATION_SERVICE_EDIT_ROLES,
   CALIBRATION_SERVICE_ODS_ROLES,
   CALIBRATION_SERVICE_SLA_COLORS,
   CALIBRATION_SERVICE_STATUS_COLORS,
-  CALIBRATION_SERVICE_STATUS_LABELS
+  CALIBRATION_SERVICE_STATUS_LABELS,
+  CALIBRATION_SERVICE_TECHNICAL_ROLES
 } from '../../constants/calibrationServices'
 import {
   useCalibrationServiceMutations,
@@ -59,6 +61,15 @@ const STATUS_OPTIONS: Array<{
   { value: 'pending_approval', label: 'Pendiente de aprobación' },
   { value: 'rejected', label: 'Rechazada' },
   { value: 'approved', label: 'Aprobada' },
+  { value: 'ods_issued', label: 'ODS emitida' },
+  { value: 'pending_programming', label: 'Pendiente de programación' }
+]
+
+const TECHNICAL_STATUS_OPTIONS: Array<{
+  value: CalibrationServiceStatus | typeof FILTER_ALL
+  label: string
+}> = [
+  { value: FILTER_ALL, label: 'Todos los estados técnicos' },
   { value: 'ods_issued', label: 'ODS emitida' },
   { value: 'pending_programming', label: 'Pendiente de programación' }
 ]
@@ -104,7 +115,7 @@ const getItemsTotal = (service: CalibrationService) => {
   return (service.items ?? []).reduce((accumulator, item) => {
     const value =
       typeof item.total === 'string' ? parseFloat(item.total) : item.total
-    return accumulator + (Number.isFinite(value) ? value : 0)
+    return accumulator + (typeof value === 'number' && Number.isFinite(value) ? value : 0)
   }, 0)
 }
 
@@ -143,6 +154,11 @@ const CalibrationServicesPage = () => {
   ])
   const canIssueOds = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
   const canViewModule = useHasRole([...CALIBRATION_SERVICE_ALLOWED_ROLES])
+  const hasTechnicalRole = useHasRole([...CALIBRATION_SERVICE_TECHNICAL_ROLES])
+  const hasCommercialVisibility = useHasRole([
+    ...CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES
+  ])
+  const isTechnicalOnlyView = hasTechnicalRole && !hasCommercialVisibility
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<
@@ -173,7 +189,7 @@ const CalibrationServicesPage = () => {
     queryFilters.status = statusFilter
   }
 
-  if (approvalFilter !== FILTER_ALL) {
+  if (!isTechnicalOnlyView && approvalFilter !== FILTER_ALL) {
     queryFilters.approvalStatus = approvalFilter
   }
 
@@ -218,6 +234,12 @@ const CalibrationServicesPage = () => {
 
   const pendingApprovalCount = visibleServices.filter(
     (service) => service.status === 'pending_approval'
+  ).length
+  const odsIssuedCount = visibleServices.filter(
+    (service) => service.status === 'ods_issued'
+  ).length
+  const pendingProgrammingCount = visibleServices.filter(
+    (service) => service.status === 'pending_programming'
   ).length
   const readyForOdsCount = visibleServices.filter(
     (service) =>
@@ -306,8 +328,9 @@ const CalibrationServicesPage = () => {
             Servicios de calibración
           </Typography>
           <Typography variant='body1' color='text.secondary' sx={{ mt: 1 }}>
-            Bandeja operativa para cotización, aprobación, emisión de ODS y
-            seguimiento base del servicio.
+            {isTechnicalOnlyView
+              ? 'Bandeja técnica para ODS, programación y seguimiento operativo del servicio.'
+              : 'Bandeja operativa para cotización, aprobación, emisión de ODS y seguimiento base del servicio.'}
           </Typography>
         </Box>
 
@@ -354,13 +377,15 @@ const CalibrationServicesPage = () => {
           <Card sx={{ borderRadius: 3 }}>
             <CardContent>
               <Typography variant='overline' color='text.secondary'>
-                Pendientes aprobación
+                {isTechnicalOnlyView ? 'ODS emitidas' : 'Pendientes aprobación'}
               </Typography>
               <Typography variant='h4' fontWeight={700}>
-                {pendingApprovalCount}
+                {isTechnicalOnlyView ? odsIssuedCount : pendingApprovalCount}
               </Typography>
               <Typography variant='body2' color='text.secondary'>
-                Requieren decisión comercial formal
+                {isTechnicalOnlyView
+                  ? 'Servicios ya liberados al frente técnico'
+                  : 'Requieren decisión comercial formal'}
               </Typography>
             </CardContent>
           </Card>
@@ -369,13 +394,15 @@ const CalibrationServicesPage = () => {
           <Card sx={{ borderRadius: 3 }}>
             <CardContent>
               <Typography variant='overline' color='text.secondary'>
-                Listos para ODS
+                {isTechnicalOnlyView ? 'Pendientes programación' : 'Listos para ODS'}
               </Typography>
               <Typography variant='h4' fontWeight={700}>
-                {readyForOdsCount}
+                {isTechnicalOnlyView ? pendingProgrammingCount : readyForOdsCount}
               </Typography>
               <Typography variant='body2' color='text.secondary'>
-                Aprobados y pendientes de emisión
+                {isTechnicalOnlyView
+                  ? 'Requieren agenda o coordinación operativa'
+                  : 'Aprobados y pendientes de emisión'}
               </Typography>
             </CardContent>
           </Card>
@@ -440,34 +467,39 @@ const CalibrationServicesPage = () => {
                   )
                 }
               >
-                {STATUS_OPTIONS.map((option) => (
+                {(isTechnicalOnlyView
+                  ? TECHNICAL_STATUS_OPTIONS
+                  : STATUS_OPTIONS
+                ).map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.label}
                   </MenuItem>
                 ))}
               </TextField>
             </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                select
-                fullWidth
-                label='Aprobación'
-                value={approvalFilter}
-                onChange={(event) =>
-                  setApprovalFilter(
-                    event.target.value as
-                      | CalibrationServiceApprovalStatus
-                      | typeof FILTER_ALL
-                  )
-                }
-              >
-                {APPROVAL_OPTIONS.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
+            {!isTechnicalOnlyView ? (
+              <Grid item xs={12} md={4}>
+                <TextField
+                  select
+                  fullWidth
+                  label='Aprobación'
+                  value={approvalFilter}
+                  onChange={(event) =>
+                    setApprovalFilter(
+                      event.target.value as
+                        | CalibrationServiceApprovalStatus
+                        | typeof FILTER_ALL
+                    )
+                  }
+                >
+                  {APPROVAL_OPTIONS.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+            ) : null}
             <Grid item xs={12} md={4}>
               <TextField
                 select
@@ -583,19 +615,21 @@ const CalibrationServicesPage = () => {
                           color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]}
                           label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]}
                         />
-                        <Chip
-                          size='small'
-                          color={
-                            CALIBRATION_SERVICE_APPROVAL_COLORS[
-                              service.approvalStatus
-                            ]
-                          }
-                          label={
-                            CALIBRATION_SERVICE_APPROVAL_LABELS[
-                              service.approvalStatus
-                            ]
-                          }
-                        />
+                        {!isTechnicalOnlyView ? (
+                          <Chip
+                            size='small'
+                            color={
+                              CALIBRATION_SERVICE_APPROVAL_COLORS[
+                                service.approvalStatus
+                              ]
+                            }
+                            label={
+                              CALIBRATION_SERVICE_APPROVAL_LABELS[
+                                service.approvalStatus
+                              ]
+                            }
+                          />
+                        ) : null}
                         <Chip
                           size='small'
                           color={
@@ -642,7 +676,7 @@ const CalibrationServicesPage = () => {
                       <Grid container spacing={2}>
                         <Grid item xs={12} sm={6} md={3}>
                           <Typography variant='caption' color='text.secondary'>
-                            Ítems cotizados
+                            Ítems del servicio
                           </Typography>
                           <Typography variant='body1' fontWeight={600}>
                             {service.items?.length ?? 0}
@@ -650,10 +684,12 @@ const CalibrationServicesPage = () => {
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>
                           <Typography variant='caption' color='text.secondary'>
-                            Total estimado
+                            {isTechnicalOnlyView ? 'ODS' : 'Total estimado'}
                           </Typography>
                           <Typography variant='body1' fontWeight={600}>
-                            {currencyFormatter.format(getItemsTotal(service))}
+                            {isTechnicalOnlyView
+                              ? service.odsCode || 'Pendiente'
+                              : currencyFormatter.format(getItemsTotal(service))}
                           </Typography>
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>

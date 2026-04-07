@@ -105,6 +105,13 @@ const CalibrationServiceDocumentsPanel = ({
     resetUploadFields()
   }
 
+  const showQuotePdfAction =
+    canGenerateQuotePdf ||
+    officialPdfDocuments.some((document) => document.documentType === 'quote_pdf')
+  const showOdsPdfAction =
+    canGenerateOdsPdf ||
+    officialPdfDocuments.some((document) => document.documentType === 'ods_pdf')
+
   const renderDocumentList = (documents: CalibrationServiceDocument[]) => {
     if (!documents.length) {
       return null
@@ -159,24 +166,30 @@ const CalibrationServiceDocumentsPanel = ({
 
   return (
     <Stack spacing={3}>
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
-        <Button
-          variant='outlined'
-          startIcon={<PictureAsPdfOutlinedIcon />}
-          onClick={() => void onGenerateQuotePdf()}
-          disabled={isBusy || !hasItems || !hasCustomer || !canGenerateQuotePdf}
-        >
-          Generar cotización PDF
-        </Button>
-        <Button
-          variant='outlined'
-          startIcon={<PictureAsPdfOutlinedIcon />}
-          onClick={() => void onGenerateOdsPdf()}
-          disabled={isBusy || !hasOds || !canGenerateOdsPdf}
-        >
-          Generar ODS PDF
-        </Button>
-      </Stack>
+      {showQuotePdfAction || showOdsPdfAction ? (
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+          {showQuotePdfAction ? (
+            <Button
+              variant='outlined'
+              startIcon={<PictureAsPdfOutlinedIcon />}
+              onClick={() => void onGenerateQuotePdf()}
+              disabled={isBusy || !hasItems || !hasCustomer || !canGenerateQuotePdf}
+            >
+              Generar cotización PDF
+            </Button>
+          ) : null}
+          {showOdsPdfAction ? (
+            <Button
+              variant='outlined'
+              startIcon={<PictureAsPdfOutlinedIcon />}
+              onClick={() => void onGenerateOdsPdf()}
+              disabled={isBusy || !hasOds || !canGenerateOdsPdf}
+            >
+              Generar ODS PDF
+            </Button>
+          ) : null}
+        </Stack>
+      ) : null}
 
       <Box>
         <Typography variant='subtitle2' fontWeight={700} gutterBottom>
