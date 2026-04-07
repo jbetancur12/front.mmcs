@@ -22,9 +22,7 @@ import {
   TextField,
   Typography
 } from '@mui/material'
-import AddOutlinedIcon from '@mui/icons-material/AddOutlined'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
-import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
@@ -47,6 +45,7 @@ import {
   CalibrationServicePayload,
   CalibrationServiceProductSummary
 } from '../../types/calibrationService'
+import CalibrationServiceItemsEditor from './CalibrationServiceItemsEditor'
 
 type FormItem = CalibrationServiceItemPayload & { localId: string }
 type FormState = Omit<CalibrationServicePayload, 'items'> & { items: FormItem[] }
@@ -279,6 +278,42 @@ const CalibrationServiceWorkspacePage = () => {
       ...previous,
       items: previous.items.map((item) =>
         item.localId === localId ? { ...item, [field]: value } : item
+      )
+    }))
+  }
+
+  const handleAddItem = () => {
+    setFormState((previous) => ({
+      ...previous,
+      items: [...previous.items, createEmptyItem()]
+    }))
+  }
+
+  const handleRemoveItem = (localId: string) => {
+    setFormState((previous) => ({
+      ...previous,
+      items:
+        previous.items.length === 1
+          ? [createEmptyItem()]
+          : previous.items.filter((candidate) => candidate.localId !== localId)
+    }))
+  }
+
+  const handleSelectProduct = (
+    localId: string,
+    product: CalibrationServiceProductSummary | null
+  ) => {
+    setFormState((previous) => ({
+      ...previous,
+      items: previous.items.map((candidate) =>
+        candidate.localId === localId
+          ? {
+              ...candidate,
+              productId: product?.id ?? null,
+              itemName: product?.name || candidate.itemName,
+              unitPrice: product?.price ?? candidate.unitPrice
+            }
+          : candidate
       )
     }))
   }
@@ -638,110 +673,17 @@ const CalibrationServiceWorkspacePage = () => {
 
           <Card sx={{ borderRadius: 3, mb: 2 }}>
             <CardContent>
-              <Stack direction={{ xs: 'column', md: 'row' }} justifyContent='space-between' spacing={2} mb={2}>
-                <Box>
-                  <Typography variant='h6' fontWeight={700}>
-                    Items cotizados
-                  </Typography>
-                  <Typography variant='body2' color='text.secondary'>
-                    Version base editable. Luego la llevamos a tabla operativa.
-                  </Typography>
-                </Box>
-                <Button variant='outlined' startIcon={<AddOutlinedIcon />} onClick={() => setFormState((previous) => ({ ...previous, items: [...previous.items, createEmptyItem()] }))} disabled={!canEdit || isBusy}>
-                  Agregar item
-                </Button>
-              </Stack>
-              <Stack spacing={2}>
-                {formState.items.map((item, index) => {
-                  const totals = getItemTotals(item)
-                  const selectedProduct = products.find((product) => product.id === item.productId) || null
-                  return (
-                    <Card key={item.localId} variant='outlined'>
-                      <CardContent>
-                        <Stack direction={{ xs: 'column', md: 'row' }} justifyContent='space-between' spacing={2} mb={2}>
-                          <Typography variant='subtitle1' fontWeight={700}>
-                            Item {index + 1}
-                          </Typography>
-                          <Button color='error' startIcon={<DeleteOutlineOutlinedIcon />} onClick={() => setFormState((previous) => ({ ...previous, items: previous.items.length === 1 ? [createEmptyItem()] : previous.items.filter((candidate) => candidate.localId !== item.localId) }))} disabled={!canEdit || isBusy}>
-                            Quitar
-                          </Button>
-                        </Stack>
-                        <Grid container spacing={2}>
-                          <Grid item xs={12} md={6}>
-                            <Autocomplete
-                              options={products}
-                              value={selectedProduct}
-                              getOptionLabel={(option) => option.name || ''}
-                              onChange={(_, value) =>
-                                setFormState((previous) => ({
-                                  ...previous,
-                                  items: previous.items.map((candidate) =>
-                                    candidate.localId === item.localId
-                                      ? {
-                                          ...candidate,
-                                          productId: value?.id ?? null,
-                                          itemName: value?.name || candidate.itemName,
-                                          unitPrice: value?.price ?? candidate.unitPrice
-                                        }
-                                      : candidate
-                                  )
-                                }))
-                              }
-                              disabled={!canEdit || isBusy}
-                              renderInput={(params) => <TextField {...params} label='Producto catalogo' />}
-                            />
-                          </Grid>
-                          <Grid item xs={12} md={6}>
-                            <TextField fullWidth required label='Item' value={item.itemName} disabled={!canEdit || isBusy} onChange={(event) => setItemField(item.localId, 'itemName', event.target.value)} />
-                          </Grid>
-                          <Grid item xs={12} md={6}>
-                            <TextField fullWidth label='Instrumento' value={item.instrumentName || ''} disabled={!canEdit || isBusy} onChange={(event) => setItemField(item.localId, 'instrumentName', event.target.value)} />
-                          </Grid>
-                          <Grid item xs={12} md={6}>
-                            <FormControl fullWidth>
-                              <InputLabel>Tipo servicio</InputLabel>
-                              <Select value={item.serviceType || 'Trazable'} label='Tipo servicio' disabled={!canEdit || isBusy} onChange={(event) => setItemField(item.localId, 'serviceType', event.target.value)}>
-                                {SERVICE_TYPE_OPTIONS.map((option) => (
-                                  <MenuItem key={option} value={option}>
-                                    {option}
-                                  </MenuItem>
-                                ))}
-                              </Select>
-                            </FormControl>
-                          </Grid>
-                          <Grid item xs={12} md={4}>
-                            <TextField fullWidth label='Intervalo' value={item.intervalText || ''} disabled={!canEdit || isBusy} onChange={(event) => setItemField(item.localId, 'intervalText', event.target.value)} />
-                          </Grid>
-                          <Grid item xs={12} md={4}>
-                            <TextField fullWidth type='number' label='Cantidad' value={item.quantity} disabled={!canEdit || isBusy} onChange={(event) => setItemField(item.localId, 'quantity', Number(event.target.value))} />
-                          </Grid>
-                          <Grid item xs={12} md={4}>
-                            <TextField fullWidth type='number' label='Valor unitario' value={item.unitPrice} disabled={!canEdit || isBusy} onChange={(event) => setItemField(item.localId, 'unitPrice', Number(event.target.value))} />
-                          </Grid>
-                          <Grid item xs={12} md={4}>
-                            <TextField fullWidth type='number' label='IVA %' value={item.taxRate} disabled={!canEdit || isBusy} onChange={(event) => setItemField(item.localId, 'taxRate', Number(event.target.value))} />
-                          </Grid>
-                          <Grid item xs={12} md={8}>
-                            <TextField fullWidth multiline minRows={2} label='Notas del item' value={item.notes || ''} disabled={!canEdit || isBusy} onChange={(event) => setItemField(item.localId, 'notes', event.target.value)} />
-                          </Grid>
-                        </Grid>
-                        <Divider sx={{ my: 2 }} />
-                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent='space-between'>
-                          <Typography variant='body2' color='text.secondary'>
-                            Subtotal: {currencyFormatter.format(totals.subtotal)}
-                          </Typography>
-                          <Typography variant='body2' color='text.secondary'>
-                            IVA: {currencyFormatter.format(totals.taxTotal)}
-                          </Typography>
-                          <Typography variant='subtitle2' fontWeight={700}>
-                            Total linea: {currencyFormatter.format(totals.total)}
-                          </Typography>
-                        </Stack>
-                      </CardContent>
-                    </Card>
-                  )
-                })}
-              </Stack>
+              <CalibrationServiceItemsEditor
+                items={formState.items}
+                products={products}
+                serviceTypeOptions={SERVICE_TYPE_OPTIONS}
+                canEdit={canEdit}
+                isBusy={isBusy}
+                onAddItem={handleAddItem}
+                onRemoveItem={handleRemoveItem}
+                onSelectProduct={handleSelectProduct}
+                onChangeItemField={setItemField}
+              />
             </CardContent>
           </Card>
 
