@@ -40,6 +40,8 @@ interface CalibrationServiceDocumentsPanelProps {
   hasItems: boolean
   hasOds: boolean
   canUploadDocuments?: boolean
+  canGenerateQuotePdf?: boolean
+  canGenerateOdsPdf?: boolean
   officialPdfDocuments: CalibrationServiceDocument[]
   supportDocuments: CalibrationServiceDocument[]
   decisionDocuments: CalibrationServiceDocument[]
@@ -64,6 +66,8 @@ const CalibrationServiceDocumentsPanel = ({
   hasItems,
   hasOds,
   canUploadDocuments = false,
+  canGenerateQuotePdf = false,
+  canGenerateOdsPdf = false,
   officialPdfDocuments,
   supportDocuments,
   decisionDocuments,
@@ -160,7 +164,7 @@ const CalibrationServiceDocumentsPanel = ({
           variant='outlined'
           startIcon={<PictureAsPdfOutlinedIcon />}
           onClick={() => void onGenerateQuotePdf()}
-          disabled={isBusy || !hasItems || !hasCustomer}
+          disabled={isBusy || !hasItems || !hasCustomer || !canGenerateQuotePdf}
         >
           Generar cotización PDF
         </Button>
@@ -168,7 +172,7 @@ const CalibrationServiceDocumentsPanel = ({
           variant='outlined'
           startIcon={<PictureAsPdfOutlinedIcon />}
           onClick={() => void onGenerateOdsPdf()}
-          disabled={isBusy || !hasOds}
+          disabled={isBusy || !hasOds || !canGenerateOdsPdf}
         >
           Generar ODS PDF
         </Button>

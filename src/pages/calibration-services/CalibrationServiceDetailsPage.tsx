@@ -135,6 +135,8 @@ const CalibrationServiceDetailsPage = () => {
   const canUploadDocuments = useHasRole([
     ...CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES
   ])
+  const canGenerateQuotePdf = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
+  const canGenerateOdsPdf = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
 
   if (isLoading) {
     return (
@@ -929,6 +931,8 @@ const CalibrationServiceDetailsPage = () => {
                   hasItems={Boolean(service.items?.length)}
                   hasOds={Boolean(service.odsCode)}
                   canUploadDocuments={canUploadDocuments}
+                  canGenerateQuotePdf={canGenerateQuotePdf}
+                  canGenerateOdsPdf={canGenerateOdsPdf}
                   officialPdfDocuments={officialPdfDocuments || []}
                   supportDocuments={supportDocuments || []}
                   decisionDocuments={decisionDocuments || []}
