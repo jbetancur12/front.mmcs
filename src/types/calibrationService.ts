@@ -12,6 +12,12 @@ export type CalibrationServiceApprovalStatus =
   | 'rejected'
 
 export type CalibrationServiceScopeType = 'general' | 'site'
+export type CalibrationServiceSlaIndicatorColor =
+  | 'gray'
+  | 'green'
+  | 'yellow'
+  | 'red'
+  | 'blue'
 
 export type CalibrationServiceDocumentType =
   | 'request_evidence'
@@ -116,6 +122,19 @@ export interface CalibrationServiceEvent {
   updatedAt?: string
 }
 
+export interface CalibrationServiceSlaIndicator {
+  color: CalibrationServiceSlaIndicatorColor
+  label: string
+  message: string
+  activePhase: string
+  isActive: boolean
+  isClosed: boolean
+  startedAt?: string | null
+  businessDaysElapsed: number
+  warningBusinessDays: number
+  targetBusinessDays: number
+}
+
 export interface CalibrationService {
   id: number
   serviceCode: string
@@ -167,6 +186,7 @@ export interface CalibrationService {
   items?: CalibrationServiceItem[]
   documents?: CalibrationServiceDocument[]
   events?: CalibrationServiceEvent[]
+  slaIndicator?: CalibrationServiceSlaIndicator
 }
 
 export interface CalibrationServiceFilters {

@@ -1,6 +1,7 @@
 import { ChipProps } from '@mui/material'
 import {
   CalibrationServiceApprovalStatus,
+  CalibrationServiceSlaIndicatorColor,
   CalibrationServiceStatus
 } from '../types/calibrationService'
 
@@ -54,4 +55,15 @@ export const CALIBRATION_SERVICE_APPROVAL_COLORS: Record<
   pending: 'warning',
   approved: 'success',
   rejected: 'error'
+}
+
+export const CALIBRATION_SERVICE_SLA_COLORS: Record<
+  CalibrationServiceSlaIndicatorColor,
+  ChipProps['color']
+> = {
+  gray: 'default',
+  green: 'success',
+  yellow: 'warning',
+  red: 'error',
+  blue: 'info'
 }

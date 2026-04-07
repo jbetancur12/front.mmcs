@@ -12,11 +12,13 @@ import {
   ListItem,
   ListItemText,
   Stack,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
+  Tabs,
   Typography
 } from '@mui/material'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
@@ -25,11 +27,12 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined'
 import { Toaster, toast } from 'react-hot-toast'
-import { useState } from 'react'
+import { ReactNode, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
+  CALIBRATION_SERVICE_SLA_COLORS,
   CALIBRATION_SERVICE_STATUS_COLORS,
   CALIBRATION_SERVICE_STATUS_LABELS
 } from '../../constants/calibrationServices'
@@ -37,10 +40,28 @@ import {
   useCalibrationService,
   useCalibrationServiceMutations
 } from '../../hooks/useCalibrationServices'
+import { useHasRole } from '../../utils/functions'
 import CalibrationServiceApprovalDialog, {
   CalibrationServiceDecisionMode,
   CalibrationServiceDecisionValues
 } from './CalibrationServiceApprovalDialog'
+
+type DetailTab = 'summary' | 'items' | 'documents' | 'history'
+
+const COMMERCIAL_WORKSPACE_ROLES = [
+  'admin',
+  'super_admin',
+  'comp_admin',
+  'comp_requester',
+  'comp_supervisor'
+]
+
+const APPROVAL_DECISION_ROLES = [
+  'admin',
+  'super_admin',
+  'comp_admin',
+  'comp_supervisor'
+]
 
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -65,6 +86,25 @@ const getOtherFieldText = (
   return typeof fieldValue === 'string' ? fieldValue : ''
 }
 
+const formatDateValue = (value?: string | null) =>
+  value ? new Date(value).toLocaleDateString('es-CO') : 'Sin registrar'
+
+const DetailTabPanel = ({
+  value,
+  tab,
+  children
+}: {
+  value: DetailTab
+  tab: DetailTab
+  children: ReactNode
+}) => {
+  if (value !== tab) {
+    return null
+  }
+
+  return <Box sx={{ pt: 3 }}>{children}</Box>
+}
+
 const CalibrationServiceDetailsPage = () => {
   const navigate = useNavigate()
   const { serviceId } = useParams<{ serviceId: string }>()
@@ -78,6 +118,9 @@ const CalibrationServiceDetailsPage = () => {
   } = useCalibrationServiceMutations()
   const [decisionMode, setDecisionMode] =
     useState<CalibrationServiceDecisionMode | null>(null)
+  const [activeTab, setActiveTab] = useState<DetailTab>('summary')
+  const canManageCommercialStage = useHasRole(COMMERCIAL_WORKSPACE_ROLES)
+  const canTakeApprovalDecision = useHasRole(APPROVAL_DECISION_ROLES)
 
   if (isLoading) {
     return (
@@ -103,10 +146,26 @@ const CalibrationServiceDetailsPage = () => {
     )
   }
 
-  const canEdit = ['draft', 'pending_approval'].includes(service.status)
-  const canRequestApproval = service.status === 'draft'
-  const canDecideApproval = service.status === 'pending_approval'
+  const canEdit =
+    canManageCommercialStage &&
+    ['draft', 'pending_approval'].includes(service.status)
+  const canRequestApproval =
+    canManageCommercialStage && service.status === 'draft'
+  const canDecideApproval =
+    canTakeApprovalDecision && service.status === 'pending_approval'
   const approvalNotes = getOtherFieldText(service.otherFields, 'approvalNotes')
+  const subtotal = (service.items || []).reduce(
+    (accumulator, item) => accumulator + toNumber(item.subtotal),
+    0
+  )
+  const taxTotal = (service.items || []).reduce(
+    (accumulator, item) => accumulator + toNumber(item.taxTotal),
+    0
+  )
+  const grandTotal = (service.items || []).reduce(
+    (accumulator, item) => accumulator + toNumber(item.total),
+    0
+  )
   const isDecisionLoading =
     requestApproval.isLoading ||
     approveService.isLoading ||
@@ -241,6 +300,12 @@ const CalibrationServiceDetailsPage = () => {
               service.executionCustomerName ||
               'Cliente pendiente'}
           </Typography>
+          <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
+            {service.customerSite ||
+              service.executionSiteName ||
+              'Sede pendiente'}{' '}
+            · {service.contactName || 'Sin contacto principal'}
+          </Typography>
         </Box>
 
         <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
@@ -287,232 +352,352 @@ const CalibrationServiceDetailsPage = () => {
               Editar servicio
             </Button>
           ) : null}
-          <Chip
-            color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]}
-            label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]}
-          />
-          <Chip
-            color={
-              CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]
-            }
-            label={
-              CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]
-            }
-          />
+          <Stack direction='row' spacing={1} flexWrap='wrap'>
+            <Chip
+              color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]}
+              label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]}
+            />
+            <Chip
+              color={
+                CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]
+              }
+              label={
+                CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]
+              }
+            />
+            <Chip
+              color={
+                CALIBRATION_SERVICE_SLA_COLORS[
+                  service.slaIndicator?.color || 'gray'
+                ]
+              }
+              label={service.slaIndicator?.label || 'SLA no iniciado'}
+            />
+          </Stack>
         </Stack>
       </Stack>
 
+      <Card sx={{ borderRadius: 3, mb: 2 }}>
+        <CardContent>
+          <Grid container spacing={2} alignItems='center'>
+            <Grid item xs={12} md={7}>
+              <Typography variant='subtitle2' color='text.secondary'>
+                Semáforo actual
+              </Typography>
+              <Typography variant='h6' fontWeight={700}>
+                {service.slaIndicator?.label || 'SLA no iniciado'}
+              </Typography>
+              <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
+                {service.slaIndicator?.message ||
+                  'Todavía no hay un SLA activo para este servicio.'}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} md={5}>
+              <Stack spacing={0.75}>
+                <Typography variant='body2' color='text.secondary'>
+                  Días hábiles transcurridos: {service.slaIndicator?.businessDaysElapsed || 0}
+                </Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  Umbral de alerta: {service.slaIndicator?.warningBusinessDays || 2}
+                </Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  SLA objetivo: {service.slaIndicator?.targetBusinessDays || 3}
+                </Typography>
+              </Stack>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
       <Grid container spacing={2}>
         <Grid item xs={12} lg={8}>
-          <Card sx={{ borderRadius: 3, mb: 2 }}>
+          <Card sx={{ borderRadius: 3 }}>
             <CardContent>
-              <Typography variant='h6' fontWeight={700} gutterBottom>
-                Resumen
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
-                  <Typography variant='caption' color='text.secondary'>
-                    Contacto
-                  </Typography>
-                  <Typography variant='body1'>
-                    {service.contactName || 'Sin contacto'}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Typography variant='caption' color='text.secondary'>
-                    Canal de solicitud
-                  </Typography>
-                  <Typography variant='body1'>
-                    {service.requestChannel || 'Sin definir'}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Typography variant='caption' color='text.secondary'>
-                    Sede
-                  </Typography>
-                  <Typography variant='body1'>
-                    {service.customerSite ||
-                      service.executionSiteName ||
-                      'Sin sede definida'}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Typography variant='caption' color='text.secondary'>
-                    Forma de pago
-                  </Typography>
-                  <Typography variant='body1'>
-                    {service.paymentMethod || 'Sin definir'}
-                  </Typography>
-                </Grid>
-              </Grid>
+              <Tabs
+                value={activeTab}
+                onChange={(_, value: DetailTab) => setActiveTab(value)}
+                variant='scrollable'
+                allowScrollButtonsMobile
+              >
+                <Tab label='Resumen' value='summary' />
+                <Tab
+                  label={`Ítems (${service.items?.length || 0})`}
+                  value='items'
+                />
+                <Tab
+                  label={`Documentos (${service.documents?.length || 0})`}
+                  value='documents'
+                />
+                <Tab
+                  label={`Historial (${service.events?.length || 0})`}
+                  value='history'
+                />
+              </Tabs>
 
-              {service.approvalStatus !== 'pending' ? (
-                <>
-                  <Divider sx={{ my: 2 }} />
-                  <Typography variant='subtitle2' fontWeight={700} gutterBottom>
-                    Decisión comercial
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
-                      <Typography variant='caption' color='text.secondary'>
-                        Medio
-                      </Typography>
-                      <Typography variant='body1'>
-                        {service.approvalChannel || 'Sin registrar'}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Typography variant='caption' color='text.secondary'>
-                        Referencia
-                      </Typography>
-                      <Typography variant='body1'>
-                        {service.approvalReference || 'Sin registrar'}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Typography variant='caption' color='text.secondary'>
-                        Fecha
-                      </Typography>
-                      <Typography variant='body1'>
-                        {service.approvedAt || service.rejectedAt
-                          ? new Date(
-                              service.approvedAt || service.rejectedAt || ''
-                            ).toLocaleDateString('es-CO')
-                          : 'Sin registrar'}
-                      </Typography>
-                    </Grid>
-                    {service.rejectionReason ? (
-                      <Grid item xs={12}>
-                        <Typography variant='caption' color='text.secondary'>
-                          Motivo de rechazo
-                        </Typography>
-                        <Typography variant='body1'>
-                          {service.rejectionReason}
-                        </Typography>
-                      </Grid>
-                    ) : null}
-                    {approvalNotes ? (
-                      <Grid item xs={12}>
-                        <Typography variant='caption' color='text.secondary'>
-                          Observación de aprobación
-                        </Typography>
-                        <Typography variant='body1'>
-                          {approvalNotes}
-                        </Typography>
-                      </Grid>
-                    ) : null}
+              <DetailTabPanel value={activeTab} tab='summary'>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='caption' color='text.secondary'>
+                      Contacto
+                    </Typography>
+                    <Typography variant='body1'>
+                      {service.contactName || 'Sin contacto'}
+                    </Typography>
                   </Grid>
-                </>
-              ) : null}
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='caption' color='text.secondary'>
+                      Canal de solicitud
+                    </Typography>
+                    <Typography variant='body1'>
+                      {service.requestChannel || 'Sin definir'}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='caption' color='text.secondary'>
+                      Sede
+                    </Typography>
+                    <Typography variant='body1'>
+                      {service.customerSite ||
+                        service.executionSiteName ||
+                        'Sin sede definida'}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='caption' color='text.secondary'>
+                      Forma de pago
+                    </Typography>
+                    <Typography variant='body1'>
+                      {service.paymentMethod || 'Sin definir'}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='caption' color='text.secondary'>
+                      Fecha creación
+                    </Typography>
+                    <Typography variant='body1'>
+                      {formatDateValue(service.createdAt)}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant='caption' color='text.secondary'>
+                      Email de contacto
+                    </Typography>
+                    <Typography variant='body1'>
+                      {service.contactEmail || 'Sin registrar'}
+                    </Typography>
+                  </Grid>
+                </Grid>
 
-              {service.commercialComments ? (
-                <>
-                  <Divider sx={{ my: 2 }} />
-                  <Typography variant='caption' color='text.secondary'>
-                    Comentarios comerciales
-                  </Typography>
-                  <Typography variant='body1' sx={{ mt: 0.5 }}>
-                    {service.commercialComments}
-                  </Typography>
-                </>
-              ) : null}
-            </CardContent>
-          </Card>
+                {service.approvalStatus !== 'pending' ? (
+                  <>
+                    <Divider sx={{ my: 2 }} />
+                    <Typography variant='subtitle2' fontWeight={700} gutterBottom>
+                      Decisión comercial
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} md={6}>
+                        <Typography variant='caption' color='text.secondary'>
+                          Medio
+                        </Typography>
+                        <Typography variant='body1'>
+                          {service.approvalChannel || 'Sin registrar'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <Typography variant='caption' color='text.secondary'>
+                          Referencia
+                        </Typography>
+                        <Typography variant='body1'>
+                          {service.approvalReference || 'Sin registrar'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <Typography variant='caption' color='text.secondary'>
+                          Fecha
+                        </Typography>
+                        <Typography variant='body1'>
+                          {formatDateValue(service.approvedAt || service.rejectedAt)}
+                        </Typography>
+                      </Grid>
+                      {service.rejectionReason ? (
+                        <Grid item xs={12}>
+                          <Typography variant='caption' color='text.secondary'>
+                            Motivo de rechazo
+                          </Typography>
+                          <Typography variant='body1'>
+                            {service.rejectionReason}
+                          </Typography>
+                        </Grid>
+                      ) : null}
+                      {approvalNotes ? (
+                        <Grid item xs={12}>
+                          <Typography variant='caption' color='text.secondary'>
+                            Observación de aprobación
+                          </Typography>
+                          <Typography variant='body1'>
+                            {approvalNotes}
+                          </Typography>
+                        </Grid>
+                      ) : null}
+                    </Grid>
+                  </>
+                ) : null}
 
-          <Card sx={{ borderRadius: 3, mb: 2 }}>
-            <CardContent>
-              <Typography variant='h6' fontWeight={700} gutterBottom>
-                Ítems cotizados
-              </Typography>
+                {service.commercialComments ? (
+                  <>
+                    <Divider sx={{ my: 2 }} />
+                    <Typography variant='caption' color='text.secondary'>
+                      Comentarios comerciales
+                    </Typography>
+                    <Typography variant='body1' sx={{ mt: 0.5 }}>
+                      {service.commercialComments}
+                    </Typography>
+                  </>
+                ) : null}
+              </DetailTabPanel>
 
-              {service.items?.length ? (
-                <Box sx={{ overflowX: 'auto' }}>
-                  <Table size='small'>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Ítem</TableCell>
-                        <TableCell>Instrumento</TableCell>
-                        <TableCell>Tipo servicio</TableCell>
-                        <TableCell align='right'>Cantidad</TableCell>
-                        <TableCell align='right'>Total</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {service.items.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell>{item.itemName}</TableCell>
-                          <TableCell>{item.instrumentName || 'N/A'}</TableCell>
-                          <TableCell>{item.serviceType || 'N/A'}</TableCell>
-                          <TableCell align='right'>{item.quantity}</TableCell>
-                          <TableCell align='right'>
-                            {currencyFormatter.format(toNumber(item.total))}
-                          </TableCell>
+              <DetailTabPanel value={activeTab} tab='items'>
+                {service.items?.length ? (
+                  <Box sx={{ overflowX: 'auto' }}>
+                    <Table size='small'>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Ítem</TableCell>
+                          <TableCell>Instrumento</TableCell>
+                          <TableCell>Tipo servicio</TableCell>
+                          <TableCell align='right'>Cantidad</TableCell>
+                          <TableCell align='right'>Subtotal</TableCell>
+                          <TableCell align='right'>Total</TableCell>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </Box>
-              ) : (
-                <Alert severity='info'>Este servicio aún no tiene ítems.</Alert>
-              )}
+                      </TableHead>
+                      <TableBody>
+                        {service.items.map((item) => (
+                          <TableRow key={item.id}>
+                            <TableCell>{item.itemName}</TableCell>
+                            <TableCell>{item.instrumentName || 'N/A'}</TableCell>
+                            <TableCell>{item.serviceType || 'N/A'}</TableCell>
+                            <TableCell align='right'>{item.quantity}</TableCell>
+                            <TableCell align='right'>
+                              {currencyFormatter.format(toNumber(item.subtotal))}
+                            </TableCell>
+                            <TableCell align='right'>
+                              {currencyFormatter.format(toNumber(item.total))}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Box>
+                ) : (
+                  <Alert severity='info'>Este servicio aún no tiene ítems.</Alert>
+                )}
+              </DetailTabPanel>
+
+              <DetailTabPanel value={activeTab} tab='documents'>
+                {decisionDocuments?.length ? (
+                  <Alert severity='success' sx={{ mb: 2 }}>
+                    Este servicio ya tiene {decisionDocuments.length} evidencia(s)
+                    de aprobación o rechazo.
+                  </Alert>
+                ) : null}
+                {service.documents?.length ? (
+                  <List dense disablePadding>
+                    {service.documents.map((document) => (
+                      <ListItem key={document.id} disableGutters>
+                        <ListItemText
+                          primary={document.title || document.originalFileName}
+                          secondary={`${document.documentType} · v${document.version} · ${formatDateValue(document.uploadedAt)}`}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                ) : (
+                  <Alert severity='info'>
+                    Aún no hay documentos asociados al servicio.
+                  </Alert>
+                )}
+              </DetailTabPanel>
+
+              <DetailTabPanel value={activeTab} tab='history'>
+                {service.events?.length ? (
+                  <List dense disablePadding>
+                    {service.events.map((event) => (
+                      <ListItem key={event.id} disableGutters>
+                        <ListItemText
+                          primary={event.description}
+                          secondary={`${event.performedByName} · ${new Date(
+                            event.occurredAt
+                          ).toLocaleString('es-CO')}`}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                ) : (
+                  <Alert severity='info'>
+                    El servicio todavía no tiene eventos visibles.
+                  </Alert>
+                )}
+              </DetailTabPanel>
             </CardContent>
           </Card>
         </Grid>
 
         <Grid item xs={12} lg={4}>
-          <Card sx={{ borderRadius: 3, mb: 2 }}>
+          <Card sx={{ borderRadius: 3, position: { lg: 'sticky' }, top: { lg: 24 } }}>
             <CardContent>
               <Typography variant='h6' fontWeight={700} gutterBottom>
-                Documentos
+                Resumen compacto
               </Typography>
-              {decisionDocuments?.length ? (
-                <Alert severity='success' sx={{ mb: 2 }}>
-                  Este servicio ya tiene {decisionDocuments.length} evidencia(s)
-                  de aprobación o rechazo.
-                </Alert>
-              ) : null}
-              {service.documents?.length ? (
-                <List dense disablePadding>
-                  {service.documents.map((document) => (
-                    <ListItem key={document.id} disableGutters>
-                      <ListItemText
-                        primary={document.title || document.originalFileName}
-                        secondary={`${document.documentType} · v${document.version}`}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              ) : (
-                <Alert severity='info'>
-                  Aún no hay documentos asociados al servicio.
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card sx={{ borderRadius: 3 }}>
-            <CardContent>
-              <Typography variant='h6' fontWeight={700} gutterBottom>
-                Historial
-              </Typography>
-              {service.events?.length ? (
-                <List dense disablePadding>
-                  {service.events.map((event) => (
-                    <ListItem key={event.id} disableGutters>
-                      <ListItemText
-                        primary={event.description}
-                        secondary={`${event.performedByName} · ${new Date(
-                          event.occurredAt
-                        ).toLocaleString('es-CO')}`}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              ) : (
-                <Alert severity='info'>
-                  El servicio todavía no tiene eventos visibles.
-                </Alert>
-              )}
+              <Stack spacing={1.25}>
+                <Stack direction='row' justifyContent='space-between'>
+                  <Typography color='text.secondary'>Ítems</Typography>
+                  <Typography fontWeight={600}>
+                    {service.items?.length || 0}
+                  </Typography>
+                </Stack>
+                <Stack direction='row' justifyContent='space-between'>
+                  <Typography color='text.secondary'>Documentos</Typography>
+                  <Typography fontWeight={600}>
+                    {service.documents?.length || 0}
+                  </Typography>
+                </Stack>
+                <Stack direction='row' justifyContent='space-between'>
+                  <Typography color='text.secondary'>Eventos</Typography>
+                  <Typography fontWeight={600}>
+                    {service.events?.length || 0}
+                  </Typography>
+                </Stack>
+                <Divider />
+                <Stack direction='row' justifyContent='space-between'>
+                  <Typography color='text.secondary'>Subtotal</Typography>
+                  <Typography fontWeight={600}>
+                    {currencyFormatter.format(subtotal)}
+                  </Typography>
+                </Stack>
+                <Stack direction='row' justifyContent='space-between'>
+                  <Typography color='text.secondary'>IVA</Typography>
+                  <Typography fontWeight={600}>
+                    {currencyFormatter.format(taxTotal)}
+                  </Typography>
+                </Stack>
+                <Stack direction='row' justifyContent='space-between'>
+                  <Typography variant='subtitle1'>Total</Typography>
+                  <Typography variant='subtitle1' fontWeight={700}>
+                    {currencyFormatter.format(grandTotal)}
+                  </Typography>
+                </Stack>
+                <Divider />
+                <Typography variant='subtitle2' fontWeight={700}>
+                  Próximo foco
+                </Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  {service.slaIndicator?.message ||
+                    'Todavía no hay una alerta operativa activa.'}
+                </Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  Inicio SLA: {formatDateValue(service.slaIndicator?.startedAt)}
+                </Typography>
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
