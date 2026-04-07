@@ -8,9 +8,6 @@ import {
   CircularProgress,
   Divider,
   Grid,
-  List,
-  ListItem,
-  ListItemText,
   Stack,
   Tab,
   Table,
@@ -23,10 +20,8 @@ import {
 } from '@mui/material'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
 import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined'
-import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
-import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined'
 import { Toaster, toast } from 'react-hot-toast'
@@ -51,6 +46,8 @@ import CalibrationServiceApprovalDialog, {
 import CalibrationServiceOdsDialog, {
   CalibrationServiceOdsDialogValues
 } from './CalibrationServiceOdsDialog'
+import CalibrationServiceDocumentsPanel from './CalibrationServiceDocumentsPanel'
+import CalibrationServiceTimeline from './CalibrationServiceTimeline'
 
 type DetailTab = 'summary' | 'items' | 'documents' | 'history'
 
@@ -209,7 +206,8 @@ const CalibrationServiceDetailsPage = () => {
     rejectService.isLoading ||
     uploadDocument.isLoading
   const isOdsLoading = issueOds.isLoading
-  const isPdfLoading =
+  const isDocumentBusy =
+    uploadDocument.isLoading ||
     generateQuotePdf.isLoading ||
     generateOdsPdf.isLoading ||
     downloadDocument.isLoading
@@ -452,6 +450,37 @@ const CalibrationServiceDetailsPage = () => {
     } catch (pdfError) {
       console.error(pdfError)
       toast.error('No pudimos generar la ODS PDF.')
+    }
+  }
+
+  const handleUploadSupportDocument = async ({
+    file,
+    documentType,
+    title,
+    notes
+  }: {
+    file: File
+    documentType:
+      | 'request_evidence'
+      | 'approval_evidence'
+      | 'rejection_evidence'
+      | 'supporting_attachment'
+    title?: string
+    notes?: string
+  }) => {
+    try {
+      await uploadDocument.mutateAsync({
+        serviceId: String(service.id),
+        file,
+        documentType,
+        title,
+        notes
+      })
+      toast.success('El documento quedó cargado al servicio.')
+    } catch (uploadError) {
+      console.error(uploadError)
+      toast.error('No pudimos cargar el documento.')
+      throw uploadError
     }
   }
 
@@ -860,131 +889,24 @@ const CalibrationServiceDetailsPage = () => {
               </DetailTabPanel>
 
               <DetailTabPanel value={activeTab} tab='documents'>
-                <Stack
-                  direction={{ xs: 'column', md: 'row' }}
-                  spacing={1}
-                  mb={2}
-                >
-                  <Button
-                    variant='outlined'
-                    startIcon={<PictureAsPdfOutlinedIcon />}
-                    onClick={() => void handleGenerateQuotePdf()}
-                    disabled={isPdfLoading || !service.items?.length || !service.customerId}
-                  >
-                    Generar cotización PDF
-                  </Button>
-                  <Button
-                    variant='outlined'
-                    startIcon={<PictureAsPdfOutlinedIcon />}
-                    onClick={() => void handleGenerateOdsPdf()}
-                    disabled={isPdfLoading || !service.odsCode}
-                  >
-                    Generar ODS PDF
-                  </Button>
-                </Stack>
-
-                <Typography variant='subtitle2' fontWeight={700} gutterBottom>
-                  PDFs oficiales
-                </Typography>
-                {officialPdfDocuments?.length ? (
-                  <List dense disablePadding sx={{ mb: 2 }}>
-                    {officialPdfDocuments.map((document) => (
-                      <ListItem
-                        key={document.id}
-                        disableGutters
-                        secondaryAction={
-                          <Button
-                            size='small'
-                            startIcon={<DownloadOutlinedIcon />}
-                            onClick={() =>
-                              void handleDownloadDocument(
-                                document.id,
-                                document.originalFileName
-                              )
-                            }
-                            disabled={isPdfLoading}
-                          >
-                            Descargar
-                          </Button>
-                        }
-                      >
-                        <ListItemText
-                          primary={document.title || document.originalFileName}
-                          secondary={`${document.documentType} · v${document.version} · ${formatDateValue(document.uploadedAt)}`}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                ) : (
-                  <Alert severity='info' sx={{ mb: 2 }}>
-                    Aún no hay PDFs oficiales generados para este servicio.
-                  </Alert>
-                )}
-
-                <Typography variant='subtitle2' fontWeight={700} gutterBottom>
-                  Evidencias y soportes
-                </Typography>
-                {decisionDocuments?.length ? (
-                  <Alert severity='success' sx={{ mb: 2 }}>
-                    Este servicio ya tiene {decisionDocuments.length} evidencia(s)
-                    de aprobación o rechazo.
-                  </Alert>
-                ) : null}
-                {supportDocuments?.length ? (
-                  <List dense disablePadding>
-                    {supportDocuments.map((document) => (
-                      <ListItem
-                        key={document.id}
-                        disableGutters
-                        secondaryAction={
-                          <Button
-                            size='small'
-                            startIcon={<DownloadOutlinedIcon />}
-                            onClick={() =>
-                              void handleDownloadDocument(
-                                document.id,
-                                document.originalFileName
-                              )
-                            }
-                            disabled={isPdfLoading}
-                          >
-                            Descargar
-                          </Button>
-                        }
-                      >
-                        <ListItemText
-                          primary={document.title || document.originalFileName}
-                          secondary={`${document.documentType} · v${document.version} · ${formatDateValue(document.uploadedAt)}`}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                ) : (
-                  <Alert severity='info'>
-                    Aún no hay evidencias ni soportes asociados al servicio.
-                  </Alert>
-                )}
+                <CalibrationServiceDocumentsPanel
+                  serviceCode={service.serviceCode}
+                  hasCustomer={Boolean(service.customerId)}
+                  hasItems={Boolean(service.items?.length)}
+                  hasOds={Boolean(service.odsCode)}
+                  officialPdfDocuments={officialPdfDocuments || []}
+                  supportDocuments={supportDocuments || []}
+                  decisionDocuments={decisionDocuments || []}
+                  isBusy={isDocumentBusy}
+                  onGenerateQuotePdf={handleGenerateQuotePdf}
+                  onGenerateOdsPdf={handleGenerateOdsPdf}
+                  onDownloadDocument={handleDownloadDocument}
+                  onUploadDocument={handleUploadSupportDocument}
+                />
               </DetailTabPanel>
 
               <DetailTabPanel value={activeTab} tab='history'>
-                {service.events?.length ? (
-                  <List dense disablePadding>
-                    {service.events.map((event) => (
-                      <ListItem key={event.id} disableGutters>
-                        <ListItemText
-                          primary={event.description}
-                          secondary={`${event.performedByName} · ${new Date(
-                            event.occurredAt
-                          ).toLocaleString('es-CO')}`}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                ) : (
-                  <Alert severity='info'>
-                    El servicio todavía no tiene eventos visibles.
-                  </Alert>
-                )}
+                <CalibrationServiceTimeline events={service.events || []} />
               </DetailTabPanel>
             </CardContent>
           </Card>
