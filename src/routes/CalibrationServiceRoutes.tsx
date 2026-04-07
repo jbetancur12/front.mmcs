@@ -30,6 +30,10 @@ const CalibrationServiceRoutes = (role: string[]) => {
         element={<CalibrationServiceWorkspacePage />}
       />
       <Route
+        path='calibration-services/:serviceId/edit'
+        element={<CalibrationServiceWorkspacePage />}
+      />
+      <Route
         path='calibration-services/:serviceId'
         element={<CalibrationServiceDetailsPage />}
       />

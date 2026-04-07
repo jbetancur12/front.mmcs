@@ -20,6 +20,7 @@ import {
   Typography
 } from '@mui/material'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   CALIBRATION_SERVICE_APPROVAL_COLORS,
@@ -74,9 +75,16 @@ const CalibrationServiceDetailsPage = () => {
     )
   }
 
+  const canEdit = ['draft', 'pending_approval'].includes(service.status)
+
   return (
     <Box p={{ xs: 2, md: 3 }}>
-      <Stack direction='row' justifyContent='space-between' mb={3}>
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        justifyContent='space-between'
+        spacing={2}
+        mb={3}
+      >
         <Box>
           <Button
             startIcon={<ArrowBackOutlinedIcon />}
@@ -95,7 +103,18 @@ const CalibrationServiceDetailsPage = () => {
           </Typography>
         </Box>
 
-        <Stack spacing={1} alignItems='flex-end'>
+        <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
+          {canEdit ? (
+            <Button
+              variant='outlined'
+              startIcon={<EditOutlinedIcon />}
+              onClick={() =>
+                navigate(`/calibration-services/${service.id}/edit`)
+              }
+            >
+              Editar servicio
+            </Button>
+          ) : null}
           <Chip
             color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]}
             label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]}

@@ -230,3 +230,12 @@ export interface CalibrationServicePayload {
   otherFields?: Record<string, unknown>
   items?: CalibrationServiceItemPayload[]
 }
+
+export interface CalibrationServiceDocumentUploadPayload {
+  serviceId: string
+  file: File
+  documentType: CalibrationServiceDocumentType
+  title?: string
+  notes?: string
+  generatedBySystem?: boolean
+}

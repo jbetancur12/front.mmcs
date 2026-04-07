@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { axiosPrivate } from '@utils/api'
 import {
   CalibrationService,
+  CalibrationServiceDocument,
+  CalibrationServiceDocumentUploadPayload,
   CalibrationServiceFilters,
   CalibrationServiceListResponse,
   CalibrationServicePayload
@@ -54,6 +56,40 @@ const calibrationServiceApi = {
       payload
     )
     return response.data
+  },
+
+  uploadDocument: async ({
+    serviceId,
+    file,
+    documentType,
+    title,
+    notes,
+    generatedBySystem = false
+  }: CalibrationServiceDocumentUploadPayload): Promise<CalibrationServiceDocument> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('documentType', documentType)
+
+    if (title) {
+      formData.append('title', title)
+    }
+
+    if (notes) {
+      formData.append('notes', notes)
+    }
+
+    formData.append('generatedBySystem', String(generatedBySystem))
+
+    const response = await axiosPrivate.post<CalibrationServiceDocument>(
+      `/calibration-services/${serviceId}/documents`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    )
+    return response.data
   }
 }
 
@@ -95,8 +131,19 @@ export const useCalibrationServiceMutations = () => {
     }
   })
 
+  const uploadDocument = useMutation(calibrationServiceApi.uploadDocument, {
+    onSuccess: (_document, variables) => {
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        variables.serviceId
+      ])
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+    }
+  })
+
   return {
     createService,
-    updateService
+    updateService,
+    uploadDocument
   }
 }
