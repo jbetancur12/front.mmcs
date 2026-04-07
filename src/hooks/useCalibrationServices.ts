@@ -11,7 +11,9 @@ import {
   CalibrationServiceListResponse,
   CalibrationServicePayload,
   CalibrationServiceRejectPayload,
-  CalibrationServiceRequestApprovalPayload
+  CalibrationServiceRequestApprovalPayload,
+  CalibrationServiceSequenceConfig,
+  CalibrationServiceSequenceConfigPayload
 } from '../types/calibrationService'
 
 export const CALIBRATION_SERVICE_QUERY_KEYS = {
@@ -20,6 +22,13 @@ export const CALIBRATION_SERVICE_QUERY_KEYS = {
 } as const
 
 const calibrationServiceApi = {
+  getSequenceConfig: async (): Promise<CalibrationServiceSequenceConfig> => {
+    const response = await axiosPrivate.get<CalibrationServiceSequenceConfig>(
+      '/calibration-services/config/sequence'
+    )
+    return response.data
+  },
+
   getServices: async (
     filters?: CalibrationServiceFilters
   ): Promise<CalibrationServiceListResponse> => {
@@ -168,6 +177,16 @@ const calibrationServiceApi = {
       }
     )
     return response.data
+  },
+
+  upsertSequenceConfig: async (
+    payload: CalibrationServiceSequenceConfigPayload
+  ): Promise<CalibrationServiceSequenceConfig> => {
+    const response = await axiosPrivate.put<CalibrationServiceSequenceConfig>(
+      '/calibration-services/config/sequence',
+      payload
+    )
+    return response.data
   }
 }
 
@@ -175,6 +194,16 @@ export const useCalibrationServices = (filters?: CalibrationServiceFilters) => {
   return useQuery({
     queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, filters],
     queryFn: () => calibrationServiceApi.getServices(filters),
+    staleTime: 60 * 1000,
+    retry: 1
+  })
+}
+
+export const useCalibrationServiceSequenceConfig = (enabled = true) => {
+  return useQuery({
+    queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, 'sequence-config'],
+    queryFn: calibrationServiceApi.getSequenceConfig,
+    enabled,
     staleTime: 60 * 1000,
     retry: 1
   })
@@ -279,6 +308,18 @@ export const useCalibrationServiceMutations = () => {
 
   const downloadDocument = useMutation(calibrationServiceApi.downloadDocument)
 
+  const upsertSequenceConfig = useMutation(
+    calibrationServiceApi.upsertSequenceConfig,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries([
+          CALIBRATION_SERVICE_QUERY_KEYS.all,
+          'sequence-config'
+        ])
+      }
+    }
+  )
+
   return {
     createService,
     updateService,
@@ -289,6 +330,7 @@ export const useCalibrationServiceMutations = () => {
     issueOds,
     generateQuotePdf,
     generateOdsPdf,
-    downloadDocument
+    downloadDocument,
+    upsertSequenceConfig
   }
 }

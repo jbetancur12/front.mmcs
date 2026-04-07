@@ -205,6 +205,20 @@ export interface CalibrationServiceListResponse {
   services: CalibrationService[]
 }
 
+export interface CalibrationServiceSequenceConfig {
+  initialized: boolean
+  quotePrefix: string
+  odsSuffix: string
+  nextQuoteNumber: number | null
+  nextOdsNumber: number | null
+  quotePreview?: string | null
+  odsPreview?: string | null
+  initializedAt?: string | null
+  initializedByName?: string | null
+  updatedAt?: string | null
+  updatedByName?: string | null
+}
+
 export interface CalibrationServiceItemPayload {
   productId?: number | null
   itemName: string
@@ -308,4 +322,9 @@ export interface CalibrationServiceIssueOdsPayload {
 export interface CalibrationServiceDocumentActionPayload {
   serviceId: string
   documentId?: string
+}
+
+export interface CalibrationServiceSequenceConfigPayload {
+  nextQuoteNumber: number
+  nextOdsNumber: number
 }

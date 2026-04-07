@@ -42,6 +42,7 @@ import {
 } from '../../constants/calibrationServices'
 import {
   useCalibrationService,
+  useCalibrationServiceSequenceConfig,
   useCalibrationServiceMutations
 } from '../../hooks/useCalibrationServices'
 import { useHasRole } from '../../utils/functions'
@@ -54,6 +55,7 @@ import CalibrationServiceOdsDialog, {
 } from './CalibrationServiceOdsDialog'
 import CalibrationServiceDocumentsPanel from './CalibrationServiceDocumentsPanel'
 import CalibrationServiceTimeline from './CalibrationServiceTimeline'
+import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
 
 type DetailTab = 'summary' | 'items' | 'documents' | 'history'
 
@@ -117,6 +119,11 @@ const CalibrationServiceDetailsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const { data: service, isLoading, isError, error } =
     useCalibrationService(serviceId)
+  const canManageSequenceConfig = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
+  const {
+    data: sequenceConfig,
+    isLoading: isLoadingSequenceConfig
+  } = useCalibrationServiceSequenceConfig(canManageSequenceConfig)
   const {
     requestApproval,
     approveService,
@@ -125,11 +132,13 @@ const CalibrationServiceDetailsPage = () => {
     issueOds,
     generateQuotePdf,
     generateOdsPdf,
-    downloadDocument
+    downloadDocument,
+    upsertSequenceConfig
   } = useCalibrationServiceMutations()
   const [decisionMode, setDecisionMode] =
     useState<CalibrationServiceDecisionMode | null>(null)
   const [isOdsDialogOpen, setIsOdsDialogOpen] = useState(false)
+  const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<DetailTab>('summary')
   const canEditService = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const canTakeApprovalDecision = useHasRole([...CALIBRATION_SERVICE_APPROVAL_ROLES])
@@ -149,7 +158,18 @@ const CalibrationServiceDetailsPage = () => {
     canIssueOdsRole &&
     service?.status === 'approved' &&
     service?.approvalStatus === 'approved' &&
-    !service?.odsCode
+    !service?.odsCode &&
+    Boolean(sequenceConfig?.initialized)
+
+  useEffect(() => {
+    if (!canManageSequenceConfig || isLoadingSequenceConfig) {
+      return
+    }
+
+    if (!sequenceConfig?.initialized) {
+      setIsSequenceDialogOpen(true)
+    }
+  }, [canManageSequenceConfig, isLoadingSequenceConfig, sequenceConfig?.initialized])
 
   useEffect(() => {
     if (requestedAction !== 'ods' || !canIssueOds || isOdsDialogOpen) {
@@ -168,7 +188,7 @@ const CalibrationServiceDetailsPage = () => {
     setSearchParams
   ])
 
-  if (isLoading) {
+  if (isLoading || isLoadingSequenceConfig) {
     return (
       <Box
         display='flex'
@@ -440,6 +460,20 @@ const CalibrationServiceDetailsPage = () => {
     }
   }
 
+  const handleSaveSequenceConfig = async (values: {
+    nextQuoteNumber: number
+    nextOdsNumber: number
+  }) => {
+    try {
+      await upsertSequenceConfig.mutateAsync(values)
+      toast.success('Los consecutivos iniciales quedaron configurados.')
+      setIsSequenceDialogOpen(false)
+    } catch (configError) {
+      console.error(configError)
+      toast.error('No pudimos guardar la configuración inicial del módulo.')
+    }
+  }
+
   const handleDownloadDocument = async (
     documentId: number,
     fileName: string
@@ -641,6 +675,21 @@ const CalibrationServiceDetailsPage = () => {
           </Stack>
         </Stack>
       </Stack>
+
+      {canManageSequenceConfig && sequenceConfig && !sequenceConfig.initialized ? (
+        <Alert
+          severity='warning'
+          sx={{ mb: 2 }}
+          action={
+            <Button color='inherit' size='small' onClick={() => setIsSequenceDialogOpen(true)}>
+              Configurar
+            </Button>
+          }
+        >
+          Antes de emitir la primera ODS, define el consecutivo inicial de
+          oferta y ODS para este módulo.
+        </Alert>
+      ) : null}
 
       <Card sx={{ borderRadius: 3, mb: 2 }}>
         <CardContent>
@@ -1068,6 +1117,15 @@ const CalibrationServiceDetailsPage = () => {
           isLoading={isOdsLoading}
           onClose={() => setIsOdsDialogOpen(false)}
           onSubmit={handleIssueOds}
+        />
+      ) : null}
+      {canManageSequenceConfig ? (
+        <CalibrationServiceSequenceConfigDialog
+          open={isSequenceDialogOpen}
+          isLoading={upsertSequenceConfig.isLoading}
+          config={sequenceConfig}
+          onClose={() => setIsSequenceDialogOpen(false)}
+          onSubmit={handleSaveSequenceConfig}
         />
       ) : null}
     </Box>

@@ -1,4 +1,4 @@
-import { useDeferredValue, useState } from 'react'
+import { useDeferredValue, useEffect, useState } from 'react'
 import {
   Alert,
   Box,
@@ -38,6 +38,7 @@ import {
 } from '../../constants/calibrationServices'
 import {
   useCalibrationServiceMutations,
+  useCalibrationServiceSequenceConfig,
   useCalibrationServices
 } from '../../hooks/useCalibrationServices'
 import {
@@ -49,6 +50,7 @@ import {
   CalibrationServiceStatus
 } from '../../types/calibrationService'
 import { useHasRole } from '../../utils/functions'
+import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
 
 const FILTER_ALL = 'all'
 
@@ -147,13 +149,15 @@ const matchesSiteFilter = (service: CalibrationService, siteSearch: string) => {
 
 const CalibrationServicesPage = () => {
   const navigate = useNavigate()
-  const { requestApproval } = useCalibrationServiceMutations()
+  const { requestApproval, upsertSequenceConfig } =
+    useCalibrationServiceMutations()
   const canCreateServices = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const canTakeApprovalDecision = useHasRole([
     ...CALIBRATION_SERVICE_APPROVAL_ROLES
   ])
   const canIssueOds = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
   const canViewModule = useHasRole([...CALIBRATION_SERVICE_ALLOWED_ROLES])
+  const canManageSequenceConfig = canCreateServices
   const hasTechnicalRole = useHasRole([...CALIBRATION_SERVICE_TECHNICAL_ROLES])
   const hasCommercialVisibility = useHasRole([
     ...CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES
@@ -175,6 +179,7 @@ const CalibrationServicesPage = () => {
   >(FILTER_ALL)
   const [siteFilter, setSiteFilter] = useState('')
   const [customerFilter, setCustomerFilter] = useState<string>(FILTER_ALL)
+  const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
 
   const deferredSearch = useDeferredValue(search)
   const queryFilters: CalibrationServiceFilters = {
@@ -197,8 +202,23 @@ const CalibrationServicesPage = () => {
     queryFilters.customerId = Number(customerFilter)
   }
 
+  const {
+    data: sequenceConfig,
+    isLoading: isLoadingSequenceConfig
+  } = useCalibrationServiceSequenceConfig(canManageSequenceConfig)
+
   const { data, isLoading, isError, error, refetch, isFetching } =
     useCalibrationServices(queryFilters)
+
+  useEffect(() => {
+    if (!canManageSequenceConfig || isLoadingSequenceConfig) {
+      return
+    }
+
+    if (!sequenceConfig?.initialized) {
+      setIsSequenceDialogOpen(true)
+    }
+  }, [canManageSequenceConfig, isLoadingSequenceConfig, sequenceConfig?.initialized])
 
   const services = data?.services ?? []
   const customerOptions = services
@@ -279,6 +299,20 @@ const CalibrationServicesPage = () => {
     navigate(`/calibration-services/${serviceId}?open=ods`)
   }
 
+  const handleSaveSequenceConfig = async (values: {
+    nextQuoteNumber: number
+    nextOdsNumber: number
+  }) => {
+    try {
+      await upsertSequenceConfig.mutateAsync(values)
+      toast.success('Los consecutivos iniciales quedaron configurados.')
+      setIsSequenceDialogOpen(false)
+    } catch (configError) {
+      console.error(configError)
+      toast.error('No pudimos guardar la configuración inicial del módulo.')
+    }
+  }
+
   if (isLoading) {
     return (
       <Box
@@ -350,12 +384,28 @@ const CalibrationServicesPage = () => {
               variant='contained'
               startIcon={<AddIcon />}
               onClick={() => navigate('/calibration-services/new')}
+              disabled={canManageSequenceConfig && !sequenceConfig?.initialized}
             >
               Nuevo servicio
             </Button>
           ) : null}
         </Stack>
       </Stack>
+
+      {canManageSequenceConfig && sequenceConfig && !sequenceConfig.initialized ? (
+        <Alert
+          severity='warning'
+          sx={{ mb: 3 }}
+          action={
+            <Button color='inherit' size='small' onClick={() => setIsSequenceDialogOpen(true)}>
+              Configurar
+            </Button>
+          }
+        >
+          Antes de crear la primera oferta o emitir la primera ODS, define los
+          consecutivos iniciales del módulo.
+        </Alert>
+      ) : null}
 
       <Grid container spacing={2} mb={3}>
         <Grid item xs={12} md={3}>
@@ -773,6 +823,15 @@ const CalibrationServicesPage = () => {
           })
         )}
       </Stack>
+      {canManageSequenceConfig ? (
+        <CalibrationServiceSequenceConfigDialog
+          open={isSequenceDialogOpen}
+          isLoading={upsertSequenceConfig.isLoading}
+          config={sequenceConfig}
+          onClose={() => setIsSequenceDialogOpen(false)}
+          onSubmit={handleSaveSequenceConfig}
+        />
+      ) : null}
     </Box>
   )
 }

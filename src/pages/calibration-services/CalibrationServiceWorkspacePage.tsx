@@ -37,6 +37,7 @@ import {
   CALIBRATION_SERVICE_STATUS_LABELS
 } from '../../constants/calibrationServices'
 import {
+  useCalibrationServiceSequenceConfig,
   useCalibrationService,
   useCalibrationServiceMutations
 } from '../../hooks/useCalibrationServices'
@@ -48,6 +49,7 @@ import {
 } from '../../types/calibrationService'
 import { useHasRole } from '../../utils/functions'
 import CalibrationServiceItemsEditor from './CalibrationServiceItemsEditor'
+import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
 
 type FormItem = CalibrationServiceItemPayload & { localId: string }
 type FormState = Omit<CalibrationServicePayload, 'items'> & { items: FormItem[] }
@@ -191,8 +193,13 @@ const CalibrationServiceWorkspacePage = () => {
   const { serviceId } = useParams<{ serviceId?: string }>()
   const isEditing = Boolean(serviceId)
   const canAccessWorkspace = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
+  const {
+    data: sequenceConfig,
+    isLoading: isLoadingSequenceConfig
+  } = useCalibrationServiceSequenceConfig(canAccessWorkspace)
   const { data: service, isLoading: isLoadingService } = useCalibrationService(serviceId)
-  const { createService, updateService, uploadDocument } = useCalibrationServiceMutations()
+  const { createService, updateService, uploadDocument, upsertSequenceConfig } =
+    useCalibrationServiceMutations()
   const {
     data: customers = [],
     error: customersError,
@@ -226,6 +233,17 @@ const CalibrationServiceWorkspacePage = () => {
   const [requestEvidenceFile, setRequestEvidenceFile] = useState<File | null>(null)
   const [requestEvidenceTitle, setRequestEvidenceTitle] = useState('')
   const [hydrated, setHydrated] = useState(false)
+  const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
+
+  useEffect(() => {
+    if (!canAccessWorkspace || isLoadingSequenceConfig) {
+      return
+    }
+
+    if (!sequenceConfig?.initialized) {
+      setIsSequenceDialogOpen(true)
+    }
+  }, [canAccessWorkspace, isLoadingSequenceConfig, sequenceConfig?.initialized])
 
   useEffect(() => {
     if (!service || hydrated) return
@@ -443,7 +461,21 @@ const CalibrationServiceWorkspacePage = () => {
     }
   }
 
-  if (isLoadingService || isLoadingCustomers || isLoadingProducts) {
+  const handleSaveSequenceConfig = async (values: {
+    nextQuoteNumber: number
+    nextOdsNumber: number
+  }) => {
+    try {
+      await upsertSequenceConfig.mutateAsync(values)
+      toast.success('Los consecutivos iniciales del módulo quedaron configurados.')
+      setIsSequenceDialogOpen(false)
+    } catch (configError) {
+      console.error(configError)
+      toast.error('No pudimos guardar la configuración inicial.')
+    }
+  }
+
+  if (isLoadingService || isLoadingCustomers || isLoadingProducts || isLoadingSequenceConfig) {
     return (
       <Box display='flex' justifyContent='center' alignItems='center' minHeight='55vh'>
         <CircularProgress />
@@ -501,6 +533,21 @@ const CalibrationServiceWorkspacePage = () => {
       {!canEdit ? (
         <Alert severity='warning' sx={{ mb: 3 }}>
           Este servicio ya no puede editarse desde el formulario base porque supero la etapa comercial inicial.
+        </Alert>
+      ) : null}
+
+      {canAccessWorkspace && sequenceConfig && !sequenceConfig.initialized ? (
+        <Alert
+          severity='warning'
+          sx={{ mb: 3 }}
+          action={
+            <Button color='inherit' size='small' onClick={() => setIsSequenceDialogOpen(true)}>
+              Configurar
+            </Button>
+          }
+        >
+          Antes de guardar la primera cotización, define los consecutivos
+          iniciales de oferta y ODS.
         </Alert>
       ) : null}
 
@@ -831,10 +878,20 @@ const CalibrationServiceWorkspacePage = () => {
               </Stack>
               <Divider sx={{ my: 3 }} />
               <Stack spacing={1.5}>
-                <Button variant='contained' startIcon={<SaveOutlinedIcon />} onClick={() => void handleSave('draft')} disabled={!canEdit || isBusy}>
+                <Button
+                  variant='contained'
+                  startIcon={<SaveOutlinedIcon />}
+                  onClick={() => void handleSave('draft')}
+                  disabled={!canEdit || isBusy || !sequenceConfig?.initialized}
+                >
                   Guardar borrador
                 </Button>
-                <Button variant='outlined' startIcon={<SendOutlinedIcon />} onClick={() => void handleSave('pending_approval')} disabled={!canEdit || isBusy}>
+                <Button
+                  variant='outlined'
+                  startIcon={<SendOutlinedIcon />}
+                  onClick={() => void handleSave('pending_approval')}
+                  disabled={!canEdit || isBusy || !sequenceConfig?.initialized}
+                >
                   Guardar y enviar a aprobacion
                 </Button>
               </Stack>
@@ -842,6 +899,15 @@ const CalibrationServiceWorkspacePage = () => {
           </Card>
         </Grid>
       </Grid>
+      {canAccessWorkspace ? (
+        <CalibrationServiceSequenceConfigDialog
+          open={isSequenceDialogOpen}
+          isLoading={upsertSequenceConfig.isLoading}
+          config={sequenceConfig}
+          onClose={() => setIsSequenceDialogOpen(false)}
+          onSubmit={handleSaveSequenceConfig}
+        />
+      ) : null}
     </Box>
   )
 }
