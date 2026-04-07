@@ -7,13 +7,14 @@ import { BiSolidReport } from 'react-icons/bi'
 import DropdownButton from './DropdownButton' // Importa el componente del dropdown si ya lo tienes
 import { useStore } from '@nanostores/react'
 import { UserData, userStore } from 'src/store/userStore'
-import { CarRepair } from '@mui/icons-material'
+import { CarRepair, ScienceOutlined } from '@mui/icons-material'
 import {
   getEffectiveLmsMenuRoles,
   isLmsOnlyUser,
   LMS_ACCESS_MENU_ROLES,
   LMS_ADMIN_ROUTE_ROLES
 } from 'src/utils/lmsIdentity'
+import { CALIBRATION_SERVICE_ALLOWED_ROLES } from 'src/constants/calibrationServices'
 
 const iconClass =
   'w-5 h-5 text-gray-600 transition-all duration-300 group-hover:text-white dark:text-gray-300 dark:group-hover:text-white group-hover:scale-110 group-hover:drop-shadow-sm'
@@ -323,6 +324,14 @@ const sidebarItems = ($userStore: UserData) => [
         roles: ['admin', 'metrologist']
       }
     ]
+  },
+  {
+    type: 'link',
+    label: 'Servicios Cal.',
+    to: '/calibration-services',
+    icon: <ScienceOutlined className={iconClass} />,
+    roles: [...CALIBRATION_SERVICE_ALLOWED_ROLES],
+    moduleName: 'Basic'
   },
   {
     type: 'link',

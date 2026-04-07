@@ -25,8 +25,8 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined'
 import { Toaster, toast } from 'react-hot-toast'
-import { ReactNode, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { ReactNode, useEffect, useState } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
@@ -123,6 +123,7 @@ const DetailTabPanel = ({
 const CalibrationServiceDetailsPage = () => {
   const navigate = useNavigate()
   const { serviceId } = useParams<{ serviceId: string }>()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { data: service, isLoading, isError, error } =
     useCalibrationService(serviceId)
   const {
@@ -178,6 +179,7 @@ const CalibrationServiceDetailsPage = () => {
     service.status === 'approved' &&
     service.approvalStatus === 'approved' &&
     !service.odsCode
+  const requestedAction = searchParams.get('open')
   const approvalNotes = getOtherFieldText(service.otherFields, 'approvalNotes')
   const odsDetails = getOtherFieldRecord(service.otherFields, 'ods')
   const odsScheduleWindow =
@@ -269,6 +271,23 @@ const CalibrationServiceDetailsPage = () => {
       toast.error('No pudimos enviar el servicio a aprobación.')
     }
   }
+
+  useEffect(() => {
+    if (requestedAction !== 'ods' || !canIssueOds || isOdsDialogOpen) {
+      return
+    }
+
+    setIsOdsDialogOpen(true)
+    const nextSearchParams = new URLSearchParams(searchParams)
+    nextSearchParams.delete('open')
+    setSearchParams(nextSearchParams, { replace: true })
+  }, [
+    canIssueOds,
+    isOdsDialogOpen,
+    requestedAction,
+    searchParams,
+    setSearchParams
+  ])
 
   const handleDecisionSubmit = async (
     values: CalibrationServiceDecisionValues
