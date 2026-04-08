@@ -1,4 +1,4 @@
-import { useState, type FocusEvent, type MouseEvent } from 'react'
+import { useState, type KeyboardEvent, type MouseEvent } from 'react'
 import {
   Alert,
   Box,
@@ -282,13 +282,35 @@ const CalibrationServiceGuidePanel = () => {
   const [activeStageAnchor, setActiveStageAnchor] = useState<HTMLElement | null>(null)
   const [activeStage, setActiveStage] = useState<FlowStage | null>(null)
 
-  const handleOpenStageBranches = (event: MouseEvent<HTMLElement> | FocusEvent<HTMLElement>, stage: FlowStage) => {
+  const handleOpenStageBranches = (event: MouseEvent<HTMLElement>, stage: FlowStage) => {
     if (!stage.branches?.length) {
+      return
+    }
+
+    if (activeStage?.title === stage.title) {
+      setActiveStageAnchor(null)
+      setActiveStage(null)
       return
     }
 
     setActiveStageAnchor(event.currentTarget)
     setActiveStage(stage)
+  }
+
+  const handleStageKeyDown = (event: KeyboardEvent<HTMLElement>, stage: FlowStage) => {
+    if (!stage.branches?.length) {
+      return
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      setActiveStageAnchor(event.currentTarget)
+      setActiveStage(stage)
+    }
+
+    if (event.key === 'Escape') {
+      handleCloseStageBranches()
+    }
   }
 
   const handleCloseStageBranches = () => {
@@ -352,9 +374,8 @@ const CalibrationServiceGuidePanel = () => {
               >
                 <Stack spacing={1} sx={{ minWidth: 180, maxWidth: 220 }}>
                   <Box
-                    onMouseEnter={(event) => handleOpenStageBranches(event, stage)}
-                    onFocus={(event) => handleOpenStageBranches(event, stage)}
-                    onMouseLeave={handleCloseStageBranches}
+                    onClick={(event) => handleOpenStageBranches(event, stage)}
+                    onKeyDown={(event) => handleStageKeyDown(event, stage)}
                     sx={{
                       border: '1px solid',
                       borderColor: stage.branches?.length ? 'primary.light' : 'divider',
@@ -362,7 +383,7 @@ const CalibrationServiceGuidePanel = () => {
                       px: 1.5,
                       py: 1.25,
                       backgroundColor: stage.branches?.length ? '#f4fbf7' : '#f8fbf9',
-                      cursor: stage.branches?.length ? 'help' : 'default',
+                      cursor: stage.branches?.length ? 'pointer' : 'default',
                       transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                       '&:hover': stage.branches?.length
                         ? {
@@ -391,7 +412,7 @@ const CalibrationServiceGuidePanel = () => {
                       </Stack>
                       {stage.branches?.length ? (
                         <Typography variant='caption' color='primary.main' fontWeight={600}>
-                          Pasa el cursor para ver decisiones y desvíos.
+                          Haz clic para ver decisiones y desvíos.
                         </Typography>
                       ) : null}
                     </Stack>
@@ -415,7 +436,6 @@ const CalibrationServiceGuidePanel = () => {
             transformOrigin={{ vertical: 'top', horizontal: 'left' }}
             disableRestoreFocus
             PaperProps={{
-              onMouseLeave: handleCloseStageBranches,
               sx: {
                 mt: 1,
                 width: 320,
