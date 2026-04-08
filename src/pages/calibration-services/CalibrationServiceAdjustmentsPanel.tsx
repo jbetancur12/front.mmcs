@@ -26,11 +26,13 @@ interface CalibrationServiceAdjustmentsPanelProps {
   canReport: boolean
   canReview: boolean
   canGenerateDocument?: boolean
+  canGenerateSummaryDocument?: boolean
   isTechnicalOnlyView?: boolean
   isBusy?: boolean
   onCreate: () => void
   onReview: (adjustment: CalibrationServiceAdjustment) => void
   onGenerateDocument?: (adjustment: CalibrationServiceAdjustment) => void
+  onGenerateSummaryDocument?: () => void
 }
 
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
@@ -53,13 +55,18 @@ const CalibrationServiceAdjustmentsPanel = ({
   canReport,
   canReview,
   canGenerateDocument = false,
+  canGenerateSummaryDocument = false,
   isTechnicalOnlyView = false,
   isBusy = false,
   onCreate,
   onReview,
-  onGenerateDocument
+  onGenerateDocument,
+  onGenerateSummaryDocument
 }: CalibrationServiceAdjustmentsPanelProps) => {
   const adjustments = service.adjustments || []
+  const hasApprovedAdjustments = adjustments.some(
+    (adjustment) => adjustment.status === 'approved'
+  )
   const pendingCommercialAdjustments = adjustments.filter(
     (adjustment) =>
       adjustment.requiresCommercialAdjustment && adjustment.status === 'reported'
@@ -83,11 +90,24 @@ const CalibrationServiceAdjustmentsPanel = ({
             Registra diferencias entre lo cotizado y lo realmente recibido o ejecutado.
           </Typography>
         </Box>
-        {canReport ? (
-          <Button variant='contained' onClick={onCreate} disabled={isBusy}>
-            Registrar novedad
-          </Button>
-        ) : null}
+        <Stack direction='row' spacing={1}>
+          {canGenerateSummaryDocument &&
+          hasApprovedAdjustments &&
+          onGenerateSummaryDocument ? (
+            <Button
+              variant='outlined'
+              onClick={onGenerateSummaryDocument}
+              disabled={isBusy}
+            >
+              Generar consolidado PDF
+            </Button>
+          ) : null}
+          {canReport ? (
+            <Button variant='contained' onClick={onCreate} disabled={isBusy}>
+              Registrar novedad
+            </Button>
+          ) : null}
+        </Stack>
       </Stack>
 
       {adjustments.length ? (

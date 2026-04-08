@@ -207,6 +207,7 @@ const CalibrationServiceDetailsPage = () => {
     generateQuotePdf,
     generateOdsPdf,
     generateAdjustmentPdf,
+    generateAdjustmentSummaryPdf,
     downloadDocument,
     upsertSequenceConfig
   } = useCalibrationServiceMutations()
@@ -505,15 +506,21 @@ const CalibrationServiceDetailsPage = () => {
     generateQuotePdf.isLoading ||
     generateOdsPdf.isLoading ||
     generateAdjustmentPdf.isLoading ||
+    generateAdjustmentSummaryPdf.isLoading ||
     downloadDocument.isLoading
   const decisionDocuments = service.documents?.filter((document) =>
     ['approval_evidence', 'rejection_evidence'].includes(document.documentType)
   )
   const officialPdfDocuments = service.documents?.filter((document) =>
-    ['quote_pdf', 'ods_pdf'].includes(document.documentType)
+    ['quote_pdf', 'ods_pdf', 'adjustment_pdf', 'adjustment_summary_pdf'].includes(
+      document.documentType
+    )
   )
   const supportDocuments = service.documents?.filter(
-    (document) => !['quote_pdf', 'ods_pdf'].includes(document.documentType)
+    (document) =>
+      !['quote_pdf', 'ods_pdf', 'adjustment_pdf', 'adjustment_summary_pdf'].includes(
+        document.documentType
+      )
   )
   const unresolvedCommercialAdjustments = (service.adjustments || []).filter(
     (adjustment) =>
@@ -1197,6 +1204,23 @@ const CalibrationServiceDetailsPage = () => {
     }
   }
 
+  const handleGenerateAdjustmentSummaryPdf = async () => {
+    try {
+      const document = await generateAdjustmentSummaryPdf.mutateAsync({
+        serviceId: String(service.id)
+      })
+      toast.success('El consolidado PDF de novedades quedó generado.')
+      await handleDownloadDocument(
+        document.id,
+        document.originalFileName ||
+          `consolidado-novedades-${service.serviceCode}.pdf`
+      )
+    } catch (pdfError) {
+      console.error(pdfError)
+      toast.error('No pudimos generar el consolidado PDF de novedades.')
+    }
+  }
+
   const handleUploadSupportDocument = async ({
     file,
     documentType,
@@ -1869,11 +1893,13 @@ const CalibrationServiceDetailsPage = () => {
                   canReport={canReportAdjustment}
                   canReview={canReviewAdjustment}
                   canGenerateDocument={canReviewAdjustment}
+                  canGenerateSummaryDocument={canReviewAdjustment}
                   isTechnicalOnlyView={isTechnicalOnlyView}
                   isBusy={isOperationalBusy}
                   onCreate={() => setIsAdjustmentDialogOpen(true)}
                   onReview={(adjustment) => setSelectedAdjustment(adjustment)}
                   onGenerateDocument={handleGenerateAdjustmentPdf}
+                  onGenerateSummaryDocument={handleGenerateAdjustmentSummaryPdf}
                 />
               </DetailTabPanel>
 

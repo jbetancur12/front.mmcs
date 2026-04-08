@@ -187,6 +187,7 @@ export const CALIBRATION_SERVICE_DOCUMENT_LABELS: Record<
   quote_pdf: 'PDF de cotización',
   ods_pdf: 'PDF de ODS',
   adjustment_pdf: 'PDF de anexo de novedad',
+  adjustment_summary_pdf: 'PDF consolidado de novedades',
   invoice_attachment: 'Soporte de factura',
   supporting_attachment: 'Soporte adjunto'
 }
@@ -201,6 +202,7 @@ export const CALIBRATION_SERVICE_DOCUMENT_COLORS: Record<
   quote_pdf: 'secondary',
   ods_pdf: 'secondary',
   adjustment_pdf: 'secondary',
+  adjustment_summary_pdf: 'secondary',
   invoice_attachment: 'info',
   supporting_attachment: 'default'
 }

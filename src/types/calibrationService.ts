@@ -84,6 +84,7 @@ export type CalibrationServiceDocumentType =
   | 'quote_pdf'
   | 'ods_pdf'
   | 'adjustment_pdf'
+  | 'adjustment_summary_pdf'
   | 'invoice_attachment'
   | 'supporting_attachment'
 
