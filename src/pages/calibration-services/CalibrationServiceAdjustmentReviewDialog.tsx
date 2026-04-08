@@ -26,6 +26,8 @@ interface CalibrationServiceAdjustmentReviewDialogProps {
     commercialNotes?: string | null
     pricingNotes?: string | null
     approvedUnitPrice?: number | null
+    approvedTaxRate?: number | null
+    approvedTaxTotal?: number | null
     approvedSubtotal?: number | null
     approvedTotal?: number | null
   }) => void | Promise<void>
@@ -45,6 +47,7 @@ const CalibrationServiceAdjustmentReviewDialog = ({
   const [commercialNotes, setCommercialNotes] = useState('')
   const [pricingNotes, setPricingNotes] = useState('')
   const [approvedUnitPrice, setApprovedUnitPrice] = useState('')
+  const [approvedTaxRate, setApprovedTaxRate] = useState('')
 
   useEffect(() => {
     if (!open || !adjustment) {
@@ -58,6 +61,18 @@ const CalibrationServiceAdjustmentReviewDialog = ({
       adjustment.approvedUnitPrice !== null &&
         adjustment.approvedUnitPrice !== undefined
         ? String(adjustment.approvedUnitPrice)
+        : ''
+    )
+    setApprovedTaxRate(
+      adjustment.approvedTaxRate !== null &&
+        adjustment.approvedTaxRate !== undefined
+        ? String(adjustment.approvedTaxRate)
+        : adjustment.otherFields &&
+            typeof adjustment.otherFields.approvedTaxRate === 'number'
+          ? String(adjustment.otherFields.approvedTaxRate)
+          : adjustment.otherFields &&
+              typeof adjustment.otherFields.approvedTaxRate === 'string'
+            ? adjustment.otherFields.approvedTaxRate
         : ''
     )
   }, [open, adjustment])
@@ -76,8 +91,10 @@ const CalibrationServiceAdjustmentReviewDialog = ({
   }, [adjustment])
 
   const approvedUnitPriceNumber = approvedUnitPrice ? Number(approvedUnitPrice) : 0
+  const approvedTaxRateNumber = approvedTaxRate ? Number(approvedTaxRate) : 0
   const approvedSubtotal = pricedQuantity * approvedUnitPriceNumber
-  const approvedTotal = approvedSubtotal
+  const approvedTaxTotal = approvedSubtotal * (approvedTaxRateNumber / 100)
+  const approvedTotal = approvedSubtotal + approvedTaxTotal
 
   const handleSubmit = async () => {
     await onSubmit({
@@ -85,6 +102,8 @@ const CalibrationServiceAdjustmentReviewDialog = ({
       commercialNotes: commercialNotes.trim() || null,
       pricingNotes: pricingNotes.trim() || null,
       approvedUnitPrice: approvedUnitPrice ? Number(approvedUnitPrice) : null,
+      approvedTaxRate: approvedTaxRate ? Number(approvedTaxRate) : null,
+      approvedTaxTotal: approvedUnitPrice ? approvedTaxTotal : null,
       approvedSubtotal: approvedUnitPrice ? approvedSubtotal : null,
       approvedTotal: approvedUnitPrice ? approvedTotal : null
     })
@@ -150,8 +169,30 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                 <TextField
                   fullWidth
                   type='number'
+                  label='IVA %'
+                  value={approvedTaxRate}
+                  onChange={(event) => setApprovedTaxRate(event.target.value)}
+                  inputProps={{ min: 0 }}
+                  helperText='Opcional'
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  fullWidth
+                  type='number'
                   label='Subtotal'
                   value={approvedUnitPrice ? approvedSubtotal : ''}
+                  inputProps={{ min: 0 }}
+                  InputProps={{ readOnly: true }}
+                  helperText='Se calcula automáticamente'
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  fullWidth
+                  type='number'
+                  label='Valor IVA'
+                  value={approvedUnitPrice ? approvedTaxTotal : ''}
                   inputProps={{ min: 0 }}
                   InputProps={{ readOnly: true }}
                   helperText='Se calcula automáticamente'

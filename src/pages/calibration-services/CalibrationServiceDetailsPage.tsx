@@ -830,6 +830,8 @@ const CalibrationServiceDetailsPage = () => {
     commercialNotes?: string | null
     pricingNotes?: string | null
     approvedUnitPrice?: number | null
+    approvedTaxRate?: number | null
+    approvedTaxTotal?: number | null
     approvedSubtotal?: number | null
     approvedTotal?: number | null
   }) => {

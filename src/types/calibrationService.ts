@@ -203,6 +203,8 @@ export interface CalibrationServiceAdjustment {
   commercialNotes?: string | null
   pricingNotes?: string | null
   approvedUnitPrice?: number | string | null
+  approvedTaxRate?: number | string | null
+  approvedTaxTotal?: number | string | null
   approvedSubtotal?: number | string | null
   approvedTotal?: number | string | null
   reportedAt: string
@@ -505,6 +507,8 @@ export interface CalibrationServiceReviewAdjustmentPayload {
   commercialNotes?: string | null
   pricingNotes?: string | null
   approvedUnitPrice?: number | null
+  approvedTaxRate?: number | null
+  approvedTaxTotal?: number | null
   approvedSubtotal?: number | null
   approvedTotal?: number | null
   reviewedAt?: string
