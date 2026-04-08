@@ -294,7 +294,8 @@ const CalibrationServiceDetailsPage = () => {
     canRunExecutionRole &&
     ['scheduled', 'in_execution'].includes(service?.status || '')
   const canInvoiceCuts = canInvoiceCutRole
-  const canUpdateDocumentControl = canUpdateDocumentControlRole
+  const canUpdateDocumentControl =
+    canUpdateDocumentControlRole && service?.status !== 'closed'
   const canStillRegisterAdjustmentsAfterTechnicalCompletion =
     service?.status === 'technically_completed' && canReportAdjustment
   const hasCuts = Boolean(service?.cuts?.length)
