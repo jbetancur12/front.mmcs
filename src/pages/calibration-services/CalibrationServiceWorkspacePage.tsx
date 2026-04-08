@@ -340,7 +340,7 @@ const CalibrationServiceWorkspacePage = () => {
       : null
   const canEdit =
     canAccessWorkspace &&
-    (!service || ['draft', 'pending_approval'].includes(service.status))
+    (!service || service.status === 'draft')
   const isBusy = createService.isLoading || updateService.isLoading || uploadDocument.isLoading
 
   const subtotal = formState.items.reduce((acc, item) => acc + getItemTotals(item).subtotal, 0)

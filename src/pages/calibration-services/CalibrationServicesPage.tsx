@@ -638,7 +638,7 @@ const CalibrationServicesPage = () => {
           visibleServices.map((service) => {
             const canEdit =
               canCreateServices &&
-              ['draft', 'pending_approval'].includes(service.status)
+              service.status === 'draft'
             const canRequestApproval =
               canCreateServices && service.status === 'draft'
             const canResolveApproval =

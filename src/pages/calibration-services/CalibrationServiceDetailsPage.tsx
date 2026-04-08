@@ -232,7 +232,7 @@ const CalibrationServiceDetailsPage = () => {
 
   const canEdit =
     canEditService &&
-    ['draft', 'pending_approval'].includes(service.status)
+    service.status === 'draft'
   const canRequestApproval =
     canEditService && service.status === 'draft'
   const canDecideApproval =
