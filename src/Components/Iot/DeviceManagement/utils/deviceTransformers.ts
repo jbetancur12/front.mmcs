@@ -1,5 +1,4 @@
-import { Customer } from 'src/Components/Quotations/types'
-import { DeviceIot, DeviceIotConfig } from '../../types'
+import { Customer, DeviceIot, DeviceIotConfig } from '../../types'
 
 export const transformDevice = (device: any): DeviceIot => {
   const [lng, lat] = device.lastLocation?.coordinates || [0, 0]
