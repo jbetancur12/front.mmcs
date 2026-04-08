@@ -382,18 +382,53 @@ const CalibrationServiceDetailsPage = () => {
     typeof operationsDetails?.completionNotes === 'string'
       ? operationsDetails.completionNotes
       : ''
-  const subtotal = (service.items || []).reduce(
+  const approvedAdjustmentsImpact = (service.adjustments || []).reduce(
+    (accumulator, adjustment) => {
+      if (!['approved', 'applied_to_cut'].includes(adjustment.status)) {
+        return accumulator
+      }
+
+      if (
+        adjustment.changeType === 'extra_item' &&
+        adjustment.serviceItemId &&
+        (service.items || []).some((item) => item.id === adjustment.serviceItemId)
+      ) {
+        return accumulator
+      }
+
+      const taxTotalFromOtherFields =
+        adjustment.approvedTaxTotal ??
+        (adjustment.otherFields &&
+        typeof adjustment.otherFields.approvedTaxTotal === 'number'
+          ? adjustment.otherFields.approvedTaxTotal
+          : adjustment.otherFields &&
+              typeof adjustment.otherFields.approvedTaxTotal === 'string'
+            ? adjustment.otherFields.approvedTaxTotal
+            : 0)
+
+      return {
+        subtotal: accumulator.subtotal + toNumber(adjustment.approvedSubtotal),
+        taxTotal: accumulator.taxTotal + toNumber(taxTotalFromOtherFields),
+        grandTotal: accumulator.grandTotal + toNumber(adjustment.approvedTotal)
+      }
+    },
+    { subtotal: 0, taxTotal: 0, grandTotal: 0 }
+  )
+  const baseSubtotal = (service.items || []).reduce(
     (accumulator, item) => accumulator + toNumber(item.subtotal),
     0
   )
-  const taxTotal = (service.items || []).reduce(
+  const baseTaxTotal = (service.items || []).reduce(
     (accumulator, item) => accumulator + toNumber(item.taxTotal),
     0
   )
-  const grandTotal = (service.items || []).reduce(
+  const baseGrandTotal = (service.items || []).reduce(
     (accumulator, item) => accumulator + toNumber(item.total),
     0
   )
+  const subtotal = baseSubtotal + approvedAdjustmentsImpact.subtotal
+  const taxTotal = baseTaxTotal + approvedAdjustmentsImpact.taxTotal
+  const grandTotal = baseGrandTotal + approvedAdjustmentsImpact.grandTotal
   const isDecisionLoading =
     requestApproval.isLoading ||
     approveService.isLoading ||
@@ -834,6 +869,8 @@ const CalibrationServiceDetailsPage = () => {
     approvedTaxTotal?: number | null
     approvedSubtotal?: number | null
     approvedTotal?: number | null
+    useQuotedPrice?: boolean
+    applyDiscount?: boolean
   }) => {
     if (!selectedAdjustment) {
       return

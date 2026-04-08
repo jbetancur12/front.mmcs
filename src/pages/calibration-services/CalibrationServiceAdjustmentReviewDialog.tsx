@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   Button,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   Grid,
   MenuItem,
   Stack,
@@ -30,6 +32,8 @@ interface CalibrationServiceAdjustmentReviewDialogProps {
     approvedTaxTotal?: number | null
     approvedSubtotal?: number | null
     approvedTotal?: number | null
+    useQuotedPrice?: boolean
+    applyDiscount?: boolean
   }) => void | Promise<void>
 }
 
@@ -48,6 +52,8 @@ const CalibrationServiceAdjustmentReviewDialog = ({
   const [pricingNotes, setPricingNotes] = useState('')
   const [approvedUnitPrice, setApprovedUnitPrice] = useState('')
   const [approvedTaxRate, setApprovedTaxRate] = useState('')
+  const [useQuotedPrice, setUseQuotedPrice] = useState(false)
+  const [applyDiscount, setApplyDiscount] = useState(true)
 
   useEffect(() => {
     if (!open || !adjustment) {
@@ -75,9 +81,24 @@ const CalibrationServiceAdjustmentReviewDialog = ({
             ? adjustment.otherFields.approvedTaxRate
         : ''
     )
+    setUseQuotedPrice(
+      adjustment.otherFields &&
+        typeof adjustment.otherFields.useQuotedPrice === 'boolean'
+        ? adjustment.otherFields.useQuotedPrice
+        : adjustment.changeType === 'quantity_more' &&
+            Boolean(adjustment.serviceItem?.unitPrice)
+    )
+    setApplyDiscount(
+      adjustment.otherFields &&
+        typeof adjustment.otherFields.applyDiscount === 'boolean'
+        ? adjustment.otherFields.applyDiscount
+        : adjustment.changeType === 'quantity_less'
+    )
   }, [open, adjustment])
 
   const needsPricing = Boolean(adjustment?.requiresCommercialAdjustment)
+  const isQuantityMore = adjustment?.changeType === 'quantity_more'
+  const isQuantityLess = adjustment?.changeType === 'quantity_less'
   const pricedQuantity = useMemo(() => {
     if (!adjustment) {
       return 0
@@ -90,22 +111,53 @@ const CalibrationServiceAdjustmentReviewDialog = ({
     return Math.abs(adjustment.differenceQuantity || 0)
   }, [adjustment])
 
+  useEffect(() => {
+    if (!adjustment || !useQuotedPrice) {
+      return
+    }
+
+    const quotedUnitPrice =
+      adjustment.serviceItem?.unitPrice !== null &&
+      adjustment.serviceItem?.unitPrice !== undefined
+        ? String(adjustment.serviceItem.unitPrice)
+        : ''
+    const quotedTaxRate =
+      adjustment.serviceItem?.taxRate !== null &&
+      adjustment.serviceItem?.taxRate !== undefined
+        ? String(adjustment.serviceItem.taxRate)
+        : ''
+
+    setApprovedUnitPrice(quotedUnitPrice)
+    setApprovedTaxRate(quotedTaxRate)
+  }, [adjustment, useQuotedPrice])
+
   const approvedUnitPriceNumber = approvedUnitPrice ? Number(approvedUnitPrice) : 0
   const approvedTaxRateNumber = approvedTaxRate ? Number(approvedTaxRate) : 0
   const approvedSubtotal = pricedQuantity * approvedUnitPriceNumber
   const approvedTaxTotal = approvedSubtotal * (approvedTaxRateNumber / 100)
   const approvedTotal = approvedSubtotal + approvedTaxTotal
+  const signedSubtotal = isQuantityLess && applyDiscount ? -approvedSubtotal : approvedSubtotal
+  const signedTaxTotal = isQuantityLess && applyDiscount ? -approvedTaxTotal : approvedTaxTotal
+  const signedTotal = isQuantityLess && applyDiscount ? -approvedTotal : approvedTotal
 
   const handleSubmit = async () => {
     await onSubmit({
       decision,
       commercialNotes: commercialNotes.trim() || null,
       pricingNotes: pricingNotes.trim() || null,
-      approvedUnitPrice: approvedUnitPrice ? Number(approvedUnitPrice) : null,
+      approvedUnitPrice:
+        approvedUnitPrice && (!isQuantityLess || applyDiscount)
+          ? Number(approvedUnitPrice)
+          : 0,
       approvedTaxRate: approvedTaxRate ? Number(approvedTaxRate) : null,
-      approvedTaxTotal: approvedUnitPrice ? approvedTaxTotal : null,
-      approvedSubtotal: approvedUnitPrice ? approvedSubtotal : null,
-      approvedTotal: approvedUnitPrice ? approvedTotal : null
+      approvedTaxTotal:
+        approvedUnitPrice && (!isQuantityLess || applyDiscount) ? signedTaxTotal : 0,
+      approvedSubtotal:
+        approvedUnitPrice && (!isQuantityLess || applyDiscount) ? signedSubtotal : 0,
+      approvedTotal:
+        approvedUnitPrice && (!isQuantityLess || applyDiscount) ? signedTotal : 0,
+      useQuotedPrice,
+      applyDiscount
     })
   }
 
@@ -154,6 +206,32 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                   minRows={2}
                 />
               </Grid>
+              {isQuantityMore ? (
+                <Grid item xs={12}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={useQuotedPrice}
+                        onChange={(event) => setUseQuotedPrice(event.target.checked)}
+                      />
+                    }
+                    label='Usar el mismo precio cotizado del ítem original'
+                  />
+                </Grid>
+              ) : null}
+              {isQuantityLess ? (
+                <Grid item xs={12}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={applyDiscount}
+                        onChange={(event) => setApplyDiscount(event.target.checked)}
+                      />
+                    }
+                    label='Descontar del valor original por la menor cantidad recibida o ejecutada'
+                  />
+                </Grid>
+              ) : null}
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
@@ -163,6 +241,7 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                   onChange={(event) => setApprovedUnitPrice(event.target.value)}
                   inputProps={{ min: 0 }}
                   helperText={`Cantidad a reconocer: ${pricedQuantity}`}
+                  disabled={useQuotedPrice}
                 />
               </Grid>
               <Grid item xs={12} md={4}>
@@ -181,7 +260,7 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                   fullWidth
                   type='number'
                   label='Subtotal'
-                  value={approvedUnitPrice ? approvedSubtotal : ''}
+                  value={approvedUnitPrice ? signedSubtotal : ''}
                   inputProps={{ min: 0 }}
                   InputProps={{ readOnly: true }}
                   helperText='Se calcula automáticamente'
@@ -192,7 +271,7 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                   fullWidth
                   type='number'
                   label='Valor IVA'
-                  value={approvedUnitPrice ? approvedTaxTotal : ''}
+                  value={approvedUnitPrice ? signedTaxTotal : ''}
                   inputProps={{ min: 0 }}
                   InputProps={{ readOnly: true }}
                   helperText='Se calcula automáticamente'
@@ -203,10 +282,14 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                   fullWidth
                   type='number'
                   label='Total aprobado'
-                  value={approvedUnitPrice ? approvedTotal : ''}
+                  value={approvedUnitPrice ? signedTotal : ''}
                   inputProps={{ min: 0 }}
                   InputProps={{ readOnly: true }}
-                  helperText='Se calcula automáticamente'
+                  helperText={
+                    isQuantityLess && !applyDiscount
+                      ? 'No se aplicará descuento económico'
+                      : 'Se calcula automáticamente'
+                  }
                 />
               </Grid>
             </Grid>

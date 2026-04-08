@@ -511,6 +511,8 @@ export interface CalibrationServiceReviewAdjustmentPayload {
   approvedTaxTotal?: number | null
   approvedSubtotal?: number | null
   approvedTotal?: number | null
+  useQuotedPrice?: boolean
+  applyDiscount?: boolean
   reviewedAt?: string
 }
 
