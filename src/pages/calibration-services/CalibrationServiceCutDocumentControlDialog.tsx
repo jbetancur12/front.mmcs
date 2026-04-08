@@ -43,6 +43,14 @@ const CalibrationServiceCutDocumentControlDialog = ({
   const [reviewedCertificates, setReviewedCertificates] = useState(0)
   const [sentCertificates, setSentCertificates] = useState(0)
   const [notes, setNotes] = useState('')
+  const suggestedCertificates = useMemo(
+    () =>
+      (cut.items || []).reduce(
+        (accumulator, item) => accumulator + (Number(item.quantity) || 0),
+        0
+      ),
+    [cut.items]
+  )
 
   useEffect(() => {
     if (!open) {
@@ -50,12 +58,14 @@ const CalibrationServiceCutDocumentControlDialog = ({
     }
 
     const current = cut.otherFields?.documentControl
-    setExpectedCertificates(current?.expectedCertificates || 0)
+    setExpectedCertificates(
+      current?.expectedCertificates || suggestedCertificates || 0
+    )
     setUploadedCertificates(current?.uploadedCertificates || 0)
     setReviewedCertificates(current?.reviewedCertificates || 0)
     setSentCertificates(current?.sentCertificates || 0)
     setNotes(current?.notes || '')
-  }, [cut, open])
+  }, [cut, open, suggestedCertificates])
 
   const normalizedUploaded = clampValue(uploadedCertificates, 0, expectedCertificates)
   const normalizedReviewed = clampValue(reviewedCertificates, 0, normalizedUploaded)
@@ -109,7 +119,22 @@ const CalibrationServiceCutDocumentControlDialog = ({
               setExpectedCertificates(Math.max(0, Number(event.target.value) || 0))
             }
             fullWidth
+            helperText={
+              suggestedCertificates > 0
+                ? `Sugerencia automática: ${suggestedCertificates} según la cantidad liberada en este corte. Puedes ajustarlo si no todos requieren certificado.`
+                : 'Define manualmente cuántos certificados esperas para este corte.'
+            }
           />
+          {suggestedCertificates > 0 ? (
+            <Button
+              variant='text'
+              onClick={() => setExpectedCertificates(suggestedCertificates)}
+              disabled={isLoading}
+              sx={{ alignSelf: 'flex-start', mt: -1 }}
+            >
+              Usar sugerencia ({suggestedCertificates})
+            </Button>
+          ) : null}
           <TextField
             label='Certificados cargados'
             type='number'
