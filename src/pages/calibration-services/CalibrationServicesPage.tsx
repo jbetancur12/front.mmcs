@@ -721,6 +721,9 @@ const CalibrationServicesPage = () => {
         ) : (
           visibleServices.map((service) => {
             const serviceOperationalFocus = getServiceOperationalFocus(service)
+            const shouldShowOperationalFocusBadge =
+              serviceOperationalFocus &&
+              serviceOperationalFocus.label !== service.slaIndicator?.label
             const canEdit =
               canCreateServices &&
               service.status === 'draft'
@@ -788,7 +791,7 @@ const CalibrationServicesPage = () => {
                           }
                           label={service.slaIndicator?.label || 'SLA no iniciado'}
                         />
-                        {serviceOperationalFocus ? (
+                        {shouldShowOperationalFocusBadge ? (
                           <Chip
                             size='small'
                             color={serviceOperationalFocus.color}
