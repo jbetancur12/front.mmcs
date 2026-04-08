@@ -236,7 +236,7 @@ const CalibrationServiceGuidePanel = () => {
       <Card sx={{ borderRadius: 3 }}>
         <CardContent>
           <Typography variant='h6' fontWeight={700} gutterBottom>
-            Flujo operativo del módulo
+            Mapa del flujo
           </Typography>
           <Stack
             direction='row'
