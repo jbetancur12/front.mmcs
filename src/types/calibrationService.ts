@@ -28,6 +28,13 @@ export type CalibrationServiceSlaIndicatorColor =
   | 'red'
   | 'blue'
 
+export interface CalibrationServiceCutSlaIndicator {
+  color: CalibrationServiceSlaIndicatorColor
+  label: string
+  message: string
+  businessDaysElapsed?: number
+}
+
 export type CalibrationServiceOperationalItemStatus =
   | 'pending'
   | 'scheduled'
@@ -158,6 +165,7 @@ export interface CalibrationServiceCut {
   notes?: string | null
   createdByUserId?: number | null
   otherFields?: Record<string, unknown>
+  slaIndicator?: CalibrationServiceCutSlaIndicator
   createdBy?: CalibrationServiceUserSummary | null
   items?: CalibrationServiceCutItem[]
   createdAt?: string
@@ -429,6 +437,12 @@ export interface CalibrationServiceCreateCutPayload {
   notes?: string | null
   releasedAt?: string
   items: CalibrationServiceCreateCutItemPayload[]
+}
+
+export interface CalibrationServiceMarkCutReadyPayload {
+  serviceId: string
+  cutId: string
+  readyForInvoicingAt?: string
 }
 
 export interface CalibrationServiceDocumentActionPayload {

@@ -171,6 +171,7 @@ const CalibrationServiceDetailsPage = () => {
     completeExecution,
     updateItemProgress,
     createCut,
+    markCutReadyForInvoicing,
     generateQuotePdf,
     generateOdsPdf,
     downloadDocument,
@@ -375,7 +376,8 @@ const CalibrationServiceDetailsPage = () => {
     startExecution.isLoading ||
     completeExecution.isLoading ||
     updateItemProgress.isLoading ||
-    createCut.isLoading
+    createCut.isLoading ||
+    markCutReadyForInvoicing.isLoading
   const isDocumentBusy =
     uploadDocument.isLoading ||
     generateQuotePdf.isLoading ||
@@ -726,6 +728,20 @@ const CalibrationServiceDetailsPage = () => {
     } catch (cutError) {
       console.error(cutError)
       toast.error('No pudimos crear el corte.')
+    }
+  }
+
+  const handleMarkCutReady = async (cutId: number) => {
+    try {
+      await markCutReadyForInvoicing.mutateAsync({
+        serviceId: String(service.id),
+        cutId: String(cutId),
+        readyForInvoicingAt: new Date().toISOString()
+      })
+      toast.success('El corte quedó listo para facturar.')
+    } catch (cutError) {
+      console.error(cutError)
+      toast.error('No pudimos mover el corte a listo para facturar.')
     }
   }
 
@@ -1439,7 +1455,12 @@ const CalibrationServiceDetailsPage = () => {
               </DetailTabPanel>
 
               <DetailTabPanel value={activeTab} tab='cuts'>
-                <CalibrationServiceCutsPanel cuts={service.cuts || []} />
+                <CalibrationServiceCutsPanel
+                  cuts={service.cuts || []}
+                  canMarkReady={canCreateCut}
+                  isBusy={isOperationalBusy}
+                  onMarkReady={handleMarkCutReady}
+                />
               </DetailTabPanel>
 
               <DetailTabPanel value={activeTab} tab='documents'>

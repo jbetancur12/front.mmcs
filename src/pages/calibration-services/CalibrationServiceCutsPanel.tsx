@@ -1,8 +1,11 @@
-import { Alert, Box, Chip, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
+import { Alert, Box, Button, Chip, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
 import { CalibrationServiceCut } from '../../types/calibrationService'
 
 interface CalibrationServiceCutsPanelProps {
   cuts: CalibrationServiceCut[]
+  canMarkReady?: boolean
+  isBusy?: boolean
+  onMarkReady?: (cutId: number) => void | Promise<void>
 }
 
 const cutTypeLabels = {
@@ -15,7 +18,12 @@ const cutStatusLabels = {
   ready_for_invoicing: 'Listo para facturar'
 } as const
 
-const CalibrationServiceCutsPanel = ({ cuts }: CalibrationServiceCutsPanelProps) => {
+const CalibrationServiceCutsPanel = ({
+  cuts,
+  canMarkReady = false,
+  isBusy = false,
+  onMarkReady
+}: CalibrationServiceCutsPanelProps) => {
   if (!cuts.length) {
     return <Alert severity='info'>Este servicio todavía no tiene cortes creados.</Alert>
   }
@@ -28,9 +36,11 @@ const CalibrationServiceCutsPanel = ({ cuts }: CalibrationServiceCutsPanelProps)
             <TableCell>Código</TableCell>
             <TableCell>Tipo</TableCell>
             <TableCell>Estado</TableCell>
+            <TableCell>Semáforo</TableCell>
             <TableCell>Items</TableCell>
             <TableCell>Fecha liberación</TableCell>
             <TableCell>Notas</TableCell>
+            <TableCell>Acción</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -41,6 +51,23 @@ const CalibrationServiceCutsPanel = ({ cuts }: CalibrationServiceCutsPanelProps)
                 <Chip size='small' label={cutTypeLabels[cut.cutType]} />
               </TableCell>
               <TableCell>{cutStatusLabels[cut.status]}</TableCell>
+              <TableCell>
+                <Chip
+                  size='small'
+                  color={
+                    cut.slaIndicator?.color === 'green'
+                      ? 'success'
+                      : cut.slaIndicator?.color === 'yellow'
+                        ? 'warning'
+                        : cut.slaIndicator?.color === 'red'
+                          ? 'error'
+                          : cut.slaIndicator?.color === 'blue'
+                            ? 'info'
+                            : 'default'
+                  }
+                  label={cut.slaIndicator?.label || 'Sin iniciar'}
+                />
+              </TableCell>
               <TableCell>
                 <Stack spacing={0.5}>
                   {(cut.items || []).map((item) => (
@@ -56,6 +83,20 @@ const CalibrationServiceCutsPanel = ({ cuts }: CalibrationServiceCutsPanelProps)
                   : 'Sin fecha'}
               </TableCell>
               <TableCell>{cut.notes || 'Sin notas'}</TableCell>
+              <TableCell>
+                {canMarkReady && cut.status === 'draft' ? (
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    onClick={() => void onMarkReady?.(cut.id)}
+                    disabled={isBusy}
+                  >
+                    Listo para facturar
+                  </Button>
+                ) : (
+                  'Sin acción'
+                )}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
