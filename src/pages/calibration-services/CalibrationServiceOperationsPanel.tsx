@@ -66,6 +66,20 @@ const getItemText = (
   return typeof value === 'string' ? value : ''
 }
 
+const getReleasedQuantity = (item: CalibrationServiceOperationalItem) => {
+  const value = item.otherFields?.releasedQuantity
+
+  if (typeof value === 'number') {
+    return value
+  }
+
+  if (typeof value === 'string') {
+    return parseInt(value, 10) || 0
+  }
+
+  return 0
+}
+
 interface CalibrationServiceOperationsPanelProps {
   service: CalibrationService
   canEditProgress: boolean
@@ -216,6 +230,9 @@ const CalibrationServiceOperationsPanel = ({
               <TableRow>
                 <TableCell>Ítem</TableCell>
                 <TableCell>Instrumento</TableCell>
+                <TableCell align='right'>Cant.</TableCell>
+                <TableCell align='right'>Liberado</TableCell>
+                <TableCell align='right'>Disponible</TableCell>
                 <TableCell>Estado técnico</TableCell>
                 <TableCell>Notas técnicas</TableCell>
               </TableRow>
@@ -225,11 +242,19 @@ const CalibrationServiceOperationsPanel = ({
                 const draftItem = draftItems.find(
                   (draftItem) => draftItem.itemId === item.id
                 )
+                const releasedQuantity = getReleasedQuantity(item)
+                const availableQuantity = Math.max(
+                  (item.quantity || 0) - releasedQuantity,
+                  0
+                )
 
                 return (
                   <TableRow key={item.id}>
                     <TableCell>{item.itemName}</TableCell>
                     <TableCell>{item.instrumentName || 'Sin registrar'}</TableCell>
+                    <TableCell align='right'>{item.quantity}</TableCell>
+                    <TableCell align='right'>{releasedQuantity}</TableCell>
+                    <TableCell align='right'>{availableQuantity}</TableCell>
                     <TableCell sx={{ minWidth: 180 }}>
                       {canEditProgress ? (
                         <TextField
