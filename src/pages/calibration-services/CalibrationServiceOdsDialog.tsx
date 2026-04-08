@@ -134,6 +134,11 @@ const CalibrationServiceOdsDialog = ({
           <Typography variant='subtitle2' fontWeight={700}>
             Datos operativos
           </Typography>
+          <Alert severity='info'>
+            Si esta cotización era para un cliente diferente a la oferta, aquí puedes confirmar o
+            ajustar esos datos antes de emitir la ODS. Este bloque alimenta el encabezado
+            `Cliente Diferente Oferta`.
+          </Alert>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <TextField

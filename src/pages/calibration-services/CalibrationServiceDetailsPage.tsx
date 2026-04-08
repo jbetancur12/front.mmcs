@@ -244,6 +244,14 @@ const CalibrationServiceDetailsPage = () => {
     typeof latestChangeRequest?.changeRequestReason === 'string'
       ? latestChangeRequest.changeRequestReason
       : ''
+  const commercialCustomerName = service.customer?.nombre || 'Sin registrar'
+  const executionCustomerName =
+    service.executionCustomerName || service.customer?.nombre || 'Sin registrar'
+  const executionSiteName =
+    service.executionSiteName || service.customerSite || 'Sin registrar'
+  const hasDifferentExecutionCustomer =
+    Boolean(service.executionCustomerName) &&
+    service.executionCustomerName !== service.customer?.nombre
   const odsDetails = getOtherFieldRecord(service.otherFields, 'ods')
   const odsScheduleWindow =
     typeof odsDetails?.scheduleWindow === 'string' ? odsDetails.scheduleWindow : ''
@@ -830,6 +838,48 @@ const CalibrationServiceDetailsPage = () => {
                   </Alert>
                 ) : null}
                 <Grid container spacing={2}>
+                  {!isTechnicalOnlyView ? (
+                    <>
+                      <Grid item xs={12} md={6}>
+                        <Typography variant='caption' color='text.secondary'>
+                          Cliente de la oferta
+                        </Typography>
+                        <Typography variant='body1'>
+                          {commercialCustomerName}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <Typography variant='caption' color='text.secondary'>
+                          Destino del servicio
+                        </Typography>
+                        <Typography variant='body1'>
+                          {hasDifferentExecutionCustomer
+                            ? 'Cliente diferente a la oferta'
+                            : 'Mismo cliente de la oferta'}
+                        </Typography>
+                      </Grid>
+                      {hasDifferentExecutionCustomer ? (
+                        <>
+                          <Grid item xs={12} md={6}>
+                            <Typography variant='caption' color='text.secondary'>
+                              Cliente de ejecución
+                            </Typography>
+                            <Typography variant='body1'>
+                              {executionCustomerName}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={12} md={6}>
+                            <Typography variant='caption' color='text.secondary'>
+                              Sede o referencia de ejecución
+                            </Typography>
+                            <Typography variant='body1'>
+                              {executionSiteName}
+                            </Typography>
+                          </Grid>
+                        </>
+                      ) : null}
+                    </>
+                  ) : null}
                   <Grid item xs={12} md={6}>
                     <Typography variant='caption' color='text.secondary'>
                       Contacto

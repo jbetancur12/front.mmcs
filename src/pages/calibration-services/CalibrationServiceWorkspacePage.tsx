@@ -7,9 +7,11 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   Chip,
   CircularProgress,
   Divider,
+  FormControlLabel,
   FormControl,
   Grid,
   InputLabel,
@@ -234,6 +236,8 @@ const CalibrationServiceWorkspacePage = () => {
   const [requestEvidenceTitle, setRequestEvidenceTitle] = useState('')
   const [hydrated, setHydrated] = useState(false)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
+  const [useDifferentExecutionCustomer, setUseDifferentExecutionCustomer] =
+    useState(false)
 
   useEffect(() => {
     if (!canAccessWorkspace || isLoadingSequenceConfig) {
@@ -247,6 +251,7 @@ const CalibrationServiceWorkspacePage = () => {
 
   useEffect(() => {
     if (!service || hydrated) return
+    const hasDifferentExecutionCustomer = Boolean(service.executionCustomerName)
     setFormState({
       customerId: service.customerId ?? null,
       scopeType: service.scopeType ?? 'general',
@@ -291,6 +296,7 @@ const CalibrationServiceWorkspacePage = () => {
       })) || [createEmptyItem()]
     })
     setRequestEvidenceTitle(`Evidencia de solicitud ${service.serviceCode}`)
+    setUseDifferentExecutionCustomer(hasDifferentExecutionCustomer)
     setHydrated(true)
   }, [hydrated, service])
 
@@ -413,6 +419,18 @@ const CalibrationServiceWorkspacePage = () => {
       department: previous.department || customer?.departamento || '',
       address: previous.address || customer?.direccion || ''
     }))
+  }
+
+  const handleDifferentExecutionCustomerToggle = (checked: boolean) => {
+    setUseDifferentExecutionCustomer(checked)
+
+    if (!checked) {
+      setFormState((previous) => ({
+        ...previous,
+        executionCustomerName: '',
+        executionSiteName: ''
+      }))
+    }
   }
 
   const validateForm = () => {
@@ -663,7 +681,7 @@ const CalibrationServiceWorkspacePage = () => {
           <Card sx={{ borderRadius: 3, mb: 2 }}>
             <CardContent>
               <Typography variant='h6' fontWeight={700} gutterBottom>
-                Contacto y ejecucion
+                Contacto y destino del servicio
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
@@ -675,12 +693,6 @@ const CalibrationServiceWorkspacePage = () => {
                 <Grid item xs={12} md={6}>
                   <TextField fullWidth label='Telefono / celular' value={formState.contactPhone || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('contactPhone', event.target.value)} />
                 </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField fullWidth label='Cliente de ejecucion' value={formState.executionCustomerName || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('executionCustomerName', event.target.value)} />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <TextField fullWidth label='Sede de ejecucion' value={formState.executionSiteName || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('executionSiteName', event.target.value)} />
-                </Grid>
                 <Grid item xs={12} md={4}>
                   <TextField fullWidth label='Ciudad' value={formState.city || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('city', event.target.value)} />
                 </Grid>
@@ -690,6 +702,61 @@ const CalibrationServiceWorkspacePage = () => {
                 <Grid item xs={12}>
                   <TextField fullWidth label='Direccion' value={formState.address || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('address', event.target.value)} />
                 </Grid>
+                <Grid item xs={12}>
+                  <Divider sx={{ my: 1 }} />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={useDifferentExecutionCustomer}
+                        disabled={!canEdit || isBusy}
+                        onChange={(event) =>
+                          handleDifferentExecutionCustomerToggle(event.target.checked)
+                        }
+                      />
+                    }
+                    label='El servicio es para un cliente diferente a la oferta'
+                  />
+                </Grid>
+                {useDifferentExecutionCustomer ? (
+                  <>
+                    <Grid item xs={12}>
+                      <Alert severity='info'>
+                        Usa este bloque cuando la cotización se emite a un cliente, pero la
+                        ejecución real será para un tercero. Estos datos quedarán precargados en
+                        la ODS y en el bloque `Cliente Diferente Oferta`.
+                      </Alert>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label='Cliente de ejecución'
+                        value={formState.executionCustomerName || ''}
+                        disabled={!canEdit || isBusy}
+                        onChange={(event) =>
+                          setField('executionCustomerName', event.target.value)
+                        }
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        label='Sede o referencia de ejecución'
+                        value={formState.executionSiteName || ''}
+                        disabled={!canEdit || isBusy}
+                        onChange={(event) =>
+                          setField('executionSiteName', event.target.value)
+                        }
+                      />
+                    </Grid>
+                  </>
+                ) : (
+                  <Grid item xs={12}>
+                    <Typography variant='body2' color='text.secondary'>
+                      Si no marcas esta opción, el sistema asumirá que el servicio se presta para el
+                      mismo cliente de la oferta y tomará como base el cliente y la sede ya elegidos.
+                    </Typography>
+                  </Grid>
+                )}
               </Grid>
             </CardContent>
           </Card>
