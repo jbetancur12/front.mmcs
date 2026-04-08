@@ -255,6 +255,13 @@ const CalibrationServiceDetailsPage = () => {
   const canUpdateOperationalProgress =
     canRunExecutionRole &&
     ['scheduled', 'in_execution'].includes(service?.status || '')
+  const canStillRegisterAdjustmentsAfterTechnicalCompletion =
+    service?.status === 'technically_completed' && canReportAdjustment
+  const hasCuts = Boolean(service?.cuts?.length)
+  const shouldShowPostTechnicalCompletionGuidance =
+    service?.status === 'technically_completed'
+  const shouldShowCutsNextStepGuidance =
+    service?.status === 'technically_completed' && !hasCuts
 
   useEffect(() => {
     if (!canManageSequenceConfig || isLoadingSequenceConfig) {
@@ -1604,6 +1611,13 @@ const CalibrationServiceDetailsPage = () => {
                         <strong> Completado</strong>.
                       </Alert>
                     ) : null}
+                    {shouldShowPostTechnicalCompletionGuidance ? (
+                      <Alert severity='success' sx={{ mb: 2 }}>
+                        El servicio ya quedó <strong>finalizado técnicamente</strong>. Aún puedes
+                        registrar novedades si apareció alguna diferencia final, y después sacar
+                        el corte parcial o final según lo que realmente vaya a salir.
+                      </Alert>
+                    ) : null}
                     <CalibrationServiceOperationsPanel
                       service={service}
                       canEditProgress={canUpdateOperationalProgress}
@@ -1619,6 +1633,12 @@ const CalibrationServiceDetailsPage = () => {
               </DetailTabPanel>
 
               <DetailTabPanel value={activeTab} tab='adjustments'>
+                {canStillRegisterAdjustmentsAfterTechnicalCompletion ? (
+                  <Alert severity='info' sx={{ mb: 2 }}>
+                    Aunque la ejecución ya terminó, todavía puedes registrar novedades para dejar
+                    trazabilidad de diferencias finales antes de sacar el corte administrativo.
+                  </Alert>
+                ) : null}
                 <CalibrationServiceAdjustmentsPanel
                   service={service}
                   canReport={canReportAdjustment}
@@ -1631,6 +1651,13 @@ const CalibrationServiceDetailsPage = () => {
               </DetailTabPanel>
 
               <DetailTabPanel value={activeTab} tab='cuts'>
+                {shouldShowCutsNextStepGuidance ? (
+                  <Alert severity='info' sx={{ mb: 2 }}>
+                    El servicio ya terminó técnicamente y todavía no tiene cortes. Este es el paso
+                    para definir qué sale ahora: puedes crear un corte parcial si quedan
+                    pendientes, o un corte final si todo ya está listo.
+                  </Alert>
+                ) : null}
                 {unresolvedCommercialAdjustments.length ? (
                   <Alert severity='warning' sx={{ mb: 2 }}>
                     Antes de dejar un corte listo para facturar, revisa las novedades con
