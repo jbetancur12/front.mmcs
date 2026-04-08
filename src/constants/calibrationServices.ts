@@ -1,5 +1,7 @@
 import { ChipProps } from '@mui/material'
 import {
+  CalibrationServiceAdjustmentStatus,
+  CalibrationServiceAdjustmentType,
   CalibrationServiceApprovalStatus,
   CalibrationServiceDocumentType,
   CalibrationServiceEventType,
@@ -65,6 +67,18 @@ export const CALIBRATION_SERVICE_EXECUTION_ROLES = [
   'comp_admin',
   'comp_supervisor',
   'metrologist'
+] as const
+
+export const CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES =
+  CALIBRATION_SERVICE_EXECUTION_ROLES
+
+export const CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES = [
+  'admin',
+  'super_admin',
+  'comp_admin',
+  'comp_requester',
+  'comp_supervisor',
+  'invoicing'
 ] as const
 
 export const CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES = [
@@ -177,6 +191,8 @@ export const CALIBRATION_SERVICE_EVENT_LABELS: Record<
   approval_requested: 'Cotización enviada',
   service_approved: 'Aprobación cliente registrada',
   service_rejected: 'Rechazo cliente registrado',
+  adjustment_reported: 'Novedad reportada',
+  adjustment_reviewed: 'Novedad revisada',
   ods_issued: 'ODS emitida',
   document_uploaded: 'Documento cargado'
 }
@@ -190,6 +206,39 @@ export const CALIBRATION_SERVICE_EVENT_COLORS: Record<
   approval_requested: 'warning',
   service_approved: 'success',
   service_rejected: 'error',
+  adjustment_reported: 'warning',
+  adjustment_reviewed: 'info',
   ods_issued: 'info',
   document_uploaded: 'secondary'
+}
+
+export const CALIBRATION_SERVICE_ADJUSTMENT_TYPE_LABELS: Record<
+  CalibrationServiceAdjustmentType,
+  string
+> = {
+  quantity_less: 'Cantidad menor a la cotizada',
+  quantity_more: 'Cantidad mayor a la cotizada',
+  extra_item: 'Ítem adicional no cotizado',
+  not_received: 'Ítem no recibido',
+  scope_change: 'Cambio de alcance'
+}
+
+export const CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS: Record<
+  CalibrationServiceAdjustmentStatus,
+  string
+> = {
+  reported: 'Reportada',
+  approved: 'Aprobada',
+  rejected: 'Rechazada',
+  applied_to_cut: 'Aplicada al corte'
+}
+
+export const CALIBRATION_SERVICE_ADJUSTMENT_STATUS_COLORS: Record<
+  CalibrationServiceAdjustmentStatus,
+  ChipProps['color']
+> = {
+  reported: 'warning',
+  approved: 'success',
+  rejected: 'error',
+  applied_to_cut: 'info'
 }

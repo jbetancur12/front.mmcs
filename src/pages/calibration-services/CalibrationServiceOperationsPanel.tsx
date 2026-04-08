@@ -80,6 +80,25 @@ const getReleasedQuantity = (item: CalibrationServiceOperationalItem) => {
   return 0
 }
 
+const getEffectiveQuantity = (
+  service: CalibrationService,
+  item: CalibrationServiceOperationalItem
+) => {
+  const approvedDelta = (service.adjustments || []).reduce((accumulator, adjustment) => {
+    if (adjustment.serviceItemId !== item.id) {
+      return accumulator
+    }
+
+    if (!['approved', 'applied_to_cut'].includes(adjustment.status)) {
+      return accumulator
+    }
+
+    return accumulator + (adjustment.differenceQuantity || 0)
+  }, 0)
+
+  return Math.max((item.quantity || 0) + approvedDelta, 0)
+}
+
 interface CalibrationServiceOperationsPanelProps {
   service: CalibrationService
   canEditProgress: boolean
@@ -243,8 +262,9 @@ const CalibrationServiceOperationsPanel = ({
                   (draftItem) => draftItem.itemId === item.id
                 )
                 const releasedQuantity = getReleasedQuantity(item)
+                const effectiveQuantity = getEffectiveQuantity(service, item)
                 const availableQuantity = Math.max(
-                  (item.quantity || 0) - releasedQuantity,
+                  effectiveQuantity - releasedQuantity,
                   0
                 )
 
@@ -252,7 +272,7 @@ const CalibrationServiceOperationsPanel = ({
                   <TableRow key={item.id}>
                     <TableCell>{item.itemName}</TableCell>
                     <TableCell>{item.instrumentName || 'Sin registrar'}</TableCell>
-                    <TableCell align='right'>{item.quantity}</TableCell>
+                    <TableCell align='right'>{effectiveQuantity}</TableCell>
                     <TableCell align='right'>{releasedQuantity}</TableCell>
                     <TableCell align='right'>{availableQuantity}</TableCell>
                     <TableCell sx={{ minWidth: 180 }}>

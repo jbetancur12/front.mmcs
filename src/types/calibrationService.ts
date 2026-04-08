@@ -20,6 +20,19 @@ export type CalibrationServiceCustomerResponseType =
   | 'rejected'
   | 'changes_requested'
 
+export type CalibrationServiceAdjustmentType =
+  | 'quantity_less'
+  | 'quantity_more'
+  | 'extra_item'
+  | 'not_received'
+  | 'scope_change'
+
+export type CalibrationServiceAdjustmentStatus =
+  | 'reported'
+  | 'approved'
+  | 'rejected'
+  | 'applied_to_cut'
+
 export type CalibrationServiceScopeType = 'general' | 'site'
 export type CalibrationServiceSlaIndicatorColor =
   | 'gray'
@@ -59,6 +72,8 @@ export type CalibrationServiceEventType =
   | 'approval_requested'
   | 'service_approved'
   | 'service_rejected'
+  | 'adjustment_reported'
+  | 'adjustment_reviewed'
   | 'ods_issued'
   | 'document_uploaded'
 
@@ -172,6 +187,36 @@ export interface CalibrationServiceCut {
   updatedAt?: string
 }
 
+export interface CalibrationServiceAdjustment {
+  id: number
+  serviceId: number
+  serviceItemId?: number | null
+  changeType: CalibrationServiceAdjustmentType
+  status: CalibrationServiceAdjustmentStatus
+  itemName: string
+  quotedQuantity: number
+  actualQuantity: number
+  differenceQuantity: number
+  description: string
+  technicalNotes?: string | null
+  requiresCommercialAdjustment: boolean
+  commercialNotes?: string | null
+  pricingNotes?: string | null
+  approvedUnitPrice?: number | string | null
+  approvedSubtotal?: number | string | null
+  approvedTotal?: number | string | null
+  reportedAt: string
+  reportedByUserId?: number | null
+  reviewedAt?: string | null
+  reviewedByUserId?: number | null
+  otherFields?: Record<string, unknown>
+  serviceItem?: CalibrationServiceItem | null
+  reportedBy?: CalibrationServiceUserSummary | null
+  reviewedBy?: CalibrationServiceUserSummary | null
+  createdAt?: string
+  updatedAt?: string
+}
+
 export interface CalibrationServiceEvent {
   id: number
   serviceId: number
@@ -251,6 +296,7 @@ export interface CalibrationService {
   rejectedBy?: CalibrationServiceUserSummary | null
   odsGeneratedBy?: CalibrationServiceUserSummary | null
   items?: CalibrationServiceItem[]
+  adjustments?: CalibrationServiceAdjustment[]
   cuts?: CalibrationServiceCut[]
   documents?: CalibrationServiceDocument[]
   events?: CalibrationServiceEvent[]
@@ -437,6 +483,31 @@ export interface CalibrationServiceCreateCutPayload {
   notes?: string | null
   releasedAt?: string
   items: CalibrationServiceCreateCutItemPayload[]
+}
+
+export interface CalibrationServiceCreateAdjustmentPayload {
+  serviceId: string
+  serviceItemId?: number | null
+  changeType: CalibrationServiceAdjustmentType
+  itemName?: string | null
+  quotedQuantity?: number
+  actualQuantity: number
+  description: string
+  technicalNotes?: string | null
+  requiresCommercialAdjustment?: boolean
+  reportedAt?: string
+}
+
+export interface CalibrationServiceReviewAdjustmentPayload {
+  serviceId: string
+  adjustmentId: string
+  decision: Extract<CalibrationServiceAdjustmentStatus, 'approved' | 'rejected'>
+  commercialNotes?: string | null
+  pricingNotes?: string | null
+  approvedUnitPrice?: number | null
+  approvedSubtotal?: number | null
+  approvedTotal?: number | null
+  reviewedAt?: string
 }
 
 export interface CalibrationServiceMarkCutReadyPayload {

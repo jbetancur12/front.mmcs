@@ -41,6 +41,8 @@ const EVENT_ICON_MAP: Record<CalibrationServiceEventType, JSX.Element> = {
   approval_requested: <SendOutlined fontSize='small' />,
   service_approved: <CheckCircleOutlineOutlined fontSize='small' />,
   service_rejected: <HighlightOffOutlined fontSize='small' />,
+  adjustment_reported: <PlaylistAddCheckOutlined fontSize='small' />,
+  adjustment_reviewed: <DescriptionOutlined fontSize='small' />,
   ods_issued: <DescriptionOutlined fontSize='small' />,
   document_uploaded: <AttachFileOutlined fontSize='small' />
 }

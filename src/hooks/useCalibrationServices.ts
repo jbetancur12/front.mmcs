@@ -3,6 +3,7 @@ import { axiosPrivate } from '@utils/api'
 import {
   CalibrationServiceApprovePayload,
   CalibrationService,
+  CalibrationServiceCreateAdjustmentPayload,
   CalibrationServiceCreateCutPayload,
   CalibrationServiceDocumentActionPayload,
   CalibrationServiceDocument,
@@ -13,6 +14,7 @@ import {
   CalibrationServiceListResponse,
   CalibrationServiceMarkCutReadyPayload,
   CalibrationServicePayload,
+  CalibrationServiceReviewAdjustmentPayload,
   CalibrationServiceRequestChangesPayload,
   CalibrationServiceRejectPayload,
   CalibrationServiceRequestApprovalPayload,
@@ -219,6 +221,29 @@ const calibrationServiceApi = {
   }: CalibrationServiceCreateCutPayload): Promise<CalibrationService> => {
     const response = await axiosPrivate.post<CalibrationService>(
       `/calibration-services/${serviceId}/cuts`,
+      payload
+    )
+    return response.data
+  },
+
+  createAdjustment: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServiceCreateAdjustmentPayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/adjustments`,
+      payload
+    )
+    return response.data
+  },
+
+  reviewAdjustment: async ({
+    serviceId,
+    adjustmentId,
+    ...payload
+  }: CalibrationServiceReviewAdjustmentPayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.put<CalibrationService>(
+      `/calibration-services/${serviceId}/adjustments/${adjustmentId}/review`,
       payload
     )
     return response.data
@@ -442,6 +467,26 @@ export const useCalibrationServiceMutations = () => {
     }
   })
 
+  const createAdjustment = useMutation(calibrationServiceApi.createAdjustment, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
+  const reviewAdjustment = useMutation(calibrationServiceApi.reviewAdjustment, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
   const markCutReadyForInvoicing = useMutation(
     calibrationServiceApi.markCutReadyForInvoicing,
     {
@@ -501,6 +546,8 @@ export const useCalibrationServiceMutations = () => {
     completeExecution,
     updateItemProgress,
     createCut,
+    createAdjustment,
+    reviewAdjustment,
     markCutReadyForInvoicing,
     generateQuotePdf,
     generateOdsPdf,

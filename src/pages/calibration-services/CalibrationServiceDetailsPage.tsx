@@ -29,6 +29,8 @@ import { Toaster, toast } from 'react-hot-toast'
 import { ReactNode, useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
+  CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES,
+  CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES,
   CALIBRATION_SERVICE_APPROVAL_ROLES,
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
@@ -48,8 +50,14 @@ import {
   useCalibrationServiceSequenceConfig,
   useCalibrationServiceMutations
 } from '../../hooks/useCalibrationServices'
-import { CalibrationServiceItemProgressEntryPayload } from '../../types/calibrationService'
+import {
+  CalibrationServiceAdjustment,
+  CalibrationServiceItemProgressEntryPayload
+} from '../../types/calibrationService'
 import { useHasRole } from '../../utils/functions'
+import CalibrationServiceAdjustmentDialog from './CalibrationServiceAdjustmentDialog'
+import CalibrationServiceAdjustmentReviewDialog from './CalibrationServiceAdjustmentReviewDialog'
+import CalibrationServiceAdjustmentsPanel from './CalibrationServiceAdjustmentsPanel'
 import CalibrationServiceApprovalDialog, {
   CalibrationServiceDecisionMode,
   CalibrationServiceDecisionValues
@@ -67,7 +75,14 @@ import CalibrationServiceScheduleDialog, {
 import CalibrationServiceTimeline from './CalibrationServiceTimeline'
 import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
 
-type DetailTab = 'summary' | 'items' | 'operations' | 'cuts' | 'documents' | 'history'
+type DetailTab =
+  | 'summary'
+  | 'items'
+  | 'operations'
+  | 'adjustments'
+  | 'cuts'
+  | 'documents'
+  | 'history'
 
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -171,6 +186,8 @@ const CalibrationServiceDetailsPage = () => {
     completeExecution,
     updateItemProgress,
     createCut,
+    createAdjustment,
+    reviewAdjustment,
     markCutReadyForInvoicing,
     generateQuotePdf,
     generateOdsPdf,
@@ -182,13 +199,22 @@ const CalibrationServiceDetailsPage = () => {
   const [isOdsDialogOpen, setIsOdsDialogOpen] = useState(false)
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false)
   const [isCutDialogOpen, setIsCutDialogOpen] = useState(false)
+  const [isAdjustmentDialogOpen, setIsAdjustmentDialogOpen] = useState(false)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
+  const [selectedAdjustment, setSelectedAdjustment] =
+    useState<CalibrationServiceAdjustment | null>(null)
   const [activeTab, setActiveTab] = useState<DetailTab>('summary')
   const canEditService = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const canTakeApprovalDecision = useHasRole([...CALIBRATION_SERVICE_APPROVAL_ROLES])
   const canIssueOdsRole = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
   const canScheduleServiceRole = useHasRole([...CALIBRATION_SERVICE_SCHEDULE_ROLES])
   const canRunExecutionRole = useHasRole([...CALIBRATION_SERVICE_EXECUTION_ROLES])
+  const canReportAdjustmentRole = useHasRole([
+    ...CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES
+  ])
+  const canReviewAdjustmentRole = useHasRole([
+    ...CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES
+  ])
   const canUploadDocuments = useHasRole([
     ...CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES
   ])
@@ -222,6 +248,10 @@ const CalibrationServiceDetailsPage = () => {
   const canCreateCut =
     canRunExecutionRole &&
     ['in_execution', 'technically_completed'].includes(service?.status || '')
+  const canReportAdjustment =
+    canReportAdjustmentRole &&
+    ['in_execution', 'technically_completed'].includes(service?.status || '')
+  const canReviewAdjustment = canReviewAdjustmentRole
   const canUpdateOperationalProgress =
     canRunExecutionRole &&
     ['scheduled', 'in_execution'].includes(service?.status || '')
@@ -377,6 +407,8 @@ const CalibrationServiceDetailsPage = () => {
     completeExecution.isLoading ||
     updateItemProgress.isLoading ||
     createCut.isLoading ||
+    createAdjustment.isLoading ||
+    reviewAdjustment.isLoading ||
     markCutReadyForInvoicing.isLoading
   const isDocumentBusy =
     uploadDocument.isLoading ||
@@ -391,6 +423,10 @@ const CalibrationServiceDetailsPage = () => {
   )
   const supportDocuments = service.documents?.filter(
     (document) => !['quote_pdf', 'ods_pdf'].includes(document.documentType)
+  )
+  const unresolvedCommercialAdjustments = (service.adjustments || []).filter(
+    (adjustment) =>
+      adjustment.requiresCommercialAdjustment && adjustment.status === 'reported'
   )
   const odsDialogInitialValues: CalibrationServiceOdsDialogValues = {
     issuedAt: buildTodayValue(),
@@ -728,6 +764,62 @@ const CalibrationServiceDetailsPage = () => {
     } catch (cutError) {
       console.error(cutError)
       toast.error('No pudimos crear el corte.')
+    }
+  }
+
+  const handleCreateAdjustment = async (values: {
+    serviceItemId?: number | null
+    changeType:
+      | 'quantity_less'
+      | 'quantity_more'
+      | 'extra_item'
+      | 'not_received'
+      | 'scope_change'
+    itemName?: string | null
+    quotedQuantity?: number
+    actualQuantity: number
+    description: string
+    technicalNotes?: string | null
+    requiresCommercialAdjustment: boolean
+  }) => {
+    try {
+      await createAdjustment.mutateAsync({
+        serviceId: String(service.id),
+        ...values
+      })
+      toast.success('La novedad quedó registrada.')
+      setIsAdjustmentDialogOpen(false)
+      setActiveTab('adjustments')
+    } catch (adjustmentError) {
+      console.error(adjustmentError)
+      toast.error('No pudimos registrar la novedad.')
+    }
+  }
+
+  const handleReviewAdjustment = async (values: {
+    decision: 'approved' | 'rejected'
+    commercialNotes?: string | null
+    pricingNotes?: string | null
+    approvedUnitPrice?: number | null
+    approvedSubtotal?: number | null
+    approvedTotal?: number | null
+  }) => {
+    if (!selectedAdjustment) {
+      return
+    }
+
+    try {
+      await reviewAdjustment.mutateAsync({
+        serviceId: String(service.id),
+        adjustmentId: String(selectedAdjustment.id),
+        ...values
+      })
+      toast.success('La revisión de la novedad quedó guardada.')
+      setSelectedAdjustment(null)
+      setActiveTab('adjustments')
+    } catch (adjustmentError) {
+      console.error(adjustmentError)
+      toast.error('No pudimos guardar la revisión de la novedad.')
     }
   }
 
@@ -1104,6 +1196,10 @@ const CalibrationServiceDetailsPage = () => {
                   value='items'
                 />
                 <Tab label='Operación' value='operations' />
+                <Tab
+                  label={`Novedades (${service.adjustments?.length || 0})`}
+                  value='adjustments'
+                />
                 <Tab label={`Cortes (${service.cuts?.length || 0})`} value='cuts' />
                 <Tab
                   label={`Documentos (${service.documents?.length || 0})`}
@@ -1454,7 +1550,25 @@ const CalibrationServiceDetailsPage = () => {
                 )}
               </DetailTabPanel>
 
+              <DetailTabPanel value={activeTab} tab='adjustments'>
+                <CalibrationServiceAdjustmentsPanel
+                  service={service}
+                  canReport={canReportAdjustment}
+                  canReview={canReviewAdjustment}
+                  isTechnicalOnlyView={isTechnicalOnlyView}
+                  isBusy={isOperationalBusy}
+                  onCreate={() => setIsAdjustmentDialogOpen(true)}
+                  onReview={(adjustment) => setSelectedAdjustment(adjustment)}
+                />
+              </DetailTabPanel>
+
               <DetailTabPanel value={activeTab} tab='cuts'>
+                {unresolvedCommercialAdjustments.length ? (
+                  <Alert severity='warning' sx={{ mb: 2 }}>
+                    Antes de dejar un corte listo para facturar, revisa las novedades con
+                    impacto económico pendientes.
+                  </Alert>
+                ) : null}
                 <CalibrationServiceCutsPanel
                   cuts={service.cuts || []}
                   canMarkReady={canCreateCut}
@@ -1591,6 +1705,24 @@ const CalibrationServiceDetailsPage = () => {
           isLoading={isOperationalBusy}
           onClose={() => setIsCutDialogOpen(false)}
           onSubmit={handleCreateCut}
+        />
+      ) : null}
+      {isAdjustmentDialogOpen ? (
+        <CalibrationServiceAdjustmentDialog
+          open={isAdjustmentDialogOpen}
+          service={service}
+          isLoading={isOperationalBusy}
+          onClose={() => setIsAdjustmentDialogOpen(false)}
+          onSubmit={handleCreateAdjustment}
+        />
+      ) : null}
+      {selectedAdjustment ? (
+        <CalibrationServiceAdjustmentReviewDialog
+          open={Boolean(selectedAdjustment)}
+          adjustment={selectedAdjustment}
+          isLoading={isOperationalBusy}
+          onClose={() => setSelectedAdjustment(null)}
+          onSubmit={handleReviewAdjustment}
         />
       ) : null}
       {canManageSequenceConfig ? (

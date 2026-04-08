@@ -54,12 +54,32 @@ const getOperationalStatus = (item: CalibrationServiceCutDialogItem) =>
     ? item.otherFields.operationalStatus
     : 'pending'
 
+const getEffectiveQuantity = (
+  service: CalibrationService,
+  item: CalibrationServiceCutDialogItem
+) => {
+  const approvedDelta = (service.adjustments || []).reduce((accumulator, adjustment) => {
+    if (adjustment.serviceItemId !== item.id) {
+      return accumulator
+    }
+
+    if (!['approved', 'applied_to_cut'].includes(adjustment.status)) {
+      return accumulator
+    }
+
+    return accumulator + (adjustment.differenceQuantity || 0)
+  }, 0)
+
+  return Math.max((item.quantity || 0) + approvedDelta, 0)
+}
+
 const buildDraftItems = (service: CalibrationService): DraftCutItem[] =>
   (service.items || [])
     .filter((item) => getOperationalStatus(item) === 'completed')
     .map((item) => {
       const releasedQuantity = getReleasedQuantity(item)
-      const quantityAvailable = Math.max((item.quantity || 0) - releasedQuantity, 0)
+      const effectiveQuantity = getEffectiveQuantity(service, item)
+      const quantityAvailable = Math.max(effectiveQuantity - releasedQuantity, 0)
 
       return {
         serviceItemId: item.id,
