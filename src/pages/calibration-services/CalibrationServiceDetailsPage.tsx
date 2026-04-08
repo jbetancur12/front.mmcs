@@ -166,6 +166,7 @@ const CalibrationServiceDetailsPage = () => {
     issueOds,
     scheduleService,
     startExecution,
+    completeExecution,
     updateItemProgress,
     generateQuotePdf,
     generateOdsPdf,
@@ -205,6 +206,14 @@ const CalibrationServiceDetailsPage = () => {
     ['ods_issued', 'pending_programming'].includes(service?.status || '')
   const canStartExecution =
     canRunExecutionRole && service?.status === 'scheduled'
+  const allItemsOperationallyCompleted = (service?.items || []).every((item) => {
+    const status = item.otherFields?.operationalStatus
+    return status === 'completed'
+  })
+  const canCompleteExecution =
+    canRunExecutionRole &&
+    service?.status === 'in_execution' &&
+    allItemsOperationallyCompleted
   const canUpdateOperationalProgress =
     canRunExecutionRole &&
     ['scheduled', 'in_execution'].includes(service?.status || '')
@@ -331,6 +340,10 @@ const CalibrationServiceDetailsPage = () => {
     typeof operationsDetails?.programmingNotes === 'string'
       ? operationsDetails.programmingNotes
       : ''
+  const operationsCompletionNotes =
+    typeof operationsDetails?.completionNotes === 'string'
+      ? operationsDetails.completionNotes
+      : ''
   const subtotal = (service.items || []).reduce(
     (accumulator, item) => accumulator + toNumber(item.subtotal),
     0
@@ -353,6 +366,7 @@ const CalibrationServiceDetailsPage = () => {
   const isOperationalBusy =
     scheduleService.isLoading ||
     startExecution.isLoading ||
+    completeExecution.isLoading ||
     updateItemProgress.isLoading
   const isDocumentBusy =
     uploadDocument.isLoading ||
@@ -666,6 +680,21 @@ const CalibrationServiceDetailsPage = () => {
     }
   }
 
+  const handleCompleteExecution = async () => {
+    try {
+      await completeExecution.mutateAsync({
+        serviceId: String(service.id),
+        technicallyCompletedAt: new Date().toISOString(),
+        completionNotes: operationsCompletionNotes || null
+      })
+      toast.success('La ejecución técnica quedó finalizada.')
+      setActiveTab('operations')
+    } catch (completeError) {
+      console.error(completeError)
+      toast.error('No pudimos finalizar técnicamente el servicio.')
+    }
+  }
+
   const handleSaveOperationalProgress = async (
     items: CalibrationServiceItemProgressEntryPayload[]
   ) => {
@@ -894,6 +923,17 @@ const CalibrationServiceDetailsPage = () => {
               disabled={isOperationalBusy}
             >
               Iniciar ejecución
+            </Button>
+          ) : null}
+          {canCompleteExecution ? (
+            <Button
+              variant='contained'
+              color='secondary'
+              startIcon={<CheckCircleOutlineOutlinedIcon />}
+              onClick={() => void handleCompleteExecution()}
+              disabled={isOperationalBusy}
+            >
+              Finalizar ejecución
             </Button>
           ) : null}
           {canEdit ? (
@@ -1330,12 +1370,21 @@ const CalibrationServiceDetailsPage = () => {
 
               <DetailTabPanel value={activeTab} tab='operations'>
                 {service.odsCode ? (
-                  <CalibrationServiceOperationsPanel
-                    service={service}
-                    canEditProgress={canUpdateOperationalProgress}
-                    isBusy={isOperationalBusy}
-                    onSaveProgress={handleSaveOperationalProgress}
-                  />
+                  <>
+                    {service.status === 'in_execution' &&
+                    !allItemsOperationallyCompleted ? (
+                      <Alert severity='info' sx={{ mb: 2 }}>
+                        Para finalizar la ejecución técnica, primero marca todos los ítems como
+                        <strong> Completado</strong>.
+                      </Alert>
+                    ) : null}
+                    <CalibrationServiceOperationsPanel
+                      service={service}
+                      canEditProgress={canUpdateOperationalProgress}
+                      isBusy={isOperationalBusy}
+                      onSaveProgress={handleSaveOperationalProgress}
+                    />
+                  </>
                 ) : (
                   <Alert severity='info'>
                     La vista operativa se habilita una vez la ODS ha sido emitida.

@@ -68,7 +68,8 @@ const STATUS_OPTIONS: Array<{
   { value: 'ods_issued', label: 'ODS emitida' },
   { value: 'pending_programming', label: 'Pendiente de programación' },
   { value: 'scheduled', label: 'Programada' },
-  { value: 'in_execution', label: 'En ejecución' }
+  { value: 'in_execution', label: 'En ejecución' },
+  { value: 'technically_completed', label: 'Finalizada técnicamente' }
 ]
 
 const TECHNICAL_STATUS_OPTIONS: Array<{
@@ -79,7 +80,8 @@ const TECHNICAL_STATUS_OPTIONS: Array<{
   { value: 'ods_issued', label: 'ODS emitida' },
   { value: 'pending_programming', label: 'Pendiente de programación' },
   { value: 'scheduled', label: 'Programada' },
-  { value: 'in_execution', label: 'En ejecución' }
+  { value: 'in_execution', label: 'En ejecución' },
+  { value: 'technically_completed', label: 'Finalizada técnicamente' }
 ]
 
 const APPROVAL_OPTIONS: Array<{
@@ -280,6 +282,9 @@ const CalibrationServicesPage = () => {
   ).length
   const inExecutionCount = visibleServices.filter(
     (service) => service.status === 'in_execution'
+  ).length
+  const technicallyCompletedCount = visibleServices.filter(
+    (service) => service.status === 'technically_completed'
   ).length
   const readyForOdsCount = visibleServices.filter(
     (service) =>
@@ -492,7 +497,7 @@ const CalibrationServicesPage = () => {
               </Typography>
               <Typography variant='body2' color='text.secondary'>
                 {isTechnicalOnlyView
-                  ? `${scheduledCount} programados · ${inExecutionCount} en ejecución`
+                  ? `${scheduledCount} programados · ${inExecutionCount} en ejecución · ${technicallyCompletedCount} finalizados`
                   : `${requestedChangesCount} con solicitud de modificación`}
               </Typography>
             </CardContent>

@@ -86,7 +86,8 @@ string
   ods_issued: 'ODS emitida',
   pending_programming: 'Pendiente de programación',
   scheduled: 'Programada',
-  in_execution: 'En ejecución'
+  in_execution: 'En ejecución',
+  technically_completed: 'Finalizada técnicamente'
 }
 
 export const CALIBRATION_SERVICE_APPROVAL_LABELS: Record<
@@ -109,7 +110,8 @@ export const CALIBRATION_SERVICE_STATUS_COLORS: Record<
   ods_issued: 'info',
   pending_programming: 'secondary',
   scheduled: 'primary',
-  in_execution: 'success'
+  in_execution: 'success',
+  technically_completed: 'info'
 }
 
 export const CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS: Record<

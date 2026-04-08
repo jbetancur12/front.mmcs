@@ -7,6 +7,7 @@ export type CalibrationServiceStatus =
   | 'pending_programming'
   | 'scheduled'
   | 'in_execution'
+  | 'technically_completed'
 
 export type CalibrationServiceApprovalStatus =
   | 'pending'

@@ -185,6 +185,21 @@ const calibrationServiceApi = {
     return response.data
   },
 
+  completeExecution: async ({
+    serviceId,
+    ...payload
+  }: {
+    serviceId: string
+    technicallyCompletedAt?: string
+    completionNotes?: string | null
+  }): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/complete-execution`,
+      payload
+    )
+    return response.data
+  },
+
   updateItemProgress: async ({
     serviceId,
     ...payload
@@ -366,6 +381,19 @@ export const useCalibrationServiceMutations = () => {
     }
   })
 
+  const completeExecution = useMutation(
+    calibrationServiceApi.completeExecution,
+    {
+      onSuccess: (service) => {
+        queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+        queryClient.invalidateQueries([
+          CALIBRATION_SERVICE_QUERY_KEYS.detail,
+          String(service.id)
+        ])
+      }
+    }
+  )
+
   const updateItemProgress = useMutation(
     calibrationServiceApi.updateItemProgress,
     {
@@ -422,6 +450,7 @@ export const useCalibrationServiceMutations = () => {
     issueOds,
     scheduleService,
     startExecution,
+    completeExecution,
     updateItemProgress,
     generateQuotePdf,
     generateOdsPdf,
