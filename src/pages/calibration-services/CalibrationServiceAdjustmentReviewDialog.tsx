@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Button,
   Dialog,
@@ -45,8 +45,6 @@ const CalibrationServiceAdjustmentReviewDialog = ({
   const [commercialNotes, setCommercialNotes] = useState('')
   const [pricingNotes, setPricingNotes] = useState('')
   const [approvedUnitPrice, setApprovedUnitPrice] = useState('')
-  const [approvedSubtotal, setApprovedSubtotal] = useState('')
-  const [approvedTotal, setApprovedTotal] = useState('')
 
   useEffect(() => {
     if (!open || !adjustment) {
@@ -62,20 +60,24 @@ const CalibrationServiceAdjustmentReviewDialog = ({
         ? String(adjustment.approvedUnitPrice)
         : ''
     )
-    setApprovedSubtotal(
-      adjustment.approvedSubtotal !== null &&
-        adjustment.approvedSubtotal !== undefined
-        ? String(adjustment.approvedSubtotal)
-        : ''
-    )
-    setApprovedTotal(
-      adjustment.approvedTotal !== null && adjustment.approvedTotal !== undefined
-        ? String(adjustment.approvedTotal)
-        : ''
-    )
   }, [open, adjustment])
 
   const needsPricing = Boolean(adjustment?.requiresCommercialAdjustment)
+  const pricedQuantity = useMemo(() => {
+    if (!adjustment) {
+      return 0
+    }
+
+    if (adjustment.changeType === 'extra_item') {
+      return adjustment.actualQuantity || 0
+    }
+
+    return Math.abs(adjustment.differenceQuantity || 0)
+  }, [adjustment])
+
+  const approvedUnitPriceNumber = approvedUnitPrice ? Number(approvedUnitPrice) : 0
+  const approvedSubtotal = pricedQuantity * approvedUnitPriceNumber
+  const approvedTotal = approvedSubtotal
 
   const handleSubmit = async () => {
     await onSubmit({
@@ -83,8 +85,8 @@ const CalibrationServiceAdjustmentReviewDialog = ({
       commercialNotes: commercialNotes.trim() || null,
       pricingNotes: pricingNotes.trim() || null,
       approvedUnitPrice: approvedUnitPrice ? Number(approvedUnitPrice) : null,
-      approvedSubtotal: approvedSubtotal ? Number(approvedSubtotal) : null,
-      approvedTotal: approvedTotal ? Number(approvedTotal) : null
+      approvedSubtotal: approvedUnitPrice ? approvedSubtotal : null,
+      approvedTotal: approvedUnitPrice ? approvedTotal : null
     })
   }
 
@@ -141,6 +143,7 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                   value={approvedUnitPrice}
                   onChange={(event) => setApprovedUnitPrice(event.target.value)}
                   inputProps={{ min: 0 }}
+                  helperText={`Cantidad a reconocer: ${pricedQuantity}`}
                 />
               </Grid>
               <Grid item xs={12} md={4}>
@@ -148,9 +151,10 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                   fullWidth
                   type='number'
                   label='Subtotal'
-                  value={approvedSubtotal}
-                  onChange={(event) => setApprovedSubtotal(event.target.value)}
+                  value={approvedUnitPrice ? approvedSubtotal : ''}
                   inputProps={{ min: 0 }}
+                  InputProps={{ readOnly: true }}
+                  helperText='Se calcula automáticamente'
                 />
               </Grid>
               <Grid item xs={12} md={4}>
@@ -158,9 +162,10 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                   fullWidth
                   type='number'
                   label='Total aprobado'
-                  value={approvedTotal}
-                  onChange={(event) => setApprovedTotal(event.target.value)}
+                  value={approvedUnitPrice ? approvedTotal : ''}
                   inputProps={{ min: 0 }}
+                  InputProps={{ readOnly: true }}
+                  helperText='Se calcula automáticamente'
                 />
               </Grid>
             </Grid>
