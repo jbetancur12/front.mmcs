@@ -21,6 +21,7 @@ import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
+import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined'
 import { Toaster, toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -791,6 +792,30 @@ const CalibrationServicesPage = () => {
                           }
                           label={service.slaIndicator?.label || 'SLA no iniciado'}
                         />
+                        {['yellow', 'red'].includes(
+                          service.slaIndicator?.color || 'gray'
+                        ) ? (
+                          <Chip
+                            size='small'
+                            icon={
+                              service.slaIndicator?.color === 'red' ? (
+                                <ReportProblemOutlinedIcon />
+                              ) : (
+                                <WarningAmberOutlinedIcon />
+                              )
+                            }
+                            color={
+                              service.slaIndicator?.color === 'red'
+                                ? 'error'
+                                : 'warning'
+                            }
+                            label={
+                              service.slaIndicator?.color === 'red'
+                                ? 'Alerta vencida'
+                                : 'Alerta activa'
+                            }
+                          />
+                        ) : null}
                         {shouldShowOperationalFocusBadge ? (
                           <Chip
                             size='small'

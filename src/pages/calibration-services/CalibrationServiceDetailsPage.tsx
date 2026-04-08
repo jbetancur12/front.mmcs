@@ -29,6 +29,8 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined'
 import AutorenewOutlinedIcon from '@mui/icons-material/AutorenewOutlined'
+import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
+import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined'
 import { Toaster, toast } from 'react-hot-toast'
 import { ReactNode, useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -1363,6 +1365,23 @@ const CalibrationServiceDetailsPage = () => {
               }
               label={service.slaIndicator?.label || 'SLA no iniciado'}
             />
+            {['yellow', 'red'].includes(service.slaIndicator?.color || 'gray') ? (
+              <Chip
+                icon={
+                  service.slaIndicator?.color === 'red' ? (
+                    <ReportProblemOutlinedIcon />
+                  ) : (
+                    <WarningAmberOutlinedIcon />
+                  )
+                }
+                color={service.slaIndicator?.color === 'red' ? 'error' : 'warning'}
+                label={
+                  service.slaIndicator?.color === 'red'
+                    ? 'Alerta vencida'
+                    : 'Alerta activa'
+                }
+              />
+            ) : null}
           </Stack>
         </Stack>
       </Stack>
