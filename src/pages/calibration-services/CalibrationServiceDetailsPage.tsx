@@ -792,7 +792,36 @@ const CalibrationServiceDetailsPage = () => {
       setActiveTab('adjustments')
     } catch (adjustmentError) {
       console.error(adjustmentError)
-      toast.error('No pudimos registrar la novedad.')
+      const serverMessage =
+        typeof adjustmentError === 'object' &&
+        adjustmentError !== null &&
+        'response' in adjustmentError &&
+        adjustmentError.response &&
+        typeof adjustmentError.response === 'object' &&
+        'data' in adjustmentError.response &&
+        adjustmentError.response.data &&
+        typeof adjustmentError.response.data === 'object' &&
+        'details' in adjustmentError.response.data &&
+        typeof adjustmentError.response.data.details === 'string'
+          ? adjustmentError.response.data.details
+          : typeof adjustmentError === 'object' &&
+              adjustmentError !== null &&
+              'response' in adjustmentError &&
+              adjustmentError.response &&
+              typeof adjustmentError.response === 'object' &&
+              'data' in adjustmentError.response &&
+              adjustmentError.response.data &&
+              typeof adjustmentError.response.data === 'object' &&
+              'error' in adjustmentError.response.data &&
+              typeof adjustmentError.response.data.error === 'string'
+            ? adjustmentError.response.data.error
+            : null
+
+      toast.error(
+        serverMessage
+          ? `No pudimos registrar la novedad. ${serverMessage}`
+          : 'No pudimos registrar la novedad.'
+      )
     }
   }
 
