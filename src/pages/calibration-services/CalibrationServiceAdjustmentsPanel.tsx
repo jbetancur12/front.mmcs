@@ -25,10 +25,12 @@ interface CalibrationServiceAdjustmentsPanelProps {
   service: CalibrationService
   canReport: boolean
   canReview: boolean
+  canGenerateDocument?: boolean
   isTechnicalOnlyView?: boolean
   isBusy?: boolean
   onCreate: () => void
   onReview: (adjustment: CalibrationServiceAdjustment) => void
+  onGenerateDocument?: (adjustment: CalibrationServiceAdjustment) => void
 }
 
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
@@ -50,10 +52,12 @@ const CalibrationServiceAdjustmentsPanel = ({
   service,
   canReport,
   canReview,
+  canGenerateDocument = false,
   isTechnicalOnlyView = false,
   isBusy = false,
   onCreate,
-  onReview
+  onReview,
+  onGenerateDocument
 }: CalibrationServiceAdjustmentsPanelProps) => {
   const adjustments = service.adjustments || []
   const pendingCommercialAdjustments = adjustments.filter(
@@ -143,18 +147,43 @@ const CalibrationServiceAdjustmentsPanel = ({
                       adjustment.description}
                   </TableCell>
                   <TableCell align='right'>
-                    {canReview && adjustment.status === 'reported' ? (
-                      <Button
-                        size='small'
-                        variant='outlined'
-                        onClick={() => onReview(adjustment)}
-                        disabled={isBusy}
-                      >
-                        Revisar
-                      </Button>
-                    ) : (
-                      'Sin acción'
-                    )}
+                    <Stack
+                      direction='row'
+                      spacing={1}
+                      justifyContent='flex-end'
+                      flexWrap='wrap'
+                    >
+                      {canReview && adjustment.status === 'reported' ? (
+                        <Button
+                          size='small'
+                          variant='outlined'
+                          onClick={() => onReview(adjustment)}
+                          disabled={isBusy}
+                        >
+                          Revisar
+                        </Button>
+                      ) : null}
+                      {canGenerateDocument &&
+                      onGenerateDocument &&
+                      adjustment.status === 'approved' ? (
+                        <Button
+                          size='small'
+                          variant='text'
+                          onClick={() => onGenerateDocument(adjustment)}
+                          disabled={isBusy}
+                        >
+                          Generar anexo PDF
+                        </Button>
+                      ) : null}
+                      {!(
+                        (canReview && adjustment.status === 'reported') ||
+                        (canGenerateDocument &&
+                          onGenerateDocument &&
+                          adjustment.status === 'approved')
+                      )
+                        ? 'Sin acción'
+                        : null}
+                    </Stack>
                   </TableCell>
                 </TableRow>
               ))}

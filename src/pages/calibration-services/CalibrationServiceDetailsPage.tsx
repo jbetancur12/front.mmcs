@@ -206,6 +206,7 @@ const CalibrationServiceDetailsPage = () => {
     updateCutDocumentControl,
     generateQuotePdf,
     generateOdsPdf,
+    generateAdjustmentPdf,
     downloadDocument,
     upsertSequenceConfig
   } = useCalibrationServiceMutations()
@@ -503,6 +504,7 @@ const CalibrationServiceDetailsPage = () => {
     uploadDocument.isLoading ||
     generateQuotePdf.isLoading ||
     generateOdsPdf.isLoading ||
+    generateAdjustmentPdf.isLoading ||
     downloadDocument.isLoading
   const decisionDocuments = service.documents?.filter((document) =>
     ['approval_evidence', 'rejection_evidence'].includes(document.documentType)
@@ -1172,6 +1174,26 @@ const CalibrationServiceDetailsPage = () => {
     } catch (pdfError) {
       console.error(pdfError)
       toast.error('No pudimos generar la ODS PDF.')
+    }
+  }
+
+  const handleGenerateAdjustmentPdf = async (
+    adjustment: CalibrationServiceAdjustment
+  ) => {
+    try {
+      const document = await generateAdjustmentPdf.mutateAsync({
+        serviceId: String(service.id),
+        adjustmentId: String(adjustment.id)
+      })
+      toast.success('El anexo PDF de la novedad quedó generado.')
+      await handleDownloadDocument(
+        document.id,
+        document.originalFileName ||
+          `anexo-novedad-${service.serviceCode}-${adjustment.id}.pdf`
+      )
+    } catch (pdfError) {
+      console.error(pdfError)
+      toast.error('No pudimos generar el anexo PDF de la novedad.')
     }
   }
 
@@ -1846,10 +1868,12 @@ const CalibrationServiceDetailsPage = () => {
                   service={service}
                   canReport={canReportAdjustment}
                   canReview={canReviewAdjustment}
+                  canGenerateDocument={canReviewAdjustment}
                   isTechnicalOnlyView={isTechnicalOnlyView}
                   isBusy={isOperationalBusy}
                   onCreate={() => setIsAdjustmentDialogOpen(true)}
                   onReview={(adjustment) => setSelectedAdjustment(adjustment)}
+                  onGenerateDocument={handleGenerateAdjustmentPdf}
                 />
               </DetailTabPanel>
 

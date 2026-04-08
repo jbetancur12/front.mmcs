@@ -83,6 +83,7 @@ export type CalibrationServiceDocumentType =
   | 'rejection_evidence'
   | 'quote_pdf'
   | 'ods_pdf'
+  | 'adjustment_pdf'
   | 'invoice_attachment'
   | 'supporting_attachment'
 
@@ -588,6 +589,7 @@ export interface CalibrationServiceUpdateCutDocumentControlPayload {
 export interface CalibrationServiceDocumentActionPayload {
   serviceId: string
   documentId?: string
+  adjustmentId?: string
 }
 
 export interface CalibrationServiceSequenceConfigPayload {

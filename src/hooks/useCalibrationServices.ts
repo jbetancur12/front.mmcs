@@ -322,6 +322,16 @@ const calibrationServiceApi = {
     return response.data
   },
 
+  generateAdjustmentPdf: async ({
+    serviceId,
+    adjustmentId
+  }: CalibrationServiceDocumentActionPayload): Promise<CalibrationServiceDocument> => {
+    const response = await axiosPrivate.post<CalibrationServiceDocument>(
+      `/calibration-services/${serviceId}/adjustments/${adjustmentId}/generate-pdf`
+    )
+    return response.data
+  },
+
   downloadDocument: async ({
     serviceId,
     documentId
@@ -594,6 +604,18 @@ export const useCalibrationServiceMutations = () => {
     }
   })
 
+  const generateAdjustmentPdf = useMutation(
+    calibrationServiceApi.generateAdjustmentPdf,
+    {
+      onSuccess: (_document, variables) => {
+        queryClient.invalidateQueries([
+          CALIBRATION_SERVICE_QUERY_KEYS.detail,
+          variables.serviceId
+        ])
+      }
+    }
+  )
+
   const downloadDocument = useMutation(calibrationServiceApi.downloadDocument)
 
   const upsertSequenceConfig = useMutation(
@@ -630,6 +652,7 @@ export const useCalibrationServiceMutations = () => {
     updateCutDocumentControl,
     generateQuotePdf,
     generateOdsPdf,
+    generateAdjustmentPdf,
     downloadDocument,
     upsertSequenceConfig
   }
