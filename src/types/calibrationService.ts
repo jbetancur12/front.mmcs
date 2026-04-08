@@ -48,6 +48,25 @@ export interface CalibrationServiceCutSlaIndicator {
   businessDaysElapsed?: number
 }
 
+export type CalibrationServiceCutDocumentStatus =
+  | 'pending_certificates'
+  | 'certificates_partial'
+  | 'certificates_ready'
+  | 'reviewed'
+  | 'sent'
+
+export interface CalibrationServiceCutDocumentControl {
+  expectedCertificates: number
+  uploadedCertificates: number
+  reviewedCertificates: number
+  sentCertificates: number
+  status: CalibrationServiceCutDocumentStatus
+  uploadedAt?: string | null
+  reviewedAt?: string | null
+  sentAt?: string | null
+  notes?: string | null
+}
+
 export type CalibrationServiceOperationalItemStatus =
   | 'pending'
   | 'scheduled'
@@ -185,7 +204,9 @@ export interface CalibrationServiceCut {
   invoiceNotes?: string | null
   notes?: string | null
   createdByUserId?: number | null
-  otherFields?: Record<string, unknown>
+  otherFields?: Record<string, unknown> & {
+    documentControl?: CalibrationServiceCutDocumentControl
+  }
   slaIndicator?: CalibrationServiceCutSlaIndicator
   createdBy?: CalibrationServiceUserSummary | null
   items?: CalibrationServiceCutItem[]
@@ -534,6 +555,16 @@ export interface CalibrationServiceMarkCutInvoicedPayload {
   invoiceReference: string
   invoicedAt?: string
   invoiceNotes?: string | null
+}
+
+export interface CalibrationServiceUpdateCutDocumentControlPayload {
+  serviceId: string
+  cutId: string
+  expectedCertificates: number
+  uploadedCertificates: number
+  reviewedCertificates: number
+  sentCertificates: number
+  notes?: string | null
 }
 
 export interface CalibrationServiceDocumentActionPayload {

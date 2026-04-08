@@ -1,14 +1,19 @@
 import { Alert, Box, Button, Chip, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
 import { CalibrationServiceCut } from '../../types/calibrationService'
-import { CALIBRATION_SERVICE_CUT_STATUS_LABELS } from '../../constants/calibrationServices'
+import {
+  CALIBRATION_SERVICE_CUT_DOCUMENT_STATUS_LABELS,
+  CALIBRATION_SERVICE_CUT_STATUS_LABELS
+} from '../../constants/calibrationServices'
 
 interface CalibrationServiceCutsPanelProps {
   cuts: CalibrationServiceCut[]
   canMarkReady?: boolean
   canMarkInvoiced?: boolean
+  canUpdateDocumentControl?: boolean
   isBusy?: boolean
   onMarkReady?: (cutId: number) => void | Promise<void>
   onMarkInvoiced?: (cut: CalibrationServiceCut) => void
+  onUpdateDocumentControl?: (cut: CalibrationServiceCut) => void
 }
 
 const cutTypeLabels = {
@@ -20,9 +25,11 @@ const CalibrationServiceCutsPanel = ({
   cuts,
   canMarkReady = false,
   canMarkInvoiced = false,
+  canUpdateDocumentControl = false,
   isBusy = false,
   onMarkReady,
-  onMarkInvoiced
+  onMarkInvoiced,
+  onUpdateDocumentControl
 }: CalibrationServiceCutsPanelProps) => {
   if (!cuts.length) {
     return <Alert severity='info'>Este servicio todavía no tiene cortes creados.</Alert>
@@ -40,12 +47,16 @@ const CalibrationServiceCutsPanel = ({
             <TableCell>Items</TableCell>
             <TableCell>Fecha liberación</TableCell>
             <TableCell>Factura</TableCell>
+            <TableCell>Control documental</TableCell>
             <TableCell>Notas</TableCell>
             <TableCell>Acción</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {cuts.map((cut) => (
+          {cuts.map((cut) => {
+            const documentControl = cut.otherFields?.documentControl
+
+            return (
             <TableRow key={cut.id}>
               <TableCell>{cut.cutCode}</TableCell>
               <TableCell>
@@ -88,6 +99,36 @@ const CalibrationServiceCutsPanel = ({
                   ? `${cut.invoiceReference}${cut.invoicedAt ? ` · ${new Date(cut.invoicedAt).toLocaleDateString('es-CO')}` : ''}`
                   : 'Pendiente'}
               </TableCell>
+              <TableCell>
+                {documentControl ? (
+                  <Stack spacing={0.5}>
+                    <Chip
+                      size='small'
+                      color={
+                        documentControl.status === 'sent'
+                          ? 'success'
+                          : documentControl.status === 'reviewed'
+                            ? 'info'
+                            : documentControl.status === 'certificates_ready'
+                              ? 'primary'
+                              : documentControl.status === 'certificates_partial'
+                                ? 'warning'
+                                : 'default'
+                      }
+                      label={
+                        CALIBRATION_SERVICE_CUT_DOCUMENT_STATUS_LABELS[
+                          documentControl.status
+                        ]
+                      }
+                    />
+                    <Typography variant='body2' color='text.secondary'>
+                      Esp. {documentControl.expectedCertificates} · Car. {documentControl.uploadedCertificates} · Rev. {documentControl.reviewedCertificates} · Env. {documentControl.sentCertificates}
+                    </Typography>
+                  </Stack>
+                ) : (
+                  'Sin control'
+                )}
+              </TableCell>
               <TableCell>{cut.notes || 'Sin notas'}</TableCell>
               <TableCell>
                 {canMarkReady && cut.status === 'draft' ? (
@@ -108,12 +149,21 @@ const CalibrationServiceCutsPanel = ({
                   >
                     Marcar facturado
                   </Button>
+                ) : canUpdateDocumentControl && cut.status === 'invoiced' ? (
+                  <Button
+                    size='small'
+                    variant='outlined'
+                    onClick={() => onUpdateDocumentControl?.(cut)}
+                    disabled={isBusy}
+                  >
+                    Control documental
+                  </Button>
                 ) : (
                   'Sin acción'
                 )}
               </TableCell>
             </TableRow>
-          ))}
+          )})}
         </TableBody>
       </Table>
     </Box>

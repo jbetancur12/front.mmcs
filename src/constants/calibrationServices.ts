@@ -3,6 +3,7 @@ import {
   CalibrationServiceAdjustmentStatus,
   CalibrationServiceAdjustmentType,
   CalibrationServiceApprovalStatus,
+  CalibrationServiceCutDocumentStatus,
   CalibrationServiceCutStatus,
   CalibrationServiceDocumentType,
   CalibrationServiceEventType,
@@ -89,6 +90,9 @@ export const CALIBRATION_SERVICE_INVOICING_ROLES = [
   'comp_supervisor',
   'invoicing'
 ] as const
+
+export const CALIBRATION_SERVICE_DOCUMENT_CONTROL_ROLES =
+  CALIBRATION_SERVICE_INVOICING_ROLES
 
 export const CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES = [
   'admin',
@@ -259,4 +263,15 @@ export const CALIBRATION_SERVICE_CUT_STATUS_LABELS: Record<
   draft: 'Borrador',
   ready_for_invoicing: 'Listo para facturar',
   invoiced: 'Facturado'
+}
+
+export const CALIBRATION_SERVICE_CUT_DOCUMENT_STATUS_LABELS: Record<
+  CalibrationServiceCutDocumentStatus,
+  string
+> = {
+  pending_certificates: 'Pendiente certificados',
+  certificates_partial: 'Certificados parciales',
+  certificates_ready: 'Certificados completos',
+  reviewed: 'Certificados revisados',
+  sent: 'Certificados enviados'
 }
