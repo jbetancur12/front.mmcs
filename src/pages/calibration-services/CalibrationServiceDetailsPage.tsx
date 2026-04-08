@@ -6,6 +6,10 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   Grid,
   Stack,
@@ -210,6 +214,7 @@ const CalibrationServiceDetailsPage = () => {
   const [isCutDialogOpen, setIsCutDialogOpen] = useState(false)
   const [isAdjustmentDialogOpen, setIsAdjustmentDialogOpen] = useState(false)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
+  const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false)
   const [selectedCutForInvoice, setSelectedCutForInvoice] =
     useState<CalibrationServiceCut | null>(null)
   const [selectedCutForDocumentControl, setSelectedCutForDocumentControl] =
@@ -828,14 +833,6 @@ const CalibrationServiceDetailsPage = () => {
       return
     }
 
-    const confirmed = window.confirm(
-      `¿Deseas cerrar definitivamente el servicio ${service.serviceCode}?`
-    )
-
-    if (!confirmed) {
-      return
-    }
-
     try {
       await closeService.mutateAsync({
         serviceId: String(service.id),
@@ -843,6 +840,7 @@ const CalibrationServiceDetailsPage = () => {
         closingNotes: 'Cierre final registrado desde el detalle del servicio.'
       })
       toast.success('El servicio quedó cerrado.')
+      setIsCloseDialogOpen(false)
       setActiveTab('summary')
     } catch (closeError) {
       console.error(closeError)
@@ -1325,7 +1323,7 @@ const CalibrationServiceDetailsPage = () => {
               variant='contained'
               color='inherit'
               startIcon={<CheckCircleOutlineOutlinedIcon />}
-              onClick={() => void handleCloseService()}
+              onClick={() => setIsCloseDialogOpen(true)}
               disabled={isOperationalBusy}
             >
               Cerrar servicio
@@ -2013,6 +2011,42 @@ const CalibrationServiceDetailsPage = () => {
           onSubmit={handleCreateAdjustment}
         />
       ) : null}
+      <Dialog
+        open={isCloseDialogOpen}
+        onClose={isOperationalBusy ? undefined : () => setIsCloseDialogOpen(false)}
+        maxWidth='sm'
+        fullWidth
+      >
+        <DialogTitle>Cerrar servicio</DialogTitle>
+        <DialogContent>
+          <Stack spacing={1.5} sx={{ pt: 1 }}>
+            <Typography variant='body1'>
+              ¿Deseas cerrar definitivamente el servicio{' '}
+              <strong>{service.serviceCode}</strong>?
+            </Typography>
+            <Typography variant='body2' color='text.secondary'>
+              Este paso deja el servicio como cerrado, sin acciones operativas o
+              documentales pendientes dentro del módulo.
+            </Typography>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setIsCloseDialogOpen(false)}
+            disabled={isOperationalBusy}
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant='contained'
+            color='inherit'
+            onClick={() => void handleCloseService()}
+            disabled={isOperationalBusy}
+          >
+            Confirmar cierre
+          </Button>
+        </DialogActions>
+      </Dialog>
       {selectedAdjustment ? (
         <CalibrationServiceAdjustmentReviewDialog
           open={Boolean(selectedAdjustment)}
