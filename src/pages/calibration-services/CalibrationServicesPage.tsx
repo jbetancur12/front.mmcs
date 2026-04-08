@@ -160,6 +160,37 @@ const matchesSiteFilter = (service: CalibrationService, siteSearch: string) => {
 const hasCustomerChangeRequest = (service: CalibrationService) =>
   service.otherFields?.customerResponseType === 'changes_requested'
 
+const getServiceOperationalFocus = (service: CalibrationService) => {
+  if (service.status === 'closed') {
+    return { label: 'Cierre final completado', color: 'success' as const }
+  }
+
+  const cuts = service.cuts || []
+  const allCutsInvoiced =
+    cuts.length > 0 && cuts.every((cut) => cut.status === 'invoiced')
+  const allCutsSent =
+    cuts.length > 0 &&
+    cuts.every((cut) => cut.otherFields?.documentControl?.status === 'sent')
+
+  if (service.status === 'technically_completed' && allCutsSent) {
+    return { label: 'Listo para cierre final', color: 'success' as const }
+  }
+
+  if (service.status === 'technically_completed' && allCutsInvoiced) {
+    return { label: 'Pendiente documental', color: 'warning' as const }
+  }
+
+  if (service.status === 'technically_completed' && cuts.length > 0) {
+    return { label: 'Pendiente facturación', color: 'secondary' as const }
+  }
+
+  if (service.status === 'technically_completed') {
+    return { label: 'Pendiente administrativo', color: 'info' as const }
+  }
+
+  return null
+}
+
 const CalibrationServicesPage = () => {
   const navigate = useNavigate()
   const { requestApproval, upsertSequenceConfig } =
@@ -689,6 +720,7 @@ const CalibrationServicesPage = () => {
           </Alert>
         ) : (
           visibleServices.map((service) => {
+            const serviceOperationalFocus = getServiceOperationalFocus(service)
             const canEdit =
               canCreateServices &&
               service.status === 'draft'
@@ -756,6 +788,14 @@ const CalibrationServicesPage = () => {
                           }
                           label={service.slaIndicator?.label || 'SLA no iniciado'}
                         />
+                        {serviceOperationalFocus ? (
+                          <Chip
+                            size='small'
+                            color={serviceOperationalFocus.color}
+                            variant='outlined'
+                            label={serviceOperationalFocus.label}
+                          />
+                        ) : null}
                         {service.odsCode ? (
                           <Chip
                             size='small'
