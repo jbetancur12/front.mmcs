@@ -72,6 +72,22 @@ const buildDraftItems = (service: CalibrationService): DraftCutItem[] =>
     })
     .filter((item) => item.quantityAvailable > 0)
 
+const getItemQuantityError = (item: DraftCutItem) => {
+  if (!item.selected) {
+    return ''
+  }
+
+  if (!Number.isInteger(item.quantity) || item.quantity < 1) {
+    return 'La cantidad debe ser mayor o igual a 1.'
+  }
+
+  if (item.quantity > item.quantityAvailable) {
+    return `La cantidad no puede superar lo disponible (${item.quantityAvailable}).`
+  }
+
+  return ''
+}
+
 const CalibrationServiceCutDialog = ({
   open,
   service,
@@ -104,14 +120,14 @@ const CalibrationServiceCutDialog = ({
 
   const handleQuantityChange =
     (serviceItemId: number) => (event: ChangeEvent<HTMLInputElement>) => {
-      const nextQuantity = parseInt(event.target.value, 10) || 0
+      const nextQuantity = parseInt(event.target.value, 10)
 
       setDraftItems((currentItems) =>
         currentItems.map((item) =>
           item.serviceItemId === serviceItemId
             ? {
                 ...item,
-                quantity: Math.max(1, Math.min(nextQuantity, item.quantityAvailable))
+                quantity: Number.isNaN(nextQuantity) ? 0 : nextQuantity
               }
             : item
         )
@@ -119,6 +135,19 @@ const CalibrationServiceCutDialog = ({
     }
 
   const handleSubmit = async () => {
+    const selectedItems = draftItems.filter((item) => item.selected)
+    if (!selectedItems.length) {
+      return
+    }
+
+    const hasInvalidQuantity = selectedItems.some((item) =>
+      Boolean(getItemQuantityError(item))
+    )
+
+    if (hasInvalidQuantity) {
+      return
+    }
+
     const items = draftItems
       .filter((item) => item.selected)
       .map((item) => ({
@@ -132,6 +161,12 @@ const CalibrationServiceCutDialog = ({
       items
     })
   }
+
+  const selectedItems = draftItems.filter((item) => item.selected)
+  const hasInvalidQuantity = selectedItems.some((item) =>
+    Boolean(getItemQuantityError(item))
+  )
+  const canSubmit = selectedItems.length > 0 && !hasInvalidQuantity && !isLoading
 
   return (
     <Dialog open={open} onClose={isLoading ? undefined : onClose} fullWidth maxWidth='md'>
@@ -188,6 +223,10 @@ const CalibrationServiceCutDialog = ({
                     </Typography>
                   </Grid>
                   <Grid item xs={12} md={4}>
+                    {(() => {
+                      const quantityError = getItemQuantityError(item)
+
+                      return (
                     <TextField
                       fullWidth
                       size='small'
@@ -196,11 +235,15 @@ const CalibrationServiceCutDialog = ({
                       value={item.quantity}
                       onChange={handleQuantityChange(item.serviceItemId)}
                       disabled={!item.selected}
+                      error={Boolean(quantityError)}
+                      helperText={quantityError || ' '}
                       inputProps={{
                         min: 1,
                         max: item.quantityAvailable
                       }}
                     />
+                      )
+                    })()}
                   </Grid>
                 </Grid>
               ))
@@ -216,7 +259,7 @@ const CalibrationServiceCutDialog = ({
         <Button onClick={onClose} disabled={isLoading}>
           Cancelar
         </Button>
-        <Button variant='contained' onClick={() => void handleSubmit()} disabled={isLoading}>
+        <Button variant='contained' onClick={() => void handleSubmit()} disabled={!canSubmit}>
           Crear corte
         </Button>
       </DialogActions>
