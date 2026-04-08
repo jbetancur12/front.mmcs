@@ -283,6 +283,9 @@ const CalibrationServiceDetailsPage = () => {
     canRunExecutionRole &&
     ['in_execution', 'technically_completed'].includes(service?.status || '') &&
     hasReleasableItems
+  const canMarkCutReady =
+    canRunExecutionRole &&
+    ['in_execution', 'technically_completed'].includes(service?.status || '')
   const canReportAdjustment =
     canReportAdjustmentRole &&
     ['in_execution', 'technically_completed'].includes(service?.status || '')
@@ -1925,7 +1928,7 @@ const CalibrationServiceDetailsPage = () => {
                 ) : null}
                 <CalibrationServiceCutsPanel
                   cuts={service.cuts || []}
-                  canMarkReady={canCreateCut}
+                  canMarkReady={canMarkCutReady}
                   canMarkInvoiced={canInvoiceCuts}
                   canUpdateDocumentControl={canUpdateDocumentControl}
                   isBusy={isOperationalBusy}
