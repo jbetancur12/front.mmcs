@@ -35,7 +35,9 @@ import {
   CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES,
   CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES,
   CALIBRATION_SERVICE_EDIT_ROLES,
+  CALIBRATION_SERVICE_EXECUTION_ROLES,
   CALIBRATION_SERVICE_ODS_ROLES,
+  CALIBRATION_SERVICE_SCHEDULE_ROLES,
   CALIBRATION_SERVICE_SLA_COLORS,
   CALIBRATION_SERVICE_STATUS_COLORS,
   CALIBRATION_SERVICE_STATUS_LABELS,
@@ -46,6 +48,7 @@ import {
   useCalibrationServiceSequenceConfig,
   useCalibrationServiceMutations
 } from '../../hooks/useCalibrationServices'
+import { CalibrationServiceItemProgressEntryPayload } from '../../types/calibrationService'
 import { useHasRole } from '../../utils/functions'
 import CalibrationServiceApprovalDialog, {
   CalibrationServiceDecisionMode,
@@ -55,10 +58,14 @@ import CalibrationServiceOdsDialog, {
   CalibrationServiceOdsDialogValues
 } from './CalibrationServiceOdsDialog'
 import CalibrationServiceDocumentsPanel from './CalibrationServiceDocumentsPanel'
+import CalibrationServiceOperationsPanel from './CalibrationServiceOperationsPanel'
+import CalibrationServiceScheduleDialog, {
+  CalibrationServiceScheduleDialogValues
+} from './CalibrationServiceScheduleDialog'
 import CalibrationServiceTimeline from './CalibrationServiceTimeline'
 import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
 
-type DetailTab = 'summary' | 'items' | 'documents' | 'history'
+type DetailTab = 'summary' | 'items' | 'operations' | 'documents' | 'history'
 
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -114,6 +121,15 @@ const getLatestChangeRequest = (
     : undefined
 }
 
+const getOperationsDetails = (
+  otherFields: Record<string, unknown> | undefined
+) => {
+  const value = otherFields?.operations
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined
+}
+
 const DetailTabPanel = ({
   value,
   tab,
@@ -148,6 +164,9 @@ const CalibrationServiceDetailsPage = () => {
     requestChanges,
     uploadDocument,
     issueOds,
+    scheduleService,
+    startExecution,
+    updateItemProgress,
     generateQuotePdf,
     generateOdsPdf,
     downloadDocument,
@@ -156,11 +175,14 @@ const CalibrationServiceDetailsPage = () => {
   const [decisionMode, setDecisionMode] =
     useState<CalibrationServiceDecisionMode | null>(null)
   const [isOdsDialogOpen, setIsOdsDialogOpen] = useState(false)
+  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<DetailTab>('summary')
   const canEditService = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const canTakeApprovalDecision = useHasRole([...CALIBRATION_SERVICE_APPROVAL_ROLES])
   const canIssueOdsRole = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
+  const canScheduleServiceRole = useHasRole([...CALIBRATION_SERVICE_SCHEDULE_ROLES])
+  const canRunExecutionRole = useHasRole([...CALIBRATION_SERVICE_EXECUTION_ROLES])
   const canUploadDocuments = useHasRole([
     ...CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES
   ])
@@ -178,6 +200,14 @@ const CalibrationServiceDetailsPage = () => {
     service?.approvalStatus === 'approved' &&
     !service?.odsCode &&
     Boolean(sequenceConfig?.initialized)
+  const canScheduleService =
+    canScheduleServiceRole &&
+    ['ods_issued', 'pending_programming'].includes(service?.status || '')
+  const canStartExecution =
+    canRunExecutionRole && service?.status === 'scheduled'
+  const canUpdateOperationalProgress =
+    canRunExecutionRole &&
+    ['scheduled', 'in_execution'].includes(service?.status || '')
 
   useEffect(() => {
     if (!canManageSequenceConfig || isLoadingSequenceConfig) {
@@ -201,6 +231,23 @@ const CalibrationServiceDetailsPage = () => {
   }, [
     canIssueOds,
     isOdsDialogOpen,
+    requestedAction,
+    searchParams,
+    setSearchParams
+  ])
+
+  useEffect(() => {
+    if (requestedAction !== 'schedule' || !canScheduleService || isScheduleDialogOpen) {
+      return
+    }
+
+    setIsScheduleDialogOpen(true)
+    const nextSearchParams = new URLSearchParams(searchParams)
+    nextSearchParams.delete('open')
+    setSearchParams(nextSearchParams, { replace: true })
+  }, [
+    canScheduleService,
+    isScheduleDialogOpen,
     requestedAction,
     searchParams,
     setSearchParams
@@ -253,6 +300,7 @@ const CalibrationServiceDetailsPage = () => {
     Boolean(service.executionCustomerName) &&
     service.executionCustomerName !== service.customer?.nombre
   const odsDetails = getOtherFieldRecord(service.otherFields, 'ods')
+  const operationsDetails = getOperationsDetails(service.otherFields)
   const odsScheduleWindow =
     typeof odsDetails?.scheduleWindow === 'string' ? odsDetails.scheduleWindow : ''
   const odsSignerName =
@@ -260,6 +308,28 @@ const CalibrationServiceDetailsPage = () => {
   const odsCustomerAgreements =
     typeof odsDetails?.customerAgreements === 'string'
       ? odsDetails.customerAgreements
+      : ''
+  const operationsCommitmentDate =
+    typeof operationsDetails?.commitmentDate === 'string'
+      ? operationsDetails.commitmentDate
+      : ''
+  const operationsScheduledDate =
+    typeof operationsDetails?.scheduledDate === 'string'
+      ? operationsDetails.scheduledDate
+      : typeof odsDetails?.scheduledFor === 'string'
+        ? odsDetails.scheduledFor
+        : ''
+  const operationsResponsibleName =
+    typeof operationsDetails?.operationalResponsibleName === 'string'
+      ? operationsDetails.operationalResponsibleName
+      : ''
+  const operationsResponsibleRole =
+    typeof operationsDetails?.operationalResponsibleRole === 'string'
+      ? operationsDetails.operationalResponsibleRole
+      : ''
+  const operationsProgrammingNotes =
+    typeof operationsDetails?.programmingNotes === 'string'
+      ? operationsDetails.programmingNotes
       : ''
   const subtotal = (service.items || []).reduce(
     (accumulator, item) => accumulator + toNumber(item.subtotal),
@@ -280,6 +350,10 @@ const CalibrationServiceDetailsPage = () => {
     requestChanges.isLoading ||
     uploadDocument.isLoading
   const isOdsLoading = issueOds.isLoading || generateOdsPdf.isLoading
+  const isOperationalBusy =
+    scheduleService.isLoading ||
+    startExecution.isLoading ||
+    updateItemProgress.isLoading
   const isDocumentBusy =
     uploadDocument.isLoading ||
     generateQuotePdf.isLoading ||
@@ -333,6 +407,17 @@ const CalibrationServiceDetailsPage = () => {
         ? odsDetails.receptionNotes
         : '',
     generatePdfImmediately: true
+  }
+  const scheduleDialogInitialValues: CalibrationServiceScheduleDialogValues = {
+    commitmentDate: operationsCommitmentDate
+      ? operationsCommitmentDate.slice(0, 10)
+      : '',
+    scheduledDate: operationsScheduledDate
+      ? operationsScheduledDate.slice(0, 10)
+      : '',
+    operationalResponsibleName: operationsResponsibleName,
+    operationalResponsibleRole: operationsResponsibleRole,
+    programmingNotes: operationsProgrammingNotes
   }
 
   const handleRequestApproval = async () => {
@@ -521,6 +606,81 @@ const CalibrationServiceDetailsPage = () => {
     } catch (odsError) {
       console.error(odsError)
       toast.error('No pudimos emitir la ODS.')
+    }
+  }
+
+  const handleScheduleService = async (
+    values: CalibrationServiceScheduleDialogValues
+  ) => {
+    try {
+      if (!values.commitmentDate) {
+        toast.error('Define la fecha compromiso del servicio.')
+        return
+      }
+
+      if (!values.scheduledDate) {
+        toast.error('Define la fecha programada del servicio.')
+        return
+      }
+
+      if (!values.operationalResponsibleName.trim()) {
+        toast.error('Indica el responsable operativo del servicio.')
+        return
+      }
+
+      await scheduleService.mutateAsync({
+        serviceId: String(service.id),
+        commitmentDate: new Date(
+          `${values.commitmentDate}T12:00:00`
+        ).toISOString(),
+        scheduledDate: new Date(
+          `${values.scheduledDate}T12:00:00`
+        ).toISOString(),
+        operationalResponsibleName: values.operationalResponsibleName.trim(),
+        operationalResponsibleRole:
+          values.operationalResponsibleRole.trim() || null,
+        programmingNotes: values.programmingNotes.trim() || null
+      })
+
+      toast.success('El servicio quedó programado.')
+      setIsScheduleDialogOpen(false)
+      setActiveTab('operations')
+    } catch (scheduleError) {
+      console.error(scheduleError)
+      toast.error('No pudimos guardar la programación del servicio.')
+    }
+  }
+
+  const handleStartExecution = async () => {
+    try {
+      await startExecution.mutateAsync({
+        serviceId: String(service.id),
+        startedAt: new Date().toISOString(),
+        executionNotes: null
+      })
+      toast.success('La ejecución del servicio quedó iniciada.')
+      setActiveTab('operations')
+    } catch (executionError) {
+      console.error(executionError)
+      toast.error('No pudimos iniciar la ejecución del servicio.')
+    }
+  }
+
+  const handleSaveOperationalProgress = async (
+    items: CalibrationServiceItemProgressEntryPayload[]
+  ) => {
+    try {
+      await updateItemProgress.mutateAsync({
+        serviceId: String(service.id),
+        items: items.map((item) => ({
+          ...item,
+          technicalNotes: item.technicalNotes?.trim() || null
+        }))
+      })
+      toast.success('El avance técnico por ítem quedó actualizado.')
+    } catch (progressError) {
+      console.error(progressError)
+      toast.error('No pudimos guardar el avance técnico por ítem.')
     }
   }
 
@@ -714,6 +874,28 @@ const CalibrationServiceDetailsPage = () => {
               Emitir ODS
             </Button>
           ) : null}
+          {canScheduleService ? (
+            <Button
+              variant='contained'
+              color='primary'
+              startIcon={<DescriptionOutlinedIcon />}
+              onClick={() => setIsScheduleDialogOpen(true)}
+              disabled={isOperationalBusy}
+            >
+              Programar servicio
+            </Button>
+          ) : null}
+          {canStartExecution ? (
+            <Button
+              variant='contained'
+              color='success'
+              startIcon={<CheckCircleOutlineOutlinedIcon />}
+              onClick={() => void handleStartExecution()}
+              disabled={isOperationalBusy}
+            >
+              Iniciar ejecución
+            </Button>
+          ) : null}
           {canEdit ? (
             <Button
               variant='outlined'
@@ -820,6 +1002,7 @@ const CalibrationServiceDetailsPage = () => {
                   label={`Ítems (${service.items?.length || 0})`}
                   value='items'
                 />
+                <Tab label='Operación' value='operations' />
                 <Tab
                   label={`Documentos (${service.documents?.length || 0})`}
                   value='documents'
@@ -1145,6 +1328,21 @@ const CalibrationServiceDetailsPage = () => {
                 )}
               </DetailTabPanel>
 
+              <DetailTabPanel value={activeTab} tab='operations'>
+                {service.odsCode ? (
+                  <CalibrationServiceOperationsPanel
+                    service={service}
+                    canEditProgress={canUpdateOperationalProgress}
+                    isBusy={isOperationalBusy}
+                    onSaveProgress={handleSaveOperationalProgress}
+                  />
+                ) : (
+                  <Alert severity='info'>
+                    La vista operativa se habilita una vez la ODS ha sido emitida.
+                  </Alert>
+                )}
+              </DetailTabPanel>
+
               <DetailTabPanel value={activeTab} tab='documents'>
                 <CalibrationServiceDocumentsPanel
                   serviceCode={service.serviceCode}
@@ -1254,6 +1452,16 @@ const CalibrationServiceDetailsPage = () => {
           isLoading={isOdsLoading}
           onClose={() => setIsOdsDialogOpen(false)}
           onSubmit={handleIssueOds}
+        />
+      ) : null}
+      {isScheduleDialogOpen ? (
+        <CalibrationServiceScheduleDialog
+          open={isScheduleDialogOpen}
+          serviceCode={service.serviceCode}
+          initialValues={scheduleDialogInitialValues}
+          isLoading={isOperationalBusy}
+          onClose={() => setIsScheduleDialogOpen(false)}
+          onSubmit={handleScheduleService}
         />
       ) : null}
       {canManageSequenceConfig ? (

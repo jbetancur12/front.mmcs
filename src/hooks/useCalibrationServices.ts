@@ -7,14 +7,17 @@ import {
   CalibrationServiceDocument,
   CalibrationServiceDocumentUploadPayload,
   CalibrationServiceFilters,
+  CalibrationServiceItemProgressPayload,
   CalibrationServiceIssueOdsPayload,
   CalibrationServiceListResponse,
   CalibrationServicePayload,
   CalibrationServiceRequestChangesPayload,
   CalibrationServiceRejectPayload,
   CalibrationServiceRequestApprovalPayload,
+  CalibrationServiceSchedulePayload,
   CalibrationServiceSequenceConfig,
-  CalibrationServiceSequenceConfigPayload
+  CalibrationServiceSequenceConfigPayload,
+  CalibrationServiceStartExecutionPayload
 } from '../types/calibrationService'
 
 export const CALIBRATION_SERVICE_QUERY_KEYS = {
@@ -155,6 +158,39 @@ const calibrationServiceApi = {
   }: CalibrationServiceIssueOdsPayload): Promise<CalibrationService> => {
     const response = await axiosPrivate.post<CalibrationService>(
       `/calibration-services/${serviceId}/issue-ods`,
+      payload
+    )
+    return response.data
+  },
+
+  scheduleService: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServiceSchedulePayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/schedule`,
+      payload
+    )
+    return response.data
+  },
+
+  startExecution: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServiceStartExecutionPayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/start-execution`,
+      payload
+    )
+    return response.data
+  },
+
+  updateItemProgress: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServiceItemProgressPayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.put<CalibrationService>(
+      `/calibration-services/${serviceId}/item-progress`,
       payload
     )
     return response.data
@@ -310,6 +346,39 @@ export const useCalibrationServiceMutations = () => {
     }
   })
 
+  const scheduleService = useMutation(calibrationServiceApi.scheduleService, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
+  const startExecution = useMutation(calibrationServiceApi.startExecution, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
+  const updateItemProgress = useMutation(
+    calibrationServiceApi.updateItemProgress,
+    {
+      onSuccess: (service) => {
+        queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+        queryClient.invalidateQueries([
+          CALIBRATION_SERVICE_QUERY_KEYS.detail,
+          String(service.id)
+        ])
+      }
+    }
+  )
+
   const generateQuotePdf = useMutation(calibrationServiceApi.generateQuotePdf, {
     onSuccess: (_document, variables) => {
       queryClient.invalidateQueries([
@@ -351,6 +420,9 @@ export const useCalibrationServiceMutations = () => {
     rejectService,
     requestChanges,
     issueOds,
+    scheduleService,
+    startExecution,
+    updateItemProgress,
     generateQuotePdf,
     generateOdsPdf,
     downloadDocument,

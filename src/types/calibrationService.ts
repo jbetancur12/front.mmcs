@@ -5,6 +5,8 @@ export type CalibrationServiceStatus =
   | 'approved'
   | 'ods_issued'
   | 'pending_programming'
+  | 'scheduled'
+  | 'in_execution'
 
 export type CalibrationServiceApprovalStatus =
   | 'pending'
@@ -24,6 +26,12 @@ export type CalibrationServiceSlaIndicatorColor =
   | 'yellow'
   | 'red'
   | 'blue'
+
+export type CalibrationServiceOperationalItemStatus =
+  | 'pending'
+  | 'scheduled'
+  | 'in_progress'
+  | 'completed'
 
 export type CalibrationServiceDocumentType =
   | 'request_evidence'
@@ -86,6 +94,18 @@ export interface CalibrationServiceItem {
   product?: CalibrationServiceProductSummary | null
   createdAt?: string
   updatedAt?: string
+}
+
+export interface CalibrationServiceOperationsSummary {
+  commitmentDate?: string | null
+  scheduledDate?: string | null
+  scheduledAt?: string | null
+  operationalResponsibleName?: string | null
+  operationalResponsibleRole?: string | null
+  programmingNotes?: string | null
+  startedAt?: string | null
+  executionNotes?: string | null
+  lastOperationalUpdateAt?: string | null
 }
 
 export interface CalibrationServiceDocument {
@@ -332,6 +352,36 @@ export interface CalibrationServiceIssueOdsPayload {
   signerRole?: string | null
   externalReference?: string | null
   receptionNotes?: string | null
+}
+
+export interface CalibrationServiceSchedulePayload {
+  serviceId: string
+  commitmentDate: string
+  scheduledDate: string
+  operationalResponsibleName: string
+  operationalResponsibleRole?: string | null
+  programmingNotes?: string | null
+  scheduledAt?: string
+}
+
+export interface CalibrationServiceStartExecutionPayload {
+  serviceId: string
+  startedAt?: string
+  executionNotes?: string | null
+}
+
+export interface CalibrationServiceItemProgressEntryPayload {
+  itemId: number
+  operationalStatus: CalibrationServiceOperationalItemStatus
+  technicalNotes?: string | null
+  scheduledFor?: string | null
+  startedAt?: string | null
+  completedAt?: string | null
+}
+
+export interface CalibrationServiceItemProgressPayload {
+  serviceId: string
+  items: CalibrationServiceItemProgressEntryPayload[]
 }
 
 export interface CalibrationServiceDocumentActionPayload {

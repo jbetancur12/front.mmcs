@@ -3,6 +3,7 @@ import {
   CalibrationServiceApprovalStatus,
   CalibrationServiceDocumentType,
   CalibrationServiceEventType,
+  CalibrationServiceOperationalItemStatus,
   CalibrationServiceSlaIndicatorColor,
   CalibrationServiceStatus
 } from '../types/calibrationService'
@@ -51,6 +52,21 @@ export const CALIBRATION_SERVICE_ODS_ROLES = [
   'comp_supervisor'
 ] as const
 
+export const CALIBRATION_SERVICE_SCHEDULE_ROLES = [
+  'admin',
+  'super_admin',
+  'comp_admin',
+  'comp_supervisor'
+] as const
+
+export const CALIBRATION_SERVICE_EXECUTION_ROLES = [
+  'admin',
+  'super_admin',
+  'comp_admin',
+  'comp_supervisor',
+  'metrologist'
+] as const
+
 export const CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES = [
   'admin',
   'super_admin',
@@ -68,7 +84,9 @@ string
   rejected: 'Rechazada',
   approved: 'Aprobada por cliente',
   ods_issued: 'ODS emitida',
-  pending_programming: 'Pendiente de programación'
+  pending_programming: 'Pendiente de programación',
+  scheduled: 'Programada',
+  in_execution: 'En ejecución'
 }
 
 export const CALIBRATION_SERVICE_APPROVAL_LABELS: Record<
@@ -89,7 +107,19 @@ export const CALIBRATION_SERVICE_STATUS_COLORS: Record<
   rejected: 'error',
   approved: 'success',
   ods_issued: 'info',
-  pending_programming: 'secondary'
+  pending_programming: 'secondary',
+  scheduled: 'primary',
+  in_execution: 'success'
+}
+
+export const CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS: Record<
+  CalibrationServiceOperationalItemStatus,
+  string
+> = {
+  pending: 'Pendiente',
+  scheduled: 'Programado',
+  in_progress: 'En proceso',
+  completed: 'Completado'
 }
 
 export const CALIBRATION_SERVICE_APPROVAL_COLORS: Record<

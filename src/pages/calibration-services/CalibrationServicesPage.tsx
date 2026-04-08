@@ -30,7 +30,9 @@ import {
   CALIBRATION_SERVICE_APPROVAL_LABELS,
   CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES,
   CALIBRATION_SERVICE_EDIT_ROLES,
+  CALIBRATION_SERVICE_EXECUTION_ROLES,
   CALIBRATION_SERVICE_ODS_ROLES,
+  CALIBRATION_SERVICE_SCHEDULE_ROLES,
   CALIBRATION_SERVICE_SLA_COLORS,
   CALIBRATION_SERVICE_STATUS_COLORS,
   CALIBRATION_SERVICE_STATUS_LABELS,
@@ -64,7 +66,9 @@ const STATUS_OPTIONS: Array<{
   { value: 'rejected', label: 'Rechazada' },
   { value: 'approved', label: 'Aprobada por cliente' },
   { value: 'ods_issued', label: 'ODS emitida' },
-  { value: 'pending_programming', label: 'Pendiente de programación' }
+  { value: 'pending_programming', label: 'Pendiente de programación' },
+  { value: 'scheduled', label: 'Programada' },
+  { value: 'in_execution', label: 'En ejecución' }
 ]
 
 const TECHNICAL_STATUS_OPTIONS: Array<{
@@ -73,7 +77,9 @@ const TECHNICAL_STATUS_OPTIONS: Array<{
 }> = [
   { value: FILTER_ALL, label: 'Todos los estados técnicos' },
   { value: 'ods_issued', label: 'ODS emitida' },
-  { value: 'pending_programming', label: 'Pendiente de programación' }
+  { value: 'pending_programming', label: 'Pendiente de programación' },
+  { value: 'scheduled', label: 'Programada' },
+  { value: 'in_execution', label: 'En ejecución' }
 ]
 
 const APPROVAL_OPTIONS: Array<{
@@ -159,6 +165,8 @@ const CalibrationServicesPage = () => {
     ...CALIBRATION_SERVICE_APPROVAL_ROLES
   ])
   const canIssueOds = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
+  const canScheduleService = useHasRole([...CALIBRATION_SERVICE_SCHEDULE_ROLES])
+  const canRunExecution = useHasRole([...CALIBRATION_SERVICE_EXECUTION_ROLES])
   const canViewModule = useHasRole([...CALIBRATION_SERVICE_ALLOWED_ROLES])
   const canManageSequenceConfig = canCreateServices
   const hasTechnicalRole = useHasRole([...CALIBRATION_SERVICE_TECHNICAL_ROLES])
@@ -267,6 +275,12 @@ const CalibrationServicesPage = () => {
   const pendingProgrammingCount = visibleServices.filter(
     (service) => service.status === 'pending_programming'
   ).length
+  const scheduledCount = visibleServices.filter(
+    (service) => service.status === 'scheduled'
+  ).length
+  const inExecutionCount = visibleServices.filter(
+    (service) => service.status === 'in_execution'
+  ).length
   const readyForOdsCount = visibleServices.filter(
     (service) =>
       service.status === 'approved' &&
@@ -303,6 +317,10 @@ const CalibrationServicesPage = () => {
 
   const openOdsWorkflow = (serviceId: number) => {
     navigate(`/calibration-services/${serviceId}?open=ods`)
+  }
+
+  const openScheduleWorkflow = (serviceId: number) => {
+    navigate(`/calibration-services/${serviceId}?open=schedule`)
   }
 
   const handleSaveSequenceConfig = async (values: {
@@ -474,7 +492,7 @@ const CalibrationServicesPage = () => {
               </Typography>
               <Typography variant='body2' color='text.secondary'>
                 {isTechnicalOnlyView
-                  ? 'SLA amarillo o rojo'
+                  ? `${scheduledCount} programados · ${inExecutionCount} en ejecución`
                   : `${requestedChangesCount} con solicitud de modificación`}
               </Typography>
             </CardContent>
@@ -648,6 +666,12 @@ const CalibrationServicesPage = () => {
               service.status === 'approved' &&
               service.approvalStatus === 'approved' &&
               !service.odsCode
+            const canOpenScheduling =
+              canScheduleService &&
+              ['ods_issued', 'pending_programming'].includes(service.status)
+            const canManageExecution =
+              canRunExecution &&
+              ['scheduled', 'in_execution'].includes(service.status)
 
             return (
               <Card key={service.id} sx={{ borderRadius: 3 }}>
@@ -831,6 +855,26 @@ const CalibrationServicesPage = () => {
                           onClick={() => openOdsWorkflow(service.id)}
                         >
                           Emitir ODS
+                        </Button>
+                      ) : null}
+                      {canOpenScheduling ? (
+                        <Button
+                          variant='contained'
+                          color='primary'
+                          startIcon={<DescriptionOutlinedIcon />}
+                          onClick={() => openScheduleWorkflow(service.id)}
+                        >
+                          Programar
+                        </Button>
+                      ) : null}
+                      {canManageExecution ? (
+                        <Button
+                          variant='outlined'
+                          color='success'
+                          startIcon={<VisibilityOutlinedIcon />}
+                          onClick={() => openServiceDetail(service.id)}
+                        >
+                          Operación
                         </Button>
                       ) : null}
                     </Stack>
