@@ -1,3 +1,4 @@
+import { useState, type FocusEvent, type MouseEvent } from 'react'
 import {
   Alert,
   Box,
@@ -9,6 +10,7 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
+  Popover,
   Stack,
   Table,
   TableBody,
@@ -23,6 +25,7 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
 import AutorenewOutlinedIcon from '@mui/icons-material/AutorenewOutlined'
 import BuildCircleOutlinedIcon from '@mui/icons-material/BuildCircleOutlined'
+import AltRouteOutlinedIcon from '@mui/icons-material/AltRouteOutlined'
 import {
   CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES,
   CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES,
@@ -276,6 +279,23 @@ const renderRoleChips = (roles: readonly string[]) => (
 )
 
 const CalibrationServiceGuidePanel = () => {
+  const [activeStageAnchor, setActiveStageAnchor] = useState<HTMLElement | null>(null)
+  const [activeStage, setActiveStage] = useState<FlowStage | null>(null)
+
+  const handleOpenStageBranches = (event: MouseEvent<HTMLElement> | FocusEvent<HTMLElement>, stage: FlowStage) => {
+    if (!stage.branches?.length) {
+      return
+    }
+
+    setActiveStageAnchor(event.currentTarget)
+    setActiveStage(stage)
+  }
+
+  const handleCloseStageBranches = () => {
+    setActiveStageAnchor(null)
+    setActiveStage(null)
+  }
+
   return (
     <Stack spacing={3}>
       <Alert severity='info' icon={<InfoOutlinedIcon fontSize='inherit' />}>
@@ -332,67 +352,53 @@ const CalibrationServiceGuidePanel = () => {
               >
                 <Stack spacing={1} sx={{ minWidth: 180, maxWidth: 220 }}>
                   <Box
+                    onMouseEnter={(event) => handleOpenStageBranches(event, stage)}
+                    onFocus={(event) => handleOpenStageBranches(event, stage)}
+                    onMouseLeave={handleCloseStageBranches}
                     sx={{
                       border: '1px solid',
-                      borderColor: 'divider',
+                      borderColor: stage.branches?.length ? 'primary.light' : 'divider',
                       borderRadius: 2,
                       px: 1.5,
                       py: 1.25,
-                      backgroundColor: '#f8fbf9'
+                      backgroundColor: stage.branches?.length ? '#f4fbf7' : '#f8fbf9',
+                      cursor: stage.branches?.length ? 'help' : 'default',
+                      transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                      '&:hover': stage.branches?.length
+                        ? {
+                            transform: 'translateY(-1px)',
+                            boxShadow: 2
+                          }
+                        : undefined
                     }}
+                    tabIndex={stage.branches?.length ? 0 : -1}
                   >
-                    <Typography fontWeight={700} variant='body2'>
-                      {index + 1}. {stage.title}
-                    </Typography>
+                    <Stack spacing={0.75}>
+                      <Stack direction='row' justifyContent='space-between' spacing={1}>
+                        <Typography fontWeight={700} variant='body2'>
+                          {index + 1}. {stage.title}
+                        </Typography>
+                        {stage.branches?.length ? (
+                          <Chip
+                            size='small'
+                            icon={<AltRouteOutlinedIcon sx={{ fontSize: 14 }} />}
+                            label='Ver rutas'
+                            color='primary'
+                            variant='outlined'
+                            sx={{ height: 22 }}
+                          />
+                        ) : null}
+                      </Stack>
+                      {stage.branches?.length ? (
+                        <Typography variant='caption' color='primary.main' fontWeight={600}>
+                          Pasa el cursor para ver decisiones y desvíos.
+                        </Typography>
+                      ) : null}
+                    </Stack>
                     <Typography variant='caption' color='text.secondary'>
                       {stage.detail}
                     </Typography>
                   </Box>
-
-                  {stage.branches ? (
-                    <Stack spacing={0.75} sx={{ pl: 1.25 }}>
-                      {stage.branches.map((branch) => {
-                        const toneStyle = branchToneStyles[branch.tone]
-
-                        return (
-                          <Box
-                            key={branch.label}
-                            sx={{
-                              position: 'relative',
-                              border: '1px dashed',
-                              borderColor: toneStyle.borderColor,
-                              borderRadius: 2,
-                              px: 1.25,
-                              py: 1,
-                              backgroundColor: toneStyle.backgroundColor,
-                              '&::before': {
-                                content: '""',
-                                position: 'absolute',
-                                left: -10,
-                                top: 14,
-                                width: 8,
-                                borderTop: '1px dashed',
-                                borderColor: toneStyle.borderColor
-                              }
-                            }}
-                          >
-                            <Stack spacing={0.75}>
-                              <Chip
-                                size='small'
-                                color={toneStyle.chipColor}
-                                variant='outlined'
-                                label={branch.label}
-                                sx={{ alignSelf: 'flex-start' }}
-                              />
-                              <Typography variant='caption' color='text.secondary'>
-                                {branch.detail}
-                              </Typography>
-                            </Stack>
-                          </Box>
-                        )
-                      })}
-                    </Stack>
-                  ) : null}
                 </Stack>
                 {index < flowStages.length - 1 ? (
                   <EastOutlinedIcon sx={{ color: 'text.secondary', mt: 2 }} />
@@ -400,6 +406,65 @@ const CalibrationServiceGuidePanel = () => {
               </Stack>
             ))}
           </Stack>
+
+          <Popover
+            open={Boolean(activeStageAnchor && activeStage?.branches?.length)}
+            anchorEl={activeStageAnchor}
+            onClose={handleCloseStageBranches}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+            disableRestoreFocus
+            PaperProps={{
+              onMouseLeave: handleCloseStageBranches,
+              sx: {
+                mt: 1,
+                width: 320,
+                borderRadius: 3,
+                border: '1px solid',
+                borderColor: 'divider',
+                p: 2
+              }
+            }}
+          >
+            <Stack spacing={1.25}>
+              <Typography variant='subtitle2' fontWeight={700}>
+                {activeStage?.title}: decisiones y desvíos
+              </Typography>
+              <Typography variant='caption' color='text.secondary'>
+                Antes de seguir a la siguiente fase, revisa qué caminos alternos puede tomar esta etapa.
+              </Typography>
+              {activeStage?.branches?.map((branch) => {
+                const toneStyle = branchToneStyles[branch.tone]
+
+                return (
+                  <Box
+                    key={branch.label}
+                    sx={{
+                      border: '1px dashed',
+                      borderColor: toneStyle.borderColor,
+                      borderRadius: 2,
+                      px: 1.25,
+                      py: 1,
+                      backgroundColor: toneStyle.backgroundColor
+                    }}
+                  >
+                    <Stack spacing={0.75}>
+                      <Chip
+                        size='small'
+                        color={toneStyle.chipColor}
+                        variant='outlined'
+                        label={branch.label}
+                        sx={{ alignSelf: 'flex-start' }}
+                      />
+                      <Typography variant='caption' color='text.secondary'>
+                        {branch.detail}
+                      </Typography>
+                    </Stack>
+                  </Box>
+                )
+              })}
+            </Stack>
+          </Popover>
 
           <Divider sx={{ my: 2.5 }} />
 
