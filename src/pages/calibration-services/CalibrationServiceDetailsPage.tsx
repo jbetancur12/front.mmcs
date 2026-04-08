@@ -1535,11 +1535,11 @@ const CalibrationServiceDetailsPage = () => {
                   label={`Documentos (${service.documents?.length || 0})`}
                   value='documents'
                 />
-                <Tab label='Guía' value='guide' />
                 <Tab
                   label={`Historial (${service.events?.length || 0})`}
                   value='history'
                 />
+                <Tab label='Guía' value='guide' />
               </Tabs>
 
               <DetailTabPanel value={activeTab} tab='summary'>

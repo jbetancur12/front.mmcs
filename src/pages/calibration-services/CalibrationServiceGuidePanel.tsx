@@ -5,6 +5,10 @@ import {
   CardContent,
   Chip,
   Divider,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
   Stack,
   Table,
   TableBody,
@@ -16,6 +20,9 @@ import {
 import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined'
 import EastOutlinedIcon from '@mui/icons-material/EastOutlined'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
+import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
+import AutorenewOutlinedIcon from '@mui/icons-material/AutorenewOutlined'
+import BuildCircleOutlinedIcon from '@mui/icons-material/BuildCircleOutlined'
 import {
   CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES,
   CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES,
@@ -141,6 +148,47 @@ const permissionRows = [
   }
 ] as const
 
+const commercialBranchRows = [
+  {
+    title: 'Cliente aprueba',
+    detail:
+      'La cotización queda aprobada por cliente y habilita la emisión de ODS.'
+  },
+  {
+    title: 'Cliente rechaza',
+    detail:
+      'El servicio queda rechazado y conserva la trazabilidad comercial, sin pasar a ODS.'
+  },
+  {
+    title: 'Cliente solicita modificación',
+    detail:
+      'La cotización vuelve a borrador, se ajusta, se reenvía y mantiene historial del cambio.'
+  }
+] as const
+
+const noveltyBranchRows = [
+  {
+    title: 'Cantidad mayor a la cotizada',
+    detail:
+      'Metrología reporta la novedad y comercial/facturación decide si usa el mismo precio o uno diferente.'
+  },
+  {
+    title: 'Cantidad menor a la cotizada',
+    detail:
+      'Se registra la diferencia y luego se define si genera descuento o si el valor comercial se mantiene.'
+  },
+  {
+    title: 'Ítem adicional no cotizado',
+    detail:
+      'Se crea la novedad, se revisa su impacto económico y, si se aprueba, puede salir en corte.'
+  },
+  {
+    title: 'Documento formal',
+    detail:
+      'Las novedades aprobadas pueden generar anexo PDF individual y también consolidado del servicio.'
+  }
+] as const
+
 const renderRoleChips = (roles: readonly string[]) => (
   <Stack direction='row' spacing={0.75} useFlexGap flexWrap='wrap'>
     {roles.map((role) => (
@@ -257,6 +305,60 @@ const CalibrationServiceGuidePanel = () => {
                 documental ya quedó completo.
               </Typography>
             </Stack>
+          </Stack>
+        </CardContent>
+      </Card>
+
+      <Card sx={{ borderRadius: 3 }}>
+        <CardContent>
+          <Typography variant='h6' fontWeight={700} gutterBottom>
+            Desvíos y caminos alternos
+          </Typography>
+
+          <Stack spacing={2.5}>
+            <Box>
+              <Typography variant='subtitle1' fontWeight={700} gutterBottom>
+                Flujo comercial
+              </Typography>
+              <List dense disablePadding>
+                {commercialBranchRows.map((row, index) => (
+                  <ListItem key={row.title} disableGutters sx={{ alignItems: 'flex-start', py: 0.5 }}>
+                    <ListItemIcon sx={{ minWidth: 34, mt: 0.2 }}>
+                      {index === 0 ? (
+                        <CheckCircleOutlineOutlinedIcon color='success' fontSize='small' />
+                      ) : index === 1 ? (
+                        <CloseOutlinedIcon color='error' fontSize='small' />
+                      ) : (
+                        <AutorenewOutlinedIcon color='warning' fontSize='small' />
+                      )}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={<Typography fontWeight={700}>{row.title}</Typography>}
+                      secondary={row.detail}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </Box>
+
+            <Box>
+              <Typography variant='subtitle1' fontWeight={700} gutterBottom>
+                Flujo de novedades en ejecución
+              </Typography>
+              <List dense disablePadding>
+                {noveltyBranchRows.map((row) => (
+                  <ListItem key={row.title} disableGutters sx={{ alignItems: 'flex-start', py: 0.5 }}>
+                    <ListItemIcon sx={{ minWidth: 34, mt: 0.2 }}>
+                      <BuildCircleOutlinedIcon color='info' fontSize='small' />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={<Typography fontWeight={700}>{row.title}</Typography>}
+                      secondary={row.detail}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </Box>
           </Stack>
         </CardContent>
       </Card>
