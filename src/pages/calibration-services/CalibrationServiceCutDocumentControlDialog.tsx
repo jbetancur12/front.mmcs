@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  Divider,
   Button,
   Dialog,
   DialogActions,
@@ -24,6 +25,10 @@ interface CalibrationServiceCutDocumentControlDialogProps {
     uploadedCertificates: number
     reviewedCertificates: number
     sentCertificates: number
+    sendChannel?: string | null
+    sentTo?: string | null
+    sentAt?: string | null
+    evidenceFile?: File | null
     notes?: string | null
   }) => void | Promise<void>
 }
@@ -42,6 +47,10 @@ const CalibrationServiceCutDocumentControlDialog = ({
   const [uploadedCertificates, setUploadedCertificates] = useState(0)
   const [reviewedCertificates, setReviewedCertificates] = useState(0)
   const [sentCertificates, setSentCertificates] = useState(0)
+  const [sendChannel, setSendChannel] = useState('')
+  const [sentTo, setSentTo] = useState('')
+  const [sentAt, setSentAt] = useState('')
+  const [evidenceFile, setEvidenceFile] = useState<File | null>(null)
   const [notes, setNotes] = useState('')
   const suggestedCertificates = useMemo(
     () =>
@@ -64,6 +73,12 @@ const CalibrationServiceCutDocumentControlDialog = ({
     setUploadedCertificates(current?.uploadedCertificates || 0)
     setReviewedCertificates(current?.reviewedCertificates || 0)
     setSentCertificates(current?.sentCertificates || 0)
+    setSendChannel(current?.sendChannel || '')
+    setSentTo(current?.sentTo || '')
+    setSentAt(
+      current?.sentAt ? new Date(current.sentAt).toISOString().slice(0, 10) : ''
+    )
+    setEvidenceFile(null)
     setNotes(current?.notes || '')
   }, [cut, open, suggestedCertificates])
 
@@ -98,6 +113,10 @@ const CalibrationServiceCutDocumentControlDialog = ({
       uploadedCertificates: normalizedUploaded,
       reviewedCertificates: normalizedReviewed,
       sentCertificates: normalizedSent,
+      sendChannel: sendChannel.trim() || null,
+      sentTo: sentTo.trim() || null,
+      sentAt: sentAt ? new Date(`${sentAt}T12:00:00`).toISOString() : null,
+      evidenceFile,
       notes: notes.trim() || null
     })
   }
@@ -165,6 +184,51 @@ const CalibrationServiceCutDocumentControlDialog = ({
             fullWidth
             helperText='No puede superar los certificados revisados.'
           />
+          <Divider flexItem />
+          <Typography variant='subtitle2'>Datos de envío</Typography>
+          <TextField
+            label='Canal de envío'
+            value={sendChannel}
+            onChange={(event) => setSendChannel(event.target.value)}
+            fullWidth
+            placeholder='Email, WhatsApp, físico, plataforma...'
+            helperText='Obligatorio cuando ya registras certificados enviados.'
+          />
+          <TextField
+            label='Destinatario'
+            value={sentTo}
+            onChange={(event) => setSentTo(event.target.value)}
+            fullWidth
+            placeholder='Nombre, correo o referencia del receptor'
+            helperText='Indica a quién se enviaron o entregaron los certificados.'
+          />
+          <TextField
+            label='Fecha de envío'
+            type='date'
+            value={sentAt}
+            onChange={(event) => setSentAt(event.target.value)}
+            fullWidth
+            InputLabelProps={{ shrink: true }}
+          />
+          <Stack spacing={0.75}>
+            <Button component='label' variant='outlined' disabled={isLoading}>
+              Adjuntar soporte de envío
+              <input
+                hidden
+                type='file'
+                onChange={(event) =>
+                  setEvidenceFile(event.target.files?.[0] || null)
+                }
+              />
+            </Button>
+            <Typography variant='caption' color='text.secondary'>
+              {evidenceFile
+                ? `Nuevo soporte: ${evidenceFile.name}`
+                : cut.otherFields?.documentControl?.evidenceDocumentIds?.length
+                  ? `Soportes vinculados: ${cut.otherFields.documentControl.evidenceDocumentIds.length}`
+                  : 'Sin soporte cargado todavía.'}
+            </Typography>
+          </Stack>
           <TextField
             label='Notas documentales'
             value={notes}

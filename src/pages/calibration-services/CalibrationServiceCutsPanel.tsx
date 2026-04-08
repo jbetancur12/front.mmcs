@@ -124,6 +124,17 @@ const CalibrationServiceCutsPanel = ({
                     <Typography variant='body2' color='text.secondary'>
                       Esp. {documentControl.expectedCertificates} · Car. {documentControl.uploadedCertificates} · Rev. {documentControl.reviewedCertificates} · Env. {documentControl.sentCertificates}
                     </Typography>
+                    {documentControl.sentCertificates > 0 ? (
+                      <Typography variant='body2' color='text.secondary'>
+                        {documentControl.sendChannel || 'Canal pendiente'} ·{' '}
+                        {documentControl.sentTo || 'Destinatario pendiente'}
+                      </Typography>
+                    ) : null}
+                    {documentControl.evidenceDocumentIds?.length ? (
+                      <Typography variant='body2' color='text.secondary'>
+                        Soportes: {documentControl.evidenceDocumentIds.length}
+                      </Typography>
+                    ) : null}
                   </Stack>
                 ) : (
                   'Sin control'

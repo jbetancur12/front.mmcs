@@ -61,9 +61,12 @@ export interface CalibrationServiceCutDocumentControl {
   reviewedCertificates: number
   sentCertificates: number
   status: CalibrationServiceCutDocumentStatus
+  sendChannel?: string | null
+  sentTo?: string | null
   uploadedAt?: string | null
   reviewedAt?: string | null
   sentAt?: string | null
+  evidenceDocumentIds?: number[]
   notes?: string | null
 }
 
@@ -414,6 +417,7 @@ export interface CalibrationServiceDocumentUploadPayload {
   documentType: CalibrationServiceDocumentType
   title?: string
   notes?: string
+  cutId?: number | null
   generatedBySystem?: boolean
 }
 
@@ -564,6 +568,10 @@ export interface CalibrationServiceUpdateCutDocumentControlPayload {
   uploadedCertificates: number
   reviewedCertificates: number
   sentCertificates: number
+  sendChannel?: string | null
+  sentTo?: string | null
+  sentAt?: string | null
+  evidenceDocumentIds?: number[]
   notes?: string | null
 }
 

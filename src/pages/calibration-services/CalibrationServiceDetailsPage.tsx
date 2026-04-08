@@ -960,6 +960,10 @@ const CalibrationServiceDetailsPage = () => {
     uploadedCertificates: number
     reviewedCertificates: number
     sentCertificates: number
+    sendChannel?: string | null
+    sentTo?: string | null
+    sentAt?: string | null
+    evidenceFile?: File | null
     notes?: string | null
   }) => {
     if (!selectedCutForDocumentControl) {
@@ -967,10 +971,45 @@ const CalibrationServiceDetailsPage = () => {
     }
 
     try {
+      if (
+        values.sentCertificates > 0 &&
+        (!values.sendChannel?.trim() || !values.sentTo?.trim())
+      ) {
+        toast.error(
+          'Cuando ya hay certificados enviados, indica el canal y el destinatario.'
+        )
+        return
+      }
+
+      let evidenceDocumentIds =
+        selectedCutForDocumentControl.otherFields?.documentControl?.evidenceDocumentIds ||
+        []
+
+      if (values.evidenceFile) {
+        const uploadedDocument = await uploadDocument.mutateAsync({
+          serviceId: String(service.id),
+          cutId: selectedCutForDocumentControl.id,
+          file: values.evidenceFile,
+          documentType: 'supporting_attachment',
+          title: `Soporte de envío ${selectedCutForDocumentControl.cutCode}`,
+          notes: values.notes || 'Soporte de envío documental del corte'
+        })
+
+        evidenceDocumentIds = [...new Set([...evidenceDocumentIds, uploadedDocument.id])]
+      }
+
       await updateCutDocumentControl.mutateAsync({
         serviceId: String(service.id),
         cutId: String(selectedCutForDocumentControl.id),
-        ...values
+        expectedCertificates: values.expectedCertificates,
+        uploadedCertificates: values.uploadedCertificates,
+        reviewedCertificates: values.reviewedCertificates,
+        sentCertificates: values.sentCertificates,
+        sendChannel: values.sendChannel,
+        sentTo: values.sentTo,
+        sentAt: values.sentAt,
+        notes: values.notes,
+        evidenceDocumentIds
       })
       toast.success('El control documental del corte quedó actualizado.')
       setSelectedCutForDocumentControl(null)

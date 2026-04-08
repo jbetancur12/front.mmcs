@@ -88,6 +88,7 @@ const calibrationServiceApi = {
     documentType,
     title,
     notes,
+    cutId,
     generatedBySystem = false
   }: CalibrationServiceDocumentUploadPayload): Promise<CalibrationServiceDocument> => {
     const formData = new FormData()
@@ -100,6 +101,10 @@ const calibrationServiceApi = {
 
     if (notes) {
       formData.append('notes', notes)
+    }
+
+    if (cutId !== undefined && cutId !== null) {
+      formData.append('cutId', String(cutId))
     }
 
     formData.append('generatedBySystem', String(generatedBySystem))
