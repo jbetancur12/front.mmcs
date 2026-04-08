@@ -186,6 +186,7 @@ export const CALIBRATION_SERVICE_DOCUMENT_LABELS: Record<
   rejection_evidence: 'Evidencia rechazo cliente',
   quote_pdf: 'PDF de cotización',
   ods_pdf: 'PDF de ODS',
+  invoice_attachment: 'Soporte de factura',
   supporting_attachment: 'Soporte adjunto'
 }
 
@@ -198,6 +199,7 @@ export const CALIBRATION_SERVICE_DOCUMENT_COLORS: Record<
   rejection_evidence: 'warning',
   quote_pdf: 'secondary',
   ods_pdf: 'secondary',
+  invoice_attachment: 'info',
   supporting_attachment: 'default'
 }
 

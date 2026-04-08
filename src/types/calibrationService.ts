@@ -83,6 +83,7 @@ export type CalibrationServiceDocumentType =
   | 'rejection_evidence'
   | 'quote_pdf'
   | 'ods_pdf'
+  | 'invoice_attachment'
   | 'supporting_attachment'
 
 export type CalibrationServiceCutType = 'partial' | 'final'
@@ -206,6 +207,7 @@ export interface CalibrationServiceCut {
   invoiceReference?: string | null
   invoicedAt?: string | null
   invoiceNotes?: string | null
+  invoiceEvidenceDocumentIds?: number[]
   notes?: string | null
   createdByUserId?: number | null
   otherFields?: Record<string, unknown> & {
@@ -566,6 +568,7 @@ export interface CalibrationServiceMarkCutInvoicedPayload {
   invoiceReference: string
   invoicedAt?: string
   invoiceNotes?: string | null
+  invoiceEvidenceDocumentId?: number | null
 }
 
 export interface CalibrationServiceUpdateCutDocumentControlPayload {

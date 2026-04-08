@@ -55,6 +55,10 @@ const CalibrationServiceCutsPanel = ({
         <TableBody>
           {cuts.map((cut) => {
             const documentControl = cut.otherFields?.documentControl
+            const invoiceEvidenceCount =
+              cut.invoiceEvidenceDocumentIds?.length ||
+              ((cut.otherFields?.invoiceEvidenceDocumentIds as number[] | undefined)
+                ?.length ?? 0)
 
             return (
             <TableRow key={cut.id}>
@@ -95,9 +99,20 @@ const CalibrationServiceCutsPanel = ({
                   : 'Sin fecha'}
               </TableCell>
               <TableCell>
-                {cut.invoiceReference
-                  ? `${cut.invoiceReference}${cut.invoicedAt ? ` · ${new Date(cut.invoicedAt).toLocaleDateString('es-CO')}` : ''}`
-                  : 'Pendiente'}
+                {cut.invoiceReference ? (
+                  <Stack spacing={0.5}>
+                    <Typography variant='body2'>
+                      {`${cut.invoiceReference}${cut.invoicedAt ? ` · ${new Date(cut.invoicedAt).toLocaleDateString('es-CO')}` : ''}`}
+                    </Typography>
+                    <Typography variant='body2' color='text.secondary'>
+                      {invoiceEvidenceCount
+                        ? `Soporte factura: ${invoiceEvidenceCount}`
+                        : 'Sin soporte adjunto'}
+                    </Typography>
+                  </Stack>
+                ) : (
+                  'Pendiente'
+                )}
               </TableCell>
               <TableCell>
                 {documentControl ? (

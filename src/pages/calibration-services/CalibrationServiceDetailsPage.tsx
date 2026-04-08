@@ -983,16 +983,35 @@ const CalibrationServiceDetailsPage = () => {
     invoiceReference: string
     invoicedAt: string
     invoiceNotes?: string | null
+    invoiceFile?: File | null
   }) => {
     if (!selectedCutForInvoice) {
       return
     }
 
     try {
+      let invoiceEvidenceDocumentId: number | null = null
+
+      if (values.invoiceFile) {
+        const uploadedDocument = await uploadDocument.mutateAsync({
+          serviceId: String(service.id),
+          file: values.invoiceFile,
+          documentType: 'invoice_attachment',
+          title: `Factura ${values.invoiceReference} · ${selectedCutForInvoice.cutCode}`,
+          notes: values.invoiceNotes || undefined,
+          cutId: selectedCutForInvoice.id
+        })
+
+        invoiceEvidenceDocumentId = uploadedDocument.id
+      }
+
       await markCutInvoiced.mutateAsync({
         serviceId: String(service.id),
         cutId: String(selectedCutForInvoice.id),
-        ...values
+        invoiceReference: values.invoiceReference,
+        invoicedAt: values.invoicedAt,
+        invoiceNotes: values.invoiceNotes || null,
+        invoiceEvidenceDocumentId
       })
       toast.success('El corte quedó marcado como facturado.')
       setSelectedCutForInvoice(null)

@@ -20,6 +20,7 @@ interface CalibrationServiceCutInvoiceDialogProps {
     invoiceReference: string
     invoicedAt: string
     invoiceNotes?: string | null
+    invoiceFile?: File | null
   }) => void | Promise<void>
 }
 
@@ -35,6 +36,7 @@ const CalibrationServiceCutInvoiceDialog = ({
   const [invoiceReference, setInvoiceReference] = useState('')
   const [invoicedAt, setInvoicedAt] = useState(buildTodayValue())
   const [invoiceNotes, setInvoiceNotes] = useState('')
+  const [invoiceFile, setInvoiceFile] = useState<File | null>(null)
 
   useEffect(() => {
     if (!open) {
@@ -48,6 +50,7 @@ const CalibrationServiceCutInvoiceDialog = ({
         : buildTodayValue()
     )
     setInvoiceNotes(cut.invoiceNotes || '')
+    setInvoiceFile(null)
   }, [cut.invoiceNotes, cut.invoiceReference, cut.invoicedAt, open])
 
   const trimmedReference = invoiceReference.trim()
@@ -60,7 +63,8 @@ const CalibrationServiceCutInvoiceDialog = ({
     void onSubmit({
       invoiceReference: trimmedReference,
       invoicedAt: new Date(invoicedAt).toISOString(),
-      invoiceNotes: invoiceNotes.trim() || null
+      invoiceNotes: invoiceNotes.trim() || null,
+      invoiceFile
     })
   }
 
@@ -97,6 +101,30 @@ const CalibrationServiceCutInvoiceDialog = ({
             multiline
             minRows={3}
           />
+          <Stack spacing={1}>
+            <Typography variant='body2' color='text.secondary'>
+              Soporte de factura opcional. Si lo adjuntas aquí, el corte guarda el
+              número de factura junto con el archivo para auditoría.
+            </Typography>
+            <Button variant='outlined' component='label' disabled={isLoading}>
+              {invoiceFile ? 'Cambiar soporte de factura' : 'Adjuntar soporte de factura'}
+              <input
+                hidden
+                type='file'
+                accept='.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx'
+                onChange={(event) =>
+                  setInvoiceFile(event.target.files?.[0] || null)
+                }
+              />
+            </Button>
+            {invoiceFile ? (
+              <Typography variant='body2'>{invoiceFile.name}</Typography>
+            ) : (
+              <Typography variant='body2' color='text.secondary'>
+                Sin archivo adjunto.
+              </Typography>
+            )}
+          </Stack>
         </Stack>
       </DialogContent>
       <DialogActions>
