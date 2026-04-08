@@ -100,6 +100,22 @@ type DetailTab =
   | 'guide'
   | 'history'
 
+const detailTabs: readonly DetailTab[] = [
+  'summary',
+  'items',
+  'operations',
+  'adjustments',
+  'cuts',
+  'documents',
+  'guide',
+  'history'
+]
+
+const getDetailTabFromSearchParams = (searchParams: URLSearchParams): DetailTab => {
+  const tab = searchParams.get('tab')
+  return detailTabs.includes(tab as DetailTab) ? (tab as DetailTab) : 'summary'
+}
+
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
   currency: 'COP',
@@ -185,6 +201,7 @@ const CalibrationServiceDetailsPage = () => {
   const navigate = useNavigate()
   const { serviceId } = useParams<{ serviceId: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
+  const requestedTab = getDetailTabFromSearchParams(searchParams)
   const { data: service, isLoading, isError, error } =
     useCalibrationService(serviceId)
   const canManageSequenceConfig = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
@@ -231,7 +248,7 @@ const CalibrationServiceDetailsPage = () => {
     useState<CalibrationServiceCut | null>(null)
   const [selectedAdjustment, setSelectedAdjustment] =
     useState<CalibrationServiceAdjustment | null>(null)
-  const [activeTab, setActiveTab] = useState<DetailTab>('summary')
+  const [activeTab, setActiveTab] = useState<DetailTab>(requestedTab)
   const canEditService = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const canTakeApprovalDecision = useHasRole([...CALIBRATION_SERVICE_APPROVAL_ROLES])
   const canIssueOdsRole = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
@@ -318,6 +335,30 @@ const CalibrationServiceDetailsPage = () => {
     canCloseServiceRole &&
     service?.status === 'technically_completed' &&
     allCutsSent
+
+  useEffect(() => {
+    if (requestedTab !== activeTab) {
+      setActiveTab(requestedTab)
+    }
+  }, [activeTab, requestedTab])
+
+  useEffect(() => {
+    const currentTab = searchParams.get('tab')
+    const normalizedActiveTab = activeTab === 'summary' ? null : activeTab
+
+    if (currentTab === normalizedActiveTab) {
+      return
+    }
+
+    const nextSearchParams = new URLSearchParams(searchParams)
+    if (normalizedActiveTab) {
+      nextSearchParams.set('tab', normalizedActiveTab)
+    } else {
+      nextSearchParams.delete('tab')
+    }
+
+    setSearchParams(nextSearchParams, { replace: true })
+  }, [activeTab, searchParams, setSearchParams])
 
   useEffect(() => {
     if (!canManageSequenceConfig || isLoadingSequenceConfig) {
