@@ -3,6 +3,7 @@ import {
   CalibrationServiceAdjustmentStatus,
   CalibrationServiceAdjustmentType,
   CalibrationServiceApprovalStatus,
+  CalibrationServiceCutStatus,
   CalibrationServiceDocumentType,
   CalibrationServiceEventType,
   CalibrationServiceOperationalItemStatus,
@@ -77,6 +78,14 @@ export const CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES = [
   'super_admin',
   'comp_admin',
   'comp_requester',
+  'comp_supervisor',
+  'invoicing'
+] as const
+
+export const CALIBRATION_SERVICE_INVOICING_ROLES = [
+  'admin',
+  'super_admin',
+  'comp_admin',
   'comp_supervisor',
   'invoicing'
 ] as const
@@ -241,4 +250,13 @@ export const CALIBRATION_SERVICE_ADJUSTMENT_STATUS_COLORS: Record<
   approved: 'success',
   rejected: 'error',
   applied_to_cut: 'info'
+}
+
+export const CALIBRATION_SERVICE_CUT_STATUS_LABELS: Record<
+  CalibrationServiceCutStatus,
+  string
+> = {
+  draft: 'Borrador',
+  ready_for_invoicing: 'Listo para facturar',
+  invoiced: 'Facturado'
 }

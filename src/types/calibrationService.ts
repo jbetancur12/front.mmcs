@@ -64,7 +64,10 @@ export type CalibrationServiceDocumentType =
 
 export type CalibrationServiceCutType = 'partial' | 'final'
 
-export type CalibrationServiceCutStatus = 'draft' | 'ready_for_invoicing'
+export type CalibrationServiceCutStatus =
+  | 'draft'
+  | 'ready_for_invoicing'
+  | 'invoiced'
 
 export type CalibrationServiceEventType =
   | 'service_created'
@@ -177,6 +180,9 @@ export interface CalibrationServiceCut {
   status: CalibrationServiceCutStatus
   releasedAt?: string | null
   readyForInvoicingAt?: string | null
+  invoiceReference?: string | null
+  invoicedAt?: string | null
+  invoiceNotes?: string | null
   notes?: string | null
   createdByUserId?: number | null
   otherFields?: Record<string, unknown>
@@ -520,6 +526,14 @@ export interface CalibrationServiceMarkCutReadyPayload {
   serviceId: string
   cutId: string
   readyForInvoicingAt?: string
+}
+
+export interface CalibrationServiceMarkCutInvoicedPayload {
+  serviceId: string
+  cutId: string
+  invoiceReference: string
+  invoicedAt?: string
+  invoiceNotes?: string | null
 }
 
 export interface CalibrationServiceDocumentActionPayload {

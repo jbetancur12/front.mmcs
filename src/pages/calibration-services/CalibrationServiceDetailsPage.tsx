@@ -38,6 +38,7 @@ import {
   CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES,
   CALIBRATION_SERVICE_EDIT_ROLES,
   CALIBRATION_SERVICE_EXECUTION_ROLES,
+  CALIBRATION_SERVICE_INVOICING_ROLES,
   CALIBRATION_SERVICE_ODS_ROLES,
   CALIBRATION_SERVICE_SCHEDULE_ROLES,
   CALIBRATION_SERVICE_SLA_COLORS,
@@ -52,6 +53,7 @@ import {
 } from '../../hooks/useCalibrationServices'
 import {
   CalibrationServiceAdjustment,
+  CalibrationServiceCut,
   CalibrationServiceItemProgressEntryPayload
 } from '../../types/calibrationService'
 import { useHasRole } from '../../utils/functions'
@@ -69,6 +71,7 @@ import CalibrationServiceDocumentsPanel from './CalibrationServiceDocumentsPanel
 import CalibrationServiceOperationsPanel from './CalibrationServiceOperationsPanel'
 import CalibrationServiceCutsPanel from './CalibrationServiceCutsPanel'
 import CalibrationServiceCutDialog from './CalibrationServiceCutDialog'
+import CalibrationServiceCutInvoiceDialog from './CalibrationServiceCutInvoiceDialog'
 import CalibrationServiceScheduleDialog, {
   CalibrationServiceScheduleDialogValues
 } from './CalibrationServiceScheduleDialog'
@@ -189,6 +192,7 @@ const CalibrationServiceDetailsPage = () => {
     createAdjustment,
     reviewAdjustment,
     markCutReadyForInvoicing,
+    markCutInvoiced,
     generateQuotePdf,
     generateOdsPdf,
     downloadDocument,
@@ -201,6 +205,8 @@ const CalibrationServiceDetailsPage = () => {
   const [isCutDialogOpen, setIsCutDialogOpen] = useState(false)
   const [isAdjustmentDialogOpen, setIsAdjustmentDialogOpen] = useState(false)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
+  const [selectedCutForInvoice, setSelectedCutForInvoice] =
+    useState<CalibrationServiceCut | null>(null)
   const [selectedAdjustment, setSelectedAdjustment] =
     useState<CalibrationServiceAdjustment | null>(null)
   const [activeTab, setActiveTab] = useState<DetailTab>('summary')
@@ -215,6 +221,7 @@ const CalibrationServiceDetailsPage = () => {
   const canReviewAdjustmentRole = useHasRole([
     ...CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES
   ])
+  const canInvoiceCutRole = useHasRole([...CALIBRATION_SERVICE_INVOICING_ROLES])
   const canUploadDocuments = useHasRole([
     ...CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES
   ])
@@ -255,6 +262,7 @@ const CalibrationServiceDetailsPage = () => {
   const canUpdateOperationalProgress =
     canRunExecutionRole &&
     ['scheduled', 'in_execution'].includes(service?.status || '')
+  const canInvoiceCuts = canInvoiceCutRole
   const canStillRegisterAdjustmentsAfterTechnicalCompletion =
     service?.status === 'technically_completed' && canReportAdjustment
   const hasCuts = Boolean(service?.cuts?.length)
@@ -451,7 +459,8 @@ const CalibrationServiceDetailsPage = () => {
     createCut.isLoading ||
     createAdjustment.isLoading ||
     reviewAdjustment.isLoading ||
-    markCutReadyForInvoicing.isLoading
+    markCutReadyForInvoicing.isLoading ||
+    markCutInvoiced.isLoading
   const isDocumentBusy =
     uploadDocument.isLoading ||
     generateQuotePdf.isLoading ||
@@ -909,6 +918,30 @@ const CalibrationServiceDetailsPage = () => {
     } catch (cutError) {
       console.error(cutError)
       toast.error('No pudimos mover el corte a listo para facturar.')
+    }
+  }
+
+  const handleMarkCutInvoiced = async (values: {
+    invoiceReference: string
+    invoicedAt: string
+    invoiceNotes?: string | null
+  }) => {
+    if (!selectedCutForInvoice) {
+      return
+    }
+
+    try {
+      await markCutInvoiced.mutateAsync({
+        serviceId: String(service.id),
+        cutId: String(selectedCutForInvoice.id),
+        ...values
+      })
+      toast.success('El corte quedó marcado como facturado.')
+      setSelectedCutForInvoice(null)
+      setActiveTab('cuts')
+    } catch (cutError) {
+      console.error(cutError)
+      toast.error('No pudimos registrar la facturación del corte.')
     }
   }
 
@@ -1667,8 +1700,10 @@ const CalibrationServiceDetailsPage = () => {
                 <CalibrationServiceCutsPanel
                   cuts={service.cuts || []}
                   canMarkReady={canCreateCut}
+                  canMarkInvoiced={canInvoiceCuts}
                   isBusy={isOperationalBusy}
                   onMarkReady={handleMarkCutReady}
+                  onMarkInvoiced={(cut) => setSelectedCutForInvoice(cut)}
                 />
               </DetailTabPanel>
 
@@ -1800,6 +1835,15 @@ const CalibrationServiceDetailsPage = () => {
           isLoading={isOperationalBusy}
           onClose={() => setIsCutDialogOpen(false)}
           onSubmit={handleCreateCut}
+        />
+      ) : null}
+      {selectedCutForInvoice ? (
+        <CalibrationServiceCutInvoiceDialog
+          open={Boolean(selectedCutForInvoice)}
+          cut={selectedCutForInvoice}
+          isLoading={isOperationalBusy}
+          onClose={() => setSelectedCutForInvoice(null)}
+          onSubmit={handleMarkCutInvoiced}
         />
       ) : null}
       {isAdjustmentDialogOpen ? (

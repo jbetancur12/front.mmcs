@@ -1,11 +1,14 @@
 import { Alert, Box, Button, Chip, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
 import { CalibrationServiceCut } from '../../types/calibrationService'
+import { CALIBRATION_SERVICE_CUT_STATUS_LABELS } from '../../constants/calibrationServices'
 
 interface CalibrationServiceCutsPanelProps {
   cuts: CalibrationServiceCut[]
   canMarkReady?: boolean
+  canMarkInvoiced?: boolean
   isBusy?: boolean
   onMarkReady?: (cutId: number) => void | Promise<void>
+  onMarkInvoiced?: (cut: CalibrationServiceCut) => void
 }
 
 const cutTypeLabels = {
@@ -13,16 +16,13 @@ const cutTypeLabels = {
   final: 'Final'
 } as const
 
-const cutStatusLabels = {
-  draft: 'Borrador',
-  ready_for_invoicing: 'Listo para facturar'
-} as const
-
 const CalibrationServiceCutsPanel = ({
   cuts,
   canMarkReady = false,
+  canMarkInvoiced = false,
   isBusy = false,
-  onMarkReady
+  onMarkReady,
+  onMarkInvoiced
 }: CalibrationServiceCutsPanelProps) => {
   if (!cuts.length) {
     return <Alert severity='info'>Este servicio todavía no tiene cortes creados.</Alert>
@@ -39,6 +39,7 @@ const CalibrationServiceCutsPanel = ({
             <TableCell>Semáforo</TableCell>
             <TableCell>Items</TableCell>
             <TableCell>Fecha liberación</TableCell>
+            <TableCell>Factura</TableCell>
             <TableCell>Notas</TableCell>
             <TableCell>Acción</TableCell>
           </TableRow>
@@ -50,7 +51,7 @@ const CalibrationServiceCutsPanel = ({
               <TableCell>
                 <Chip size='small' label={cutTypeLabels[cut.cutType]} />
               </TableCell>
-              <TableCell>{cutStatusLabels[cut.status]}</TableCell>
+              <TableCell>{CALIBRATION_SERVICE_CUT_STATUS_LABELS[cut.status]}</TableCell>
               <TableCell>
                 <Chip
                   size='small'
@@ -82,6 +83,11 @@ const CalibrationServiceCutsPanel = ({
                   ? new Date(cut.releasedAt).toLocaleDateString('es-CO')
                   : 'Sin fecha'}
               </TableCell>
+              <TableCell>
+                {cut.invoiceReference
+                  ? `${cut.invoiceReference}${cut.invoicedAt ? ` · ${new Date(cut.invoicedAt).toLocaleDateString('es-CO')}` : ''}`
+                  : 'Pendiente'}
+              </TableCell>
               <TableCell>{cut.notes || 'Sin notas'}</TableCell>
               <TableCell>
                 {canMarkReady && cut.status === 'draft' ? (
@@ -92,6 +98,15 @@ const CalibrationServiceCutsPanel = ({
                     disabled={isBusy}
                   >
                     Listo para facturar
+                  </Button>
+                ) : canMarkInvoiced && cut.status === 'ready_for_invoicing' ? (
+                  <Button
+                    size='small'
+                    variant='contained'
+                    onClick={() => onMarkInvoiced?.(cut)}
+                    disabled={isBusy}
+                  >
+                    Marcar facturado
                   </Button>
                 ) : (
                   'Sin acción'

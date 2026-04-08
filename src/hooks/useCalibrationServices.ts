@@ -10,6 +10,7 @@ import {
   CalibrationServiceDocumentUploadPayload,
   CalibrationServiceFilters,
   CalibrationServiceItemProgressPayload,
+  CalibrationServiceMarkCutInvoicedPayload,
   CalibrationServiceIssueOdsPayload,
   CalibrationServiceListResponse,
   CalibrationServiceMarkCutReadyPayload,
@@ -261,6 +262,18 @@ const calibrationServiceApi = {
     return response.data
   },
 
+  markCutInvoiced: async ({
+    serviceId,
+    cutId,
+    ...payload
+  }: CalibrationServiceMarkCutInvoicedPayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/cuts/${cutId}/invoiced`,
+      payload
+    )
+    return response.data
+  },
+
   generateQuotePdf: async ({
     serviceId
   }: CalibrationServiceDocumentActionPayload): Promise<CalibrationServiceDocument> => {
@@ -500,6 +513,16 @@ export const useCalibrationServiceMutations = () => {
     }
   )
 
+  const markCutInvoiced = useMutation(calibrationServiceApi.markCutInvoiced, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
   const generateQuotePdf = useMutation(calibrationServiceApi.generateQuotePdf, {
     onSuccess: (_document, variables) => {
       queryClient.invalidateQueries([
@@ -549,6 +572,7 @@ export const useCalibrationServiceMutations = () => {
     createAdjustment,
     reviewAdjustment,
     markCutReadyForInvoicing,
+    markCutInvoiced,
     generateQuotePdf,
     generateOdsPdf,
     downloadDocument,
