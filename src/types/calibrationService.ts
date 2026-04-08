@@ -42,6 +42,10 @@ export type CalibrationServiceDocumentType =
   | 'ods_pdf'
   | 'supporting_attachment'
 
+export type CalibrationServiceCutType = 'partial' | 'final'
+
+export type CalibrationServiceCutStatus = 'draft' | 'ready_for_invoicing'
+
 export type CalibrationServiceEventType =
   | 'service_created'
   | 'service_updated'
@@ -132,6 +136,34 @@ export interface CalibrationServiceDocument {
   updatedAt?: string
 }
 
+export interface CalibrationServiceCutItem {
+  id: number
+  cutId: number
+  serviceItemId: number
+  quantity: number
+  otherFields?: Record<string, unknown>
+  serviceItem?: CalibrationServiceItem | null
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface CalibrationServiceCut {
+  id: number
+  serviceId: number
+  cutCode: string
+  cutType: CalibrationServiceCutType
+  status: CalibrationServiceCutStatus
+  releasedAt?: string | null
+  readyForInvoicingAt?: string | null
+  notes?: string | null
+  createdByUserId?: number | null
+  otherFields?: Record<string, unknown>
+  createdBy?: CalibrationServiceUserSummary | null
+  items?: CalibrationServiceCutItem[]
+  createdAt?: string
+  updatedAt?: string
+}
+
 export interface CalibrationServiceEvent {
   id: number
   serviceId: number
@@ -211,6 +243,7 @@ export interface CalibrationService {
   rejectedBy?: CalibrationServiceUserSummary | null
   odsGeneratedBy?: CalibrationServiceUserSummary | null
   items?: CalibrationServiceItem[]
+  cuts?: CalibrationServiceCut[]
   documents?: CalibrationServiceDocument[]
   events?: CalibrationServiceEvent[]
   slaIndicator?: CalibrationServiceSlaIndicator
@@ -383,6 +416,19 @@ export interface CalibrationServiceItemProgressEntryPayload {
 export interface CalibrationServiceItemProgressPayload {
   serviceId: string
   items: CalibrationServiceItemProgressEntryPayload[]
+}
+
+export interface CalibrationServiceCreateCutItemPayload {
+  serviceItemId: number
+  quantity: number
+}
+
+export interface CalibrationServiceCreateCutPayload {
+  serviceId: string
+  cutType: CalibrationServiceCutType
+  notes?: string | null
+  releasedAt?: string
+  items: CalibrationServiceCreateCutItemPayload[]
 }
 
 export interface CalibrationServiceDocumentActionPayload {

@@ -59,13 +59,15 @@ import CalibrationServiceOdsDialog, {
 } from './CalibrationServiceOdsDialog'
 import CalibrationServiceDocumentsPanel from './CalibrationServiceDocumentsPanel'
 import CalibrationServiceOperationsPanel from './CalibrationServiceOperationsPanel'
+import CalibrationServiceCutsPanel from './CalibrationServiceCutsPanel'
+import CalibrationServiceCutDialog from './CalibrationServiceCutDialog'
 import CalibrationServiceScheduleDialog, {
   CalibrationServiceScheduleDialogValues
 } from './CalibrationServiceScheduleDialog'
 import CalibrationServiceTimeline from './CalibrationServiceTimeline'
 import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
 
-type DetailTab = 'summary' | 'items' | 'operations' | 'documents' | 'history'
+type DetailTab = 'summary' | 'items' | 'operations' | 'cuts' | 'documents' | 'history'
 
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -168,6 +170,7 @@ const CalibrationServiceDetailsPage = () => {
     startExecution,
     completeExecution,
     updateItemProgress,
+    createCut,
     generateQuotePdf,
     generateOdsPdf,
     downloadDocument,
@@ -177,6 +180,7 @@ const CalibrationServiceDetailsPage = () => {
     useState<CalibrationServiceDecisionMode | null>(null)
   const [isOdsDialogOpen, setIsOdsDialogOpen] = useState(false)
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false)
+  const [isCutDialogOpen, setIsCutDialogOpen] = useState(false)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<DetailTab>('summary')
   const canEditService = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
@@ -214,6 +218,9 @@ const CalibrationServiceDetailsPage = () => {
     canRunExecutionRole &&
     service?.status === 'in_execution' &&
     allItemsOperationallyCompleted
+  const canCreateCut =
+    canRunExecutionRole &&
+    ['in_execution', 'technically_completed'].includes(service?.status || '')
   const canUpdateOperationalProgress =
     canRunExecutionRole &&
     ['scheduled', 'in_execution'].includes(service?.status || '')
@@ -367,7 +374,8 @@ const CalibrationServiceDetailsPage = () => {
     scheduleService.isLoading ||
     startExecution.isLoading ||
     completeExecution.isLoading ||
-    updateItemProgress.isLoading
+    updateItemProgress.isLoading ||
+    createCut.isLoading
   const isDocumentBusy =
     uploadDocument.isLoading ||
     generateQuotePdf.isLoading ||
@@ -695,6 +703,32 @@ const CalibrationServiceDetailsPage = () => {
     }
   }
 
+  const handleCreateCut = async (values: {
+    cutType: 'partial' | 'final'
+    notes: string
+    items: Array<{ serviceItemId: number; quantity: number }>
+  }) => {
+    try {
+      if (!values.items.length) {
+        toast.error('Selecciona al menos un ítem para el corte.')
+        return
+      }
+
+      await createCut.mutateAsync({
+        serviceId: String(service.id),
+        cutType: values.cutType,
+        notes: values.notes.trim() || null,
+        items: values.items
+      })
+      toast.success('El corte quedó creado.')
+      setIsCutDialogOpen(false)
+      setActiveTab('cuts')
+    } catch (cutError) {
+      console.error(cutError)
+      toast.error('No pudimos crear el corte.')
+    }
+  }
+
   const handleSaveOperationalProgress = async (
     items: CalibrationServiceItemProgressEntryPayload[]
   ) => {
@@ -936,6 +970,17 @@ const CalibrationServiceDetailsPage = () => {
               Finalizar ejecución
             </Button>
           ) : null}
+          {canCreateCut ? (
+            <Button
+              variant='outlined'
+              color='primary'
+              startIcon={<DescriptionOutlinedIcon />}
+              onClick={() => setIsCutDialogOpen(true)}
+              disabled={isOperationalBusy}
+            >
+              Crear corte
+            </Button>
+          ) : null}
           {canEdit ? (
             <Button
               variant='outlined'
@@ -1043,6 +1088,7 @@ const CalibrationServiceDetailsPage = () => {
                   value='items'
                 />
                 <Tab label='Operación' value='operations' />
+                <Tab label={`Cortes (${service.cuts?.length || 0})`} value='cuts' />
                 <Tab
                   label={`Documentos (${service.documents?.length || 0})`}
                   value='documents'
@@ -1392,6 +1438,10 @@ const CalibrationServiceDetailsPage = () => {
                 )}
               </DetailTabPanel>
 
+              <DetailTabPanel value={activeTab} tab='cuts'>
+                <CalibrationServiceCutsPanel cuts={service.cuts || []} />
+              </DetailTabPanel>
+
               <DetailTabPanel value={activeTab} tab='documents'>
                 <CalibrationServiceDocumentsPanel
                   serviceCode={service.serviceCode}
@@ -1511,6 +1561,15 @@ const CalibrationServiceDetailsPage = () => {
           isLoading={isOperationalBusy}
           onClose={() => setIsScheduleDialogOpen(false)}
           onSubmit={handleScheduleService}
+        />
+      ) : null}
+      {isCutDialogOpen ? (
+        <CalibrationServiceCutDialog
+          open={isCutDialogOpen}
+          service={service}
+          isLoading={isOperationalBusy}
+          onClose={() => setIsCutDialogOpen(false)}
+          onSubmit={handleCreateCut}
         />
       ) : null}
       {canManageSequenceConfig ? (

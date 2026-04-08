@@ -3,6 +3,7 @@ import { axiosPrivate } from '@utils/api'
 import {
   CalibrationServiceApprovePayload,
   CalibrationService,
+  CalibrationServiceCreateCutPayload,
   CalibrationServiceDocumentActionPayload,
   CalibrationServiceDocument,
   CalibrationServiceDocumentUploadPayload,
@@ -211,6 +212,17 @@ const calibrationServiceApi = {
     return response.data
   },
 
+  createCut: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServiceCreateCutPayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/cuts`,
+      payload
+    )
+    return response.data
+  },
+
   generateQuotePdf: async ({
     serviceId
   }: CalibrationServiceDocumentActionPayload): Promise<CalibrationServiceDocument> => {
@@ -407,6 +419,16 @@ export const useCalibrationServiceMutations = () => {
     }
   )
 
+  const createCut = useMutation(calibrationServiceApi.createCut, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
   const generateQuotePdf = useMutation(calibrationServiceApi.generateQuotePdf, {
     onSuccess: (_document, variables) => {
       queryClient.invalidateQueries([
@@ -452,6 +474,7 @@ export const useCalibrationServiceMutations = () => {
     startExecution,
     completeExecution,
     updateItemProgress,
+    createCut,
     generateQuotePdf,
     generateOdsPdf,
     downloadDocument,
