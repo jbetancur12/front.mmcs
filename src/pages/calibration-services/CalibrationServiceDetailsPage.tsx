@@ -62,6 +62,7 @@ import {
 import {
   CalibrationServiceAdjustment,
   CalibrationServiceCut,
+  CalibrationServiceCustomerResponseType,
   CalibrationServiceItemProgressEntryPayload
 } from '../../types/calibrationService'
 import { useHasRole } from '../../utils/functions'
@@ -87,6 +88,7 @@ import CalibrationServiceScheduleDialog, {
 import CalibrationServiceTimeline from './CalibrationServiceTimeline'
 import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
 import CalibrationServiceGuidePanel from './CalibrationServiceGuidePanel'
+import CalibrationServiceStageDecisionHelp from './CalibrationServiceStageDecisionHelp'
 
 type DetailTab =
   | 'summary'
@@ -140,7 +142,9 @@ const getCustomerResponseType = (
   otherFields: Record<string, unknown> | undefined
 ) => {
   const value = otherFields?.customerResponseType
-  return typeof value === 'string' ? value : null
+  return typeof value === 'string'
+    ? (value as CalibrationServiceCustomerResponseType)
+    : null
 }
 
 const getLatestChangeRequest = (
@@ -1453,6 +1457,14 @@ const CalibrationServiceDetailsPage = () => {
                 }
               />
             ) : null}
+            <CalibrationServiceStageDecisionHelp
+              status={service.status}
+              approvalStatus={service.approvalStatus}
+              customerResponseType={customerResponseType}
+              hasCommercialAdjustments={Boolean(unresolvedCommercialAdjustments.length)}
+              hasCuts={hasCuts}
+              allCutsSent={allCutsSent}
+            />
           </Stack>
         </Stack>
       </Stack>
