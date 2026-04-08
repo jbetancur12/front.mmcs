@@ -53,6 +53,7 @@ export const CALIBRATION_SERVICE_ODS_ROLES = [
   'admin',
   'super_admin',
   'comp_admin',
+  'comp_requester',
   'comp_supervisor'
 ] as const
 
