@@ -45,6 +45,20 @@ const roleLabels: Record<string, string> = {
   invoicing: 'Facturacion'
 }
 
+type FlowBranchTone = 'success' | 'warning' | 'error' | 'info'
+
+type FlowBranch = {
+  label: string
+  detail: string
+  tone: FlowBranchTone
+}
+
+type FlowStage = {
+  title: string
+  detail: string
+  branches?: readonly FlowBranch[]
+}
+
 const glossaryRows = [
   {
     code: 'SCL-2026-0004',
@@ -74,10 +88,27 @@ const glossaryRows = [
   }
 ] as const
 
-const flowStages = [
+const flowStages: readonly FlowStage[] = [
   {
     title: 'Cotizacion',
-    detail: 'Borrador, envio al cliente, respuesta y cambios'
+    detail: 'Borrador, envio al cliente, respuesta y cambios',
+    branches: [
+      {
+        label: 'Cliente aprueba',
+        detail: 'Habilita ODS y abre el flujo operativo.',
+        tone: 'success'
+      },
+      {
+        label: 'Cliente rechaza',
+        detail: 'Cierra el flujo comercial con trazabilidad.',
+        tone: 'error'
+      },
+      {
+        label: 'Solicita modificacion',
+        detail: 'Vuelve a borrador, se ajusta y se reenvia.',
+        tone: 'warning'
+      }
+    ]
   },
   {
     title: 'ODS',
@@ -89,11 +120,35 @@ const flowStages = [
   },
   {
     title: 'Ejecucion',
-    detail: 'Avance por item, novedades y cierre tecnico'
+    detail: 'Avance por item, novedades y cierre tecnico',
+    branches: [
+      {
+        label: 'Sin novedad',
+        detail: 'Continua al cierre tecnico normal.',
+        tone: 'success'
+      },
+      {
+        label: 'Con novedad',
+        detail: 'Reporta ajuste, revisa impacto y puede generar anexo.',
+        tone: 'info'
+      }
+    ]
   },
   {
     title: 'Cortes',
-    detail: 'Parciales o final, listos para facturar'
+    detail: 'Parciales o final, listos para facturar',
+    branches: [
+      {
+        label: 'Corte parcial',
+        detail: 'Libera solo una parte del servicio.',
+        tone: 'info'
+      },
+      {
+        label: 'Corte final',
+        detail: 'Formaliza la salida completa del caso.',
+        tone: 'success'
+      }
+    ]
   },
   {
     title: 'Facturacion',
@@ -108,6 +163,29 @@ const flowStages = [
     detail: 'Servicio cerrado y sin acciones pendientes'
   }
 ] as const
+
+const branchToneStyles = {
+  success: {
+    borderColor: 'success.light',
+    backgroundColor: '#eef9f1',
+    chipColor: 'success' as const
+  },
+  warning: {
+    borderColor: 'warning.light',
+    backgroundColor: '#fff7ea',
+    chipColor: 'warning' as const
+  },
+  error: {
+    borderColor: 'error.light',
+    backgroundColor: '#fef0f0',
+    chipColor: 'error' as const
+  },
+  info: {
+    borderColor: 'info.light',
+    backgroundColor: '#eef6ff',
+    chipColor: 'info' as const
+  }
+} as const
 
 const permissionRows = [
   {
@@ -243,36 +321,81 @@ const CalibrationServiceGuidePanel = () => {
             spacing={1}
             useFlexGap
             flexWrap='wrap'
-            alignItems='stretch'
+            alignItems='flex-start'
           >
             {flowStages.map((stage, index) => (
               <Stack
                 key={stage.title}
                 direction='row'
                 spacing={1}
-                alignItems='center'
+                alignItems='flex-start'
               >
-                <Box
-                  sx={{
-                    minWidth: 180,
-                    maxWidth: 210,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 2,
-                    px: 1.5,
-                    py: 1.25,
-                    backgroundColor: '#f8fbf9'
-                  }}
-                >
-                  <Typography fontWeight={700} variant='body2'>
-                    {index + 1}. {stage.title}
-                  </Typography>
-                  <Typography variant='caption' color='text.secondary'>
-                    {stage.detail}
-                  </Typography>
-                </Box>
+                <Stack spacing={1} sx={{ minWidth: 180, maxWidth: 220 }}>
+                  <Box
+                    sx={{
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 2,
+                      px: 1.5,
+                      py: 1.25,
+                      backgroundColor: '#f8fbf9'
+                    }}
+                  >
+                    <Typography fontWeight={700} variant='body2'>
+                      {index + 1}. {stage.title}
+                    </Typography>
+                    <Typography variant='caption' color='text.secondary'>
+                      {stage.detail}
+                    </Typography>
+                  </Box>
+
+                  {stage.branches ? (
+                    <Stack spacing={0.75} sx={{ pl: 1.25 }}>
+                      {stage.branches.map((branch) => {
+                        const toneStyle = branchToneStyles[branch.tone]
+
+                        return (
+                          <Box
+                            key={branch.label}
+                            sx={{
+                              position: 'relative',
+                              border: '1px dashed',
+                              borderColor: toneStyle.borderColor,
+                              borderRadius: 2,
+                              px: 1.25,
+                              py: 1,
+                              backgroundColor: toneStyle.backgroundColor,
+                              '&::before': {
+                                content: '""',
+                                position: 'absolute',
+                                left: -10,
+                                top: 14,
+                                width: 8,
+                                borderTop: '1px dashed',
+                                borderColor: toneStyle.borderColor
+                              }
+                            }}
+                          >
+                            <Stack spacing={0.75}>
+                              <Chip
+                                size='small'
+                                color={toneStyle.chipColor}
+                                variant='outlined'
+                                label={branch.label}
+                                sx={{ alignSelf: 'flex-start' }}
+                              />
+                              <Typography variant='caption' color='text.secondary'>
+                                {branch.detail}
+                              </Typography>
+                            </Stack>
+                          </Box>
+                        )
+                      })}
+                    </Stack>
+                  ) : null}
+                </Stack>
                 {index < flowStages.length - 1 ? (
-                  <EastOutlinedIcon sx={{ color: 'text.secondary' }} />
+                  <EastOutlinedIcon sx={{ color: 'text.secondary', mt: 2 }} />
                 ) : null}
               </Stack>
             ))}
