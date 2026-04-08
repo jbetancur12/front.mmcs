@@ -256,13 +256,21 @@ const CalibrationServiceDetailsPage = () => {
     const status = item.otherFields?.operationalStatus
     return status === 'completed'
   })
+  const hasReleasableItems = (service?.items || []).some((item) => {
+    const operationalStatus = item.otherFields?.operationalStatus
+    const releasedQuantity = Number(item.otherFields?.releasedQuantity || 0)
+    const quantity = Number(item.quantity || 0)
+
+    return operationalStatus === 'completed' && Math.max(quantity - releasedQuantity, 0) > 0
+  })
   const canCompleteExecution =
     canRunExecutionRole &&
     service?.status === 'in_execution' &&
     allItemsOperationallyCompleted
   const canCreateCut =
     canRunExecutionRole &&
-    ['in_execution', 'technically_completed'].includes(service?.status || '')
+    ['in_execution', 'technically_completed'].includes(service?.status || '') &&
+    hasReleasableItems
   const canReportAdjustment =
     canReportAdjustmentRole &&
     ['in_execution', 'technically_completed'].includes(service?.status || '')

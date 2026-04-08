@@ -99,7 +99,8 @@ export const CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES = [
   'super_admin',
   'comp_admin',
   'comp_requester',
-  'comp_supervisor'
+  'comp_supervisor',
+  'invoicing'
 ] as const
 
 export const CALIBRATION_SERVICE_STATUS_LABELS: Record<
