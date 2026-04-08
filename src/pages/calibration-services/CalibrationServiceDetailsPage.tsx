@@ -35,6 +35,7 @@ import {
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
   CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES,
+  CALIBRATION_SERVICE_CLOSE_ROLES,
   CALIBRATION_SERVICE_DOCUMENT_CONTROL_ROLES,
   CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES,
   CALIBRATION_SERVICE_EDIT_ROLES,
@@ -189,6 +190,7 @@ const CalibrationServiceDetailsPage = () => {
     scheduleService,
     startExecution,
     completeExecution,
+    closeService,
     updateItemProgress,
     createCut,
     createAdjustment,
@@ -229,6 +231,7 @@ const CalibrationServiceDetailsPage = () => {
   const canUpdateDocumentControlRole = useHasRole([
     ...CALIBRATION_SERVICE_DOCUMENT_CONTROL_ROLES
   ])
+  const canCloseServiceRole = useHasRole([...CALIBRATION_SERVICE_CLOSE_ROLES])
   const canInvoiceCutRole = useHasRole([...CALIBRATION_SERVICE_INVOICING_ROLES])
   const canUploadDocuments = useHasRole([
     ...CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES
@@ -283,10 +286,19 @@ const CalibrationServiceDetailsPage = () => {
   const canStillRegisterAdjustmentsAfterTechnicalCompletion =
     service?.status === 'technically_completed' && canReportAdjustment
   const hasCuts = Boolean(service?.cuts?.length)
+  const allCutsSent =
+    Boolean(service?.cuts?.length) &&
+    (service?.cuts || []).every(
+      (cut) => cut.otherFields?.documentControl?.status === 'sent'
+    )
   const shouldShowPostTechnicalCompletionGuidance =
     service?.status === 'technically_completed'
   const shouldShowCutsNextStepGuidance =
     service?.status === 'technically_completed' && !hasCuts
+  const canCloseService =
+    canCloseServiceRole &&
+    service?.status === 'technically_completed' &&
+    allCutsSent
 
   useEffect(() => {
     if (!canManageSequenceConfig || isLoadingSequenceConfig) {
@@ -478,7 +490,8 @@ const CalibrationServiceDetailsPage = () => {
     reviewAdjustment.isLoading ||
     markCutReadyForInvoicing.isLoading ||
     markCutInvoiced.isLoading ||
-    updateCutDocumentControl.isLoading
+    updateCutDocumentControl.isLoading ||
+    closeService.isLoading
   const isDocumentBusy =
     uploadDocument.isLoading ||
     generateQuotePdf.isLoading ||
@@ -807,6 +820,33 @@ const CalibrationServiceDetailsPage = () => {
     } catch (completeError) {
       console.error(completeError)
       toast.error('No pudimos finalizar técnicamente el servicio.')
+    }
+  }
+
+  const handleCloseService = async () => {
+    if (!service) {
+      return
+    }
+
+    const confirmed = window.confirm(
+      `¿Deseas cerrar definitivamente el servicio ${service.serviceCode}?`
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    try {
+      await closeService.mutateAsync({
+        serviceId: String(service.id),
+        closedAt: new Date().toISOString(),
+        closingNotes: 'Cierre final registrado desde el detalle del servicio.'
+      })
+      toast.success('El servicio quedó cerrado.')
+      setActiveTab('summary')
+    } catch (closeError) {
+      console.error(closeError)
+      toast.error('No pudimos cerrar el servicio.')
     }
   }
 
@@ -1278,6 +1318,17 @@ const CalibrationServiceDetailsPage = () => {
               disabled={isOperationalBusy}
             >
               Crear corte
+            </Button>
+          ) : null}
+          {canCloseService ? (
+            <Button
+              variant='contained'
+              color='inherit'
+              startIcon={<CheckCircleOutlineOutlinedIcon />}
+              onClick={() => void handleCloseService()}
+              disabled={isOperationalBusy}
+            >
+              Cerrar servicio
             </Button>
           ) : null}
           {canEdit ? (
@@ -1774,6 +1825,12 @@ const CalibrationServiceDetailsPage = () => {
                     pendientes, o un corte final si todo ya está listo.
                   </Alert>
                 ) : null}
+                {service.status === 'technically_completed' && allCutsSent ? (
+                  <Alert severity='success' sx={{ mb: 2 }}>
+                    Todos los cortes ya están enviados. El servicio quedó listo para
+                    <strong> cierre final</strong>.
+                  </Alert>
+                ) : null}
                 {unresolvedCommercialAdjustments.length ? (
                   <Alert severity='warning' sx={{ mb: 2 }}>
                     Antes de dejar un corte listo para facturar, revisa las novedades con
@@ -1877,6 +1934,11 @@ const CalibrationServiceDetailsPage = () => {
                   {service.slaIndicator?.message ||
                     'Todavía no hay una alerta operativa activa.'}
                 </Typography>
+                {service.status === 'closed' ? (
+                  <Typography variant='body2' color='text.secondary'>
+                    Estado final: el servicio ya no tiene acciones operativas pendientes.
+                  </Typography>
+                ) : null}
                 <Typography variant='body2' color='text.secondary'>
                   Inicio SLA: {formatDateValue(service.slaIndicator?.startedAt)}
                 </Typography>

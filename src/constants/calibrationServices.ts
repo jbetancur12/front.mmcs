@@ -94,6 +94,9 @@ export const CALIBRATION_SERVICE_INVOICING_ROLES = [
 export const CALIBRATION_SERVICE_DOCUMENT_CONTROL_ROLES =
   CALIBRATION_SERVICE_INVOICING_ROLES
 
+export const CALIBRATION_SERVICE_CLOSE_ROLES =
+  CALIBRATION_SERVICE_DOCUMENT_CONTROL_ROLES
+
 export const CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES = [
   'admin',
   'super_admin',
@@ -115,7 +118,8 @@ string
   pending_programming: 'Pendiente de programación',
   scheduled: 'Programada',
   in_execution: 'En ejecución',
-  technically_completed: 'Finalizada técnicamente'
+  technically_completed: 'Finalizada técnicamente',
+  closed: 'Cerrado'
 }
 
 export const CALIBRATION_SERVICE_APPROVAL_LABELS: Record<
@@ -139,7 +143,8 @@ export const CALIBRATION_SERVICE_STATUS_COLORS: Record<
   pending_programming: 'secondary',
   scheduled: 'primary',
   in_execution: 'success',
-  technically_completed: 'info'
+  technically_completed: 'info',
+  closed: 'default'
 }
 
 export const CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS: Record<

@@ -8,6 +8,7 @@ export type CalibrationServiceStatus =
   | 'scheduled'
   | 'in_execution'
   | 'technically_completed'
+  | 'closed'
 
 export type CalibrationServiceApprovalStatus =
   | 'pending'
@@ -489,6 +490,12 @@ export interface CalibrationServiceStartExecutionPayload {
   serviceId: string
   startedAt?: string
   executionNotes?: string | null
+}
+
+export interface CalibrationServiceClosePayload {
+  serviceId: string
+  closedAt?: string
+  closingNotes?: string | null
 }
 
 export interface CalibrationServiceItemProgressEntryPayload {

@@ -3,6 +3,7 @@ import { axiosPrivate } from '@utils/api'
 import {
   CalibrationServiceApprovePayload,
   CalibrationService,
+  CalibrationServiceClosePayload,
   CalibrationServiceCreateAdjustmentPayload,
   CalibrationServiceCreateCutPayload,
   CalibrationServiceDocumentActionPayload,
@@ -206,6 +207,17 @@ const calibrationServiceApi = {
   }): Promise<CalibrationService> => {
     const response = await axiosPrivate.post<CalibrationService>(
       `/calibration-services/${serviceId}/complete-execution`,
+      payload
+    )
+    return response.data
+  },
+
+  closeService: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServiceClosePayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/close`,
       payload
     )
     return response.data
@@ -475,6 +487,16 @@ export const useCalibrationServiceMutations = () => {
     }
   )
 
+  const closeService = useMutation(calibrationServiceApi.closeService, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
   const updateItemProgress = useMutation(
     calibrationServiceApi.updateItemProgress,
     {
@@ -598,6 +620,7 @@ export const useCalibrationServiceMutations = () => {
     scheduleService,
     startExecution,
     completeExecution,
+    closeService,
     updateItemProgress,
     createCut,
     createAdjustment,

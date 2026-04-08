@@ -69,7 +69,8 @@ const STATUS_OPTIONS: Array<{
   { value: 'pending_programming', label: 'Pendiente de programación' },
   { value: 'scheduled', label: 'Programada' },
   { value: 'in_execution', label: 'En ejecución' },
-  { value: 'technically_completed', label: 'Finalizada técnicamente' }
+  { value: 'technically_completed', label: 'Finalizada técnicamente' },
+  { value: 'closed', label: 'Cerrado' }
 ]
 
 const TECHNICAL_STATUS_OPTIONS: Array<{
@@ -81,7 +82,8 @@ const TECHNICAL_STATUS_OPTIONS: Array<{
   { value: 'pending_programming', label: 'Pendiente de programación' },
   { value: 'scheduled', label: 'Programada' },
   { value: 'in_execution', label: 'En ejecución' },
-  { value: 'technically_completed', label: 'Finalizada técnicamente' }
+  { value: 'technically_completed', label: 'Finalizada técnicamente' },
+  { value: 'closed', label: 'Cerrado' }
 ]
 
 const APPROVAL_OPTIONS: Array<{
@@ -285,6 +287,17 @@ const CalibrationServicesPage = () => {
   ).length
   const technicallyCompletedCount = visibleServices.filter(
     (service) => service.status === 'technically_completed'
+  ).length
+  const closedCount = visibleServices.filter(
+    (service) => service.status === 'closed'
+  ).length
+  const readyToCloseCount = visibleServices.filter(
+    (service) =>
+      service.status === 'technically_completed' &&
+      service.slaIndicator?.activePhase === 'document_control_closed'
+  ).length
+  const pendingDocumentControlCount = visibleServices.filter(
+    (service) => service.slaIndicator?.activePhase === 'document_control'
   ).length
   const readyForOdsCount = visibleServices.filter(
     (service) =>
@@ -497,11 +510,28 @@ const CalibrationServicesPage = () => {
               </Typography>
               <Typography variant='body2' color='text.secondary'>
                 {isTechnicalOnlyView
-                  ? `${scheduledCount} programados · ${inExecutionCount} en ejecución · ${technicallyCompletedCount} finalizados`
-                  : `${requestedChangesCount} con solicitud de modificación`}
+                  ? `${scheduledCount} programados · ${inExecutionCount} en ejecución · ${technicallyCompletedCount} finalizados · ${closedCount} cerrados`
+                  : `${requestedChangesCount} con solicitud de modificación · ${pendingDocumentControlCount} pendientes documentales`}
               </Typography>
             </CardContent>
           </Card>
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={2} mb={3}>
+        <Grid item xs={12} md={6}>
+          <Alert severity='info'>
+            {pendingDocumentControlCount > 0
+              ? `${pendingDocumentControlCount} servicios todavía requieren control documental o envío por corte.`
+              : 'No hay servicios con frente documental pendiente en la bandeja actual.'}
+          </Alert>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Alert severity='success'>
+            {readyToCloseCount > 0
+              ? `${readyToCloseCount} servicios ya están listos para cierre final.`
+              : 'Todavía no hay servicios listos para cierre final en la bandeja actual.'}
+          </Alert>
         </Grid>
       </Grid>
 
