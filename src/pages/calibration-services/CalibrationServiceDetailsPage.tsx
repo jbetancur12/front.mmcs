@@ -111,9 +111,18 @@ const detailTabs: readonly DetailTab[] = [
   'history'
 ]
 
-const getDetailTabFromSearchParams = (searchParams: URLSearchParams): DetailTab => {
-  const tab = searchParams.get('tab')
-  return detailTabs.includes(tab as DetailTab) ? (tab as DetailTab) : 'summary'
+const getStoredDetailTab = (serviceId?: string): DetailTab => {
+  if (!serviceId || typeof window === 'undefined') {
+    return 'summary'
+  }
+
+  const storedTab = window.sessionStorage.getItem(
+    `calibration-service-detail-tab:${serviceId}`
+  )
+
+  return detailTabs.includes(storedTab as DetailTab)
+    ? (storedTab as DetailTab)
+    : 'summary'
 }
 
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
@@ -201,7 +210,6 @@ const CalibrationServiceDetailsPage = () => {
   const navigate = useNavigate()
   const { serviceId } = useParams<{ serviceId: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
-  const requestedTab = getDetailTabFromSearchParams(searchParams)
   const { data: service, isLoading, isError, error } =
     useCalibrationService(serviceId)
   const canManageSequenceConfig = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
@@ -248,7 +256,9 @@ const CalibrationServiceDetailsPage = () => {
     useState<CalibrationServiceCut | null>(null)
   const [selectedAdjustment, setSelectedAdjustment] =
     useState<CalibrationServiceAdjustment | null>(null)
-  const [activeTab, setActiveTab] = useState<DetailTab>(requestedTab)
+  const [activeTab, setActiveTab] = useState<DetailTab>(() =>
+    getStoredDetailTab(serviceId)
+  )
   const canEditService = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const canTakeApprovalDecision = useHasRole([...CALIBRATION_SERVICE_APPROVAL_ROLES])
   const canIssueOdsRole = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
@@ -337,28 +347,19 @@ const CalibrationServiceDetailsPage = () => {
     allCutsSent
 
   useEffect(() => {
-    if (requestedTab !== activeTab) {
-      setActiveTab(requestedTab)
-    }
-  }, [activeTab, requestedTab])
+    setActiveTab(getStoredDetailTab(serviceId))
+  }, [serviceId])
 
   useEffect(() => {
-    const currentTab = searchParams.get('tab')
-    const normalizedActiveTab = activeTab === 'summary' ? null : activeTab
-
-    if (currentTab === normalizedActiveTab) {
+    if (!serviceId || typeof window === 'undefined') {
       return
     }
 
-    const nextSearchParams = new URLSearchParams(searchParams)
-    if (normalizedActiveTab) {
-      nextSearchParams.set('tab', normalizedActiveTab)
-    } else {
-      nextSearchParams.delete('tab')
-    }
-
-    setSearchParams(nextSearchParams, { replace: true })
-  }, [activeTab, searchParams, setSearchParams])
+    window.sessionStorage.setItem(
+      `calibration-service-detail-tab:${serviceId}`,
+      activeTab
+    )
+  }, [activeTab, serviceId])
 
   useEffect(() => {
     if (!canManageSequenceConfig || isLoadingSequenceConfig) {
