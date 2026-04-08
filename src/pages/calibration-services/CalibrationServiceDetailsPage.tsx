@@ -86,6 +86,7 @@ import CalibrationServiceScheduleDialog, {
 } from './CalibrationServiceScheduleDialog'
 import CalibrationServiceTimeline from './CalibrationServiceTimeline'
 import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
+import CalibrationServiceGuidePanel from './CalibrationServiceGuidePanel'
 
 type DetailTab =
   | 'summary'
@@ -94,6 +95,7 @@ type DetailTab =
   | 'adjustments'
   | 'cuts'
   | 'documents'
+  | 'guide'
   | 'history'
 
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
@@ -1533,6 +1535,7 @@ const CalibrationServiceDetailsPage = () => {
                   label={`Documentos (${service.documents?.length || 0})`}
                   value='documents'
                 />
+                <Tab label='Guía' value='guide' />
                 <Tab
                   label={`Historial (${service.events?.length || 0})`}
                   value='history'
@@ -1959,6 +1962,10 @@ const CalibrationServiceDetailsPage = () => {
                   onDownloadDocument={handleDownloadDocument}
                   onUploadDocument={handleUploadSupportDocument}
                 />
+              </DetailTabPanel>
+
+              <DetailTabPanel value={activeTab} tab='guide'>
+                <CalibrationServiceGuidePanel />
               </DetailTabPanel>
 
               <DetailTabPanel value={activeTab} tab='history'>
