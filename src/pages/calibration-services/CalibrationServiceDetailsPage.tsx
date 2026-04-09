@@ -938,26 +938,34 @@ const CalibrationServiceDetailsPage = () => {
   }
 
   const handleCreateAdjustment = async (values: {
-    serviceItemId?: number | null
-    changeType:
-      | 'quantity_less'
-      | 'quantity_more'
-      | 'extra_item'
-      | 'not_received'
-      | 'scope_change'
-    itemName?: string | null
-    quotedQuantity?: number
-    actualQuantity: number
-    description: string
-    technicalNotes?: string | null
-    requiresCommercialAdjustment: boolean
+    adjustments: Array<{
+      serviceItemId?: number | null
+      changeType:
+        | 'quantity_less'
+        | 'quantity_more'
+        | 'extra_item'
+        | 'not_received'
+        | 'scope_change'
+      itemName?: string | null
+      quotedQuantity?: number
+      actualQuantity: number
+      description: string
+      technicalNotes?: string | null
+      requiresCommercialAdjustment: boolean
+    }>
   }) => {
     try {
-      await createAdjustment.mutateAsync({
-        serviceId: String(service.id),
-        ...values
-      })
-      toast.success('La novedad quedó registrada.')
+      for (const adjustmentValues of values.adjustments) {
+        await createAdjustment.mutateAsync({
+          serviceId: String(service.id),
+          ...adjustmentValues
+        })
+      }
+      toast.success(
+        values.adjustments.length > 1
+          ? 'Las novedades quedaron registradas.'
+          : 'La novedad quedó registrada.'
+      )
       setIsAdjustmentDialogOpen(false)
       setActiveTab('adjustments')
     } catch (adjustmentError) {
