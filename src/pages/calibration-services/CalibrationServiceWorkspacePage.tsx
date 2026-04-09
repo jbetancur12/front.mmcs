@@ -151,6 +151,18 @@ const getItemTotals = (item: CalibrationServiceItemPayload) => {
   return { subtotal, taxTotal, total: subtotal + taxTotal }
 }
 
+const getCatalogPriceValue = (
+  product: CalibrationServiceProductSummary | null,
+  priceSource: CatalogPriceSource
+) => {
+  if (!product) return null
+
+  if (priceSource === 'medicalPrice') return product.medicalPrice ?? null
+  if (priceSource === 'industrialPrice') return product.industrialPrice ?? null
+  if (priceSource === 'thirdPartyPrice') return product.thirdPartyPrice ?? null
+  return product.price ?? null
+}
+
 const buildPayload = (formState: FormState, status: 'draft' | 'pending_approval'): CalibrationServicePayload => ({
   customerId: formState.customerId ?? null,
   scopeType: formState.scopeType ?? 'general',
@@ -364,6 +376,10 @@ const CalibrationServiceWorkspacePage = () => {
     canAccessWorkspace &&
     (!service || service.status === 'draft')
   const isBusy = createService.isLoading || updateService.isLoading || uploadDocument.isLoading
+  const suggestedCatalogPriceSource =
+    (typeof formState.otherFields?.catalogPriceProfile === 'string'
+      ? formState.otherFields.catalogPriceProfile
+      : 'price') as CatalogPriceSource
 
   const subtotal = formState.items.reduce((acc, item) => acc + getItemTotals(item).subtotal, 0)
   const taxTotal = formState.items.reduce((acc, item) => acc + getItemTotals(item).taxTotal, 0)
@@ -425,15 +441,8 @@ const CalibrationServiceWorkspacePage = () => {
     localId: string,
     product: CalibrationServiceProductSummary | null
   ) => {
-    const catalogPriceSource = 'price' as CatalogPriceSource
-    const selectedUnitPrice =
-      catalogPriceSource === 'medicalPrice'
-        ? product?.medicalPrice
-        : catalogPriceSource === 'industrialPrice'
-          ? product?.industrialPrice
-          : catalogPriceSource === 'thirdPartyPrice'
-            ? product?.thirdPartyPrice
-            : product?.price
+    const catalogPriceSource = suggestedCatalogPriceSource
+    const selectedUnitPrice = getCatalogPriceValue(product, catalogPriceSource)
 
     setFormState((previous) => ({
       ...previous,
@@ -463,14 +472,7 @@ const CalibrationServiceWorkspacePage = () => {
     product: CalibrationServiceProductSummary | null,
     priceSource: CatalogPriceSource
   ) => {
-    const nextUnitPrice =
-      priceSource === 'medicalPrice'
-        ? product?.medicalPrice
-        : priceSource === 'industrialPrice'
-          ? product?.industrialPrice
-          : priceSource === 'thirdPartyPrice'
-            ? product?.thirdPartyPrice
-            : product?.price
+    const nextUnitPrice = getCatalogPriceValue(product, priceSource)
 
     setFormState((previous) => ({
       ...previous,
@@ -888,6 +890,28 @@ const CalibrationServiceWorkspacePage = () => {
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <FormControl fullWidth>
+                    <InputLabel>Perfil sugerido de precio</InputLabel>
+                    <Select
+                      value={suggestedCatalogPriceSource}
+                      label='Perfil sugerido de precio'
+                      disabled={!canEdit || isBusy}
+                      onChange={(event) =>
+                        setField('otherFields', {
+                          ...(formState.otherFields || {}),
+                          catalogPriceProfile: event.target.value
+                        })
+                      }
+                    >
+                      {CATALOG_PRICE_SOURCE_OPTIONS.map((option) => (
+                        <MenuItem key={option.value} value={option.value}>
+                          {option.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <FormControl fullWidth>
                     <InputLabel>Aplica descuento</InputLabel>
                     <Select
                       value={formState.hasDiscount ? 'yes' : 'no'}
@@ -959,6 +983,13 @@ const CalibrationServiceWorkspacePage = () => {
                   </FormControl>
                 </Grid>
                 <Grid item xs={12}>
+                  <Alert severity='info'>
+                    El perfil sugerido de precio se usa para precargar el valor al
+                    seleccionar un producto del catálogo. Luego cada ítem puede cambiar
+                    su precio de catálogo o editar manualmente el valor unitario.
+                  </Alert>
+                </Grid>
+                <Grid item xs={12}>
                   <TextField fullWidth multiline minRows={3} label='Comentarios comerciales' value={formState.commercialComments || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('commercialComments', event.target.value)} />
                 </Grid>
               </Grid>
@@ -972,6 +1003,7 @@ const CalibrationServiceWorkspacePage = () => {
                 products={productOptions}
                 serviceTypeOptions={SERVICE_TYPE_OPTIONS}
                 catalogPriceSourceOptions={CATALOG_PRICE_SOURCE_OPTIONS}
+                suggestedCatalogPriceSource={suggestedCatalogPriceSource}
                 canEdit={canEdit}
                 isBusy={isBusy}
                 onAddItem={handleAddItem}

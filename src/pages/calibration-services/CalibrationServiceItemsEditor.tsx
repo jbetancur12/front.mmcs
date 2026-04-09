@@ -2,6 +2,7 @@ import {
   Autocomplete,
   Box,
   Button,
+  Chip,
   FormControl,
   IconButton,
   InputLabel,
@@ -38,6 +39,7 @@ interface CalibrationServiceItemsEditorProps {
   products: CalibrationServiceProductSummary[]
   serviceTypeOptions: string[]
   catalogPriceSourceOptions: readonly CatalogPriceSourceOption[]
+  suggestedCatalogPriceSource: CatalogPriceSourceOption['value']
   canEdit: boolean
   isBusy: boolean
   onAddItem: () => void
@@ -103,6 +105,7 @@ const CalibrationServiceItemsEditor = ({
   products,
   serviceTypeOptions,
   catalogPriceSourceOptions,
+  suggestedCatalogPriceSource,
   canEdit,
   isBusy,
   onAddItem,
@@ -184,44 +187,75 @@ const CalibrationServiceItemsEditor = ({
                     />
                   </TableCell>
                   <TableCell>
-                    <FormControl fullWidth size='small'>
-                      <InputLabel>Precio catálogo</InputLabel>
-                      <Select
-                        value={selectedCatalogPriceSource}
-                        label='Precio catálogo'
-                        disabled={!canEdit || isBusy || !selectedProduct}
-                        onChange={(event) => {
-                          const nextPriceSource =
-                            event.target.value as CatalogPriceSourceOption['value']
-                          onChangeItemOtherField(
-                            item.localId,
-                            'catalogPriceSource',
-                            nextPriceSource
-                          )
-                          onSelectCatalogPrice(
-                            item.localId,
-                            selectedProduct,
-                            nextPriceSource
-                          )
-                        }}
-                      >
-                        {catalogPriceSourceOptions.map((option) => {
-                          const optionValue = getCatalogPriceValue(
-                            selectedProduct,
-                            option.value
-                          )
+                    <Stack spacing={0.75}>
+                      <FormControl fullWidth size='small'>
+                        <InputLabel>Precio catálogo</InputLabel>
+                        <Select
+                          value={selectedCatalogPriceSource}
+                          label='Precio catálogo'
+                          disabled={!canEdit || isBusy || !selectedProduct}
+                          onChange={(event) => {
+                            const nextPriceSource =
+                              event.target.value as CatalogPriceSourceOption['value']
+                            onChangeItemOtherField(
+                              item.localId,
+                              'catalogPriceSource',
+                              nextPriceSource
+                            )
+                            onSelectCatalogPrice(
+                              item.localId,
+                              selectedProduct,
+                              nextPriceSource
+                            )
+                          }}
+                        >
+                          {catalogPriceSourceOptions.map((option) => {
+                            const optionValue = getCatalogPriceValue(
+                              selectedProduct,
+                              option.value
+                            )
 
-                          return (
-                            <MenuItem key={option.value} value={option.value}>
-                              {option.label} ·{' '}
-                              {optionValue !== null
-                                ? currencyFormatter.format(optionValue)
-                                : 'Sin valor'}
-                            </MenuItem>
-                          )
-                        })}
-                      </Select>
-                    </FormControl>
+                            return (
+                              <MenuItem key={option.value} value={option.value}>
+                                {option.label}
+                                {' · '}
+                                {optionValue !== null
+                                  ? currencyFormatter.format(optionValue)
+                                  : 'Sin valor'}
+                                {option.value === suggestedCatalogPriceSource
+                                  ? ' · Sugerido'
+                                  : ''}
+                              </MenuItem>
+                            )
+                          })}
+                        </Select>
+                      </FormControl>
+                      {selectedProduct ? (
+                        <Stack direction='row' spacing={1} alignItems='center' flexWrap='wrap'>
+                          {selectedCatalogPriceSource === suggestedCatalogPriceSource ? (
+                            <Chip
+                              size='small'
+                              color='success'
+                              variant='outlined'
+                              label='Usando precio sugerido'
+                            />
+                          ) : (
+                            <Chip
+                              size='small'
+                              color='warning'
+                              variant='outlined'
+                              label='Precio del ítem ajustado'
+                            />
+                          )}
+                          <Typography variant='caption' color='text.secondary'>
+                            Sugerido para esta cotización:{' '}
+                            {catalogPriceSourceOptions.find(
+                              (option) => option.value === suggestedCatalogPriceSource
+                            )?.label || 'Valor general'}
+                          </Typography>
+                        </Stack>
+                      ) : null}
+                    </Stack>
                   </TableCell>
                   <TableCell>
                     <TextField
