@@ -23,6 +23,11 @@ import {
   CalibrationServiceProductSummary
 } from '../../types/calibrationService'
 
+type CatalogPriceSourceOption = {
+  value: 'medicalPrice' | 'industrialPrice' | 'thirdPartyPrice' | 'price'
+  label: string
+}
+
 interface EditableCalibrationServiceItem
   extends CalibrationServiceItemPayload {
   localId: string
@@ -32,6 +37,7 @@ interface CalibrationServiceItemsEditorProps {
   items: EditableCalibrationServiceItem[]
   products: CalibrationServiceProductSummary[]
   serviceTypeOptions: string[]
+  catalogPriceSourceOptions: readonly CatalogPriceSourceOption[]
   canEdit: boolean
   isBusy: boolean
   onAddItem: () => void
@@ -44,6 +50,16 @@ interface CalibrationServiceItemsEditorProps {
     localId: string,
     field: keyof EditableCalibrationServiceItem,
     value: string | number | null
+  ) => void
+  onSelectCatalogPrice: (
+    localId: string,
+    product: CalibrationServiceProductSummary | null,
+    priceSource: CatalogPriceSourceOption['value']
+  ) => void
+  onChangeItemOtherField: (
+    localId: string,
+    field: string,
+    value: unknown
   ) => void
 }
 
@@ -68,16 +84,33 @@ const getItemTotals = (item: EditableCalibrationServiceItem) => {
   return { subtotal, taxTotal, total: subtotal + taxTotal }
 }
 
+const getCatalogPriceValue = (
+  product: CalibrationServiceProductSummary | null,
+  priceSource: CatalogPriceSourceOption['value']
+) => {
+  if (!product) {
+    return null
+  }
+
+  if (priceSource === 'medicalPrice') return product.medicalPrice ?? null
+  if (priceSource === 'industrialPrice') return product.industrialPrice ?? null
+  if (priceSource === 'thirdPartyPrice') return product.thirdPartyPrice ?? null
+  return product.price ?? null
+}
+
 const CalibrationServiceItemsEditor = ({
   items,
   products,
   serviceTypeOptions,
+  catalogPriceSourceOptions,
   canEdit,
   isBusy,
   onAddItem,
   onRemoveItem,
   onSelectProduct,
-  onChangeItemField
+  onChangeItemField,
+  onSelectCatalogPrice,
+  onChangeItemOtherField
 }: CalibrationServiceItemsEditorProps) => {
   return (
     <Stack spacing={2}>
@@ -106,10 +139,11 @@ const CalibrationServiceItemsEditor = ({
       </Stack>
 
       <Box sx={{ overflowX: 'auto' }}>
-        <Table size='small' sx={{ minWidth: 1260 }}>
+        <Table size='small' sx={{ minWidth: 1420 }}>
           <TableHead>
             <TableRow>
               <TableCell sx={{ minWidth: 240 }}>Producto catálogo</TableCell>
+              <TableCell sx={{ minWidth: 220 }}>Precio catálogo</TableCell>
               <TableCell sx={{ minWidth: 220 }}>Ítem</TableCell>
               <TableCell sx={{ minWidth: 180 }}>Instrumento</TableCell>
               <TableCell sx={{ minWidth: 160 }}>Intervalo</TableCell>
@@ -129,6 +163,10 @@ const CalibrationServiceItemsEditor = ({
               const selectedProduct =
                 products.find((product) => product.id === item.productId) || null
               const totals = getItemTotals(item)
+              const selectedCatalogPriceSource =
+                (typeof item.otherFields?.catalogPriceSource === 'string'
+                  ? item.otherFields.catalogPriceSource
+                  : 'price') as CatalogPriceSourceOption['value']
 
               return (
                 <TableRow key={item.localId} hover>
@@ -144,6 +182,46 @@ const CalibrationServiceItemsEditor = ({
                         <TextField {...params} label={`Producto ${index + 1}`} />
                       )}
                     />
+                  </TableCell>
+                  <TableCell>
+                    <FormControl fullWidth size='small'>
+                      <InputLabel>Precio catálogo</InputLabel>
+                      <Select
+                        value={selectedCatalogPriceSource}
+                        label='Precio catálogo'
+                        disabled={!canEdit || isBusy || !selectedProduct}
+                        onChange={(event) => {
+                          const nextPriceSource =
+                            event.target.value as CatalogPriceSourceOption['value']
+                          onChangeItemOtherField(
+                            item.localId,
+                            'catalogPriceSource',
+                            nextPriceSource
+                          )
+                          onSelectCatalogPrice(
+                            item.localId,
+                            selectedProduct,
+                            nextPriceSource
+                          )
+                        }}
+                      >
+                        {catalogPriceSourceOptions.map((option) => {
+                          const optionValue = getCatalogPriceValue(
+                            selectedProduct,
+                            option.value
+                          )
+
+                          return (
+                            <MenuItem key={option.value} value={option.value}>
+                              {option.label} ·{' '}
+                              {optionValue !== null
+                                ? currencyFormatter.format(optionValue)
+                                : 'Sin valor'}
+                            </MenuItem>
+                          )
+                        })}
+                      </Select>
+                    </FormControl>
                   </TableCell>
                   <TableCell>
                     <TextField

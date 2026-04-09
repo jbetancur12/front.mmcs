@@ -127,6 +127,11 @@ export interface CalibrationServiceUserSummary {
 export interface CalibrationServiceProductSummary {
   id: number
   name: string
+  serviceType?: string | null
+  intervalText?: string | null
+  medicalPrice?: number | null
+  industrialPrice?: number | null
+  thirdPartyPrice?: number | null
   price?: number | null
 }
 

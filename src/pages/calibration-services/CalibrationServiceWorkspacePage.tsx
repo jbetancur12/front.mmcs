@@ -60,7 +60,15 @@ const REQUEST_CHANNEL_OPTIONS = ['En persona', 'Por Email', 'Por Telefono', 'Por
 const PAYMENT_METHOD_OPTIONS = ['De Contado', 'A 30 Dias', 'A 60 Dias', 'A 90 Dias', '50% / 50%']
 const DELIVERY_TIME_OPTIONS = ['8 Dias Habiles', '15 Dias Habiles', '30 Dias Habiles']
 const VALIDITY_DAY_OPTIONS = [8, 15, 30, 60, 90]
-const SERVICE_TYPE_OPTIONS = ['Acreditado', 'Trazable', 'Especial']
+const SERVICE_TYPE_OPTIONS = ['Acreditado', 'Trazable', 'Subcontratado ONAC', 'Especial']
+const CATALOG_PRICE_SOURCE_OPTIONS = [
+  { value: 'medicalPrice', label: 'Valor médica' },
+  { value: 'industrialPrice', label: 'Valor industrial' },
+  { value: 'thirdPartyPrice', label: 'Valor subcontratados' },
+  { value: 'price', label: 'Valor general' }
+] as const
+
+type CatalogPriceSource = (typeof CATALOG_PRICE_SOURCE_OPTIONS)[number]['value']
 const DISCOUNT_TYPE_OPTIONS = [
   { value: 'fixed', label: 'Valor fijo' },
   { value: 'percentage', label: 'Porcentaje' }
@@ -104,7 +112,9 @@ const createEmptyItem = (): FormItem => ({
   total: 0,
   notes: '',
   sortOrder: 0,
-  otherFields: {}
+  otherFields: {
+    catalogPriceSource: 'price'
+  }
 })
 
 const createInitialFormState = (): FormState => ({
@@ -292,7 +302,13 @@ const CalibrationServiceWorkspacePage = () => {
         total: toNumber(item.total),
         notes: item.notes || '',
         sortOrder: item.sortOrder ?? index,
-        otherFields: item.otherFields || {}
+        otherFields: {
+          catalogPriceSource:
+            typeof item.otherFields?.catalogPriceSource === 'string'
+              ? item.otherFields.catalogPriceSource
+              : 'price',
+          ...(item.otherFields || {})
+        }
       })) || [createEmptyItem()]
     })
     setRequestEvidenceTitle(`Evidencia de solicitud ${service.serviceCode}`)
@@ -371,6 +387,23 @@ const CalibrationServiceWorkspacePage = () => {
     }))
   }
 
+  const setItemOtherField = (localId: string, field: string, value: unknown) => {
+    setFormState((previous) => ({
+      ...previous,
+      items: previous.items.map((item) =>
+        item.localId === localId
+          ? {
+              ...item,
+              otherFields: {
+                ...(item.otherFields || {}),
+                [field]: value
+              }
+            }
+          : item
+      )
+    }))
+  }
+
   const handleAddItem = () => {
     setFormState((previous) => ({
       ...previous,
@@ -392,6 +425,16 @@ const CalibrationServiceWorkspacePage = () => {
     localId: string,
     product: CalibrationServiceProductSummary | null
   ) => {
+    const catalogPriceSource = 'price' as CatalogPriceSource
+    const selectedUnitPrice =
+      catalogPriceSource === 'medicalPrice'
+        ? product?.medicalPrice
+        : catalogPriceSource === 'industrialPrice'
+          ? product?.industrialPrice
+          : catalogPriceSource === 'thirdPartyPrice'
+            ? product?.thirdPartyPrice
+            : product?.price
+
     setFormState((previous) => ({
       ...previous,
       items: previous.items.map((candidate) =>
@@ -400,7 +443,49 @@ const CalibrationServiceWorkspacePage = () => {
               ...candidate,
               productId: product?.id ?? null,
               itemName: product?.name || candidate.itemName,
-              unitPrice: product?.price ?? candidate.unitPrice
+              instrumentName: product?.name || candidate.instrumentName,
+              intervalText: product?.intervalText || candidate.intervalText,
+              serviceType: product?.serviceType || candidate.serviceType,
+              unitPrice:
+                selectedUnitPrice ?? candidate.unitPrice,
+              otherFields: {
+                ...(candidate.otherFields || {}),
+                catalogPriceSource
+              }
+            }
+          : candidate
+      )
+    }))
+  }
+
+  const handleSelectCatalogPrice = (
+    localId: string,
+    product: CalibrationServiceProductSummary | null,
+    priceSource: CatalogPriceSource
+  ) => {
+    const nextUnitPrice =
+      priceSource === 'medicalPrice'
+        ? product?.medicalPrice
+        : priceSource === 'industrialPrice'
+          ? product?.industrialPrice
+          : priceSource === 'thirdPartyPrice'
+            ? product?.thirdPartyPrice
+            : product?.price
+
+    setFormState((previous) => ({
+      ...previous,
+      items: previous.items.map((candidate) =>
+        candidate.localId === localId
+          ? {
+              ...candidate,
+              unitPrice:
+                nextUnitPrice !== null && nextUnitPrice !== undefined
+                  ? nextUnitPrice
+                  : candidate.unitPrice,
+              otherFields: {
+                ...(candidate.otherFields || {}),
+                catalogPriceSource: priceSource
+              }
             }
           : candidate
       )
@@ -886,12 +971,15 @@ const CalibrationServiceWorkspacePage = () => {
                 items={formState.items}
                 products={productOptions}
                 serviceTypeOptions={SERVICE_TYPE_OPTIONS}
+                catalogPriceSourceOptions={CATALOG_PRICE_SOURCE_OPTIONS}
                 canEdit={canEdit}
                 isBusy={isBusy}
                 onAddItem={handleAddItem}
                 onRemoveItem={handleRemoveItem}
                 onSelectProduct={handleSelectProduct}
+                onSelectCatalogPrice={handleSelectCatalogPrice}
                 onChangeItemField={setItemField}
+                onChangeItemOtherField={setItemOtherField}
               />
             </CardContent>
           </Card>
