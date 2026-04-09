@@ -1,4 +1,5 @@
 import { useDeferredValue, useEffect, useState } from 'react'
+import { useStore } from '@nanostores/react'
 import {
   Alert,
   Box,
@@ -52,6 +53,7 @@ import {
   CalibrationServiceSlaIndicatorColor,
   CalibrationServiceStatus
 } from '../../types/calibrationService'
+import { userStore } from '../../store/userStore'
 import { useHasRole } from '../../utils/functions'
 import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
 
@@ -161,6 +163,14 @@ const matchesSiteFilter = (service: CalibrationService, siteSearch: string) => {
 const hasCustomerChangeRequest = (service: CalibrationService) =>
   service.otherFields?.customerResponseType === 'changes_requested'
 
+const getOperationsDetails = (service: CalibrationService) => {
+  const operations = service.otherFields?.operations
+
+  return operations && typeof operations === 'object' && !Array.isArray(operations)
+    ? (operations as Record<string, unknown>)
+    : {}
+}
+
 const getServiceOperationalFocus = (service: CalibrationService) => {
   if (service.status === 'closed') {
     return { label: 'Cierre final completado', color: 'success' as const }
@@ -194,6 +204,7 @@ const getServiceOperationalFocus = (service: CalibrationService) => {
 
 const CalibrationServicesPage = () => {
   const navigate = useNavigate()
+  const $userStore = useStore(userStore)
   const { requestApproval, upsertSequenceConfig } =
     useCalibrationServiceMutations()
   const canCreateServices = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
@@ -722,6 +733,25 @@ const CalibrationServicesPage = () => {
         ) : (
           visibleServices.map((service) => {
             const serviceOperationalFocus = getServiceOperationalFocus(service)
+            const operations = getOperationsDetails(service)
+            const assignedMetrologistName =
+              typeof operations.assignedMetrologistName === 'string'
+                ? operations.assignedMetrologistName
+                : typeof operations.operationalResponsibleName === 'string'
+                  ? operations.operationalResponsibleName
+                  : ''
+            const assignedMetrologistEmail =
+              typeof operations.assignedMetrologistEmail === 'string'
+                ? operations.assignedMetrologistEmail
+                : ''
+            const isAssignedToCurrentMetrologist =
+              Boolean(
+                hasTechnicalRole &&
+                  $userStore.email &&
+                  assignedMetrologistEmail &&
+                  assignedMetrologistEmail.toLowerCase() ===
+                    $userStore.email.toLowerCase()
+              )
             const shouldShowOperationalFocusBadge =
               serviceOperationalFocus &&
               serviceOperationalFocus.label !== service.slaIndicator?.label
@@ -839,6 +869,18 @@ const CalibrationServicesPage = () => {
                             label='Cliente pidió modificación'
                           />
                         ) : null}
+                        {assignedMetrologistName ? (
+                          <Chip
+                            size='small'
+                            color={isAssignedToCurrentMetrologist ? 'success' : 'default'}
+                            variant={isAssignedToCurrentMetrologist ? 'filled' : 'outlined'}
+                            label={
+                              isAssignedToCurrentMetrologist
+                                ? 'Asignado a ti'
+                                : `Metrólogo: ${assignedMetrologistName}`
+                            }
+                          />
+                        ) : null}
                       </Stack>
 
                       <Typography variant='body1' fontWeight={700}>
@@ -865,6 +907,17 @@ const CalibrationServicesPage = () => {
                           : service.slaIndicator?.message ||
                             'Todavía no hay una alerta operativa activa.'}
                       </Typography>
+                      {assignedMetrologistName ? (
+                        <Typography
+                          variant='body2'
+                          color='text.secondary'
+                          sx={{ mt: 0.75 }}
+                        >
+                          Responsable metrológico:{' '}
+                          <strong>{assignedMetrologistName}</strong>
+                          {assignedMetrologistEmail ? ` · ${assignedMetrologistEmail}` : ''}
+                        </Typography>
+                      ) : null}
 
                       <Divider sx={{ my: 2 }} />
 
