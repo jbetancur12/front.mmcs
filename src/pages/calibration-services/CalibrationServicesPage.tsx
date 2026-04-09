@@ -58,6 +58,7 @@ import { useHasRole } from '../../utils/functions'
 import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
 
 const FILTER_ALL = 'all'
+const FILTER_UNASSIGNED = 'unassigned'
 
 const STATUS_OPTIONS: Array<{
   value: CalibrationServiceStatus | typeof FILTER_ALL
@@ -237,6 +238,7 @@ const CalibrationServicesPage = () => {
   >(FILTER_ALL)
   const [siteFilter, setSiteFilter] = useState('')
   const [customerFilter, setCustomerFilter] = useState<string>(FILTER_ALL)
+  const [metrologistFilter, setMetrologistFilter] = useState<string>(FILTER_ALL)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
 
   const deferredSearch = useDeferredValue(search)
@@ -294,8 +296,50 @@ const CalibrationServicesPage = () => {
       return accumulator
     }, [])
     .sort((left, right) => left.label.localeCompare(right.label, 'es'))
+  const metrologistOptions = services
+    .reduce<Array<{ id: string; label: string }>>((accumulator, service) => {
+      const operations = getOperationsDetails(service)
+      const assignedMetrologistName =
+        typeof operations.assignedMetrologistName === 'string'
+          ? operations.assignedMetrologistName.trim()
+          : ''
+      const assignedMetrologistEmail =
+        typeof operations.assignedMetrologistEmail === 'string'
+          ? operations.assignedMetrologistEmail.trim()
+          : ''
+
+      if (!assignedMetrologistName) {
+        return accumulator
+      }
+
+      const optionId = assignedMetrologistEmail || assignedMetrologistName
+
+      if (accumulator.some((metrologist) => metrologist.id === optionId)) {
+        return accumulator
+      }
+
+      accumulator.push({
+        id: optionId,
+        label: assignedMetrologistEmail
+          ? `${assignedMetrologistName} · ${assignedMetrologistEmail}`
+          : assignedMetrologistName
+      })
+
+      return accumulator
+    }, [])
+    .sort((left, right) => left.label.localeCompare(right.label, 'es'))
 
   const visibleServices = services.filter((service) => {
+    const operations = getOperationsDetails(service)
+    const assignedMetrologistName =
+      typeof operations.assignedMetrologistName === 'string'
+        ? operations.assignedMetrologistName.trim()
+        : ''
+    const assignedMetrologistEmail =
+      typeof operations.assignedMetrologistEmail === 'string'
+        ? operations.assignedMetrologistEmail.trim()
+        : ''
+
     if (scopeFilter !== FILTER_ALL && service.scopeType !== scopeFilter) {
       return false
     }
@@ -303,6 +347,19 @@ const CalibrationServicesPage = () => {
     if (
       slaFilter !== FILTER_ALL &&
       (service.slaIndicator?.color || 'gray') !== slaFilter
+    ) {
+      return false
+    }
+
+    if (metrologistFilter === FILTER_UNASSIGNED && assignedMetrologistName) {
+      return false
+    }
+
+    if (
+      metrologistFilter !== FILTER_ALL &&
+      metrologistFilter !== FILTER_UNASSIGNED &&
+      assignedMetrologistEmail !== metrologistFilter &&
+      assignedMetrologistName !== metrologistFilter
     ) {
       return false
     }
@@ -360,6 +417,7 @@ const CalibrationServicesPage = () => {
     setSlaFilter(FILTER_ALL)
     setSiteFilter('')
     setCustomerFilter(FILTER_ALL)
+    setMetrologistFilter(FILTER_ALL)
   }
 
   const handleRequestApproval = async (service: CalibrationService) => {
@@ -670,6 +728,25 @@ const CalibrationServicesPage = () => {
                 ))}
               </TextField>
             </Grid>
+            {!isTechnicalOnlyView ? (
+              <Grid item xs={12} md={4}>
+                <TextField
+                  select
+                  fullWidth
+                  label='Metrólogo asignado'
+                  value={metrologistFilter}
+                  onChange={(event) => setMetrologistFilter(event.target.value)}
+                >
+                  <MenuItem value={FILTER_ALL}>Todos los metrólogos</MenuItem>
+                  <MenuItem value={FILTER_UNASSIGNED}>Sin asignar</MenuItem>
+                  {metrologistOptions.map((metrologist) => (
+                    <MenuItem key={metrologist.id} value={metrologist.id}>
+                      {metrologist.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+            ) : null}
             <Grid item xs={12} md={4}>
               <TextField
                 select
