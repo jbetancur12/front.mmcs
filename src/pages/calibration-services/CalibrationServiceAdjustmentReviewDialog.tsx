@@ -85,8 +85,12 @@ const CalibrationServiceAdjustmentReviewDialog = ({
       adjustment.otherFields &&
         typeof adjustment.otherFields.useQuotedPrice === 'boolean'
         ? adjustment.otherFields.useQuotedPrice
-        : adjustment.changeType === 'quantity_more' &&
-            Boolean(adjustment.serviceItem?.unitPrice)
+        : (adjustment.changeType === 'quantity_more' ||
+            adjustment.changeType === 'quantity_less') &&
+            Boolean(
+              adjustment.serviceItem?.unitPrice !== null &&
+                adjustment.serviceItem?.unitPrice !== undefined
+            )
     )
     setApplyDiscount(
       adjustment.otherFields &&
@@ -99,6 +103,9 @@ const CalibrationServiceAdjustmentReviewDialog = ({
   const needsPricing = Boolean(adjustment?.requiresCommercialAdjustment)
   const isQuantityMore = adjustment?.changeType === 'quantity_more'
   const isQuantityLess = adjustment?.changeType === 'quantity_less'
+  const hasQuotedItemPrice =
+    adjustment?.serviceItem?.unitPrice !== null &&
+    adjustment?.serviceItem?.unitPrice !== undefined
   const pricedQuantity = useMemo(() => {
     if (!adjustment) {
       return 0
@@ -206,7 +213,7 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                   minRows={2}
                 />
               </Grid>
-              {isQuantityMore ? (
+              {hasQuotedItemPrice && (isQuantityMore || isQuantityLess) ? (
                 <Grid item xs={12}>
                   <FormControlLabel
                     control={
@@ -215,7 +222,11 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                         onChange={(event) => setUseQuotedPrice(event.target.checked)}
                       />
                     }
-                    label='Usar el mismo precio cotizado del ítem original'
+                    label={
+                      isQuantityLess
+                        ? 'Usar el mismo precio cotizado del ítem original como base del descuento'
+                        : 'Usar el mismo precio cotizado del ítem original'
+                    }
                   />
                 </Grid>
               ) : null}
@@ -240,7 +251,11 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                   value={approvedUnitPrice}
                   onChange={(event) => setApprovedUnitPrice(event.target.value)}
                   inputProps={{ min: 0 }}
-                  helperText={`Cantidad a reconocer: ${pricedQuantity}`}
+                  helperText={
+                    useQuotedPrice
+                      ? `Cantidad a reconocer: ${pricedQuantity}. Desmarca la opción anterior si quieres cambiar el precio.`
+                      : `Cantidad a reconocer: ${pricedQuantity}`
+                  }
                   disabled={useQuotedPrice}
                 />
               </Grid>
