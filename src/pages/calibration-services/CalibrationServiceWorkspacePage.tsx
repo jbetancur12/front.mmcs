@@ -52,6 +52,7 @@ import {
 import { useHasRole } from '../../utils/functions'
 import CalibrationServiceItemsEditor from './CalibrationServiceItemsEditor'
 import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
+import { NumericFormatCustom } from '../../Components/NumericFormatCustom'
 
 type FormItem = CalibrationServiceItemPayload & { localId: string }
 type FormState = Omit<CalibrationServicePayload, 'items'> & { items: FormItem[] }
@@ -944,7 +945,20 @@ const CalibrationServiceWorkspacePage = () => {
                       </FormControl>
                     </Grid>
                     <Grid item xs={12} md={4}>
-                      <TextField fullWidth type='number' label='Valor descuento' value={formState.discountValue ?? 0} disabled={!canEdit || isBusy} onChange={(event) => setField('discountValue', Number(event.target.value))} />
+                      <TextField
+                        fullWidth
+                        label='Valor descuento'
+                        value={formState.discountValue ?? 0}
+                        disabled={!canEdit || isBusy}
+                        onChange={(event) =>
+                          setField('discountValue', Number(event.target.value))
+                        }
+                        InputProps={
+                          formState.discountType === 'fixed'
+                            ? { inputComponent: NumericFormatCustom as never }
+                            : undefined
+                        }
+                      />
                     </Grid>
                   </>
                 ) : null}

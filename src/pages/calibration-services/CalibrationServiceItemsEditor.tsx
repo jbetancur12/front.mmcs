@@ -23,6 +23,7 @@ import {
   CalibrationServiceItemPayload,
   CalibrationServiceProductSummary
 } from '../../types/calibrationService'
+import { NumericFormatCustom } from '../../Components/NumericFormatCustom'
 
 type CatalogPriceSourceOption = {
   value: 'medicalPrice' | 'industrialPrice' | 'thirdPartyPrice' | 'price'
@@ -346,10 +347,10 @@ const CalibrationServiceItemsEditor = ({
                     <TextField
                       fullWidth
                       size='small'
-                      type='number'
                       label='Valor unitario'
                       value={item.unitPrice}
                       disabled={!canEdit || isBusy}
+                      InputProps={{ inputComponent: NumericFormatCustom as never }}
                       onChange={(event) =>
                         onChangeItemField(
                           item.localId,

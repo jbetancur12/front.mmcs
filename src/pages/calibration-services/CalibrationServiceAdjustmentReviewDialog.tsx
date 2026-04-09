@@ -17,6 +17,7 @@ import {
   CalibrationServiceAdjustment,
   CalibrationServiceAdjustmentStatus
 } from '../../types/calibrationService'
+import { NumericFormatCustom } from '../../Components/NumericFormatCustom'
 
 interface CalibrationServiceAdjustmentReviewDialogProps {
   open: boolean
@@ -246,11 +247,12 @@ const CalibrationServiceAdjustmentReviewDialog = ({
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
-                  type='number'
                   label='Precio unitario'
                   value={approvedUnitPrice}
                   onChange={(event) => setApprovedUnitPrice(event.target.value)}
-                  inputProps={{ min: 0 }}
+                  InputProps={{
+                    inputComponent: NumericFormatCustom as never
+                  }}
                   helperText={
                     useQuotedPrice
                       ? `Cantidad a reconocer: ${pricedQuantity}. Desmarca la opción anterior si quieres cambiar el precio.`
@@ -273,33 +275,36 @@ const CalibrationServiceAdjustmentReviewDialog = ({
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
-                  type='number'
                   label='Subtotal'
                   value={approvedUnitPrice ? signedSubtotal : ''}
-                  inputProps={{ min: 0 }}
-                  InputProps={{ readOnly: true }}
+                  InputProps={{
+                    inputComponent: NumericFormatCustom as never,
+                    readOnly: true
+                  }}
                   helperText='Se calcula automáticamente'
                 />
               </Grid>
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
-                  type='number'
                   label='Valor IVA'
                   value={approvedUnitPrice ? signedTaxTotal : ''}
-                  inputProps={{ min: 0 }}
-                  InputProps={{ readOnly: true }}
+                  InputProps={{
+                    inputComponent: NumericFormatCustom as never,
+                    readOnly: true
+                  }}
                   helperText='Se calcula automáticamente'
                 />
               </Grid>
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
-                  type='number'
                   label='Total aprobado'
                   value={approvedUnitPrice ? signedTotal : ''}
-                  inputProps={{ min: 0 }}
-                  InputProps={{ readOnly: true }}
+                  InputProps={{
+                    inputComponent: NumericFormatCustom as never,
+                    readOnly: true
+                  }}
                   helperText={
                     isQuantityLess && !applyDiscount
                       ? 'No se aplicará descuento económico'
