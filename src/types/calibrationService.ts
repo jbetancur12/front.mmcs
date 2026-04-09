@@ -161,6 +161,9 @@ export interface CalibrationServiceOperationsSummary {
   commitmentDate?: string | null
   scheduledDate?: string | null
   scheduledAt?: string | null
+  assignedMetrologistUserId?: number | null
+  assignedMetrologistName?: string | null
+  assignedMetrologistEmail?: string | null
   operationalResponsibleName?: string | null
   operationalResponsibleRole?: string | null
   programmingNotes?: string | null
@@ -489,6 +492,7 @@ export interface CalibrationServiceSchedulePayload {
   serviceId: string
   commitmentDate: string
   scheduledDate: string
+  assignedMetrologistUserId: number
   operationalResponsibleName: string
   operationalResponsibleRole?: string | null
   programmingNotes?: string | null

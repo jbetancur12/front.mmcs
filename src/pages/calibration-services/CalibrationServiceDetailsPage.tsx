@@ -55,6 +55,7 @@ import {
   CALIBRATION_SERVICE_TECHNICAL_ROLES
 } from '../../constants/calibrationServices'
 import {
+  useCalibrationAssignableMetrologists,
   useCalibrationService,
   useCalibrationServiceSequenceConfig,
   useCalibrationServiceMutations
@@ -284,6 +285,8 @@ const CalibrationServiceDetailsPage = () => {
   ])
   const canGenerateQuotePdf = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const canGenerateOdsPdf = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
+  const { data: assignableMetrologists = [] } =
+    useCalibrationAssignableMetrologists(canScheduleServiceRole)
   const requestedAction = searchParams.get('open')
   const isTechnicalOnlyView = hasTechnicalRole && !hasCommercialVisibility
   const canIssueOds =
@@ -471,9 +474,20 @@ const CalibrationServiceDetailsPage = () => {
       : typeof odsDetails?.scheduledFor === 'string'
         ? odsDetails.scheduledFor
         : ''
+  const operationsAssignedMetrologistUserId =
+    operationsDetails?.assignedMetrologistUserId !== undefined &&
+    operationsDetails?.assignedMetrologistUserId !== null
+      ? String(operationsDetails.assignedMetrologistUserId)
+      : ''
+  const operationsAssignedMetrologistName =
+    typeof operationsDetails?.assignedMetrologistName === 'string'
+      ? operationsDetails.assignedMetrologistName
+      : ''
   const operationsResponsibleName =
     typeof operationsDetails?.operationalResponsibleName === 'string'
       ? operationsDetails.operationalResponsibleName
+      : operationsAssignedMetrologistName
+        ? operationsAssignedMetrologistName
       : ''
   const operationsResponsibleRole =
     typeof operationsDetails?.operationalResponsibleRole === 'string'
@@ -625,6 +639,7 @@ const CalibrationServiceDetailsPage = () => {
     scheduledDate: operationsScheduledDate
       ? operationsScheduledDate.slice(0, 10)
       : '',
+    assignedMetrologistUserId: operationsAssignedMetrologistUserId,
     operationalResponsibleName: operationsResponsibleName,
     operationalResponsibleRole: operationsResponsibleRole,
     programmingNotes: operationsProgrammingNotes
@@ -838,6 +853,13 @@ const CalibrationServiceDetailsPage = () => {
         return
       }
 
+      const assignedMetrologistUserId = Number(values.assignedMetrologistUserId)
+
+      if (!Number.isInteger(assignedMetrologistUserId) || assignedMetrologistUserId <= 0) {
+        toast.error('Selecciona el metrólogo asignado para el servicio.')
+        return
+      }
+
       await scheduleService.mutateAsync({
         serviceId: String(service.id),
         commitmentDate: new Date(
@@ -846,6 +868,7 @@ const CalibrationServiceDetailsPage = () => {
         scheduledDate: new Date(
           `${values.scheduledDate}T12:00:00`
         ).toISOString(),
+        assignedMetrologistUserId,
         operationalResponsibleName: values.operationalResponsibleName.trim(),
         operationalResponsibleRole:
           values.operationalResponsibleRole.trim() || null,
@@ -2128,12 +2151,13 @@ const CalibrationServiceDetailsPage = () => {
       ) : null}
       {isScheduleDialogOpen ? (
         <CalibrationServiceScheduleDialog
-          open={isScheduleDialogOpen}
-          serviceCode={service.serviceCode}
-          initialValues={scheduleDialogInitialValues}
-          isLoading={isOperationalBusy}
-          onClose={() => setIsScheduleDialogOpen(false)}
-          onSubmit={handleScheduleService}
+        open={isScheduleDialogOpen}
+        serviceCode={service.serviceCode}
+        initialValues={scheduleDialogInitialValues}
+        metrologists={assignableMetrologists}
+        isLoading={isOperationalBusy}
+        onClose={() => setIsScheduleDialogOpen(false)}
+        onSubmit={handleScheduleService}
         />
       ) : null}
       {isCutDialogOpen ? (

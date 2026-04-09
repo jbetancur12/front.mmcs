@@ -24,7 +24,8 @@ import {
   CalibrationServiceSchedulePayload,
   CalibrationServiceSequenceConfig,
   CalibrationServiceSequenceConfigPayload,
-  CalibrationServiceStartExecutionPayload
+  CalibrationServiceStartExecutionPayload,
+  CalibrationServiceUserSummary
 } from '../types/calibrationService'
 
 export const CALIBRATION_SERVICE_QUERY_KEYS = {
@@ -55,6 +56,13 @@ const calibrationServiceApi = {
   getServiceById: async (serviceId: string): Promise<CalibrationService> => {
     const response = await axiosPrivate.get<CalibrationService>(
       `/calibration-services/${serviceId}`
+    )
+    return response.data
+  },
+
+  getAssignableMetrologists: async (): Promise<CalibrationServiceUserSummary[]> => {
+    const response = await axiosPrivate.get<CalibrationServiceUserSummary[]>(
+      '/calibration-services/assignable-metrologists'
     )
     return response.data
   },
@@ -390,6 +398,16 @@ export const useCalibrationService = (serviceId?: string) => {
     queryFn: () => calibrationServiceApi.getServiceById(serviceId as string),
     enabled: Boolean(serviceId),
     staleTime: 60 * 1000,
+    retry: 1
+  })
+}
+
+export const useCalibrationAssignableMetrologists = (enabled = true) => {
+  return useQuery({
+    queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, 'assignable-metrologists'],
+    queryFn: calibrationServiceApi.getAssignableMetrologists,
+    enabled,
+    staleTime: 5 * 60 * 1000,
     retry: 1
   })
 }

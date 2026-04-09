@@ -6,14 +6,17 @@ import {
   DialogContent,
   DialogTitle,
   Grid,
+  MenuItem,
   Stack,
   TextField,
   Typography
 } from '@mui/material'
+import { CalibrationServiceUserSummary } from '../../types/calibrationService'
 
 export interface CalibrationServiceScheduleDialogValues {
   commitmentDate: string
   scheduledDate: string
+  assignedMetrologistUserId: string
   operationalResponsibleName: string
   operationalResponsibleRole: string
   programmingNotes: string
@@ -23,6 +26,7 @@ interface CalibrationServiceScheduleDialogProps {
   open: boolean
   serviceCode: string
   initialValues: CalibrationServiceScheduleDialogValues
+  metrologists: CalibrationServiceUserSummary[]
   isLoading?: boolean
   onClose: () => void
   onSubmit: (values: CalibrationServiceScheduleDialogValues) => void | Promise<void>
@@ -32,6 +36,7 @@ const CalibrationServiceScheduleDialog = ({
   open,
   serviceCode,
   initialValues,
+  metrologists,
   isLoading = false,
   onClose,
   onSubmit
@@ -53,6 +58,21 @@ const CalibrationServiceScheduleDialog = ({
         [field]: event.target.value
       }))
     }
+
+  const handleMetrologistChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextAssignedMetrologistUserId = event.target.value
+    const selectedMetrologist = metrologists.find(
+      (metrologist) => String(metrologist.id) === nextAssignedMetrologistUserId
+    )
+
+    setValues((currentValues) => ({
+      ...currentValues,
+      assignedMetrologistUserId: nextAssignedMetrologistUserId,
+      operationalResponsibleName:
+        selectedMetrologist?.nombre || currentValues.operationalResponsibleName,
+      operationalResponsibleRole: selectedMetrologist ? 'Metrologo' : ''
+    }))
+  }
 
   const handleSubmit = async () => {
     await onSubmit(values)
@@ -91,9 +111,30 @@ const CalibrationServiceScheduleDialog = ({
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
+                select
+                label='Metrólogo asignado'
+                value={values.assignedMetrologistUserId}
+                onChange={handleMetrologistChange}
+                helperText='Selecciona el metrólogo interno que quedará a cargo del servicio.'
+              >
+                <MenuItem value=''>
+                  Selecciona un metrólogo
+                </MenuItem>
+                {metrologists.map((metrologist) => (
+                  <MenuItem key={metrologist.id} value={String(metrologist.id)}>
+                    {metrologist.nombre}
+                    {metrologist.email ? ` · ${metrologist.email}` : ''}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
                 label='Responsable operativo'
                 value={values.operationalResponsibleName}
                 onChange={handleChange('operationalResponsibleName')}
+                helperText='Se completa con el metrólogo asignado y puedes ajustarlo si necesitas una etiqueta operativa más específica.'
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -102,6 +143,7 @@ const CalibrationServiceScheduleDialog = ({
                 label='Rol o cargo'
                 value={values.operationalResponsibleRole}
                 onChange={handleChange('operationalResponsibleRole')}
+                helperText='Puedes conservar “Metrologo” o ajustar el cargo operativo visible.'
               />
             </Grid>
             <Grid item xs={12}>
