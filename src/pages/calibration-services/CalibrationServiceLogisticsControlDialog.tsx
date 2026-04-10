@@ -1,10 +1,13 @@
 import { ChangeEvent, useEffect, useState } from 'react'
 import {
+  Alert,
+  Box,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   Grid,
   IconButton,
   MenuItem,
@@ -13,6 +16,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow,
   TextField,
@@ -20,6 +24,13 @@ import {
 } from '@mui/material'
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
+import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined'
+import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined'
+import EngineeringOutlinedIcon from '@mui/icons-material/EngineeringOutlined'
+import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined'
+import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined'
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
+import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
 import {
   CalibrationServiceLogisticsControlItem,
   CalibrationServiceLogisticsControlSheet
@@ -169,45 +180,97 @@ const CalibrationServiceLogisticsControlDialog = ({
     })
   }
 
+  const sectionPaperProps = {
+    elevation: 0,
+    sx: {
+      p: 3,
+      borderRadius: 3,
+      border: '1px solid',
+      borderColor: 'divider',
+      bgcolor: 'background.paper',
+      boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.02)'
+    }
+  }
+
+  const sectionTitleProps = {
+    variant: 'subtitle1',
+    fontWeight: 600,
+    color: 'text.primary'
+  } as const
+
   return (
-    <Dialog open={open} onClose={isLoading ? undefined : onClose} fullWidth maxWidth='xl'>
-      <DialogTitle>Control de ingreso y entrega</DialogTitle>
-      <DialogContent dividers>
-        <Stack spacing={3}>
-          <Typography variant='body2' color='text.secondary'>
+    <Dialog
+      open={open}
+      onClose={isLoading ? undefined : onClose}
+      fullWidth
+      maxWidth='xl'
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          bgcolor: 'background.default'
+        }
+      }}
+    >
+      <DialogTitle sx={{ pb: 2, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            p: 1,
+            borderRadius: 2,
+            bgcolor: 'primary.50',
+            color: 'primary.main'
+          }}
+        >
+          <AssignmentTurnedInOutlinedIcon />
+        </Box>
+        <Typography variant='h6' fontWeight={700}>
+          Control de ingreso y entrega
+        </Typography>
+      </DialogTitle>
+      
+      <DialogContent dividers sx={{ p: { xs: 2, md: 4 } }}>
+        <Stack spacing={4}>
+          <Alert severity='info' icon={<FactCheckOutlinedIcon />} sx={{ borderRadius: 2 }}>
             Diligencia el formato formal de recepción y entrega para{' '}
             <strong>{serviceCode}</strong>. El contenido se usará para el PDF oficial
             de logística.
-          </Typography>
+          </Alert>
 
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                type='date'
-                label='Fecha de ingreso'
-                value={values.intakeDate || ''}
-                onChange={handleChange('intakeDate')}
-                InputLabelProps={{ shrink: true }}
-              />
+          <Paper {...sectionPaperProps}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  type='date'
+                  label='Fecha de ingreso'
+                  value={values.intakeDate || ''}
+                  onChange={handleChange('intakeDate')}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  type='date'
+                  label='Fecha de entrega'
+                  value={values.deliveryDate || ''}
+                  onChange={handleChange('deliveryDate')}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                type='date'
-                label='Fecha de entrega'
-                value={values.deliveryDate || ''}
-                onChange={handleChange('deliveryDate')}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-          </Grid>
+          </Paper>
 
-          <Paper variant='outlined' sx={{ p: 2 }}>
-            <Typography variant='subtitle1' fontWeight={700} sx={{ mb: 2 }}>
-              Información de quien solicita calibración
-            </Typography>
-            <Grid container spacing={2}>
+          <Paper {...sectionPaperProps}>
+            <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 2 }}>
+              <PersonOutlineOutlinedIcon color='action' />
+              <Typography {...sectionTitleProps}>
+                Información de quien solicita calibración
+              </Typography>
+            </Stack>
+            <Divider sx={{ mb: 3 }} />
+            
+            <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -259,152 +322,171 @@ const CalibrationServiceLogisticsControlDialog = ({
             </Grid>
           </Paper>
 
-          <Paper variant='outlined' sx={{ p: 2 }}>
+          <Paper {...sectionPaperProps}>
             <Stack
               direction={{ xs: 'column', md: 'row' }}
               justifyContent='space-between'
-              spacing={1}
+              alignItems='center'
+              spacing={2}
               sx={{ mb: 2 }}
             >
-              <Typography variant='subtitle1' fontWeight={700}>
-                Información e inspección de equipos
-              </Typography>
-              <Button startIcon={<AddOutlinedIcon />} onClick={handleAddRow}>
+              <Stack direction='row' alignItems='center' spacing={1}>
+                <EngineeringOutlinedIcon color='action' />
+                <Typography {...sectionTitleProps}>
+                  Información e inspección de equipos
+                </Typography>
+              </Stack>
+              <Button
+                variant='outlined'
+                startIcon={<AddOutlinedIcon />}
+                onClick={handleAddRow}
+                sx={{ borderRadius: 2 }}
+              >
                 Agregar fila
               </Button>
             </Stack>
-            <Table size='small'>
-              <TableHead>
-                <TableRow>
-                  <TableCell>#</TableCell>
-                  <TableCell>Equipo / instrumento</TableCell>
-                  <TableCell>Marca</TableCell>
-                  <TableCell>Modelo</TableCell>
-                  <TableCell>Serial</TableCell>
-                  <TableCell>Activo fijo / inventario</TableCell>
-                  <TableCell>Ubicación</TableCell>
-                  <TableCell>Servicio</TableCell>
-                  <TableCell>Fís. ingreso</TableCell>
-                  <TableCell>Fís. entrega</TableCell>
-                  <TableCell>Oper. ingreso</TableCell>
-                  <TableCell>Oper. entrega</TableCell>
-                  <TableCell />
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {values.items.map((item, index) => (
-                  <TableRow key={`${item.serviceItemId || 'manual'}-${index}`}>
-                    <TableCell>{item.rowNumber}</TableCell>
-                    <TableCell>
-                      <TextField
-                        fullWidth
-                        size='small'
-                        value={item.equipmentName}
-                        onChange={handleItemChange(index, 'equipmentName')}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        fullWidth
-                        size='small'
-                        value={item.brand || ''}
-                        onChange={handleItemChange(index, 'brand')}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        fullWidth
-                        size='small'
-                        value={item.model || ''}
-                        onChange={handleItemChange(index, 'model')}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        fullWidth
-                        size='small'
-                        value={item.serialNumber || ''}
-                        onChange={handleItemChange(index, 'serialNumber')}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        fullWidth
-                        size='small'
-                        value={item.assetNumber || ''}
-                        onChange={handleItemChange(index, 'assetNumber')}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        fullWidth
-                        size='small'
-                        value={item.location || ''}
-                        onChange={handleItemChange(index, 'location')}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        select
-                        fullWidth
-                        size='small'
-                        value={item.serviceScope}
-                        onChange={handleItemChange(index, 'serviceScope')}
-                      >
-                        {SERVICE_SCOPE_OPTIONS.map((option) => (
-                          <MenuItem key={option.value} value={option.value}>
-                            {option.label}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    </TableCell>
-                    {(
-                      [
-                        'physicalInspectionIn',
-                        'physicalInspectionOut',
-                        'operationalInspectionIn',
-                        'operationalInspectionOut'
-                      ] as const
-                    ).map((field) => (
-                      <TableCell key={field}>
+            <Divider sx={{ mb: 3 }} />
+
+            <TableContainer sx={{ overflowX: 'auto', pb: 1 }}>
+              <Table size='small' sx={{ minWidth: 1800 }}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', width: 50 }}>#</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 250 }}>Equipo / instrumento</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 150 }}>Marca</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 150 }}>Modelo</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 150 }}>Serial</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 150 }}>Activo fijo / inventario</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 150 }}>Ubicación</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 100 }}>Servicio</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 100 }}>Fís. ingreso</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 100 }}>Fís. entrega</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 100 }}>Oper. ingreso</TableCell>
+                    <TableCell sx={{ fontWeight: 600, color: 'text.secondary', minWidth: 100 }}>Oper. entrega</TableCell>
+                    <TableCell sx={{ width: 50 }} />
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {values.items.map((item, index) => (
+                    <TableRow key={`${item.serviceItemId || 'manual'}-${index}`} hover>
+                      <TableCell sx={{ color: 'text.secondary' }}>{item.rowNumber}</TableCell>
+                      <TableCell>
+                        <TextField
+                          fullWidth
+                          size='small'
+                          value={item.equipmentName}
+                          onChange={handleItemChange(index, 'equipmentName')}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <TextField
+                          fullWidth
+                          size='small'
+                          value={item.brand || ''}
+                          onChange={handleItemChange(index, 'brand')}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <TextField
+                          fullWidth
+                          size='small'
+                          value={item.model || ''}
+                          onChange={handleItemChange(index, 'model')}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <TextField
+                          fullWidth
+                          size='small'
+                          value={item.serialNumber || ''}
+                          onChange={handleItemChange(index, 'serialNumber')}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <TextField
+                          fullWidth
+                          size='small'
+                          value={item.assetNumber || ''}
+                          onChange={handleItemChange(index, 'assetNumber')}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <TextField
+                          fullWidth
+                          size='small'
+                          value={item.location || ''}
+                          onChange={handleItemChange(index, 'location')}
+                        />
+                      </TableCell>
+                      <TableCell>
                         <TextField
                           select
                           fullWidth
                           size='small'
-                          value={item[field] || ''}
-                          onChange={handleItemChange(index, field)}
+                          value={item.serviceScope}
+                          onChange={handleItemChange(index, 'serviceScope')}
                         >
-                          {INSPECTION_OPTIONS.map((option) => (
+                          {SERVICE_SCOPE_OPTIONS.map((option) => (
                             <MenuItem key={option.value} value={option.value}>
                               {option.label}
                             </MenuItem>
                           ))}
                         </TextField>
                       </TableCell>
-                    ))}
-                    <TableCell>
-                      <IconButton
-                        size='small'
-                        onClick={() => handleRemoveRow(index)}
-                        disabled={values.items.length <= 1}
-                      >
-                        <DeleteOutlineOutlinedIcon fontSize='small' />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <Typography variant='caption' color='text.secondary' sx={{ mt: 1, display: 'block' }}>
+                      {(
+                        [
+                          'physicalInspectionIn',
+                          'physicalInspectionOut',
+                          'operationalInspectionIn',
+                          'operationalInspectionOut'
+                        ] as const
+                      ).map((field) => (
+                        <TableCell key={field}>
+                          <TextField
+                            select
+                            fullWidth
+                            size='small'
+                            value={item[field] || ''}
+                            onChange={handleItemChange(index, field)}
+                          >
+                            {INSPECTION_OPTIONS.map((option) => (
+                              <MenuItem key={option.value} value={option.value}>
+                                {option.label}
+                              </MenuItem>
+                            ))}
+                          </TextField>
+                        </TableCell>
+                      ))}
+                      <TableCell>
+                        <IconButton
+                          size='small'
+                          color="error"
+                          onClick={() => handleRemoveRow(index)}
+                          disabled={values.items.length <= 1}
+                        >
+                          <DeleteOutlineOutlinedIcon fontSize='small' />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <Typography variant='caption' color='text.secondary' sx={{ mt: 2, display: 'block' }}>
               B: Buen estado · M: Mal estado · NA: No aplica · SI: Sin información.
             </Typography>
           </Paper>
 
-          <Paper variant='outlined' sx={{ p: 2 }}>
-            <Typography variant='subtitle1' fontWeight={700} sx={{ mb: 2 }}>
-              Validaciones y observaciones
-            </Typography>
-            <Grid container spacing={2}>
+          <Paper {...sectionPaperProps}>
+            <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 2 }}>
+              <FactCheckOutlinedIcon color='action' />
+              <Typography {...sectionTitleProps}>
+                Validaciones y observaciones
+              </Typography>
+            </Stack>
+            <Divider sx={{ mb: 3 }} />
+
+            <Grid container spacing={3}>
               <Grid item xs={12} md={4}>
                 <TextField
                   select
@@ -509,11 +591,16 @@ const CalibrationServiceLogisticsControlDialog = ({
             </Grid>
           </Paper>
 
-          <Paper variant='outlined' sx={{ p: 2 }}>
-            <Typography variant='subtitle1' fontWeight={700} sx={{ mb: 2 }}>
-              Recibido, enviado y firmas
-            </Typography>
-            <Grid container spacing={2}>
+          <Paper {...sectionPaperProps}>
+            <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 2 }}>
+              <LocalShippingOutlinedIcon color='action' />
+              <Typography {...sectionTitleProps}>
+                Recibido, enviado y firmas
+              </Typography>
+            </Stack>
+            <Divider sx={{ mb: 3 }} />
+
+            <Grid container spacing={3}>
               <Grid item xs={12} md={3}>
                 <TextField
                   fullWidth
@@ -615,16 +702,32 @@ const CalibrationServiceLogisticsControlDialog = ({
           </Paper>
         </Stack>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} disabled={isLoading}>
+      
+      <DialogActions sx={{ p: { xs: 2, md: 3 }, bgcolor: 'background.paper', borderTop: '1px solid', borderColor: 'divider' }}>
+        <Button
+          variant='outlined'
+          color='inherit'
+          onClick={onClose}
+          disabled={isLoading}
+          startIcon={<CloseOutlinedIcon />}
+          sx={{ borderRadius: 2 }}
+        >
           Cancelar
         </Button>
-        <Button variant='contained' onClick={() => void onSubmit(values)} disabled={isLoading}>
+        <Button
+          variant='contained'
+          color='primary'
+          onClick={() => void onSubmit(values)}
+          disabled={isLoading}
+          startIcon={<SaveOutlinedIcon />}
+          sx={{ borderRadius: 2, px: 3, boxShadow: 2 }}
+        >
           Guardar ficha logística
         </Button>
       </DialogActions>
     </Dialog>
   )
 }
+
 
 export default CalibrationServiceLogisticsControlDialog
