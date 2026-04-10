@@ -21,6 +21,7 @@ import {
   CalibrationServicePhysicalTraceabilityPayload,
   CalibrationServiceReassignPayload,
   CalibrationServiceReschedulePayload,
+  CalibrationServiceUpdateLogisticsControlPayload,
   CalibrationServiceUpdateCutDocumentControlPayload,
   CalibrationServiceReviewAdjustmentPayload,
   CalibrationServiceRequestChangesPayload,
@@ -314,6 +315,17 @@ const calibrationServiceApi = {
     return response.data
   },
 
+  updateLogisticsControl: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServiceUpdateLogisticsControlPayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.put<CalibrationService>(
+      `/calibration-services/${serviceId}/logistics-control`,
+      payload
+    )
+    return response.data
+  },
+
   createCut: async ({
     serviceId,
     ...payload
@@ -417,6 +429,15 @@ const calibrationServiceApi = {
   }: CalibrationServiceDocumentActionPayload): Promise<CalibrationServiceDocument> => {
     const response = await axiosPrivate.post<CalibrationServiceDocument>(
       `/calibration-services/${serviceId}/adjustments/generate-summary-pdf`
+    )
+    return response.data
+  },
+
+  generateLogisticsPdf: async ({
+    serviceId
+  }: CalibrationServiceDocumentActionPayload): Promise<CalibrationServiceDocument> => {
+    const response = await axiosPrivate.post<CalibrationServiceDocument>(
+      `/calibration-services/${serviceId}/generate-logistics-pdf`
     )
     return response.data
   },
@@ -682,6 +703,19 @@ export const useCalibrationServiceMutations = () => {
     }
   )
 
+  const updateLogisticsControl = useMutation(
+    calibrationServiceApi.updateLogisticsControl,
+    {
+      onSuccess: (service) => {
+        queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+        queryClient.invalidateQueries([
+          CALIBRATION_SERVICE_QUERY_KEYS.detail,
+          String(service.id)
+        ])
+      }
+    }
+  )
+
   const createCut = useMutation(calibrationServiceApi.createCut, {
     onSuccess: (service) => {
       queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
@@ -790,6 +824,18 @@ export const useCalibrationServiceMutations = () => {
     }
   )
 
+  const generateLogisticsPdf = useMutation(
+    calibrationServiceApi.generateLogisticsPdf,
+    {
+      onSuccess: (_document, variables) => {
+        queryClient.invalidateQueries([
+          CALIBRATION_SERVICE_QUERY_KEYS.detail,
+          variables.serviceId
+        ])
+      }
+    }
+  )
+
   const downloadDocument = useMutation(calibrationServiceApi.downloadDocument)
 
   const upsertSequenceConfig = useMutation(
@@ -824,6 +870,7 @@ export const useCalibrationServiceMutations = () => {
     closeService,
     updateItemProgress,
     registerPhysicalTraceability,
+    updateLogisticsControl,
     createCut,
     createAdjustment,
     reviewAdjustment,
@@ -834,6 +881,7 @@ export const useCalibrationServiceMutations = () => {
     generateOdsPdf,
     generateAdjustmentPdf,
     generateAdjustmentSummaryPdf,
+    generateLogisticsPdf,
     downloadDocument,
     upsertSequenceConfig
   }

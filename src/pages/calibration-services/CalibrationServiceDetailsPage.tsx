@@ -70,6 +70,8 @@ import {
   CalibrationServiceCut,
   CalibrationServiceCustomerResponseType,
   CalibrationServiceItemProgressEntryPayload,
+  CalibrationServiceLogisticsControlItem,
+  CalibrationServiceLogisticsControlSheet,
   CalibrationServicePhysicalTraceabilityEntry
 } from '../../types/calibrationService'
 import { useHasRole } from '../../utils/functions'
@@ -109,6 +111,9 @@ import CalibrationServicePhysicalTraceabilityDialog, {
   CalibrationServicePhysicalTraceabilityDialogValues
 } from './CalibrationServicePhysicalTraceabilityDialog'
 import CalibrationServiceLogisticsPanel from './CalibrationServiceLogisticsPanel'
+import CalibrationServiceLogisticsControlDialog, {
+  CalibrationServiceLogisticsControlDialogValues
+} from './CalibrationServiceLogisticsControlDialog'
 
 type DetailTab =
   | 'summary'
@@ -266,6 +271,7 @@ const CalibrationServiceDetailsPage = () => {
     closeService,
     updateItemProgress,
     registerPhysicalTraceability,
+    updateLogisticsControl,
     createCut,
     createAdjustment,
     reviewAdjustment,
@@ -276,6 +282,7 @@ const CalibrationServiceDetailsPage = () => {
     generateOdsPdf,
     generateAdjustmentPdf,
     generateAdjustmentSummaryPdf,
+    generateLogisticsPdf,
     downloadDocument,
     upsertSequenceConfig
   } = useCalibrationServiceMutations()
@@ -288,6 +295,8 @@ const CalibrationServiceDetailsPage = () => {
   const [isPauseDialogOpen, setIsPauseDialogOpen] = useState(false)
   const [isResumeDialogOpen, setIsResumeDialogOpen] = useState(false)
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
+  const [isLogisticsControlDialogOpen, setIsLogisticsControlDialogOpen] =
+    useState(false)
   const [isPhysicalTraceabilityDialogOpen, setIsPhysicalTraceabilityDialogOpen] =
     useState(false)
   const [isCutDialogOpen, setIsCutDialogOpen] = useState(false)
@@ -432,6 +441,19 @@ const CalibrationServiceDetailsPage = () => {
     service?.status !== 'cancelled' &&
     service?.status !== 'closed' &&
     ['ods_issued', 'pending_programming', 'scheduled', 'in_execution', 'technically_completed'].includes(
+      service?.status || ''
+    )
+  const canManageLogisticsControl =
+    canRegisterPhysicalTraceabilityRole &&
+    service?.status !== 'cancelled' &&
+    service?.status !== 'closed' &&
+    ['ods_issued', 'pending_programming', 'scheduled', 'in_execution', 'technically_completed'].includes(
+      service?.status || ''
+    )
+  const canGenerateLogisticsPdf =
+    canRegisterPhysicalTraceabilityRole &&
+    service?.status !== 'cancelled' &&
+    ['ods_issued', 'pending_programming', 'scheduled', 'in_execution', 'technically_completed', 'closed'].includes(
       service?.status || ''
     )
   const canStillRegisterAdjustmentsAfterTechnicalCompletion =
@@ -606,6 +628,215 @@ const CalibrationServiceDetailsPage = () => {
       ? ((logisticsDetails?.history ||
           []) as CalibrationServicePhysicalTraceabilityEntry[])
       : []
+  const logisticsControlSheet: CalibrationServiceLogisticsControlSheet = (() => {
+    const rawControlSheet =
+      logisticsDetails?.controlSheet &&
+      typeof logisticsDetails.controlSheet === 'object' &&
+      !Array.isArray(logisticsDetails.controlSheet)
+        ? (logisticsDetails.controlSheet as Record<string, unknown>)
+        : {}
+
+    const existingItems =
+      Array.isArray(rawControlSheet.items) && rawControlSheet.items.length
+        ? rawControlSheet.items
+        : (service.items || []).map((item, index) => ({
+            rowNumber: index + 1,
+            serviceItemId: item.id,
+            equipmentName: item.instrumentName || item.itemName,
+            brand: '',
+            model: '',
+            serialNumber: '',
+            assetNumber: '',
+            location: '',
+            serviceScope: String(item.serviceType || '').toLowerCase().includes('acredit')
+              ? 'AC'
+              : 'NA',
+            physicalInspectionIn: null,
+            physicalInspectionOut: null,
+            operationalInspectionIn: null,
+            operationalInspectionOut: null
+          }))
+
+    const normalizedItems: CalibrationServiceLogisticsControlItem[] = existingItems.map((item, index) => ({
+      rowNumber:
+        typeof item?.rowNumber === 'number' && item.rowNumber > 0
+          ? item.rowNumber
+          : index + 1,
+      serviceItemId:
+        typeof item?.serviceItemId === 'number' ? item.serviceItemId : null,
+      equipmentName: typeof item?.equipmentName === 'string' ? item.equipmentName : '',
+      brand: typeof item?.brand === 'string' ? item.brand : '',
+      model: typeof item?.model === 'string' ? item.model : '',
+      serialNumber:
+        typeof item?.serialNumber === 'string' ? item.serialNumber : '',
+      assetNumber: typeof item?.assetNumber === 'string' ? item.assetNumber : '',
+      location: typeof item?.location === 'string' ? item.location : '',
+      serviceScope:
+        item?.serviceScope === 'AC'
+          ? 'AC'
+          : 'NA',
+      physicalInspectionIn:
+        typeof item?.physicalInspectionIn === 'string'
+          ? item.physicalInspectionIn
+          : null,
+      physicalInspectionOut:
+        typeof item?.physicalInspectionOut === 'string'
+          ? item.physicalInspectionOut
+          : null,
+      operationalInspectionIn:
+        typeof item?.operationalInspectionIn === 'string'
+          ? item.operationalInspectionIn
+          : null,
+      operationalInspectionOut:
+        typeof item?.operationalInspectionOut === 'string'
+          ? item.operationalInspectionOut
+          : null
+    }))
+
+    return {
+      intakeDate:
+        typeof rawControlSheet.intakeDate === 'string' ? rawControlSheet.intakeDate : '',
+      deliveryDate:
+        typeof rawControlSheet.deliveryDate === 'string'
+          ? rawControlSheet.deliveryDate
+          : '',
+      requesterCompanyName:
+        typeof rawControlSheet.requesterCompanyName === 'string'
+          ? rawControlSheet.requesterCompanyName
+          : service.customer?.nombre || service.executionCustomerName || '',
+      requesterOfferNumber:
+        typeof rawControlSheet.requesterOfferNumber === 'string'
+          ? rawControlSheet.requesterOfferNumber
+          : service.quoteCode || service.serviceCode,
+      requesterAddress:
+        typeof rawControlSheet.requesterAddress === 'string'
+          ? rawControlSheet.requesterAddress
+          : service.address || service.customer?.direccion || '',
+      requesterPhone:
+        typeof rawControlSheet.requesterPhone === 'string'
+          ? rawControlSheet.requesterPhone
+          : service.contactPhone || service.customer?.telefono || '',
+      requesterContactName:
+        typeof rawControlSheet.requesterContactName === 'string'
+          ? rawControlSheet.requesterContactName
+          : service.contactName || '',
+      requesterCity:
+        typeof rawControlSheet.requesterCity === 'string'
+          ? rawControlSheet.requesterCity
+          : service.city || service.customer?.ciudad || '',
+      items: normalizedItems.length
+        ? normalizedItems
+        : [
+            {
+              rowNumber: 1,
+              serviceItemId: null,
+              equipmentName: '',
+              brand: '',
+              model: '',
+              serialNumber: '',
+              assetNumber: '',
+              location: '',
+              serviceScope: 'NA' as const,
+              physicalInspectionIn: null,
+              physicalInspectionOut: null,
+              operationalInspectionIn: null,
+              operationalInspectionOut: null
+            }
+          ],
+      noSerialAuthorization:
+        typeof rawControlSheet.noSerialAuthorization === 'boolean'
+          ? rawControlSheet.noSerialAuthorization
+          : null,
+      calibrationPointsRequested:
+        typeof rawControlSheet.calibrationPointsRequested === 'boolean'
+          ? rawControlSheet.calibrationPointsRequested
+          : null,
+      calibrationPointsDetails:
+        typeof rawControlSheet.calibrationPointsDetails === 'string'
+          ? rawControlSheet.calibrationPointsDetails
+          : '',
+      specialCondition:
+        typeof rawControlSheet.specialCondition === 'boolean'
+          ? rawControlSheet.specialCondition
+          : null,
+      specialConditionDetails:
+        typeof rawControlSheet.specialConditionDetails === 'string'
+          ? rawControlSheet.specialConditionDetails
+          : '',
+      calibrationCertificateIncluded:
+        typeof rawControlSheet.calibrationCertificateIncluded === 'boolean'
+          ? rawControlSheet.calibrationCertificateIncluded
+          : null,
+      stampIncluded:
+        typeof rawControlSheet.stampIncluded === 'boolean'
+          ? rawControlSheet.stampIncluded
+          : null,
+      observations:
+        typeof rawControlSheet.observations === 'string'
+          ? rawControlSheet.observations
+          : '',
+      receivedTransportCompany:
+        typeof rawControlSheet.receivedTransportCompany === 'string'
+          ? rawControlSheet.receivedTransportCompany
+          : '',
+      receivedGuide:
+        typeof rawControlSheet.receivedGuide === 'string'
+          ? rawControlSheet.receivedGuide
+          : '',
+      receivedByMetromedicsName:
+        typeof rawControlSheet.receivedByMetromedicsName === 'string'
+          ? rawControlSheet.receivedByMetromedicsName
+          : '',
+      receivedByMetromedicsRole:
+        typeof rawControlSheet.receivedByMetromedicsRole === 'string'
+          ? rawControlSheet.receivedByMetromedicsRole
+          : '',
+      deliveredByMetromedicsName:
+        typeof rawControlSheet.deliveredByMetromedicsName === 'string'
+          ? rawControlSheet.deliveredByMetromedicsName
+          : '',
+      deliveredByMetromedicsRole:
+        typeof rawControlSheet.deliveredByMetromedicsRole === 'string'
+          ? rawControlSheet.deliveredByMetromedicsRole
+          : '',
+      sentTransportCompany:
+        typeof rawControlSheet.sentTransportCompany === 'string'
+          ? rawControlSheet.sentTransportCompany
+          : '',
+      sentGuide:
+        typeof rawControlSheet.sentGuide === 'string'
+          ? rawControlSheet.sentGuide
+          : '',
+      deliveredToClientName:
+        typeof rawControlSheet.deliveredToClientName === 'string'
+          ? rawControlSheet.deliveredToClientName
+          : '',
+      deliveredToClientSignature:
+        typeof rawControlSheet.deliveredToClientSignature === 'string'
+          ? rawControlSheet.deliveredToClientSignature
+          : '',
+      receivedByClientName:
+        typeof rawControlSheet.receivedByClientName === 'string'
+          ? rawControlSheet.receivedByClientName
+          : '',
+      receivedByClientSignature:
+        typeof rawControlSheet.receivedByClientSignature === 'string'
+          ? rawControlSheet.receivedByClientSignature
+          : '',
+      lastUpdatedAt:
+        typeof rawControlSheet.lastUpdatedAt === 'string'
+          ? rawControlSheet.lastUpdatedAt
+          : '',
+      lastUpdatedByUserId:
+        typeof rawControlSheet.lastUpdatedByUserId === 'number'
+          ? rawControlSheet.lastUpdatedByUserId
+          : null,
+      lastUpdatedByName:
+        typeof rawControlSheet.lastUpdatedByName === 'string'
+          ? rawControlSheet.lastUpdatedByName
+          : ''
+    }
+  })()
   const operationsCompletionNotes =
     typeof operationsDetails?.completionNotes === 'string'
       ? operationsDetails.completionNotes
@@ -674,6 +905,7 @@ const CalibrationServiceDetailsPage = () => {
     startExecution.isLoading ||
     completeExecution.isLoading ||
     updateItemProgress.isLoading ||
+    updateLogisticsControl.isLoading ||
     registerPhysicalTraceability.isLoading ||
     createCut.isLoading ||
     createAdjustment.isLoading ||
@@ -688,18 +920,19 @@ const CalibrationServiceDetailsPage = () => {
     generateOdsPdf.isLoading ||
     generateAdjustmentPdf.isLoading ||
     generateAdjustmentSummaryPdf.isLoading ||
+    generateLogisticsPdf.isLoading ||
     downloadDocument.isLoading
   const decisionDocuments = service.documents?.filter((document) =>
     ['approval_evidence', 'rejection_evidence'].includes(document.documentType)
   )
   const officialPdfDocuments = service.documents?.filter((document) =>
-    ['quote_pdf', 'ods_pdf', 'adjustment_pdf', 'adjustment_summary_pdf'].includes(
+    ['quote_pdf', 'ods_pdf', 'adjustment_pdf', 'adjustment_summary_pdf', 'logistics_control_pdf'].includes(
       document.documentType
     )
   )
   const supportDocuments = service.documents?.filter(
     (document) =>
-      !['quote_pdf', 'ods_pdf', 'adjustment_pdf', 'adjustment_summary_pdf'].includes(
+      !['quote_pdf', 'ods_pdf', 'adjustment_pdf', 'adjustment_summary_pdf', 'logistics_control_pdf'].includes(
         document.documentType
       )
   )
@@ -783,6 +1016,8 @@ const CalibrationServiceDetailsPage = () => {
         service.executionSiteName || service.customerSite || service.address || '',
       notes: ''
     }
+  const logisticsControlInitialValues: CalibrationServiceLogisticsControlDialogValues =
+    logisticsControlSheet
 
   const handleRequestApproval = async () => {
     try {
@@ -1173,6 +1408,42 @@ const CalibrationServiceDetailsPage = () => {
     } catch (traceabilityError) {
       console.error(traceabilityError)
       toast.error('No pudimos registrar la trazabilidad física.')
+    }
+  }
+
+  const handleSaveLogisticsControl = async (
+    values: CalibrationServiceLogisticsControlDialogValues
+  ) => {
+    try {
+      await updateLogisticsControl.mutateAsync({
+        serviceId: String(service.id),
+        ...values
+      })
+
+      toast.success('La ficha logística quedó actualizada.')
+      setIsLogisticsControlDialogOpen(false)
+      setActiveTab('logistics')
+    } catch (logisticsError) {
+      console.error(logisticsError)
+      toast.error('No pudimos guardar la ficha logística.')
+    }
+  }
+
+  const handleGenerateLogisticsPdf = async () => {
+    try {
+      const document = await generateLogisticsPdf.mutateAsync({
+        serviceId: String(service.id)
+      })
+      toast.success('El PDF de control de ingreso y entrega ya está listo.')
+      await handleDownloadDocument(
+        document.id,
+        document.originalFileName ||
+          `control-ingreso-entrega-${service.serviceCode}.pdf`
+      )
+      setActiveTab('logistics')
+    } catch (logisticsPdfError) {
+      console.error(logisticsPdfError)
+      toast.error('No pudimos generar el PDF de control de ingreso y entrega.')
     }
   }
 
@@ -2454,10 +2725,15 @@ const CalibrationServiceDetailsPage = () => {
 
               <DetailTabPanel value={activeTab} tab='logistics'>
                 <CalibrationServiceLogisticsPanel
+                  controlSheet={logisticsControlSheet}
                   entries={logisticsHistory}
-                  canRegister={canRegisterPhysicalTraceability}
+                  canManageControl={canManageLogisticsControl}
+                  canRegisterMovement={canRegisterPhysicalTraceability}
+                  canGeneratePdf={canGenerateLogisticsPdf}
                   isBusy={isOperationalBusy}
-                  onRegister={() => setIsPhysicalTraceabilityDialogOpen(true)}
+                  onEditControl={() => setIsLogisticsControlDialogOpen(true)}
+                  onRegisterMovement={() => setIsPhysicalTraceabilityDialogOpen(true)}
+                  onGeneratePdf={handleGenerateLogisticsPdf}
                 />
               </DetailTabPanel>
 
@@ -2630,6 +2906,16 @@ const CalibrationServiceDetailsPage = () => {
           isLoading={isOperationalBusy}
           onClose={() => setIsCancelDialogOpen(false)}
           onSubmit={handleCancelService}
+        />
+      ) : null}
+      {isLogisticsControlDialogOpen ? (
+        <CalibrationServiceLogisticsControlDialog
+          open={isLogisticsControlDialogOpen}
+          serviceCode={service.serviceCode}
+          initialValues={logisticsControlInitialValues}
+          isLoading={isOperationalBusy}
+          onClose={() => setIsLogisticsControlDialogOpen(false)}
+          onSubmit={handleSaveLogisticsControl}
         />
       ) : null}
       {isPhysicalTraceabilityDialogOpen ? (

@@ -86,6 +86,7 @@ export type CalibrationServiceDocumentType =
   | 'ods_pdf'
   | 'adjustment_pdf'
   | 'adjustment_summary_pdf'
+  | 'logistics_control_pdf'
   | 'invoice_attachment'
   | 'supporting_attachment'
 
@@ -186,6 +187,60 @@ export interface CalibrationServicePhysicalTraceabilityEntry {
   notes?: string | null
   recordedByUserId?: number | null
   recordedByName?: string | null
+}
+
+export type CalibrationServiceLogisticsServiceScope = 'NA' | 'AC'
+export type CalibrationServiceLogisticsInspectionValue = 'B' | 'M' | 'NA' | 'SI'
+
+export interface CalibrationServiceLogisticsControlItem {
+  rowNumber: number
+  serviceItemId?: number | null
+  equipmentName: string
+  brand?: string | null
+  model?: string | null
+  serialNumber?: string | null
+  assetNumber?: string | null
+  location?: string | null
+  serviceScope: CalibrationServiceLogisticsServiceScope
+  physicalInspectionIn?: CalibrationServiceLogisticsInspectionValue | null
+  physicalInspectionOut?: CalibrationServiceLogisticsInspectionValue | null
+  operationalInspectionIn?: CalibrationServiceLogisticsInspectionValue | null
+  operationalInspectionOut?: CalibrationServiceLogisticsInspectionValue | null
+}
+
+export interface CalibrationServiceLogisticsControlSheet {
+  intakeDate?: string | null
+  deliveryDate?: string | null
+  requesterCompanyName?: string | null
+  requesterOfferNumber?: string | null
+  requesterAddress?: string | null
+  requesterPhone?: string | null
+  requesterContactName?: string | null
+  requesterCity?: string | null
+  items: CalibrationServiceLogisticsControlItem[]
+  noSerialAuthorization?: boolean | null
+  calibrationPointsRequested?: boolean | null
+  calibrationPointsDetails?: string | null
+  specialCondition?: boolean | null
+  specialConditionDetails?: string | null
+  calibrationCertificateIncluded?: boolean | null
+  stampIncluded?: boolean | null
+  observations?: string | null
+  receivedTransportCompany?: string | null
+  receivedGuide?: string | null
+  receivedByMetromedicsName?: string | null
+  receivedByMetromedicsRole?: string | null
+  deliveredByMetromedicsName?: string | null
+  deliveredByMetromedicsRole?: string | null
+  sentTransportCompany?: string | null
+  sentGuide?: string | null
+  deliveredToClientName?: string | null
+  deliveredToClientSignature?: string | null
+  receivedByClientName?: string | null
+  receivedByClientSignature?: string | null
+  lastUpdatedAt?: string | null
+  lastUpdatedByUserId?: number | null
+  lastUpdatedByName?: string | null
 }
 
 export interface CalibrationServiceDocument {
@@ -559,6 +614,39 @@ export interface CalibrationServicePhysicalTraceabilityPayload {
   contactRole?: string | null
   location?: string | null
   notes?: string | null
+}
+
+export interface CalibrationServiceUpdateLogisticsControlPayload {
+  serviceId: string
+  intakeDate?: string | null
+  deliveryDate?: string | null
+  requesterCompanyName?: string | null
+  requesterOfferNumber?: string | null
+  requesterAddress?: string | null
+  requesterPhone?: string | null
+  requesterContactName?: string | null
+  requesterCity?: string | null
+  items: CalibrationServiceLogisticsControlItem[]
+  noSerialAuthorization?: boolean | null
+  calibrationPointsRequested?: boolean | null
+  calibrationPointsDetails?: string | null
+  specialCondition?: boolean | null
+  specialConditionDetails?: string | null
+  calibrationCertificateIncluded?: boolean | null
+  stampIncluded?: boolean | null
+  observations?: string | null
+  receivedTransportCompany?: string | null
+  receivedGuide?: string | null
+  receivedByMetromedicsName?: string | null
+  receivedByMetromedicsRole?: string | null
+  deliveredByMetromedicsName?: string | null
+  deliveredByMetromedicsRole?: string | null
+  sentTransportCompany?: string | null
+  sentGuide?: string | null
+  deliveredToClientName?: string | null
+  deliveredToClientSignature?: string | null
+  receivedByClientName?: string | null
+  receivedByClientSignature?: string | null
 }
 
 export interface CalibrationServiceStartExecutionPayload {
