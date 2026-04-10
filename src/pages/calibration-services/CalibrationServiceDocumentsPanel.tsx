@@ -191,8 +191,8 @@ const CalibrationServiceDocumentsPanel = ({
         </Stack>
       ) : null}
 
-      <Box>
-        <Typography variant='subtitle2' fontWeight={700} gutterBottom>
+      <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3 }}>
+        <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
           PDFs oficiales
         </Typography>
         {officialPdfDocuments.length ? (
@@ -205,8 +205,8 @@ const CalibrationServiceDocumentsPanel = ({
       </Box>
 
       {canUploadDocuments ? (
-        <Box>
-          <Typography variant='subtitle2' fontWeight={700} gutterBottom>
+        <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3 }}>
+          <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
             Cargar evidencia o soporte
           </Typography>
           <Stack spacing={2}>
@@ -277,6 +277,7 @@ const CalibrationServiceDocumentsPanel = ({
               Subir documento
             </Button>
           </Stack>
+
         </Box>
       ) : (
         <Alert severity='info'>
@@ -285,8 +286,8 @@ const CalibrationServiceDocumentsPanel = ({
         </Alert>
       )}
 
-      <Box>
-        <Typography variant='subtitle2' fontWeight={700} gutterBottom>
+      <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3 }}>
+        <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
           Evidencias y soportes
         </Typography>
         {decisionDocuments.length ? (

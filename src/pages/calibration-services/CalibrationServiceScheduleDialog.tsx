@@ -79,8 +79,8 @@ const CalibrationServiceScheduleDialog = ({
   }
 
   return (
-    <Dialog open={open} onClose={isLoading ? undefined : onClose} fullWidth maxWidth='md'>
-      <DialogTitle>Programar servicio</DialogTitle>
+    <Dialog open={open} onClose={isLoading ? undefined : onClose} fullWidth maxWidth='md' PaperProps={{ sx: { borderRadius: 3 } }}>
+      <DialogTitle sx={{ fontWeight: 800 }}>Programar servicio</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={3}>
           <Typography variant='body2' color='text.secondary'>
@@ -160,10 +160,10 @@ const CalibrationServiceScheduleDialog = ({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={isLoading}>
+        <Button onClick={onClose} disabled={isLoading} sx={{ borderRadius: 2 }}>
           Cancelar
         </Button>
-        <Button variant='contained' onClick={() => void handleSubmit()} disabled={isLoading}>
+        <Button variant='contained' disableElevation sx={{ borderRadius: 2 }} onClick={() => void handleSubmit()} disabled={isLoading}>
           Guardar programación
         </Button>
       </DialogActions>

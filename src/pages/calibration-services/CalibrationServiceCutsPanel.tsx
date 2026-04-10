@@ -36,7 +36,7 @@ const CalibrationServiceCutsPanel = ({
   }
 
   return (
-    <Box sx={{ overflowX: 'auto' }}>
+    <Box sx={{ overflowX: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
       <Table size='small'>
         <TableHead>
           <TableRow>

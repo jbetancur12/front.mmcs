@@ -682,9 +682,9 @@ const CalibrationServiceWorkspacePage = () => {
 
       <Grid container spacing={2}>
         <Grid item xs={12} lg={8}>
-          <Card sx={{ borderRadius: 3, mb: 2 }}>
-            <CardContent>
-              <Typography variant='h6' fontWeight={700} gutterBottom>
+          <Card elevation={0} sx={{ borderRadius: 3, mb: 3, border: '1px solid', borderColor: 'divider' }}>
+            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
                 Cliente y alcance
               </Typography>
               <Grid container spacing={2}>
@@ -766,9 +766,9 @@ const CalibrationServiceWorkspacePage = () => {
             </CardContent>
           </Card>
 
-          <Card sx={{ borderRadius: 3, mb: 2 }}>
-            <CardContent>
-              <Typography variant='h6' fontWeight={700} gutterBottom>
+          <Card elevation={0} sx={{ borderRadius: 3, mb: 3, border: '1px solid', borderColor: 'divider' }}>
+            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
                 Contacto y destino del servicio
               </Typography>
               <Grid container spacing={2}>
@@ -849,9 +849,9 @@ const CalibrationServiceWorkspacePage = () => {
             </CardContent>
           </Card>
 
-          <Card sx={{ borderRadius: 3, mb: 2 }}>
-            <CardContent>
-              <Typography variant='h6' fontWeight={700} gutterBottom>
+          <Card elevation={0} sx={{ borderRadius: 3, mb: 3, border: '1px solid', borderColor: 'divider' }}>
+            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
                 Condiciones comerciales
               </Typography>
               <Grid container spacing={2}>
@@ -1010,8 +1010,8 @@ const CalibrationServiceWorkspacePage = () => {
             </CardContent>
           </Card>
 
-          <Card sx={{ borderRadius: 3, mb: 2 }}>
-            <CardContent>
+          <Card elevation={0} sx={{ borderRadius: 3, mb: 3, border: '1px solid', borderColor: 'divider' }}>
+            <CardContent sx={{ p: { xs: 2, md: 3 }, pBottom: { xs: 2, md: 3 } }}>
               <CalibrationServiceItemsEditor
                 items={formState.items}
                 products={productOptions}
@@ -1030,9 +1030,9 @@ const CalibrationServiceWorkspacePage = () => {
             </CardContent>
           </Card>
 
-          <Card sx={{ borderRadius: 3 }}>
-            <CardContent>
-              <Typography variant='h6' fontWeight={700} gutterBottom>
+          <Card elevation={0} sx={{ borderRadius: 3, mb: 3, border: '1px solid', borderColor: 'divider' }}>
+            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
                 Evidencia de solicitud
               </Typography>
               <Stack spacing={2}>
@@ -1068,9 +1068,9 @@ const CalibrationServiceWorkspacePage = () => {
         </Grid>
 
         <Grid item xs={12} lg={4}>
-          <Card sx={{ borderRadius: 3, position: { lg: 'sticky' }, top: { lg: 24 } }}>
-            <CardContent>
-              <Typography variant='h6' fontWeight={700} gutterBottom>
+          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', position: { lg: 'sticky' }, top: { lg: 24 } }}>
+            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
                 Resumen economico
               </Typography>
               <Stack spacing={1.5}>

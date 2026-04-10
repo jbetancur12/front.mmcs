@@ -552,67 +552,67 @@ const CalibrationServicesPage = () => {
 
       <Grid container spacing={2} mb={3}>
         <Grid item xs={12} md={3}>
-          <Card sx={{ borderRadius: 3 }}>
+          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
             <CardContent>
-              <Typography variant='overline' color='text.secondary'>
+              <Typography variant='overline' color='text.secondary' fontWeight={600} sx={{ letterSpacing: 1 }}>
                 Servicios visibles
               </Typography>
-              <Typography variant='h4' fontWeight={700}>
+              <Typography variant='h3' fontWeight={800} sx={{ mt: 1, mb: 1, color: 'primary.main' }}>
                 {visibleServices.length}
               </Typography>
-              <Typography variant='body2' color='text.secondary'>
+              <Typography variant='body2' color='text.secondary' fontWeight={500}>
                 Total cargados: {data?.totalItems ?? 0}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card sx={{ borderRadius: 3 }}>
+          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
             <CardContent>
-              <Typography variant='overline' color='text.secondary'>
-                {isTechnicalOnlyView ? 'ODS emitidas' : 'Pendientes respuesta cliente'}
+              <Typography variant='overline' color='text.secondary' fontWeight={600} sx={{ letterSpacing: 1 }}>
+                {isTechnicalOnlyView ? 'ODS emitidas' : 'Pendientes respuesta'}
               </Typography>
-              <Typography variant='h4' fontWeight={700}>
+              <Typography variant='h3' fontWeight={800} sx={{ mt: 1, mb: 1 }}>
                 {isTechnicalOnlyView ? odsIssuedCount : pendingApprovalCount}
               </Typography>
-              <Typography variant='body2' color='text.secondary'>
+              <Typography variant='body2' color='text.secondary' sx={{ lineHeight: 1.3 }}>
                 {isTechnicalOnlyView
                   ? 'Servicios ya liberados al frente técnico'
-                  : 'Cotizaciones enviadas que aún esperan respuesta del cliente'}
+                  : 'Cotizaciones enviadas esperando respuesta'}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card sx={{ borderRadius: 3 }}>
+          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
             <CardContent>
-              <Typography variant='overline' color='text.secondary'>
-                {isTechnicalOnlyView ? 'Pendientes programación' : 'Listos para ODS'}
+              <Typography variant='overline' color='text.secondary' fontWeight={600} sx={{ letterSpacing: 1 }}>
+                {isTechnicalOnlyView ? 'Requieren agenda' : 'Listos para ODS'}
               </Typography>
-              <Typography variant='h4' fontWeight={700}>
+              <Typography variant='h3' fontWeight={800} sx={{ mt: 1, mb: 1 }}>
                 {isTechnicalOnlyView ? pendingProgrammingCount : readyForOdsCount}
               </Typography>
-              <Typography variant='body2' color='text.secondary'>
+              <Typography variant='body2' color='text.secondary' sx={{ lineHeight: 1.3 }}>
                 {isTechnicalOnlyView
-                  ? 'Requieren agenda o coordinación operativa'
-                  : 'Con aprobación del cliente y pendientes de emisión'}
+                  ? 'Servicios que requieren coordinación'
+                  : 'Aprobados y pendientes de emisión ODS'}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card sx={{ borderRadius: 3 }}>
+          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
             <CardContent>
-              <Typography variant='overline' color='text.secondary'>
+              <Typography variant='overline' color='error.main' fontWeight={600} sx={{ letterSpacing: 1 }}>
                 En riesgo o vencidos
               </Typography>
-              <Typography variant='h4' fontWeight={700}>
+              <Typography variant='h3' fontWeight={800} sx={{ mt: 1, mb: 1, color: urgentCount > 0 ? 'error.main' : 'text.primary' }}>
                 {urgentCount}
               </Typography>
-              <Typography variant='body2' color='text.secondary'>
+              <Typography variant='body2' color='text.secondary' sx={{ lineHeight: 1.3 }}>
                 {isTechnicalOnlyView
-                  ? `${scheduledCount} programados · ${inExecutionCount} en ejecución · ${technicallyCompletedCount} finalizados · ${closedCount} cerrados`
-                  : `${requestedChangesCount} con solicitud de modificación · ${pendingDocumentControlCount} pendientes documentales`}
+                  ? `${scheduledCount} prog · ${inExecutionCount} ejec · ${technicallyCompletedCount} fin · ${closedCount} cerrados`
+                  : `${requestedChangesCount} con cambios · ${pendingDocumentControlCount} documentales`}
               </Typography>
             </CardContent>
           </Card>
@@ -636,28 +636,28 @@ const CalibrationServicesPage = () => {
         </Grid>
       </Grid>
 
-      <Card sx={{ borderRadius: 3, mb: 3 }}>
-        <CardContent>
+      <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', mb: 3 }}>
+        <CardContent sx={{ p: 3 }}>
           <Stack
             direction={{ xs: 'column', md: 'row' }}
             justifyContent='space-between'
             spacing={2}
-            mb={2}
+            mb={3}
           >
             <Box>
-              <Typography variant='h6' fontWeight={700}>
+              <Typography variant='h6' fontWeight={800}>
                 Filtros operativos
               </Typography>
-              <Typography variant='body2' color='text.secondary'>
+              <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
                 Reduce ruido y enfócate en los servicios que sí requieren acción.
               </Typography>
             </Box>
-            <Button variant='text' onClick={clearFilters}>
+            <Button variant='outlined' color="inherit" onClick={clearFilters} sx={{ borderRadius: 2 }}>
               Limpiar filtros
             </Button>
           </Stack>
 
-          <Grid container spacing={2}>
+          <Grid container spacing={2.5}>
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth

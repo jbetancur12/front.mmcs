@@ -75,8 +75,8 @@ const CalibrationServiceOdsDialog = ({
   }
 
   return (
-    <Dialog open={open} onClose={isLoading ? undefined : onClose} fullWidth maxWidth='md'>
-      <DialogTitle>Emitir ODS para {serviceCode}</DialogTitle>
+    <Dialog open={open} onClose={isLoading ? undefined : onClose} fullWidth maxWidth='md' PaperProps={{ sx: { borderRadius: 3 } }}>
+      <DialogTitle sx={{ fontWeight: 800 }}>Emitir ODS para {serviceCode}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2.5}>
           <Alert severity='info'>
@@ -131,7 +131,7 @@ const CalibrationServiceOdsDialog = ({
             </Grid>
           </Grid>
 
-          <Typography variant='subtitle2' fontWeight={700}>
+          <Typography variant='h6' fontWeight={700}>
             Datos operativos
           </Typography>
           <Alert severity='info'>
@@ -225,7 +225,7 @@ const CalibrationServiceOdsDialog = ({
             </Grid>
           </Grid>
 
-          <Typography variant='subtitle2' fontWeight={700}>
+          <Typography variant='h6' fontWeight={700}>
             Observaciones ODS
           </Typography>
           <Grid container spacing={2}>
@@ -290,7 +290,7 @@ const CalibrationServiceOdsDialog = ({
             </Grid>
           </Grid>
 
-          <Typography variant='subtitle2' fontWeight={700}>
+          <Typography variant='h6' fontWeight={700}>
             Firma / conformidad
           </Typography>
           <Grid container spacing={2}>
@@ -316,11 +316,13 @@ const CalibrationServiceOdsDialog = ({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={isLoading}>
+        <Button onClick={onClose} disabled={isLoading} sx={{ borderRadius: 2 }}>
           Cancelar
         </Button>
         <Button
           variant='contained'
+          disableElevation
+          sx={{ borderRadius: 2 }}
           disabled={isLoading}
           onClick={() => void onSubmit(values)}
         >

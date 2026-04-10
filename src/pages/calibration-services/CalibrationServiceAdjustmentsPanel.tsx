@@ -81,12 +81,12 @@ const CalibrationServiceAdjustmentsPanel = ({
         </Alert>
       ) : null}
 
-      <Stack direction='row' justifyContent='space-between' alignItems='center'>
+      <Stack direction={{ xs: 'column', md: 'row' }} justifyContent='space-between' alignItems={{ xs: 'flex-start', md: 'center' }} spacing={2}>
         <Box>
-          <Typography variant='subtitle1' fontWeight={700}>
+          <Typography variant='subtitle1' fontWeight={800}>
             Novedades de ejecución
           </Typography>
-          <Typography variant='body2' color='text.secondary'>
+          <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
             Registra diferencias entre lo cotizado y lo realmente recibido o ejecutado.
           </Typography>
         </Box>
@@ -111,7 +111,7 @@ const CalibrationServiceAdjustmentsPanel = ({
       </Stack>
 
       {adjustments.length ? (
-        <Box sx={{ overflowX: 'auto' }}>
+        <Box sx={{ overflowX: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
           <Table size='small'>
             <TableHead>
               <TableRow>
