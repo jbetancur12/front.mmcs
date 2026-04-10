@@ -31,6 +31,7 @@ import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined'
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined'
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
+import SignaturePad from '../../Components/Maintenance/SignaturePad'
 import {
   CalibrationServiceLogisticsControlItem,
   CalibrationServiceLogisticsControlSheet
@@ -675,11 +676,18 @@ const CalibrationServiceLogisticsControlDialog = ({
                 />
               </Grid>
               <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Firma entregado al cliente'
-                  value={values.deliveredToClientSignature || ''}
-                  onChange={handleChange('deliveredToClientSignature')}
+                <SignaturePad
+                  value={values.deliveredToClientSignature || null}
+                  onChange={(value) =>
+                    setValues((current) => ({
+                      ...current,
+                      deliveredToClientSignature: value || ''
+                    }))
+                  }
+                  disabled={isLoading}
+                  height={150}
+                  label='Firma de quien recibe del lado del cliente'
+                  helperText='Esta firma quedará embebida en el PDF oficial de entrega.'
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -691,11 +699,18 @@ const CalibrationServiceLogisticsControlDialog = ({
                 />
               </Grid>
               <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Firma recibido por cliente'
-                  value={values.receivedByClientSignature || ''}
-                  onChange={handleChange('receivedByClientSignature')}
+                <SignaturePad
+                  value={values.receivedByClientSignature || null}
+                  onChange={(value) =>
+                    setValues((current) => ({
+                      ...current,
+                      receivedByClientSignature: value || ''
+                    }))
+                  }
+                  disabled={isLoading}
+                  height={150}
+                  label='Firma de quien recibe finalmente el equipo'
+                  helperText='Puedes firmar aquí mismo o cargar una imagen si ya tienes la firma.'
                 />
               </Grid>
             </Grid>
