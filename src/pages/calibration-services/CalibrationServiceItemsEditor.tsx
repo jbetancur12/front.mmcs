@@ -1,24 +1,25 @@
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Autocomplete,
   Box,
   Button,
   Chip,
+  Divider,
   FormControl,
+  Grid,
   IconButton,
   InputLabel,
   MenuItem,
   Select,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   TextField,
   Typography
 } from '@mui/material'
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import {
   CalibrationServiceItemPayload,
   CalibrationServiceProductSummary
@@ -117,7 +118,7 @@ const CalibrationServiceItemsEditor = ({
   onChangeItemOtherField
 }: CalibrationServiceItemsEditorProps) => {
   return (
-    <Stack spacing={2}>
+    <Stack spacing={3}>
       <Stack
         direction={{ xs: 'column', md: 'row' }}
         justifyContent='space-between'
@@ -128,12 +129,12 @@ const CalibrationServiceItemsEditor = ({
             Ítems cotizados
           </Typography>
           <Typography variant='body2' color='text.secondary'>
-            Tabla operativa para construir la cotización con cantidades, tipo
-            de servicio y total por línea.
+            Configuración detallada de cantidades, productos, tipos de servicio y totales.
           </Typography>
         </Box>
         <Button
-          variant='outlined'
+          variant='contained'
+          color='primary'
           startIcon={<AddOutlinedIcon />}
           onClick={onAddItem}
           disabled={!canEdit || isBusy}
@@ -142,39 +143,76 @@ const CalibrationServiceItemsEditor = ({
         </Button>
       </Stack>
 
-      <Box sx={{ overflowX: 'auto' }}>
-        <Table size='small' sx={{ minWidth: 1420 }}>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ minWidth: 240 }}>Producto catálogo</TableCell>
-              <TableCell sx={{ minWidth: 220 }}>Precio catálogo</TableCell>
-              <TableCell sx={{ minWidth: 220 }}>Ítem</TableCell>
-              <TableCell sx={{ minWidth: 180 }}>Instrumento</TableCell>
-              <TableCell sx={{ minWidth: 160 }}>Intervalo</TableCell>
-              <TableCell sx={{ minWidth: 110 }}>Cantidad</TableCell>
-              <TableCell sx={{ minWidth: 150 }}>Tipo servicio</TableCell>
-              <TableCell sx={{ minWidth: 150 }}>Valor unitario</TableCell>
-              <TableCell sx={{ minWidth: 120 }}>IVA %</TableCell>
-              <TableCell sx={{ minWidth: 180 }}>Notas</TableCell>
-              <TableCell sx={{ minWidth: 150 }}>Total línea</TableCell>
-              <TableCell align='center' sx={{ minWidth: 90 }}>
-                Acción
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {items.map((item, index) => {
-              const selectedProduct =
-                products.find((product) => product.id === item.productId) || null
-              const totals = getItemTotals(item)
-              const selectedCatalogPriceSource =
-                (typeof item.otherFields?.catalogPriceSource === 'string'
-                  ? item.otherFields.catalogPriceSource
-                  : 'price') as CatalogPriceSourceOption['value']
+      <Stack spacing={2}>
+        {items.map((item, index) => {
+          const selectedProduct =
+            products.find((product) => product.id === item.productId) || null
+          const totals = getItemTotals(item)
+          const selectedCatalogPriceSource =
+            (typeof item.otherFields?.catalogPriceSource === 'string'
+              ? item.otherFields.catalogPriceSource
+              : 'price') as CatalogPriceSourceOption['value']
+          const itemNameLabel = item.itemName || 'Nuevo ítem'
 
-              return (
-                <TableRow key={item.localId} hover>
-                  <TableCell>
+          return (
+            <Accordion
+              key={item.localId}
+              variant='outlined'
+              defaultExpanded={!item.itemName}
+              sx={{
+                borderRadius: '8px !important',
+                '&:before': { display: 'none' }, // removes the default accordion divider line
+                transition: 'box-shadow 0.2s',
+                '&:hover': {
+                  boxShadow: 2
+                }
+              }}
+            >
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                aria-controls={`panel-${item.localId}-content`}
+                id={`panel-${item.localId}-header`}
+                sx={{
+                  '& .MuiAccordionSummary-content': { 
+                    alignItems: 'center', 
+                    pr: 1 
+                  }
+                }}
+              >
+                <Typography
+                  variant='subtitle2'
+                  color='primary'
+                  fontWeight='bold'
+                  sx={{ textTransform: 'uppercase', letterSpacing: 1, mr: 2, minWidth: 80 }}
+                >
+                  Ítem #{index + 1}
+                </Typography>
+                
+                <Typography variant='body2' fontWeight='medium' sx={{ flexGrow: 1 }}>
+                  {item.quantity ? `${item.quantity} x ` : ''}{itemNameLabel} 
+                  {totals.total > 0 ? ` · ${currencyFormatter.format(totals.total)}` : ''}
+                </Typography>
+
+                <IconButton
+                  color='error'
+                  disabled={!canEdit || isBusy}
+                  size='small'
+                  title='Eliminar ítem'
+                  sx={{ mr: 1 }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onRemoveItem(item.localId)
+                  }}
+                  onFocus={(e) => e.stopPropagation()}
+                >
+                  <DeleteOutlineOutlinedIcon />
+                </IconButton>
+              </AccordionSummary>
+              
+              <AccordionDetails sx={{ pt: 0, px: { xs: 2, sm: 3 }, pb: 3 }}>
+                <Grid container spacing={2}>
+                  {/* Fila 1: Selección de producto de catálogo */}
+                  <Grid item xs={12} md={6}>
                     <Autocomplete
                       size='small'
                       options={products}
@@ -183,11 +221,12 @@ const CalibrationServiceItemsEditor = ({
                       onChange={(_, value) => onSelectProduct(item.localId, value)}
                       disabled={!canEdit || isBusy}
                       renderInput={(params) => (
-                        <TextField {...params} label={`Producto ${index + 1}`} />
+                        <TextField {...params} label='Producto catálogo' />
                       )}
                     />
-                  </TableCell>
-                  <TableCell>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
                     <Stack spacing={0.75}>
                       <FormControl fullWidth size='small'>
                         <InputLabel>Precio catálogo</InputLabel>
@@ -232,8 +271,14 @@ const CalibrationServiceItemsEditor = ({
                         </Select>
                       </FormControl>
                       {selectedProduct ? (
-                        <Stack direction='row' spacing={1} alignItems='center' flexWrap='wrap'>
-                          {selectedCatalogPriceSource === suggestedCatalogPriceSource ? (
+                        <Stack
+                          direction='row'
+                          spacing={1}
+                          alignItems='center'
+                          flexWrap='wrap'
+                        >
+                          {selectedCatalogPriceSource ===
+                          suggestedCatalogPriceSource ? (
                             <Chip
                               size='small'
                               color='success'
@@ -251,27 +296,34 @@ const CalibrationServiceItemsEditor = ({
                           <Typography variant='caption' color='text.secondary'>
                             Sugerido para esta cotización:{' '}
                             {catalogPriceSourceOptions.find(
-                              (option) => option.value === suggestedCatalogPriceSource
+                              (option) =>
+                                option.value === suggestedCatalogPriceSource
                             )?.label || 'Valor general'}
                           </Typography>
                         </Stack>
                       ) : null}
                     </Stack>
-                  </TableCell>
-                  <TableCell>
+                  </Grid>
+
+                  {/* Fila 2: Detalles del ítem */}
+                  <Grid item xs={12}>
+                    <Divider sx={{ my: 1 }} />
+                  </Grid>
+
+                  <Grid item xs={12} sm={6} md={3}>
                     <TextField
                       fullWidth
                       size='small'
                       required
-                      label='Ítem'
+                      label='Nombre Ítem'
                       value={item.itemName}
                       disabled={!canEdit || isBusy}
                       onChange={(event) =>
                         onChangeItemField(item.localId, 'itemName', event.target.value)
                       }
                     />
-                  </TableCell>
-                  <TableCell>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
                     <TextField
                       fullWidth
                       size='small'
@@ -286,8 +338,8 @@ const CalibrationServiceItemsEditor = ({
                         )
                       }
                     />
-                  </TableCell>
-                  <TableCell>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
                     <TextField
                       fullWidth
                       size='small'
@@ -302,25 +354,8 @@ const CalibrationServiceItemsEditor = ({
                         )
                       }
                     />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      fullWidth
-                      size='small'
-                      type='number'
-                      label='Cant.'
-                      value={item.quantity}
-                      disabled={!canEdit || isBusy}
-                      onChange={(event) =>
-                        onChangeItemField(
-                          item.localId,
-                          'quantity',
-                          Number(event.target.value)
-                        )
-                      }
-                    />
-                  </TableCell>
-                  <TableCell>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
                     <FormControl fullWidth size='small'>
                       <InputLabel>Tipo servicio</InputLabel>
                       <Select
@@ -342,8 +377,27 @@ const CalibrationServiceItemsEditor = ({
                         ))}
                       </Select>
                     </FormControl>
-                  </TableCell>
-                  <TableCell>
+                  </Grid>
+
+                  {/* Fila 3: Cantidad y Precios */}
+                  <Grid item xs={12} sm={4} md={2}>
+                    <TextField
+                      fullWidth
+                      size='small'
+                      type='number'
+                      label='Cantidad'
+                      value={item.quantity}
+                      disabled={!canEdit || isBusy}
+                      onChange={(event) =>
+                        onChangeItemField(
+                          item.localId,
+                          'quantity',
+                          Number(event.target.value)
+                        )
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4} md={3}>
                     <TextField
                       fullWidth
                       size='small'
@@ -359,8 +413,8 @@ const CalibrationServiceItemsEditor = ({
                         )
                       }
                     />
-                  </TableCell>
-                  <TableCell>
+                  </Grid>
+                  <Grid item xs={12} sm={4} md={2}>
                     <TextField
                       fullWidth
                       size='small'
@@ -376,51 +430,68 @@ const CalibrationServiceItemsEditor = ({
                         )
                       }
                     />
-                  </TableCell>
-                  <TableCell>
+                  </Grid>
+                  <Grid item xs={12} md={5}>
                     <TextField
                       fullWidth
                       size='small'
-                      multiline
-                      minRows={2}
-                      label='Notas'
+                      label='Notas / Observaciones'
                       value={item.notes || ''}
                       disabled={!canEdit || isBusy}
                       onChange={(event) =>
                         onChangeItemField(item.localId, 'notes', event.target.value)
                       }
                     />
-                  </TableCell>
-                  <TableCell>
-                    <Stack spacing={0.5}>
-                      <Typography variant='body2' fontWeight={700}>
-                        {currencyFormatter.format(totals.total)}
-                      </Typography>
-                      <Typography variant='caption' color='text.secondary'>
-                        Sub: {currencyFormatter.format(totals.subtotal)}
-                      </Typography>
-                      <Typography variant='caption' color='text.secondary'>
-                        IVA: {currencyFormatter.format(totals.taxTotal)}
-                      </Typography>
-                    </Stack>
-                  </TableCell>
-                  <TableCell align='center'>
-                    <IconButton
-                      color='error'
-                      disabled={!canEdit || isBusy}
-                      onClick={() => onRemoveItem(item.localId)}
-                    >
-                      <DeleteOutlineOutlinedIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
-      </Box>
+                  </Grid>
+                </Grid>
+
+                {/* Footer del card con los totales */}
+                <Box
+                  sx={{
+                    mt: 3,
+                    p: 2,
+                    bgcolor: 'action.hover',
+                    borderRadius: 1,
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    justifyContent: 'flex-end',
+                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    gap: 3
+                  }}
+                >
+                  <Box textAlign={{ xs: 'left', sm: 'right' }}>
+                    <Typography variant='caption' color='text.secondary' display='block'>
+                      Subtotal
+                    </Typography>
+                    <Typography variant='body2' fontWeight='medium'>
+                      {currencyFormatter.format(totals.subtotal)}
+                    </Typography>
+                  </Box>
+                  <Box textAlign={{ xs: 'left', sm: 'right' }}>
+                    <Typography variant='caption' color='text.secondary' display='block'>
+                      IVA
+                    </Typography>
+                    <Typography variant='body2' fontWeight='medium'>
+                      {currencyFormatter.format(totals.taxTotal)}
+                    </Typography>
+                  </Box>
+                  <Box textAlign={{ xs: 'left', sm: 'right' }}>
+                    <Typography variant='caption' color='primary' display='block'>
+                      Total Línea
+                    </Typography>
+                    <Typography variant='h6' color='primary' fontWeight='bold' lineHeight={1}>
+                      {currencyFormatter.format(totals.total)}
+                    </Typography>
+                  </Box>
+                </Box>
+              </AccordionDetails>
+            </Accordion>
+          )
+        })}
+      </Stack>
     </Stack>
   )
 }
 
 export default CalibrationServiceItemsEditor
+
