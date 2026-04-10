@@ -1633,238 +1633,51 @@ const CalibrationServiceDetailsPage = () => {
       <Stack
         direction={{ xs: 'column', md: 'row' }}
         justifyContent='space-between'
-        spacing={2}
-        mb={3}
+        spacing={3}
+        mb={4}
       >
-        <Box>
+        <Box flex={1} maxWidth={{ xs: '100%', md: '60%' }}>
           <Button
             startIcon={<ArrowBackOutlinedIcon />}
             onClick={() => navigate('/calibration-services')}
-            sx={{ mb: 1 }}
+            sx={{ mb: 2, ml: -1 }}
+            color='inherit'
+            size='small'
           >
             Volver a la bandeja
           </Button>
-          <Typography variant='h4' fontWeight={700}>
-            {service.serviceCode}
-          </Typography>
-          <Typography variant='body1' color='text.secondary' sx={{ mt: 1 }}>
-            {service.customer?.nombre ||
-              service.executionCustomerName ||
-              'Cliente pendiente'}
-          </Typography>
-          <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
-            {service.customerSite ||
-              service.executionSiteName ||
-              'Sede pendiente'}{' '}
-            · {service.contactName || 'Sin contacto principal'}
-          </Typography>
-        </Box>
 
-        <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
-          {customerResponseType === 'changes_requested' ? (
-            <Chip color='warning' variant='outlined' label='Cliente pidió modificación' />
-          ) : null}
-          {canRequestApproval ? (
-            <Button
-              variant='contained'
-              startIcon={<SendOutlinedIcon />}
-              onClick={() => void handleRequestApproval()}
-              disabled={isDecisionLoading}
-            >
-              Enviar cotización
-            </Button>
-          ) : null}
-          {canDecideApproval ? (
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-              <Button
-                variant='outlined'
-                color='warning'
-                startIcon={<AutorenewOutlinedIcon />}
-                onClick={() => setDecisionMode('request_changes')}
-                disabled={isDecisionLoading}
-              >
-                Registrar solicitud de modificación
-              </Button>
-              <Button
-                variant='outlined'
-                color='warning'
-                startIcon={<HighlightOffOutlinedIcon />}
-                onClick={() => setDecisionMode('reject')}
-                disabled={isDecisionLoading}
-              >
-                Registrar rechazo cliente
-              </Button>
-              <Button
-                variant='contained'
-                color='success'
-                startIcon={<CheckCircleOutlineOutlinedIcon />}
-                onClick={() => setDecisionMode('approve')}
-                disabled={isDecisionLoading}
-              >
-                Registrar aprobación cliente
-              </Button>
-            </Stack>
-          ) : null}
-          {canIssueOds ? (
-            <Button
-              variant='contained'
-              color='info'
-              startIcon={<DescriptionOutlinedIcon />}
-              onClick={() => setIsOdsDialogOpen(true)}
-              disabled={isOdsLoading}
-            >
-              Emitir ODS
-            </Button>
-          ) : null}
-          {canScheduleService ? (
-            <Button
-              variant='contained'
-              color='primary'
-              startIcon={<DescriptionOutlinedIcon />}
-              onClick={() => setIsScheduleDialogOpen(true)}
-              disabled={isOperationalBusy}
-            >
-              Programar servicio
-            </Button>
-          ) : null}
-          {canReprogramService ? (
-            <Button
-              variant='outlined'
-              color='primary'
-              startIcon={<AutorenewOutlinedIcon />}
-              onClick={() => setIsRescheduleDialogOpen(true)}
-              disabled={isOperationalBusy}
-            >
-              Reprogramar
-            </Button>
-          ) : null}
-          {canReassignService ? (
-            <Button
-              variant='outlined'
-              color='primary'
-              startIcon={<AutorenewOutlinedIcon />}
-              onClick={() => setIsReassignDialogOpen(true)}
-              disabled={isOperationalBusy}
-            >
-              Reasignar metrólogo
-            </Button>
-          ) : null}
-          {canPauseService ? (
-            <Button
-              variant='outlined'
-              color='warning'
-              startIcon={<WarningAmberOutlinedIcon />}
-              onClick={() => setIsPauseDialogOpen(true)}
-              disabled={isOperationalBusy}
-            >
-              Pausar servicio
-            </Button>
-          ) : null}
-          {canResumeService ? (
-            <Button
-              variant='contained'
-              color='warning'
-              startIcon={<AutorenewOutlinedIcon />}
-              onClick={() => setIsResumeDialogOpen(true)}
-              disabled={isOperationalBusy}
-            >
-              Reanudar servicio
-            </Button>
-          ) : null}
-          {canStartExecution ? (
-            <Button
-              variant='contained'
-              color='success'
-              startIcon={<CheckCircleOutlineOutlinedIcon />}
-              onClick={() => void handleStartExecution()}
-              disabled={isOperationalBusy}
-            >
-              Iniciar ejecución
-            </Button>
-          ) : null}
-          {canCompleteExecution ? (
-            <Button
-              variant='contained'
-              color='secondary'
-              startIcon={<CheckCircleOutlineOutlinedIcon />}
-              onClick={() => void handleCompleteExecution()}
-              disabled={isOperationalBusy}
-            >
-              Finalizar ejecución
-            </Button>
-          ) : null}
-          {canCreateCut ? (
-            <Button
-              variant='outlined'
-              color='primary'
-              startIcon={<DescriptionOutlinedIcon />}
-              onClick={() => setIsCutDialogOpen(true)}
-              disabled={isOperationalBusy}
-            >
-              Crear corte
-            </Button>
-          ) : null}
-          {canCancelService ? (
-            <Button
-              variant='outlined'
-              color='error'
-              startIcon={<HighlightOffOutlinedIcon />}
-              onClick={() => setIsCancelDialogOpen(true)}
-              disabled={isOperationalBusy}
-            >
-              Cancelar servicio
-            </Button>
-          ) : null}
-          {canCloseService ? (
-            <Button
-              variant='contained'
-              color='inherit'
-              startIcon={<CheckCircleOutlineOutlinedIcon />}
-              onClick={() => setIsCloseDialogOpen(true)}
-              disabled={isOperationalBusy}
-            >
-              Cerrar servicio
-            </Button>
-          ) : null}
-          {canEdit ? (
-            <Button
-              variant='outlined'
-              startIcon={<EditOutlinedIcon />}
-              onClick={() =>
-                navigate(`/calibration-services/${service.id}/edit`)
-              }
-            >
-              Editar servicio
-            </Button>
-          ) : null}
-          <Stack direction='row' spacing={1} flexWrap='wrap'>
+          <Stack direction='row' alignItems='center' spacing={1.5} flexWrap='wrap' sx={{ mb: 1.5 }}>
+            <Typography variant='h4' fontWeight={800} color='text.primary' sx={{ letterSpacing: '-0.02em', mr: 1, lineHeight: 1 }}>
+              {service.serviceCode}
+            </Typography>
+
             <Chip
+              size='small'
               color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]}
               label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]}
+              sx={{ fontWeight: 600 }}
             />
             {service.isPaused ? (
-              <Chip color='warning' variant='outlined' label='Pausado' />
+              <Chip size='small' color='warning' variant='outlined' label='Pausado' sx={{ fontWeight: 600 }} />
             ) : null}
             {!isTechnicalOnlyView ? (
               <Chip
-                color={
-                  CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]
-                }
-                label={
-                  CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]
-                }
+                size='small'
+                color={CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]}
+                label={CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]}
+                sx={{ fontWeight: 600 }}
               />
             ) : null}
             <Chip
-              color={
-                CALIBRATION_SERVICE_SLA_COLORS[
-                  service.slaIndicator?.color || 'gray'
-                ]
-              }
+              size='small'
+              color={CALIBRATION_SERVICE_SLA_COLORS[service.slaIndicator?.color || 'gray']}
               label={service.slaIndicator?.label || 'SLA no iniciado'}
+              sx={{ fontWeight: 600 }}
             />
             {['yellow', 'red'].includes(service.slaIndicator?.color || 'gray') ? (
               <Chip
+                size='small'
                 icon={
                   service.slaIndicator?.color === 'red' ? (
                     <ReportProblemOutlinedIcon />
@@ -1878,6 +1691,7 @@ const CalibrationServiceDetailsPage = () => {
                     ? 'Alerta vencida'
                     : 'Alerta activa'
                 }
+                sx={{ fontWeight: 600 }}
               />
             ) : null}
             <CalibrationServiceStageDecisionHelp
@@ -1889,7 +1703,233 @@ const CalibrationServiceDetailsPage = () => {
               allCutsSent={allCutsSent}
             />
           </Stack>
-        </Stack>
+
+          <Typography variant='subtitle1' color='text.secondary' fontWeight={500}>
+            {service.customer?.nombre ||
+              service.executionCustomerName ||
+              'Cliente pendiente'}
+          </Typography>
+          <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
+            {service.customerSite ||
+              service.executionSiteName ||
+              'Sede pendiente'}{' '}
+            · {service.contactName || 'Sin contacto principal'}
+          </Typography>
+        </Box>
+
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: 1.5, 
+            justifyContent: { xs: 'flex-start', md: 'flex-end' },
+            alignItems: 'flex-start',
+            flex: 1
+          }}
+        >
+          {customerResponseType === 'changes_requested' ? (
+            <Chip color='warning' variant='outlined' label='Cliente pidió modificación' />
+          ) : null}
+          {canRequestApproval ? (
+            <Button
+              variant='contained'
+              startIcon={<SendOutlinedIcon />}
+              onClick={() => void handleRequestApproval()}
+              disabled={isDecisionLoading}
+              disableElevation
+              sx={{ borderRadius: 2 }}
+            >
+              Enviar cotización
+            </Button>
+          ) : null}
+          {canDecideApproval ? (
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Button
+                variant='outlined'
+                color='warning'
+                startIcon={<AutorenewOutlinedIcon />}
+                onClick={() => setDecisionMode('request_changes')}
+                disabled={isDecisionLoading}
+                sx={{ borderRadius: 2 }}
+              >
+                Registrar solicitud de modificación
+              </Button>
+              <Button
+                variant='outlined'
+                color='warning'
+                startIcon={<HighlightOffOutlinedIcon />}
+                onClick={() => setDecisionMode('reject')}
+                disabled={isDecisionLoading}
+                sx={{ borderRadius: 2 }}
+              >
+                Registrar rechazo cliente
+              </Button>
+              <Button
+                variant='contained'
+                color='success'
+                startIcon={<CheckCircleOutlineOutlinedIcon />}
+                onClick={() => setDecisionMode('approve')}
+                disabled={isDecisionLoading}
+                disableElevation
+                sx={{ borderRadius: 2 }}
+              >
+                Registrar aprobación cliente
+              </Button>
+            </Stack>
+          ) : null}
+          {canIssueOds ? (
+            <Button
+              variant='contained'
+              color='info'
+              startIcon={<DescriptionOutlinedIcon />}
+              onClick={() => setIsOdsDialogOpen(true)}
+              disabled={isOdsLoading}
+              disableElevation
+              sx={{ borderRadius: 2 }}
+            >
+              Emitir ODS
+            </Button>
+          ) : null}
+          {canScheduleService ? (
+            <Button
+              variant='contained'
+              color='primary'
+              startIcon={<DescriptionOutlinedIcon />}
+              onClick={() => setIsScheduleDialogOpen(true)}
+              disabled={isOperationalBusy}
+              disableElevation
+              sx={{ borderRadius: 2 }}
+            >
+              Programar servicio
+            </Button>
+          ) : null}
+          {canReprogramService ? (
+            <Button
+              variant='outlined'
+              color='primary'
+              startIcon={<AutorenewOutlinedIcon />}
+              onClick={() => setIsRescheduleDialogOpen(true)}
+              disabled={isOperationalBusy}
+              sx={{ borderRadius: 2 }}
+            >
+              Reprogramar
+            </Button>
+          ) : null}
+          {canReassignService ? (
+            <Button
+              variant='outlined'
+              color='primary'
+              startIcon={<AutorenewOutlinedIcon />}
+              onClick={() => setIsReassignDialogOpen(true)}
+              disabled={isOperationalBusy}
+              sx={{ borderRadius: 2 }}
+            >
+              Reasignar metrólogo
+            </Button>
+          ) : null}
+          {canPauseService ? (
+            <Button
+              variant='outlined'
+              color='warning'
+              startIcon={<WarningAmberOutlinedIcon />}
+              onClick={() => setIsPauseDialogOpen(true)}
+              disabled={isOperationalBusy}
+              sx={{ borderRadius: 2 }}
+            >
+              Pausar servicio
+            </Button>
+          ) : null}
+          {canResumeService ? (
+            <Button
+              variant='contained'
+              color='warning'
+              startIcon={<AutorenewOutlinedIcon />}
+              onClick={() => setIsResumeDialogOpen(true)}
+              disabled={isOperationalBusy}
+              disableElevation
+              sx={{ borderRadius: 2 }}
+            >
+              Reanudar servicio
+            </Button>
+          ) : null}
+          {canStartExecution ? (
+            <Button
+              variant='contained'
+              color='success'
+              startIcon={<CheckCircleOutlineOutlinedIcon />}
+              onClick={() => void handleStartExecution()}
+              disabled={isOperationalBusy}
+              disableElevation
+              sx={{ borderRadius: 2 }}
+            >
+              Iniciar ejecución
+            </Button>
+          ) : null}
+          {canCompleteExecution ? (
+            <Button
+              variant='contained'
+              color='secondary'
+              startIcon={<CheckCircleOutlineOutlinedIcon />}
+              onClick={() => void handleCompleteExecution()}
+              disabled={isOperationalBusy}
+              disableElevation
+              sx={{ borderRadius: 2 }}
+            >
+              Finalizar ejecución
+            </Button>
+          ) : null}
+          {canCreateCut ? (
+            <Button
+              variant='outlined'
+              color='primary'
+              startIcon={<DescriptionOutlinedIcon />}
+              onClick={() => setIsCutDialogOpen(true)}
+              disabled={isOperationalBusy}
+              sx={{ borderRadius: 2 }}
+            >
+              Crear corte
+            </Button>
+          ) : null}
+          {canCancelService ? (
+            <Button
+              variant='outlined'
+              color='error'
+              startIcon={<HighlightOffOutlinedIcon />}
+              onClick={() => setIsCancelDialogOpen(true)}
+              disabled={isOperationalBusy}
+              sx={{ borderRadius: 2 }}
+            >
+              Cancelar servicio
+            </Button>
+          ) : null}
+          {canCloseService ? (
+            <Button
+              variant='contained'
+              color='inherit'
+              startIcon={<CheckCircleOutlineOutlinedIcon />}
+              onClick={() => setIsCloseDialogOpen(true)}
+              disabled={isOperationalBusy}
+              disableElevation
+              sx={{ borderRadius: 2 }}
+            >
+              Cerrar servicio
+            </Button>
+          ) : null}
+          {canEdit ? (
+            <Button
+              variant='contained'
+              color='primary'
+              startIcon={<EditOutlinedIcon />}
+              onClick={() =>
+                navigate(`/calibration-services/${service.id}/edit`)
+              }
+              disableElevation
+              sx={{ borderRadius: 2 }}
+            >
+              Editar servicio
+            </Button>
+          ) : null}
+        </Box>
       </Stack>
 
       {canManageSequenceConfig && sequenceConfig && !sequenceConfig.initialized ? (
