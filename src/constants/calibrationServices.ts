@@ -64,12 +64,32 @@ export const CALIBRATION_SERVICE_SCHEDULE_ROLES = [
   'comp_supervisor'
 ] as const
 
+export const CALIBRATION_SERVICE_REPROGRAM_ROLES =
+  CALIBRATION_SERVICE_SCHEDULE_ROLES
+
+export const CALIBRATION_SERVICE_REASSIGN_ROLES =
+  CALIBRATION_SERVICE_SCHEDULE_ROLES
+
 export const CALIBRATION_SERVICE_EXECUTION_ROLES = [
   'admin',
   'super_admin',
   'comp_admin',
   'comp_supervisor',
   'metrologist'
+] as const
+
+export const CALIBRATION_SERVICE_PAUSE_ROLES =
+  CALIBRATION_SERVICE_EXECUTION_ROLES
+
+export const CALIBRATION_SERVICE_PHYSICAL_TRACEABILITY_ROLES =
+  CALIBRATION_SERVICE_EXECUTION_ROLES
+
+export const CALIBRATION_SERVICE_CANCEL_ROLES = [
+  'admin',
+  'super_admin',
+  'comp_admin',
+  'comp_requester',
+  'comp_supervisor'
 ] as const
 
 export const CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES =
@@ -122,6 +142,7 @@ string
   scheduled: 'Programada',
   in_execution: 'En ejecución',
   technically_completed: 'Finalizada técnicamente',
+  cancelled: 'Cancelado',
   closed: 'Cerrado'
 }
 
@@ -147,6 +168,7 @@ export const CALIBRATION_SERVICE_STATUS_COLORS: Record<
   scheduled: 'primary',
   in_execution: 'success',
   technically_completed: 'info',
+  cancelled: 'error',
   closed: 'default'
 }
 

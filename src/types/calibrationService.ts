@@ -8,6 +8,7 @@ export type CalibrationServiceStatus =
   | 'scheduled'
   | 'in_execution'
   | 'technically_completed'
+  | 'cancelled'
   | 'closed'
 
 export type CalibrationServiceApprovalStatus =
@@ -170,6 +171,21 @@ export interface CalibrationServiceOperationsSummary {
   startedAt?: string | null
   executionNotes?: string | null
   lastOperationalUpdateAt?: string | null
+  lastReprogrammingReason?: string | null
+  cancelledAt?: string | null
+  cancellationReason?: string | null
+}
+
+export interface CalibrationServicePhysicalTraceabilityEntry {
+  id: string
+  movementType: 'pickup' | 'delivery'
+  occurredAt: string
+  contactName: string
+  contactRole?: string | null
+  location?: string | null
+  notes?: string | null
+  recordedByUserId?: number | null
+  recordedByName?: string | null
 }
 
 export interface CalibrationServiceDocument {
@@ -497,6 +513,52 @@ export interface CalibrationServiceSchedulePayload {
   operationalResponsibleRole?: string | null
   programmingNotes?: string | null
   scheduledAt?: string
+}
+
+export interface CalibrationServiceReschedulePayload {
+  serviceId: string
+  commitmentDate: string
+  scheduledDate: string
+  reprogrammingReason: string
+  programmingNotes?: string | null
+  rescheduledAt?: string
+}
+
+export interface CalibrationServiceReassignPayload {
+  serviceId: string
+  assignedMetrologistUserId: number
+  reassignmentReason: string
+  operationalResponsibleName?: string | null
+  operationalResponsibleRole?: string | null
+  effectiveAt?: string
+}
+
+export interface CalibrationServicePausePayload {
+  serviceId: string
+  pauseReason: string
+  pausedAt?: string
+}
+
+export interface CalibrationServiceResumePayload {
+  serviceId: string
+  resumeNotes?: string | null
+  resumedAt?: string
+}
+
+export interface CalibrationServiceCancelPayload {
+  serviceId: string
+  cancellationReason: string
+  cancelledAt?: string
+}
+
+export interface CalibrationServicePhysicalTraceabilityPayload {
+  serviceId: string
+  movementType: 'pickup' | 'delivery'
+  occurredAt?: string
+  contactName: string
+  contactRole?: string | null
+  location?: string | null
+  notes?: string | null
 }
 
 export interface CalibrationServiceStartExecutionPayload {

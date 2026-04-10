@@ -41,6 +41,7 @@ import {
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
   CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES,
+  CALIBRATION_SERVICE_CANCEL_ROLES,
   CALIBRATION_SERVICE_CLOSE_ROLES,
   CALIBRATION_SERVICE_DOCUMENT_CONTROL_ROLES,
   CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES,
@@ -48,6 +49,10 @@ import {
   CALIBRATION_SERVICE_EXECUTION_ROLES,
   CALIBRATION_SERVICE_INVOICING_ROLES,
   CALIBRATION_SERVICE_ODS_ROLES,
+  CALIBRATION_SERVICE_PAUSE_ROLES,
+  CALIBRATION_SERVICE_PHYSICAL_TRACEABILITY_ROLES,
+  CALIBRATION_SERVICE_REASSIGN_ROLES,
+  CALIBRATION_SERVICE_REPROGRAM_ROLES,
   CALIBRATION_SERVICE_SCHEDULE_ROLES,
   CALIBRATION_SERVICE_SLA_COLORS,
   CALIBRATION_SERVICE_STATUS_COLORS,
@@ -64,7 +69,8 @@ import {
   CalibrationServiceAdjustment,
   CalibrationServiceCut,
   CalibrationServiceCustomerResponseType,
-  CalibrationServiceItemProgressEntryPayload
+  CalibrationServiceItemProgressEntryPayload,
+  CalibrationServicePhysicalTraceabilityEntry
 } from '../../types/calibrationService'
 import { useHasRole } from '../../utils/functions'
 import CalibrationServiceAdjustmentDialog from './CalibrationServiceAdjustmentDialog'
@@ -90,6 +96,19 @@ import CalibrationServiceTimeline from './CalibrationServiceTimeline'
 import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
 import CalibrationServiceGuidePanel from './CalibrationServiceGuidePanel'
 import CalibrationServiceStageDecisionHelp from './CalibrationServiceStageDecisionHelp'
+import CalibrationServiceRescheduleDialog, {
+  CalibrationServiceRescheduleDialogValues
+} from './CalibrationServiceRescheduleDialog'
+import CalibrationServiceReassignDialog, {
+  CalibrationServiceReassignDialogValues
+} from './CalibrationServiceReassignDialog'
+import CalibrationServicePauseDialog, {
+  CalibrationServicePauseDialogValues
+} from './CalibrationServicePauseDialog'
+import CalibrationServicePhysicalTraceabilityDialog, {
+  CalibrationServicePhysicalTraceabilityDialogValues
+} from './CalibrationServicePhysicalTraceabilityDialog'
+import CalibrationServiceLogisticsPanel from './CalibrationServiceLogisticsPanel'
 
 type DetailTab =
   | 'summary'
@@ -98,6 +117,7 @@ type DetailTab =
   | 'adjustments'
   | 'cuts'
   | 'documents'
+  | 'logistics'
   | 'guide'
   | 'history'
 
@@ -108,6 +128,7 @@ const detailTabs: readonly DetailTab[] = [
   'adjustments',
   'cuts',
   'documents',
+  'logistics',
   'guide',
   'history'
 ]
@@ -187,6 +208,15 @@ const getOperationsDetails = (
 ) => {
   const value = otherFields?.operations
   return value && typeof value === 'object' && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : undefined
+}
+
+const getLogisticsDetails = (
+  otherFields: Record<string, unknown> | undefined
+) => {
+  const value = otherFields?.logistics
+  return value && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : undefined
 }
@@ -226,10 +256,16 @@ const CalibrationServiceDetailsPage = () => {
     uploadDocument,
     issueOds,
     scheduleService,
+    rescheduleService,
+    reassignService,
+    pauseService,
+    resumeService,
+    cancelService,
     startExecution,
     completeExecution,
     closeService,
     updateItemProgress,
+    registerPhysicalTraceability,
     createCut,
     createAdjustment,
     reviewAdjustment,
@@ -247,6 +283,13 @@ const CalibrationServiceDetailsPage = () => {
     useState<CalibrationServiceDecisionMode | null>(null)
   const [isOdsDialogOpen, setIsOdsDialogOpen] = useState(false)
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false)
+  const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false)
+  const [isReassignDialogOpen, setIsReassignDialogOpen] = useState(false)
+  const [isPauseDialogOpen, setIsPauseDialogOpen] = useState(false)
+  const [isResumeDialogOpen, setIsResumeDialogOpen] = useState(false)
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
+  const [isPhysicalTraceabilityDialogOpen, setIsPhysicalTraceabilityDialogOpen] =
+    useState(false)
   const [isCutDialogOpen, setIsCutDialogOpen] = useState(false)
   const [isAdjustmentDialogOpen, setIsAdjustmentDialogOpen] = useState(false)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
@@ -264,7 +307,18 @@ const CalibrationServiceDetailsPage = () => {
   const canTakeApprovalDecision = useHasRole([...CALIBRATION_SERVICE_APPROVAL_ROLES])
   const canIssueOdsRole = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
   const canScheduleServiceRole = useHasRole([...CALIBRATION_SERVICE_SCHEDULE_ROLES])
+  const canReprogramServiceRole = useHasRole([
+    ...CALIBRATION_SERVICE_REPROGRAM_ROLES
+  ])
+  const canReassignServiceRole = useHasRole([
+    ...CALIBRATION_SERVICE_REASSIGN_ROLES
+  ])
   const canRunExecutionRole = useHasRole([...CALIBRATION_SERVICE_EXECUTION_ROLES])
+  const canPauseServiceRole = useHasRole([...CALIBRATION_SERVICE_PAUSE_ROLES])
+  const canCancelServiceRole = useHasRole([...CALIBRATION_SERVICE_CANCEL_ROLES])
+  const canRegisterPhysicalTraceabilityRole = useHasRole([
+    ...CALIBRATION_SERVICE_PHYSICAL_TRACEABILITY_ROLES
+  ])
   const canReportAdjustmentRole = useHasRole([
     ...CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES
   ])
@@ -297,9 +351,42 @@ const CalibrationServiceDetailsPage = () => {
     Boolean(sequenceConfig?.initialized)
   const canScheduleService =
     canScheduleServiceRole &&
+    !service?.isPaused &&
+    service?.status !== 'cancelled' &&
     ['ods_issued', 'pending_programming'].includes(service?.status || '')
+  const canReprogramService =
+    canReprogramServiceRole &&
+    !service?.isPaused &&
+    service?.status === 'scheduled'
+  const canReassignService =
+    canReassignServiceRole &&
+    service?.status !== 'cancelled' &&
+    ['scheduled', 'in_execution', 'technically_completed'].includes(
+      service?.status || ''
+    )
+  const canPauseService =
+    canPauseServiceRole &&
+    !service?.isPaused &&
+    service?.status !== 'cancelled' &&
+    ['ods_issued', 'pending_programming', 'scheduled', 'in_execution', 'technically_completed'].includes(
+      service?.status || ''
+    )
+  const canResumeService =
+    canPauseServiceRole &&
+    Boolean(service?.isPaused) &&
+    service?.status !== 'cancelled' &&
+    ['ods_issued', 'pending_programming', 'scheduled', 'in_execution', 'technically_completed'].includes(
+      service?.status || ''
+    )
+  const canCancelService =
+    canCancelServiceRole &&
+    service?.status !== 'cancelled' &&
+    service?.status !== 'closed' &&
+    ['draft', 'pending_approval', 'approved', 'ods_issued', 'pending_programming', 'scheduled', 'in_execution', 'technically_completed'].includes(
+      service?.status || ''
+    )
   const canStartExecution =
-    canRunExecutionRole && service?.status === 'scheduled'
+    canRunExecutionRole && !service?.isPaused && service?.status === 'scheduled'
   const allItemsOperationallyCompleted = (service?.items || []).every((item) => {
     const status = item.otherFields?.operationalStatus
     return status === 'completed'
@@ -317,21 +404,36 @@ const CalibrationServiceDetailsPage = () => {
     allItemsOperationallyCompleted
   const canCreateCut =
     canRunExecutionRole &&
+    !service?.isPaused &&
     ['in_execution', 'technically_completed'].includes(service?.status || '') &&
     hasReleasableItems
   const canMarkCutReady =
     canRunExecutionRole &&
+    !service?.isPaused &&
     ['in_execution', 'technically_completed'].includes(service?.status || '')
   const canReportAdjustment =
     canReportAdjustmentRole &&
+    !service?.isPaused &&
     ['in_execution', 'technically_completed'].includes(service?.status || '')
   const canReviewAdjustment = canReviewAdjustmentRole
   const canUpdateOperationalProgress =
     canRunExecutionRole &&
+    !service?.isPaused &&
     ['scheduled', 'in_execution'].includes(service?.status || '')
-  const canInvoiceCuts = canInvoiceCutRole
+  const canInvoiceCuts =
+    canInvoiceCutRole && !service?.isPaused && service?.status !== 'cancelled'
   const canUpdateDocumentControl =
-    canUpdateDocumentControlRole && service?.status !== 'closed'
+    canUpdateDocumentControlRole &&
+    service?.status !== 'closed' &&
+    service?.status !== 'cancelled' &&
+    !service?.isPaused
+  const canRegisterPhysicalTraceability =
+    canRegisterPhysicalTraceabilityRole &&
+    service?.status !== 'cancelled' &&
+    service?.status !== 'closed' &&
+    ['ods_issued', 'pending_programming', 'scheduled', 'in_execution', 'technically_completed'].includes(
+      service?.status || ''
+    )
   const canStillRegisterAdjustmentsAfterTechnicalCompletion =
     service?.status === 'technically_completed' && canReportAdjustment
   const hasCuts = Boolean(service?.cuts?.length)
@@ -346,6 +448,7 @@ const CalibrationServiceDetailsPage = () => {
     service?.status === 'technically_completed' && !hasCuts
   const canCloseService =
     canCloseServiceRole &&
+    !service?.isPaused &&
     service?.status === 'technically_completed' &&
     allCutsSent
 
@@ -456,6 +559,7 @@ const CalibrationServiceDetailsPage = () => {
     service.executionCustomerName !== service.customer?.nombre
   const odsDetails = getOtherFieldRecord(service.otherFields, 'ods')
   const operationsDetails = getOperationsDetails(service.otherFields)
+  const logisticsDetails = getLogisticsDetails(service.otherFields)
   const odsScheduleWindow =
     typeof odsDetails?.scheduleWindow === 'string' ? odsDetails.scheduleWindow : ''
   const odsSignerName =
@@ -497,6 +601,11 @@ const CalibrationServiceDetailsPage = () => {
     typeof operationsDetails?.programmingNotes === 'string'
       ? operationsDetails.programmingNotes
       : ''
+  const logisticsHistory: CalibrationServicePhysicalTraceabilityEntry[] =
+    Array.isArray(logisticsDetails?.history)
+      ? ((logisticsDetails?.history ||
+          []) as CalibrationServicePhysicalTraceabilityEntry[])
+      : []
   const operationsCompletionNotes =
     typeof operationsDetails?.completionNotes === 'string'
       ? operationsDetails.completionNotes
@@ -557,9 +666,15 @@ const CalibrationServiceDetailsPage = () => {
   const isOdsLoading = issueOds.isLoading || generateOdsPdf.isLoading
   const isOperationalBusy =
     scheduleService.isLoading ||
+    rescheduleService.isLoading ||
+    reassignService.isLoading ||
+    pauseService.isLoading ||
+    resumeService.isLoading ||
+    cancelService.isLoading ||
     startExecution.isLoading ||
     completeExecution.isLoading ||
     updateItemProgress.isLoading ||
+    registerPhysicalTraceability.isLoading ||
     createCut.isLoading ||
     createAdjustment.isLoading ||
     reviewAdjustment.isLoading ||
@@ -644,6 +759,30 @@ const CalibrationServiceDetailsPage = () => {
     operationalResponsibleRole: operationsResponsibleRole,
     programmingNotes: operationsProgrammingNotes
   }
+  const rescheduleDialogInitialValues: CalibrationServiceRescheduleDialogValues = {
+    commitmentDate: operationsCommitmentDate
+      ? operationsCommitmentDate.slice(0, 10)
+      : '',
+    scheduledDate: operationsScheduledDate ? operationsScheduledDate.slice(0, 10) : '',
+    reprogrammingReason: '',
+    programmingNotes: operationsProgrammingNotes
+  }
+  const reassignDialogInitialValues: CalibrationServiceReassignDialogValues = {
+    assignedMetrologistUserId: operationsAssignedMetrologistUserId,
+    operationalResponsibleName: operationsResponsibleName,
+    operationalResponsibleRole: operationsResponsibleRole || 'Metrologo',
+    reassignmentReason: ''
+  }
+  const physicalTraceabilityInitialValues: CalibrationServicePhysicalTraceabilityDialogValues =
+    {
+      movementType: 'pickup',
+      occurredAt: new Date().toISOString().slice(0, 16),
+      contactName: service.contactName || '',
+      contactRole: '',
+      location:
+        service.executionSiteName || service.customerSite || service.address || '',
+      notes: ''
+    }
 
   const handleRequestApproval = async () => {
     try {
@@ -881,6 +1020,159 @@ const CalibrationServiceDetailsPage = () => {
     } catch (scheduleError) {
       console.error(scheduleError)
       toast.error('No pudimos guardar la programación del servicio.')
+    }
+  }
+
+  const handleRescheduleService = async (
+    values: CalibrationServiceRescheduleDialogValues
+  ) => {
+    try {
+      if (!values.commitmentDate || !values.scheduledDate) {
+        toast.error('Debes definir las nuevas fechas del servicio.')
+        return
+      }
+
+      if (!values.reprogrammingReason.trim()) {
+        toast.error('Indica el motivo de la reprogramación.')
+        return
+      }
+
+      await rescheduleService.mutateAsync({
+        serviceId: String(service.id),
+        commitmentDate: new Date(`${values.commitmentDate}T12:00:00`).toISOString(),
+        scheduledDate: new Date(`${values.scheduledDate}T12:00:00`).toISOString(),
+        reprogrammingReason: values.reprogrammingReason.trim(),
+        programmingNotes: values.programmingNotes.trim() || null,
+        rescheduledAt: new Date().toISOString()
+      })
+
+      toast.success('La reprogramación formal quedó registrada.')
+      setIsRescheduleDialogOpen(false)
+      setActiveTab('operations')
+    } catch (rescheduleError) {
+      console.error(rescheduleError)
+      toast.error('No pudimos registrar la reprogramación del servicio.')
+    }
+  }
+
+  const handleReassignService = async (
+    values: CalibrationServiceReassignDialogValues
+  ) => {
+    try {
+      const assignedMetrologistUserId = Number(values.assignedMetrologistUserId)
+
+      if (!Number.isInteger(assignedMetrologistUserId) || assignedMetrologistUserId <= 0) {
+        toast.error('Selecciona el nuevo metrólogo asignado.')
+        return
+      }
+
+      if (!values.reassignmentReason.trim()) {
+        toast.error('Indica el motivo de la reasignación.')
+        return
+      }
+
+      await reassignService.mutateAsync({
+        serviceId: String(service.id),
+        assignedMetrologistUserId,
+        reassignmentReason: values.reassignmentReason.trim(),
+        operationalResponsibleName: values.operationalResponsibleName.trim() || null,
+        operationalResponsibleRole: values.operationalResponsibleRole.trim() || null,
+        effectiveAt: new Date().toISOString()
+      })
+
+      toast.success('La reasignación quedó registrada.')
+      setIsReassignDialogOpen(false)
+      setActiveTab('operations')
+    } catch (reassignError) {
+      console.error(reassignError)
+      toast.error('No pudimos reasignar el metrólogo.')
+    }
+  }
+
+  const handlePauseService = async (values: CalibrationServicePauseDialogValues) => {
+    try {
+      if (!values.notes.trim()) {
+        toast.error('Indica el motivo de la pausa.')
+        return
+      }
+
+      await pauseService.mutateAsync({
+        serviceId: String(service.id),
+        pauseReason: values.notes.trim(),
+        pausedAt: new Date().toISOString()
+      })
+
+      toast.success('El servicio quedó pausado.')
+      setIsPauseDialogOpen(false)
+    } catch (pauseError) {
+      console.error(pauseError)
+      toast.error('No pudimos pausar el servicio.')
+    }
+  }
+
+  const handleResumeService = async (values: CalibrationServicePauseDialogValues) => {
+    try {
+      await resumeService.mutateAsync({
+        serviceId: String(service.id),
+        resumeNotes: values.notes.trim() || null,
+        resumedAt: new Date().toISOString()
+      })
+
+      toast.success('El servicio quedó reanudado.')
+      setIsResumeDialogOpen(false)
+    } catch (resumeError) {
+      console.error(resumeError)
+      toast.error('No pudimos reanudar el servicio.')
+    }
+  }
+
+  const handleCancelService = async (values: CalibrationServicePauseDialogValues) => {
+    try {
+      if (!values.notes.trim()) {
+        toast.error('Indica el motivo de la cancelación.')
+        return
+      }
+
+      await cancelService.mutateAsync({
+        serviceId: String(service.id),
+        cancellationReason: values.notes.trim(),
+        cancelledAt: new Date().toISOString()
+      })
+
+      toast.success('El servicio quedó cancelado formalmente.')
+      setIsCancelDialogOpen(false)
+      setActiveTab('summary')
+    } catch (cancelError) {
+      console.error(cancelError)
+      toast.error('No pudimos cancelar el servicio.')
+    }
+  }
+
+  const handleRegisterPhysicalTraceability = async (
+    values: CalibrationServicePhysicalTraceabilityDialogValues
+  ) => {
+    try {
+      if (!values.contactName.trim()) {
+        toast.error('Indica el contacto de la recogida o entrega.')
+        return
+      }
+
+      await registerPhysicalTraceability.mutateAsync({
+        serviceId: String(service.id),
+        movementType: values.movementType,
+        occurredAt: new Date(values.occurredAt).toISOString(),
+        contactName: values.contactName.trim(),
+        contactRole: values.contactRole.trim() || null,
+        location: values.location.trim() || null,
+        notes: values.notes.trim() || null
+      })
+
+      toast.success('La trazabilidad física quedó registrada.')
+      setIsPhysicalTraceabilityDialogOpen(false)
+      setActiveTab('logistics')
+    } catch (traceabilityError) {
+      console.error(traceabilityError)
+      toast.error('No pudimos registrar la trazabilidad física.')
     }
   }
 
@@ -1435,6 +1727,50 @@ const CalibrationServiceDetailsPage = () => {
               Programar servicio
             </Button>
           ) : null}
+          {canReprogramService ? (
+            <Button
+              variant='outlined'
+              color='primary'
+              startIcon={<AutorenewOutlinedIcon />}
+              onClick={() => setIsRescheduleDialogOpen(true)}
+              disabled={isOperationalBusy}
+            >
+              Reprogramar
+            </Button>
+          ) : null}
+          {canReassignService ? (
+            <Button
+              variant='outlined'
+              color='primary'
+              startIcon={<AutorenewOutlinedIcon />}
+              onClick={() => setIsReassignDialogOpen(true)}
+              disabled={isOperationalBusy}
+            >
+              Reasignar metrólogo
+            </Button>
+          ) : null}
+          {canPauseService ? (
+            <Button
+              variant='outlined'
+              color='warning'
+              startIcon={<WarningAmberOutlinedIcon />}
+              onClick={() => setIsPauseDialogOpen(true)}
+              disabled={isOperationalBusy}
+            >
+              Pausar servicio
+            </Button>
+          ) : null}
+          {canResumeService ? (
+            <Button
+              variant='contained'
+              color='warning'
+              startIcon={<AutorenewOutlinedIcon />}
+              onClick={() => setIsResumeDialogOpen(true)}
+              disabled={isOperationalBusy}
+            >
+              Reanudar servicio
+            </Button>
+          ) : null}
           {canStartExecution ? (
             <Button
               variant='contained'
@@ -1468,6 +1804,17 @@ const CalibrationServiceDetailsPage = () => {
               Crear corte
             </Button>
           ) : null}
+          {canCancelService ? (
+            <Button
+              variant='outlined'
+              color='error'
+              startIcon={<HighlightOffOutlinedIcon />}
+              onClick={() => setIsCancelDialogOpen(true)}
+              disabled={isOperationalBusy}
+            >
+              Cancelar servicio
+            </Button>
+          ) : null}
           {canCloseService ? (
             <Button
               variant='contained'
@@ -1495,6 +1842,9 @@ const CalibrationServiceDetailsPage = () => {
               color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]}
               label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]}
             />
+            {service.isPaused ? (
+              <Chip color='warning' variant='outlined' label='Pausado' />
+            ) : null}
             {!isTechnicalOnlyView ? (
               <Chip
                 color={
@@ -1620,6 +1970,7 @@ const CalibrationServiceDetailsPage = () => {
                   label={`Documentos (${service.documents?.length || 0})`}
                   value='documents'
                 />
+                <Tab label='Logística' value='logistics' />
                 <Tab
                   label={`Historial (${service.events?.length || 0})`}
                   value='history'
@@ -1628,6 +1979,18 @@ const CalibrationServiceDetailsPage = () => {
               </Tabs>
 
               <DetailTabPanel value={activeTab} tab='summary'>
+                {service.status === 'cancelled' ? (
+                  <Alert severity='error' sx={{ mb: 2 }}>
+                    Este servicio fue <strong>cancelado formalmente</strong> y quedó fuera del
+                    flujo operativo.
+                  </Alert>
+                ) : null}
+                {service.isPaused ? (
+                  <Alert severity='warning' sx={{ mb: 2 }}>
+                    El servicio se encuentra <strong>pausado</strong>. Antes de continuar con
+                    ejecución, cortes, facturación o control documental debes reanudarlo.
+                  </Alert>
+                ) : null}
                 {!isTechnicalOnlyView && customerResponseType === 'changes_requested' ? (
                   <Alert severity='warning' sx={{ mb: 2 }}>
                     El cliente pidió modificar la cotización. El servicio volvió a edición para
@@ -2049,6 +2412,15 @@ const CalibrationServiceDetailsPage = () => {
                 />
               </DetailTabPanel>
 
+              <DetailTabPanel value={activeTab} tab='logistics'>
+                <CalibrationServiceLogisticsPanel
+                  entries={logisticsHistory}
+                  canRegister={canRegisterPhysicalTraceability}
+                  isBusy={isOperationalBusy}
+                  onRegister={() => setIsPhysicalTraceabilityDialogOpen(true)}
+                />
+              </DetailTabPanel>
+
               <DetailTabPanel value={activeTab} tab='guide'>
                 <CalibrationServiceGuidePanel />
               </DetailTabPanel>
@@ -2158,6 +2530,76 @@ const CalibrationServiceDetailsPage = () => {
         isLoading={isOperationalBusy}
         onClose={() => setIsScheduleDialogOpen(false)}
         onSubmit={handleScheduleService}
+        />
+      ) : null}
+      {isRescheduleDialogOpen ? (
+        <CalibrationServiceRescheduleDialog
+          open={isRescheduleDialogOpen}
+          serviceCode={service.serviceCode}
+          initialValues={rescheduleDialogInitialValues}
+          isLoading={isOperationalBusy}
+          onClose={() => setIsRescheduleDialogOpen(false)}
+          onSubmit={handleRescheduleService}
+        />
+      ) : null}
+      {isReassignDialogOpen ? (
+        <CalibrationServiceReassignDialog
+          open={isReassignDialogOpen}
+          serviceCode={service.serviceCode}
+          initialValues={reassignDialogInitialValues}
+          metrologists={assignableMetrologists}
+          isLoading={isOperationalBusy}
+          onClose={() => setIsReassignDialogOpen(false)}
+          onSubmit={handleReassignService}
+        />
+      ) : null}
+      {isPauseDialogOpen ? (
+        <CalibrationServicePauseDialog
+          open={isPauseDialogOpen}
+          title='Pausar servicio'
+          subtitle='La pausa detiene el avance operativo y administrativo hasta que el servicio sea reanudado.'
+          fieldLabel='Motivo de pausa o suspensión'
+          actionLabel='Pausar'
+          initialValues={{ notes: service.pauseReason || '' }}
+          isLoading={isOperationalBusy}
+          onClose={() => setIsPauseDialogOpen(false)}
+          onSubmit={handlePauseService}
+        />
+      ) : null}
+      {isResumeDialogOpen ? (
+        <CalibrationServicePauseDialog
+          open={isResumeDialogOpen}
+          title='Reanudar servicio'
+          subtitle='Registra por qué el servicio vuelve al flujo activo y retoma su seguimiento.'
+          fieldLabel='Observación de reanudación'
+          actionLabel='Reanudar'
+          initialValues={{ notes: '' }}
+          isLoading={isOperationalBusy}
+          onClose={() => setIsResumeDialogOpen(false)}
+          onSubmit={handleResumeService}
+        />
+      ) : null}
+      {isCancelDialogOpen ? (
+        <CalibrationServicePauseDialog
+          open={isCancelDialogOpen}
+          title='Cancelar servicio'
+          subtitle='La cancelación formal saca el servicio del flujo. Úsala cuando el caso ya no vaya a ejecutarse.'
+          fieldLabel='Motivo de cancelación'
+          actionLabel='Cancelar servicio'
+          initialValues={{ notes: '' }}
+          isLoading={isOperationalBusy}
+          onClose={() => setIsCancelDialogOpen(false)}
+          onSubmit={handleCancelService}
+        />
+      ) : null}
+      {isPhysicalTraceabilityDialogOpen ? (
+        <CalibrationServicePhysicalTraceabilityDialog
+          open={isPhysicalTraceabilityDialogOpen}
+          serviceCode={service.serviceCode}
+          initialValues={physicalTraceabilityInitialValues}
+          isLoading={isOperationalBusy}
+          onClose={() => setIsPhysicalTraceabilityDialogOpen(false)}
+          onSubmit={handleRegisterPhysicalTraceability}
         />
       ) : null}
       {isCutDialogOpen ? (

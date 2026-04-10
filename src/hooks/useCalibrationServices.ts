@@ -3,6 +3,7 @@ import { axiosPrivate } from '@utils/api'
 import {
   CalibrationServiceApprovePayload,
   CalibrationService,
+  CalibrationServiceCancelPayload,
   CalibrationServiceClosePayload,
   CalibrationServiceCreateAdjustmentPayload,
   CalibrationServiceCreateCutPayload,
@@ -16,11 +17,16 @@ import {
   CalibrationServiceListResponse,
   CalibrationServiceMarkCutReadyPayload,
   CalibrationServicePayload,
+  CalibrationServicePausePayload,
+  CalibrationServicePhysicalTraceabilityPayload,
+  CalibrationServiceReassignPayload,
+  CalibrationServiceReschedulePayload,
   CalibrationServiceUpdateCutDocumentControlPayload,
   CalibrationServiceReviewAdjustmentPayload,
   CalibrationServiceRequestChangesPayload,
   CalibrationServiceRejectPayload,
   CalibrationServiceRequestApprovalPayload,
+  CalibrationServiceResumePayload,
   CalibrationServiceSchedulePayload,
   CalibrationServiceSequenceConfig,
   CalibrationServiceSequenceConfigPayload,
@@ -194,6 +200,61 @@ const calibrationServiceApi = {
     return response.data
   },
 
+  rescheduleService: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServiceReschedulePayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/reschedule`,
+      payload
+    )
+    return response.data
+  },
+
+  reassignService: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServiceReassignPayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/reassign`,
+      payload
+    )
+    return response.data
+  },
+
+  pauseService: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServicePausePayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/pause`,
+      payload
+    )
+    return response.data
+  },
+
+  resumeService: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServiceResumePayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/resume`,
+      payload
+    )
+    return response.data
+  },
+
+  cancelService: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServiceCancelPayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/cancel`,
+      payload
+    )
+    return response.data
+  },
+
   startExecution: async ({
     serviceId,
     ...payload
@@ -237,6 +298,17 @@ const calibrationServiceApi = {
   }: CalibrationServiceItemProgressPayload): Promise<CalibrationService> => {
     const response = await axiosPrivate.put<CalibrationService>(
       `/calibration-services/${serviceId}/item-progress`,
+      payload
+    )
+    return response.data
+  },
+
+  registerPhysicalTraceability: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServicePhysicalTraceabilityPayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/physical-traceability`,
       payload
     )
     return response.data
@@ -501,6 +573,56 @@ export const useCalibrationServiceMutations = () => {
     }
   })
 
+  const rescheduleService = useMutation(calibrationServiceApi.rescheduleService, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
+  const reassignService = useMutation(calibrationServiceApi.reassignService, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
+  const pauseService = useMutation(calibrationServiceApi.pauseService, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
+  const resumeService = useMutation(calibrationServiceApi.resumeService, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
+  const cancelService = useMutation(calibrationServiceApi.cancelService, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
   const startExecution = useMutation(calibrationServiceApi.startExecution, {
     onSuccess: (service) => {
       queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
@@ -536,6 +658,19 @@ export const useCalibrationServiceMutations = () => {
 
   const updateItemProgress = useMutation(
     calibrationServiceApi.updateItemProgress,
+    {
+      onSuccess: (service) => {
+        queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+        queryClient.invalidateQueries([
+          CALIBRATION_SERVICE_QUERY_KEYS.detail,
+          String(service.id)
+        ])
+      }
+    }
+  )
+
+  const registerPhysicalTraceability = useMutation(
+    calibrationServiceApi.registerPhysicalTraceability,
     {
       onSuccess: (service) => {
         queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
@@ -679,10 +814,16 @@ export const useCalibrationServiceMutations = () => {
     requestChanges,
     issueOds,
     scheduleService,
+    rescheduleService,
+    reassignService,
+    pauseService,
+    resumeService,
+    cancelService,
     startExecution,
     completeExecution,
     closeService,
     updateItemProgress,
+    registerPhysicalTraceability,
     createCut,
     createAdjustment,
     reviewAdjustment,
