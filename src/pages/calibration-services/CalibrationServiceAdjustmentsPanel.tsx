@@ -31,6 +31,8 @@ interface CalibrationServiceAdjustmentsPanelProps {
   isBusy?: boolean
   onCreate: () => void
   onReview: (adjustment: CalibrationServiceAdjustment) => void
+  onSendToCustomer?: (adjustment: CalibrationServiceAdjustment) => void
+  onRegisterCustomerResponse?: (adjustment: CalibrationServiceAdjustment) => void
   onGenerateDocument?: (adjustment: CalibrationServiceAdjustment) => void
   onGenerateSummaryDocument?: () => void
 }
@@ -60,6 +62,8 @@ const CalibrationServiceAdjustmentsPanel = ({
   isBusy = false,
   onCreate,
   onReview,
+  onSendToCustomer,
+  onRegisterCustomerResponse,
   onGenerateDocument,
   onGenerateSummaryDocument
 }: CalibrationServiceAdjustmentsPanelProps) => {
@@ -69,7 +73,10 @@ const CalibrationServiceAdjustmentsPanel = ({
   )
   const pendingCommercialAdjustments = adjustments.filter(
     (adjustment) =>
-      adjustment.requiresCommercialAdjustment && adjustment.status === 'reported'
+      adjustment.requiresCommercialAdjustment &&
+      ['reported', 'pending_customer_approval', 'customer_changes_requested'].includes(
+        adjustment.status
+      )
   )
 
   return (
@@ -80,6 +87,12 @@ const CalibrationServiceAdjustmentsPanel = ({
           Mientras sigan reportadas, el corte no podrá quedar listo para facturar.
         </Alert>
       ) : null}
+
+      <Alert severity='info'>
+        Las novedades registradas dejan trazabilidad de lo ocurrido en operación, pero no
+        modifican el servicio formal ni los valores administrativos hasta completar la
+        validación comercial y, si aplica, la aprobación del cliente.
+      </Alert>
 
       <Stack direction={{ xs: 'column', md: 'row' }} justifyContent='space-between' alignItems={{ xs: 'flex-start', md: 'center' }} spacing={2}>
         <Box>
@@ -140,15 +153,26 @@ const CalibrationServiceAdjustmentsPanel = ({
                   <TableCell align='right'>{adjustment.actualQuantity}</TableCell>
                   <TableCell align='right'>{adjustment.differenceQuantity}</TableCell>
                   <TableCell>
-                    <Chip
-                      size='small'
-                      color={
-                        CALIBRATION_SERVICE_ADJUSTMENT_STATUS_COLORS[adjustment.status]
-                      }
-                      label={
-                        CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS[adjustment.status]
-                      }
-                    />
+                    <Stack spacing={0.5}>
+                      <Box>
+                        <Chip
+                          size='small'
+                          color={
+                            CALIBRATION_SERVICE_ADJUSTMENT_STATUS_COLORS[adjustment.status]
+                          }
+                          label={
+                            CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS[adjustment.status]
+                          }
+                        />
+                      </Box>
+                      {['reported', 'pending_customer_approval', 'customer_changes_requested'].includes(
+                        adjustment.status
+                      ) ? (
+                        <Typography variant='caption' color='text.secondary'>
+                          Aún no modifica el servicio formal.
+                        </Typography>
+                      ) : null}
+                    </Stack>
                   </TableCell>
                   <TableCell>
                     {adjustment.requiresCommercialAdjustment ? 'Sí' : 'No'}
@@ -183,6 +207,41 @@ const CalibrationServiceAdjustmentsPanel = ({
                           Revisar
                         </Button>
                       ) : null}
+                      {canReview &&
+                      adjustment.status === 'customer_changes_requested' ? (
+                        <Button
+                          size='small'
+                          variant='outlined'
+                          onClick={() => onReview(adjustment)}
+                          disabled={isBusy}
+                        >
+                          Replantear
+                        </Button>
+                      ) : null}
+                      {canReview &&
+                      onSendToCustomer &&
+                      adjustment.status === 'pending_customer_approval' ? (
+                        <Button
+                          size='small'
+                          variant='outlined'
+                          onClick={() => onSendToCustomer(adjustment)}
+                          disabled={isBusy}
+                        >
+                          Enviar al cliente
+                        </Button>
+                      ) : null}
+                      {canReview &&
+                      onRegisterCustomerResponse &&
+                      adjustment.status === 'pending_customer_approval' ? (
+                        <Button
+                          size='small'
+                          variant='text'
+                          onClick={() => onRegisterCustomerResponse(adjustment)}
+                          disabled={isBusy}
+                        >
+                          Registrar respuesta
+                        </Button>
+                      ) : null}
                       {canGenerateDocument &&
                       onGenerateDocument &&
                       adjustment.status === 'approved' ? (
@@ -197,6 +256,14 @@ const CalibrationServiceAdjustmentsPanel = ({
                       ) : null}
                       {!(
                         (canReview && adjustment.status === 'reported') ||
+                        (canReview &&
+                          adjustment.status === 'customer_changes_requested') ||
+                        (canReview &&
+                          onSendToCustomer &&
+                          adjustment.status === 'pending_customer_approval') ||
+                        (canReview &&
+                          onRegisterCustomerResponse &&
+                          adjustment.status === 'pending_customer_approval') ||
                         (canGenerateDocument &&
                           onGenerateDocument &&
                           adjustment.status === 'approved')

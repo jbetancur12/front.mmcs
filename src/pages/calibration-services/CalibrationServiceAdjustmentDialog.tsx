@@ -115,6 +115,22 @@ const CalibrationServiceAdjustmentDialog = ({
   }, [completedItems, serviceItemId, changeType])
 
   const isExtraItem = changeType === 'extra_item'
+  const isQuantityMore = changeType === 'quantity_more'
+  const isQuantityLess = changeType === 'quantity_less'
+  const actualQuantityLabel = isExtraItem
+    ? 'Cantidad real'
+    : isQuantityMore
+      ? 'Cantidad real total'
+      : isQuantityLess
+        ? 'Cantidad recibida / ejecutada'
+        : 'Cantidad real'
+  const actualQuantityHelperText = isExtraItem
+    ? 'Indica cuántas unidades nuevas aparecieron para este ítem no cotizado.'
+    : isQuantityMore
+      ? 'Escribe la cantidad total real. Ejemplo: si cotizaste 1 y llegaron 3, aquí va 3.'
+      : isQuantityLess
+        ? 'Escribe la cantidad total realmente recibida o ejecutada.'
+        : 'Indica la cantidad real total del ítem.'
   const selectedBatchItems = selectedItems.filter((item) => item.selected)
   const canSubmit =
     description.trim().length >= 5 &&
@@ -235,7 +251,9 @@ const CalibrationServiceAdjustmentDialog = ({
               <Grid item xs={12} md={6}>
                 <Typography variant='body2' color='text.secondary' sx={{ pt: 1 }}>
                   Puedes seleccionar varios ítems del mismo tipo de novedad. El sistema
-                  guardará una novedad por ítem para mantener trazabilidad.
+                  guardará una novedad por ítem para mantener trazabilidad. Para
+                  cantidades mayores o menores, escribe la cantidad real total de cada
+                  ítem, no solo la diferencia.
                 </Typography>
               </Grid>
             )}
@@ -271,10 +289,11 @@ const CalibrationServiceAdjustmentDialog = ({
                   <TextField
                     fullWidth
                     type='number'
-                    label='Real'
+                    label={actualQuantityLabel}
                     value={actualQuantity}
                     onChange={(event) => setActualQuantity(event.target.value)}
                     inputProps={{ min: 0 }}
+                    helperText={actualQuantityHelperText}
                   />
                 </Grid>
               </>
@@ -309,11 +328,16 @@ const CalibrationServiceAdjustmentDialog = ({
                           <TextField
                             fullWidth
                             type='number'
-                            label='Cantidad real'
+                            label={actualQuantityLabel}
                             value={item.actualQuantity}
                             onChange={handleSelectedItemActualQuantity(item.serviceItemId)}
                             inputProps={{ min: 0 }}
                             disabled={!item.selected}
+                            helperText={
+                              item.selected
+                                ? `Se comparará contra ${item.quotedQuantity} cotizada(s).`
+                                : 'Selecciona el ítem para registrar la novedad.'
+                            }
                           />
                         </Grid>
                       </Grid>

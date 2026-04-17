@@ -19,12 +19,14 @@ import {
 } from '@mui/icons-material'
 import { Box, Chip, Stack, Typography } from '@mui/material'
 import {
+  CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
   CALIBRATION_SERVICE_EVENT_COLORS,
   CALIBRATION_SERVICE_EVENT_LABELS,
   CALIBRATION_SERVICE_STATUS_LABELS
 } from '../../constants/calibrationServices'
 import {
+  CalibrationServiceAdjustmentStatus,
   CalibrationServiceApprovalStatus,
   CalibrationServiceEvent,
   CalibrationServiceEventType,
@@ -99,6 +101,10 @@ const formatStateValue = (value?: string | null) => {
 
   if (value in CALIBRATION_SERVICE_APPROVAL_LABELS) {
     return CALIBRATION_SERVICE_APPROVAL_LABELS[value as CalibrationServiceApprovalStatus]
+  }
+
+  if (value in CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS) {
+    return CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS[value as CalibrationServiceAdjustmentStatus]
   }
 
   return value

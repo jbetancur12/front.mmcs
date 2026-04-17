@@ -31,8 +31,11 @@ export type CalibrationServiceAdjustmentType =
 
 export type CalibrationServiceAdjustmentStatus =
   | 'reported'
+  | 'pending_customer_approval'
   | 'approved'
   | 'rejected'
+  | 'customer_rejected'
+  | 'customer_changes_requested'
   | 'applied_to_cut'
 
 export type CalibrationServiceScopeType = 'general' | 'site'
@@ -86,6 +89,7 @@ export type CalibrationServiceDocumentType =
   | 'ods_pdf'
   | 'adjustment_pdf'
   | 'adjustment_summary_pdf'
+  | 'adjustment_customer_response_pdf'
   | 'logistics_control_pdf'
   | 'invoice_attachment'
   | 'supporting_attachment'
@@ -714,7 +718,44 @@ export interface CalibrationServiceReviewAdjustmentPayload {
   approvedTotal?: number | null
   useQuotedPrice?: boolean
   applyDiscount?: boolean
+  customerApprovalRequired?: boolean
   reviewedAt?: string
+}
+
+export interface CalibrationServiceSendAdjustmentToCustomerPayload {
+  serviceId: string
+  adjustmentId: string
+  recipientEmail?: string | null
+  recipientName?: string | null
+  sentAt?: string
+  deadlineAt?: string
+}
+
+export interface CalibrationServiceRespondAdjustmentPayload {
+  serviceId: string
+  adjustmentId: string
+  decision: 'approved' | 'rejected' | 'changes_requested'
+  responseChannel?: string | null
+  responseReference?: string | null
+  notes?: string | null
+  evidenceDocumentId?: number | null
+  respondedAt?: string
+}
+
+export interface CalibrationServiceAdjustmentSendResult {
+  service: CalibrationService
+  delivery: {
+    intendedRecipient?: string | null
+    requestedRecipient?: string | null
+    actualRecipient?: string | null
+    isDevOverride: boolean
+  }
+}
+
+export interface CalibrationServiceSendPreviewResult {
+  intendedRecipient?: string | null
+  actualRecipient?: string | null
+  isDevOverride: boolean
 }
 
 export interface CalibrationServiceMarkCutReadyPayload {

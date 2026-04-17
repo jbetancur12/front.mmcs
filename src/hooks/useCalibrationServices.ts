@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { axiosPrivate } from '@utils/api'
 import {
   CalibrationServiceApprovePayload,
+  CalibrationServiceAdjustmentSendResult,
   CalibrationService,
   CalibrationServiceCancelPayload,
   CalibrationServiceClosePayload,
@@ -24,9 +25,11 @@ import {
   CalibrationServiceUpdateLogisticsControlPayload,
   CalibrationServiceUpdateCutDocumentControlPayload,
   CalibrationServiceReviewAdjustmentPayload,
+  CalibrationServiceRespondAdjustmentPayload,
   CalibrationServiceRequestChangesPayload,
   CalibrationServiceRejectPayload,
   CalibrationServiceRequestApprovalPayload,
+  CalibrationServiceSendAdjustmentToCustomerPayload,
   CalibrationServiceResumePayload,
   CalibrationServiceSchedulePayload,
   CalibrationServiceSequenceConfig,
@@ -355,6 +358,30 @@ const calibrationServiceApi = {
   }: CalibrationServiceReviewAdjustmentPayload): Promise<CalibrationService> => {
     const response = await axiosPrivate.put<CalibrationService>(
       `/calibration-services/${serviceId}/adjustments/${adjustmentId}/review`,
+      payload
+    )
+    return response.data
+  },
+
+  sendAdjustmentToCustomer: async ({
+    serviceId,
+    adjustmentId,
+    ...payload
+  }: CalibrationServiceSendAdjustmentToCustomerPayload): Promise<CalibrationServiceAdjustmentSendResult> => {
+    const response = await axiosPrivate.post<CalibrationServiceAdjustmentSendResult>(
+      `/calibration-services/${serviceId}/adjustments/${adjustmentId}/send-to-customer`,
+      payload
+    )
+    return response.data
+  },
+
+  respondAdjustment: async ({
+    serviceId,
+    adjustmentId,
+    ...payload
+  }: CalibrationServiceRespondAdjustmentPayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.put<CalibrationService>(
+      `/calibration-services/${serviceId}/adjustments/${adjustmentId}/customer-response`,
       payload
     )
     return response.data
@@ -746,6 +773,29 @@ export const useCalibrationServiceMutations = () => {
     }
   })
 
+  const sendAdjustmentToCustomer = useMutation(
+    calibrationServiceApi.sendAdjustmentToCustomer,
+    {
+      onSuccess: ({ service }) => {
+        queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+        queryClient.invalidateQueries([
+          CALIBRATION_SERVICE_QUERY_KEYS.detail,
+          String(service.id)
+        ])
+      }
+    }
+  )
+
+  const respondAdjustment = useMutation(calibrationServiceApi.respondAdjustment, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
   const markCutReadyForInvoicing = useMutation(
     calibrationServiceApi.markCutReadyForInvoicing,
     {
@@ -874,6 +924,8 @@ export const useCalibrationServiceMutations = () => {
     createCut,
     createAdjustment,
     reviewAdjustment,
+    sendAdjustmentToCustomer,
+    respondAdjustment,
     markCutReadyForInvoicing,
     markCutInvoiced,
     updateCutDocumentControl,

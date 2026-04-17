@@ -43,6 +43,7 @@ interface CalibrationServiceDocumentsPanelProps {
   canGenerateQuotePdf?: boolean
   canGenerateOdsPdf?: boolean
   officialPdfDocuments: CalibrationServiceDocument[]
+  adjustmentCustomerResponseDocuments: CalibrationServiceDocument[]
   supportDocuments: CalibrationServiceDocument[]
   decisionDocuments: CalibrationServiceDocument[]
   isBusy?: boolean
@@ -58,7 +59,15 @@ interface CalibrationServiceDocumentsPanelProps {
 }
 
 const formatDateValue = (value?: string | null) =>
-  value ? new Date(value).toLocaleDateString('es-CO') : 'Sin registrar'
+  value
+    ? new Date(value).toLocaleString('es-CO', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    : 'Sin registrar'
 
 const CalibrationServiceDocumentsPanel = ({
   serviceCode,
@@ -69,6 +78,7 @@ const CalibrationServiceDocumentsPanel = ({
   canGenerateQuotePdf = false,
   canGenerateOdsPdf = false,
   officialPdfDocuments,
+  adjustmentCustomerResponseDocuments,
   supportDocuments,
   decisionDocuments,
   isBusy = false,
@@ -288,14 +298,44 @@ const CalibrationServiceDocumentsPanel = ({
 
       <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3 }}>
         <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
-          Evidencias y soportes
+          Respuesta del cliente sobre novedades
+        </Typography>
+        {adjustmentCustomerResponseDocuments.length ? (
+          <Alert severity='success' sx={{ mb: 2 }}>
+            Este servicio ya tiene {adjustmentCustomerResponseDocuments.length}{' '}
+            constancia(s) formal(es) de respuesta del cliente sobre novedades.
+          </Alert>
+        ) : (
+          <Alert severity='info' sx={{ mb: 2 }}>
+            Cuando el cliente responda una novedad desde el correo, de forma
+            manual o por aceptación tácita, aquí verás la constancia PDF para
+            auditoría.
+          </Alert>
+        )}
+        {adjustmentCustomerResponseDocuments.length ? (
+          renderDocumentList(adjustmentCustomerResponseDocuments)
+        ) : null}
+      </Box>
+
+      <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3 }}>
+        <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
+          Evidencias de decisión del servicio
         </Typography>
         {decisionDocuments.length ? (
-          <Alert severity='success' sx={{ mb: 2 }}>
-            Este servicio ya tiene {decisionDocuments.length} evidencia(s) de
-            respuesta del cliente.
+          renderDocumentList(decisionDocuments)
+        ) : null}
+        {!decisionDocuments.length ? (
+          <Alert severity='info' sx={{ mb: 2 }}>
+            Aquí aparecen las evidencias de aprobación o rechazo general de la
+            cotización del servicio.
           </Alert>
         ) : null}
+      </Box>
+
+      <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3 }}>
+        <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
+          Evidencias y soportes
+        </Typography>
         {supportDocuments.length ? (
           renderDocumentList(supportDocuments)
         ) : (

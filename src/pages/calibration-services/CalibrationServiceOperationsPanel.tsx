@@ -115,6 +115,13 @@ const CalibrationServiceOperationsPanel = ({
   onSaveProgress
 }: CalibrationServiceOperationsPanelProps) => {
   const operations = getOperationsSummary(service.otherFields)
+  const pendingFormalAdjustments = (service.adjustments || []).filter(
+    (adjustment) =>
+      adjustment.requiresCommercialAdjustment &&
+      ['reported', 'pending_customer_approval', 'customer_changes_requested'].includes(
+        adjustment.status
+      )
+  )
   const [draftItems, setDraftItems] = useState<
     CalibrationServiceItemProgressEntryPayload[]
   >([])
@@ -165,6 +172,14 @@ const CalibrationServiceOperationsPanel = ({
 
   return (
     <Stack spacing={3}>
+      {pendingFormalAdjustments.length ? (
+        <Alert severity='info'>
+          Hay {pendingFormalAdjustments.length} novedad(es) pendientes de validación
+          comercial o cliente. En operación puedes registrar lo ocurrido técnicamente,
+          pero el servicio formal solo cambia cuando esas novedades queden aprobadas.
+        </Alert>
+      ) : null}
+
       <Grid container spacing={2}>
         <Grid item xs={12} md={4}>
           <Typography variant='caption' color='text.secondary'>

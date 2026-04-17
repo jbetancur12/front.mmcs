@@ -213,6 +213,7 @@ export const CALIBRATION_SERVICE_DOCUMENT_LABELS: Record<
   ods_pdf: 'PDF de ODS',
   adjustment_pdf: 'PDF de anexo de novedad',
   adjustment_summary_pdf: 'PDF consolidado de novedades',
+  adjustment_customer_response_pdf: 'PDF respuesta cliente novedad',
   logistics_control_pdf: 'PDF control ingreso/entrega',
   invoice_attachment: 'Soporte de factura',
   supporting_attachment: 'Soporte adjunto'
@@ -229,6 +230,7 @@ export const CALIBRATION_SERVICE_DOCUMENT_COLORS: Record<
   ods_pdf: 'secondary',
   adjustment_pdf: 'secondary',
   adjustment_summary_pdf: 'secondary',
+  adjustment_customer_response_pdf: 'secondary',
   logistics_control_pdf: 'secondary',
   invoice_attachment: 'info',
   supporting_attachment: 'default'
@@ -280,8 +282,11 @@ export const CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS: Record<
   string
 > = {
   reported: 'Reportada',
+  pending_customer_approval: 'Pendiente cliente',
   approved: 'Aprobada',
   rejected: 'Rechazada',
+  customer_rejected: 'Rechazada por cliente',
+  customer_changes_requested: 'Cliente pide ajuste',
   applied_to_cut: 'Aplicada al corte'
 }
 
@@ -290,8 +295,11 @@ export const CALIBRATION_SERVICE_ADJUSTMENT_STATUS_COLORS: Record<
   ChipProps['color']
 > = {
   reported: 'warning',
+  pending_customer_approval: 'info',
   approved: 'success',
   rejected: 'error',
+  customer_rejected: 'error',
+  customer_changes_requested: 'secondary',
   applied_to_cut: 'info'
 }
 

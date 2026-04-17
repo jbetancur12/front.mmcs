@@ -35,6 +35,7 @@ interface CalibrationServiceAdjustmentReviewDialogProps {
     approvedTotal?: number | null
     useQuotedPrice?: boolean
     applyDiscount?: boolean
+    customerApprovalRequired?: boolean
   }) => void | Promise<void>
 }
 
@@ -55,6 +56,7 @@ const CalibrationServiceAdjustmentReviewDialog = ({
   const [approvedTaxRate, setApprovedTaxRate] = useState('')
   const [useQuotedPrice, setUseQuotedPrice] = useState(false)
   const [applyDiscount, setApplyDiscount] = useState(true)
+  const [customerApprovalRequired, setCustomerApprovalRequired] = useState(false)
 
   useEffect(() => {
     if (!open || !adjustment) {
@@ -98,6 +100,12 @@ const CalibrationServiceAdjustmentReviewDialog = ({
         typeof adjustment.otherFields.applyDiscount === 'boolean'
         ? adjustment.otherFields.applyDiscount
         : adjustment.changeType === 'quantity_less'
+    )
+    setCustomerApprovalRequired(
+      adjustment.otherFields &&
+        typeof adjustment.otherFields.customerApprovalRequired === 'boolean'
+        ? adjustment.otherFields.customerApprovalRequired
+        : Boolean(adjustment.requiresCommercialAdjustment)
     )
   }, [open, adjustment])
 
@@ -165,7 +173,8 @@ const CalibrationServiceAdjustmentReviewDialog = ({
       approvedTotal:
         approvedUnitPrice && (!isQuantityLess || applyDiscount) ? signedTotal : 0,
       useQuotedPrice,
-      applyDiscount
+      applyDiscount,
+      customerApprovalRequired
     })
   }
 
@@ -212,6 +221,19 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                   onChange={(event) => setPricingNotes(event.target.value)}
                   multiline
                   minRows={2}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={customerApprovalRequired}
+                      onChange={(event) =>
+                        setCustomerApprovalRequired(event.target.checked)
+                      }
+                    />
+                  }
+                  label='Esta novedad requiere validación del cliente antes de aplicarse'
                 />
               </Grid>
               {hasQuotedItemPrice && (isQuantityMore || isQuantityLess) ? (

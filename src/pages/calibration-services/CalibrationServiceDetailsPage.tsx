@@ -72,11 +72,14 @@ import {
   CalibrationServiceItemProgressEntryPayload,
   CalibrationServiceLogisticsControlItem,
   CalibrationServiceLogisticsControlSheet,
-  CalibrationServicePhysicalTraceabilityEntry
+  CalibrationServicePhysicalTraceabilityEntry,
+  CalibrationServiceSendPreviewResult
 } from '../../types/calibrationService'
 import { useHasRole } from '../../utils/functions'
 import CalibrationServiceAdjustmentDialog from './CalibrationServiceAdjustmentDialog'
 import CalibrationServiceAdjustmentReviewDialog from './CalibrationServiceAdjustmentReviewDialog'
+import CalibrationServiceAdjustmentCustomerResponseDialog from './CalibrationServiceAdjustmentCustomerResponseDialog'
+import CalibrationServiceSendAdjustmentToCustomerDialog from './CalibrationServiceSendAdjustmentToCustomerDialog'
 import CalibrationServiceAdjustmentsPanel from './CalibrationServiceAdjustmentsPanel'
 import CalibrationServiceApprovalDialog, {
   CalibrationServiceDecisionMode,
@@ -185,6 +188,28 @@ const getOtherFieldRecord = (
     : undefined
 }
 
+const getEmailSendPreview = (
+  contactEmail?: string | null,
+  customerEmail?: string | null
+): CalibrationServiceSendPreviewResult | null => {
+  const envOverride = import.meta.env.VITE_DEV_EMAIL_OVERRIDE
+  const intendedRecipient = contactEmail || customerEmail || null
+
+  if (!envOverride) {
+    return {
+      intendedRecipient,
+      actualRecipient: intendedRecipient,
+      isDevOverride: false
+    }
+  }
+
+  return {
+    intendedRecipient,
+    actualRecipient: envOverride,
+    isDevOverride: true
+  }
+}
+
 const formatDateValue = (value?: string | null) =>
   value ? new Date(value).toLocaleDateString('es-CO') : 'Sin registrar'
 
@@ -275,6 +300,8 @@ const CalibrationServiceDetailsPage = () => {
     createCut,
     createAdjustment,
     reviewAdjustment,
+    sendAdjustmentToCustomer,
+    respondAdjustment,
     markCutReadyForInvoicing,
     markCutInvoiced,
     updateCutDocumentControl,
@@ -309,6 +336,12 @@ const CalibrationServiceDetailsPage = () => {
     useState<CalibrationServiceCut | null>(null)
   const [selectedAdjustment, setSelectedAdjustment] =
     useState<CalibrationServiceAdjustment | null>(null)
+  const [selectedAdjustmentForCustomerResponse, setSelectedAdjustmentForCustomerResponse] =
+    useState<CalibrationServiceAdjustment | null>(null)
+  const [selectedAdjustmentForSend, setSelectedAdjustmentForSend] =
+    useState<CalibrationServiceAdjustment | null>(null)
+  const [sendAdjustmentPreview, setSendAdjustmentPreview] =
+    useState<CalibrationServiceSendPreviewResult | null>(null)
   const [activeTab, setActiveTab] = useState<DetailTab>(() =>
     getStoredDetailTab(serviceId)
   )
@@ -910,6 +943,8 @@ const CalibrationServiceDetailsPage = () => {
     createCut.isLoading ||
     createAdjustment.isLoading ||
     reviewAdjustment.isLoading ||
+    sendAdjustmentToCustomer.isLoading ||
+    respondAdjustment.isLoading ||
     markCutReadyForInvoicing.isLoading ||
     markCutInvoiced.isLoading ||
     updateCutDocumentControl.isLoading ||
@@ -925,20 +960,35 @@ const CalibrationServiceDetailsPage = () => {
   const decisionDocuments = service.documents?.filter((document) =>
     ['approval_evidence', 'rejection_evidence'].includes(document.documentType)
   )
+  const adjustmentCustomerResponseDocuments = service.documents?.filter(
+    (document) => document.documentType === 'adjustment_customer_response_pdf'
+  )
   const officialPdfDocuments = service.documents?.filter((document) =>
-    ['quote_pdf', 'ods_pdf', 'adjustment_pdf', 'adjustment_summary_pdf', 'logistics_control_pdf'].includes(
+    ['quote_pdf', 'ods_pdf', 'adjustment_pdf', 'adjustment_summary_pdf', 'adjustment_customer_response_pdf', 'logistics_control_pdf'].includes(
       document.documentType
     )
   )
   const supportDocuments = service.documents?.filter(
     (document) =>
-      !['quote_pdf', 'ods_pdf', 'adjustment_pdf', 'adjustment_summary_pdf', 'logistics_control_pdf'].includes(
+      ![
+        'quote_pdf',
+        'ods_pdf',
+        'adjustment_pdf',
+        'adjustment_summary_pdf',
+        'adjustment_customer_response_pdf',
+        'logistics_control_pdf',
+        'approval_evidence',
+        'rejection_evidence'
+      ].includes(
         document.documentType
       )
   )
   const unresolvedCommercialAdjustments = (service.adjustments || []).filter(
     (adjustment) =>
-      adjustment.requiresCommercialAdjustment && adjustment.status === 'reported'
+      adjustment.requiresCommercialAdjustment &&
+      ['reported', 'pending_customer_approval', 'customer_changes_requested'].includes(
+        adjustment.status
+      )
   )
   const odsDialogInitialValues: CalibrationServiceOdsDialogValues = {
     issuedAt: buildTodayValue(),
@@ -1600,6 +1650,7 @@ const CalibrationServiceDetailsPage = () => {
     approvedTotal?: number | null
     useQuotedPrice?: boolean
     applyDiscount?: boolean
+    customerApprovalRequired?: boolean
   }) => {
     if (!selectedAdjustment) {
       return
@@ -1617,6 +1668,99 @@ const CalibrationServiceDetailsPage = () => {
     } catch (adjustmentError) {
       console.error(adjustmentError)
       toast.error('No pudimos guardar la revisión de la novedad.')
+    }
+  }
+
+  const handleSendAdjustmentToCustomer = async (values: {
+    recipientEmail?: string | null
+    recipientName?: string | null
+  }) => {
+    if (!selectedAdjustmentForSend) {
+      return
+    }
+
+    try {
+      const result = await sendAdjustmentToCustomer.mutateAsync({
+        serviceId: String(service.id),
+        adjustmentId: String(selectedAdjustmentForSend.id),
+        recipientEmail: values.recipientEmail,
+        recipientName: values.recipientName,
+        sentAt: new Date().toISOString()
+      })
+      toast.success('La novedad quedó enviada al cliente.')
+      setSelectedAdjustmentForSend(null)
+      setSendAdjustmentPreview(null)
+      if (result.delivery?.isDevOverride) {
+        toast(
+          `Modo desarrollo: normalmente iría a ${result.delivery.intendedRecipient || 'sin correo definido'}, pero se envió a ${result.delivery.actualRecipient || 'sin correo de override'}.`,
+          {
+            duration: 7000,
+            icon: 'ℹ️'
+          }
+        )
+      } else if (result.delivery?.actualRecipient) {
+        toast(
+          result.delivery.requestedRecipient &&
+            result.delivery.intendedRecipient &&
+            result.delivery.requestedRecipient !==
+              result.delivery.intendedRecipient
+            ? `Normalmente iría a ${result.delivery.intendedRecipient}, pero se envió a ${result.delivery.actualRecipient}.`
+            : `Se envió al correo ${result.delivery.actualRecipient}.`,
+          {
+            duration: 5000,
+            icon: '📧'
+          }
+        )
+      }
+      setActiveTab('adjustments')
+    } catch (adjustmentError) {
+      console.error(adjustmentError)
+      toast.error('No pudimos enviar la novedad al cliente.')
+    }
+  }
+
+  const handleRegisterAdjustmentCustomerResponse = async (values: {
+    decision: 'approved' | 'rejected' | 'changes_requested'
+    responseChannel?: string | null
+    responseReference?: string | null
+    notes?: string | null
+    evidenceFile?: File | null
+  }) => {
+    if (!selectedAdjustmentForCustomerResponse) {
+      return
+    }
+
+    try {
+      let evidenceDocumentId: number | null = null
+
+      if (values.evidenceFile) {
+        const uploadedDocument = await uploadDocument.mutateAsync({
+          serviceId: String(service.id),
+          file: values.evidenceFile,
+          documentType: 'supporting_attachment',
+          title: `Evidencia respuesta novedad ${selectedAdjustmentForCustomerResponse.itemName}`,
+          notes: values.notes?.trim() || undefined
+        })
+
+        evidenceDocumentId = uploadedDocument.id
+      }
+
+      await respondAdjustment.mutateAsync({
+        serviceId: String(service.id),
+        adjustmentId: String(selectedAdjustmentForCustomerResponse.id),
+        decision: values.decision,
+        responseChannel: values.responseChannel,
+        responseReference: values.responseReference,
+        notes: values.notes,
+        evidenceDocumentId,
+        respondedAt: new Date().toISOString()
+      })
+      toast.success('La respuesta del cliente quedó registrada.')
+      setSelectedAdjustmentForCustomerResponse(null)
+      setActiveTab('adjustments')
+    } catch (adjustmentError) {
+      console.error(adjustmentError)
+      toast.error('No pudimos registrar la respuesta del cliente.')
     }
   }
 
@@ -2664,6 +2808,15 @@ const CalibrationServiceDetailsPage = () => {
                   isBusy={isOperationalBusy}
                   onCreate={() => setIsAdjustmentDialogOpen(true)}
                   onReview={(adjustment) => setSelectedAdjustment(adjustment)}
+                  onSendToCustomer={(adjustment) => {
+                    setSelectedAdjustmentForSend(adjustment)
+                    setSendAdjustmentPreview(
+                      getEmailSendPreview(service.contactEmail, service.customer?.email)
+                    )
+                  }}
+                  onRegisterCustomerResponse={(adjustment) =>
+                    setSelectedAdjustmentForCustomerResponse(adjustment)
+                  }
                   onGenerateDocument={handleGenerateAdjustmentPdf}
                   onGenerateSummaryDocument={handleGenerateAdjustmentSummaryPdf}
                 />
@@ -2713,6 +2866,9 @@ const CalibrationServiceDetailsPage = () => {
                   canGenerateQuotePdf={canGenerateQuotePdf}
                   canGenerateOdsPdf={canGenerateOdsPdf}
                   officialPdfDocuments={officialPdfDocuments || []}
+                  adjustmentCustomerResponseDocuments={
+                    adjustmentCustomerResponseDocuments || []
+                  }
                   supportDocuments={supportDocuments || []}
                   decisionDocuments={decisionDocuments || []}
                   isBusy={isDocumentBusy}
@@ -3007,6 +3163,29 @@ const CalibrationServiceDetailsPage = () => {
           isLoading={isOperationalBusy}
           onClose={() => setSelectedAdjustment(null)}
           onSubmit={handleReviewAdjustment}
+        />
+      ) : null}
+      {selectedAdjustmentForSend ? (
+        <CalibrationServiceSendAdjustmentToCustomerDialog
+          open={Boolean(selectedAdjustmentForSend)}
+          service={service}
+          adjustment={selectedAdjustmentForSend}
+          isLoading={isOperationalBusy}
+          sendPreview={sendAdjustmentPreview}
+          onClose={() => {
+            setSelectedAdjustmentForSend(null)
+            setSendAdjustmentPreview(null)
+          }}
+          onSubmit={handleSendAdjustmentToCustomer}
+        />
+      ) : null}
+      {selectedAdjustmentForCustomerResponse ? (
+        <CalibrationServiceAdjustmentCustomerResponseDialog
+          open={Boolean(selectedAdjustmentForCustomerResponse)}
+          adjustment={selectedAdjustmentForCustomerResponse}
+          isLoading={isOperationalBusy}
+          onClose={() => setSelectedAdjustmentForCustomerResponse(null)}
+          onSubmit={handleRegisterAdjustmentCustomerResponse}
         />
       ) : null}
       {canManageSequenceConfig ? (
