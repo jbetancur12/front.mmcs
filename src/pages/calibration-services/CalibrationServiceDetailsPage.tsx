@@ -118,6 +118,7 @@ import CalibrationServiceLogisticsPanel from './CalibrationServiceLogisticsPanel
 import CalibrationServiceLogisticsControlDialog, {
   CalibrationServiceLogisticsControlDialogValues
 } from './CalibrationServiceLogisticsControlDialog'
+import CalibrationServiceSendLogisticsEmailDialog from './CalibrationServiceSendLogisticsEmailDialog'
 
 type DetailTab =
   | 'summary'
@@ -385,6 +386,7 @@ const CalibrationServiceDetailsPage = () => {
     generateAdjustmentPdf,
     generateAdjustmentSummaryPdf,
     generateLogisticsPdf,
+    sendLogisticsControlEmail,
     downloadDocument,
     upsertSequenceConfig
   } = useCalibrationServiceMutations()
@@ -399,6 +401,10 @@ const CalibrationServiceDetailsPage = () => {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
   const [isLogisticsControlDialogOpen, setIsLogisticsControlDialogOpen] =
     useState(false)
+  const [isSendLogisticsEmailDialogOpen, setIsSendLogisticsEmailDialogOpen] =
+    useState(false)
+  const [sendLogisticsPreview, setSendLogisticsPreview] =
+    useState<CalibrationServiceSendPreviewResult | null>(null)
   const [isPhysicalTraceabilityDialogOpen, setIsPhysicalTraceabilityDialogOpen] =
     useState(false)
   const [isCutDialogOpen, setIsCutDialogOpen] = useState(false)
@@ -564,6 +570,7 @@ const CalibrationServiceDetailsPage = () => {
     ['ods_issued', 'pending_programming', 'scheduled', 'in_execution', 'technically_completed', 'closed'].includes(
       service?.status || ''
     )
+  const canSendLogisticsEmail = canGenerateLogisticsPdf
   const canStillRegisterAdjustmentsAfterTechnicalCompletion =
     service?.status === 'technically_completed' && canReportAdjustment
   const hasCuts = Boolean(service?.cuts?.length)
@@ -1020,6 +1027,7 @@ const CalibrationServiceDetailsPage = () => {
     createAdjustment.isLoading ||
     reviewAdjustment.isLoading ||
     sendAdjustmentToCustomer.isLoading ||
+    sendLogisticsControlEmail.isLoading ||
     respondAdjustment.isLoading ||
     markCutReadyForInvoicing.isLoading ||
     markCutInvoiced.isLoading ||
@@ -1032,6 +1040,7 @@ const CalibrationServiceDetailsPage = () => {
     generateAdjustmentPdf.isLoading ||
     generateAdjustmentSummaryPdf.isLoading ||
     generateLogisticsPdf.isLoading ||
+    sendLogisticsControlEmail.isLoading ||
     downloadDocument.isLoading
   const decisionDocuments = service.documents?.filter((document) =>
     ['approval_evidence', 'rejection_evidence'].includes(document.documentType)
@@ -1570,6 +1579,39 @@ const CalibrationServiceDetailsPage = () => {
     } catch (logisticsPdfError) {
       console.error(logisticsPdfError)
       toast.error('No pudimos generar el PDF de control de ingreso y entrega.')
+    }
+  }
+
+  const handleOpenSendLogisticsEmail = () => {
+    setSendLogisticsPreview(
+      getEmailSendPreview(service.contactEmail, service.customer?.email)
+    )
+    setIsSendLogisticsEmailDialogOpen(true)
+  }
+
+  const handleSendLogisticsEmail = async (values: {
+    recipientEmail?: string | null
+    recipientName?: string | null
+  }) => {
+    try {
+      const result = await sendLogisticsControlEmail.mutateAsync({
+        serviceId: String(service.id),
+        recipientEmail: values.recipientEmail,
+        recipientName: values.recipientName
+      })
+
+      const actualRecipient = result.delivery?.actualRecipient
+      toast.success(
+        actualRecipient
+          ? `Formato logístico enviado a ${actualRecipient}.`
+          : 'Formato logístico enviado.'
+      )
+      setIsSendLogisticsEmailDialogOpen(false)
+      setSendLogisticsPreview(null)
+      setActiveTab('logistics')
+    } catch (logisticsEmailError) {
+      console.error(logisticsEmailError)
+      toast.error('No pudimos enviar el formato logístico por correo.')
     }
   }
 
@@ -2999,7 +3041,14 @@ const CalibrationServiceDetailsPage = () => {
                     pendientes, o un corte final si todo ya está listo.
                   </Alert>
                 ) : null}
-                {service.status === 'technically_completed' && allCutsSent ? (
+                {service.status === 'technically_completed' && allCutsSent && hasReleasableItems ? (
+                  <Alert severity='warning' sx={{ mb: 2 }}>
+                    Los cortes existentes ya fueron enviados, pero todavía hay cantidades
+                    aprobadas pendientes por liberar. Crea un nuevo corte para esas cantidades
+                    antes del cierre final.
+                  </Alert>
+                ) : null}
+                {service.status === 'technically_completed' && allCutsSent && !hasReleasableItems ? (
                   <Alert severity='success' sx={{ mb: 2 }}>
                     Todos los cortes ya están enviados. El servicio quedó listo para
                     <strong> cierre final</strong>.
@@ -3055,10 +3104,12 @@ const CalibrationServiceDetailsPage = () => {
                   canManageControl={canManageLogisticsControl}
                   canRegisterMovement={canRegisterPhysicalTraceability}
                   canGeneratePdf={canGenerateLogisticsPdf}
+                  canSendEmail={canSendLogisticsEmail}
                   isBusy={isOperationalBusy}
                   onEditControl={() => setIsLogisticsControlDialogOpen(true)}
                   onRegisterMovement={() => setIsPhysicalTraceabilityDialogOpen(true)}
                   onGeneratePdf={handleGenerateLogisticsPdf}
+                  onSendEmail={handleOpenSendLogisticsEmail}
                 />
               </DetailTabPanel>
 
@@ -3241,6 +3292,19 @@ const CalibrationServiceDetailsPage = () => {
           isLoading={isOperationalBusy}
           onClose={() => setIsLogisticsControlDialogOpen(false)}
           onSubmit={handleSaveLogisticsControl}
+        />
+      ) : null}
+      {isSendLogisticsEmailDialogOpen ? (
+        <CalibrationServiceSendLogisticsEmailDialog
+          open={isSendLogisticsEmailDialogOpen}
+          service={service}
+          isLoading={isOperationalBusy}
+          sendPreview={sendLogisticsPreview}
+          onClose={() => {
+            setIsSendLogisticsEmailDialogOpen(false)
+            setSendLogisticsPreview(null)
+          }}
+          onSubmit={handleSendLogisticsEmail}
         />
       ) : null}
       {isPhysicalTraceabilityDialogOpen ? (

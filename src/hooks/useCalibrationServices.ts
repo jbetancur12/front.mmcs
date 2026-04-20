@@ -30,6 +30,8 @@ import {
   CalibrationServiceRejectPayload,
   CalibrationServiceRequestApprovalPayload,
   CalibrationServiceSendAdjustmentToCustomerPayload,
+  CalibrationServiceSendLogisticsControlEmailPayload,
+  CalibrationServiceLogisticsEmailSendResult,
   CalibrationServiceResumePayload,
   CalibrationServiceSchedulePayload,
   CalibrationServiceSequenceConfig,
@@ -469,6 +471,17 @@ const calibrationServiceApi = {
     return response.data
   },
 
+  sendLogisticsControlEmail: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServiceSendLogisticsControlEmailPayload): Promise<CalibrationServiceLogisticsEmailSendResult> => {
+    const response = await axiosPrivate.post<CalibrationServiceLogisticsEmailSendResult>(
+      `/calibration-services/${serviceId}/logistics-control/send-email`,
+      payload
+    )
+    return response.data
+  },
+
   downloadDocument: async ({
     serviceId,
     documentId
@@ -886,6 +899,22 @@ export const useCalibrationServiceMutations = () => {
     }
   )
 
+  const sendLogisticsControlEmail = useMutation(
+    calibrationServiceApi.sendLogisticsControlEmail,
+    {
+      onSuccess: (result, variables) => {
+        queryClient.setQueryData(
+          [CALIBRATION_SERVICE_QUERY_KEYS.detail, variables.serviceId],
+          result.service
+        )
+        queryClient.invalidateQueries([
+          CALIBRATION_SERVICE_QUERY_KEYS.detail,
+          variables.serviceId
+        ])
+      }
+    }
+  )
+
   const downloadDocument = useMutation(calibrationServiceApi.downloadDocument)
 
   const upsertSequenceConfig = useMutation(
@@ -934,6 +963,7 @@ export const useCalibrationServiceMutations = () => {
     generateAdjustmentPdf,
     generateAdjustmentSummaryPdf,
     generateLogisticsPdf,
+    sendLogisticsControlEmail,
     downloadDocument,
     upsertSequenceConfig
   }

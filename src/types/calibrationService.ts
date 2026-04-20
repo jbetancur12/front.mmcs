@@ -653,6 +653,12 @@ export interface CalibrationServiceUpdateLogisticsControlPayload {
   receivedByClientSignature?: string | null
 }
 
+export interface CalibrationServiceSendLogisticsControlEmailPayload {
+  serviceId: string
+  recipientEmail?: string | null
+  recipientName?: string | null
+}
+
 export interface CalibrationServiceStartExecutionPayload {
   serviceId: string
   startedAt?: string
@@ -744,6 +750,17 @@ export interface CalibrationServiceRespondAdjustmentPayload {
 
 export interface CalibrationServiceAdjustmentSendResult {
   service: CalibrationService
+  delivery: {
+    intendedRecipient?: string | null
+    requestedRecipient?: string | null
+    actualRecipient?: string | null
+    isDevOverride: boolean
+  }
+}
+
+export interface CalibrationServiceLogisticsEmailSendResult {
+  service: CalibrationService
+  document: CalibrationServiceDocument
   delivery: {
     intendedRecipient?: string | null
     requestedRecipient?: string | null
