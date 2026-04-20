@@ -15,6 +15,12 @@ const MaintenanceTracking = lazy(
 const MaintenanceTVDisplayPage = lazy(
   () => import('../pages/MaintenanceTVDisplayPage')
 )
+const CalibrationServiceAdjustmentCustomerResponsePage = lazy(
+  () =>
+    import(
+      '../pages/calibration-services/CalibrationServiceAdjustmentCustomerResponsePage'
+    )
+)
 
 const LoadingFallback = () => (
   <Box
@@ -96,6 +102,14 @@ const PublicRoutes = (
       element={
         <Suspense fallback={<LoadingFallback />}>
           <NotAuthorizedPage />
+        </Suspense>
+      }
+    />
+    <Route
+      path='/calibration-adjustments/respond'
+      element={
+        <Suspense fallback={<LoadingFallback />}>
+          <CalibrationServiceAdjustmentCustomerResponsePage />
         </Suspense>
       }
     />

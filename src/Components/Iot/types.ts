@@ -1,6 +1,16 @@
-import { Customer } from '../Quotations/types'
 import { DeviceAlarm } from './DeviceIotMap/types'
 import { AlarmThreshold, WarningThreshold } from './GraphDrawer/types'
+
+export interface Customer {
+  id: number
+  nombre: string
+  identificacion?: string
+  direccion?: string
+  email?: string
+  telefono?: string
+  ciudad?: string
+  departamento?: string
+}
 
 export interface SData {
   h: string

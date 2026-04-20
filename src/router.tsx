@@ -17,7 +17,7 @@ import { userStore } from './store/userStore'
 import PublicRoutes from './routes/PublicRoutes'
 import FleetRoutes from './routes/FleetRoutes'
 import DataSheetRoutes from './routes/DataSheetRoutes'
-import QuotationRoutes from './routes/QuotationRoutes'
+import ProductCatalogRoutes from './routes/ProductCatalogRoutes'
 import CalibrationRoutes from './routes/CalibrationRoutes'
 import CustomerRoutes from './routes/CustomerRoutes'
 import OtherRoutes from './routes/OtherRoutes'
@@ -31,6 +31,7 @@ import LaboratoryRoutes from './routes/LaboratoryRoutes'
 import NonConformRoutes from './routes/NonConformRoutes'
 import MaintenanceRoutes from './routes/MaintenanceRoutes'
 import AssetLifeSheetRoutes from './routes/AssetLifeSheetRoutes'
+import CalibrationServiceRoutes from './routes/CalibrationServiceRoutes'
 
 function Router() {
   const $userStore = useStore(userStore)
@@ -76,7 +77,7 @@ function Router() {
         >
           {FleetRoutes($userStore.rol)}
           {DataSheetRoutes($userStore.rol)}
-          {QuotationRoutes($userStore.rol)}
+          {ProductCatalogRoutes($userStore.rol)}
           {CalibrationRoutes($userStore.rol)}
           {CustomerRoutes($userStore.rol)}
           {ProfileRoutes($userStore.rol)}
@@ -88,6 +89,7 @@ function Router() {
           {NonConformRoutes($userStore.rol)}
           {MaintenanceRoutes($userStore.rol)}
           {AssetLifeSheetRoutes($userStore.rol)}
+          {CalibrationServiceRoutes($userStore.rol)}
           {OtherRoutes($userStore.rol)}
         </Route>
 

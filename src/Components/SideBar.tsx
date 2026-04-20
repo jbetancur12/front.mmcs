@@ -7,13 +7,14 @@ import { BiSolidReport } from 'react-icons/bi'
 import DropdownButton from './DropdownButton' // Importa el componente del dropdown si ya lo tienes
 import { useStore } from '@nanostores/react'
 import { UserData, userStore } from 'src/store/userStore'
-import { CarRepair } from '@mui/icons-material'
+import { CarRepair, RequestQuoteOutlined, ScienceOutlined } from '@mui/icons-material'
 import {
   getEffectiveLmsMenuRoles,
   isLmsOnlyUser,
   LMS_ACCESS_MENU_ROLES,
   LMS_ADMIN_ROUTE_ROLES
 } from 'src/utils/lmsIdentity'
+import { CALIBRATION_SERVICE_ALLOWED_ROLES } from 'src/constants/calibrationServices'
 
 const iconClass =
   'w-5 h-5 text-gray-600 transition-all duration-300 group-hover:text-white dark:text-gray-300 dark:group-hover:text-white group-hover:scale-110 group-hover:drop-shadow-sm'
@@ -61,20 +62,12 @@ const sidebarItems = ($userStore: UserData) => [
   },
 
   {
-    type: 'dropdown',
-    buttonText: 'Cotizaciones',
+    type: 'link',
+    label: 'Productos y servicios',
+    to: '/productos-y-servicios',
+    icon: <RequestQuoteOutlined className={iconClass} />,
     roles: ['admin'],
-    moduleName: 'Basic',
-    pathData:
-      'M18 1H6a3 3 0 0 0-3 3v18a1 1 0 0 0 1.707.707l2.138-2.137 1.323 1.984A1 1 0 0 0 8.9 23a.986.986 0 0 0 .806-.288L12 20.414l2.293 2.293a1 1 0 0 0 1.539-.153l1.323-1.984 2.138 2.137A1 1 0 0 0 21 22V4a3 3 0 0 0-3-3Zm1 18.586-1.293-1.293a.984.984 0 0 0-.806-.288 1 1 0 0 0-.733.44l-1.323 1.985-2.138-2.137a1 1 0 0 0-1.414 0L9.155 20.43l-1.323-1.985a1 1 0 0 0-1.539-.152L5 19.586V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1ZM13 11a1 1 0 0 1-1 1H8a1 1 0 0 1 0-2h4a1 1 0 0 1 1 1Zm0 4a1 1 0 0 1-1 1H8a1 1 0 0 1 0-2h4a1 1 0 0 1 1 1Zm4-4a1 1 0 0 1-1 1h-1a1 1 0 0 1 0-2h1a1 1 0 0 1 1 1Zm0 4a1 1 0 0 1-1 1h-1a1 1 0 0 1 0-2h1a1 1 0 0 1 1 1Zm0-9a1 1 0 0 1-1 1H8a1 1 0 0 1 0-2h8a1 1 0 0 1 1 1Z',
-    menuItems: [
-      { label: 'Listar Cotizaciones', url: 'cotizaciones', roles: ['admin'] },
-      {
-        label: 'Listar Productos y Servicios',
-        url: 'productos-y-servicios',
-        roles: ['admin']
-      }
-    ]
+    moduleName: 'Basic'
   },
   {
     type: 'dropdown',
@@ -323,6 +316,14 @@ const sidebarItems = ($userStore: UserData) => [
         roles: ['admin', 'metrologist']
       }
     ]
+  },
+  {
+    type: 'link',
+    label: 'Servicios Cal.',
+    to: '/calibration-services',
+    icon: <ScienceOutlined className={iconClass} />,
+    roles: [...CALIBRATION_SERVICE_ALLOWED_ROLES],
+    moduleName: 'Basic'
   },
   {
     type: 'link',

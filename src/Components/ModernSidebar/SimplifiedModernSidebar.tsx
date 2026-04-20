@@ -77,10 +77,10 @@ const SimplifiedModernSidebar: React.FC<ModernSidebarProps> = ({ onItemClick }) 
       roles: ['admin', 'employee', 'client']
     },
     {
-      id: 'quotes',
-      label: 'Cotizaciones',
+      id: 'product-catalog',
+      label: 'Productos y servicios',
       icon: <QuoteIcon />,
-      to: '/cotizaciones',
+      to: '/productos-y-servicios',
       roles: ['admin']
     },
     {
