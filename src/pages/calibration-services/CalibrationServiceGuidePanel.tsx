@@ -37,6 +37,7 @@ import {
   CALIBRATION_SERVICE_ODS_ROLES,
   CALIBRATION_SERVICE_SCHEDULE_ROLES
 } from '../../constants/calibrationServices'
+import { CalibrationServiceSlaConfig } from '../../types/calibrationService'
 
 const roleLabels: Record<string, string> = {
   admin: 'Admin',
@@ -60,6 +61,10 @@ type FlowStage = {
   title: string
   detail: string
   branches?: readonly FlowBranch[]
+}
+
+interface CalibrationServiceGuidePanelProps {
+  slaConfig?: CalibrationServiceSlaConfig
 }
 
 const glossaryRows = [
@@ -270,6 +275,76 @@ const noveltyBranchRows = [
   }
 ] as const
 
+const DEFAULT_SLA_CONFIG: Required<
+  Omit<CalibrationServiceSlaConfig, 'updatedAt' | 'updatedByName'>
+> = {
+  programmingWarningBusinessDays: 2,
+  programmingTargetBusinessDays: 3,
+  executionWarningBusinessDays: 1,
+  executionTargetBusinessDays: 2,
+  adminClosureWarningBusinessDays: 1,
+  adminClosureTargetBusinessDays: 2,
+  invoicingWarningBusinessDays: 1,
+  invoicingTargetBusinessDays: 2,
+  documentControlWarningBusinessDays: 2,
+  documentControlTargetBusinessDays: 3,
+  finalCloseWarningBusinessDays: 1,
+  finalCloseTargetBusinessDays: 2
+}
+
+const formatBusinessDays = (value: number) =>
+  `${value} ${value === 1 ? 'día hábil' : 'días hábiles'}`
+
+const getSlaValue = (
+  config: CalibrationServiceSlaConfig | undefined,
+  key: keyof typeof DEFAULT_SLA_CONFIG
+) => config?.[key] ?? DEFAULT_SLA_CONFIG[key]
+
+const buildSlaRows = (config?: CalibrationServiceSlaConfig) => [
+  {
+    phase: 'ODS a programación',
+    startsAt: 'Emisión de ODS',
+    expectedAction: 'Programar fecha compromiso, fecha programada y responsable.',
+    alertAt: formatBusinessDays(getSlaValue(config, 'programmingWarningBusinessDays')),
+    overdueAfter: formatBusinessDays(getSlaValue(config, 'programmingTargetBusinessDays'))
+  },
+  {
+    phase: 'Programación a ejecución',
+    startsAt: 'Fecha programada o programación registrada',
+    expectedAction: 'Iniciar la ejecución técnica del servicio.',
+    alertAt: formatBusinessDays(getSlaValue(config, 'executionWarningBusinessDays')),
+    overdueAfter: formatBusinessDays(getSlaValue(config, 'executionTargetBusinessDays'))
+  },
+  {
+    phase: 'Ejecución finalizada a corte',
+    startsAt: 'Finalización técnica',
+    expectedAction: 'Crear corte parcial o final con las cantidades completadas.',
+    alertAt: formatBusinessDays(getSlaValue(config, 'adminClosureWarningBusinessDays')),
+    overdueAfter: formatBusinessDays(getSlaValue(config, 'adminClosureTargetBusinessDays'))
+  },
+  {
+    phase: 'Corte a facturación',
+    startsAt: 'Corte listo para facturación',
+    expectedAction: 'Registrar factura, fecha y soporte si aplica.',
+    alertAt: formatBusinessDays(getSlaValue(config, 'invoicingWarningBusinessDays')),
+    overdueAfter: formatBusinessDays(getSlaValue(config, 'invoicingTargetBusinessDays'))
+  },
+  {
+    phase: 'Facturación a control documental',
+    startsAt: 'Corte facturado',
+    expectedAction: 'Cargar, revisar y enviar certificados/evidencias documentales.',
+    alertAt: formatBusinessDays(getSlaValue(config, 'documentControlWarningBusinessDays')),
+    overdueAfter: formatBusinessDays(getSlaValue(config, 'documentControlTargetBusinessDays'))
+  },
+  {
+    phase: 'Control documental a cierre final',
+    startsAt: 'Certificados enviados',
+    expectedAction: 'Cerrar definitivamente el servicio si no quedan pendientes.',
+    alertAt: formatBusinessDays(getSlaValue(config, 'finalCloseWarningBusinessDays')),
+    overdueAfter: formatBusinessDays(getSlaValue(config, 'finalCloseTargetBusinessDays'))
+  }
+]
+
 const renderRoleChips = (roles: readonly string[]) => (
   <Stack direction='row' spacing={0.75} useFlexGap flexWrap='wrap'>
     {roles.map((role) => (
@@ -278,9 +353,10 @@ const renderRoleChips = (roles: readonly string[]) => (
   </Stack>
 )
 
-const CalibrationServiceGuidePanel = () => {
+const CalibrationServiceGuidePanel = ({ slaConfig }: CalibrationServiceGuidePanelProps) => {
   const [activeStageAnchor, setActiveStageAnchor] = useState<HTMLElement | null>(null)
   const [activeStage, setActiveStage] = useState<FlowStage | null>(null)
+  const slaRows = buildSlaRows(slaConfig)
 
   const handleOpenStageBranches = (event: MouseEvent<HTMLElement>, stage: FlowStage) => {
     if (!stage.branches?.length) {
@@ -568,6 +644,54 @@ const CalibrationServiceGuidePanel = () => {
               </List>
             </Box>
           </Stack>
+        </CardContent>
+      </Card>
+
+      <Card sx={{ borderRadius: 3 }}>
+        <CardContent>
+          <Typography variant='h6' fontWeight={700} gutterBottom>
+            Tiempos SLA por fase
+          </Typography>
+          <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+            Los tiempos se cuentan en días hábiles. Antes del umbral de alerta el
+            servicio se considera al día; desde el umbral aparece alerta; después
+            del objetivo queda vencido.
+          </Typography>
+
+          <Table size='small'>
+            <TableHead>
+              <TableRow>
+                <TableCell>Fase</TableCell>
+                <TableCell>Inicio del conteo</TableCell>
+                <TableCell>Acción esperada</TableCell>
+                <TableCell>Alerta</TableCell>
+                <TableCell>Vencido después de</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {slaRows.map((row) => (
+                <TableRow key={row.phase}>
+                  <TableCell>
+                    <Typography fontWeight={700}>{row.phase}</Typography>
+                  </TableCell>
+                  <TableCell>{row.startsAt}</TableCell>
+                  <TableCell>{row.expectedAction}</TableCell>
+                  <TableCell>
+                    <Chip size='small' color='warning' variant='outlined' label={row.alertAt} />
+                  </TableCell>
+                  <TableCell>
+                    <Chip size='small' color='error' variant='outlined' label={row.overdueAfter} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          <Alert severity='info' sx={{ mt: 2 }}>
+            Si una novedad aprobada aumenta cantidades o agrega ítems, el servicio
+            vuelve a quedar pendiente de corte hasta liberar esas cantidades. Por eso
+            no debe pasar a cierre final aunque los cortes anteriores ya estén enviados.
+          </Alert>
         </CardContent>
       </Card>
 

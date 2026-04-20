@@ -20,6 +20,7 @@ import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined'
@@ -43,6 +44,7 @@ import {
 import {
   useCalibrationServiceMutations,
   useCalibrationServiceSequenceConfig,
+  useCalibrationServiceSlaConfig,
   useCalibrationServices
 } from '../../hooks/useCalibrationServices'
 import {
@@ -50,12 +52,14 @@ import {
   CalibrationServiceApprovalStatus,
   CalibrationServiceFilters,
   CalibrationServiceScopeType,
+  CalibrationServiceSlaConfigPayload,
   CalibrationServiceSlaIndicatorColor,
   CalibrationServiceStatus
 } from '../../types/calibrationService'
 import { userStore } from '../../store/userStore'
 import { useHasRole } from '../../utils/functions'
 import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
+import CalibrationServiceSlaConfigDialog from './CalibrationServiceSlaConfigDialog'
 
 const FILTER_ALL = 'all'
 const FILTER_UNASSIGNED = 'unassigned'
@@ -249,7 +253,7 @@ const getServiceOperationalFocus = (service: CalibrationService) => {
 const CalibrationServicesPage = () => {
   const navigate = useNavigate()
   const $userStore = useStore(userStore)
-  const { requestApproval, upsertSequenceConfig } =
+  const { requestApproval, upsertSequenceConfig, upsertSlaConfig } =
     useCalibrationServiceMutations()
   const canCreateServices = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const canTakeApprovalDecision = useHasRole([
@@ -260,6 +264,7 @@ const CalibrationServicesPage = () => {
   const canRunExecution = useHasRole([...CALIBRATION_SERVICE_EXECUTION_ROLES])
   const canViewModule = useHasRole([...CALIBRATION_SERVICE_ALLOWED_ROLES])
   const canManageSequenceConfig = canCreateServices
+  const canManageSlaConfig = useHasRole(['admin', 'super_admin'])
   const hasTechnicalRole = useHasRole([...CALIBRATION_SERVICE_TECHNICAL_ROLES])
   const hasCommercialVisibility = useHasRole([
     ...CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES
@@ -283,6 +288,7 @@ const CalibrationServicesPage = () => {
   const [customerFilter, setCustomerFilter] = useState<string>(FILTER_ALL)
   const [metrologistFilter, setMetrologistFilter] = useState<string>(FILTER_ALL)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
+  const [isSlaConfigDialogOpen, setIsSlaConfigDialogOpen] = useState(false)
 
   const deferredSearch = useDeferredValue(search)
   const queryFilters: CalibrationServiceFilters = {
@@ -309,6 +315,7 @@ const CalibrationServicesPage = () => {
     data: sequenceConfig,
     isLoading: isLoadingSequenceConfig
   } = useCalibrationServiceSequenceConfig(canManageSequenceConfig)
+  const { data: slaConfig } = useCalibrationServiceSlaConfig(canManageSlaConfig)
 
   const { data, isLoading, isError, error, refetch, isFetching } =
     useCalibrationServices(queryFilters)
@@ -499,6 +506,18 @@ const CalibrationServicesPage = () => {
     }
   }
 
+  const handleSaveSlaConfig = async (values: CalibrationServiceSlaConfigPayload) => {
+    try {
+      await upsertSlaConfig.mutateAsync(values)
+      toast.success('Los tiempos SLA quedaron actualizados.')
+      setIsSlaConfigDialogOpen(false)
+      void refetch()
+    } catch (configError) {
+      console.error(configError)
+      toast.error('No pudimos guardar los tiempos SLA.')
+    }
+  }
+
   if (isLoading) {
     return (
       <Box
@@ -555,6 +574,15 @@ const CalibrationServicesPage = () => {
         </Box>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+          {canManageSlaConfig ? (
+            <Button
+              variant='outlined'
+              startIcon={<SettingsOutlinedIcon />}
+              onClick={() => setIsSlaConfigDialogOpen(true)}
+            >
+              Configuración SLA
+            </Button>
+          ) : null}
           <Button
             variant='outlined'
             startIcon={<RefreshOutlinedIcon />}
@@ -1168,6 +1196,15 @@ const CalibrationServicesPage = () => {
           config={sequenceConfig}
           onClose={() => setIsSequenceDialogOpen(false)}
           onSubmit={handleSaveSequenceConfig}
+        />
+      ) : null}
+      {canManageSlaConfig ? (
+        <CalibrationServiceSlaConfigDialog
+          open={isSlaConfigDialogOpen}
+          isLoading={upsertSlaConfig.isLoading}
+          config={slaConfig}
+          onClose={() => setIsSlaConfigDialogOpen(false)}
+          onSubmit={handleSaveSlaConfig}
         />
       ) : null}
     </Box>

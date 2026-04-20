@@ -36,6 +36,8 @@ import {
   CalibrationServiceSchedulePayload,
   CalibrationServiceSequenceConfig,
   CalibrationServiceSequenceConfigPayload,
+  CalibrationServiceSlaConfig,
+  CalibrationServiceSlaConfigPayload,
   CalibrationServiceStartExecutionPayload,
   CalibrationServiceUserSummary
 } from '../types/calibrationService'
@@ -49,6 +51,13 @@ const calibrationServiceApi = {
   getSequenceConfig: async (): Promise<CalibrationServiceSequenceConfig> => {
     const response = await axiosPrivate.get<CalibrationServiceSequenceConfig>(
       '/calibration-services/config/sequence'
+    )
+    return response.data
+  },
+
+  getSlaConfig: async (): Promise<CalibrationServiceSlaConfig> => {
+    const response = await axiosPrivate.get<CalibrationServiceSlaConfig>(
+      '/calibration-services/config/sla'
     )
     return response.data
   },
@@ -503,6 +512,16 @@ const calibrationServiceApi = {
       payload
     )
     return response.data
+  },
+
+  upsertSlaConfig: async (
+    payload: CalibrationServiceSlaConfigPayload
+  ): Promise<CalibrationServiceSlaConfig> => {
+    const response = await axiosPrivate.put<CalibrationServiceSlaConfig>(
+      '/calibration-services/config/sla',
+      payload
+    )
+    return response.data
   }
 }
 
@@ -519,6 +538,16 @@ export const useCalibrationServiceSequenceConfig = (enabled = true) => {
   return useQuery({
     queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, 'sequence-config'],
     queryFn: calibrationServiceApi.getSequenceConfig,
+    enabled,
+    staleTime: 60 * 1000,
+    retry: 1
+  })
+}
+
+export const useCalibrationServiceSlaConfig = (enabled = true) => {
+  return useQuery({
+    queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, 'sla-config'],
+    queryFn: calibrationServiceApi.getSlaConfig,
     enabled,
     staleTime: 60 * 1000,
     retry: 1
@@ -929,6 +958,17 @@ export const useCalibrationServiceMutations = () => {
     }
   )
 
+  const upsertSlaConfig = useMutation(calibrationServiceApi.upsertSlaConfig, {
+    onSuccess: () => {
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.all,
+        'sla-config'
+      ])
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail])
+    }
+  })
+
   return {
     createService,
     updateService,
@@ -965,6 +1005,7 @@ export const useCalibrationServiceMutations = () => {
     generateLogisticsPdf,
     sendLogisticsControlEmail,
     downloadDocument,
-    upsertSequenceConfig
+    upsertSequenceConfig,
+    upsertSlaConfig
   }
 }

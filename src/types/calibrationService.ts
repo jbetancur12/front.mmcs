@@ -453,6 +453,23 @@ export interface CalibrationServiceSequenceConfig {
   updatedByName?: string | null
 }
 
+export interface CalibrationServiceSlaConfig {
+  programmingWarningBusinessDays: number
+  programmingTargetBusinessDays: number
+  executionWarningBusinessDays: number
+  executionTargetBusinessDays: number
+  adminClosureWarningBusinessDays: number
+  adminClosureTargetBusinessDays: number
+  invoicingWarningBusinessDays: number
+  invoicingTargetBusinessDays: number
+  documentControlWarningBusinessDays: number
+  documentControlTargetBusinessDays: number
+  finalCloseWarningBusinessDays: number
+  finalCloseTargetBusinessDays: number
+  updatedAt?: string | null
+  updatedByName?: string | null
+}
+
 export interface CalibrationServiceItemPayload {
   productId?: number | null
   itemName: string
@@ -814,3 +831,8 @@ export interface CalibrationServiceSequenceConfigPayload {
   nextQuoteNumber: number
   nextOdsNumber: number
 }
+
+export type CalibrationServiceSlaConfigPayload = Omit<
+  CalibrationServiceSlaConfig,
+  'updatedAt' | 'updatedByName'
+>

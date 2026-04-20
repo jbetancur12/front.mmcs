@@ -63,6 +63,7 @@ import {
   useCalibrationAssignableMetrologists,
   useCalibrationService,
   useCalibrationServiceSequenceConfig,
+  useCalibrationServiceSlaConfig,
   useCalibrationServiceMutations
 } from '../../hooks/useCalibrationServices'
 import {
@@ -354,6 +355,7 @@ const CalibrationServiceDetailsPage = () => {
     data: sequenceConfig,
     isLoading: isLoadingSequenceConfig
   } = useCalibrationServiceSequenceConfig(canManageSequenceConfig)
+  const { data: slaConfig } = useCalibrationServiceSlaConfig(Boolean(serviceId))
   const {
     requestApproval,
     approveService,
@@ -3114,7 +3116,7 @@ const CalibrationServiceDetailsPage = () => {
               </DetailTabPanel>
 
               <DetailTabPanel value={activeTab} tab='guide'>
-                <CalibrationServiceGuidePanel />
+                <CalibrationServiceGuidePanel slaConfig={slaConfig} />
               </DetailTabPanel>
 
               <DetailTabPanel value={activeTab} tab='history'>
