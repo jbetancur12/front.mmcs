@@ -172,6 +172,41 @@ const getOperationsDetails = (service: CalibrationService) => {
     : {}
 }
 
+const getNumberValue = (value: unknown) => {
+  const parsedValue = typeof value === 'string' ? parseFloat(value) : value
+
+  return typeof parsedValue === 'number' && Number.isFinite(parsedValue)
+    ? parsedValue
+    : 0
+}
+
+const hasPendingReleasableQuantities = (service: CalibrationService) =>
+  (service.items || []).some((item) => {
+    if (item.otherFields?.operationalStatus !== 'completed') {
+      return false
+    }
+
+    const approvedDelta = (service.adjustments || []).reduce((accumulator, adjustment) => {
+      if (adjustment.serviceItemId !== item.id) {
+        return accumulator
+      }
+
+      if (!['approved', 'applied_to_cut'].includes(adjustment.status)) {
+        return accumulator
+      }
+
+      if (adjustment.changeType === 'extra_item') {
+        return accumulator
+      }
+
+      return accumulator + getNumberValue(adjustment.differenceQuantity)
+    }, 0)
+    const effectiveQuantity = Math.max(getNumberValue(item.quantity) + approvedDelta, 0)
+    const releasedQuantity = getNumberValue(item.otherFields?.releasedQuantity)
+
+    return Math.max(effectiveQuantity - releasedQuantity, 0) > 0
+  })
+
 const getServiceOperationalFocus = (service: CalibrationService) => {
   if (service.status === 'closed') {
     return { label: 'Cierre final completado', color: 'success' as const }
@@ -184,8 +219,16 @@ const getServiceOperationalFocus = (service: CalibrationService) => {
     cuts.length > 0 &&
     cuts.every((cut) => cut.otherFields?.documentControl?.status === 'sent')
 
-  if (service.status === 'technically_completed' && allCutsSent) {
+  if (
+    service.status === 'technically_completed' &&
+    allCutsSent &&
+    !hasPendingReleasableQuantities(service)
+  ) {
     return { label: 'Listo para cierre final', color: 'success' as const }
+  }
+
+  if (service.status === 'technically_completed' && hasPendingReleasableQuantities(service)) {
+    return { label: 'Pendiente corte', color: 'warning' as const }
   }
 
   if (service.status === 'technically_completed' && allCutsInvoiced) {
