@@ -30,10 +30,14 @@ import {
   CalibrationServiceRejectPayload,
   CalibrationServiceRequestApprovalPayload,
   CalibrationServiceSendAdjustmentToCustomerPayload,
+  CalibrationServiceSendLogisticsControlEmailPayload,
+  CalibrationServiceLogisticsEmailSendResult,
   CalibrationServiceResumePayload,
   CalibrationServiceSchedulePayload,
   CalibrationServiceSequenceConfig,
   CalibrationServiceSequenceConfigPayload,
+  CalibrationServiceSlaConfig,
+  CalibrationServiceSlaConfigPayload,
   CalibrationServiceStartExecutionPayload,
   CalibrationServiceUserSummary
 } from '../types/calibrationService'
@@ -47,6 +51,13 @@ const calibrationServiceApi = {
   getSequenceConfig: async (): Promise<CalibrationServiceSequenceConfig> => {
     const response = await axiosPrivate.get<CalibrationServiceSequenceConfig>(
       '/calibration-services/config/sequence'
+    )
+    return response.data
+  },
+
+  getSlaConfig: async (): Promise<CalibrationServiceSlaConfig> => {
+    const response = await axiosPrivate.get<CalibrationServiceSlaConfig>(
+      '/calibration-services/config/sla'
     )
     return response.data
   },
@@ -469,6 +480,17 @@ const calibrationServiceApi = {
     return response.data
   },
 
+  sendLogisticsControlEmail: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServiceSendLogisticsControlEmailPayload): Promise<CalibrationServiceLogisticsEmailSendResult> => {
+    const response = await axiosPrivate.post<CalibrationServiceLogisticsEmailSendResult>(
+      `/calibration-services/${serviceId}/logistics-control/send-email`,
+      payload
+    )
+    return response.data
+  },
+
   downloadDocument: async ({
     serviceId,
     documentId
@@ -490,6 +512,16 @@ const calibrationServiceApi = {
       payload
     )
     return response.data
+  },
+
+  upsertSlaConfig: async (
+    payload: CalibrationServiceSlaConfigPayload
+  ): Promise<CalibrationServiceSlaConfig> => {
+    const response = await axiosPrivate.put<CalibrationServiceSlaConfig>(
+      '/calibration-services/config/sla',
+      payload
+    )
+    return response.data
   }
 }
 
@@ -506,6 +538,16 @@ export const useCalibrationServiceSequenceConfig = (enabled = true) => {
   return useQuery({
     queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, 'sequence-config'],
     queryFn: calibrationServiceApi.getSequenceConfig,
+    enabled,
+    staleTime: 60 * 1000,
+    retry: 1
+  })
+}
+
+export const useCalibrationServiceSlaConfig = (enabled = true) => {
+  return useQuery({
+    queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, 'sla-config'],
+    queryFn: calibrationServiceApi.getSlaConfig,
     enabled,
     staleTime: 60 * 1000,
     retry: 1
@@ -886,6 +928,22 @@ export const useCalibrationServiceMutations = () => {
     }
   )
 
+  const sendLogisticsControlEmail = useMutation(
+    calibrationServiceApi.sendLogisticsControlEmail,
+    {
+      onSuccess: (result, variables) => {
+        queryClient.setQueryData(
+          [CALIBRATION_SERVICE_QUERY_KEYS.detail, variables.serviceId],
+          result.service
+        )
+        queryClient.invalidateQueries([
+          CALIBRATION_SERVICE_QUERY_KEYS.detail,
+          variables.serviceId
+        ])
+      }
+    }
+  )
+
   const downloadDocument = useMutation(calibrationServiceApi.downloadDocument)
 
   const upsertSequenceConfig = useMutation(
@@ -899,6 +957,17 @@ export const useCalibrationServiceMutations = () => {
       }
     }
   )
+
+  const upsertSlaConfig = useMutation(calibrationServiceApi.upsertSlaConfig, {
+    onSuccess: () => {
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.all,
+        'sla-config'
+      ])
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail])
+    }
+  })
 
   return {
     createService,
@@ -934,7 +1003,9 @@ export const useCalibrationServiceMutations = () => {
     generateAdjustmentPdf,
     generateAdjustmentSummaryPdf,
     generateLogisticsPdf,
+    sendLogisticsControlEmail,
     downloadDocument,
-    upsertSequenceConfig
+    upsertSequenceConfig,
+    upsertSlaConfig
   }
 }

@@ -63,9 +63,11 @@ import {
   useCalibrationAssignableMetrologists,
   useCalibrationService,
   useCalibrationServiceSequenceConfig,
+  useCalibrationServiceSlaConfig,
   useCalibrationServiceMutations
 } from '../../hooks/useCalibrationServices'
 import {
+  CalibrationService,
   CalibrationServiceAdjustment,
   CalibrationServiceCut,
   CalibrationServiceCustomerResponseType,
@@ -117,6 +119,7 @@ import CalibrationServiceLogisticsPanel from './CalibrationServiceLogisticsPanel
 import CalibrationServiceLogisticsControlDialog, {
   CalibrationServiceLogisticsControlDialogValues
 } from './CalibrationServiceLogisticsControlDialog'
+import CalibrationServiceSendLogisticsEmailDialog from './CalibrationServiceSendLogisticsEmailDialog'
 
 type DetailTab =
   | 'summary'
@@ -169,6 +172,80 @@ const toNumber = (value: number | string | null | undefined) => {
   const parsed = typeof value === 'string' ? parseFloat(value) : value
   return Number.isFinite(parsed) ? parsed : 0
 }
+
+const getApprovedQuantityDeltaForItem = (
+  service: CalibrationService,
+  serviceItemId: number
+) =>
+  (service.adjustments || []).reduce((accumulator, adjustment) => {
+    if (adjustment.serviceItemId !== serviceItemId) {
+      return accumulator
+    }
+
+    if (!['approved', 'applied_to_cut'].includes(adjustment.status)) {
+      return accumulator
+    }
+
+    if (adjustment.changeType === 'extra_item') {
+      return accumulator
+    }
+
+    return accumulator + toNumber(adjustment.differenceQuantity)
+  }, 0)
+
+const getEffectiveServiceItemQuantity = (
+  service: CalibrationService,
+  item: NonNullable<CalibrationService['items']>[number]
+) => Math.max(toNumber(item.quantity) + getApprovedQuantityDeltaForItem(service, item.id), 0)
+
+const getApprovedFinancialImpactForItem = (
+  service: CalibrationService,
+  serviceItemId: number
+) =>
+  (service.adjustments || []).reduce(
+    (accumulator, adjustment) => {
+      if (adjustment.serviceItemId !== serviceItemId) {
+        return accumulator
+      }
+
+      if (!['approved', 'applied_to_cut'].includes(adjustment.status)) {
+        return accumulator
+      }
+
+      if (adjustment.changeType === 'extra_item') {
+        return accumulator
+      }
+
+      const taxTotalFromOtherFields =
+        adjustment.approvedTaxTotal ??
+        (adjustment.otherFields &&
+        typeof adjustment.otherFields.approvedTaxTotal === 'number'
+          ? adjustment.otherFields.approvedTaxTotal
+          : adjustment.otherFields &&
+              typeof adjustment.otherFields.approvedTaxTotal === 'string'
+            ? adjustment.otherFields.approvedTaxTotal
+            : 0)
+
+      return {
+        subtotal: accumulator.subtotal + toNumber(adjustment.approvedSubtotal),
+        taxTotal: accumulator.taxTotal + toNumber(taxTotalFromOtherFields),
+        total: accumulator.total + toNumber(adjustment.approvedTotal),
+        hasImpact: true
+      }
+    },
+    { subtotal: 0, taxTotal: 0, total: 0, hasImpact: false }
+  )
+
+const getApprovedPricingAdjustmentsForItem = (
+  service: CalibrationService,
+  serviceItemId: number
+) =>
+  (service.adjustments || []).filter(
+    (adjustment) =>
+      adjustment.serviceItemId === serviceItemId &&
+      ['approved', 'applied_to_cut'].includes(adjustment.status) &&
+      adjustment.changeType !== 'extra_item'
+  )
 
 const getOtherFieldText = (
   otherFields: Record<string, unknown> | undefined,
@@ -278,6 +355,7 @@ const CalibrationServiceDetailsPage = () => {
     data: sequenceConfig,
     isLoading: isLoadingSequenceConfig
   } = useCalibrationServiceSequenceConfig(canManageSequenceConfig)
+  const { data: slaConfig } = useCalibrationServiceSlaConfig(Boolean(serviceId))
   const {
     requestApproval,
     approveService,
@@ -310,6 +388,7 @@ const CalibrationServiceDetailsPage = () => {
     generateAdjustmentPdf,
     generateAdjustmentSummaryPdf,
     generateLogisticsPdf,
+    sendLogisticsControlEmail,
     downloadDocument,
     upsertSequenceConfig
   } = useCalibrationServiceMutations()
@@ -324,6 +403,10 @@ const CalibrationServiceDetailsPage = () => {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
   const [isLogisticsControlDialogOpen, setIsLogisticsControlDialogOpen] =
     useState(false)
+  const [isSendLogisticsEmailDialogOpen, setIsSendLogisticsEmailDialogOpen] =
+    useState(false)
+  const [sendLogisticsPreview, setSendLogisticsPreview] =
+    useState<CalibrationServiceSendPreviewResult | null>(null)
   const [isPhysicalTraceabilityDialogOpen, setIsPhysicalTraceabilityDialogOpen] =
     useState(false)
   const [isCutDialogOpen, setIsCutDialogOpen] = useState(false)
@@ -436,7 +519,7 @@ const CalibrationServiceDetailsPage = () => {
   const hasReleasableItems = (service?.items || []).some((item) => {
     const operationalStatus = item.otherFields?.operationalStatus
     const releasedQuantity = Number(item.otherFields?.releasedQuantity || 0)
-    const quantity = Number(item.quantity || 0)
+    const quantity = service ? getEffectiveServiceItemQuantity(service, item) : 0
 
     return operationalStatus === 'completed' && Math.max(quantity - releasedQuantity, 0) > 0
   })
@@ -489,6 +572,7 @@ const CalibrationServiceDetailsPage = () => {
     ['ods_issued', 'pending_programming', 'scheduled', 'in_execution', 'technically_completed', 'closed'].includes(
       service?.status || ''
     )
+  const canSendLogisticsEmail = canGenerateLogisticsPdf
   const canStillRegisterAdjustmentsAfterTechnicalCompletion =
     service?.status === 'technically_completed' && canReportAdjustment
   const hasCuts = Boolean(service?.cuts?.length)
@@ -505,7 +589,8 @@ const CalibrationServiceDetailsPage = () => {
     canCloseServiceRole &&
     !service?.isPaused &&
     service?.status === 'technically_completed' &&
-    allCutsSent
+    allCutsSent &&
+    !hasReleasableItems
 
   useEffect(() => {
     setActiveTab(getStoredDetailTab(serviceId))
@@ -944,6 +1029,7 @@ const CalibrationServiceDetailsPage = () => {
     createAdjustment.isLoading ||
     reviewAdjustment.isLoading ||
     sendAdjustmentToCustomer.isLoading ||
+    sendLogisticsControlEmail.isLoading ||
     respondAdjustment.isLoading ||
     markCutReadyForInvoicing.isLoading ||
     markCutInvoiced.isLoading ||
@@ -956,6 +1042,7 @@ const CalibrationServiceDetailsPage = () => {
     generateAdjustmentPdf.isLoading ||
     generateAdjustmentSummaryPdf.isLoading ||
     generateLogisticsPdf.isLoading ||
+    sendLogisticsControlEmail.isLoading ||
     downloadDocument.isLoading
   const decisionDocuments = service.documents?.filter((document) =>
     ['approval_evidence', 'rejection_evidence'].includes(document.documentType)
@@ -1494,6 +1581,39 @@ const CalibrationServiceDetailsPage = () => {
     } catch (logisticsPdfError) {
       console.error(logisticsPdfError)
       toast.error('No pudimos generar el PDF de control de ingreso y entrega.')
+    }
+  }
+
+  const handleOpenSendLogisticsEmail = () => {
+    setSendLogisticsPreview(
+      getEmailSendPreview(service.contactEmail, service.customer?.email)
+    )
+    setIsSendLogisticsEmailDialogOpen(true)
+  }
+
+  const handleSendLogisticsEmail = async (values: {
+    recipientEmail?: string | null
+    recipientName?: string | null
+  }) => {
+    try {
+      const result = await sendLogisticsControlEmail.mutateAsync({
+        serviceId: String(service.id),
+        recipientEmail: values.recipientEmail,
+        recipientName: values.recipientName
+      })
+
+      const actualRecipient = result.delivery?.actualRecipient
+      toast.success(
+        actualRecipient
+          ? `Formato logístico enviado a ${actualRecipient}.`
+          : 'Formato logístico enviado.'
+      )
+      setIsSendLogisticsEmailDialogOpen(false)
+      setSendLogisticsPreview(null)
+      setActiveTab('logistics')
+    } catch (logisticsEmailError) {
+      console.error(logisticsEmailError)
+      toast.error('No pudimos enviar el formato logístico por correo.')
     }
   }
 
@@ -2726,6 +2846,9 @@ const CalibrationServiceDetailsPage = () => {
                           <TableCell>Tipo servicio</TableCell>
                           <TableCell align='right'>Cantidad</TableCell>
                           {!isTechnicalOnlyView ? (
+                            <TableCell align='right'>Precio unitario</TableCell>
+                          ) : null}
+                          {!isTechnicalOnlyView ? (
                             <TableCell align='right'>Subtotal</TableCell>
                           ) : null}
                           {!isTechnicalOnlyView ? (
@@ -2734,24 +2857,114 @@ const CalibrationServiceDetailsPage = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {service.items.map((item) => (
-                          <TableRow key={item.id}>
-                            <TableCell>{item.itemName}</TableCell>
-                            <TableCell>{item.instrumentName || 'N/A'}</TableCell>
-                            <TableCell>{item.serviceType || 'N/A'}</TableCell>
-                            <TableCell align='right'>{item.quantity}</TableCell>
-                            {!isTechnicalOnlyView ? (
-                              <TableCell align='right'>
-                                {currencyFormatter.format(toNumber(item.subtotal))}
+                        {service.items.map((item) => {
+                          const effectiveQuantity = getEffectiveServiceItemQuantity(
+                            service,
+                            item
+                          )
+                          const approvedFinancialImpact =
+                            getApprovedFinancialImpactForItem(service, item.id)
+                          const effectiveSubtotal =
+                            toNumber(item.subtotal) + approvedFinancialImpact.subtotal
+                          const effectiveTotal =
+                            toNumber(item.total) + approvedFinancialImpact.total
+                          const hasQuantityAdjustment =
+                            effectiveQuantity !== toNumber(item.quantity)
+                          const isAdjustmentItem = Boolean(
+                            item.otherFields?.isAdditionalExecutionItem
+                          )
+                          const pricingAdjustments = getApprovedPricingAdjustmentsForItem(
+                            service,
+                            item.id
+                          )
+
+                          return (
+                            <TableRow key={item.id}>
+                              <TableCell>
+                                <Stack spacing={0.5}>
+                                  <Typography variant='body2'>{item.itemName}</Typography>
+                                  {hasQuantityAdjustment ||
+                                  approvedFinancialImpact.hasImpact ||
+                                  isAdjustmentItem ? (
+                                    <Stack direction='row' spacing={0.5} flexWrap='wrap'>
+                                      {hasQuantityAdjustment ||
+                                      approvedFinancialImpact.hasImpact ? (
+                                        <Chip
+                                          size='small'
+                                          color='success'
+                                          label='Ajustado por novedad'
+                                        />
+                                      ) : null}
+                                      {isAdjustmentItem ? (
+                                        <Chip
+                                          size='small'
+                                          color='info'
+                                          label='No cotizado aprobado'
+                                        />
+                                      ) : null}
+                                    </Stack>
+                                  ) : null}
+                                </Stack>
                               </TableCell>
-                            ) : null}
-                            {!isTechnicalOnlyView ? (
+                              <TableCell>{item.instrumentName || 'N/A'}</TableCell>
+                              <TableCell>{item.serviceType || 'N/A'}</TableCell>
                               <TableCell align='right'>
-                                {currencyFormatter.format(toNumber(item.total))}
+                                <Stack spacing={0.25} alignItems='flex-end'>
+                                  <Typography variant='body2'>{effectiveQuantity}</Typography>
+                                  {hasQuantityAdjustment ? (
+                                    <Typography variant='caption' color='text.secondary'>
+                                      Cotizado: {item.quantity}
+                                    </Typography>
+                                  ) : null}
+                                </Stack>
                               </TableCell>
-                            ) : null}
-                          </TableRow>
-                        ))}
+                              {!isTechnicalOnlyView ? (
+                                <TableCell align='right'>
+                                  <Stack spacing={0.5} alignItems='flex-end'>
+                                    <Typography variant='body2'>
+                                      {currencyFormatter.format(toNumber(item.unitPrice))}
+                                    </Typography>
+                                    <Typography variant='caption' color='text.secondary'>
+                                      Cotizado original
+                                    </Typography>
+                                    {pricingAdjustments.map((adjustment) => (
+                                      <Box key={adjustment.id}>
+                                        <Typography variant='body2' color='success.main'>
+                                          {currencyFormatter.format(
+                                            toNumber(adjustment.approvedUnitPrice)
+                                          )}
+                                        </Typography>
+                                        <Typography variant='caption' color='text.secondary'>
+                                          Novedad: {adjustment.differenceQuantity > 0 ? '+' : ''}
+                                          {adjustment.differenceQuantity} und.
+                                        </Typography>
+                                      </Box>
+                                    ))}
+                                  </Stack>
+                                </TableCell>
+                              ) : null}
+                              {!isTechnicalOnlyView ? (
+                                <TableCell align='right'>
+                                  <Stack spacing={0.5} alignItems='flex-end'>
+                                    <Typography variant='body2'>
+                                      {currencyFormatter.format(effectiveSubtotal)}
+                                    </Typography>
+                                    {pricingAdjustments.length ? (
+                                      <Typography variant='caption' color='text.secondary'>
+                                        Incluye novedades aprobadas
+                                      </Typography>
+                                    ) : null}
+                                  </Stack>
+                                </TableCell>
+                              ) : null}
+                              {!isTechnicalOnlyView ? (
+                                <TableCell align='right'>
+                                  {currencyFormatter.format(effectiveTotal)}
+                                </TableCell>
+                              ) : null}
+                            </TableRow>
+                          )
+                        })}
                       </TableBody>
                     </Table>
                   </Box>
@@ -2830,7 +3043,14 @@ const CalibrationServiceDetailsPage = () => {
                     pendientes, o un corte final si todo ya está listo.
                   </Alert>
                 ) : null}
-                {service.status === 'technically_completed' && allCutsSent ? (
+                {service.status === 'technically_completed' && allCutsSent && hasReleasableItems ? (
+                  <Alert severity='warning' sx={{ mb: 2 }}>
+                    Los cortes existentes ya fueron enviados, pero todavía hay cantidades
+                    aprobadas pendientes por liberar. Crea un nuevo corte para esas cantidades
+                    antes del cierre final.
+                  </Alert>
+                ) : null}
+                {service.status === 'technically_completed' && allCutsSent && !hasReleasableItems ? (
                   <Alert severity='success' sx={{ mb: 2 }}>
                     Todos los cortes ya están enviados. El servicio quedó listo para
                     <strong> cierre final</strong>.
@@ -2886,15 +3106,17 @@ const CalibrationServiceDetailsPage = () => {
                   canManageControl={canManageLogisticsControl}
                   canRegisterMovement={canRegisterPhysicalTraceability}
                   canGeneratePdf={canGenerateLogisticsPdf}
+                  canSendEmail={canSendLogisticsEmail}
                   isBusy={isOperationalBusy}
                   onEditControl={() => setIsLogisticsControlDialogOpen(true)}
                   onRegisterMovement={() => setIsPhysicalTraceabilityDialogOpen(true)}
                   onGeneratePdf={handleGenerateLogisticsPdf}
+                  onSendEmail={handleOpenSendLogisticsEmail}
                 />
               </DetailTabPanel>
 
               <DetailTabPanel value={activeTab} tab='guide'>
-                <CalibrationServiceGuidePanel />
+                <CalibrationServiceGuidePanel slaConfig={slaConfig} />
               </DetailTabPanel>
 
               <DetailTabPanel value={activeTab} tab='history'>
@@ -3072,6 +3294,19 @@ const CalibrationServiceDetailsPage = () => {
           isLoading={isOperationalBusy}
           onClose={() => setIsLogisticsControlDialogOpen(false)}
           onSubmit={handleSaveLogisticsControl}
+        />
+      ) : null}
+      {isSendLogisticsEmailDialogOpen ? (
+        <CalibrationServiceSendLogisticsEmailDialog
+          open={isSendLogisticsEmailDialogOpen}
+          service={service}
+          isLoading={isOperationalBusy}
+          sendPreview={sendLogisticsPreview}
+          onClose={() => {
+            setIsSendLogisticsEmailDialogOpen(false)
+            setSendLogisticsPreview(null)
+          }}
+          onSubmit={handleSendLogisticsEmail}
         />
       ) : null}
       {isPhysicalTraceabilityDialogOpen ? (

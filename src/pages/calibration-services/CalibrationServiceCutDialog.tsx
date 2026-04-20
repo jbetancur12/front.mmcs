@@ -67,6 +67,10 @@ const getEffectiveQuantity = (
       return accumulator
     }
 
+    if (adjustment.changeType === 'extra_item') {
+      return accumulator
+    }
+
     return accumulator + (adjustment.differenceQuantity || 0)
   }, 0)
 

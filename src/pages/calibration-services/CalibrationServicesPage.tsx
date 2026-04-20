@@ -8,6 +8,7 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  Collapse,
   Divider,
   Grid,
   MenuItem,
@@ -18,8 +19,12 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
+import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
+import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
+import FilterListOutlinedIcon from '@mui/icons-material/FilterListOutlined'
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined'
@@ -43,6 +48,7 @@ import {
 import {
   useCalibrationServiceMutations,
   useCalibrationServiceSequenceConfig,
+  useCalibrationServiceSlaConfig,
   useCalibrationServices
 } from '../../hooks/useCalibrationServices'
 import {
@@ -50,12 +56,14 @@ import {
   CalibrationServiceApprovalStatus,
   CalibrationServiceFilters,
   CalibrationServiceScopeType,
+  CalibrationServiceSlaConfigPayload,
   CalibrationServiceSlaIndicatorColor,
   CalibrationServiceStatus
 } from '../../types/calibrationService'
 import { userStore } from '../../store/userStore'
 import { useHasRole } from '../../utils/functions'
 import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
+import CalibrationServiceSlaConfigDialog from './CalibrationServiceSlaConfigDialog'
 
 const FILTER_ALL = 'all'
 const FILTER_UNASSIGNED = 'unassigned'
@@ -172,6 +180,41 @@ const getOperationsDetails = (service: CalibrationService) => {
     : {}
 }
 
+const getNumberValue = (value: unknown) => {
+  const parsedValue = typeof value === 'string' ? parseFloat(value) : value
+
+  return typeof parsedValue === 'number' && Number.isFinite(parsedValue)
+    ? parsedValue
+    : 0
+}
+
+const hasPendingReleasableQuantities = (service: CalibrationService) =>
+  (service.items || []).some((item) => {
+    if (item.otherFields?.operationalStatus !== 'completed') {
+      return false
+    }
+
+    const approvedDelta = (service.adjustments || []).reduce((accumulator, adjustment) => {
+      if (adjustment.serviceItemId !== item.id) {
+        return accumulator
+      }
+
+      if (!['approved', 'applied_to_cut'].includes(adjustment.status)) {
+        return accumulator
+      }
+
+      if (adjustment.changeType === 'extra_item') {
+        return accumulator
+      }
+
+      return accumulator + getNumberValue(adjustment.differenceQuantity)
+    }, 0)
+    const effectiveQuantity = Math.max(getNumberValue(item.quantity) + approvedDelta, 0)
+    const releasedQuantity = getNumberValue(item.otherFields?.releasedQuantity)
+
+    return Math.max(effectiveQuantity - releasedQuantity, 0) > 0
+  })
+
 const getServiceOperationalFocus = (service: CalibrationService) => {
   if (service.status === 'closed') {
     return { label: 'Cierre final completado', color: 'success' as const }
@@ -184,8 +227,16 @@ const getServiceOperationalFocus = (service: CalibrationService) => {
     cuts.length > 0 &&
     cuts.every((cut) => cut.otherFields?.documentControl?.status === 'sent')
 
-  if (service.status === 'technically_completed' && allCutsSent) {
+  if (
+    service.status === 'technically_completed' &&
+    allCutsSent &&
+    !hasPendingReleasableQuantities(service)
+  ) {
     return { label: 'Listo para cierre final', color: 'success' as const }
+  }
+
+  if (service.status === 'technically_completed' && hasPendingReleasableQuantities(service)) {
+    return { label: 'Pendiente corte', color: 'warning' as const }
   }
 
   if (service.status === 'technically_completed' && allCutsInvoiced) {
@@ -206,7 +257,7 @@ const getServiceOperationalFocus = (service: CalibrationService) => {
 const CalibrationServicesPage = () => {
   const navigate = useNavigate()
   const $userStore = useStore(userStore)
-  const { requestApproval, upsertSequenceConfig } =
+  const { requestApproval, upsertSequenceConfig, upsertSlaConfig } =
     useCalibrationServiceMutations()
   const canCreateServices = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const canTakeApprovalDecision = useHasRole([
@@ -217,6 +268,7 @@ const CalibrationServicesPage = () => {
   const canRunExecution = useHasRole([...CALIBRATION_SERVICE_EXECUTION_ROLES])
   const canViewModule = useHasRole([...CALIBRATION_SERVICE_ALLOWED_ROLES])
   const canManageSequenceConfig = canCreateServices
+  const canManageSlaConfig = useHasRole(['admin', 'super_admin'])
   const hasTechnicalRole = useHasRole([...CALIBRATION_SERVICE_TECHNICAL_ROLES])
   const hasCommercialVisibility = useHasRole([
     ...CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES
@@ -240,6 +292,8 @@ const CalibrationServicesPage = () => {
   const [customerFilter, setCustomerFilter] = useState<string>(FILTER_ALL)
   const [metrologistFilter, setMetrologistFilter] = useState<string>(FILTER_ALL)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
+  const [isSlaConfigDialogOpen, setIsSlaConfigDialogOpen] = useState(false)
+  const [areFiltersOpen, setAreFiltersOpen] = useState(false)
 
   const deferredSearch = useDeferredValue(search)
   const queryFilters: CalibrationServiceFilters = {
@@ -266,6 +320,7 @@ const CalibrationServicesPage = () => {
     data: sequenceConfig,
     isLoading: isLoadingSequenceConfig
   } = useCalibrationServiceSequenceConfig(canManageSequenceConfig)
+  const { data: slaConfig } = useCalibrationServiceSlaConfig(canManageSlaConfig)
 
   const { data, isLoading, isError, error, refetch, isFetching } =
     useCalibrationServices(queryFilters)
@@ -408,6 +463,16 @@ const CalibrationServicesPage = () => {
   const urgentCount = visibleServices.filter((service) =>
     ['yellow', 'red'].includes(service.slaIndicator?.color || 'gray')
   ).length
+  const activeFiltersCount = [
+    search.trim(),
+    statusFilter !== FILTER_ALL,
+    !isTechnicalOnlyView && approvalFilter !== FILTER_ALL,
+    scopeFilter !== FILTER_ALL,
+    slaFilter !== FILTER_ALL,
+    siteFilter.trim(),
+    customerFilter !== FILTER_ALL,
+    metrologistFilter !== FILTER_ALL
+  ].filter(Boolean).length
 
   const clearFilters = () => {
     setSearch('')
@@ -453,6 +518,18 @@ const CalibrationServicesPage = () => {
     } catch (configError) {
       console.error(configError)
       toast.error('No pudimos guardar la configuración inicial del módulo.')
+    }
+  }
+
+  const handleSaveSlaConfig = async (values: CalibrationServiceSlaConfigPayload) => {
+    try {
+      await upsertSlaConfig.mutateAsync(values)
+      toast.success('Los tiempos SLA quedaron actualizados.')
+      setIsSlaConfigDialogOpen(false)
+      void refetch()
+    } catch (configError) {
+      console.error(configError)
+      toast.error('No pudimos guardar los tiempos SLA.')
     }
   }
 
@@ -512,6 +589,15 @@ const CalibrationServicesPage = () => {
         </Box>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+          {canManageSlaConfig ? (
+            <Button
+              variant='outlined'
+              startIcon={<SettingsOutlinedIcon />}
+              onClick={() => setIsSlaConfigDialogOpen(true)}
+            >
+              Configuración SLA
+            </Button>
+          ) : null}
           <Button
             variant='outlined'
             startIcon={<RefreshOutlinedIcon />}
@@ -641,164 +727,196 @@ const CalibrationServicesPage = () => {
           <Stack
             direction={{ xs: 'column', md: 'row' }}
             justifyContent='space-between'
+            alignItems={{ xs: 'stretch', md: 'center' }}
             spacing={2}
-            mb={3}
           >
             <Box>
-              <Typography variant='h6' fontWeight={800}>
-                Filtros operativos
-              </Typography>
+              <Stack direction='row' spacing={1} alignItems='center' flexWrap='wrap'>
+                <Typography variant='h6' fontWeight={800}>
+                  Filtros operativos
+                </Typography>
+                {activeFiltersCount > 0 ? (
+                  <Chip
+                    size='small'
+                    color='primary'
+                    variant='outlined'
+                    label={`${activeFiltersCount} activo${activeFiltersCount === 1 ? '' : 's'}`}
+                  />
+                ) : null}
+              </Stack>
               <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
                 Reduce ruido y enfócate en los servicios que sí requieren acción.
               </Typography>
             </Box>
-            <Button variant='outlined' color="inherit" onClick={clearFilters} sx={{ borderRadius: 2 }}>
-              Limpiar filtros
-            </Button>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Button
+                variant='outlined'
+                color='inherit'
+                onClick={clearFilters}
+                disabled={activeFiltersCount === 0}
+                sx={{ borderRadius: 2 }}
+              >
+                Limpiar filtros
+              </Button>
+              <Button
+                variant='contained'
+                color='inherit'
+                startIcon={<FilterListOutlinedIcon />}
+                endIcon={
+                  areFiltersOpen ? <ExpandLessOutlinedIcon /> : <ExpandMoreOutlinedIcon />
+                }
+                onClick={() => setAreFiltersOpen((currentValue) => !currentValue)}
+                sx={{ borderRadius: 2 }}
+              >
+                {areFiltersOpen ? 'Ocultar filtros' : 'Mostrar filtros'}
+              </Button>
+            </Stack>
           </Stack>
 
-          <Grid container spacing={2.5}>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label='Buscar servicio o cliente'
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder='Código, cliente, ODS, contacto...'
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                select
-                fullWidth
-                label='Estado'
-                value={statusFilter}
-                onChange={(event) =>
-                  setStatusFilter(
-                    event.target.value as CalibrationServiceStatus | typeof FILTER_ALL
-                  )
-                }
-              >
-                {(isTechnicalOnlyView
-                  ? TECHNICAL_STATUS_OPTIONS
-                  : STATUS_OPTIONS
-                ).map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            {!isTechnicalOnlyView ? (
+          <Collapse in={areFiltersOpen} timeout='auto' unmountOnExit>
+            <Grid container spacing={2.5} sx={{ mt: 1 }}>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  fullWidth
+                  label='Buscar servicio o cliente'
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder='Código, cliente, ODS, contacto...'
+                />
+              </Grid>
               <Grid item xs={12} md={4}>
                 <TextField
                   select
                   fullWidth
-                  label='Respuesta cliente'
-                  value={approvalFilter}
+                  label='Estado'
+                  value={statusFilter}
                   onChange={(event) =>
-                    setApprovalFilter(
-                      event.target.value as
-                        | CalibrationServiceApprovalStatus
-                        | typeof FILTER_ALL
+                    setStatusFilter(
+                      event.target.value as CalibrationServiceStatus | typeof FILTER_ALL
                     )
                   }
                 >
-                  {APPROVAL_OPTIONS.map((option) => (
+                  {(isTechnicalOnlyView
+                    ? TECHNICAL_STATUS_OPTIONS
+                    : STATUS_OPTIONS
+                  ).map((option) => (
                     <MenuItem key={option.value} value={option.value}>
                       {option.label}
                     </MenuItem>
                   ))}
                 </TextField>
               </Grid>
-            ) : null}
-            <Grid item xs={12} md={4}>
-              <TextField
-                select
-                fullWidth
-                label='Cliente'
-                value={customerFilter}
-                onChange={(event) => setCustomerFilter(event.target.value)}
-              >
-                <MenuItem value={FILTER_ALL}>Todos los clientes</MenuItem>
-                {customerOptions.map((customer) => (
-                  <MenuItem key={customer.id} value={customer.id}>
-                    {customer.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            {!isTechnicalOnlyView ? (
+              {!isTechnicalOnlyView ? (
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    select
+                    fullWidth
+                    label='Respuesta cliente'
+                    value={approvalFilter}
+                    onChange={(event) =>
+                      setApprovalFilter(
+                        event.target.value as
+                          | CalibrationServiceApprovalStatus
+                          | typeof FILTER_ALL
+                      )
+                    }
+                  >
+                    {APPROVAL_OPTIONS.map((option) => (
+                      <MenuItem key={option.value} value={option.value}>
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+              ) : null}
               <Grid item xs={12} md={4}>
                 <TextField
                   select
                   fullWidth
-                  label='Metrólogo asignado'
-                  value={metrologistFilter}
-                  onChange={(event) => setMetrologistFilter(event.target.value)}
+                  label='Cliente'
+                  value={customerFilter}
+                  onChange={(event) => setCustomerFilter(event.target.value)}
                 >
-                  <MenuItem value={FILTER_ALL}>Todos los metrólogos</MenuItem>
-                  <MenuItem value={FILTER_UNASSIGNED}>Sin asignar</MenuItem>
-                  {metrologistOptions.map((metrologist) => (
-                    <MenuItem key={metrologist.id} value={metrologist.id}>
-                      {metrologist.label}
+                  <MenuItem value={FILTER_ALL}>Todos los clientes</MenuItem>
+                  {customerOptions.map((customer) => (
+                    <MenuItem key={customer.id} value={customer.id}>
+                      {customer.label}
                     </MenuItem>
                   ))}
                 </TextField>
               </Grid>
-            ) : null}
-            <Grid item xs={12} md={4}>
-              <TextField
-                select
-                fullWidth
-                label='Alcance'
-                value={scopeFilter}
-                onChange={(event) =>
-                  setScopeFilter(
-                    event.target.value as
-                      | CalibrationServiceScopeType
-                      | typeof FILTER_ALL
-                  )
-                }
-              >
-                {SCOPE_OPTIONS.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
+              {!isTechnicalOnlyView ? (
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    select
+                    fullWidth
+                    label='Metrólogo asignado'
+                    value={metrologistFilter}
+                    onChange={(event) => setMetrologistFilter(event.target.value)}
+                  >
+                    <MenuItem value={FILTER_ALL}>Todos los metrólogos</MenuItem>
+                    <MenuItem value={FILTER_UNASSIGNED}>Sin asignar</MenuItem>
+                    {metrologistOptions.map((metrologist) => (
+                      <MenuItem key={metrologist.id} value={metrologist.id}>
+                        {metrologist.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+              ) : null}
+              <Grid item xs={12} md={4}>
+                <TextField
+                  select
+                  fullWidth
+                  label='Alcance'
+                  value={scopeFilter}
+                  onChange={(event) =>
+                    setScopeFilter(
+                      event.target.value as
+                        | CalibrationServiceScopeType
+                        | typeof FILTER_ALL
+                    )
+                  }
+                >
+                  {SCOPE_OPTIONS.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  select
+                  fullWidth
+                  label='Semáforo'
+                  value={slaFilter}
+                  onChange={(event) =>
+                    setSlaFilter(
+                      event.target.value as
+                        | CalibrationServiceSlaIndicatorColor
+                        | typeof FILTER_ALL
+                    )
+                  }
+                >
+                  {SLA_OPTIONS.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label='Sede o ubicación'
+                  value={siteFilter}
+                  onChange={(event) => setSiteFilter(event.target.value)}
+                  placeholder='Filtra por sede, ciudad o departamento'
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                select
-                fullWidth
-                label='Semáforo'
-                value={slaFilter}
-                onChange={(event) =>
-                  setSlaFilter(
-                    event.target.value as
-                      | CalibrationServiceSlaIndicatorColor
-                      | typeof FILTER_ALL
-                  )
-                }
-              >
-                {SLA_OPTIONS.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label='Sede o ubicación'
-                value={siteFilter}
-                onChange={(event) => setSiteFilter(event.target.value)}
-                placeholder='Filtra por sede, ciudad o departamento'
-              />
-            </Grid>
-          </Grid>
+          </Collapse>
         </CardContent>
       </Card>
 
@@ -1125,6 +1243,15 @@ const CalibrationServicesPage = () => {
           config={sequenceConfig}
           onClose={() => setIsSequenceDialogOpen(false)}
           onSubmit={handleSaveSequenceConfig}
+        />
+      ) : null}
+      {canManageSlaConfig ? (
+        <CalibrationServiceSlaConfigDialog
+          open={isSlaConfigDialogOpen}
+          isLoading={upsertSlaConfig.isLoading}
+          config={slaConfig}
+          onClose={() => setIsSlaConfigDialogOpen(false)}
+          onSubmit={handleSaveSlaConfig}
         />
       ) : null}
     </Box>

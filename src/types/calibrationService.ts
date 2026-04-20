@@ -453,6 +453,23 @@ export interface CalibrationServiceSequenceConfig {
   updatedByName?: string | null
 }
 
+export interface CalibrationServiceSlaConfig {
+  programmingWarningBusinessDays: number
+  programmingTargetBusinessDays: number
+  executionWarningBusinessDays: number
+  executionTargetBusinessDays: number
+  adminClosureWarningBusinessDays: number
+  adminClosureTargetBusinessDays: number
+  invoicingWarningBusinessDays: number
+  invoicingTargetBusinessDays: number
+  documentControlWarningBusinessDays: number
+  documentControlTargetBusinessDays: number
+  finalCloseWarningBusinessDays: number
+  finalCloseTargetBusinessDays: number
+  updatedAt?: string | null
+  updatedByName?: string | null
+}
+
 export interface CalibrationServiceItemPayload {
   productId?: number | null
   itemName: string
@@ -653,6 +670,12 @@ export interface CalibrationServiceUpdateLogisticsControlPayload {
   receivedByClientSignature?: string | null
 }
 
+export interface CalibrationServiceSendLogisticsControlEmailPayload {
+  serviceId: string
+  recipientEmail?: string | null
+  recipientName?: string | null
+}
+
 export interface CalibrationServiceStartExecutionPayload {
   serviceId: string
   startedAt?: string
@@ -752,6 +775,17 @@ export interface CalibrationServiceAdjustmentSendResult {
   }
 }
 
+export interface CalibrationServiceLogisticsEmailSendResult {
+  service: CalibrationService
+  document: CalibrationServiceDocument
+  delivery: {
+    intendedRecipient?: string | null
+    requestedRecipient?: string | null
+    actualRecipient?: string | null
+    isDevOverride: boolean
+  }
+}
+
 export interface CalibrationServiceSendPreviewResult {
   intendedRecipient?: string | null
   actualRecipient?: string | null
@@ -797,3 +831,8 @@ export interface CalibrationServiceSequenceConfigPayload {
   nextQuoteNumber: number
   nextOdsNumber: number
 }
+
+export type CalibrationServiceSlaConfigPayload = Omit<
+  CalibrationServiceSlaConfig,
+  'updatedAt' | 'updatedByName'
+>

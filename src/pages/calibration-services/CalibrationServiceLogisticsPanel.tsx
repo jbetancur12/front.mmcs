@@ -14,6 +14,7 @@ import {
   Typography
 } from '@mui/material'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
+import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined'
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined'
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined'
 import {
@@ -27,10 +28,12 @@ interface Props {
   canManageControl: boolean
   canRegisterMovement: boolean
   canGeneratePdf: boolean
+  canSendEmail: boolean
   isBusy?: boolean
   onEditControl: () => void
   onRegisterMovement: () => void
   onGeneratePdf: () => void
+  onSendEmail: () => void
 }
 
 const formatDateTime = (value?: string | null) =>
@@ -53,10 +56,12 @@ const CalibrationServiceLogisticsPanel = ({
   canManageControl,
   canRegisterMovement,
   canGeneratePdf,
+  canSendEmail,
   isBusy = false,
   onEditControl,
   onRegisterMovement,
-  onGeneratePdf
+  onGeneratePdf,
+  onSendEmail
 }: Props) => {
   const filledRows = (controlSheet.items || []).filter(
     (item) =>
@@ -92,6 +97,16 @@ const CalibrationServiceLogisticsPanel = ({
               disabled={isBusy}
             >
               Generar PDF
+            </Button>
+          ) : null}
+          {canSendEmail ? (
+            <Button
+              variant='outlined'
+              startIcon={<EmailOutlinedIcon />}
+              onClick={onSendEmail}
+              disabled={isBusy}
+            >
+              Enviar correo
             </Button>
           ) : null}
           {canRegisterMovement ? (
