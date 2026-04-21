@@ -7,8 +7,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   Grid,
   Stack,
+  Switch,
   TextField,
   Typography
 } from '@mui/material'
@@ -24,6 +26,7 @@ export interface CalibrationServiceCustomerDialogValues {
     ciudad: string
     departamento: string
     pais: string
+    certificateProfileEnabled: boolean
   }
   site: CalibrationServiceCustomerSite
 }
@@ -46,7 +49,8 @@ const emptyValues: CalibrationServiceCustomerDialogValues = {
     direccion: '',
     ciudad: '',
     departamento: '',
-    pais: 'Colombia'
+    pais: 'Colombia',
+    certificateProfileEnabled: false
   },
   site: {
     name: 'Principal',
@@ -85,7 +89,8 @@ const CalibrationServiceCustomerDialog = ({
           direccion: customer.direccion || '',
           ciudad: customer.ciudad || '',
           departamento: customer.departamento || '',
-          pais: 'Colombia'
+          pais: 'Colombia',
+          certificateProfileEnabled: customer.certificateProfileEnabled ?? true
         },
         site: {
           name: '',
@@ -184,6 +189,29 @@ const CalibrationServiceCustomerDialog = ({
                     value={values.customer.telefono}
                     onChange={(event) => setCustomerField('telefono', event.target.value)}
                   />
+                </Grid>
+                <Grid item xs={12}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={values.customer.certificateProfileEnabled}
+                        onChange={(event) =>
+                          setValues((previous) => ({
+                            ...previous,
+                            customer: {
+                              ...previous.customer,
+                              certificateProfileEnabled: event.target.checked
+                            }
+                          }))
+                        }
+                      />
+                    }
+                    label='También visible en clientes para certificados'
+                  />
+                  <Typography variant='caption' color='text.secondary' display='block'>
+                    Déjalo apagado si el cliente solo se usará para cotización, ODS y operación
+                    de calibración.
+                  </Typography>
                 </Grid>
               </Grid>
             </Box>
@@ -291,4 +319,3 @@ const CalibrationServiceCustomerDialog = ({
 }
 
 export default CalibrationServiceCustomerDialog
-

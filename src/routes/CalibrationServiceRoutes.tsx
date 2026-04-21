@@ -15,6 +15,9 @@ const CalibrationServiceDetailsPage = lazy(
 const CalibrationServiceWorkspacePage = lazy(
   () => import('../pages/calibration-services/CalibrationServiceWorkspacePage')
 )
+const CalibrationServiceCustomersPage = lazy(
+  () => import('../pages/calibration-services/CalibrationServiceCustomersPage')
+)
 
 const CalibrationServiceRoutes = (role: string[]) => {
   return (
@@ -35,6 +38,10 @@ const CalibrationServiceRoutes = (role: string[]) => {
         <Route
           path='calibration-services/:serviceId'
           element={<CalibrationServiceDetailsPage />}
+        />
+        <Route
+          path='calibration-services/customers'
+          element={<CalibrationServiceCustomersPage />}
         />
       </Route>
 

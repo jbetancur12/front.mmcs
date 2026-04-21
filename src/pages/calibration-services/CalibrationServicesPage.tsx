@@ -17,6 +17,7 @@ import {
   Typography
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import AddBusinessOutlinedIcon from '@mui/icons-material/AddBusinessOutlined'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
@@ -589,6 +590,15 @@ const CalibrationServicesPage = () => {
         </Box>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+          {canCreateServices ? (
+            <Button
+              variant='outlined'
+              startIcon={<AddBusinessOutlinedIcon />}
+              onClick={() => navigate('/calibration-services/customers')}
+            >
+              Clientes
+            </Button>
+          ) : null}
           {canManageSlaConfig ? (
             <Button
               variant='outlined'

@@ -262,7 +262,9 @@ const CalibrationServiceWorkspacePage = () => {
   } = useQuery({
     queryKey: ['calibration-service-customers'],
     queryFn: async () => {
-      const response = await axiosPrivate.get<CalibrationServiceCustomer[]>('/customers')
+      const response = await axiosPrivate.get<CalibrationServiceCustomer[]>('/customers', {
+        params: { scope: 'calibration' }
+      })
       return response.data
     },
     enabled: canAccessWorkspace,

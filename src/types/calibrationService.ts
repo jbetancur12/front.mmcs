@@ -121,6 +121,7 @@ export interface CalibrationServiceCustomer {
   ciudad?: string | null
   departamento?: string | null
   direccion?: string | null
+  certificateProfileEnabled?: boolean
   sede?: string[]
   sites?: CalibrationServiceCustomerSite[]
 }
