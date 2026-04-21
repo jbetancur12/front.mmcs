@@ -413,6 +413,7 @@ export interface CalibrationService {
   department?: string | null
   address?: string | null
   commercialComments?: string | null
+  quoteTerms?: CalibrationServiceQuoteTerms | null
   internalNotes?: string | null
   rejectionReason?: string | null
   isPaused?: boolean
@@ -438,6 +439,26 @@ export interface CalibrationService {
   documents?: CalibrationServiceDocument[]
   events?: CalibrationServiceEvent[]
   slaIndicator?: CalibrationServiceSlaIndicator
+}
+
+export interface CalibrationServiceQuoteTerms {
+  commercialComments?: string
+  generalConditions?: string
+  labCalibrationConditions?: string
+  siteCalibrationConditions?: string
+  paymentConditions?: string
+  deliveryConditions?: string
+  subcontractedServices?: string
+  calibrationMethods?: string
+  conformityDeclaration?: string
+  capacityAndResources?: string
+  complaintsAndPqrs?: string
+}
+
+export interface CalibrationServiceQuoteTermsTemplate {
+  terms: CalibrationServiceQuoteTerms
+  updatedAt?: string | null
+  updatedByName?: string | null
 }
 
 export interface CalibrationServiceFilters {
@@ -527,6 +548,7 @@ export interface CalibrationServicePayload {
   department?: string | null
   address?: string | null
   commercialComments?: string | null
+  quoteTerms?: CalibrationServiceQuoteTerms | null
   internalNotes?: string | null
   status?: Extract<CalibrationServiceStatus, 'draft' | 'pending_approval'>
   otherFields?: Record<string, unknown>

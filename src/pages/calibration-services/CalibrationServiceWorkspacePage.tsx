@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import {
   Alert,
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Autocomplete,
   Box,
   Button,
@@ -25,6 +28,7 @@ import {
   Typography
 } from '@mui/material'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
+import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
@@ -41,6 +45,7 @@ import {
 import {
   useCalibrationServiceSequenceConfig,
   useCalibrationService,
+  useCalibrationServiceQuoteTermsTemplate,
   useCalibrationServiceMutations
 } from '../../hooks/useCalibrationServices'
 import {
@@ -48,6 +53,7 @@ import {
   CalibrationServiceCustomerSite,
   CalibrationServiceItemPayload,
   CalibrationServicePayload,
+  CalibrationServiceQuoteTerms,
   CalibrationServiceProductSummary
 } from '../../types/calibrationService'
 import { useHasRole } from '../../utils/functions'
@@ -56,6 +62,13 @@ import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequence
 import CalibrationServiceCustomerDialog, {
   CalibrationServiceCustomerDialogValues
 } from './CalibrationServiceCustomerDialog'
+import CalibrationServiceRichTextEditor from './CalibrationServiceRichTextEditor'
+import {
+  CALIBRATION_QUOTE_TERM_KEYS,
+  CALIBRATION_QUOTE_TERM_LABELS,
+  CalibrationQuoteTermKey,
+  mergeCalibrationQuoteTerms
+} from './calibrationQuoteTerms'
 import { NumericFormatCustom } from '../../Components/NumericFormatCustom'
 
 type FormItem = CalibrationServiceItemPayload & { localId: string }
@@ -93,6 +106,12 @@ const toNumber = (value: number | string | null | undefined) => {
   const parsed = typeof value === 'string' ? parseFloat(value) : value
   return Number.isFinite(parsed) ? parsed : 0
 }
+
+const stripHtml = (value?: string | null) =>
+  String(value || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 
 const getQueryErrorMessage = (error: unknown, fallbackMessage: string) => {
   if (error instanceof Error && error.message) {
@@ -145,6 +164,7 @@ const createInitialFormState = (): FormState => ({
   department: '',
   address: '',
   commercialComments: '',
+  quoteTerms: mergeCalibrationQuoteTerms(),
   internalNotes: '',
   otherFields: {},
   items: [createEmptyItem()]
@@ -214,7 +234,11 @@ const buildPayload = (formState: FormState, status: 'draft' | 'pending_approval'
   city: formState.city?.trim() || null,
   department: formState.department?.trim() || null,
   address: formState.address?.trim() || null,
-  commercialComments: formState.commercialComments?.trim() || null,
+  commercialComments:
+    stripHtml(formState.quoteTerms?.commercialComments) ||
+    formState.commercialComments?.trim() ||
+    null,
+  quoteTerms: formState.quoteTerms || null,
   internalNotes: formState.internalNotes?.trim() || null,
   status,
   otherFields: formState.otherFields || {},
@@ -252,6 +276,8 @@ const CalibrationServiceWorkspacePage = () => {
     isLoading: isLoadingSequenceConfig
   } = useCalibrationServiceSequenceConfig(canAccessWorkspace)
   const { data: service, isLoading: isLoadingService } = useCalibrationService(serviceId)
+  const { data: quoteTermsTemplate } =
+    useCalibrationServiceQuoteTermsTemplate(canAccessWorkspace && !isEditing)
   const { createService, updateService, uploadDocument, upsertSequenceConfig } =
     useCalibrationServiceMutations()
   const {
@@ -289,6 +315,7 @@ const CalibrationServiceWorkspacePage = () => {
   const [requestEvidenceFile, setRequestEvidenceFile] = useState<File | null>(null)
   const [requestEvidenceTitle, setRequestEvidenceTitle] = useState('')
   const [hydrated, setHydrated] = useState(false)
+  const [templateHydrated, setTemplateHydrated] = useState(false)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
   const [customerDialogMode, setCustomerDialogMode] = useState<'customer' | 'site' | null>(null)
   const [useDifferentExecutionCustomer, setUseDifferentExecutionCustomer] =
@@ -394,6 +421,14 @@ const CalibrationServiceWorkspacePage = () => {
       department: service.department || '',
       address: service.address || '',
       commercialComments: service.commercialComments || '',
+      quoteTerms: mergeCalibrationQuoteTerms({
+        commercialComments:
+          service.quoteTerms?.commercialComments ||
+          (service.commercialComments
+            ? `<p>${service.commercialComments}</p>`
+            : undefined),
+        ...(service.quoteTerms || {})
+      }),
       internalNotes: service.internalNotes || '',
       otherFields: service.otherFields || {},
       items: service.items?.map((item, index) => ({
@@ -424,6 +459,19 @@ const CalibrationServiceWorkspacePage = () => {
     setUseDifferentExecutionCustomer(hasDifferentExecutionCustomer)
     setHydrated(true)
   }, [hydrated, service])
+
+  useEffect(() => {
+    if (isEditing || templateHydrated || !quoteTermsTemplate?.terms) return
+
+    setFormState((previous) => ({
+      ...previous,
+      quoteTerms: mergeCalibrationQuoteTerms(quoteTermsTemplate.terms),
+      commercialComments:
+        stripHtml(quoteTermsTemplate.terms.commercialComments) ||
+        previous.commercialComments
+    }))
+    setTemplateHydrated(true)
+  }, [isEditing, quoteTermsTemplate?.terms, templateHydrated])
 
   const customerOptions =
     customers.length > 0
@@ -489,6 +537,20 @@ const CalibrationServiceWorkspacePage = () => {
 
   const setField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setFormState((previous) => ({ ...previous, [field]: value }))
+  }
+
+  const setQuoteTerm = (field: CalibrationQuoteTermKey, value: string) => {
+    setFormState((previous) => ({
+      ...previous,
+      commercialComments:
+        field === 'commercialComments'
+          ? stripHtml(value)
+          : previous.commercialComments,
+      quoteTerms: {
+        ...(previous.quoteTerms || mergeCalibrationQuoteTerms()),
+        [field]: value
+      } as CalibrationServiceQuoteTerms
+    }))
   }
 
   const setItemField = (localId: string, field: keyof FormItem, value: string | number | null) => {
@@ -1154,9 +1216,6 @@ const CalibrationServiceWorkspacePage = () => {
                     su precio de catálogo o editar manualmente el valor unitario.
                   </Alert>
                 </Grid>
-                <Grid item xs={12}>
-                  <TextField fullWidth multiline minRows={3} label='Comentarios comerciales' value={formState.commercialComments || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('commercialComments', event.target.value)} />
-                </Grid>
               </Grid>
             </CardContent>
           </Card>
@@ -1213,6 +1272,55 @@ const CalibrationServiceWorkspacePage = () => {
                 ) : (
                   <Alert severity='info'>Aun no hay evidencia de solicitud cargada.</Alert>
                 )}
+              </Stack>
+            </CardContent>
+          </Card>
+
+          <Card elevation={0} sx={{ borderRadius: 3, mb: 3, border: '1px solid', borderColor: 'divider' }}>
+            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+              <Stack spacing={2}>
+                <Box>
+                  <Typography variant='h6' fontWeight={800} gutterBottom>
+                    Textos editables del PDF
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    Este bloque se deja al final para ajustar la última hoja de la
+                    cotización. Al guardar, queda como snapshot de este servicio y
+                    también queda como plantilla para las siguientes cotizaciones.
+                  </Typography>
+                </Box>
+                <Alert severity='info'>
+                  Puedes usar variables dentro del texto. Al generar el PDF se reemplazan
+                  automáticamente por los valores de esta cotización:
+                  <Box component='ul' sx={{ mt: 1, mb: 0, pl: 3 }}>
+                    <li><strong>{'{{validityDays}}'}</strong>: validez de la oferta.</li>
+                    <li><strong>{'{{paymentMethod}}'}</strong>: forma de pago acordada.</li>
+                    <li><strong>{'{{instrumentDeliveryTime}}'}</strong>: tiempo de entrega de los equipos.</li>
+                    <li><strong>{'{{certificateDeliveryTime}}'}</strong>: tiempo de entrega de los certificados.</li>
+                  </Box>
+                </Alert>
+                {CALIBRATION_QUOTE_TERM_KEYS.map((termKey) => (
+                  <Accordion
+                    key={termKey}
+                    disableGutters
+                    elevation={0}
+                    sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px !important' }}
+                  >
+                    <AccordionSummary expandIcon={<ExpandMoreOutlinedIcon />}>
+                      <Typography fontWeight={800}>
+                        {CALIBRATION_QUOTE_TERM_LABELS[termKey]}
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <CalibrationServiceRichTextEditor
+                        value={formState.quoteTerms?.[termKey] || ''}
+                        disabled={!canEdit || isBusy}
+                        placeholder={`Escribe ${CALIBRATION_QUOTE_TERM_LABELS[termKey].toLowerCase()}`}
+                        onChange={(value) => setQuoteTerm(termKey, value)}
+                      />
+                    </AccordionDetails>
+                  </Accordion>
+                ))}
               </Stack>
             </CardContent>
           </Card>
