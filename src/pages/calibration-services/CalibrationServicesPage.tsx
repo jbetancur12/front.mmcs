@@ -17,6 +17,7 @@ import {
   Typography
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import AddBusinessOutlinedIcon from '@mui/icons-material/AddBusinessOutlined'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
@@ -28,6 +29,7 @@ import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined'
+import { alpha } from '@mui/material/styles'
 import { Toaster, toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -134,6 +136,62 @@ const currencyFormatter = new Intl.NumberFormat('es-CO', {
   currency: 'COP',
   maximumFractionDigits: 0
 })
+
+const ui = {
+  green: '#10b981',
+  greenDark: '#059669',
+  greenLight: '#f0fdf4',
+  success: '#059669',
+  warning: '#d97706',
+  error: '#dc2626',
+  info: '#3b82f6',
+  text: '#1f2937',
+  textSecondary: '#374151',
+  muted: '#6b7280',
+  border: '#e5e7eb',
+  surface: '#f9fafb',
+  white: '#ffffff'
+}
+
+const softCardSx = {
+  border: `1px solid ${ui.border}`,
+  borderRadius: '12px',
+  boxShadow: 'none',
+  transition: 'all 0.3s ease-in-out',
+  '&:hover': {
+    borderColor: ui.green,
+    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.1)',
+    transform: 'translateY(-2px)'
+  }
+}
+
+const primaryButtonSx = {
+  background: `linear-gradient(135deg, ${ui.green} 0%, ${ui.greenDark} 100%)`,
+  borderRadius: '12px',
+  textTransform: 'none',
+  fontWeight: 700,
+  boxShadow: 'none',
+  minHeight: 44,
+  '&:hover': {
+    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+    boxShadow: '0 8px 18px rgba(16, 185, 129, 0.2)'
+  }
+}
+
+const secondaryButtonSx = {
+  borderRadius: '12px',
+  textTransform: 'none',
+  fontWeight: 700,
+  minHeight: 44,
+  borderColor: ui.border,
+  color: ui.textSecondary,
+  backgroundColor: ui.white,
+  '&:hover': {
+    borderColor: ui.green,
+    color: ui.greenDark,
+    backgroundColor: ui.greenLight
+  }
+}
 
 const getItemsTotal = (service: CalibrationService) => {
   return (service.items ?? []).reduce((accumulator, item) => {
@@ -568,7 +626,15 @@ const CalibrationServicesPage = () => {
   }
 
   return (
-    <Box p={{ xs: 2, md: 3 }}>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        backgroundColor: ui.surface,
+        px: { xs: 2, md: 3 },
+        py: { xs: 2, md: 3 },
+        color: ui.text
+      }}
+    >
       <Toaster position='top-center' />
       <Stack
         direction={{ xs: 'column', md: 'row' }}
@@ -578,10 +644,28 @@ const CalibrationServicesPage = () => {
         mb={3}
       >
         <Box>
-          <Typography variant='h4' fontWeight={700}>
+          <Stack direction='row' spacing={1} alignItems='center' sx={{ mb: 1 }}>
+            <Typography variant='body2' sx={{ color: ui.muted, fontWeight: 500 }}>
+              Metromédica
+            </Typography>
+            <Typography variant='body2' sx={{ color: '#9ca3af' }}>
+              /
+            </Typography>
+            <Typography variant='body2' sx={{ color: ui.textSecondary, fontWeight: 500 }}>
+              Servicios
+            </Typography>
+          </Stack>
+          <Typography
+            variant='h4'
+            fontWeight={700}
+            sx={{ color: ui.text, lineHeight: 1.2, letterSpacing: '-0.02em' }}
+          >
             Servicios de calibración
           </Typography>
-          <Typography variant='body1' color='text.secondary' sx={{ mt: 1 }}>
+          <Typography
+            variant='body2'
+            sx={{ mt: 1, color: ui.muted, lineHeight: 1.5, maxWidth: 780 }}
+          >
             {isTechnicalOnlyView
               ? 'Bandeja técnica para ODS, programación y seguimiento operativo del servicio.'
               : 'Bandeja operativa para cotización, respuesta del cliente, emisión de ODS y seguimiento base del servicio.'}
@@ -589,11 +673,22 @@ const CalibrationServicesPage = () => {
         </Box>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+          {canCreateServices ? (
+            <Button
+              variant='outlined'
+              startIcon={<AddBusinessOutlinedIcon />}
+              onClick={() => navigate('/calibration-services/customers')}
+              sx={secondaryButtonSx}
+            >
+              Clientes
+            </Button>
+          ) : null}
           {canManageSlaConfig ? (
             <Button
               variant='outlined'
               startIcon={<SettingsOutlinedIcon />}
               onClick={() => setIsSlaConfigDialogOpen(true)}
+              sx={secondaryButtonSx}
             >
               Configuración SLA
             </Button>
@@ -605,6 +700,7 @@ const CalibrationServicesPage = () => {
               void refetch()
             }}
             disabled={isFetching}
+            sx={secondaryButtonSx}
           >
             Actualizar
           </Button>
@@ -614,6 +710,7 @@ const CalibrationServicesPage = () => {
               startIcon={<AddIcon />}
               onClick={() => navigate('/calibration-services/new')}
               disabled={canManageSequenceConfig && !sequenceConfig?.initialized}
+              sx={primaryButtonSx}
             >
               Nuevo servicio
             </Button>
@@ -638,30 +735,40 @@ const CalibrationServicesPage = () => {
 
       <Grid container spacing={2} mb={3}>
         <Grid item xs={12} md={3}>
-          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
-            <CardContent>
-              <Typography variant='overline' color='text.secondary' fontWeight={600} sx={{ letterSpacing: 1 }}>
-                Servicios visibles
-              </Typography>
-              <Typography variant='h3' fontWeight={800} sx={{ mt: 1, mb: 1, color: 'primary.main' }}>
+          <Card elevation={0} sx={{ ...softCardSx, height: '100%' }}>
+            <CardContent sx={{ p: 2 }}>
+              <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
+                <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
+                  Servicios visibles
+                </Typography>
+                <Box sx={{ width: 40, height: 40, borderRadius: '12px', bgcolor: alpha(ui.info, 0.1), color: ui.info, display: 'grid', placeItems: 'center' }}>
+                  <VisibilityOutlinedIcon fontSize='small' />
+                </Box>
+              </Stack>
+              <Typography variant='h3' fontWeight={700} sx={{ mt: 1.5, mb: 0.5, color: ui.text, lineHeight: 1.2 }}>
                 {visibleServices.length}
               </Typography>
-              <Typography variant='body2' color='text.secondary' fontWeight={500}>
+              <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500 }}>
                 Total cargados: {data?.totalItems ?? 0}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
-            <CardContent>
-              <Typography variant='overline' color='text.secondary' fontWeight={600} sx={{ letterSpacing: 1 }}>
-                {isTechnicalOnlyView ? 'ODS emitidas' : 'Pendientes respuesta'}
-              </Typography>
-              <Typography variant='h3' fontWeight={800} sx={{ mt: 1, mb: 1 }}>
+          <Card elevation={0} sx={{ ...softCardSx, height: '100%' }}>
+            <CardContent sx={{ p: 2 }}>
+              <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
+                <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
+                  {isTechnicalOnlyView ? 'ODS emitidas' : 'Pendientes respuesta'}
+                </Typography>
+                <Box sx={{ width: 40, height: 40, borderRadius: '12px', bgcolor: alpha(ui.warning, 0.1), color: ui.warning, display: 'grid', placeItems: 'center' }}>
+                  <WarningAmberOutlinedIcon fontSize='small' />
+                </Box>
+              </Stack>
+              <Typography variant='h3' fontWeight={700} sx={{ mt: 1.5, mb: 0.5, color: ui.text, lineHeight: 1.2 }}>
                 {isTechnicalOnlyView ? odsIssuedCount : pendingApprovalCount}
               </Typography>
-              <Typography variant='body2' color='text.secondary' sx={{ lineHeight: 1.3 }}>
+              <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500, lineHeight: 1.5, display: 'block' }}>
                 {isTechnicalOnlyView
                   ? 'Servicios ya liberados al frente técnico'
                   : 'Cotizaciones enviadas esperando respuesta'}
@@ -670,15 +777,20 @@ const CalibrationServicesPage = () => {
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
-            <CardContent>
-              <Typography variant='overline' color='text.secondary' fontWeight={600} sx={{ letterSpacing: 1 }}>
-                {isTechnicalOnlyView ? 'Requieren agenda' : 'Listos para ODS'}
-              </Typography>
-              <Typography variant='h3' fontWeight={800} sx={{ mt: 1, mb: 1 }}>
+          <Card elevation={0} sx={{ ...softCardSx, height: '100%' }}>
+            <CardContent sx={{ p: 2 }}>
+              <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
+                <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
+                  {isTechnicalOnlyView ? 'Requieren agenda' : 'Listos para ODS'}
+                </Typography>
+                <Box sx={{ width: 40, height: 40, borderRadius: '12px', bgcolor: alpha(ui.green, 0.12), color: ui.greenDark, display: 'grid', placeItems: 'center' }}>
+                  <DescriptionOutlinedIcon fontSize='small' />
+                </Box>
+              </Stack>
+              <Typography variant='h3' fontWeight={700} sx={{ mt: 1.5, mb: 0.5, color: ui.text, lineHeight: 1.2 }}>
                 {isTechnicalOnlyView ? pendingProgrammingCount : readyForOdsCount}
               </Typography>
-              <Typography variant='body2' color='text.secondary' sx={{ lineHeight: 1.3 }}>
+              <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500, lineHeight: 1.5, display: 'block' }}>
                 {isTechnicalOnlyView
                   ? 'Servicios que requieren coordinación'
                   : 'Aprobados y pendientes de emisión ODS'}
@@ -687,15 +799,20 @@ const CalibrationServicesPage = () => {
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
-            <CardContent>
-              <Typography variant='overline' color='error.main' fontWeight={600} sx={{ letterSpacing: 1 }}>
-                En riesgo o vencidos
-              </Typography>
-              <Typography variant='h3' fontWeight={800} sx={{ mt: 1, mb: 1, color: urgentCount > 0 ? 'error.main' : 'text.primary' }}>
+          <Card elevation={0} sx={{ ...softCardSx, height: '100%' }}>
+            <CardContent sx={{ p: 2 }}>
+              <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
+                <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
+                  En riesgo o vencidos
+                </Typography>
+                <Box sx={{ width: 40, height: 40, borderRadius: '12px', bgcolor: alpha(ui.error, 0.1), color: ui.error, display: 'grid', placeItems: 'center' }}>
+                  <ReportProblemOutlinedIcon fontSize='small' />
+                </Box>
+              </Stack>
+              <Typography variant='h3' fontWeight={700} sx={{ mt: 1.5, mb: 0.5, color: urgentCount > 0 ? ui.error : ui.text, lineHeight: 1.2 }}>
                 {urgentCount}
               </Typography>
-              <Typography variant='body2' color='text.secondary' sx={{ lineHeight: 1.3 }}>
+              <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500, lineHeight: 1.5, display: 'block' }}>
                 {isTechnicalOnlyView
                   ? `${scheduledCount} prog · ${inExecutionCount} ejec · ${technicallyCompletedCount} fin · ${closedCount} cerrados`
                   : `${requestedChangesCount} con cambios · ${pendingDocumentControlCount} documentales`}
@@ -707,14 +824,30 @@ const CalibrationServicesPage = () => {
 
       <Grid container spacing={2} mb={3}>
         <Grid item xs={12} md={6}>
-          <Alert severity='info'>
+          <Alert
+            severity='info'
+            sx={{
+              borderRadius: '12px',
+              border: `1px solid ${alpha(ui.info, 0.18)}`,
+              bgcolor: alpha(ui.info, 0.06),
+              color: ui.textSecondary
+            }}
+          >
             {pendingDocumentControlCount > 0
               ? `${pendingDocumentControlCount} servicios todavía requieren control documental o envío por corte.`
               : 'No hay servicios con frente documental pendiente en la bandeja actual.'}
           </Alert>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Alert severity='success'>
+          <Alert
+            severity='success'
+            sx={{
+              borderRadius: '12px',
+              border: `1px solid ${alpha(ui.green, 0.18)}`,
+              bgcolor: ui.greenLight,
+              color: ui.textSecondary
+            }}
+          >
             {readyToCloseCount > 0
               ? `${readyToCloseCount} servicios ya están listos para cierre final.`
               : 'Todavía no hay servicios listos para cierre final en la bandeja actual.'}
@@ -722,8 +855,8 @@ const CalibrationServicesPage = () => {
         </Grid>
       </Grid>
 
-      <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', mb: 3 }}>
-        <CardContent sx={{ p: 3 }}>
+      <Card elevation={0} sx={{ ...softCardSx, mb: 3 }}>
+        <CardContent sx={{ p: { xs: 2, md: 3 } }}>
           <Stack
             direction={{ xs: 'column', md: 'row' }}
             justifyContent='space-between'
@@ -732,7 +865,7 @@ const CalibrationServicesPage = () => {
           >
             <Box>
               <Stack direction='row' spacing={1} alignItems='center' flexWrap='wrap'>
-                <Typography variant='h6' fontWeight={800}>
+                <Typography variant='h6' fontWeight={700} sx={{ color: ui.text, lineHeight: 1.2 }}>
                   Filtros operativos
                 </Typography>
                 {activeFiltersCount > 0 ? (
@@ -744,7 +877,7 @@ const CalibrationServicesPage = () => {
                   />
                 ) : null}
               </Stack>
-              <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
+              <Typography variant='body2' sx={{ mt: 0.5, color: ui.muted, lineHeight: 1.5 }}>
                 Reduce ruido y enfócate en los servicios que sí requieren acción.
               </Typography>
             </Box>
@@ -754,19 +887,18 @@ const CalibrationServicesPage = () => {
                 color='inherit'
                 onClick={clearFilters}
                 disabled={activeFiltersCount === 0}
-                sx={{ borderRadius: 2 }}
+                sx={secondaryButtonSx}
               >
                 Limpiar filtros
               </Button>
               <Button
                 variant='contained'
-                color='inherit'
                 startIcon={<FilterListOutlinedIcon />}
                 endIcon={
                   areFiltersOpen ? <ExpandLessOutlinedIcon /> : <ExpandMoreOutlinedIcon />
                 }
                 onClick={() => setAreFiltersOpen((currentValue) => !currentValue)}
-                sx={{ borderRadius: 2 }}
+                sx={primaryButtonSx}
               >
                 {areFiltersOpen ? 'Ocultar filtros' : 'Mostrar filtros'}
               </Button>
@@ -970,8 +1102,8 @@ const CalibrationServicesPage = () => {
               ['scheduled', 'in_execution'].includes(service.status)
 
             return (
-              <Card key={service.id} sx={{ borderRadius: 3 }}>
-                <CardContent>
+              <Card key={service.id} elevation={0} sx={softCardSx}>
+                <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
                   <Stack
                     direction={{ xs: 'column', xl: 'row' }}
                     justifyContent='space-between'
@@ -985,7 +1117,7 @@ const CalibrationServicesPage = () => {
                         mb={1.5}
                         flexWrap='wrap'
                       >
-                        <Typography variant='h6' fontWeight={700}>
+                        <Typography variant='h6' fontWeight={700} sx={{ color: ui.text, lineHeight: 1.2 }}>
                           {service.serviceCode}
                         </Typography>
                         <Chip
@@ -1078,15 +1210,14 @@ const CalibrationServicesPage = () => {
                         ) : null}
                       </Stack>
 
-                      <Typography variant='body1' fontWeight={700}>
+                      <Typography variant='body1' fontWeight={700} sx={{ color: ui.textSecondary, lineHeight: 1.5 }}>
                         {service.customer?.nombre ||
                           service.executionCustomerName ||
                           'Cliente pendiente'}
                       </Typography>
                       <Typography
                         variant='body2'
-                        color='text.secondary'
-                        sx={{ mt: 0.5 }}
+                        sx={{ mt: 0.5, color: ui.muted, lineHeight: 1.5 }}
                       >
                         {service.scopeType === 'site'
                           ? `Sede: ${getServiceSiteLabel(service)}`
@@ -1094,8 +1225,7 @@ const CalibrationServicesPage = () => {
                       </Typography>
                       <Typography
                         variant='body2'
-                        color='text.secondary'
-                        sx={{ mt: 1 }}
+                        sx={{ mt: 1, color: ui.muted, lineHeight: 1.5 }}
                       >
                         {hasCustomerChangeRequest(service)
                           ? 'La cotización volvió a edición porque el cliente pidió cambios.'
@@ -1105,8 +1235,7 @@ const CalibrationServicesPage = () => {
                       {assignedMetrologistName ? (
                         <Typography
                           variant='body2'
-                          color='text.secondary'
-                          sx={{ mt: 0.75 }}
+                          sx={{ mt: 0.75, color: ui.muted, lineHeight: 1.5 }}
                         >
                           Responsable metrológico:{' '}
                           <strong>{assignedMetrologistName}</strong>
@@ -1114,40 +1243,40 @@ const CalibrationServicesPage = () => {
                         </Typography>
                       ) : null}
 
-                      <Divider sx={{ my: 2 }} />
+                      <Divider sx={{ my: 2, borderColor: ui.border }} />
 
                       <Grid container spacing={2}>
                         <Grid item xs={12} sm={6} md={3}>
-                          <Typography variant='caption' color='text.secondary'>
+                          <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500 }}>
                             Ítems del servicio
                           </Typography>
-                          <Typography variant='body1' fontWeight={600}>
+                          <Typography variant='body1' fontWeight={700} sx={{ color: ui.text }}>
                             {service.items?.length ?? 0}
                           </Typography>
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>
-                          <Typography variant='caption' color='text.secondary'>
+                          <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500 }}>
                             {isTechnicalOnlyView ? 'ODS' : 'Total estimado'}
                           </Typography>
-                          <Typography variant='body1' fontWeight={600}>
+                          <Typography variant='body1' fontWeight={700} sx={{ color: ui.success }}>
                             {isTechnicalOnlyView
                               ? service.odsCode || 'Pendiente'
                               : currencyFormatter.format(getItemsTotal(service))}
                           </Typography>
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>
-                          <Typography variant='caption' color='text.secondary'>
+                          <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500 }}>
                             Contacto
                           </Typography>
-                          <Typography variant='body1' fontWeight={600}>
+                          <Typography variant='body1' fontWeight={700} sx={{ color: ui.text }}>
                             {service.contactName || 'Sin contacto'}
                           </Typography>
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>
-                          <Typography variant='caption' color='text.secondary'>
+                          <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500 }}>
                             Actualizado
                           </Typography>
-                          <Typography variant='body1' fontWeight={600}>
+                          <Typography variant='body1' fontWeight={700} sx={{ color: ui.text }}>
                             {new Date(service.updatedAt).toLocaleDateString('es-CO')}
                           </Typography>
                         </Grid>
@@ -1164,6 +1293,7 @@ const CalibrationServicesPage = () => {
                         variant='outlined'
                         startIcon={<VisibilityOutlinedIcon />}
                         onClick={() => openServiceDetail(service.id)}
+                        sx={secondaryButtonSx}
                       >
                         Ver detalle
                       </Button>
@@ -1174,6 +1304,7 @@ const CalibrationServicesPage = () => {
                           onClick={() =>
                             navigate(`/calibration-services/${service.id}/edit`)
                           }
+                          sx={secondaryButtonSx}
                         >
                           Editar
                         </Button>
@@ -1184,6 +1315,7 @@ const CalibrationServicesPage = () => {
                           startIcon={<SendOutlinedIcon />}
                           onClick={() => void handleRequestApproval(service)}
                           disabled={requestApproval.isLoading}
+                          sx={primaryButtonSx}
                         >
                           Enviar cotización
                         </Button>
@@ -1194,6 +1326,12 @@ const CalibrationServicesPage = () => {
                           color='warning'
                           startIcon={<WarningAmberOutlinedIcon />}
                           onClick={() => openServiceDetail(service.id)}
+                          sx={{
+                            borderRadius: '12px',
+                            textTransform: 'none',
+                            fontWeight: 700,
+                            minHeight: 44
+                          }}
                         >
                           Registrar respuesta cliente
                         </Button>
@@ -1204,6 +1342,12 @@ const CalibrationServicesPage = () => {
                           color='info'
                           startIcon={<DescriptionOutlinedIcon />}
                           onClick={() => openOdsWorkflow(service.id)}
+                          sx={{
+                            borderRadius: '12px',
+                            textTransform: 'none',
+                            fontWeight: 700,
+                            minHeight: 44
+                          }}
                         >
                           Emitir ODS
                         </Button>
@@ -1214,6 +1358,12 @@ const CalibrationServicesPage = () => {
                           color='primary'
                           startIcon={<DescriptionOutlinedIcon />}
                           onClick={() => openScheduleWorkflow(service.id)}
+                          sx={{
+                            borderRadius: '12px',
+                            textTransform: 'none',
+                            fontWeight: 700,
+                            minHeight: 44
+                          }}
                         >
                           Programar
                         </Button>
@@ -1224,6 +1374,11 @@ const CalibrationServicesPage = () => {
                           color='success'
                           startIcon={<VisibilityOutlinedIcon />}
                           onClick={() => openServiceDetail(service.id)}
+                          sx={{
+                            ...secondaryButtonSx,
+                            color: ui.success,
+                            borderColor: alpha(ui.success, 0.35)
+                          }}
                         >
                           Operación
                         </Button>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useQuery } from 'react-query'
+import { useMutation, useQuery, useQueryClient } from 'react-query'
 import {
   Alert,
   Autocomplete,
@@ -45,6 +45,7 @@ import {
 } from '../../hooks/useCalibrationServices'
 import {
   CalibrationServiceCustomer,
+  CalibrationServiceCustomerSite,
   CalibrationServiceItemPayload,
   CalibrationServicePayload,
   CalibrationServiceProductSummary
@@ -52,6 +53,9 @@ import {
 import { useHasRole } from '../../utils/functions'
 import CalibrationServiceItemsEditor from './CalibrationServiceItemsEditor'
 import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
+import CalibrationServiceCustomerDialog, {
+  CalibrationServiceCustomerDialogValues
+} from './CalibrationServiceCustomerDialog'
 import { NumericFormatCustom } from '../../Components/NumericFormatCustom'
 
 type FormItem = CalibrationServiceItemPayload & { localId: string }
@@ -164,6 +168,30 @@ const getCatalogPriceValue = (
   return product.price ?? null
 }
 
+const getCustomerSiteOptions = (
+  customer: CalibrationServiceCustomer | null
+): CalibrationServiceCustomerSite[] => {
+  if (!customer) return []
+
+  if (customer.sites?.length) {
+    return customer.sites.filter((site) => site.isActive !== false)
+  }
+
+  return (customer.sede || []).map((siteName) => ({
+    name: siteName,
+    address: customer.direccion || '',
+    city: customer.ciudad || '',
+    department: customer.departamento || '',
+    country: 'Colombia',
+    contactEmail: customer.email || '',
+    contactPhone: customer.telefono || '',
+    isActive: true
+  }))
+}
+
+const getSiteDisplayLabel = (site: CalibrationServiceCustomerSite) =>
+  [site.name, site.city, site.department].filter(Boolean).join(' · ')
+
 const buildPayload = (formState: FormState, status: 'draft' | 'pending_approval'): CalibrationServicePayload => ({
   customerId: formState.customerId ?? null,
   scopeType: formState.scopeType ?? 'general',
@@ -215,6 +243,7 @@ const buildPayload = (formState: FormState, status: 'draft' | 'pending_approval'
 
 const CalibrationServiceWorkspacePage = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { serviceId } = useParams<{ serviceId?: string }>()
   const isEditing = Boolean(serviceId)
   const canAccessWorkspace = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
@@ -233,7 +262,9 @@ const CalibrationServiceWorkspacePage = () => {
   } = useQuery({
     queryKey: ['calibration-service-customers'],
     queryFn: async () => {
-      const response = await axiosPrivate.get<CalibrationServiceCustomer[]>('/customers')
+      const response = await axiosPrivate.get<CalibrationServiceCustomer[]>('/customers', {
+        params: { scope: 'calibration' }
+      })
       return response.data
     },
     enabled: canAccessWorkspace,
@@ -259,8 +290,73 @@ const CalibrationServiceWorkspacePage = () => {
   const [requestEvidenceTitle, setRequestEvidenceTitle] = useState('')
   const [hydrated, setHydrated] = useState(false)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
+  const [customerDialogMode, setCustomerDialogMode] = useState<'customer' | 'site' | null>(null)
   const [useDifferentExecutionCustomer, setUseDifferentExecutionCustomer] =
     useState(false)
+
+  const createCustomerMutation = useMutation({
+    mutationFn: async (values: CalibrationServiceCustomerDialogValues) => {
+      const response = await axiosPrivate.post<{ customer: CalibrationServiceCustomer }>(
+        '/customers',
+        {
+          ...values.customer,
+          direccion: values.customer.direccion || values.site.address || '',
+          ciudad: values.customer.ciudad || values.site.city || '',
+          departamento: values.customer.departamento || values.site.department || '',
+          email: values.customer.email || values.site.contactEmail || '',
+          telefono: values.customer.telefono || values.site.contactPhone || '',
+          pais: values.customer.pais || values.site.country || 'Colombia',
+          sites: [values.site]
+        }
+      )
+      return response.data.customer
+    },
+    onSuccess: (customer) => {
+      queryClient.setQueryData<CalibrationServiceCustomer[]>(
+        ['calibration-service-customers'],
+        (previous = []) => {
+          const withoutDuplicate = previous.filter((item) => item.id !== customer.id)
+          return [...withoutDuplicate, customer].sort((left, right) =>
+            left.nombre.localeCompare(right.nombre)
+          )
+        }
+      )
+      handleCustomerChange(customer)
+      if (customer.sites?.[0]) {
+        handleCustomerSiteChange(customer.sites[0])
+      }
+      setCustomerDialogMode(null)
+      toast.success('Cliente creado y seleccionado.')
+    }
+  })
+
+  const createCustomerSiteMutation = useMutation({
+    mutationFn: async (values: CalibrationServiceCustomerDialogValues) => {
+      if (!selectedCustomer?.id) {
+        throw new Error('Selecciona un cliente antes de crear la sede.')
+      }
+
+      const response = await axiosPrivate.post<CalibrationServiceCustomer>(
+        `/customers/${selectedCustomer.id}/sedes`,
+        values.site
+      )
+      return response.data
+    },
+    onSuccess: (customer) => {
+      queryClient.setQueryData<CalibrationServiceCustomer[]>(
+        ['calibration-service-customers'],
+        (previous = []) =>
+          previous.map((item) => (item.id === customer.id ? customer : item))
+      )
+      const createdSite = customer.sites?.[customer.sites.length - 1]
+      handleCustomerChange(customer)
+      if (createdSite) {
+        handleCustomerSiteChange(createdSite)
+      }
+      setCustomerDialogMode(null)
+      toast.success('Sede creada y seleccionada.')
+    }
+  })
 
   useEffect(() => {
     if (!canAccessWorkspace || isLoadingSequenceConfig) {
@@ -362,7 +458,7 @@ const CalibrationServiceWorkspacePage = () => {
   ].filter(Boolean) as string[]
   const selectedCustomer =
     customerOptions.find((customer) => customer.id === formState.customerId) || null
-  const customerSites = selectedCustomer?.sede ?? []
+  const customerSites = getCustomerSiteOptions(selectedCustomer)
   const requestEvidenceDocuments =
     service?.documents?.filter((document) => document.documentType === 'request_evidence') || []
   const hasCustomerChangeRequest =
@@ -496,16 +592,33 @@ const CalibrationServiceWorkspacePage = () => {
   }
 
   const handleCustomerChange = (customer: CalibrationServiceCustomer | null) => {
+    const firstSite = getCustomerSiteOptions(customer)[0]
+
     setFormState((previous) => ({
       ...previous,
       customerId: customer?.id ?? null,
       customerSite:
-        previous.scopeType === 'site' ? customer?.sede?.[0] || previous.customerSite : previous.customerSite,
-      contactEmail: previous.contactEmail || customer?.email || '',
-      contactPhone: previous.contactPhone || customer?.telefono || '',
-      city: previous.city || customer?.ciudad || '',
-      department: previous.department || customer?.departamento || '',
-      address: previous.address || customer?.direccion || ''
+        previous.scopeType === 'site'
+          ? firstSite?.name || previous.customerSite
+          : previous.customerSite,
+      contactEmail: firstSite?.contactEmail || customer?.email || previous.contactEmail || '',
+      contactPhone: firstSite?.contactPhone || customer?.telefono || previous.contactPhone || '',
+      city: firstSite?.city || customer?.ciudad || previous.city || '',
+      department: firstSite?.department || customer?.departamento || previous.department || '',
+      address: firstSite?.address || customer?.direccion || previous.address || ''
+    }))
+  }
+
+  const handleCustomerSiteChange = (site: CalibrationServiceCustomerSite | null) => {
+    setFormState((previous) => ({
+      ...previous,
+      customerSite: site?.name || '',
+      contactName: site?.contactName || previous.contactName || '',
+      contactEmail: site?.contactEmail || previous.contactEmail || selectedCustomer?.email || '',
+      contactPhone: site?.contactPhone || previous.contactPhone || selectedCustomer?.telefono || '',
+      city: site?.city || previous.city || selectedCustomer?.ciudad || '',
+      department: site?.department || previous.department || selectedCustomer?.departamento || '',
+      address: site?.address || previous.address || selectedCustomer?.direccion || ''
     }))
   }
 
@@ -689,18 +802,31 @@ const CalibrationServiceWorkspacePage = () => {
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
-                  <Autocomplete
-                    options={customerOptions}
-                    value={selectedCustomer}
-                    getOptionLabel={(option) => option.nombre || ''}
-                    onChange={(_, value) => handleCustomerChange(value)}
-                    disabled={
-                      !canEdit ||
-                      isBusy ||
-                      (hasCustomersError && customerOptions.length === 0)
-                    }
-                    renderInput={(params) => <TextField {...params} label='Cliente' required />}
-                  />
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <Autocomplete
+                      fullWidth
+                      options={customerOptions}
+                      value={selectedCustomer}
+                      getOptionLabel={(option) =>
+                        [option.nombre, option.identificacion].filter(Boolean).join(' · ')
+                      }
+                      onChange={(_, value) => handleCustomerChange(value)}
+                      disabled={
+                        !canEdit ||
+                        isBusy ||
+                        (hasCustomersError && customerOptions.length === 0)
+                      }
+                      renderInput={(params) => <TextField {...params} label='Cliente' required />}
+                    />
+                    <Button
+                      variant='outlined'
+                      sx={{ minWidth: 150 }}
+                      disabled={!canEdit || isBusy}
+                      onClick={() => setCustomerDialogMode('customer')}
+                    >
+                      Nuevo cliente
+                    </Button>
+                  </Stack>
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <FormControl fullWidth>
@@ -719,29 +845,54 @@ const CalibrationServiceWorkspacePage = () => {
                 {formState.scopeType === 'site' ? (
                   <Grid item xs={12} md={6}>
                     {customerSites.length ? (
-                      <FormControl fullWidth>
-                        <InputLabel>Sede</InputLabel>
-                        <Select
-                          value={formState.customerSite || ''}
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                        <FormControl fullWidth>
+                          <InputLabel>Sede</InputLabel>
+                          <Select
+                            value={formState.customerSite || ''}
+                            label='Sede'
+                            disabled={!canEdit || isBusy}
+                            onChange={(event) => {
+                              const site = customerSites.find(
+                                (candidate) => candidate.name === event.target.value
+                              )
+                              handleCustomerSiteChange(site || null)
+                            }}
+                          >
+                            {customerSites.map((site) => (
+                              <MenuItem key={site.id || site.name} value={site.name}>
+                                {getSiteDisplayLabel(site)}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                        <Button
+                          variant='outlined'
+                          sx={{ minWidth: 130 }}
+                          disabled={!canEdit || isBusy || !selectedCustomer}
+                          onClick={() => setCustomerDialogMode('site')}
+                        >
+                          Nueva sede
+                        </Button>
+                      </Stack>
+                    ) : (
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                        <TextField
+                          fullWidth
                           label='Sede'
+                          value={formState.customerSite || ''}
                           disabled={!canEdit || isBusy}
                           onChange={(event) => setField('customerSite', event.target.value)}
+                        />
+                        <Button
+                          variant='outlined'
+                          sx={{ minWidth: 130 }}
+                          disabled={!canEdit || isBusy || !selectedCustomer}
+                          onClick={() => setCustomerDialogMode('site')}
                         >
-                          {customerSites.map((site) => (
-                            <MenuItem key={site} value={site}>
-                              {site}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    ) : (
-                      <TextField
-                        fullWidth
-                        label='Sede'
-                        value={formState.customerSite || ''}
-                        disabled={!canEdit || isBusy}
-                        onChange={(event) => setField('customerSite', event.target.value)}
-                      />
+                          Crear sede
+                        </Button>
+                      </Stack>
                     )}
                   </Grid>
                 ) : null}
@@ -1126,6 +1277,35 @@ const CalibrationServiceWorkspacePage = () => {
           onSubmit={handleSaveSequenceConfig}
         />
       ) : null}
+      <CalibrationServiceCustomerDialog
+        open={Boolean(customerDialogMode)}
+        mode={customerDialogMode || 'customer'}
+        customer={selectedCustomer}
+        isSubmitting={createCustomerMutation.isLoading || createCustomerSiteMutation.isLoading}
+        onClose={() => setCustomerDialogMode(null)}
+        onSubmit={(values) => {
+          if (customerDialogMode === 'site') {
+            if (!values.site.name.trim()) {
+              toast.error('Indica el nombre de la sede.')
+              return
+            }
+            createCustomerSiteMutation.mutate(values)
+            return
+          }
+
+          if (!values.customer.nombre.trim()) {
+            toast.error('Indica el nombre del cliente.')
+            return
+          }
+
+          if (!values.site.name.trim()) {
+            toast.error('Indica al menos una sede inicial.')
+            return
+          }
+
+          createCustomerMutation.mutate(values)
+        }}
+      />
     </Box>
   )
 }
