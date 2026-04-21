@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import {
   Alert,
@@ -11,13 +11,16 @@ import {
   Divider,
   FormControlLabel,
   Grid,
+  IconButton,
   Stack,
   Switch,
+  TablePagination,
   TextField,
   Typography
 } from '@mui/material'
 import AddBusinessOutlinedIcon from '@mui/icons-material/AddBusinessOutlined'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import { Toaster, toast } from 'react-hot-toast'
@@ -34,6 +37,17 @@ import CalibrationServiceCustomerDialog, {
 } from './CalibrationServiceCustomerDialog'
 
 const customerQueryKey = ['calibration-service-customers']
+const DEFAULT_PAGE_SIZE = 10
+
+interface CalibrationCustomersResponse {
+  customers: CalibrationServiceCustomer[]
+  totalItems: number
+  totalPages: number
+  page: number
+  limit: number
+  certificateEnabledCount: number
+  commercialOnlyCount: number
+}
 
 const getCustomerSiteCount = (customer: CalibrationServiceCustomer) => {
   if (customer.sites?.length) {
@@ -51,23 +65,39 @@ const CalibrationServiceCustomersPage = () => {
   const [customerDialogMode, setCustomerDialogMode] = useState<'customer' | 'site' | null>(null)
   const [selectedCustomer, setSelectedCustomer] =
     useState<CalibrationServiceCustomer | null>(null)
+  const [selectedSite, setSelectedSite] =
+    useState<CalibrationServiceCustomerSite | null>(null)
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(DEFAULT_PAGE_SIZE)
   const deferredSearch = useDeferredValue(search)
 
+  useEffect(() => {
+    setPage(0)
+  }, [deferredSearch])
+
   const {
-    data: customers = [],
+    data,
     isLoading,
     isError,
     error
   } = useQuery({
-    queryKey: customerQueryKey,
+    queryKey: [...customerQueryKey, page, rowsPerPage, deferredSearch],
     queryFn: async () => {
-      const response = await axiosPrivate.get<CalibrationServiceCustomer[]>('/customers', {
-        params: { scope: 'calibration' }
+      const response = await axiosPrivate.get<CalibrationCustomersResponse>('/customers', {
+        params: {
+          scope: 'calibration',
+          page: page + 1,
+          limit: rowsPerPage,
+          q: deferredSearch.trim() || undefined
+        }
       })
       return response.data
     },
+    keepPreviousData: true,
     staleTime: 5 * 60 * 1000
   })
+  const customers = data?.customers ?? []
+  const totalItems = data?.totalItems ?? 0
 
   const createCustomerMutation = useMutation({
     mutationFn: async (values: CalibrationServiceCustomerDialogValues) => {
@@ -86,13 +116,8 @@ const CalibrationServiceCustomersPage = () => {
       )
       return response.data.customer
     },
-    onSuccess: (customer) => {
-      queryClient.setQueryData<CalibrationServiceCustomer[]>(customerQueryKey, (previous = []) => {
-        const withoutDuplicate = previous.filter((item) => item.id !== customer.id)
-        return [...withoutDuplicate, customer].sort((left, right) =>
-          left.nombre.localeCompare(right.nombre, 'es')
-        )
-      })
+    onSuccess: () => {
+      queryClient.invalidateQueries(customerQueryKey)
       setCustomerDialogMode(null)
       toast.success('Cliente creado para calibración.')
     }
@@ -110,13 +135,37 @@ const CalibrationServiceCustomersPage = () => {
       )
       return response.data
     },
-    onSuccess: (customer) => {
-      queryClient.setQueryData<CalibrationServiceCustomer[]>(customerQueryKey, (previous = []) =>
-        previous.map((item) => (item.id === customer.id ? customer : item))
-      )
+    onSuccess: () => {
+      queryClient.invalidateQueries(customerQueryKey)
       setCustomerDialogMode(null)
       setSelectedCustomer(null)
       toast.success('Sede creada para el cliente.')
+    }
+  })
+
+  const updateCustomerSiteMutation = useMutation({
+    mutationFn: async (values: CalibrationServiceCustomerDialogValues) => {
+      if (!selectedCustomer?.id || !selectedSite) {
+        throw new Error('Selecciona una sede antes de editarla.')
+      }
+
+      const response = await axiosPrivate.put<CalibrationServiceCustomer>(
+        `/customers/${selectedCustomer.id}/sedes`,
+        {
+          ...values.site,
+          siteId: selectedSite.id,
+          oldSede: selectedSite.name,
+          newSede: values.site.name
+        }
+      )
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(customerQueryKey)
+      setCustomerDialogMode(null)
+      setSelectedCustomer(null)
+      setSelectedSite(null)
+      toast.success('Sede actualizada.')
     }
   })
 
@@ -135,9 +184,7 @@ const CalibrationServiceCustomersPage = () => {
       return response.data
     },
     onSuccess: (customer) => {
-      queryClient.setQueryData<CalibrationServiceCustomer[]>(customerQueryKey, (previous = []) =>
-        previous.map((item) => (item.id === customer.id ? customer : item))
-      )
+      queryClient.invalidateQueries(customerQueryKey)
       toast.success(
         customer.certificateProfileEnabled
           ? 'Cliente habilitado para certificados.'
@@ -146,32 +193,8 @@ const CalibrationServiceCustomersPage = () => {
     }
   })
 
-  const filteredCustomers = useMemo(() => {
-    const needle = deferredSearch.trim().toLowerCase()
-    if (!needle) {
-      return customers
-    }
-
-    return customers.filter((customer) =>
-      [
-        customer.nombre,
-        customer.identificacion,
-        customer.email,
-        customer.telefono,
-        customer.ciudad,
-        customer.departamento
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
-        .includes(needle)
-    )
-  }, [customers, deferredSearch])
-
-  const certificateEnabledCount = customers.filter(
-    (customer) => customer.certificateProfileEnabled
-  ).length
-  const commercialOnlyCount = customers.length - certificateEnabledCount
+  const certificateEnabledCount = data?.certificateEnabledCount ?? 0
+  const commercialOnlyCount = data?.commercialOnlyCount ?? 0
 
   if (isLoading) {
     return (
@@ -241,7 +264,7 @@ const CalibrationServiceCustomersPage = () => {
                 Total clientes
               </Typography>
               <Typography variant='h3' fontWeight={900}>
-                {customers.length}
+                {totalItems}
               </Typography>
             </CardContent>
           </Card>
@@ -286,7 +309,7 @@ const CalibrationServiceCustomersPage = () => {
           />
 
           <Stack spacing={2}>
-            {filteredCustomers.map((customer) => (
+            {customers.map((customer) => (
               <Box
                 key={customer.id}
                 sx={{
@@ -368,9 +391,23 @@ const CalibrationServiceCustomersPage = () => {
                       {customer.sites.map((site: CalibrationServiceCustomerSite) => (
                         <Grid item xs={12} md={6} key={site.id || site.name}>
                           <Box sx={{ bgcolor: 'grey.50', borderRadius: 2, p: 1.5 }}>
-                            <Typography variant='subtitle2' fontWeight={800}>
-                              {site.name}
-                            </Typography>
+                            <Stack direction='row' justifyContent='space-between' spacing={1}>
+                              <Typography variant='subtitle2' fontWeight={800}>
+                                {site.name}
+                              </Typography>
+                              {canManageCustomers ? (
+                                <IconButton
+                                  size='small'
+                                  onClick={() => {
+                                    setSelectedCustomer(customer)
+                                    setSelectedSite(site)
+                                    setCustomerDialogMode('site')
+                                  }}
+                                >
+                                  <EditOutlinedIcon fontSize='small' />
+                                </IconButton>
+                              ) : null}
+                            </Stack>
                             <Typography variant='caption' color='text.secondary' display='block'>
                               {[site.address, site.city, site.department]
                                 .filter(Boolean)
@@ -390,10 +427,27 @@ const CalibrationServiceCustomersPage = () => {
               </Box>
             ))}
 
-            {!filteredCustomers.length ? (
+            {!customers.length ? (
               <Alert severity='info'>No encontramos clientes con ese criterio.</Alert>
             ) : null}
           </Stack>
+
+          <TablePagination
+            component='div'
+            count={totalItems}
+            page={page}
+            onPageChange={(_, nextPage) => setPage(nextPage)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(event) => {
+              setRowsPerPage(Number.parseInt(event.target.value, 10))
+              setPage(0)
+            }}
+            rowsPerPageOptions={[10, 25, 50]}
+            labelRowsPerPage='Clientes por página'
+            labelDisplayedRows={({ from, to, count }) =>
+              `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
+            }
+          />
         </CardContent>
       </Card>
 
@@ -401,13 +455,24 @@ const CalibrationServiceCustomersPage = () => {
         open={customerDialogMode !== null}
         mode={customerDialogMode || 'customer'}
         customer={selectedCustomer}
-        isSubmitting={createCustomerMutation.isLoading || createCustomerSiteMutation.isLoading}
+        site={selectedSite}
+        isSubmitting={
+          createCustomerMutation.isLoading ||
+          createCustomerSiteMutation.isLoading ||
+          updateCustomerSiteMutation.isLoading
+        }
         onClose={() => {
           setCustomerDialogMode(null)
           setSelectedCustomer(null)
+          setSelectedSite(null)
         }}
         onSubmit={(values) => {
           if (customerDialogMode === 'site') {
+            if (selectedSite) {
+              updateCustomerSiteMutation.mutate(values)
+              return
+            }
+
             createCustomerSiteMutation.mutate(values)
             return
           }

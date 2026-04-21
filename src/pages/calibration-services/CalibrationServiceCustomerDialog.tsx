@@ -35,6 +35,7 @@ interface CalibrationServiceCustomerDialogProps {
   open: boolean
   mode: 'customer' | 'site'
   customer?: CalibrationServiceCustomer | null
+  site?: CalibrationServiceCustomerSite | null
   isSubmitting?: boolean
   onClose: () => void
   onSubmit: (values: CalibrationServiceCustomerDialogValues) => void
@@ -70,6 +71,7 @@ const CalibrationServiceCustomerDialog = ({
   open,
   mode,
   customer,
+  site,
   isSubmitting = false,
   onClose,
   onSubmit
@@ -93,23 +95,25 @@ const CalibrationServiceCustomerDialog = ({
           certificateProfileEnabled: customer.certificateProfileEnabled ?? true
         },
         site: {
-          name: '',
-          address: customer.direccion || '',
-          city: customer.ciudad || '',
-          department: customer.departamento || '',
-          country: 'Colombia',
-          contactName: '',
-          contactEmail: customer.email || '',
-          contactPhone: customer.telefono || '',
-          notes: '',
-          isActive: true
+          id: site?.id,
+          customerId: site?.customerId || customer.id,
+          name: site?.name || '',
+          address: site?.address || customer.direccion || '',
+          city: site?.city || customer.ciudad || '',
+          department: site?.department || customer.departamento || '',
+          country: site?.country || 'Colombia',
+          contactName: site?.contactName || '',
+          contactEmail: site?.contactEmail || customer.email || '',
+          contactPhone: site?.contactPhone || customer.telefono || '',
+          notes: site?.notes || '',
+          isActive: site?.isActive ?? true
         }
       })
       return
     }
 
     setValues(emptyValues)
-  }, [customer, mode, open])
+  }, [customer, mode, open, site])
 
   const setCustomerField = (
     field: keyof CalibrationServiceCustomerDialogValues['customer'],
@@ -138,7 +142,12 @@ const CalibrationServiceCustomerDialog = ({
     onSubmit(values)
   }
 
-  const title = mode === 'customer' ? 'Crear cliente comercial' : 'Crear sede del cliente'
+  const title =
+    mode === 'customer'
+      ? 'Crear cliente comercial'
+      : site?.id
+        ? 'Editar sede del cliente'
+        : 'Crear sede del cliente'
 
   return (
     <Dialog open={open} onClose={isSubmitting ? undefined : onClose} maxWidth='md' fullWidth>
@@ -217,7 +226,8 @@ const CalibrationServiceCustomerDialog = ({
             </Box>
           ) : (
             <Alert severity='success'>
-              Nueva sede para <strong>{customer?.nombre || 'cliente seleccionado'}</strong>.
+              {site?.id ? 'Editando sede de' : 'Nueva sede para'}{' '}
+              <strong>{customer?.nombre || 'cliente seleccionado'}</strong>.
             </Alert>
           )}
 
@@ -311,7 +321,13 @@ const CalibrationServiceCustomerDialog = ({
           Cancelar
         </Button>
         <Button variant='contained' onClick={handleSubmit} disabled={isSubmitting}>
-          {isSubmitting ? 'Guardando...' : mode === 'customer' ? 'Crear cliente' : 'Crear sede'}
+          {isSubmitting
+            ? 'Guardando...'
+            : mode === 'customer'
+              ? 'Crear cliente'
+              : site?.id
+                ? 'Guardar sede'
+                : 'Crear sede'}
         </Button>
       </DialogActions>
     </Dialog>
