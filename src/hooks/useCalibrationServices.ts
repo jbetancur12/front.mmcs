@@ -20,6 +20,7 @@ import {
   CalibrationServicePayload,
   CalibrationServicePausePayload,
   CalibrationServicePhysicalTraceabilityPayload,
+  CalibrationServiceQuoteTermsTemplate,
   CalibrationServiceReassignPayload,
   CalibrationServiceReschedulePayload,
   CalibrationServiceUpdateLogisticsControlPayload,
@@ -58,6 +59,13 @@ const calibrationServiceApi = {
   getSlaConfig: async (): Promise<CalibrationServiceSlaConfig> => {
     const response = await axiosPrivate.get<CalibrationServiceSlaConfig>(
       '/calibration-services/config/sla'
+    )
+    return response.data
+  },
+
+  getQuoteTermsTemplate: async (): Promise<CalibrationServiceQuoteTermsTemplate> => {
+    const response = await axiosPrivate.get<CalibrationServiceQuoteTermsTemplate>(
+      '/calibration-services/config/quote-terms'
     )
     return response.data
   },
@@ -551,6 +559,15 @@ export const useCalibrationServiceSlaConfig = (enabled = true) => {
     enabled,
     staleTime: 60 * 1000,
     retry: 1
+  })
+}
+
+export const useCalibrationServiceQuoteTermsTemplate = (enabled = true) => {
+  return useQuery({
+    queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template'],
+    queryFn: calibrationServiceApi.getQuoteTermsTemplate,
+    enabled,
+    staleTime: 5 * 60 * 1000
   })
 }
 
