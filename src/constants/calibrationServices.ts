@@ -103,13 +103,24 @@ export const CALIBRATION_SERVICE_CANCEL_ROLES = [
 export const CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES =
   CALIBRATION_SERVICE_EXECUTION_ROLES
 
-export const CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES = [
+export const CALIBRATION_SERVICE_ADJUSTMENT_TECHNICAL_REVIEW_ROLES = [
+  'admin',
+  'super_admin',
+  'technical_director',
+  'calibration_coordinator'
+] as const
+
+export const CALIBRATION_SERVICE_ADJUSTMENT_COMMERCIAL_REVIEW_ROLES = [
   'admin',
   'super_admin',
   'comp_admin',
   'comp_requester',
-  'comp_supervisor',
-  'invoicing'
+  'comp_supervisor'
+] as const
+
+export const CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES = [
+  ...CALIBRATION_SERVICE_ADJUSTMENT_TECHNICAL_REVIEW_ROLES,
+  ...CALIBRATION_SERVICE_ADJUSTMENT_COMMERCIAL_REVIEW_ROLES
 ] as const
 
 export const CALIBRATION_SERVICE_INVOICING_ROLES = [
@@ -138,8 +149,8 @@ export const CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES = [
 ] as const
 
 export const CALIBRATION_SERVICE_STATUS_LABELS: Record<
-CalibrationServiceStatus,
-string
+  CalibrationServiceStatus,
+  string
 > = {
   draft: 'Borrador',
   pending_approval: 'Cotización enviada',
@@ -155,8 +166,8 @@ string
 }
 
 export const CALIBRATION_SERVICE_APPROVAL_LABELS: Record<
-CalibrationServiceApprovalStatus,
-string
+  CalibrationServiceApprovalStatus,
+  string
 > = {
   pending: 'Pendiente respuesta cliente',
   approved: 'Aprobada por cliente',

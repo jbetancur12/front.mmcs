@@ -20,18 +20,21 @@ import {
 import { NumericFormatCustom } from '../../Components/NumericFormatCustom'
 
 type TechnicalDecision = 'approved' | 'rejected'
+type ReviewStage = 'technical' | 'commercial'
 
 interface CalibrationServiceAdjustmentReviewDialogProps {
   open: boolean
   adjustment: CalibrationServiceAdjustment | null
+  reviewStage: ReviewStage
   isLoading?: boolean
   onClose: () => void
   onSubmit: (values: {
-    decision: Extract<
+    reviewStage: ReviewStage
+    decision?: Extract<
       CalibrationServiceAdjustmentStatus,
       'approved' | 'rejected'
     >
-    technicalDecision: TechnicalDecision
+    technicalDecision?: TechnicalDecision
     technicalReviewNotes?: string | null
     technicalReviewerRole?: string | null
     contractModificationRequired?: boolean
@@ -54,6 +57,7 @@ interface CalibrationServiceAdjustmentReviewDialogProps {
 const CalibrationServiceAdjustmentReviewDialog = ({
   open,
   adjustment,
+  reviewStage,
   isLoading = false,
   onClose,
   onSubmit
@@ -92,7 +96,7 @@ const CalibrationServiceAdjustmentReviewDialog = ({
         ? 'rejected'
         : 'approved'
 
-    setDecision(nextTechnicalDecision === 'rejected' ? 'rejected' : 'approved')
+    setDecision('approved')
     setTechnicalDecision(nextTechnicalDecision)
     setTechnicalReviewNotes(
       adjustment.otherFields &&
@@ -220,20 +224,34 @@ const CalibrationServiceAdjustmentReviewDialog = ({
     isQuantityLess && applyDiscount ? -approvedTaxTotal : approvedTaxTotal
   const signedTotal =
     isQuantityLess && applyDiscount ? -approvedTotal : approvedTotal
+  const isTechnicalReview = reviewStage === 'technical'
   const canSubmit =
     (!contractModificationRequired || Boolean(supportChannel)) &&
-    !(technicalDecision === 'rejected' && decision === 'approved')
+    (isTechnicalReview ||
+      adjustment?.otherFields?.technicalDecision === 'approved')
 
   const handleSubmit = async () => {
     if (!canSubmit) {
       return
     }
 
+    if (isTechnicalReview) {
+      await onSubmit({
+        reviewStage,
+        technicalDecision,
+        technicalReviewNotes: technicalReviewNotes.trim() || null,
+        technicalReviewerRole: technicalReviewerRole.trim() || null,
+        contractModificationRequired,
+        supportChannel: contractModificationRequired ? supportChannel : null,
+        supportReference: supportReference.trim() || null,
+        supportNotifiedAt: new Date().toISOString()
+      })
+      return
+    }
+
     await onSubmit({
+      reviewStage,
       decision,
-      technicalDecision,
-      technicalReviewNotes: technicalReviewNotes.trim() || null,
-      technicalReviewerRole: technicalReviewerRole.trim() || null,
       contractModificationRequired,
       supportChannel: contractModificationRequired ? supportChannel : null,
       supportReference: supportReference.trim() || null,
@@ -265,62 +283,84 @@ const CalibrationServiceAdjustmentReviewDialog = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth='md' fullWidth>
-      <DialogTitle>Revisar novedad</DialogTitle>
+      <DialogTitle>
+        {isTechnicalReview
+          ? 'Revisión técnica de novedad'
+          : 'Revisión comercial de novedad'}
+      </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={3} sx={{ mt: 0.5 }}>
           <Typography variant='body2' color='text.secondary'>
             {adjustment?.itemName || 'Sin ítem'} ·{' '}
             {adjustment?.description || ''}
           </Typography>
-          <Stack spacing={2}>
-            <Typography variant='subtitle2' fontWeight={800}>
-              Revisión técnica / calidad / laboratorio
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  select
-                  fullWidth
-                  label='Decisión técnica'
-                  value={technicalDecision}
-                  onChange={(event) => {
-                    const nextDecision = event.target.value as TechnicalDecision
-                    setTechnicalDecision(nextDecision)
-                    if (nextDecision === 'rejected') {
-                      setDecision('rejected')
+          {isTechnicalReview ? (
+            <Stack spacing={2}>
+              <Typography variant='subtitle2' fontWeight={800}>
+                Revisión técnica / calidad / laboratorio
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    select
+                    fullWidth
+                    label='Decisión técnica'
+                    value={technicalDecision}
+                    onChange={(event) => {
+                      const nextDecision = event.target
+                        .value as TechnicalDecision
+                      setTechnicalDecision(nextDecision)
+                      if (nextDecision === 'rejected') {
+                        setDecision('rejected')
+                      }
+                    }}
+                    helperText='Confirma si el cambio puede ejecutarse con capacidad y alcance técnico.'
+                  >
+                    <MenuItem value='approved'>Se puede ejecutar</MenuItem>
+                    <MenuItem value='rejected'>No se puede ejecutar</MenuItem>
+                  </TextField>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label='Rol que revisa'
+                    value={technicalReviewerRole}
+                    onChange={(event) =>
+                      setTechnicalReviewerRole(event.target.value)
                     }
-                  }}
-                  helperText='Confirma si el cambio puede ejecutarse con capacidad y alcance técnico.'
-                >
-                  <MenuItem value='approved'>Se puede ejecutar</MenuItem>
-                  <MenuItem value='rejected'>No se puede ejecutar</MenuItem>
-                </TextField>
+                    helperText='Ej. Director técnico, Coordinador, Calidad o Laboratorio.'
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label='Observación técnica'
+                    value={technicalReviewNotes}
+                    onChange={(event) =>
+                      setTechnicalReviewNotes(event.target.value)
+                    }
+                    multiline
+                    minRows={2}
+                  />
+                </Grid>
               </Grid>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label='Rol que revisa'
-                  value={technicalReviewerRole}
-                  onChange={(event) =>
-                    setTechnicalReviewerRole(event.target.value)
-                  }
-                  helperText='Ej. Director técnico, Coordinador, Calidad o Laboratorio.'
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label='Observación técnica'
-                  value={technicalReviewNotes}
-                  onChange={(event) =>
-                    setTechnicalReviewNotes(event.target.value)
-                  }
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
-            </Grid>
-          </Stack>
+            </Stack>
+          ) : (
+            <Stack spacing={1}>
+              <Typography variant='subtitle2' fontWeight={800}>
+                Revisión técnica
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                Aprobada técnicamente por{' '}
+                {String(
+                  adjustment?.otherFields?.technicalReviewedByName ||
+                    adjustment?.otherFields?.technicalReviewerRole ||
+                    'director técnico / coordinador'
+                )}
+                .
+              </Typography>
+            </Stack>
+          )}
           <Stack spacing={2}>
             <Typography variant='subtitle2' fontWeight={800}>
               Modificación contractual y soporte inmediato
@@ -368,163 +408,170 @@ const CalibrationServiceAdjustmentReviewDialog = ({
               </Grid>
             ) : null}
           </Stack>
-          <Typography variant='subtitle2' fontWeight={800}>
-            Revisión comercial
-          </Typography>
-          <TextField
-            select
-            fullWidth
-            label='Decisión comercial'
-            value={decision}
-            onChange={(event) =>
-              setDecision(
-                event.target.value as Extract<
-                  CalibrationServiceAdjustmentStatus,
-                  'approved' | 'rejected'
-                >
-              )
-            }
-            disabled={technicalDecision === 'rejected'}
-          >
-            <MenuItem value='approved'>Aprobar novedad</MenuItem>
-            <MenuItem value='rejected'>Rechazar novedad</MenuItem>
-          </TextField>
-          <TextField
-            fullWidth
-            label='Observación comercial'
-            value={commercialNotes}
-            onChange={(event) => setCommercialNotes(event.target.value)}
-            multiline
-            minRows={2}
-          />
-          {decision === 'approved' && needsPricing ? (
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label='Notas de valoración'
-                  value={pricingNotes}
-                  onChange={(event) => setPricingNotes(event.target.value)}
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={customerApprovalRequired}
+          {!isTechnicalReview ? (
+            <>
+              <Typography variant='subtitle2' fontWeight={800}>
+                Revisión comercial
+              </Typography>
+              <TextField
+                select
+                fullWidth
+                label='Decisión comercial'
+                value={decision}
+                onChange={(event) =>
+                  setDecision(
+                    event.target.value as Extract<
+                      CalibrationServiceAdjustmentStatus,
+                      'approved' | 'rejected'
+                    >
+                  )
+                }
+              >
+                <MenuItem value='approved'>Aprobar novedad</MenuItem>
+                <MenuItem value='rejected'>Rechazar novedad</MenuItem>
+              </TextField>
+              <TextField
+                fullWidth
+                label='Observación comercial'
+                value={commercialNotes}
+                onChange={(event) => setCommercialNotes(event.target.value)}
+                multiline
+                minRows={2}
+              />
+              {decision === 'approved' && needsPricing ? (
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label='Notas de valoración'
+                      value={pricingNotes}
+                      onChange={(event) => setPricingNotes(event.target.value)}
+                      multiline
+                      minRows={2}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={customerApprovalRequired}
+                          onChange={(event) =>
+                            setCustomerApprovalRequired(event.target.checked)
+                          }
+                        />
+                      }
+                      label='Esta novedad requiere validación del cliente/calidad antes de aplicarse'
+                    />
+                  </Grid>
+                  {hasQuotedItemPrice && (isQuantityMore || isQuantityLess) ? (
+                    <Grid item xs={12}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={useQuotedPrice}
+                            onChange={(event) =>
+                              setUseQuotedPrice(event.target.checked)
+                            }
+                          />
+                        }
+                        label={
+                          isQuantityLess
+                            ? 'Usar el mismo precio cotizado del ítem original como base del descuento'
+                            : 'Usar el mismo precio cotizado del ítem original'
+                        }
+                      />
+                    </Grid>
+                  ) : null}
+                  {isQuantityLess ? (
+                    <Grid item xs={12}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={applyDiscount}
+                            onChange={(event) =>
+                              setApplyDiscount(event.target.checked)
+                            }
+                          />
+                        }
+                        label='Descontar del valor original por la menor cantidad recibida o ejecutada'
+                      />
+                    </Grid>
+                  ) : null}
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label='Precio unitario'
+                      value={approvedUnitPrice}
                       onChange={(event) =>
-                        setCustomerApprovalRequired(event.target.checked)
+                        setApprovedUnitPrice(event.target.value)
+                      }
+                      InputProps={{
+                        inputComponent: NumericFormatCustom as never
+                      }}
+                      helperText={
+                        useQuotedPrice
+                          ? `Cantidad a reconocer: ${pricedQuantity}. Desmarca la opción anterior si quieres cambiar el precio.`
+                          : `Cantidad a reconocer: ${pricedQuantity}`
+                      }
+                      disabled={useQuotedPrice}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      type='number'
+                      label='IVA %'
+                      value={approvedTaxRate}
+                      onChange={(event) =>
+                        setApprovedTaxRate(event.target.value)
+                      }
+                      inputProps={{ min: 0 }}
+                      helperText='Opcional'
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label='Subtotal'
+                      value={approvedUnitPrice ? signedSubtotal : ''}
+                      InputProps={{
+                        inputComponent: NumericFormatCustom as never,
+                        readOnly: true
+                      }}
+                      helperText='Se calcula automáticamente'
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label='Valor IVA'
+                      value={approvedUnitPrice ? signedTaxTotal : ''}
+                      InputProps={{
+                        inputComponent: NumericFormatCustom as never,
+                        readOnly: true
+                      }}
+                      helperText='Se calcula automáticamente'
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label='Total aprobado'
+                      value={approvedUnitPrice ? signedTotal : ''}
+                      InputProps={{
+                        inputComponent: NumericFormatCustom as never,
+                        readOnly: true
+                      }}
+                      helperText={
+                        isQuantityLess && !applyDiscount
+                          ? 'No se aplicará descuento económico'
+                          : 'Se calcula automáticamente'
                       }
                     />
-                  }
-                  label='Esta novedad requiere validación del cliente/calidad antes de aplicarse'
-                />
-              </Grid>
-              {hasQuotedItemPrice && (isQuantityMore || isQuantityLess) ? (
-                <Grid item xs={12}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={useQuotedPrice}
-                        onChange={(event) =>
-                          setUseQuotedPrice(event.target.checked)
-                        }
-                      />
-                    }
-                    label={
-                      isQuantityLess
-                        ? 'Usar el mismo precio cotizado del ítem original como base del descuento'
-                        : 'Usar el mismo precio cotizado del ítem original'
-                    }
-                  />
+                  </Grid>
                 </Grid>
               ) : null}
-              {isQuantityLess ? (
-                <Grid item xs={12}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={applyDiscount}
-                        onChange={(event) =>
-                          setApplyDiscount(event.target.checked)
-                        }
-                      />
-                    }
-                    label='Descontar del valor original por la menor cantidad recibida o ejecutada'
-                  />
-                </Grid>
-              ) : null}
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  label='Precio unitario'
-                  value={approvedUnitPrice}
-                  onChange={(event) => setApprovedUnitPrice(event.target.value)}
-                  InputProps={{
-                    inputComponent: NumericFormatCustom as never
-                  }}
-                  helperText={
-                    useQuotedPrice
-                      ? `Cantidad a reconocer: ${pricedQuantity}. Desmarca la opción anterior si quieres cambiar el precio.`
-                      : `Cantidad a reconocer: ${pricedQuantity}`
-                  }
-                  disabled={useQuotedPrice}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  type='number'
-                  label='IVA %'
-                  value={approvedTaxRate}
-                  onChange={(event) => setApprovedTaxRate(event.target.value)}
-                  inputProps={{ min: 0 }}
-                  helperText='Opcional'
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  label='Subtotal'
-                  value={approvedUnitPrice ? signedSubtotal : ''}
-                  InputProps={{
-                    inputComponent: NumericFormatCustom as never,
-                    readOnly: true
-                  }}
-                  helperText='Se calcula automáticamente'
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  label='Valor IVA'
-                  value={approvedUnitPrice ? signedTaxTotal : ''}
-                  InputProps={{
-                    inputComponent: NumericFormatCustom as never,
-                    readOnly: true
-                  }}
-                  helperText='Se calcula automáticamente'
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  label='Total aprobado'
-                  value={approvedUnitPrice ? signedTotal : ''}
-                  InputProps={{
-                    inputComponent: NumericFormatCustom as never,
-                    readOnly: true
-                  }}
-                  helperText={
-                    isQuantityLess && !applyDiscount
-                      ? 'No se aplicará descuento económico'
-                      : 'Se calcula automáticamente'
-                  }
-                />
-              </Grid>
-            </Grid>
+            </>
           ) : null}
         </Stack>
       </DialogContent>

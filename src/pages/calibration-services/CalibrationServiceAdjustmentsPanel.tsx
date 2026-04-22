@@ -24,13 +24,17 @@ import {
 interface CalibrationServiceAdjustmentsPanelProps {
   service: CalibrationService
   canReport: boolean
-  canReview: boolean
+  canTechnicalReview: boolean
+  canCommercialReview: boolean
   canGenerateDocument?: boolean
   canGenerateSummaryDocument?: boolean
   isTechnicalOnlyView?: boolean
   isBusy?: boolean
   onCreate: () => void
-  onReview: (adjustment: CalibrationServiceAdjustment) => void
+  onReview: (
+    adjustment: CalibrationServiceAdjustment,
+    reviewStage: 'technical' | 'commercial'
+  ) => void
   onSendToCustomer?: (adjustment: CalibrationServiceAdjustment) => void
   onRegisterCustomerResponse?: (
     adjustment: CalibrationServiceAdjustment
@@ -120,7 +124,8 @@ const isBlockingAdjustment = (adjustment: CalibrationServiceAdjustment) => {
 const CalibrationServiceAdjustmentsPanel = ({
   service,
   canReport,
-  canReview,
+  canTechnicalReview,
+  canCommercialReview,
   canGenerateDocument = false,
   canGenerateSummaryDocument = false,
   isTechnicalOnlyView = false,
@@ -230,6 +235,23 @@ const CalibrationServiceAdjustmentsPanel = ({
                 )
                 const hasContractModification =
                   otherFields.contractModificationRequired !== false
+                const hasTechnicalApproval =
+                  otherFields.technicalDecision === 'approved'
+                const hasTechnicalDecision = Boolean(
+                  otherFields.technicalDecision
+                )
+                const canRunTechnicalReview =
+                  canTechnicalReview &&
+                  [
+                    'reported',
+                    'customer_changes_requested',
+                    'customer_rejected'
+                  ].includes(adjustment.status) &&
+                  !hasTechnicalApproval
+                const canRunCommercialReview =
+                  canCommercialReview &&
+                  adjustment.status === 'reported' &&
+                  hasTechnicalApproval
 
                 return (
                   <TableRow key={adjustment.id}>
@@ -329,17 +351,28 @@ const CalibrationServiceAdjustmentsPanel = ({
                         justifyContent='flex-end'
                         flexWrap='wrap'
                       >
-                        {canReview && adjustment.status === 'reported' ? (
+                        {canRunTechnicalReview ? (
                           <Button
                             size='small'
                             variant='outlined'
-                            onClick={() => onReview(adjustment)}
+                            onClick={() => onReview(adjustment, 'technical')}
                             disabled={isBusy}
                           >
-                            Revisar
+                            Revisión técnica
                           </Button>
                         ) : null}
-                        {canReview &&
+                        {canRunCommercialReview ? (
+                          <Button
+                            size='small'
+                            variant='outlined'
+                            onClick={() => onReview(adjustment, 'commercial')}
+                            disabled={isBusy}
+                          >
+                            Revisión comercial
+                          </Button>
+                        ) : null}
+                        {canTechnicalReview &&
+                        hasTechnicalDecision &&
                         [
                           'customer_changes_requested',
                           'customer_rejected'
@@ -347,13 +380,13 @@ const CalibrationServiceAdjustmentsPanel = ({
                           <Button
                             size='small'
                             variant='outlined'
-                            onClick={() => onReview(adjustment)}
+                            onClick={() => onReview(adjustment, 'technical')}
                             disabled={isBusy}
                           >
                             Replantear
                           </Button>
                         ) : null}
-                        {canReview &&
+                        {canCommercialReview &&
                         onSendToCustomer &&
                         adjustment.status === 'pending_customer_approval' ? (
                           <Button
@@ -365,7 +398,7 @@ const CalibrationServiceAdjustmentsPanel = ({
                             Enviar al cliente
                           </Button>
                         ) : null}
-                        {canReview &&
+                        {canCommercialReview &&
                         onRegisterCustomerResponse &&
                         adjustment.status === 'pending_customer_approval' ? (
                           <Button
@@ -392,17 +425,18 @@ const CalibrationServiceAdjustmentsPanel = ({
                           </Button>
                         ) : null}
                         {!(
-                          (canReview && adjustment.status === 'reported') ||
-                          (canReview &&
+                          canRunTechnicalReview ||
+                          canRunCommercialReview ||
+                          (canTechnicalReview &&
                             [
                               'customer_changes_requested',
                               'customer_rejected'
                             ].includes(adjustment.status)) ||
-                          (canReview &&
+                          (canCommercialReview &&
                             onSendToCustomer &&
                             adjustment.status ===
                               'pending_customer_approval') ||
-                          (canReview &&
+                          (canCommercialReview &&
                             onRegisterCustomerResponse &&
                             adjustment.status ===
                               'pending_customer_approval') ||

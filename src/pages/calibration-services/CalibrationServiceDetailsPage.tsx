@@ -36,7 +36,8 @@ import { ReactNode, useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES,
-  CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES,
+  CALIBRATION_SERVICE_ADJUSTMENT_COMMERCIAL_REVIEW_ROLES,
+  CALIBRATION_SERVICE_ADJUSTMENT_TECHNICAL_REVIEW_ROLES,
   CALIBRATION_SERVICE_APPROVAL_ROLES,
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
@@ -429,6 +430,8 @@ const CalibrationServiceDetailsPage = () => {
     useState<CalibrationServiceCut | null>(null)
   const [selectedAdjustment, setSelectedAdjustment] =
     useState<CalibrationServiceAdjustment | null>(null)
+  const [selectedAdjustmentReviewStage, setSelectedAdjustmentReviewStage] =
+    useState<'technical' | 'commercial'>('technical')
   const [
     selectedAdjustmentForCustomerResponse,
     setSelectedAdjustmentForCustomerResponse
@@ -465,8 +468,11 @@ const CalibrationServiceDetailsPage = () => {
   const canReportAdjustmentRole = useHasRole([
     ...CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES
   ])
-  const canReviewAdjustmentRole = useHasRole([
-    ...CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES
+  const canReviewAdjustmentTechnically = useHasRole([
+    ...CALIBRATION_SERVICE_ADJUSTMENT_TECHNICAL_REVIEW_ROLES
+  ])
+  const canReviewAdjustmentCommercially = useHasRole([
+    ...CALIBRATION_SERVICE_ADJUSTMENT_COMMERCIAL_REVIEW_ROLES
   ])
   const canUpdateDocumentControlRole = useHasRole([
     ...CALIBRATION_SERVICE_DOCUMENT_CONTROL_ROLES
@@ -580,7 +586,8 @@ const CalibrationServiceDetailsPage = () => {
     canReportAdjustmentRole &&
     !service?.isPaused &&
     ['in_execution', 'technically_completed'].includes(service?.status || '')
-  const canReviewAdjustment = canReviewAdjustmentRole
+  const canReviewAdjustment =
+    canReviewAdjustmentTechnically || canReviewAdjustmentCommercially
   const canUpdateOperationalProgress =
     canRunExecutionRole &&
     !service?.isPaused &&
@@ -1862,8 +1869,9 @@ const CalibrationServiceDetailsPage = () => {
   }
 
   const handleReviewAdjustment = async (values: {
-    decision: 'approved' | 'rejected'
-    technicalDecision: 'approved' | 'rejected'
+    reviewStage?: 'technical' | 'commercial'
+    decision?: 'approved' | 'rejected'
+    technicalDecision?: 'approved' | 'rejected'
     technicalReviewNotes?: string | null
     technicalReviewerRole?: string | null
     contractModificationRequired?: boolean
@@ -1893,6 +1901,7 @@ const CalibrationServiceDetailsPage = () => {
       })
       toast.success('La revisión de la novedad quedó guardada.')
       setSelectedAdjustment(null)
+      setSelectedAdjustmentReviewStage('technical')
       setActiveTab('adjustments')
     } catch (adjustmentError) {
       console.error(adjustmentError)
@@ -3246,13 +3255,17 @@ const CalibrationServiceDetailsPage = () => {
                 <CalibrationServiceAdjustmentsPanel
                   service={service}
                   canReport={canReportAdjustment}
-                  canReview={canReviewAdjustment}
+                  canTechnicalReview={canReviewAdjustmentTechnically}
+                  canCommercialReview={canReviewAdjustmentCommercially}
                   canGenerateDocument={canReviewAdjustment}
                   canGenerateSummaryDocument={canReviewAdjustment}
                   isTechnicalOnlyView={isTechnicalOnlyView}
                   isBusy={isOperationalBusy}
                   onCreate={() => setIsAdjustmentDialogOpen(true)}
-                  onReview={(adjustment) => setSelectedAdjustment(adjustment)}
+                  onReview={(adjustment, reviewStage) => {
+                    setSelectedAdjustment(adjustment)
+                    setSelectedAdjustmentReviewStage(reviewStage)
+                  }}
                   onSendToCustomer={(adjustment) => {
                     setSelectedAdjustmentForSend(adjustment)
                     setSendAdjustmentPreview(
@@ -3647,8 +3660,12 @@ const CalibrationServiceDetailsPage = () => {
         <CalibrationServiceAdjustmentReviewDialog
           open={Boolean(selectedAdjustment)}
           adjustment={selectedAdjustment}
+          reviewStage={selectedAdjustmentReviewStage}
           isLoading={isOperationalBusy}
-          onClose={() => setSelectedAdjustment(null)}
+          onClose={() => {
+            setSelectedAdjustment(null)
+            setSelectedAdjustmentReviewStage('technical')
+          }}
           onSubmit={handleReviewAdjustment}
         />
       ) : null}

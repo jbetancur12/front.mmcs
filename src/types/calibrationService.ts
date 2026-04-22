@@ -880,8 +880,12 @@ export interface CalibrationServiceCreateAdjustmentPayload {
 export interface CalibrationServiceReviewAdjustmentPayload {
   serviceId: string
   adjustmentId: string
-  decision: Extract<CalibrationServiceAdjustmentStatus, 'approved' | 'rejected'>
-  technicalDecision: 'approved' | 'rejected'
+  reviewStage?: 'technical' | 'commercial'
+  decision?: Extract<
+    CalibrationServiceAdjustmentStatus,
+    'approved' | 'rejected'
+  >
+  technicalDecision?: 'approved' | 'rejected'
   technicalReviewNotes?: string | null
   technicalReviewerRole?: string | null
   contractModificationRequired?: boolean
