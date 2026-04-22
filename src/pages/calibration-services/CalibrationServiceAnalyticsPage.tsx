@@ -183,6 +183,8 @@ const parseBooleanFilter = (value: string) => {
   return value === 'true'
 }
 
+const formatDateInput = (date: Date) => date.toISOString().slice(0, 10)
+
 interface CalibrationCustomersResponse {
   customers: CalibrationServiceCustomer[]
 }
@@ -318,6 +320,27 @@ const CalibrationServiceAnalyticsPage = () => {
     ...(data?.metrologists ?? []).map((item) => item.total)
   )
 
+  const applyDatePreset = (preset: 'all' | 'current_month' | 'last_30_days') => {
+    const today = new Date()
+
+    if (preset === 'all') {
+      setDateFrom('')
+      setDateTo('')
+      return
+    }
+
+    if (preset === 'current_month') {
+      setDateFrom(formatDateInput(new Date(today.getFullYear(), today.getMonth(), 1)))
+      setDateTo(formatDateInput(today))
+      return
+    }
+
+    const fromDate = new Date(today)
+    fromDate.setDate(today.getDate() - 30)
+    setDateFrom(formatDateInput(fromDate))
+    setDateTo(formatDateInput(today))
+  }
+
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, backgroundColor: ui.surface, minHeight: '100%' }}>
       <Stack
@@ -418,6 +441,40 @@ const CalibrationServiceAnalyticsPage = () => {
           </Stack>
 
           <Collapse in={areFiltersOpen} timeout='auto' unmountOnExit>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1}
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+              sx={{ mt: 2 }}
+            >
+              <Typography variant='body2' sx={{ color: ui.muted, fontWeight: 700 }}>
+                Fecha rápida:
+              </Typography>
+              <Button
+                size='small'
+                variant={!dateFrom && !dateTo ? 'contained' : 'outlined'}
+                onClick={() => applyDatePreset('all')}
+                sx={{ textTransform: 'none', fontWeight: 700 }}
+              >
+                Todo
+              </Button>
+              <Button
+                size='small'
+                variant='outlined'
+                onClick={() => applyDatePreset('current_month')}
+                sx={{ textTransform: 'none', fontWeight: 700 }}
+              >
+                Mes actual
+              </Button>
+              <Button
+                size='small'
+                variant='outlined'
+                onClick={() => applyDatePreset('last_30_days')}
+                sx={{ textTransform: 'none', fontWeight: 700 }}
+              >
+                Últimos 30 días
+              </Button>
+            </Stack>
             <Grid container spacing={2} sx={{ mt: 0.5 }}>
             <Grid item xs={12} md={3}>
               <TextField
