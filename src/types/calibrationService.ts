@@ -488,6 +488,7 @@ export interface CalibrationServiceAnalyticsFilters {
   hasCuts?: boolean
   hasInvoice?: boolean
   hasPendingDocumentControl?: boolean
+  tableAll?: boolean
   tableLimit?: number
   tableOffset?: number
 }

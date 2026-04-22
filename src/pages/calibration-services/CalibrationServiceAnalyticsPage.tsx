@@ -20,6 +20,7 @@ import {
 import AnalyticsOutlinedIcon from '@mui/icons-material/AnalyticsOutlined'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
 import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined'
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined'
 import EngineeringOutlinedIcon from '@mui/icons-material/EngineeringOutlined'
 import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
 import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
@@ -47,6 +48,7 @@ import {
 } from '../../hooks/useCalibrationServices'
 import {
   CalibrationServiceAnalyticsFilters,
+  CalibrationServiceAnalyticsResponse,
   CalibrationServiceAnalyticsTableRow,
   CalibrationServiceCustomer,
   CalibrationServiceSlaIndicatorColor,
@@ -250,6 +252,7 @@ const CalibrationServiceAnalyticsPage = () => {
   const [customerId, setCustomerId] = useState<string>(FILTER_ALL)
   const [metrologistId, setMetrologistId] = useState<string>(FILTER_ALL)
   const [areFiltersOpen, setAreFiltersOpen] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
   const [tablePagination, setTablePagination] = useState<MRT_PaginationState>({
     pageIndex: 0,
     pageSize: 10
@@ -437,6 +440,164 @@ const CalibrationServiceAnalyticsPage = () => {
     [navigate]
   )
 
+  const exportToExcel = async () => {
+    setIsExporting(true)
+    try {
+      const XLSX = await import('xlsx')
+      const exportFilters: CalibrationServiceAnalyticsFilters = {
+        ...filters,
+        tableAll: true,
+        tableLimit: undefined,
+        tableOffset: undefined
+      }
+      const response = await axiosPrivate.get<CalibrationServiceAnalyticsResponse>(
+        '/calibration-services/analytics',
+        {
+          params: exportFilters
+        }
+      )
+      const exportData = response.data
+
+      if (!exportData) {
+        return
+      }
+
+      const workbook = XLSX.utils.book_new()
+      const selectedCustomer =
+        customerData?.customers.find((customer) => String(customer.id) === customerId)
+          ?.nombre || 'Todos'
+      const selectedMetrologist =
+        metrologistId === 'unassigned'
+          ? 'Sin metrólogo asignado'
+          : metrologists.find(
+              (metrologist: CalibrationServiceUserSummary) =>
+                String(metrologist.id) === metrologistId
+            )?.nombre || 'Todos'
+
+      XLSX.utils.book_append_sheet(
+        workbook,
+        XLSX.utils.json_to_sheet([
+          {
+            'Fecha inicial': dateFrom || 'Sin filtro',
+            'Fecha final': dateTo || 'Sin filtro',
+            Cliente: selectedCustomer,
+            Metrólogo: selectedMetrologist,
+            Estado:
+              statusOptions.find((option) => option.value === status)?.label ||
+              'Todos los estados',
+            Semáforo:
+              slaOptions.find((option) => option.value === slaColor)?.label ||
+              'Todo el semáforo',
+            'Servicios visibles': exportData.summary.totalServices,
+            'Servicios activos': exportData.summary.activeServices,
+            'Servicios con novedades': exportData.summary.servicesWithAdjustments,
+            'Servicios con cortes': exportData.summary.servicesWithCuts,
+            'Valor cotizado': exportData.summary.quotedValue ?? 'Restringido',
+            'Valor novedades aprobadas':
+              exportData.summary.approvedAdjustmentValue ?? 'Restringido',
+            'Valor facturado': exportData.summary.invoicedValue ?? 'Restringido'
+          }
+        ]),
+        'Resumen'
+      )
+
+      XLSX.utils.book_append_sheet(
+        workbook,
+        XLSX.utils.json_to_sheet(
+          Object.entries(exportData.slaCounts).map(([key, value]) => ({
+            Semáforo:
+              slaLabels[key as CalibrationServiceSlaIndicatorColor] || key,
+            Cantidad: value
+          }))
+        ),
+        'SLA'
+      )
+
+      XLSX.utils.book_append_sheet(
+        workbook,
+        XLSX.utils.json_to_sheet(
+          exportData.funnel.map((item) => ({
+            Fase: phaseLabels[item.phase] || item.phase,
+            Cantidad: item.count
+          }))
+        ),
+        'Embudo'
+      )
+
+      XLSX.utils.book_append_sheet(
+        workbook,
+        XLSX.utils.json_to_sheet(
+          exportData.metrologists.map((metrologist) => ({
+            Metrólogo: metrologist.metrologistName,
+            Total: metrologist.total,
+            Programados: metrologist.scheduled,
+            'En ejecución': metrologist.inExecution,
+            'Finalizados técnicamente': metrologist.technicallyCompleted,
+            'SLA alerta o vencido': metrologist.warningOrOverdue,
+            'Pendiente cierre': metrologist.pendingClosure
+          }))
+        ),
+        'Metrólogos'
+      )
+
+      XLSX.utils.book_append_sheet(
+        workbook,
+        XLSX.utils.json_to_sheet([
+          {
+            'Total novedades': exportData.adjustments.total,
+            'Por estado': JSON.stringify(exportData.adjustments.byStatus),
+            'Por tipo': JSON.stringify(exportData.adjustments.byType)
+          }
+        ]),
+        'Novedades'
+      )
+
+      XLSX.utils.book_append_sheet(
+        workbook,
+        XLSX.utils.json_to_sheet(
+          Object.entries(exportData.cuts).map(([key, value]) => ({
+            Indicador: key,
+            Cantidad: value
+          }))
+        ),
+        'Cortes'
+      )
+
+      XLSX.utils.book_append_sheet(
+        workbook,
+        XLSX.utils.json_to_sheet(
+          exportData.tableRows.map((row) => ({
+            Servicio: row.serviceCode,
+            Cotización: row.quoteCode || '',
+            ODS: row.odsCode || '',
+            Cliente: row.customerName,
+            Estado: CALIBRATION_SERVICE_STATUS_LABELS[row.status] || row.status,
+            Semáforo: slaLabels[row.slaColor] || row.slaLabel,
+            Fase: row.activePhase ? phaseLabels[row.activePhase] || row.activePhase : '',
+            Metrólogo: row.metrologistName || 'Sin asignar',
+            Novedades: row.adjustmentsCount,
+            Cortes: row.cutsCount,
+            'Control documental pendiente': row.hasPendingDocumentControl
+              ? 'Sí'
+              : 'No',
+            Valor: row.totalValue ?? 'Restringido',
+            'Última actualización': row.updatedAt
+              ? new Date(row.updatedAt).toLocaleString('es-CO')
+              : ''
+          }))
+        ),
+        'Servicios'
+      )
+
+      const fileName = `analiticas_calibracion_${new Date()
+        .toISOString()
+        .slice(0, 10)}.xlsx`
+      XLSX.writeFile(workbook, fileName)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const applyDatePreset = (preset: 'all' | 'current_month' | 'last_30_days') => {
     const today = new Date()
 
@@ -494,6 +655,26 @@ const CalibrationServiceAnalyticsPage = () => {
           sx={secondaryButtonSx}
         >
           Actualizar
+        </Button>
+        <Button
+          variant='contained'
+          startIcon={<DownloadOutlinedIcon />}
+          onClick={() => {
+            void exportToExcel()
+          }}
+          disabled={!data || isExporting}
+          sx={{
+            borderRadius: '12px',
+            textTransform: 'none',
+            fontWeight: 800,
+            minHeight: 42,
+            backgroundColor: ui.green,
+            '&:hover': {
+              backgroundColor: ui.greenDark
+            }
+          }}
+        >
+          {isExporting ? 'Generando...' : 'Descargar Excel'}
         </Button>
       </Stack>
 
