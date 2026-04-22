@@ -488,6 +488,8 @@ export interface CalibrationServiceAnalyticsFilters {
   hasCuts?: boolean
   hasInvoice?: boolean
   hasPendingDocumentControl?: boolean
+  tableLimit?: number
+  tableOffset?: number
 }
 
 export interface CalibrationServiceAnalyticsSummary {
@@ -560,6 +562,11 @@ export interface CalibrationServiceAnalyticsResponse {
   }
   cuts: Record<string, number>
   tableRows: CalibrationServiceAnalyticsTableRow[]
+  tableTotalItems: number
+  tableLimit: number
+  tableOffset: number
+  tableCurrentPage: number
+  tableTotalPages: number
 }
 
 export interface CalibrationServiceSequenceConfig {

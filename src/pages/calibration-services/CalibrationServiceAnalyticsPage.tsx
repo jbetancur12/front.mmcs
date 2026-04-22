@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
   Alert,
@@ -14,12 +14,6 @@ import {
   MenuItem,
   Paper,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Typography
 } from '@mui/material'
@@ -34,6 +28,11 @@ import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined'
 import TimelineOutlinedIcon from '@mui/icons-material/TimelineOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import { alpha } from '@mui/material/styles'
+import MaterialReactTable, {
+  type MRT_ColumnDef,
+  type MRT_PaginationState
+} from 'material-react-table'
+import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from 'react-query'
 import { axiosPrivate } from '@utils/api'
@@ -48,6 +47,7 @@ import {
 } from '../../hooks/useCalibrationServices'
 import {
   CalibrationServiceAnalyticsFilters,
+  CalibrationServiceAnalyticsTableRow,
   CalibrationServiceCustomer,
   CalibrationServiceSlaIndicatorColor,
   CalibrationServiceStatus,
@@ -250,6 +250,10 @@ const CalibrationServiceAnalyticsPage = () => {
   const [customerId, setCustomerId] = useState<string>(FILTER_ALL)
   const [metrologistId, setMetrologistId] = useState<string>(FILTER_ALL)
   const [areFiltersOpen, setAreFiltersOpen] = useState(false)
+  const [tablePagination, setTablePagination] = useState<MRT_PaginationState>({
+    pageIndex: 0,
+    pageSize: 10
+  })
 
   const { data: customerData } = useQuery({
     queryKey: ['calibration-service-analytics-customers'],
@@ -292,9 +296,26 @@ const CalibrationServiceAnalyticsPage = () => {
   if (hasPendingDocumentControl !== FILTER_ALL) {
     filters.hasPendingDocumentControl = parseBooleanFilter(hasPendingDocumentControl)
   }
+  filters.tableLimit = tablePagination.pageSize
+  filters.tableOffset = tablePagination.pageIndex * tablePagination.pageSize
 
   const { data, isFetching, isLoading, refetch } =
     useCalibrationServiceAnalytics(filters)
+
+  useEffect(() => {
+    setTablePagination((current) => ({ ...current, pageIndex: 0 }))
+  }, [
+    dateFrom,
+    dateTo,
+    status,
+    slaColor,
+    customerId,
+    metrologistId,
+    hasAdjustments,
+    hasCuts,
+    hasInvoice,
+    hasPendingDocumentControl
+  ])
 
   const totalServices = data?.summary.totalServices ?? 0
   const warningOrOverdue =
@@ -318,6 +339,102 @@ const CalibrationServiceAnalyticsPage = () => {
   const maxMetrologistValue = Math.max(
     1,
     ...(data?.metrologists ?? []).map((item) => item.total)
+  )
+  const analyticsTableColumns = useMemo<
+    MRT_ColumnDef<CalibrationServiceAnalyticsTableRow>[]
+  >(
+    () => [
+      {
+        accessorKey: 'serviceCode',
+        header: 'Servicio',
+        Cell: ({ row }) => (
+          <Box>
+            <Typography variant='body2' sx={{ fontWeight: 800 }}>
+              {row.original.serviceCode}
+            </Typography>
+            <Typography variant='caption' sx={{ color: ui.muted }}>
+              {row.original.odsCode || row.original.quoteCode || 'Sin ODS'}
+            </Typography>
+          </Box>
+        )
+      },
+      {
+        accessorKey: 'customerName',
+        header: 'Cliente'
+      },
+      {
+        accessorKey: 'status',
+        header: 'Estado',
+        Cell: ({ row }) => (
+          <Chip
+            size='small'
+            label={CALIBRATION_SERVICE_STATUS_LABELS[row.original.status]}
+            color={CALIBRATION_SERVICE_STATUS_COLORS[row.original.status]}
+          />
+        )
+      },
+      {
+        accessorKey: 'slaColor',
+        header: 'Semáforo',
+        Cell: ({ row }) => (
+          <Chip
+            size='small'
+            label={slaLabels[row.original.slaColor] || row.original.slaLabel}
+            color={CALIBRATION_SERVICE_SLA_COLORS[row.original.slaColor]}
+            variant={row.original.slaColor === 'gray' ? 'outlined' : 'filled'}
+          />
+        )
+      },
+      {
+        accessorKey: 'metrologistName',
+        header: 'Metrólogo',
+        Cell: ({ row }) => row.original.metrologistName || 'Sin asignar'
+      },
+      {
+        accessorKey: 'adjustmentsCount',
+        header: 'Novedades',
+        muiTableBodyCellProps: { align: 'right' },
+        muiTableHeadCellProps: { align: 'right' }
+      },
+      {
+        accessorKey: 'cutsCount',
+        header: 'Cortes',
+        muiTableBodyCellProps: { align: 'right' },
+        muiTableHeadCellProps: { align: 'right' },
+        Cell: ({ row }) => (
+          <Stack direction='row' justifyContent='flex-end' spacing={1}>
+            <span>{row.original.cutsCount}</span>
+            {row.original.hasPendingDocumentControl ? (
+              <WarningAmberOutlinedIcon color='warning' sx={{ fontSize: 16 }} />
+            ) : null}
+          </Stack>
+        )
+      },
+      {
+        accessorKey: 'totalValue',
+        header: 'Valor',
+        muiTableBodyCellProps: { align: 'right' },
+        muiTableHeadCellProps: { align: 'right' },
+        Cell: ({ row }) => formatCurrency(row.original.totalValue)
+      },
+      {
+        id: 'actions',
+        header: 'Acción',
+        enableSorting: false,
+        muiTableBodyCellProps: { align: 'right' },
+        muiTableHeadCellProps: { align: 'right' },
+        Cell: ({ row }) => (
+          <Button
+            size='small'
+            onClick={() => navigate(`/calibration-services/${row.original.id}`)}
+            sx={{ textTransform: 'none', fontWeight: 700 }}
+          >
+            Ver detalle
+          </Button>
+        )
+      }
+    ],
+    [navigate]
   )
 
   const applyDatePreset = (preset: 'all' | 'current_month' | 'last_30_days') => {
@@ -910,83 +1027,61 @@ const CalibrationServiceAnalyticsPage = () => {
                   </Typography>
                 </Box>
                 <Chip
-                  label={`${data?.tableRows.length ?? 0} servicios`}
+                  label={`${data?.tableTotalItems ?? 0} servicios`}
                   color='success'
                   variant='outlined'
                 />
               </Stack>
-              <TableContainer>
-                <Table size='small'>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Servicio</TableCell>
-                      <TableCell>Cliente</TableCell>
-                      <TableCell>Estado</TableCell>
-                      <TableCell>Semáforo</TableCell>
-                      <TableCell>Metrólogo</TableCell>
-                      <TableCell align='right'>Novedades</TableCell>
-                      <TableCell align='right'>Cortes</TableCell>
-                      <TableCell align='right'>Valor</TableCell>
-                      <TableCell align='right'>Acción</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {(data?.tableRows ?? []).slice(0, 30).map((row) => (
-                      <TableRow hover key={row.id}>
-                        <TableCell>
-                          <Typography variant='body2' sx={{ fontWeight: 800 }}>
-                            {row.serviceCode}
-                          </Typography>
-                          <Typography variant='caption' sx={{ color: ui.muted }}>
-                            {row.odsCode || row.quoteCode || 'Sin ODS'}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>{row.customerName}</TableCell>
-                        <TableCell>
-                          <Chip
-                            size='small'
-                            label={CALIBRATION_SERVICE_STATUS_LABELS[row.status]}
-                            color={CALIBRATION_SERVICE_STATUS_COLORS[row.status]}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            size='small'
-                            label={slaLabels[row.slaColor] || row.slaLabel}
-                            color={CALIBRATION_SERVICE_SLA_COLORS[row.slaColor]}
-                            variant={row.slaColor === 'gray' ? 'outlined' : 'filled'}
-                          />
-                        </TableCell>
-                        <TableCell>{row.metrologistName || 'Sin asignar'}</TableCell>
-                        <TableCell align='right'>{row.adjustmentsCount}</TableCell>
-                        <TableCell align='right'>
-                          <Stack direction='row' justifyContent='flex-end' spacing={1}>
-                            <span>{row.cutsCount}</span>
-                            {row.hasPendingDocumentControl ? (
-                              <WarningAmberOutlinedIcon
-                                color='warning'
-                                sx={{ fontSize: 16 }}
-                              />
-                            ) : null}
-                          </Stack>
-                        </TableCell>
-                        <TableCell align='right'>
-                          {formatCurrency(row.totalValue)}
-                        </TableCell>
-                        <TableCell align='right'>
-                          <Button
-                            size='small'
-                            onClick={() => navigate(`/calibration-services/${row.id}`)}
-                            sx={{ textTransform: 'none', fontWeight: 700 }}
-                          >
-                            Ver detalle
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              <MaterialReactTable
+                columns={analyticsTableColumns}
+                data={data?.tableRows ?? []}
+                localization={MRT_Localization_ES}
+                enableColumnActions={false}
+                enableColumnFilters={false}
+                enableDensityToggle={false}
+                enableFullScreenToggle={false}
+                enableGlobalFilter={false}
+                enableHiding={false}
+                enablePagination
+                enableSorting={false}
+                manualPagination
+                rowCount={data?.tableTotalItems ?? 0}
+                onPaginationChange={setTablePagination}
+                state={{
+                  isLoading: isFetching,
+                  pagination: tablePagination
+                }}
+                initialState={{
+                  density: 'comfortable'
+                }}
+                muiTablePaperProps={{
+                  elevation: 0,
+                  sx: {
+                    border: `1px solid ${ui.border}`,
+                    borderRadius: '14px',
+                    overflow: 'hidden'
+                  }
+                }}
+                muiTableHeadCellProps={{
+                  sx: {
+                    backgroundColor: ui.surface,
+                    color: ui.text,
+                    fontWeight: 800,
+                    fontSize: '0.75rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '.04em'
+                  }
+                }}
+                muiTableBodyCellProps={{
+                  sx: {
+                    borderColor: ui.border,
+                    color: ui.text
+                  }
+                }}
+                muiTablePaginationProps={{
+                  rowsPerPageOptions: [10, 20, 50, 100]
+                }}
+              />
             </CardContent>
           </Card>
         </>
