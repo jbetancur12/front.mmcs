@@ -477,6 +477,91 @@ export interface CalibrationServiceListResponse {
   services: CalibrationService[]
 }
 
+export interface CalibrationServiceAnalyticsFilters {
+  dateFrom?: string
+  dateTo?: string
+  customerId?: number
+  metrologistId?: number | 'unassigned'
+  status?: CalibrationServiceStatus
+  slaColor?: CalibrationServiceSlaIndicatorColor
+  hasAdjustments?: boolean
+  hasCuts?: boolean
+  hasInvoice?: boolean
+  hasPendingDocumentControl?: boolean
+}
+
+export interface CalibrationServiceAnalyticsSummary {
+  totalServices: number
+  activeServices: number
+  servicesWithAdjustments: number
+  servicesWithCuts: number
+  quotedValue: number | null
+  approvedAdjustmentValue: number | null
+  invoicedValue: number | null
+}
+
+export interface CalibrationServiceAnalyticsFunnelItem {
+  phase: string
+  count: number
+}
+
+export interface CalibrationServiceAnalyticsMetrologist {
+  key: string
+  metrologistId?: number | null
+  metrologistName: string
+  total: number
+  scheduled: number
+  inExecution: number
+  technicallyCompleted: number
+  warningOrOverdue: number
+  pendingClosure: number
+}
+
+export interface CalibrationServiceAnalyticsCustomer {
+  customerName: string
+  total: number
+  warningOrOverdue: number
+  withAdjustments: number
+}
+
+export interface CalibrationServiceAnalyticsTableRow {
+  id: number
+  serviceCode: string
+  quoteCode?: string | null
+  odsCode?: string | null
+  customerName: string
+  status: CalibrationServiceStatus
+  approvalStatus: CalibrationServiceApprovalStatus
+  slaColor: CalibrationServiceSlaIndicatorColor
+  slaLabel: string
+  activePhase?: string | null
+  metrologistName?: string | null
+  adjustmentsCount: number
+  cutsCount: number
+  hasPendingDocumentControl: boolean
+  totalValue?: number | null
+  updatedAt?: string | null
+}
+
+export interface CalibrationServiceAnalyticsResponse {
+  generatedAt: string
+  limitedTechnicalView: boolean
+  summary: CalibrationServiceAnalyticsSummary
+  statusCounts: Partial<Record<CalibrationServiceStatus, number>>
+  slaCounts: Partial<Record<CalibrationServiceSlaIndicatorColor, number>>
+  activePhaseCounts: Record<string, number>
+  funnel: CalibrationServiceAnalyticsFunnelItem[]
+  metrologists: CalibrationServiceAnalyticsMetrologist[]
+  customers: CalibrationServiceAnalyticsCustomer[]
+  adjustments: {
+    total: number
+    byStatus: Record<string, number>
+    byType: Record<string, number>
+  }
+  cuts: Record<string, number>
+  tableRows: CalibrationServiceAnalyticsTableRow[]
+}
+
 export interface CalibrationServiceSequenceConfig {
   initialized: boolean
   quotePrefix: string

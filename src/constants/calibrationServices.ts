@@ -41,6 +41,14 @@ export const CALIBRATION_SERVICE_EDIT_ROLES = [
   'comp_supervisor'
 ] as const
 
+export const CALIBRATION_SERVICE_ANALYTICS_ROLES = [
+  'admin',
+  'super_admin',
+  'comp_admin',
+  'comp_supervisor',
+  'metrologist'
+] as const
+
 export const CALIBRATION_SERVICE_APPROVAL_ROLES = [
   'admin',
   'super_admin',
