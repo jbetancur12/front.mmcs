@@ -31,16 +31,23 @@ import TimelineOutlinedIcon from '@mui/icons-material/TimelineOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import { alpha } from '@mui/material/styles'
 import { useNavigate } from 'react-router-dom'
+import { useQuery } from 'react-query'
+import { axiosPrivate } from '@utils/api'
 import {
   CALIBRATION_SERVICE_SLA_COLORS,
   CALIBRATION_SERVICE_STATUS_COLORS,
   CALIBRATION_SERVICE_STATUS_LABELS
 } from '../../constants/calibrationServices'
-import { useCalibrationServiceAnalytics } from '../../hooks/useCalibrationServices'
+import {
+  useCalibrationAssignableMetrologists,
+  useCalibrationServiceAnalytics
+} from '../../hooks/useCalibrationServices'
 import {
   CalibrationServiceAnalyticsFilters,
+  CalibrationServiceCustomer,
   CalibrationServiceSlaIndicatorColor,
-  CalibrationServiceStatus
+  CalibrationServiceStatus,
+  CalibrationServiceUserSummary
 } from '../../types/calibrationService'
 
 const FILTER_ALL = 'all'
@@ -172,6 +179,10 @@ const parseBooleanFilter = (value: string) => {
   return value === 'true'
 }
 
+interface CalibrationCustomersResponse {
+  customers: CalibrationServiceCustomer[]
+}
+
 const KpiCard = ({
   color = ui.green,
   icon,
@@ -230,12 +241,38 @@ const CalibrationServiceAnalyticsPage = () => {
   const [hasInvoice, setHasInvoice] = useState<string>(FILTER_ALL)
   const [hasPendingDocumentControl, setHasPendingDocumentControl] =
     useState<string>(FILTER_ALL)
+  const [customerId, setCustomerId] = useState<string>(FILTER_ALL)
+  const [metrologistId, setMetrologistId] = useState<string>(FILTER_ALL)
+
+  const { data: customerData } = useQuery({
+    queryKey: ['calibration-service-analytics-customers'],
+    queryFn: async () => {
+      const response = await axiosPrivate.get<CalibrationCustomersResponse>(
+        '/customers',
+        {
+          params: {
+            scope: 'calibration',
+            page: 1,
+            limit: 100
+          }
+        }
+      )
+      return response.data
+    },
+    staleTime: 5 * 60 * 1000
+  })
+  const { data: metrologists = [] } = useCalibrationAssignableMetrologists()
 
   const filters: CalibrationServiceAnalyticsFilters = {}
   if (dateFrom) filters.dateFrom = dateFrom
   if (dateTo) filters.dateTo = dateTo
   if (status !== FILTER_ALL) filters.status = status
   if (slaColor !== FILTER_ALL) filters.slaColor = slaColor
+  if (customerId !== FILTER_ALL) filters.customerId = Number(customerId)
+  if (metrologistId !== FILTER_ALL) {
+    filters.metrologistId =
+      metrologistId === 'unassigned' ? 'unassigned' : Number(metrologistId)
+  }
   if (hasAdjustments !== FILTER_ALL) {
     filters.hasAdjustments = parseBooleanFilter(hasAdjustments)
   }
@@ -365,6 +402,39 @@ const CalibrationServiceAnalyticsPage = () => {
                 {slaOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <TextField
+                fullWidth
+                select
+                label='Cliente'
+                value={customerId}
+                onChange={(event) => setCustomerId(event.target.value)}
+              >
+                <MenuItem value={FILTER_ALL}>Todos los clientes</MenuItem>
+                {(customerData?.customers ?? []).map((customer) => (
+                  <MenuItem key={customer.id} value={String(customer.id)}>
+                    {customer.nombre}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <TextField
+                fullWidth
+                select
+                label='Metrólogo'
+                value={metrologistId}
+                onChange={(event) => setMetrologistId(event.target.value)}
+              >
+                <MenuItem value={FILTER_ALL}>Todos los metrólogos</MenuItem>
+                <MenuItem value='unassigned'>Sin metrólogo asignado</MenuItem>
+                {metrologists.map((metrologist: CalibrationServiceUserSummary) => (
+                  <MenuItem key={metrologist.id} value={String(metrologist.id)}>
+                    {metrologist.nombre}
                   </MenuItem>
                 ))}
               </TextField>
