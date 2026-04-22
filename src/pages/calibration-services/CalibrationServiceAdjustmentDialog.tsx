@@ -34,6 +34,10 @@ interface CalibrationServiceAdjustmentDialogProps {
       description: string
       technicalNotes?: string | null
       requiresCommercialAdjustment: boolean
+      contractModificationRequired: boolean
+      supportChannel?: string | null
+      supportReference?: string | null
+      supportNotifiedAt?: string
     }>
   }) => void | Promise<void>
 }
@@ -74,6 +78,10 @@ const CalibrationServiceAdjustmentDialog = ({
   const [technicalNotes, setTechnicalNotes] = useState('')
   const [requiresCommercialAdjustment, setRequiresCommercialAdjustment] =
     useState(true)
+  const [contractModificationRequired, setContractModificationRequired] =
+    useState(true)
+  const [supportChannel, setSupportChannel] = useState('whatsapp')
+  const [supportReference, setSupportReference] = useState('')
 
   useEffect(() => {
     if (!open) {
@@ -97,6 +105,9 @@ const CalibrationServiceAdjustmentDialog = ({
     setDescription('')
     setTechnicalNotes('')
     setRequiresCommercialAdjustment(true)
+    setContractModificationRequired(true)
+    setSupportChannel('whatsapp')
+    setSupportReference('')
   }, [completedItems, open])
 
   useEffect(() => {
@@ -134,6 +145,7 @@ const CalibrationServiceAdjustmentDialog = ({
   const selectedBatchItems = selectedItems.filter((item) => item.selected)
   const canSubmit =
     description.trim().length >= 5 &&
+    (!contractModificationRequired || Boolean(supportChannel)) &&
     (isExtraItem
       ? actualQuantity.trim() && itemName.trim()
       : selectedBatchItems.length > 0 &&
@@ -152,8 +164,7 @@ const CalibrationServiceAdjustmentDialog = ({
     }
 
   const handleSelectedItemActualQuantity =
-    (serviceItemIdValue: number) =>
-    (event: ChangeEvent<HTMLInputElement>) => {
+    (serviceItemIdValue: number) => (event: ChangeEvent<HTMLInputElement>) => {
       setSelectedItems((currentItems) =>
         currentItems.map((item) =>
           item.serviceItemId === serviceItemIdValue
@@ -179,7 +190,13 @@ const CalibrationServiceAdjustmentDialog = ({
             actualQuantity: Number(actualQuantity || '0'),
             description: description.trim(),
             technicalNotes: technicalNotes.trim() || null,
-            requiresCommercialAdjustment
+            requiresCommercialAdjustment,
+            contractModificationRequired,
+            supportChannel: contractModificationRequired
+              ? supportChannel
+              : null,
+            supportReference: supportReference.trim() || null,
+            supportNotifiedAt: new Date().toISOString()
           }
         ]
       })
@@ -195,7 +212,11 @@ const CalibrationServiceAdjustmentDialog = ({
         actualQuantity: Number(item.actualQuantity || '0'),
         description: description.trim(),
         technicalNotes: technicalNotes.trim() || null,
-        requiresCommercialAdjustment
+        requiresCommercialAdjustment,
+        contractModificationRequired,
+        supportChannel: contractModificationRequired ? supportChannel : null,
+        supportReference: supportReference.trim() || null,
+        supportNotifiedAt: new Date().toISOString()
       }))
     })
   }
@@ -206,8 +227,9 @@ const CalibrationServiceAdjustmentDialog = ({
       <DialogContent dividers>
         <Stack spacing={3} sx={{ mt: 0.5 }}>
           <Typography variant='body2' color='text.secondary'>
-            Registra aquí diferencias entre lo cotizado y lo realmente recibido o
-            ejecutado.
+            Registra aquí diferencias entre la OC/oferta aprobada y lo realmente
+            recibido o ejecutado. Si hay modificación de contrato, deja
+            evidencia del aviso inmediato a oficina.
           </Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
@@ -217,7 +239,9 @@ const CalibrationServiceAdjustmentDialog = ({
                 label='Tipo de novedad'
                 value={changeType}
                 onChange={(event) =>
-                  setChangeType(event.target.value as CalibrationServiceAdjustmentType)
+                  setChangeType(
+                    event.target.value as CalibrationServiceAdjustmentType
+                  )
                 }
               >
                 {Object.entries(CALIBRATION_SERVICE_ADJUSTMENT_TYPE_LABELS).map(
@@ -249,11 +273,15 @@ const CalibrationServiceAdjustmentDialog = ({
               </Grid>
             ) : (
               <Grid item xs={12} md={6}>
-                <Typography variant='body2' color='text.secondary' sx={{ pt: 1 }}>
-                  Puedes seleccionar varios ítems del mismo tipo de novedad. El sistema
-                  guardará una novedad por ítem para mantener trazabilidad. Para
-                  cantidades mayores o menores, escribe la cantidad real total de cada
-                  ítem, no solo la diferencia.
+                <Typography
+                  variant='body2'
+                  color='text.secondary'
+                  sx={{ pt: 1 }}
+                >
+                  Puedes seleccionar varios ítems del mismo tipo de novedad. El
+                  sistema guardará una novedad por ítem para mantener
+                  trazabilidad. Para cantidades mayores o menores, escribe la
+                  cantidad real total de cada ítem, no solo la diferencia.
                 </Typography>
               </Grid>
             )}
@@ -313,7 +341,9 @@ const CalibrationServiceAdjustmentDialog = ({
                             control={
                               <Checkbox
                                 checked={item.selected}
-                                onChange={handleToggleSelectedItem(item.serviceItemId)}
+                                onChange={handleToggleSelectedItem(
+                                  item.serviceItemId
+                                )}
                               />
                             }
                             label={`${item.itemName} · Cotizado: ${item.quotedQuantity}`}
@@ -330,7 +360,9 @@ const CalibrationServiceAdjustmentDialog = ({
                             type='number'
                             label={actualQuantityLabel}
                             value={item.actualQuantity}
-                            onChange={handleSelectedItemActualQuantity(item.serviceItemId)}
+                            onChange={handleSelectedItemActualQuantity(
+                              item.serviceItemId
+                            )}
                             inputProps={{ min: 0 }}
                             disabled={!item.selected}
                             helperText={
@@ -344,7 +376,8 @@ const CalibrationServiceAdjustmentDialog = ({
                     ))
                   ) : (
                     <Typography variant='body2' color='text.secondary'>
-                      No hay ítems completados disponibles para relacionar con una novedad.
+                      No hay ítems completados disponibles para relacionar con
+                      una novedad.
                     </Typography>
                   )}
                 </Stack>
@@ -384,6 +417,50 @@ const CalibrationServiceAdjustmentDialog = ({
                 label='Esta novedad requiere ajuste comercial o valoración para facturar'
               />
             </Grid>
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={contractModificationRequired}
+                    onChange={(event) =>
+                      setContractModificationRequired(event.target.checked)
+                    }
+                  />
+                }
+                label='Modificación de contrato: Sí'
+              />
+            </Grid>
+            {contractModificationRequired ? (
+              <>
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    select
+                    fullWidth
+                    label='Aviso inmediato'
+                    value={supportChannel}
+                    onChange={(event) => setSupportChannel(event.target.value)}
+                    helperText='Cumple el aviso por llamada, correo o WhatsApp.'
+                  >
+                    <MenuItem value='whatsapp'>WhatsApp</MenuItem>
+                    <MenuItem value='call'>Llamada</MenuItem>
+                    <MenuItem value='email'>Correo electrónico</MenuItem>
+                    <MenuItem value='in_person'>Presencial</MenuItem>
+                    <MenuItem value='other'>Otro</MenuItem>
+                  </TextField>
+                </Grid>
+                <Grid item xs={12} md={8}>
+                  <TextField
+                    fullWidth
+                    label='Soporte / referencia del aviso'
+                    value={supportReference}
+                    onChange={(event) =>
+                      setSupportReference(event.target.value)
+                    }
+                    helperText='Ej. número contactado, correo enviado o persona que atendió.'
+                  />
+                </Grid>
+              </>
+            ) : null}
           </Grid>
         </Stack>
       </DialogContent>

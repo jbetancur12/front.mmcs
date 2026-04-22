@@ -870,6 +870,10 @@ export interface CalibrationServiceCreateAdjustmentPayload {
   description: string
   technicalNotes?: string | null
   requiresCommercialAdjustment?: boolean
+  contractModificationRequired?: boolean
+  supportChannel?: string | null
+  supportReference?: string | null
+  supportNotifiedAt?: string
   reportedAt?: string
 }
 
@@ -877,6 +881,13 @@ export interface CalibrationServiceReviewAdjustmentPayload {
   serviceId: string
   adjustmentId: string
   decision: Extract<CalibrationServiceAdjustmentStatus, 'approved' | 'rejected'>
+  technicalDecision: 'approved' | 'rejected'
+  technicalReviewNotes?: string | null
+  technicalReviewerRole?: string | null
+  contractModificationRequired?: boolean
+  supportChannel?: string | null
+  supportReference?: string | null
+  supportNotifiedAt?: string
   commercialNotes?: string | null
   pricingNotes?: string | null
   approvedUnitPrice?: number | null

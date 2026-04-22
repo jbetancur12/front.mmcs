@@ -65,7 +65,7 @@ const CalibrationServiceAdjustmentCustomerResponseDialog = ({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth='sm'>
-      <DialogTitle>Registrar respuesta del cliente</DialogTitle>
+      <DialogTitle>Registrar respuesta del cliente/calidad</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={3} sx={{ mt: 0.5 }}>
           <Typography variant='body2' color='text.secondary'>
@@ -75,11 +75,14 @@ const CalibrationServiceAdjustmentCustomerResponseDialog = ({
           <TextField
             select
             fullWidth
-            label='Respuesta del cliente'
+            label='Respuesta del cliente/calidad'
             value={decision}
             onChange={(event) =>
               setDecision(
-                event.target.value as 'approved' | 'rejected' | 'changes_requested'
+                event.target.value as
+                  | 'approved'
+                  | 'rejected'
+                  | 'changes_requested'
               )
             }
           >
@@ -95,7 +98,7 @@ const CalibrationServiceAdjustmentCustomerResponseDialog = ({
             label='Medio de respuesta'
             value={responseChannel}
             onChange={(event) => setResponseChannel(event.target.value)}
-            helperText='Indica cómo confirmó el cliente la respuesta.'
+            helperText='Indica cómo confirmaron la respuesta.'
           >
             <MenuItem value='whatsapp'>WhatsApp</MenuItem>
             <MenuItem value='call'>Llamada</MenuItem>
@@ -117,7 +120,7 @@ const CalibrationServiceAdjustmentCustomerResponseDialog = ({
             label='Observación'
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
-            helperText='Úsalo para dejar trazabilidad de la respuesta del cliente.'
+            helperText='Úsalo para dejar trazabilidad de la respuesta del cliente/calidad.'
           />
           <Stack spacing={1}>
             <Button component='label' variant='outlined' disabled={isLoading}>
@@ -143,7 +146,11 @@ const CalibrationServiceAdjustmentCustomerResponseDialog = ({
         <Button onClick={onClose} disabled={isLoading}>
           Cancelar
         </Button>
-        <Button variant='contained' onClick={() => void handleSubmit()} disabled={isLoading}>
+        <Button
+          variant='contained'
+          onClick={() => void handleSubmit()}
+          disabled={isLoading}
+        >
           Guardar respuesta
         </Button>
       </DialogActions>
