@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   Chip,
+  Collapse,
   CircularProgress,
   Grid,
   LinearProgress,
@@ -26,6 +27,9 @@ import AnalyticsOutlinedIcon from '@mui/icons-material/AnalyticsOutlined'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
 import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined'
 import EngineeringOutlinedIcon from '@mui/icons-material/EngineeringOutlined'
+import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
+import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
+import FilterListOutlinedIcon from '@mui/icons-material/FilterListOutlined'
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined'
 import TimelineOutlinedIcon from '@mui/icons-material/TimelineOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
@@ -243,6 +247,7 @@ const CalibrationServiceAnalyticsPage = () => {
     useState<string>(FILTER_ALL)
   const [customerId, setCustomerId] = useState<string>(FILTER_ALL)
   const [metrologistId, setMetrologistId] = useState<string>(FILTER_ALL)
+  const [areFiltersOpen, setAreFiltersOpen] = useState(false)
 
   const { data: customerData } = useQuery({
     queryKey: ['calibration-service-analytics-customers'],
@@ -292,6 +297,18 @@ const CalibrationServiceAnalyticsPage = () => {
   const totalServices = data?.summary.totalServices ?? 0
   const warningOrOverdue =
     (data?.slaCounts.yellow ?? 0) + (data?.slaCounts.red ?? 0)
+  const activeFiltersCount = [
+    dateFrom,
+    dateTo,
+    status !== FILTER_ALL,
+    slaColor !== FILTER_ALL,
+    customerId !== FILTER_ALL,
+    metrologistId !== FILTER_ALL,
+    hasAdjustments !== FILTER_ALL,
+    hasCuts !== FILTER_ALL,
+    hasInvoice !== FILTER_ALL,
+    hasPendingDocumentControl !== FILTER_ALL
+  ].filter(Boolean).length
   const maxFunnelValue = Math.max(
     1,
     ...(data?.funnel ?? []).map((item) => item.count)
@@ -349,7 +366,59 @@ const CalibrationServiceAnalyticsPage = () => {
 
       <Card elevation={0} sx={{ ...cardSx, mb: 3 }}>
         <CardContent sx={{ p: 2.5 }}>
-          <Grid container spacing={2}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            justifyContent='space-between'
+            alignItems={{ xs: 'flex-start', sm: 'center' }}
+            spacing={1.5}
+          >
+            <Box>
+              <Typography variant='subtitle1' sx={{ fontWeight: 800 }}>
+                Filtros analíticos
+              </Typography>
+              <Typography variant='body2' sx={{ color: ui.muted }}>
+                {activeFiltersCount
+                  ? `${activeFiltersCount} filtro(s) aplicado(s)`
+                  : 'Sin filtros aplicados. La vista muestra todo el universo visible.'}
+              </Typography>
+            </Box>
+            <Stack direction='row' spacing={1}>
+              {activeFiltersCount ? (
+                <Button
+                  variant='text'
+                  onClick={() => {
+                    setDateFrom('')
+                    setDateTo('')
+                    setStatus(FILTER_ALL)
+                    setSlaColor(FILTER_ALL)
+                    setCustomerId(FILTER_ALL)
+                    setMetrologistId(FILTER_ALL)
+                    setHasAdjustments(FILTER_ALL)
+                    setHasCuts(FILTER_ALL)
+                    setHasInvoice(FILTER_ALL)
+                    setHasPendingDocumentControl(FILTER_ALL)
+                  }}
+                  sx={{ color: ui.muted, textTransform: 'none', fontWeight: 700 }}
+                >
+                  Limpiar
+                </Button>
+              ) : null}
+              <Button
+                variant='outlined'
+                startIcon={<FilterListOutlinedIcon />}
+                endIcon={
+                  areFiltersOpen ? <ExpandLessOutlinedIcon /> : <ExpandMoreOutlinedIcon />
+                }
+                onClick={() => setAreFiltersOpen((current) => !current)}
+                sx={secondaryButtonSx}
+              >
+                {areFiltersOpen ? 'Ocultar filtros' : 'Mostrar filtros'}
+              </Button>
+            </Stack>
+          </Stack>
+
+          <Collapse in={areFiltersOpen} timeout='auto' unmountOnExit>
+            <Grid container spacing={2} sx={{ mt: 0.5 }}>
             <Grid item xs={12} md={3}>
               <TextField
                 fullWidth
@@ -501,7 +570,8 @@ const CalibrationServiceAnalyticsPage = () => {
                 ))}
               </TextField>
             </Grid>
-          </Grid>
+            </Grid>
+          </Collapse>
         </CardContent>
       </Card>
 
