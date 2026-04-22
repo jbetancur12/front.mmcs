@@ -145,6 +145,7 @@ export interface CalibrationServiceUserSummary {
   id: number
   nombre: string
   email?: string | null
+  phone?: string | null
   active?: boolean
 }
 
