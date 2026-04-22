@@ -36,6 +36,16 @@ import MaterialReactTable, {
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from 'react-query'
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
+} from 'recharts'
 import { axiosPrivate } from '@utils/api'
 import {
   CALIBRATION_SERVICE_SLA_COLORS,
@@ -125,6 +135,34 @@ const phaseLabels: Record<string, string> = {
   rejected: 'Rechazada'
 }
 
+const adjustmentStatusLabels: Record<string, string> = {
+  reported: 'Reportada',
+  under_review: 'En revisión',
+  approved: 'Aprobada comercialmente',
+  rejected: 'Rechazada',
+  pending_customer_approval: 'Pendiente aprobación cliente',
+  customer_approved: 'Aprobada por cliente',
+  customer_rejected: 'Rechazada por cliente',
+  auto_accepted: 'Aceptada automáticamente'
+}
+
+const adjustmentTypeLabels: Record<string, string> = {
+  quantity_more: 'Cantidad mayor a la cotizada',
+  quantity_less: 'Cantidad menor a la cotizada',
+  extra_item: 'Ítem no cotizado',
+  item_removed: 'Ítem retirado',
+  scope_change: 'Cambio de alcance',
+  other: 'Otra novedad'
+}
+
+const cutIndicatorLabels: Record<string, string> = {
+  draft: 'Cortes en borrador',
+  ready_for_invoicing: 'Cortes listos para facturar',
+  invoiced: 'Cortes facturados',
+  document_pending: 'Servicios con control documental pendiente',
+  final_close_ready: 'Servicios listos para cierre final'
+}
+
 const slaLabels: Record<CalibrationServiceSlaIndicatorColor, string> = {
   gray: 'Sin iniciar',
   green: 'En tiempo',
@@ -140,6 +178,11 @@ const currencyFormatter = new Intl.NumberFormat('es-CO', {
 })
 
 const numberFormatter = new Intl.NumberFormat('es-CO')
+
+const compactCurrencyFormatter = new Intl.NumberFormat('es-CO', {
+  notation: 'compact',
+  maximumFractionDigits: 1
+})
 
 const cardSx = {
   border: `1px solid ${ui.border}`,
@@ -165,6 +208,11 @@ const secondaryButtonSx = {
 
 const formatCurrency = (value?: number | null) =>
   value === null || value === undefined ? 'Restringido' : currencyFormatter.format(value)
+
+const formatCompactCurrency = (value?: number | null) =>
+  value === null || value === undefined
+    ? 'Restringido'
+    : `$ ${compactCurrencyFormatter.format(value)}`
 
 const formatDate = (value?: string | null) => {
   if (!value) {
@@ -252,6 +300,7 @@ const CalibrationServiceAnalyticsPage = () => {
   const [customerId, setCustomerId] = useState<string>(FILTER_ALL)
   const [metrologistId, setMetrologistId] = useState<string>(FILTER_ALL)
   const [areFiltersOpen, setAreFiltersOpen] = useState(false)
+  const [isFinancialTrendOpen, setIsFinancialTrendOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [tablePagination, setTablePagination] = useState<MRT_PaginationState>({
     pageIndex: 0,
@@ -492,7 +541,9 @@ const CalibrationServiceAnalyticsPage = () => {
             'Servicios activos': exportData.summary.activeServices,
             'Servicios con novedades': exportData.summary.servicesWithAdjustments,
             'Servicios con cortes': exportData.summary.servicesWithCuts,
-            'Valor cotizado': exportData.summary.quotedValue ?? 'Restringido',
+            'Valor cotizado total': exportData.summary.quotedValue ?? 'Restringido',
+            'Valor cotizado aprobado':
+              exportData.summary.approvedQuotedValue ?? 'Restringido',
             'Valor novedades aprobadas':
               exportData.summary.approvedAdjustmentValue ?? 'Restringido',
             'Valor facturado': exportData.summary.invoicedValue ?? 'Restringido'
@@ -544,10 +595,20 @@ const CalibrationServiceAnalyticsPage = () => {
         workbook,
         XLSX.utils.json_to_sheet([
           {
-            'Total novedades': exportData.adjustments.total,
-            'Por estado': JSON.stringify(exportData.adjustments.byStatus),
-            'Por tipo': JSON.stringify(exportData.adjustments.byType)
-          }
+            Categoría: 'Total novedades',
+            Detalle: 'Novedades registradas',
+            Cantidad: exportData.adjustments.total
+          },
+          ...Object.entries(exportData.adjustments.byStatus).map(([key, value]) => ({
+            Categoría: 'Por estado',
+            Detalle: adjustmentStatusLabels[key] || key,
+            Cantidad: value
+          })),
+          ...Object.entries(exportData.adjustments.byType).map(([key, value]) => ({
+            Categoría: 'Por tipo',
+            Detalle: adjustmentTypeLabels[key] || key,
+            Cantidad: value
+          }))
         ]),
         'Novedades'
       )
@@ -556,11 +617,25 @@ const CalibrationServiceAnalyticsPage = () => {
         workbook,
         XLSX.utils.json_to_sheet(
           Object.entries(exportData.cuts).map(([key, value]) => ({
-            Indicador: key,
+            Indicador: cutIndicatorLabels[key] || key,
             Cantidad: value
           }))
         ),
         'Cortes'
+      )
+
+      XLSX.utils.book_append_sheet(
+        workbook,
+        XLSX.utils.json_to_sheet(
+          (exportData.financialTrend ?? []).map((row) => ({
+            Mes: row.monthLabel,
+            'Valor cotizado total': row.quotedValue,
+            'Valor cotizado aprobado': row.approvedQuotedValue,
+            'Valor novedades aprobadas': row.approvedAdjustmentValue,
+            'Valor facturado': row.invoicedValue
+          }))
+        ),
+        'Tendencia financiera'
       )
 
       XLSX.utils.book_append_sheet(
@@ -974,14 +1049,22 @@ const CalibrationServiceAnalyticsPage = () => {
           </Grid>
 
           <Grid container spacing={2} mb={3}>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={3}>
               <KpiCard
-                label='Valor cotizado'
+                label='Valor cotizado total'
                 value={formatCurrency(data?.summary.quotedValue)}
                 icon={<AnalyticsOutlinedIcon />}
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={3}>
+              <KpiCard
+                color={ui.info}
+                label='Valor cotizado aprobado'
+                value={formatCurrency(data?.summary.approvedQuotedValue)}
+                icon={<AnalyticsOutlinedIcon />}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
               <KpiCard
                 color={ui.warning}
                 label='Novedades aprobadas'
@@ -989,7 +1072,7 @@ const CalibrationServiceAnalyticsPage = () => {
                 icon={<AssignmentTurnedInOutlinedIcon />}
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={3}>
               <KpiCard
                 color={ui.info}
                 label='Facturado'
@@ -998,6 +1081,117 @@ const CalibrationServiceAnalyticsPage = () => {
               />
             </Grid>
           </Grid>
+
+          <Card elevation={0} sx={{ ...cardSx, mb: 3 }}>
+            <CardContent>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                justifyContent='space-between'
+                alignItems={{ xs: 'flex-start', sm: 'center' }}
+                spacing={1.5}
+              >
+                <Box>
+                  <Typography variant='h6' sx={{ fontWeight: 800 }}>
+                    Tendencia financiera
+                  </Typography>
+                  <Typography variant='body2' sx={{ color: ui.muted }}>
+                    Compara mes a mes lo cotizado, aprobado, ajustado por novedades
+                    y facturado.
+                  </Typography>
+                </Box>
+                <Button
+                  variant='outlined'
+                  endIcon={
+                    isFinancialTrendOpen ? (
+                      <ExpandLessOutlinedIcon />
+                    ) : (
+                      <ExpandMoreOutlinedIcon />
+                    )
+                  }
+                  onClick={() => setIsFinancialTrendOpen((current) => !current)}
+                  sx={secondaryButtonSx}
+                >
+                  {isFinancialTrendOpen ? 'Ocultar gráfica' : 'Ver gráfica'}
+                </Button>
+              </Stack>
+
+              <Collapse in={isFinancialTrendOpen} timeout='auto' unmountOnExit>
+                <Box sx={{ height: 340, mt: 3 }}>
+                  {data?.limitedTechnicalView ? (
+                    <Alert severity='info'>
+                      Esta tendencia contiene valores comerciales y no está disponible
+                      para la vista técnica limitada.
+                    </Alert>
+                  ) : (data?.financialTrend ?? []).length ? (
+                    <ResponsiveContainer width='100%' height='100%'>
+                      <LineChart
+                        data={data?.financialTrend ?? []}
+                        margin={{ top: 8, right: 16, left: 8, bottom: 8 }}
+                      >
+                        <CartesianGrid strokeDasharray='3 3' stroke={ui.border} />
+                        <XAxis
+                          dataKey='monthLabel'
+                          tick={{ fill: ui.muted, fontSize: 12 }}
+                          axisLine={{ stroke: ui.border }}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          tickFormatter={(value) => formatCompactCurrency(Number(value))}
+                          tick={{ fill: ui.muted, fontSize: 12 }}
+                          axisLine={{ stroke: ui.border }}
+                          tickLine={false}
+                        />
+                        <Tooltip
+                          formatter={(value, name) => [
+                            formatCurrency(Number(value)),
+                            String(name)
+                          ]}
+                          labelFormatter={(label) => `Mes: ${label}`}
+                        />
+                        <Legend />
+                        <Line
+                          type='monotone'
+                          dataKey='quotedValue'
+                          name='Cotizado total'
+                          stroke={ui.green}
+                          strokeWidth={2.5}
+                          dot={{ r: 3 }}
+                        />
+                        <Line
+                          type='monotone'
+                          dataKey='approvedQuotedValue'
+                          name='Cotizado aprobado'
+                          stroke={ui.info}
+                          strokeWidth={2.5}
+                          dot={{ r: 3 }}
+                        />
+                        <Line
+                          type='monotone'
+                          dataKey='approvedAdjustmentValue'
+                          name='Novedades aprobadas'
+                          stroke={ui.warning}
+                          strokeWidth={2.5}
+                          dot={{ r: 3 }}
+                        />
+                        <Line
+                          type='monotone'
+                          dataKey='invoicedValue'
+                          name='Facturado'
+                          stroke={ui.error}
+                          strokeWidth={2.5}
+                          dot={{ r: 3 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <Alert severity='info'>
+                      No hay datos financieros mensuales para los filtros actuales.
+                    </Alert>
+                  )}
+                </Box>
+              </Collapse>
+            </CardContent>
+          </Card>
 
           <Grid container spacing={2} mb={3}>
             <Grid item xs={12} md={5}>

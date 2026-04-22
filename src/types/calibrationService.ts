@@ -499,6 +499,7 @@ export interface CalibrationServiceAnalyticsSummary {
   servicesWithAdjustments: number
   servicesWithCuts: number
   quotedValue: number | null
+  approvedQuotedValue: number | null
   approvedAdjustmentValue: number | null
   invoicedValue: number | null
 }
@@ -525,6 +526,15 @@ export interface CalibrationServiceAnalyticsCustomer {
   total: number
   warningOrOverdue: number
   withAdjustments: number
+}
+
+export interface CalibrationServiceAnalyticsFinancialTrendItem {
+  month: string
+  monthLabel: string
+  quotedValue: number
+  approvedQuotedValue: number
+  approvedAdjustmentValue: number
+  invoicedValue: number
 }
 
 export interface CalibrationServiceAnalyticsTableRow {
@@ -556,6 +566,7 @@ export interface CalibrationServiceAnalyticsResponse {
   funnel: CalibrationServiceAnalyticsFunnelItem[]
   metrologists: CalibrationServiceAnalyticsMetrologist[]
   customers: CalibrationServiceAnalyticsCustomer[]
+  financialTrend: CalibrationServiceAnalyticsFinancialTrendItem[]
   adjustments: {
     total: number
     byStatus: Record<string, number>
