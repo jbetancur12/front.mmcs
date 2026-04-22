@@ -124,6 +124,7 @@ const CalibrationServiceScheduleDialog = ({
                   <MenuItem key={metrologist.id} value={String(metrologist.id)}>
                     {metrologist.nombre}
                     {metrologist.email ? ` · ${metrologist.email}` : ''}
+                    {metrologist.active === false ? ' · cuenta sin activar' : ''}
                   </MenuItem>
                 ))}
               </TextField>
