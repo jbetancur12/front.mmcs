@@ -556,7 +556,6 @@ const AssetLifeSheetsPage = () => {
         state={{ isLoading: loading }}
         initialState={{
           density: 'compact',
-          showColumnFilters: true,
           sorting: [{ id: 'assetCode', desc: false }]
         }}
         muiTablePaperProps={{
