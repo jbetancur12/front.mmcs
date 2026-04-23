@@ -13,6 +13,7 @@ export const QUERY_KEYS = {
 export interface CreateUserData {
   nombre: string
   email: string
+  phone?: string | null
   roles: Array<{ id: number; name: string; description: string }>
   contraseña?: string
 }
@@ -21,6 +22,7 @@ export interface UpdateUserData {
   id: number
   nombre: string
   email: string
+  phone?: string | null
   roles: Array<{ id: number; name: string; description: string }>
 }
 

@@ -11,6 +11,7 @@ import {
   Stack,
   TextField,
   Tooltip,
+  Typography,
   Skeleton,
   Chip,
   Alert,
@@ -32,7 +33,7 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 
 import { axiosPrivate } from '@utils/api'
 import { useQuery } from 'react-query'
-import { Delete, Edit, Search, Clear, FilterList, PersonAdd, Add } from '@mui/icons-material'
+import { Delete, Edit, Search, Clear, FilterList, PersonAdd, Add, HelpOutline } from '@mui/icons-material'
 import {
   showDeleteConfirmation,
   showSuccessAlert,
@@ -49,11 +50,86 @@ interface Role {
   description: string
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  admin: 'Admin',
+  super_admin: 'Super admin',
+  employee: 'Empleado',
+  user: 'Usuario',
+  metrologist: 'Metrólogo',
+  mantenimiento: 'Mantenimiento',
+  technician: 'Técnico',
+  maintenance_coordinator: 'Coord. mantenimiento',
+  purchases_admin: 'Compras',
+  invoicing: 'Facturación',
+  training_manager: 'Training manager',
+  lms_admin: 'LMS admin',
+  lms_only: 'Solo LMS'
+}
+
+const getRoleChipLabel = (role: Role) => {
+  if (ROLE_LABELS[role.name]) {
+    return ROLE_LABELS[role.name]
+  }
+
+  const compactDescription = role.description?.split(' - ')[0]?.trim()
+  return compactDescription || role.name
+}
+
+interface RoleHelpDialogProps {
+  open: boolean
+  rolesList?: Role[]
+  onClose: () => void
+}
+
+const RoleHelpDialog = ({ open, rolesList = [], onClose }: RoleHelpDialogProps) => (
+  <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <DialogTitle sx={{ fontWeight: 700 }}>Roles disponibles</DialogTitle>
+    <DialogContent dividers>
+      <Stack spacing={1.5}>
+        {rolesList.map((role) => (
+          <Box
+            key={role.id}
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: '160px 1fr' },
+              gap: 1,
+              alignItems: 'start',
+              py: 1,
+              borderBottom: '1px solid #e5e7eb',
+              '&:last-of-type': {
+                borderBottom: 'none'
+              }
+            }}
+          >
+            <Chip
+              label={getRoleChipLabel(role)}
+              size="small"
+              sx={{
+                width: 'fit-content',
+                backgroundColor: '#d1fae5',
+                color: '#047857',
+                fontWeight: 600
+              }}
+            />
+            <Typography variant="body2" color="text.secondary">
+              {role.description || role.name}
+            </Typography>
+          </Box>
+        ))}
+      </Stack>
+    </DialogContent>
+    <DialogActions>
+      <Button onClick={onClose}>Cerrar</Button>
+    </DialogActions>
+  </Dialog>
+)
+
 export interface UserData {
   id: number
   nombre: string
   roles: Role[]
   email: string
+  phone?: string | null
   createdAt: string
 }
 
@@ -611,6 +687,7 @@ const TableOwnUsers: React.FC = () => {
           id: values.id,
           nombre: values.nombre,
           email: values.email,
+          phone: values.phone,
           roles: row.original.roles
         }
 
@@ -685,6 +762,11 @@ const TableOwnUsers: React.FC = () => {
         })
       },
       {
+        accessorKey: 'phone',
+        header: 'Teléfono',
+        Cell: ({ cell }) => cell.getValue<string>() || 'Sin teléfono'
+      },
+      {
         accessorKey: 'roles',
         header: 'Rol',
         Cell: ({ cell }) => {
@@ -694,7 +776,7 @@ const TableOwnUsers: React.FC = () => {
               {roles.map((role, index) => (
                 <Tooltip key={index} title={role.description} arrow placement="top">
                   <Chip
-                    label={role.description}
+                    label={getRoleChipLabel(role)}
                     size="small"
                     sx={{
                       backgroundColor: '#d1fae5',
@@ -782,6 +864,7 @@ const TableOwnUsers: React.FC = () => {
       const createData = {
         nombre: userData.nombre,
         email: userData.email,
+        phone: userData.phone || null,
         roles: userData.roles,
         contraseña: 'Metromedics@2025'
       }
@@ -814,6 +897,7 @@ const TableOwnUsers: React.FC = () => {
         id: userData.id,
         nombre: userData.nombre,
         email: userData.email,
+        phone: userData.phone || null,
         roles: userData.roles
       }
 
@@ -875,6 +959,7 @@ const TableOwnUsers: React.FC = () => {
       return (
         user.nombre.toLowerCase().includes(searchTerm) ||
         user.email.toLowerCase().includes(searchTerm) ||
+        (user.phone || '').toLowerCase().includes(searchTerm) ||
         user.roles.some(role =>
           role.description.toLowerCase().includes(searchTerm) ||
           role.name.toLowerCase().includes(searchTerm)
@@ -1148,6 +1233,7 @@ const CreateNewAccountModal = ({
   const initialValues = useMemo(() => ({
     nombre: '',
     email: '',
+    phone: '',
     roles: []
   }), [])
 
@@ -1156,6 +1242,7 @@ const CreateNewAccountModal = ({
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({})
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [roleHelpOpen, setRoleHelpOpen] = useState(false)
 
   // Validation functions - memoized to prevent re-renders
   const validateEmail = useCallback((email: string) => {
@@ -1176,9 +1263,23 @@ const CreateNewAccountModal = ({
     return ''
   }, [])
 
+  const validatePhone = useCallback((phone: string, roles: Role[]) => {
+    const isMetrologist = roles?.some((role) => role.name === 'metrologist')
+    if (isMetrologist && !phone) return 'El teléfono es obligatorio para metrólogos'
+    if (phone && !/^[0-9+\-\s().]+$/.test(phone)) {
+      return 'Usa solo números y símbolos + - ( ) .'
+    }
+    return ''
+  }, [])
+
 
 
   const handleFieldChange = useCallback((fieldName: string, value: any) => {
+    const nextValues = {
+      ...values,
+      [fieldName]: value
+    }
+
     setValues((prev: any) => ({
       ...prev,
       [fieldName]: value
@@ -1200,6 +1301,9 @@ const CreateNewAccountModal = ({
       case 'email':
         error = validateEmail(value)
         break
+      case 'phone':
+        error = validatePhone(value, nextValues.roles)
+        break
       case 'roles':
         error = validateRoles(value)
         break
@@ -1207,17 +1311,19 @@ const CreateNewAccountModal = ({
 
     setErrors(prev => ({
       ...prev,
-      [fieldName]: error
+      [fieldName]: error,
+      phone: fieldName === 'phone' ? error : validatePhone(nextValues.phone || '', nextValues.roles || [])
     }))
-  }, [validateName, validateEmail, validateRoles])
+  }, [validateName, validateEmail, validatePhone, validateRoles, values])
 
   const isFormValid = useMemo(() => {
     const nameError = validateName(values.nombre || '')
     const emailError = validateEmail(values.email || '')
+    const phoneError = validatePhone(values.phone || '', values.roles || [])
     const rolesError = validateRoles(values.roles || [])
 
-    return !nameError && !emailError && !rolesError
-  }, [validateName, validateEmail, validateRoles, values.nombre, values.email, values.roles])
+    return !nameError && !emailError && !phoneError && !rolesError
+  }, [validateName, validateEmail, validatePhone, validateRoles, values.nombre, values.email, values.phone, values.roles])
 
   const handleSubmit = async () => {
     if (!isFormValid) {
@@ -1225,6 +1331,7 @@ const CreateNewAccountModal = ({
       setTouched({
         nombre: true,
         email: true,
+        phone: true,
         roles: true
       })
       return
@@ -1353,13 +1460,23 @@ const CreateNewAccountModal = ({
                 <FormFieldSkeleton />
               </>
             ) : (
-              ['nombre', 'email', 'roles'].map((fieldName) => (
+              ['nombre', 'email', 'phone', 'roles'].map((fieldName) => (
                 <React.Fragment key={fieldName}>
                   {fieldName && (
                     <Fade in timeout={300}>
                       <Box>
                         {fieldName === 'roles' ? (
                           <Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+                              <Button
+                                size="small"
+                                variant="text"
+                                startIcon={<HelpOutline fontSize="small" />}
+                                onClick={() => setRoleHelpOpen(true)}
+                              >
+                                Ver roles
+                              </Button>
+                            </Box>
                             <Autocomplete
                               multiple
                               options={rolesList ?? []}
@@ -1385,7 +1502,7 @@ const CreateNewAccountModal = ({
                                   <Chip
                                     {...getTagProps({ index })}
                                     key={index}
-                                    label={option.description}
+                                    label={getRoleChipLabel(option)}
                                     size="small"
                                     sx={{
                                       backgroundColor: '#d1fae5',
@@ -1447,7 +1564,7 @@ const CreateNewAccountModal = ({
                           </Box>
                         ) : (
                           <TextField
-                            label={`${fieldName === 'nombre' ? 'Nombre' : fieldName === 'email' ? 'Email' : 'Campo'} *`}
+                            label={`${fieldName === 'nombre' ? 'Nombre *' : fieldName === 'email' ? 'Email *' : 'Teléfono'}`}
                             name={fieldName}
                             value={values[fieldName] || ''}
                             onChange={(e) => handleFieldChange(fieldName, e.target.value)}
@@ -1565,6 +1682,11 @@ const CreateNewAccountModal = ({
           </>
         )}
       </DialogActions>
+      <RoleHelpDialog
+        open={roleHelpOpen}
+        rolesList={rolesList}
+        onClose={() => setRoleHelpOpen(false)}
+      />
     </Dialog>
   )
 }
@@ -1594,6 +1716,7 @@ const EditUserModal = ({
     id: userData?.id || 0,
     nombre: userData?.nombre || '',
     email: userData?.email || '',
+    phone: userData?.phone || '',
     roles: userData?.roles || [],
     createdAt: userData?.createdAt || ''
   }), [userData])
@@ -1602,6 +1725,7 @@ const EditUserModal = ({
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({})
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [roleHelpOpen, setRoleHelpOpen] = useState(false)
 
   // Update form values when userData changes
   useEffect(() => {
@@ -1632,7 +1756,21 @@ const EditUserModal = ({
     return ''
   }, [])
 
+  const validatePhone = useCallback((phone: string, roles: Role[]) => {
+    const isMetrologist = roles?.some((role) => role.name === 'metrologist')
+    if (isMetrologist && !phone) return 'El teléfono es obligatorio para metrólogos'
+    if (phone && !/^[0-9+\-\s().]+$/.test(phone)) {
+      return 'Usa solo números y símbolos + - ( ) .'
+    }
+    return ''
+  }, [])
+
   const handleFieldChange = useCallback((fieldName: string, value: any) => {
+    const nextValues = {
+      ...values,
+      [fieldName]: value
+    }
+
     setValues((prev: UserData) => ({
       ...prev,
       [fieldName]: value
@@ -1654,6 +1792,9 @@ const EditUserModal = ({
       case 'email':
         error = validateEmail(value)
         break
+      case 'phone':
+        error = validatePhone(value, nextValues.roles)
+        break
       case 'roles':
         error = validateRoles(value)
         break
@@ -1661,17 +1802,19 @@ const EditUserModal = ({
 
     setErrors(prev => ({
       ...prev,
-      [fieldName]: error
+      [fieldName]: error,
+      phone: fieldName === 'phone' ? error : validatePhone(nextValues.phone || '', nextValues.roles || [])
     }))
-  }, [validateName, validateEmail, validateRoles])
+  }, [validateName, validateEmail, validatePhone, validateRoles, values])
 
   const isFormValid = useMemo(() => {
     const nameError = validateName(values.nombre || '')
     const emailError = validateEmail(values.email || '')
+    const phoneError = validatePhone(values.phone || '', values.roles || [])
     const rolesError = validateRoles(values.roles || [])
 
-    return !nameError && !emailError && !rolesError
-  }, [validateName, validateEmail, validateRoles, values.nombre, values.email, values.roles])
+    return !nameError && !emailError && !phoneError && !rolesError
+  }, [validateName, validateEmail, validatePhone, validateRoles, values.nombre, values.email, values.phone, values.roles])
 
   const handleSubmit = async () => {
     if (!isFormValid) {
@@ -1679,6 +1822,7 @@ const EditUserModal = ({
       setTouched({
         nombre: true,
         email: true,
+        phone: true,
         roles: true
       })
       return
@@ -1964,92 +2108,134 @@ const EditUserModal = ({
                   />
                 </Fade>
 
+                {/* Phone Field */}
+                <Fade in timeout={450}>
+                  <TextField
+                    label="Teléfono"
+                    value={values.phone || ''}
+                    onChange={(e) => handleFieldChange('phone', e.target.value)}
+                    onBlur={() => setTouched(prev => ({ ...prev, phone: true }))}
+                    variant="outlined"
+                    fullWidth
+                    error={touched.phone && !!errors.phone}
+                    helperText={touched.phone && errors.phone}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: '12px',
+                        transition: 'all 0.3s ease-in-out',
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#10b981'
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#10b981',
+                          borderWidth: '2px'
+                        }
+                      },
+                      '& .MuiInputLabel-root': {
+                        fontWeight: 600
+                      }
+                    }}
+                  />
+                </Fade>
+
                 {/* Roles Field */}
                 <Fade in timeout={500}>
-                  <Autocomplete
-                    multiple
-                    options={rolesList ?? []}
-                    autoComplete={false}
-                    value={values.roles || []}
-                    getOptionLabel={(option) => {
-                      if (typeof option === 'string') {
-                        return option
-                      }
-                      return option.description
-                    }}
-                    onChange={(_, newValues) => {
-                      const roles = newValues.map((v) => {
-                        if (typeof v === 'string') {
-                          return { id: 0, name: v, description: v }
+                  <Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+                      <Button
+                        size="small"
+                        variant="text"
+                        startIcon={<HelpOutline fontSize="small" />}
+                        onClick={() => setRoleHelpOpen(true)}
+                      >
+                        Ver roles
+                      </Button>
+                    </Box>
+                    <Autocomplete
+                      multiple
+                      options={rolesList ?? []}
+                      autoComplete={false}
+                      value={values.roles || []}
+                      getOptionLabel={(option) => {
+                        if (typeof option === 'string') {
+                          return option
                         }
-                        return v
-                      })
-                      handleFieldChange('roles', roles)
-                    }}
-                    renderTags={(value, getTagProps) =>
-                      value.map((option, index) => (
-                        <Chip
-                          {...getTagProps({ index })}
-                          key={index}
-                          label={option.description}
-                          size="small"
+                        return option.description
+                      }}
+                      onChange={(_, newValues) => {
+                        const roles = newValues.map((v) => {
+                          if (typeof v === 'string') {
+                            return { id: 0, name: v, description: v }
+                          }
+                          return v
+                        })
+                        handleFieldChange('roles', roles)
+                      }}
+                      renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                          <Chip
+                            {...getTagProps({ index })}
+                            key={index}
+                            label={getRoleChipLabel(option)}
+                            size="small"
+                            sx={{
+                              backgroundColor: '#d1fae5',
+                              color: '#059669',
+                              fontWeight: 500,
+                              '& .MuiChip-deleteIcon': {
+                                color: '#059669'
+                              }
+                            }}
+                          />
+                        ))
+                      }
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label='Roles *'
+                          variant="outlined"
+                          error={touched.roles && !!errors.roles}
+                          helperText={touched.roles && errors.roles}
+                          InputProps={{
+                            ...params.InputProps,
+                            endAdornment: (
+                              <>
+                                {loadingRoles ? (
+                                  <CircularProgress color='inherit' size={20} />
+                                ) : null}
+                                {params.InputProps.endAdornment}
+                              </>
+                            )
+                          }}
                           sx={{
-                            backgroundColor: '#d1fae5',
-                            color: '#059669',
-                            fontWeight: 500,
-                            '& .MuiChip-deleteIcon': {
-                              color: '#059669'
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: '12px',
+                              transition: 'all 0.3s ease-in-out',
+                              '&:hover .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#10b981'
+                              },
+                              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#10b981',
+                                borderWidth: '2px'
+                              }
+                            },
+                            '& .MuiInputLabel-root': {
+                              fontWeight: 600
                             }
                           }}
                         />
-                      ))
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label='Roles *'
-                        variant="outlined"
-                        error={touched.roles && !!errors.roles}
-                        helperText={touched.roles && errors.roles}
-                        InputProps={{
-                          ...params.InputProps,
-                          endAdornment: (
-                            <>
-                              {loadingRoles ? (
-                                <CircularProgress color='inherit' size={20} />
-                              ) : null}
-                              {params.InputProps.endAdornment}
-                            </>
-                          )
-                        }}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: '12px',
-                            transition: 'all 0.3s ease-in-out',
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                              borderColor: '#10b981'
-                            },
-                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                              borderColor: '#10b981',
-                              borderWidth: '2px'
-                            }
-                          },
-                          '& .MuiInputLabel-root': {
-                            fontWeight: 600
-                          }
-                        }}
-                      />
-                    )}
-                    filterOptions={(options, state) => {
-                      return options.filter((option) =>
-                        option.description
-                          .toLowerCase()
-                          .includes(state.inputValue.toLowerCase())
-                      )
-                    }}
-                    noOptionsText='No se encontraron roles'
-                    fullWidth
-                  />
+                      )}
+                      filterOptions={(options, state) => {
+                        return options.filter((option) =>
+                          option.description
+                            .toLowerCase()
+                            .includes(state.inputValue.toLowerCase())
+                        )
+                      }}
+                      noOptionsText='No se encontraron roles'
+                      fullWidth
+                    />
+                  </Box>
                 </Fade>
               </>
             )}
@@ -2141,6 +2327,11 @@ const EditUserModal = ({
           </>
         )}
       </DialogActions>
+      <RoleHelpDialog
+        open={roleHelpOpen}
+        rolesList={rolesList}
+        onClose={() => setRoleHelpOpen(false)}
+      />
     </Dialog>
   )
 }

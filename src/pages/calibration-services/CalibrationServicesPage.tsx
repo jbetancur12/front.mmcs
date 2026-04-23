@@ -18,6 +18,7 @@ import {
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import AddBusinessOutlinedIcon from '@mui/icons-material/AddBusinessOutlined'
+import AnalyticsOutlinedIcon from '@mui/icons-material/AnalyticsOutlined'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
@@ -34,6 +35,7 @@ import { Toaster, toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import {
   CALIBRATION_SERVICE_ALLOWED_ROLES,
+  CALIBRATION_SERVICE_ANALYTICS_ROLES,
   CALIBRATION_SERVICE_APPROVAL_ROLES,
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
@@ -325,6 +327,7 @@ const CalibrationServicesPage = () => {
   const canScheduleService = useHasRole([...CALIBRATION_SERVICE_SCHEDULE_ROLES])
   const canRunExecution = useHasRole([...CALIBRATION_SERVICE_EXECUTION_ROLES])
   const canViewModule = useHasRole([...CALIBRATION_SERVICE_ALLOWED_ROLES])
+  const canViewAnalytics = useHasRole([...CALIBRATION_SERVICE_ANALYTICS_ROLES])
   const canManageSequenceConfig = canCreateServices
   const canManageSlaConfig = useHasRole(['admin', 'super_admin'])
   const hasTechnicalRole = useHasRole([...CALIBRATION_SERVICE_TECHNICAL_ROLES])
@@ -673,6 +676,16 @@ const CalibrationServicesPage = () => {
         </Box>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+          {canViewAnalytics ? (
+            <Button
+              variant='outlined'
+              startIcon={<AnalyticsOutlinedIcon />}
+              onClick={() => navigate('/calibration-services/analytics')}
+              sx={secondaryButtonSx}
+            >
+              Analíticas
+            </Button>
+          ) : null}
           {canCreateServices ? (
             <Button
               variant='outlined'

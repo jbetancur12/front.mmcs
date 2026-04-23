@@ -145,6 +145,8 @@ export interface CalibrationServiceUserSummary {
   id: number
   nombre: string
   email?: string | null
+  phone?: string | null
+  active?: boolean
 }
 
 export interface CalibrationServiceProductSummary {
@@ -477,6 +479,110 @@ export interface CalibrationServiceListResponse {
   services: CalibrationService[]
 }
 
+export interface CalibrationServiceAnalyticsFilters {
+  dateFrom?: string
+  dateTo?: string
+  customerId?: number
+  metrologistId?: number | 'unassigned'
+  status?: CalibrationServiceStatus
+  slaColor?: CalibrationServiceSlaIndicatorColor
+  hasAdjustments?: boolean
+  hasCuts?: boolean
+  hasInvoice?: boolean
+  hasPendingDocumentControl?: boolean
+  tableAll?: boolean
+  tableLimit?: number
+  tableOffset?: number
+}
+
+export interface CalibrationServiceAnalyticsSummary {
+  totalServices: number
+  activeServices: number
+  servicesWithAdjustments: number
+  servicesWithCuts: number
+  quotedValue: number | null
+  approvedQuotedValue: number | null
+  approvedAdjustmentValue: number | null
+  invoicedValue: number | null
+}
+
+export interface CalibrationServiceAnalyticsFunnelItem {
+  phase: string
+  count: number
+}
+
+export interface CalibrationServiceAnalyticsMetrologist {
+  key: string
+  metrologistId?: number | null
+  metrologistName: string
+  total: number
+  scheduled: number
+  inExecution: number
+  technicallyCompleted: number
+  warningOrOverdue: number
+  pendingClosure: number
+}
+
+export interface CalibrationServiceAnalyticsCustomer {
+  customerName: string
+  total: number
+  warningOrOverdue: number
+  withAdjustments: number
+}
+
+export interface CalibrationServiceAnalyticsFinancialTrendItem {
+  month: string
+  monthLabel: string
+  quotedValue: number
+  approvedQuotedValue: number
+  approvedAdjustmentValue: number
+  invoicedValue: number
+}
+
+export interface CalibrationServiceAnalyticsTableRow {
+  id: number
+  serviceCode: string
+  quoteCode?: string | null
+  odsCode?: string | null
+  customerName: string
+  status: CalibrationServiceStatus
+  approvalStatus: CalibrationServiceApprovalStatus
+  slaColor: CalibrationServiceSlaIndicatorColor
+  slaLabel: string
+  activePhase?: string | null
+  metrologistName?: string | null
+  adjustmentsCount: number
+  cutsCount: number
+  hasPendingDocumentControl: boolean
+  totalValue?: number | null
+  updatedAt?: string | null
+}
+
+export interface CalibrationServiceAnalyticsResponse {
+  generatedAt: string
+  limitedTechnicalView: boolean
+  summary: CalibrationServiceAnalyticsSummary
+  statusCounts: Partial<Record<CalibrationServiceStatus, number>>
+  slaCounts: Partial<Record<CalibrationServiceSlaIndicatorColor, number>>
+  activePhaseCounts: Record<string, number>
+  funnel: CalibrationServiceAnalyticsFunnelItem[]
+  metrologists: CalibrationServiceAnalyticsMetrologist[]
+  customers: CalibrationServiceAnalyticsCustomer[]
+  financialTrend: CalibrationServiceAnalyticsFinancialTrendItem[]
+  adjustments: {
+    total: number
+    byStatus: Record<string, number>
+    byType: Record<string, number>
+  }
+  cuts: Record<string, number>
+  tableRows: CalibrationServiceAnalyticsTableRow[]
+  tableTotalItems: number
+  tableLimit: number
+  tableOffset: number
+  tableCurrentPage: number
+  tableTotalPages: number
+}
+
 export interface CalibrationServiceSequenceConfig {
   initialized: boolean
   quotePrefix: string
@@ -764,13 +870,28 @@ export interface CalibrationServiceCreateAdjustmentPayload {
   description: string
   technicalNotes?: string | null
   requiresCommercialAdjustment?: boolean
+  contractModificationRequired?: boolean
+  supportChannel?: string | null
+  supportReference?: string | null
+  supportNotifiedAt?: string
   reportedAt?: string
 }
 
 export interface CalibrationServiceReviewAdjustmentPayload {
   serviceId: string
   adjustmentId: string
-  decision: Extract<CalibrationServiceAdjustmentStatus, 'approved' | 'rejected'>
+  reviewStage?: 'technical' | 'commercial'
+  decision?: Extract<
+    CalibrationServiceAdjustmentStatus,
+    'approved' | 'rejected'
+  >
+  technicalDecision?: 'approved' | 'rejected'
+  technicalReviewNotes?: string | null
+  technicalReviewerRole?: string | null
+  contractModificationRequired?: boolean
+  supportChannel?: string | null
+  supportReference?: string | null
+  supportNotifiedAt?: string
   commercialNotes?: string | null
   pricingNotes?: string | null
   approvedUnitPrice?: number | null

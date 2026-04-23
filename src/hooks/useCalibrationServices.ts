@@ -4,6 +4,8 @@ import {
   CalibrationServiceApprovePayload,
   CalibrationServiceAdjustmentSendResult,
   CalibrationService,
+  CalibrationServiceAnalyticsFilters,
+  CalibrationServiceAnalyticsResponse,
   CalibrationServiceCancelPayload,
   CalibrationServiceClosePayload,
   CalibrationServiceCreateAdjustmentPayload,
@@ -75,6 +77,18 @@ const calibrationServiceApi = {
   ): Promise<CalibrationServiceListResponse> => {
     const response = await axiosPrivate.get<CalibrationServiceListResponse>(
       '/calibration-services',
+      {
+        params: filters
+      }
+    )
+    return response.data
+  },
+
+  getAnalytics: async (
+    filters?: CalibrationServiceAnalyticsFilters
+  ): Promise<CalibrationServiceAnalyticsResponse> => {
+    const response = await axiosPrivate.get<CalibrationServiceAnalyticsResponse>(
+      '/calibration-services/analytics',
       {
         params: filters
       }
@@ -537,6 +551,19 @@ export const useCalibrationServices = (filters?: CalibrationServiceFilters) => {
   return useQuery({
     queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, filters],
     queryFn: () => calibrationServiceApi.getServices(filters),
+    staleTime: 60 * 1000,
+    retry: 1
+  })
+}
+
+export const useCalibrationServiceAnalytics = (
+  filters?: CalibrationServiceAnalyticsFilters,
+  enabled = true
+) => {
+  return useQuery({
+    queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, 'analytics', filters],
+    queryFn: () => calibrationServiceApi.getAnalytics(filters),
+    enabled,
     staleTime: 60 * 1000,
     retry: 1
   })

@@ -36,7 +36,8 @@ import { ReactNode, useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES,
-  CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES,
+  CALIBRATION_SERVICE_ADJUSTMENT_COMMERCIAL_REVIEW_ROLES,
+  CALIBRATION_SERVICE_ADJUSTMENT_TECHNICAL_REVIEW_ROLES,
   CALIBRATION_SERVICE_APPROVAL_ROLES,
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
@@ -196,7 +197,11 @@ const getApprovedQuantityDeltaForItem = (
 const getEffectiveServiceItemQuantity = (
   service: CalibrationService,
   item: NonNullable<CalibrationService['items']>[number]
-) => Math.max(toNumber(item.quantity) + getApprovedQuantityDeltaForItem(service, item.id), 0)
+) =>
+  Math.max(
+    toNumber(item.quantity) + getApprovedQuantityDeltaForItem(service, item.id),
+    0
+  )
 
 const getApprovedFinancialImpactForItem = (
   service: CalibrationService,
@@ -260,7 +265,9 @@ const getOtherFieldRecord = (
   fieldName: string
 ) => {
   const fieldValue = otherFields?.[fieldName]
-  return fieldValue && typeof fieldValue === 'object' && !Array.isArray(fieldValue)
+  return fieldValue &&
+    typeof fieldValue === 'object' &&
+    !Array.isArray(fieldValue)
     ? (fieldValue as Record<string, unknown>)
     : undefined
 }
@@ -315,8 +322,8 @@ const getOperationsDetails = (
 ) => {
   const value = otherFields?.operations
   return value && typeof value === 'object' && !Array.isArray(value)
-      ? (value as Record<string, unknown>)
-      : undefined
+    ? (value as Record<string, unknown>)
+    : undefined
 }
 
 const getLogisticsDetails = (
@@ -348,13 +355,15 @@ const CalibrationServiceDetailsPage = () => {
   const navigate = useNavigate()
   const { serviceId } = useParams<{ serviceId: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { data: service, isLoading, isError, error } =
-    useCalibrationService(serviceId)
-  const canManageSequenceConfig = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
   const {
-    data: sequenceConfig,
-    isLoading: isLoadingSequenceConfig
-  } = useCalibrationServiceSequenceConfig(canManageSequenceConfig)
+    data: service,
+    isLoading,
+    isError,
+    error
+  } = useCalibrationService(serviceId)
+  const canManageSequenceConfig = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
+  const { data: sequenceConfig, isLoading: isLoadingSequenceConfig } =
+    useCalibrationServiceSequenceConfig(canManageSequenceConfig)
   const { data: slaConfig } = useCalibrationServiceSlaConfig(Boolean(serviceId))
   const {
     requestApproval,
@@ -407,8 +416,10 @@ const CalibrationServiceDetailsPage = () => {
     useState(false)
   const [sendLogisticsPreview, setSendLogisticsPreview] =
     useState<CalibrationServiceSendPreviewResult | null>(null)
-  const [isPhysicalTraceabilityDialogOpen, setIsPhysicalTraceabilityDialogOpen] =
-    useState(false)
+  const [
+    isPhysicalTraceabilityDialogOpen,
+    setIsPhysicalTraceabilityDialogOpen
+  ] = useState(false)
   const [isCutDialogOpen, setIsCutDialogOpen] = useState(false)
   const [isAdjustmentDialogOpen, setIsAdjustmentDialogOpen] = useState(false)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
@@ -419,8 +430,12 @@ const CalibrationServiceDetailsPage = () => {
     useState<CalibrationServiceCut | null>(null)
   const [selectedAdjustment, setSelectedAdjustment] =
     useState<CalibrationServiceAdjustment | null>(null)
-  const [selectedAdjustmentForCustomerResponse, setSelectedAdjustmentForCustomerResponse] =
-    useState<CalibrationServiceAdjustment | null>(null)
+  const [selectedAdjustmentReviewStage, setSelectedAdjustmentReviewStage] =
+    useState<'technical' | 'commercial'>('technical')
+  const [
+    selectedAdjustmentForCustomerResponse,
+    setSelectedAdjustmentForCustomerResponse
+  ] = useState<CalibrationServiceAdjustment | null>(null)
   const [selectedAdjustmentForSend, setSelectedAdjustmentForSend] =
     useState<CalibrationServiceAdjustment | null>(null)
   const [sendAdjustmentPreview, setSendAdjustmentPreview] =
@@ -429,16 +444,22 @@ const CalibrationServiceDetailsPage = () => {
     getStoredDetailTab(serviceId)
   )
   const canEditService = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
-  const canTakeApprovalDecision = useHasRole([...CALIBRATION_SERVICE_APPROVAL_ROLES])
+  const canTakeApprovalDecision = useHasRole([
+    ...CALIBRATION_SERVICE_APPROVAL_ROLES
+  ])
   const canIssueOdsRole = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
-  const canScheduleServiceRole = useHasRole([...CALIBRATION_SERVICE_SCHEDULE_ROLES])
+  const canScheduleServiceRole = useHasRole([
+    ...CALIBRATION_SERVICE_SCHEDULE_ROLES
+  ])
   const canReprogramServiceRole = useHasRole([
     ...CALIBRATION_SERVICE_REPROGRAM_ROLES
   ])
   const canReassignServiceRole = useHasRole([
     ...CALIBRATION_SERVICE_REASSIGN_ROLES
   ])
-  const canRunExecutionRole = useHasRole([...CALIBRATION_SERVICE_EXECUTION_ROLES])
+  const canRunExecutionRole = useHasRole([
+    ...CALIBRATION_SERVICE_EXECUTION_ROLES
+  ])
   const canPauseServiceRole = useHasRole([...CALIBRATION_SERVICE_PAUSE_ROLES])
   const canCancelServiceRole = useHasRole([...CALIBRATION_SERVICE_CANCEL_ROLES])
   const canRegisterPhysicalTraceabilityRole = useHasRole([
@@ -447,8 +468,11 @@ const CalibrationServiceDetailsPage = () => {
   const canReportAdjustmentRole = useHasRole([
     ...CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES
   ])
-  const canReviewAdjustmentRole = useHasRole([
-    ...CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES
+  const canReviewAdjustmentTechnically = useHasRole([
+    ...CALIBRATION_SERVICE_ADJUSTMENT_TECHNICAL_REVIEW_ROLES
+  ])
+  const canReviewAdjustmentCommercially = useHasRole([
+    ...CALIBRATION_SERVICE_ADJUSTMENT_COMMERCIAL_REVIEW_ROLES
   ])
   const canUpdateDocumentControlRole = useHasRole([
     ...CALIBRATION_SERVICE_DOCUMENT_CONTROL_ROLES
@@ -493,35 +517,57 @@ const CalibrationServiceDetailsPage = () => {
     canPauseServiceRole &&
     !service?.isPaused &&
     service?.status !== 'cancelled' &&
-    ['ods_issued', 'pending_programming', 'scheduled', 'in_execution', 'technically_completed'].includes(
-      service?.status || ''
-    )
+    [
+      'ods_issued',
+      'pending_programming',
+      'scheduled',
+      'in_execution',
+      'technically_completed'
+    ].includes(service?.status || '')
   const canResumeService =
     canPauseServiceRole &&
     Boolean(service?.isPaused) &&
     service?.status !== 'cancelled' &&
-    ['ods_issued', 'pending_programming', 'scheduled', 'in_execution', 'technically_completed'].includes(
-      service?.status || ''
-    )
+    [
+      'ods_issued',
+      'pending_programming',
+      'scheduled',
+      'in_execution',
+      'technically_completed'
+    ].includes(service?.status || '')
   const canCancelService =
     canCancelServiceRole &&
     service?.status !== 'cancelled' &&
     service?.status !== 'closed' &&
-    ['draft', 'pending_approval', 'approved', 'ods_issued', 'pending_programming', 'scheduled', 'in_execution', 'technically_completed'].includes(
-      service?.status || ''
-    )
+    [
+      'draft',
+      'pending_approval',
+      'approved',
+      'ods_issued',
+      'pending_programming',
+      'scheduled',
+      'in_execution',
+      'technically_completed'
+    ].includes(service?.status || '')
   const canStartExecution =
     canRunExecutionRole && !service?.isPaused && service?.status === 'scheduled'
-  const allItemsOperationallyCompleted = (service?.items || []).every((item) => {
-    const status = item.otherFields?.operationalStatus
-    return status === 'completed'
-  })
+  const allItemsOperationallyCompleted = (service?.items || []).every(
+    (item) => {
+      const status = item.otherFields?.operationalStatus
+      return status === 'completed'
+    }
+  )
   const hasReleasableItems = (service?.items || []).some((item) => {
     const operationalStatus = item.otherFields?.operationalStatus
     const releasedQuantity = Number(item.otherFields?.releasedQuantity || 0)
-    const quantity = service ? getEffectiveServiceItemQuantity(service, item) : 0
+    const quantity = service
+      ? getEffectiveServiceItemQuantity(service, item)
+      : 0
 
-    return operationalStatus === 'completed' && Math.max(quantity - releasedQuantity, 0) > 0
+    return (
+      operationalStatus === 'completed' &&
+      Math.max(quantity - releasedQuantity, 0) > 0
+    )
   })
   const canCompleteExecution =
     canRunExecutionRole &&
@@ -540,7 +586,8 @@ const CalibrationServiceDetailsPage = () => {
     canReportAdjustmentRole &&
     !service?.isPaused &&
     ['in_execution', 'technically_completed'].includes(service?.status || '')
-  const canReviewAdjustment = canReviewAdjustmentRole
+  const canReviewAdjustment =
+    canReviewAdjustmentTechnically || canReviewAdjustmentCommercially
   const canUpdateOperationalProgress =
     canRunExecutionRole &&
     !service?.isPaused &&
@@ -556,22 +603,35 @@ const CalibrationServiceDetailsPage = () => {
     canRegisterPhysicalTraceabilityRole &&
     service?.status !== 'cancelled' &&
     service?.status !== 'closed' &&
-    ['ods_issued', 'pending_programming', 'scheduled', 'in_execution', 'technically_completed'].includes(
-      service?.status || ''
-    )
+    [
+      'ods_issued',
+      'pending_programming',
+      'scheduled',
+      'in_execution',
+      'technically_completed'
+    ].includes(service?.status || '')
   const canManageLogisticsControl =
     canRegisterPhysicalTraceabilityRole &&
     service?.status !== 'cancelled' &&
     service?.status !== 'closed' &&
-    ['ods_issued', 'pending_programming', 'scheduled', 'in_execution', 'technically_completed'].includes(
-      service?.status || ''
-    )
+    [
+      'ods_issued',
+      'pending_programming',
+      'scheduled',
+      'in_execution',
+      'technically_completed'
+    ].includes(service?.status || '')
   const canGenerateLogisticsPdf =
     canRegisterPhysicalTraceabilityRole &&
     service?.status !== 'cancelled' &&
-    ['ods_issued', 'pending_programming', 'scheduled', 'in_execution', 'technically_completed', 'closed'].includes(
-      service?.status || ''
-    )
+    [
+      'ods_issued',
+      'pending_programming',
+      'scheduled',
+      'in_execution',
+      'technically_completed',
+      'closed'
+    ].includes(service?.status || '')
   const canSendLogisticsEmail = canGenerateLogisticsPdf
   const canStillRegisterAdjustmentsAfterTechnicalCompletion =
     service?.status === 'technically_completed' && canReportAdjustment
@@ -615,7 +675,11 @@ const CalibrationServiceDetailsPage = () => {
     if (!sequenceConfig?.initialized) {
       setIsSequenceDialogOpen(true)
     }
-  }, [canManageSequenceConfig, isLoadingSequenceConfig, sequenceConfig?.initialized])
+  }, [
+    canManageSequenceConfig,
+    isLoadingSequenceConfig,
+    sequenceConfig?.initialized
+  ])
 
   useEffect(() => {
     if (requestedAction !== 'ods' || !canIssueOds || isOdsDialogOpen) {
@@ -635,7 +699,11 @@ const CalibrationServiceDetailsPage = () => {
   ])
 
   useEffect(() => {
-    if (requestedAction !== 'schedule' || !canScheduleService || isScheduleDialogOpen) {
+    if (
+      requestedAction !== 'schedule' ||
+      !canScheduleService ||
+      isScheduleDialogOpen
+    ) {
       return
     }
 
@@ -675,11 +743,8 @@ const CalibrationServiceDetailsPage = () => {
     )
   }
 
-  const canEdit =
-    canEditService &&
-    service.status === 'draft'
-  const canRequestApproval =
-    canEditService && service.status === 'draft'
+  const canEdit = canEditService && service.status === 'draft'
+  const canRequestApproval = canEditService && service.status === 'draft'
   const canDecideApproval =
     canTakeApprovalDecision && service.status === 'pending_approval'
   const approvalNotes = getOtherFieldText(service.otherFields, 'approvalNotes')
@@ -701,7 +766,9 @@ const CalibrationServiceDetailsPage = () => {
   const operationsDetails = getOperationsDetails(service.otherFields)
   const logisticsDetails = getLogisticsDetails(service.otherFields)
   const odsScheduleWindow =
-    typeof odsDetails?.scheduleWindow === 'string' ? odsDetails.scheduleWindow : ''
+    typeof odsDetails?.scheduleWindow === 'string'
+      ? odsDetails.scheduleWindow
+      : ''
   const odsSignerName =
     typeof odsDetails?.signerName === 'string' ? odsDetails.signerName : ''
   const odsCustomerAgreements =
@@ -732,7 +799,7 @@ const CalibrationServiceDetailsPage = () => {
       ? operationsDetails.operationalResponsibleName
       : operationsAssignedMetrologistName
         ? operationsAssignedMetrologistName
-      : ''
+        : ''
   const operationsResponsibleRole =
     typeof operationsDetails?.operationalResponsibleRole === 'string'
       ? operationsDetails.operationalResponsibleRole
@@ -746,215 +813,220 @@ const CalibrationServiceDetailsPage = () => {
       ? ((logisticsDetails?.history ||
           []) as CalibrationServicePhysicalTraceabilityEntry[])
       : []
-  const logisticsControlSheet: CalibrationServiceLogisticsControlSheet = (() => {
-    const rawControlSheet =
-      logisticsDetails?.controlSheet &&
-      typeof logisticsDetails.controlSheet === 'object' &&
-      !Array.isArray(logisticsDetails.controlSheet)
-        ? (logisticsDetails.controlSheet as Record<string, unknown>)
-        : {}
+  const logisticsControlSheet: CalibrationServiceLogisticsControlSheet =
+    (() => {
+      const rawControlSheet =
+        logisticsDetails?.controlSheet &&
+        typeof logisticsDetails.controlSheet === 'object' &&
+        !Array.isArray(logisticsDetails.controlSheet)
+          ? (logisticsDetails.controlSheet as Record<string, unknown>)
+          : {}
 
-    const existingItems =
-      Array.isArray(rawControlSheet.items) && rawControlSheet.items.length
-        ? rawControlSheet.items
-        : (service.items || []).map((item, index) => ({
-            rowNumber: index + 1,
-            serviceItemId: item.id,
-            equipmentName: item.instrumentName || item.itemName,
-            brand: '',
-            model: '',
-            serialNumber: '',
-            assetNumber: '',
-            location: '',
-            serviceScope: String(item.serviceType || '').toLowerCase().includes('acredit')
-              ? 'AC'
-              : 'NA',
-            physicalInspectionIn: null,
-            physicalInspectionOut: null,
-            operationalInspectionIn: null,
-            operationalInspectionOut: null
-          }))
-
-    const normalizedItems: CalibrationServiceLogisticsControlItem[] = existingItems.map((item, index) => ({
-      rowNumber:
-        typeof item?.rowNumber === 'number' && item.rowNumber > 0
-          ? item.rowNumber
-          : index + 1,
-      serviceItemId:
-        typeof item?.serviceItemId === 'number' ? item.serviceItemId : null,
-      equipmentName: typeof item?.equipmentName === 'string' ? item.equipmentName : '',
-      brand: typeof item?.brand === 'string' ? item.brand : '',
-      model: typeof item?.model === 'string' ? item.model : '',
-      serialNumber:
-        typeof item?.serialNumber === 'string' ? item.serialNumber : '',
-      assetNumber: typeof item?.assetNumber === 'string' ? item.assetNumber : '',
-      location: typeof item?.location === 'string' ? item.location : '',
-      serviceScope:
-        item?.serviceScope === 'AC'
-          ? 'AC'
-          : 'NA',
-      physicalInspectionIn:
-        typeof item?.physicalInspectionIn === 'string'
-          ? item.physicalInspectionIn
-          : null,
-      physicalInspectionOut:
-        typeof item?.physicalInspectionOut === 'string'
-          ? item.physicalInspectionOut
-          : null,
-      operationalInspectionIn:
-        typeof item?.operationalInspectionIn === 'string'
-          ? item.operationalInspectionIn
-          : null,
-      operationalInspectionOut:
-        typeof item?.operationalInspectionOut === 'string'
-          ? item.operationalInspectionOut
-          : null
-    }))
-
-    return {
-      intakeDate:
-        typeof rawControlSheet.intakeDate === 'string' ? rawControlSheet.intakeDate : '',
-      deliveryDate:
-        typeof rawControlSheet.deliveryDate === 'string'
-          ? rawControlSheet.deliveryDate
-          : '',
-      requesterCompanyName:
-        typeof rawControlSheet.requesterCompanyName === 'string'
-          ? rawControlSheet.requesterCompanyName
-          : service.customer?.nombre || service.executionCustomerName || '',
-      requesterOfferNumber:
-        typeof rawControlSheet.requesterOfferNumber === 'string'
-          ? rawControlSheet.requesterOfferNumber
-          : service.quoteCode || service.serviceCode,
-      requesterAddress:
-        typeof rawControlSheet.requesterAddress === 'string'
-          ? rawControlSheet.requesterAddress
-          : service.address || service.customer?.direccion || '',
-      requesterPhone:
-        typeof rawControlSheet.requesterPhone === 'string'
-          ? rawControlSheet.requesterPhone
-          : service.contactPhone || service.customer?.telefono || '',
-      requesterContactName:
-        typeof rawControlSheet.requesterContactName === 'string'
-          ? rawControlSheet.requesterContactName
-          : service.contactName || '',
-      requesterCity:
-        typeof rawControlSheet.requesterCity === 'string'
-          ? rawControlSheet.requesterCity
-          : service.city || service.customer?.ciudad || '',
-      items: normalizedItems.length
-        ? normalizedItems
-        : [
-            {
-              rowNumber: 1,
-              serviceItemId: null,
-              equipmentName: '',
+      const existingItems =
+        Array.isArray(rawControlSheet.items) && rawControlSheet.items.length
+          ? rawControlSheet.items
+          : (service.items || []).map((item, index) => ({
+              rowNumber: index + 1,
+              serviceItemId: item.id,
+              equipmentName: item.instrumentName || item.itemName,
               brand: '',
               model: '',
               serialNumber: '',
               assetNumber: '',
               location: '',
-              serviceScope: 'NA' as const,
+              serviceScope: String(item.serviceType || '')
+                .toLowerCase()
+                .includes('acredit')
+                ? 'AC'
+                : 'NA',
               physicalInspectionIn: null,
               physicalInspectionOut: null,
               operationalInspectionIn: null,
               operationalInspectionOut: null
-            }
-          ],
-      noSerialAuthorization:
-        typeof rawControlSheet.noSerialAuthorization === 'boolean'
-          ? rawControlSheet.noSerialAuthorization
-          : null,
-      calibrationPointsRequested:
-        typeof rawControlSheet.calibrationPointsRequested === 'boolean'
-          ? rawControlSheet.calibrationPointsRequested
-          : null,
-      calibrationPointsDetails:
-        typeof rawControlSheet.calibrationPointsDetails === 'string'
-          ? rawControlSheet.calibrationPointsDetails
-          : '',
-      specialCondition:
-        typeof rawControlSheet.specialCondition === 'boolean'
-          ? rawControlSheet.specialCondition
-          : null,
-      specialConditionDetails:
-        typeof rawControlSheet.specialConditionDetails === 'string'
-          ? rawControlSheet.specialConditionDetails
-          : '',
-      calibrationCertificateIncluded:
-        typeof rawControlSheet.calibrationCertificateIncluded === 'boolean'
-          ? rawControlSheet.calibrationCertificateIncluded
-          : null,
-      stampIncluded:
-        typeof rawControlSheet.stampIncluded === 'boolean'
-          ? rawControlSheet.stampIncluded
-          : null,
-      observations:
-        typeof rawControlSheet.observations === 'string'
-          ? rawControlSheet.observations
-          : '',
-      receivedTransportCompany:
-        typeof rawControlSheet.receivedTransportCompany === 'string'
-          ? rawControlSheet.receivedTransportCompany
-          : '',
-      receivedGuide:
-        typeof rawControlSheet.receivedGuide === 'string'
-          ? rawControlSheet.receivedGuide
-          : '',
-      receivedByMetromedicsName:
-        typeof rawControlSheet.receivedByMetromedicsName === 'string'
-          ? rawControlSheet.receivedByMetromedicsName
-          : '',
-      receivedByMetromedicsRole:
-        typeof rawControlSheet.receivedByMetromedicsRole === 'string'
-          ? rawControlSheet.receivedByMetromedicsRole
-          : '',
-      deliveredByMetromedicsName:
-        typeof rawControlSheet.deliveredByMetromedicsName === 'string'
-          ? rawControlSheet.deliveredByMetromedicsName
-          : '',
-      deliveredByMetromedicsRole:
-        typeof rawControlSheet.deliveredByMetromedicsRole === 'string'
-          ? rawControlSheet.deliveredByMetromedicsRole
-          : '',
-      sentTransportCompany:
-        typeof rawControlSheet.sentTransportCompany === 'string'
-          ? rawControlSheet.sentTransportCompany
-          : '',
-      sentGuide:
-        typeof rawControlSheet.sentGuide === 'string'
-          ? rawControlSheet.sentGuide
-          : '',
-      deliveredToClientName:
-        typeof rawControlSheet.deliveredToClientName === 'string'
-          ? rawControlSheet.deliveredToClientName
-          : '',
-      deliveredToClientSignature:
-        typeof rawControlSheet.deliveredToClientSignature === 'string'
-          ? rawControlSheet.deliveredToClientSignature
-          : '',
-      receivedByClientName:
-        typeof rawControlSheet.receivedByClientName === 'string'
-          ? rawControlSheet.receivedByClientName
-          : '',
-      receivedByClientSignature:
-        typeof rawControlSheet.receivedByClientSignature === 'string'
-          ? rawControlSheet.receivedByClientSignature
-          : '',
-      lastUpdatedAt:
-        typeof rawControlSheet.lastUpdatedAt === 'string'
-          ? rawControlSheet.lastUpdatedAt
-          : '',
-      lastUpdatedByUserId:
-        typeof rawControlSheet.lastUpdatedByUserId === 'number'
-          ? rawControlSheet.lastUpdatedByUserId
-          : null,
-      lastUpdatedByName:
-        typeof rawControlSheet.lastUpdatedByName === 'string'
-          ? rawControlSheet.lastUpdatedByName
-          : ''
-    }
-  })()
+            }))
+
+      const normalizedItems: CalibrationServiceLogisticsControlItem[] =
+        existingItems.map((item, index) => ({
+          rowNumber:
+            typeof item?.rowNumber === 'number' && item.rowNumber > 0
+              ? item.rowNumber
+              : index + 1,
+          serviceItemId:
+            typeof item?.serviceItemId === 'number' ? item.serviceItemId : null,
+          equipmentName:
+            typeof item?.equipmentName === 'string' ? item.equipmentName : '',
+          brand: typeof item?.brand === 'string' ? item.brand : '',
+          model: typeof item?.model === 'string' ? item.model : '',
+          serialNumber:
+            typeof item?.serialNumber === 'string' ? item.serialNumber : '',
+          assetNumber:
+            typeof item?.assetNumber === 'string' ? item.assetNumber : '',
+          location: typeof item?.location === 'string' ? item.location : '',
+          serviceScope: item?.serviceScope === 'AC' ? 'AC' : 'NA',
+          physicalInspectionIn:
+            typeof item?.physicalInspectionIn === 'string'
+              ? item.physicalInspectionIn
+              : null,
+          physicalInspectionOut:
+            typeof item?.physicalInspectionOut === 'string'
+              ? item.physicalInspectionOut
+              : null,
+          operationalInspectionIn:
+            typeof item?.operationalInspectionIn === 'string'
+              ? item.operationalInspectionIn
+              : null,
+          operationalInspectionOut:
+            typeof item?.operationalInspectionOut === 'string'
+              ? item.operationalInspectionOut
+              : null
+        }))
+
+      return {
+        intakeDate:
+          typeof rawControlSheet.intakeDate === 'string'
+            ? rawControlSheet.intakeDate
+            : '',
+        deliveryDate:
+          typeof rawControlSheet.deliveryDate === 'string'
+            ? rawControlSheet.deliveryDate
+            : '',
+        requesterCompanyName:
+          typeof rawControlSheet.requesterCompanyName === 'string'
+            ? rawControlSheet.requesterCompanyName
+            : service.customer?.nombre || service.executionCustomerName || '',
+        requesterOfferNumber:
+          typeof rawControlSheet.requesterOfferNumber === 'string'
+            ? rawControlSheet.requesterOfferNumber
+            : service.quoteCode || service.serviceCode,
+        requesterAddress:
+          typeof rawControlSheet.requesterAddress === 'string'
+            ? rawControlSheet.requesterAddress
+            : service.address || service.customer?.direccion || '',
+        requesterPhone:
+          typeof rawControlSheet.requesterPhone === 'string'
+            ? rawControlSheet.requesterPhone
+            : service.contactPhone || service.customer?.telefono || '',
+        requesterContactName:
+          typeof rawControlSheet.requesterContactName === 'string'
+            ? rawControlSheet.requesterContactName
+            : service.contactName || '',
+        requesterCity:
+          typeof rawControlSheet.requesterCity === 'string'
+            ? rawControlSheet.requesterCity
+            : service.city || service.customer?.ciudad || '',
+        items: normalizedItems.length
+          ? normalizedItems
+          : [
+              {
+                rowNumber: 1,
+                serviceItemId: null,
+                equipmentName: '',
+                brand: '',
+                model: '',
+                serialNumber: '',
+                assetNumber: '',
+                location: '',
+                serviceScope: 'NA' as const,
+                physicalInspectionIn: null,
+                physicalInspectionOut: null,
+                operationalInspectionIn: null,
+                operationalInspectionOut: null
+              }
+            ],
+        noSerialAuthorization:
+          typeof rawControlSheet.noSerialAuthorization === 'boolean'
+            ? rawControlSheet.noSerialAuthorization
+            : null,
+        calibrationPointsRequested:
+          typeof rawControlSheet.calibrationPointsRequested === 'boolean'
+            ? rawControlSheet.calibrationPointsRequested
+            : null,
+        calibrationPointsDetails:
+          typeof rawControlSheet.calibrationPointsDetails === 'string'
+            ? rawControlSheet.calibrationPointsDetails
+            : '',
+        specialCondition:
+          typeof rawControlSheet.specialCondition === 'boolean'
+            ? rawControlSheet.specialCondition
+            : null,
+        specialConditionDetails:
+          typeof rawControlSheet.specialConditionDetails === 'string'
+            ? rawControlSheet.specialConditionDetails
+            : '',
+        calibrationCertificateIncluded:
+          typeof rawControlSheet.calibrationCertificateIncluded === 'boolean'
+            ? rawControlSheet.calibrationCertificateIncluded
+            : null,
+        stampIncluded:
+          typeof rawControlSheet.stampIncluded === 'boolean'
+            ? rawControlSheet.stampIncluded
+            : null,
+        observations:
+          typeof rawControlSheet.observations === 'string'
+            ? rawControlSheet.observations
+            : '',
+        receivedTransportCompany:
+          typeof rawControlSheet.receivedTransportCompany === 'string'
+            ? rawControlSheet.receivedTransportCompany
+            : '',
+        receivedGuide:
+          typeof rawControlSheet.receivedGuide === 'string'
+            ? rawControlSheet.receivedGuide
+            : '',
+        receivedByMetromedicsName:
+          typeof rawControlSheet.receivedByMetromedicsName === 'string'
+            ? rawControlSheet.receivedByMetromedicsName
+            : '',
+        receivedByMetromedicsRole:
+          typeof rawControlSheet.receivedByMetromedicsRole === 'string'
+            ? rawControlSheet.receivedByMetromedicsRole
+            : '',
+        deliveredByMetromedicsName:
+          typeof rawControlSheet.deliveredByMetromedicsName === 'string'
+            ? rawControlSheet.deliveredByMetromedicsName
+            : '',
+        deliveredByMetromedicsRole:
+          typeof rawControlSheet.deliveredByMetromedicsRole === 'string'
+            ? rawControlSheet.deliveredByMetromedicsRole
+            : '',
+        sentTransportCompany:
+          typeof rawControlSheet.sentTransportCompany === 'string'
+            ? rawControlSheet.sentTransportCompany
+            : '',
+        sentGuide:
+          typeof rawControlSheet.sentGuide === 'string'
+            ? rawControlSheet.sentGuide
+            : '',
+        deliveredToClientName:
+          typeof rawControlSheet.deliveredToClientName === 'string'
+            ? rawControlSheet.deliveredToClientName
+            : '',
+        deliveredToClientSignature:
+          typeof rawControlSheet.deliveredToClientSignature === 'string'
+            ? rawControlSheet.deliveredToClientSignature
+            : '',
+        receivedByClientName:
+          typeof rawControlSheet.receivedByClientName === 'string'
+            ? rawControlSheet.receivedByClientName
+            : '',
+        receivedByClientSignature:
+          typeof rawControlSheet.receivedByClientSignature === 'string'
+            ? rawControlSheet.receivedByClientSignature
+            : '',
+        lastUpdatedAt:
+          typeof rawControlSheet.lastUpdatedAt === 'string'
+            ? rawControlSheet.lastUpdatedAt
+            : '',
+        lastUpdatedByUserId:
+          typeof rawControlSheet.lastUpdatedByUserId === 'number'
+            ? rawControlSheet.lastUpdatedByUserId
+            : null,
+        lastUpdatedByName:
+          typeof rawControlSheet.lastUpdatedByName === 'string'
+            ? rawControlSheet.lastUpdatedByName
+            : ''
+      }
+    })()
   const operationsCompletionNotes =
     typeof operationsDetails?.completionNotes === 'string'
       ? operationsDetails.completionNotes
@@ -968,7 +1040,9 @@ const CalibrationServiceDetailsPage = () => {
       if (
         adjustment.changeType === 'extra_item' &&
         adjustment.serviceItemId &&
-        (service.items || []).some((item) => item.id === adjustment.serviceItemId)
+        (service.items || []).some(
+          (item) => item.id === adjustment.serviceItemId
+        )
       ) {
         return accumulator
       }
@@ -1051,9 +1125,14 @@ const CalibrationServiceDetailsPage = () => {
     (document) => document.documentType === 'adjustment_customer_response_pdf'
   )
   const officialPdfDocuments = service.documents?.filter((document) =>
-    ['quote_pdf', 'ods_pdf', 'adjustment_pdf', 'adjustment_summary_pdf', 'adjustment_customer_response_pdf', 'logistics_control_pdf'].includes(
-      document.documentType
-    )
+    [
+      'quote_pdf',
+      'ods_pdf',
+      'adjustment_pdf',
+      'adjustment_summary_pdf',
+      'adjustment_customer_response_pdf',
+      'logistics_control_pdf'
+    ].includes(document.documentType)
   )
   const supportDocuments = service.documents?.filter(
     (document) =>
@@ -1066,23 +1145,22 @@ const CalibrationServiceDetailsPage = () => {
         'logistics_control_pdf',
         'approval_evidence',
         'rejection_evidence'
-      ].includes(
-        document.documentType
-      )
+      ].includes(document.documentType)
   )
   const unresolvedCommercialAdjustments = (service.adjustments || []).filter(
     (adjustment) =>
       adjustment.requiresCommercialAdjustment &&
-      ['reported', 'pending_customer_approval', 'customer_changes_requested'].includes(
-        adjustment.status
-      )
+      [
+        'reported',
+        'pending_customer_approval',
+        'customer_changes_requested'
+      ].includes(adjustment.status)
   )
   const odsDialogInitialValues: CalibrationServiceOdsDialogValues = {
     issuedAt: buildTodayValue(),
     executionCustomerName:
       service.executionCustomerName || service.customer?.nombre || '',
-    executionSiteName:
-      service.executionSiteName || service.customerSite || '',
+    executionSiteName: service.executionSiteName || service.customerSite || '',
     contactName: service.contactName || '',
     contactEmail: service.contactEmail || '',
     contactPhone: service.contactPhone || '',
@@ -1129,14 +1207,17 @@ const CalibrationServiceDetailsPage = () => {
     operationalResponsibleRole: operationsResponsibleRole,
     programmingNotes: operationsProgrammingNotes
   }
-  const rescheduleDialogInitialValues: CalibrationServiceRescheduleDialogValues = {
-    commitmentDate: operationsCommitmentDate
-      ? operationsCommitmentDate.slice(0, 10)
-      : '',
-    scheduledDate: operationsScheduledDate ? operationsScheduledDate.slice(0, 10) : '',
-    reprogrammingReason: '',
-    programmingNotes: operationsProgrammingNotes
-  }
+  const rescheduleDialogInitialValues: CalibrationServiceRescheduleDialogValues =
+    {
+      commitmentDate: operationsCommitmentDate
+        ? operationsCommitmentDate.slice(0, 10)
+        : '',
+      scheduledDate: operationsScheduledDate
+        ? operationsScheduledDate.slice(0, 10)
+        : '',
+      reprogrammingReason: '',
+      programmingNotes: operationsProgrammingNotes
+    }
   const reassignDialogInitialValues: CalibrationServiceReassignDialogValues = {
     assignedMetrologistUserId: operationsAssignedMetrologistUserId,
     operationalResponsibleName: operationsResponsibleName,
@@ -1150,7 +1231,10 @@ const CalibrationServiceDetailsPage = () => {
       contactName: service.contactName || '',
       contactRole: '',
       location:
-        service.executionSiteName || service.customerSite || service.address || '',
+        service.executionSiteName ||
+        service.customerSite ||
+        service.address ||
+        '',
       notes: ''
     }
   const logisticsControlInitialValues: CalibrationServiceLogisticsControlDialogValues =
@@ -1177,7 +1261,9 @@ const CalibrationServiceDetailsPage = () => {
         }
 
         if (!values.approvalReference.trim()) {
-          toast.error('Indica el email o teléfono del contacto que aprobó la cotización.')
+          toast.error(
+            'Indica el email o teléfono del contacto que aprobó la cotización.'
+          )
           return
         }
       }
@@ -1248,7 +1334,6 @@ const CalibrationServiceDetailsPage = () => {
       }
 
       if (decisionMode === 'reject') {
-
         await rejectService.mutateAsync({
           serviceId: String(service.id),
           approvalChannel: values.approvalChannel.trim(),
@@ -1271,7 +1356,9 @@ const CalibrationServiceDetailsPage = () => {
           evidenceDocumentId
         })
 
-        toast.success('La solicitud de modificación del cliente quedó registrada.')
+        toast.success(
+          'La solicitud de modificación del cliente quedó registrada.'
+        )
       }
 
       setDecisionMode(null)
@@ -1366,7 +1453,10 @@ const CalibrationServiceDetailsPage = () => {
 
       const assignedMetrologistUserId = Number(values.assignedMetrologistUserId)
 
-      if (!Number.isInteger(assignedMetrologistUserId) || assignedMetrologistUserId <= 0) {
+      if (
+        !Number.isInteger(assignedMetrologistUserId) ||
+        assignedMetrologistUserId <= 0
+      ) {
         toast.error('Selecciona el metrólogo asignado para el servicio.')
         return
       }
@@ -1411,8 +1501,12 @@ const CalibrationServiceDetailsPage = () => {
 
       await rescheduleService.mutateAsync({
         serviceId: String(service.id),
-        commitmentDate: new Date(`${values.commitmentDate}T12:00:00`).toISOString(),
-        scheduledDate: new Date(`${values.scheduledDate}T12:00:00`).toISOString(),
+        commitmentDate: new Date(
+          `${values.commitmentDate}T12:00:00`
+        ).toISOString(),
+        scheduledDate: new Date(
+          `${values.scheduledDate}T12:00:00`
+        ).toISOString(),
         reprogrammingReason: values.reprogrammingReason.trim(),
         programmingNotes: values.programmingNotes.trim() || null,
         rescheduledAt: new Date().toISOString()
@@ -1433,7 +1527,10 @@ const CalibrationServiceDetailsPage = () => {
     try {
       const assignedMetrologistUserId = Number(values.assignedMetrologistUserId)
 
-      if (!Number.isInteger(assignedMetrologistUserId) || assignedMetrologistUserId <= 0) {
+      if (
+        !Number.isInteger(assignedMetrologistUserId) ||
+        assignedMetrologistUserId <= 0
+      ) {
         toast.error('Selecciona el nuevo metrólogo asignado.')
         return
       }
@@ -1447,8 +1544,10 @@ const CalibrationServiceDetailsPage = () => {
         serviceId: String(service.id),
         assignedMetrologistUserId,
         reassignmentReason: values.reassignmentReason.trim(),
-        operationalResponsibleName: values.operationalResponsibleName.trim() || null,
-        operationalResponsibleRole: values.operationalResponsibleRole.trim() || null,
+        operationalResponsibleName:
+          values.operationalResponsibleName.trim() || null,
+        operationalResponsibleRole:
+          values.operationalResponsibleRole.trim() || null,
         effectiveAt: new Date().toISOString()
       })
 
@@ -1461,7 +1560,9 @@ const CalibrationServiceDetailsPage = () => {
     }
   }
 
-  const handlePauseService = async (values: CalibrationServicePauseDialogValues) => {
+  const handlePauseService = async (
+    values: CalibrationServicePauseDialogValues
+  ) => {
     try {
       if (!values.notes.trim()) {
         toast.error('Indica el motivo de la pausa.')
@@ -1482,7 +1583,9 @@ const CalibrationServiceDetailsPage = () => {
     }
   }
 
-  const handleResumeService = async (values: CalibrationServicePauseDialogValues) => {
+  const handleResumeService = async (
+    values: CalibrationServicePauseDialogValues
+  ) => {
     try {
       await resumeService.mutateAsync({
         serviceId: String(service.id),
@@ -1498,7 +1601,9 @@ const CalibrationServiceDetailsPage = () => {
     }
   }
 
-  const handleCancelService = async (values: CalibrationServicePauseDialogValues) => {
+  const handleCancelService = async (
+    values: CalibrationServicePauseDialogValues
+  ) => {
     try {
       if (!values.notes.trim()) {
         toast.error('Indica el motivo de la cancelación.')
@@ -1708,6 +1813,10 @@ const CalibrationServiceDetailsPage = () => {
       description: string
       technicalNotes?: string | null
       requiresCommercialAdjustment: boolean
+      contractModificationRequired?: boolean
+      supportChannel?: string | null
+      supportReference?: string | null
+      supportNotifiedAt?: string
     }>
   }) => {
     try {
@@ -1760,7 +1869,15 @@ const CalibrationServiceDetailsPage = () => {
   }
 
   const handleReviewAdjustment = async (values: {
-    decision: 'approved' | 'rejected'
+    reviewStage?: 'technical' | 'commercial'
+    decision?: 'approved' | 'rejected'
+    technicalDecision?: 'approved' | 'rejected'
+    technicalReviewNotes?: string | null
+    technicalReviewerRole?: string | null
+    contractModificationRequired?: boolean
+    supportChannel?: string | null
+    supportReference?: string | null
+    supportNotifiedAt?: string
     commercialNotes?: string | null
     pricingNotes?: string | null
     approvedUnitPrice?: number | null
@@ -1784,6 +1901,7 @@ const CalibrationServiceDetailsPage = () => {
       })
       toast.success('La revisión de la novedad quedó guardada.')
       setSelectedAdjustment(null)
+      setSelectedAdjustmentReviewStage('technical')
       setActiveTab('adjustments')
     } catch (adjustmentError) {
       console.error(adjustmentError)
@@ -1968,8 +2086,8 @@ const CalibrationServiceDetailsPage = () => {
       }
 
       let evidenceDocumentIds =
-        selectedCutForDocumentControl.otherFields?.documentControl?.evidenceDocumentIds ||
-        []
+        selectedCutForDocumentControl.otherFields?.documentControl
+          ?.evidenceDocumentIds || []
 
       if (values.evidenceFile) {
         const uploadedDocument = await uploadDocument.mutateAsync({
@@ -1981,7 +2099,9 @@ const CalibrationServiceDetailsPage = () => {
           notes: values.notes || 'Soporte de envío documental del corte'
         })
 
-        evidenceDocumentIds = [...new Set([...evidenceDocumentIds, uploadedDocument.id])]
+        evidenceDocumentIds = [
+          ...new Set([...evidenceDocumentIds, uploadedDocument.id])
+        ]
       }
 
       await updateCutDocumentControl.mutateAsync({
@@ -2182,8 +2302,19 @@ const CalibrationServiceDetailsPage = () => {
             Volver a la bandeja
           </Button>
 
-          <Stack direction='row' alignItems='center' spacing={1.5} flexWrap='wrap' sx={{ mb: 1.5 }}>
-            <Typography variant='h4' fontWeight={800} color='text.primary' sx={{ letterSpacing: '-0.02em', mr: 1, lineHeight: 1 }}>
+          <Stack
+            direction='row'
+            alignItems='center'
+            spacing={1.5}
+            flexWrap='wrap'
+            sx={{ mb: 1.5 }}
+          >
+            <Typography
+              variant='h4'
+              fontWeight={800}
+              color='text.primary'
+              sx={{ letterSpacing: '-0.02em', mr: 1, lineHeight: 1 }}
+            >
               {service.serviceCode}
             </Typography>
 
@@ -2194,23 +2325,39 @@ const CalibrationServiceDetailsPage = () => {
               sx={{ fontWeight: 600 }}
             />
             {service.isPaused ? (
-              <Chip size='small' color='warning' variant='outlined' label='Pausado' sx={{ fontWeight: 600 }} />
+              <Chip
+                size='small'
+                color='warning'
+                variant='outlined'
+                label='Pausado'
+                sx={{ fontWeight: 600 }}
+              />
             ) : null}
             {!isTechnicalOnlyView ? (
               <Chip
                 size='small'
-                color={CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]}
-                label={CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]}
+                color={
+                  CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]
+                }
+                label={
+                  CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]
+                }
                 sx={{ fontWeight: 600 }}
               />
             ) : null}
             <Chip
               size='small'
-              color={CALIBRATION_SERVICE_SLA_COLORS[service.slaIndicator?.color || 'gray']}
+              color={
+                CALIBRATION_SERVICE_SLA_COLORS[
+                  service.slaIndicator?.color || 'gray'
+                ]
+              }
               label={service.slaIndicator?.label || 'SLA no iniciado'}
               sx={{ fontWeight: 600 }}
             />
-            {['yellow', 'red'].includes(service.slaIndicator?.color || 'gray') ? (
+            {['yellow', 'red'].includes(
+              service.slaIndicator?.color || 'gray'
+            ) ? (
               <Chip
                 size='small'
                 icon={
@@ -2220,7 +2367,9 @@ const CalibrationServiceDetailsPage = () => {
                     <WarningAmberOutlinedIcon />
                   )
                 }
-                color={service.slaIndicator?.color === 'red' ? 'error' : 'warning'}
+                color={
+                  service.slaIndicator?.color === 'red' ? 'error' : 'warning'
+                }
                 label={
                   service.slaIndicator?.color === 'red'
                     ? 'Alerta vencida'
@@ -2233,13 +2382,19 @@ const CalibrationServiceDetailsPage = () => {
               status={service.status}
               approvalStatus={service.approvalStatus}
               customerResponseType={customerResponseType}
-              hasCommercialAdjustments={Boolean(unresolvedCommercialAdjustments.length)}
+              hasCommercialAdjustments={Boolean(
+                unresolvedCommercialAdjustments.length
+              )}
               hasCuts={hasCuts}
               allCutsSent={allCutsSent}
             />
           </Stack>
 
-          <Typography variant='subtitle1' color='text.secondary' fontWeight={500}>
+          <Typography
+            variant='subtitle1'
+            color='text.secondary'
+            fontWeight={500}
+          >
             {service.customer?.nombre ||
               service.executionCustomerName ||
               'Cliente pendiente'}
@@ -2252,18 +2407,22 @@ const CalibrationServiceDetailsPage = () => {
           </Typography>
         </Box>
 
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            flexWrap: 'wrap', 
-            gap: 1.5, 
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 1.5,
             justifyContent: { xs: 'flex-start', md: 'flex-end' },
             alignItems: 'flex-start',
             flex: 1
           }}
         >
           {customerResponseType === 'changes_requested' ? (
-            <Chip color='warning' variant='outlined' label='Cliente pidió modificación' />
+            <Chip
+              color='warning'
+              variant='outlined'
+              label='Cliente pidió modificación'
+            />
           ) : null}
           {canRequestApproval ? (
             <Button
@@ -2467,12 +2626,18 @@ const CalibrationServiceDetailsPage = () => {
         </Box>
       </Stack>
 
-      {canManageSequenceConfig && sequenceConfig && !sequenceConfig.initialized ? (
+      {canManageSequenceConfig &&
+      sequenceConfig &&
+      !sequenceConfig.initialized ? (
         <Alert
           severity='warning'
           sx={{ mb: 2 }}
           action={
-            <Button color='inherit' size='small' onClick={() => setIsSequenceDialogOpen(true)}>
+            <Button
+              color='inherit'
+              size='small'
+              onClick={() => setIsSequenceDialogOpen(true)}
+            >
               Configurar
             </Button>
           }
@@ -2498,7 +2663,11 @@ const CalibrationServiceDetailsPage = () => {
               <Typography variant='h6' fontWeight={700}>
                 {service.slaIndicator?.label || 'SLA no iniciado'}
               </Typography>
-              <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
+              <Typography
+                variant='body2'
+                color='text.secondary'
+                sx={{ mt: 0.5 }}
+              >
                 {service.slaIndicator?.message ||
                   'Todavía no hay un SLA activo para este servicio.'}
               </Typography>
@@ -2506,10 +2675,12 @@ const CalibrationServiceDetailsPage = () => {
             <Grid item xs={12} md={5}>
               <Stack spacing={0.75}>
                 <Typography variant='body2' color='text.secondary'>
-                  Días hábiles transcurridos: {service.slaIndicator?.businessDaysElapsed || 0}
+                  Días hábiles transcurridos:{' '}
+                  {service.slaIndicator?.businessDaysElapsed || 0}
                 </Typography>
                 <Typography variant='body2' color='text.secondary'>
-                  Umbral de alerta: {service.slaIndicator?.warningBusinessDays || 2}
+                  Umbral de alerta:{' '}
+                  {service.slaIndicator?.warningBusinessDays || 2}
                 </Typography>
                 <Typography variant='body2' color='text.secondary'>
                   SLA objetivo: {service.slaIndicator?.targetBusinessDays || 3}
@@ -2540,7 +2711,10 @@ const CalibrationServiceDetailsPage = () => {
                   label={`Novedades (${service.adjustments?.length || 0})`}
                   value='adjustments'
                 />
-                <Tab label={`Cortes (${service.cuts?.length || 0})`} value='cuts' />
+                <Tab
+                  label={`Cortes (${service.cuts?.length || 0})`}
+                  value='cuts'
+                />
                 <Tab
                   label={`Documentos (${service.documents?.length || 0})`}
                   value='documents'
@@ -2556,20 +2730,23 @@ const CalibrationServiceDetailsPage = () => {
               <DetailTabPanel value={activeTab} tab='summary'>
                 {service.status === 'cancelled' ? (
                   <Alert severity='error' sx={{ mb: 2 }}>
-                    Este servicio fue <strong>cancelado formalmente</strong> y quedó fuera del
-                    flujo operativo.
+                    Este servicio fue <strong>cancelado formalmente</strong> y
+                    quedó fuera del flujo operativo.
                   </Alert>
                 ) : null}
                 {service.isPaused ? (
                   <Alert severity='warning' sx={{ mb: 2 }}>
-                    El servicio se encuentra <strong>pausado</strong>. Antes de continuar con
-                    ejecución, cortes, facturación o control documental debes reanudarlo.
+                    El servicio se encuentra <strong>pausado</strong>. Antes de
+                    continuar con ejecución, cortes, facturación o control
+                    documental debes reanudarlo.
                   </Alert>
                 ) : null}
-                {!isTechnicalOnlyView && customerResponseType === 'changes_requested' ? (
+                {!isTechnicalOnlyView &&
+                customerResponseType === 'changes_requested' ? (
                   <Alert severity='warning' sx={{ mb: 2 }}>
-                    El cliente pidió modificar la cotización. El servicio volvió a edición para
-                    ajustar la propuesta y reenviarla sin perder la trazabilidad.
+                    El cliente pidió modificar la cotización. El servicio volvió
+                    a edición para ajustar la propuesta y reenviarla sin perder
+                    la trazabilidad.
                   </Alert>
                 ) : null}
                 <Grid container spacing={2}>
@@ -2596,7 +2773,10 @@ const CalibrationServiceDetailsPage = () => {
                       {hasDifferentExecutionCustomer ? (
                         <>
                           <Grid item xs={12} md={6}>
-                            <Typography variant='caption' color='text.secondary'>
+                            <Typography
+                              variant='caption'
+                              color='text.secondary'
+                            >
                               Cliente de ejecución
                             </Typography>
                             <Typography variant='body1'>
@@ -2604,7 +2784,10 @@ const CalibrationServiceDetailsPage = () => {
                             </Typography>
                           </Grid>
                           <Grid item xs={12} md={6}>
-                            <Typography variant='caption' color='text.secondary'>
+                            <Typography
+                              variant='caption'
+                              color='text.secondary'
+                            >
                               Sede o referencia de ejecución
                             </Typography>
                             <Typography variant='body1'>
@@ -2700,7 +2883,11 @@ const CalibrationServiceDetailsPage = () => {
                   customerResponseType === 'changes_requested') ? (
                   <>
                     <Divider sx={{ my: 2 }} />
-                    <Typography variant='subtitle2' fontWeight={700} gutterBottom>
+                    <Typography
+                      variant='subtitle2'
+                      fontWeight={700}
+                      gutterBottom
+                    >
                       Respuesta del cliente
                     </Typography>
                     <Grid container spacing={2}>
@@ -2725,7 +2912,9 @@ const CalibrationServiceDetailsPage = () => {
                           Fecha
                         </Typography>
                         <Typography variant='body1'>
-                          {formatDateValue(service.approvedAt || service.rejectedAt)}
+                          {formatDateValue(
+                            service.approvedAt || service.rejectedAt
+                          )}
                         </Typography>
                       </Grid>
                       {service.rejectionReason ? (
@@ -2778,7 +2967,11 @@ const CalibrationServiceDetailsPage = () => {
                 {service.odsCode ? (
                   <>
                     <Divider sx={{ my: 2 }} />
-                    <Typography variant='subtitle2' fontWeight={700} gutterBottom>
+                    <Typography
+                      variant='subtitle2'
+                      fontWeight={700}
+                      gutterBottom
+                    >
                       Datos ODS
                     </Typography>
                     <Grid container spacing={2}>
@@ -2837,7 +3030,14 @@ const CalibrationServiceDetailsPage = () => {
 
               <DetailTabPanel value={activeTab} tab='items'>
                 {service.items?.length ? (
-                  <Box sx={{ overflowX: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+                  <Box
+                    sx={{
+                      overflowX: 'auto',
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 2
+                    }}
+                  >
                     <Table size='small'>
                       <TableHead>
                         <TableRow>
@@ -2858,14 +3058,13 @@ const CalibrationServiceDetailsPage = () => {
                       </TableHead>
                       <TableBody>
                         {service.items.map((item) => {
-                          const effectiveQuantity = getEffectiveServiceItemQuantity(
-                            service,
-                            item
-                          )
+                          const effectiveQuantity =
+                            getEffectiveServiceItemQuantity(service, item)
                           const approvedFinancialImpact =
                             getApprovedFinancialImpactForItem(service, item.id)
                           const effectiveSubtotal =
-                            toNumber(item.subtotal) + approvedFinancialImpact.subtotal
+                            toNumber(item.subtotal) +
+                            approvedFinancialImpact.subtotal
                           const effectiveTotal =
                             toNumber(item.total) + approvedFinancialImpact.total
                           const hasQuantityAdjustment =
@@ -2873,20 +3072,27 @@ const CalibrationServiceDetailsPage = () => {
                           const isAdjustmentItem = Boolean(
                             item.otherFields?.isAdditionalExecutionItem
                           )
-                          const pricingAdjustments = getApprovedPricingAdjustmentsForItem(
-                            service,
-                            item.id
-                          )
+                          const pricingAdjustments =
+                            getApprovedPricingAdjustmentsForItem(
+                              service,
+                              item.id
+                            )
 
                           return (
                             <TableRow key={item.id}>
                               <TableCell>
                                 <Stack spacing={0.5}>
-                                  <Typography variant='body2'>{item.itemName}</Typography>
+                                  <Typography variant='body2'>
+                                    {item.itemName}
+                                  </Typography>
                                   {hasQuantityAdjustment ||
                                   approvedFinancialImpact.hasImpact ||
                                   isAdjustmentItem ? (
-                                    <Stack direction='row' spacing={0.5} flexWrap='wrap'>
+                                    <Stack
+                                      direction='row'
+                                      spacing={0.5}
+                                      flexWrap='wrap'
+                                    >
                                       {hasQuantityAdjustment ||
                                       approvedFinancialImpact.hasImpact ? (
                                         <Chip
@@ -2906,13 +3112,20 @@ const CalibrationServiceDetailsPage = () => {
                                   ) : null}
                                 </Stack>
                               </TableCell>
-                              <TableCell>{item.instrumentName || 'N/A'}</TableCell>
+                              <TableCell>
+                                {item.instrumentName || 'N/A'}
+                              </TableCell>
                               <TableCell>{item.serviceType || 'N/A'}</TableCell>
                               <TableCell align='right'>
                                 <Stack spacing={0.25} alignItems='flex-end'>
-                                  <Typography variant='body2'>{effectiveQuantity}</Typography>
+                                  <Typography variant='body2'>
+                                    {effectiveQuantity}
+                                  </Typography>
                                   {hasQuantityAdjustment ? (
-                                    <Typography variant='caption' color='text.secondary'>
+                                    <Typography
+                                      variant='caption'
+                                      color='text.secondary'
+                                    >
                                       Cotizado: {item.quantity}
                                     </Typography>
                                   ) : null}
@@ -2922,20 +3135,36 @@ const CalibrationServiceDetailsPage = () => {
                                 <TableCell align='right'>
                                   <Stack spacing={0.5} alignItems='flex-end'>
                                     <Typography variant='body2'>
-                                      {currencyFormatter.format(toNumber(item.unitPrice))}
+                                      {currencyFormatter.format(
+                                        toNumber(item.unitPrice)
+                                      )}
                                     </Typography>
-                                    <Typography variant='caption' color='text.secondary'>
+                                    <Typography
+                                      variant='caption'
+                                      color='text.secondary'
+                                    >
                                       Cotizado original
                                     </Typography>
                                     {pricingAdjustments.map((adjustment) => (
                                       <Box key={adjustment.id}>
-                                        <Typography variant='body2' color='success.main'>
+                                        <Typography
+                                          variant='body2'
+                                          color='success.main'
+                                        >
                                           {currencyFormatter.format(
-                                            toNumber(adjustment.approvedUnitPrice)
+                                            toNumber(
+                                              adjustment.approvedUnitPrice
+                                            )
                                           )}
                                         </Typography>
-                                        <Typography variant='caption' color='text.secondary'>
-                                          Novedad: {adjustment.differenceQuantity > 0 ? '+' : ''}
+                                        <Typography
+                                          variant='caption'
+                                          color='text.secondary'
+                                        >
+                                          Novedad:{' '}
+                                          {adjustment.differenceQuantity > 0
+                                            ? '+'
+                                            : ''}
                                           {adjustment.differenceQuantity} und.
                                         </Typography>
                                       </Box>
@@ -2947,10 +3176,15 @@ const CalibrationServiceDetailsPage = () => {
                                 <TableCell align='right'>
                                   <Stack spacing={0.5} alignItems='flex-end'>
                                     <Typography variant='body2'>
-                                      {currencyFormatter.format(effectiveSubtotal)}
+                                      {currencyFormatter.format(
+                                        effectiveSubtotal
+                                      )}
                                     </Typography>
                                     {pricingAdjustments.length ? (
-                                      <Typography variant='caption' color='text.secondary'>
+                                      <Typography
+                                        variant='caption'
+                                        color='text.secondary'
+                                      >
                                         Incluye novedades aprobadas
                                       </Typography>
                                     ) : null}
@@ -2969,7 +3203,9 @@ const CalibrationServiceDetailsPage = () => {
                     </Table>
                   </Box>
                 ) : (
-                  <Alert severity='info'>Este servicio aún no tiene ítems.</Alert>
+                  <Alert severity='info'>
+                    Este servicio aún no tiene ítems.
+                  </Alert>
                 )}
               </DetailTabPanel>
 
@@ -2979,15 +3215,18 @@ const CalibrationServiceDetailsPage = () => {
                     {service.status === 'in_execution' &&
                     !allItemsOperationallyCompleted ? (
                       <Alert severity='info' sx={{ mb: 2 }}>
-                        Para finalizar la ejecución técnica, primero marca todos los ítems como
+                        Para finalizar la ejecución técnica, primero marca todos
+                        los ítems como
                         <strong> Completado</strong>.
                       </Alert>
                     ) : null}
                     {shouldShowPostTechnicalCompletionGuidance ? (
                       <Alert severity='success' sx={{ mb: 2 }}>
-                        El servicio ya quedó <strong>finalizado técnicamente</strong>. Aún puedes
-                        registrar novedades si apareció alguna diferencia final, y después sacar
-                        el corte parcial o final según lo que realmente vaya a salir.
+                        El servicio ya quedó{' '}
+                        <strong>finalizado técnicamente</strong>. Aún puedes
+                        registrar novedades si apareció alguna diferencia final,
+                        y después sacar el corte parcial o final según lo que
+                        realmente vaya a salir.
                       </Alert>
                     ) : null}
                     <CalibrationServiceOperationsPanel
@@ -2999,7 +3238,8 @@ const CalibrationServiceDetailsPage = () => {
                   </>
                 ) : (
                   <Alert severity='info'>
-                    La vista operativa se habilita una vez la ODS ha sido emitida.
+                    La vista operativa se habilita una vez la ODS ha sido
+                    emitida.
                   </Alert>
                 )}
               </DetailTabPanel>
@@ -3007,24 +3247,32 @@ const CalibrationServiceDetailsPage = () => {
               <DetailTabPanel value={activeTab} tab='adjustments'>
                 {canStillRegisterAdjustmentsAfterTechnicalCompletion ? (
                   <Alert severity='info' sx={{ mb: 2 }}>
-                    Aunque la ejecución ya terminó, todavía puedes registrar novedades para dejar
-                    trazabilidad de diferencias finales antes de sacar el corte administrativo.
+                    Aunque la ejecución ya terminó, todavía puedes registrar
+                    novedades para dejar trazabilidad de diferencias finales
+                    antes de sacar el corte administrativo.
                   </Alert>
                 ) : null}
                 <CalibrationServiceAdjustmentsPanel
                   service={service}
                   canReport={canReportAdjustment}
-                  canReview={canReviewAdjustment}
+                  canTechnicalReview={canReviewAdjustmentTechnically}
+                  canCommercialReview={canReviewAdjustmentCommercially}
                   canGenerateDocument={canReviewAdjustment}
                   canGenerateSummaryDocument={canReviewAdjustment}
                   isTechnicalOnlyView={isTechnicalOnlyView}
                   isBusy={isOperationalBusy}
                   onCreate={() => setIsAdjustmentDialogOpen(true)}
-                  onReview={(adjustment) => setSelectedAdjustment(adjustment)}
+                  onReview={(adjustment, reviewStage) => {
+                    setSelectedAdjustment(adjustment)
+                    setSelectedAdjustmentReviewStage(reviewStage)
+                  }}
                   onSendToCustomer={(adjustment) => {
                     setSelectedAdjustmentForSend(adjustment)
                     setSendAdjustmentPreview(
-                      getEmailSendPreview(service.contactEmail, service.customer?.email)
+                      getEmailSendPreview(
+                        service.contactEmail,
+                        service.customer?.email
+                      )
                     )
                   }}
                   onRegisterCustomerResponse={(adjustment) =>
@@ -3038,28 +3286,34 @@ const CalibrationServiceDetailsPage = () => {
               <DetailTabPanel value={activeTab} tab='cuts'>
                 {shouldShowCutsNextStepGuidance ? (
                   <Alert severity='info' sx={{ mb: 2 }}>
-                    El servicio ya terminó técnicamente y todavía no tiene cortes. Este es el paso
-                    para definir qué sale ahora: puedes crear un corte parcial si quedan
-                    pendientes, o un corte final si todo ya está listo.
+                    El servicio ya terminó técnicamente y todavía no tiene
+                    cortes. Este es el paso para definir qué sale ahora: puedes
+                    crear un corte parcial si quedan pendientes, o un corte
+                    final si todo ya está listo.
                   </Alert>
                 ) : null}
-                {service.status === 'technically_completed' && allCutsSent && hasReleasableItems ? (
+                {service.status === 'technically_completed' &&
+                allCutsSent &&
+                hasReleasableItems ? (
                   <Alert severity='warning' sx={{ mb: 2 }}>
-                    Los cortes existentes ya fueron enviados, pero todavía hay cantidades
-                    aprobadas pendientes por liberar. Crea un nuevo corte para esas cantidades
-                    antes del cierre final.
+                    Los cortes existentes ya fueron enviados, pero todavía hay
+                    cantidades aprobadas pendientes por liberar. Crea un nuevo
+                    corte para esas cantidades antes del cierre final.
                   </Alert>
                 ) : null}
-                {service.status === 'technically_completed' && allCutsSent && !hasReleasableItems ? (
+                {service.status === 'technically_completed' &&
+                allCutsSent &&
+                !hasReleasableItems ? (
                   <Alert severity='success' sx={{ mb: 2 }}>
-                    Todos los cortes ya están enviados. El servicio quedó listo para
+                    Todos los cortes ya están enviados. El servicio quedó listo
+                    para
                     <strong> cierre final</strong>.
                   </Alert>
                 ) : null}
                 {unresolvedCommercialAdjustments.length ? (
                   <Alert severity='warning' sx={{ mb: 2 }}>
-                    Antes de dejar un corte listo para facturar, revisa las novedades con
-                    impacto económico pendientes.
+                    Antes de dejar un corte listo para facturar, revisa las
+                    novedades con impacto económico pendientes.
                   </Alert>
                 ) : null}
                 <CalibrationServiceCutsPanel
@@ -3109,7 +3363,9 @@ const CalibrationServiceDetailsPage = () => {
                   canSendEmail={canSendLogisticsEmail}
                   isBusy={isOperationalBusy}
                   onEditControl={() => setIsLogisticsControlDialogOpen(true)}
-                  onRegisterMovement={() => setIsPhysicalTraceabilityDialogOpen(true)}
+                  onRegisterMovement={() =>
+                    setIsPhysicalTraceabilityDialogOpen(true)
+                  }
                   onGeneratePdf={handleGenerateLogisticsPdf}
                   onSendEmail={handleOpenSendLogisticsEmail}
                 />
@@ -3127,7 +3383,13 @@ const CalibrationServiceDetailsPage = () => {
         </Grid>
 
         <Grid item xs={12} lg={4}>
-          <Card sx={{ borderRadius: 3, position: { lg: 'sticky' }, top: { lg: 24 } }}>
+          <Card
+            sx={{
+              borderRadius: 3,
+              position: { lg: 'sticky' },
+              top: { lg: 24 }
+            }}
+          >
             <CardContent>
               <Typography variant='h6' fontWeight={700} gutterBottom>
                 Resumen compacto
@@ -3184,7 +3446,8 @@ const CalibrationServiceDetailsPage = () => {
                 </Typography>
                 {service.status === 'closed' ? (
                   <Typography variant='body2' color='text.secondary'>
-                    Estado final: el servicio ya no tiene acciones operativas pendientes.
+                    Estado final: el servicio ya no tiene acciones operativas
+                    pendientes.
                   </Typography>
                 ) : null}
                 <Typography variant='body2' color='text.secondary'>
@@ -3217,13 +3480,13 @@ const CalibrationServiceDetailsPage = () => {
       ) : null}
       {isScheduleDialogOpen ? (
         <CalibrationServiceScheduleDialog
-        open={isScheduleDialogOpen}
-        serviceCode={service.serviceCode}
-        initialValues={scheduleDialogInitialValues}
-        metrologists={assignableMetrologists}
-        isLoading={isOperationalBusy}
-        onClose={() => setIsScheduleDialogOpen(false)}
-        onSubmit={handleScheduleService}
+          open={isScheduleDialogOpen}
+          serviceCode={service.serviceCode}
+          initialValues={scheduleDialogInitialValues}
+          metrologists={assignableMetrologists}
+          isLoading={isOperationalBusy}
+          onClose={() => setIsScheduleDialogOpen(false)}
+          onSubmit={handleScheduleService}
         />
       ) : null}
       {isRescheduleDialogOpen ? (
@@ -3357,7 +3620,9 @@ const CalibrationServiceDetailsPage = () => {
       ) : null}
       <Dialog
         open={isCloseDialogOpen}
-        onClose={isOperationalBusy ? undefined : () => setIsCloseDialogOpen(false)}
+        onClose={
+          isOperationalBusy ? undefined : () => setIsCloseDialogOpen(false)
+        }
         maxWidth='sm'
         fullWidth
       >
@@ -3395,8 +3660,12 @@ const CalibrationServiceDetailsPage = () => {
         <CalibrationServiceAdjustmentReviewDialog
           open={Boolean(selectedAdjustment)}
           adjustment={selectedAdjustment}
+          reviewStage={selectedAdjustmentReviewStage}
           isLoading={isOperationalBusy}
-          onClose={() => setSelectedAdjustment(null)}
+          onClose={() => {
+            setSelectedAdjustment(null)
+            setSelectedAdjustmentReviewStage('technical')
+          }}
           onSubmit={handleReviewAdjustment}
         />
       ) : null}
