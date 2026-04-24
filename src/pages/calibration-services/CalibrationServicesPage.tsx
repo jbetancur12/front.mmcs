@@ -251,9 +251,12 @@ const getStoredViewMode = (): CalibrationServicesViewMode => {
   return storedValue === 'kanban' ? 'kanban' : 'list'
 }
 
-const getStoredCollapsedKanbanColumns = (): string[] => {
+const getStoredCollapsedKanbanColumns = (): {
+  hasStoredPreference: boolean
+  value: string[]
+} => {
   if (typeof window === 'undefined') {
-    return []
+    return { hasStoredPreference: false, value: [] }
   }
 
   try {
@@ -262,15 +265,18 @@ const getStoredCollapsedKanbanColumns = (): string[] => {
     )
 
     if (!rawValue) {
-      return []
+      return { hasStoredPreference: false, value: [] }
     }
 
     const parsedValue = JSON.parse(rawValue)
-    return Array.isArray(parsedValue)
-      ? parsedValue.filter((value): value is string => typeof value === 'string')
-      : []
+    return {
+      hasStoredPreference: true,
+      value: Array.isArray(parsedValue)
+        ? parsedValue.filter((value): value is string => typeof value === 'string')
+        : []
+    }
   } catch (_error) {
-    return []
+    return { hasStoredPreference: false, value: [] }
   }
 }
 
@@ -618,9 +624,17 @@ const CalibrationServicesPage = () => {
     getStoredViewMode
   )
   const [showOnlyMyLoad, setShowOnlyMyLoad] = useState(false)
-  const [collapsedKanbanColumns, setCollapsedKanbanColumns] = useState<string[]>(
-    getStoredCollapsedKanbanColumns
-  )
+  const [
+    { collapsedKanbanColumns, hasStoredCollapsedKanbanPreference },
+    setKanbanColumnState
+  ] = useState(() => {
+    const storedPreference = getStoredCollapsedKanbanColumns()
+
+    return {
+      collapsedKanbanColumns: storedPreference.value,
+      hasStoredCollapsedKanbanPreference: storedPreference.hasStoredPreference
+    }
+  })
 
   const deferredSearch = useDeferredValue(search)
   const queryFilters: CalibrationServiceFilters = {
@@ -871,6 +885,22 @@ const CalibrationServicesPage = () => {
       )
     }))
   }, [isTechnicalOnlyView, kanbanColumns, visibleServices])
+
+  useEffect(() => {
+    if (hasStoredCollapsedKanbanPreference) {
+      return
+    }
+
+    const emptyColumnKeys = kanbanServices
+      .filter((column) => column.services.length === 0)
+      .map((column) => column.key)
+
+    setKanbanColumnState((currentValue) => ({
+      ...currentValue,
+      collapsedKanbanColumns: emptyColumnKeys,
+      hasStoredCollapsedKanbanPreference: true
+    }))
+  }, [hasStoredCollapsedKanbanPreference, kanbanServices])
 
   const currentUserHasAssignedLoad = useMemo(() => {
     const currentUserEmail = $userStore.email?.trim().toLowerCase()
@@ -1901,22 +1931,22 @@ const CalibrationServicesPage = () => {
                 isEmptyColumn && collapsedKanbanColumns.includes(column.key)
 
               return (
-              <Box
-                key={column.key}
-                sx={{
-                  width: isCollapsed ? 96 : 340,
-                  minWidth: isCollapsed ? 96 : 340,
-                  borderRadius: '20px',
-                  border: `1px solid ${alpha(column.accent, 0.16)}`,
-                  background: `linear-gradient(180deg, ${alpha(
-                    column.accent,
-                    0.08
-                  )} 0%, rgba(255,255,255,0.88) 22%)`,
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: '0 6px 18px rgba(15, 23, 42, 0.05)',
-                  transition: 'width 0.25s ease, min-width 0.25s ease'
-                }}
-              >
+                <Box
+                  key={column.key}
+                  sx={{
+                    width: isCollapsed ? 96 : 340,
+                    minWidth: isCollapsed ? 96 : 340,
+                    borderRadius: '20px',
+                    border: `1px solid ${alpha(column.accent, 0.16)}`,
+                    background: `linear-gradient(180deg, ${alpha(
+                      column.accent,
+                      0.08
+                    )} 0%, rgba(255,255,255,0.88) 22%)`,
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: '0 6px 18px rgba(15, 23, 42, 0.05)',
+                    transition: 'width 0.25s ease, min-width 0.25s ease'
+                  }}
+                >
                 <Box
                   sx={{
                     p: 2,
@@ -1959,11 +1989,18 @@ const CalibrationServicesPage = () => {
                           size='small'
                           variant='text'
                           onClick={() =>
-                            setCollapsedKanbanColumns((currentValue) =>
-                              isCollapsed
-                                ? currentValue.filter((value) => value !== column.key)
-                                : [...currentValue, column.key]
-                            )
+                            setKanbanColumnState((currentValue) => ({
+                              ...currentValue,
+                              hasStoredCollapsedKanbanPreference: true,
+                              collapsedKanbanColumns: isCollapsed
+                                ? currentValue.collapsedKanbanColumns.filter(
+                                    (value) => value !== column.key
+                                  )
+                                : [
+                                    ...currentValue.collapsedKanbanColumns,
+                                    column.key
+                                  ]
+                            }))
                           }
                           sx={{
                             minWidth: 0,
@@ -2336,7 +2373,8 @@ const CalibrationServicesPage = () => {
                 </Stack>
                 )}
               </Box>
-            )})}
+              )
+            })}
           </Stack>
         </Box>
       )}
