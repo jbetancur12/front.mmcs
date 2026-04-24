@@ -84,6 +84,7 @@ type KanbanColumnDefinition = {
   title: string
   description: string
   accent: string
+  priority: number
 }
 
 const STATUS_OPTIONS: Array<{
@@ -449,31 +450,36 @@ const getKanbanColumns = (
         key: 'pre_operational',
         title: 'Preoperativo',
         description: 'Aún no liberados al frente técnico',
-        accent: '#64748b'
+        accent: '#64748b',
+        priority: 5
       },
       {
         key: 'to_schedule',
         title: 'Por programar',
         description: 'ODS emitidas o pendientes de agenda',
-        accent: '#f59e0b'
+        accent: '#f59e0b',
+        priority: 2
       },
       {
         key: 'in_service',
         title: 'En ejecución',
         description: 'Programados o en trabajo activo',
-        accent: '#10b981'
+        accent: '#10b981',
+        priority: 1
       },
       {
         key: 'pending_close',
         title: 'Pendiente cierre',
         description: 'Finalizados técnicamente y pendientes de salida',
-        accent: '#0ea5e9'
+        accent: '#0ea5e9',
+        priority: 3
       },
       {
         key: 'closed',
         title: 'Cerrados',
         description: 'Servicios completamente terminados',
-        accent: '#059669'
+        accent: '#059669',
+        priority: 6
       }
     ]
   }
@@ -483,43 +489,50 @@ const getKanbanColumns = (
       key: 'adjustments',
       title: 'Por ajustar',
       description: 'Borradores, rechazadas o con cambios pendientes',
-      accent: '#64748b'
+      accent: '#64748b',
+      priority: 6
     },
     {
       key: 'waiting_customer',
       title: 'Esperando respuesta cliente',
       description: 'Cotizaciones enviadas pendientes de respuesta',
-      accent: '#f59e0b'
+      accent: '#f59e0b',
+      priority: 4
     },
     {
       key: 'ready_for_ods',
       title: 'Listo para ODS',
       description: 'Aprobadas y listas para liberar',
-      accent: '#10b981'
+      accent: '#10b981',
+      priority: 5
     },
     {
       key: 'to_schedule',
       title: 'Pendiente programación',
       description: 'ODS emitidas o pendientes de agenda operativa',
-      accent: '#3b82f6'
+      accent: '#3b82f6',
+      priority: 3
     },
     {
       key: 'in_service',
       title: 'En servicio',
       description: 'Programados y en ejecución',
-      accent: '#14b8a6'
+      accent: '#14b8a6',
+      priority: 2
     },
     {
       key: 'pending_close',
       title: 'Pendiente administrativo',
       description: 'Finalizados técnicamente o pendientes administrativos',
-      accent: '#3b82f6'
+      accent: '#3b82f6',
+      priority: 1
     },
     {
       key: 'closed',
       title: 'Cerradas',
       description: 'Servicios completados',
-      accent: '#059669'
+      accent: '#059669',
+      priority: 7
     }
   ]
 }
@@ -877,14 +890,69 @@ const CalibrationServicesPage = () => {
       {}
     )
 
-    return kanbanColumns.map((column) => ({
-      ...column,
-      services: (groupedServices[column.key] || []).sort(
+    const columnsWithServices = kanbanColumns.map((column) => {
+      const servicesForColumn = (groupedServices[column.key] || []).sort(
         (left, right) =>
           new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
       )
-    }))
-  }, [isTechnicalOnlyView, kanbanColumns, visibleServices])
+
+      const urgentCount = servicesForColumn.filter((service) =>
+        ['red', 'yellow'].includes(service.slaIndicator?.color || 'gray')
+      ).length
+
+      const currentUserEmail = $userStore.email?.trim().toLowerCase()
+      const myLoadCount = currentUserEmail
+        ? servicesForColumn.filter((service) => {
+            const operations = getOperationsDetails(service)
+            const assignedMetrologistEmail =
+              typeof operations.assignedMetrologistEmail === 'string'
+                ? operations.assignedMetrologistEmail.trim().toLowerCase()
+                : ''
+
+            return assignedMetrologistEmail === currentUserEmail
+          }).length
+        : 0
+
+      return {
+        ...column,
+        services: servicesForColumn,
+        urgentCount,
+        myLoadCount
+      }
+    })
+
+    const shouldPrioritizeOperationally =
+      showOnlyMyLoad || activeFiltersCount > 0
+
+    if (!shouldPrioritizeOperationally) {
+      return columnsWithServices.sort(
+        (left, right) => left.priority - right.priority
+      )
+    }
+
+    return columnsWithServices.sort((left, right) => {
+      if (right.urgentCount !== left.urgentCount) {
+        return right.urgentCount - left.urgentCount
+      }
+
+      if (right.myLoadCount !== left.myLoadCount) {
+        return right.myLoadCount - left.myLoadCount
+      }
+
+      if (right.services.length !== left.services.length) {
+        return right.services.length - left.services.length
+      }
+
+      return left.priority - right.priority
+    })
+  }, [
+    $userStore.email,
+    activeFiltersCount,
+    isTechnicalOnlyView,
+    kanbanColumns,
+    showOnlyMyLoad,
+    visibleServices
+  ])
 
   useEffect(() => {
     if (viewMode !== 'kanban') {
