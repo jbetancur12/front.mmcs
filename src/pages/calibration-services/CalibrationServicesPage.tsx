@@ -2019,16 +2019,6 @@ const CalibrationServicesPage = () => {
                 kanbanTopScrollRef.current.scrollLeft = event.currentTarget.scrollLeft
               }
             }}
-            onWheel={(event) => {
-              if (!kanbanScrollRef.current) {
-                return
-              }
-
-              if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
-                event.preventDefault()
-                kanbanScrollRef.current.scrollLeft += event.deltaY
-              }
-            }}
             sx={{ overflowX: 'auto', pb: 1 }}
           >
           <Stack
