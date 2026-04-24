@@ -310,7 +310,7 @@ const getCompactColumnTitle = (title: string) => {
       return 'Cliente'
     case 'Listo para ODS':
       return 'Para ODS'
-    case 'Pendiente programacion':
+    case 'Pendiente programación':
       return 'Programar'
     case 'En servicio':
       return 'Servicio'
@@ -448,7 +448,7 @@ const getKanbanColumns = (
       {
         key: 'pre_operational',
         title: 'Preoperativo',
-        description: 'Aun no liberados al frente tecnico',
+        description: 'Aún no liberados al frente técnico',
         accent: '#64748b'
       },
       {
@@ -466,7 +466,7 @@ const getKanbanColumns = (
       {
         key: 'pending_close',
         title: 'Pendiente cierre',
-        description: 'Finalizados tecnicamente y pendientes de salida',
+        description: 'Finalizados técnicamente y pendientes de salida',
         accent: '#0ea5e9'
       },
       {
@@ -499,7 +499,7 @@ const getKanbanColumns = (
     },
     {
       key: 'to_schedule',
-      title: 'Pendiente programacion',
+      title: 'Pendiente programación',
       description: 'ODS emitidas o pendientes de agenda operativa',
       accent: '#3b82f6'
     },
@@ -512,7 +512,7 @@ const getKanbanColumns = (
     {
       key: 'pending_close',
       title: 'Pendiente administrativo',
-      description: 'Finalizados tecnicamente o pendientes administrativos',
+      description: 'Finalizados técnicamente o pendientes administrativos',
       accent: '#3b82f6'
     },
     {
