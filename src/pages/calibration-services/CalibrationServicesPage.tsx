@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import {
   Alert,
@@ -643,6 +643,9 @@ const CalibrationServicesPage = () => {
     getStoredViewMode
   )
   const [showOnlyMyLoad, setShowOnlyMyLoad] = useState(false)
+  const kanbanScrollRef = useRef<HTMLDivElement | null>(null)
+  const kanbanTopScrollRef = useRef<HTMLDivElement | null>(null)
+  const [kanbanScrollWidth, setKanbanScrollWidth] = useState(0)
 
   const deferredSearch = useDeferredValue(search)
   const queryFilters: CalibrationServiceFilters = {
@@ -882,6 +885,23 @@ const CalibrationServicesPage = () => {
       )
     }))
   }, [isTechnicalOnlyView, kanbanColumns, visibleServices])
+
+  useEffect(() => {
+    if (viewMode !== 'kanban') {
+      return
+    }
+
+    const syncScrollMetrics = () => {
+      setKanbanScrollWidth(kanbanScrollRef.current?.scrollWidth || 0)
+    }
+
+    syncScrollMetrics()
+    window.addEventListener('resize', syncScrollMetrics)
+
+    return () => {
+      window.removeEventListener('resize', syncScrollMetrics)
+    }
+  }, [kanbanServices, viewMode])
 
   const currentUserHasAssignedLoad = useMemo(() => {
     const currentUserEmail = $userStore.email?.trim().toLowerCase()
@@ -1899,7 +1919,50 @@ const CalibrationServicesPage = () => {
           })}
         </Stack>
       ) : (
-        <Box sx={{ overflowX: 'auto', pb: 1 }}>
+        <Stack spacing={1.25}>
+          <Box
+            ref={kanbanTopScrollRef}
+            onScroll={(event) => {
+              if (kanbanScrollRef.current) {
+                kanbanScrollRef.current.scrollLeft = event.currentTarget.scrollLeft
+              }
+            }}
+            sx={{
+              overflowX: 'auto',
+              overflowY: 'hidden',
+              height: 12,
+              borderRadius: '999px',
+              bgcolor: alpha(ui.textSecondary, 0.08),
+              '&::-webkit-scrollbar': {
+                height: 10
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: alpha(ui.textSecondary, 0.28),
+                borderRadius: '999px'
+              }
+            }}
+          >
+            <Box sx={{ width: Math.max(kanbanScrollWidth, 1), height: 1 }} />
+          </Box>
+          <Box
+            ref={kanbanScrollRef}
+            onScroll={(event) => {
+              if (kanbanTopScrollRef.current) {
+                kanbanTopScrollRef.current.scrollLeft = event.currentTarget.scrollLeft
+              }
+            }}
+            onWheel={(event) => {
+              if (!kanbanScrollRef.current) {
+                return
+              }
+
+              if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+                event.preventDefault()
+                kanbanScrollRef.current.scrollLeft += event.deltaY
+              }
+            }}
+            sx={{ overflowX: 'auto', pb: 1 }}
+          >
           <Stack
             direction='row'
             spacing={2}
@@ -2011,21 +2074,6 @@ const CalibrationServicesPage = () => {
                           : typeof operations.operationalResponsibleName === 'string'
                             ? operations.operationalResponsibleName
                             : ''
-                      const canOpenPrimaryAction =
-                        (canCreateServices && service.status === 'draft') ||
-                        (canTakeApprovalDecision &&
-                          service.status === 'pending_approval') ||
-                        (canIssueOds &&
-                          service.status === 'approved' &&
-                          service.approvalStatus === 'approved' &&
-                          !service.odsCode) ||
-                        (canScheduleService &&
-                          ['ods_issued', 'pending_programming'].includes(
-                            service.status
-                          )) ||
-                        (canRunExecution &&
-                          ['scheduled', 'in_execution'].includes(service.status))
-
                       const customerLabel =
                         service.customer?.nombre ||
                         service.executionCustomerName ||
@@ -2197,32 +2245,6 @@ const CalibrationServicesPage = () => {
                                 </Typography>
                               </Stack>
 
-                              <Button
-                                fullWidth
-                                variant={canOpenPrimaryAction ? 'contained' : 'outlined'}
-                                startIcon={<VisibilityOutlinedIcon />}
-                                onClick={(event) => {
-                                  event.stopPropagation()
-                                  openServiceDetail(service.id)
-                                }}
-                                sx={
-                                  canOpenPrimaryAction
-                                    ? {
-                                        ...primaryButtonSx,
-                                        minHeight: 38,
-                                        borderRadius: '10px',
-                                        fontSize: '0.82rem'
-                                      }
-                                    : {
-                                        ...secondaryButtonSx,
-                                        minHeight: 38,
-                                        borderRadius: '10px',
-                                        fontSize: '0.82rem'
-                                      }
-                                }
-                              >
-                                Ver detalle
-                              </Button>
                             </Stack>
                           </CardContent>
                         </Card>
@@ -2234,7 +2256,8 @@ const CalibrationServicesPage = () => {
               )
             })}
           </Stack>
-        </Box>
+          </Box>
+        </Stack>
       )}
       {canManageSequenceConfig ? (
         <CalibrationServiceSequenceConfigDialog
