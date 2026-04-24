@@ -784,40 +784,84 @@ const CalibrationServiceWorkspacePage = () => {
   }
 
   return (
-    <Box p={{ xs: 2, md: 3 }}>
+    <Box
+      sx={{
+        px: { xs: 2, md: 3 },
+        py: { xs: 2, md: 3 },
+        minHeight: '100vh',
+        backgroundColor: '#f8fafb',
+        '@keyframes fadeUp': {
+          from: { opacity: 0, transform: 'translateY(15px)' },
+          to: { opacity: 1, transform: 'translateY(0)' }
+        }
+      }}
+    >
       <Toaster position='top-center' />
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        justifyContent='space-between'
-        alignItems={{ xs: 'flex-start', md: 'center' }}
-        spacing={2}
-        mb={3}
+
+      {/* ── Header banner ── */}
+      <Box
+        sx={{
+          background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+          borderRadius: '20px',
+          p: { xs: 3, md: 4 },
+          mb: 3,
+          position: 'relative',
+          overflow: 'hidden',
+          animation: 'fadeUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: '40%',
+            height: '100%',
+            background: 'radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.12) 0%, transparent 70%)',
+            pointerEvents: 'none'
+          }
+        }}
       >
-        <Box>
-          <Button
-            startIcon={<ArrowBackOutlinedIcon />}
-            onClick={() =>
-              navigate(isEditing && serviceId ? `/calibration-services/${serviceId}` : '/calibration-services')
-            }
-            sx={{ mb: 1 }}
-          >
-            Volver
-          </Button>
-          <Typography variant='h4' fontWeight={700}>
-            {isEditing ? 'Editar servicio de calibracion' : 'Nuevo servicio de calibracion'}
-          </Typography>
-          <Typography variant='body1' color='text.secondary' sx={{ mt: 1 }}>
-            Cotización base del servicio con cliente, sede, condiciones comerciales,
-            ítems y evidencia de solicitud.
-          </Typography>
-        </Box>
-        {service ? (
-          <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
-            <Chip color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]} label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]} />
-            <Chip color={CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]} label={CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]} />
-          </Stack>
-        ) : null}
-      </Stack>
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          justifyContent='space-between'
+          alignItems={{ xs: 'flex-start', md: 'center' }}
+          spacing={2}
+        >
+          <Box>
+            <Button
+              startIcon={<ArrowBackOutlinedIcon />}
+              onClick={() =>
+                navigate(isEditing && serviceId ? `/calibration-services/${serviceId}` : '/calibration-services')
+              }
+              sx={{
+                mb: 1,
+                color: 'rgba(255,255,255,0.85)',
+                textTransform: 'none',
+                fontWeight: 600,
+                borderRadius: '10px',
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.12)',
+                  color: '#fff'
+                }
+              }}
+            >
+              Volver
+            </Button>
+            <Typography variant='h4' fontWeight={800} sx={{ color: '#fff', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+              {isEditing ? 'Editar servicio de calibración' : 'Nuevo servicio de calibración'}
+            </Typography>
+            <Typography variant='body2' sx={{ mt: 1, color: 'rgba(255,255,255,0.8)', lineHeight: 1.5, maxWidth: 780 }}>
+              Cotización base del servicio con cliente, sede, condiciones comerciales,
+              ítems y evidencia de solicitud.
+            </Typography>
+          </Box>
+          {service ? (
+            <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
+              <Chip color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]} label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]} sx={{ fontWeight: 700 }} />
+              <Chip color={CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]} label={CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]} sx={{ fontWeight: 700 }} />
+            </Stack>
+          ) : null}
+        </Stack>
+      </Box>
 
       {!canEdit ? (
         <Alert severity='warning' sx={{ mb: 3 }}>
@@ -857,9 +901,9 @@ const CalibrationServiceWorkspacePage = () => {
 
       <Grid container spacing={2}>
         <Grid item xs={12} lg={8}>
-          <Card elevation={0} sx={{ borderRadius: 3, mb: 3, border: '1px solid', borderColor: 'divider' }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both' }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
+              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2, color: '#111827', letterSpacing: '-0.01em' }}>
                 Cliente y alcance
               </Typography>
               <Grid container spacing={2}>
@@ -979,9 +1023,9 @@ const CalibrationServiceWorkspacePage = () => {
             </CardContent>
           </Card>
 
-          <Card elevation={0} sx={{ borderRadius: 3, mb: 3, border: '1px solid', borderColor: 'divider' }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both' }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
+              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2, color: '#111827', letterSpacing: '-0.01em' }}>
                 Contacto y destino del servicio
               </Typography>
               <Grid container spacing={2}>
@@ -1062,9 +1106,9 @@ const CalibrationServiceWorkspacePage = () => {
             </CardContent>
           </Card>
 
-          <Card elevation={0} sx={{ borderRadius: 3, mb: 3, border: '1px solid', borderColor: 'divider' }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both' }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
+              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2, color: '#111827', letterSpacing: '-0.01em' }}>
                 Condiciones comerciales
               </Typography>
               <Grid container spacing={2}>
@@ -1220,7 +1264,7 @@ const CalibrationServiceWorkspacePage = () => {
             </CardContent>
           </Card>
 
-          <Card elevation={0} sx={{ borderRadius: 3, mb: 3, border: '1px solid', borderColor: 'divider' }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.25s both' }}>
             <CardContent sx={{ p: { xs: 2, md: 3 }, pBottom: { xs: 2, md: 3 } }}>
               <CalibrationServiceItemsEditor
                 items={formState.items}
@@ -1240,9 +1284,9 @@ const CalibrationServiceWorkspacePage = () => {
             </CardContent>
           </Card>
 
-          <Card elevation={0} sx={{ borderRadius: 3, mb: 3, border: '1px solid', borderColor: 'divider' }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both' }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
+              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2, color: '#111827', letterSpacing: '-0.01em' }}>
                 Evidencia de solicitud
               </Typography>
               <Stack spacing={2}>
@@ -1276,7 +1320,7 @@ const CalibrationServiceWorkspacePage = () => {
             </CardContent>
           </Card>
 
-          <Card elevation={0} sx={{ borderRadius: 3, mb: 3, border: '1px solid', borderColor: 'divider' }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.35s both' }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Stack spacing={2}>
                 <Box>
@@ -1327,28 +1371,28 @@ const CalibrationServiceWorkspacePage = () => {
         </Grid>
 
         <Grid item xs={12} lg={4}>
-          <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', position: { lg: 'sticky' }, top: { lg: 24 } }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(14px)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)', position: { lg: 'sticky' }, top: { lg: 24 }, animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both' }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
-                Resumen economico
+              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2, color: '#111827', letterSpacing: '-0.01em' }}>
+                Resumen económico
               </Typography>
               <Stack spacing={1.5}>
                 <Stack direction='row' justifyContent='space-between'>
-                  <Typography color='text.secondary'>Subtotal</Typography>
-                  <Typography fontWeight={600}>{currencyFormatter.format(subtotal)}</Typography>
+                  <Typography sx={{ color: '#6b7280', fontWeight: 500 }}>Subtotal</Typography>
+                  <Typography fontWeight={600} sx={{ color: '#111827' }}>{currencyFormatter.format(subtotal)}</Typography>
                 </Stack>
                 <Stack direction='row' justifyContent='space-between'>
-                  <Typography color='text.secondary'>IVA</Typography>
-                  <Typography fontWeight={600}>{currencyFormatter.format(taxTotal)}</Typography>
+                  <Typography sx={{ color: '#6b7280', fontWeight: 500 }}>IVA</Typography>
+                  <Typography fontWeight={600} sx={{ color: '#111827' }}>{currencyFormatter.format(taxTotal)}</Typography>
                 </Stack>
                 <Stack direction='row' justifyContent='space-between'>
-                  <Typography color='text.secondary'>Descuento</Typography>
-                  <Typography fontWeight={600}>{currencyFormatter.format(discountTotal)}</Typography>
+                  <Typography sx={{ color: '#6b7280', fontWeight: 500 }}>Descuento</Typography>
+                  <Typography fontWeight={600} sx={{ color: '#111827' }}>{currencyFormatter.format(discountTotal)}</Typography>
                 </Stack>
                 <Divider />
-                <Stack direction='row' justifyContent='space-between'>
-                  <Typography variant='h6'>Total</Typography>
-                  <Typography variant='h6' fontWeight={700}>
+                <Stack direction='row' justifyContent='space-between' alignItems='center'>
+                  <Typography variant='h6' sx={{ color: '#111827', fontWeight: 700 }}>Total</Typography>
+                  <Typography variant='h6' fontWeight={800} sx={{ color: '#059669' }}>
                     {currencyFormatter.format(grandTotal)}
                   </Typography>
                 </Stack>
@@ -1360,6 +1404,20 @@ const CalibrationServiceWorkspacePage = () => {
                   startIcon={<SaveOutlinedIcon />}
                   onClick={() => void handleSave('draft')}
                   disabled={!canEdit || isBusy || !sequenceConfig?.initialized}
+                  sx={{
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    borderRadius: '12px',
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    py: 1.2,
+                    boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.2)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #10b981 0%, #047857 100%)',
+                      boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)',
+                      transform: 'translateY(-1px)'
+                    }
+                  }}
                 >
                   Guardar borrador
                 </Button>
@@ -1368,6 +1426,20 @@ const CalibrationServiceWorkspacePage = () => {
                   startIcon={<SendOutlinedIcon />}
                   onClick={() => void handleSave('pending_approval')}
                   disabled={!canEdit || isBusy || !sequenceConfig?.initialized}
+                  sx={{
+                    borderColor: '#10b981',
+                    color: '#059669',
+                    borderRadius: '12px',
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    py: 1.2,
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      borderColor: '#059669',
+                      backgroundColor: 'rgba(16, 185, 129, 0.06)',
+                      transform: 'translateY(-1px)'
+                    }
+                  }}
                 >
                   Guardar y enviar cotización
                 </Button>

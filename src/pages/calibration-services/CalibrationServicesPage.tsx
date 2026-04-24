@@ -671,97 +671,120 @@ const CalibrationServicesPage = () => {
       }}
     >
       <Toaster position='top-center' />
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        justifyContent='space-between'
-        alignItems={{ xs: 'flex-start', md: 'center' }}
-        spacing={2}
-        mb={3}
-      >
-        <Box>
-          <Stack direction='row' spacing={1} alignItems='center' sx={{ mb: 1 }}>
-            <Typography variant='body2' sx={{ color: ui.muted, fontWeight: 500 }}>
-              Metromédica
-            </Typography>
-            <Typography variant='body2' sx={{ color: '#9ca3af' }}>
-              /
-            </Typography>
-            <Typography variant='body2' sx={{ color: ui.textSecondary, fontWeight: 500 }}>
-              Servicios
-            </Typography>
-          </Stack>
-          <Typography
-            variant='h4'
-            fontWeight={700}
-            sx={{ color: ui.text, lineHeight: 1.2, letterSpacing: '-0.02em' }}
-          >
-            Servicios de calibración
-          </Typography>
-          <Typography
-            variant='body2'
-            sx={{ mt: 1, color: ui.muted, lineHeight: 1.5, maxWidth: 780 }}
-          >
-            {isTechnicalOnlyView
-              ? 'Bandeja técnica para ODS, programación y seguimiento operativo del servicio.'
-              : 'Bandeja operativa para cotización, respuesta del cliente, emisión de ODS y seguimiento base del servicio.'}
-          </Typography>
-        </Box>
 
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-          {canViewAnalytics ? (
+      {/* ── Header banner (inspirado en /calibraciones/certificados) ── */}
+      <Box
+        sx={{
+          background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+          borderRadius: '20px',
+          p: { xs: 3, md: 4 },
+          mb: 3,
+          position: 'relative',
+          overflow: 'hidden',
+          animation: 'fadeUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: '40%',
+            height: '100%',
+            background: 'radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.12) 0%, transparent 70%)',
+            pointerEvents: 'none'
+          }
+        }}
+      >
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          justifyContent='space-between'
+          alignItems={{ xs: 'flex-start', md: 'center' }}
+          spacing={2}
+        >
+          <Box>
+            <Stack direction='row' spacing={1} alignItems='center' sx={{ mb: 1 }}>
+              <Typography variant='body2' sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>
+                Metromédica
+              </Typography>
+              <Typography variant='body2' sx={{ color: 'rgba(255,255,255,0.4)' }}>
+                /
+              </Typography>
+              <Typography variant='body2' sx={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>
+                Servicios
+              </Typography>
+            </Stack>
+            <Typography
+              variant='h4'
+              fontWeight={800}
+              sx={{ color: '#fff', lineHeight: 1.2, letterSpacing: '-0.02em' }}
+            >
+              Servicios de calibración
+            </Typography>
+            <Typography
+              variant='body2'
+              sx={{ mt: 1, color: 'rgba(255,255,255,0.8)', lineHeight: 1.5, maxWidth: 780 }}
+            >
+              {isTechnicalOnlyView
+                ? 'Bandeja técnica para ODS, programación y seguimiento operativo del servicio.'
+                : 'Bandeja operativa para cotización, respuesta del cliente, emisión de ODS y seguimiento base del servicio.'}
+            </Typography>
+          </Box>
+
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+            {canViewAnalytics ? (
+              <Button
+                variant='outlined'
+                startIcon={<AnalyticsOutlinedIcon />}
+                onClick={() => navigate('/calibration-services/analytics')}
+                sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
+              >
+                Analíticas
+              </Button>
+            ) : null}
+            {canCreateServices ? (
+              <Button
+                variant='outlined'
+                startIcon={<AddBusinessOutlinedIcon />}
+                onClick={() => navigate('/calibration-services/customers')}
+                sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
+              >
+                Clientes
+              </Button>
+            ) : null}
+            {canManageSlaConfig ? (
+              <Button
+                variant='outlined'
+                startIcon={<SettingsOutlinedIcon />}
+                onClick={() => setIsSlaConfigDialogOpen(true)}
+                sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
+              >
+                Configuración SLA
+              </Button>
+            ) : null}
             <Button
               variant='outlined'
-              startIcon={<AnalyticsOutlinedIcon />}
-              onClick={() => navigate('/calibration-services/analytics')}
-              sx={secondaryButtonSx}
+              startIcon={<RefreshOutlinedIcon />}
+              onClick={() => {
+                void refetch()
+              }}
+              disabled={isFetching}
+              sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
             >
-              Analíticas
+              Actualizar
             </Button>
-          ) : null}
-          {canCreateServices ? (
-            <Button
-              variant='outlined'
-              startIcon={<AddBusinessOutlinedIcon />}
-              onClick={() => navigate('/calibration-services/customers')}
-              sx={secondaryButtonSx}
-            >
-              Clientes
-            </Button>
-          ) : null}
-          {canManageSlaConfig ? (
-            <Button
-              variant='outlined'
-              startIcon={<SettingsOutlinedIcon />}
-              onClick={() => setIsSlaConfigDialogOpen(true)}
-              sx={secondaryButtonSx}
-            >
-              Configuración SLA
-            </Button>
-          ) : null}
-          <Button
-            variant='outlined'
-            startIcon={<RefreshOutlinedIcon />}
-            onClick={() => {
-              void refetch()
-            }}
-            disabled={isFetching}
-            sx={secondaryButtonSx}
-          >
-            Actualizar
-          </Button>
-          {canCreateServices ? (
-            <Button
-              variant='contained'
-              startIcon={<AddIcon />}
-              onClick={() => navigate('/calibration-services/new')}
-              disabled={canManageSequenceConfig && !sequenceConfig?.initialized}
-              sx={primaryButtonSx}
-            >
-              Nuevo servicio
-            </Button>
-          ) : null}
+            {canCreateServices ? (
+              <Button
+                variant='contained'
+                startIcon={<AddIcon />}
+                onClick={() => navigate('/calibration-services/new')}
+                disabled={canManageSequenceConfig && !sequenceConfig?.initialized}
+                sx={{ ...primaryButtonSx, background: '#fff', color: ui.greenDark, '&:hover': { background: 'rgba(255,255,255,0.9)', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.15)' } }}
+              >
+                Nuevo servicio
+              </Button>
+            ) : null}
+          </Stack>
         </Stack>
-      </Stack>
+      </Box>
 
       {canManageSequenceConfig && sequenceConfig && !sequenceConfig.initialized ? (
         <Alert
@@ -786,7 +809,7 @@ const CalibrationServicesPage = () => {
                 <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
                   Servicios visibles
                 </Typography>
-                <Box sx={{ width: 40, height: 40, borderRadius: '12px', bgcolor: alpha(ui.info, 0.1), color: ui.info, display: 'grid', placeItems: 'center' }}>
+                <Box sx={{ width: 42, height: 42, borderRadius: '14px', background: `linear-gradient(135deg, ${alpha(ui.info, 0.15)} 0%, ${alpha(ui.info, 0.08)} 100%)`, color: ui.info, display: 'grid', placeItems: 'center', boxShadow: `0 2px 8px ${alpha(ui.info, 0.12)}` }}>
                   <VisibilityOutlinedIcon fontSize='small' />
                 </Box>
               </Stack>
@@ -806,7 +829,7 @@ const CalibrationServicesPage = () => {
                 <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
                   {isTechnicalOnlyView ? 'ODS emitidas' : 'Pendientes respuesta'}
                 </Typography>
-                <Box sx={{ width: 40, height: 40, borderRadius: '12px', bgcolor: alpha(ui.warning, 0.1), color: ui.warning, display: 'grid', placeItems: 'center' }}>
+                <Box sx={{ width: 42, height: 42, borderRadius: '14px', background: `linear-gradient(135deg, ${alpha(ui.warning, 0.15)} 0%, ${alpha(ui.warning, 0.08)} 100%)`, color: ui.warning, display: 'grid', placeItems: 'center', boxShadow: `0 2px 8px ${alpha(ui.warning, 0.12)}` }}>
                   <WarningAmberOutlinedIcon fontSize='small' />
                 </Box>
               </Stack>
@@ -828,7 +851,7 @@ const CalibrationServicesPage = () => {
                 <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
                   {isTechnicalOnlyView ? 'Requieren agenda' : 'Listos para ODS'}
                 </Typography>
-                <Box sx={{ width: 40, height: 40, borderRadius: '12px', bgcolor: alpha(ui.green, 0.12), color: ui.greenDark, display: 'grid', placeItems: 'center' }}>
+                <Box sx={{ width: 42, height: 42, borderRadius: '14px', background: `linear-gradient(135deg, ${alpha(ui.green, 0.15)} 0%, ${alpha(ui.green, 0.08)} 100%)`, color: ui.greenDark, display: 'grid', placeItems: 'center', boxShadow: `0 2px 8px ${alpha(ui.green, 0.12)}` }}>
                   <DescriptionOutlinedIcon fontSize='small' />
                 </Box>
               </Stack>
@@ -850,7 +873,7 @@ const CalibrationServicesPage = () => {
                 <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
                   En riesgo o vencidos
                 </Typography>
-                <Box sx={{ width: 40, height: 40, borderRadius: '12px', bgcolor: alpha(ui.error, 0.1), color: ui.error, display: 'grid', placeItems: 'center' }}>
+                <Box sx={{ width: 42, height: 42, borderRadius: '14px', background: `linear-gradient(135deg, ${alpha(ui.error, 0.15)} 0%, ${alpha(ui.error, 0.08)} 100%)`, color: ui.error, display: 'grid', placeItems: 'center', boxShadow: `0 2px 8px ${alpha(ui.error, 0.12)}` }}>
                   <ReportProblemOutlinedIcon fontSize='small' />
                 </Box>
               </Stack>
@@ -872,10 +895,12 @@ const CalibrationServicesPage = () => {
           <Alert
             severity='info'
             sx={{
-              borderRadius: '12px',
+              borderRadius: '16px',
               border: `1px solid ${alpha(ui.info, 0.18)}`,
               bgcolor: alpha(ui.info, 0.06),
-              color: ui.textSecondary
+              color: ui.textSecondary,
+              animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both',
+              '& .MuiAlert-icon': { color: ui.info }
             }}
           >
             {pendingDocumentControlCount > 0
@@ -887,10 +912,12 @@ const CalibrationServicesPage = () => {
           <Alert
             severity='success'
             sx={{
-              borderRadius: '12px',
+              borderRadius: '16px',
               border: `1px solid ${alpha(ui.green, 0.18)}`,
               bgcolor: ui.greenLight,
-              color: ui.textSecondary
+              color: ui.textSecondary,
+              animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.25s both',
+              '& .MuiAlert-icon': { color: ui.green }
             }}
           >
             {readyToCloseCount > 0
