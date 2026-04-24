@@ -289,6 +289,38 @@ const getSlaVisualTone = (color?: CalibrationServiceSlaIndicatorColor) => {
   }
 }
 
+const getCompactSlaLabel = (color?: CalibrationServiceSlaIndicatorColor) => {
+  switch (color) {
+    case 'red':
+      return 'Vencido'
+    case 'yellow':
+      return 'Alerta'
+    case 'green':
+      return 'En tiempo'
+    case 'blue':
+      return 'Completado'
+    default:
+      return 'Sin iniciar'
+  }
+}
+
+const getCompactColumnTitle = (title: string) => {
+  switch (title) {
+    case 'Esperando cliente':
+      return 'Cliente'
+    case 'Listo para ODS':
+      return 'Para ODS'
+    case 'Por programar':
+      return 'Programar'
+    case 'En servicio':
+      return 'Servicio'
+    case 'Pendiente cierre':
+      return 'Cierre'
+    default:
+      return title
+  }
+}
+
 const getItemsTotal = (service: CalibrationService) => {
   return (service.items ?? []).reduce((accumulator, item) => {
     const value =
@@ -416,43 +448,31 @@ const getKanbanColumns = (
       {
         key: 'pre_operational',
         title: 'Preoperativo',
-        description: 'Aún no liberados al frente técnico',
+        description: 'Aun no liberados al frente tecnico',
         accent: '#64748b'
       },
       {
-        key: 'ods_issued',
-        title: 'ODS emitida',
-        description: 'Listos para entrar a coordinación',
-        accent: '#3b82f6'
-      },
-      {
-        key: 'pending_programming',
-        title: 'Pendiente programación',
-        description: 'Falta agenda o asignación operativa',
+        key: 'to_schedule',
+        title: 'Por programar',
+        description: 'ODS emitidas o pendientes de agenda',
         accent: '#f59e0b'
       },
       {
-        key: 'scheduled',
-        title: 'Programada',
-        description: 'Con agenda confirmada',
-        accent: '#8b5cf6'
-      },
-      {
-        key: 'in_execution',
+        key: 'in_service',
         title: 'En ejecución',
-        description: 'Trabajo activo en campo o laboratorio',
+        description: 'Programados o en trabajo activo',
         accent: '#10b981'
       },
       {
-        key: 'technically_completed',
-        title: 'Finalizada técnicamente',
-        description: 'Pendiente frente administrativo o documental',
+        key: 'pending_close',
+        title: 'Pendiente cierre',
+        description: 'Finalizados tecnicamente y pendientes de salida',
         accent: '#0ea5e9'
       },
       {
         key: 'closed',
-        title: 'Cerrada',
-        description: 'Servicio completamente terminado',
+        title: 'Cerrados',
+        description: 'Servicios completamente terminados',
         accent: '#059669'
       }
     ]
@@ -460,33 +480,39 @@ const getKanbanColumns = (
 
   return [
     {
-      key: 'draft',
-      title: 'Borradores',
-      description: 'Cotizaciones en preparación',
+      key: 'adjustments',
+      title: 'Ajustes',
+      description: 'Borradores, rechazadas o con cambios',
       accent: '#64748b'
     },
     {
-      key: 'pending_customer',
-      title: 'Pendiente cliente',
-      description: 'Esperando respuesta del cliente',
+      key: 'waiting_customer',
+      title: 'Esperando cliente',
+      description: 'Cotizaciones enviadas pendientes de respuesta',
       accent: '#f59e0b'
     },
     {
-      key: 'changes_requested',
-      title: 'Con cambios',
-      description: 'Requieren ajuste comercial o técnico',
-      accent: '#ef4444'
-    },
-    {
       key: 'ready_for_ods',
-      title: 'Lista para ODS',
+      title: 'Listo para ODS',
       description: 'Aprobadas y listas para liberar',
       accent: '#10b981'
     },
     {
-      key: 'technical_flow',
-      title: 'Flujo técnico',
-      description: 'ODS, programación, ejecución y cierre técnico',
+      key: 'to_schedule',
+      title: 'Por programar',
+      description: 'ODS emitidas o pendientes de agenda',
+      accent: '#3b82f6'
+    },
+    {
+      key: 'in_service',
+      title: 'En servicio',
+      description: 'Programados y en ejecución',
+      accent: '#14b8a6'
+    },
+    {
+      key: 'pending_close',
+      title: 'Pendiente cierre',
+      description: 'Finalizados tecnicamente o pendientes administrativos',
       accent: '#3b82f6'
     },
     {
@@ -503,49 +529,73 @@ const getKanbanColumnKey = (
   isTechnicalOnlyView: boolean
 ) => {
   if (isTechnicalOnlyView) {
-    switch (service.status) {
-      case 'ods_issued':
-        return 'ods_issued'
-      case 'pending_programming':
-        return 'pending_programming'
-      case 'scheduled':
-        return 'scheduled'
-      case 'in_execution':
-        return 'in_execution'
-      case 'technically_completed':
-        return 'technically_completed'
-      case 'closed':
-        return 'closed'
-      default:
-        return 'pre_operational'
+    if (
+      ['draft', 'pending_approval', 'rejected', 'approved'].includes(service.status)
+    ) {
+      return 'pre_operational'
     }
-  }
 
-  if (service.status === 'draft') {
-    return 'draft'
-  }
+    if (['ods_issued', 'pending_programming'].includes(service.status)) {
+      return 'to_schedule'
+    }
 
-  if (service.status === 'pending_approval') {
-    return 'pending_customer'
+    if (['scheduled', 'in_execution'].includes(service.status)) {
+      return 'in_service'
+    }
+
+    if (service.status === 'technically_completed') {
+      return 'pending_close'
+    }
+
+    if (service.status === 'closed') {
+      return 'closed'
+    }
+
+    return 'pre_operational'
   }
 
   if (
+    service.status === 'draft' ||
     service.status === 'rejected' ||
     service.approvalStatus === 'rejected' ||
     hasCustomerChangeRequest(service)
   ) {
-    return 'changes_requested'
+    return 'adjustments'
   }
 
-  if (service.status === 'approved') {
+  if (service.status === 'pending_approval') {
+    return 'waiting_customer'
+  }
+
+  if (
+    service.status === 'approved' &&
+    service.approvalStatus === 'approved' &&
+    !service.odsCode
+  ) {
     return 'ready_for_ods'
+  }
+
+  if (['ods_issued', 'pending_programming'].includes(service.status)) {
+    return 'to_schedule'
+  }
+
+  if (['scheduled', 'in_execution'].includes(service.status)) {
+    return 'in_service'
+  }
+
+  if (service.status === 'technically_completed') {
+    return 'pending_close'
   }
 
   if (service.status === 'closed') {
     return 'closed'
   }
 
-  return 'technical_flow'
+  if (service.status === 'approved') {
+    return 'ready_for_ods'
+  }
+
+  return 'adjustments'
 }
 
 const CalibrationServicesPage = () => {
@@ -1856,12 +1906,15 @@ const CalibrationServicesPage = () => {
             alignItems='flex-start'
             sx={{ minWidth: 'max-content' }}
           >
-            {kanbanServices.map((column) => (
+            {kanbanServices.map((column) => {
+              const isEmptyColumn = column.services.length === 0
+
+              return (
               <Box
                 key={column.key}
                 sx={{
-                  width: 312,
-                  minWidth: 312,
+                  width: isEmptyColumn ? 172 : 312,
+                  minWidth: isEmptyColumn ? 172 : 312,
                   borderRadius: '20px',
                   border: `1px solid ${alpha(column.accent, 0.16)}`,
                   background: `linear-gradient(180deg, ${alpha(
@@ -1893,14 +1946,18 @@ const CalibrationServicesPage = () => {
                         fontWeight={800}
                         sx={{ color: ui.text, lineHeight: 1.2 }}
                       >
-                        {column.title}
+                        {isEmptyColumn
+                          ? getCompactColumnTitle(column.title)
+                          : column.title}
                       </Typography>
-                      <Typography
-                        variant='body2'
-                        sx={{ mt: 0.5, color: ui.textSecondary, lineHeight: 1.45 }}
-                      >
-                        {column.description}
-                      </Typography>
+                      {!isEmptyColumn ? (
+                        <Typography
+                          variant='body2'
+                          sx={{ mt: 0.5, color: ui.textSecondary, lineHeight: 1.45 }}
+                        >
+                          {column.description}
+                        </Typography>
+                      ) : null}
                     </Box>
                     <Chip
                       size='small'
@@ -1926,17 +1983,20 @@ const CalibrationServicesPage = () => {
                   {column.services.length === 0 ? (
                     <Box
                       sx={{
-                        p: 2,
+                        p: 1.5,
                         borderRadius: '16px',
                         border: `1px dashed ${alpha(column.accent, 0.24)}`,
-                        bgcolor: alpha(column.accent, 0.04)
+                        bgcolor: alpha(column.accent, 0.04),
+                        minHeight: 72,
+                        display: 'flex',
+                        alignItems: 'center'
                       }}
                     >
                       <Typography
-                        variant='body2'
-                        sx={{ color: ui.textSecondary, lineHeight: 1.5 }}
+                        variant='caption'
+                        sx={{ color: ui.textSecondary, lineHeight: 1.45 }}
                       >
-                        Sin servicios en esta etapa.
+                        Sin servicios.
                       </Typography>
                     </Box>
                   ) : (
@@ -1966,21 +2026,24 @@ const CalibrationServicesPage = () => {
                         (canRunExecution &&
                           ['scheduled', 'in_execution'].includes(service.status))
 
-                      const priorityLabel =
-                        service.slaIndicator?.color === 'red'
-                          ? 'Critica'
-                          : service.slaIndicator?.color === 'yellow'
-                            ? 'Alta'
-                            : service.slaIndicator?.color === 'green'
-                              ? 'Normal'
-                              : service.slaIndicator?.color === 'blue'
-                                ? 'Completada'
-                                : 'Por iniciar'
+                      const customerLabel =
+                        service.customer?.nombre ||
+                        service.executionCustomerName ||
+                        'Cliente pendiente'
 
                       return (
                         <Card
                           key={service.id}
                           elevation={0}
+                          onClick={() => openServiceDetail(service.id)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault()
+                              openServiceDetail(service.id)
+                            }
+                          }}
+                          role='button'
+                          tabIndex={0}
                           sx={{
                             borderRadius: '14px',
                             border: `1px solid ${slaTone.border}`,
@@ -1988,6 +2051,12 @@ const CalibrationServicesPage = () => {
                             boxShadow: slaTone.glow,
                             position: 'relative',
                             overflow: 'hidden',
+                            cursor: 'pointer',
+                            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                            '&:hover': {
+                              transform: 'translateY(-1px)',
+                              boxShadow: `0 10px 22px ${alpha(slaTone.accent, 0.16)}`
+                            },
                             '&::before': {
                               content: '""',
                               position: 'absolute',
@@ -2000,7 +2069,7 @@ const CalibrationServicesPage = () => {
                           }}
                         >
                           <CardContent sx={{ p: 1.5 }}>
-                            <Stack spacing={1}>
+                            <Stack spacing={1.1}>
                               <Stack
                                 direction='row'
                                 justifyContent='space-between'
@@ -2017,22 +2086,25 @@ const CalibrationServicesPage = () => {
                                   </Typography>
                                   <Typography
                                     variant='caption'
+                                    title={customerLabel}
                                     sx={{
                                       color: ui.textSecondary,
-                                      display: 'block',
                                       mt: 0.25,
                                       fontWeight: 700,
-                                      lineHeight: 1.35
+                                      lineHeight: 1.35,
+                                      display: '-webkit-box',
+                                      WebkitLineClamp: 2,
+                                      WebkitBoxOrient: 'vertical',
+                                      overflow: 'hidden',
+                                      minHeight: '2.7em'
                                     }}
                                   >
-                                    {service.customer?.nombre ||
-                                      service.executionCustomerName ||
-                                      'Cliente pendiente'}
+                                    {customerLabel}
                                   </Typography>
                                 </Box>
                                 <Chip
                                   size='small'
-                                  label={priorityLabel}
+                                  label={getCompactSlaLabel(service.slaIndicator?.color)}
                                   sx={{
                                     bgcolor: alpha(slaTone.accent, 0.12),
                                     color: slaTone.accent,
@@ -2083,6 +2155,22 @@ const CalibrationServicesPage = () => {
                                   : getServiceSiteLabel(service)}
                               </Typography>
 
+                              {assignedMetrologistName ? (
+                                <Typography
+                                  variant='caption'
+                                  sx={{
+                                    color: ui.textSecondary,
+                                    lineHeight: 1.3,
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 1,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden'
+                                  }}
+                                >
+                                  Metrólogo: {assignedMetrologistName}
+                                </Typography>
+                              ) : null}
+
                               <Stack
                                 direction='row'
                                 justifyContent='space-between'
@@ -2109,20 +2197,14 @@ const CalibrationServicesPage = () => {
                                 </Typography>
                               </Stack>
 
-                              {assignedMetrologistName ? (
-                                <Typography
-                                  variant='caption'
-                                  sx={{ color: ui.textSecondary, lineHeight: 1.3 }}
-                                >
-                                  Metrólogo: {assignedMetrologistName}
-                                </Typography>
-                              ) : null}
-
                               <Button
                                 fullWidth
                                 variant={canOpenPrimaryAction ? 'contained' : 'outlined'}
                                 startIcon={<VisibilityOutlinedIcon />}
-                                onClick={() => openServiceDetail(service.id)}
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  openServiceDetail(service.id)
+                                }}
                                 sx={
                                   canOpenPrimaryAction
                                     ? {
@@ -2149,7 +2231,8 @@ const CalibrationServicesPage = () => {
                   )}
                 </Stack>
               </Box>
-            ))}
+              )
+            })}
           </Stack>
         </Box>
       )}
