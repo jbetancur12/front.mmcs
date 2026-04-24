@@ -76,6 +76,8 @@ import CalibrationServiceSlaConfigDialog from './CalibrationServiceSlaConfigDial
 const FILTER_ALL = 'all'
 const FILTER_UNASSIGNED = 'unassigned'
 const CALIBRATION_SERVICES_VIEW_STORAGE_KEY = 'calibrationServicesViewMode'
+const CALIBRATION_SERVICES_KANBAN_COLLAPSED_STORAGE_KEY =
+  'calibrationServicesKanbanCollapsedColumns'
 
 type CalibrationServicesViewMode = 'list' | 'kanban'
 
@@ -247,6 +249,69 @@ const getStoredViewMode = (): CalibrationServicesViewMode => {
   )
 
   return storedValue === 'kanban' ? 'kanban' : 'list'
+}
+
+const getStoredCollapsedKanbanColumns = (): string[] => {
+  if (typeof window === 'undefined') {
+    return []
+  }
+
+  try {
+    const rawValue = window.localStorage.getItem(
+      CALIBRATION_SERVICES_KANBAN_COLLAPSED_STORAGE_KEY
+    )
+
+    if (!rawValue) {
+      return []
+    }
+
+    const parsedValue = JSON.parse(rawValue)
+    return Array.isArray(parsedValue)
+      ? parsedValue.filter((value): value is string => typeof value === 'string')
+      : []
+  } catch (_error) {
+    return []
+  }
+}
+
+const getSlaVisualTone = (color?: CalibrationServiceSlaIndicatorColor) => {
+  switch (color) {
+    case 'red':
+      return {
+        accent: '#ef4444',
+        background: 'linear-gradient(180deg, rgba(239,68,68,0.14) 0%, rgba(255,255,255,0.96) 28%)',
+        border: 'rgba(239,68,68,0.24)',
+        glow: '0 6px 18px rgba(239,68,68,0.12)'
+      }
+    case 'yellow':
+      return {
+        accent: '#f59e0b',
+        background: 'linear-gradient(180deg, rgba(245,158,11,0.14) 0%, rgba(255,255,255,0.96) 28%)',
+        border: 'rgba(245,158,11,0.24)',
+        glow: '0 6px 18px rgba(245,158,11,0.12)'
+      }
+    case 'green':
+      return {
+        accent: '#10b981',
+        background: 'linear-gradient(180deg, rgba(16,185,129,0.1) 0%, rgba(255,255,255,0.96) 28%)',
+        border: 'rgba(16,185,129,0.18)',
+        glow: '0 6px 18px rgba(16,185,129,0.08)'
+      }
+    case 'blue':
+      return {
+        accent: '#3b82f6',
+        background: 'linear-gradient(180deg, rgba(59,130,246,0.1) 0%, rgba(255,255,255,0.96) 28%)',
+        border: 'rgba(59,130,246,0.18)',
+        glow: '0 6px 18px rgba(59,130,246,0.08)'
+      }
+    default:
+      return {
+        accent: '#94a3b8',
+        background: 'linear-gradient(180deg, rgba(148,163,184,0.08) 0%, rgba(255,255,255,0.96) 28%)',
+        border: 'rgba(148,163,184,0.16)',
+        glow: '0 4px 12px rgba(148,163,184,0.08)'
+      }
+  }
 }
 
 const getItemsTotal = (service: CalibrationService) => {
@@ -552,6 +617,10 @@ const CalibrationServicesPage = () => {
   const [viewMode, setViewMode] = useState<CalibrationServicesViewMode>(
     getStoredViewMode
   )
+  const [showOnlyMyLoad, setShowOnlyMyLoad] = useState(false)
+  const [collapsedKanbanColumns, setCollapsedKanbanColumns] = useState<string[]>(
+    getStoredCollapsedKanbanColumns
+  )
 
   const deferredSearch = useDeferredValue(search)
   const queryFilters: CalibrationServiceFilters = {
@@ -603,6 +672,17 @@ const CalibrationServicesPage = () => {
       viewMode
     )
   }, [viewMode])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    window.localStorage.setItem(
+      CALIBRATION_SERVICES_KANBAN_COLLAPSED_STORAGE_KEY,
+      JSON.stringify(collapsedKanbanColumns)
+    )
+  }, [collapsedKanbanColumns])
 
   const services = data?.services ?? []
   const customerOptions = services
@@ -688,6 +768,13 @@ const CalibrationServicesPage = () => {
       return false
     }
 
+    if (showOnlyMyLoad) {
+      const currentUserEmail = $userStore.email?.trim().toLowerCase()
+      if (!currentUserEmail || assignedMetrologistEmail.toLowerCase() !== currentUserEmail) {
+        return false
+      }
+    }
+
     return matchesSiteFilter(service, siteFilter)
   })
 
@@ -740,7 +827,8 @@ const CalibrationServicesPage = () => {
     slaFilter !== FILTER_ALL,
     siteFilter.trim(),
     customerFilter !== FILTER_ALL,
-    metrologistFilter !== FILTER_ALL
+    metrologistFilter !== FILTER_ALL,
+    showOnlyMyLoad
   ].filter(Boolean).length
 
   const clearFilters = () => {
@@ -752,6 +840,7 @@ const CalibrationServicesPage = () => {
     setSiteFilter('')
     setCustomerFilter(FILTER_ALL)
     setMetrologistFilter(FILTER_ALL)
+    setShowOnlyMyLoad(false)
   }
 
   const kanbanColumns = useMemo(
@@ -782,6 +871,42 @@ const CalibrationServicesPage = () => {
       )
     }))
   }, [isTechnicalOnlyView, kanbanColumns, visibleServices])
+
+  const currentUserHasAssignedLoad = useMemo(() => {
+    const currentUserEmail = $userStore.email?.trim().toLowerCase()
+
+    if (!currentUserEmail) {
+      return false
+    }
+
+    return services.some((service) => {
+      const operations = getOperationsDetails(service)
+      const assignedMetrologistEmail =
+        typeof operations.assignedMetrologistEmail === 'string'
+          ? operations.assignedMetrologistEmail.trim().toLowerCase()
+          : ''
+
+      return assignedMetrologistEmail === currentUserEmail
+    })
+  }, [$userStore.email, services])
+
+  const myLoadCount = useMemo(() => {
+    const currentUserEmail = $userStore.email?.trim().toLowerCase()
+
+    if (!currentUserEmail) {
+      return 0
+    }
+
+    return services.filter((service) => {
+      const operations = getOperationsDetails(service)
+      const assignedMetrologistEmail =
+        typeof operations.assignedMetrologistEmail === 'string'
+          ? operations.assignedMetrologistEmail.trim().toLowerCase()
+          : ''
+
+      return assignedMetrologistEmail === currentUserEmail
+    }).length
+  }, [$userStore.email, services])
 
   const handleRequestApproval = async (service: CalibrationService) => {
     try {
@@ -1163,6 +1288,24 @@ const CalibrationServicesPage = () => {
               </Typography>
             </Box>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+              <Button
+                variant={showOnlyMyLoad ? 'contained' : 'outlined'}
+                color={showOnlyMyLoad ? 'success' : 'inherit'}
+                onClick={() => setShowOnlyMyLoad((currentValue) => !currentValue)}
+                disabled={!currentUserHasAssignedLoad}
+                sx={
+                  showOnlyMyLoad
+                    ? {
+                        borderRadius: '12px',
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        minHeight: 44
+                      }
+                    : secondaryButtonSx
+                }
+              >
+                {showOnlyMyLoad ? `Mi carga (${visibleServices.length})` : `Mi carga${myLoadCount > 0 ? ` (${myLoadCount})` : ''}`}
+              </Button>
               <ToggleButtonGroup
                 size='small'
                 exclusive
@@ -1752,12 +1895,17 @@ const CalibrationServicesPage = () => {
             alignItems='flex-start'
             sx={{ minWidth: 'max-content' }}
           >
-            {kanbanServices.map((column) => (
+            {kanbanServices.map((column) => {
+              const isEmptyColumn = column.services.length === 0
+              const isCollapsed =
+                isEmptyColumn && collapsedKanbanColumns.includes(column.key)
+
+              return (
               <Box
                 key={column.key}
                 sx={{
-                  width: 340,
-                  minWidth: 340,
+                  width: isCollapsed ? 96 : 340,
+                  minWidth: isCollapsed ? 96 : 340,
                   borderRadius: '20px',
                   border: `1px solid ${alpha(column.accent, 0.16)}`,
                   background: `linear-gradient(180deg, ${alpha(
@@ -1765,7 +1913,8 @@ const CalibrationServicesPage = () => {
                     0.08
                   )} 0%, rgba(255,255,255,0.88) 22%)`,
                   backdropFilter: 'blur(10px)',
-                  boxShadow: '0 6px 18px rgba(15, 23, 42, 0.05)'
+                  boxShadow: '0 6px 18px rgba(15, 23, 42, 0.05)',
+                  transition: 'width 0.25s ease, min-width 0.25s ease'
                 }}
               >
                 <Box
@@ -1780,7 +1929,7 @@ const CalibrationServicesPage = () => {
                     alignItems='flex-start'
                     spacing={1}
                   >
-                    <Box>
+                    <Box sx={{ minWidth: 0 }}>
                       <Typography
                         variant='subtitle1'
                         fontWeight={800}
@@ -1795,18 +1944,63 @@ const CalibrationServicesPage = () => {
                         {column.description}
                       </Typography>
                     </Box>
-                    <Chip
-                      size='small'
-                      label={column.services.length}
-                      sx={{
-                        bgcolor: alpha(column.accent, 0.14),
-                        color: column.accent,
-                        fontWeight: 800
-                      }}
-                    />
+                    <Stack spacing={1} alignItems='flex-end'>
+                      <Chip
+                        size='small'
+                        label={column.services.length}
+                        sx={{
+                          bgcolor: alpha(column.accent, 0.14),
+                          color: column.accent,
+                          fontWeight: 800
+                        }}
+                      />
+                      {isEmptyColumn ? (
+                        <Button
+                          size='small'
+                          variant='text'
+                          onClick={() =>
+                            setCollapsedKanbanColumns((currentValue) =>
+                              isCollapsed
+                                ? currentValue.filter((value) => value !== column.key)
+                                : [...currentValue, column.key]
+                            )
+                          }
+                          sx={{
+                            minWidth: 0,
+                            px: 1,
+                            color: column.accent,
+                            textTransform: 'none',
+                            fontWeight: 700
+                          }}
+                        >
+                          {isCollapsed ? 'Abrir' : 'Colapsar'}
+                        </Button>
+                      ) : null}
+                    </Stack>
                   </Stack>
                 </Box>
 
+                {isCollapsed ? (
+                  <Stack
+                    alignItems='center'
+                    justifyContent='center'
+                    spacing={1}
+                    sx={{ p: 1.5, minHeight: 240 }}
+                  >
+                    <Typography
+                      variant='caption'
+                      sx={{
+                        color: ui.textSecondary,
+                        writingMode: 'vertical-rl',
+                        transform: 'rotate(180deg)',
+                        fontWeight: 700,
+                        letterSpacing: 0.6
+                      }}
+                    >
+                      Vacía
+                    </Typography>
+                  </Stack>
+                ) : (
                 <Stack spacing={1.5} sx={{ p: 1.5, minHeight: 240 }}>
                   {column.services.length === 0 ? (
                     <Box
@@ -1827,6 +2021,7 @@ const CalibrationServicesPage = () => {
                   ) : (
                     column.services.map((service) => {
                       const operations = getOperationsDetails(service)
+                      const slaTone = getSlaVisualTone(service.slaIndicator?.color || 'gray')
                       const assignedMetrologistName =
                         typeof operations.assignedMetrologistName === 'string'
                           ? operations.assignedMetrologistName
@@ -1858,9 +2053,20 @@ const CalibrationServicesPage = () => {
                           elevation={0}
                           sx={{
                             borderRadius: '16px',
-                            border: `1px solid ${alpha(column.accent, 0.14)}`,
-                            bgcolor: 'rgba(255,255,255,0.9)',
-                            boxShadow: '0 3px 10px rgba(15, 23, 42, 0.05)'
+                            border: `1px solid ${slaTone.border}`,
+                            background: slaTone.background,
+                            boxShadow: slaTone.glow,
+                            position: 'relative',
+                            overflow: 'hidden',
+                            '&::before': {
+                              content: '""',
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: 4,
+                              backgroundColor: slaTone.accent
+                            }
                           }}
                         >
                           <CardContent sx={{ p: 2 }}>
@@ -1940,7 +2146,9 @@ const CalibrationServicesPage = () => {
                                 variant='body2'
                                 sx={{ color: ui.muted, lineHeight: 1.45 }}
                               >
-                                {service.scopeType === 'site'
+                                {hasCustomerChangeRequest(service)
+                                  ? 'Cliente pidió cambios y el servicio requiere una nueva revisión.'
+                                  : service.scopeType === 'site'
                                   ? `Sede: ${getServiceSiteLabel(service)}`
                                   : `Alcance general · ${getServiceSiteLabel(service)}`}
                               </Typography>
@@ -1978,6 +2186,29 @@ const CalibrationServicesPage = () => {
                                       : currencyFormatter.format(
                                           getItemsTotal(service)
                                         )}
+                                  </Typography>
+                                </Grid>
+                                <Grid item xs={12}>
+                                  <Typography
+                                    variant='caption'
+                                    sx={{ color: ui.muted, fontWeight: 600 }}
+                                  >
+                                    Prioridad
+                                  </Typography>
+                                  <Typography
+                                    variant='body2'
+                                    fontWeight={800}
+                                    sx={{ color: slaTone.accent }}
+                                  >
+                                    {service.slaIndicator?.color === 'red'
+                                      ? 'Crítica'
+                                      : service.slaIndicator?.color === 'yellow'
+                                        ? 'Alta'
+                                        : service.slaIndicator?.color === 'green'
+                                          ? 'Normal'
+                                          : service.slaIndicator?.color === 'blue'
+                                            ? 'Completada'
+                                            : 'Por iniciar'}
                                   </Typography>
                                 </Grid>
                               </Grid>
@@ -2103,8 +2334,9 @@ const CalibrationServicesPage = () => {
                     })
                   )}
                 </Stack>
+                )}
               </Box>
-            ))}
+            )})}
           </Stack>
         </Box>
       )}
