@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import {
   Alert,
@@ -14,6 +14,8 @@ import {
   MenuItem,
   Stack,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
@@ -30,6 +32,8 @@ import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined'
+import ViewKanbanOutlinedIcon from '@mui/icons-material/ViewKanbanOutlined'
+import ViewListOutlinedIcon from '@mui/icons-material/ViewListOutlined'
 import { alpha } from '@mui/material/styles'
 import { Toaster, toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
@@ -71,6 +75,17 @@ import CalibrationServiceSlaConfigDialog from './CalibrationServiceSlaConfigDial
 
 const FILTER_ALL = 'all'
 const FILTER_UNASSIGNED = 'unassigned'
+const CALIBRATION_SERVICES_VIEW_STORAGE_KEY = 'calibrationServicesViewMode'
+
+type CalibrationServicesViewMode = 'list' | 'kanban'
+
+type KanbanColumnDefinition = {
+  key: string
+  title: string
+  description: string
+  accent: string
+  priority: number
+}
 
 const STATUS_OPTIONS: Array<{
   value: CalibrationServiceStatus | typeof FILTER_ALL
@@ -223,6 +238,90 @@ const secondaryButtonSx = {
   }
 }
 
+const getStoredViewMode = (): CalibrationServicesViewMode => {
+  if (typeof window === 'undefined') {
+    return 'list'
+  }
+
+  const storedValue = window.localStorage.getItem(
+    CALIBRATION_SERVICES_VIEW_STORAGE_KEY
+  )
+
+  return storedValue === 'kanban' ? 'kanban' : 'list'
+}
+
+const getSlaVisualTone = (color?: CalibrationServiceSlaIndicatorColor) => {
+  switch (color) {
+    case 'red':
+      return {
+        accent: '#ef4444',
+        background: 'linear-gradient(180deg, rgba(239,68,68,0.14) 0%, rgba(255,255,255,0.96) 28%)',
+        border: 'rgba(239,68,68,0.24)',
+        glow: '0 6px 18px rgba(239,68,68,0.12)'
+      }
+    case 'yellow':
+      return {
+        accent: '#f59e0b',
+        background: 'linear-gradient(180deg, rgba(245,158,11,0.14) 0%, rgba(255,255,255,0.96) 28%)',
+        border: 'rgba(245,158,11,0.24)',
+        glow: '0 6px 18px rgba(245,158,11,0.12)'
+      }
+    case 'green':
+      return {
+        accent: '#10b981',
+        background: 'linear-gradient(180deg, rgba(16,185,129,0.1) 0%, rgba(255,255,255,0.96) 28%)',
+        border: 'rgba(16,185,129,0.18)',
+        glow: '0 6px 18px rgba(16,185,129,0.08)'
+      }
+    case 'blue':
+      return {
+        accent: '#3b82f6',
+        background: 'linear-gradient(180deg, rgba(59,130,246,0.1) 0%, rgba(255,255,255,0.96) 28%)',
+        border: 'rgba(59,130,246,0.18)',
+        glow: '0 6px 18px rgba(59,130,246,0.08)'
+      }
+    default:
+      return {
+        accent: '#94a3b8',
+        background: 'linear-gradient(180deg, rgba(148,163,184,0.08) 0%, rgba(255,255,255,0.96) 28%)',
+        border: 'rgba(148,163,184,0.16)',
+        glow: '0 4px 12px rgba(148,163,184,0.08)'
+      }
+  }
+}
+
+const getCompactSlaLabel = (color?: CalibrationServiceSlaIndicatorColor) => {
+  switch (color) {
+    case 'red':
+      return 'Vencido'
+    case 'yellow':
+      return 'Alerta'
+    case 'green':
+      return 'En tiempo'
+    case 'blue':
+      return 'Completado'
+    default:
+      return 'Sin iniciar'
+  }
+}
+
+const getCompactColumnTitle = (title: string) => {
+  switch (title) {
+    case 'Esperando respuesta cliente':
+      return 'Cliente'
+    case 'Listo para ODS':
+      return 'Para ODS'
+    case 'Pendiente programación':
+      return 'Programar'
+    case 'En servicio':
+      return 'Servicio'
+    case 'Pendiente administrativo':
+      return 'Admin'
+    default:
+      return title
+  }
+}
+
 const getItemsTotal = (service: CalibrationService) => {
   return (service.items ?? []).reduce((accumulator, item) => {
     const value =
@@ -342,6 +441,176 @@ const getServiceOperationalFocus = (service: CalibrationService) => {
   return null
 }
 
+const getKanbanColumns = (
+  isTechnicalOnlyView: boolean
+): KanbanColumnDefinition[] => {
+  if (isTechnicalOnlyView) {
+    return [
+      {
+        key: 'pre_operational',
+        title: 'Preoperativo',
+        description: 'Aún no liberados al frente técnico',
+        accent: '#64748b',
+        priority: 5
+      },
+      {
+        key: 'to_schedule',
+        title: 'Por programar',
+        description: 'ODS emitidas o pendientes de agenda',
+        accent: '#f59e0b',
+        priority: 2
+      },
+      {
+        key: 'in_service',
+        title: 'En ejecución',
+        description: 'Programados o en trabajo activo',
+        accent: '#10b981',
+        priority: 1
+      },
+      {
+        key: 'pending_close',
+        title: 'Pendiente cierre',
+        description: 'Finalizados técnicamente y pendientes de salida',
+        accent: '#0ea5e9',
+        priority: 3
+      },
+      {
+        key: 'closed',
+        title: 'Cerrados',
+        description: 'Servicios completamente terminados',
+        accent: '#059669',
+        priority: 6
+      }
+    ]
+  }
+
+  return [
+    {
+      key: 'adjustments',
+      title: 'Por ajustar',
+      description: 'Borradores, rechazadas o con cambios pendientes',
+      accent: '#64748b',
+      priority: 6
+    },
+    {
+      key: 'waiting_customer',
+      title: 'Esperando respuesta cliente',
+      description: 'Cotizaciones enviadas pendientes de respuesta',
+      accent: '#f59e0b',
+      priority: 4
+    },
+    {
+      key: 'ready_for_ods',
+      title: 'Listo para ODS',
+      description: 'Aprobadas y listas para liberar',
+      accent: '#10b981',
+      priority: 5
+    },
+    {
+      key: 'to_schedule',
+      title: 'Pendiente programación',
+      description: 'ODS emitidas o pendientes de agenda operativa',
+      accent: '#3b82f6',
+      priority: 3
+    },
+    {
+      key: 'in_service',
+      title: 'En servicio',
+      description: 'Programados y en ejecución',
+      accent: '#14b8a6',
+      priority: 2
+    },
+    {
+      key: 'pending_close',
+      title: 'Pendiente administrativo',
+      description: 'Finalizados técnicamente o pendientes administrativos',
+      accent: '#3b82f6',
+      priority: 1
+    },
+    {
+      key: 'closed',
+      title: 'Cerradas',
+      description: 'Servicios completados',
+      accent: '#059669',
+      priority: 7
+    }
+  ]
+}
+
+const getKanbanColumnKey = (
+  service: CalibrationService,
+  isTechnicalOnlyView: boolean
+) => {
+  if (isTechnicalOnlyView) {
+    if (
+      ['draft', 'pending_approval', 'rejected', 'approved'].includes(service.status)
+    ) {
+      return 'pre_operational'
+    }
+
+    if (['ods_issued', 'pending_programming'].includes(service.status)) {
+      return 'to_schedule'
+    }
+
+    if (['scheduled', 'in_execution'].includes(service.status)) {
+      return 'in_service'
+    }
+
+    if (service.status === 'technically_completed') {
+      return 'pending_close'
+    }
+
+    if (service.status === 'closed') {
+      return 'closed'
+    }
+
+    return 'pre_operational'
+  }
+
+  if (
+    service.status === 'draft' ||
+    service.status === 'rejected' ||
+    service.approvalStatus === 'rejected' ||
+    hasCustomerChangeRequest(service)
+  ) {
+    return 'adjustments'
+  }
+
+  if (service.status === 'pending_approval') {
+    return 'waiting_customer'
+  }
+
+  if (
+    service.status === 'approved' &&
+    service.approvalStatus === 'approved' &&
+    !service.odsCode
+  ) {
+    return 'ready_for_ods'
+  }
+
+  if (['ods_issued', 'pending_programming'].includes(service.status)) {
+    return 'to_schedule'
+  }
+
+  if (['scheduled', 'in_execution'].includes(service.status)) {
+    return 'in_service'
+  }
+
+  if (service.status === 'technically_completed') {
+    return 'pending_close'
+  }
+
+  if (service.status === 'closed') {
+    return 'closed'
+  }
+
+  if (service.status === 'approved') {
+    return 'ready_for_ods'
+  }
+
+  return 'adjustments'
+}
+
 const CalibrationServicesPage = () => {
   const navigate = useNavigate()
   const $userStore = useStore(userStore)
@@ -383,6 +652,13 @@ const CalibrationServicesPage = () => {
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
   const [isSlaConfigDialogOpen, setIsSlaConfigDialogOpen] = useState(false)
   const [areFiltersOpen, setAreFiltersOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<CalibrationServicesViewMode>(
+    getStoredViewMode
+  )
+  const [showOnlyMyLoad, setShowOnlyMyLoad] = useState(false)
+  const kanbanScrollRef = useRef<HTMLDivElement | null>(null)
+  const kanbanTopScrollRef = useRef<HTMLDivElement | null>(null)
+  const [kanbanScrollWidth, setKanbanScrollWidth] = useState(0)
 
   const deferredSearch = useDeferredValue(search)
   const queryFilters: CalibrationServiceFilters = {
@@ -423,6 +699,17 @@ const CalibrationServicesPage = () => {
       setIsSequenceDialogOpen(true)
     }
   }, [canManageSequenceConfig, isLoadingSequenceConfig, sequenceConfig?.initialized])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    window.localStorage.setItem(
+      CALIBRATION_SERVICES_VIEW_STORAGE_KEY,
+      viewMode
+    )
+  }, [viewMode])
 
   const services = data?.services ?? []
   const customerOptions = services
@@ -508,6 +795,13 @@ const CalibrationServicesPage = () => {
       return false
     }
 
+    if (showOnlyMyLoad) {
+      const currentUserEmail = $userStore.email?.trim().toLowerCase()
+      if (!currentUserEmail || assignedMetrologistEmail.toLowerCase() !== currentUserEmail) {
+        return false
+      }
+    }
+
     return matchesSiteFilter(service, siteFilter)
   })
 
@@ -560,7 +854,8 @@ const CalibrationServicesPage = () => {
     slaFilter !== FILTER_ALL,
     siteFilter.trim(),
     customerFilter !== FILTER_ALL,
-    metrologistFilter !== FILTER_ALL
+    metrologistFilter !== FILTER_ALL,
+    showOnlyMyLoad
   ].filter(Boolean).length
 
   const clearFilters = () => {
@@ -572,7 +867,145 @@ const CalibrationServicesPage = () => {
     setSiteFilter('')
     setCustomerFilter(FILTER_ALL)
     setMetrologistFilter(FILTER_ALL)
+    setShowOnlyMyLoad(false)
   }
+
+  const kanbanColumns = useMemo(
+    () => getKanbanColumns(isTechnicalOnlyView),
+    [isTechnicalOnlyView]
+  )
+
+  const kanbanServices = useMemo(() => {
+    const groupedServices = visibleServices.reduce<Record<string, CalibrationService[]>>(
+      (accumulator, service) => {
+        const columnKey = getKanbanColumnKey(service, isTechnicalOnlyView)
+
+        if (!accumulator[columnKey]) {
+          accumulator[columnKey] = []
+        }
+
+        accumulator[columnKey].push(service)
+        return accumulator
+      },
+      {}
+    )
+
+    const columnsWithServices = kanbanColumns.map((column) => {
+      const servicesForColumn = (groupedServices[column.key] || []).sort(
+        (left, right) =>
+          new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
+      )
+
+      const urgentCount = servicesForColumn.filter((service) =>
+        ['red', 'yellow'].includes(service.slaIndicator?.color || 'gray')
+      ).length
+
+      const currentUserEmail = $userStore.email?.trim().toLowerCase()
+      const myLoadCount = currentUserEmail
+        ? servicesForColumn.filter((service) => {
+            const operations = getOperationsDetails(service)
+            const assignedMetrologistEmail =
+              typeof operations.assignedMetrologistEmail === 'string'
+                ? operations.assignedMetrologistEmail.trim().toLowerCase()
+                : ''
+
+            return assignedMetrologistEmail === currentUserEmail
+          }).length
+        : 0
+
+      return {
+        ...column,
+        services: servicesForColumn,
+        urgentCount,
+        myLoadCount
+      }
+    })
+
+    const shouldPrioritizeOperationally =
+      showOnlyMyLoad || activeFiltersCount > 0
+
+    if (!shouldPrioritizeOperationally) {
+      return columnsWithServices.sort(
+        (left, right) => left.priority - right.priority
+      )
+    }
+
+    return columnsWithServices.sort((left, right) => {
+      if (right.urgentCount !== left.urgentCount) {
+        return right.urgentCount - left.urgentCount
+      }
+
+      if (right.myLoadCount !== left.myLoadCount) {
+        return right.myLoadCount - left.myLoadCount
+      }
+
+      if (right.services.length !== left.services.length) {
+        return right.services.length - left.services.length
+      }
+
+      return left.priority - right.priority
+    })
+  }, [
+    $userStore.email,
+    activeFiltersCount,
+    isTechnicalOnlyView,
+    kanbanColumns,
+    showOnlyMyLoad,
+    visibleServices
+  ])
+
+  useEffect(() => {
+    if (viewMode !== 'kanban') {
+      return
+    }
+
+    const syncScrollMetrics = () => {
+      setKanbanScrollWidth(kanbanScrollRef.current?.scrollWidth || 0)
+    }
+
+    syncScrollMetrics()
+    window.addEventListener('resize', syncScrollMetrics)
+
+    return () => {
+      window.removeEventListener('resize', syncScrollMetrics)
+    }
+  }, [kanbanServices, viewMode])
+
+  const currentUserHasAssignedLoad = useMemo(() => {
+    const currentUserEmail = $userStore.email?.trim().toLowerCase()
+
+    if (!currentUserEmail) {
+      return false
+    }
+
+    return services.some((service) => {
+      const operations = getOperationsDetails(service)
+      const assignedMetrologistEmail =
+        typeof operations.assignedMetrologistEmail === 'string'
+          ? operations.assignedMetrologistEmail.trim().toLowerCase()
+          : ''
+
+      return assignedMetrologistEmail === currentUserEmail
+    })
+  }, [$userStore.email, services])
+
+  const myLoadCount = useMemo(() => {
+    const currentUserEmail = $userStore.email?.trim().toLowerCase()
+
+    if (!currentUserEmail) {
+      return 0
+    }
+
+    return services.filter((service) => {
+      const operations = getOperationsDetails(service)
+      const assignedMetrologistEmail =
+        typeof operations.assignedMetrologistEmail === 'string'
+          ? operations.assignedMetrologistEmail.trim().toLowerCase()
+          : ''
+
+      return assignedMetrologistEmail === currentUserEmail
+    }).length
+  }, [$userStore.email, services])
 
   const handleRequestApproval = async (service: CalibrationService) => {
     try {
@@ -955,6 +1388,63 @@ const CalibrationServicesPage = () => {
             </Box>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <Button
+                variant={showOnlyMyLoad ? 'contained' : 'outlined'}
+                color={showOnlyMyLoad ? 'success' : 'inherit'}
+                onClick={() => setShowOnlyMyLoad((currentValue) => !currentValue)}
+                disabled={!currentUserHasAssignedLoad}
+                sx={
+                  showOnlyMyLoad
+                    ? {
+                        borderRadius: '12px',
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        minHeight: 44
+                      }
+                    : secondaryButtonSx
+                }
+              >
+                {showOnlyMyLoad ? `Mi carga (${visibleServices.length})` : `Mi carga${myLoadCount > 0 ? ` (${myLoadCount})` : ''}`}
+              </Button>
+              <ToggleButtonGroup
+                size='small'
+                exclusive
+                value={viewMode}
+                onChange={(_event, nextViewMode: CalibrationServicesViewMode | null) => {
+                  if (nextViewMode) {
+                    setViewMode(nextViewMode)
+                  }
+                }}
+                sx={{
+                  backgroundColor: 'rgba(255,255,255,0.9)',
+                  borderRadius: '12px',
+                  p: 0.4,
+                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                  '& .MuiToggleButton-root': {
+                    border: 0,
+                    borderRadius: '10px',
+                    px: 1.5,
+                    py: 0.85,
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    color: ui.textSecondary,
+                    gap: 0.75
+                  },
+                  '& .Mui-selected': {
+                    backgroundColor: alpha(ui.green, 0.12),
+                    color: ui.greenDark
+                  }
+                }}
+              >
+                <ToggleButton value='list'>
+                  <ViewListOutlinedIcon fontSize='small' />
+                  Lista
+                </ToggleButton>
+                <ToggleButton value='kanban'>
+                  <ViewKanbanOutlinedIcon fontSize='small' />
+                  Kanban
+                </ToggleButton>
+              </ToggleButtonGroup>
+              <Button
                 variant='outlined'
                 color='inherit'
                 onClick={clearFilters}
@@ -1124,13 +1614,13 @@ const CalibrationServicesPage = () => {
         </CardContent>
       </Card>
 
-      <Stack spacing={2}>
-        {visibleServices.length === 0 ? (
-          <Alert severity='info'>
-            No encontramos servicios con los filtros actuales.
-          </Alert>
-        ) : (
-          visibleServices.map((service) => {
+      {visibleServices.length === 0 ? (
+        <Alert severity='info'>
+          No encontramos servicios con los filtros actuales.
+        </Alert>
+      ) : viewMode === 'list' ? (
+        <Stack spacing={2}>
+          {visibleServices.map((service) => {
             const serviceOperationalFocus = getServiceOperationalFocus(service)
             const operations = getOperationsDetails(service)
             const assignedMetrologistName =
@@ -1154,9 +1644,7 @@ const CalibrationServicesPage = () => {
             const shouldShowOperationalFocusBadge =
               serviceOperationalFocus &&
               serviceOperationalFocus.label !== service.slaIndicator?.label
-            const canEdit =
-              canCreateServices &&
-              service.status === 'draft'
+            const canEdit = canCreateServices && service.status === 'draft'
             const canRequestApproval =
               canCreateServices && service.status === 'draft'
             const canResolveApproval =
@@ -1189,7 +1677,11 @@ const CalibrationServicesPage = () => {
                         mb={1.5}
                         flexWrap='wrap'
                       >
-                        <Typography variant='h6' fontWeight={700} sx={{ color: ui.text, lineHeight: 1.2 }}>
+                        <Typography
+                          variant='h6'
+                          fontWeight={700}
+                          sx={{ color: ui.text, lineHeight: 1.2 }}
+                        >
                           {service.serviceCode}
                         </Typography>
                         <Chip
@@ -1254,11 +1746,7 @@ const CalibrationServicesPage = () => {
                           />
                         ) : null}
                         {service.odsCode ? (
-                          <Chip
-                            size='small'
-                            variant='outlined'
-                            label={service.odsCode}
-                          />
+                          <Chip size='small' variant='outlined' label={service.odsCode} />
                         ) : null}
                         {!isTechnicalOnlyView && hasCustomerChangeRequest(service) ? (
                           <Chip
@@ -1272,7 +1760,9 @@ const CalibrationServicesPage = () => {
                           <Chip
                             size='small'
                             color={isAssignedToCurrentMetrologist ? 'success' : 'default'}
-                            variant={isAssignedToCurrentMetrologist ? 'filled' : 'outlined'}
+                            variant={
+                              isAssignedToCurrentMetrologist ? 'filled' : 'outlined'
+                            }
                             label={
                               isAssignedToCurrentMetrologist
                                 ? 'Asignado a ti'
@@ -1282,7 +1772,11 @@ const CalibrationServicesPage = () => {
                         ) : null}
                       </Stack>
 
-                      <Typography variant='body1' fontWeight={700} sx={{ color: ui.textSecondary, lineHeight: 1.5 }}>
+                      <Typography
+                        variant='body1'
+                        fontWeight={700}
+                        sx={{ color: ui.textSecondary, lineHeight: 1.5 }}
+                      >
                         {service.customer?.nombre ||
                           service.executionCustomerName ||
                           'Cliente pendiente'}
@@ -1311,7 +1805,9 @@ const CalibrationServicesPage = () => {
                         >
                           Responsable metrológico:{' '}
                           <strong>{assignedMetrologistName}</strong>
-                          {assignedMetrologistEmail ? ` · ${assignedMetrologistEmail}` : ''}
+                          {assignedMetrologistEmail
+                            ? ` · ${assignedMetrologistEmail}`
+                            : ''}
                         </Typography>
                       ) : null}
 
@@ -1319,36 +1815,64 @@ const CalibrationServicesPage = () => {
 
                       <Grid container spacing={2}>
                         <Grid item xs={12} sm={6} md={3}>
-                          <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500 }}>
+                          <Typography
+                            variant='caption'
+                            sx={{ color: ui.muted, fontWeight: 500 }}
+                          >
                             Ítems del servicio
                           </Typography>
-                          <Typography variant='body1' fontWeight={700} sx={{ color: ui.text }}>
+                          <Typography
+                            variant='body1'
+                            fontWeight={700}
+                            sx={{ color: ui.text }}
+                          >
                             {service.items?.length ?? 0}
                           </Typography>
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>
-                          <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500 }}>
+                          <Typography
+                            variant='caption'
+                            sx={{ color: ui.muted, fontWeight: 500 }}
+                          >
                             {isTechnicalOnlyView ? 'ODS' : 'Total estimado'}
                           </Typography>
-                          <Typography variant='body1' fontWeight={700} sx={{ color: ui.success }}>
+                          <Typography
+                            variant='body1'
+                            fontWeight={700}
+                            sx={{ color: ui.success }}
+                          >
                             {isTechnicalOnlyView
                               ? service.odsCode || 'Pendiente'
                               : currencyFormatter.format(getItemsTotal(service))}
                           </Typography>
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>
-                          <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500 }}>
+                          <Typography
+                            variant='caption'
+                            sx={{ color: ui.muted, fontWeight: 500 }}
+                          >
                             Contacto
                           </Typography>
-                          <Typography variant='body1' fontWeight={700} sx={{ color: ui.text }}>
+                          <Typography
+                            variant='body1'
+                            fontWeight={700}
+                            sx={{ color: ui.text }}
+                          >
                             {service.contactName || 'Sin contacto'}
                           </Typography>
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>
-                          <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500 }}>
+                          <Typography
+                            variant='caption'
+                            sx={{ color: ui.muted, fontWeight: 500 }}
+                          >
                             Actualizado
                           </Typography>
-                          <Typography variant='body1' fontWeight={700} sx={{ color: ui.text }}>
+                          <Typography
+                            variant='body1'
+                            fontWeight={700}
+                            sx={{ color: ui.text }}
+                          >
                             {new Date(service.updatedAt).toLocaleDateString('es-CO')}
                           </Typography>
                         </Grid>
@@ -1460,9 +1984,339 @@ const CalibrationServicesPage = () => {
                 </CardContent>
               </Card>
             )
-          })
-        )}
-      </Stack>
+          })}
+        </Stack>
+      ) : (
+        <Stack spacing={1.25}>
+          <Box
+            ref={kanbanTopScrollRef}
+            onScroll={(event) => {
+              if (kanbanScrollRef.current) {
+                kanbanScrollRef.current.scrollLeft = event.currentTarget.scrollLeft
+              }
+            }}
+            sx={{
+              overflowX: 'auto',
+              overflowY: 'hidden',
+              height: 12,
+              borderRadius: '999px',
+              bgcolor: alpha(ui.textSecondary, 0.08),
+              '&::-webkit-scrollbar': {
+                height: 10
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: alpha(ui.textSecondary, 0.28),
+                borderRadius: '999px'
+              }
+            }}
+          >
+            <Box sx={{ width: Math.max(kanbanScrollWidth, 1), height: 1 }} />
+          </Box>
+          <Box
+            ref={kanbanScrollRef}
+            onScroll={(event) => {
+              if (kanbanTopScrollRef.current) {
+                kanbanTopScrollRef.current.scrollLeft = event.currentTarget.scrollLeft
+              }
+            }}
+            sx={{ overflowX: 'auto', pb: 1 }}
+          >
+          <Stack
+            direction='row'
+            spacing={2}
+            alignItems='flex-start'
+            sx={{ minWidth: 'max-content' }}
+          >
+            {kanbanServices.map((column) => {
+              const isEmptyColumn = column.services.length === 0
+
+              return (
+              <Box
+                key={column.key}
+                sx={{
+                  width: isEmptyColumn ? 172 : 312,
+                  minWidth: isEmptyColumn ? 172 : 312,
+                  borderRadius: '20px',
+                  border: `1px solid ${alpha(column.accent, 0.16)}`,
+                  background: `linear-gradient(180deg, ${alpha(
+                    column.accent,
+                    0.08
+                  )} 0%, rgba(255,255,255,0.88) 22%)`,
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 6px 18px rgba(15, 23, 42, 0.05)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  maxHeight: 'calc(100vh - 280px)'
+                }}
+              >
+                <Box
+                  sx={{
+                    p: 2,
+                    borderBottom: `1px solid ${alpha(column.accent, 0.14)}`
+                  }}
+                >
+                  <Stack
+                    direction='row'
+                    justifyContent='space-between'
+                    alignItems='flex-start'
+                    spacing={1}
+                  >
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography
+                        variant='subtitle1'
+                        fontWeight={800}
+                        sx={{ color: ui.text, lineHeight: 1.2 }}
+                      >
+                        {isEmptyColumn
+                          ? getCompactColumnTitle(column.title)
+                          : column.title}
+                      </Typography>
+                      {!isEmptyColumn ? (
+                        <Typography
+                          variant='body2'
+                          sx={{ mt: 0.5, color: ui.textSecondary, lineHeight: 1.45 }}
+                        >
+                          {column.description}
+                        </Typography>
+                      ) : null}
+                    </Box>
+                    <Chip
+                      size='small'
+                      label={column.services.length}
+                      sx={{
+                        bgcolor: alpha(column.accent, 0.14),
+                        color: column.accent,
+                        fontWeight: 800
+                      }}
+                    />
+                  </Stack>
+                </Box>
+
+                <Stack
+                  spacing={1}
+                  sx={{
+                    p: 1.5,
+                    minHeight: 240,
+                    overflowY: 'auto',
+                    scrollbarWidth: 'thin'
+                  }}
+                >
+                  {column.services.length === 0 ? (
+                    <Box
+                      sx={{
+                        p: 1.5,
+                        borderRadius: '16px',
+                        border: `1px dashed ${alpha(column.accent, 0.24)}`,
+                        bgcolor: alpha(column.accent, 0.04),
+                        minHeight: 72,
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <Typography
+                        variant='caption'
+                        sx={{ color: ui.textSecondary, lineHeight: 1.45 }}
+                      >
+                        Sin servicios.
+                      </Typography>
+                    </Box>
+                  ) : (
+                    column.services.map((service) => {
+                      const operations = getOperationsDetails(service)
+                      const slaTone = getSlaVisualTone(
+                        service.slaIndicator?.color || 'gray'
+                      )
+                      const assignedMetrologistName =
+                        typeof operations.assignedMetrologistName === 'string'
+                          ? operations.assignedMetrologistName
+                          : typeof operations.operationalResponsibleName === 'string'
+                            ? operations.operationalResponsibleName
+                            : ''
+                      const customerLabel =
+                        service.customer?.nombre ||
+                        service.executionCustomerName ||
+                        'Cliente pendiente'
+
+                      return (
+                        <Card
+                          key={service.id}
+                          elevation={0}
+                          onClick={() => openServiceDetail(service.id)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault()
+                              openServiceDetail(service.id)
+                            }
+                          }}
+                          role='button'
+                          tabIndex={0}
+                          sx={{
+                            borderRadius: '14px',
+                            border: `1px solid ${slaTone.border}`,
+                            background: slaTone.background,
+                            boxShadow: slaTone.glow,
+                            position: 'relative',
+                            overflow: 'hidden',
+                            cursor: 'pointer',
+                            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                            '&:hover': {
+                              transform: 'translateY(-1px)',
+                              boxShadow: `0 10px 22px ${alpha(slaTone.accent, 0.16)}`
+                            },
+                            '&::before': {
+                              content: '""',
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: 4,
+                              backgroundColor: slaTone.accent
+                            }
+                          }}
+                        >
+                          <CardContent sx={{ p: 1.5 }}>
+                            <Stack spacing={1.1}>
+                              <Stack
+                                direction='row'
+                                justifyContent='space-between'
+                                alignItems='flex-start'
+                                spacing={1}
+                              >
+                                <Box sx={{ minWidth: 0 }}>
+                                  <Typography
+                                    variant='subtitle2'
+                                    fontWeight={800}
+                                    sx={{ color: ui.text, lineHeight: 1.2 }}
+                                  >
+                                    {service.serviceCode}
+                                  </Typography>
+                                  <Typography
+                                    variant='caption'
+                                    title={customerLabel}
+                                    sx={{
+                                      color: ui.textSecondary,
+                                      mt: 0.25,
+                                      fontWeight: 700,
+                                      lineHeight: 1.35,
+                                      display: '-webkit-box',
+                                      WebkitLineClamp: 2,
+                                      WebkitBoxOrient: 'vertical',
+                                      overflow: 'hidden',
+                                      minHeight: '2.7em'
+                                    }}
+                                  >
+                                    {customerLabel}
+                                  </Typography>
+                                </Box>
+                                <Chip
+                                  size='small'
+                                  label={getCompactSlaLabel(service.slaIndicator?.color)}
+                                  sx={{
+                                    bgcolor: alpha(slaTone.accent, 0.12),
+                                    color: slaTone.accent,
+                                    fontWeight: 800,
+                                    height: 24
+                                  }}
+                                />
+                              </Stack>
+
+                              <Stack
+                                direction='row'
+                                spacing={0.75}
+                                flexWrap='wrap'
+                                useFlexGap
+                              >
+                                <Chip
+                                  size='small'
+                                  color={
+                                    CALIBRATION_SERVICE_STATUS_COLORS[service.status]
+                                  }
+                                  label={
+                                    CALIBRATION_SERVICE_STATUS_LABELS[service.status]
+                                  }
+                                />
+                                {!isTechnicalOnlyView ? (
+                                  <Chip
+                                    size='small'
+                                    color={
+                                      CALIBRATION_SERVICE_APPROVAL_COLORS[
+                                        service.approvalStatus
+                                      ]
+                                    }
+                                    label={
+                                      CALIBRATION_SERVICE_APPROVAL_LABELS[
+                                        service.approvalStatus
+                                      ]
+                                    }
+                                  />
+                                ) : null}
+                              </Stack>
+
+                              <Typography
+                                variant='caption'
+                                sx={{ color: ui.muted, lineHeight: 1.35 }}
+                              >
+                                {service.scopeType === 'site'
+                                  ? `Sede: ${getServiceSiteLabel(service)}`
+                                  : getServiceSiteLabel(service)}
+                              </Typography>
+
+                              {assignedMetrologistName ? (
+                                <Typography
+                                  variant='caption'
+                                  sx={{
+                                    color: ui.textSecondary,
+                                    lineHeight: 1.3,
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 1,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden'
+                                  }}
+                                >
+                                  Metrólogo: {assignedMetrologistName}
+                                </Typography>
+                              ) : null}
+
+                              <Stack
+                                direction='row'
+                                justifyContent='space-between'
+                                alignItems='center'
+                                sx={{
+                                  pt: 0.25,
+                                  color: ui.textSecondary
+                                }}
+                              >
+                                <Typography variant='caption' fontWeight={700}>
+                                  {service.items?.length ?? 0} item
+                                  {(service.items?.length ?? 0) === 1 ? '' : 's'}
+                                </Typography>
+                                <Typography
+                                  variant='caption'
+                                  fontWeight={800}
+                                  sx={{ color: ui.greenDark }}
+                                >
+                                  {isTechnicalOnlyView
+                                    ? service.odsCode || 'ODS pendiente'
+                                    : currencyFormatter.format(
+                                        getItemsTotal(service)
+                                      )}
+                                </Typography>
+                              </Stack>
+
+                            </Stack>
+                          </CardContent>
+                        </Card>
+                      )
+                    })
+                  )}
+                </Stack>
+              </Box>
+              )
+            })}
+          </Stack>
+          </Box>
+        </Stack>
+      )}
       {canManageSequenceConfig ? (
         <CalibrationServiceSequenceConfigDialog
           open={isSequenceDialogOpen}
