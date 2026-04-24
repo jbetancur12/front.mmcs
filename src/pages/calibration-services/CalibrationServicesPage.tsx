@@ -144,25 +144,29 @@ const ui = {
   greenDark: '#059669',
   greenLight: '#f0fdf4',
   success: '#059669',
-  warning: '#d97706',
-  error: '#dc2626',
+  warning: '#f59e0b',
+  error: '#ef4444',
   info: '#3b82f6',
-  text: '#1f2937',
-  textSecondary: '#374151',
-  muted: '#6b7280',
+  text: '#111827',
+  textSecondary: '#4b5563',
+  muted: '#9ca3af',
   border: '#e5e7eb',
-  surface: '#f9fafb',
-  white: '#ffffff'
+  surface: '#f3f4f6', // Slightly darker to make glass cards pop
+  white: '#ffffff',
+  glass: 'rgba(255, 255, 255, 0.75)'
 }
 
 const softCardSx = {
-  border: `1px solid ${ui.border}`,
-  borderRadius: '12px',
-  boxShadow: 'none',
-  transition: 'all 0.3s ease-in-out',
+  background: ui.glass,
+  backdropFilter: 'blur(12px)',
+  border: `1px solid rgba(255, 255, 255, 0.5)`,
+  borderRadius: '16px',
+  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) both',
   '&:hover': {
-    borderColor: ui.green,
-    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.1)',
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+    boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.1), 0 4px 6px -2px rgba(16, 185, 129, 0.05)',
     transform: 'translateY(-2px)'
   }
 }
@@ -172,11 +176,30 @@ const primaryButtonSx = {
   borderRadius: '12px',
   textTransform: 'none',
   fontWeight: 700,
-  boxShadow: 'none',
+  color: ui.white,
+  boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -1px rgba(16, 185, 129, 0.1)',
   minHeight: 44,
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  position: 'relative',
+  overflow: 'hidden',
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(rgba(255,255,255,0.2), transparent)',
+    opacity: 0,
+    transition: 'opacity 0.3s ease',
+  },
   '&:hover': {
-    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-    boxShadow: '0 8px 18px rgba(16, 185, 129, 0.2)'
+    background: `linear-gradient(135deg, ${ui.green} 0%, #047857 100%)`,
+    boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3), 0 4px 6px -2px rgba(16, 185, 129, 0.1)',
+    transform: 'translateY(-1px)'
+  },
+  '&:hover::after': {
+    opacity: 1
   }
 }
 
@@ -187,11 +210,16 @@ const secondaryButtonSx = {
   minHeight: 44,
   borderColor: ui.border,
   color: ui.textSecondary,
-  backgroundColor: ui.white,
+  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+  backdropFilter: 'blur(8px)',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
   '&:hover': {
     borderColor: ui.green,
     color: ui.greenDark,
-    backgroundColor: ui.greenLight
+    backgroundColor: ui.greenLight,
+    boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.1)',
+    transform: 'translateY(-1px)'
   }
 }
 
@@ -635,7 +663,11 @@ const CalibrationServicesPage = () => {
         backgroundColor: ui.surface,
         px: { xs: 2, md: 3 },
         py: { xs: 2, md: 3 },
-        color: ui.text
+        color: ui.text,
+        '@keyframes fadeUp': {
+          from: { opacity: 0, transform: 'translateY(15px)' },
+          to: { opacity: 1, transform: 'translateY(0)' }
+        }
       }}
     >
       <Toaster position='top-center' />
