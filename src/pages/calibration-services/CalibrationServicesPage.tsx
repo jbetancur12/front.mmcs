@@ -306,16 +306,16 @@ const getCompactSlaLabel = (color?: CalibrationServiceSlaIndicatorColor) => {
 
 const getCompactColumnTitle = (title: string) => {
   switch (title) {
-    case 'Esperando cliente':
+    case 'Esperando respuesta cliente':
       return 'Cliente'
     case 'Listo para ODS':
       return 'Para ODS'
-    case 'Por programar':
+    case 'Pendiente programacion':
       return 'Programar'
     case 'En servicio':
       return 'Servicio'
-    case 'Pendiente cierre':
-      return 'Cierre'
+    case 'Pendiente administrativo':
+      return 'Admin'
     default:
       return title
   }
@@ -481,13 +481,13 @@ const getKanbanColumns = (
   return [
     {
       key: 'adjustments',
-      title: 'Ajustes',
-      description: 'Borradores, rechazadas o con cambios',
+      title: 'Por ajustar',
+      description: 'Borradores, rechazadas o con cambios pendientes',
       accent: '#64748b'
     },
     {
       key: 'waiting_customer',
-      title: 'Esperando cliente',
+      title: 'Esperando respuesta cliente',
       description: 'Cotizaciones enviadas pendientes de respuesta',
       accent: '#f59e0b'
     },
@@ -499,8 +499,8 @@ const getKanbanColumns = (
     },
     {
       key: 'to_schedule',
-      title: 'Por programar',
-      description: 'ODS emitidas o pendientes de agenda',
+      title: 'Pendiente programacion',
+      description: 'ODS emitidas o pendientes de agenda operativa',
       accent: '#3b82f6'
     },
     {
@@ -511,7 +511,7 @@ const getKanbanColumns = (
     },
     {
       key: 'pending_close',
-      title: 'Pendiente cierre',
+      title: 'Pendiente administrativo',
       description: 'Finalizados tecnicamente o pendientes administrativos',
       accent: '#3b82f6'
     },
