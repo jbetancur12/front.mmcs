@@ -76,8 +76,6 @@ import CalibrationServiceSlaConfigDialog from './CalibrationServiceSlaConfigDial
 const FILTER_ALL = 'all'
 const FILTER_UNASSIGNED = 'unassigned'
 const CALIBRATION_SERVICES_VIEW_STORAGE_KEY = 'calibrationServicesViewMode'
-const CALIBRATION_SERVICES_KANBAN_COLLAPSED_STORAGE_KEY =
-  'calibrationServicesKanbanCollapsedColumns'
 
 type CalibrationServicesViewMode = 'list' | 'kanban'
 
@@ -249,35 +247,6 @@ const getStoredViewMode = (): CalibrationServicesViewMode => {
   )
 
   return storedValue === 'kanban' ? 'kanban' : 'list'
-}
-
-const getStoredCollapsedKanbanColumns = (): {
-  hasStoredPreference: boolean
-  value: string[]
-} => {
-  if (typeof window === 'undefined') {
-    return { hasStoredPreference: false, value: [] }
-  }
-
-  try {
-    const rawValue = window.localStorage.getItem(
-      CALIBRATION_SERVICES_KANBAN_COLLAPSED_STORAGE_KEY
-    )
-
-    if (!rawValue) {
-      return { hasStoredPreference: false, value: [] }
-    }
-
-    const parsedValue = JSON.parse(rawValue)
-    return {
-      hasStoredPreference: true,
-      value: Array.isArray(parsedValue)
-        ? parsedValue.filter((value): value is string => typeof value === 'string')
-        : []
-    }
-  } catch (_error) {
-    return { hasStoredPreference: false, value: [] }
-  }
 }
 
 const getSlaVisualTone = (color?: CalibrationServiceSlaIndicatorColor) => {
@@ -624,17 +593,6 @@ const CalibrationServicesPage = () => {
     getStoredViewMode
   )
   const [showOnlyMyLoad, setShowOnlyMyLoad] = useState(false)
-  const [
-    { collapsedKanbanColumns, hasStoredCollapsedKanbanPreference },
-    setKanbanColumnState
-  ] = useState(() => {
-    const storedPreference = getStoredCollapsedKanbanColumns()
-
-    return {
-      collapsedKanbanColumns: storedPreference.value,
-      hasStoredCollapsedKanbanPreference: storedPreference.hasStoredPreference
-    }
-  })
 
   const deferredSearch = useDeferredValue(search)
   const queryFilters: CalibrationServiceFilters = {
@@ -686,17 +644,6 @@ const CalibrationServicesPage = () => {
       viewMode
     )
   }, [viewMode])
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return
-    }
-
-    window.localStorage.setItem(
-      CALIBRATION_SERVICES_KANBAN_COLLAPSED_STORAGE_KEY,
-      JSON.stringify(collapsedKanbanColumns)
-    )
-  }, [collapsedKanbanColumns])
 
   const services = data?.services ?? []
   const customerOptions = services
@@ -885,22 +832,6 @@ const CalibrationServicesPage = () => {
       )
     }))
   }, [isTechnicalOnlyView, kanbanColumns, visibleServices])
-
-  useEffect(() => {
-    if (hasStoredCollapsedKanbanPreference) {
-      return
-    }
-
-    const emptyColumnKeys = kanbanServices
-      .filter((column) => column.services.length === 0)
-      .map((column) => column.key)
-
-    setKanbanColumnState((currentValue) => ({
-      ...currentValue,
-      collapsedKanbanColumns: emptyColumnKeys,
-      hasStoredCollapsedKanbanPreference: true
-    }))
-  }, [hasStoredCollapsedKanbanPreference, kanbanServices])
 
   const currentUserHasAssignedLoad = useMemo(() => {
     const currentUserEmail = $userStore.email?.trim().toLowerCase()
@@ -1925,28 +1856,25 @@ const CalibrationServicesPage = () => {
             alignItems='flex-start'
             sx={{ minWidth: 'max-content' }}
           >
-            {kanbanServices.map((column) => {
-              const isEmptyColumn = column.services.length === 0
-              const isCollapsed =
-                isEmptyColumn && collapsedKanbanColumns.includes(column.key)
-
-              return (
-                <Box
-                  key={column.key}
-                  sx={{
-                    width: isCollapsed ? 96 : 340,
-                    minWidth: isCollapsed ? 96 : 340,
-                    borderRadius: '20px',
-                    border: `1px solid ${alpha(column.accent, 0.16)}`,
-                    background: `linear-gradient(180deg, ${alpha(
-                      column.accent,
-                      0.08
-                    )} 0%, rgba(255,255,255,0.88) 22%)`,
-                    backdropFilter: 'blur(10px)',
-                    boxShadow: '0 6px 18px rgba(15, 23, 42, 0.05)',
-                    transition: 'width 0.25s ease, min-width 0.25s ease'
-                  }}
-                >
+            {kanbanServices.map((column) => (
+              <Box
+                key={column.key}
+                sx={{
+                  width: 312,
+                  minWidth: 312,
+                  borderRadius: '20px',
+                  border: `1px solid ${alpha(column.accent, 0.16)}`,
+                  background: `linear-gradient(180deg, ${alpha(
+                    column.accent,
+                    0.08
+                  )} 0%, rgba(255,255,255,0.88) 22%)`,
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 6px 18px rgba(15, 23, 42, 0.05)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  maxHeight: 'calc(100vh - 280px)'
+                }}
+              >
                 <Box
                   sx={{
                     p: 2,
@@ -1974,71 +1902,27 @@ const CalibrationServicesPage = () => {
                         {column.description}
                       </Typography>
                     </Box>
-                    <Stack spacing={1} alignItems='flex-end'>
-                      <Chip
-                        size='small'
-                        label={column.services.length}
-                        sx={{
-                          bgcolor: alpha(column.accent, 0.14),
-                          color: column.accent,
-                          fontWeight: 800
-                        }}
-                      />
-                      {isEmptyColumn ? (
-                        <Button
-                          size='small'
-                          variant='text'
-                          onClick={() =>
-                            setKanbanColumnState((currentValue) => ({
-                              ...currentValue,
-                              hasStoredCollapsedKanbanPreference: true,
-                              collapsedKanbanColumns: isCollapsed
-                                ? currentValue.collapsedKanbanColumns.filter(
-                                    (value) => value !== column.key
-                                  )
-                                : [
-                                    ...currentValue.collapsedKanbanColumns,
-                                    column.key
-                                  ]
-                            }))
-                          }
-                          sx={{
-                            minWidth: 0,
-                            px: 1,
-                            color: column.accent,
-                            textTransform: 'none',
-                            fontWeight: 700
-                          }}
-                        >
-                          {isCollapsed ? 'Abrir' : 'Colapsar'}
-                        </Button>
-                      ) : null}
-                    </Stack>
+                    <Chip
+                      size='small'
+                      label={column.services.length}
+                      sx={{
+                        bgcolor: alpha(column.accent, 0.14),
+                        color: column.accent,
+                        fontWeight: 800
+                      }}
+                    />
                   </Stack>
                 </Box>
 
-                {isCollapsed ? (
-                  <Stack
-                    alignItems='center'
-                    justifyContent='center'
-                    spacing={1}
-                    sx={{ p: 1.5, minHeight: 240 }}
-                  >
-                    <Typography
-                      variant='caption'
-                      sx={{
-                        color: ui.textSecondary,
-                        writingMode: 'vertical-rl',
-                        transform: 'rotate(180deg)',
-                        fontWeight: 700,
-                        letterSpacing: 0.6
-                      }}
-                    >
-                      Vacía
-                    </Typography>
-                  </Stack>
-                ) : (
-                <Stack spacing={1.5} sx={{ p: 1.5, minHeight: 240 }}>
+                <Stack
+                  spacing={1}
+                  sx={{
+                    p: 1.5,
+                    minHeight: 240,
+                    overflowY: 'auto',
+                    scrollbarWidth: 'thin'
+                  }}
+                >
                   {column.services.length === 0 ? (
                     <Box
                       sx={{
@@ -2052,44 +1936,53 @@ const CalibrationServicesPage = () => {
                         variant='body2'
                         sx={{ color: ui.textSecondary, lineHeight: 1.5 }}
                       >
-                        No hay servicios en esta etapa con los filtros actuales.
+                        Sin servicios en esta etapa.
                       </Typography>
                     </Box>
                   ) : (
                     column.services.map((service) => {
                       const operations = getOperationsDetails(service)
-                      const slaTone = getSlaVisualTone(service.slaIndicator?.color || 'gray')
+                      const slaTone = getSlaVisualTone(
+                        service.slaIndicator?.color || 'gray'
+                      )
                       const assignedMetrologistName =
                         typeof operations.assignedMetrologistName === 'string'
                           ? operations.assignedMetrologistName
                           : typeof operations.operationalResponsibleName === 'string'
                             ? operations.operationalResponsibleName
                             : ''
-                      const canEdit =
-                        canCreateServices && service.status === 'draft'
-                      const canRequestApproval =
-                        canCreateServices && service.status === 'draft'
-                      const canResolveApproval =
-                        canTakeApprovalDecision &&
-                        service.status === 'pending_approval'
-                      const canOpenOds =
-                        canIssueOds &&
-                        service.status === 'approved' &&
-                        service.approvalStatus === 'approved' &&
-                        !service.odsCode
-                      const canOpenScheduling =
-                        canScheduleService &&
-                        ['ods_issued', 'pending_programming'].includes(service.status)
-                      const canManageExecution =
-                        canRunExecution &&
-                        ['scheduled', 'in_execution'].includes(service.status)
+                      const canOpenPrimaryAction =
+                        (canCreateServices && service.status === 'draft') ||
+                        (canTakeApprovalDecision &&
+                          service.status === 'pending_approval') ||
+                        (canIssueOds &&
+                          service.status === 'approved' &&
+                          service.approvalStatus === 'approved' &&
+                          !service.odsCode) ||
+                        (canScheduleService &&
+                          ['ods_issued', 'pending_programming'].includes(
+                            service.status
+                          )) ||
+                        (canRunExecution &&
+                          ['scheduled', 'in_execution'].includes(service.status))
+
+                      const priorityLabel =
+                        service.slaIndicator?.color === 'red'
+                          ? 'Critica'
+                          : service.slaIndicator?.color === 'yellow'
+                            ? 'Alta'
+                            : service.slaIndicator?.color === 'green'
+                              ? 'Normal'
+                              : service.slaIndicator?.color === 'blue'
+                                ? 'Completada'
+                                : 'Por iniciar'
 
                       return (
                         <Card
                           key={service.id}
                           elevation={0}
                           sx={{
-                            borderRadius: '16px',
+                            borderRadius: '14px',
                             border: `1px solid ${slaTone.border}`,
                             background: slaTone.background,
                             boxShadow: slaTone.glow,
@@ -2106,26 +1999,31 @@ const CalibrationServicesPage = () => {
                             }
                           }}
                         >
-                          <CardContent sx={{ p: 2 }}>
-                            <Stack spacing={1.25}>
+                          <CardContent sx={{ p: 1.5 }}>
+                            <Stack spacing={1}>
                               <Stack
                                 direction='row'
                                 justifyContent='space-between'
-                                spacing={1}
                                 alignItems='flex-start'
+                                spacing={1}
                               >
-                                <Box>
+                                <Box sx={{ minWidth: 0 }}>
                                   <Typography
                                     variant='subtitle2'
                                     fontWeight={800}
-                                    sx={{ color: ui.text, lineHeight: 1.25 }}
+                                    sx={{ color: ui.text, lineHeight: 1.2 }}
                                   >
                                     {service.serviceCode}
                                   </Typography>
                                   <Typography
-                                    variant='body2'
-                                    fontWeight={700}
-                                    sx={{ color: ui.textSecondary, mt: 0.25 }}
+                                    variant='caption'
+                                    sx={{
+                                      color: ui.textSecondary,
+                                      display: 'block',
+                                      mt: 0.25,
+                                      fontWeight: 700,
+                                      lineHeight: 1.35
+                                    }}
                                   >
                                     {service.customer?.nombre ||
                                       service.executionCustomerName ||
@@ -2134,18 +2032,22 @@ const CalibrationServicesPage = () => {
                                 </Box>
                                 <Chip
                                   size='small'
-                                  color={
-                                    CALIBRATION_SERVICE_SLA_COLORS[
-                                      service.slaIndicator?.color || 'gray'
-                                    ]
-                                  }
-                                  label={
-                                    service.slaIndicator?.label || 'SLA no iniciado'
-                                  }
+                                  label={priorityLabel}
+                                  sx={{
+                                    bgcolor: alpha(slaTone.accent, 0.12),
+                                    color: slaTone.accent,
+                                    fontWeight: 800,
+                                    height: 24
+                                  }}
                                 />
                               </Stack>
 
-                              <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
+                              <Stack
+                                direction='row'
+                                spacing={0.75}
+                                flexWrap='wrap'
+                                useFlexGap
+                              >
                                 <Chip
                                   size='small'
                                   color={
@@ -2170,200 +2072,75 @@ const CalibrationServicesPage = () => {
                                     }
                                   />
                                 ) : null}
-                                {service.odsCode ? (
-                                  <Chip
-                                    size='small'
-                                    variant='outlined'
-                                    label={service.odsCode}
-                                  />
-                                ) : null}
                               </Stack>
 
                               <Typography
-                                variant='body2'
-                                sx={{ color: ui.muted, lineHeight: 1.45 }}
+                                variant='caption'
+                                sx={{ color: ui.muted, lineHeight: 1.35 }}
                               >
-                                {hasCustomerChangeRequest(service)
-                                  ? 'Cliente pidió cambios y el servicio requiere una nueva revisión.'
-                                  : service.scopeType === 'site'
+                                {service.scopeType === 'site'
                                   ? `Sede: ${getServiceSiteLabel(service)}`
-                                  : `Alcance general · ${getServiceSiteLabel(service)}`}
+                                  : getServiceSiteLabel(service)}
                               </Typography>
 
-                              <Grid container spacing={1.25}>
-                                <Grid item xs={6}>
-                                  <Typography
-                                    variant='caption'
-                                    sx={{ color: ui.muted, fontWeight: 600 }}
-                                  >
-                                    Ítems
-                                  </Typography>
-                                  <Typography
-                                    variant='body2'
-                                    fontWeight={800}
-                                    sx={{ color: ui.text }}
-                                  >
-                                    {service.items?.length ?? 0}
-                                  </Typography>
-                                </Grid>
-                                <Grid item xs={6}>
-                                  <Typography
-                                    variant='caption'
-                                    sx={{ color: ui.muted, fontWeight: 600 }}
-                                  >
-                                    {isTechnicalOnlyView ? 'ODS' : 'Total'}
-                                  </Typography>
-                                  <Typography
-                                    variant='body2'
-                                    fontWeight={800}
-                                    sx={{ color: ui.greenDark }}
-                                  >
-                                    {isTechnicalOnlyView
-                                      ? service.odsCode || 'Pendiente'
-                                      : currencyFormatter.format(
-                                          getItemsTotal(service)
-                                        )}
-                                  </Typography>
-                                </Grid>
-                                <Grid item xs={12}>
-                                  <Typography
-                                    variant='caption'
-                                    sx={{ color: ui.muted, fontWeight: 600 }}
-                                  >
-                                    Prioridad
-                                  </Typography>
-                                  <Typography
-                                    variant='body2'
-                                    fontWeight={800}
-                                    sx={{ color: slaTone.accent }}
-                                  >
-                                    {service.slaIndicator?.color === 'red'
-                                      ? 'Crítica'
-                                      : service.slaIndicator?.color === 'yellow'
-                                        ? 'Alta'
-                                        : service.slaIndicator?.color === 'green'
-                                          ? 'Normal'
-                                          : service.slaIndicator?.color === 'blue'
-                                            ? 'Completada'
-                                            : 'Por iniciar'}
-                                  </Typography>
-                                </Grid>
-                              </Grid>
+                              <Stack
+                                direction='row'
+                                justifyContent='space-between'
+                                alignItems='center'
+                                sx={{
+                                  pt: 0.25,
+                                  color: ui.textSecondary
+                                }}
+                              >
+                                <Typography variant='caption' fontWeight={700}>
+                                  {service.items?.length ?? 0} item
+                                  {(service.items?.length ?? 0) === 1 ? '' : 's'}
+                                </Typography>
+                                <Typography
+                                  variant='caption'
+                                  fontWeight={800}
+                                  sx={{ color: ui.greenDark }}
+                                >
+                                  {isTechnicalOnlyView
+                                    ? service.odsCode || 'ODS pendiente'
+                                    : currencyFormatter.format(
+                                        getItemsTotal(service)
+                                      )}
+                                </Typography>
+                              </Stack>
 
                               {assignedMetrologistName ? (
                                 <Typography
                                   variant='caption'
-                                  sx={{ color: ui.textSecondary, lineHeight: 1.4 }}
+                                  sx={{ color: ui.textSecondary, lineHeight: 1.3 }}
                                 >
-                                  Metrólogo: <strong>{assignedMetrologistName}</strong>
+                                  Metrólogo: {assignedMetrologistName}
                                 </Typography>
                               ) : null}
 
-                              <Stack spacing={1} sx={{ pt: 0.5 }}>
-                                <Button
-                                  fullWidth
-                                  variant='outlined'
-                                  startIcon={<VisibilityOutlinedIcon />}
-                                  onClick={() => openServiceDetail(service.id)}
-                                  sx={secondaryButtonSx}
-                                >
-                                  Ver detalle
-                                </Button>
-                                {canEdit ? (
-                                  <Button
-                                    fullWidth
-                                    variant='outlined'
-                                    startIcon={<EditOutlinedIcon />}
-                                    onClick={() =>
-                                      navigate(
-                                        `/calibration-services/${service.id}/edit`
-                                      )
-                                    }
-                                    sx={secondaryButtonSx}
-                                  >
-                                    Editar
-                                  </Button>
-                                ) : null}
-                                {canRequestApproval ? (
-                                  <Button
-                                    fullWidth
-                                    variant='contained'
-                                    startIcon={<SendOutlinedIcon />}
-                                    onClick={() => void handleRequestApproval(service)}
-                                    disabled={requestApproval.isLoading}
-                                    sx={primaryButtonSx}
-                                  >
-                                    Enviar cotización
-                                  </Button>
-                                ) : null}
-                                {canResolveApproval ? (
-                                  <Button
-                                    fullWidth
-                                    variant='contained'
-                                    color='warning'
-                                    startIcon={<WarningAmberOutlinedIcon />}
-                                    onClick={() => openServiceDetail(service.id)}
-                                    sx={{
-                                      borderRadius: '12px',
-                                      textTransform: 'none',
-                                      fontWeight: 700,
-                                      minHeight: 44
-                                    }}
-                                  >
-                                    Registrar respuesta
-                                  </Button>
-                                ) : null}
-                                {canOpenOds ? (
-                                  <Button
-                                    fullWidth
-                                    variant='contained'
-                                    color='info'
-                                    startIcon={<DescriptionOutlinedIcon />}
-                                    onClick={() => openOdsWorkflow(service.id)}
-                                    sx={{
-                                      borderRadius: '12px',
-                                      textTransform: 'none',
-                                      fontWeight: 700,
-                                      minHeight: 44
-                                    }}
-                                  >
-                                    Emitir ODS
-                                  </Button>
-                                ) : null}
-                                {canOpenScheduling ? (
-                                  <Button
-                                    fullWidth
-                                    variant='contained'
-                                    color='primary'
-                                    startIcon={<DescriptionOutlinedIcon />}
-                                    onClick={() => openScheduleWorkflow(service.id)}
-                                    sx={{
-                                      borderRadius: '12px',
-                                      textTransform: 'none',
-                                      fontWeight: 700,
-                                      minHeight: 44
-                                    }}
-                                  >
-                                    Programar
-                                  </Button>
-                                ) : null}
-                                {canManageExecution ? (
-                                  <Button
-                                    fullWidth
-                                    variant='outlined'
-                                    color='success'
-                                    startIcon={<VisibilityOutlinedIcon />}
-                                    onClick={() => openServiceDetail(service.id)}
-                                    sx={{
-                                      ...secondaryButtonSx,
-                                      color: ui.success,
-                                      borderColor: alpha(ui.success, 0.35)
-                                    }}
-                                  >
-                                    Operación
-                                  </Button>
-                                ) : null}
-                              </Stack>
+                              <Button
+                                fullWidth
+                                variant={canOpenPrimaryAction ? 'contained' : 'outlined'}
+                                startIcon={<VisibilityOutlinedIcon />}
+                                onClick={() => openServiceDetail(service.id)}
+                                sx={
+                                  canOpenPrimaryAction
+                                    ? {
+                                        ...primaryButtonSx,
+                                        minHeight: 38,
+                                        borderRadius: '10px',
+                                        fontSize: '0.82rem'
+                                      }
+                                    : {
+                                        ...secondaryButtonSx,
+                                        minHeight: 38,
+                                        borderRadius: '10px',
+                                        fontSize: '0.82rem'
+                                      }
+                                }
+                              >
+                                Ver detalle
+                              </Button>
                             </Stack>
                           </CardContent>
                         </Card>
@@ -2371,10 +2148,8 @@ const CalibrationServicesPage = () => {
                     })
                   )}
                 </Stack>
-                )}
               </Box>
-              )
-            })}
+            ))}
           </Stack>
         </Box>
       )}
