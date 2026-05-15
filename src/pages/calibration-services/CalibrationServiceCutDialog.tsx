@@ -79,7 +79,7 @@ const getEffectiveQuantity = (
 
 const buildDraftItems = (service: CalibrationService): DraftCutItem[] =>
   (service.items || [])
-    .filter((item) => getOperationalStatus(item) === 'completed')
+    .filter((item) => ['completed', 'in_progress'].includes(getOperationalStatus(item)))
     .map((item) => {
       const releasedQuantity = getReleasedQuantity(item)
       const effectiveQuantity = getEffectiveQuantity(service, item)
@@ -198,7 +198,7 @@ const CalibrationServiceCutDialog = ({
       <DialogContent dividers>
         <Stack spacing={3}>
           <Typography variant='body2' color='text.secondary'>
-            Selecciona los ítems completados que van a salir en este corte.
+            Selecciona los ítems con avance para liberar en este corte.
           </Typography>
 
           <Grid container spacing={2}>
@@ -273,7 +273,7 @@ const CalibrationServiceCutDialog = ({
               ))
             ) : (
               <Typography variant='body2' color='text.secondary'>
-                No hay ítems completados con cantidad disponible para liberar a corte.
+                No hay ítems con avance y cantidad disponible para liberar a corte.
               </Typography>
             )}
           </Stack>

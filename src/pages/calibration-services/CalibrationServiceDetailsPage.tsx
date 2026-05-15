@@ -565,7 +565,7 @@ const CalibrationServiceDetailsPage = () => {
       : 0
 
     return (
-      operationalStatus === 'completed' &&
+      ['completed', 'in_progress'].includes(operationalStatus as string) &&
       Math.max(quantity - releasedQuantity, 0) > 0
     )
   })
