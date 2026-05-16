@@ -15,6 +15,7 @@ import {
   Select,
   Stack,
   TextField,
+  Tooltip,
   Typography
 } from '@mui/material'
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined'
@@ -203,13 +204,15 @@ const CalibrationServiceItemsEditor = ({
                   />
                 ) : null}
                 {item.intervalText ? (
-                  <Typography
-                    variant='caption'
-                    color='text.secondary'
-                    sx={{ display: { xs: 'none', md: 'block' }, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                  >
-                    {item.intervalText}
-                  </Typography>
+                  <Tooltip title={item.intervalText} arrow>
+                    <Typography
+                      variant='caption'
+                      color='text.secondary'
+                      sx={{ display: { xs: 'none', md: 'block' }, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'default' }}
+                    >
+                      {item.intervalText}
+                    </Typography>
+                  </Tooltip>
                 ) : null}
 
                 <IconButton
