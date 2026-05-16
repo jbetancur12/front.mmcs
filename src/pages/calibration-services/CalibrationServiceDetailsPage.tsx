@@ -12,6 +12,7 @@ import {
   DialogTitle,
   Divider,
   Grid,
+  IconButton,
   Stack,
   Tab,
   Table,
@@ -385,6 +386,7 @@ const CalibrationServiceDetailsPage = () => {
     registerPhysicalTraceability,
     updateLogisticsControl,
     updateDeliverySignature,
+    updateExecutionCustomer,
     createCut,
     createAdjustment,
     reviewAdjustment,
@@ -426,6 +428,10 @@ const CalibrationServiceDetailsPage = () => {
   const [isAdjustmentDialogOpen, setIsAdjustmentDialogOpen] = useState(false)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
   const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false)
+  const [isExecutionCustomerDialogOpen, setIsExecutionCustomerDialogOpen] =
+    useState(false)
+  const [executionCustomerDraft, setExecutionCustomerDraft] = useState('')
+  const [executionSiteDraft, setExecutionSiteDraft] = useState('')
   const [selectedCutForInvoice, setSelectedCutForInvoice] =
     useState<CalibrationServiceCut | null>(null)
   const [selectedCutForDocumentControl, setSelectedCutForDocumentControl] =
@@ -764,6 +770,12 @@ const CalibrationServiceDetailsPage = () => {
   const hasDifferentExecutionCustomer =
     Boolean(service.executionCustomerName) &&
     service.executionCustomerName !== service.customer?.nombre
+  const rawExecutionCustomerName = service.executionCustomerName || null
+  const rawExecutionSiteName = service.executionSiteName || null
+  const canEditExecutionCustomer =
+    !service.odsCode &&
+    service.status !== 'cancelled' &&
+    service.status !== 'closed'
   const odsDetails = getOtherFieldRecord(service.otherFields, 'ods')
   const operationsDetails = getOperationsDetails(service.otherFields)
   const logisticsDetails = getLogisticsDetails(service.otherFields)
@@ -1121,6 +1133,7 @@ const CalibrationServiceDetailsPage = () => {
     respondAdjustment.isLoading ||
     updateCustomerSignature.isLoading ||
     updateDeliverySignature.isLoading ||
+    updateExecutionCustomer.isLoading ||
     markCutReadyForInvoicing.isLoading ||
     markCutInvoiced.isLoading ||
     updateCutDocumentControl.isLoading ||
@@ -2160,6 +2173,23 @@ const CalibrationServiceDetailsPage = () => {
     }
   }
 
+  const handleSaveExecutionCustomer = async (data: {
+    executionCustomerName: string | null
+    executionSiteName: string | null
+  }) => {
+    try {
+      await updateExecutionCustomer.mutateAsync({
+        serviceId: String(service.id),
+        ...data
+      })
+      toast.success('Cliente de ejecución actualizado.')
+      setIsExecutionCustomerDialogOpen(false)
+    } catch (error) {
+      console.error(error)
+      toast.error('No pudimos actualizar el cliente de ejecución.')
+    }
+  }
+
   const handleSaveOperationalProgress = async (
     items: CalibrationServiceItemProgressEntryPayload[]
   ) => {
@@ -2811,14 +2841,38 @@ const CalibrationServiceDetailsPage = () => {
                         </Typography>
                       </Grid>
                       <Grid item xs={12} md={6}>
-                        <Typography variant='caption' color='text.secondary'>
-                          Destino del servicio
-                        </Typography>
-                        <Typography variant='body1'>
-                          {hasDifferentExecutionCustomer
-                            ? 'Cliente diferente a la oferta'
-                            : 'Mismo cliente de la oferta'}
-                        </Typography>
+                        <Stack direction='row' alignItems='center' spacing={1}>
+                          <Box>
+                            <Typography
+                              variant='caption'
+                              color='text.secondary'
+                            >
+                              Destino del servicio
+                            </Typography>
+                            <Typography variant='body1'>
+                              {hasDifferentExecutionCustomer
+                                ? 'Cliente diferente a la oferta'
+                                : 'Mismo cliente de la oferta'}
+                            </Typography>
+                          </Box>
+                          {canEditExecutionCustomer ? (
+                            <IconButton
+                              size='small'
+                              onClick={() => {
+                                setExecutionCustomerDraft(
+                                  rawExecutionCustomerName ?? ''
+                                )
+                                setExecutionSiteDraft(
+                                  rawExecutionSiteName ?? ''
+                                )
+                                setIsExecutionCustomerDialogOpen(true)
+                              }}
+                              sx={{ mt: 1.5 }}
+                            >
+                              <EditOutlinedIcon fontSize='small' />
+                            </IconButton>
+                          ) : null}
+                        </Stack>
                       </Grid>
                       {hasDifferentExecutionCustomer ? (
                         <>
@@ -3759,6 +3813,54 @@ const CalibrationServiceDetailsPage = () => {
           onSubmit={handleSaveSequenceConfig}
         />
       ) : null}
+      <Dialog
+        open={isExecutionCustomerDialogOpen}
+        onClose={() => setIsExecutionCustomerDialogOpen(false)}
+        maxWidth='sm'
+        fullWidth
+      >
+        <DialogTitle>Cliente de ejecución</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 0.5 }}>
+            <Typography variant='body2' color='text.secondary'>
+              Define o actualiza el cliente y sede donde realmente se presta el
+              servicio. Solo editable si aún no se ha emitido la ODS.
+            </Typography>
+            <TextField
+              fullWidth
+              label='Cliente de ejecución'
+              value={executionCustomerDraft}
+              onChange={(e) => setExecutionCustomerDraft(e.target.value)}
+              helperText='Nombre del cliente donde se ejecuta el servicio'
+            />
+            <TextField
+              fullWidth
+              label='Sede o referencia de ejecución'
+              value={executionSiteDraft}
+              onChange={(e) => setExecutionSiteDraft(e.target.value)}
+              helperText='Sede, dirección o referencia del lugar de ejecución'
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsExecutionCustomerDialogOpen(false)}>
+            Cancelar
+          </Button>
+          <Button
+            variant='contained'
+            onClick={() =>
+              void handleSaveExecutionCustomer({
+                executionCustomerName:
+                  executionCustomerDraft.trim() || null,
+                executionSiteName: executionSiteDraft.trim() || null
+              })
+            }
+            disabled={updateExecutionCustomer.isLoading}
+          >
+            Guardar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }
