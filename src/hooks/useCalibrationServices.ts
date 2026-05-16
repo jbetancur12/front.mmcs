@@ -513,6 +513,20 @@ const calibrationServiceApi = {
     return response.data
   },
 
+  updateCustomerSignature: async ({
+    serviceId,
+    customerSignatureData
+  }: {
+    serviceId: string
+    customerSignatureData: string | null
+  }): Promise<CalibrationService> => {
+    const response = await axiosPrivate.put<CalibrationService>(
+      `/calibration-services/${serviceId}/customer-signature`,
+      { customerSignatureData }
+    )
+    return response.data
+  },
+
   downloadDocument: async ({
     serviceId,
     documentId
@@ -1004,14 +1018,18 @@ export const useCalibrationServiceMutations = () => {
 
   const upsertSlaConfig = useMutation(calibrationServiceApi.upsertSlaConfig, {
     onSuccess: () => {
-      queryClient.invalidateQueries([
-        CALIBRATION_SERVICE_QUERY_KEYS.all,
-        'sla-config'
-      ])
-      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
-      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail])
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.slaConfig])
     }
   })
+
+  const updateCustomerSignature = useMutation(
+    calibrationServiceApi.updateCustomerSignature,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail])
+      }
+    }
+  )
 
   return {
     createService,
@@ -1050,6 +1068,7 @@ export const useCalibrationServiceMutations = () => {
     sendLogisticsControlEmail,
     downloadDocument,
     upsertSequenceConfig,
-    upsertSlaConfig
+    upsertSlaConfig,
+    updateCustomerSignature
   }
 }

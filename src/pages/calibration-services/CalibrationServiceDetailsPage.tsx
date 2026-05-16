@@ -389,6 +389,7 @@ const CalibrationServiceDetailsPage = () => {
     reviewAdjustment,
     sendAdjustmentToCustomer,
     respondAdjustment,
+    updateCustomerSignature,
     markCutReadyForInvoicing,
     markCutInvoiced,
     updateCutDocumentControl,
@@ -1874,6 +1875,7 @@ const CalibrationServiceDetailsPage = () => {
     technicalDecision?: 'approved' | 'rejected'
     technicalReviewNotes?: string | null
     technicalReviewerRole?: string | null
+    technicalSignatureData?: string | null
     contractModificationRequired?: boolean
     supportChannel?: string | null
     supportReference?: string | null
@@ -2248,6 +2250,22 @@ const CalibrationServiceDetailsPage = () => {
     } catch (pdfError) {
       console.error(pdfError)
       toast.error('No pudimos generar el consolidado PDF de novedades.')
+    }
+  }
+
+  const customerSignatureData =
+    (service.otherFields?.customerSignatureData as string | undefined) ?? null
+
+  const handleUpdateCustomerSignature = async (data: string | null) => {
+    try {
+      await updateCustomerSignature.mutateAsync({
+        serviceId: String(service.id),
+        customerSignatureData: data
+      })
+      toast.success('Firma del cliente guardada.')
+    } catch (error) {
+      console.error(error)
+      toast.error('No pudimos guardar la firma del cliente.')
     }
   }
 
@@ -3280,6 +3298,9 @@ const CalibrationServiceDetailsPage = () => {
                   }
                   onGenerateDocument={handleGenerateAdjustmentPdf}
                   onGenerateSummaryDocument={handleGenerateAdjustmentSummaryPdf}
+                  customerSignatureData={customerSignatureData}
+                  onUpdateCustomerSignature={handleUpdateCustomerSignature}
+                  isUpdatingSignature={updateCustomerSignature.isLoading}
                 />
               </DetailTabPanel>
 

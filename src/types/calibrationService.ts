@@ -888,6 +888,7 @@ export interface CalibrationServiceReviewAdjustmentPayload {
   technicalDecision?: 'approved' | 'rejected'
   technicalReviewNotes?: string | null
   technicalReviewerRole?: string | null
+  technicalSignatureData?: string | null
   contractModificationRequired?: boolean
   supportChannel?: string | null
   supportReference?: string | null

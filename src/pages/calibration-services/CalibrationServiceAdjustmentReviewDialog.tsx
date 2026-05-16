@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Button,
   Checkbox,
   Dialog,
@@ -13,6 +16,8 @@ import {
   TextField,
   Typography
 } from '@mui/material'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import SignaturePad from '../../Components/Maintenance/SignaturePad'
 import {
   CalibrationServiceAdjustment,
   CalibrationServiceAdjustmentStatus
@@ -37,6 +42,7 @@ interface CalibrationServiceAdjustmentReviewDialogProps {
     technicalDecision?: TechnicalDecision
     technicalReviewNotes?: string | null
     technicalReviewerRole?: string | null
+    technicalSignatureData?: string | null
     contractModificationRequired?: boolean
     supportChannel?: string | null
     supportReference?: string | null
@@ -80,6 +86,9 @@ const CalibrationServiceAdjustmentReviewDialog = ({
   const [technicalReviewerRole, setTechnicalReviewerRole] = useState(
     'Director técnico / Coordinador / Calidad'
   )
+  const [technicalSignatureData, setTechnicalSignatureData] = useState<
+    string | null
+  >(null)
   const [contractModificationRequired, setContractModificationRequired] =
     useState(true)
   const [supportChannel, setSupportChannel] = useState('whatsapp')
@@ -109,6 +118,12 @@ const CalibrationServiceAdjustmentReviewDialog = ({
         typeof adjustment.otherFields.technicalReviewerRole === 'string'
         ? adjustment.otherFields.technicalReviewerRole
         : 'Director técnico / Coordinador / Calidad'
+    )
+    setTechnicalSignatureData(
+      adjustment.otherFields &&
+        typeof adjustment.otherFields.technicalSignatureData === 'string'
+        ? adjustment.otherFields.technicalSignatureData
+        : null
     )
     setContractModificationRequired(
       adjustment.otherFields &&
@@ -241,6 +256,7 @@ const CalibrationServiceAdjustmentReviewDialog = ({
         technicalDecision,
         technicalReviewNotes: technicalReviewNotes.trim() || null,
         technicalReviewerRole: technicalReviewerRole.trim() || null,
+        technicalSignatureData,
         contractModificationRequired,
         supportChannel: contractModificationRequired ? supportChannel : null,
         supportReference: supportReference.trim() || null,
@@ -342,6 +358,32 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                     multiline
                     minRows={2}
                   />
+                </Grid>
+                <Grid item xs={12}>
+                  <Accordion
+                    variant='outlined'
+                    slotProps={{ transition: { unmountOnExit: true } }}
+                    sx={{
+                      '&:before': { display: 'none' },
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1
+                    }}
+                  >
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Typography variant='body2' fontWeight={600}>
+                        Firma del revisor técnico
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <SignaturePad
+                        value={technicalSignatureData}
+                        onChange={setTechnicalSignatureData}
+                        height={160}
+                        helperText='La firma se guarda y aparece en el PDF anexo de la novedad.'
+                      />
+                    </AccordionDetails>
+                  </Accordion>
                 </Grid>
               </Grid>
             </Stack>

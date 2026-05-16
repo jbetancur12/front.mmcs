@@ -10,9 +10,17 @@ import {
   Grid,
   MenuItem,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
   TextField,
   Typography
 } from '@mui/material'
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import { CALIBRATION_SERVICE_ADJUSTMENT_TYPE_LABELS } from '../../constants/calibrationServices'
 import {
   CalibrationService,
@@ -51,6 +59,7 @@ interface DraftAdjustmentItem {
 }
 
 const DEFAULT_TYPE: CalibrationServiceAdjustmentType = 'quantity_more'
+const ROWS_PER_PAGE = 10
 
 const CalibrationServiceAdjustmentDialog = ({
   open,
@@ -59,10 +68,12 @@ const CalibrationServiceAdjustmentDialog = ({
   onClose,
   onSubmit
 }: CalibrationServiceAdjustmentDialogProps) => {
-  const completedItems = useMemo(
+  const eligibleItems = useMemo(
     () =>
       (service.items || []).filter(
-        (item) => item.otherFields?.operationalStatus === 'completed'
+        (item) =>
+          item.otherFields?.operationalStatus === 'completed' ||
+          item.otherFields?.operationalStatus === 'in_progress'
       ),
     [service.items]
   )
@@ -82,6 +93,8 @@ const CalibrationServiceAdjustmentDialog = ({
     useState(true)
   const [supportChannel, setSupportChannel] = useState('whatsapp')
   const [supportReference, setSupportReference] = useState('')
+  const [page, setPage] = useState(0)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     if (!open) {
@@ -94,7 +107,7 @@ const CalibrationServiceAdjustmentDialog = ({
     setQuotedQuantity('0')
     setActualQuantity('1')
     setSelectedItems(
-      completedItems.map((item) => ({
+      eligibleItems.map((item) => ({
         serviceItemId: item.id,
         itemName: item.itemName,
         quotedQuantity: item.quantity || 0,
@@ -108,10 +121,12 @@ const CalibrationServiceAdjustmentDialog = ({
     setContractModificationRequired(true)
     setSupportChannel('whatsapp')
     setSupportReference('')
-  }, [completedItems, open])
+    setPage(0)
+    setSearchQuery('')
+  }, [eligibleItems, open])
 
   useEffect(() => {
-    const selectedItem = completedItems.find(
+    const selectedItem = eligibleItems.find(
       (item) => String(item.id) === serviceItemId
     )
 
@@ -123,7 +138,7 @@ const CalibrationServiceAdjustmentDialog = ({
       setQuotedQuantity('0')
       setActualQuantity('1')
     }
-  }, [completedItems, serviceItemId, changeType])
+  }, [eligibleItems, serviceItemId, changeType])
 
   const isExtraItem = changeType === 'extra_item'
   const isQuantityMore = changeType === 'quantity_more'
@@ -151,6 +166,24 @@ const CalibrationServiceAdjustmentDialog = ({
       : selectedBatchItems.length > 0 &&
         selectedBatchItems.every((item) => item.actualQuantity.trim()))
 
+  const filteredItems = useMemo(() => {
+    if (!searchQuery.trim()) return selectedItems
+    const q = searchQuery.toLowerCase().trim()
+    return selectedItems.filter((item) =>
+      item.itemName.toLowerCase().includes(q)
+    )
+  }, [selectedItems, searchQuery])
+
+  const paginatedItems = useMemo(
+    () => filteredItems.slice(page * ROWS_PER_PAGE, (page + 1) * ROWS_PER_PAGE),
+    [filteredItems, page]
+  )
+
+  const allFilteredSelected = useMemo(
+    () => filteredItems.length > 0 && filteredItems.every((item) => item.selected),
+    [filteredItems]
+  )
+
   const handleToggleSelectedItem =
     (serviceItemIdValue: number) =>
     (_event: ChangeEvent<HTMLInputElement>, checked: boolean) => {
@@ -163,6 +196,20 @@ const CalibrationServiceAdjustmentDialog = ({
       )
     }
 
+  const handleToggleSelectAll = (
+    _event: ChangeEvent<HTMLInputElement>,
+    checked: boolean
+  ) => {
+    const filteredIds = new Set(filteredItems.map((i) => i.serviceItemId))
+    setSelectedItems((currentItems) =>
+      currentItems.map((item) =>
+        filteredIds.has(item.serviceItemId)
+          ? { ...item, selected: checked }
+          : item
+      )
+    )
+  }
+
   const handleSelectedItemActualQuantity =
     (serviceItemIdValue: number) => (event: ChangeEvent<HTMLInputElement>) => {
       setSelectedItems((currentItems) =>
@@ -173,6 +220,10 @@ const CalibrationServiceAdjustmentDialog = ({
         )
       )
     }
+
+  const handleChangePage = (_event: unknown, newPage: number) => {
+    setPage(newPage)
+  }
 
   const handleSubmit = async () => {
     if (!canSubmit) {
@@ -264,7 +315,7 @@ const CalibrationServiceAdjustmentDialog = ({
                   helperText='Opcional, solo si el adicional se relaciona con un ítem ya cotizado.'
                 >
                   <MenuItem value=''>Sin item relacionado</MenuItem>
-                  {completedItems.map((item) => (
+                  {eligibleItems.map((item) => (
                     <MenuItem key={item.id} value={String(item.id)}>
                       {item.itemName} · Cant. {item.quantity}
                     </MenuItem>
@@ -325,62 +376,155 @@ const CalibrationServiceAdjustmentDialog = ({
                   />
                 </Grid>
               </>
-            ) : (
+            ) : selectedItems.length ? (
               <Grid item xs={12}>
-                <Stack spacing={1.5}>
-                  {selectedItems.length ? (
-                    selectedItems.map((item) => (
-                      <Grid
-                        container
-                        spacing={2}
-                        alignItems='center'
-                        key={item.serviceItemId}
-                      >
-                        <Grid item xs={12} md={6}>
-                          <FormControlLabel
-                            control={
+                <Stack spacing={1}>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    placeholder='Buscar ítems...'
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value)
+                      setPage(0)
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <SearchOutlinedIcon
+                          sx={{ mr: 1, color: 'text.secondary' }}
+                        />
+                      )
+                    }}
+                    sx={{ maxWidth: 360 }}
+                  />
+                  <TableContainer sx={{ maxHeight: 420 }}>
+                    <Table size='small' stickyHeader>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell padding='checkbox' sx={{ width: 48 }}>
+                            <Checkbox
+                              checked={allFilteredSelected}
+                              indeterminate={
+                                !allFilteredSelected &&
+                                filteredItems.some((item) => item.selected)
+                              }
+                              onChange={handleToggleSelectAll}
+                              inputProps={{
+                                'aria-label': 'Seleccionar todos los ítems'
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell sx={{ fontWeight: 600 }}>
+                            Ítem
+                          </TableCell>
+                          <TableCell sx={{ fontWeight: 600 }} width={120}>
+                            Cotizado
+                          </TableCell>
+                          <TableCell sx={{ fontWeight: 600 }} width={200}>
+                            {actualQuantityLabel}
+                          </TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {paginatedItems.map((item) => (
+                          <TableRow
+                            key={item.serviceItemId}
+                            hover
+                            selected={item.selected}
+                            sx={{
+                              '&:hover .quantity-input': {
+                                opacity: 1
+                              }
+                            }}
+                          >
+                            <TableCell padding='checkbox'>
                               <Checkbox
                                 checked={item.selected}
                                 onChange={handleToggleSelectedItem(
                                   item.serviceItemId
                                 )}
                               />
-                            }
-                            label={`${item.itemName} · Cotizado: ${item.quotedQuantity}`}
-                          />
-                        </Grid>
-                        <Grid item xs={12} md={3}>
-                          <Typography variant='body2' color='text.secondary'>
-                            Cantidad cotizada: {item.quotedQuantity}
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={12} md={3}>
-                          <TextField
-                            fullWidth
-                            type='number'
-                            label={actualQuantityLabel}
-                            value={item.actualQuantity}
-                            onChange={handleSelectedItemActualQuantity(
-                              item.serviceItemId
-                            )}
-                            inputProps={{ min: 0 }}
-                            disabled={!item.selected}
-                            helperText={
-                              item.selected
-                                ? `Se comparará contra ${item.quotedQuantity} cotizada(s).`
-                                : 'Selecciona el ítem para registrar la novedad.'
-                            }
-                          />
-                        </Grid>
-                      </Grid>
-                    ))
-                  ) : (
-                    <Typography variant='body2' color='text.secondary'>
-                      No hay ítems completados disponibles para relacionar con
-                      una novedad.
+                            </TableCell>
+                            <TableCell>
+                              <Typography
+                                variant='body2'
+                                sx={{
+                                  fontWeight: item.selected ? 500 : 400,
+                                  maxWidth: 280,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                {item.itemName}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant='body2' color='text.secondary'>
+                                {item.quotedQuantity}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <TextField
+                                className='quantity-input'
+                                fullWidth
+                                type='number'
+                                size='small'
+                                placeholder='Cantidad real'
+                                value={item.actualQuantity}
+                                onChange={handleSelectedItemActualQuantity(
+                                  item.serviceItemId
+                                )}
+                                inputProps={{ min: 0 }}
+                                disabled={!item.selected}
+                                sx={{
+                                  opacity: item.selected ? 1 : 0.5,
+                                  transition: 'opacity 0.15s'
+                                }}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {paginatedItems.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={4} align='center' sx={{ py: 4 }}>
+                              <Typography variant='body2' color='text.secondary'>
+                                {searchQuery.trim()
+                                  ? 'Ningún ítem coincide con la búsqueda.'
+                                  : 'No hay ítems completados disponibles.'}
+                              </Typography>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                  <TablePagination
+                    component='div'
+                    count={filteredItems.length}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    rowsPerPage={ROWS_PER_PAGE}
+                    rowsPerPageOptions={[ROWS_PER_PAGE]}
+                    labelDisplayedRows={({ from, to, count }) =>
+                      `${from}–${to} de ${count}`
+                    }
+                  />
+                  {selectedBatchItems.length > 0 && (
+                    <Typography variant='caption' color='primary' sx={{ pl: 0.5 }}>
+                      {selectedBatchItems.length} ítem
+                      {selectedBatchItems.length !== 1 ? 's' : ''} seleccionado
+                      {selectedBatchItems.length !== 1 ? 's' : ''}
                     </Typography>
                   )}
                 </Stack>
+              </Grid>
+            ) : (
+              <Grid item xs={12}>
+                <Typography variant='body2' color='text.secondary'>
+                  No hay ítems completados disponibles para relacionar con
+                  una novedad.
+                </Typography>
               </Grid>
             )}
 

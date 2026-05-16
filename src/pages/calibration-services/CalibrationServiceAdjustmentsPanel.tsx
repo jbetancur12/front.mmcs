@@ -1,4 +1,8 @@
+import { useState } from 'react'
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Box,
   Button,
@@ -11,6 +15,8 @@ import {
   TableRow,
   Typography
 } from '@mui/material'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import SignaturePad from '../../Components/Maintenance/SignaturePad'
 import {
   CALIBRATION_SERVICE_ADJUSTMENT_STATUS_COLORS,
   CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS,
@@ -41,6 +47,9 @@ interface CalibrationServiceAdjustmentsPanelProps {
   ) => void
   onGenerateDocument?: (adjustment: CalibrationServiceAdjustment) => void
   onGenerateSummaryDocument?: () => void
+  customerSignatureData?: string | null
+  onUpdateCustomerSignature?: (data: string | null) => void
+  isUpdatingSignature?: boolean
 }
 
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
@@ -135,9 +144,15 @@ const CalibrationServiceAdjustmentsPanel = ({
   onSendToCustomer,
   onRegisterCustomerResponse,
   onGenerateDocument,
-  onGenerateSummaryDocument
+  onGenerateSummaryDocument,
+  customerSignatureData,
+  onUpdateCustomerSignature,
+  isUpdatingSignature = false
 }: CalibrationServiceAdjustmentsPanelProps) => {
   const adjustments = service.adjustments || []
+  const [signatureData, setSignatureData] = useState<string | null>(
+    customerSignatureData ?? null
+  )
   const hasApprovedAdjustments = adjustments.some(
     (adjustment) => adjustment.status === 'approved'
   )
@@ -459,6 +474,59 @@ const CalibrationServiceAdjustmentsPanel = ({
           Aún no se han registrado novedades de ejecución.
         </Alert>
       )}
+
+      <Accordion
+        variant='outlined'
+        slotProps={{ transition: { unmountOnExit: true } }}
+        sx={{
+          '&:before': { display: 'none' },
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 1
+        }}
+      >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant='body2' fontWeight={600}>
+            Firma del cliente / Calidad
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Stack spacing={2}>
+            <Typography variant='caption' color='text.secondary'>
+              Firma consolidada del cliente o calidad. Aplica para todas las
+              novedades registradas y aparece en los PDFs de anexo y orden de
+              servicio.
+            </Typography>
+            <SignaturePad
+              value={signatureData}
+              onChange={setSignatureData}
+              height={160}
+              helperText='Firma del cliente que aprueba las novedades.'
+            />
+            <Stack direction='row' spacing={1} justifyContent='flex-end'>
+              <Button
+                size='small'
+                variant='outlined'
+                onClick={() => setSignatureData(customerSignatureData ?? null)}
+                disabled={isUpdatingSignature}
+              >
+                Cancelar
+              </Button>
+              <Button
+                size='small'
+                variant='contained'
+                onClick={() => onUpdateCustomerSignature?.(signatureData)}
+                disabled={
+                  signatureData === (customerSignatureData ?? null) ||
+                  isUpdatingSignature
+                }
+              >
+                Guardar firma
+              </Button>
+            </Stack>
+          </Stack>
+        </AccordionDetails>
+      </Accordion>
     </Stack>
   )
 }
