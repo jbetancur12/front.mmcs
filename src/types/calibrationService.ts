@@ -198,6 +198,9 @@ export interface CalibrationServiceOperationsSummary {
   lastReprogrammingReason?: string | null
   cancelledAt?: string | null
   cancellationReason?: string | null
+  deliveryName?: string | null
+  deliveryRole?: string | null
+  deliverySignatureData?: string | null
 }
 
 export interface CalibrationServicePhysicalTraceabilityEntry {

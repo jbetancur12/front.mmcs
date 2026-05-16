@@ -1,5 +1,8 @@
 import { ChangeEvent, useEffect, useState } from 'react'
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Box,
   Button,
@@ -15,6 +18,8 @@ import {
   TextField,
   Typography
 } from '@mui/material'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import SignaturePad from '../../Components/Maintenance/SignaturePad'
 import {
   CALIBRATION_SERVICE_STATUS_LABELS,
   CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS
@@ -110,15 +115,38 @@ interface CalibrationServiceOperationsPanelProps {
   onSaveProgress: (
     items: CalibrationServiceItemProgressEntryPayload[]
   ) => void | Promise<void>
+  deliveryName?: string | null
+  deliveryRole?: string | null
+  deliverySignatureData?: string | null
+  onUpdateDeliverySignature?: (data: {
+    deliveryName: string | null
+    deliveryRole: string | null
+    deliverySignatureData: string | null
+  }) => void | Promise<void>
+  isUpdatingDeliverySignature?: boolean
 }
 
 const CalibrationServiceOperationsPanel = ({
   service,
   canEditProgress,
   isBusy = false,
-  onSaveProgress
+  onSaveProgress,
+  deliveryName: initialDeliveryName,
+  deliveryRole: initialDeliveryRole,
+  deliverySignatureData: initialDeliverySignatureData,
+  onUpdateDeliverySignature,
+  isUpdatingDeliverySignature = false
 }: CalibrationServiceOperationsPanelProps) => {
   const operations = getOperationsSummary(service.otherFields)
+  const [deliveryName, setDeliveryName] = useState(initialDeliveryName ?? '')
+  const [deliveryRole, setDeliveryRole] = useState(initialDeliveryRole ?? '')
+  const [deliverySignature, setDeliverySignature] = useState<string | null>(
+    initialDeliverySignatureData ?? null
+  )
+  const hasDeliveryChanged =
+    deliveryName !== (initialDeliveryName ?? '') ||
+    deliveryRole !== (initialDeliveryRole ?? '') ||
+    deliverySignature !== (initialDeliverySignatureData ?? null)
   const pendingFormalAdjustments = (service.adjustments || []).filter(
     (adjustment) =>
       adjustment.requiresCommercialAdjustment &&
@@ -349,6 +377,85 @@ const CalibrationServiceOperationsPanel = ({
           </Button>
         </Stack>
       ) : null}
+
+      <Accordion
+        variant='outlined'
+        slotProps={{ transition: { unmountOnExit: true } }}
+        sx={{
+          '&:before': { display: 'none' },
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 1
+        }}
+      >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant='body2' fontWeight={600}>
+            Recepción conforme del servicio
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Stack spacing={2}>
+            <Typography variant='caption' color='text.secondary'>
+              Datos de la persona que recibe el servicio a satisfacción. Aparecen
+              en la Orden de Servicio (ODS) como constancia de recibido.
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  size='small'
+                  label='Nombre de quien recibe'
+                  value={deliveryName}
+                  onChange={(e) => setDeliveryName(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  size='small'
+                  label='Cargo'
+                  value={deliveryRole}
+                  onChange={(e) => setDeliveryRole(e.target.value)}
+                />
+              </Grid>
+            </Grid>
+            <SignaturePad
+              value={deliverySignature}
+              onChange={setDeliverySignature}
+              height={160}
+              helperText='Firma de recepción conforme del servicio.'
+            />
+            <Stack direction='row' spacing={1} justifyContent='flex-end'>
+              <Button
+                size='small'
+                variant='outlined'
+                onClick={() => {
+                  setDeliveryName(initialDeliveryName ?? '')
+                  setDeliveryRole(initialDeliveryRole ?? '')
+                  setDeliverySignature(initialDeliverySignatureData ?? null)
+                }}
+                disabled={isUpdatingDeliverySignature}
+              >
+                Cancelar
+              </Button>
+              <Button
+                size='small'
+                variant='contained'
+                onClick={() =>
+                  onUpdateDeliverySignature?.({
+                    deliveryName: deliveryName.trim() || null,
+                    deliveryRole: deliveryRole.trim() || null,
+                    deliverySignatureData: deliverySignature
+                  })
+                }
+                disabled={!hasDeliveryChanged || isUpdatingDeliverySignature}
+              >
+                Guardar recepción conforme
+              </Button>
+            </Stack>
+          </Stack>
+        </AccordionDetails>
+      </Accordion>
     </Stack>
   )
 }

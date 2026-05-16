@@ -527,6 +527,24 @@ const calibrationServiceApi = {
     return response.data
   },
 
+  updateDeliverySignature: async ({
+    serviceId,
+    deliveryName,
+    deliveryRole,
+    deliverySignatureData
+  }: {
+    serviceId: string
+    deliveryName: string | null
+    deliveryRole: string | null
+    deliverySignatureData: string | null
+  }): Promise<CalibrationService> => {
+    const response = await axiosPrivate.put<CalibrationService>(
+      `/calibration-services/${serviceId}/delivery-signature`,
+      { deliveryName, deliveryRole, deliverySignatureData }
+    )
+    return response.data
+  },
+
   downloadDocument: async ({
     serviceId,
     documentId
@@ -1031,6 +1049,15 @@ export const useCalibrationServiceMutations = () => {
     }
   )
 
+  const updateDeliverySignature = useMutation(
+    calibrationServiceApi.updateDeliverySignature,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail])
+      }
+    }
+  )
+
   return {
     createService,
     updateService,
@@ -1069,6 +1096,7 @@ export const useCalibrationServiceMutations = () => {
     downloadDocument,
     upsertSequenceConfig,
     upsertSlaConfig,
-    updateCustomerSignature
+    updateCustomerSignature,
+    updateDeliverySignature
   }
 }

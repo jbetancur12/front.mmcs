@@ -384,6 +384,7 @@ const CalibrationServiceDetailsPage = () => {
     updateItemProgress,
     registerPhysicalTraceability,
     updateLogisticsControl,
+    updateDeliverySignature,
     createCut,
     createAdjustment,
     reviewAdjustment,
@@ -1028,6 +1029,18 @@ const CalibrationServiceDetailsPage = () => {
             : ''
       }
     })()
+  const deliveryName =
+    typeof operationsDetails?.deliveryName === 'string'
+      ? operationsDetails.deliveryName
+      : null
+  const deliveryRole =
+    typeof operationsDetails?.deliveryRole === 'string'
+      ? operationsDetails.deliveryRole
+      : null
+  const deliverySignatureData =
+    typeof operationsDetails?.deliverySignatureData === 'string'
+      ? operationsDetails.deliverySignatureData
+      : null
   const operationsCompletionNotes =
     typeof operationsDetails?.completionNotes === 'string'
       ? operationsDetails.completionNotes
@@ -1106,6 +1119,8 @@ const CalibrationServiceDetailsPage = () => {
     sendAdjustmentToCustomer.isLoading ||
     sendLogisticsControlEmail.isLoading ||
     respondAdjustment.isLoading ||
+    updateCustomerSignature.isLoading ||
+    updateDeliverySignature.isLoading ||
     markCutReadyForInvoicing.isLoading ||
     markCutInvoiced.isLoading ||
     updateCutDocumentControl.isLoading ||
@@ -2125,6 +2140,23 @@ const CalibrationServiceDetailsPage = () => {
     } catch (cutError) {
       console.error(cutError)
       toast.error('No pudimos actualizar el control documental del corte.')
+    }
+  }
+
+  const handleUpdateDeliverySignature = async (data: {
+    deliveryName: string | null
+    deliveryRole: string | null
+    deliverySignatureData: string | null
+  }) => {
+    try {
+      await updateDeliverySignature.mutateAsync({
+        serviceId: String(service.id),
+        ...data
+      })
+      toast.success('Recepción conforme guardada.')
+    } catch (error) {
+      console.error(error)
+      toast.error('No pudimos guardar la recepción conforme.')
     }
   }
 
@@ -3252,6 +3284,11 @@ const CalibrationServiceDetailsPage = () => {
                       canEditProgress={canUpdateOperationalProgress}
                       isBusy={isOperationalBusy}
                       onSaveProgress={handleSaveOperationalProgress}
+                      deliveryName={deliveryName}
+                      deliveryRole={deliveryRole}
+                      deliverySignatureData={deliverySignatureData}
+                      onUpdateDeliverySignature={handleUpdateDeliverySignature}
+                      isUpdatingDeliverySignature={updateDeliverySignature.isLoading}
                     />
                   </>
                 ) : (
