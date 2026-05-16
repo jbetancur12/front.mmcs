@@ -78,8 +78,6 @@ export const CALIBRATION_SERVICE_REASSIGN_ROLES =
 export const CALIBRATION_SERVICE_EXECUTION_ROLES = [
   'admin',
   'super_admin',
-  'comp_admin',
-  'comp_supervisor',
   'metrologist'
 ] as const
 
@@ -123,8 +121,6 @@ export const CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES = [
 export const CALIBRATION_SERVICE_INVOICING_ROLES = [
   'admin',
   'super_admin',
-  'comp_admin',
-  'comp_supervisor',
   'invoicing'
 ] as const
 
