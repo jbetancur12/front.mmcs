@@ -175,6 +175,7 @@ const CalibrationServiceItemsEditor = ({
                 sx={{
                   '& .MuiAccordionSummary-content': { 
                     alignItems: 'center', 
+                    gap: 1.5,
                     pr: 1 
                   }
                 }}
@@ -183,7 +184,7 @@ const CalibrationServiceItemsEditor = ({
                   variant='subtitle2'
                   color='primary'
                   fontWeight='bold'
-                  sx={{ textTransform: 'uppercase', letterSpacing: 1, mr: 2, minWidth: 80 }}
+                  sx={{ textTransform: 'uppercase', letterSpacing: 1, minWidth: 80 }}
                 >
                   Ítem #{index + 1}
                 </Typography>
@@ -192,6 +193,24 @@ const CalibrationServiceItemsEditor = ({
                   {item.quantity ? `${item.quantity} x ` : ''}{itemNameLabel} 
                   {totals.total > 0 ? ` · ${currencyFormatter.format(totals.total)}` : ''}
                 </Typography>
+
+                {item.serviceType ? (
+                  <Chip
+                    size='small'
+                    variant='outlined'
+                    label={item.serviceType}
+                    sx={{ height: 22, '& .MuiChip-label': { fontSize: 11, px: 0.8 } }}
+                  />
+                ) : null}
+                {item.intervalText ? (
+                  <Typography
+                    variant='caption'
+                    color='text.secondary'
+                    sx={{ display: { xs: 'none', md: 'block' }, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                  >
+                    {item.intervalText}
+                  </Typography>
+                ) : null}
 
                 <IconButton
                   color='error'
