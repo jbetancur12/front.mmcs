@@ -59,10 +59,7 @@ export const CALIBRATION_SERVICE_APPROVAL_ROLES = [
 
 export const CALIBRATION_SERVICE_ODS_ROLES = [
   'admin',
-  'super_admin',
-  'comp_admin',
-  'comp_requester',
-  'comp_supervisor'
+  'super_admin'
 ] as const
 
 export const CALIBRATION_SERVICE_SCHEDULE_ROLES = [
