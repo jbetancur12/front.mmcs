@@ -1050,11 +1050,7 @@ export const useCalibrationServiceMutations = () => {
     }
   )
 
-  const upsertSlaConfig = useMutation(calibrationServiceApi.upsertSlaConfig, {
-    onSuccess: () => {
-      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.slaConfig])
-    }
-  })
+  const upsertSlaConfig = useMutation(calibrationServiceApi.upsertSlaConfig)
 
   const updateCustomerSignature = useMutation(
     calibrationServiceApi.updateCustomerSignature,
