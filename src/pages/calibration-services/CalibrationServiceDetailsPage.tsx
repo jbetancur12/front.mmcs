@@ -2043,7 +2043,10 @@ const CalibrationServiceDetailsPage = () => {
       toast.success('El corte quedó listo para facturar.')
     } catch (cutError) {
       console.error(cutError)
-      toast.error('No pudimos mover el corte a listo para facturar.')
+      const message =
+        (cutError as { response?: { data?: { error?: string } } })?.response?.data?.error ||
+        'No pudimos mover el corte a listo para facturar.'
+      toast.error(message)
     }
   }
 
