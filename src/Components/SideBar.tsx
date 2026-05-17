@@ -7,7 +7,7 @@ import { BiSolidReport } from 'react-icons/bi'
 import DropdownButton from './DropdownButton' // Importa el componente del dropdown si ya lo tienes
 import { useStore } from '@nanostores/react'
 import { UserData, userStore } from 'src/store/userStore'
-import { CarRepair, RequestQuoteOutlined, ScienceOutlined } from '@mui/icons-material'
+import { CarRepair, NotificationsOutlined, RequestQuoteOutlined, ScienceOutlined } from '@mui/icons-material'
 import {
   getEffectiveLmsMenuRoles,
   isLmsOnlyUser,
@@ -322,6 +322,14 @@ const sidebarItems = ($userStore: UserData) => [
     label: 'Servicios Cal.',
     to: '/calibration-services',
     icon: <ScienceOutlined className={iconClass} />,
+    roles: [...CALIBRATION_SERVICE_ALLOWED_ROLES],
+    moduleName: 'Basic'
+  },
+  {
+    type: 'link',
+    label: 'Notificaciones',
+    to: '/calibration-services/notifications',
+    icon: <NotificationsOutlined className={iconClass} />,
     roles: [...CALIBRATION_SERVICE_ALLOWED_ROLES],
     moduleName: 'Basic'
   },

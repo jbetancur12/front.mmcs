@@ -106,6 +106,7 @@ import CalibrationServiceTimeline from './CalibrationServiceTimeline'
 import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
 import CalibrationServiceGuidePanel from './CalibrationServiceGuidePanel'
 import CalibrationServiceStageDecisionHelp from './CalibrationServiceStageDecisionHelp'
+import CalibrationNotificationBell from './CalibrationNotificationBell'
 import CalibrationServiceRescheduleDialog, {
   CalibrationServiceRescheduleDialogValues
 } from './CalibrationServiceRescheduleDialog'
@@ -2385,6 +2386,7 @@ const CalibrationServiceDetailsPage = () => {
           >
             Volver a la bandeja
           </Button>
+          <CalibrationNotificationBell />
 
           <Stack
             direction='row'
