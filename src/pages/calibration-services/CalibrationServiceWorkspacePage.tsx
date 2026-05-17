@@ -541,11 +541,17 @@ const CalibrationServiceWorkspacePage = () => {
     { key: 'contact', label: 'Contacto y destino', icon: <Inventory2OutlinedIcon sx={{ fontSize: 18 }} />, fields: ['contactName', 'contactEmail', 'city'] as const },
     { key: 'commercial', label: 'Condiciones', icon: <ReceiptLongOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['paymentMethod', 'validityDays'] as const },
     { key: 'items', label: 'Ítems cotizados', icon: <RequestQuoteOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['items'] as const },
+    { key: 'documents', label: 'Evidencia y términos', icon: <UploadFileOutlinedIcon sx={{ fontSize: 18 }} />, fields: [] as const },
   ] as const
   const sectionCompletion = sections.map((section) => {
     if (section.key === 'items') {
       const validItems = formState.items.filter((i) => i.itemName.trim())
       return Math.min(validItems.length, 1)
+    }
+    if (section.key === 'documents') {
+      const hasEvidence = Boolean(requestEvidenceFile || requestEvidenceDocuments.length)
+      const hasQuoteTerms = Boolean(formState.quoteTerms?.commercialComments?.trim())
+      return hasEvidence || hasQuoteTerms ? 1 : 0.3
     }
     const filled = section.fields.filter((f) => {
       const val = formState[f]
@@ -1422,11 +1428,13 @@ const CalibrationServiceWorkspacePage = () => {
               />
             </CardContent>
           </Card>
+          </div>
 
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both' }}>
+          <div style={{ display: activeSection !== 4 ? 'none' : undefined }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #8b5cf6, #a78bfa)' } }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
-                <UploadFileOutlinedIcon sx={{ color: '#6b7280', fontSize: 22 }} />
+                <UploadFileOutlinedIcon sx={{ color: '#7c3aed', fontSize: 22 }} />
                 <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
                   Evidencia de solicitud
                 </Typography>
