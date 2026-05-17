@@ -18,17 +18,26 @@ import {
   FormControl,
   Grid,
   InputLabel,
+  LinearProgress,
   List,
   ListItem,
   ListItemText,
   MenuItem,
+  Paper,
   Select,
   Stack,
+  Tab,
+  Tabs,
   TextField,
   Typography
 } from '@mui/material'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
+import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined'
 import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
+import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined'
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
+import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
+import RequestQuoteOutlinedIcon from '@mui/icons-material/RequestQuoteOutlined'
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
@@ -320,6 +329,7 @@ const CalibrationServiceWorkspacePage = () => {
   const [customerDialogMode, setCustomerDialogMode] = useState<'customer' | 'site' | null>(null)
   const [useDifferentExecutionCustomer, setUseDifferentExecutionCustomer] =
     useState(false)
+  const [activeSection, setActiveSection] = useState(0)
 
   const createCustomerMutation = useMutation({
     mutationFn: async (values: CalibrationServiceCustomerDialogValues) => {
@@ -526,6 +536,24 @@ const CalibrationServiceWorkspacePage = () => {
       ? formState.otherFields.catalogPriceProfile
       : 'price') as CatalogPriceSource
 
+  const sections = [
+    { key: 'customer', label: 'Cliente y alcance', icon: <GroupOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['customerId', 'requestChannel'] as const },
+    { key: 'contact', label: 'Contacto y destino', icon: <Inventory2OutlinedIcon sx={{ fontSize: 18 }} />, fields: ['contactName', 'contactEmail', 'city'] as const },
+    { key: 'commercial', label: 'Condiciones', icon: <ReceiptLongOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['paymentMethod', 'validityDays'] as const },
+    { key: 'items', label: 'Ítems cotizados', icon: <RequestQuoteOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['items'] as const },
+  ] as const
+  const sectionCompletion = sections.map((section) => {
+    if (section.key === 'items') {
+      const validItems = formState.items.filter((i) => i.itemName.trim())
+      return Math.min(validItems.length, 1)
+    }
+    const filled = section.fields.filter((f) => {
+      const val = formState[f]
+      return val !== null && val !== undefined && val !== '' && val !== 0
+    }).length
+    return Math.min(filled / Math.max(section.fields.length, 1), 1)
+  })
+
   const subtotal = formState.items.reduce((acc, item) => acc + getItemTotals(item).subtotal, 0)
   const taxTotal = formState.items.reduce((acc, item) => acc + getItemTotals(item).taxTotal, 0)
   const discountTotal = formState.hasDiscount
@@ -534,6 +562,7 @@ const CalibrationServiceWorkspacePage = () => {
       : toNumber(formState.discountValue)
     : 0
   const grandTotal = subtotal + taxTotal - discountTotal
+  const validItemsCount = formState.items.filter((i) => i.itemName.trim()).length
 
   const setField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setFormState((previous) => ({ ...previous, [field]: value }))
@@ -801,7 +830,7 @@ const CalibrationServiceWorkspacePage = () => {
       {/* ── Header banner ── */}
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+          background: 'linear-gradient(135deg, #0f766e 0%, #059669 50%, #047857 100%)',
           borderRadius: '20px',
           p: { xs: 3, md: 4 },
           mb: 3,
@@ -813,10 +842,19 @@ const CalibrationServiceWorkspacePage = () => {
             position: 'absolute',
             top: 0,
             right: 0,
-            width: '40%',
+            width: '45%',
             height: '100%',
-            background: 'radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.12) 0%, transparent 70%)',
+            background: 'radial-gradient(ellipse at 70% 10%, rgba(255,255,255,0.10) 0%, transparent 65%)',
             pointerEvents: 'none'
+          },
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            width: '100%',
+            height: '1px',
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)'
           }
         }}
       >
@@ -834,30 +872,31 @@ const CalibrationServiceWorkspacePage = () => {
               }
               sx={{
                 mb: 1,
-                color: 'rgba(255,255,255,0.85)',
+                color: 'rgba(255,255,255,0.8)',
                 textTransform: 'none',
                 fontWeight: 600,
                 borderRadius: '10px',
+                fontSize: '0.85rem',
                 '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.12)',
+                  backgroundColor: 'rgba(255,255,255,0.10)',
                   color: '#fff'
                 }
               }}
             >
               Volver
             </Button>
-            <Typography variant='h4' fontWeight={800} sx={{ color: '#fff', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+            <Typography variant='h4' fontWeight={800} sx={{ color: '#fff', lineHeight: 1.15, letterSpacing: '-0.025em', fontSize: { xs: '1.6rem', md: '2rem' } }}>
               {isEditing ? 'Editar servicio de calibración' : 'Nuevo servicio de calibración'}
             </Typography>
-            <Typography variant='body2' sx={{ mt: 1, color: 'rgba(255,255,255,0.8)', lineHeight: 1.5, maxWidth: 780 }}>
+            <Typography variant='body2' sx={{ mt: 1, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, maxWidth: 700, fontSize: '0.9rem' }}>
               Cotización base del servicio con cliente, sede, condiciones comerciales,
               ítems y evidencia de solicitud.
             </Typography>
           </Box>
           {service ? (
             <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
-              <Chip color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]} label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]} sx={{ fontWeight: 700 }} />
-              <Chip color={CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]} label={CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]} sx={{ fontWeight: 700 }} />
+              <Chip color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]} label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]} sx={{ fontWeight: 700, borderRadius: '8px' }} />
+              <Chip color={CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]} label={CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]} sx={{ fontWeight: 700, borderRadius: '8px' }} />
             </Stack>
           ) : null}
         </Stack>
@@ -899,13 +938,85 @@ const CalibrationServiceWorkspacePage = () => {
         </Alert>
       ) : null}
 
-      <Grid container spacing={2}>
+      {/* ── Section navigation ── */}
+      <Paper
+        elevation={0}
+        sx={{
+          mb: 3,
+          borderRadius: '14px',
+          border: '1px solid rgba(0,0,0,0.06)',
+          overflow: 'hidden',
+          animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.08s both'
+        }}
+      >
+        <Tabs
+          value={activeSection}
+          onChange={(_, v) => setActiveSection(v)}
+          variant='scrollable'
+          scrollButtons={false}
+          sx={{
+            minHeight: 48,
+            px: 1.5,
+            '& .MuiTab-root': {
+              minHeight: 48,
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.8rem',
+              letterSpacing: '0.01em',
+              px: 2,
+              gap: 1,
+              color: 'text.secondary',
+              '&.Mui-selected': { color: '#059669' }
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: '#059669',
+              height: 3,
+              borderRadius: '3px 3px 0 0'
+            }
+          }}
+        >
+          {sections.map((section, index) => (
+            <Tab
+              key={section.key}
+              icon={section.icon}
+              iconPosition='start'
+              label={
+                <Stack direction='row' alignItems='center' spacing={1}>
+                  <span>{section.label}</span>
+                  <Chip
+                    size='small'
+                    label={`${Math.round(sectionCompletion[index] * 100)}%`}
+                    color={sectionCompletion[index] >= 1 ? 'success' : 'default'}
+                    variant='outlined'
+                    sx={{ height: 20, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.8 } }}
+                  />
+                </Stack>
+              }
+            />
+          ))}
+        </Tabs>
+      </Paper>
+
+      <Grid container spacing={2.5}>
         <Grid item xs={12} lg={8}>
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both' }}>
+          <div style={{ display: activeSection !== 0 ? 'none' : undefined }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #10b981, #34d399)' } }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2, color: '#111827', letterSpacing: '-0.01em' }}>
-                Cliente y alcance
-              </Typography>
+              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
+                <GroupOutlinedIcon sx={{ color: '#059669', fontSize: 22 }} />
+                <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
+                  Cliente y alcance
+                </Typography>
+                {sectionCompletion[0] >= 1 ? (
+                  <Chip icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />} size='small' label='Completo' color='success' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }} />
+                ) : (
+                  <LinearProgress
+                    variant='determinate'
+                    value={sectionCompletion[0] * 100}
+                    sx={{ width: 60, height: 4, borderRadius: 2, ml: 'auto', backgroundColor: 'rgba(0,0,0,0.06)', '& .MuiLinearProgress-bar': { backgroundColor: '#059669', borderRadius: 2 } }}
+                  />
+                )}
+              </Stack>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
@@ -1022,12 +1133,20 @@ const CalibrationServiceWorkspacePage = () => {
               </Grid>
             </CardContent>
           </Card>
+          </div>
 
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both' }}>
+          <div style={{ display: activeSection !== 1 ? 'none' : undefined }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #f59e0b, #fbbf24)' } }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2, color: '#111827', letterSpacing: '-0.01em' }}>
-                Contacto y destino del servicio
-              </Typography>
+              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
+                <Inventory2OutlinedIcon sx={{ color: '#d97706', fontSize: 22 }} />
+                <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
+                  Contacto y destino del servicio
+                </Typography>
+                {sectionCompletion[1] >= 1 ? (
+                  <Chip icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />} size='small' label='Completo' color='success' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }} />
+                ) : null}
+              </Stack>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
                   <TextField fullWidth label='Contacto' value={formState.contactName || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('contactName', event.target.value)} />
@@ -1105,12 +1224,20 @@ const CalibrationServiceWorkspacePage = () => {
               </Grid>
             </CardContent>
           </Card>
+          </div>
 
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both' }}>
+          <div style={{ display: activeSection !== 2 ? 'none' : undefined }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #6366f1, #818cf8)' } }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2, color: '#111827', letterSpacing: '-0.01em' }}>
-                Condiciones comerciales
-              </Typography>
+              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
+                <ReceiptLongOutlinedIcon sx={{ color: '#4f46e5', fontSize: 22 }} />
+                <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
+                  Condiciones comerciales
+                </Typography>
+                {sectionCompletion[2] >= 1 ? (
+                  <Chip icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />} size='small' label='Completo' color='success' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }} />
+                ) : null}
+              </Stack>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={4}>
                   <FormControl fullWidth>
@@ -1263,9 +1390,21 @@ const CalibrationServiceWorkspacePage = () => {
               </Grid>
             </CardContent>
           </Card>
+          </div>
 
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.25s both' }}>
+          <div style={{ display: activeSection !== 3 ? 'none' : undefined }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.25s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #ec4899, #f472b6)' } }}>
             <CardContent sx={{ p: { xs: 2, md: 3 }, pBottom: { xs: 2, md: 3 } }}>
+              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
+                <RequestQuoteOutlinedIcon sx={{ color: '#db2777', fontSize: 22 }} />
+                <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
+                  Ítems cotizados
+                </Typography>
+                <Chip size='small' label={`${formState.items.filter((i) => i.itemName.trim()).length} ítems`} variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.8 } }} />
+                {formState.items.filter((i) => i.itemName.trim()).length > 0 ? (
+                  <Chip icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />} size='small' label='Completo' color='success' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }} />
+                ) : null}
+              </Stack>
               <CalibrationServiceItemsEditor
                 items={formState.items}
                 products={productOptions}
@@ -1286,9 +1425,12 @@ const CalibrationServiceWorkspacePage = () => {
 
           <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both' }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2, color: '#111827', letterSpacing: '-0.01em' }}>
-                Evidencia de solicitud
-              </Typography>
+              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
+                <UploadFileOutlinedIcon sx={{ color: '#6b7280', fontSize: 22 }} />
+                <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
+                  Evidencia de solicitud
+                </Typography>
+              </Stack>
               <Stack spacing={2}>
                 <TextField fullWidth label='Titulo de la evidencia' value={requestEvidenceTitle} disabled={!canEdit || isBusy} onChange={(event) => setRequestEvidenceTitle(event.target.value)} />
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', md: 'center' }}>
@@ -1368,14 +1510,18 @@ const CalibrationServiceWorkspacePage = () => {
               </Stack>
             </CardContent>
           </Card>
+          </div>
         </Grid>
 
         <Grid item xs={12} lg={4}>
           <Card elevation={0} sx={{ borderRadius: '16px', border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(14px)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)', position: { lg: 'sticky' }, top: { lg: 24 }, animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both' }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2, color: '#111827', letterSpacing: '-0.01em' }}>
-                Resumen económico
-              </Typography>
+              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2 }}>
+                <ReceiptLongOutlinedIcon sx={{ color: '#059669', fontSize: 22 }} />
+                <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
+                  Resumen económico
+                </Typography>
+              </Stack>
               <Stack spacing={1.5}>
                 <Stack direction='row' justifyContent='space-between'>
                   <Typography sx={{ color: '#6b7280', fontWeight: 500 }}>Subtotal</Typography>
@@ -1397,7 +1543,33 @@ const CalibrationServiceWorkspacePage = () => {
                   </Typography>
                 </Stack>
               </Stack>
-              <Divider sx={{ my: 3 }} />
+
+              <Divider sx={{ my: 2.5 }} />
+
+              <Stack spacing={1.5}>
+                <Typography variant='caption' color='text.secondary' fontWeight={700} sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>Resumen del formulario</Typography>
+                {sections.map((section, index) => (
+                  <Stack key={section.key} direction='row' justifyContent='space-between' alignItems='center'>
+                    <Stack direction='row' alignItems='center' spacing={1}>
+                      {section.icon}
+                      <Typography variant='body2' sx={{ color: 'text.secondary', fontWeight: 500 }}>{section.label}</Typography>
+                    </Stack>
+                    <Chip
+                      size='small'
+                      label={sectionCompletion[index] >= 1 ? 'Listo' : `${Math.round(sectionCompletion[index] * 100)}%`}
+                      color={sectionCompletion[index] >= 1 ? 'success' : 'default'}
+                      variant='outlined'
+                      sx={{ height: 20, '& .MuiChip-label': { fontSize: '0.65rem', px: 0.6 } }}
+                    />
+                  </Stack>
+                ))}
+                <Stack direction='row' justifyContent='space-between' alignItems='center'>
+                  <Typography variant='body2' sx={{ color: 'text.secondary', fontWeight: 500 }}>Ítems</Typography>
+                  <Typography variant='body2' fontWeight={600}>{validItemsCount}</Typography>
+                </Stack>
+              </Stack>
+
+              <Divider sx={{ my: 2.5 }} />
               <Stack spacing={1.5}>
                 <Button
                   variant='contained'
