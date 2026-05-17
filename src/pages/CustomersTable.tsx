@@ -56,7 +56,9 @@ const CustomersTable: React.FC = () => {
   const fetchCustomers = async () => {
     try {
       setLoading(true)
-      const response = await axiosPrivate.get(`/customers`, {})
+      const response = await axiosPrivate.get(`/customers`, {
+        params: { scope: 'all' }
+      })
 
       if (response.statusText === 'OK') {
         const filteredData = response.data.filter(
