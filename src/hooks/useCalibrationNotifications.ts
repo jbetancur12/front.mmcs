@@ -70,8 +70,8 @@ export const useCalibrationNotifications = ({
   return useQuery({
     queryKey: [QUERY_KEY, 'list', page, limit, showRead],
     queryFn: () => fetchNotifications({ page, limit, showRead }),
-    staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000
+    staleTime: 5 * 1000,
+    refetchInterval: 15 * 1000
   })
 }
 
@@ -79,8 +79,8 @@ export const useCalibrationUnreadCount = () => {
   return useQuery({
     queryKey: [QUERY_KEY, 'unread-count'],
     queryFn: fetchUnreadCount,
-    staleTime: 15 * 1000,
-    refetchInterval: 30 * 1000
+    staleTime: 3000,
+    refetchInterval: 8000
   })
 }
 
