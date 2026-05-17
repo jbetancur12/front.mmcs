@@ -349,22 +349,6 @@ const CalibrationServiceItemsEditor = ({
                     <TextField
                       fullWidth
                       size='small'
-                      label='Instrumento'
-                      value={item.instrumentName || ''}
-                      disabled={!canEdit || isBusy}
-                      onChange={(event) =>
-                        onChangeItemField(
-                          item.localId,
-                          'instrumentName',
-                          event.target.value
-                        )
-                      }
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      fullWidth
-                      size='small'
                       label='Intervalo'
                       value={item.intervalText || ''}
                       disabled={!canEdit || isBusy}
