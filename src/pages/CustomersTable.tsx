@@ -60,7 +60,7 @@ const CustomersTable: React.FC = () => {
         params: { scope: 'all' }
       })
 
-      if (response.statusText === 'OK') {
+      if (response.status === 200) {
         const filteredData = response.data.filter(
           (customer: CustomerData) => customer.rol !== 'admin'
         )
