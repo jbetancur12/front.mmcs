@@ -168,6 +168,18 @@ const NotificationBell = () => {
                 <Typography variant='body2' color='text.secondary'>Sin notificaciones</Typography>
               </Box>
             )}
+            <Box
+              sx={{ borderTop: '1px solid', borderColor: 'divider' }}
+            >
+              <ListItemButton
+                onClick={() => { navigate('/calibration-services/notifications'); handleClose() }}
+                sx={{ justifyContent: 'center', py: 1 }}
+              >
+                <Typography variant='caption' fontWeight={600} color='primary'>
+                  Ver historial completo
+                </Typography>
+              </ListItemButton>
+            </Box>
           </Box>
         </Paper>
       </Popper>
