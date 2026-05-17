@@ -34,6 +34,7 @@ import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined'
 import ViewKanbanOutlinedIcon from '@mui/icons-material/ViewKanbanOutlined'
 import ViewListOutlinedIcon from '@mui/icons-material/ViewListOutlined'
+import CalibrationNotificationBell from './CalibrationNotificationBell'
 import { alpha } from '@mui/material/styles'
 import { Toaster, toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
@@ -1204,6 +1205,9 @@ const CalibrationServicesPage = () => {
             >
               Actualizar
             </Button>
+            <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '10px', px: 0.5, backdropFilter: 'blur(8px)' }}>
+              <CalibrationNotificationBell />
+            </Box>
             {canCreateServices ? (
               <Button
                 variant='contained'
