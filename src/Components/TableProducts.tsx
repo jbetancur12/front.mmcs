@@ -5,12 +5,19 @@ import {
   DialogContent,
   DialogTitle,
   FormControl,
+  IconButton,
   InputLabel,
   MenuItem,
   Select,
   Stack,
-  TextField
+  TextField,
+  Tooltip,
+  Typography
 } from '@mui/material'
+import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined'
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined'
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import {
   MaterialReactTable,
   MaterialReactTableProps,
@@ -21,6 +28,7 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { NumericFormatCustom } from './NumericFormatCustom'
 import { bigToast } from './ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
+import Swal from 'sweetalert2'
 
 export interface ProductData {
   id: number
@@ -65,6 +73,9 @@ const TableProducts: React.FC = () => {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
   const [percentage, setPercentage] = useState('0')
   const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false)
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [isImporting, setIsImporting] = useState(false)
 
   const fetchProducts = async () => {
     try {
@@ -103,6 +114,93 @@ const TableProducts: React.FC = () => {
     } catch (error) {
       console.error('Error updating prices:', error)
       bigToast('Error al actualizar los precios.', 'error')
+    }
+  }
+
+  const handleDeleteProduct = async (product: ProductData) => {
+    const result = await Swal.fire({
+      title: '¿Eliminar producto?',
+      html: `
+        <div style="text-align: left;">
+          <p><strong>Producto:</strong> ${product.name}</p>
+          <p style="color: #6b7280; font-size: 0.9rem; margin-top: 12px;">
+            Los servicios ya cotizados que usen este producto conservarán sus datos,
+            pero perderán la referencia al catálogo.
+          </p>
+          <p style="color: #dc2626; font-size: 0.85rem;"><strong>Esta acción no se puede deshacer.</strong></p>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#9ca3af',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true,
+      focusCancel: true
+    })
+
+    if (!result.isConfirmed) return
+
+    try {
+      await axiosPrivate.delete(`/products/${product.id}`)
+      await fetchProducts()
+      bigToast('Producto eliminado.', 'success')
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      bigToast('Error al eliminar el producto.', 'error')
+    }
+  }
+
+  const handleDownloadTemplate = async () => {
+    try {
+      const response = await axiosPrivate.get('/products/template', {
+        responseType: 'blob'
+      })
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', 'plantilla-productos.xlsx')
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Error downloading template:', error)
+      bigToast('Error al descargar la plantilla.', 'error')
+    }
+  }
+
+  const handleImportFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setImportFile(event.target.files?.[0] || null)
+  }
+
+  const handleImportProducts = async () => {
+    if (!importFile) {
+      bigToast('Selecciona un archivo Excel.', 'warning')
+      return
+    }
+
+    setIsImporting(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', importFile)
+      const response = await axiosPrivate.post('/products/import', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      const result = response.data
+      bigToast(
+        `Importación completada: ${result.created} creados, ${result.updated} actualizados${result.errors?.length ? `, ${result.errors.length} errores.` : '.'}`,
+        result.errors?.length ? 'warning' : 'success'
+      )
+      setImportDialogOpen(false)
+      setImportFile(null)
+      await fetchProducts()
+    } catch (error) {
+      console.error('Error importing products:', error)
+      bigToast('Error al importar productos.', 'error')
+    } finally {
+      setIsImporting(false)
     }
   }
 
@@ -305,6 +403,22 @@ const TableProducts: React.FC = () => {
           onChange={(e) => setPercentage(e.target.value)}
           InputProps={{ inputProps: { min: 0 } }}
         />
+        <Button
+          variant='outlined'
+          startIcon={<DownloadOutlinedIcon />}
+          onClick={handleDownloadTemplate}
+          sx={{ fontWeight: 600, ml: 'auto' }}
+        >
+          Descargar plantilla
+        </Button>
+        <Button
+          variant='outlined'
+          startIcon={<CloudUploadOutlinedIcon />}
+          onClick={() => setImportDialogOpen(true)}
+          sx={{ fontWeight: 600 }}
+        >
+          Importar Excel
+        </Button>
       </Stack>
 
       <Dialog
@@ -327,6 +441,8 @@ const TableProducts: React.FC = () => {
         enableHiding={false}
         enableColumnActions={false}
         enableEditing
+        enableRowActions
+        positionActionsColumn='last'
         localization={MRT_Localization_ES}
         muiTableProps={{
           sx: {
@@ -337,6 +453,20 @@ const TableProducts: React.FC = () => {
         data={tableData}
         onEditingRowSave={handleSaveRowEdits}
         onEditingRowCancel={handleCancelRowEdits}
+        renderRowActions={({ row, table }) => (
+          <Stack direction='row' spacing={0.5}>
+            <Tooltip title='Editar'>
+              <IconButton size='small' onClick={() => table.setEditingRow(row)}>
+                <EditOutlinedIcon fontSize='small' />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title='Eliminar'>
+              <IconButton size='small' color='error' onClick={() => handleDeleteProduct(row.original)}>
+                <DeleteOutlineOutlinedIcon fontSize='small' />
+              </IconButton>
+            </Tooltip>
+          </Stack>
+        )}
         renderTopToolbarCustomActions={() => (
           <Button
             variant='contained'
@@ -353,6 +483,36 @@ const TableProducts: React.FC = () => {
         onClose={() => setCreateModalOpen(false)}
         onSubmit={handleCreateNewRow}
       />
+
+      <Dialog open={importDialogOpen} onClose={() => { setImportDialogOpen(false); setImportFile(null) }} maxWidth='sm' fullWidth>
+        <DialogTitle>Importar productos desde Excel</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            <Typography variant='body2' color='text.secondary'>
+              Selecciona un archivo Excel (.xlsx) con los productos a importar.
+              Usa la plantilla de ejemplo para asegurar el formato correcto.
+              Los productos existentes se actualizarán automáticamente.
+            </Typography>
+            <Button
+              variant='outlined'
+              component='label'
+              startIcon={<CloudUploadOutlinedIcon />}
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              {importFile ? importFile.name : 'Seleccionar archivo'}
+              <input type='file' hidden accept='.xlsx,.xls' onChange={handleImportFileChange} />
+            </Button>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setImportDialogOpen(false); setImportFile(null) }} color='inherit'>
+            Cancelar
+          </Button>
+          <Button variant='contained' onClick={handleImportProducts} disabled={!importFile || isImporting}>
+            {isImporting ? 'Importando...' : 'Importar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   )
 }

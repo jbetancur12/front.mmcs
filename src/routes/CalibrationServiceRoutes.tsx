@@ -25,6 +25,7 @@ const CalibrationServiceAnalyticsPage = lazy(
 const CalibrationNotificationCenter = lazy(
   () => import('../pages/calibration-services/CalibrationNotificationCenter')
 )
+const ProductosServicios = lazy(() => import('../pages/ProductosServicios'))
 
 const CalibrationServiceRoutes = (role: string[]) => {
   return (
@@ -65,6 +66,21 @@ const CalibrationServiceRoutes = (role: string[]) => {
         <Route
           path='calibration-services/notifications'
           element={<CalibrationNotificationCenter />}
+        />
+      </Route>
+
+      <Route
+        element={
+          <ProtectedRoute
+            isAuthenticated={localStorage.getItem('accessToken') !== null}
+            userRole={role}
+            roles={['admin']}
+          />
+        }
+      >
+        <Route
+          path='calibration-services/products'
+          element={<ProductosServicios />}
         />
       </Route>
 

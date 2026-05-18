@@ -64,7 +64,7 @@ const sidebarItems = ($userStore: UserData) => [
   {
     type: 'link',
     label: 'Productos y servicios',
-    to: '/productos-y-servicios',
+    to: '/calibration-services/products',
     icon: <RequestQuoteOutlined className={iconClass} />,
     roles: ['admin'],
     moduleName: 'Basic'
