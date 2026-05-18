@@ -7,7 +7,7 @@ import { BiSolidReport } from 'react-icons/bi'
 import DropdownButton from './DropdownButton' // Importa el componente del dropdown si ya lo tienes
 import { useStore } from '@nanostores/react'
 import { UserData, userStore } from 'src/store/userStore'
-import { CarRepair, NotificationsOutlined, RequestQuoteOutlined, ScienceOutlined } from '@mui/icons-material'
+import { CarRepair, NotificationsOutlined, ScienceOutlined } from '@mui/icons-material'
 import {
   getEffectiveLmsMenuRoles,
   isLmsOnlyUser,
@@ -61,14 +61,6 @@ const sidebarItems = ($userStore: UserData) => [
     moduleName: 'Basic'
   },
 
-  {
-    type: 'link',
-    label: 'Productos y servicios',
-    to: '/calibration-services/products',
-    icon: <RequestQuoteOutlined className={iconClass} />,
-    roles: ['admin'],
-    moduleName: 'Basic'
-  },
   {
     type: 'dropdown',
     buttonText: 'Compras',
@@ -327,14 +319,6 @@ const sidebarItems = ($userStore: UserData) => [
   },
   {
     type: 'link',
-    label: 'Notificaciones',
-    to: '/calibration-services/notifications',
-    icon: <NotificationsOutlined className={iconClass} />,
-    roles: [...CALIBRATION_SERVICE_ALLOWED_ROLES],
-    moduleName: 'Basic'
-  },
-  {
-    type: 'link',
     label: 'Flota',
     to: '/fleet',
     icon: <CarRepair className={iconClass} />,
@@ -488,14 +472,14 @@ const SideBar = ({
                   <Link
                     to={item.to}
                     className={`flex items-center p-2.5 text-sm font-medium rounded-lg transition-all duration-250 group relative ${
-                      pathname === item.to
+                      pathname === item.to || (item.to && item.to !== '/' && pathname.startsWith(item.to + '/'))
                         ? 'bg-[#6dc662]/12 text-[#6dc662] shadow-sm shadow-[#6dc662]/15 border-l-3 border-[#6dc662] dark:bg-[#6dc662]/20 dark:text-[#6dc662]'
                         : 'text-gray-700 hover:bg-gray-50/80 hover:text-gray-900 hover:shadow-sm hover:shadow-gray-200/30 dark:text-gray-300 dark:hover:bg-gray-800/40 dark:hover:text-white'
                     } ${sidebarMinimized ? 'justify-center px-2' : ''}`}
                     onClick={handleLinkClick}
                   >
                     <div
-                      className={`flex-shrink-0 ${sidebarMinimized ? '' : 'mr-3'} ${pathname === item.to ? 'bg-[#6dc662] p-1.5 rounded-md shadow-sm' : 'group-hover:bg-[#6dc662]/10 group-hover:p-1.5 group-hover:rounded-md transition-all duration-250'}`}
+                      className={`flex-shrink-0 ${sidebarMinimized ? '' : 'mr-3'} ${pathname === item.to || (item.to && item.to !== '/' && pathname.startsWith(item.to + '/')) ? 'bg-[#6dc662] p-1.5 rounded-md shadow-sm' : 'group-hover:bg-[#6dc662]/10 group-hover:p-1.5 group-hover:rounded-md transition-all duration-250'}`}
                     >
                       {item.icon}
                     </div>

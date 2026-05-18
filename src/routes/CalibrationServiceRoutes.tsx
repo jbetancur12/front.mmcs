@@ -56,10 +56,6 @@ const CalibrationServiceRoutes = (role: string[]) => {
           <Route index element={<CalibrationServiceAnalyticsPage />} />
         </Route>
         <Route
-          path='calibration-services/:serviceId'
-          element={<CalibrationServiceDetailsPage />}
-        />
-        <Route
           path='calibration-services/customers'
           element={<CalibrationServiceCustomersPage />}
         />
@@ -67,20 +63,13 @@ const CalibrationServiceRoutes = (role: string[]) => {
           path='calibration-services/notifications'
           element={<CalibrationNotificationCenter />}
         />
-      </Route>
-
-      <Route
-        element={
-          <ProtectedRoute
-            isAuthenticated={localStorage.getItem('accessToken') !== null}
-            userRole={role}
-            roles={['admin']}
-          />
-        }
-      >
         <Route
-          path='calibration-services/products'
+          path='calibration-services/productos-y-servicios'
           element={<ProductosServicios />}
+        />
+        <Route
+          path='calibration-services/:serviceId'
+          element={<CalibrationServiceDetailsPage />}
         />
       </Route>
 

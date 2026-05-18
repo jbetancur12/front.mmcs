@@ -26,6 +26,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
 import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
 import FilterListOutlinedIcon from '@mui/icons-material/FilterListOutlined'
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
@@ -1196,6 +1197,16 @@ const CalibrationServicesPage = () => {
                 sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
               >
                 Clientes
+              </Button>
+            ) : null}
+            {canCreateServices ? (
+              <Button
+                variant='outlined'
+                startIcon={<Inventory2OutlinedIcon />}
+                onClick={() => navigate('/calibration-services/productos-y-servicios')}
+                sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
+              >
+                Productos
               </Button>
             ) : null}
             {canManageSlaConfig ? (
