@@ -167,9 +167,23 @@ const ui = {
   textSecondary: '#4b5563',
   muted: '#9ca3af',
   border: '#e5e7eb',
-  surface: '#f3f4f6', // Slightly darker to make glass cards pop
+  surface: '#f3f4f6',
   white: '#ffffff',
   glass: 'rgba(255, 255, 255, 0.75)'
+}
+
+const STATUS_BORDER_COLORS: Record<string, string> = {
+  draft: '#d1d5db',
+  pending_approval: '#f59e0b',
+  rejected: '#ef4444',
+  approved: '#10b981',
+  ods_issued: '#3b82f6',
+  pending_programming: '#8b5cf6',
+  scheduled: '#6366f1',
+  in_execution: '#10b981',
+  technically_completed: '#3b82f6',
+  cancelled: '#ef4444',
+  closed: '#9ca3af'
 }
 
 const softCardSx = {
@@ -1240,7 +1254,7 @@ const CalibrationServicesPage = () => {
 
       <Grid container spacing={2} mb={3}>
         <Grid item xs={12} md={3}>
-          <Card elevation={0} sx={{ ...softCardSx, height: '100%' }}>
+          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: `linear-gradient(180deg, ${ui.info}, ${alpha(ui.info, 0.4)})` } }}>
             <CardContent sx={{ p: 2 }}>
               <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
                 <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
@@ -1260,7 +1274,7 @@ const CalibrationServicesPage = () => {
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card elevation={0} sx={{ ...softCardSx, height: '100%' }}>
+          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: `linear-gradient(180deg, ${ui.warning}, ${alpha(ui.warning, 0.4)})` } }}>
             <CardContent sx={{ p: 2 }}>
               <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
                 <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
@@ -1282,7 +1296,7 @@ const CalibrationServicesPage = () => {
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card elevation={0} sx={{ ...softCardSx, height: '100%' }}>
+          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: `linear-gradient(180deg, ${ui.greenDark}, ${alpha(ui.green, 0.4)})` } }}>
             <CardContent sx={{ p: 2 }}>
               <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
                 <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
@@ -1304,7 +1318,7 @@ const CalibrationServicesPage = () => {
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card elevation={0} sx={{ ...softCardSx, height: '100%' }}>
+          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: urgentCount > 0 ? `linear-gradient(180deg, ${ui.error}, ${alpha(ui.error, 0.4)})` : `linear-gradient(180deg, ${ui.muted}, ${alpha(ui.muted, 0.3)})` } }}>
             <CardContent sx={{ p: 2 }}>
               <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
                 <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
@@ -1470,6 +1484,23 @@ const CalibrationServicesPage = () => {
               </Button>
             </Stack>
           </Stack>
+
+          {activeFiltersCount > 0 ? (
+            <Stack direction='row' spacing={1} sx={{ mt: 2, mb: 0, flexWrap: 'wrap' }}>
+              {search.trim() ? (
+                <Chip size='small' label={`Buscar: "${search}"`} onDelete={() => setSearch('')} variant='outlined' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
+              ) : null}
+              {statusFilter !== FILTER_ALL ? (
+                <Chip size='small' label={`Estado: ${CALIBRATION_SERVICE_STATUS_LABELS[statusFilter] || statusFilter}`} onDelete={() => setStatusFilter(FILTER_ALL)} variant='outlined' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
+              ) : null}
+              {customerFilter !== FILTER_ALL ? (
+                <Chip size='small' label={`Cliente: ${customerFilter}`} onDelete={() => setCustomerFilter(FILTER_ALL)} variant='outlined' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
+              ) : null}
+              {showOnlyMyLoad ? (
+                <Chip size='small' label='Mi carga' onDelete={() => setShowOnlyMyLoad(false)} variant='outlined' color='success' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
+              ) : null}
+            </Stack>
+          ) : null}
 
           <Collapse in={areFiltersOpen} timeout='auto' unmountOnExit>
             <Grid container spacing={2.5} sx={{ mt: 1 }}>
@@ -1666,7 +1697,14 @@ const CalibrationServicesPage = () => {
               ['scheduled', 'in_execution'].includes(service.status)
 
             return (
-              <Card key={service.id} elevation={0} sx={softCardSx}>
+              <Card key={service.id} elevation={0} sx={{
+                ...softCardSx, position: 'relative', overflow: 'visible',
+                '&::before': {
+                  content: '""', position: 'absolute', left: 0, top: 12, bottom: 12,
+                  width: 3, borderRadius: '2px',
+                  background: `linear-gradient(180deg, ${STATUS_BORDER_COLORS[service.status] || '#d1d5db'}, ${alpha(STATUS_BORDER_COLORS[service.status] || '#d1d5db', 0.3)})`
+                }
+              }}>
                 <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
                   <Stack
                     direction={{ xs: 'column', xl: 'row' }}
