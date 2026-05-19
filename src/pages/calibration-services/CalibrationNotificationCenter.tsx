@@ -15,6 +15,7 @@ import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
 import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined'
 import DoneAllOutlinedIcon from '@mui/icons-material/DoneAllOutlined'
 import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined'
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import { Toaster, toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -22,6 +23,7 @@ import {
   useCalibrationNotificationMutations,
   CalibrationNotification
 } from '../../hooks/useCalibrationNotifications'
+import CalibrationServiceWhatsAppConfigDialog from './CalibrationServiceWhatsAppConfigDialog'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -46,6 +48,7 @@ const CalibrationNotificationCenter = () => {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
   const [showRead, setShowRead] = useState(false)
+  const [whatsappConfigOpen, setWhatsappConfigOpen] = useState(false)
   const { data, isLoading } = useCalibrationNotifications({ page, limit: LIMIT, showRead })
   const { markAsRead, markAllAsRead } = useCalibrationNotificationMutations()
 
@@ -125,6 +128,15 @@ const CalibrationNotificationCenter = () => {
               Marcar todas leídas
             </Button>
           ) : null}
+          <Tooltip title='Configurar notificaciones WhatsApp'>
+            <IconButton
+              size='small'
+              onClick={() => setWhatsappConfigOpen(true)}
+              sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '8px' }}
+            >
+              <SettingsOutlinedIcon fontSize='small' />
+            </IconButton>
+          </Tooltip>
         </Stack>
       </Stack>
 
@@ -217,6 +229,10 @@ const CalibrationNotificationCenter = () => {
           </Typography>
         </Paper>
       )}
+      <CalibrationServiceWhatsAppConfigDialog
+        open={whatsappConfigOpen}
+        onClose={() => setWhatsappConfigOpen(false)}
+      />
     </Box>
   )
 }
