@@ -380,19 +380,19 @@ const MaintenanceBilling: React.FC = () => {
             ) : data?.tickets.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} align='center' sx={{ py: 8 }}>
-                  <Typography variant='h6' color='text.secondary'>
-                    No hay tickets con costos para mostrar
-                  </Typography>
-                  <Typography
-                    variant='body2'
-                    color='text.secondary'
-                    sx={{ mt: 1 }}
-                  >
-                    {filter === 'not_invoiced'
-                      ? 'No hay tickets pendientes de facturar'
-                      : filter === 'invoiced'
-                        ? 'No hay tickets facturados'
-                        : 'No hay tickets completados con costos'}
+                    <Typography variant='h6' color='text.secondary'>
+                      No hay tickets completados para mostrar
+                    </Typography>
+                    <Typography
+                      variant='body2'
+                      color='text.secondary'
+                      sx={{ mt: 1 }}
+                    >
+                      {filter === 'not_invoiced'
+                        ? 'No hay tickets pendientes de facturar'
+                        : filter === 'invoiced'
+                          ? 'No hay tickets facturados'
+                          : 'No hay tickets completados'}
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -440,13 +440,19 @@ const MaintenanceBilling: React.FC = () => {
                       </Typography>
                     </TableCell>
                     <TableCell align='right'>
-                      <Typography
-                        variant='body1'
-                        fontWeight={700}
-                        color='#10b981'
-                      >
-                        {formatCurrency(ticket.totalCost)}
-                      </Typography>
+                      {ticket.totalCost > 0 ? (
+                        <Typography variant='body1' fontWeight={700} color='#10b981'>
+                          {formatCurrency(ticket.totalCost)}
+                        </Typography>
+                      ) : ticket.technicianWorkMinutes ? (
+                        <Typography variant='caption' color='text.secondary' sx={{ fontStyle: 'italic' }}>
+                          Solo tiempo técnico
+                        </Typography>
+                      ) : (
+                        <Typography variant='body1' fontWeight={700} color='#9ca3af'>
+                          $0
+                        </Typography>
+                      )}
                     </TableCell>
                     <TableCell align='center'>
                       {ticket.isInvoiced ? (
@@ -529,6 +535,12 @@ const MaintenanceBilling: React.FC = () => {
                             </strong>
                           </Typography>
                           <Divider sx={{ mb: 2 }} />
+                          {ticket.costs.length === 0 ? (
+                            <Alert severity='info' sx={{ mb: 2 }}>
+                              Sin costos de materiales — Este servicio no registró costos de materiales. El tiempo técnico registrado queda como referencia para la facturación externa.
+                            </Alert>
+                          ) : (
+                            <>
                           <Grid container spacing={2}>
                             {ticket.costs.map((cost) => (
                               <Grid item xs={12} sm={6} md={4} key={cost.id}>
@@ -594,6 +606,8 @@ const MaintenanceBilling: React.FC = () => {
                               {formatCurrency(ticket.totalCost)}
                             </Typography>
                           </Box>
+                            </>
+                          )}
                         </Box>
                       </Collapse>
                     </TableCell>

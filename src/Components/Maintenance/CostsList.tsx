@@ -131,8 +131,8 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
             <DialogContent dividers>
                 {initialCosts.length === 0 ? (
                     <Alert severity="info">
-                        <AlertTitle>No hay Costos Registrados</AlertTitle>
-                        No hay costos asociados a este ticket de mantenimiento.
+                        <AlertTitle>Sin costos de materiales</AlertTitle>
+                        Este ticket no tiene costos de materiales registrados. Solo se capturó el tiempo técnico del servicio. Puedes marcarlo como facturado.
                     </Alert>
                 ) : (
                     <>
@@ -230,7 +230,7 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
                     onClick={handleInvoice}
                     color="primary"
                     variant="contained"
-                    disabled={isInvoiced || initialCosts.length === 0 || isProcessingInvoice}
+                    disabled={isInvoiced || isProcessingInvoice}
                     startIcon={
                         isProcessingInvoice ? (
                             <CircularProgress size={20} color="inherit" />
@@ -247,6 +247,8 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
                         ? 'Facturando...'
                         : isInvoiced
                         ? 'Ya Facturado'
+                        : initialCosts.length === 0
+                        ? 'Marcar como Facturado'
                         : 'Facturar Costos'}
                 </Button>
             </DialogActions>

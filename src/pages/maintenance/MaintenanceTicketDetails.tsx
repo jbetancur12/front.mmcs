@@ -137,6 +137,16 @@ export const formatCurrency = (amount: number | undefined) => {
     currency: 'COP'
   }).format(amount)
 }
+
+const formatWorkMinutes = (value?: number | null) => {
+  const minutes = Number(value)
+  if (!Number.isFinite(minutes) || minutes <= 0) return null
+  const hours = Math.floor(minutes / 60)
+  const remainingMinutes = minutes % 60
+  if (hours <= 0) return `${remainingMinutes} min`
+  if (remainingMinutes <= 0) return `${hours} h`
+  return `${hours} h ${remainingMinutes} min`
+}
 /**
  * MaintenanceTicketDetails component provides a comprehensive ticket management interface
  * Features: ticket info display, editing, comments, file management, timeline, PDF generation
@@ -3230,6 +3240,55 @@ const MaintenanceTicketDetails: React.FC = () => {
                       height: 40,
                       borderRadius: '20px',
                       padding: '0 8px',
+                      flexShrink: 0
+                    }}
+                  />
+                </Box>
+              </Paper>
+            )}
+
+            {ticket.costs && ticket.costs.length === 0 && ticket.technicianWorkMinutes && ticket.status === MaintenanceStatus.COMPLETED && (
+              <Paper
+                sx={{
+                  ...surfaceSx,
+                  p: 3,
+                  mb: 3,
+                  '&:hover': {
+                    borderColor: '#cbd5e1',
+                    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
+                  },
+                  cursor: 'pointer'
+                }}
+                onClick={() => setBriefCostsDialogOpen(true)}
+              >
+                <Box display='flex' alignItems='center' justifyContent='space-between' gap={3}>
+                  <Avatar
+                    sx={{
+                      backgroundColor: '#fef3c7',
+                      color: '#92400e',
+                      width: 48,
+                      height: 48,
+                      flexShrink: 0
+                    }}
+                  >
+                    <Schedule fontSize='medium' />
+                  </Avatar>
+                  <Box flexGrow={1} minWidth={0}>
+                    <Typography variant='body1' sx={{ fontWeight: 700, color: '#0f172a', lineHeight: 1 }}>
+                      Sin costos de materiales
+                    </Typography>
+                    <Typography variant='caption' color='text.secondary' lineHeight={1} sx={{ mt: 0.5, display: 'block' }}>
+                      Tiempo técnico registrado: {formatWorkMinutes(ticket.technicianWorkMinutes)}
+                    </Typography>
+                  </Box>
+                  <Chip
+                    label='Solo tiempo técnico'
+                    size='small'
+                    sx={{
+                      backgroundColor: '#fef3c7',
+                      color: '#92400e',
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
                       flexShrink: 0
                     }}
                   />
