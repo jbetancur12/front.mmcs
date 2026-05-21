@@ -63,6 +63,7 @@ const exportToExcel = async (
     'Nombre del Equipo': cert.device.name || '',
     'Activo Fijo': cert.activoFijo || '',
     Serie: cert.serie || '',
+    Ubicación: cert.location || '',
     'Fecha de Calibración': cert.calibrationDate
       ? new Date(cert.calibrationDate).toLocaleDateString('es-ES')
       : '',
@@ -81,6 +82,7 @@ const exportToExcel = async (
     { wch: 35 }, // Nombre del Equipo
     { wch: 15 }, // Activo Fijo
     { wch: 15 }, // Serie
+    { wch: 25 }, // Ubicación
     { wch: 18 }, // Fecha de Calibración
     { wch: 20 } // Próxima Calibración
   ]

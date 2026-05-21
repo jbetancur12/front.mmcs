@@ -170,6 +170,7 @@ const exportToExcel = async (
     'Nombre del Equipo': cert.device?.name || '',
     'Activo Fijo': cert.activoFijo || '',
     Serie: cert.serie || '',
+    Ubicación: cert.location || '',
     'Fecha de Calibración': cert.calibrationDate
       ? new Date(cert.calibrationDate).toLocaleDateString('es-ES')
       : '',
@@ -186,6 +187,7 @@ const exportToExcel = async (
     { wch: 35 },
     { wch: 15 },
     { wch: 15 },
+    { wch: 25 },
     { wch: 18 },
     { wch: 20 }
   ]
@@ -258,6 +260,7 @@ const exportOverviewReport = async (
       'Nombre del Equipo': cert.device?.name || '',
       'Activo Fijo': cert.activoFijo || '',
       Serie: cert.serie || '',
+      Ubicación: cert.location || '',
       'Última Calibración': cert.calibrationDate
         ? new Date(cert.calibrationDate).toLocaleDateString('es-ES')
         : '',
@@ -278,6 +281,7 @@ const exportOverviewReport = async (
       { wch: 35 },
       { wch: 15 },
       { wch: 15 },
+      { wch: 25 },
       { wch: 18 },
       { wch: 20 },
       { wch: 15 }
@@ -298,6 +302,7 @@ const exportOverviewReport = async (
       'Nombre del Equipo': cert.device?.name || '',
       'Activo Fijo': cert.activoFijo || '',
       Serie: cert.serie || '',
+      Ubicación: cert.location || '',
       'Última Calibración': cert.calibrationDate
         ? new Date(cert.calibrationDate).toLocaleDateString('es-ES')
         : '',
@@ -318,6 +323,7 @@ const exportOverviewReport = async (
       { wch: 35 },
       { wch: 15 },
       { wch: 15 },
+      { wch: 25 },
       { wch: 18 },
       { wch: 20 },
       { wch: 15 }
@@ -341,6 +347,7 @@ const exportOverviewReport = async (
         'Nombre del Equipo': cert.device?.name || '',
         'Activo Fijo': cert.activoFijo || '',
         Serie: cert.serie || '',
+        Ubicación: cert.location || '',
         'Última Calibración': cert.calibrationDate
           ? new Date(cert.calibrationDate).toLocaleDateString('es-ES')
           : '',
@@ -357,6 +364,7 @@ const exportOverviewReport = async (
       { wch: 35 },
       { wch: 15 },
       { wch: 15 },
+      { wch: 25 },
       { wch: 18 },
       { wch: 20 },
       { wch: 15 }
