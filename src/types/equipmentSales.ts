@@ -2,6 +2,7 @@ export type EquipmentQuotationStatus =
   | 'draft'
   | 'sent'
   | 'accepted'
+  | 'ready_for_invoicing'
   | 'rejected'
   | 'invoiced'
   | 'cancelled'

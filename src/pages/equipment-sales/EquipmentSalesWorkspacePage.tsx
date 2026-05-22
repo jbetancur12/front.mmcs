@@ -1,16 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from 'react-query'
-import { useCallback, useEffect, useState } from 'react'
 import {
   Accordion, AccordionDetails, AccordionSummary, Autocomplete, Box, Button,
   Card, CardContent, FormControl, Grid,
   InputLabel, MenuItem, Select, Stack, Switch, Tab, Tabs,
-  TextField, Typography, Chip, IconButton, Tooltip
+  TextField, Typography, Chip, IconButton
 } from '@mui/material'
 import {
   ArrowBack, ExpandMoreOutlined, GroupOutlined, Inventory2Outlined, ReceiptLongOutlined,
-  RequestQuoteOutlined, Save, Send, SaveAsOutlined
+  RequestQuoteOutlined, Save, Send, UploadFileOutlined
 } from '@mui/icons-material'
 import { axiosPrivate } from '@utils/api'
 import Swal from 'sweetalert2'
@@ -79,7 +78,7 @@ const TABS = [
   { index: 4, key: 'terms', label: 'Términos', icon: <UploadFileOutlined /> }
 ]
 
-const getCustomerSites = (customer: CustomerOption | null): CustomerSite[] => {
+const getCustomerSites = (customer: CustomerOption | null | undefined): CustomerSite[] => {
   if (!customer) return []
   if (customer.sites?.length) {
     return customer.sites.filter((s) => s.isActive !== false)

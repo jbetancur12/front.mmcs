@@ -1,13 +1,16 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Box, Button, Card, CardContent, Chip, Grid, IconButton,
+  Accordion, AccordionDetails, AccordionSummary, Box, Button, Card, CardContent, Chip, Dialog,
+  DialogActions, DialogContent, DialogTitle, Grid, IconButton, Stack,
   TablePagination, TextField, Tooltip, Typography
 } from '@mui/material'
-import { Add, ChevronRight, Edit, Send, CheckCircle, Cancel, Inventory, Group } from '@mui/icons-material'
-import { useEquipmentQuotations, useEquipmentSalesMutations } from '../../hooks/useEquipmentSales'
+import { Add, ChevronRight, Edit, Send, CheckCircle, Cancel, Inventory, Group, ExpandMoreOutlined, SaveOutlined } from '@mui/icons-material'
+import { useEquipmentQuotations, useEquipmentSalesMutations, useEquipmentQuoteTermsTemplate } from '../../hooks/useEquipmentSales'
 import { EQUIPMENT_QUOTATION_STATUS_LABELS, EQUIPMENT_QUOTATION_STATUS_COLORS } from '../../constants/equipmentSales'
 import { EquipmentQuotation } from '../../types/equipmentSales'
+import CalibrationServiceRichTextEditor from '../calibration-services/CalibrationServiceRichTextEditor'
+import { EQUIPMENT_QUOTE_TERM_KEYS, EQUIPMENT_QUOTE_TERM_LABELS, mergeEquipmentQuoteTerms } from './equipmentQuoteTerms'
 import Swal from 'sweetalert2'
 
 const EquipmentSalesPage = () => {
@@ -16,6 +19,9 @@ const EquipmentSalesPage = () => {
   const [rowsPerPage, setRowsPerPage] = useState(50)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [templateOpen, setTemplateOpen] = useState(false)
+  const [templateTerms, setTemplateTerms] = useState<Record<string, string>>({})
+  const { data: templateData } = useEquipmentQuoteTermsTemplate()
 
   const { data, isLoading } = useEquipmentQuotations({
     page: page + 1,
@@ -24,6 +30,25 @@ const EquipmentSalesPage = () => {
     status: statusFilter || undefined
   })
   const mutations = useEquipmentSalesMutations()
+
+  const handleOpenTemplate = () => {
+    setTemplateTerms(mergeEquipmentQuoteTerms(templateData?.terms as Record<string, string> | null))
+    setTemplateOpen(true)
+  }
+
+  const handleSaveTemplate = async () => {
+    try {
+      await mutations.saveQuoteTermsTemplate.mutateAsync(templateTerms)
+      Swal.fire('Guardada', 'Plantilla de términos actualizada correctamente', 'success')
+      setTemplateOpen(false)
+    } catch {
+      Swal.fire('Error', 'No se pudo guardar la plantilla', 'error')
+    }
+  }
+
+  const setTerm = (key: string, value: string) => {
+    setTemplateTerms((prev) => ({ ...prev, [key]: value }))
+  }
 
   const handleSend = async (id: number) => {
     const result = await Swal.fire({
@@ -81,6 +106,9 @@ const EquipmentSalesPage = () => {
           </Button>
           <Button variant='outlined' startIcon={<Inventory />} onClick={() => navigate('/equipment-sales/products')}>
             Productos
+          </Button>
+          <Button variant='outlined' startIcon={<SaveOutlined />} onClick={handleOpenTemplate}>
+            Plantilla términos
           </Button>
           <Button variant='contained' startIcon={<Add />} onClick={() => navigate('/equipment-sales/new')}>
             Nueva Cotización
@@ -152,6 +180,39 @@ const EquipmentSalesPage = () => {
           )}
         </>
       )}
+
+      <Dialog open={templateOpen} onClose={() => setTemplateOpen(false)} maxWidth='md' fullWidth>
+        <DialogTitle>Plantilla global de términos y condiciones</DialogTitle>
+        <DialogContent dividers>
+          <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+            Edita los términos que se cargarán por defecto al crear una nueva cotización. Usa {'{{validityDays}}'}, {'{{paymentMethod}}'}, {'{{deliveryTime}}'}, {'{{warrantyTerms}}'} como variables dinámicas.
+          </Typography>
+          <Stack spacing={1.5}>
+            {EQUIPMENT_QUOTE_TERM_KEYS.map((termKey) => (
+              <Accordion key={termKey} elevation={0}
+                sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px !important' }}>
+                <AccordionSummary expandIcon={<ExpandMoreOutlined />}>
+                  <Typography fontWeight={800}>{EQUIPMENT_QUOTE_TERM_LABELS[termKey]}</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <CalibrationServiceRichTextEditor
+                    value={templateTerms[termKey] || ''}
+                    placeholder={`Escribe ${EQUIPMENT_QUOTE_TERM_LABELS[termKey].toLowerCase()}`}
+                    onChange={(value) => setTerm(termKey, value)}
+                  />
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setTemplateOpen(false)}>Cancelar</Button>
+          <Button variant='contained' startIcon={<SaveOutlined />}
+            onClick={handleSaveTemplate} disabled={mutations.saveQuoteTermsTemplate.isLoading}>
+            Guardar plantilla
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }
