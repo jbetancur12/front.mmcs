@@ -7,7 +7,7 @@ import { BiSolidReport } from 'react-icons/bi'
 import DropdownButton from './DropdownButton' // Importa el componente del dropdown si ya lo tienes
 import { useStore } from '@nanostores/react'
 import { UserData, userStore } from 'src/store/userStore'
-import { CarRepair, ScienceOutlined } from '@mui/icons-material'
+import { CarRepair, PrecisionManufacturing, ScienceOutlined } from '@mui/icons-material'
 import {
   getEffectiveLmsMenuRoles,
   isLmsOnlyUser,
@@ -15,6 +15,7 @@ import {
   LMS_ADMIN_ROUTE_ROLES
 } from 'src/utils/lmsIdentity'
 import { CALIBRATION_SERVICE_ALLOWED_ROLES } from 'src/constants/calibrationServices'
+import { EQUIPMENT_SALES_ALLOWED_ROLES } from 'src/constants/equipmentSales'
 
 const iconClass =
   'w-5 h-5 text-gray-600 transition-all duration-300 group-hover:text-white dark:text-gray-300 dark:group-hover:text-white group-hover:scale-110 group-hover:drop-shadow-sm'
@@ -315,6 +316,14 @@ const sidebarItems = ($userStore: UserData) => [
     to: '/calibration-services',
     icon: <ScienceOutlined className={iconClass} />,
     roles: [...CALIBRATION_SERVICE_ALLOWED_ROLES],
+    moduleName: 'Basic'
+  },
+  {
+    type: 'link',
+    label: 'Venta Equipos',
+    to: '/equipment-sales',
+    icon: <PrecisionManufacturing className={iconClass} />,
+    roles: [...EQUIPMENT_SALES_ALLOWED_ROLES],
     moduleName: 'Basic'
   },
   {
