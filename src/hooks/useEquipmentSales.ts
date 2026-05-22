@@ -13,7 +13,8 @@ export const EQUIPMENT_SALES_QUERY_KEYS = {
   all: 'equipment-sales',
   quotations: 'equipment-quotations',
   quotation: 'equipment-quotation',
-  products: 'equipment-products'
+  products: 'equipment-products',
+  quoteTermsTemplate: 'equipment-quote-terms-template'
 } as const
 
 const equipmentSalesApi = {
@@ -75,6 +76,14 @@ const equipmentSalesApi = {
   },
   deleteProduct: async (id: number | string): Promise<void> => {
     await axiosPrivate.delete(`/equipment-sales/products/${id}`)
+  },
+  getQuoteTermsTemplate: async (): Promise<{ terms: Record<string, string>; updatedAt: string | null; updatedByName: string | null }> => {
+    const { data } = await axiosPrivate.get('/equipment-sales/config/quote-terms')
+    return data
+  },
+  upsertQuoteTermsTemplate: async (terms: Record<string, string>): Promise<{ terms: Record<string, string>; updatedAt: string; updatedByName: string }> => {
+    const { data } = await axiosPrivate.put('/equipment-sales/config/quote-terms', { terms })
+    return data
   }
 }
 
@@ -102,6 +111,15 @@ export const useEquipmentProducts = (params?: Record<string, unknown>) => {
     queryFn: () => equipmentSalesApi.listProducts(params),
     keepPreviousData: true,
     staleTime: 60 * 1000
+  })
+}
+
+export const useEquipmentQuoteTermsTemplate = (enabled?: boolean) => {
+  return useQuery({
+    queryKey: [EQUIPMENT_SALES_QUERY_KEYS.quoteTermsTemplate],
+    queryFn: () => equipmentSalesApi.getQuoteTermsTemplate(),
+    enabled,
+    staleTime: 5 * 60 * 1000
   })
 }
 
@@ -170,6 +188,11 @@ export const useEquipmentSalesMutations = () => {
     onSuccess: () => queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.products])
   })
 
+  const saveQuoteTermsTemplate = useMutation({
+    mutationFn: equipmentSalesApi.upsertQuoteTermsTemplate,
+    onSuccess: () => queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.quoteTermsTemplate])
+  })
+
   return {
     createQuotation,
     updateQuotation,
@@ -181,6 +204,7 @@ export const useEquipmentSalesMutations = () => {
     cancelQuotation,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    saveQuoteTermsTemplate
   }
 }

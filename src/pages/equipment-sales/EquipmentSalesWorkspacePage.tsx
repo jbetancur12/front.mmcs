@@ -1,20 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from 'react-query'
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   Accordion, AccordionDetails, AccordionSummary, Autocomplete, Box, Button,
   Card, CardContent, FormControl, Grid,
   InputLabel, MenuItem, Select, Stack, Switch, Tab, Tabs,
-  TextField, Typography, Chip, IconButton
+  TextField, Typography, Chip, IconButton, Tooltip
 } from '@mui/material'
 import {
   ArrowBack, ExpandMoreOutlined, GroupOutlined, Inventory2Outlined, ReceiptLongOutlined,
-  RequestQuoteOutlined, UploadFileOutlined, Save, Send
+  RequestQuoteOutlined, Save, Send, SaveAsOutlined
 } from '@mui/icons-material'
 import { axiosPrivate } from '@utils/api'
 import Swal from 'sweetalert2'
-import { useEquipmentQuotation, useEquipmentSalesMutations } from '../../hooks/useEquipmentSales'
+import { useEquipmentQuotation, useEquipmentQuoteTermsTemplate, useEquipmentSalesMutations } from '../../hooks/useEquipmentSales'
 import { EQUIPMENT_QUOTATION_STATUS_LABELS, EQUIPMENT_QUOTATION_STATUS_COLORS } from '../../constants/equipmentSales'
 import { EquipmentQuotationPayload } from '../../types/equipmentSales'
 import EquipmentQuotationItemsEditor, { FormItem, createEmptyItem, calculateItemTotals } from './EquipmentQuotationItemsEditor'
@@ -123,9 +123,22 @@ const EquipmentSalesWorkspacePage = () => {
   const isEditing = !!quotationId
   const [activeTab, setActiveTab] = useState(0)
   const [formState, setFormState] = useState<FormState>(initialFormState)
+  const [saveAsTemplate, setSaveAsTemplate] = useState(false)
+  const [templateHydrated, setTemplateHydrated] = useState(false)
   const mutations = useEquipmentSalesMutations()
 
   const { data: quotationData, isLoading: loadingQuotation } = useEquipmentQuotation(isEditing ? quotationId : null)
+  const { data: termsTemplate } = useEquipmentQuoteTermsTemplate(!isEditing)
+
+  useEffect(() => {
+    if (isEditing || templateHydrated || !termsTemplate?.terms) return
+    setFormState((prev) => ({
+      ...prev,
+      quoteTerms: mergeEquipmentQuoteTerms(termsTemplate.terms as Record<string, string>),
+    }))
+    setTemplateHydrated(true)
+  }, [isEditing, termsTemplate, templateHydrated])
+
   const { data: customers = [] } = useQuery({
     queryKey: ['equipment-sales-customers'],
     queryFn: async () => {
@@ -297,11 +310,13 @@ const EquipmentSalesWorkspacePage = () => {
       const payload = buildPayload(targetStatus)
       if (isEditing) {
         await mutations.updateQuotation.mutateAsync({ id: quotationId!, payload })
-        Swal.fire('Guardado', 'Cotización actualizada correctamente', 'success')
       } else {
         await mutations.createQuotation.mutateAsync(payload)
-        Swal.fire('Creada', 'Cotización creada correctamente', 'success')
       }
+      if (saveAsTemplate) {
+        await mutations.saveQuoteTermsTemplate.mutateAsync(formState.quoteTerms)
+      }
+      Swal.fire(isEditing ? 'Guardado' : 'Creada', isEditing ? 'Cotización actualizada correctamente' : 'Cotización creada correctamente', 'success')
       navigate('/equipment-sales')
     } catch (err: any) {
       Swal.fire('Error', err?.response?.data?.error || 'Error al guardar', 'error')
@@ -501,14 +516,30 @@ const EquipmentSalesWorkspacePage = () => {
                   Variables disponibles:
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  <Chip label='{{validityDays}}' size='small' color='success' variant='outlined' />
-                  <Chip label='{{paymentMethod}}' size='small' color='success' variant='outlined' />
-                  <Chip label='{{deliveryTime}}' size='small' color='success' variant='outlined' />
-                  <Chip label='{{warrantyTerms}}' size='small' color='success' variant='outlined' />
+                  <Chip label='{{validityDays}} → Días de validez' size='small' color='success' variant='outlined' />
+                  <Chip label='{{paymentMethod}} → Forma de pago' size='small' color='success' variant='outlined' />
+                  <Chip label='{{deliveryTime}} → Tiempo de entrega' size='small' color='success' variant='outlined' />
+                  <Chip label='{{warrantyTerms}} → Términos de garantía' size='small' color='success' variant='outlined' />
                 </Box>
                 <Typography variant='caption' sx={{ mt: 1, display: 'block', color: '#15803d' }}>
                   Escribe estas variables en el texto y serán reemplazadas automáticamente al generar el PDF.
                 </Typography>
+              </Box>
+
+              <Box sx={{ mb: 2, p: 2, bgcolor: '#fefce8', border: '1px solid #fef08a', borderRadius: 2 }}>
+                <Typography variant='caption' sx={{ color: '#854d0e', display: 'block' }}>
+                  {'💡 Ejemplo: si pones "La oferta tiene una validez de {{validityDays}}", en el PDF se verá "La oferta tiene una validez de 30 días".'}
+                </Typography>
+              </Box>
+
+              <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Switch checked={saveAsTemplate} onChange={(e) => setSaveAsTemplate(e.target.checked)} />
+                <Box>
+                  <Typography variant='body2' sx={{ fontWeight: 600 }}>Guardar como plantilla global</Typography>
+                  <Typography variant='caption' color='text.secondary'>
+                    Al guardar la cotización, estos términos quedarán como predeterminados para futuras cotizaciones.
+                  </Typography>
+                </Box>
               </Box>
 
               <Stack spacing={1.5}>
