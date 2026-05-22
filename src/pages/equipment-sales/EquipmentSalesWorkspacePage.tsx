@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from 'react-query'
+import { useCallback } from 'react'
 import {
-  Autocomplete, Box, Button, Card, CardContent, FormControl, Grid,
-  InputLabel, MenuItem, Select, Switch, Tab, Tabs,
+  Accordion, AccordionDetails, AccordionSummary, Autocomplete, Box, Button,
+  Card, CardContent, FormControl, Grid,
+  InputLabel, MenuItem, Select, Stack, Switch, Tab, Tabs,
   TextField, Typography, Chip, IconButton
 } from '@mui/material'
 import {
-  ArrowBack, GroupOutlined, Inventory2Outlined, ReceiptLongOutlined,
+  ArrowBack, ExpandMoreOutlined, GroupOutlined, Inventory2Outlined, ReceiptLongOutlined,
   RequestQuoteOutlined, UploadFileOutlined, Save, Send
 } from '@mui/icons-material'
 import { axiosPrivate } from '@utils/api'
@@ -16,6 +18,8 @@ import { useEquipmentQuotation, useEquipmentSalesMutations } from '../../hooks/u
 import { EQUIPMENT_QUOTATION_STATUS_LABELS, EQUIPMENT_QUOTATION_STATUS_COLORS } from '../../constants/equipmentSales'
 import { EquipmentQuotationPayload } from '../../types/equipmentSales'
 import EquipmentQuotationItemsEditor, { FormItem, createEmptyItem, calculateItemTotals } from './EquipmentQuotationItemsEditor'
+import CalibrationServiceRichTextEditor from '../calibration-services/CalibrationServiceRichTextEditor'
+import { EQUIPMENT_QUOTE_TERM_KEYS, EQUIPMENT_QUOTE_TERM_LABELS, mergeEquipmentQuoteTerms } from './equipmentQuoteTerms'
 
 const REQUEST_CHANNEL_OPTIONS = ['En persona', 'Por Email', 'Por Telefono', 'Por WhatsApp']
 const PAYMENT_METHOD_OPTIONS = ['De Contado', 'A 30 Dias', 'A 60 Dias', 'A 90 Dias', '50% / 50%', 'Credito 30 Dias', 'Credito 60 Dias']
@@ -63,6 +67,7 @@ interface FormState {
   discountValue: number
   commercialComments: string
   internalNotes: string
+  quoteTerms: Record<string, string>
   items: FormItem[]
 }
 
@@ -108,6 +113,7 @@ const initialFormState: FormState = {
   discountValue: 0,
   commercialComments: '',
   internalNotes: '',
+  quoteTerms: mergeEquipmentQuoteTerms(),
   items: [createEmptyItem()]
 }
 
@@ -149,6 +155,7 @@ const EquipmentSalesWorkspacePage = () => {
         discountValue: Number(quotationData.discountValue) || 0,
         commercialComments: quotationData.commercialComments || '',
         internalNotes: quotationData.internalNotes || '',
+        quoteTerms: mergeEquipmentQuoteTerms(quotationData.quoteTerms as Record<string, string> | null),
         items: quotationData.items?.length
           ? quotationData.items.map((i, idx) => ({
               localId: `item-${Date.now()}-${idx}`,
@@ -178,6 +185,13 @@ const EquipmentSalesWorkspacePage = () => {
   const setField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setFormState((prev) => ({ ...prev, [field]: value }))
   }
+
+  const setQuoteTerm = useCallback((key: string, value: string) => {
+    setFormState((prev) => ({
+      ...prev,
+      quoteTerms: { ...prev.quoteTerms, [key]: value }
+    }))
+  }, [])
 
   const selectedCustomer = customers.find((c: CustomerOption) => c.id === formState.customerId)
   const customerSites = getCustomerSites(selectedCustomer)
@@ -267,7 +281,7 @@ const EquipmentSalesWorkspacePage = () => {
       discountValue: formState.discountValue,
       commercialComments: formState.commercialComments || null,
       internalNotes: formState.internalNotes || null,
-      quoteTerms: null,
+      quoteTerms: formState.quoteTerms || null,
       status,
       items: validItems
     }
@@ -299,6 +313,7 @@ const EquipmentSalesWorkspacePage = () => {
     if (index === 1) return formState.contactName ? 100 : 40
     if (index === 2) return formState.paymentMethod ? 100 : 50
     if (index === 3) return formState.items.some((i) => i.itemName) ? 100 : 0
+    if (index === 4) return formState.quoteTerms?.commercialComments ? 100 : 30
     return 50
   }
 
@@ -479,19 +494,57 @@ const EquipmentSalesWorkspacePage = () => {
           {/* Tab 4: Terms */}
           <Card sx={{ display: activeTab === 4 ? 'block' : 'none', borderLeft: '4px solid #9c27b0' }}>
             <CardContent>
-              <Typography variant='h6' sx={{ mb: 2 }}>Comentarios y notas</Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField label='Comentarios comerciales' multiline rows={4} fullWidth
-                    value={formState.internalNotes}
-                    onChange={(e) => setField('internalNotes', e.target.value)} />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField label='Notas internas' multiline rows={3} fullWidth
-                    value={formState.commercialComments}
-                    onChange={(e) => setField('commercialComments', e.target.value)} />
-                </Grid>
-              </Grid>
+              <Typography variant='h6' sx={{ mb: 2 }}>Términos y condiciones</Typography>
+
+              <Box sx={{ mb: 3, p: 2, bgcolor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 2 }}>
+                <Typography variant='subtitle2' sx={{ mb: 1, color: '#166534' }}>
+                  Variables disponibles:
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  <Chip label='{{validityDays}}' size='small' color='success' variant='outlined' />
+                  <Chip label='{{paymentMethod}}' size='small' color='success' variant='outlined' />
+                  <Chip label='{{deliveryTime}}' size='small' color='success' variant='outlined' />
+                  <Chip label='{{warrantyTerms}}' size='small' color='success' variant='outlined' />
+                </Box>
+                <Typography variant='caption' sx={{ mt: 1, display: 'block', color: '#15803d' }}>
+                  Escribe estas variables en el texto y serán reemplazadas automáticamente al generar el PDF.
+                </Typography>
+              </Box>
+
+              <Stack spacing={1.5}>
+                {EQUIPMENT_QUOTE_TERM_KEYS.map((termKey) => {
+                  const variablesForTerm: Record<string, string[]> = {
+                    paymentConditions: ['{{validityDays}}', '{{paymentMethod}}'],
+                    deliveryConditions: ['{{deliveryTime}}'],
+                    warrantyConditions: ['{{warrantyTerms}}'],
+                  }
+                  const vars = variablesForTerm[termKey] || []
+                  return (
+                    <Accordion key={termKey} elevation={0}
+                      sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px !important' }}>
+                      <AccordionSummary expandIcon={<ExpandMoreOutlined />}>
+                        <Typography fontWeight={800}>
+                          {EQUIPMENT_QUOTE_TERM_LABELS[termKey]}
+                        </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        {vars.length > 0 && (
+                          <Box sx={{ mb: 1.5, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                            {vars.map((v) => (
+                              <Chip key={v} label={v} size='small' color='success' variant='outlined' sx={{ height: 22, fontSize: 11 }} />
+                            ))}
+                          </Box>
+                        )}
+                        <CalibrationServiceRichTextEditor
+                          value={formState.quoteTerms?.[termKey] || ''}
+                          placeholder={`Escribe ${EQUIPMENT_QUOTE_TERM_LABELS[termKey].toLowerCase()}`}
+                          onChange={(value) => setQuoteTerm(termKey, value)}
+                        />
+                      </AccordionDetails>
+                    </Accordion>
+                  )
+                })}
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
