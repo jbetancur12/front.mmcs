@@ -149,21 +149,27 @@ export interface CalibrationServiceUserSummary {
   active?: boolean
 }
 
-export interface CalibrationServiceProductSummary {
+export interface ProductVariantSummary {
   id: number
-  name: string
-  serviceType?: string | null
-  intervalText?: string | null
+  productId: number
+  serviceType: string
   medicalPrice?: number | null
   industrialPrice?: number | null
   thirdPartyPrice?: number | null
-  price?: number | null
+}
+
+export interface CalibrationServiceProductSummary {
+  id: number
+  name: string
+  intervalText?: string | null
+  variants?: ProductVariantSummary[]
 }
 
 export interface CalibrationServiceItem {
   id: number
   serviceId: number
   productId?: number | null
+  productVariantId?: number | null
   itemName: string
   instrumentName?: string | null
   intervalText?: string | null
@@ -178,6 +184,7 @@ export interface CalibrationServiceItem {
   sortOrder: number
   otherFields?: Record<string, unknown>
   product?: CalibrationServiceProductSummary | null
+  productVariant?: ProductVariantSummary | null
   createdAt?: string
   updatedAt?: string
 }

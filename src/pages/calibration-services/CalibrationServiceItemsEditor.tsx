@@ -28,6 +28,7 @@ import {
   Tooltip,
   Typography
 } from '@mui/material'
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
@@ -45,7 +46,7 @@ import {
 import { NumericFormatCustom } from '../../Components/NumericFormatCustom'
 
 type CatalogPriceSourceOption = {
-  value: 'medicalPrice' | 'industrialPrice' | 'thirdPartyPrice' | 'price'
+  value: 'medicalPrice' | 'industrialPrice' | 'thirdPartyPrice'
   label: string
 }
 
@@ -57,7 +58,6 @@ interface EditableCalibrationServiceItem
 interface CalibrationServiceItemsEditorProps {
   items: EditableCalibrationServiceItem[]
   products: CalibrationServiceProductSummary[]
-  serviceTypeOptions: string[]
   catalogPriceSourceOptions: readonly CatalogPriceSourceOption[]
   suggestedCatalogPriceSource: CatalogPriceSourceOption['value']
   canEdit: boolean
@@ -110,16 +110,15 @@ const getCatalogPriceValue = (
   priceSource: CatalogPriceSourceOption['value']
 ) => {
   if (!product) return null
-  if (priceSource === 'medicalPrice') return product.medicalPrice ?? null
-  if (priceSource === 'industrialPrice') return product.industrialPrice ?? null
-  if (priceSource === 'thirdPartyPrice') return product.thirdPartyPrice ?? null
-  return product.price ?? null
+  const firstVariant = product.variants?.[0]
+  if (!firstVariant) return null
+  const val = firstVariant[priceSource]
+  return val !== null && val !== undefined ? Number(val) : null
 }
 
 const CalibrationServiceItemsEditor = ({
   items,
   products,
-  serviceTypeOptions,
   catalogPriceSourceOptions,
   suggestedCatalogPriceSource,
   canEdit,
@@ -186,9 +185,10 @@ const CalibrationServiceItemsEditor = ({
       products.find((product) => product.id === item.productId) || null
     const totals = getItemTotals(item)
     const selectedCatalogPriceSource =
-      (typeof item.otherFields?.catalogPriceSource === 'string'
+      (typeof item.otherFields?.catalogPriceSource === 'string' &&
+      ['medicalPrice', 'industrialPrice', 'thirdPartyPrice'].includes(item.otherFields.catalogPriceSource)
         ? item.otherFields.catalogPriceSource
-        : 'price') as CatalogPriceSourceOption['value']
+        : 'medicalPrice') as CatalogPriceSourceOption['value']
     const itemNameLabel = item.itemName || 'Nuevo ítem'
     const isUsingSuggestedPrice = selectedCatalogPriceSource === suggestedCatalogPriceSource
     const expanded = isExpanded(item.localId)
@@ -349,20 +349,18 @@ const CalibrationServiceItemsEditor = ({
                 onChange={(event) => onChangeItemField(item.localId, 'itemName', event.target.value)} />
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              <TextField fullWidth size='small' label='Intervalo' placeholder='Ej. -50°C a 300°C'
-                value={item.intervalText || ''} disabled={!canEdit || isBusy}
-                onChange={(event) => onChangeItemField(item.localId, 'intervalText', event.target.value)} />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth size='small'>
-                <InputLabel>Tipo servicio</InputLabel>
-                <Select value={item.serviceType || 'Trazable'} label='Tipo servicio' disabled={!canEdit || isBusy}
-                  onChange={(event) => onChangeItemField(item.localId, 'serviceType', event.target.value)}>
-                  {serviceTypeOptions.map((option) => (
-                    <MenuItem key={option} value={option}>{option}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Tooltip title={item.intervalText || ''} arrow placement='top'>
+                <TextField fullWidth size='small' label='Intervalo' placeholder='Ej. -50°C a 300°C'
+                  value={item.intervalText || ''} disabled={!canEdit || isBusy}
+                  onChange={(event) => onChangeItemField(item.localId, 'intervalText', event.target.value)}
+                  InputProps={{
+                    endAdornment: item.intervalText ? (
+                      <InputAdornment position='end'>
+                        <InfoOutlinedIcon sx={{ fontSize: 16, color: 'action.disabled', cursor: 'help' }} />
+                      </InputAdornment>
+                    ) : undefined
+                  }} />
+              </Tooltip>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <TextField fullWidth size='small' type='number' label='Cantidad' value={item.quantity}
@@ -425,14 +423,9 @@ const CalibrationServiceItemsEditor = ({
             onChange={(event) => onChangeItemField(item.localId, 'quantity', Number(event.target.value))} />
         </TableCell>
         <TableCell sx={{ width: 140 }}>
-          <FormControl fullWidth size='small' variant='standard'>
-            <Select value={item.serviceType || 'Trazable'} disabled={!canEdit || isBusy} sx={{ fontSize: '0.8rem' }}
-              onChange={(event) => onChangeItemField(item.localId, 'serviceType', event.target.value)}>
-              {serviceTypeOptions.map((option) => (
-                <MenuItem key={option} value={option} sx={{ fontSize: '0.8rem' }}>{option}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Typography variant='body2' fontWeight={600} sx={{ color: item.serviceType === 'Acreditado' ? '#059669' : item.serviceType === 'Trazable' ? '#2563eb' : item.serviceType === 'Subcontratado ONAC' ? '#7c3aed' : '#d97706' }}>
+            {item.serviceType || '—'}
+          </Typography>
         </TableCell>
         <TableCell sx={{ width: 120 }}>
           <Typography variant='body2' fontWeight={700} color='#059669'>{currencyFormatter.format(totals.total)}</Typography>

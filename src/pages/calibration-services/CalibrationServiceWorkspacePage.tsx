@@ -67,6 +67,7 @@ import {
 } from '../../types/calibrationService'
 import { useHasRole } from '../../utils/functions'
 import CalibrationServiceItemsEditor from './CalibrationServiceItemsEditor'
+import CatalogProductPickerDialog from './CatalogProductPickerDialog'
 import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
 import CalibrationServiceCustomerDialog, {
   CalibrationServiceCustomerDialogValues
@@ -91,8 +92,7 @@ const SERVICE_TYPE_OPTIONS = ['Acreditado', 'Trazable', 'Subcontratado ONAC', 'E
 const CATALOG_PRICE_SOURCE_OPTIONS = [
   { value: 'medicalPrice', label: 'Valor médica' },
   { value: 'industrialPrice', label: 'Valor industrial' },
-  { value: 'thirdPartyPrice', label: 'Valor subcontratados' },
-  { value: 'price', label: 'Valor general' }
+  { value: 'thirdPartyPrice', label: 'Valor subcontratados' }
 ] as const
 
 type CatalogPriceSource = (typeof CATALOG_PRICE_SOURCE_OPTIONS)[number]['value']
@@ -146,7 +146,7 @@ const createEmptyItem = (): FormItem => ({
   notes: '',
   sortOrder: 0,
   otherFields: {
-    catalogPriceSource: 'price'
+    catalogPriceSource: 'medicalPrice'
   }
 })
 
@@ -176,7 +176,7 @@ const createInitialFormState = (): FormState => ({
   quoteTerms: mergeCalibrationQuoteTerms(),
   internalNotes: '',
   otherFields: {},
-  items: [createEmptyItem()]
+  items: []
 })
 
 const getItemTotals = (item: CalibrationServiceItemPayload) => {
@@ -191,10 +191,11 @@ const getCatalogPriceValue = (
 ) => {
   if (!product) return null
 
-  if (priceSource === 'medicalPrice') return product.medicalPrice ?? null
-  if (priceSource === 'industrialPrice') return product.industrialPrice ?? null
-  if (priceSource === 'thirdPartyPrice') return product.thirdPartyPrice ?? null
-  return product.price ?? null
+  const firstVariant = product.variants?.[0]
+  if (!firstVariant) return null
+
+  const val = firstVariant[priceSource]
+  return val !== null && val !== undefined ? Number(val) : null
 }
 
 const getCustomerSiteOptions = (
@@ -327,6 +328,7 @@ const CalibrationServiceWorkspacePage = () => {
   const [templateHydrated, setTemplateHydrated] = useState(false)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
   const [customerDialogMode, setCustomerDialogMode] = useState<'customer' | 'site' | null>(null)
+  const [catalogPickerOpen, setCatalogPickerOpen] = useState(false)
   const [useDifferentExecutionCustomer, setUseDifferentExecutionCustomer] =
     useState(false)
   const [activeSection, setActiveSection] = useState(0)
@@ -458,9 +460,10 @@ const CalibrationServiceWorkspacePage = () => {
         sortOrder: item.sortOrder ?? index,
         otherFields: {
           catalogPriceSource:
-            typeof item.otherFields?.catalogPriceSource === 'string'
+            typeof item.otherFields?.catalogPriceSource === 'string' &&
+            ['medicalPrice', 'industrialPrice', 'thirdPartyPrice'].includes(item.otherFields.catalogPriceSource)
               ? item.otherFields.catalogPriceSource
-              : 'price',
+              : 'medicalPrice',
           ...(item.otherFields || {})
         }
       })) || [createEmptyItem()]
@@ -531,10 +534,11 @@ const CalibrationServiceWorkspacePage = () => {
     canAccessWorkspace &&
     (!service || service.status === 'draft')
   const isBusy = createService.isLoading || updateService.isLoading || uploadDocument.isLoading
-  const suggestedCatalogPriceSource =
-    (typeof formState.otherFields?.catalogPriceProfile === 'string'
-      ? formState.otherFields.catalogPriceProfile
-      : 'price') as CatalogPriceSource
+  const suggestedCatalogPriceSource: CatalogPriceSource =
+    typeof formState.otherFields?.catalogPriceProfile === 'string' &&
+    ['medicalPrice', 'industrialPrice', 'thirdPartyPrice'].includes(formState.otherFields.catalogPriceProfile)
+      ? (formState.otherFields.catalogPriceProfile as CatalogPriceSource)
+      : 'medicalPrice'
 
   const sections = [
     { key: 'customer', label: 'Cliente y alcance', icon: <GroupOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['customerId', 'requestChannel'] as const },
@@ -615,9 +619,37 @@ const CalibrationServiceWorkspacePage = () => {
   }
 
   const handleAddItem = () => {
+    setCatalogPickerOpen(true)
+  }
+
+  const handleAddItemsFromCatalog = (
+    pickedItems: { productId: number; productVariantId: number; itemName: string; intervalText: string | null; serviceType: string; unitPrice: number }[],
+    quantity: number
+  ) => {
     setFormState((previous) => ({
       ...previous,
-      items: [...previous.items, createEmptyItem()]
+      items: [
+        ...previous.items,
+        ...pickedItems.map((picked, index) => ({
+          localId: createLocalId(),
+          productId: picked.productId,
+          itemName: picked.itemName,
+          instrumentName: picked.itemName,
+          intervalText: picked.intervalText || '',
+          quantity,
+          serviceType: picked.serviceType,
+          unitPrice: picked.unitPrice,
+          taxRate: 19,
+          subtotal: quantity * picked.unitPrice,
+          taxTotal: quantity * picked.unitPrice * 0.19,
+          total: quantity * picked.unitPrice * 1.19,
+          notes: '',
+          sortOrder: previous.items.length + index,
+          otherFields: {
+            catalogPriceSource: suggestedCatalogPriceSource
+          }
+        }))
+      ]
     }))
   }
 
@@ -637,6 +669,7 @@ const CalibrationServiceWorkspacePage = () => {
   ) => {
     const catalogPriceSource = suggestedCatalogPriceSource
     const selectedUnitPrice = getCatalogPriceValue(product, catalogPriceSource)
+    const firstVariantServiceType = product?.variants?.[0]?.serviceType || null
 
     setFormState((previous) => ({
       ...previous,
@@ -648,7 +681,7 @@ const CalibrationServiceWorkspacePage = () => {
               itemName: product?.name || candidate.itemName,
               instrumentName: product?.name || candidate.instrumentName,
               intervalText: product?.intervalText || candidate.intervalText,
-              serviceType: product?.serviceType || candidate.serviceType,
+              serviceType: firstVariantServiceType || candidate.serviceType,
               unitPrice:
                 selectedUnitPrice ?? candidate.unitPrice,
               otherFields: {
@@ -1414,7 +1447,6 @@ const CalibrationServiceWorkspacePage = () => {
               <CalibrationServiceItemsEditor
                 items={formState.items}
                 products={productOptions}
-                serviceTypeOptions={SERVICE_TYPE_OPTIONS}
                 catalogPriceSourceOptions={CATALOG_PRICE_SOURCE_OPTIONS}
                 suggestedCatalogPriceSource={suggestedCatalogPriceSource}
                 canEdit={canEdit}
@@ -1630,6 +1662,13 @@ const CalibrationServiceWorkspacePage = () => {
           </Card>
         </Grid>
       </Grid>
+      <CatalogProductPickerDialog
+        open={catalogPickerOpen}
+        products={productOptions}
+        suggestedPriceSource={suggestedCatalogPriceSource}
+        onClose={() => setCatalogPickerOpen(false)}
+        onAddItems={handleAddItemsFromCatalog}
+      />
       {canAccessWorkspace ? (
         <CalibrationServiceSequenceConfigDialog
           open={isSequenceDialogOpen}
