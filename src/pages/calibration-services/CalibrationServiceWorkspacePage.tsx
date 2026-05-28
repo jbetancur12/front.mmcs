@@ -541,11 +541,7 @@ const CalibrationServiceWorkspacePage = () => {
     (!service || service.status === 'draft')
   const isBusy = createService.isLoading || updateService.isLoading || uploadDocument.isLoading ||
     generateQuotePdf.isLoading || downloadDocument.isLoading
-  const suggestedCatalogPriceSource: CatalogPriceSource | null =
-    typeof formState.otherFields?.catalogPriceProfile === 'string' &&
-    ['medicalPrice', 'industrialPrice', 'thirdPartyPrice'].includes(formState.otherFields.catalogPriceProfile)
-      ? (formState.otherFields.catalogPriceProfile as CatalogPriceSource)
-      : null
+  const SUGGESTED_CATALOG_PRICE_SOURCE: CatalogPriceSource = 'medicalPrice'
 
   const sections = [
     { key: 'customer', label: 'Cliente y alcance', icon: <GroupOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['customerId', 'requestChannel'] as const },
@@ -579,13 +575,11 @@ const CalibrationServiceWorkspacePage = () => {
         const val = formState[f]
         return val !== null && val !== undefined && val !== '' && val !== 0
       }).length
-      const hasPriceProfile = typeof formState.otherFields?.catalogPriceProfile === 'string' &&
-        ['medicalPrice', 'industrialPrice', 'thirdPartyPrice'].includes(formState.otherFields.catalogPriceProfile)
       const discountOk = !formState.hasDiscount || (
         formState.discountType?.trim() && Number(formState.discountValue) > 0
       )
-      const extraTotal = 2
-      return Math.min((base + (hasPriceProfile ? 1 : 0) + (discountOk ? 1 : 0)) / (section.fields.length + extraTotal), 1)
+      const extraTotal = 1
+      return Math.min((base + (discountOk ? 1 : 0)) / (section.fields.length + extraTotal), 1)
     }
     const filled = section.fields.filter((f) => {
       const val = formState[f]
@@ -653,7 +647,7 @@ const CalibrationServiceWorkspacePage = () => {
   }
 
   const handleAddItemsFromCatalog = (
-    pickedItems: { productId: number; productVariantId: number; itemName: string; intervalText: string | null; serviceType: string; unitPrice: number }[],
+    pickedItems: { productId: number; productVariantId: number; itemName: string; intervalText: string | null; serviceType: string; unitPrice: number; catalogPriceSource: string }[],
     quantity: number
   ) => {
     setFormState((previous) => ({
@@ -676,7 +670,7 @@ const CalibrationServiceWorkspacePage = () => {
           notes: '',
           sortOrder: previous.items.length + index,
           otherFields: {
-            catalogPriceSource: suggestedCatalogPriceSource || 'medicalPrice'
+            catalogPriceSource: picked.catalogPriceSource || SUGGESTED_CATALOG_PRICE_SOURCE
           }
         }))
       ]
@@ -697,7 +691,7 @@ const CalibrationServiceWorkspacePage = () => {
     localId: string,
     product: CalibrationServiceProductSummary | null
   ) => {
-    const catalogPriceSource = suggestedCatalogPriceSource || 'medicalPrice'
+    const catalogPriceSource = SUGGESTED_CATALOG_PRICE_SOURCE
     const selectedUnitPrice = getCatalogPriceValue(product, catalogPriceSource)
     const firstVariantServiceType = product?.variants?.[0]?.serviceType || null
 
@@ -1434,7 +1428,7 @@ const CalibrationServiceWorkspacePage = () => {
                 items={formState.items}
                 products={productOptions}
                 catalogPriceSourceOptions={CATALOG_PRICE_SOURCE_OPTIONS}
-                suggestedCatalogPriceSource={suggestedCatalogPriceSource}
+                suggestedCatalogPriceSource={SUGGESTED_CATALOG_PRICE_SOURCE}
                 canEdit={canEdit}
                 isBusy={isBusy}
                 onAddItem={handleAddItem}
@@ -1490,28 +1484,6 @@ const CalibrationServiceWorkspacePage = () => {
                       {PAYMENT_METHOD_OPTIONS.map((option) => (
                         <MenuItem key={option} value={option}>
                           {option}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <FormControl fullWidth required>
-                    <InputLabel>Perfil sugerido de precio</InputLabel>
-                    <Select
-                      value={suggestedCatalogPriceSource ?? ''}
-                      label='Perfil sugerido de precio'
-                      disabled={!canEdit || isBusy}
-                      onChange={(event) =>
-                        setField('otherFields', {
-                          ...(formState.otherFields || {}),
-                          catalogPriceProfile: event.target.value
-                        })
-                      }
-                    >
-                      {CATALOG_PRICE_SOURCE_OPTIONS.map((option) => (
-                        <MenuItem key={option.value} value={option.value}>
-                          {option.label}
                         </MenuItem>
                       ))}
                     </Select>
@@ -1727,7 +1699,7 @@ const CalibrationServiceWorkspacePage = () => {
       <CatalogProductPickerDialog
         open={catalogPickerOpen}
         products={productOptions}
-        suggestedPriceSource={suggestedCatalogPriceSource}
+        suggestedPriceSource={SUGGESTED_CATALOG_PRICE_SOURCE}
         onClose={() => setCatalogPickerOpen(false)}
         onAddItems={handleAddItemsFromCatalog}
       />

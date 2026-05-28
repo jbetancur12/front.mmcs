@@ -37,12 +37,12 @@ interface PickedVariant {
   intervalText: string | null
   serviceType: string
   unitPrice: number
+  catalogPriceSource: string
 }
 
 interface CatalogProductPickerDialogProps {
   open: boolean
   products: CalibrationServiceProductSummary[]
-  suggestedPriceSource: CatalogPriceSource | null
   onClose: () => void
   onAddItems: (items: PickedVariant[], quantity: number) => void
 }
@@ -83,14 +83,13 @@ const getPriceValue = (
 const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
   open,
   products,
-  suggestedPriceSource,
   onClose,
   onAddItems
 }) => {
   const [searchQuery, setSearchQuery] = useState('')
-  const [priceSource, setPriceSource] = useState<CatalogPriceSource>(suggestedPriceSource || 'medicalPrice')
   const [expandedProducts, setExpandedProducts] = useState<Set<number>>(new Set())
   const [selectedVariantIds, setSelectedVariantIds] = useState<Set<number>>(new Set())
+  const [variantPriceSources, setVariantPriceSources] = useState<Record<number, CatalogPriceSource>>({})
   const [defaultQuantity, setDefaultQuantity] = useState(1)
 
   const filteredProducts = useMemo(() => {
@@ -102,11 +101,10 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
         p.intervalText?.toLowerCase().includes(q) ||
         p.variants?.some(
           (v) =>
-            (v.serviceType || '').toLowerCase().includes(q) ||
-            String(getPriceValue(v, priceSource) ?? '').includes(q)
+            (v.serviceType || '').toLowerCase().includes(q)
         )
     )
-  }, [products, searchQuery, priceSource])
+  }, [products, searchQuery])
 
   const toggleProduct = (id: number) => {
     setExpandedProducts((prev) => {
@@ -138,21 +136,30 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
     })
   }
 
-  const clearSelection = () => setSelectedVariantIds(new Set())
+  const setVariantPriceSource = (variantId: number, source: CatalogPriceSource) => {
+    setVariantPriceSources((prev) => ({ ...prev, [variantId]: source }))
+  }
+
+  const clearSelection = () => {
+    setSelectedVariantIds(new Set())
+    setVariantPriceSources({})
+  }
 
   const handleAddItems = () => {
     const picked: PickedVariant[] = []
     for (const product of products) {
       for (const variant of product.variants || []) {
         if (selectedVariantIds.has(variant.id)) {
-          const price = getPriceValue(variant, priceSource)
+          const source = variantPriceSources[variant.id] || 'medicalPrice'
+          const price = getPriceValue(variant, source)
           picked.push({
             productId: product.id,
             productVariantId: variant.id,
             itemName: product.name,
             intervalText: product.intervalText,
             serviceType: variant.serviceType,
-            unitPrice: price ?? 0
+            unitPrice: price ?? 0,
+            catalogPriceSource: source
           })
         }
       }
@@ -160,16 +167,25 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
     if (picked.length === 0) return
     onAddItems(picked, defaultQuantity)
     setSelectedVariantIds(new Set())
+    setVariantPriceSources({})
     onClose()
   }
 
   const handleClose = () => {
     setSelectedVariantIds(new Set())
+    setVariantPriceSources({})
     setSearchQuery('')
     onClose()
   }
 
   const totalSelected = selectedVariantIds.size
+
+  const getVariantDefaultSource = (variant: ProductVariantSummary): CatalogPriceSource => {
+    if (variant.medicalPrice != null) return 'medicalPrice'
+    if (variant.industrialPrice != null) return 'industrialPrice'
+    if (variant.thirdPartyPrice != null) return 'thirdPartyPrice'
+    return 'medicalPrice'
+  }
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth='lg'>
@@ -205,27 +221,13 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                 )
               }}
             />
-            <FormControl size='small' sx={{ minWidth: 200 }}>
-              <InputLabel>Usar precio</InputLabel>
-              <Select
-                value={priceSource}
-                label='Usar precio'
-                onChange={(e) => setPriceSource(e.target.value as CatalogPriceSource)}
-              >
-                {PRICE_SOURCE_OPTIONS.map((opt) => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
             <TextField
               size='small'
               type='number'
-              label='Cantidad'
+              label='Cantidad por defecto'
               value={defaultQuantity}
               onChange={(e) => setDefaultQuantity(Math.max(1, Number(e.target.value)))}
-              sx={{ width: 100 }}
+              sx={{ width: 160 }}
               inputProps={{ min: 1 }}
             />
           </Stack>
@@ -243,42 +245,9 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
               <thead>
                 <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
                   <th style={{ width: 40, padding: '10px 8px' }}></th>
-                  <th
-                    style={{
-                      textAlign: 'left',
-                      padding: '10px 8px',
-                      fontWeight: 700,
-                      fontSize: '0.75rem',
-                      color: '#6b7280',
-                      textTransform: 'uppercase'
-                    }}
-                  >
-                    Producto
-                  </th>
-                  <th
-                    style={{
-                      textAlign: 'left',
-                      padding: '10px 8px',
-                      fontWeight: 700,
-                      fontSize: '0.75rem',
-                      color: '#6b7280',
-                      textTransform: 'uppercase'
-                    }}
-                  >
-                    Intervalo
-                  </th>
-                  <th
-                    style={{
-                      textAlign: 'left',
-                      padding: '10px 8px',
-                      fontWeight: 700,
-                      fontSize: '0.75rem',
-                      color: '#6b7280',
-                      textTransform: 'uppercase'
-                    }}
-                  >
-                    Variantes
-                  </th>
+                  <th style={{ textAlign: 'left', padding: '10px 8px', fontWeight: 700, fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Producto</th>
+                  <th style={{ textAlign: 'left', padding: '10px 8px', fontWeight: 700, fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Intervalo</th>
+                  <th style={{ textAlign: 'left', padding: '10px 8px', fontWeight: 700, fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Variantes</th>
                 </tr>
               </thead>
               <tbody>
@@ -288,92 +257,54 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                     <React.Fragment key={product.id}>
                       <tr
                         style={{ borderBottom: '1px solid #e5e7eb', cursor: 'pointer' }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.02)'
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = ''
-                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.02)' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}
                         onClick={() => toggleProduct(product.id)}
                       >
                         <td style={{ padding: '10px 8px', textAlign: 'center' }}>
-                          <IconButton
-                            size='small'
-                            sx={{ color: isExpanded ? '#059669' : '#9ca3af' }}
-                          >
-                            {isExpanded ? (
-                              <ExpandLessIcon fontSize='small' />
-                            ) : (
-                              <ExpandMoreIcon fontSize='small' />
-                            )}
+                          <IconButton size='small' sx={{ color: isExpanded ? '#059669' : '#9ca3af' }}>
+                            {isExpanded ? <ExpandLessIcon fontSize='small' /> : <ExpandMoreIcon fontSize='small' />}
                           </IconButton>
                         </td>
                         <td style={{ padding: '10px 8px' }}>
-                          <Typography variant='body2' fontWeight={600}>
-                            {product.name}
-                          </Typography>
+                          <Typography variant='body2' fontWeight={600}>{product.name}</Typography>
                         </td>
                         <td style={{ padding: '10px 8px' }}>
-                          <Typography variant='body2' color='text.secondary'>
-                            {product.intervalText || '—'}
-                          </Typography>
+                          <Typography variant='body2' color='text.secondary'>{product.intervalText || '—'}</Typography>
                         </td>
                         <td style={{ padding: '10px 8px' }}>
                           <Stack direction='row' spacing={0.5} flexWrap='wrap' useFlexGap>
-                            {product.variants?.map((v) => {
-                              const price = getPriceValue(v, priceSource)
-                              return (
-                                <Chip
-                                  key={v.id}
-                                  size='small'
-                                  label={`${v.serviceType} · ${price !== null ? CURRENCY_FORMATTER.format(price) : '—'}`}
-                                  variant='outlined'
-                                  sx={{
-                                    borderRadius: '6px',
-                                    fontWeight: 600,
-                                    fontSize: '0.7rem',
-                                    borderColor:
-                                      (SERVICE_TYPE_COLORS[v.serviceType] || '#d1d5db') + '40',
-                                    color: SERVICE_TYPE_COLORS[v.serviceType] || '#6b7280',
-                                    backgroundColor:
-                                      (SERVICE_TYPE_COLORS[v.serviceType] || '#d1d5db') + '10'
-                                  }}
-                                />
-                              )
-                            })}
+                            {product.variants?.map((v) => (
+                              <Chip
+                                key={v.id}
+                                size='small'
+                                label={`${v.serviceType} · ${CURRENCY_FORMATTER.format(getPriceValue(v, variantPriceSources[v.id] || getVariantDefaultSource(v)) ?? 0)}`}
+                                variant='outlined'
+                                sx={{
+                                  borderRadius: '6px', fontWeight: 600, fontSize: '0.7rem',
+                                  borderColor: (SERVICE_TYPE_COLORS[v.serviceType] || '#d1d5db') + '40',
+                                  color: SERVICE_TYPE_COLORS[v.serviceType] || '#6b7280',
+                                  backgroundColor: (SERVICE_TYPE_COLORS[v.serviceType] || '#d1d5db') + '10'
+                                }}
+                              />
+                            ))}
                           </Stack>
                         </td>
                       </tr>
                       {isExpanded && (
                         <tr style={{ backgroundColor: '#f9fafb' }}>
                           <td colSpan={4} style={{ padding: '8px 16px 16px 56px' }}>
-                            <Stack
-                              direction='row'
-                              alignItems='center'
-                              spacing={1}
-                              sx={{ mb: 1.5 }}
-                            >
+                            <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 1.5 }}>
                               <Checkbox
                                 size='small'
                                 indeterminate={
-                                  (product.variants?.filter((v) =>
-                                    selectedVariantIds.has(v.id)
-                                  ).length || 0) > 0 &&
-                                  (product.variants?.filter((v) =>
-                                    selectedVariantIds.has(v.id)
-                                  ).length || 0) < (product.variants?.length || 0)
+                                  (product.variants?.filter((v) => selectedVariantIds.has(v.id)).length || 0) > 0 &&
+                                  (product.variants?.filter((v) => selectedVariantIds.has(v.id)).length || 0) < (product.variants?.length || 0)
                                 }
-                                checked={product.variants?.every((v) =>
-                                  selectedVariantIds.has(v.id)
-                                )}
+                                checked={product.variants?.every((v) => selectedVariantIds.has(v.id))}
                                 onChange={() => selectAllVariants(product)}
                               />
-                              <Typography
-                                variant='caption'
-                                fontWeight={600}
-                                sx={{ color: '#6b7280', cursor: 'pointer' }}
-                                onClick={() => selectAllVariants(product)}
-                              >
+                              <Typography variant='caption' fontWeight={600} sx={{ color: '#6b7280', cursor: 'pointer' }} onClick={() => selectAllVariants(product)}>
                                 Seleccionar todos
                               </Typography>
                             </Stack>
@@ -382,61 +313,29 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                               <thead>
                                 <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
                                   <th style={{ width: 40, padding: '8px' }}></th>
-                                  <th
-                                    style={{
-                                      textAlign: 'left',
-                                      padding: '8px',
-                                      fontWeight: 600,
-                                      fontSize: '0.7rem',
-                                      color: '#6b7280',
-                                      textTransform: 'uppercase'
-                                    }}
-                                  >
-                                    Tipo
-                                  </th>
+                                  <th style={{ textAlign: 'left', padding: '8px', fontWeight: 600, fontSize: '0.7rem', color: '#6b7280', textTransform: 'uppercase' }}>Tipo</th>
                                   {PRICE_SOURCE_OPTIONS.map((opt) => (
-                                    <th
-                                      key={opt.value}
-                                      style={{
-                                        textAlign: 'right',
-                                        padding: '8px',
-                                        fontWeight: 600,
-                                        fontSize: '0.7rem',
-                                        color:
-                                          opt.value === priceSource
-                                            ? PRICE_COLORS[opt.value]
-                                            : '#6b7280',
-                                        textTransform: 'uppercase'
-                                      }}
-                                    >
+                                    <th key={opt.value} style={{ textAlign: 'right', padding: '8px', fontWeight: 600, fontSize: '0.7rem', color: '#6b7280', textTransform: 'uppercase' }}>
                                       {opt.label}
-                                      {opt.value === priceSource ? ' ✓' : ''}
                                     </th>
                                   ))}
+                                  <th style={{ textAlign: 'left', padding: '8px', fontWeight: 600, fontSize: '0.7rem', color: '#6b7280', textTransform: 'uppercase', width: 150 }}>Precio a usar</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {product.variants?.map((v) => {
                                   const isSelected = selectedVariantIds.has(v.id)
+                                  const activeSource = variantPriceSources[v.id] || getVariantDefaultSource(v)
                                   return (
                                     <tr
                                       key={v.id}
                                       style={{
                                         borderBottom: '1px solid #f3f4f6',
-                                        backgroundColor: isSelected
-                                          ? 'rgba(16,185,129,0.04)'
-                                          : undefined,
+                                        backgroundColor: isSelected ? 'rgba(16,185,129,0.04)' : undefined,
                                         cursor: 'pointer'
                                       }}
-                                      onMouseEnter={(e) => {
-                                        if (!isSelected)
-                                          e.currentTarget.style.backgroundColor =
-                                            'rgba(0,0,0,0.015)'
-                                      }}
-                                      onMouseLeave={(e) => {
-                                        if (!isSelected)
-                                          e.currentTarget.style.backgroundColor = ''
-                                      }}
+                                      onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.015)' }}
+                                      onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = '' }}
                                       onClick={() => toggleVariant(v.id)}
                                     >
                                       <td style={{ padding: '8px', textAlign: 'center' }}>
@@ -445,47 +344,53 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                                           checked={isSelected}
                                           onClick={(e) => e.stopPropagation()}
                                           onChange={() => toggleVariant(v.id)}
-                                          sx={{
-                                            color: '#d1d5db',
-                                            '&.Mui-checked': { color: '#059669' }
-                                          }}
+                                          sx={{ color: '#d1d5db', '&.Mui-checked': { color: '#059669' } }}
                                         />
                                       </td>
                                       <td style={{ padding: '8px' }}>
-                                        <Typography
-                                          variant='body2'
-                                          fontWeight={600}
-                                          sx={{
-                                            color: SERVICE_TYPE_COLORS[v.serviceType] || '#374151'
-                                          }}
-                                        >
+                                        <Typography variant='body2' fontWeight={600} sx={{ color: SERVICE_TYPE_COLORS[v.serviceType] || '#374151' }}>
                                           {v.serviceType}
                                         </Typography>
                                       </td>
                                       {PRICE_SOURCE_OPTIONS.map((opt) => {
                                         const price = getPriceValue(v, opt.value)
-                                        const isActive = opt.value === priceSource
+                                        const isActive = opt.value === activeSource
                                         return (
-                                          <td
-                                            key={opt.value}
-                                            style={{ padding: '8px', textAlign: 'right' }}
-                                          >
-                                            <Typography
-                                              variant='body2'
-                                              fontWeight={isActive ? 700 : 400}
-                                              sx={{
-                                                color: isActive
-                                                  ? PRICE_COLORS[opt.value]
-                                                  : '#6b7280'
-                                              }}
-                                            >
-                                              {price !== null
-                                                ? CURRENCY_FORMATTER.format(price)
-                                                : '—'}
+                                          <td key={opt.value} style={{ padding: '8px', textAlign: 'right' }}>
+                                            <Typography variant='body2' sx={{ fontWeight: isActive ? 700 : 400, color: isActive ? PRICE_COLORS[opt.value] : '#6b7280' }}>
+                                              {price !== null ? CURRENCY_FORMATTER.format(price) : '—'}
                                             </Typography>
                                           </td>
                                         )
                                       })}
+                                      <td style={{ padding: '4px 8px' }}>
+                                        <FormControl
+                                          size='small'
+                                          fullWidth
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <Select
+                                            value={activeSource}
+                                            disabled={!isSelected}
+                                            onChange={(e) => setVariantPriceSource(v.id, e.target.value as CatalogPriceSource)}
+                                            sx={{ fontSize: '0.75rem', height: 32 }}
+                                          >
+                                            {PRICE_SOURCE_OPTIONS.map((opt) => {
+                                              const price = getPriceValue(v, opt.value)
+                                              return (
+                                                <MenuItem key={opt.value} value={opt.value} sx={{ fontSize: '0.75rem' }}>
+                                                  <Stack direction='row' justifyContent='space-between' sx={{ width: '100%', gap: 2 }}>
+                                                    <span>{opt.label}</span>
+                                                    <Box component='span' sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                                                      {price !== null ? CURRENCY_FORMATTER.format(price) : '—'}
+                                                    </Box>
+                                                  </Stack>
+                                                </MenuItem>
+                                              )
+                                            })}
+                                          </Select>
+                                        </FormControl>
+                                      </td>
                                     </tr>
                                   )
                                 })}
@@ -501,9 +406,7 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                   <tr>
                     <td colSpan={4} style={{ padding: 32, textAlign: 'center' }}>
                       <Typography variant='body2' color='text.secondary'>
-                        {searchQuery.trim()
-                          ? 'Ningún producto coincide con la búsqueda.'
-                          : 'No hay productos disponibles en el catálogo.'}
+                        {searchQuery.trim() ? 'Ningún producto coincide con la búsqueda.' : 'No hay productos disponibles en el catálogo.'}
                       </Typography>
                     </td>
                   </tr>
@@ -519,9 +422,7 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
           Limpiar selección
         </Button>
         <Stack direction='row' spacing={1}>
-          <Button onClick={handleClose} color='inherit'>
-            Cancelar
-          </Button>
+          <Button onClick={handleClose} color='inherit'>Cancelar</Button>
           <Button
             variant='contained'
             startIcon={<AddCircleOutlineOutlinedIcon />}
@@ -532,9 +433,7 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
               borderRadius: '10px',
               textTransform: 'none',
               fontWeight: 700,
-              '&:hover': {
-                background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
-              }
+              '&:hover': { background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' }
             }}
           >
             Agregar {totalSelected > 0 ? `${totalSelected} seleccionado${totalSelected !== 1 ? 's' : ''}` : ''}
