@@ -534,17 +534,18 @@ const CalibrationServiceWorkspacePage = () => {
     canAccessWorkspace &&
     (!service || service.status === 'draft')
   const isBusy = createService.isLoading || updateService.isLoading || uploadDocument.isLoading
-  const suggestedCatalogPriceSource: CatalogPriceSource =
+  const suggestedCatalogPriceSource: CatalogPriceSource | null =
     typeof formState.otherFields?.catalogPriceProfile === 'string' &&
     ['medicalPrice', 'industrialPrice', 'thirdPartyPrice'].includes(formState.otherFields.catalogPriceProfile)
       ? (formState.otherFields.catalogPriceProfile as CatalogPriceSource)
-      : 'medicalPrice'
+      : null
 
   const sections = [
     { key: 'customer', label: 'Cliente y alcance', icon: <GroupOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['customerId', 'requestChannel'] as const },
     { key: 'contact', label: 'Contacto y destino', icon: <Inventory2OutlinedIcon sx={{ fontSize: 18 }} />, fields: ['contactName', 'contactEmail', 'city'] as const },
-    { key: 'commercial', label: 'Condiciones', icon: <ReceiptLongOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['paymentMethod', 'validityDays'] as const },
+    { key: 'commercial', label: 'Condiciones', icon: <ReceiptLongOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['paymentMethod', 'validityDays', 'instrumentDeliveryTime', 'certificateDeliveryTime'] as const },
     { key: 'items', label: 'Ítems cotizados', icon: <RequestQuoteOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['items'] as const },
+    { key: 'terms', label: 'Términos', icon: <UploadFileOutlinedIcon sx={{ fontSize: 18 }} />, fields: [] as const },
   ] as const
   const sectionCompletion = sections.map((section) => {
     if (section.key === 'items') {
@@ -559,6 +560,19 @@ const CalibrationServiceWorkspacePage = () => {
       const hasEvidence = Boolean(requestEvidenceFile || requestEvidenceDocuments.length)
       const total = section.fields.length + 1
       return Math.min((base + (hasEvidence ? 1 : 0)) / total, 1)
+    }
+    if (section.key === 'commercial') {
+      const base = section.fields.filter((f) => {
+        const val = formState[f]
+        return val !== null && val !== undefined && val !== '' && val !== 0
+      }).length
+      const hasPriceProfile = typeof formState.otherFields?.catalogPriceProfile === 'string' &&
+        ['medicalPrice', 'industrialPrice', 'thirdPartyPrice'].includes(formState.otherFields.catalogPriceProfile)
+      const discountOk = !formState.hasDiscount || (
+        formState.discountType?.trim() && Number(formState.discountValue) > 0
+      )
+      const extraTotal = 2
+      return Math.min((base + (hasPriceProfile ? 1 : 0) + (discountOk ? 1 : 0)) / (section.fields.length + extraTotal), 1)
     }
     const filled = section.fields.filter((f) => {
       const val = formState[f]
@@ -649,7 +663,7 @@ const CalibrationServiceWorkspacePage = () => {
           notes: '',
           sortOrder: previous.items.length + index,
           otherFields: {
-            catalogPriceSource: suggestedCatalogPriceSource
+            catalogPriceSource: suggestedCatalogPriceSource || 'medicalPrice'
           }
         }))
       ]
@@ -670,7 +684,7 @@ const CalibrationServiceWorkspacePage = () => {
     localId: string,
     product: CalibrationServiceProductSummary | null
   ) => {
-    const catalogPriceSource = suggestedCatalogPriceSource
+    const catalogPriceSource = suggestedCatalogPriceSource || 'medicalPrice'
     const selectedUnitPrice = getCatalogPriceValue(product, catalogPriceSource)
     const firstVariantServiceType = product?.variants?.[0]?.serviceType || null
 
@@ -1358,10 +1372,10 @@ const CalibrationServiceWorkspacePage = () => {
                   </FormControl>
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <FormControl fullWidth>
+                  <FormControl fullWidth required>
                     <InputLabel>Perfil sugerido de precio</InputLabel>
                     <Select
-                      value={suggestedCatalogPriceSource}
+                      value={suggestedCatalogPriceSource ?? ''}
                       label='Perfil sugerido de precio'
                       disabled={!canEdit || isBusy}
                       onChange={(event) =>
@@ -1505,14 +1519,19 @@ const CalibrationServiceWorkspacePage = () => {
               />
             </CardContent>
           </Card>
+          </div>
 
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both' }}>
+          <div style={{ display: activeSection !== 4 ? 'none' : undefined }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #8b5cf6, #a78bfa)' } }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
+                <UploadFileOutlinedIcon sx={{ color: '#7c3aed', fontSize: 22 }} />
+                <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
+                  Términos
+                </Typography>
+              </Stack>
               <Stack spacing={2}>
                 <Box>
-                  <Typography variant='h6' fontWeight={800} gutterBottom>
-                    Textos editables del PDF
-                  </Typography>
                   <Typography variant='body2' color='text.secondary'>
                     Este bloque se deja al final para ajustar la última hoja de la
                     cotización. Al guardar, los términos quedan como snapshot de este

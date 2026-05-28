@@ -59,7 +59,7 @@ interface CalibrationServiceItemsEditorProps {
   items: EditableCalibrationServiceItem[]
   products: CalibrationServiceProductSummary[]
   catalogPriceSourceOptions: readonly CatalogPriceSourceOption[]
-  suggestedCatalogPriceSource: CatalogPriceSourceOption['value']
+  suggestedCatalogPriceSource: CatalogPriceSourceOption['value'] | null
   canEdit: boolean
   isBusy: boolean
   onAddItem: () => void

@@ -42,7 +42,7 @@ interface PickedVariant {
 interface CatalogProductPickerDialogProps {
   open: boolean
   products: CalibrationServiceProductSummary[]
-  suggestedPriceSource: CatalogPriceSource
+  suggestedPriceSource: CatalogPriceSource | null
   onClose: () => void
   onAddItems: (items: PickedVariant[], quantity: number) => void
 }
@@ -88,7 +88,7 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
   onAddItems
 }) => {
   const [searchQuery, setSearchQuery] = useState('')
-  const [priceSource, setPriceSource] = useState<CatalogPriceSource>(suggestedPriceSource)
+  const [priceSource, setPriceSource] = useState<CatalogPriceSource>(suggestedPriceSource || 'medicalPrice')
   const [expandedProducts, setExpandedProducts] = useState<Set<number>>(new Set())
   const [selectedVariantIds, setSelectedVariantIds] = useState<Set<number>>(new Set())
   const [defaultQuantity, setDefaultQuantity] = useState(1)
