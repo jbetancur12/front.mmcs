@@ -1,3 +1,5 @@
+import fs from 'node:fs'
+import path from 'node:path'
 // import { sentryVitePlugin } from '@sentry/vite-plugin'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -12,7 +14,16 @@ export default defineConfig({
   plugins: [
     react(),
     nodePolyfills(),
-    tsconfigPaths()
+    tsconfigPaths(),
+    {
+      name: 'version-json',
+      closeBundle() {
+        const version = { timestamp: Date.now() }
+        const distDir = path.resolve(__dirname, 'dist')
+        if (!fs.existsSync(distDir)) return
+        fs.writeFileSync(path.join(distDir, 'version.json'), JSON.stringify(version))
+      }
+    }
     // sentryVitePlugin({
     //   org: 'metromedics',
     //   project: 'javascript-react'

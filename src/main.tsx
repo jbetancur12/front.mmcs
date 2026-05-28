@@ -14,6 +14,7 @@ import { ReactQueryDevtools } from 'react-query/devtools'
 import { WebSocketProvider } from '@utils/use-websockets.tsx'
 import { queryClient } from './config/queryClient'
 import { ToastProvider } from './Components/lms/Notifications/ToastNotifications'
+import NewVersionBanner from './Components/NewVersionBanner'
 
 const options = {
   api_host: import.meta.env.VITE_POSTHOG_HOST
@@ -24,30 +25,6 @@ const options = {
 //   integrations: [Sentry.browserTracingIntegration()],
 //   tracesSampleRate: 1.0 // puedes bajarlo en producción
 // })
-
-const APP_VERSION = '1.2.1' // Cambia esto en cada deploy
-
-// Limpiar cache y tokens cuando cambie la versión
-const currentVersion = localStorage.getItem('app-version')
-console.log(window.caches)
-if (currentVersion !== APP_VERSION) {
-  if ('caches' in window) {
-    caches.keys().then((names) => {
-      names.forEach((name) => {
-        caches.delete(name)
-      })
-    })
-  }
-
-  // Limpiar tokens de autenticación
-  localStorage.removeItem('accessToken')
-  localStorage.removeItem('refreshToken')
-  localStorage.removeItem('user')
-  localStorage.removeItem('userProfile')
-
-  localStorage.setItem('app-version', APP_VERSION)
-  window.location.reload()
-}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -71,6 +48,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 <Router />
               </WebSocketProvider>
             </ToastProvider>
+            <NewVersionBanner />
           </ThemeProvider>
         </BrowserRouter>
         {/* React Query DevTools - only in development */}
