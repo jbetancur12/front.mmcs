@@ -185,13 +185,17 @@ const CalibrationServiceApprovalDialog = ({
           />
 
           <Box>
+            <Typography variant='caption' fontWeight={700} sx={{ color: '#dc2626', mb: 1, display: 'block' }}>
+              * Evidencia obligatoria
+            </Typography>
             <Button
               component='label'
               variant='outlined'
               startIcon={<UploadFileOutlinedIcon />}
               disabled={isLoading}
+              color={values.evidenceFile ? 'success' : 'primary'}
             >
-              Adjuntar evidencia
+              {values.evidenceFile ? 'Cambiar archivo' : 'Adjuntar evidencia'}
               <input
                 hidden
                 type='file'
@@ -207,7 +211,7 @@ const CalibrationServiceApprovalDialog = ({
             <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
               {values.evidenceFile
                 ? values.evidenceFile.name
-                : 'Puedes adjuntar correo, captura, acta o soporte de la respuesta del cliente.'}
+                : 'Adjunta correo, captura, acta o soporte de la respuesta del cliente.'}
             </Typography>
           </Box>
         </Stack>
@@ -220,7 +224,13 @@ const CalibrationServiceApprovalDialog = ({
           variant='contained'
           color={isRejectMode ? 'warning' : 'success'}
           disabled={isLoading}
-          onClick={() => void onSubmit(values)}
+          onClick={() => {
+            if (!values.evidenceFile) {
+              alert('Debes adjuntar la evidencia de la respuesta del cliente.')
+              return
+            }
+            void onSubmit(values)
+          }}
         >
           {isRejectMode
             ? isLoading
