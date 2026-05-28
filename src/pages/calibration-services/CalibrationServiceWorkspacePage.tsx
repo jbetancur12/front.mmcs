@@ -561,6 +561,12 @@ const CalibrationServiceWorkspacePage = () => {
       const total = section.fields.length + 1
       return Math.min((base + (hasEvidence ? 1 : 0)) / total, 1)
     }
+    if (section.key === 'terms') {
+      const hasContent = CALIBRATION_QUOTE_TERM_KEYS.some(
+        (key) => formState.quoteTerms?.[key]?.trim()
+      )
+      return hasContent ? 1 : 0
+    }
     if (section.key === 'commercial') {
       const base = section.fields.filter((f) => {
         const val = formState[f]
