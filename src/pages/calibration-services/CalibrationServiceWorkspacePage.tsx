@@ -545,17 +545,20 @@ const CalibrationServiceWorkspacePage = () => {
     { key: 'contact', label: 'Contacto y destino', icon: <Inventory2OutlinedIcon sx={{ fontSize: 18 }} />, fields: ['contactName', 'contactEmail', 'city'] as const },
     { key: 'commercial', label: 'Condiciones', icon: <ReceiptLongOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['paymentMethod', 'validityDays'] as const },
     { key: 'items', label: 'Ítems cotizados', icon: <RequestQuoteOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['items'] as const },
-    { key: 'documents', label: 'Evidencia y términos', icon: <UploadFileOutlinedIcon sx={{ fontSize: 18 }} />, fields: [] as const },
   ] as const
   const sectionCompletion = sections.map((section) => {
     if (section.key === 'items') {
       const validItems = formState.items.filter((i) => i.itemName.trim())
       return Math.min(validItems.length, 1)
     }
-    if (section.key === 'documents') {
+    if (section.key === 'customer') {
+      const base = section.fields.filter((f) => {
+        const val = formState[f]
+        return val !== null && val !== undefined && val !== '' && val !== 0
+      }).length
       const hasEvidence = Boolean(requestEvidenceFile || requestEvidenceDocuments.length)
-      const hasQuoteTerms = Boolean(formState.quoteTerms?.commercialComments?.trim())
-      return hasEvidence || hasQuoteTerms ? 1 : 0.3
+      const total = section.fields.length + 1
+      return Math.min((base + (hasEvidence ? 1 : 0)) / total, 1)
     }
     const filled = section.fields.filter((f) => {
       const val = formState[f]
@@ -776,6 +779,9 @@ const CalibrationServiceWorkspacePage = () => {
     if (!validItems.length) return 'Agrega al menos un item.'
     if (validItems.some((item) => !item.itemName.trim() || !(Number(item.quantity) > 0))) {
       return 'Revisa nombre y cantidad de los items.'
+    }
+    if (!requestEvidenceFile && !requestEvidenceDocuments.length) {
+      return 'Debes adjuntar la evidencia de solicitud.'
     }
     return null
   }
@@ -1170,6 +1176,45 @@ const CalibrationServiceWorkspacePage = () => {
                   </FormControl>
                 </Grid>
               </Grid>
+
+              <Divider sx={{ my: 2 }} />
+              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2 }}>
+                <UploadFileOutlinedIcon sx={{ color: '#7c3aed', fontSize: 20 }} />
+                <Typography variant='subtitle2' fontWeight={700} sx={{ color: '#374151' }}>
+                  Evidencia de solicitud *
+                </Typography>
+                {requestEvidenceFile || requestEvidenceDocuments.length ? (
+                  <Chip icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />} size='small' label='Adjunta' color='success' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }} />
+                ) : (
+                  <Chip size='small' label='Obligatorio' color='error' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 } }} />
+                )}
+              </Stack>
+              <Stack spacing={2}>
+                <TextField fullWidth label='Titulo de la evidencia' value={requestEvidenceTitle} disabled={!canEdit || isBusy} onChange={(event) => setRequestEvidenceTitle(event.target.value)} required />
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', md: 'center' }}>
+                  <Button component='label' variant='outlined' startIcon={<UploadFileOutlinedIcon />} disabled={!canEdit || isBusy}>
+                    Seleccionar archivo
+                    <input
+                      hidden
+                      type='file'
+                      accept='.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx'
+                      onChange={(event) => setRequestEvidenceFile(event.target.files?.[0] || null)}
+                    />
+                  </Button>
+                  <Typography variant='body2' color='text.secondary'>
+                    {requestEvidenceFile ? requestEvidenceFile.name : 'Adjunta PDF, imagen o soporte documental de la solicitud.'}
+                  </Typography>
+                </Stack>
+                {requestEvidenceDocuments.length ? (
+                  <List dense disablePadding>
+                    {requestEvidenceDocuments.map((document) => (
+                      <ListItem key={document.id} disableGutters>
+                        <ListItemText primary={document.title || document.originalFileName} secondary={`Version ${document.version}`} />
+                      </ListItem>
+                    ))}
+                  </List>
+                ) : null}
+              </Stack>
             </CardContent>
           </Card>
           </div>
@@ -1460,49 +1505,8 @@ const CalibrationServiceWorkspacePage = () => {
               />
             </CardContent>
           </Card>
-          </div>
 
-          <div style={{ display: activeSection !== 4 ? 'none' : undefined }}>
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #8b5cf6, #a78bfa)' } }}>
-            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
-                <UploadFileOutlinedIcon sx={{ color: '#7c3aed', fontSize: 22 }} />
-                <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
-                  Evidencia de solicitud
-                </Typography>
-              </Stack>
-              <Stack spacing={2}>
-                <TextField fullWidth label='Titulo de la evidencia' value={requestEvidenceTitle} disabled={!canEdit || isBusy} onChange={(event) => setRequestEvidenceTitle(event.target.value)} />
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', md: 'center' }}>
-                  <Button component='label' variant='outlined' startIcon={<UploadFileOutlinedIcon />} disabled={!canEdit || isBusy}>
-                    Seleccionar archivo
-                    <input
-                      hidden
-                      type='file'
-                      accept='.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx'
-                      onChange={(event) => setRequestEvidenceFile(event.target.files?.[0] || null)}
-                    />
-                  </Button>
-                  <Typography variant='body2' color='text.secondary'>
-                    {requestEvidenceFile ? requestEvidenceFile.name : 'Adjunta PDF, imagen o soporte documental de la solicitud.'}
-                  </Typography>
-                </Stack>
-                {requestEvidenceDocuments.length ? (
-                  <List dense disablePadding>
-                    {requestEvidenceDocuments.map((document) => (
-                      <ListItem key={document.id} disableGutters>
-                        <ListItemText primary={document.title || document.originalFileName} secondary={`Version ${document.version}`} />
-                      </ListItem>
-                    ))}
-                  </List>
-                ) : (
-                  <Alert severity='info'>Aun no hay evidencia de solicitud cargada.</Alert>
-                )}
-              </Stack>
-            </CardContent>
-          </Card>
-
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.35s both' }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both' }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Stack spacing={2}>
                 <Box>
