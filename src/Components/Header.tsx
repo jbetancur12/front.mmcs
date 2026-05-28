@@ -11,8 +11,7 @@ import {
   MenuItem,
   Tooltip,
   useTheme,
-  useMediaQuery,
-  Button
+  useMediaQuery
 } from '@mui/material'
 import {
   Menu as MenuIcon,

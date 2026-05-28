@@ -15,7 +15,6 @@ import {
   Typography,
 } from '@mui/material'
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined'
-import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined'
 
