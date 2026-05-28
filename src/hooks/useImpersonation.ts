@@ -96,7 +96,7 @@ export const useImpersonation = () => {
         },
       })
 
-      window.location.reload()
+      window.location.href = '/calibration-services'
     } catch (error) {
       console.error('Error starting impersonation:', error)
       throw error
@@ -125,7 +125,7 @@ export const useImpersonation = () => {
         targetUser: null,
       })
 
-      window.location.reload()
+      window.location.href = '/calibration-services'
     } catch (error) {
       console.error('Error stopping impersonation:', error)
     }
