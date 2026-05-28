@@ -11,18 +11,23 @@ import {
   MenuItem,
   Tooltip,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  Button
 } from '@mui/material'
 import {
   Menu as MenuIcon,
   Notifications as NotificationsIcon
 } from '@mui/icons-material'
+import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined'
 import { useStore } from '@nanostores/react'
 import { useNavigate } from 'react-router-dom'
 import { userStore } from '../store/userStore'
 import LogoutButton from './Authentication/Logout'
 import useAxiosPrivate from '@utils/use-axios-private'
 import type { EquipmentData } from './DataSheet/EquipmentAlertPage'
+import { useImpersonation } from '../hooks/useImpersonation'
+import ImpersonationBar from './ImpersonationBar'
+import ImpersonationDialog from './ImpersonationDialog'
 
 interface HeaderProps {
   toggleMobileMenu: () => void
@@ -37,6 +42,18 @@ function Header({ toggleMobileMenu }: HeaderProps) {
   
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [hasAlert, setHasAlert] = useState<EquipmentData[]>([])
+  const [impersonationDialogOpen, setImpersonationDialogOpen] = useState(false)
+  const {
+    isImpersonating,
+    impersonator,
+    targetUser,
+    candidates,
+    searching,
+    searchUsers,
+    startImpersonation,
+    stopImpersonation,
+    clearSearch,
+  } = useImpersonation()
   
   const isMenuOpen = Boolean(anchorEl)
 
@@ -76,7 +93,16 @@ function Header({ toggleMobileMenu }: HeaderProps) {
   }
 
   return (
-    <AppBar
+    <>
+      {isImpersonating && impersonator && targetUser && (
+        <ImpersonationBar
+          impersonatorName={impersonator.name}
+          targetName={targetUser.name}
+          targetRoles={targetUser.roles}
+          onStop={stopImpersonation}
+        />
+      )}
+      <AppBar
       position="fixed"
       elevation={1}
       sx={{
@@ -185,6 +211,22 @@ function Header({ toggleMobileMenu }: HeaderProps) {
             </Tooltip>
           )}
 
+          {/* Botón de suplantación - Solo admin */}
+          {$userStore.rol.some((role) => ['admin', 'super_admin'].includes(role)) && !$userStore.lmsOnly && (
+            <Tooltip title="Suplantar usuario">
+              <IconButton
+                color='inherit'
+                onClick={() => {
+                  clearSearch()
+                  setImpersonationDialogOpen(true)
+                }}
+                sx={{ color: isImpersonating ? '#d97706' : 'text.secondary' }}
+              >
+                <AdminPanelSettingsOutlinedIcon />
+              </IconButton>
+            </Tooltip>
+          )}
+
           {/* Botón de perfil */}
           <Tooltip title="Perfil de usuario">
             <IconButton
@@ -239,6 +281,20 @@ function Header({ toggleMobileMenu }: HeaderProps) {
           </MenuItem>
         </Menu>
       </Toolbar>
+      <ImpersonationDialog
+        open={impersonationDialogOpen}
+        searching={searching}
+        candidates={candidates}
+        onSearch={searchUsers}
+        onSelect={(userId) => {
+          setImpersonationDialogOpen(false)
+          startImpersonation(userId)
+        }}
+        onClose={() => {
+          setImpersonationDialogOpen(false)
+          clearSearch()
+        }}
+      />
     </AppBar>
   )
 }
