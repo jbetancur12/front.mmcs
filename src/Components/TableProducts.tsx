@@ -125,6 +125,7 @@ const TableProducts: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<ProductData | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const fetchProducts = async () => {
     try {
@@ -137,8 +138,19 @@ const TableProducts: React.FC = () => {
 
   useEffect(() => { fetchProducts() }, [])
 
-  const totalProducts = tableData.length
-  const totalVariants = tableData.reduce((s, p) => s + p.variants.length, 0)
+  const filteredData = useMemo(() => {
+    if (!searchQuery.trim()) return tableData
+    const q = searchQuery.toLowerCase().trim()
+    return tableData.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.intervalText?.toLowerCase().includes(q) ||
+        p.variants.some((v) => v.serviceType.toLowerCase().includes(q))
+    )
+  }, [tableData, searchQuery])
+
+  const totalProducts = filteredData.length
+  const totalVariants = filteredData.reduce((s, p) => s + p.variants.length, 0)
 
   const toggleRow = (id: number) => {
     setExpandedRows((prev) => {
@@ -334,6 +346,8 @@ const TableProducts: React.FC = () => {
         <TextField
           size='small'
           placeholder='Buscar productos...'
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           sx={{ minWidth: 220 }}
           InputProps={{
             startAdornment: (
@@ -406,7 +420,7 @@ const TableProducts: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {tableData.map((product) => (
+              {filteredData.map((product) => (
                 <React.Fragment key={product.id}>
                   <tr
                     style={{ borderBottom: '1px solid #e5e7eb' }}
@@ -517,7 +531,7 @@ const TableProducts: React.FC = () => {
                   )}
                 </React.Fragment>
               ))}
-              {tableData.length === 0 && (
+              {filteredData.length === 0 && (
                 <tr>
                   <td colSpan={5} style={{ padding: 32, textAlign: 'center' }}>
                     <Typography variant='body2' color='text.secondary'>
