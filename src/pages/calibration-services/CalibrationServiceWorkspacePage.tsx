@@ -550,9 +550,9 @@ const CalibrationServiceWorkspacePage = () => {
   const sections = [
     { key: 'customer', label: 'Cliente y alcance', icon: <GroupOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['customerId', 'requestChannel'] as const },
     { key: 'contact', label: 'Contacto y destino', icon: <Inventory2OutlinedIcon sx={{ fontSize: 18 }} />, fields: ['contactName', 'contactEmail', 'city'] as const },
-    { key: 'commercial', label: 'Condiciones', icon: <ReceiptLongOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['paymentMethod', 'validityDays', 'instrumentDeliveryTime', 'certificateDeliveryTime'] as const },
-    { key: 'items', label: 'Ítems cotizados', icon: <RequestQuoteOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['items'] as const },
     { key: 'terms', label: 'Términos', icon: <UploadFileOutlinedIcon sx={{ fontSize: 18 }} />, fields: [] as const },
+    { key: 'items', label: 'Ítems cotizados', icon: <RequestQuoteOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['items'] as const },
+    { key: 'commercial', label: 'Condiciones', icon: <ReceiptLongOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['paymentMethod', 'validityDays', 'instrumentDeliveryTime', 'certificateDeliveryTime'] as const },
   ] as const
   const sectionCompletion = sections.map((section) => {
     if (section.key === 'items') {
@@ -1360,7 +1360,95 @@ const CalibrationServiceWorkspacePage = () => {
           </Card>
           </div>
 
+
           <div style={{ display: activeSection !== 2 ? 'none' : undefined }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #8b5cf6, #a78bfa)' } }}>
+            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
+                <UploadFileOutlinedIcon sx={{ color: '#7c3aed', fontSize: 22 }} />
+                <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
+                  Términos
+                </Typography>
+              </Stack>
+              <Stack spacing={2}>
+                <Box>
+                  <Typography variant='body2' color='text.secondary'>
+                    Este bloque se deja al final para ajustar la última hoja de la
+                    cotización. Al guardar, los términos quedan como snapshot de este
+                    servicio sin afectar la plantilla global. Para modificar la plantilla
+                    que se precarga en servicios nuevos, usa el botón "Plantilla
+                    términos" en la bandeja de entrada.
+                  </Typography>
+                </Box>
+                <Alert severity='info'>
+                  Puedes usar variables dentro del texto. Al generar el PDF se reemplazan
+                  automáticamente por los valores de esta cotización:
+                  <Box component='ul' sx={{ mt: 1, mb: 0, pl: 3 }}>
+                    <li><strong>{'{{validityDays}}'}</strong>: validez de la oferta.</li>
+                    <li><strong>{'{{paymentMethod}}'}</strong>: forma de pago acordada.</li>
+                    <li><strong>{'{{instrumentDeliveryTime}}'}</strong>: tiempo de entrega de los equipos.</li>
+                    <li><strong>{'{{certificateDeliveryTime}}'}</strong>: tiempo de entrega de los certificados.</li>
+                  </Box>
+                </Alert>
+                {CALIBRATION_QUOTE_TERM_KEYS.map((termKey) => (
+                  <Accordion
+                    key={termKey}
+                    disableGutters
+                    elevation={0}
+                    sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px !important' }}
+                  >
+                    <AccordionSummary expandIcon={<ExpandMoreOutlinedIcon />}>
+                      <Typography fontWeight={800}>
+                        {CALIBRATION_QUOTE_TERM_LABELS[termKey]}
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <CalibrationServiceRichTextEditor
+                        value={formState.quoteTerms?.[termKey] || ''}
+                        disabled={!canEdit || isBusy}
+                        placeholder={`Escribe ${CALIBRATION_QUOTE_TERM_LABELS[termKey].toLowerCase()}`}
+                        onChange={(value) => setQuoteTerm(termKey, value)}
+                      />
+                    </AccordionDetails>
+                  </Accordion>
+                ))}
+              </Stack>
+            </CardContent>
+          </Card>
+          </div>
+
+          <div style={{ display: activeSection !== 3 ? 'none' : undefined }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.25s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #ec4899, #f472b6)' } }}>
+            <CardContent sx={{ p: { xs: 2, md: 3 }, pBottom: { xs: 2, md: 3 } }}>
+              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
+                <RequestQuoteOutlinedIcon sx={{ color: '#db2777', fontSize: 22 }} />
+                <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
+                  Ítems cotizados
+                </Typography>
+                <Chip size='small' label={`${formState.items.filter((i) => i.itemName.trim()).length} ítems`} variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.8 } }} />
+                {formState.items.filter((i) => i.itemName.trim()).length > 0 ? (
+                  <Chip icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />} size='small' label='Completo' color='success' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }} />
+                ) : null}
+              </Stack>
+              <CalibrationServiceItemsEditor
+                items={formState.items}
+                products={productOptions}
+                catalogPriceSourceOptions={CATALOG_PRICE_SOURCE_OPTIONS}
+                suggestedCatalogPriceSource={suggestedCatalogPriceSource}
+                canEdit={canEdit}
+                isBusy={isBusy}
+                onAddItem={handleAddItem}
+                onRemoveItem={handleRemoveItem}
+                onSelectProduct={handleSelectProduct}
+                onSelectCatalogPrice={handleSelectCatalogPrice}
+                onChangeItemField={setItemField}
+                onChangeItemOtherField={setItemOtherField}
+              />
+            </CardContent>
+          </Card>
+          </div>
+
+          <div style={{ display: activeSection !== 4 ? 'none' : undefined }}>
           <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #6366f1, #818cf8)' } }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
@@ -1368,7 +1456,7 @@ const CalibrationServiceWorkspacePage = () => {
                 <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
                   Condiciones comerciales
                 </Typography>
-                {sectionCompletion[2] >= 1 ? (
+                {sectionCompletion[4] >= 1 ? (
                   <Chip icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />} size='small' label='Completo' color='success' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }} />
                 ) : null}
               </Stack>
@@ -1526,92 +1614,7 @@ const CalibrationServiceWorkspacePage = () => {
           </Card>
           </div>
 
-          <div style={{ display: activeSection !== 3 ? 'none' : undefined }}>
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.25s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #ec4899, #f472b6)' } }}>
-            <CardContent sx={{ p: { xs: 2, md: 3 }, pBottom: { xs: 2, md: 3 } }}>
-              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
-                <RequestQuoteOutlinedIcon sx={{ color: '#db2777', fontSize: 22 }} />
-                <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
-                  Ítems cotizados
-                </Typography>
-                <Chip size='small' label={`${formState.items.filter((i) => i.itemName.trim()).length} ítems`} variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.8 } }} />
-                {formState.items.filter((i) => i.itemName.trim()).length > 0 ? (
-                  <Chip icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />} size='small' label='Completo' color='success' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }} />
-                ) : null}
-              </Stack>
-              <CalibrationServiceItemsEditor
-                items={formState.items}
-                products={productOptions}
-                catalogPriceSourceOptions={CATALOG_PRICE_SOURCE_OPTIONS}
-                suggestedCatalogPriceSource={suggestedCatalogPriceSource}
-                canEdit={canEdit}
-                isBusy={isBusy}
-                onAddItem={handleAddItem}
-                onRemoveItem={handleRemoveItem}
-                onSelectProduct={handleSelectProduct}
-                onSelectCatalogPrice={handleSelectCatalogPrice}
-                onChangeItemField={setItemField}
-                onChangeItemOtherField={setItemOtherField}
-              />
-            </CardContent>
-          </Card>
-          </div>
 
-          <div style={{ display: activeSection !== 4 ? 'none' : undefined }}>
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #8b5cf6, #a78bfa)' } }}>
-            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
-                <UploadFileOutlinedIcon sx={{ color: '#7c3aed', fontSize: 22 }} />
-                <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
-                  Términos
-                </Typography>
-              </Stack>
-              <Stack spacing={2}>
-                <Box>
-                  <Typography variant='body2' color='text.secondary'>
-                    Este bloque se deja al final para ajustar la última hoja de la
-                    cotización. Al guardar, los términos quedan como snapshot de este
-                    servicio sin afectar la plantilla global. Para modificar la plantilla
-                    que se precarga en servicios nuevos, usa el botón "Plantilla
-                    términos" en la bandeja de entrada.
-                  </Typography>
-                </Box>
-                <Alert severity='info'>
-                  Puedes usar variables dentro del texto. Al generar el PDF se reemplazan
-                  automáticamente por los valores de esta cotización:
-                  <Box component='ul' sx={{ mt: 1, mb: 0, pl: 3 }}>
-                    <li><strong>{'{{validityDays}}'}</strong>: validez de la oferta.</li>
-                    <li><strong>{'{{paymentMethod}}'}</strong>: forma de pago acordada.</li>
-                    <li><strong>{'{{instrumentDeliveryTime}}'}</strong>: tiempo de entrega de los equipos.</li>
-                    <li><strong>{'{{certificateDeliveryTime}}'}</strong>: tiempo de entrega de los certificados.</li>
-                  </Box>
-                </Alert>
-                {CALIBRATION_QUOTE_TERM_KEYS.map((termKey) => (
-                  <Accordion
-                    key={termKey}
-                    disableGutters
-                    elevation={0}
-                    sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px !important' }}
-                  >
-                    <AccordionSummary expandIcon={<ExpandMoreOutlinedIcon />}>
-                      <Typography fontWeight={800}>
-                        {CALIBRATION_QUOTE_TERM_LABELS[termKey]}
-                      </Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <CalibrationServiceRichTextEditor
-                        value={formState.quoteTerms?.[termKey] || ''}
-                        disabled={!canEdit || isBusy}
-                        placeholder={`Escribe ${CALIBRATION_QUOTE_TERM_LABELS[termKey].toLowerCase()}`}
-                        onChange={(value) => setQuoteTerm(termKey, value)}
-                      />
-                    </AccordionDetails>
-                  </Accordion>
-                ))}
-              </Stack>
-            </CardContent>
-          </Card>
-          </div>
         </Grid>
 
         <Grid item xs={12} lg={4}>
