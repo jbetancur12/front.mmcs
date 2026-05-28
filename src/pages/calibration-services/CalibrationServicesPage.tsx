@@ -1,6 +1,9 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Box,
   Button,
@@ -9,6 +12,10 @@ import {
   Chip,
   CircularProgress,
   Collapse,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   Grid,
   MenuItem,
@@ -28,6 +35,7 @@ import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
 import FilterListOutlinedIcon from '@mui/icons-material/FilterListOutlined'
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined'
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
@@ -57,6 +65,7 @@ import {
 } from '../../constants/calibrationServices'
 import {
   useCalibrationServiceMutations,
+  useCalibrationServiceQuoteTermsTemplate,
   useCalibrationServiceSequenceConfig,
   useCalibrationServiceSlaConfig,
   useCalibrationServices
@@ -65,6 +74,7 @@ import {
   CalibrationService,
   CalibrationServiceApprovalStatus,
   CalibrationServiceFilters,
+  CalibrationServiceQuoteTerms,
   CalibrationServiceScopeType,
   CalibrationServiceSlaConfigPayload,
   CalibrationServiceSlaIndicatorColor,
@@ -72,8 +82,14 @@ import {
 } from '../../types/calibrationService'
 import { userStore } from '../../store/userStore'
 import { useHasRole } from '../../utils/functions'
+import CalibrationServiceRichTextEditor from './CalibrationServiceRichTextEditor'
 import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
 import CalibrationServiceSlaConfigDialog from './CalibrationServiceSlaConfigDialog'
+import {
+  CALIBRATION_QUOTE_TERM_KEYS,
+  CALIBRATION_QUOTE_TERM_LABELS,
+  mergeCalibrationQuoteTerms
+} from './calibrationQuoteTerms'
 
 const FILTER_ALL = 'all'
 const FILTER_UNASSIGNED = 'unassigned'
@@ -630,7 +646,7 @@ const getKanbanColumnKey = (
 const CalibrationServicesPage = () => {
   const navigate = useNavigate()
   const $userStore = useStore(userStore)
-  const { requestApproval, upsertSequenceConfig, upsertSlaConfig } =
+  const { requestApproval, upsertSequenceConfig, upsertSlaConfig, upsertQuoteTermsTemplate } =
     useCalibrationServiceMutations()
   const canCreateServices = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const canTakeApprovalDecision = useHasRole([
@@ -668,6 +684,9 @@ const CalibrationServicesPage = () => {
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
   const [isSlaConfigDialogOpen, setIsSlaConfigDialogOpen] = useState(false)
   const [areFiltersOpen, setAreFiltersOpen] = useState(false)
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
+  const [templateTerms, setTemplateTerms] = useState<CalibrationServiceQuoteTerms>({})
+  const { data: quoteTermsTemplate } = useCalibrationServiceQuoteTermsTemplate(canCreateServices)
   const [viewMode, setViewMode] = useState<CalibrationServicesViewMode>(
     getStoredViewMode
   )
@@ -1071,6 +1090,25 @@ const CalibrationServicesPage = () => {
     }
   }
 
+  const handleOpenTemplate = () => {
+    setTemplateTerms(mergeCalibrationQuoteTerms(quoteTermsTemplate?.terms))
+    setTemplateDialogOpen(true)
+  }
+
+  const handleSaveTemplate = async () => {
+    try {
+      await upsertQuoteTermsTemplate.mutateAsync(templateTerms)
+      toast.success('Plantilla de términos actualizada correctamente.')
+      setTemplateDialogOpen(false)
+    } catch {
+      toast.error('No se pudo guardar la plantilla de términos.')
+    }
+  }
+
+  const setTemplateTerm = (key: string, value: string) => {
+    setTemplateTerms((previous) => ({ ...previous, [key]: value }))
+  }
+
   if (isLoading) {
     return (
       <Box
@@ -1217,6 +1255,16 @@ const CalibrationServicesPage = () => {
                 sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
               >
                 Configuración SLA
+              </Button>
+            ) : null}
+            {canCreateServices ? (
+              <Button
+                variant='outlined'
+                startIcon={<SaveOutlinedIcon />}
+                onClick={handleOpenTemplate}
+                sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
+              >
+                Plantilla términos
               </Button>
             ) : null}
             <Button
@@ -2388,6 +2436,50 @@ const CalibrationServicesPage = () => {
           onSubmit={handleSaveSlaConfig}
         />
       ) : null}
+
+      <Dialog open={templateDialogOpen} onClose={() => setTemplateDialogOpen(false)} maxWidth='md' fullWidth>
+        <DialogTitle>Plantilla global de términos y condiciones</DialogTitle>
+        <DialogContent dividers>
+          <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+            Edita los términos que se cargarán por defecto al crear una nueva cotización.
+            Usa {'{{validityDays}}'}, {'{{paymentMethod}}'}, {'{{instrumentDeliveryTime}}'}, {'{{certificateDeliveryTime}}'} como variables dinámicas.
+          </Typography>
+          <Stack spacing={1.5}>
+            {CALIBRATION_QUOTE_TERM_KEYS.map((termKey) => (
+              <Accordion
+                key={termKey}
+                disableGutters
+                elevation={0}
+                sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px !important' }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreOutlinedIcon />}>
+                  <Typography fontWeight={800}>
+                    {CALIBRATION_QUOTE_TERM_LABELS[termKey]}
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <CalibrationServiceRichTextEditor
+                    value={templateTerms[termKey] || ''}
+                    placeholder={`Escribe ${CALIBRATION_QUOTE_TERM_LABELS[termKey].toLowerCase()}`}
+                    onChange={(value) => setTemplateTerm(termKey, value)}
+                  />
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setTemplateDialogOpen(false)}>Cancelar</Button>
+          <Button
+            variant='contained'
+            startIcon={<SaveOutlinedIcon />}
+            onClick={handleSaveTemplate}
+            disabled={upsertQuoteTermsTemplate.isLoading}
+          >
+            Guardar plantilla
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }

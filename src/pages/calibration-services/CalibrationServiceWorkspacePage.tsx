@@ -1479,8 +1479,10 @@ const CalibrationServiceWorkspacePage = () => {
                   </Typography>
                   <Typography variant='body2' color='text.secondary'>
                     Este bloque se deja al final para ajustar la última hoja de la
-                    cotización. Al guardar, queda como snapshot de este servicio y
-                    también queda como plantilla para las siguientes cotizaciones.
+                    cotización. Al guardar, los términos quedan como snapshot de este
+                    servicio sin afectar la plantilla global. Para modificar la plantilla
+                    que se precarga en servicios nuevos, usa el botón "Plantilla
+                    términos" en la bandeja de entrada.
                   </Typography>
                 </Box>
                 <Alert severity='info'>

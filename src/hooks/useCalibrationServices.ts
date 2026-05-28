@@ -22,6 +22,7 @@ import {
   CalibrationServicePayload,
   CalibrationServicePausePayload,
   CalibrationServicePhysicalTraceabilityPayload,
+  CalibrationServiceQuoteTerms,
   CalibrationServiceQuoteTermsTemplate,
   CalibrationServiceReassignPayload,
   CalibrationServiceReschedulePayload,
@@ -592,6 +593,16 @@ const calibrationServiceApi = {
       payload
     )
     return response.data
+  },
+
+  upsertQuoteTermsTemplate: async (
+    terms: CalibrationServiceQuoteTerms
+  ): Promise<CalibrationServiceQuoteTermsTemplate> => {
+    const response = await axiosPrivate.put<CalibrationServiceQuoteTermsTemplate>(
+      '/calibration-services/config/quote-terms',
+      { terms }
+    )
+    return response.data
   }
 }
 
@@ -1079,6 +1090,18 @@ export const useCalibrationServiceMutations = () => {
     }
   )
 
+  const upsertQuoteTermsTemplate = useMutation(
+    calibrationServiceApi.upsertQuoteTermsTemplate,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries([
+          CALIBRATION_SERVICE_QUERY_KEYS.all,
+          'quote-terms-template'
+        ])
+      }
+    }
+  )
+
   return {
     createService,
     updateService,
@@ -1117,6 +1140,7 @@ export const useCalibrationServiceMutations = () => {
     downloadDocument,
     upsertSequenceConfig,
     upsertSlaConfig,
+    upsertQuoteTermsTemplate,
     updateCustomerSignature,
     updateDeliverySignature,
     updateExecutionCustomer
