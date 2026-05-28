@@ -288,8 +288,14 @@ const CalibrationServiceWorkspacePage = () => {
   const { data: service, isLoading: isLoadingService } = useCalibrationService(serviceId)
   const { data: quoteTermsTemplate } =
     useCalibrationServiceQuoteTermsTemplate(canAccessWorkspace && !isEditing)
-  const { createService, updateService, uploadDocument, upsertSequenceConfig } =
-    useCalibrationServiceMutations()
+  const {
+    createService,
+    updateService,
+    uploadDocument,
+    generateQuotePdf,
+    downloadDocument,
+    upsertSequenceConfig
+  } = useCalibrationServiceMutations()
   const {
     data: customers = [],
     error: customersError,
@@ -533,7 +539,8 @@ const CalibrationServiceWorkspacePage = () => {
   const canEdit =
     canAccessWorkspace &&
     (!service || service.status === 'draft')
-  const isBusy = createService.isLoading || updateService.isLoading || uploadDocument.isLoading
+  const isBusy = createService.isLoading || updateService.isLoading || uploadDocument.isLoading ||
+    generateQuotePdf.isLoading || downloadDocument.isLoading
   const suggestedCatalogPriceSource: CatalogPriceSource | null =
     typeof formState.otherFields?.catalogPriceProfile === 'string' &&
     ['medicalPrice', 'industrialPrice', 'thirdPartyPrice'].includes(formState.otherFields.catalogPriceProfile)
@@ -832,9 +839,31 @@ const CalibrationServiceWorkspacePage = () => {
           return
         }
       }
+      if (targetStatus === 'pending_approval') {
+        try {
+          const pdfDocument = await generateQuotePdf.mutateAsync({
+            serviceId: String(savedService.id)
+          })
+          const downloadResponse = await downloadDocument.mutateAsync({
+            serviceId: String(savedService.id),
+            documentId: pdfDocument.id
+          })
+          const url = window.URL.createObjectURL(new Blob([downloadResponse.data]))
+          const link = document.createElement('a')
+          link.href = url
+          link.setAttribute('download', pdfDocument.originalFileName || `cotizacion-${savedService.serviceCode}.pdf`)
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          window.URL.revokeObjectURL(url)
+        } catch (pdfError) {
+          console.error(pdfError)
+          toast.error('No se pudo generar la cotización PDF.')
+        }
+      }
       toast.success(
         targetStatus === 'pending_approval'
-          ? 'Servicio guardado y cotización marcada como enviada al cliente.'
+          ? 'Servicio guardado y cotización generada.'
           : 'Servicio guardado como borrador.'
       )
       navigate(`/calibration-services/${savedService.id}`)
