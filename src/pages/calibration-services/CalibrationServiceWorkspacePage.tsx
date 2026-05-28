@@ -844,18 +844,7 @@ const CalibrationServiceWorkspacePage = () => {
           const pdfDocument = await generateQuotePdf.mutateAsync({
             serviceId: String(savedService.id)
           })
-          const downloadResponse = await downloadDocument.mutateAsync({
-            serviceId: String(savedService.id),
-            documentId: pdfDocument.id
-          })
-          const url = window.URL.createObjectURL(new Blob([downloadResponse.data]))
-          const link = document.createElement('a')
-          link.href = url
-          link.setAttribute('download', pdfDocument.originalFileName || `cotizacion-${savedService.serviceCode}.pdf`)
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
-          window.URL.revokeObjectURL(url)
+          window.open(`/calibration-services/${savedService.id}/documents/${pdfDocument.id}/download`, '_blank')
         } catch (pdfError) {
           console.error(pdfError)
           toast.error('No se pudo generar la cotización PDF.')
