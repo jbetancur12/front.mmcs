@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { axiosPrivate } from '@utils/api'
+import toast from 'react-hot-toast'
 
 interface ImpersonationUser {
   id: number
@@ -60,6 +61,7 @@ export const useImpersonation = () => {
   }, [])
 
   const startImpersonation = useCallback(async (userId: number) => {
+    toast.loading('Suplantando usuario...', { id: 'impersonation' })
     try {
       const response = await axiosPrivate.post(`/auth/impersonate/${userId}`)
       const { token, user, impersonator } = response.data
@@ -83,27 +85,27 @@ export const useImpersonation = () => {
         userType: user.userType,
       }))
 
+      toast.success(`Ahora operas como ${user.name}`, { id: 'impersonation' })
+
       setState({
         isImpersonating: true,
         impersonator,
         targetUser: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          roles: user.rol,
-          customerId: user.customerId,
-          userType: user.userType,
+          id: user.id, name: user.name, email: user.email,
+          roles: user.rol, customerId: user.customerId, userType: user.userType,
         },
       })
 
-      window.location.href = '/calibration-services'
+      setTimeout(() => { window.location.href = '/calibration-services' }, 500)
     } catch (error) {
+      toast.error('No se pudo suplantar al usuario.', { id: 'impersonation' })
       console.error('Error starting impersonation:', error)
       throw error
     }
   }, [])
 
   const stopImpersonation = useCallback(async () => {
+    toast.loading('Volviendo a tu sesión...', { id: 'impersonation' })
     try {
       const response = await axiosPrivate.post('/auth/impersonate/stop')
       const { token, user } = response.data
@@ -119,13 +121,15 @@ export const useImpersonation = () => {
       localStorage.removeItem(STORAGE_KEY_IMPERSONATOR)
       localStorage.removeItem(STORAGE_KEY_TARGET)
 
+      toast.success(`De vuelta como ${user.name}`, { id: 'impersonation' })
+
       setState({
         isImpersonating: false,
         impersonator: null,
         targetUser: null,
       })
 
-      window.location.href = '/calibration-services'
+      setTimeout(() => { window.location.href = '/calibration-services' }, 500)
     } catch (error) {
       console.error('Error stopping impersonation:', error)
     }
