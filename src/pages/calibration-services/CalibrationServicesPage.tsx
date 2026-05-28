@@ -1783,9 +1783,11 @@ const CalibrationServicesPage = () => {
                           fontWeight={700}
                           sx={{ color: ui.text, lineHeight: 1.2 }}
                         >
-                          {service.serviceCode}
+                          <Box component='span' title='Código interno del servicio (SCL)' sx={{ cursor: 'help' }}>
+                            {service.serviceCode}
+                          </Box>
                           {service.quoteCode ? (
-                            <Box component='span' sx={{ ml: 1, color: '#059669', fontWeight: 800, fontSize: '0.85rem' }}>
+                            <Box component='span' title='Consecutivo de cotización' sx={{ ml: 1, color: '#059669', fontWeight: 800, fontSize: '0.85rem', cursor: 'help' }}>
                               · {service.quoteCode}
                             </Box>
                           ) : null}
@@ -2294,9 +2296,11 @@ const CalibrationServicesPage = () => {
                                     fontWeight={800}
                                     sx={{ color: ui.text, lineHeight: 1.2 }}
                                   >
-                                    {service.serviceCode}
+                                    <Box component='span' title='Código interno del servicio (SCL)' sx={{ cursor: 'help' }}>
+                                      {service.serviceCode}
+                                    </Box>
                                     {service.quoteCode ? (
-                                      <Box component='span' sx={{ ml: 1, color: '#059669', fontWeight: 700, fontSize: '0.75rem' }}>
+                                      <Box component='span' title='Consecutivo de cotización' sx={{ ml: 1, color: '#059669', fontWeight: 700, fontSize: '0.75rem', cursor: 'help' }}>
                                         · {service.quoteCode}
                                       </Box>
                                     ) : null}
