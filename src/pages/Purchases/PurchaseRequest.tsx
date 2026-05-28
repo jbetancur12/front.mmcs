@@ -31,7 +31,7 @@ import {
   generateTableId,
   getModuleTableConfig
 } from '../../utils/tableStateUtils'
-import ActiveFiltersIndicator from '../../components/Table/ActiveFiltersIndicator'
+import ActiveFiltersIndicator from '../../Components/Table/ActiveFiltersIndicator'
 
 // Función para obtener las solicitudes de compra
 const fetchPurchaseRequests = async (
