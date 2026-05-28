@@ -861,10 +861,11 @@ const CalibrationServiceWorkspacePage = () => {
           toast.error('No se pudo generar la cotización PDF.')
         }
       }
+      const codeLabel = savedService.quoteCode || savedService.serviceCode
       toast.success(
         targetStatus === 'pending_approval'
-          ? 'Servicio guardado y cotización generada.'
-          : 'Servicio guardado como borrador.'
+          ? `Cotización ${codeLabel} generada y guardada.`
+          : `Servicio ${codeLabel} guardado como borrador.`
       )
       navigate(`/calibration-services/${savedService.id}`)
     } catch (error) {
@@ -980,7 +981,7 @@ const CalibrationServiceWorkspacePage = () => {
               Volver
             </Button>
             <Typography variant='h4' fontWeight={800} sx={{ color: '#fff', lineHeight: 1.15, letterSpacing: '-0.025em', fontSize: { xs: '1.6rem', md: '2rem' } }}>
-              {isEditing ? 'Editar servicio de calibración' : 'Nuevo servicio de calibración'}
+              {isEditing ? `Editar ${service?.quoteCode || service?.serviceCode || 'servicio'}` : 'Nuevo servicio de calibración'}
             </Typography>
             <Typography variant='body2' sx={{ mt: 1, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, maxWidth: 700, fontSize: '0.9rem' }}>
               Cotización base del servicio con cliente, sede, condiciones comerciales,
