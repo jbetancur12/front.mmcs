@@ -37,7 +37,6 @@ const ImpersonationBar: React.FC<ImpersonationBarProps> = ({
         ⚠️ Estás operando como <strong>{targetName}</strong>
       </Typography>
       {targetRoles.map((role) => (
-      {targetRoles.map((role) => (
         <Chip
           key={role}
           size='small'
