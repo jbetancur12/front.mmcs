@@ -11,7 +11,6 @@ import {
   FormControl,
   IconButton,
   InputAdornment,
-  InputLabel,
   MenuItem,
   Paper,
   Select,
@@ -34,7 +33,7 @@ interface PickedVariant {
   productId: number
   productVariantId: number
   itemName: string
-  intervalText: string | null
+  intervalText: string | null | undefined
   serviceType: string
   unitPrice: number
   catalogPriceSource: string

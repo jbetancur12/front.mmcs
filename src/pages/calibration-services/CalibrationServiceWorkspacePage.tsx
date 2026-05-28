@@ -88,7 +88,6 @@ const REQUEST_CHANNEL_OPTIONS = ['En persona', 'Por Email', 'Por Telefono', 'Por
 const PAYMENT_METHOD_OPTIONS = ['De Contado', 'A 30 Dias', 'A 60 Dias', 'A 90 Dias', '50% / 50%']
 const DELIVERY_TIME_OPTIONS = ['8 Dias Habiles', '15 Dias Habiles', '30 Dias Habiles']
 const VALIDITY_DAY_OPTIONS = [8, 15, 30, 60, 90]
-const SERVICE_TYPE_OPTIONS = ['Acreditado', 'Trazable', 'Subcontratado ONAC', 'Especial']
 const CATALOG_PRICE_SOURCE_OPTIONS = [
   { value: 'medicalPrice', label: 'Valor médica' },
   { value: 'industrialPrice', label: 'Valor industrial' },
@@ -583,7 +582,7 @@ const CalibrationServiceWorkspacePage = () => {
     }
     const filled = section.fields.filter((f) => {
       const val = formState[f]
-      return val !== null && val !== undefined && val !== '' && val !== 0
+      return val !== null && val !== undefined && val !== ''
     }).length
     return Math.min(filled / Math.max(section.fields.length, 1), 1)
   })
@@ -647,7 +646,7 @@ const CalibrationServiceWorkspacePage = () => {
   }
 
   const handleAddItemsFromCatalog = (
-    pickedItems: { productId: number; productVariantId: number; itemName: string; intervalText: string | null; serviceType: string; unitPrice: number; catalogPriceSource: string }[],
+    pickedItems: { productId: number; productVariantId: number; itemName: string; intervalText: string | null | undefined; serviceType: string; unitPrice: number; catalogPriceSource: string }[],
     quantity: number
   ) => {
     setFormState((previous) => ({
@@ -1699,7 +1698,6 @@ const CalibrationServiceWorkspacePage = () => {
       <CatalogProductPickerDialog
         open={catalogPickerOpen}
         products={productOptions}
-        suggestedPriceSource={SUGGESTED_CATALOG_PRICE_SOURCE}
         onClose={() => setCatalogPickerOpen(false)}
         onAddItems={handleAddItemsFromCatalog}
       />
