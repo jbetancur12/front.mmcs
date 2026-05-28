@@ -1784,6 +1784,11 @@ const CalibrationServicesPage = () => {
                           sx={{ color: ui.text, lineHeight: 1.2 }}
                         >
                           {service.serviceCode}
+                          {service.quoteCode ? (
+                            <Box component='span' sx={{ ml: 1, color: '#059669', fontWeight: 800, fontSize: '0.85rem' }}>
+                              · {service.quoteCode}
+                            </Box>
+                          ) : null}
                         </Typography>
                         <Chip
                           size='small'
@@ -2290,6 +2295,11 @@ const CalibrationServicesPage = () => {
                                     sx={{ color: ui.text, lineHeight: 1.2 }}
                                   >
                                     {service.serviceCode}
+                                    {service.quoteCode ? (
+                                      <Box component='span' sx={{ ml: 1, color: '#059669', fontWeight: 700, fontSize: '0.75rem' }}>
+                                        · {service.quoteCode}
+                                      </Box>
+                                    ) : null}
                                   </Typography>
                                   <Typography
                                     variant='caption'
