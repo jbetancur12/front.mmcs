@@ -275,7 +275,15 @@ function Header({ toggleMobileMenu }: HeaderProps) {
                 {$userStore.email}
               </Typography>
             </Box>
-          </MenuItem>          
+          </MenuItem>
+          {isImpersonating && (
+            <MenuItem onClick={stopImpersonation} sx={{ color: '#d97706', fontWeight: 600 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 18 }} />
+                <span>Volver a mi sesión</span>
+              </Box>
+            </MenuItem>
+          )}
           <MenuItem>
             <LogoutButton />
           </MenuItem>
@@ -296,6 +304,21 @@ function Header({ toggleMobileMenu }: HeaderProps) {
         }}
       />
     </AppBar>
+    <ImpersonationDialog
+      open={impersonationDialogOpen}
+      searching={searching}
+      candidates={candidates}
+      onSearch={searchUsers}
+      onSelect={(userId) => {
+        setImpersonationDialogOpen(false)
+        startImpersonation(userId)
+      }}
+      onClose={() => {
+        setImpersonationDialogOpen(false)
+        clearSearch()
+      }}
+    />
+    </>
   )
 }
 

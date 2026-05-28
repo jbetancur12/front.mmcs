@@ -23,16 +23,20 @@ const ImpersonationBar: React.FC<ImpersonationBarProps> = ({
         justifyContent: 'center',
         gap: 2,
         px: 3,
-        py: 1,
+        py: 1.5,
         backgroundColor: '#fef3c7',
-        borderBottom: '1px solid #f59e0b',
+        borderBottom: '2px solid #f59e0b',
         flexWrap: 'wrap',
+        position: 'sticky',
+        top: 0,
+        zIndex: 9999,
       }}
     >
-      <AdminPanelSettingsOutlinedIcon sx={{ color: '#d97706', fontSize: 20 }} />
-      <Typography variant='body2' fontWeight={600} sx={{ color: '#92400e' }}>
-        Estás operando como <strong>{targetName}</strong>
+      <AdminPanelSettingsOutlinedIcon sx={{ color: '#d97706', fontSize: 22 }} />
+      <Typography variant='body2' fontWeight={700} sx={{ color: '#92400e' }}>
+        ⚠️ Estás operando como <strong>{targetName}</strong>
       </Typography>
+      {targetRoles.map((role) => (
       {targetRoles.map((role) => (
         <Chip
           key={role}
