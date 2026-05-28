@@ -96,7 +96,7 @@ export const useImpersonation = () => {
         },
       })
 
-      setTimeout(() => { window.location.href = '/calibration-services' }, 500)
+      setTimeout(() => { window.location.href = '/' }, 500)
     } catch (error) {
       toast.error('No se pudo suplantar al usuario.', { id: 'impersonation' })
       console.error('Error starting impersonation:', error)
@@ -129,7 +129,7 @@ export const useImpersonation = () => {
         targetUser: null,
       })
 
-      setTimeout(() => { window.location.href = '/calibration-services' }, 500)
+      setTimeout(() => { window.location.href = '/' }, 500)
     } catch (error) {
       console.error('Error stopping impersonation:', error)
     }
