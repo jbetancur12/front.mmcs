@@ -608,6 +608,8 @@ const CalibrationServiceDetailsPage = () => {
     ['scheduled', 'in_execution'].includes(service?.status || '')
   const canInvoiceCuts =
     canInvoiceCutRole && !service?.isPaused && service?.status !== 'cancelled'
+  const canRegisterPayment =
+    canInvoiceCutRole && !service?.isPaused && service?.status !== 'cancelled'
   const canUpdateDocumentControl =
     canUpdateDocumentControlRole &&
     service?.status !== 'closed' &&
@@ -3471,6 +3473,7 @@ const CalibrationServiceDetailsPage = () => {
                   cuts={service.cuts || []}
                   canMarkReady={canMarkCutReady}
                   canMarkInvoiced={canInvoiceCuts}
+                  canRegisterPayment={canRegisterPayment}
                   canUpdateDocumentControl={canUpdateDocumentControl}
                   isBusy={isOperationalBusy}
                   onMarkReady={handleMarkCutReady}

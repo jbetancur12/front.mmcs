@@ -9,6 +9,7 @@ interface CalibrationServiceCutsPanelProps {
   cuts: CalibrationServiceCut[]
   canMarkReady?: boolean
   canMarkInvoiced?: boolean
+  canRegisterPayment?: boolean
   canUpdateDocumentControl?: boolean
   isBusy?: boolean
   onMarkReady?: (cutId: number) => void | Promise<void>
@@ -30,6 +31,7 @@ const CalibrationServiceCutsPanel = ({
   isBusy = false,
   onMarkReady,
   onMarkInvoiced,
+  onRegisterPayment,
   onUpdateDocumentControl
 }: CalibrationServiceCutsPanelProps) => {
   if (!cuts.length) {
