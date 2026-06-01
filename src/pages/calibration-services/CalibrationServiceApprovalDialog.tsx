@@ -35,6 +35,7 @@ export interface CalibrationServiceDecisionValues {
   decisionDate: string
   notes: string
   evidenceFile: File | null
+  onSiteCalibration: boolean | null
 }
 
 interface CalibrationServiceApprovalDialogProps {
@@ -53,7 +54,8 @@ const createInitialValues = (): CalibrationServiceDecisionValues => ({
   approvalReference: '',
   decisionDate: buildTodayValue(),
   notes: '',
-  evidenceFile: null
+  evidenceFile: null,
+  onSiteCalibration: null
 })
 
 const CalibrationServiceApprovalDialog = ({
@@ -95,6 +97,28 @@ const CalibrationServiceApprovalDialog = ({
                 ? `Esta acción deja trazada la solicitud de modificación del cliente para ${serviceCode}.`
               : `Esta acción registra formalmente la aprobación del cliente para ${serviceCode}.`}
           </Alert>
+
+          {!isRejectMode && !isRequestChangesMode && (
+            <FormControl fullWidth required error={values.onSiteCalibration === null}>
+              <InputLabel>
+                Calibración en sitio
+              </InputLabel>
+              <Select
+                value={values.onSiteCalibration === null ? '' : values.onSiteCalibration ? 'si' : 'no'}
+                label='Calibración en sitio'
+                disabled={isLoading}
+                onChange={(event) =>
+                  setValues((previous) => ({
+                    ...previous,
+                    onSiteCalibration: event.target.value === 'si' ? true : event.target.value === 'no' ? false : null
+                  }))
+                }
+              >
+                <MenuItem value='si'>Sí</MenuItem>
+                <MenuItem value='no'>No</MenuItem>
+              </Select>
+            </FormControl>
+          )}
 
           <FormControl fullWidth required>
             <InputLabel>
@@ -227,6 +251,10 @@ const CalibrationServiceApprovalDialog = ({
           onClick={() => {
             if (!values.evidenceFile) {
               alert('Debes adjuntar la evidencia de la respuesta del cliente.')
+              return
+            }
+            if (!isRejectMode && !isRequestChangesMode && values.onSiteCalibration === null) {
+              alert('Selecciona si la calibración es en sitio o en laboratorio.')
               return
             }
             void onSubmit(values)

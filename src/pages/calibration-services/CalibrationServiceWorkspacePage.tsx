@@ -86,7 +86,7 @@ type FormState = Omit<CalibrationServicePayload, 'items'> & { items: FormItem[] 
 
 const REQUEST_CHANNEL_OPTIONS = ['En persona', 'Por Email', 'Por Telefono', 'Por WhatsApp']
 const PAYMENT_METHOD_OPTIONS = ['De Contado', 'A 30 Dias', 'A 60 Dias', 'A 90 Dias', '50% / 50%']
-const DELIVERY_TIME_OPTIONS = ['8 Dias Habiles', '15 Dias Habiles', '30 Dias Habiles']
+const DELIVERY_TIME_OPTIONS = ['8 Dias Habiles', '15 Dias Habiles', '20 Dias Habiles', '30 Dias Habiles']
 const VALIDITY_DAY_OPTIONS = [8, 15, 30, 60, 90]
 const CATALOG_PRICE_SOURCE_OPTIONS = [
   { value: 'medicalPrice', label: 'Valor médica' },

@@ -418,6 +418,7 @@ export interface CalibrationService {
   paymentMethod?: string | null
   instrumentDeliveryTime?: string | null
   certificateDeliveryTime?: string | null
+  onSiteCalibration?: boolean | null
   contactName?: string | null
   contactEmail?: string | null
   contactPhone?: string | null
@@ -599,6 +600,7 @@ export interface CalibrationServiceSequenceConfig {
   odsSuffix: string
   nextQuoteNumber: number | null
   nextOdsNumber: number | null
+  labMetrologistUserId?: number | null
   quotePreview?: string | null
   odsPreview?: string | null
   initializedAt?: string | null
@@ -692,6 +694,7 @@ export interface CalibrationServiceApprovePayload {
   approvalNotes?: string | null
   approvedAt?: string
   evidenceDocumentId?: number | null
+  onSiteCalibration: boolean
 }
 
 export interface CalibrationServiceRejectPayload {
@@ -1001,6 +1004,7 @@ export interface CalibrationServiceDocumentActionPayload {
 export interface CalibrationServiceSequenceConfigPayload {
   nextQuoteNumber: number
   nextOdsNumber: number
+  labMetrologistUserId?: number | null
 }
 
 export type CalibrationServiceSlaConfigPayload = Omit<

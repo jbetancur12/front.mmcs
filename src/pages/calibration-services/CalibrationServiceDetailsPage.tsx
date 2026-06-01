@@ -1286,6 +1286,13 @@ const CalibrationServiceDetailsPage = () => {
   ) => {
     try {
       if (decisionMode === 'approve') {
+        if (values.onSiteCalibration === null) {
+          toast.error(
+            'Selecciona si la calibración es en sitio o en laboratorio.'
+          )
+          return
+        }
+
         if (!values.approvalChannel.trim()) {
           toast.error('Selecciona el medio por el que respondió el cliente.')
           return
@@ -1358,7 +1365,8 @@ const CalibrationServiceDetailsPage = () => {
           approvalReference: values.approvalReference.trim(),
           approvalNotes: values.notes.trim() || null,
           approvedAt: decisionIsoDate,
-          evidenceDocumentId
+          evidenceDocumentId,
+          onSiteCalibration: values.onSiteCalibration as boolean
         })
 
         toast.success('La aprobación del cliente quedó registrada.')
@@ -3592,6 +3600,7 @@ const CalibrationServiceDetailsPage = () => {
           serviceCode={service.serviceCode}
           initialValues={odsDialogInitialValues}
           isLoading={isOdsLoading}
+          isLabCalibration={service.onSiteCalibration === false}
           onClose={() => setIsOdsDialogOpen(false)}
           onSubmit={handleIssueOds}
         />

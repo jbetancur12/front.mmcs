@@ -42,6 +42,7 @@ interface CalibrationServiceOdsDialogProps {
   serviceCode: string
   initialValues: CalibrationServiceOdsDialogValues
   isLoading?: boolean
+  isLabCalibration?: boolean
   onClose: () => void
   onSubmit: (values: CalibrationServiceOdsDialogValues) => Promise<void> | void
 }
@@ -51,6 +52,7 @@ const CalibrationServiceOdsDialog = ({
   serviceCode,
   initialValues,
   isLoading = false,
+  isLabCalibration = false,
   onClose,
   onSubmit
 }: CalibrationServiceOdsDialogProps) => {
@@ -80,7 +82,9 @@ const CalibrationServiceOdsDialog = ({
       <DialogContent dividers>
         <Stack spacing={2.5}>
           <Alert severity='info'>
-            Esta acción genera la Orden de Servicio y activa el primer semáforo de seguimiento.
+            {isLabCalibration
+              ? 'Esta acción genera la Orden de Servicio y programará automáticamente la calibración en laboratorio según el tiempo de entrega de la cotización.'
+              : 'Esta acción genera la Orden de Servicio y activa el primer semáforo de seguimiento.'}
           </Alert>
 
           <FormControlLabel

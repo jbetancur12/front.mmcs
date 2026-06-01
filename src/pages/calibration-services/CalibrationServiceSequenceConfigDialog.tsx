@@ -5,10 +5,15 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
   Stack,
   TextField,
   Typography
 } from '@mui/material'
+import { useCalibrationAssignableMetrologists } from '../../hooks/useCalibrationServices'
 import { CalibrationServiceSequenceConfig } from '../../types/calibrationService'
 
 interface CalibrationServiceSequenceConfigDialogProps {
@@ -19,6 +24,7 @@ interface CalibrationServiceSequenceConfigDialogProps {
   onSubmit: (values: {
     nextQuoteNumber: number
     nextOdsNumber: number
+    labMetrologistUserId?: number | null
   }) => Promise<void> | void
 }
 
@@ -29,8 +35,10 @@ const CalibrationServiceSequenceConfigDialog = ({
   onClose,
   onSubmit
 }: CalibrationServiceSequenceConfigDialogProps) => {
+  const { data: metrologists = [] } = useCalibrationAssignableMetrologists(open)
   const [nextQuoteNumber, setNextQuoteNumber] = useState('1')
   const [nextOdsNumber, setNextOdsNumber] = useState('1')
+  const [labMetrologistUserId, setLabMetrologistUserId] = useState('')
 
   useEffect(() => {
     if (!open) {
@@ -39,15 +47,19 @@ const CalibrationServiceSequenceConfigDialog = ({
 
     setNextQuoteNumber(String(config?.nextQuoteNumber ?? 1))
     setNextOdsNumber(String(config?.nextOdsNumber ?? 1))
-  }, [config?.nextOdsNumber, config?.nextQuoteNumber, open])
+    setLabMetrologistUserId(String(config?.labMetrologistUserId ?? ''))
+  }, [config?.nextOdsNumber, config?.nextQuoteNumber, config?.labMetrologistUserId, open])
 
-  const quotePreview = `MMCS-${nextQuoteNumber || '...'}` 
+  const quotePreview = `MMCS-${nextQuoteNumber || '...'}`
   const odsPreview = `${nextOdsNumber || '...'} -CAL-MMCS`
 
   const handleSubmit = async () => {
     await onSubmit({
       nextQuoteNumber: Number(nextQuoteNumber),
-      nextOdsNumber: Number(nextOdsNumber)
+      nextOdsNumber: Number(nextOdsNumber),
+      labMetrologistUserId: labMetrologistUserId
+        ? Number(labMetrologistUserId)
+        : null
     })
   }
 
@@ -83,6 +95,38 @@ const CalibrationServiceSequenceConfigDialog = ({
           />
           <Typography variant='caption' color='text.secondary'>
             Vista previa: {odsPreview}
+          </Typography>
+
+          <Typography variant='h6' fontWeight={700} sx={{ mt: 2 }}>
+            Configuración de laboratorio
+          </Typography>
+          <FormControl fullWidth>
+            <InputLabel>Metrólogo de laboratorio</InputLabel>
+            <Select
+              value={labMetrologistUserId}
+              label='Metrólogo de laboratorio'
+              disabled={isLoading}
+              onChange={(event) =>
+                setLabMetrologistUserId(event.target.value)
+              }
+            >
+              <MenuItem value=''>
+                <em>Selecciona un metrólogo</em>
+              </MenuItem>
+              {metrologists.map((metrologist) => (
+                <MenuItem
+                  key={metrologist.id}
+                  value={String(metrologist.id)}
+                >
+                  {metrologist.nombre}
+                  {metrologist.email ? ` · ${metrologist.email}` : ''}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Typography variant='caption' color='text.secondary'>
+            Metrólogo que recibirá automáticamente los servicios de
+            calibración en laboratorio (cuando no sea en sitio).
           </Typography>
         </Stack>
       </DialogContent>
