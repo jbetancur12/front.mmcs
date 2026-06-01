@@ -1257,6 +1257,16 @@ const CalibrationServicesPage = () => {
                 Configuración SLA
               </Button>
             ) : null}
+            {canManageSequenceConfig ? (
+              <Button
+                variant='outlined'
+                startIcon={<SettingsOutlinedIcon />}
+                onClick={() => setIsSequenceDialogOpen(true)}
+                sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
+              >
+                Config. secuencia
+              </Button>
+            ) : null}
             {canCreateServices ? (
               <Button
                 variant='outlined'
@@ -1296,9 +1306,9 @@ const CalibrationServicesPage = () => {
         </Stack>
       </Box>
 
-      {canManageSequenceConfig && sequenceConfig && !sequenceConfig.initialized ? (
+      {canManageSequenceConfig && sequenceConfig ? (
         <Alert
-          severity='warning'
+          severity={sequenceConfig.initialized ? 'info' : 'warning'}
           sx={{ mb: 3 }}
           action={
             <Button color='inherit' size='small' onClick={() => setIsSequenceDialogOpen(true)}>
@@ -1306,8 +1316,9 @@ const CalibrationServicesPage = () => {
             </Button>
           }
         >
-          Antes de crear la primera oferta o emitir la primera ODS, define los
-          consecutivos iniciales del módulo.
+          {sequenceConfig.initialized
+            ? 'Puedes ajustar el metrólogo de laboratorio y los consecutivos desde la configuración.'
+            : 'Antes de crear la primera oferta o emitir la primera ODS, define los consecutivos iniciales del módulo.'}
         </Alert>
       ) : null}
 

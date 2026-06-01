@@ -1005,9 +1005,9 @@ const CalibrationServiceWorkspacePage = () => {
         </Alert>
       ) : null}
 
-      {canAccessWorkspace && sequenceConfig && !sequenceConfig.initialized ? (
+      {canAccessWorkspace && sequenceConfig ? (
         <Alert
-          severity='warning'
+          severity={sequenceConfig.initialized ? 'info' : 'warning'}
           sx={{ mb: 3 }}
           action={
             <Button color='inherit' size='small' onClick={() => setIsSequenceDialogOpen(true)}>
@@ -1015,8 +1015,9 @@ const CalibrationServiceWorkspacePage = () => {
             </Button>
           }
         >
-          Antes de guardar la primera cotización, define los consecutivos
-          iniciales de oferta y ODS.
+          {sequenceConfig.initialized
+            ? 'Puedes ajustar el metrólogo de laboratorio y los consecutivos desde la configuración.'
+            : 'Antes de guardar la primera cotización, define los consecutivos iniciales de oferta y ODS.'}
         </Alert>
       ) : null}
 

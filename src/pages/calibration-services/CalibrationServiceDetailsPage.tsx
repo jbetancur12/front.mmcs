@@ -2720,11 +2720,9 @@ const CalibrationServiceDetailsPage = () => {
         </Box>
       </Stack>
 
-      {canManageSequenceConfig &&
-      sequenceConfig &&
-      !sequenceConfig.initialized ? (
+      {canManageSequenceConfig && sequenceConfig ? (
         <Alert
-          severity='warning'
+          severity={sequenceConfig.initialized ? 'info' : 'warning'}
           sx={{ mb: 2 }}
           action={
             <Button
@@ -2736,8 +2734,9 @@ const CalibrationServiceDetailsPage = () => {
             </Button>
           }
         >
-          Antes de emitir la primera ODS, define el consecutivo inicial de
-          oferta y ODS para este módulo.
+          {sequenceConfig.initialized
+            ? 'Puedes ajustar el metrólogo de laboratorio y los consecutivos desde la configuración.'
+            : 'Antes de emitir la primera ODS, define el consecutivo inicial de oferta y ODS para este módulo.'}
         </Alert>
       ) : null}
 
