@@ -322,6 +322,8 @@ export interface CalibrationServiceCut {
   invoicedAt?: string | null
   invoiceNotes?: string | null
   invoiceEvidenceDocumentIds?: number[]
+  customerHasCredit?: boolean | null
+  paymentRegisteredAt?: string | null
   notes?: string | null
   createdByUserId?: number | null
   otherFields?: Record<string, unknown> & {
@@ -979,6 +981,12 @@ export interface CalibrationServiceMarkCutInvoicedPayload {
   invoicedAt?: string
   invoiceNotes?: string | null
   invoiceEvidenceDocumentId?: number | null
+  customerHasCredit: boolean
+}
+
+export interface CalibrationServiceRegisterCutPaymentPayload {
+  serviceId: string
+  cutId: string
 }
 
 export interface CalibrationServiceUpdateCutDocumentControlPayload {

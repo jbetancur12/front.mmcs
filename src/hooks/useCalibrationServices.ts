@@ -16,6 +16,7 @@ import {
   CalibrationServiceFilters,
   CalibrationServiceItemProgressPayload,
   CalibrationServiceMarkCutInvoicedPayload,
+  CalibrationServiceRegisterCutPaymentPayload,
   CalibrationServiceIssueOdsPayload,
   CalibrationServiceListResponse,
   CalibrationServiceMarkCutReadyPayload,
@@ -441,6 +442,16 @@ const calibrationServiceApi = {
     const response = await axiosPrivate.post<CalibrationService>(
       `/calibration-services/${serviceId}/cuts/${cutId}/invoiced`,
       payload
+    )
+    return response.data
+  },
+
+  registerCutPayment: async ({
+    serviceId,
+    cutId,
+  }: CalibrationServiceRegisterCutPaymentPayload): Promise<CalibrationService> => {
+    const response = await axiosPrivate.post<CalibrationService>(
+      `/calibration-services/${serviceId}/cuts/${cutId}/payment`
     )
     return response.data
   },
@@ -964,6 +975,16 @@ export const useCalibrationServiceMutations = () => {
     }
   })
 
+  const registerCutPayment = useMutation(calibrationServiceApi.registerCutPayment, {
+    onSuccess: (service) => {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+      queryClient.invalidateQueries([
+        CALIBRATION_SERVICE_QUERY_KEYS.detail,
+        String(service.id)
+      ])
+    }
+  })
+
   const updateCutDocumentControl = useMutation(
     calibrationServiceApi.updateCutDocumentControl,
     {
@@ -1130,6 +1151,7 @@ export const useCalibrationServiceMutations = () => {
     respondAdjustment,
     markCutReadyForInvoicing,
     markCutInvoiced,
+    registerCutPayment,
     updateCutDocumentControl,
     generateQuotePdf,
     generateOdsPdf,

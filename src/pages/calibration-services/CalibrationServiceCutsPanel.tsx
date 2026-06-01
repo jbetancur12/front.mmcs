@@ -13,6 +13,7 @@ interface CalibrationServiceCutsPanelProps {
   isBusy?: boolean
   onMarkReady?: (cutId: number) => void | Promise<void>
   onMarkInvoiced?: (cut: CalibrationServiceCut) => void
+  onRegisterPayment?: (cut: CalibrationServiceCut) => void
   onUpdateDocumentControl?: (cut: CalibrationServiceCut) => void
 }
 
@@ -175,6 +176,20 @@ const CalibrationServiceCutsPanel = ({
                   >
                     Marcar facturado
                   </Button>
+                ) : canUpdateDocumentControl && cut.status === 'invoiced' && cut.customerHasCredit === false && !cut.paymentRegisteredAt ? (
+                  <Stack spacing={0.5}>
+                    {onRegisterPayment ? (
+                      <Button
+                        size='small'
+                        variant='contained'
+                        color='warning'
+                        onClick={() => onRegisterPayment(cut)}
+                        disabled={isBusy}
+                      >
+                        ⚠ Registrar pago
+                      </Button>
+                    ) : null}
+                  </Stack>
                 ) : canUpdateDocumentControl && cut.status === 'invoiced' ? (
                   <Button
                     size='small'

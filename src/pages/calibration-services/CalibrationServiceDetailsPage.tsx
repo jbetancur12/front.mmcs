@@ -99,6 +99,7 @@ import CalibrationServiceCutsPanel from './CalibrationServiceCutsPanel'
 import CalibrationServiceCutDialog from './CalibrationServiceCutDialog'
 import CalibrationServiceCutDocumentControlDialog from './CalibrationServiceCutDocumentControlDialog'
 import CalibrationServiceCutInvoiceDialog from './CalibrationServiceCutInvoiceDialog'
+import CalibrationServiceCutPaymentDialog from './CalibrationServiceCutPaymentDialog'
 import CalibrationServiceScheduleDialog, {
   CalibrationServiceScheduleDialogValues
 } from './CalibrationServiceScheduleDialog'
@@ -397,6 +398,7 @@ const CalibrationServiceDetailsPage = () => {
     updateCustomerSignature,
     markCutReadyForInvoicing,
     markCutInvoiced,
+    registerCutPayment,
     updateCutDocumentControl,
     generateQuotePdf,
     generateOdsPdf,
@@ -435,6 +437,8 @@ const CalibrationServiceDetailsPage = () => {
   const [executionCustomerDraft, setExecutionCustomerDraft] = useState('')
   const [executionSiteDraft, setExecutionSiteDraft] = useState('')
   const [selectedCutForInvoice, setSelectedCutForInvoice] =
+    useState<CalibrationServiceCut | null>(null)
+  const [selectedCutForPayment, setSelectedCutForPayment] =
     useState<CalibrationServiceCut | null>(null)
   const [selectedCutForDocumentControl, setSelectedCutForDocumentControl] =
     useState<CalibrationServiceCut | null>(null)
@@ -1138,6 +1142,7 @@ const CalibrationServiceDetailsPage = () => {
     updateExecutionCustomer.isLoading ||
     markCutReadyForInvoicing.isLoading ||
     markCutInvoiced.isLoading ||
+    registerCutPayment.isLoading ||
     updateCutDocumentControl.isLoading ||
     closeService.isLoading
   const isDocumentBusy =
@@ -2064,6 +2069,7 @@ const CalibrationServiceDetailsPage = () => {
     invoicedAt: string
     invoiceNotes?: string | null
     invoiceFile?: File | null
+    customerHasCredit: boolean
   }) => {
     if (!selectedCutForInvoice) {
       return
@@ -2091,7 +2097,8 @@ const CalibrationServiceDetailsPage = () => {
         invoiceReference: values.invoiceReference,
         invoicedAt: values.invoicedAt,
         invoiceNotes: values.invoiceNotes || null,
-        invoiceEvidenceDocumentId
+        invoiceEvidenceDocumentId,
+        customerHasCredit: values.customerHasCredit
       })
       toast.success('El corte quedó marcado como facturado.')
       setSelectedCutForInvoice(null)
@@ -2099,6 +2106,25 @@ const CalibrationServiceDetailsPage = () => {
     } catch (cutError) {
       console.error(cutError)
       toast.error('No pudimos registrar la facturación del corte.')
+    }
+  }
+
+  const handleRegisterCutPayment = async () => {
+    if (!selectedCutForPayment) {
+      return
+    }
+
+    try {
+      await registerCutPayment.mutateAsync({
+        serviceId: String(service.id),
+        cutId: String(selectedCutForPayment.id)
+      })
+      toast.success('El pago del corte quedó registrado.')
+      setSelectedCutForPayment(null)
+      setActiveTab('cuts')
+    } catch (cutError) {
+      console.error(cutError)
+      toast.error('No pudimos registrar el pago del corte.')
     }
   }
 
@@ -3449,6 +3475,7 @@ const CalibrationServiceDetailsPage = () => {
                   isBusy={isOperationalBusy}
                   onMarkReady={handleMarkCutReady}
                   onMarkInvoiced={(cut) => setSelectedCutForInvoice(cut)}
+                  onRegisterPayment={(cut) => setSelectedCutForPayment(cut)}
                   onUpdateDocumentControl={(cut) =>
                     setSelectedCutForDocumentControl(cut)
                   }
@@ -3724,6 +3751,15 @@ const CalibrationServiceDetailsPage = () => {
           isLoading={isOperationalBusy}
           onClose={() => setSelectedCutForInvoice(null)}
           onSubmit={handleMarkCutInvoiced}
+        />
+      ) : null}
+      {selectedCutForPayment ? (
+        <CalibrationServiceCutPaymentDialog
+          open={Boolean(selectedCutForPayment)}
+          cut={selectedCutForPayment}
+          isLoading={isOperationalBusy}
+          onClose={() => setSelectedCutForPayment(null)}
+          onConfirm={handleRegisterCutPayment}
         />
       ) : null}
       {selectedCutForDocumentControl ? (

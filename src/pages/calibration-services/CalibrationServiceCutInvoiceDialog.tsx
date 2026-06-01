@@ -5,6 +5,11 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
+  FormHelperText,
+  InputLabel,
+  MenuItem,
+  Select,
   Stack,
   TextField,
   Typography
@@ -21,6 +26,7 @@ interface CalibrationServiceCutInvoiceDialogProps {
     invoicedAt: string
     invoiceNotes?: string | null
     invoiceFile?: File | null
+    customerHasCredit: boolean
   }) => void | Promise<void>
 }
 
@@ -37,6 +43,7 @@ const CalibrationServiceCutInvoiceDialog = ({
   const [invoicedAt, setInvoicedAt] = useState(buildTodayValue())
   const [invoiceNotes, setInvoiceNotes] = useState('')
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null)
+  const [customerHasCredit, setCustomerHasCredit] = useState<boolean | null>(null)
 
   useEffect(() => {
     if (!open) {
@@ -51,6 +58,7 @@ const CalibrationServiceCutInvoiceDialog = ({
     )
     setInvoiceNotes(cut.invoiceNotes || '')
     setInvoiceFile(null)
+    setCustomerHasCredit(null)
   }, [cut.invoiceNotes, cut.invoiceReference, cut.invoicedAt, open])
 
   const trimmedReference = invoiceReference.trim()
@@ -60,11 +68,16 @@ const CalibrationServiceCutInvoiceDialog = ({
       return
     }
 
+    if (customerHasCredit === null) {
+      return
+    }
+
     void onSubmit({
       invoiceReference: trimmedReference,
       invoicedAt: new Date(invoicedAt).toISOString(),
       invoiceNotes: invoiceNotes.trim() || null,
-      invoiceFile
+      invoiceFile,
+      customerHasCredit
     })
   }
 
@@ -77,6 +90,23 @@ const CalibrationServiceCutInvoiceDialog = ({
             {cut.cutCode} · registra la referencia y fecha de factura para cerrar esta etapa
             administrativa del corte.
           </Typography>
+          <FormControl fullWidth required error={customerHasCredit === null}>
+            <InputLabel>Cliente con crédito</InputLabel>
+            <Select
+              value={customerHasCredit === null ? '' : customerHasCredit ? 'si' : 'no'}
+              label='Cliente con crédito'
+              disabled={isLoading}
+              onChange={(event) =>
+                setCustomerHasCredit(event.target.value === 'si' ? true : event.target.value === 'no' ? false : null)
+              }
+            >
+              <MenuItem value='si'>Sí</MenuItem>
+              <MenuItem value='no'>No</MenuItem>
+            </Select>
+            <FormHelperText>
+              Indica si el cliente tiene crédito. Si seleccionas No, se solicitará registrar el pago después de facturar.
+            </FormHelperText>
+          </FormControl>
           <TextField
             label='Referencia o número de factura'
             value={invoiceReference}
@@ -134,7 +164,7 @@ const CalibrationServiceCutInvoiceDialog = ({
         <Button
           variant='contained'
           onClick={handleSubmit}
-          disabled={isLoading || !trimmedReference}
+          disabled={isLoading || !trimmedReference || customerHasCredit === null}
         >
           Marcar facturado
         </Button>
