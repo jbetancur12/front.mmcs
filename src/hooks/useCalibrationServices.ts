@@ -664,7 +664,7 @@ export const useCalibrationServiceQuoteTermsTemplate = (enabled = true) => {
     queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template'],
     queryFn: calibrationServiceApi.getQuoteTermsTemplate,
     enabled,
-    staleTime: 15 * 1000
+    staleTime: 10 * 1000
   })
 }
 
