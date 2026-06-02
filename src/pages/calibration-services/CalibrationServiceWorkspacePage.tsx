@@ -52,6 +52,7 @@ import {
   CALIBRATION_SERVICE_STATUS_LABELS
 } from '../../constants/calibrationServices'
 import {
+  CALIBRATION_SERVICE_QUERY_KEYS,
   useCalibrationServiceSequenceConfig,
   useCalibrationService,
   useCalibrationServiceQuoteTermsTemplate,
@@ -288,6 +289,12 @@ const CalibrationServiceWorkspacePage = () => {
   const { data: service, isLoading: isLoadingService } = useCalibrationService(serviceId)
   const { data: quoteTermsTemplate } =
     useCalibrationServiceQuoteTermsTemplate(canAccessWorkspace && !isEditing)
+
+  useEffect(() => {
+    if (!isEditing && canAccessWorkspace) {
+      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template'])
+    }
+  }, [isEditing, canAccessWorkspace, queryClient])
   const {
     createService,
     updateService,
