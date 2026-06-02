@@ -1,4 +1,5 @@
 import React from 'react'
+import pkg from '../../../../package.json'
 import {
   Box,
   Typography,
@@ -117,6 +118,12 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({
             </IconButton>
           </Tooltip>
         </Box>
+        <Typography
+          variant='caption'
+          sx={{ textAlign: 'center', color: 'text.disabled', fontSize: '0.55rem', writingMode: 'vertical-rl' }}
+        >
+          v{pkg.version}
+        </Typography>
       </Box>
     )
   }
@@ -244,6 +251,15 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({
           </IconButton>
         </Tooltip>
       </Box>
+
+      <Divider />
+
+      <Typography
+        variant='caption'
+        sx={{ display: 'block', textAlign: 'center', py: 0.5, color: 'text.disabled', fontSize: '0.65rem' }}
+      >
+        v{pkg.version}
+      </Typography>
     </Box>
   )
 }
