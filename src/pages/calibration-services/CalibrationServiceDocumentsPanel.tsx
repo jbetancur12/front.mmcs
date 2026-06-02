@@ -42,6 +42,7 @@ interface CalibrationServiceDocumentsPanelProps {
   canUploadDocuments?: boolean
   canGenerateQuotePdf?: boolean
   canGenerateOdsPdf?: boolean
+  isDraft?: boolean
   officialPdfDocuments: CalibrationServiceDocument[]
   adjustmentCustomerResponseDocuments: CalibrationServiceDocument[]
   supportDocuments: CalibrationServiceDocument[]
@@ -77,6 +78,7 @@ const CalibrationServiceDocumentsPanel = ({
   canUploadDocuments = false,
   canGenerateQuotePdf = false,
   canGenerateOdsPdf = false,
+  isDraft = false,
   officialPdfDocuments,
   adjustmentCustomerResponseDocuments,
   supportDocuments,
@@ -159,6 +161,9 @@ const CalibrationServiceDocumentsPanel = ({
                   <Typography variant='body2' fontWeight={600}>
                     {document.title || document.originalFileName}
                   </Typography>
+                  {isDraft && document.documentType === 'quote_pdf' ? (
+                    <Chip size='small' color='warning' label='BORRADOR' />
+                  ) : null}
                   <Chip
                     size='small'
                     color={CALIBRATION_SERVICE_DOCUMENT_COLORS[document.documentType]}
