@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { axiosPrivate } from '@utils/api'
 import { Link, useLocation } from 'react-router-dom'
 import { FaHospitalUser, FaUser } from 'react-icons/fa'
 import { MdMicrowave, MdDashboard, MdOutlineSettings } from 'react-icons/md'
@@ -21,6 +22,8 @@ const iconClass =
   'w-5 h-5 text-gray-600 transition-all duration-300 group-hover:text-white dark:text-gray-300 dark:group-hover:text-white group-hover:scale-110 group-hover:drop-shadow-sm'
 
 const LMS_SIDEBAR_HINT_DISMISSED_KEY = 'lms-sidebar-hint-dismissed'
+
+const apiVersionPromise = axiosPrivate.get('/version').then(r => r.data.version).catch(() => null)
 
 // Helper para verificar si un módulo debe ser visible
 const canViewModule = (roles: string[], userRole: string[]) => {
@@ -412,7 +415,12 @@ const SideBar = ({
   mobileMenuOpen,
   setMobileMenuOpen
 }: SideBarProps) => {
+  const [apiVersion, setApiVersion] = useState<string | null>(null)
   const $userStore = useStore(userStore)
+
+  useEffect(() => {
+    apiVersionPromise.then(setApiVersion)
+  }, [])
   const { pathname } = useLocation()
   const effectiveLmsMenuRoles = getEffectiveLmsMenuRoles($userStore)
   const [isLmsHintDismissed, setIsLmsHintDismissed] = useState(true)
@@ -653,8 +661,9 @@ const SideBar = ({
             )}
               </button>
           {!userMinimized && (
-            <span className='text-[0.6rem] text-gray-400 dark:text-gray-500 text-center block mt-1'>
-              v{import.meta.env.VITE_APP_VERSION || '0.0.0-dev'}
+            <span className='text-[0.6rem] text-gray-400 dark:text-gray-500 text-center block mt-1 leading-tight'>
+              <span>v{import.meta.env.VITE_APP_VERSION}</span>
+              {apiVersion && <><br />API v{apiVersion}</>}
             </span>
           )}
         </div>
