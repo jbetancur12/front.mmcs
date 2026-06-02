@@ -788,7 +788,7 @@ const CalibrationServiceWorkspacePage = () => {
     }
   }
 
-  const validateForm = () => {
+  const validateForm = (targetStatus: 'draft' | 'pending_approval') => {
     if (!formState.customerId) return 'Selecciona un cliente.'
     if (formState.scopeType === 'site' && !formState.customerSite?.trim()) {
       return 'Selecciona la sede del servicio.'
@@ -801,13 +801,15 @@ const CalibrationServiceWorkspacePage = () => {
     if (validItems.some((item) => !item.itemName.trim() || !(Number(item.quantity) > 0))) {
       return 'Revisa nombre y cantidad de los items.'
     }
-    const invalidItems = validItems.filter(
-      (item) => !item.otherFields?.calibrationPointCount || !item.otherFields?.measurementRange
-    )
-    if (invalidItems.length) {
-      setValidationErrorItemIds(new Set(invalidItems.map((i) => i.localId)))
-      setActiveSection(3)
-      return `Completa cantidad de puntos y rango de medición en ${invalidItems.length} item${invalidItems.length > 1 ? 's' : ''}.`
+    if (targetStatus === 'pending_approval') {
+      const invalidItems = validItems.filter(
+        (item) => !item.otherFields?.calibrationPointCount || !item.otherFields?.measurementRange
+      )
+      if (invalidItems.length) {
+        setValidationErrorItemIds(new Set(invalidItems.map((i) => i.localId)))
+        setActiveSection(3)
+        return `Completa cantidad de puntos y rango de medición en ${invalidItems.length} item${invalidItems.length > 1 ? 's' : ''}.`
+      }
     }
     setValidationErrorItemIds(new Set())
     if (!requestEvidenceFile && !requestEvidenceDocuments.length) {
@@ -817,7 +819,7 @@ const CalibrationServiceWorkspacePage = () => {
   }
 
   const handleSave = async (targetStatus: 'draft' | 'pending_approval') => {
-    const validationError = validateForm()
+    const validationError = validateForm(targetStatus)
     if (validationError) {
       toast.error(validationError)
       return
