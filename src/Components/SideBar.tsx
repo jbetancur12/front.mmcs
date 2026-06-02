@@ -651,7 +651,12 @@ const SideBar = ({
                 />
               </svg>
             )}
-          </button>
+              </button>
+          {!userMinimized && (
+            <span className='text-[0.6rem] text-gray-400 dark:text-gray-500 text-center block mt-1'>
+              v{import.meta.env.VITE_APP_VERSION || '0.0.0-dev'}
+            </span>
+          )}
         </div>
       </div>
     </aside>
