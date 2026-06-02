@@ -145,7 +145,8 @@ const createEmptyItem = (): FormItem => ({
   notes: '',
   sortOrder: 0,
   otherFields: {
-    catalogPriceSource: 'medicalPrice'
+    catalogPriceSource: 'medicalPrice',
+    hasCalibrationPoints: true
   }
 })
 
