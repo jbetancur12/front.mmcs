@@ -671,7 +671,8 @@ const CalibrationServiceWorkspacePage = () => {
           notes: '',
           sortOrder: previous.items.length + index,
           otherFields: {
-            catalogPriceSource: picked.catalogPriceSource || SUGGESTED_CATALOG_PRICE_SOURCE
+            catalogPriceSource: picked.catalogPriceSource || SUGGESTED_CATALOG_PRICE_SOURCE,
+            hasCalibrationPoints: true
           }
         }))
       ]
@@ -805,7 +806,7 @@ const CalibrationServiceWorkspacePage = () => {
     if (targetStatus === 'pending_approval') {
       const invalidItems = validItems.filter(
         (item) =>
-          item.otherFields?.hasCalibrationPoints &&
+          item.otherFields?.hasCalibrationPoints !== false &&
           (!item.otherFields?.calibrationPointCount || !item.otherFields?.measurementRange)
       )
       if (invalidItems.length) {

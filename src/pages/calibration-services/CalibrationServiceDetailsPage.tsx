@@ -1281,7 +1281,7 @@ const CalibrationServiceDetailsPage = () => {
   const handleRequestApproval = async () => {
     const missingItems = (service.items || []).filter(
       (item) =>
-        item.otherFields?.hasCalibrationPoints &&
+        item.otherFields?.hasCalibrationPoints !== false &&
         (!item.otherFields?.calibrationPointCount || !item.otherFields?.measurementRange)
     )
     if (missingItems.length) {
@@ -3240,7 +3240,7 @@ const CalibrationServiceDetailsPage = () => {
                                   <Typography variant='body2'>
                                     {item.itemName}
                                   </Typography>
-                                  {item.otherFields?.hasCalibrationPoints ? (
+                                  {item.otherFields?.hasCalibrationPoints !== false ? (
                                     <Typography variant='caption' sx={{ color: '#9ca3af', display: 'block' }}>
                                       {[
                                         item.otherFields.calibrationPointCount ? `Cantidad puntos: ${item.otherFields.calibrationPointCount}` : '',

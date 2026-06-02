@@ -319,7 +319,7 @@ const CalibrationServiceOperationsPanel = ({
                   <TableRow key={item.id}>
                     <TableCell>{item.itemName}</TableCell>
                     <TableCell>
-                      {item.otherFields?.hasCalibrationPoints
+                      {item.otherFields?.hasCalibrationPoints !== false
                         ? [
                             item.otherFields?.calibrationPointCount ? `Cantidad puntos: ${item.otherFields.calibrationPointCount}` : '',
                             item.otherFields?.measurementRange ? `Rango medición: ${item.otherFields.measurementRange}` : ''

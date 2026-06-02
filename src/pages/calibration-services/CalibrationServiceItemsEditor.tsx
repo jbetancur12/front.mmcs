@@ -395,7 +395,7 @@ const CalibrationServiceItemsEditor = ({
                 control={
                   <Checkbox
                     size='small'
-                    checked={Boolean(item.otherFields?.hasCalibrationPoints)}
+                    checked={item.otherFields?.hasCalibrationPoints !== false}
                     onChange={(e) => {
                       onChangeItemOtherField(item.localId, 'hasCalibrationPoints', e.target.checked)
                       if (!e.target.checked) {
@@ -410,7 +410,7 @@ const CalibrationServiceItemsEditor = ({
               />
             </Grid>
             <Grid item xs={12}>
-              <Collapse in={Boolean(item.otherFields?.hasCalibrationPoints)}>
+              <Collapse in={item.otherFields?.hasCalibrationPoints !== false}>
                 <Stack direction='row' spacing={2} sx={{ mt: 0.5 }}>
                   <TextField fullWidth size='small' type='number' label='Cant. puntos' placeholder='Ej: 3' required
                     value={(item.otherFields?.calibrationPointCount as number) ?? ''} disabled={!canEdit || isBusy}
@@ -455,7 +455,7 @@ const CalibrationServiceItemsEditor = ({
         <TableCell sx={{ fontWeight: 600, color: '#6b7280', fontSize: '0.8rem', width: 40 }}>{actualIndex + 1}</TableCell>
         <TableCell sx={{ minWidth: 180 }}>
           <Typography variant='body2' fontWeight={600} noWrap sx={{ maxWidth: 200 }}>{item.itemName || '—'}</Typography>
-          {item.otherFields?.hasCalibrationPoints && (
+          {item.otherFields?.hasCalibrationPoints !== false && (
             <Typography variant='caption' sx={{ color: '#9ca3af', display: 'block', lineHeight: 1.2, mt: 0.25 }}>
               {[
                 item.otherFields?.calibrationPointCount ? `Cantidad puntos: ${item.otherFields.calibrationPointCount}` : '',
