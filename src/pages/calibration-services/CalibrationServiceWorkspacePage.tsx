@@ -337,6 +337,7 @@ const CalibrationServiceWorkspacePage = () => {
   const [useDifferentExecutionCustomer, setUseDifferentExecutionCustomer] =
     useState(false)
   const [activeSection, setActiveSection] = useState(0)
+  const [validationErrorItemIds, setValidationErrorItemIds] = useState<Set<string>>(new Set())
 
   const createCustomerMutation = useMutation({
     mutationFn: async (values: CalibrationServiceCustomerDialogValues) => {
@@ -800,6 +801,15 @@ const CalibrationServiceWorkspacePage = () => {
     if (validItems.some((item) => !item.itemName.trim() || !(Number(item.quantity) > 0))) {
       return 'Revisa nombre y cantidad de los items.'
     }
+    const invalidItems = validItems.filter(
+      (item) => !item.otherFields?.calibrationPointCount || !item.otherFields?.measurementRange
+    )
+    if (invalidItems.length) {
+      setValidationErrorItemIds(new Set(invalidItems.map((i) => i.localId)))
+      setActiveSection(3)
+      return `Completa cantidad de puntos y rango de medición en ${invalidItems.length} item${invalidItems.length > 1 ? 's' : ''}.`
+    }
+    setValidationErrorItemIds(new Set())
     if (!requestEvidenceFile && !requestEvidenceDocuments.length) {
       return 'Debes adjuntar la evidencia de solicitud.'
     }
@@ -1431,6 +1441,7 @@ const CalibrationServiceWorkspacePage = () => {
                 suggestedCatalogPriceSource={SUGGESTED_CATALOG_PRICE_SOURCE}
                 canEdit={canEdit}
                 isBusy={isBusy}
+                validationErrorItemIds={validationErrorItemIds}
                 onAddItem={handleAddItem}
                 onRemoveItem={handleRemoveItem}
                 onSelectProduct={handleSelectProduct}

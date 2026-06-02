@@ -295,7 +295,7 @@ const CalibrationServiceOperationsPanel = ({
             <TableHead>
               <TableRow>
                 <TableCell>Ítem</TableCell>
-                <TableCell>Instrumento</TableCell>
+                <TableCell>Puntos de calibración</TableCell>
                 <TableCell align='right'>Cant.</TableCell>
                 <TableCell align='right'>Liberado</TableCell>
                 <TableCell align='right'>Disponible</TableCell>
@@ -318,7 +318,12 @@ const CalibrationServiceOperationsPanel = ({
                 return (
                   <TableRow key={item.id}>
                     <TableCell>{item.itemName}</TableCell>
-                    <TableCell>{item.instrumentName || 'Sin registrar'}</TableCell>
+                    <TableCell>
+                      {[
+                        item.otherFields?.calibrationPointCount ? `Cantidad puntos: ${item.otherFields.calibrationPointCount}` : '',
+                        item.otherFields?.measurementRange ? `Rango medición: ${item.otherFields.measurementRange}` : ''
+                      ].filter(Boolean).join(' · ') || 'Sin registrar'}
+                    </TableCell>
                     <TableCell align='right'>{effectiveQuantity}</TableCell>
                     <TableCell align='right'>{releasedQuantity}</TableCell>
                     <TableCell align='right'>{availableQuantity}</TableCell>

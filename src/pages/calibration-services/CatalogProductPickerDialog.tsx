@@ -245,7 +245,7 @@ const CatalogProductPickerDialog: React.FC<CatalogProductPickerDialogProps> = ({
                 <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
                   <th style={{ width: 40, padding: '10px 8px' }}></th>
                   <th style={{ textAlign: 'left', padding: '10px 8px', fontWeight: 700, fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Producto</th>
-                  <th style={{ textAlign: 'left', padding: '10px 8px', fontWeight: 700, fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Intervalo</th>
+                  <th style={{ textAlign: 'left', padding: '10px 8px', fontWeight: 700, fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Alcance</th>
                   <th style={{ textAlign: 'left', padding: '10px 8px', fontWeight: 700, fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Variantes</th>
                 </tr>
               </thead>

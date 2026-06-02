@@ -645,6 +645,13 @@ export interface CalibrationServiceItemPayload {
   otherFields?: Record<string, unknown>
 }
 
+export interface CalibrationServiceItemOtherFields {
+  catalogPriceSource?: string
+  calibrationPoints?: string
+  calibrationPointCount?: number
+  measurementRange?: string
+}
+
 export interface CalibrationServicePayload {
   customerId?: number | null
   scopeType?: CalibrationServiceScopeType

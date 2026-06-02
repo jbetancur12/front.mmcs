@@ -62,6 +62,7 @@ interface CalibrationServiceItemsEditorProps {
   suggestedCatalogPriceSource: CatalogPriceSourceOption['value'] | null
   canEdit: boolean
   isBusy: boolean
+  validationErrorItemIds?: Set<string>
   onAddItem: () => void
   onRemoveItem: (localId: string) => void
   onSelectProduct: (
@@ -128,7 +129,8 @@ const CalibrationServiceItemsEditor = ({
   onSelectProduct,
   onChangeItemField,
   onSelectCatalogPrice,
-  onChangeItemOtherField
+  onChangeItemOtherField,
+  validationErrorItemIds
 }: CalibrationServiceItemsEditorProps) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(0)
@@ -143,7 +145,8 @@ const CalibrationServiceItemsEditor = ({
         item.itemName.toLowerCase().includes(q) ||
         item.intervalText?.toLowerCase().includes(q) ||
         item.serviceType?.toLowerCase().includes(q) ||
-        item.notes?.toLowerCase().includes(q)
+        item.notes?.toLowerCase().includes(q) ||
+        (item.otherFields?.measurementRange as string)?.toLowerCase().includes(q)
     )
   }, [items, searchQuery])
 
@@ -192,6 +195,7 @@ const CalibrationServiceItemsEditor = ({
     const itemNameLabel = item.itemName || 'Nuevo ítem'
     const isUsingSuggestedPrice = selectedCatalogPriceSource === suggestedCatalogPriceSource
     const expanded = isExpanded(item.localId)
+    const hasError = validationErrorItemIds?.has(item.localId)
 
     return (
       <Accordion
@@ -203,16 +207,16 @@ const CalibrationServiceItemsEditor = ({
         sx={{
           borderRadius: '12px !important',
           '&:before': { display: 'none' },
-          border: '1px solid',
-          borderColor: item.itemName ? 'divider' : '#10b981',
+          border: '2px solid',
+          borderColor: hasError ? '#ef4444' : item.itemName ? 'divider' : '#10b981',
           transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
           '&:hover': {
-            borderColor: 'rgba(16, 185, 129, 0.3)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+            borderColor: hasError ? '#ef4444' : 'rgba(16, 185, 129, 0.3)',
+            boxShadow: hasError ? '0 2px 8px rgba(239,68,68,0.15)' : '0 2px 8px rgba(0,0,0,0.04)'
           },
           '&.Mui-expanded': {
-            borderColor: 'rgba(16, 185, 129, 0.4)',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.06)'
+            borderColor: hasError ? '#ef4444' : 'rgba(16, 185, 129, 0.4)',
+            boxShadow: hasError ? '0 4px 16px rgba(239,68,68,0.2)' : '0 4px 16px rgba(0,0,0,0.06)'
           }
         }}
       >
@@ -350,7 +354,7 @@ const CalibrationServiceItemsEditor = ({
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <Tooltip title={item.intervalText || ''} arrow placement='top'>
-                <TextField fullWidth size='small' label='Intervalo' placeholder='Ej. -50°C a 300°C'
+                <TextField fullWidth size='small' label='Alcance' placeholder='Ej. -50°C a 300°C'
                   value={item.intervalText || ''} disabled={!canEdit || isBusy}
                   onChange={(event) => onChangeItemField(item.localId, 'intervalText', event.target.value)}
                   InputProps={{
@@ -382,6 +386,17 @@ const CalibrationServiceItemsEditor = ({
               <TextField fullWidth size='small' label='Notas / Observaciones' placeholder='Detalles adicionales del ítem'
                 value={item.notes || ''} disabled={!canEdit || isBusy}
                 onChange={(event) => onChangeItemField(item.localId, 'notes', event.target.value)} />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField fullWidth size='small' type='number' label='Cant. puntos' placeholder='Ej: 3' required
+                value={(item.otherFields?.calibrationPointCount as number) ?? ''} disabled={!canEdit || isBusy}
+                inputProps={{ min: 1, step: 1 }}
+                onChange={(event) => onChangeItemOtherField(item.localId, 'calibrationPointCount', event.target.value === '' ? null : Number(event.target.value))} />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField fullWidth size='small' label='Rango medición' placeholder='Ej: -50°C a 300°C' required
+                value={(item.otherFields?.measurementRange as string) || ''} disabled={!canEdit || isBusy}
+                onChange={(event) => onChangeItemOtherField(item.localId, 'measurementRange', event.target.value)} />
             </Grid>
           </Grid>
           <Box sx={{
@@ -416,6 +431,14 @@ const CalibrationServiceItemsEditor = ({
         <TableCell sx={{ fontWeight: 600, color: '#6b7280', fontSize: '0.8rem', width: 40 }}>{actualIndex + 1}</TableCell>
         <TableCell sx={{ minWidth: 180 }}>
           <Typography variant='body2' fontWeight={600} noWrap sx={{ maxWidth: 200 }}>{item.itemName || '—'}</Typography>
+          {(Number(item.otherFields?.calibrationPointCount) > 0 || Boolean(item.otherFields?.measurementRange)) && (
+            <Typography variant='caption' sx={{ color: '#9ca3af', display: 'block', lineHeight: 1.2, mt: 0.25 }}>
+              {[
+                item.otherFields?.calibrationPointCount ? `Cantidad puntos: ${item.otherFields.calibrationPointCount}` : '',
+                item.otherFields?.measurementRange ? `Rango medición: ${item.otherFields.measurementRange}` : ''
+              ].filter(Boolean).join(' · ')}
+            </Typography>
+          )}
         </TableCell>
         <TableCell sx={{ width: 80 }}>
           <TextField size='small' type='number' value={item.quantity} disabled={!canEdit || isBusy} variant='standard'

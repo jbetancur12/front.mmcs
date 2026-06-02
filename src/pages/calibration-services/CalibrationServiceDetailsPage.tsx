@@ -3230,6 +3230,14 @@ const CalibrationServiceDetailsPage = () => {
                                   <Typography variant='body2'>
                                     {item.itemName}
                                   </Typography>
+                                  {item.otherFields?.calibrationPointCount || item.otherFields?.measurementRange ? (
+                                    <Typography variant='caption' sx={{ color: '#9ca3af', display: 'block' }}>
+                                      {[
+                                        item.otherFields.calibrationPointCount ? `Cantidad puntos: ${item.otherFields.calibrationPointCount}` : '',
+                                        item.otherFields.measurementRange ? `Rango medición: ${item.otherFields.measurementRange}` : ''
+                                      ].filter(Boolean).join(' · ')}
+                                    </Typography>
+                                  ) : null}
                                   {hasQuantityAdjustment ||
                                   approvedFinancialImpact.hasImpact ||
                                   isAdjustmentItem ? (

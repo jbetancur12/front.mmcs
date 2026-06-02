@@ -414,7 +414,7 @@ const TableProducts: React.FC = () => {
               <tr style={{ borderBottom: '2px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
                 <th style={{ width: 40, padding: '12px 8px' }}></th>
                 <th style={{ textAlign: 'left', padding: '12px 8px', fontWeight: 700, fontSize: '0.8rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Producto</th>
-                <th style={{ textAlign: 'left', padding: '12px 8px', fontWeight: 700, fontSize: '0.8rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', width: 200 }}>Intervalo</th>
+                <th style={{ textAlign: 'left', padding: '12px 8px', fontWeight: 700, fontSize: '0.8rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', width: 200 }}>Alcance</th>
                 <th style={{ textAlign: 'left', padding: '12px 8px', fontWeight: 700, fontSize: '0.8rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Variantes</th>
                 <th style={{ width: 100, padding: '12px 8px' }}></th>
               </tr>
@@ -740,7 +740,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             required
           />
           <TextField
-            label='Intervalo'
+            label='Alcance'
             value={intervalText}
             onChange={(e) => setIntervalText(e.target.value)}
           />
