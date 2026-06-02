@@ -650,6 +650,7 @@ export interface CalibrationServiceItemOtherFields {
   calibrationPoints?: string
   calibrationPointCount?: number
   measurementRange?: string
+  hasCalibrationPoints?: boolean
 }
 
 export interface CalibrationServicePayload {

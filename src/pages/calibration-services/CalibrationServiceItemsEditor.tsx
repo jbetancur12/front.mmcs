@@ -6,9 +6,12 @@ import {
   Autocomplete,
   Box,
   Button,
+  Checkbox,
   Chip,
+  Collapse,
   Divider,
   FormControl,
+  FormControlLabel,
   Grid,
   IconButton,
   InputAdornment,
@@ -387,16 +390,37 @@ const CalibrationServiceItemsEditor = ({
                 value={item.notes || ''} disabled={!canEdit || isBusy}
                 onChange={(event) => onChangeItemField(item.localId, 'notes', event.target.value)} />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField fullWidth size='small' type='number' label='Cant. puntos' placeholder='Ej: 3' required
-                value={(item.otherFields?.calibrationPointCount as number) ?? ''} disabled={!canEdit || isBusy}
-                inputProps={{ min: 1, step: 1 }}
-                onChange={(event) => onChangeItemOtherField(item.localId, 'calibrationPointCount', event.target.value === '' ? null : Number(event.target.value))} />
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    size='small'
+                    checked={Boolean(item.otherFields?.hasCalibrationPoints)}
+                    onChange={(e) => {
+                      onChangeItemOtherField(item.localId, 'hasCalibrationPoints', e.target.checked)
+                      if (!e.target.checked) {
+                        onChangeItemOtherField(item.localId, 'calibrationPointCount', null)
+                        onChangeItemOtherField(item.localId, 'measurementRange', '')
+                      }
+                    }}
+                    disabled={!canEdit || isBusy}
+                  />
+                }
+                label={<Typography variant='body2' fontWeight={600}>¿Tiene puntos de calibración?</Typography>}
+              />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <TextField fullWidth size='small' label='Rango medición' placeholder='Ej: -50°C a 300°C' required
-                value={(item.otherFields?.measurementRange as string) || ''} disabled={!canEdit || isBusy}
-                onChange={(event) => onChangeItemOtherField(item.localId, 'measurementRange', event.target.value)} />
+            <Grid item xs={12}>
+              <Collapse in={Boolean(item.otherFields?.hasCalibrationPoints)}>
+                <Stack direction='row' spacing={2} sx={{ mt: 0.5 }}>
+                  <TextField fullWidth size='small' type='number' label='Cant. puntos' placeholder='Ej: 3' required
+                    value={(item.otherFields?.calibrationPointCount as number) ?? ''} disabled={!canEdit || isBusy}
+                    inputProps={{ min: 1, step: 1 }}
+                    onChange={(event) => onChangeItemOtherField(item.localId, 'calibrationPointCount', event.target.value === '' ? null : Number(event.target.value))} />
+                  <TextField fullWidth size='small' label='Rango medición' placeholder='Ej: -50°C a 300°C' required
+                    value={(item.otherFields?.measurementRange as string) || ''} disabled={!canEdit || isBusy}
+                    onChange={(event) => onChangeItemOtherField(item.localId, 'measurementRange', event.target.value)} />
+                </Stack>
+              </Collapse>
             </Grid>
           </Grid>
           <Box sx={{
@@ -431,7 +455,7 @@ const CalibrationServiceItemsEditor = ({
         <TableCell sx={{ fontWeight: 600, color: '#6b7280', fontSize: '0.8rem', width: 40 }}>{actualIndex + 1}</TableCell>
         <TableCell sx={{ minWidth: 180 }}>
           <Typography variant='body2' fontWeight={600} noWrap sx={{ maxWidth: 200 }}>{item.itemName || '—'}</Typography>
-          {(Number(item.otherFields?.calibrationPointCount) > 0 || Boolean(item.otherFields?.measurementRange)) && (
+          {item.otherFields?.hasCalibrationPoints && (
             <Typography variant='caption' sx={{ color: '#9ca3af', display: 'block', lineHeight: 1.2, mt: 0.25 }}>
               {[
                 item.otherFields?.calibrationPointCount ? `Cantidad puntos: ${item.otherFields.calibrationPointCount}` : '',

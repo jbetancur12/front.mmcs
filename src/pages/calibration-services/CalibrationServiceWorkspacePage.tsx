@@ -803,7 +803,9 @@ const CalibrationServiceWorkspacePage = () => {
     }
     if (targetStatus === 'pending_approval') {
       const invalidItems = validItems.filter(
-        (item) => !item.otherFields?.calibrationPointCount || !item.otherFields?.measurementRange
+        (item) =>
+          item.otherFields?.hasCalibrationPoints &&
+          (!item.otherFields?.calibrationPointCount || !item.otherFields?.measurementRange)
       )
       if (invalidItems.length) {
         setValidationErrorItemIds(new Set(invalidItems.map((i) => i.localId)))
