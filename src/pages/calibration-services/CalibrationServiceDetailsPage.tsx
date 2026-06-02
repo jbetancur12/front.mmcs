@@ -1279,6 +1279,14 @@ const CalibrationServiceDetailsPage = () => {
     logisticsControlSheet
 
   const handleRequestApproval = async () => {
+    const missingItems = (service.items || []).filter(
+      (item) => !item.otherFields?.calibrationPointCount || !item.otherFields?.measurementRange
+    )
+    if (missingItems.length) {
+      setActiveTab('items')
+      toast.error(`Completa cantidad de puntos y rango de medición en ${missingItems.length} item${missingItems.length > 1 ? 's' : ''} antes de enviar.`)
+      return
+    }
     try {
       await requestApproval.mutateAsync({ serviceId: String(service.id) })
       toast.success('La cotización quedó enviada al cliente.')
