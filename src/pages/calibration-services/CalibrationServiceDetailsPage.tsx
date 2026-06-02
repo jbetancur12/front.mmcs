@@ -3510,7 +3510,6 @@ const CalibrationServiceDetailsPage = () => {
                   canUploadDocuments={canUploadDocuments}
                   canGenerateQuotePdf={canGenerateQuotePdf}
                   canGenerateOdsPdf={canGenerateOdsPdf}
-                  isDraft={service.status === 'draft'}
                   officialPdfDocuments={officialPdfDocuments || []}
                   adjustmentCustomerResponseDocuments={
                     adjustmentCustomerResponseDocuments || []
