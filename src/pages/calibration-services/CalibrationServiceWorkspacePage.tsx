@@ -147,7 +147,7 @@ const createEmptyItem = (): FormItem => ({
   sortOrder: 0,
   otherFields: {
     catalogPriceSource: 'medicalPrice',
-    hasCalibrationPoints: true
+    hasCalibrationPoints: false
   }
 })
 
@@ -679,7 +679,7 @@ const CalibrationServiceWorkspacePage = () => {
           sortOrder: previous.items.length + index,
           otherFields: {
             catalogPriceSource: picked.catalogPriceSource || SUGGESTED_CATALOG_PRICE_SOURCE,
-            hasCalibrationPoints: true
+            hasCalibrationPoints: false
           }
         }))
       ]

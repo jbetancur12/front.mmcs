@@ -412,11 +412,11 @@ const CalibrationServiceItemsEditor = ({
             <Grid item xs={12}>
               <Collapse in={item.otherFields?.hasCalibrationPoints !== false}>
                 <Stack direction='row' spacing={2} sx={{ mt: 0.5 }}>
-                  <TextField fullWidth size='small' type='number' label='Cant. puntos' placeholder='Ej: 3' required
+                  <TextField fullWidth size='small' type='number' label='Cant. puntos' placeholder='Ej: 3'
                     value={(item.otherFields?.calibrationPointCount as number) ?? ''} disabled={!canEdit || isBusy}
                     inputProps={{ min: 1, step: 1 }}
                     onChange={(event) => onChangeItemOtherField(item.localId, 'calibrationPointCount', event.target.value === '' ? null : Number(event.target.value))} />
-                  <TextField fullWidth size='small' label='Rango medición' placeholder='Ej: -50°C a 300°C' required
+                  <TextField fullWidth size='small' label='Rango medición' placeholder='Ej: -50°C a 300°C'
                     value={(item.otherFields?.measurementRange as string) || ''} disabled={!canEdit || isBusy}
                     onChange={(event) => onChangeItemOtherField(item.localId, 'measurementRange', event.target.value)} />
                 </Stack>
