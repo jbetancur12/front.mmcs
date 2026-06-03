@@ -811,6 +811,24 @@ const CalibrationServiceWorkspacePage = () => {
       return 'Revisa nombre y cantidad de los items.'
     }
     if (targetStatus === 'pending_approval') {
+      if (!formState.paymentMethod) {
+        setActiveSection(4)
+        return 'Selecciona la forma de pago.'
+      }
+      if (!formState.instrumentDeliveryTime) {
+        setActiveSection(4)
+        return 'Selecciona el tiempo de entrega de equipos.'
+      }
+      if (!formState.certificateDeliveryTime) {
+        setActiveSection(4)
+        return 'Selecciona el tiempo de entrega de certificados.'
+      }
+      if (formState.hasDiscount) {
+        if (!formState.discountType || Number(formState.discountValue) <= 0) {
+          setActiveSection(4)
+          return 'Completa el tipo y valor del descuento.'
+        }
+      }
       const invalidItems = validItems.filter(
         (item) =>
           item.otherFields?.hasCalibrationPoints !== false &&
@@ -1498,10 +1516,11 @@ const CalibrationServiceWorkspacePage = () => {
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <FormControl fullWidth>
-                    <InputLabel>Forma de pago</InputLabel>
+                    <InputLabel required>Forma de pago</InputLabel>
                     <Select
                       value={formState.paymentMethod || ''}
                       label='Forma de pago'
+                      required
                       disabled={!canEdit || isBusy}
                       onChange={(event) => setField('paymentMethod', event.target.value)}
                     >
@@ -1566,10 +1585,11 @@ const CalibrationServiceWorkspacePage = () => {
                 ) : null}
                 <Grid item xs={12} md={6}>
                   <FormControl fullWidth>
-                    <InputLabel>Entrega instrumento</InputLabel>
+                    <InputLabel required>Entrega instrumento</InputLabel>
                     <Select
                       value={formState.instrumentDeliveryTime || ''}
                       label='Entrega instrumento'
+                      required
                       disabled={!canEdit || isBusy}
                       onChange={(event) => setField('instrumentDeliveryTime', event.target.value)}
                     >
@@ -1583,10 +1603,11 @@ const CalibrationServiceWorkspacePage = () => {
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <FormControl fullWidth>
-                    <InputLabel>Entrega certificado</InputLabel>
+                    <InputLabel required>Entrega certificado</InputLabel>
                     <Select
                       value={formState.certificateDeliveryTime || ''}
                       label='Entrega certificado'
+                      required
                       disabled={!canEdit || isBusy}
                       onChange={(event) => setField('certificateDeliveryTime', event.target.value)}
                     >
