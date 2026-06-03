@@ -1279,6 +1279,21 @@ const CalibrationServiceDetailsPage = () => {
     logisticsControlSheet
 
   const handleRequestApproval = async () => {
+    if (!service.paymentMethod) {
+      setActiveTab('summary')
+      toast.error('Completa la forma de pago antes de enviar.')
+      return
+    }
+    if (!service.instrumentDeliveryTime) {
+      setActiveTab('summary')
+      toast.error('Completa el tiempo de entrega de equipos antes de enviar.')
+      return
+    }
+    if (!service.certificateDeliveryTime) {
+      setActiveTab('summary')
+      toast.error('Completa el tiempo de entrega de certificados antes de enviar.')
+      return
+    }
     const missingItems = (service.items || []).filter(
       (item) =>
         item.otherFields?.hasCalibrationPoints !== false &&
