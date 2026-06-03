@@ -1107,10 +1107,6 @@ const CalibrationServiceDetailsPage = () => {
     (accumulator, item) => accumulator + toNumber(item.taxTotal),
     0
   )
-  const baseGrandTotal = (service.items || []).reduce(
-    (accumulator, item) => accumulator + toNumber(item.total),
-    0
-  )
   const subtotal = baseSubtotal + approvedAdjustmentsImpact.subtotal
   const baseTaxTotalValue = baseTaxTotal + approvedAdjustmentsImpact.taxTotal
   const discountAmount = service.hasDiscount
