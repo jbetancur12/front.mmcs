@@ -1112,8 +1112,16 @@ const CalibrationServiceDetailsPage = () => {
     0
   )
   const subtotal = baseSubtotal + approvedAdjustmentsImpact.subtotal
-  const taxTotal = baseTaxTotal + approvedAdjustmentsImpact.taxTotal
-  const grandTotal = baseGrandTotal + approvedAdjustmentsImpact.grandTotal
+  const baseTaxTotalValue = baseTaxTotal + approvedAdjustmentsImpact.taxTotal
+  const discountAmount = service.hasDiscount
+    ? service.discountType === 'percentage'
+      ? subtotal * (toNumber(service.discountValue) / 100)
+      : toNumber(service.discountValue)
+    : 0
+  const discountedSubtotal = subtotal - discountAmount
+  const effectiveTaxRate = subtotal > 0 ? baseTaxTotalValue / subtotal : 0
+  const taxTotal = effectiveTaxRate > 0 ? discountedSubtotal * effectiveTaxRate : baseTaxTotalValue
+  const grandTotal = discountedSubtotal + taxTotal
   const isDecisionLoading =
     requestApproval.isLoading ||
     approveService.isLoading ||
@@ -3610,6 +3618,14 @@ const CalibrationServiceDetailsPage = () => {
                         {currencyFormatter.format(subtotal)}
                       </Typography>
                     </Stack>
+                    {discountAmount > 0 ? (
+                      <Stack direction='row' justifyContent='space-between'>
+                        <Typography color='text.secondary'>Descuento</Typography>
+                        <Typography fontWeight={600} color='error'>
+                          -{currencyFormatter.format(discountAmount)}
+                        </Typography>
+                      </Stack>
+                    ) : null}
                     <Stack direction='row' justifyContent='space-between'>
                       <Typography color='text.secondary'>IVA</Typography>
                       <Typography fontWeight={600}>
