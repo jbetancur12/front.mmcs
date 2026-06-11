@@ -72,6 +72,7 @@ import {
   normalizeCourseAudience
 } from '../../../utils/lmsAudience'
 import { buildLessonResourceDownloadUrl, buildLmsVideoStreamUrl } from '../../../services/lmsService'
+import PDFViewer from 'src/Components/PDFViewer'
 
 
 interface CourseLesson {
@@ -139,20 +140,6 @@ const getResourceHref = (resource: any) =>
   resource.download_url ||
   (resource.object_key ? buildLessonResourceDownloadUrl(resource.id) : resource.file_url)
 
-const handleOpenResource = (resource: any) => {
-  if (resource.external_url) {
-    window.open(resource.external_url, '_blank', 'noopener,noreferrer')
-    return
-  }
-  const href = resource.href
-  if (!href) return
-  const token = localStorage.getItem('accessToken')
-  const fullUrl = href.startsWith('http') ? href : `${api()}${href}`
-  const url = new URL(fullUrl)
-  if (token) url.searchParams.set('token', token)
-  window.open(url.toString(), '_blank', 'noopener,noreferrer')
-}
-
 interface QuizOutcomeSummary {
   passed: boolean
   percentage: number
@@ -179,6 +166,8 @@ const LmsCourseView: React.FC = () => {
   const [lessonStartTime, setLessonStartTime] = useState<Date | null>(null)
   const [latestQuizOutcome, setLatestQuizOutcome] = useState<QuizOutcomeSummary | null>(null)
   const [certificateReadyNoticeVisible, setCertificateReadyNoticeVisible] = useState(false)
+  const [pdfViewerOpen, setPdfViewerOpen] = useState(false)
+  const [pdfViewerResource, setPdfViewerResource] = useState<any>(null)
 
   const storeUser = useStore(userStore)
 
@@ -731,6 +720,25 @@ const LmsCourseView: React.FC = () => {
       setCertificateReadyNoticeVisible(true)
     }
   }, [course, courseProgress.percentage, hasGeneratedCertificate])
+
+  const handleOpenResource = (resource: any) => {
+    if (resource.external_url) {
+      window.open(resource.external_url, '_blank', 'noopener,noreferrer')
+      return
+    }
+    if (resource.resourceType === 'pdf') {
+      setPdfViewerResource(resource)
+      setPdfViewerOpen(true)
+      return
+    }
+    const href = resource.href
+    if (!href) return
+    const token = localStorage.getItem('accessToken')
+    const fullUrl = href.startsWith('http') ? href : `${api()}${href}`
+    const url = new URL(fullUrl)
+    if (token) url.searchParams.set('token', token)
+    window.open(url.toString(), '_blank', 'noopener,noreferrer')
+  }
 
   // Early return states (must be after all hooks)
   if (isLoadingCourse) {
@@ -1890,6 +1898,45 @@ const LmsCourseView: React.FC = () => {
             onClick={() => setShowCompletionDialog(false)}
           >
             Continuar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* PDF Secure Viewer */}
+      <Dialog
+        open={pdfViewerOpen}
+        onClose={() => setPdfViewerOpen(false)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle sx={{ m: 0, p: 2 }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              {pdfViewerResource?.title || 'Documento PDF'}
+            </Typography>
+            <IconButton onClick={() => setPdfViewerOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Stack>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 0, bgcolor: '#f5f5f5' }}>
+          {pdfViewerResource && (
+            <PDFViewer
+              downloadUrl={`/lms/content/resources/${pdfViewerResource.id}/download`}
+              allowDownload={false}
+              allowOpen={false}
+              buttons={false}
+              disableContextMenu
+            />
+          )}
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', p: 2 }}>
+          <Button
+            variant="contained"
+            onClick={() => setPdfViewerOpen(false)}
+            sx={{ borderRadius: 999, px: 3 }}
+          >
+            Cerrar
           </Button>
         </DialogActions>
       </Dialog>

@@ -19,7 +19,11 @@ import {
   Alert,
   IconButton,
   Paper,
-  Stack
+  Stack,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
@@ -32,7 +36,8 @@ import {
   Quiz as QuizIcon,
   Schedule as ScheduleIcon,
   Edit as EditIcon,
-  Visibility as ViewIcon
+  Visibility as ViewIcon,
+  Close as CloseIcon
 } from '@mui/icons-material'
 import { useQueryClient } from 'react-query'
 import { useStore } from '@nanostores/react'
@@ -53,6 +58,7 @@ import {
   normalizeCourseAudience
 } from 'src/utils/lmsAudience'
 import { buildLessonResourceDownloadUrl, buildLmsVideoStreamUrl } from 'src/services/lmsService'
+import PDFViewer from 'src/Components/PDFViewer'
 
 
 interface CourseUnit {
@@ -102,20 +108,6 @@ const getResourceHref = (resource: any) =>
   resource.external_url ||
   resource.download_url ||
   (resource.object_key ? buildLessonResourceDownloadUrl(resource.id) : resource.file_url)
-
-const handleOpenResource = (resource: any) => {
-  if (resource.external_url) {
-    window.open(resource.external_url, '_blank', 'noopener,noreferrer')
-    return
-  }
-  const href = resource.href
-  if (!href) return
-  const token = localStorage.getItem('accessToken')
-  const fullUrl = href.startsWith('http') ? href : `${api()}${href}`
-  const url = new URL(fullUrl)
-  if (token) url.searchParams.set('token', token)
-  window.open(url.toString(), '_blank', 'noopener,noreferrer')
-}
 
 // ==================== HELPER FUNCTIONS ====================
 
@@ -315,6 +307,8 @@ const LmsCoursePreview: React.FC = () => {
   const [currentUnit, setCurrentUnit] = useState(0)
 
   const [previewMode, setPreviewMode] = useState<'student' | 'admin'>('student')
+  const [pdfViewerOpen, setPdfViewerOpen] = useState(false)
+  const [pdfViewerResource, setPdfViewerResource] = useState<any>(null)
 
   const storeUser = useStore(userStore)
   const queryClient = useQueryClient()
@@ -357,6 +351,25 @@ const LmsCoursePreview: React.FC = () => {
       return
     }
   }, [navigate, storeUser])
+
+  const handleOpenResource = (resource: any) => {
+    if (resource.external_url) {
+      window.open(resource.external_url, '_blank', 'noopener,noreferrer')
+      return
+    }
+    if (resource.resourceType === 'pdf') {
+      setPdfViewerResource(resource)
+      setPdfViewerOpen(true)
+      return
+    }
+    const href = resource.href
+    if (!href) return
+    const token = localStorage.getItem('accessToken')
+    const fullUrl = href.startsWith('http') ? href : `${api()}${href}`
+    const url = new URL(fullUrl)
+    if (token) url.searchParams.set('token', token)
+    window.open(url.toString(), '_blank', 'noopener,noreferrer')
+  }
 
   if (isLoading) {
     return (
@@ -1014,6 +1027,45 @@ const LmsCoursePreview: React.FC = () => {
           </Card>
         </Grid>
       </Grid>
+      {/* PDF Secure Viewer */}
+      <Dialog
+        open={pdfViewerOpen}
+        onClose={() => setPdfViewerOpen(false)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle sx={{ m: 0, p: 2 }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              {pdfViewerResource?.title || 'Documento PDF'}
+            </Typography>
+            <IconButton onClick={() => setPdfViewerOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Stack>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 0, bgcolor: '#f5f5f5' }}>
+          {pdfViewerResource && (
+            <PDFViewer
+              downloadUrl={`/lms/content/resources/${pdfViewerResource.id}/download`}
+              allowDownload={false}
+              allowOpen={false}
+              buttons={false}
+              disableContextMenu
+            />
+          )}
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', p: 2 }}>
+          <Button
+            variant="contained"
+            onClick={() => setPdfViewerOpen(false)}
+            sx={{ borderRadius: 999, px: 3 }}
+          >
+            Cerrar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
     </Box>
   )
 }

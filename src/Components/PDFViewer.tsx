@@ -16,7 +16,7 @@ const PDFViewer = ({
   watermarkText,
   disableContextMenu = false
 }: {
-  path: string
+  path?: string
   bucket?: string
   view?: 'preview' | 'default'
   buttons?: boolean
@@ -28,7 +28,7 @@ const PDFViewer = ({
   disableContextMenu?: boolean
 }) => {
   const axiosPrivate = useAxiosPrivate()
-  const pdfUrl = useMemo(() => buildMinioObjectUrl(bucket, path), [bucket, path])
+  const pdfUrl = useMemo(() => path ? buildMinioObjectUrl(bucket, path) : '', [bucket, path])
   const [viewerUrl, setViewerUrl] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -42,7 +42,7 @@ const PDFViewer = ({
     let objectUrlToRevoke = ''
 
     const loadPdf = async () => {
-      if (!pdfUrl) {
+      if (!downloadUrl && !pdfUrl) {
         if (isMounted) {
           setViewerUrl('')
           setError('No se pudo cargar el documento PDF.')
@@ -116,7 +116,7 @@ const PDFViewer = ({
     )
   }
 
-  if (!pdfUrl || !viewerUrl) {
+  if (!viewerUrl || (!downloadUrl && !pdfUrl)) {
     return (
       <Box
         sx={{
