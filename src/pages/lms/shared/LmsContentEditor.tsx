@@ -179,7 +179,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({ value, onChange }) => {
         containerRef.current.removeChild(host)
       }
     }
-  }, [value])
+  }, [])
 
   useEffect(() => {
     const quill = quillRef.current
