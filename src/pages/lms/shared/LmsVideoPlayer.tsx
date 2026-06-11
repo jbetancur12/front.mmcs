@@ -20,7 +20,7 @@ import useAxiosPrivate from 'src/utils/use-axios-private'
 
 interface LmsVideoPlayerProps {
   src: string
-  videoSource: 'minio' | 'youtube'
+  videoSource: 'minio' | 'youtube' | 'gdrive'
   title?: string
   onProgress?: (currentTime: number, duration: number) => void
   onComplete?: () => void
@@ -49,6 +49,14 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [resolvedSrc, setResolvedSrc] = useState(videoSource === 'minio' ? '' : src)
+
+  // Google Drive video handling
+  const buildGDriveEmbedUrl = (url: string): string => {
+    if (url.includes('/preview')) return url
+    const match = url.match(/\/file\/d\/([^\/?#]+)/)
+    if (match) return `https://drive.google.com/file/d/${match[1]}/preview`
+    return url
+  }
 
   // YouTube video handling
   const getYouTubeEmbedUrl = (url: string): string => {
@@ -233,6 +241,39 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
 
     setError(mediaErrorMessage)
     setIsLoading(false)
+  }
+
+  // Google Drive iframe
+  if (videoSource === 'gdrive') {
+    const embedUrl = buildGDriveEmbedUrl(src)
+    return (
+      <Box
+        ref={containerRef}
+        sx={{
+          position: 'relative',
+          width: '100%',
+          paddingBottom: '56.25%',
+          height: 0,
+          overflow: 'hidden'
+        }}
+      >
+        <Box
+          component="iframe"
+          src={embedUrl}
+          title={title || 'Video de Google Drive'}
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            border: 'none'
+          }}
+          allow="autoplay"
+          allowFullScreen
+        />
+      </Box>
+    )
   }
 
   // YouTube iframe for YouTube videos

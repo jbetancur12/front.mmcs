@@ -74,7 +74,7 @@ export interface ContentLessonDraft {
   content: {
     text?: string
     videoUrl?: string
-    videoSource?: 'youtube' | 'minio'
+    videoSource?: 'youtube' | 'minio' | 'gdrive'
     description?: string
     quizId?: number
     resources: LessonResourceDraft[]
@@ -975,9 +975,9 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                                         ...lesson,
                                         content: {
                                           ...lesson.content,
-                                          videoSource: event.target.value as 'youtube' | 'minio',
+                                          videoSource: event.target.value as 'youtube' | 'minio' | 'gdrive',
                                           videoUrl:
-                                            event.target.value === 'youtube' &&
+                                            (event.target.value === 'youtube' || event.target.value === 'gdrive') &&
                                             (lesson.content.videoUrl || '').startsWith('course_')
                                               ? ''
                                               : lesson.content.videoUrl
@@ -987,14 +987,19 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
                                   >
                                     <MenuItem value="youtube">YouTube</MenuItem>
                                     <MenuItem value="minio">Archivo alojado</MenuItem>
+                                    <MenuItem value="gdrive">Google Drive</MenuItem>
                                   </Select>
                                 </FormControl>
 
-                                {selectedLesson.content.videoSource === 'youtube' ? (
+                                {selectedLesson.content.videoSource === 'youtube' || selectedLesson.content.videoSource === 'gdrive' ? (
                                   <TextField
                                     fullWidth
                                     label="URL del video"
-                                    placeholder="https://youtu.be/... o URL embebible"
+                                    placeholder={
+                                      selectedLesson.content.videoSource === 'gdrive'
+                                        ? 'https://drive.google.com/file/d/.../preview'
+                                        : 'https://youtu.be/... o URL embebible'
+                                    }
                                     value={selectedLesson.content.videoUrl || ''}
                                     onChange={(event) =>
                                       updateSelectedLesson((lesson) => ({

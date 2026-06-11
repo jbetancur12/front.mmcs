@@ -86,7 +86,7 @@ interface CourseLesson {
   estimatedMinutes: number
   content: {
     videoUrl?: string
-    videoSource?: 'minio' | 'youtube'
+    videoSource?: 'minio' | 'youtube' | 'gdrive'
     transcript?: string
     text?: string
     quiz?: any

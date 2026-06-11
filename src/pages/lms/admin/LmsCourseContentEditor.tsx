@@ -123,6 +123,7 @@ const LmsCourseContentEditor: React.FC = () => {
   const queryClient = useQueryClient()
   const [draftCourse, setDraftCourse] = useState<FrontendCourseDraft | null>(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const draftCourseRef = useRef<FrontendCourseDraft | null>(null)
 
   const { data: course, isLoading } = useQuery<FrontendCourseDraft>(
@@ -308,6 +309,11 @@ const LmsCourseContentEditor: React.FC = () => {
       await queryClient.invalidateQueries(['lms-course', courseId])
       await queryClient.invalidateQueries(['lms-courses'])
       setHasUnsavedChanges(false)
+      setSaveError('')
+    },
+    onError: (error: any) => {
+      const msg = error?.response?.data?.error?.message || error?.message || 'Error al guardar los cambios'
+      setSaveError(msg)
     }
   })
 
@@ -389,6 +395,12 @@ const LmsCourseContentEditor: React.FC = () => {
           {saveCourseMutation.isLoading ? 'Guardando cambios...' : hasUnsavedChanges ? 'Guardar cambios del contenido' : 'Sin cambios por guardar'}
         </Button>
       </Stack>
+
+      {saveError && (
+        <Alert severity="error" onClose={() => setSaveError('')} sx={{ mb: 2 }}>
+          {saveError}
+        </Alert>
+      )}
 
       <Alert severity="info" sx={{ mb: 2 }}>
         Flujo recomendado: 1) crea una sección, 2) agrega las lecciones que harán parte de ella, 3) usa recursos de apoyo para PDFs o enlaces, 4) guarda y revisa la vista previa.

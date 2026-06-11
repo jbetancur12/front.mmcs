@@ -71,7 +71,7 @@ interface CourseUnit {
   unlocked: boolean
   content: {
     videoUrl?: string
-    videoSource?: 'minio' | 'youtube'
+    videoSource?: 'minio' | 'youtube' | 'gdrive'
     transcript?: string
     text?: string
     quizId?: number
@@ -150,9 +150,9 @@ const convertToEmbedUrl = (url: string): string => {
 
 const resolveLessonVideoUrl = (lesson: any): string => {
   if (!lesson?.video_url) return ''
-  return lesson.video_source === 'minio'
-    ? buildLmsVideoStreamUrl(lesson.video_url)
-    : convertToEmbedUrl(lesson.video_url)
+  if (lesson.video_source === 'minio') return buildLmsVideoStreamUrl(lesson.video_url)
+  if (lesson.video_source === 'gdrive') return lesson.video_url
+  return convertToEmbedUrl(lesson.video_url)
 }
 
 /**
