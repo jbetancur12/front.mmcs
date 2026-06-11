@@ -66,11 +66,13 @@ import {
   useUserCertificates
 } from '../../../hooks/useLms'
 import { queryKeys } from '../../../config/queryClient'
+import { api } from 'src/config'
 import {
   getCourseAudienceLabel,
   normalizeCourseAudience
 } from '../../../utils/lmsAudience'
 import { buildLessonResourceDownloadUrl, buildLmsVideoStreamUrl } from '../../../services/lmsService'
+
 
 interface CourseLesson {
   id: number
@@ -94,6 +96,8 @@ interface CourseLesson {
       description?: string
       resourceType: 'pdf' | 'document' | 'link'
       href: string
+      original_filename?: string
+      external_url?: string
     }>
   }
 }
@@ -134,6 +138,20 @@ const getResourceHref = (resource: any) =>
   resource.external_url ||
   resource.download_url ||
   (resource.object_key ? buildLessonResourceDownloadUrl(resource.id) : resource.file_url)
+
+const handleOpenResource = (resource: any) => {
+  if (resource.external_url) {
+    window.open(resource.external_url, '_blank', 'noopener,noreferrer')
+    return
+  }
+  const href = resource.href
+  if (!href) return
+  const token = localStorage.getItem('accessToken')
+  const fullUrl = href.startsWith('http') ? href : `${api()}${href}`
+  const url = new URL(fullUrl)
+  if (token) url.searchParams.set('token', token)
+  window.open(url.toString(), '_blank', 'noopener,noreferrer')
+}
 
 interface QuizOutcomeSummary {
   passed: boolean
@@ -273,7 +291,9 @@ const LmsCourseView: React.FC = () => {
                     title: resource.title,
                     description: resource.description || '',
                     resourceType: resource.resource_type,
-                    href: getResourceHref(resource)
+                    href: getResourceHref(resource),
+                    original_filename: resource.original_filename,
+                    external_url: resource.external_url
                   }))
               }
             }
@@ -1723,9 +1743,7 @@ const LmsCourseView: React.FC = () => {
                             <Button
                               size='small'
                               variant='outlined'
-                              href={resource.href}
-                              target='_blank'
-                              rel='noopener noreferrer'
+                              onClick={() => handleOpenResource(resource)}
                               sx={{ borderRadius: 999, px: 2 }}
                             >
                               Abrir recurso
