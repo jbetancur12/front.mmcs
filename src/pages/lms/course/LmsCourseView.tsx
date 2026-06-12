@@ -33,7 +33,6 @@ import {
   Menu as MenuIcon,
   Close as CloseIcon,
   AccessTime as AccessTimeIcon,
-  Assignment as AssignmentIcon,
   EmojiEvents as CertificateIcon,
   Description as DescriptionIcon
 } from '@mui/icons-material'
@@ -1008,169 +1007,26 @@ const LmsCourseView: React.FC = () => {
         marginLeft: !isMobile && sidebarOpen ? 0 : 0
       }}>
         {/* Header */}
-        <Paper
-          elevation={0}
-          sx={{
-            p: { xs: 1.5, md: 2.25 },
-            borderRadius: 0,
-            borderBottom: '1px solid',
-            borderColor: 'rgba(24, 49, 83, 0.08)',
-            background:
-              'linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(244,250,247,0.96) 52%, rgba(229,242,235,0.96) 100%)'
-          }}
-        >
-          <Box sx={{ maxWidth: 1320, mx: 'auto' }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1.25 }}>
-            <IconButton onClick={() => navigate(-1)} sx={{ mr: 2 }}>
-              <ArrowBackIcon />
+        <Box sx={{ px: { xs: 2, md: 3 }, py: 1.5, borderBottom: '1px solid #e2e8f0', bgcolor: '#ffffff', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <IconButton onClick={() => navigate(-1)} size='small'>
+            <ArrowBackIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+          {!isMobile && !sidebarOpen && (
+            <IconButton onClick={() => setSidebarOpen(true)} size='small'>
+              <MenuIcon sx={{ fontSize: 18 }} />
             </IconButton>
-            {!isMobile && !sidebarOpen && (
-              <IconButton onClick={() => setSidebarOpen(true)} sx={{ mr: 2 }}>
-                <MenuIcon />
-              </IconButton>
-            )}
-            <Box sx={{ flex: 1 }}>
-              <Typography
-                variant='overline'
-                sx={{ letterSpacing: '0.18em', color: '#2d9b5f', fontWeight: 700 }}
-              >
-                Experiencia activa
-              </Typography>
-              <Typography
-                variant={isMobile ? 'h5' : 'h4'}
-                component='h1'
-                gutterBottom
-                sx={{ fontWeight: 800, color: '#183153', maxWidth: 980, mb: 0.5 }}
-              >
-                {course.title}
-              </Typography>
-              <Typography
-                variant='body2'
-                color='text.secondary'
-                sx={{ maxWidth: 900, mb: 1.1, lineHeight: 1.6 }}
-              >
-                {course.description}
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                <Chip
-                  label={course.category}
-                  size='small'
-                  sx={{
-                    bgcolor: 'rgba(45,155,95,0.14)',
-                    color: '#12704a',
-                    fontWeight: 700
-                  }}
-                />
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <AccessTimeIcon fontSize='small' />
-                  <Typography variant='caption'>{course.duration}</Typography>
-                </Box>
-                <Chip label={`Instructor: ${course.instructor}`} size='small' variant='outlined' />
-                {course.hasCertificate && (
-                  <Chip 
-                    icon={<CertificateIcon />} 
-                    label="Con certificado" 
-                    size='small'
-                    sx={{
-                      bgcolor: 'rgba(14,107,168,0.14)',
-                      color: '#0e6ba8',
-                      fontWeight: 700
-                    }}
-                  />
-                )}
-                {course.isMandatory && (
-                  <Chip 
-                    icon={<AssignmentIcon />} 
-                    label="Obligatorio" 
-                    color="warning" 
-                    size="small" 
-                  />
-                )}
-              </Box>
-            </Box>
-          </Box>
-
-          <Box
-            sx={{
-              p: 1.5,
-              borderRadius: 4,
-              border: '1px solid rgba(24, 49, 83, 0.08)',
-              bgcolor: 'rgba(255,255,255,0.74)',
-              backdropFilter: 'blur(10px)',
-              boxShadow: '0 16px 30px rgba(24, 49, 83, 0.05)'
-            }}
-          >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 1 }}>
-              <Typography variant='body2' color='text.secondary'>
-                Progreso del curso
-              </Typography>
-              <Typography variant='body2' sx={{ color: '#5b6b7d', fontWeight: 700 }}>
-                {courseProgress.completed} de {courseProgress.total} lecciones ({Math.round(courseProgress.percentage)}%)
-              </Typography>
-            </Box>
-            <LinearProgress
-              variant='determinate'
-              value={courseProgress.percentage}
-              sx={{
-                height: 8,
-                borderRadius: 999,
-                bgcolor: 'rgba(24,49,83,0.08)',
-                '& .MuiLinearProgress-bar': {
-                  borderRadius: 999,
-                  background: 'linear-gradient(90deg, #2d9b5f 0%, #53cf89 100%)'
-                }
-              }}
-            />
-            <Typography variant='caption' color='text.secondary' sx={{ mt: 0.75, display: 'block' }}>
-              {courseProgress.percentage === 100
-                ? 'Ruta completada. Ya puedes revisar el resultado final y tu certificado.'
-                : 'Completa cada lección para mantener el avance desbloqueado.'}
-            </Typography>
-          </Box>
-          </Box>
-
-                {courseProgress.percentage === 100 && (
-                  <Box sx={{ maxWidth: 1320, mx: 'auto', px: { xs: 2, md: 3 }, pt: 1.5 }}>
-                  <Alert
-                    severity="success"
-                    sx={{
-                      borderRadius: 4,
-                      border: '1px solid rgba(45,155,95,0.18)',
-                      background: 'linear-gradient(135deg, rgba(232,251,239,0.96) 0%, rgba(244,255,248,0.98) 100%)',
-                      boxShadow: '0 14px 32px rgba(45,155,95,0.08)'
-                    }}
-                  >
-                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                      ¡Felicitaciones! Has completado el curso.
-                      {course.hasCertificate && hasGeneratedCertificate && (
-                        <Button
-                          variant="contained"
-                          color="success"
-                          size="small"
-                          startIcon={<CertificateIcon />}
-                          sx={{ ml: 2 }}
-                          onClick={handleOpenCurrentCertificate}
-                        >
-                          Ver Certificado
-                        </Button>
-                      )}
-                      {course.hasCertificate && !hasGeneratedCertificate && (
-                        <Box sx={{ ml: 2, display: 'inline-flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                          <Chip
-                            label="Generando certificado..."
-                            color="success"
-                            size="small"
-                          />
-                          <Typography variant="caption" color="text.secondary">
-                            Esto puede tardar unos segundos.
-                          </Typography>
-                        </Box>
-                      )}
-                    </Typography>
-                  </Alert>
-                  </Box>
-                )}
-        </Paper>
+          )}
+          <Typography variant='body2' sx={{ color: '#0d6e8a', fontWeight: 600, fontSize: '0.8rem' }}>
+            {course.title}
+          </Typography>
+          <Typography variant='body2' sx={{ color: '#94a3b8', fontSize: '0.7rem' }}>/</Typography>
+          <Typography variant='caption' sx={{ color: '#64748b' }}>
+            {currentLesson?.title || 'Curso'}
+          </Typography>
+          <Box sx={{ flex: 1 }} />
+          <Chip label={`${Math.round(courseProgress.percentage)}%`} size='small' sx={{ height: 22, fontSize: '0.65rem', bgcolor: 'rgba(13,110,138,0.1)', color: '#0d6e8a', fontWeight: 700 }} />
+          {course.hasCertificate && <CertificateIcon sx={{ fontSize: 16, color: '#64748b' }} />}
+        </Box>
 
         {/* Lesson content */}
         <Box sx={{ flex: 1, overflow: 'auto', bgcolor: '#f8fafc' }}>
