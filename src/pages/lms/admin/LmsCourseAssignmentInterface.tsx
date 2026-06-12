@@ -112,7 +112,8 @@ interface Assignment {
   courseId: number
   courseTitle: string
   assignedTo: string[]
-  assignmentType: 'role' | 'all'
+  user_ids?: number[]
+  assignmentType: 'role' | 'all' | 'users'
   role?: string
   allEmployees: boolean
   assignedBy: string
@@ -145,7 +146,8 @@ const transformAssignment = (backendAssignment: BackendAssignment): Assignment =
     courseId: backendAssignment.course_id,
     courseTitle: backendAssignment.course.title,
     assignedTo: backendAssignment.assigned_to,
-    assignmentType: backendAssignment.all_employees ? 'all' : 'role',
+    user_ids: backendAssignment.user_ids,
+    assignmentType: backendAssignment.all_employees ? 'all' : backendAssignment.role ? 'role' : 'users',
     role: backendAssignment.role || undefined,
     allEmployees: backendAssignment.all_employees,
     assignedBy: backendAssignment.creator?.nombre || 'Admin',
@@ -236,7 +238,8 @@ const LmsCourseAssignmentInterface: React.FC = () => {
       : 'all'
   )
   const [selectedRole, setSelectedRole] = useState<string>('')
-  const [selectedUsers, setSelectedUsers] = useState<Array<{ id: number; nombre: string; email: string }>>([])
+  const [selectedUsers, setSelectedUsers] = useState<Array<{ id: number; name: string; email: string }>>([])
+  const [deadlineDays, setDeadlineDays] = useState<number>(30)
   const [deadline, setDeadline] = useState<Date | null>(null)
   const [assignmentType, setAssignmentType] = useState<'role' | 'all' | 'users'>('role')
   const page = 0
@@ -246,9 +249,10 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null)
   const [editDeadline, setEditDeadline] = useState<Date | null>(null)
+  const [editDeadlineDays, setEditDeadlineDays] = useState<number>(30)
   const [editAssignmentType, setEditAssignmentType] = useState<'role' | 'all' | 'users'>('role')
   const [editSelectedRole, setEditSelectedRole] = useState<string>('')
-  const [editSelectedUsers, setEditSelectedUsers] = useState<Array<{ id: number; nombre: string; email: string }>>([])
+  const [editSelectedUsers, setEditSelectedUsers] = useState<Array<{ id: number; name: string; email: string }>>([])
 
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
@@ -303,20 +307,20 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   )
 
   // Get internal users for user-specific assignment
-  const { data: internalUsers = [] } = useQuery<Array<{ id: number; nombre: string; email: string }>>(
+  const { data: internalUsers = [] } = useQuery<Array<{ id: number; name: string; email: string }>>(
     ['lms-internal-users'],
     async () => {
       const response = await axiosPrivate.get('/lms/users', {
         params: { userType: 'internal', active: true, limit: 1000 }
       })
-      return response.data?.data?.users || response.data?.users || response.data?.data || []
+      return response.data?.data || []
     }
   )
 
 
   // Mutations
   const createAssignmentMutation = useMutation(
-    async (data: { courseId: number; type: string; role?: string; userIds?: number[]; deadline: Date | null }) => {
+    async (data: { courseId: number; type: string; role?: string; userIds?: number[]; deadline?: string; deadlineDays?: number }) => {
       const course = courses.find(c => c.id === data.courseId)
       const response = await axiosPrivate.post(
         `/lms/assignments/courses/${data.courseId}/assign`,
@@ -324,7 +328,8 @@ const LmsCourseAssignmentInterface: React.FC = () => {
           role: data.type === 'role' ? data.role : undefined,
           all_employees: data.type === 'all',
           user_ids: data.type === 'users' ? data.userIds : undefined,
-          deadline: data.deadline ? data.deadline.toISOString() : null,
+          deadline: data.deadline,
+          deadline_days: data.deadlineDays,
           send_notification: true,
           notification_message: `Tienes un nuevo curso asignado: ${course?.title || 'Curso'}`
         }
@@ -362,14 +367,15 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   )
 
   const updateAssignmentMutation = useMutation(
-    async (data: { id: number; deadline?: string; role?: string | null; all_employees?: boolean; user_ids?: number[] }) => {
+    async (data: { id: number; deadline?: string; role?: string | null; all_employees?: boolean; user_ids?: number[]; deadline_days?: number }) => {
       const response = await axiosPrivate.put(
         `/lms/assignments/assignments/${data.id}`,
         {
           deadline: data.deadline,
           role: data.role,
           all_employees: data.all_employees,
-          user_ids: data.user_ids
+          user_ids: data.user_ids,
+          deadline_days: data.deadline_days
         }
       )
       return response.data
@@ -524,11 +530,29 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   }
 
   const handleCreateAssignment = () => {
-    if (!selectedCourse || !deadline) {
+    if (!selectedCourse) {
       Swal.fire({
         icon: 'warning',
-        title: 'Campos requeridos',
-        text: 'Debes seleccionar un curso y una fecha límite'
+        title: 'Curso requerido',
+        text: 'Debes seleccionar un curso'
+      })
+      return
+    }
+
+    if (assignmentType === 'users' && (!deadlineDays || deadlineDays < 1)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Días requeridos',
+        text: 'Debes especificar el número de días para la fecha límite'
+      })
+      return
+    }
+
+    if (assignmentType !== 'users' && !deadline) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Fecha límite requerida',
+        text: 'Debes seleccionar una fecha límite'
       })
       return
     }
@@ -561,21 +585,32 @@ const LmsCourseAssignmentInterface: React.FC = () => {
       return
     }
 
-    // Set deadline to end of day (23:59:59) to avoid timezone issues
-    const deadlineEndOfDay = new Date(deadline)
-    deadlineEndOfDay.setHours(23, 59, 59, 999)
+    // Set deadline: fixed date for role/all, calculated from days for users
+    let deadlineISO = ''
+    if (assignmentType === 'users') {
+      const d = new Date()
+      d.setDate(d.getDate() + deadlineDays)
+      d.setHours(23, 59, 59, 999)
+      deadlineISO = d.toISOString()
+    } else {
+      const deadlineEndOfDay = new Date(deadline!)
+      deadlineEndOfDay.setHours(23, 59, 59, 999)
+      deadlineISO = deadlineEndOfDay.toISOString()
+    }
 
     createAssignmentMutation.mutate({
       courseId: selectedCourse as number,
       type: assignmentType,
       role: selectedRole,
       userIds: selectedUsers.map(u => u.id),
-      deadline: deadlineEndOfDay
+      deadline: deadlineISO,
+      deadlineDays: assignmentType === 'users' ? deadlineDays : undefined
     })
 
     setSelectedRole('')
     setSelectedUsers([])
     setDeadline(null)
+    setDeadlineDays(30)
   }
 
   const handleSendNotification = (assignmentId: number) => {
@@ -612,9 +647,14 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   const handleOpenEditDialog = (assignment: Assignment) => {
     setEditingAssignment(assignment)
     setEditDeadline(assignment.deadline ? new Date(assignment.deadline) : null)
+    setEditDeadlineDays(30)
     setEditAssignmentType(assignment.allEmployees ? 'all' : assignment.role ? 'role' : 'users')
     setEditSelectedRole(assignment.role || '')
-    setEditSelectedUsers([])
+    setEditSelectedUsers(
+      assignment.user_ids && assignment.user_ids.length > 0
+        ? internalUsers.filter(u => assignment.user_ids?.includes(u.id))
+        : []
+    )
     setEditDialogOpen(true)
   }
 
@@ -622,26 +662,22 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     setEditDialogOpen(false)
     setEditingAssignment(null)
     setEditDeadline(null)
+    setEditDeadlineDays(30)
     setEditAssignmentType('role')
     setEditSelectedRole('')
     setEditSelectedUsers([])
   }
 
   const handleSaveEdit = () => {
-    if (!editingAssignment || !editDeadline) {
+    if (!editingAssignment) {
+      return
+    }
+
+    if (editAssignmentType !== 'users' && !editDeadline) {
       Swal.fire({
         icon: 'warning',
         title: 'Fecha requerida',
         text: 'Debes seleccionar una nueva fecha límite'
-      })
-      return
-    }
-
-    if (editAssignmentType === 'role' && !editSelectedRole) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Rol requerido',
-        text: 'Debes seleccionar un rol para esta asignación.'
       })
       return
     }
@@ -655,16 +691,30 @@ const LmsCourseAssignmentInterface: React.FC = () => {
       return
     }
 
-    // Set deadline to end of day (23:59:59) to avoid timezone issues
-    const deadlineEndOfDay = new Date(editDeadline)
-    deadlineEndOfDay.setHours(23, 59, 59, 999)
+    if (editAssignmentType === 'users' && (!editDeadlineDays || editDeadlineDays < 1)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Días requeridos',
+        text: 'Debes especificar el número de días para la fecha límite.'
+      })
+      return
+    }
+
+    const deadlineEndOfDay = editAssignmentType === 'users'
+      ? undefined
+      : (() => {
+          const d = new Date(editDeadline!)
+          d.setHours(23, 59, 59, 999)
+          return d.toISOString()
+        })()
 
     updateAssignmentMutation.mutate({
       id: editingAssignment.id,
-      deadline: deadlineEndOfDay.toISOString(),
+      deadline: deadlineEndOfDay,
       role: editAssignmentType === 'role' ? editSelectedRole : null,
       all_employees: editAssignmentType === 'all',
-      user_ids: editAssignmentType === 'users' ? editSelectedUsers.map(u => u.id) : undefined
+      user_ids: editAssignmentType === 'users' ? editSelectedUsers.map(u => u.id) : undefined,
+      deadline_days: editAssignmentType === 'users' ? editDeadlineDays : undefined
     })
 
     handleCloseEditDialog()
@@ -982,14 +1032,28 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                     </FormControl>
                   </Grid>
 
-                  <Grid item xs={12} md={6}>
-                    <DatePicker
-                      label="Fecha límite"
-                      value={deadline}
-                      onChange={(newValue) => setDeadline(newValue)}
-                      slotProps={{ textField: { fullWidth: true } }}
-                    />
-                  </Grid>
+                  {assignmentType === 'users' ? (
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        type="number"
+                        label="Días para fecha límite"
+                        value={deadlineDays}
+                        onChange={(e) => setDeadlineDays(Math.max(1, parseInt(e.target.value) || 1))}
+                        InputProps={{ inputProps: { min: 1 } }}
+                        helperText="La fecha límite se calculará desde el momento de la asignación"
+                      />
+                    </Grid>
+                  ) : (
+                    <Grid item xs={12} md={6}>
+                      <DatePicker
+                        label="Fecha límite"
+                        value={deadline}
+                        onChange={(newValue) => setDeadline(newValue)}
+                        slotProps={{ textField: { fullWidth: true } }}
+                      />
+                    </Grid>
+                  )}
 
                   <Grid item xs={12}>
                     <FormControl fullWidth>
@@ -1032,7 +1096,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                       <Autocomplete
                         multiple
                         options={internalUsers}
-                        getOptionLabel={(option) => `${option.nombre} (${option.email})`}
+                        getOptionLabel={(option) => `${option.name} (${option.email})`}
                         value={selectedUsers}
                         onChange={(_, newValue) => setSelectedUsers(newValue)}
                         renderInput={(params) => (
@@ -1045,7 +1109,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                         renderTags={(value, getTagProps) =>
                           value.map((option, index) => (
                             <Chip
-                              label={option.nombre}
+                              label={option.name}
                               size="small"
                               {...getTagProps({ index })}
                             />
@@ -1074,7 +1138,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                       <Button
                         variant="contained"
                         onClick={handleCreateAssignment}
-                        disabled={!selectedCourse || !deadline}
+                        disabled={!selectedCourse || (assignmentType !== 'users' && !deadline) || (assignmentType === 'users' && (!deadlineDays || deadlineDays < 1))}
                         startIcon={<AssignmentIcon />}
                       >
                         Crear Asignación
@@ -1167,7 +1231,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                   <Autocomplete
                     multiple
                     options={internalUsers}
-                    getOptionLabel={(option) => `${option.nombre} (${option.email})`}
+                    getOptionLabel={(option) => `${option.name} (${option.email})`}
                     value={editSelectedUsers}
                     onChange={(_, newValue) => setEditSelectedUsers(newValue)}
                     renderInput={(params) => (
@@ -1180,7 +1244,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                     renderTags={(value, getTagProps) =>
                       value.map((option, index) => (
                         <Chip
-                          label={option.nombre}
+                          label={option.name}
                           size="small"
                           {...getTagProps({ index })}
                         />
@@ -1205,20 +1269,39 @@ const LmsCourseAssignmentInterface: React.FC = () => {
 
               <Divider sx={{ my: 3 }} />
 
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Nueva fecha límite
-              </Typography>
-              <DatePicker
-                label="Seleccionar nueva fecha"
-                value={editDeadline}
-                onChange={(newValue) => setEditDeadline(newValue)}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    required: true
-                  }
-                }}
-              />
+              {editAssignmentType === 'users' ? (
+                <>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Días para fecha límite
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    type="number"
+                    label="Días"
+                    value={editDeadlineDays}
+                    onChange={(e) => setEditDeadlineDays(Math.max(1, parseInt(e.target.value) || 1))}
+                    InputProps={{ inputProps: { min: 1 } }}
+                    helperText="Se recalculará desde el momento de guardar"
+                  />
+                </>
+              ) : (
+                <>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Nueva fecha límite
+                  </Typography>
+                  <DatePicker
+                    label="Seleccionar nueva fecha"
+                    value={editDeadline}
+                    onChange={(newValue) => setEditDeadline(newValue)}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        required: true
+                      }
+                    }}
+                  />
+                </>
+              )}
             </Box>
           )}
         </DialogContent>
