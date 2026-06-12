@@ -9,10 +9,6 @@ import {
   Button,
   Chip,
   LinearProgress,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   IconButton,
   Drawer,
   useTheme,
@@ -25,10 +21,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Stepper,
-  Step,
-  StepLabel,
-  StepContent,
   Paper,
   Tooltip,
   Stack,
@@ -40,7 +32,6 @@ import {
   SkipNext as SkipNextIcon,
   SkipPrevious as SkipPreviousIcon,
   CheckCircle as CheckIcon,
-  Lock as LockIcon,
   MenuBook as BookIcon,
   VideoLibrary as VideoIcon,
   Quiz as QuizIcon,
@@ -50,8 +41,7 @@ import {
   Assignment as AssignmentIcon,
   EmojiEvents as CertificateIcon,
   Description as DescriptionIcon,
-  FolderOpen as FolderOpenIcon,
-  Check as CheckSmallIcon
+  FolderOpen as FolderOpenIcon
 } from '@mui/icons-material'
 import { useQueryClient } from 'react-query'
 import { useStore } from '@nanostores/react'
@@ -545,19 +535,6 @@ const LmsCourseView: React.FC = () => {
     navigate(`/lms/certificate/${currentCourseCertificate.id}`)
   }, [currentCourseCertificate, navigate])
 
-  const getModuleProgress = useCallback((moduleIndex: number) => {
-    if (!course || !course.modules) return { completed: 0, total: 0, percentage: 0 }
-    const module = course.modules[moduleIndex]
-    if (!module) return { completed: 0, total: 0, percentage: 0 }
-
-    const completedLessons = module.lessons.filter(lesson => isLessonCompleted(lesson.id))
-    return {
-      completed: completedLessons.length,
-      total: module.lessons.length,
-      percentage: module.lessons.length > 0 ? (completedLessons.length / module.lessons.length) * 100 : 0
-    }
-  }, [course, isLessonCompleted])
-
   // Effects
   useEffect(() => {
     // Verificar autenticación
@@ -839,223 +816,151 @@ const LmsCourseView: React.FC = () => {
   const sidebarContent = (
     <Box
       sx={{
-        width: isMobile ? '100vw' : 344,
+        width: isMobile ? '100vw' : 272,
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        background:
-          'linear-gradient(180deg, rgba(248,252,249,0.98) 0%, rgba(239,247,243,0.98) 100%)'
+        bgcolor: '#1a2332',
+        color: '#e2e8f0'
       }}
     >
       <Box
         sx={{
-          p: 2.5,
-          borderBottom: '1px solid',
-          borderColor: 'rgba(24, 49, 83, 0.08)',
-          background:
-            'linear-gradient(180deg, rgba(255,255,255,0.78) 0%, rgba(255,255,255,0.3) 100%)'
+          px: 4,
+          pt: 5,
+          pb: 4,
+          borderBottom: '1px solid rgba(255,255,255,0.06)'
         }}
       >
-        <Typography
-          variant='overline'
-          sx={{ letterSpacing: '0.18em', color: '#2d9b5f', fontWeight: 700 }}
-        >
-          Ruta de aprendizaje
+        <Typography variant='body2' sx={{ fontWeight: 600, color: '#e2e8f0', lineHeight: 1.4, mb: 2.5 }}>
+          {course.title}
         </Typography>
-        <Typography variant='h6' sx={{ mt: 0.5, fontWeight: 700, color: '#183153' }}>
-          Contenido del curso
-        </Typography>
-        <Typography variant='body2' color='text.secondary' sx={{ mt: 0.75 }}>
-          Avanza por módulos, completa lecciones y desbloquea el certificado al final.
-        </Typography>
+        <Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+            <Typography variant='caption' sx={{ color: 'rgba(226,232,240,0.55)', fontSize: '0.7rem' }}>
+              Progreso del curso
+            </Typography>
+            <Typography variant='caption' sx={{ color: '#5ecae0', fontWeight: 700, fontSize: '0.7rem' }}>
+              {Math.round(courseProgress.percentage)}%
+            </Typography>
+          </Box>
+          <LinearProgress
+            variant='determinate'
+            value={courseProgress.percentage}
+            sx={{
+              height: 5,
+              borderRadius: 999,
+              bgcolor: 'rgba(255,255,255,0.08)',
+              '& .MuiLinearProgress-bar': {
+                borderRadius: 999,
+                bgcolor: '#0d6e8a',
+                transition: 'width 0.5s ease'
+              }
+            }}
+          />
+          <Typography variant='caption' sx={{ color: 'rgba(226,232,240,0.4)', fontSize: '0.65rem', mt: 1, display: 'block' }}>
+            {courseProgress.completed} de {courseProgress.total} lecciones
+          </Typography>
+        </Box>
       </Box>
 
-      <Box sx={{ flex: 1, overflow: 'auto', p: 1.75 }}>
-        <Stepper
-          orientation='vertical'
-          nonLinear
-          sx={{
-            '& .MuiStepConnector-line': {
-              borderColor: 'rgba(24,49,83,0.12)'
-            }
-          }}
-        >
-          {course.modules.map((module, moduleIndex) => {
-            const moduleProgress = getModuleProgress(moduleIndex)
-            const isExpanded = expandedModules.has(moduleIndex)
-            
-            return (
-              <Step key={module.id} expanded={isExpanded}>
-                <StepLabel
-                  onClick={() => handleToggleModule(moduleIndex)}
+      <Box sx={{ flex: 1, overflow: 'auto', py: 1 }}>
+        {course.modules.map((module, moduleIndex) => {
+          const isExpanded = expandedModules.has(moduleIndex)
+
+          return (
+            <Box key={module.id}>
+              <Box
+                onClick={() => handleToggleModule(moduleIndex)}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  px: 4,
+                  py: 2,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  '&:hover': { bgcolor: 'rgba(255,255,255,0.04)' }
+                }}
+              >
+                <Typography
+                  variant='caption'
                   sx={{
-                    cursor: 'pointer',
-                    borderRadius: 4,
-                    px: 1.35,
-                    py: 1.1,
-                    mx: 0.5,
-                    backgroundColor: 'rgba(255,255,255,0.9)',
-                    border: '1px solid rgba(24,49,83,0.08)',
-                    boxShadow: isExpanded ? '0 18px 34px rgba(24, 49, 83, 0.08)' : '0 10px 24px rgba(24, 49, 83, 0.04)',
-                    transition: 'all 0.2s ease'
+                    color: 'rgba(226,232,240,0.45)',
+                    fontWeight: 600,
+                    letterSpacing: '0.07em',
+                    textTransform: 'uppercase',
+                    fontSize: '0.6rem'
                   }}
-                  icon={
-                    <Box sx={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: '50%',
-                      background:
-                        moduleProgress.percentage === 100
-                          ? 'linear-gradient(135deg, #2d9b5f 0%, #43c77f 100%)'
-                          : 'linear-gradient(135deg, #183153 0%, #0e6ba8 100%)',
-                      color: 'white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '0.75rem',
-                      boxShadow: '0 8px 18px rgba(24, 49, 83, 0.16)'
-                    }}>
-                      {moduleProgress.percentage === 100 ? <CheckIcon fontSize='small' /> : moduleIndex + 1}
-                    </Box>
-                  }
                 >
-                  <Box>
-                    <Typography variant='overline' sx={{ color: '#5b6b7d', fontSize: '0.62rem' }}>
-                      Módulo {moduleIndex + 1}
-                    </Typography>
-                    <Typography variant='subtitle1' sx={{ fontWeight: 800, color: '#183153', lineHeight: 1.2 }}>
-                      {module.title}
-                    </Typography>
-                    <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.35 }}>
-                      {moduleProgress.completed}/{moduleProgress.total} lecciones
-                    </Typography>
-                    {!isExpanded ? (
-                      <Box sx={{ mt: 1.25, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <LinearProgress
-                          variant='determinate'
-                          value={moduleProgress.percentage}
-                          sx={{
-                            flex: 1,
-                            height: 8,
-                            borderRadius: 999,
-                            bgcolor: 'rgba(24,49,83,0.08)',
-                            '& .MuiLinearProgress-bar': {
-                              borderRadius: 999,
-                              background: 'linear-gradient(90deg, #2d9b5f 0%, #53cf89 100%)'
-                            }
-                          }}
-                        />
-                        <Typography variant='caption' sx={{ color: '#5b6b7d', minWidth: 28 }}>
-                          {Math.round(moduleProgress.percentage)}%
-                        </Typography>
-                      </Box>
-                    ) : null}
-                  </Box>
-                </StepLabel>
-                
-                <StepContent>
-                  <List dense sx={{ pl: 0.5, pt: 0.5 }}>
-                    {module.lessons.map((lesson, lessonIndex) => {
-                      const isCompleted = isLessonCompleted(lesson.id)
-                      const isUnlocked = isLessonUnlocked(moduleIndex, lessonIndex)
-                      const isCurrent = currentModuleIndex === moduleIndex && currentLessonIndex === lessonIndex
-                      
-                      return (
-                        <ListItem
-                          key={lesson.id}
-                          button
-                          selected={isCurrent}
-                          onClick={() => handleNavigateToLesson(moduleIndex, lessonIndex)}
-                          disabled={!isUnlocked}
-                          sx={{
-                            borderRadius: 3,
-                            mb: 1,
-                            px: 1.1,
-                            py: 0.9,
-                            opacity: isUnlocked ? 1 : 0.6,
-                            border: '1px solid',
-                            borderColor: isCurrent
-                              ? '#2d9b5f'
-                              : 'rgba(24, 49, 83, 0.06)',
-                            borderLeft: isCurrent ? '3px solid' : '1px solid',
-                            borderLeftColor: isCurrent ? '#2d9b5f' : 'rgba(24, 49, 83, 0.06)',
-                            background: isCurrent
-                              ? 'linear-gradient(135deg, rgba(45,155,95,0.12) 0%, rgba(255,255,255,0.96) 100%)'
-                              : 'rgba(255,255,255,0.72)',
-                            boxShadow: isCurrent ? '0 14px 28px rgba(24, 49, 83, 0.08)' : 'none',
-                            transition: 'all 0.25s ease',
-                            '&:hover:not(:disabled)': {
-                              borderColor: isCurrent ? '#2d9b5f' : 'rgba(45,155,95,0.3)',
-                              boxShadow: '0 8px 20px rgba(24, 49, 83, 0.06)'
-                            }
-                          }}
-                        >
-                          <ListItemIcon sx={{ minWidth: 36 }}>
-                            {isCompleted ? (
-                              <CheckIcon color='success' fontSize='small' />
-                            ) : isUnlocked ? (
-                              <Box
-                                sx={{
-                                  width: 34,
-                                  height: 34,
-                                  borderRadius: 2,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  bgcolor: isCurrent ? 'rgba(45,155,95,0.15)' : 'rgba(24,49,83,0.06)',
-                                  color: isCurrent ? '#2d9b5f' : '#355c7d',
-                                  transition: 'background 0.25s ease'
-                                }}
-                              >
-                                {getContentIcon(lesson.type)}
-                              </Box>
-                            ) : (
-                              <LockIcon color='disabled' fontSize='small' />
-                            )}
-                          </ListItemIcon>
-                          <ListItemText
-                            primary={
-                                <Typography
-                                  variant='body2'
-                                  sx={{
-                                    fontWeight: isCurrent ? 700 : 500,
-                                    color: isCompleted ? 'success.main' : 'text.primary',
-                                    lineHeight: 1.2
-                                  }}
-                                >
-                                  {lesson.title}
+                  {module.title}
+                </Typography>
+                <Box component='span' sx={{ color: 'rgba(226,232,240,0.3)', fontSize: 12 }}>
+                  {isExpanded ? '▼' : '▶'}
+                </Box>
+              </Box>
+
+              {isExpanded && (
+                <Box>
+                  {module.lessons.map((lesson, lessonIndex) => {
+                    const isCompleted = isLessonCompleted(lesson.id)
+                    const isUnlocked = isLessonUnlocked(moduleIndex, lessonIndex)
+                    const isCurrent = currentModuleIndex === moduleIndex && currentLessonIndex === lessonIndex
+
+                    return (
+                      <Box
+                        key={lesson.id}
+                        onClick={() => isUnlocked && handleNavigateToLesson(moduleIndex, lessonIndex)}
+                        sx={{
+                          display: 'flex',
+                          gap: 2,
+                          px: 4,
+                          py: 1.5,
+                          cursor: isUnlocked ? 'pointer' : 'default',
+                          transition: 'all 0.15s ease',
+                          opacity: isUnlocked ? 1 : 0.45,
+                          bgcolor: isCurrent ? 'rgba(13,110,138,0.2)' : 'transparent',
+                          borderLeft: '2px solid',
+                          borderLeftColor: isCurrent ? '#0d6e8a' : 'transparent',
+                          '&:hover': isUnlocked ? { bgcolor: isCurrent ? 'rgba(13,110,138,0.25)' : 'rgba(255,255,255,0.04)' } : {}
+                        }}
+                      >
+                        <Box sx={{ mt: 0.25, flexShrink: 0, color: isCompleted ? '#5ecae0' : isCurrent ? '#94d8e8' : 'rgba(226,232,240,0.35)' }}>
+                          {isCompleted ? (
+                            <CheckIcon sx={{ fontSize: 14 }} />
+                          ) : (
+                            <Box sx={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid currentColor' }} />
+                          )}
+                        </Box>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography
+                            variant='body2'
+                            sx={{
+                              fontSize: '0.75rem',
+                              lineHeight: 1.3,
+                              color: isCurrent ? '#e2e8f0' : isCompleted ? 'rgba(226,232,240,0.65)' : 'rgba(226,232,240,0.8)',
+                              fontWeight: isCurrent ? 500 : 400
+                            }}
+                          >
+                            {lesson.title}
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                            <Box sx={{ color: 'rgba(226,232,240,0.3)', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              {lesson.type === 'video' ? <VideoIcon sx={{ fontSize: 11 }} /> : lesson.type === 'quiz' ? <QuizIcon sx={{ fontSize: 11 }} /> : <BookIcon sx={{ fontSize: 11 }} />}
+                              <Typography variant='caption' sx={{ fontSize: '0.6rem', color: 'rgba(226,232,240,0.35)' }}>
+                                {lesson.duration}
                               </Typography>
-                            }
-                            secondary={
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                                <Chip
-                                  label={getContentTypeLabel(lesson.type)}
-                                  size='small'
-                                  variant='outlined'
-                                  sx={{
-                                    height: 20,
-                                    fontSize: '0.62rem',
-                                    borderColor: 'rgba(45,155,95,0.28)',
-                                    color: '#2d9b5f',
-                                    bgcolor: 'rgba(255,255,255,0.9)'
-                                  }}
-                                />
-                                <Typography variant='caption' color='text.secondary'>
-                                  {lesson.duration}
-                                </Typography>
-                                {isCompleted ? <CheckSmallIcon sx={{ fontSize: 16, color: '#2d9b5f' }} /> : null}
-                              </Box>
-                            }
-                          />
-                        </ListItem>
-                      )
-                    })}
-                  </List>
-                </StepContent>
-              </Step>
-            )
-          })}
-        </Stepper>
+                            </Box>
+                          </Box>
+                        </Box>
+                      </Box>
+                    )
+                  })}
+                </Box>
+              )}
+            </Box>
+          )
+        })}
       </Box>
     </Box>
   )
@@ -1096,12 +1001,12 @@ const LmsCourseView: React.FC = () => {
         onClose={() => setSidebarOpen(false)}
         sx={{
           '& .MuiDrawer-paper': {
-            width: isMobile ? '100vw' : 344,
+            width: isMobile ? '100vw' : 272,
             boxSizing: 'border-box',
             position: 'relative',
             height: '100%',
-            borderRight: '1px solid rgba(24, 49, 83, 0.08)',
-            background: 'transparent'
+            borderRight: 'none',
+            background: '#1a2332'
           }
         }}
       >
