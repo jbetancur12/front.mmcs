@@ -24,8 +24,10 @@ import {
   Avatar,
   LinearProgress,
   Tabs,
-  Tab
+  Tab,
+  TextField
 } from '@mui/material'
+import { Autocomplete } from '@mui/lab'
 import {
   Assignment as AssignmentIcon,
   ArrowForward as ArrowForwardIcon,
@@ -234,8 +236,9 @@ const LmsCourseAssignmentInterface: React.FC = () => {
       : 'all'
   )
   const [selectedRole, setSelectedRole] = useState<string>('')
+  const [selectedUsers, setSelectedUsers] = useState<Array<{ id: number; nombre: string; email: string }>>([])
   const [deadline, setDeadline] = useState<Date | null>(null)
-  const [assignmentType, setAssignmentType] = useState<'role' | 'all'>('role')
+  const [assignmentType, setAssignmentType] = useState<'role' | 'all' | 'users'>('role')
   const page = 0
   const rowsPerPage = 10
 
@@ -243,8 +246,9 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null)
   const [editDeadline, setEditDeadline] = useState<Date | null>(null)
-  const [editAssignmentType, setEditAssignmentType] = useState<'role' | 'all'>('role')
+  const [editAssignmentType, setEditAssignmentType] = useState<'role' | 'all' | 'users'>('role')
   const [editSelectedRole, setEditSelectedRole] = useState<string>('')
+  const [editSelectedUsers, setEditSelectedUsers] = useState<Array<{ id: number; nombre: string; email: string }>>([])
 
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
@@ -298,16 +302,28 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     }
   )
 
+  // Get internal users for user-specific assignment
+  const { data: internalUsers = [] } = useQuery<Array<{ id: number; nombre: string; email: string }>>(
+    ['lms-internal-users'],
+    async () => {
+      const response = await axiosPrivate.get('/lms/users', {
+        params: { userType: 'internal', active: true, limit: 1000 }
+      })
+      return response.data?.data?.users || response.data?.users || response.data?.data || []
+    }
+  )
+
 
   // Mutations
   const createAssignmentMutation = useMutation(
-    async (data: { courseId: number; type: string; role?: string; deadline: Date | null }) => {
+    async (data: { courseId: number; type: string; role?: string; userIds?: number[]; deadline: Date | null }) => {
       const course = courses.find(c => c.id === data.courseId)
       const response = await axiosPrivate.post(
         `/lms/assignments/courses/${data.courseId}/assign`,
         {
           role: data.type === 'role' ? data.role : undefined,
           all_employees: data.type === 'all',
+          user_ids: data.type === 'users' ? data.userIds : undefined,
           deadline: data.deadline ? data.deadline.toISOString() : null,
           send_notification: true,
           notification_message: `Tienes un nuevo curso asignado: ${course?.title || 'Curso'}`
@@ -346,13 +362,14 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   )
 
   const updateAssignmentMutation = useMutation(
-    async (data: { id: number; deadline?: string; role?: string | null; all_employees?: boolean }) => {
+    async (data: { id: number; deadline?: string; role?: string | null; all_employees?: boolean; user_ids?: number[] }) => {
       const response = await axiosPrivate.put(
         `/lms/assignments/assignments/${data.id}`,
         {
           deadline: data.deadline,
           role: data.role,
-          all_employees: data.all_employees
+          all_employees: data.all_employees,
+          user_ids: data.user_ids
         }
       )
       return response.data
@@ -525,6 +542,15 @@ const LmsCourseAssignmentInterface: React.FC = () => {
       return
     }
 
+    if (assignmentType === 'users' && selectedUsers.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Usuarios requeridos',
+        text: 'Debes seleccionar al menos un usuario'
+      })
+      return
+    }
+
     const selectedCourseData = assignableCourses.find((course) => course.id === selectedCourse)
     if (!selectedCourseData) {
       Swal.fire({
@@ -543,10 +569,12 @@ const LmsCourseAssignmentInterface: React.FC = () => {
       courseId: selectedCourse as number,
       type: assignmentType,
       role: selectedRole,
+      userIds: selectedUsers.map(u => u.id),
       deadline: deadlineEndOfDay
     })
 
     setSelectedRole('')
+    setSelectedUsers([])
     setDeadline(null)
   }
 
@@ -584,8 +612,9 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   const handleOpenEditDialog = (assignment: Assignment) => {
     setEditingAssignment(assignment)
     setEditDeadline(assignment.deadline ? new Date(assignment.deadline) : null)
-    setEditAssignmentType(assignment.allEmployees ? 'all' : 'role')
+    setEditAssignmentType(assignment.allEmployees ? 'all' : assignment.role ? 'role' : 'users')
     setEditSelectedRole(assignment.role || '')
+    setEditSelectedUsers([])
     setEditDialogOpen(true)
   }
 
@@ -595,6 +624,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     setEditDeadline(null)
     setEditAssignmentType('role')
     setEditSelectedRole('')
+    setEditSelectedUsers([])
   }
 
   const handleSaveEdit = () => {
@@ -616,6 +646,15 @@ const LmsCourseAssignmentInterface: React.FC = () => {
       return
     }
 
+    if (editAssignmentType === 'users' && editSelectedUsers.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Usuarios requeridos',
+        text: 'Debes seleccionar al menos un usuario.'
+      })
+      return
+    }
+
     // Set deadline to end of day (23:59:59) to avoid timezone issues
     const deadlineEndOfDay = new Date(editDeadline)
     deadlineEndOfDay.setHours(23, 59, 59, 999)
@@ -624,7 +663,8 @@ const LmsCourseAssignmentInterface: React.FC = () => {
       id: editingAssignment.id,
       deadline: deadlineEndOfDay.toISOString(),
       role: editAssignmentType === 'role' ? editSelectedRole : null,
-      all_employees: editAssignmentType === 'all'
+      all_employees: editAssignmentType === 'all',
+      user_ids: editAssignmentType === 'users' ? editSelectedUsers.map(u => u.id) : undefined
     })
 
     handleCloseEditDialog()
@@ -961,6 +1001,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                       >
                         <MenuItem value="role">Por Rol</MenuItem>
                         <MenuItem value="all">Todos los Empleados</MenuItem>
+                        <MenuItem value="users">Por Usuario</MenuItem>
                       </Select>
                     </FormControl>
                   </Grid>
@@ -983,6 +1024,34 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                           <MenuItem value="comp_admin">Administrador de Compras</MenuItem>
                         </Select>
                       </FormControl>
+                    </Grid>
+                  )}
+
+                  {assignmentType === 'users' && (
+                    <Grid item xs={12}>
+                      <Autocomplete
+                        multiple
+                        options={internalUsers}
+                        getOptionLabel={(option) => `${option.nombre} (${option.email})`}
+                        value={selectedUsers}
+                        onChange={(_, newValue) => setSelectedUsers(newValue)}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Seleccionar Usuarios"
+                            placeholder="Buscar usuarios..."
+                          />
+                        )}
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => (
+                            <Chip
+                              label={option.nombre}
+                              size="small"
+                              {...getTagProps({ index })}
+                            />
+                          ))
+                        }
+                      />
                     </Grid>
                   )}
 
@@ -1050,7 +1119,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                 {editingAssignment.assignedTo.join(', ')}
               </Typography>
 
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                 Tipo de asignación
               </Typography>
               <FormControl fullWidth sx={{ mb: 3 }}>
@@ -1058,10 +1127,11 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                 <Select
                   value={editAssignmentType}
                   label="Tipo de Asignación"
-                  onChange={(e) => setEditAssignmentType(e.target.value as 'role' | 'all')}
+                  onChange={(e) => setEditAssignmentType(e.target.value as 'role' | 'all' | 'users')}
                 >
                   <MenuItem value="role">Por Rol</MenuItem>
                   <MenuItem value="all">Todos los Empleados</MenuItem>
+                  <MenuItem value="users">Por Usuario</MenuItem>
                 </Select>
               </FormControl>
 
@@ -1086,6 +1156,37 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                       <MenuItem value="comp_admin">Administrador de Compras</MenuItem>
                     </Select>
                   </FormControl>
+                </>
+              )}
+
+              {editAssignmentType === 'users' && (
+                <>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Usuarios
+                  </Typography>
+                  <Autocomplete
+                    multiple
+                    options={internalUsers}
+                    getOptionLabel={(option) => `${option.nombre} (${option.email})`}
+                    value={editSelectedUsers}
+                    onChange={(_, newValue) => setEditSelectedUsers(newValue)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Seleccionar Usuarios"
+                        placeholder="Buscar usuarios..."
+                      />
+                    )}
+                    renderTags={(value, getTagProps) =>
+                      value.map((option, index) => (
+                        <Chip
+                          label={option.nombre}
+                          size="small"
+                          {...getTagProps({ index })}
+                        />
+                      ))
+                    }
+                  />
                 </>
               )}
 
