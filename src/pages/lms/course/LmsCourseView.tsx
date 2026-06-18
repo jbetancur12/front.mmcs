@@ -20,7 +20,7 @@ import {
   Paper,
   Stack,
   Divider,
-  Skeleton
+  Skeleton,
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
@@ -28,13 +28,20 @@ import {
   SkipPrevious as SkipPreviousIcon,
   CheckCircle as CheckIcon,
   MenuBook as BookIcon,
-  VideoLibrary as VideoIcon,
-  Quiz as QuizIcon,
   Menu as MenuIcon,
   Close as CloseIcon,
   AccessTime as AccessTimeIcon,
   EmojiEvents as CertificateIcon,
-  Description as DescriptionIcon
+  Description as DescriptionIcon,
+  PlayCircleOutline as PlayCircleIcon,
+  Assignment as AssignmentIcon,
+  ChevronRight as ChevronRightIcon,
+  ExpandMore as ExpandMoreIcon,
+  RadioButtonUnchecked as RadioUncheckedIcon,
+  Shield as ShieldIcon,
+  PeopleOutline as PeopleIcon,
+  Download as DownloadIcon,
+  OpenInNew as ExternalLinkIcon
 } from '@mui/icons-material'
 import { useQueryClient } from 'react-query'
 import { useStore } from '@nanostores/react'
@@ -162,9 +169,7 @@ const LmsCourseView: React.FC = () => {
   const [certificateReadyNoticeVisible, setCertificateReadyNoticeVisible] = useState(false)
   const [pdfViewerOpen, setPdfViewerOpen] = useState(false)
   const [pdfViewerResource, setPdfViewerResource] = useState<any>(null)
-  const [autoAdvance, setAutoAdvance] = useState(false)
-  const [contentTab, setContentTab] = useState<'objetivo' | 'contenido' | 'recursos'>('objetivo')
-
+  const autoAdvance = false
   const storeUser = useStore(userStore)
 
   // Obtener curso real de la API
@@ -549,7 +554,6 @@ const LmsCourseView: React.FC = () => {
     // Start lesson timer
     setLessonStartTime(new Date())
     setLatestQuizOutcome(null)
-    setContentTab('objetivo')
   }, [currentModuleIndex, currentLessonIndex])
 
   useEffect(() => {
@@ -790,6 +794,12 @@ const LmsCourseView: React.FC = () => {
     }
   }
 
+  const getLessonTypeIcon = (type: string) => {
+    if (type === 'video') return <PlayCircleIcon sx={{ fontSize: 11 }} />
+    if (type === 'quiz') return <AssignmentIcon sx={{ fontSize: 11 }} />
+    return <BookIcon sx={{ fontSize: 11 }} />
+  }
+
   // Sidebar content
   const sidebarContent = (
     <Box
@@ -798,27 +808,49 @@ const LmsCourseView: React.FC = () => {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        bgcolor: '#1a2332',
+        bgcolor: '#0b1724',
         color: '#e2e8f0'
       }}
     >
       <Box
         sx={{
-          px: 4,
-          pt: 5,
+          px: 3,
+          pt: 4,
           pb: 4,
-          borderBottom: '1px solid rgba(255,255,255,0.06)'
+          borderBottom: '1px solid rgba(255,255,255,0.08)'
         }}
       >
-        <Typography variant='body2' sx={{ fontWeight: 600, color: '#e2e8f0', lineHeight: 1.4, mb: 2.5 }}>
+        {/* Badge */}
+        <Box
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 0.5,
+            px: 1.5,
+            py: 0.5,
+            borderRadius: 0.5,
+            bgcolor: 'rgba(13,110,138,0.3)',
+            color: '#7dd3e8',
+            mb: 2.5
+          }}
+        >
+          <ShieldIcon sx={{ fontSize: 10 }} />
+          <Typography variant='caption' sx={{ fontSize: '0.6rem', lineHeight: 1 }}>
+            {course.category || 'Empleados'} · {course.isMandatory ? 'Obligatorio' : 'Voluntario'}
+          </Typography>
+        </Box>
+
+        <Typography variant='body2' sx={{ fontWeight: 600, color: '#f0f4f8', lineHeight: 1.4, mb: 3 }}>
           {course.title}
         </Typography>
+
+        {/* Progress */}
         <Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-            <Typography variant='caption' sx={{ color: 'rgba(226,232,240,0.55)', fontSize: '0.7rem' }}>
-              Progreso del curso
+            <Typography variant='caption' sx={{ color: 'rgba(240,244,248,0.5)', fontSize: '0.65rem' }}>
+              Tu progreso
             </Typography>
-            <Typography variant='caption' sx={{ color: '#5ecae0', fontWeight: 700, fontSize: '0.7rem' }}>
+            <Typography variant='caption' sx={{ color: '#7dd3e8', fontWeight: 700, fontSize: '0.7rem' }}>
               {Math.round(courseProgress.percentage)}%
             </Typography>
           </Box>
@@ -831,13 +863,13 @@ const LmsCourseView: React.FC = () => {
               bgcolor: 'rgba(255,255,255,0.08)',
               '& .MuiLinearProgress-bar': {
                 borderRadius: 999,
-                bgcolor: '#0d6e8a',
+                bgcolor: '#0d8aaa',
                 transition: 'width 0.5s ease'
               }
             }}
           />
-          <Typography variant='caption' sx={{ color: 'rgba(226,232,240,0.4)', fontSize: '0.65rem', mt: 1, display: 'block' }}>
-            {courseProgress.completed} de {courseProgress.total} lecciones
+          <Typography variant='caption' sx={{ color: 'rgba(240,244,248,0.38)', fontSize: '0.65rem', mt: 0.5, display: 'block' }}>
+            {courseProgress.completed} de {courseProgress.total} lecciones completadas
           </Typography>
         </Box>
       </Box>
@@ -845,41 +877,50 @@ const LmsCourseView: React.FC = () => {
       <Box sx={{ flex: 1, overflow: 'auto', py: 1 }}>
         {course.modules.map((module, moduleIndex) => {
           const isExpanded = expandedModules.has(moduleIndex)
+          const modCompleted = module.lessons.filter(l => isLessonCompleted(l.id)).length
+          const modTotal = module.lessons.length
 
           return (
-            <Box key={module.id}>
+            <Box key={module.id} sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              {/* Module header */}
               <Box
                 onClick={() => handleToggleModule(moduleIndex)}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  px: 4,
+                  px: 3,
                   py: 2,
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
                   '&:hover': { bgcolor: 'rgba(255,255,255,0.04)' }
                 }}
               >
-                <Typography
-                  variant='caption'
-                  sx={{
-                    color: 'rgba(226,232,240,0.45)',
-                    fontWeight: 600,
-                    letterSpacing: '0.07em',
-                    textTransform: 'uppercase',
-                    fontSize: '0.6rem'
-                  }}
-                >
-                  {module.title}
-                </Typography>
-                <Box component='span' sx={{ color: 'rgba(226,232,240,0.3)', fontSize: 12 }}>
-                  {isExpanded ? '▼' : '▶'}
+                <Box>
+                  <Typography
+                    variant='caption'
+                    sx={{
+                      color: '#c8d8e8',
+                      fontWeight: 600,
+                      fontSize: '0.7rem',
+                      lineHeight: 1.3,
+                      display: 'block'
+                    }}
+                  >
+                    {module.title}
+                  </Typography>
+                  <Typography variant='caption' sx={{ color: 'rgba(200,216,232,0.45)', fontSize: '0.6rem' }}>
+                    {modCompleted}/{modTotal} lecciones
+                  </Typography>
+                </Box>
+                <Box sx={{ color: 'rgba(200,216,232,0.5)', display: 'flex', flexShrink: 0 }}>
+                  {isExpanded ? <ExpandMoreIcon sx={{ fontSize: 14 }} /> : <ChevronRightIcon sx={{ fontSize: 14 }} />}
                 </Box>
               </Box>
 
+              {/* Lessons */}
               {isExpanded && (
-                <Box>
+                <Box sx={{ pb: 0.5 }}>
                   {module.lessons.map((lesson, lessonIndex) => {
                     const isCompleted = isLessonCompleted(lesson.id)
                     const isUnlocked = isLessonUnlocked(moduleIndex, lessonIndex)
@@ -891,41 +932,59 @@ const LmsCourseView: React.FC = () => {
                         onClick={() => isUnlocked && handleNavigateToLesson(moduleIndex, lessonIndex)}
                         sx={{
                           display: 'flex',
-                          gap: 2,
-                          px: 4,
+                          gap: 1.5,
+                          pl: 3,
+                          pr: 3,
                           py: 1.5,
                           cursor: isUnlocked ? 'pointer' : 'default',
                           transition: 'all 0.15s ease',
                           opacity: isUnlocked ? 1 : 0.45,
-                          bgcolor: isCurrent ? 'rgba(13,110,138,0.2)' : 'transparent',
+                          bgcolor: isCurrent ? 'rgba(13,110,138,0.18)' : 'transparent',
                           borderLeft: '2px solid',
-                          borderLeftColor: isCurrent ? '#0d6e8a' : 'transparent',
+                          borderLeftColor: isCurrent ? '#0d8aaa' : 'transparent',
                           '&:hover': isUnlocked ? { bgcolor: isCurrent ? 'rgba(13,110,138,0.25)' : 'rgba(255,255,255,0.04)' } : {}
                         }}
                       >
-                        <Box sx={{ mt: 0.25, flexShrink: 0, color: isCompleted ? '#5ecae0' : isCurrent ? '#94d8e8' : 'rgba(226,232,240,0.35)' }}>
+                        {/* Status icon */}
+                        <Box
+                          sx={{
+                            mt: 0.25,
+                            flexShrink: 0,
+                            color: isCompleted
+                              ? '#4dc8e0'
+                              : isCurrent
+                              ? '#9de4f0'
+                              : 'rgba(200,216,232,0.3)'
+                          }}
+                        >
                           {isCompleted ? (
                             <CheckIcon sx={{ fontSize: 14 }} />
                           ) : (
-                            <Box sx={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid currentColor' }} />
+                            <RadioUncheckedIcon sx={{ fontSize: 14 }} />
                           )}
                         </Box>
+
+                        {/* Text */}
                         <Box sx={{ minWidth: 0 }}>
                           <Typography
                             variant='body2'
                             sx={{
-                              fontSize: '0.75rem',
+                              fontSize: '0.7rem',
                               lineHeight: 1.3,
-                              color: isCurrent ? '#e2e8f0' : isCompleted ? 'rgba(226,232,240,0.65)' : 'rgba(226,232,240,0.8)',
+                              color: isCurrent
+                                ? '#f0f4f8'
+                                : isCompleted
+                                ? 'rgba(240,244,248,0.55)'
+                                : 'rgba(240,244,248,0.82)',
                               fontWeight: isCurrent ? 500 : 400
                             }}
                           >
                             {lesson.title}
                           </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                            <Box sx={{ color: 'rgba(226,232,240,0.3)', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                              {lesson.type === 'video' ? <VideoIcon sx={{ fontSize: 11 }} /> : lesson.type === 'quiz' ? <QuizIcon sx={{ fontSize: 11 }} /> : <BookIcon sx={{ fontSize: 11 }} />}
-                              <Typography variant='caption' sx={{ fontSize: '0.6rem', color: 'rgba(226,232,240,0.35)' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                            <Box sx={{ color: 'rgba(200,216,232,0.35)', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              {getLessonTypeIcon(lesson.type)}
+                              <Typography variant='caption' sx={{ fontSize: '0.6rem', color: 'rgba(200,216,232,0.35)' }}>
                                 {lesson.duration}
                               </Typography>
                             </Box>
@@ -984,7 +1043,7 @@ const LmsCourseView: React.FC = () => {
             position: 'relative',
             height: '100%',
             borderRight: 'none',
-            background: '#1a2332'
+            background: '#0b1724'
           }
         }}
       >
@@ -1006,8 +1065,20 @@ const LmsCourseView: React.FC = () => {
         overflow: 'hidden',
         marginLeft: !isMobile && sidebarOpen ? 0 : 0
       }}>
-        {/* Header */}
-        <Box sx={{ px: { xs: 2, md: 3 }, py: 1.5, borderBottom: '1px solid #e2e8f0', bgcolor: '#ffffff', display: 'flex', alignItems: 'center', gap: 1 }}>
+
+        {/* Header nav */}
+        <Box
+          sx={{
+            px: { xs: 2, md: 3 },
+            height: 52,
+            borderBottom: '1px solid #e2e8f0',
+            bgcolor: '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            flexShrink: 0
+          }}
+        >
           <IconButton onClick={() => navigate(-1)} size='small'>
             <ArrowBackIcon sx={{ fontSize: 18 }} />
           </IconButton>
@@ -1016,16 +1087,15 @@ const LmsCourseView: React.FC = () => {
               <MenuIcon sx={{ fontSize: 18 }} />
             </IconButton>
           )}
-          <Typography variant='body2' sx={{ color: '#0d6e8a', fontWeight: 600, fontSize: '0.8rem' }}>
+
+          <Typography variant='caption' sx={{ fontWeight: 500, color: '#0f1117', fontSize: '0.7rem' }}>
             {course.title}
           </Typography>
-          <Typography variant='body2' sx={{ color: '#94a3b8', fontSize: '0.7rem' }}>/</Typography>
-          <Typography variant='caption' sx={{ color: '#64748b' }}>
+          <Typography variant='caption' sx={{ color: '#94a3b8' }}>/</Typography>
+          <Typography variant='caption' sx={{ color: '#0d6e8a', fontWeight: 600, fontSize: '0.7rem' }}>
             {currentLesson?.title || 'Curso'}
           </Typography>
           <Box sx={{ flex: 1 }} />
-          <Chip label={`${Math.round(courseProgress.percentage)}%`} size='small' sx={{ height: 22, fontSize: '0.65rem', bgcolor: 'rgba(13,110,138,0.1)', color: '#0d6e8a', fontWeight: 700 }} />
-          {course.hasCertificate && <CertificateIcon sx={{ fontSize: 16, color: '#64748b' }} />}
         </Box>
 
         {/* Lesson content */}
@@ -1033,68 +1103,25 @@ const LmsCourseView: React.FC = () => {
           <Box sx={{ maxWidth: 1320, mx: 'auto', p: { xs: 2, md: 3 } }}>
           {currentLesson ? (
             <Box key={`${currentModuleIndex}-${currentLessonIndex}`} sx={{ ...fadeIn }}>
-              {/* Breadcrumb */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <Typography variant='caption' sx={{ color: '#64748b' }}>
-                  {course.modules[currentModuleIndex]?.title || ''}
-                </Typography>
-                <Typography variant='caption' sx={{ color: '#94a3b8' }}>/</Typography>
-                <Typography variant='caption' sx={{ color: '#0d6e8a', fontWeight: 600 }}>
-                  {currentLesson.title}
-                </Typography>
-              </Box>
-
               {/* Title */}
-              <Typography variant='h5' sx={{ fontWeight: 700, color: '#0f172a', mb: 2 }}>
+              <Typography variant='h5' sx={{ fontWeight: 700, color: '#0f1117', mb: 2, fontSize: '1.25rem' }}>
                 {currentLesson.title}
               </Typography>
 
               {/* Meta */}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap', mb: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <AccessTimeIcon sx={{ fontSize: 13, color: '#64748b' }} />
-                  <Typography variant='caption' sx={{ color: '#64748b' }}>
+                  <AccessTimeIcon sx={{ fontSize: 13, color: '#6b6b72' }} />
+                  <Typography variant='caption' sx={{ color: '#6b6b72', fontSize: '0.7rem' }}>
                     {currentLesson.duration} · {getContentTypeLabel(currentLesson.type)}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Box component='span' sx={{ color: '#64748b', fontSize: 13 }}>📖</Box>
-                  <Typography variant='caption' sx={{ color: '#64748b' }}>
-                    {course.category}
+                  <PeopleIcon sx={{ fontSize: 13, color: '#6b6b72' }} />
+                  <Typography variant='caption' sx={{ color: '#6b6b72', fontSize: '0.7rem' }}>
+                    {course.category} · {course.isMandatory ? 'Obligatorio' : 'Voluntario'}
                   </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Box component='span' sx={{ color: '#64748b', fontSize: 13 }}>📁</Box>
-                  <Typography variant='caption' sx={{ color: '#64748b' }}>
-                    Módulo {currentModuleIndex + 1} de {course.modules.length}
-                  </Typography>
-                </Box>
-                {isLessonCompleted(currentLesson.id) && (
-                  <Chip label="Completado" size='small' sx={{ height: 20, fontSize: '0.6rem', bgcolor: 'rgba(13,110,138,0.1)', color: '#0d6e8a', fontWeight: 600 }} />
-                )}
-              </Box>
-
-              {/* Tabs */}
-              <Box sx={{ display: 'flex', gap: 0, mb: 3, borderBottom: '1px solid #e2e8f0' }}>
-                {(['objetivo', 'contenido', 'recursos'] as const).map((tab) => (
-                  <Box
-                    key={tab}
-                    onClick={() => setContentTab(tab)}
-                    sx={{
-                      px: 3,
-                      pb: 2,
-                      cursor: 'pointer',
-                      fontSize: '0.8rem',
-                      fontWeight: contentTab === tab ? 600 : 400,
-                      color: contentTab === tab ? '#0d6e8a' : '#64748b',
-                      borderBottom: contentTab === tab ? '2px solid #0d6e8a' : '2px solid transparent',
-                      mb: '-1px',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    {tab === 'objetivo' ? 'Objetivo' : tab === 'contenido' ? 'Contenido' : 'Recursos'}
-                  </Box>
-                ))}
               </Box>
 
               {/* Alerts */}
@@ -1132,160 +1159,218 @@ const LmsCourseView: React.FC = () => {
                 </Alert>
               )}
 
-              {/* Tab content */}
-              {contentTab === 'objetivo' && (
-                <Box sx={{ maxWidth: 720 }}>
-                  {currentLesson.content.description && (
-                    <Typography variant='body2' sx={{ color: '#475569', lineHeight: 1.8, mb: 3 }}>
-                      {currentLesson.content.description}
-                    </Typography>
-                  )}
-                  <Box sx={{ p: 3, borderRadius: 2, bgcolor: '#f1f5f9', border: '1px solid #e2e8f0', mb: 3 }}>
-                    <Typography variant='body2' sx={{ color: '#0f172a', fontWeight: 600, mb: 1 }}>
-                      Información de la lección
-                    </Typography>
-                    <Typography variant='caption' sx={{ color: '#64748b', display: 'block', mb: 0.5 }}>
-                      Tipo: {getContentTypeLabel(currentLesson.type)}
-                    </Typography>
-                    <Typography variant='caption' sx={{ color: '#64748b', display: 'block', mb: 0.5 }}>
-                      Duración estimada: {currentLesson.duration}
-                    </Typography>
-                    <Typography variant='caption' sx={{ color: '#64748b', display: 'block' }}>
-                      Estado: {isLessonCompleted(currentLesson.id) ? 'Completada' : currentLessonCompleted ? 'Completada' : 'Pendiente'}
-                    </Typography>
-                  </Box>
-                </Box>
-              )}
+              {/* Content */}
+              <Box sx={{ maxWidth: 720, mb: 4 }}>
+                {/* Description / intro */}
+                {currentLesson.content.description && (
+                  <Typography variant='body2' sx={{ color: '#0f1117', lineHeight: 1.8, mb: 4, fontSize: '0.8rem' }}>
+                    {currentLesson.content.description}
+                  </Typography>
+                )}
 
-              {contentTab === 'contenido' && (
-                <Box>
-                  {/* Video */}
-                  {currentLesson.type === 'video' && currentLesson.content.videoUrl && (
-                    <Box sx={{ mb: 3 }}>
-                      <LmsVideoPlayer
-                        src={currentLesson.content.videoUrl}
-                        videoSource={currentLesson.content.videoSource || 'youtube'}
-                        title={currentLesson.title}
-                        onComplete={() => handleLessonComplete(currentLesson.id)}
-                      />
-                    </Box>
-                  )}
-
-                  {/* Text */}
-                  {currentLesson.type === 'text' && currentLesson.content.text && (
-                    <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid #e2e8f0', mb: 3, bgcolor: '#ffffff' }}>
-                      <Typography
-                        component='div'
-                        sx={{
-                          '& h1, & h2, & h3': { color: '#0f172a', mb: 2, mt: 3 },
-                          '& p': { mb: 2, lineHeight: 1.8, color: '#334155', fontSize: '0.9rem' },
-                          '& code': { bgcolor: '#f1f5f9', px: 1, borderRadius: 1, fontFamily: 'monospace' },
-                          '& pre': { bgcolor: '#0f172a', color: '#e2e8f0', p: 2, borderRadius: 1, overflow: 'auto' },
-                          '& ul, & ol': { mb: 2, pl: 3 },
-                          '& li': { mb: 1, color: '#334155' }
-                        }}
-                        dangerouslySetInnerHTML={{ __html: currentLesson.content.text }}
-                      />
-                    </Paper>
-                  )}
-
-                  {/* Quiz */}
-                  {currentLesson.type === 'quiz' && currentQuizConfig && (
-                    <LmsQuizPlayer
-                      quizConfig={currentQuizConfig}
-                      userAttempts={userQuizAttempts}
-                      onComplete={handleQuizComplete}
+                {/* Video */}
+                {currentLesson.type === 'video' && currentLesson.content.videoUrl && (
+                  <Box sx={{ mb: 3 }}>
+                    <LmsVideoPlayer
+                      src={currentLesson.content.videoUrl}
+                      videoSource={currentLesson.content.videoSource || 'youtube'}
+                      title={currentLesson.title}
+                      onComplete={() => handleLessonComplete(currentLesson.id)}
                     />
-                  )}
+                  </Box>
+                )}
 
-                  {/* Completion button */}
-                  {!isLessonCompleted(currentLesson.id) && currentLesson.type !== 'quiz' && (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                {/* Text */}
+                {currentLesson.type === 'text' && currentLesson.content.text && (
+                  <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid #e2e8f0', mb: 3, bgcolor: '#ffffff' }}>
+                    <Typography
+                      component='div'
+                      sx={{
+                        '& h1, & h2, & h3': { color: '#0f172a', mb: 2, mt: 3 },
+                        '& p': { mb: 2, lineHeight: 1.8, color: '#334155', fontSize: '0.9rem' },
+                        '& code': { bgcolor: '#f1f5f9', px: 1, borderRadius: 1, fontFamily: 'monospace' },
+                        '& pre': { bgcolor: '#0f172a', color: '#e2e8f0', p: 2, borderRadius: 1, overflow: 'auto' },
+                        '& ul, & ol': { mb: 2, pl: 3 },
+                        '& li': { mb: 1, color: '#334155' }
+                      }}
+                      dangerouslySetInnerHTML={{ __html: currentLesson.content.text }}
+                    />
+                  </Paper>
+                )}
+
+                {/* Quiz */}
+                {currentLesson.type === 'quiz' && currentQuizConfig && (
+                  <LmsQuizPlayer
+                    quizConfig={currentQuizConfig}
+                    userAttempts={userQuizAttempts}
+                    onComplete={handleQuizComplete}
+                  />
+                )}
+
+
+
+                {/* Resources */}
+                {!!currentLesson.content.resources?.length && (
+                  <Box sx={{ pt: 2 }}>
+                    <Typography variant='body2' sx={{ fontWeight: 600, color: '#0f1117', mb: 2, fontSize: '0.85rem' }}>
+                      Recursos de apoyo
+                    </Typography>
+                    <Stack spacing={1.5}>
+                      {currentLesson.content.resources.map((resource) => (
+                        <Box
+                          key={resource.id}
+                          onClick={() => handleOpenResource(resource)}
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1.5,
+                            px: 2,
+                            py: 1.5,
+                            borderRadius: 2,
+                            border: '1px solid #e2e8f0',
+                            bgcolor: '#ffffff',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                            '&:hover': { borderColor: '#0d6e8a', bgcolor: '#f8fbfc' },
+                            '&:hover .resource-download': { color: '#0d6e8a' }
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 1,
+                              bgcolor: '#f0eeea',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0
+                            }}
+                          >
+                            {resource.resourceType === 'link' ? (
+                              <ExternalLinkIcon sx={{ fontSize: 14, color: '#0d6e8a' }} />
+                            ) : (
+                              <DescriptionIcon sx={{ fontSize: 14, color: '#0d6e8a' }} />
+                            )}
+                          </Box>
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography variant='body2' sx={{ fontWeight: 500, color: '#0f1117', fontSize: '0.75rem' }}>
+                              {resource.title}
+                            </Typography>
+                            <Typography variant='caption' sx={{ color: '#6b6b72', fontSize: '0.65rem' }}>
+                              {resource.resourceType === 'pdf' ? 'PDF' : resource.resourceType === 'link' ? 'Enlace' : 'Documento'}
+                              {resource.description ? ` · ${resource.description}` : ''}
+                            </Typography>
+                          </Box>
+                          <DownloadIcon sx={{ fontSize: 13, color: '#6b6b72', flexShrink: 0, transition: 'color 0.15s ease' }} className="resource-download" />
+                        </Box>
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+              </Box>
+
+              {/* Footer - completion toggle + CTA */}
+              <Box
+                sx={{
+                  mt: 4,
+                  pt: 3,
+                  pb: 1,
+                  borderTop: '1px solid #e2e8f0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 2
+                }}
+              >
+                {/* Mark complete toggle */}
+                <Box
+                  onClick={() => {
+                    if (!currentLessonCompleted && currentLesson && currentLesson.type !== 'quiz') {
+                      handleLessonComplete(currentLesson.id)
+                    }
+                  }}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    cursor: currentLesson && currentLesson.type !== 'quiz' ? 'pointer' : 'default',
+                    userSelect: 'none'
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: 0.5,
+                      border: '2px solid',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.15s ease',
+                      borderColor: currentLessonCompleted ? '#0d6e8a' : '#d1d5db',
+                      bgcolor: currentLessonCompleted ? '#0d6e8a' : 'transparent'
+                    }}
+                  >
+                    {currentLessonCompleted && <CheckIcon sx={{ fontSize: 13, color: '#ffffff' }} />}
+                  </Box>
+                  <Typography variant='caption' sx={{ color: currentLessonCompleted ? '#0d6e8a' : '#6b6b72', fontWeight: 500, fontSize: '0.75rem' }}>
+                    {currentLessonCompleted ? 'Completado' : 'Marcar como completado'}
+                  </Typography>
+                </Box>
+
+                {/* CTA */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Typography variant='caption' sx={{ color: '#6b6b72', fontSize: '0.65rem', display: { xs: 'none', sm: 'block' } }}>
+                    Lección {currentLessonGlobalIndex} de {totalLessons}
+                    {estimatedMinutesRemaining > 0 ? ` · ~${Math.max(1, estimatedMinutesRemaining)} min` : ''}
+                  </Typography>
+                  {currentLesson && currentLesson.type !== 'quiz' && !currentLessonCompleted && (
+                    <Button
+                      variant='contained'
+                      size='small'
+                      onClick={() => handleLessonComplete(currentLesson.id)}
+                      disabled={updateProgressMutation.isLoading}
+                      endIcon={<ChevronRightIcon />}
+                      sx={{
+                        borderRadius: 1,
+                        px: 2.5,
+                        py: 1,
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        bgcolor: '#0d6e8a',
+                        '&:hover': { bgcolor: '#0b5e75', opacity: 0.9 },
+                        '&:active': { transform: 'scale(0.98)' },
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {updateProgressMutation.isLoading ? 'Guardando...' : 'Completar y continuar'}
+                    </Button>
+                  )}
+                  {currentLessonCompleted && (
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Button
+                        variant='outlined'
+                        size='small'
+                        startIcon={<SkipPreviousIcon />}
+                        onClick={handlePreviousLesson}
+                        disabled={!prevLesson}
+                        sx={{ borderRadius: 1, px: 2, fontSize: '0.75rem', borderColor: '#d1d5db', color: '#374151' }}
+                      >
+                        {isMobile ? 'Anterior' : 'Lección Anterior'}
+                      </Button>
                       <Button
                         variant='contained'
-                        size='large'
-                        onClick={() => handleLessonComplete(currentLesson.id)}
-                        disabled={updateProgressMutation.isLoading}
-                        sx={{
-                          minWidth: 260,
-                          borderRadius: 2,
-                          py: 1.25,
-                          fontSize: '0.9rem',
-                          fontWeight: 600,
-                          bgcolor: '#0d6e8a',
-                          '&:hover': { bgcolor: '#0b5e75' },
-                          boxShadow: '0 4px 12px rgba(13,110,138,0.25)'
-                        }}
+                        size='small'
+                        endIcon={<SkipNextIcon />}
+                        onClick={handleNextLesson}
+                        disabled={!nextLesson || !isLessonUnlocked(nextLesson.moduleIndex, nextLesson.lessonIndex)}
+                        sx={{ borderRadius: 1, px: 2, fontSize: '0.75rem', bgcolor: '#0d6e8a', '&:hover': { bgcolor: '#0b5e75' } }}
                       >
-                        {updateProgressMutation.isLoading ? 'Guardando...' : 'Completar y continuar'}
+                        {isMobile ? 'Siguiente' : 'Siguiente Lección'}
                       </Button>
                     </Box>
                   )}
-                </Box>
-              )}
-
-              {contentTab === 'recursos' && (
-                <Box>
-                  {!!currentLesson.content.resources?.length ? (
-                    <Stack spacing={1.5}>
-                      {currentLesson.content.resources.map((resource) => (
-                        <Paper
-                          key={resource.id}
-                          sx={{ p: 2, borderRadius: 2, border: '1px solid #e2e8f0', cursor: 'pointer', transition: 'all 0.15s ease', '&:hover': { borderColor: '#0d6e8a', boxShadow: '0 2px 8px rgba(13,110,138,0.1)' } }}
-                          onClick={() => handleOpenResource(resource)}
-                        >
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Stack direction='row' spacing={1.5} alignItems='center'>
-                              <DescriptionIcon sx={{ color: resource.resourceType === 'pdf' ? '#d32f2f' : '#64748b', fontSize: 20 }} />
-                              <Box>
-                                <Typography variant='body2' sx={{ fontWeight: 600, color: '#0f172a' }}>{resource.title}</Typography>
-                                {resource.description && <Typography variant='caption' color='text.secondary'>{resource.description}</Typography>}
-                              </Box>
-                            </Stack>
-                            <Chip label={resource.resourceType === 'pdf' ? 'PDF' : resource.resourceType === 'link' ? 'Enlace' : 'Doc'} size='small' sx={{ height: 20, fontSize: '0.6rem', fontWeight: 700 }} />
-                          </Box>
-                        </Paper>
-                      ))}
-                    </Stack>
-                  ) : (
-                    <Typography variant='body2' color='text.secondary'>Esta lección no tiene recursos de apoyo.</Typography>
-                  )}
-                </Box>
-              )}
-
-              {/* Footer */}
-              <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid #e2e8f0' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap', mb: 2 }}>
-                  <Typography variant='caption' color='text.secondary' sx={{ fontWeight: 500 }}>
-                    Lección {currentLessonGlobalIndex} de {totalLessons}
-                    {' · ~'}{Math.max(1, estimatedMinutesRemaining)} min restantes
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant='caption' color='text.secondary'>Auto</Typography>
-                    <Box
-                      component='span'
-                      onClick={() => setAutoAdvance(!autoAdvance)}
-                      sx={{
-                        width: 36, height: 20, borderRadius: 10,
-                        bgcolor: autoAdvance ? '#0d6e8a' : 'rgba(0,0,0,0.12)',
-                        position: 'relative', cursor: 'pointer', transition: 'background 0.2s ease',
-                        '&::after': {
-                          content: '""', position: 'absolute', top: 2,
-                          left: autoAdvance ? 18 : 2, width: 16, height: 16,
-                          borderRadius: '50%', bgcolor: 'white', transition: 'left 0.2s ease',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
-                        }
-                      }}
-                    />
-                  </Box>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
-                  <Button variant='outlined' startIcon={<SkipPreviousIcon />} onClick={handlePreviousLesson} disabled={!prevLesson} sx={{ borderRadius: 2, px: 2.5, fontSize: '0.8rem' }}>
-                    {isMobile ? 'Anterior' : 'Lección Anterior'}
-                  </Button>
-                  <Button variant='contained' endIcon={<SkipNextIcon />} onClick={handleNextLesson} disabled={!nextLesson || !isLessonUnlocked(nextLesson.moduleIndex, nextLesson.lessonIndex)} sx={{ borderRadius: 2, px: 2.75, fontSize: '0.8rem', bgcolor: '#0d6e8a', '&:hover': { bgcolor: '#0b5e75' } }}>
-                    {isMobile ? 'Siguiente' : 'Siguiente Lección'}
-                  </Button>
                 </Box>
               </Box>
             </Box>

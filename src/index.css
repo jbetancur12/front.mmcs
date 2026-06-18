@@ -127,3 +127,37 @@
     transition: transform 300ms ease-in;
   }
 }
+
+/* =============================
+   LMS Course View Theme Tokens
+   (from MejorarUX_UI Figma)
+   ============================= */
+:root {
+  --lms-primary: #0d6e8a;
+  --lms-primary-foreground: #ffffff;
+  --lms-secondary: #e8f4f7;
+  --lms-secondary-foreground: #0d4a5e;
+  --lms-sidebar: #0b1724;
+  --lms-sidebar-foreground: #e2e8f0;
+  --lms-sidebar-accent: rgba(13,110,138,0.18);
+  --lms-sidebar-border: rgba(255,255,255,0.08);
+  --lms-muted: #f0eeea;
+  --lms-muted-foreground: #6b6b72;
+  --lms-background: #f8f7f4;
+  --lms-foreground: #0f1117;
+  --lms-card: #ffffff;
+  --lms-border: rgba(15, 17, 23, 0.1);
+  --lms-warning-bg: #fff8ec;
+  --lms-warning-border: #f5d580;
+  --lms-warning-accent: #e6a817;
+  --lms-progress-track: rgba(255,255,255,0.08);
+  --lms-progress-fill: #0d8aaa;
+  --lms-completed: #4dc8e0;
+  --lms-active-text: #f0f4f8;
+  --lms-lesson-title: #c8d8e8;
+  --lms-badge-bg: rgba(13,110,138,0.3);
+  --lms-badge-text: #7dd3e8;
+}
+
+/* DM Sans font for LMS course view */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
