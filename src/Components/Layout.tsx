@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import Header from './Header'
 import SideBar from './SideBar'
 import SessionExpiryBanner from './Authentication/SessionExpiryBanner'
 
 const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
-  // userMinimized: si el usuario ha minimizado el sidebar
+  const location = useLocation()
+  const isCourseView = location.pathname.match(/^\/lms\/course\/\d+$/)
   const [userMinimized, setUserMinimized] = useState(false)
   // hovered: si el mouse está sobre el sidebar
   const [hovered, setHovered] = useState(false)
@@ -24,25 +26,27 @@ const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
     <>
       <Header toggleMobileMenu={toggleMobileMenu} />
       {/* Overlay para cerrar el menú móvil */}
-      {mobileMenuOpen && (
+      {mobileMenuOpen && !isCourseView && (
         <div
           className='fixed inset-0 z-20 bg-black/60 backdrop-blur-[2px] lg:hidden'
           onClick={toggleMobileMenu}
         />
       )}
       <div className='flex pt-16 overflow-hidden bg-gray-50 dark:bg-gray-900'>
-        <SideBar
-          sidebarMinimized={sidebarMinimized}
-          userMinimized={userMinimized}
-          setUserMinimized={setUserMinimized}
-          setHovered={setHovered}
-          hoverEnabled={hoverEnabled}
-          setHoverEnabled={setHoverEnabled}
-          mobileMenuOpen={mobileMenuOpen}
-          setMobileMenuOpen={setMobileMenuOpen}
-        />
+        {!isCourseView && (
+          <SideBar
+            sidebarMinimized={sidebarMinimized}
+            userMinimized={userMinimized}
+            setUserMinimized={setUserMinimized}
+            setHovered={setHovered}
+            hoverEnabled={hoverEnabled}
+            setHoverEnabled={setHoverEnabled}
+            mobileMenuOpen={mobileMenuOpen}
+            setMobileMenuOpen={setMobileMenuOpen}
+          />
+        )}
         <div
-          className={`relative w-full h-full overflow-y-auto bg-gray-50 dark:bg-gray-900 ${sidebarMinimized ? 'lg:ml-20' : 'lg:ml-64'}`}
+          className={`relative w-full h-full overflow-y-auto bg-gray-50 dark:bg-gray-900 ${!isCourseView ? (sidebarMinimized ? 'lg:ml-20' : 'lg:ml-64') : ''}`}
         >
           <SessionExpiryBanner />
           <main>

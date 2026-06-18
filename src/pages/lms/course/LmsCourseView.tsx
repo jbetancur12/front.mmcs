@@ -748,7 +748,7 @@ const LmsCourseView: React.FC = () => {
     return (
       <>
       <style>{styles}</style>
-      <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', bgcolor: '#f6fbf8' }}>
+      <Box sx={{ display: 'flex', height: '100%', minHeight: '100vh', overflow: 'hidden', bgcolor: '#f6fbf8' }}>
         <Box sx={{ width: 344, display: { xs: 'none', md: 'block' }, p: 2 }}>
           <Box sx={{ mb: 2 }}>
             <Skeleton variant="text" width={100} height={14} sx={{ mb: 1 }} />
@@ -1008,7 +1008,8 @@ const LmsCourseView: React.FC = () => {
     <Box
       sx={{
         display: 'flex',
-        height: '100vh',
+        height: '100%',
+        minHeight: '100vh',
         overflow: 'hidden',
         background:
           'radial-gradient(circle at top left, rgba(67,199,127,0.12), transparent 30%), linear-gradient(180deg, #f6fbf8 0%, #edf5f1 100%)'
