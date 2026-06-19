@@ -28,6 +28,7 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import AddBusinessOutlinedIcon from '@mui/icons-material/AddBusinessOutlined'
 import AnalyticsOutlinedIcon from '@mui/icons-material/AnalyticsOutlined'
+import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
@@ -711,6 +712,7 @@ const CalibrationServicesPage = () => {
     getStoredViewMode
   )
   const [showOnlyMyLoad, setShowOnlyMyLoad] = useState(false)
+  const [showOnlyReadyForInvoice, setShowOnlyReadyForInvoice] = useState(false)
   const kanbanScrollRef = useRef<HTMLDivElement | null>(null)
   const kanbanTopScrollRef = useRef<HTMLDivElement | null>(null)
   const [kanbanScrollWidth, setKanbanScrollWidth] = useState(0)
@@ -844,6 +846,10 @@ const CalibrationServicesPage = () => {
       }
     }
 
+    if (showOnlyReadyForInvoice && !(service.cuts || []).some(c => c.status === 'ready_for_invoicing')) {
+      return false
+    }
+
     return matchesSiteFilter(service, siteFilter)
   })
 
@@ -851,6 +857,7 @@ const CalibrationServicesPage = () => {
     let pendingApproval = 0, requestedChanges = 0, odsIssued = 0, pendingProgramming = 0
     let scheduled = 0, inExecution = 0, technicallyCompleted = 0, closed = 0
     let readyToClose = 0, pendingDocumentControl = 0, readyForOds = 0, urgent = 0
+    let readyForInvoice = 0
 
     for (const service of visibleServices) {
       if (service.status === 'pending_approval') pendingApproval++
@@ -865,12 +872,13 @@ const CalibrationServicesPage = () => {
       if (service.slaIndicator?.activePhase === 'document_control') pendingDocumentControl++
       if (service.status === 'approved' && service.approvalStatus === 'approved' && !service.odsCode) readyForOds++
       if (['yellow', 'red'].includes(service.slaIndicator?.color || 'gray')) urgent++
+      if ((service.cuts || []).some(c => c.status === 'ready_for_invoicing')) readyForInvoice++
     }
 
-    return { pendingApproval, requestedChanges, odsIssued, pendingProgramming, scheduled, inExecution, technicallyCompleted, closed, readyToClose, pendingDocumentControl, readyForOds, urgent }
+    return { pendingApproval, requestedChanges, odsIssued, pendingProgramming, scheduled, inExecution, technicallyCompleted, closed, readyToClose, pendingDocumentControl, readyForOds, urgent, readyForInvoice }
   }, [visibleServices])
 
-  const { pendingApproval: pendingApprovalCount, requestedChanges: requestedChangesCount, odsIssued: odsIssuedCount, pendingProgramming: pendingProgrammingCount, scheduled: scheduledCount, inExecution: inExecutionCount, technicallyCompleted: technicallyCompletedCount, closed: closedCount, readyToClose: readyToCloseCount, pendingDocumentControl: pendingDocumentControlCount, readyForOds: readyForOdsCount, urgent: urgentCount } = counts
+  const { pendingApproval: pendingApprovalCount, requestedChanges: requestedChangesCount, odsIssued: odsIssuedCount, pendingProgramming: pendingProgrammingCount, scheduled: scheduledCount, inExecution: inExecutionCount, technicallyCompleted: technicallyCompletedCount, closed: closedCount, readyToClose: readyToCloseCount, pendingDocumentControl: pendingDocumentControlCount, readyForOds: readyForOdsCount, urgent: urgentCount, readyForInvoice: readyForInvoiceCount } = counts
   const activeFiltersCount = [
     search.trim(),
     statusFilter !== FILTER_ALL,
@@ -880,7 +888,8 @@ const CalibrationServicesPage = () => {
     siteFilter.trim(),
     customerFilter !== FILTER_ALL,
     metrologistFilter !== FILTER_ALL,
-    showOnlyMyLoad
+    showOnlyMyLoad,
+    showOnlyReadyForInvoice
   ].filter(Boolean).length
 
   const clearFilters = () => {
@@ -893,6 +902,7 @@ const CalibrationServicesPage = () => {
     setCustomerFilter(FILTER_ALL)
     setMetrologistFilter(FILTER_ALL)
     setShowOnlyMyLoad(false)
+    setShowOnlyReadyForInvoice(false)
   }
 
   const kanbanColumns = useMemo(
@@ -1259,8 +1269,28 @@ const CalibrationServicesPage = () => {
                   >
                     {new Date(service.updatedAt).toLocaleDateString('es-CO')}
                   </Typography>
-                </Grid>
-              </Grid>
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', cursor: 'default', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: readyForInvoiceCount > 0 ? `linear-gradient(180deg, ${ui.info}, ${alpha(ui.info, 0.4)})` : `linear-gradient(180deg, ${ui.muted}, ${alpha(ui.muted, 0.3)})` } }}>
+            <CardContent sx={{ p: 2 }}>
+              <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
+                <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
+                  Por facturar
+                </Typography>
+                <Box sx={{ width: 42, height: 42, borderRadius: '14px', background: `linear-gradient(135deg, ${alpha(ui.info, 0.15)} 0%, ${alpha(ui.info, 0.08)} 100%)`, color: ui.info, display: 'grid', placeItems: 'center', boxShadow: `0 2px 8px ${alpha(ui.info, 0.12)}` }}>
+                  <AssignmentTurnedInOutlinedIcon fontSize='small' />
+                </Box>
+              </Stack>
+              <Typography variant='h3' fontWeight={700} sx={{ mt: 1.5, mb: 0.5, color: readyForInvoiceCount > 0 ? ui.info : ui.text, lineHeight: 1.2 }}>
+                {readyForInvoiceCount}
+              </Typography>
+              <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500, lineHeight: 1.5, display: 'block' }}>
+                Cortes listos para facturar
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
             </Box>
 
             <Stack
@@ -1869,6 +1899,15 @@ const CalibrationServicesPage = () => {
               >
                 {showOnlyMyLoad ? `Mi carga (${visibleServices.length})` : `Mi carga${myLoadCount > 0 ? ` (${myLoadCount})` : ''}`}
               </Button>
+              <Button
+                variant={showOnlyReadyForInvoice ? 'contained' : 'outlined'}
+                color={showOnlyReadyForInvoice ? 'info' : 'inherit'}
+                onClick={() => setShowOnlyReadyForInvoice((v) => !v)}
+                disabled={readyForInvoiceCount === 0}
+                sx={showOnlyReadyForInvoice ? { borderRadius: '12px', textTransform: 'none', fontWeight: 700, minHeight: 44 } : secondaryButtonSx}
+              >
+                {showOnlyReadyForInvoice ? `Por facturar (${visibleServices.length})` : `Por facturar${readyForInvoiceCount > 0 ? ` (${readyForInvoiceCount})` : ''}`}
+              </Button>
               <ToggleButtonGroup
                 size='small'
                 exclusive
@@ -1948,6 +1987,9 @@ const CalibrationServicesPage = () => {
               ) : null}
               {showOnlyMyLoad ? (
                 <Chip size='small' label='Mi carga' onDelete={() => setShowOnlyMyLoad(false)} variant='outlined' color='success' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
+              ) : null}
+              {showOnlyReadyForInvoice ? (
+                <Chip size='small' label='Por facturar' onDelete={() => setShowOnlyReadyForInvoice(false)} variant='outlined' color='info' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
               ) : null}
             </Stack>
           ) : null}
