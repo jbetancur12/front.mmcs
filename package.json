@@ -1,7 +1,7 @@
 {
   "name": "metromedics",
   "private": true,
-  "version": "1.5.0",
+  "version": "1.5.1",
   "type": "module",
   "prettier": "prettier-config-standard",
   "scripts": {
