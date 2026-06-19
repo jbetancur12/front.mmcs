@@ -807,21 +807,22 @@ const CalibrationServiceDetailsPage = () => {
       : typeof odsDetails?.scheduledFor === 'string'
         ? odsDetails.scheduledFor
         : ''
-  const operationsAssignedMetrologistUserId =
-    operationsDetails?.assignedMetrologistUserId !== undefined &&
-    operationsDetails?.assignedMetrologistUserId !== null
-      ? String(operationsDetails.assignedMetrologistUserId)
-      : ''
-  const operationsAssignedMetrologistName =
-    typeof operationsDetails?.assignedMetrologistName === 'string'
-      ? operationsDetails.assignedMetrologistName
-      : ''
-  const operationsResponsibleName =
-    typeof operationsDetails?.operationalResponsibleName === 'string'
-      ? operationsDetails.operationalResponsibleName
-      : operationsAssignedMetrologistName
-        ? operationsAssignedMetrologistName
-        : ''
+  const operationsAssignedMetrologistUserIds = (() => {
+    const raw = operationsDetails?.assignedMetrologistUserIds
+    if (Array.isArray(raw) && raw.length > 0) return (raw as number[]).map(String)
+    const legacyId = operationsDetails?.assignedMetrologistUserId
+    return legacyId ? [String(legacyId)] : []
+  })()
+  const operationsAssignedMetrologistNames = (() => {
+    const raw: any = operationsDetails?.assignedMetrologists
+    if (Array.isArray(raw) && raw.length > 0) return raw.map((m: any) => m.name).join(', ')
+    const legacyName = operationsDetails?.assignedMetrologistName
+    return legacyName || ''
+  })()
+  const operationsResponsibleName: string =
+    typeof (operationsDetails as any)?.operationalResponsibleName === 'string'
+      ? (operationsDetails as any).operationalResponsibleName
+      : (operationsAssignedMetrologistNames || '')
   const operationsResponsibleRole =
     typeof operationsDetails?.operationalResponsibleRole === 'string'
       ? operationsDetails.operationalResponsibleRole
@@ -1244,7 +1245,7 @@ const CalibrationServiceDetailsPage = () => {
     scheduledDate: operationsScheduledDate
       ? operationsScheduledDate.slice(0, 10)
       : '',
-    assignedMetrologistUserId: operationsAssignedMetrologistUserId,
+    assignedMetrologistUserIds: operationsAssignedMetrologistUserIds,
     operationalResponsibleName: operationsResponsibleName,
     operationalResponsibleRole: operationsResponsibleRole,
     programmingNotes: operationsProgrammingNotes
@@ -1261,7 +1262,7 @@ const CalibrationServiceDetailsPage = () => {
       programmingNotes: operationsProgrammingNotes
     }
   const reassignDialogInitialValues: CalibrationServiceReassignDialogValues = {
-    assignedMetrologistUserId: operationsAssignedMetrologistUserId,
+    assignedMetrologistUserIds: operationsAssignedMetrologistUserIds,
     operationalResponsibleName: operationsResponsibleName,
     operationalResponsibleRole: operationsResponsibleRole || 'Metrologo',
     reassignmentReason: ''
@@ -1526,13 +1527,12 @@ const CalibrationServiceDetailsPage = () => {
         return
       }
 
-      const assignedMetrologistUserId = Number(values.assignedMetrologistUserId)
+      const assignedMetrologistUserIds = values.assignedMetrologistUserIds
+        .map(Number)
+        .filter((id) => Number.isInteger(id) && id > 0)
 
-      if (
-        !Number.isInteger(assignedMetrologistUserId) ||
-        assignedMetrologistUserId <= 0
-      ) {
-        toast.error('Selecciona el metrólogo asignado para el servicio.')
+      if (assignedMetrologistUserIds.length === 0) {
+        toast.error('Selecciona al menos un metrólogo asignado para el servicio.')
         return
       }
 
@@ -1544,7 +1544,7 @@ const CalibrationServiceDetailsPage = () => {
         scheduledDate: new Date(
           `${values.scheduledDate}T12:00:00`
         ).toISOString(),
-        assignedMetrologistUserId,
+        assignedMetrologistUserIds,
         operationalResponsibleName: values.operationalResponsibleName.trim(),
         operationalResponsibleRole:
           values.operationalResponsibleRole.trim() || null,
@@ -1600,13 +1600,12 @@ const CalibrationServiceDetailsPage = () => {
     values: CalibrationServiceReassignDialogValues
   ) => {
     try {
-      const assignedMetrologistUserId = Number(values.assignedMetrologistUserId)
+      const assignedMetrologistUserIds = values.assignedMetrologistUserIds
+        .map(Number)
+        .filter((id) => Number.isInteger(id) && id > 0)
 
-      if (
-        !Number.isInteger(assignedMetrologistUserId) ||
-        assignedMetrologistUserId <= 0
-      ) {
-        toast.error('Selecciona el nuevo metrólogo asignado.')
+      if (assignedMetrologistUserIds.length === 0) {
+        toast.error('Selecciona al menos un metrólogo asignado.')
         return
       }
 
@@ -1617,7 +1616,7 @@ const CalibrationServiceDetailsPage = () => {
 
       await reassignService.mutateAsync({
         serviceId: String(service.id),
-        assignedMetrologistUserId,
+        assignedMetrologistUserIds,
         reassignmentReason: values.reassignmentReason.trim(),
         operationalResponsibleName:
           values.operationalResponsibleName.trim() || null,

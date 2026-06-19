@@ -189,13 +189,24 @@ export interface CalibrationServiceItem {
   updatedAt?: string
 }
 
+export interface CalibrationServiceMetrologistDetail {
+  userId: number
+  name: string
+  email?: string | null
+}
+
 export interface CalibrationServiceOperationsSummary {
   commitmentDate?: string | null
   scheduledDate?: string | null
   scheduledAt?: string | null
-  assignedMetrologistUserId?: number | null
+  assignedMetrologistUserIds?: number[] | null
+  assignedMetrologists?: CalibrationServiceMetrologistDetail[] | null
+  /** @deprecated use assignedMetrologists */
   assignedMetrologistName?: string | null
+  /** @deprecated use assignedMetrologists */
   assignedMetrologistEmail?: string | null
+  /** @deprecated use assignedMetrologists */
+  assignedMetrologistUserId?: number | null
   operationalResponsibleName?: string | null
   operationalResponsibleRole?: string | null
   programmingNotes?: string | null
@@ -752,7 +763,7 @@ export interface CalibrationServiceSchedulePayload {
   serviceId: string
   commitmentDate: string
   scheduledDate: string
-  assignedMetrologistUserId: number
+  assignedMetrologistUserIds: number[]
   operationalResponsibleName: string
   operationalResponsibleRole?: string | null
   programmingNotes?: string | null
@@ -770,7 +781,7 @@ export interface CalibrationServiceReschedulePayload {
 
 export interface CalibrationServiceReassignPayload {
   serviceId: string
-  assignedMetrologistUserId: number
+  assignedMetrologistUserIds: number[]
   reassignmentReason: string
   operationalResponsibleName?: string | null
   operationalResponsibleRole?: string | null

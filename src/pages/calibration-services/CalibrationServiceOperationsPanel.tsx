@@ -215,6 +215,20 @@ const CalibrationServiceOperationsPanel = ({
       <Grid container spacing={2}>
         <Grid item xs={12} md={4}>
           <Typography variant='caption' color='text.secondary'>
+            Metrólogos asignados
+          </Typography>
+          <Typography variant='body1'>
+            {(() => {
+              const metrologists: any = operations.assignedMetrologists
+              if (Array.isArray(metrologists) && metrologists.length > 0) {
+                return metrologists.map((m: any) => m.name).join(', ')
+              }
+              return operations.assignedMetrologistName || 'Sin asignar'
+            })()}
+          </Typography>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Typography variant='caption' color='text.secondary'>
             Fecha compromiso
           </Typography>
           <Typography variant='body1'>

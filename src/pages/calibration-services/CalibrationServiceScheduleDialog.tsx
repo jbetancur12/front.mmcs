@@ -1,12 +1,12 @@
-import { ChangeEvent, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
+  Autocomplete,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Grid,
-  MenuItem,
   Stack,
   TextField,
   Typography
@@ -16,7 +16,7 @@ import { CalibrationServiceUserSummary } from '../../types/calibrationService'
 export interface CalibrationServiceScheduleDialogValues {
   commitmentDate: string
   scheduledDate: string
-  assignedMetrologistUserId: string
+  assignedMetrologistUserIds: string[]
   operationalResponsibleName: string
   operationalResponsibleRole: string
   programmingNotes: string
@@ -52,27 +52,16 @@ const CalibrationServiceScheduleDialog = ({
 
   const handleChange =
     (field: keyof CalibrationServiceScheduleDialogValues) =>
-    (event: ChangeEvent<HTMLInputElement>) => {
+    (event: React.ChangeEvent<HTMLInputElement>) => {
       setValues((currentValues) => ({
         ...currentValues,
         [field]: event.target.value
       }))
     }
 
-  const handleMetrologistChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const nextAssignedMetrologistUserId = event.target.value
-    const selectedMetrologist = metrologists.find(
-      (metrologist) => String(metrologist.id) === nextAssignedMetrologistUserId
-    )
-
-    setValues((currentValues) => ({
-      ...currentValues,
-      assignedMetrologistUserId: nextAssignedMetrologistUserId,
-      operationalResponsibleName:
-        selectedMetrologist?.nombre || currentValues.operationalResponsibleName,
-      operationalResponsibleRole: selectedMetrologist ? 'Metrologo' : ''
-    }))
-  }
+  const selectedMetrologists = metrologists.filter((m) =>
+    values.assignedMetrologistUserIds.includes(String(m.id))
+  )
 
   const handleSubmit = async () => {
     await onSubmit(values)
@@ -84,7 +73,7 @@ const CalibrationServiceScheduleDialog = ({
       <DialogContent dividers>
         <Stack spacing={3}>
           <Typography variant='body2' color='text.secondary'>
-            Define la fecha compromiso, la fecha programada y el responsable operativo para
+            Define la fecha compromiso, la fecha programada y los metrólogos responsables para
             continuar con <strong>{serviceCode}</strong>.
           </Typography>
           <Grid container spacing={2}>
@@ -109,25 +98,34 @@ const CalibrationServiceScheduleDialog = ({
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                select
-                label='Metrólogo asignado'
-                value={values.assignedMetrologistUserId}
-                onChange={handleMetrologistChange}
-                helperText='Selecciona el metrólogo interno que quedará a cargo del servicio.'
-              >
-                <MenuItem value=''>
-                  Selecciona un metrólogo
-                </MenuItem>
-                {metrologists.map((metrologist) => (
-                  <MenuItem key={metrologist.id} value={String(metrologist.id)}>
-                    {metrologist.nombre}
-                    {metrologist.email ? ` · ${metrologist.email}` : ''}
-                    {metrologist.active === false ? ' · cuenta sin activar' : ''}
-                  </MenuItem>
-                ))}
-              </TextField>
+              <Autocomplete
+                multiple
+                options={metrologists}
+                value={selectedMetrologists}
+                getOptionLabel={(option) =>
+                  `${option.nombre}${option.email ? ` · ${option.email}` : ''}${option.active === false ? ' · cuenta sin activar' : ''}`
+                }
+                onChange={(_, newValue) => {
+                  setValues((currentValues) => ({
+                    ...currentValues,
+                    assignedMetrologistUserIds: newValue.map((m) => String(m.id)),
+                    operationalResponsibleName:
+                      newValue.length > 0
+                        ? newValue[0].nombre
+                        : currentValues.operationalResponsibleName,
+                    operationalResponsibleRole:
+                      newValue.length > 0 ? 'Metrologo' : currentValues.operationalResponsibleRole
+                  }))
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Metrólogos asignados'
+                    placeholder='Selecciona metrólogos'
+                    helperText='Selecciona uno o más metrólogos internos que quedarán a cargo del servicio.'
+                  />
+                )}
+              />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
@@ -135,7 +133,7 @@ const CalibrationServiceScheduleDialog = ({
                 label='Responsable operativo'
                 value={values.operationalResponsibleName}
                 onChange={handleChange('operationalResponsibleName')}
-                helperText='Se completa con el metrólogo asignado y puedes ajustarlo si necesitas una etiqueta operativa más específica.'
+                helperText='Se completa con el primer metrólogo asignado y puedes ajustarlo si necesitas una etiqueta operativa más específica.'
               />
             </Grid>
             <Grid item xs={12} md={6}>

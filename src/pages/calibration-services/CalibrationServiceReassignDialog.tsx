@@ -1,12 +1,12 @@
-import { ChangeEvent, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
+  Autocomplete,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Grid,
-  MenuItem,
   Stack,
   TextField,
   Typography
@@ -14,7 +14,7 @@ import {
 import { CalibrationServiceUserSummary } from '../../types/calibrationService'
 
 export interface CalibrationServiceReassignDialogValues {
-  assignedMetrologistUserId: string
+  assignedMetrologistUserIds: string[]
   operationalResponsibleName: string
   operationalResponsibleRole: string
   reassignmentReason: string
@@ -49,52 +49,50 @@ const CalibrationServiceReassignDialog = ({
 
   const handleChange =
     (field: keyof CalibrationServiceReassignDialogValues) =>
-    (event: ChangeEvent<HTMLInputElement>) => {
+    (event: React.ChangeEvent<HTMLInputElement>) => {
       setValues((current) => ({
         ...current,
         [field]: event.target.value
       }))
     }
 
-  const handleMetrologistChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const nextId = event.target.value
-    const selected = metrologists.find((item) => String(item.id) === nextId)
-
-    setValues((current) => ({
-      ...current,
-      assignedMetrologistUserId: nextId,
-      operationalResponsibleName: selected?.nombre || current.operationalResponsibleName,
-      operationalResponsibleRole: selected ? 'Metrologo' : current.operationalResponsibleRole
-    }))
-  }
+  const selectedMetrologists = metrologists.filter((m) =>
+    values.assignedMetrologistUserIds.includes(String(m.id))
+  )
 
   return (
     <Dialog open={open} onClose={isLoading ? undefined : onClose} fullWidth maxWidth='md'>
-      <DialogTitle>Reasignar metrólogo</DialogTitle>
+      <DialogTitle>Asignar metrólogos</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={3}>
           <Typography variant='body2' color='text.secondary'>
-            Cambia el metrólogo responsable de <strong>{serviceCode}</strong> y deja
-            trazabilidad del motivo.
+            Asigna uno o más metrólogos responsables de <strong>{serviceCode}</strong>.
           </Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                select
-                label='Nuevo metrólogo asignado'
-                value={values.assignedMetrologistUserId}
-                onChange={handleMetrologistChange}
-              >
-                <MenuItem value=''>Selecciona un metrólogo</MenuItem>
-                {metrologists.map((metrologist) => (
-                  <MenuItem key={metrologist.id} value={String(metrologist.id)}>
-                    {metrologist.nombre}
-                    {metrologist.email ? ` · ${metrologist.email}` : ''}
-                    {metrologist.active === false ? ' · cuenta sin activar' : ''}
-                  </MenuItem>
-                ))}
-              </TextField>
+              <Autocomplete
+                multiple
+                options={metrologists}
+                value={selectedMetrologists}
+                getOptionLabel={(option) =>
+                  `${option.nombre}${option.email ? ` · ${option.email}` : ''}${option.active === false ? ' · cuenta sin activar' : ''}`
+                }
+                onChange={(_, newValue) => {
+                  setValues((current) => ({
+                    ...current,
+                    assignedMetrologistUserIds: newValue.map((m) => String(m.id)),
+                    operationalResponsibleName:
+                      newValue.length > 0
+                        ? newValue[0].nombre
+                        : current.operationalResponsibleName,
+                    operationalResponsibleRole:
+                      newValue.length > 0 ? 'Metrologo' : current.operationalResponsibleRole
+                  }))
+                }}
+                renderInput={(params) => (
+                  <TextField {...params} label='Metrólogos asignados' placeholder='Selecciona metrólogos' />
+                )}
+              />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
@@ -117,7 +115,7 @@ const CalibrationServiceReassignDialog = ({
                 fullWidth
                 multiline
                 minRows={3}
-                label='Motivo de reasignación'
+                label='Motivo de asignación'
                 value={values.reassignmentReason}
                 onChange={handleChange('reassignmentReason')}
               />
@@ -130,7 +128,7 @@ const CalibrationServiceReassignDialog = ({
           Cancelar
         </Button>
         <Button variant='contained' onClick={() => void onSubmit(values)} disabled={isLoading}>
-          Guardar reasignación
+          Guardar
         </Button>
       </DialogActions>
     </Dialog>

@@ -373,6 +373,22 @@ const getServiceSiteLabel = (service: CalibrationService) => {
   return service.executionSiteName || 'Alcance general del cliente'
 }
 
+const getMetrologistNames = (service: CalibrationService): string[] => {
+  const ops = getOperationsDetails(service)
+  const arr: any = ops.assignedMetrologists
+  if (Array.isArray(arr) && arr.length > 0) return arr.map((m: any) => String(m.name)).filter(Boolean)
+  const legacy = ops.assignedMetrologistName
+  return legacy ? [String(legacy)] : []
+}
+
+const getMetrologistEmails = (service: CalibrationService): string[] => {
+  const ops = getOperationsDetails(service)
+  const arr: any = ops.assignedMetrologists
+  if (Array.isArray(arr) && arr.length > 0) return arr.map((m: any) => String(m.email)).filter(Boolean)
+  const legacy = ops.assignedMetrologistEmail
+  return legacy ? [String(legacy)] : []
+}
+
 const matchesSiteFilter = (service: CalibrationService, siteSearch: string) => {
   if (!siteSearch.trim()) {
     return true
@@ -767,31 +783,25 @@ const CalibrationServicesPage = () => {
     .sort((left, right) => left.label.localeCompare(right.label, 'es'))
   const metrologistOptions = services
     .reduce<Array<{ id: string; label: string }>>((accumulator, service) => {
-      const operations = getOperationsDetails(service)
-      const assignedMetrologistName =
-        typeof operations.assignedMetrologistName === 'string'
-          ? operations.assignedMetrologistName.trim()
-          : ''
-      const assignedMetrologistEmail =
-        typeof operations.assignedMetrologistEmail === 'string'
-          ? operations.assignedMetrologistEmail.trim()
-          : ''
+      const names = getMetrologistNames(service)
+      const emails = getMetrologistEmails(service)
 
-      if (!assignedMetrologistName) {
-        return accumulator
-      }
+      if (names.length === 0) return accumulator
 
-      const optionId = assignedMetrologistEmail || assignedMetrologistName
+      names.forEach((name, idx) => {
+        const email = emails[idx] || ''
+        const optionId = email || name
 
-      if (accumulator.some((metrologist) => metrologist.id === optionId)) {
-        return accumulator
-      }
+        if (accumulator.some((metrologist) => metrologist.id === optionId)) {
+          return
+        }
 
-      accumulator.push({
-        id: optionId,
-        label: assignedMetrologistEmail
-          ? `${assignedMetrologistName} · ${assignedMetrologistEmail}`
-          : assignedMetrologistName
+        accumulator.push({
+          id: optionId,
+          label: email
+            ? `${name} · ${email}`
+            : name
+        })
       })
 
       return accumulator
@@ -799,15 +809,8 @@ const CalibrationServicesPage = () => {
     .sort((left, right) => left.label.localeCompare(right.label, 'es'))
 
   const visibleServices = services.filter((service) => {
-    const operations = getOperationsDetails(service)
-    const assignedMetrologistName =
-      typeof operations.assignedMetrologistName === 'string'
-        ? operations.assignedMetrologistName.trim()
-        : ''
-    const assignedMetrologistEmail =
-      typeof operations.assignedMetrologistEmail === 'string'
-        ? operations.assignedMetrologistEmail.trim()
-        : ''
+    const currentMetrologistNames = getMetrologistNames(service)
+    const currentMetrologistEmails = getMetrologistEmails(service)
 
     if (scopeFilter !== FILTER_ALL && service.scopeType !== scopeFilter) {
       return false
@@ -820,22 +823,22 @@ const CalibrationServicesPage = () => {
       return false
     }
 
-    if (metrologistFilter === FILTER_UNASSIGNED && assignedMetrologistName) {
+    if (metrologistFilter === FILTER_UNASSIGNED && currentMetrologistNames.length > 0) {
       return false
     }
 
     if (
       metrologistFilter !== FILTER_ALL &&
       metrologistFilter !== FILTER_UNASSIGNED &&
-      assignedMetrologistEmail !== metrologistFilter &&
-      assignedMetrologistName !== metrologistFilter
+      !currentMetrologistEmails.includes(metrologistFilter) &&
+      !currentMetrologistNames.includes(metrologistFilter)
     ) {
       return false
     }
 
     if (showOnlyMyLoad) {
       const currentUserEmail = $userStore.email?.trim().toLowerCase()
-      if (!currentUserEmail || assignedMetrologistEmail.toLowerCase() !== currentUserEmail) {
+      if (!currentUserEmail || !currentMetrologistEmails.some(e => e.toLowerCase() === currentUserEmail)) {
         return false
       }
     }
@@ -924,13 +927,8 @@ const CalibrationServicesPage = () => {
       const currentUserEmail = $userStore.email?.trim().toLowerCase()
       const myLoadCount = currentUserEmail
         ? servicesForColumn.filter((service) => {
-            const operations = getOperationsDetails(service)
-            const assignedMetrologistEmail =
-              typeof operations.assignedMetrologistEmail === 'string'
-                ? operations.assignedMetrologistEmail.trim().toLowerCase()
-                : ''
-
-            return assignedMetrologistEmail === currentUserEmail
+            const emails = getMetrologistEmails(service)
+            return emails.some(e => e.toLowerCase() === currentUserEmail)
           }).length
         : 0
 
@@ -994,17 +992,10 @@ const CalibrationServicesPage = () => {
 
   const renderServiceCard = (service: CalibrationService) => {
     const serviceOperationalFocus = getServiceOperationalFocus(service)
-    const operations = getOperationsDetails(service)
-    const assignedMetrologistName =
-      typeof operations.assignedMetrologistName === 'string'
-        ? operations.assignedMetrologistName
-        : typeof operations.operationalResponsibleName === 'string'
-          ? operations.operationalResponsibleName
-          : ''
-    const assignedMetrologistEmail =
-      typeof operations.assignedMetrologistEmail === 'string'
-        ? operations.assignedMetrologistEmail
-        : ''
+    const assignedMetrologistNames = getMetrologistNames(service)
+    const assignedMetrologistName = assignedMetrologistNames[0] || ''
+    const assignedMetrologistEmails = getMetrologistEmails(service)
+    const assignedMetrologistEmail = assignedMetrologistEmails[0] || ''
     const isAssignedToCurrentMetrologist =
       Boolean(
         hasTechnicalRole &&
@@ -1152,7 +1143,9 @@ const CalibrationServicesPage = () => {
                     label={
                       isAssignedToCurrentMetrologist
                         ? 'Asignado a ti'
-                        : `Metrólogo: ${assignedMetrologistName}`
+                        : assignedMetrologistNames.length > 1
+                          ? `Metrólogos: ${assignedMetrologistNames.join(', ')}`
+                          : `Metrólogo: ${assignedMetrologistName}`
                     }
                   />
                 ) : null}
@@ -1189,10 +1182,11 @@ const CalibrationServicesPage = () => {
                   variant='body2'
                   sx={{ mt: 0.75, color: ui.muted, lineHeight: 1.5 }}
                 >
-                  Responsable metrológico:{' '}
-                  <strong>{assignedMetrologistName}</strong>
-                  {assignedMetrologistEmail
-                    ? ` · ${assignedMetrologistEmail}`
+                  {assignedMetrologistNames.length > 1
+                    ? `Metrólogos: ${assignedMetrologistNames.join(', ')}`
+                    : `Responsable metrológico: <strong>${assignedMetrologistName}</strong>`}
+                  {assignedMetrologistEmails.length > 0 && !isTechnicalOnlyView
+                    ? ` · ${assignedMetrologistEmails.join(', ')}`
                     : ''}
                 </Typography>
               ) : null}
@@ -1402,13 +1396,8 @@ const CalibrationServicesPage = () => {
     }
 
     return services.some((service) => {
-      const operations = getOperationsDetails(service)
-      const assignedMetrologistEmail =
-        typeof operations.assignedMetrologistEmail === 'string'
-          ? operations.assignedMetrologistEmail.trim().toLowerCase()
-          : ''
-
-      return assignedMetrologistEmail === currentUserEmail
+      const emails = getMetrologistEmails(service)
+      return emails.some(e => e.toLowerCase() === currentUserEmail)
     })
   }, [$userStore.email, services])
 
@@ -1420,13 +1409,8 @@ const CalibrationServicesPage = () => {
     }
 
     return services.filter((service) => {
-      const operations = getOperationsDetails(service)
-      const assignedMetrologistEmail =
-        typeof operations.assignedMetrologistEmail === 'string'
-          ? operations.assignedMetrologistEmail.trim().toLowerCase()
-          : ''
-
-      return assignedMetrologistEmail === currentUserEmail
+      const emails = getMetrologistEmails(service)
+      return emails.some(e => e.toLowerCase() === currentUserEmail)
     }).length
   }, [$userStore.email, services])
 
@@ -2209,11 +2193,11 @@ const CalibrationServicesPage = () => {
             }] : []),
             {
               accessorFn: (s) => {
-                const ops = getOperationsDetails(s)
-                return typeof ops.assignedMetrologistName === 'string' ? ops.assignedMetrologistName : ''
+                const names = getMetrologistNames(s)
+                return names.length > 0 ? names.join(', ') : ''
               },
-              header: 'Metrólogo',
-              size: 140,
+              header: 'Metrólogo(s)',
+              size: 160,
               Cell: ({ cell }) => {
                 const name = cell.getValue<string>()
                 return name ? <Typography variant='body2' sx={{ color: ui.muted }}>{name}</Typography> : <Typography variant='body2' sx={{ color: ui.muted }}>—</Typography>
@@ -2397,16 +2381,11 @@ const CalibrationServicesPage = () => {
                     </Box>
                   ) : (
                     column.services.map((service) => {
-                      const operations = getOperationsDetails(service)
                       const slaTone = getSlaVisualTone(
                         service.slaIndicator?.color || 'gray'
                       )
-                      const assignedMetrologistName =
-                        typeof operations.assignedMetrologistName === 'string'
-                          ? operations.assignedMetrologistName
-                          : typeof operations.operationalResponsibleName === 'string'
-                            ? operations.operationalResponsibleName
-                            : ''
+                      const assignedMetrologistNames = getMetrologistNames(service)
+                      const assignedMetrologistName = assignedMetrologistNames[0] || ''
                       const customerLabel =
                         service.customer?.nombre ||
                         service.executionCustomerName ||
@@ -2556,7 +2535,9 @@ const CalibrationServicesPage = () => {
                                     overflow: 'hidden'
                                   }}
                                 >
-                                  Metrólogo: {assignedMetrologistName}
+                                  {assignedMetrologistNames.length > 1
+                                    ? `Metrólogos: ${assignedMetrologistNames.join(', ')}`
+                                    : `Metrólogo: ${assignedMetrologistName}`}
                                 </Typography>
                               ) : null}
 
