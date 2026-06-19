@@ -715,6 +715,7 @@ const CalibrationServicesPage = () => {
   )
   const [showOnlyMyLoad, setShowOnlyMyLoad] = useState(false)
   const [showOnlyReadyForInvoice, setShowOnlyReadyForInvoice] = useState(false)
+  const [showOnlyInvoicedCut, setShowOnlyInvoicedCut] = useState(false)
   const [moreAnchorEl, setMoreAnchorEl] = useState<HTMLElement | null>(null)
   const kanbanScrollRef = useRef<HTMLDivElement | null>(null)
   const kanbanTopScrollRef = useRef<HTMLDivElement | null>(null)
@@ -852,6 +853,9 @@ const CalibrationServicesPage = () => {
     if (showOnlyReadyForInvoice && !(service.cuts || []).some(c => c.status === 'ready_for_invoicing')) {
       return false
     }
+    if (showOnlyInvoicedCut && !(service.cuts || []).some(c => c.status === 'invoiced')) {
+      return false
+    }
 
     return matchesSiteFilter(service, siteFilter)
   })
@@ -861,6 +865,7 @@ const CalibrationServicesPage = () => {
     let scheduled = 0, inExecution = 0, technicallyCompleted = 0, closed = 0
     let readyToClose = 0, pendingDocumentControl = 0, readyForOds = 0, urgent = 0
     let readyForInvoice = 0
+    let invoicedCut = 0
 
     for (const service of visibleServices) {
       if (service.status === 'pending_approval') pendingApproval++
@@ -876,12 +881,13 @@ const CalibrationServicesPage = () => {
       if (service.status === 'approved' && service.approvalStatus === 'approved' && !service.odsCode) readyForOds++
       if (['yellow', 'red'].includes(service.slaIndicator?.color || 'gray')) urgent++
       if ((service.cuts || []).some(c => c.status === 'ready_for_invoicing')) readyForInvoice++
+      if ((service.cuts || []).some(c => c.status === 'invoiced')) invoicedCut++
     }
 
-    return { pendingApproval, requestedChanges, odsIssued, pendingProgramming, scheduled, inExecution, technicallyCompleted, closed, readyToClose, pendingDocumentControl, readyForOds, urgent, readyForInvoice }
+    return { pendingApproval, requestedChanges, odsIssued, pendingProgramming, scheduled, inExecution, technicallyCompleted, closed, readyToClose, pendingDocumentControl, readyForOds, urgent, readyForInvoice, invoicedCut }
   }, [visibleServices])
 
-  const { pendingApproval: pendingApprovalCount, requestedChanges: requestedChangesCount, odsIssued: odsIssuedCount, pendingProgramming: pendingProgrammingCount, scheduled: scheduledCount, inExecution: inExecutionCount, technicallyCompleted: technicallyCompletedCount, closed: closedCount, readyToClose: readyToCloseCount, pendingDocumentControl: pendingDocumentControlCount, readyForOds: readyForOdsCount, urgent: urgentCount, readyForInvoice: readyForInvoiceCount } = counts
+  const { pendingApproval: pendingApprovalCount, requestedChanges: requestedChangesCount, odsIssued: odsIssuedCount, pendingProgramming: pendingProgrammingCount, scheduled: scheduledCount, inExecution: inExecutionCount, technicallyCompleted: technicallyCompletedCount, closed: closedCount, readyToClose: readyToCloseCount, pendingDocumentControl: pendingDocumentControlCount, readyForOds: readyForOdsCount, urgent: urgentCount, readyForInvoice: readyForInvoiceCount, invoicedCut: invoicedCutCount } = counts
   const activeFiltersCount = [
     search.trim(),
     statusFilter !== FILTER_ALL,
@@ -892,7 +898,8 @@ const CalibrationServicesPage = () => {
     customerFilter !== FILTER_ALL,
     metrologistFilter !== FILTER_ALL,
     showOnlyMyLoad,
-    showOnlyReadyForInvoice
+    showOnlyReadyForInvoice,
+    showOnlyInvoicedCut
   ].filter(Boolean).length
 
   const clearFilters = () => {
@@ -906,6 +913,7 @@ const CalibrationServicesPage = () => {
     setMetrologistFilter(FILTER_ALL)
     setShowOnlyMyLoad(false)
     setShowOnlyReadyForInvoice(false)
+    setShowOnlyInvoicedCut(false)
   }
 
   const kanbanColumns = useMemo(
@@ -1887,6 +1895,15 @@ const CalibrationServicesPage = () => {
               >
                 {showOnlyReadyForInvoice ? `Por facturar (${visibleServices.length})` : `Por facturar${readyForInvoiceCount > 0 ? ` (${readyForInvoiceCount})` : ''}`}
               </Button>
+              <Button
+                variant={showOnlyInvoicedCut ? 'contained' : 'outlined'}
+                color={showOnlyInvoicedCut ? 'success' : 'inherit'}
+                onClick={() => setShowOnlyInvoicedCut((v) => !v)}
+                disabled={invoicedCutCount === 0}
+                sx={showOnlyInvoicedCut ? { borderRadius: '12px', textTransform: 'none', fontWeight: 700, minHeight: 44 } : secondaryButtonSx}
+              >
+                {showOnlyInvoicedCut ? `Facturados (${visibleServices.length})` : `Facturados${invoicedCutCount > 0 ? ` (${invoicedCutCount})` : ''}`}
+              </Button>
               <ToggleButtonGroup
                 size='small'
                 exclusive
@@ -1969,6 +1986,9 @@ const CalibrationServicesPage = () => {
               ) : null}
               {showOnlyReadyForInvoice ? (
                 <Chip size='small' label='Por facturar' onDelete={() => setShowOnlyReadyForInvoice(false)} variant='outlined' color='info' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
+              ) : null}
+              {showOnlyInvoicedCut ? (
+                <Chip size='small' label='Facturados' onDelete={() => setShowOnlyInvoicedCut(false)} variant='outlined' color='success' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
               ) : null}
             </Stack>
           ) : null}
