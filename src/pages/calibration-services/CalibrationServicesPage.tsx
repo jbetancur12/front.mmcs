@@ -46,7 +46,7 @@ import ViewListOutlinedIcon from '@mui/icons-material/ViewListOutlined'
 import TableViewIcon from '@mui/icons-material/TableView'
 import CalibrationNotificationBell from './CalibrationNotificationBell'
 import { alpha } from '@mui/material/styles'
-import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
+import MaterialReactTable from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Toaster, toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
@@ -2188,7 +2188,7 @@ const CalibrationServicesPage = () => {
               header: 'Estado',
               size: 130,
               filterVariant: 'select',
-              filterSelectOptions: STATUS_OPTIONS.filter(o => o.value !== FILTER_ALL).map(o => ({ label: o.label, value: o.value })),
+              filterSelectOptions: STATUS_OPTIONS.filter(o => o.value !== FILTER_ALL).map(o => ({ text: o.label, value: o.value })),
               Cell: ({ cell }) => <Chip size='small' color={CALIBRATION_SERVICE_STATUS_COLORS[cell.getValue<CalibrationServiceStatus>()]} label={CALIBRATION_SERVICE_STATUS_LABELS[cell.getValue<CalibrationServiceStatus>()]} />
             },
             {
@@ -2196,7 +2196,7 @@ const CalibrationServicesPage = () => {
               header: 'SLA',
               size: 90,
               filterVariant: 'select',
-              filterSelectOptions: SLA_OPTIONS.filter(o => o.value !== FILTER_ALL).map(o => ({ label: o.label, value: o.value })),
+              filterSelectOptions: SLA_OPTIONS.filter(o => o.value !== FILTER_ALL).map(o => ({ text: o.label, value: o.value })),
               Cell: ({ row }) => <Chip size='small' color={CALIBRATION_SERVICE_SLA_COLORS[row.original.slaIndicator?.color || 'gray']} label={row.original.slaIndicator?.label || '—'} />
             },
             ...(!isTechnicalOnlyView ? [{
@@ -2204,8 +2204,8 @@ const CalibrationServicesPage = () => {
               header: 'Respuesta cliente' as const,
               size: 130 as const,
               filterVariant: 'select' as const,
-              filterSelectOptions: (APPROVAL_OPTIONS as any[]).filter((o: any) => o.value !== FILTER_ALL).map((o: any) => ({ label: o.label, value: o.value })),
-              Cell: ({ cell }: any) => <Chip size='small' color={(CALIBRATION_SERVICE_APPROVAL_COLORS as any)[cell.getValue<string>()]} label={(CALIBRATION_SERVICE_APPROVAL_LABELS as any)[cell.getValue<string>()]} />
+              filterSelectOptions: (APPROVAL_OPTIONS as any[]).filter((o: any) => o.value !== FILTER_ALL).map((o: any) => ({ text: o.label, value: o.value })),
+              Cell: ({ cell }: any) => <Chip size='small' color={(CALIBRATION_SERVICE_APPROVAL_COLORS as any)[cell.getValue() as string]} label={(CALIBRATION_SERVICE_APPROVAL_LABELS as any)[cell.getValue() as string]} />
             }] : []),
             {
               accessorFn: (s) => {
@@ -2228,7 +2228,7 @@ const CalibrationServicesPage = () => {
               accessorFn: (s: CalibrationService) => getItemsTotal(s),
               header: 'Valor' as const,
               size: 100 as const,
-              Cell: ({ cell }: any) => <Typography variant='body2' fontWeight={700} sx={{ color: ui.greenDark }}>{currencyFormatter.format(cell.getValue<number>())}</Typography>
+              Cell: ({ cell }: any) => <Typography variant='body2' fontWeight={700} sx={{ color: ui.greenDark }}>{currencyFormatter.format(cell.getValue() as number)}</Typography>
             }] : []),
             {
               accessorFn: (s) => new Date(s.updatedAt),

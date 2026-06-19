@@ -956,6 +956,7 @@ const CalibrationServiceAnalyticsPage = () => {
             <Grid item xs={12} md={3}>
               <YesNoSelect label='Doc. pendiente' value={hasPendingDocumentControl} onChange={setHasPendingDocumentControl} />
             </Grid>
+          </Grid>
           </Collapse>
         </CardContent>
       </Card>
