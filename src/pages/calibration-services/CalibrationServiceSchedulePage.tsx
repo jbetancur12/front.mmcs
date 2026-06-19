@@ -27,8 +27,7 @@ import {
 } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
-  CalibrationService,
-  CalibrationServiceFilters
+  CalibrationService
 } from '../../types/calibrationService'
 
 const WEEKDAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
@@ -51,16 +50,14 @@ const CalibrationServiceSchedulePage = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
-  const filters: CalibrationServiceFilters = {
-    status: 'scheduled,in_execution' as any,
-    limit: 500
-  }
-
   const { data, isLoading } = useQuery(
     ['calibration-services', 'schedule', currentMonth.getFullYear(), currentMonth.getMonth()],
     async () => {
-      const res = await axiosPrivate.get('/calibration-services', { params: filters })
-      return res.data?.services as CalibrationService[] || []
+      const res = await axiosPrivate.get('/calibration-services', { params: { limit: 500, status: 'scheduled' } })
+      const scheduled = res.data?.services as CalibrationService[] || []
+      const res2 = await axiosPrivate.get('/calibration-services', { params: { limit: 500, status: 'in_execution' } })
+      const execution = res2.data?.services as CalibrationService[] || []
+      return [...scheduled, ...execution]
     }
   )
 
