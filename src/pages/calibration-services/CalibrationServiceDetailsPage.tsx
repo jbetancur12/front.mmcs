@@ -848,25 +848,7 @@ const CalibrationServiceDetailsPage = () => {
       const existingItems =
         Array.isArray(rawControlSheet.items) && rawControlSheet.items.length
           ? rawControlSheet.items
-          : (service.items || []).map((item, index) => ({
-              rowNumber: index + 1,
-              serviceItemId: item.id,
-              equipmentName: item.instrumentName || item.itemName,
-              brand: '',
-              model: '',
-              serialNumber: '',
-              assetNumber: '',
-              location: '',
-              serviceScope: String(item.serviceType || '')
-                .toLowerCase()
-                .includes('acredit')
-                ? 'AC'
-                : 'NA',
-              physicalInspectionIn: null,
-              physicalInspectionOut: null,
-              operationalInspectionIn: null,
-              operationalInspectionOut: null
-            }))
+          : []
 
       const normalizedItems: CalibrationServiceLogisticsControlItem[] =
         existingItems.map((item, index) => ({

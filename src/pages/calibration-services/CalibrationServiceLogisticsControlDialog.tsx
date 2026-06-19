@@ -1,8 +1,10 @@
-import { ChangeEvent, useEffect, useState } from 'react'
+import { ChangeEvent, useEffect, useRef, useState } from 'react'
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -31,7 +33,9 @@ import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined'
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined'
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import SignaturePad from '../../Components/Maintenance/SignaturePad'
+import { axiosPrivate } from '@utils/api'
 import {
   CalibrationServiceLogisticsControlItem,
   CalibrationServiceLogisticsControlSheet
@@ -179,6 +183,35 @@ const CalibrationServiceLogisticsControlDialog = ({
         items: nextItems.length ? nextItems : [createEmptyItem(1)]
       }
     })
+  }
+
+  const [deviceQuery, setDeviceQuery] = useState('')
+  const [deviceOptions, setDeviceOptions] = useState<Array<{ id: number; name: string }>>([])
+  const [deviceLoading, setDeviceLoading] = useState(false)
+  const deviceTimerRef = useRef<ReturnType<typeof setTimeout>>()
+
+  useEffect(() => {
+    clearTimeout(deviceTimerRef.current)
+    if (!deviceQuery.trim() || deviceQuery.trim().length < 2) {
+      setDeviceOptions([])
+      return
+    }
+    deviceTimerRef.current = setTimeout(async () => {
+      setDeviceLoading(true)
+      try {
+        const res = await axiosPrivate.get('/devices', { params: { q: deviceQuery.trim() } })
+        setDeviceOptions((res.data || []).map((d: any) => ({ id: d.id, name: d.name })))
+      } catch { setDeviceOptions([]) }
+      setDeviceLoading(false)
+    }, 300)
+    return () => clearTimeout(deviceTimerRef.current)
+  }, [deviceQuery])
+
+  const handleAddRowWithDevice = (device: { id: number; name: string }) => {
+    setValues((current) => ({
+      ...current,
+      items: [...current.items, { ...createEmptyItem(current.items.length + 1), equipmentName: device.name }]
+    }))
   }
 
   const sectionPaperProps = {
@@ -347,6 +380,29 @@ const CalibrationServiceLogisticsControlDialog = ({
               </Button>
             </Stack>
             <Divider sx={{ mb: 3 }} />
+
+            <Autocomplete
+              size='small'
+              options={deviceOptions}
+              loading={deviceLoading}
+              getOptionLabel={(o) => o.name}
+              noOptionsText='Escribe para buscar equipos...'
+              onInputChange={(_, value) => setDeviceQuery(value)}
+              onChange={(_, option) => {
+                if (!option) return
+                handleAddRowWithDevice(option)
+              }}
+              renderInput={(params) => (
+                <TextField {...params} label='Buscar equipo del catálogo para agregar' placeholder='Escribe nombre del equipo...'
+                  InputProps={{
+                    ...params.InputProps,
+                    startAdornment: <SearchOutlinedIcon fontSize='small' sx={{ mr: 0.5, color: 'text.secondary' }} />,
+                    endAdornment: <>{deviceLoading ? <CircularProgress size={20} /> : params.InputProps.endAdornment}</>
+                  }}
+                />
+              )}
+              sx={{ mb: 2 }}
+            />
 
             <TableContainer sx={{ overflowX: 'auto', pb: 1 }}>
               <Table size='small' sx={{ minWidth: 1800 }}>
