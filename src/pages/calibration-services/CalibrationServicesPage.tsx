@@ -28,7 +28,6 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import AddBusinessOutlinedIcon from '@mui/icons-material/AddBusinessOutlined'
 import AnalyticsOutlinedIcon from '@mui/icons-material/AnalyticsOutlined'
-import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
@@ -1136,6 +1135,9 @@ const CalibrationServicesPage = () => {
                 {service.odsCode ? (
                   <Chip size='small' variant='outlined' label={service.odsCode} />
                 ) : null}
+                {(service.cuts || []).some(c => c.status === 'ready_for_invoicing') ? (
+                  <Chip size='small' color='info' variant='outlined' label='Por facturar' />
+                ) : null}
                 {(service.otherFields as any)?.hasEquipmentSale === true ? (
                   <Chip size='small' color='warning' variant='outlined' label='Venta Eq.' />
                 ) : null}
@@ -1269,28 +1271,8 @@ const CalibrationServicesPage = () => {
                   >
                     {new Date(service.updatedAt).toLocaleDateString('es-CO')}
                   </Typography>
-        </Grid>
-        <Grid item xs={12} sm={6} md={4}>
-          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', cursor: 'default', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: readyForInvoiceCount > 0 ? `linear-gradient(180deg, ${ui.info}, ${alpha(ui.info, 0.4)})` : `linear-gradient(180deg, ${ui.muted}, ${alpha(ui.muted, 0.3)})` } }}>
-            <CardContent sx={{ p: 2 }}>
-              <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
-                <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
-                  Por facturar
-                </Typography>
-                <Box sx={{ width: 42, height: 42, borderRadius: '14px', background: `linear-gradient(135deg, ${alpha(ui.info, 0.15)} 0%, ${alpha(ui.info, 0.08)} 100%)`, color: ui.info, display: 'grid', placeItems: 'center', boxShadow: `0 2px 8px ${alpha(ui.info, 0.12)}` }}>
-                  <AssignmentTurnedInOutlinedIcon fontSize='small' />
-                </Box>
-              </Stack>
-              <Typography variant='h3' fontWeight={700} sx={{ mt: 1.5, mb: 0.5, color: readyForInvoiceCount > 0 ? ui.info : ui.text, lineHeight: 1.2 }}>
-                {readyForInvoiceCount}
-              </Typography>
-              <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500, lineHeight: 1.5, display: 'block' }}>
-                Cortes listos para facturar
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+                </Grid>
+              </Grid>
             </Box>
 
             <Stack
@@ -2600,6 +2582,9 @@ const CalibrationServicesPage = () => {
                                   {service.items?.length ?? 0} item
                                   {(service.items?.length ?? 0) === 1 ? '' : 's'}
                                 </Typography>
+                                {(service.cuts || []).some(c => c.status === 'ready_for_invoicing') ? (
+                                  <Chip size='small' color='info' variant='outlined' label='Facturar' sx={{ height: 20, '& .MuiChip-label': { fontSize: '0.65rem', px: 0.5 } }} />
+                                ) : null}
                                 {(service.otherFields as any)?.hasEquipmentSale === true ? (
                                   <Chip size='small' color='warning' variant='outlined' label='Venta' sx={{ height: 20, '& .MuiChip-label': { fontSize: '0.65rem', px: 0.5 } }} />
                                 ) : null}
