@@ -282,6 +282,12 @@ const KpiCard = ({
   </Card>
 )
 
+const YesNoSelect = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
+  <TextField fullWidth select label={label} value={value} onChange={(e) => onChange(e.target.value)}>
+    {yesNoOptions.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+  </TextField>
+)
+
 const CalibrationServiceAnalyticsPage = () => {
   const navigate = useNavigate()
   const [dateFrom, setDateFrom] = useState('')
@@ -939,67 +945,16 @@ const CalibrationServiceAnalyticsPage = () => {
               </TextField>
             </Grid>
             <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                select
-                label='Con novedades'
-                value={hasAdjustments}
-                onChange={(event) => setHasAdjustments(event.target.value)}
-              >
-                {yesNoOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
+              <YesNoSelect label='Con novedades' value={hasAdjustments} onChange={setHasAdjustments} />
             </Grid>
             <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                select
-                label='Con cortes'
-                value={hasCuts}
-                onChange={(event) => setHasCuts(event.target.value)}
-              >
-                {yesNoOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
+              <YesNoSelect label='Con cortes' value={hasCuts} onChange={setHasCuts} />
             </Grid>
             <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                select
-                label='Con factura'
-                value={hasInvoice}
-                onChange={(event) => setHasInvoice(event.target.value)}
-              >
-                {yesNoOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
+              <YesNoSelect label='Con factura' value={hasInvoice} onChange={setHasInvoice} />
             </Grid>
             <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                select
-                label='Doc. pendiente'
-                value={hasPendingDocumentControl}
-                onChange={(event) =>
-                  setHasPendingDocumentControl(event.target.value)
-                }
-              >
-                {yesNoOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
+              <YesNoSelect label='Doc. pendiente' value={hasPendingDocumentControl} onChange={setHasPendingDocumentControl} />
             </Grid>
           </Collapse>
         </CardContent>

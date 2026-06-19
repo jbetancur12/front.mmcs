@@ -840,47 +840,30 @@ const CalibrationServicesPage = () => {
     return matchesSiteFilter(service, siteFilter)
   })
 
-  const pendingApprovalCount = visibleServices.filter(
-    (service) => service.status === 'pending_approval'
-  ).length
-  const requestedChangesCount = visibleServices.filter((service) =>
-    hasCustomerChangeRequest(service)
-  ).length
-  const odsIssuedCount = visibleServices.filter(
-    (service) => service.status === 'ods_issued'
-  ).length
-  const pendingProgrammingCount = visibleServices.filter(
-    (service) => service.status === 'pending_programming'
-  ).length
-  const scheduledCount = visibleServices.filter(
-    (service) => service.status === 'scheduled'
-  ).length
-  const inExecutionCount = visibleServices.filter(
-    (service) => service.status === 'in_execution'
-  ).length
-  const technicallyCompletedCount = visibleServices.filter(
-    (service) => service.status === 'technically_completed'
-  ).length
-  const closedCount = visibleServices.filter(
-    (service) => service.status === 'closed'
-  ).length
-  const readyToCloseCount = visibleServices.filter(
-    (service) =>
-      service.status === 'technically_completed' &&
-      service.slaIndicator?.activePhase === 'document_control_closed'
-  ).length
-  const pendingDocumentControlCount = visibleServices.filter(
-    (service) => service.slaIndicator?.activePhase === 'document_control'
-  ).length
-  const readyForOdsCount = visibleServices.filter(
-    (service) =>
-      service.status === 'approved' &&
-      service.approvalStatus === 'approved' &&
-      !service.odsCode
-  ).length
-  const urgentCount = visibleServices.filter((service) =>
-    ['yellow', 'red'].includes(service.slaIndicator?.color || 'gray')
-  ).length
+  const counts = useMemo(() => {
+    let pendingApproval = 0, requestedChanges = 0, odsIssued = 0, pendingProgramming = 0
+    let scheduled = 0, inExecution = 0, technicallyCompleted = 0, closed = 0
+    let readyToClose = 0, pendingDocumentControl = 0, readyForOds = 0, urgent = 0
+
+    for (const service of visibleServices) {
+      if (service.status === 'pending_approval') pendingApproval++
+      if (service.status === 'ods_issued') odsIssued++
+      if (service.status === 'pending_programming') pendingProgramming++
+      if (service.status === 'scheduled') scheduled++
+      if (service.status === 'in_execution') inExecution++
+      if (service.status === 'technically_completed') technicallyCompleted++
+      if (service.status === 'closed') closed++
+      if (hasCustomerChangeRequest(service)) requestedChanges++
+      if (service.status === 'technically_completed' && service.slaIndicator?.activePhase === 'document_control_closed') readyToClose++
+      if (service.slaIndicator?.activePhase === 'document_control') pendingDocumentControl++
+      if (service.status === 'approved' && service.approvalStatus === 'approved' && !service.odsCode) readyForOds++
+      if (['yellow', 'red'].includes(service.slaIndicator?.color || 'gray')) urgent++
+    }
+
+    return { pendingApproval, requestedChanges, odsIssued, pendingProgramming, scheduled, inExecution, technicallyCompleted, closed, readyToClose, pendingDocumentControl, readyForOds, urgent }
+  }, [visibleServices])
+
+  const { pendingApproval: pendingApprovalCount, requestedChanges: requestedChangesCount, odsIssued: odsIssuedCount, pendingProgramming: pendingProgrammingCount, scheduled: scheduledCount, inExecution: inExecutionCount, technicallyCompleted: technicallyCompletedCount, closed: closedCount, readyToClose: readyToCloseCount, pendingDocumentControl: pendingDocumentControlCount, readyForOds: readyForOdsCount, urgent: urgentCount } = counts
   const activeFiltersCount = [
     search.trim(),
     statusFilter !== FILTER_ALL,

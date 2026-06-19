@@ -49,21 +49,11 @@ export const CALIBRATION_SERVICE_ANALYTICS_ROLES = [
   'metrologist'
 ] as const
 
-export const CALIBRATION_SERVICE_APPROVAL_ROLES = [
-  'admin',
-  'super_admin',
-  'comp_admin',
-  'comp_requester',
-  'comp_supervisor'
-] as const
+export const CALIBRATION_SERVICE_APPROVAL_ROLES =
+  CALIBRATION_SERVICE_EDIT_ROLES
 
-export const CALIBRATION_SERVICE_ODS_ROLES = [
-  'admin',
-  'super_admin',
-  'comp_admin',
-  'comp_requester',
-  'comp_supervisor'
-] as const
+export const CALIBRATION_SERVICE_ODS_ROLES =
+  CALIBRATION_SERVICE_EDIT_ROLES
 
 export const CALIBRATION_SERVICE_SCHEDULE_ROLES = [
   'admin',
@@ -130,14 +120,8 @@ export const CALIBRATION_SERVICE_DOCUMENT_CONTROL_ROLES = [
 export const CALIBRATION_SERVICE_CLOSE_ROLES =
   CALIBRATION_SERVICE_INVOICING_ROLES
 
-export const CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES = [
-  'admin',
-  'super_admin',
-  'comp_admin',
-  'comp_requester',
-  'comp_supervisor',
-  'invoicing'
-] as const
+export const CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES =
+  CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES
 
 export const CALIBRATION_SERVICE_STATUS_LABELS: Record<
   CalibrationServiceStatus,
