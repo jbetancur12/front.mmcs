@@ -43,8 +43,11 @@ import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined'
 import ViewKanbanOutlinedIcon from '@mui/icons-material/ViewKanbanOutlined'
 import ViewListOutlinedIcon from '@mui/icons-material/ViewListOutlined'
+import TableViewIcon from '@mui/icons-material/TableView'
 import CalibrationNotificationBell from './CalibrationNotificationBell'
 import { alpha } from '@mui/material/styles'
+import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
+import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Toaster, toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -95,7 +98,7 @@ const FILTER_ALL = 'all'
 const FILTER_UNASSIGNED = 'unassigned'
 const CALIBRATION_SERVICES_VIEW_STORAGE_KEY = 'calibrationServicesViewMode'
 
-type CalibrationServicesViewMode = 'list' | 'kanban'
+type CalibrationServicesViewMode = 'list' | 'table' | 'kanban'
 
 type KanbanColumnDefinition = {
   key: string
@@ -279,7 +282,7 @@ const getStoredViewMode = (): CalibrationServicesViewMode => {
     CALIBRATION_SERVICES_VIEW_STORAGE_KEY
   )
 
-  return storedValue === 'kanban' ? 'kanban' : 'list'
+  return storedValue === 'kanban' ? 'kanban' : storedValue === 'table' ? 'table' : 'list'
 }
 
 const getSlaVisualTone = (color?: CalibrationServiceSlaIndicatorColor) => {
@@ -1912,6 +1915,10 @@ const CalibrationServicesPage = () => {
                   <ViewListOutlinedIcon fontSize='small' />
                   Lista
                 </ToggleButton>
+                <ToggleButton value='table'>
+                  <TableViewIcon fontSize='small' />
+                  Tabla
+                </ToggleButton>
                 <ToggleButton value='kanban'>
                   <ViewKanbanOutlinedIcon fontSize='small' />
                   Kanban
@@ -2156,6 +2163,102 @@ const CalibrationServicesPage = () => {
             )
           })}
         </Stack>
+      ) : viewMode === 'table' ? (
+        <MaterialReactTable
+          columns={[
+            {
+              accessorKey: 'serviceCode',
+              header: 'Código',
+              size: 140,
+              Cell: ({ row }) => (
+                <Stack spacing={0.5}>
+                  <Typography variant='body2' fontWeight={700} sx={{ color: ui.text, lineHeight: 1.2 }}>{row.original.serviceCode}</Typography>
+                  {row.original.odsCode ? <Typography variant='caption' sx={{ color: ui.greenDark }}>{row.original.odsCode}</Typography> : null}
+                </Stack>
+              )
+            },
+            {
+              accessorFn: (s) => s.customer?.nombre || s.executionCustomerName || '',
+              header: 'Cliente',
+              size: 200,
+              Cell: ({ cell }) => <Typography variant='body2' sx={{ color: ui.textSecondary, fontWeight: 600 }}>{cell.getValue<string>()}</Typography>
+            },
+            {
+              accessorKey: 'status',
+              header: 'Estado',
+              size: 130,
+              filterVariant: 'select',
+              filterSelectOptions: STATUS_OPTIONS.filter(o => o.value !== FILTER_ALL).map(o => ({ label: o.label, value: o.value })),
+              Cell: ({ cell }) => <Chip size='small' color={CALIBRATION_SERVICE_STATUS_COLORS[cell.getValue<CalibrationServiceStatus>()]} label={CALIBRATION_SERVICE_STATUS_LABELS[cell.getValue<CalibrationServiceStatus>()]} />
+            },
+            {
+              accessorKey: 'slaIndicator.color',
+              header: 'SLA',
+              size: 90,
+              filterVariant: 'select',
+              filterSelectOptions: SLA_OPTIONS.filter(o => o.value !== FILTER_ALL).map(o => ({ label: o.label, value: o.value })),
+              Cell: ({ row }) => <Chip size='small' color={CALIBRATION_SERVICE_SLA_COLORS[row.original.slaIndicator?.color || 'gray']} label={row.original.slaIndicator?.label || '—'} />
+            },
+            ...(!isTechnicalOnlyView ? [{
+              accessorKey: 'approvalStatus' as const,
+              header: 'Respuesta cliente' as const,
+              size: 130 as const,
+              filterVariant: 'select' as const,
+              filterSelectOptions: (APPROVAL_OPTIONS as any[]).filter((o: any) => o.value !== FILTER_ALL).map((o: any) => ({ label: o.label, value: o.value })),
+              Cell: ({ cell }: any) => <Chip size='small' color={(CALIBRATION_SERVICE_APPROVAL_COLORS as any)[cell.getValue<string>()]} label={(CALIBRATION_SERVICE_APPROVAL_LABELS as any)[cell.getValue<string>()]} />
+            }] : []),
+            {
+              accessorFn: (s) => {
+                const ops = getOperationsDetails(s)
+                return typeof ops.assignedMetrologistName === 'string' ? ops.assignedMetrologistName : ''
+              },
+              header: 'Metrólogo',
+              size: 140,
+              Cell: ({ cell }) => {
+                const name = cell.getValue<string>()
+                return name ? <Typography variant='body2' sx={{ color: ui.muted }}>{name}</Typography> : <Typography variant='body2' sx={{ color: ui.muted }}>—</Typography>
+              }
+            },
+            {
+              accessorFn: (s) => s.items?.length ?? 0,
+              header: 'Ítems',
+              size: 60
+            },
+            ...(!isTechnicalOnlyView ? [{
+              accessorFn: (s: CalibrationService) => getItemsTotal(s),
+              header: 'Valor' as const,
+              size: 100 as const,
+              Cell: ({ cell }: any) => <Typography variant='body2' fontWeight={700} sx={{ color: ui.greenDark }}>{currencyFormatter.format(cell.getValue<number>())}</Typography>
+            }] : []),
+            {
+              accessorFn: (s) => new Date(s.updatedAt),
+              header: 'Actualizado',
+              size: 90,
+              Cell: ({ cell }) => <Typography variant='body2' sx={{ color: ui.muted }}>{cell.getValue<Date>().toLocaleDateString('es-CO')}</Typography>
+            },
+            {
+              id: 'actions',
+              header: '',
+              size: 80,
+              Cell: ({ row }) => <Button size='small' variant='outlined' onClick={() => openServiceDetail(row.original.id)} sx={secondaryButtonSx}>Ver</Button>
+            }
+          ]}
+          data={visibleServices}
+          enableColumnActions={false}
+          enableColumnFilters
+          enableGlobalFilter
+          enablePagination={false}
+          enableSorting
+          enableBottomToolbar={false}
+          enableTopToolbar
+          localization={MRT_Localization_ES}
+          muiTableBodyRowProps={{
+            sx: { cursor: 'pointer' }
+          }}
+          muiTableProps={{
+            sx: { borderRadius: '16px', border: `1px solid ${ui.border}`, '& td': { py: 0.75 } }
+          }}
+        />
       ) : (
         <Stack spacing={1.25}>
           <Box
@@ -2216,7 +2319,8 @@ const CalibrationServicesPage = () => {
                   boxShadow: '0 6px 18px rgba(15, 23, 42, 0.05)',
                   display: 'flex',
                   flexDirection: 'column',
-                  maxHeight: 'calc(100vh - 280px)'
+                  maxHeight: 'calc(100vh - 220px)',
+                  overflow: 'hidden'
                 }}
               >
                 <Box
@@ -2266,7 +2370,8 @@ const CalibrationServicesPage = () => {
                   spacing={1}
                   sx={{
                     p: 1.5,
-                    minHeight: 240,
+                    minHeight: 0,
+                    flex: 1,
                     overflowY: 'auto',
                     scrollbarWidth: 'thin'
                   }}
@@ -2328,6 +2433,7 @@ const CalibrationServicesPage = () => {
                             position: 'relative',
                             overflow: 'hidden',
                             cursor: 'pointer',
+                            flexShrink: 0,
                             transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                             '&:hover': {
                               transform: 'translateY(-1px)',
@@ -2429,14 +2535,14 @@ const CalibrationServicesPage = () => {
                                 ) : null}
                               </Stack>
 
-                              <Typography
-                                variant='caption'
-                                sx={{ color: ui.muted, lineHeight: 1.35 }}
-                              >
-                                {service.scopeType === 'site'
-                                  ? `Sede: ${getServiceSiteLabel(service)}`
-                                  : getServiceSiteLabel(service)}
-                              </Typography>
+                              {service.scopeType === 'site' ? (
+                                <Typography
+                                  variant='caption'
+                                  sx={{ color: ui.muted, lineHeight: 1.35 }}
+                                >
+                                  Sede: {getServiceSiteLabel(service)}
+                                </Typography>
+                              ) : null}
 
                               {assignedMetrologistName ? (
                                 <Typography
