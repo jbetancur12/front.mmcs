@@ -126,7 +126,8 @@ const STATUS_OPTIONS: Array<{
   { value: 'in_execution', label: 'En ejecución' },
   { value: 'technically_completed', label: 'Finalizada técnicamente' },
   { value: 'cancelled', label: 'Cancelado' },
-  { value: 'closed', label: 'Cerrado' }
+  { value: 'closed', label: 'Cerrado' },
+  { value: 'invoiced' as any, label: 'Facturado' }
 ]
 
 const TECHNICAL_STATUS_OPTIONS: Array<{
@@ -730,7 +731,7 @@ const CalibrationServicesPage = () => {
     queryFilters.search = deferredSearch.trim()
   }
 
-  if (statusFilter !== FILTER_ALL) {
+  if (statusFilter !== FILTER_ALL && statusFilter !== 'invoiced') {
     queryFilters.status = statusFilter
   }
 
@@ -818,6 +819,10 @@ const CalibrationServicesPage = () => {
   const visibleServices = services.filter((service) => {
     const currentMetrologistNames = getMetrologistNames(service)
     const currentMetrologistEmails = getMetrologistEmails(service)
+
+    if (statusFilter === 'invoiced' && !(service.cuts || []).some(c => c.status === 'invoiced')) {
+      return false
+    }
 
     if (scopeFilter !== FILTER_ALL && service.scopeType !== scopeFilter) {
       return false
