@@ -36,6 +36,7 @@ export interface CalibrationServiceDecisionValues {
   notes: string
   evidenceFile: File | null
   onSiteCalibration: boolean | null
+  hasEquipmentSale: boolean | null
 }
 
 interface CalibrationServiceApprovalDialogProps {
@@ -55,7 +56,8 @@ const createInitialValues = (): CalibrationServiceDecisionValues => ({
   decisionDate: buildTodayValue(),
   notes: '',
   evidenceFile: null,
-  onSiteCalibration: null
+  onSiteCalibration: null,
+  hasEquipmentSale: null
 })
 
 const CalibrationServiceApprovalDialog = ({
@@ -111,6 +113,26 @@ const CalibrationServiceApprovalDialog = ({
                   setValues((previous) => ({
                     ...previous,
                     onSiteCalibration: event.target.value === 'si' ? true : event.target.value === 'no' ? false : null
+                  }))
+                }
+              >
+                <MenuItem value='si'>Sí</MenuItem>
+                <MenuItem value='no'>No</MenuItem>
+              </Select>
+            </FormControl>
+          )}
+
+          {!isRejectMode && !isRequestChangesMode && (
+            <FormControl fullWidth required error={values.hasEquipmentSale === null}>
+              <InputLabel>Incluye venta de equipo</InputLabel>
+              <Select
+                value={values.hasEquipmentSale === null ? '' : values.hasEquipmentSale ? 'si' : 'no'}
+                label='Incluye venta de equipo'
+                disabled={isLoading}
+                onChange={(event) =>
+                  setValues((previous) => ({
+                    ...previous,
+                    hasEquipmentSale: event.target.value === 'si' ? true : event.target.value === 'no' ? false : null
                   }))
                 }
               >
@@ -255,6 +277,10 @@ const CalibrationServiceApprovalDialog = ({
             }
             if (!isRejectMode && !isRequestChangesMode && values.onSiteCalibration === null) {
               alert('Selecciona si la calibración es en sitio o en laboratorio.')
+              return
+            }
+            if (!isRejectMode && !isRequestChangesMode && values.hasEquipmentSale === null) {
+              alert('Indica si el servicio incluye venta de equipo.')
               return
             }
             void onSubmit(values)

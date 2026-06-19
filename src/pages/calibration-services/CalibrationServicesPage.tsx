@@ -1125,6 +1125,9 @@ const CalibrationServicesPage = () => {
                 {service.odsCode ? (
                   <Chip size='small' variant='outlined' label={service.odsCode} />
                 ) : null}
+                {(service.otherFields as any)?.hasEquipmentSale === true ? (
+                  <Chip size='small' color='warning' variant='outlined' label='Venta Eq.' />
+                ) : null}
                 {!isTechnicalOnlyView && hasCustomerChangeRequest(service) ? (
                   <Chip
                     size='small'
@@ -2554,6 +2557,9 @@ const CalibrationServicesPage = () => {
                                   {service.items?.length ?? 0} item
                                   {(service.items?.length ?? 0) === 1 ? '' : 's'}
                                 </Typography>
+                                {(service.otherFields as any)?.hasEquipmentSale === true ? (
+                                  <Chip size='small' color='warning' variant='outlined' label='Venta' sx={{ height: 20, '& .MuiChip-label': { fontSize: '0.65rem', px: 0.5 } }} />
+                                ) : null}
                                 <Typography
                                   variant='caption'
                                   fontWeight={800}

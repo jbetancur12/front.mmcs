@@ -1385,7 +1385,8 @@ const CalibrationServiceDetailsPage = () => {
           approvalNotes: values.notes.trim() || null,
           approvedAt: decisionIsoDate,
           evidenceDocumentId,
-          onSiteCalibration: values.onSiteCalibration as boolean
+          onSiteCalibration: values.onSiteCalibration as boolean,
+          hasEquipmentSale: values.hasEquipmentSale as boolean
         })
 
         toast.success('La aprobación del cliente quedó registrada.')
@@ -2509,6 +2510,9 @@ const CalibrationServiceDetailsPage = () => {
                 }
                 sx={{ fontWeight: 600 }}
               />
+            ) : null}
+            {(service.otherFields as any)?.hasEquipmentSale === true ? (
+              <Chip size='small' color='warning' variant='outlined' label='Venta equipo' sx={{ fontWeight: 600 }} />
             ) : null}
             <CalibrationServiceStageDecisionHelp
               status={service.status}

@@ -716,6 +716,7 @@ export interface CalibrationServiceApprovePayload {
   approvedAt?: string
   evidenceDocumentId?: number | null
   onSiteCalibration: boolean
+  hasEquipmentSale: boolean
 }
 
 export interface CalibrationServiceRejectPayload {
