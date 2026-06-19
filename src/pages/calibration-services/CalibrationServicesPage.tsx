@@ -122,6 +122,7 @@ const STATUS_OPTIONS: Array<{
   { value: 'scheduled', label: 'Programada' },
   { value: 'in_execution', label: 'En ejecución' },
   { value: 'technically_completed', label: 'Finalizada técnicamente' },
+  { value: 'cancelled', label: 'Cancelado' },
   { value: 'closed', label: 'Cerrado' }
 ]
 
