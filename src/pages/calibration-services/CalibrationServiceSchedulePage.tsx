@@ -180,7 +180,7 @@ const CalibrationServiceSchedulePage = () => {
                             <Chip
                               key={s.id}
                               size='small'
-                              label={s.serviceCode}
+                              label={s.odsCode || s.serviceCode}
                               color={s.status === 'in_execution' ? 'info' : 'success'}
                               variant='outlined'
                               onClick={(e) => { e.stopPropagation(); navigate(`/calibration-services/${s.id}`) }}
@@ -219,7 +219,7 @@ const CalibrationServiceSchedulePage = () => {
                               <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                                 <Stack direction='row' justifyContent='space-between' alignItems='center'>
                                   <Box>
-                                    <Typography variant='body2' fontWeight={700}>{s.serviceCode}</Typography>
+                                    <Typography variant='body2' fontWeight={700}>{s.odsCode || s.serviceCode}</Typography>
                                     <Typography variant='caption' color='text.secondary'>
                                       {s.customer?.nombre || s.executionCustomerName || '—'}
                                     </Typography>
