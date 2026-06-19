@@ -731,7 +731,7 @@ const CalibrationServicesPage = () => {
     queryFilters.search = deferredSearch.trim()
   }
 
-  if (statusFilter !== FILTER_ALL && statusFilter !== 'invoiced') {
+  if (statusFilter !== FILTER_ALL && (statusFilter as string) !== 'invoiced') {
     queryFilters.status = statusFilter
   }
 
@@ -820,7 +820,7 @@ const CalibrationServicesPage = () => {
     const currentMetrologistNames = getMetrologistNames(service)
     const currentMetrologistEmails = getMetrologistEmails(service)
 
-    if (statusFilter === 'invoiced' && !(service.cuts || []).some(c => c.status === 'invoiced')) {
+    if ((statusFilter as string) === 'invoiced' && !(service.cuts || []).some(c => c.status === 'invoiced')) {
       return false
     }
 
