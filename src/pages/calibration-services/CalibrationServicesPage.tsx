@@ -18,6 +18,8 @@ import {
   DialogTitle,
   Divider,
   Grid,
+  IconButton,
+  Menu,
   MenuItem,
   Stack,
   TextField,
@@ -26,6 +28,7 @@ import {
   Typography
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
 import AddBusinessOutlinedIcon from '@mui/icons-material/AddBusinessOutlined'
 import AnalyticsOutlinedIcon from '@mui/icons-material/AnalyticsOutlined'
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined'
@@ -35,7 +38,6 @@ import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
 import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
 import FilterListOutlinedIcon from '@mui/icons-material/FilterListOutlined'
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
-import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined'
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
@@ -713,6 +715,7 @@ const CalibrationServicesPage = () => {
   )
   const [showOnlyMyLoad, setShowOnlyMyLoad] = useState(false)
   const [showOnlyReadyForInvoice, setShowOnlyReadyForInvoice] = useState(false)
+  const [moreAnchorEl, setMoreAnchorEl] = useState<HTMLElement | null>(null)
   const kanbanScrollRef = useRef<HTMLDivElement | null>(null)
   const kanbanTopScrollRef = useRef<HTMLDivElement | null>(null)
   const [kanbanScrollWidth, setKanbanScrollWidth] = useState(0)
@@ -744,7 +747,7 @@ const CalibrationServicesPage = () => {
   } = useCalibrationServiceSequenceConfig(canManageSequenceConfig)
   const { data: slaConfig } = useCalibrationServiceSlaConfig(canManageSlaConfig)
 
-  const { data, isLoading, isError, error, refetch, isFetching } =
+  const { data, isLoading, isError, error, refetch } =
     useCalibrationServices(queryFilters)
 
   useEffect(() => {
@@ -1636,60 +1639,43 @@ const CalibrationServicesPage = () => {
                 Clientes
               </Button>
             ) : null}
-            {canCreateServices ? (
-              <Button
-                variant='outlined'
-                startIcon={<Inventory2OutlinedIcon />}
-                onClick={() => navigate('/calibration-services/productos-y-servicios')}
-                sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
-              >
-                Productos
-              </Button>
-            ) : null}
-            {canManageSlaConfig ? (
-              <Button
-                variant='outlined'
-                startIcon={<SettingsOutlinedIcon />}
-                onClick={() => setIsSlaConfigDialogOpen(true)}
-                sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
-              >
-                Configuración SLA
-              </Button>
-            ) : null}
-            {canManageSequenceConfig ? (
-              <Button
-                variant='outlined'
-                startIcon={<SettingsOutlinedIcon />}
-                onClick={() => setIsSequenceDialogOpen(true)}
-                sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
-              >
-                Config. secuencia
-              </Button>
-            ) : null}
-            {canCreateServices ? (
-              <Button
-                variant='outlined'
-                startIcon={<SaveOutlinedIcon />}
-                onClick={handleOpenTemplate}
-                sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
-              >
-                Plantilla términos
-              </Button>
-            ) : null}
-            <Button
-              variant='outlined'
-              startIcon={<RefreshOutlinedIcon />}
-              onClick={() => {
-                void refetch()
-              }}
-              disabled={isFetching}
-              sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
-            >
-              Actualizar
-            </Button>
             <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '10px', px: 0.5, backdropFilter: 'blur(8px)' }}>
               <CalibrationNotificationBell />
             </Box>
+            <IconButton
+              onClick={(e) => setMoreAnchorEl(e.currentTarget)}
+              sx={{ color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '10px', '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' } }}
+            >
+              <MoreVertIcon />
+            </IconButton>
+            <Menu
+              anchorEl={moreAnchorEl}
+              open={Boolean(moreAnchorEl)}
+              onClose={() => setMoreAnchorEl(null)}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+            >
+              {canCreateServices ? (
+                <MenuItem onClick={() => { setMoreAnchorEl(null); navigate('/calibration-services/productos-y-servicios') }}>
+                  <Inventory2OutlinedIcon fontSize='small' sx={{ mr: 1 }} /> Productos
+                </MenuItem>
+              ) : null}
+              {canManageSlaConfig ? (
+                <MenuItem onClick={() => { setMoreAnchorEl(null); setIsSlaConfigDialogOpen(true) }}>
+                  <SettingsOutlinedIcon fontSize='small' sx={{ mr: 1 }} /> Configuración SLA
+                </MenuItem>
+              ) : null}
+              {canManageSequenceConfig ? (
+                <MenuItem onClick={() => { setMoreAnchorEl(null); setIsSequenceDialogOpen(true) }}>
+                  <SettingsOutlinedIcon fontSize='small' sx={{ mr: 1 }} /> Config. secuencia
+                </MenuItem>
+              ) : null}
+              {canCreateServices ? (
+                <MenuItem onClick={() => { setMoreAnchorEl(null); handleOpenTemplate() }}>
+                  <SaveOutlinedIcon fontSize='small' sx={{ mr: 1 }} /> Plantilla términos
+                </MenuItem>
+              ) : null}
+            </Menu>
             {canCreateServices ? (
               <Button
                 variant='contained'
