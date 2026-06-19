@@ -28,6 +28,7 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import AddBusinessOutlinedIcon from '@mui/icons-material/AddBusinessOutlined'
 import AnalyticsOutlinedIcon from '@mui/icons-material/AnalyticsOutlined'
+import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
@@ -1613,6 +1614,16 @@ const CalibrationServicesPage = () => {
                 sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
               >
                 Analíticas
+              </Button>
+            ) : null}
+            {canViewModule ? (
+              <Button
+                variant='outlined'
+                startIcon={<CalendarMonthOutlinedIcon />}
+                onClick={() => navigate('/calibration-services/schedule')}
+                sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
+              >
+                Agenda
               </Button>
             ) : null}
             {canCreateServices ? (
