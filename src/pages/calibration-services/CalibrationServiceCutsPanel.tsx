@@ -178,7 +178,7 @@ const CalibrationServiceCutsPanel = ({
                   >
                     Marcar facturado
                   </Button>
-                ) : canUpdateDocumentControl && cut.status === 'invoiced' && cut.customerHasCredit === false && !cut.paymentRegisteredAt ? (
+                ) : (canUpdateDocumentControl || canRegisterPayment) && cut.status === 'invoiced' && cut.customerHasCredit === false && !cut.paymentRegisteredAt ? (
                   <Stack spacing={0.5}>
                     {onRegisterPayment ? (
                       <Button
