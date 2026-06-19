@@ -28,6 +28,7 @@ const CalibrationServiceCutsPanel = ({
   canMarkReady = false,
   canMarkInvoiced = false,
   canUpdateDocumentControl = false,
+  canRegisterPayment = false,
   isBusy = false,
   onMarkReady,
   onMarkInvoiced,
