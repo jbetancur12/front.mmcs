@@ -1006,6 +1006,408 @@ const CalibrationServicesPage = () => {
     }
   }, [kanbanServices, viewMode])
 
+  const renderServiceCard = (service: CalibrationService) => {
+    const serviceOperationalFocus = getServiceOperationalFocus(service)
+    const operations = getOperationsDetails(service)
+    const assignedMetrologistName =
+      typeof operations.assignedMetrologistName === 'string'
+        ? operations.assignedMetrologistName
+        : typeof operations.operationalResponsibleName === 'string'
+          ? operations.operationalResponsibleName
+          : ''
+    const assignedMetrologistEmail =
+      typeof operations.assignedMetrologistEmail === 'string'
+        ? operations.assignedMetrologistEmail
+        : ''
+    const isAssignedToCurrentMetrologist =
+      Boolean(
+        hasTechnicalRole &&
+          $userStore.email &&
+          assignedMetrologistEmail &&
+          assignedMetrologistEmail.toLowerCase() ===
+            $userStore.email.toLowerCase()
+      )
+    const shouldShowOperationalFocusBadge =
+      serviceOperationalFocus &&
+      serviceOperationalFocus.label !== service.slaIndicator?.label
+    const canEdit = canCreateServices && service.status === 'draft'
+    const canRequestApproval =
+      canCreateServices && service.status === 'draft'
+    const canResolveApproval =
+      canTakeApprovalDecision && service.status === 'pending_approval'
+    const canOpenOds =
+      canIssueOds &&
+      service.status === 'approved' &&
+      service.approvalStatus === 'approved' &&
+      !service.odsCode
+    const canOpenScheduling =
+      canScheduleService &&
+      ['ods_issued', 'pending_programming'].includes(service.status)
+    const canManageExecution =
+      canRunExecution &&
+      ['scheduled', 'in_execution'].includes(service.status)
+
+    return (
+      <Card key={service.id} elevation={0} sx={{
+        ...softCardSx, position: 'relative', overflow: 'visible',
+        '&::before': {
+          content: '""', position: 'absolute', left: 0, top: 12, bottom: 12,
+          width: 3, borderRadius: '2px',
+          background: `linear-gradient(180deg, ${STATUS_BORDER_COLORS[service.status] || '#d1d5db'}, ${alpha(STATUS_BORDER_COLORS[service.status] || '#d1d5db', 0.3)})`
+        }
+      }}>
+        <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
+          <Stack
+            direction={{ xs: 'column', xl: 'row' }}
+            justifyContent='space-between'
+            spacing={2}
+          >
+            <Box flex={1}>
+              <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                spacing={1}
+                alignItems={{ xs: 'flex-start', md: 'center' }}
+                mb={1.5}
+                flexWrap='wrap'
+              >
+                <Typography
+                  variant='h6'
+                  fontWeight={700}
+                  sx={{ color: ui.text, lineHeight: 1.2 }}
+                >
+                  <Box component='span' title='Código interno del servicio (SCL)' sx={{ cursor: 'help' }}>
+                    {service.serviceCode}
+                  </Box>
+                  {service.quoteCode ? (
+                    <Box component='span' title='Consecutivo de cotización' sx={{ ml: 1, color: '#059669', fontWeight: 800, fontSize: '0.85rem', cursor: 'help' }}>
+                      · {service.quoteCode}
+                    </Box>
+                  ) : null}
+                </Typography>
+                <Chip
+                  size='small'
+                  color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]}
+                  label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]}
+                />
+                {!isTechnicalOnlyView ? (
+                  <Chip
+                    size='small'
+                    color={
+                      CALIBRATION_SERVICE_APPROVAL_COLORS[
+                        service.approvalStatus
+                      ]
+                    }
+                    label={
+                      CALIBRATION_SERVICE_APPROVAL_LABELS[
+                        service.approvalStatus
+                      ]
+                    }
+                  />
+                ) : null}
+                <Chip
+                  size='small'
+                  color={
+                    CALIBRATION_SERVICE_SLA_COLORS[
+                      service.slaIndicator?.color || 'gray'
+                    ]
+                  }
+                  label={service.slaIndicator?.label || 'SLA no iniciado'}
+                />
+                {['yellow', 'red'].includes(
+                  service.slaIndicator?.color || 'gray'
+                ) ? (
+                  <Chip
+                    size='small'
+                    icon={
+                      service.slaIndicator?.color === 'red' ? (
+                        <ReportProblemOutlinedIcon />
+                      ) : (
+                        <WarningAmberOutlinedIcon />
+                      )
+                    }
+                    color={
+                      service.slaIndicator?.color === 'red'
+                        ? 'error'
+                        : 'warning'
+                    }
+                    label={
+                      service.slaIndicator?.color === 'red'
+                        ? 'Alerta vencida'
+                        : 'Alerta activa'
+                    }
+                  />
+                ) : null}
+                {shouldShowOperationalFocusBadge ? (
+                  <Chip
+                    size='small'
+                    color={serviceOperationalFocus.color}
+                    variant='outlined'
+                    label={serviceOperationalFocus.label}
+                  />
+                ) : null}
+                {service.odsCode ? (
+                  <Chip size='small' variant='outlined' label={service.odsCode} />
+                ) : null}
+                {!isTechnicalOnlyView && hasCustomerChangeRequest(service) ? (
+                  <Chip
+                    size='small'
+                    color='warning'
+                    variant='outlined'
+                    label='Cliente pidió modificación'
+                  />
+                ) : null}
+                {assignedMetrologistName ? (
+                  <Chip
+                    size='small'
+                    color={isAssignedToCurrentMetrologist ? 'success' : 'default'}
+                    variant={
+                      isAssignedToCurrentMetrologist ? 'filled' : 'outlined'
+                    }
+                    label={
+                      isAssignedToCurrentMetrologist
+                        ? 'Asignado a ti'
+                        : `Metrólogo: ${assignedMetrologistName}`
+                    }
+                  />
+                ) : null}
+              </Stack>
+
+              <Typography
+                variant='body1'
+                fontWeight={700}
+                sx={{ color: ui.textSecondary, lineHeight: 1.5 }}
+              >
+                {service.customer?.nombre ||
+                  service.executionCustomerName ||
+                  'Cliente pendiente'}
+              </Typography>
+              {service.scopeType === 'site' ? (
+                <Typography
+                  variant='body2'
+                  sx={{ mt: 0.5, color: ui.muted, lineHeight: 1.5 }}
+                >
+                  Sede: {getServiceSiteLabel(service)}
+                </Typography>
+              ) : null}
+              <Typography
+                variant='body2'
+                sx={{ mt: 1, color: ui.muted, lineHeight: 1.5 }}
+              >
+                {hasCustomerChangeRequest(service)
+                  ? 'La cotización volvió a edición porque el cliente pidió cambios.'
+                  : service.slaIndicator?.message ||
+                    'Todavía no hay una alerta operativa activa.'}
+              </Typography>
+              {assignedMetrologistName ? (
+                <Typography
+                  variant='body2'
+                  sx={{ mt: 0.75, color: ui.muted, lineHeight: 1.5 }}
+                >
+                  Responsable metrológico:{' '}
+                  <strong>{assignedMetrologistName}</strong>
+                  {assignedMetrologistEmail
+                    ? ` · ${assignedMetrologistEmail}`
+                    : ''}
+                </Typography>
+              ) : null}
+
+              <Divider sx={{ my: 2, borderColor: ui.border }} />
+
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Typography
+                    variant='caption'
+                    sx={{ color: ui.muted, fontWeight: 500 }}
+                  >
+                    Ítems del servicio
+                  </Typography>
+                  <Typography
+                    variant='body1'
+                    fontWeight={700}
+                    sx={{ color: ui.text }}
+                  >
+                    {service.items?.length ?? 0}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Typography
+                    variant='caption'
+                    sx={{ color: ui.muted, fontWeight: 500 }}
+                  >
+                    {isTechnicalOnlyView ? 'ODS' : 'Total estimado'}
+                  </Typography>
+                  <Typography
+                    variant='body1'
+                    fontWeight={700}
+                    sx={{ color: ui.success }}
+                  >
+                    {isTechnicalOnlyView
+                      ? service.odsCode || 'Pendiente'
+                      : currencyFormatter.format(getItemsTotal(service))}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Typography
+                    variant='caption'
+                    sx={{ color: ui.muted, fontWeight: 500 }}
+                  >
+                    Contacto
+                  </Typography>
+                  <Typography
+                    variant='body1'
+                    fontWeight={700}
+                    sx={{ color: ui.text }}
+                  >
+                    {service.contactName || 'Sin contacto'}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Typography
+                    variant='caption'
+                    sx={{ color: ui.muted, fontWeight: 500 }}
+                  >
+                    Actualizado
+                  </Typography>
+                  <Typography
+                    variant='body1'
+                    fontWeight={700}
+                    sx={{ color: ui.text }}
+                  >
+                    {new Date(service.updatedAt).toLocaleDateString('es-CO')}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Box>
+
+            <Stack
+              direction={{ xs: 'column', sm: 'row', xl: 'column' }}
+              spacing={1}
+              justifyContent='flex-start'
+              alignItems={{ xs: 'stretch', sm: 'flex-start' }}
+            >
+              <Button
+                variant='outlined'
+                startIcon={<VisibilityOutlinedIcon />}
+                onClick={() => openServiceDetail(service.id)}
+                sx={secondaryButtonSx}
+              >
+                Ver detalle
+              </Button>
+              {canEdit ? (
+                <Button
+                  variant='outlined'
+                  startIcon={<EditOutlinedIcon />}
+                  onClick={() =>
+                    navigate(`/calibration-services/${service.id}/edit`)
+                  }
+                  sx={secondaryButtonSx}
+                >
+                  Editar
+                </Button>
+              ) : null}
+              {canRequestApproval ? (
+                <Button
+                  variant='contained'
+                  startIcon={<SendOutlinedIcon />}
+                  onClick={() => void handleRequestApproval(service)}
+                  disabled={requestApproval.isLoading}
+                  sx={primaryButtonSx}
+                >
+                  Enviar cotización
+                </Button>
+              ) : null}
+              {canResolveApproval ? (
+                <Button
+                  variant='contained'
+                  color='warning'
+                  startIcon={<WarningAmberOutlinedIcon />}
+                  onClick={() => openServiceDetail(service.id)}
+                  sx={{
+                    borderRadius: '12px',
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    minHeight: 44
+                  }}
+                >
+                  Registrar respuesta cliente
+                </Button>
+              ) : null}
+              {canOpenOds ? (
+                <Button
+                  variant='contained'
+                  color='info'
+                  startIcon={<DescriptionOutlinedIcon />}
+                  onClick={() => openOdsWorkflow(service.id)}
+                  sx={{
+                    borderRadius: '12px',
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    minHeight: 44
+                  }}
+                >
+                  Emitir ODS
+                </Button>
+              ) : null}
+              {canOpenScheduling ? (
+                <Button
+                  variant='contained'
+                  color='primary'
+                  startIcon={<DescriptionOutlinedIcon />}
+                  onClick={() => openScheduleWorkflow(service.id)}
+                  sx={{
+                    borderRadius: '12px',
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    minHeight: 44
+                  }}
+                >
+                  Programar
+                </Button>
+              ) : null}
+              {canManageExecution ? (
+                <Button
+                  variant='outlined'
+                  color='success'
+                  startIcon={<VisibilityOutlinedIcon />}
+                  onClick={() => openServiceDetail(service.id)}
+                  sx={{
+                    ...secondaryButtonSx,
+                    color: ui.success,
+                    borderColor: alpha(ui.success, 0.35)
+                  }}
+                >
+                  Operación
+                </Button>
+              ) : null}
+            </Stack>
+          </Stack>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const groupedListServices = useMemo(() => {
+    const grouped = visibleServices.reduce<Record<string, CalibrationService[]>>(
+      (acc, service) => {
+        const key = getKanbanColumnKey(service, isTechnicalOnlyView)
+        if (!acc[key]) acc[key] = []
+        acc[key].push(service)
+        return acc
+      },
+      {}
+    )
+
+    return getKanbanColumns(isTechnicalOnlyView)
+      .map(col => ({
+        ...col,
+        services: (grouped[col.key] || []).sort(
+          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        )
+      }))
+      .filter(col => col.services.length > 0)
+      .sort((a, b) => a.priority - b.priority)
+  }, [visibleServices, isTechnicalOnlyView])
+
   const currentUserHasAssignedLoad = useMemo(() => {
     const currentUserEmail = $userStore.email?.trim().toLowerCase()
 
@@ -1324,7 +1726,7 @@ const CalibrationServicesPage = () => {
 
       <Grid container spacing={2} mb={3}>
         <Grid item xs={12} md={3}>
-          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: `linear-gradient(180deg, ${ui.info}, ${alpha(ui.info, 0.4)})` } }}>
+          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', cursor: 'pointer', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: `linear-gradient(180deg, ${ui.info}, ${alpha(ui.info, 0.4)})` } }} onClick={clearFilters}>
             <CardContent sx={{ p: 2 }}>
               <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
                 <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
@@ -1344,7 +1746,7 @@ const CalibrationServicesPage = () => {
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: `linear-gradient(180deg, ${ui.warning}, ${alpha(ui.warning, 0.4)})` } }}>
+          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', cursor: 'pointer', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: `linear-gradient(180deg, ${ui.warning}, ${alpha(ui.warning, 0.4)})` } }} onClick={() => { setStatusFilter(isTechnicalOnlyView ? 'ods_issued' : 'pending_approval'); setAreFiltersOpen(true) }}>
             <CardContent sx={{ p: 2 }}>
               <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
                 <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
@@ -1366,7 +1768,7 @@ const CalibrationServicesPage = () => {
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: `linear-gradient(180deg, ${ui.greenDark}, ${alpha(ui.green, 0.4)})` } }}>
+          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', cursor: 'pointer', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: `linear-gradient(180deg, ${ui.greenDark}, ${alpha(ui.green, 0.4)})` } }} onClick={() => { setStatusFilter(isTechnicalOnlyView ? 'pending_programming' : 'approved'); setAreFiltersOpen(true) }}>
             <CardContent sx={{ p: 2 }}>
               <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
                 <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
@@ -1388,7 +1790,7 @@ const CalibrationServicesPage = () => {
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: urgentCount > 0 ? `linear-gradient(180deg, ${ui.error}, ${alpha(ui.error, 0.4)})` : `linear-gradient(180deg, ${ui.muted}, ${alpha(ui.muted, 0.3)})` } }}>
+          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', cursor: 'pointer', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: urgentCount > 0 ? `linear-gradient(180deg, ${ui.error}, ${alpha(ui.error, 0.4)})` : `linear-gradient(180deg, ${ui.muted}, ${alpha(ui.muted, 0.3)})` } }} onClick={() => { setSlaFilter('red'); setAreFiltersOpen(true) }}>
             <CardContent sx={{ p: 2 }}>
               <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
                 <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
@@ -1724,384 +2126,50 @@ const CalibrationServicesPage = () => {
           No encontramos servicios con los filtros actuales.
         </Alert>
       ) : viewMode === 'list' ? (
-        <Stack spacing={2}>
-          {visibleServices.map((service) => {
-            const serviceOperationalFocus = getServiceOperationalFocus(service)
-            const operations = getOperationsDetails(service)
-            const assignedMetrologistName =
-              typeof operations.assignedMetrologistName === 'string'
-                ? operations.assignedMetrologistName
-                : typeof operations.operationalResponsibleName === 'string'
-                  ? operations.operationalResponsibleName
-                  : ''
-            const assignedMetrologistEmail =
-              typeof operations.assignedMetrologistEmail === 'string'
-                ? operations.assignedMetrologistEmail
-                : ''
-            const isAssignedToCurrentMetrologist =
-              Boolean(
-                hasTechnicalRole &&
-                  $userStore.email &&
-                  assignedMetrologistEmail &&
-                  assignedMetrologistEmail.toLowerCase() ===
-                    $userStore.email.toLowerCase()
-              )
-            const shouldShowOperationalFocusBadge =
-              serviceOperationalFocus &&
-              serviceOperationalFocus.label !== service.slaIndicator?.label
-            const canEdit = canCreateServices && service.status === 'draft'
-            const canRequestApproval =
-              canCreateServices && service.status === 'draft'
-            const canResolveApproval =
-              canTakeApprovalDecision && service.status === 'pending_approval'
-            const canOpenOds =
-              canIssueOds &&
-              service.status === 'approved' &&
-              service.approvalStatus === 'approved' &&
-              !service.odsCode
-            const canOpenScheduling =
-              canScheduleService &&
-              ['ods_issued', 'pending_programming'].includes(service.status)
-            const canManageExecution =
-              canRunExecution &&
-              ['scheduled', 'in_execution'].includes(service.status)
-
+        <Stack spacing={1.5}>
+          {groupedListServices.map((group) => {
+            const isDefaultExpanded = group.key !== 'closed'
             return (
-              <Card key={service.id} elevation={0} sx={{
-                ...softCardSx, position: 'relative', overflow: 'visible',
-                '&::before': {
-                  content: '""', position: 'absolute', left: 0, top: 12, bottom: 12,
-                  width: 3, borderRadius: '2px',
-                  background: `linear-gradient(180deg, ${STATUS_BORDER_COLORS[service.status] || '#d1d5db'}, ${alpha(STATUS_BORDER_COLORS[service.status] || '#d1d5db', 0.3)})`
-                }
-              }}>
-                <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
-                  <Stack
-                    direction={{ xs: 'column', xl: 'row' }}
-                    justifyContent='space-between'
-                    spacing={2}
-                  >
-                    <Box flex={1}>
-                      <Stack
-                        direction={{ xs: 'column', md: 'row' }}
-                        spacing={1}
-                        alignItems={{ xs: 'flex-start', md: 'center' }}
-                        mb={1.5}
-                        flexWrap='wrap'
-                      >
-                        <Typography
-                          variant='h6'
-                          fontWeight={700}
-                          sx={{ color: ui.text, lineHeight: 1.2 }}
-                        >
-                          <Box component='span' title='Código interno del servicio (SCL)' sx={{ cursor: 'help' }}>
-                            {service.serviceCode}
-                          </Box>
-                          {service.quoteCode ? (
-                            <Box component='span' title='Consecutivo de cotización' sx={{ ml: 1, color: '#059669', fontWeight: 800, fontSize: '0.85rem', cursor: 'help' }}>
-                              · {service.quoteCode}
-                            </Box>
-                          ) : null}
-                        </Typography>
-                        <Chip
-                          size='small'
-                          color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]}
-                          label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]}
-                        />
-                        {!isTechnicalOnlyView ? (
-                          <Chip
-                            size='small'
-                            color={
-                              CALIBRATION_SERVICE_APPROVAL_COLORS[
-                                service.approvalStatus
-                              ]
-                            }
-                            label={
-                              CALIBRATION_SERVICE_APPROVAL_LABELS[
-                                service.approvalStatus
-                              ]
-                            }
-                          />
-                        ) : null}
-                        <Chip
-                          size='small'
-                          color={
-                            CALIBRATION_SERVICE_SLA_COLORS[
-                              service.slaIndicator?.color || 'gray'
-                            ]
-                          }
-                          label={service.slaIndicator?.label || 'SLA no iniciado'}
-                        />
-                        {['yellow', 'red'].includes(
-                          service.slaIndicator?.color || 'gray'
-                        ) ? (
-                          <Chip
-                            size='small'
-                            icon={
-                              service.slaIndicator?.color === 'red' ? (
-                                <ReportProblemOutlinedIcon />
-                              ) : (
-                                <WarningAmberOutlinedIcon />
-                              )
-                            }
-                            color={
-                              service.slaIndicator?.color === 'red'
-                                ? 'error'
-                                : 'warning'
-                            }
-                            label={
-                              service.slaIndicator?.color === 'red'
-                                ? 'Alerta vencida'
-                                : 'Alerta activa'
-                            }
-                          />
-                        ) : null}
-                        {shouldShowOperationalFocusBadge ? (
-                          <Chip
-                            size='small'
-                            color={serviceOperationalFocus.color}
-                            variant='outlined'
-                            label={serviceOperationalFocus.label}
-                          />
-                        ) : null}
-                        {service.odsCode ? (
-                          <Chip size='small' variant='outlined' label={service.odsCode} />
-                        ) : null}
-                        {!isTechnicalOnlyView && hasCustomerChangeRequest(service) ? (
-                          <Chip
-                            size='small'
-                            color='warning'
-                            variant='outlined'
-                            label='Cliente pidió modificación'
-                          />
-                        ) : null}
-                        {assignedMetrologistName ? (
-                          <Chip
-                            size='small'
-                            color={isAssignedToCurrentMetrologist ? 'success' : 'default'}
-                            variant={
-                              isAssignedToCurrentMetrologist ? 'filled' : 'outlined'
-                            }
-                            label={
-                              isAssignedToCurrentMetrologist
-                                ? 'Asignado a ti'
-                                : `Metrólogo: ${assignedMetrologistName}`
-                            }
-                          />
-                        ) : null}
-                      </Stack>
-
-                      <Typography
-                        variant='body1'
-                        fontWeight={700}
-                        sx={{ color: ui.textSecondary, lineHeight: 1.5 }}
-                      >
-                        {service.customer?.nombre ||
-                          service.executionCustomerName ||
-                          'Cliente pendiente'}
-                      </Typography>
-                      <Typography
-                        variant='body2'
-                        sx={{ mt: 0.5, color: ui.muted, lineHeight: 1.5 }}
-                      >
-                        {service.scopeType === 'site'
-                          ? `Sede: ${getServiceSiteLabel(service)}`
-                          : `Alcance general · ${getServiceSiteLabel(service)}`}
-                      </Typography>
-                      <Typography
-                        variant='body2'
-                        sx={{ mt: 1, color: ui.muted, lineHeight: 1.5 }}
-                      >
-                        {hasCustomerChangeRequest(service)
-                          ? 'La cotización volvió a edición porque el cliente pidió cambios.'
-                          : service.slaIndicator?.message ||
-                            'Todavía no hay una alerta operativa activa.'}
-                      </Typography>
-                      {assignedMetrologistName ? (
-                        <Typography
-                          variant='body2'
-                          sx={{ mt: 0.75, color: ui.muted, lineHeight: 1.5 }}
-                        >
-                          Responsable metrológico:{' '}
-                          <strong>{assignedMetrologistName}</strong>
-                          {assignedMetrologistEmail
-                            ? ` · ${assignedMetrologistEmail}`
-                            : ''}
-                        </Typography>
-                      ) : null}
-
-                      <Divider sx={{ my: 2, borderColor: ui.border }} />
-
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6} md={3}>
-                          <Typography
-                            variant='caption'
-                            sx={{ color: ui.muted, fontWeight: 500 }}
-                          >
-                            Ítems del servicio
-                          </Typography>
-                          <Typography
-                            variant='body1'
-                            fontWeight={700}
-                            sx={{ color: ui.text }}
-                          >
-                            {service.items?.length ?? 0}
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={3}>
-                          <Typography
-                            variant='caption'
-                            sx={{ color: ui.muted, fontWeight: 500 }}
-                          >
-                            {isTechnicalOnlyView ? 'ODS' : 'Total estimado'}
-                          </Typography>
-                          <Typography
-                            variant='body1'
-                            fontWeight={700}
-                            sx={{ color: ui.success }}
-                          >
-                            {isTechnicalOnlyView
-                              ? service.odsCode || 'Pendiente'
-                              : currencyFormatter.format(getItemsTotal(service))}
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={3}>
-                          <Typography
-                            variant='caption'
-                            sx={{ color: ui.muted, fontWeight: 500 }}
-                          >
-                            Contacto
-                          </Typography>
-                          <Typography
-                            variant='body1'
-                            fontWeight={700}
-                            sx={{ color: ui.text }}
-                          >
-                            {service.contactName || 'Sin contacto'}
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={12} sm={6} md={3}>
-                          <Typography
-                            variant='caption'
-                            sx={{ color: ui.muted, fontWeight: 500 }}
-                          >
-                            Actualizado
-                          </Typography>
-                          <Typography
-                            variant='body1'
-                            fontWeight={700}
-                            sx={{ color: ui.text }}
-                          >
-                            {new Date(service.updatedAt).toLocaleDateString('es-CO')}
-                          </Typography>
-                        </Grid>
-                      </Grid>
-                    </Box>
-
-                    <Stack
-                      direction={{ xs: 'column', sm: 'row', xl: 'column' }}
-                      spacing={1}
-                      justifyContent='flex-start'
-                      alignItems={{ xs: 'stretch', sm: 'flex-start' }}
-                    >
-                      <Button
-                        variant='outlined'
-                        startIcon={<VisibilityOutlinedIcon />}
-                        onClick={() => openServiceDetail(service.id)}
-                        sx={secondaryButtonSx}
-                      >
-                        Ver detalle
-                      </Button>
-                      {canEdit ? (
-                        <Button
-                          variant='outlined'
-                          startIcon={<EditOutlinedIcon />}
-                          onClick={() =>
-                            navigate(`/calibration-services/${service.id}/edit`)
-                          }
-                          sx={secondaryButtonSx}
-                        >
-                          Editar
-                        </Button>
-                      ) : null}
-                      {canRequestApproval ? (
-                        <Button
-                          variant='contained'
-                          startIcon={<SendOutlinedIcon />}
-                          onClick={() => void handleRequestApproval(service)}
-                          disabled={requestApproval.isLoading}
-                          sx={primaryButtonSx}
-                        >
-                          Enviar cotización
-                        </Button>
-                      ) : null}
-                      {canResolveApproval ? (
-                        <Button
-                          variant='contained'
-                          color='warning'
-                          startIcon={<WarningAmberOutlinedIcon />}
-                          onClick={() => openServiceDetail(service.id)}
-                          sx={{
-                            borderRadius: '12px',
-                            textTransform: 'none',
-                            fontWeight: 700,
-                            minHeight: 44
-                          }}
-                        >
-                          Registrar respuesta cliente
-                        </Button>
-                      ) : null}
-                      {canOpenOds ? (
-                        <Button
-                          variant='contained'
-                          color='info'
-                          startIcon={<DescriptionOutlinedIcon />}
-                          onClick={() => openOdsWorkflow(service.id)}
-                          sx={{
-                            borderRadius: '12px',
-                            textTransform: 'none',
-                            fontWeight: 700,
-                            minHeight: 44
-                          }}
-                        >
-                          Emitir ODS
-                        </Button>
-                      ) : null}
-                      {canOpenScheduling ? (
-                        <Button
-                          variant='contained'
-                          color='primary'
-                          startIcon={<DescriptionOutlinedIcon />}
-                          onClick={() => openScheduleWorkflow(service.id)}
-                          sx={{
-                            borderRadius: '12px',
-                            textTransform: 'none',
-                            fontWeight: 700,
-                            minHeight: 44
-                          }}
-                        >
-                          Programar
-                        </Button>
-                      ) : null}
-                      {canManageExecution ? (
-                        <Button
-                          variant='outlined'
-                          color='success'
-                          startIcon={<VisibilityOutlinedIcon />}
-                          onClick={() => openServiceDetail(service.id)}
-                          sx={{
-                            ...secondaryButtonSx,
-                            color: ui.success,
-                            borderColor: alpha(ui.success, 0.35)
-                          }}
-                        >
-                          Operación
-                        </Button>
-                      ) : null}
-                    </Stack>
+              <Accordion
+                key={group.key}
+                defaultExpanded={isDefaultExpanded}
+                disableGutters
+                elevation={0}
+                sx={{
+                  border: `1px solid ${alpha(group.accent, 0.16)}`,
+                  borderRadius: '16px !important',
+                  '&::before': { display: 'none' },
+                  overflow: 'hidden'
+                }}
+              >
+                <AccordionSummary
+                  expandIcon={<ExpandMoreOutlinedIcon />}
+                  sx={{
+                    background: `linear-gradient(90deg, ${alpha(group.accent, 0.06)} 0%, transparent 100%)`,
+                    borderBottom: `1px solid ${alpha(group.accent, 0.1)}`,
+                    minHeight: 48,
+                    '&.Mui-expanded': { minHeight: 48 },
+                    '& .MuiAccordionSummary-content': { my: 1 }
+                  }}
+                >
+                  <Stack direction='row' spacing={1.5} alignItems='center'>
+                    <Box sx={{ width: 4, height: 24, borderRadius: 2, backgroundColor: group.accent }} />
+                    <Typography variant='subtitle1' fontWeight={800} sx={{ color: ui.text }}>
+                      {group.title}
+                    </Typography>
+                    <Chip
+                      size='small'
+                      label={group.services.length}
+                      sx={{ bgcolor: alpha(group.accent, 0.12), color: group.accent, fontWeight: 800 }}
+                    />
                   </Stack>
-                </CardContent>
-              </Card>
+                </AccordionSummary>
+                <AccordionDetails sx={{ p: 2 }}>
+                  <Stack spacing={2}>
+                    {group.services.map(renderServiceCard)}
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
             )
           })}
         </Stack>
