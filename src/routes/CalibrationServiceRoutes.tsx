@@ -13,6 +13,9 @@ const CalibrationServicesPage = lazy(
 const CalibrationServiceMobilePage = lazy(
   () => import('../pages/calibration-services/CalibrationServiceMobilePage')
 )
+const CalibrationServiceMobileListPage = lazy(
+  () => import('../pages/calibration-services/CalibrationServiceMobileListPage')
+)
 const CalibrationServiceDetailsPage = lazy(
   () => import('../pages/calibration-services/CalibrationServiceDetailsPage')
 )
@@ -34,6 +37,8 @@ const CalibrationNotificationCenter = lazy(
 const ProductosServicios = lazy(() => import('../pages/ProductosServicios'))
 
 const CalibrationServiceRoutes = (role: string[]) => {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+
   return (
     <>
       <Route
@@ -47,7 +52,7 @@ const CalibrationServiceRoutes = (role: string[]) => {
       >
         <Route
           path='calibration-services'
-          element={<CalibrationServicesPage />}
+          element={isMobile ? <CalibrationServiceMobileListPage /> : <CalibrationServicesPage />}
         />
         <Route
           path='calibration-services/analytics'
@@ -83,7 +88,7 @@ const CalibrationServiceRoutes = (role: string[]) => {
         />
         <Route
           path='calibration-services/:serviceId'
-          element={<CalibrationServiceDetailsPage />}
+          element={isMobile ? <CalibrationServiceMobilePage /> : <CalibrationServiceDetailsPage />}
         />
       </Route>
 
