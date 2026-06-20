@@ -11,12 +11,6 @@ import { axiosPrivate } from '@utils/api'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import SearchIcon from '@mui/icons-material/Search'
-import PlayArrowIcon from '@mui/icons-material/PlayArrow'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
-import InventoryIcon from '@mui/icons-material/Inventory'
-import WarningAmberIcon from '@mui/icons-material/WarningAmber'
-import PauseIcon from '@mui/icons-material/Pause'
 import SignaturePad from '../../Components/Maintenance/SignaturePad'
 import {
   CalibrationService, CalibrationServiceCut, CalibrationServiceOperationalItemStatus
@@ -26,11 +20,20 @@ import {
   CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS
 } from '../../constants/calibrationServices'
 
+// Figma design palette
+const G = {
+  green: '#00A651', greenLight: '#e8f7ef', greenDark: '#007a3d',
+  yellow: '#F5A623', yellowLight: '#fff8ec', red: '#e53e3e',
+  gray50: '#f0f2f5', gray100: '#e8eaed', gray200: '#d1d5db',
+  gray300: '#b0b7c3', gray400: '#9ca3af', gray600: '#4b5563',
+  gray800: '#1f2937', dark: '#1a1a2e', white: '#ffffff'
+}
+
 const STATUS_FLOW: CalibrationServiceOperationalItemStatus[] = ['pending', 'scheduled', 'in_progress', 'completed']
 const CUT_STATUSES: Record<string, { label: string; color: string }> = {
-  draft: { label: 'Borrador', color: '#f59e0b' },
-  ready_for_invoicing: { label: 'Listo facturar', color: '#3b82f6' },
-  invoiced: { label: 'Facturado', color: '#10b981' }
+  draft: { label: 'Borrador', color: G.yellow },
+  ready_for_invoicing: { label: 'Listo facturar', color: G.green },
+  invoiced: { label: 'Facturado', color: G.gray400 }
 }
 
 const getOps = (s: any) => (s?.otherFields?.operations || {})
@@ -172,26 +175,28 @@ const MobilePage = () => {
     setSaving(false)
   }
 
-  return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f5f5f5', pb: 12 }}>
+return (
+    <Box sx={{ minHeight: '100vh', bgcolor: G.gray50, pb: 12 }}>
       <Toaster position='top-center' />
       {isLoading ? <Box sx={{ textAlign: 'center', py: 8 }}><CircularProgress /></Box> :
       !s ? <Box sx={{ p: 2 }}><Alert severity='error'>Servicio no encontrado</Alert></Box> : (
-      <>
+      <Box sx={{ maxWidth: 430, mx: 'auto' }}>
         {/* Header */}
-        <Box sx={{ bgcolor: '#10b981', p: 2, color: 'white' }}>
-          <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 1 }}>
-            <ArrowBackIcon fontSize='small' onClick={() => navigate(-1)} sx={{ cursor: 'pointer' }} />
-            <Typography variant='body2' sx={{ opacity: 0.8 }}>Servicios</Typography>
-          </Stack>
-          <Typography variant='h6' fontWeight={800}>{s.serviceCode}</Typography>
-          <Typography variant='body2'>{s.customer?.nombre || s.executionCustomerName}</Typography>
-          <Stack direction='row' spacing={1} sx={{ mt: 1 }}>
-            <Chip size='small' label={CALIBRATION_SERVICE_STATUS_LABELS[status]} color={CALIBRATION_SERVICE_STATUS_COLORS[status] as any} sx={{ color: 'white' }} />
-            {s.odsCode && <Chip size='small' label={s.odsCode} variant='outlined' sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.5)' }} />}
-            {scheduledDate && <Chip size='small' label={new Date(scheduledDate).toLocaleDateString('es-CO')} variant='outlined' sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.5)' }} />}
-          </Stack>
-        </Box>
+      <Box sx={{ bgcolor: G.green, px: 2, py: 2, color: 'white' }}>
+        <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 1 }}>
+          <ArrowBackIcon fontSize='small' onClick={() => navigate(-1)} sx={{ cursor: 'pointer', opacity: 0.8 }} />
+          <Typography variant='body2' sx={{ opacity: 0.75 }}>MetroMedics</Typography>
+        </Stack>
+        <Typography variant='h6' fontWeight={800}>{s.serviceCode}</Typography>
+        <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mt: 1, flexWrap: 'wrap' }}>
+          <Typography variant='body2' fontWeight={600} sx={{ fontSize: '0.75rem' }}>{s.customer?.nombre || s.executionCustomerName}</Typography>
+          <Box component='span' sx={{ bgcolor: `${G.greenDark}99`, color: 'white', fontSize: '0.65rem', fontWeight: 600, px: 1.5, py: 0.3, borderRadius: '999px' }}>
+            {CALIBRATION_SERVICE_STATUS_LABELS[status]}
+          </Box>
+          {s.odsCode && <Box component='span' sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', fontSize: '0.65rem', fontWeight: 600, px: 1.5, py: 0.3, borderRadius: '999px' }}>{s.odsCode}</Box>}
+          {scheduledDate && <Box component='span' sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', fontSize: '0.65rem', fontWeight: 600, px: 1.5, py: 0.3, borderRadius: '999px' }}>{new Date(scheduledDate).toLocaleDateString('es-CO')}</Box>}
+        </Stack>
+      </Box>
 
         {/* Execution */}
         {['scheduled', 'in_execution'].includes(status) && (
@@ -228,7 +233,7 @@ const MobilePage = () => {
         )}
 
         {/* Items */}
-        <Typography variant='subtitle1' fontWeight={700} sx={{ px: 2, mt: 3, mb: 1 }}>Ítems del servicio</Typography>
+        <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400 }}>Ítems del servicio</Typography>
         <Stack spacing={1.5} sx={{ px: 2 }}>
           {items.map(item => (
             <Card key={item.id} sx={{ borderRadius: 3 }} elevation={1}>
@@ -255,7 +260,7 @@ const MobilePage = () => {
         </Stack>
 
         {/* Logistics */}
-        <Typography variant='subtitle1' fontWeight={700} sx={{ px: 2, mt: 3, mb: 1 }}>Logística</Typography>
+        <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400 }}>Logística</Typography>
         <Stack spacing={1} sx={{ px: 2 }}>
           <Button fullWidth variant='outlined' startIcon={<InventoryIcon />}
             onClick={() => setShowLogistics(true)}
@@ -270,7 +275,7 @@ const MobilePage = () => {
         </Stack>
 
         {/* Adjustments */}
-        <Typography variant='subtitle1' fontWeight={700} sx={{ px: 2, mt: 3, mb: 1 }}>Novedades</Typography>
+        <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400 }}>Novedades</Typography>
         <Stack spacing={1} sx={{ px: 2 }}>
           <Button fullWidth variant='outlined' color='warning' startIcon={<WarningAmberIcon />}
             onClick={() => setShowAdjust(true)}
@@ -280,7 +285,7 @@ const MobilePage = () => {
         </Stack>
 
         {/* Signature */}
-        <Typography variant='subtitle1' fontWeight={700} sx={{ px: 2, mt: 3, mb: 1 }}>Firma de recepción</Typography>
+        <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400 }}>Firma de recepción</Typography>
         <Card sx={{ mx: 2, borderRadius: 3 }} elevation={1}>
           <CardContent sx={{ p: 2 }}>
             <TextField fullWidth size='small' label='Nombre de quien recibe' value={deliveryName} onChange={e => setDeliveryName(e.target.value)} sx={{ mb: 2 }} />
@@ -294,7 +299,7 @@ const MobilePage = () => {
         </Card>
 
         {/* Cuts */}
-        <Typography variant='subtitle1' fontWeight={700} sx={{ px: 2, mt: 3, mb: 1 }}>Cortes</Typography>
+        <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400 }}>Cortes</Typography>
         <Stack spacing={1} sx={{ px: 2 }}>
           {cuts.map((cut: CalibrationServiceCut) => {
             const cs = CUT_STATUSES[cut.status] || { label: cut.status, color: '#6b7280' }
@@ -543,7 +548,7 @@ const MobilePage = () => {
             }, 'Corte creado')} disabled={actionLoading === 'cut'}>Crear</Button>
           </DialogActions>
         </Dialog>
-      </>
+      </Box>
       )}
     </Box>
   )
