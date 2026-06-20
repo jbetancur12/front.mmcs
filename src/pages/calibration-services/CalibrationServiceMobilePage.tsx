@@ -64,6 +64,37 @@ const MobilePage = () => {
   const [showAdjust, setShowAdjust] = useState(false)
   const [showLogistics, setShowLogistics] = useState(false)
 
+  // Pre-fill logistics fields when dialog opens from service data
+  useEffect(() => {
+    if (!showLogistics || !s) return
+    const existing: any = (s.otherFields as any)?.logistics?.controlSheet || {}
+    const cust = s.customer as any || {}
+    setLogCompany(existing.requesterCompanyName ?? cust.nombre ?? '')
+    setLogOffer(existing.requesterOfferNumber ?? s.quoteCode ?? '')
+    setLogIntake(existing.intakeDate ?? '')
+    setLogDelivery(existing.deliveryDate ?? '')
+    setLogAddress(existing.requesterAddress ?? cust.direccion ?? '')
+    setLogPhone(existing.requesterPhone ?? cust.telefono ?? '')
+    setLogContact(existing.requesterContactName ?? s.contactName ?? '')
+    setLogCity(existing.requesterCity ?? cust.ciudad ?? '')
+    setLogEquipment((existing.items || []).map((i: any) => ({
+      equipmentName: i.equipmentName || '', brand: i.brand || '', model: i.model || '',
+      serial: i.serialNumber || '', asset: i.assetNumber || '', location: i.location || '',
+      physIn: i.physicalInspectionIn ?? null, physOut: i.physicalInspectionOut ?? null,
+      opIn: i.operationalInspectionIn ?? null, opOut: i.operationalInspectionOut ?? null
+    })))
+    setLogNoSerial(existing.noSerialAuthorization === true ? 'true' : existing.noSerialAuthorization === false ? 'false' : '')
+    setLogCalPoints(existing.calibrationPointsRequested === true ? 'true' : existing.calibrationPointsRequested === false ? 'false' : '')
+    setLogSpecialCond(existing.specialCondition === true ? 'true' : existing.specialCondition === false ? 'false' : '')
+    setLogCertIncluded(existing.calibrationCertificateIncluded === true ? 'true' : existing.calibrationCertificateIncluded === false ? 'false' : '')
+    setLogStamp(existing.stampIncluded === true ? 'true' : existing.stampIncluded === false ? 'false' : '')
+    setLogObs(existing.observations ?? '')
+    setLogDeliveryName(existing.deliveredToClientName ?? '')
+    setLogDeliverySig(existing.deliveredToClientSignature ?? null)
+    setLogReceiptName(existing.receivedByClientName ?? '')
+    setLogReceiptSig(existing.receivedByClientSignature ?? null)
+  }, [showLogistics])
+
   // Trace fields
   const [traceMovement, setTraceMovement] = useState<'pickup' | 'delivery'>('pickup')
   const [traceContact, setTraceContact] = useState('')
