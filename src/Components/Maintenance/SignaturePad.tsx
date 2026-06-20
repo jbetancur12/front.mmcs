@@ -148,7 +148,9 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     if (previousData) {
       const image = new Image()
       image.onload = () => {
-        context.drawImage(image, 0, 0, width, height)
+        const imgWidth = image.naturalWidth || width
+        const imgHeight = image.naturalHeight || height
+        context.drawImage(image, 0, 0, Math.min(imgWidth, width), Math.min(imgHeight, height))
       }
       image.src = previousData
     }
@@ -205,7 +207,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const dataUrl = normalizeSignatureImage(canvas) || canvas.toDataURL('image/png')
+    const dataUrl = canvas.toDataURL('image/png')
     setHasSignature(true)
     onChange(dataUrl)
   }
