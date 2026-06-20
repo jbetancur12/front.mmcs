@@ -1,350 +1,399 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Stack,
-  TextField,
-  Typography
+  Alert, Box, Button, Card, CardContent,
+  Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle,
+  Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle,
+  FormControl, InputLabel, MenuItem, Select, Stack, TextField, Typography
 } from '@mui/material'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from 'react-query'
 import { Toaster, toast } from 'react-hot-toast'
 import { axiosPrivate } from '@utils/api'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import LocalShippingIcon from '@mui/icons-material/LocalShipping'
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import InventoryIcon from '@mui/icons-material/Inventory'
+import WarningAmberIcon from '@mui/icons-material/WarningAmber'
+import PauseIcon from '@mui/icons-material/Pause'
 import SignaturePad from '../../Components/Maintenance/SignaturePad'
 import {
-  CalibrationService,
-  CalibrationServiceOperationalItemStatus
+  CalibrationService, CalibrationServiceCut, CalibrationServiceOperationalItemStatus
 } from '../../types/calibrationService'
 import {
-  CALIBRATION_SERVICE_STATUS_COLORS,
-  CALIBRATION_SERVICE_STATUS_LABELS,
+  CALIBRATION_SERVICE_STATUS_COLORS, CALIBRATION_SERVICE_STATUS_LABELS,
   CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS
 } from '../../constants/calibrationServices'
 
-const STATUS_FLOW: CalibrationServiceOperationalItemStatus[] = [
-  'pending', 'scheduled', 'in_progress', 'completed'
-]
+const STATUS_FLOW: CalibrationServiceOperationalItemStatus[] = ['pending', 'scheduled', 'in_progress', 'completed']
+const CUT_STATUSES: Record<string, { label: string; color: string }> = {
+  draft: { label: 'Borrador', color: '#f59e0b' },
+  ready_for_invoicing: { label: 'Listo facturar', color: '#3b82f6' },
+  invoiced: { label: 'Facturado', color: '#10b981' }
+}
+
+const getOps = (s: any) => (s?.otherFields?.operations || {})
+const getScheduledDate = (s: any) => getOps(s)?.scheduledDate || getOps(s)?.scheduledFor
 
 const MobilePage = () => {
   const { serviceId } = useParams()
   const navigate = useNavigate()
-
   const { data: service, isLoading, refetch } = useQuery(
-    ['calibration-service', serviceId],
-    async () => {
-      const res = await axiosPrivate.get(`/calibration-services/${serviceId}`)
-      return res.data as CalibrationService
-    },
+    ['calibration-service-mobile', serviceId],
+    async () => (await axiosPrivate.get(`/calibration-services/${serviceId}`)).data as CalibrationService,
     { enabled: Boolean(serviceId) }
   )
 
+  const s = service
+  const items = s?.items || []
+  const cuts = s?.cuts || []
+  const status = s?.status || ''
+  const scheduledDate = getScheduledDate(s)
+  const ops = getOps(s)
+
+  // Execution state
   const [draftItems, setDraftItems] = useState<Record<number, CalibrationServiceOperationalItemStatus>>({})
   const [draftNotes, setDraftNotes] = useState<Record<number, string>>({})
   const [saving, setSaving] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [showTraceDialog, setShowTraceDialog] = useState(false)
-  const [showCutDialog, setShowCutDialog] = useState(false)
-  const [cutType, setCutType] = useState<'partial' | 'final'>('partial')
-  const [deliveryName, setDeliveryName] = useState('')
-  const [deliverySignature, setDeliverySignature] = useState<string | null>(null)
+
+  // Dialog states
+  const [showTrace, setShowTrace] = useState(false)
+  const [showCut, setShowCut] = useState(false)
+  const [showAdjust, setShowAdjust] = useState(false)
+  const [showLogistics, setShowLogistics] = useState(false)
+
+  // Trace fields
   const [traceMovement, setTraceMovement] = useState<'pickup' | 'delivery'>('pickup')
   const [traceContact, setTraceContact] = useState('')
   const [traceLocation, setTraceLocation] = useState('')
 
-  const items = service?.items || []
-  const ops: any = service?.otherFields?.operations || {}
-  const scheduledDate = ops?.scheduledDate || ops?.scheduledFor
+  // Cut fields
+  const [cutType, setCutType] = useState<'partial' | 'final'>('partial')
+
+  // Adjustment fields
+  const [adjItemId, setAdjItemId] = useState('')
+  const [adjChangeType, setAdjChangeType] = useState('quantity_more')
+  const [adjQuantity, setAdjQuantity] = useState('')
+  const [adjReason, setAdjReason] = useState('')
+
+  // Logistics fields
+  const [logIntake, setLogIntake] = useState('')
+  const [logDelivery, setLogDelivery] = useState('')
+  const [logCompany, setLogCompany] = useState('')
+  const [logContact, setLogContact] = useState('')
+
+  // Signature
+  const [deliveryName, setDeliveryName] = useState('')
+  const [deliverySignature, setDeliverySignature] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!service) return
-    setDraftItems({})
-    setDraftNotes({})
-    for (const item of (service.items || [])) {
-      const status = (item as any).otherFields?.operationalStatus || 'pending'
-      setDraftItems(prev => ({ ...prev, [item.id]: status }))
-      const notes = (item as any).otherFields?.technicalNotes || ''
-      setDraftNotes(prev => ({ ...prev, [item.id]: notes }))
+    if (!s) return
+    setDraftItems({}); setDraftNotes({})
+    for (const item of (s.items || [])) {
+      const st = (item as any).otherFields?.operationalStatus || 'pending'
+      setDraftItems(p => ({ ...p, [item.id]: st }))
+      setDraftNotes(p => ({ ...p, [item.id]: (item as any).otherFields?.technicalNotes || '' }))
     }
-  }, [service?.id])
+  }, [s?.id])
 
-  const allItemsCompleted = useMemo(
-    () => items.length > 0 && items.every(i => draftItems[i.id] === 'completed'),
-    [items, draftItems]
-  )
+  const allCompleted = useMemo(() => items.length > 0 && items.every(i => draftItems[i.id] === 'completed'), [items, draftItems])
 
-  const handleStartExecution = async () => {
-    setActionLoading('start')
-    try {
-      await axiosPrivate.post(`/calibration-services/${serviceId}/start-execution`, {
-        startedAt: new Date().toISOString()
-      })
-      toast.success('Ejecución iniciada')
-      void refetch()
-    } catch { toast.error('Error al iniciar ejecución') }
-    setActionLoading(null)
+  const apiCall = async (method: string, url: string, body?: any) => {
+    const res = await axiosPrivate({ method, url, data: body } as any)
+    return res.data
   }
 
-  const handleCompleteExecution = async () => {
-    setActionLoading('complete')
-    try {
-      await axiosPrivate.post(`/calibration-services/${serviceId}/complete-execution`, {
-        technicallyCompletedAt: new Date().toISOString()
-      })
-      toast.success('Ejecución finalizada')
-      void refetch()
-    } catch { toast.error('Error al finalizar') }
+  const handleAction = async (key: string, fn: () => Promise<any>, msg: string) => {
+    setActionLoading(key)
+    try { await fn(); toast.success(msg); void refetch() }
+    catch (e: any) { toast.error(e?.response?.data?.error || `Error: ${msg}`) }
     setActionLoading(null)
   }
 
   const handleSaveProgress = async () => {
     setSaving(true)
     try {
-      await axiosPrivate.put(`/calibration-services/${serviceId}/item-progress`, {
-        items: (service?.items || []).map(item => ({
-          itemId: item.id,
-          operationalStatus: draftItems[item.id] || 'pending',
-          technicalNotes: draftNotes[item.id] || ''
-        }))
+      await apiCall('put', `/calibration-services/${serviceId}/item-progress`, {
+        items: items.map(i => ({ itemId: i.id, operationalStatus: draftItems[i.id] || 'pending', technicalNotes: draftNotes[i.id] || '' }))
       })
       toast.success('Avance guardado')
-    } catch { toast.error('Error al guardar avance') }
+    } catch { toast.error('Error al guardar') }
     setSaving(false)
   }
 
-  const handleRegisterTrace = async () => {
-    try {
-      await axiosPrivate.post(`/calibration-services/${serviceId}/physical-traceability`, {
-        movementType: traceMovement,
-        occurredAt: new Date().toISOString(),
-        contactName: traceContact,
-        location: traceLocation || null,
-        notes: null
-      })
-      toast.success('Movimiento registrado')
-      setShowTraceDialog(false)
-    } catch { toast.error('Error al registrar') }
-  }
-
-  const handleCreateCut = async () => {
-    setActionLoading('cut')
-    try {
-      // Primero guardar avance técnico para que el backend vea el estado actualizado
-      if (service?.items?.length) {
-        await axiosPrivate.put(`/calibration-services/${serviceId}/item-progress`, {
-          items: (service?.items || []).map(item => ({
-            itemId: item.id,
-            operationalStatus: draftItems[item.id] || 'pending',
-            technicalNotes: draftNotes[item.id] || ''
-          }))
-        })
-      }
-      await axiosPrivate.post(`/calibration-services/${serviceId}/cuts`, {
-        cutType,
-        notes: null,
-        items: (service?.items || []).filter(i => draftItems[i.id] === 'completed').map(i => ({ serviceItemId: i.id, quantity: 1 }))
-      })
-      toast.success('Corte creado')
-      setShowCutDialog(false)
-      void refetch()
-    } catch (e: any) {
-      toast.error(e?.response?.data?.error || 'Error al crear corte')
-    }
-    setActionLoading(null)
-  }
-
-  const handleSaveSignature = async () => {
-    try {
-      await axiosPrivate.put(`/calibration-services/${serviceId}/delivery-signature`, {
-        deliveryName: deliveryName.trim() || null,
-        deliverySignatureData: deliverySignature
-      })
-      toast.success('Firma guardada')
-    } catch { toast.error('Error al guardar firma') }
-  }
-
-  if (isLoading) return <Box sx={{ p: 4, textAlign: 'center' }}><CircularProgress /></Box>
-  if (!service) return <Box sx={{ p: 2 }}><Alert severity='error'>Servicio no encontrado</Alert></Box>
-
-  const status = service.status
-
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f5f5f5', pb: 10 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#f5f5f5', pb: 12 }}>
       <Toaster position='top-center' />
-      
-      {/* Header */}
-      <Box sx={{ bgcolor: '#10b981', p: 2, color: 'white' }}>
-        <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 1 }}>
-          <ArrowBackIcon fontSize='small' onClick={() => navigate(-1)} sx={{ cursor: 'pointer' }} />
-          <Typography variant='body2' sx={{ opacity: 0.8 }}>Servicios</Typography>
-        </Stack>
-        <Typography variant='h6' fontWeight={800}>{service.serviceCode}</Typography>
-        <Typography variant='body2'>{service.customer?.nombre || service.executionCustomerName}</Typography>
-        <Stack direction='row' spacing={1} sx={{ mt: 1 }}>
-          <Chip size='small' label={CALIBRATION_SERVICE_STATUS_LABELS[status]} color={CALIBRATION_SERVICE_STATUS_COLORS[status] as any} sx={{ color: 'white' }} />
-          {scheduledDate && <Chip size='small' label={new Date(scheduledDate).toLocaleDateString('es-CO')} variant='outlined' sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.5)' }} />}
-        </Stack>
-      </Box>
+      {isLoading ? <Box sx={{ textAlign: 'center', py: 8 }}><CircularProgress /></Box> :
+      !s ? <Box sx={{ p: 2 }}><Alert severity='error'>Servicio no encontrado</Alert></Box> : (
+      <>
+        {/* Header */}
+        <Box sx={{ bgcolor: '#10b981', p: 2, color: 'white' }}>
+          <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 1 }}>
+            <ArrowBackIcon fontSize='small' onClick={() => navigate(-1)} sx={{ cursor: 'pointer' }} />
+            <Typography variant='body2' sx={{ opacity: 0.8 }}>Servicios</Typography>
+          </Stack>
+          <Typography variant='h6' fontWeight={800}>{s.serviceCode}</Typography>
+          <Typography variant='body2'>{s.customer?.nombre || s.executionCustomerName}</Typography>
+          <Stack direction='row' spacing={1} sx={{ mt: 1 }}>
+            <Chip size='small' label={CALIBRATION_SERVICE_STATUS_LABELS[status]} color={CALIBRATION_SERVICE_STATUS_COLORS[status] as any} sx={{ color: 'white' }} />
+            {s.odsCode && <Chip size='small' label={s.odsCode} variant='outlined' sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.5)' }} />}
+            {scheduledDate && <Chip size='small' label={new Date(scheduledDate).toLocaleDateString('es-CO')} variant='outlined' sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.5)' }} />}
+          </Stack>
+        </Box>
 
-      {/* Execution actions */}
-      {['scheduled', 'in_execution'].includes(status) && (
-        <Card sx={{ mx: 2, mt: 2, borderRadius: 3 }}>
-          <CardContent sx={{ p: 2 }}>
-            <Stack spacing={1.5}>
-              {status === 'scheduled' && (
-                <Button fullWidth variant='contained' startIcon={<PlayArrowIcon />}
-                  onClick={handleStartExecution} disabled={actionLoading === 'start'}
-                  sx={{ borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 700 }}>
-                  Iniciar ejecución
-                </Button>
-              )}
-              {status === 'in_execution' && (
-                <Button fullWidth variant='contained' color='success' startIcon={<CheckCircleIcon />}
-                  onClick={handleCompleteExecution} disabled={!allItemsCompleted || actionLoading === 'complete'}
-                  sx={{ borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 700 }}>
-                  {allItemsCompleted ? 'Finalizar ejecución' : 'Completa todos los ítems primero'}
-                </Button>
-              )}
-            </Stack>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Items */}
-      <Typography variant='subtitle1' fontWeight={700} sx={{ px: 2, mt: 3, mb: 1 }}>
-        Ítems del servicio
-      </Typography>
-      <Stack spacing={1.5} sx={{ px: 2 }}>
-        {items.map(item => (
-          <Card key={item.id} sx={{ borderRadius: 3 }} elevation={1}>
+        {/* Execution */}
+        {['scheduled', 'in_execution'].includes(status) && (
+          <Card sx={{ mx: 2, mt: 2, borderRadius: 3 }}>
             <CardContent sx={{ p: 2 }}>
-              <Typography variant='subtitle2' fontWeight={700}>{item.itemName}</Typography>
-              {(item as any).otherFields?.hasCalibrationPoints !== false && (item as any).otherFields?.calibrationPointCount ? (
-                <Typography variant='caption' color='text.secondary'>Puntos: {(item as any).otherFields.calibrationPointCount}</Typography>
-              ) : null}
-              <FormControl fullWidth size='small' sx={{ mt: 1 }}>
-                <InputLabel>Estado técnico</InputLabel>
-                <Select value={draftItems[item.id] || 'pending'} label='Estado técnico'
-                  onChange={(e) => setDraftItems(p => ({ ...p, [item.id]: e.target.value as CalibrationServiceOperationalItemStatus }))}>
-                  {STATUS_FLOW.map(s => (
-                    <MenuItem key={s} value={s}>{CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS[s]}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <TextField fullWidth size='small' multiline minRows={2} placeholder='Notas técnicas'
-                value={draftNotes[item.id] || ''}
-                onChange={(e) => setDraftNotes(p => ({ ...p, [item.id]: e.target.value }))}
-                sx={{ mt: 1 }} />
+              <Stack spacing={1.5}>
+                {status === 'scheduled' && (
+                  <Button fullWidth variant='contained' startIcon={<PlayArrowIcon />}
+                    onClick={() => handleAction('start', () => apiCall('post', `/calibration-services/${serviceId}/start-execution`, { startedAt: new Date().toISOString() }), 'Ejecución iniciada')}
+                    disabled={actionLoading === 'start'}
+                    sx={{ borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 700 }}>
+                    Iniciar ejecución
+                  </Button>
+                )}
+                {status === 'in_execution' && (
+                  <Button fullWidth variant='contained' color='success' startIcon={<CheckCircleIcon />}
+                    onClick={() => handleAction('complete', () => apiCall('post', `/calibration-services/${serviceId}/complete-execution`, { technicallyCompletedAt: new Date().toISOString() }), 'Ejecución finalizada')}
+                    disabled={!allCompleted || actionLoading === 'complete'}
+                    sx={{ borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 700 }}>
+                    {allCompleted ? 'Finalizar ejecución' : 'Completa todos los ítems primero'}
+                  </Button>
+                )}
+                {status === 'in_execution' && !ops?.isPaused && (
+                  <Button fullWidth variant='text' color='warning' size='small' startIcon={<PauseIcon />}
+                    onClick={() => handleAction('pause', () => apiCall('post', `/calibration-services/${serviceId}/pause`, { pauseReason: 'Pausado desde móvil' }), 'Servicio pausado')}
+                    disabled={actionLoading === 'pause'}
+                    sx={{ textTransform: 'none' }}>
+                    Pausar servicio
+                  </Button>
+                )}
+              </Stack>
             </CardContent>
           </Card>
-        ))}
-        {items.length > 0 && (
-          <Button fullWidth variant='contained' onClick={handleSaveProgress} disabled={saving}
-            sx={{ borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 700 }}>
-            {saving ? 'Guardando...' : 'Guardar avance técnico'}
-          </Button>
         )}
-      </Stack>
 
-      {/* Logistics */}
-      <Typography variant='subtitle1' fontWeight={700} sx={{ px: 2, mt: 3, mb: 1 }}>
-        Logística
-      </Typography>
-      <Stack spacing={1} sx={{ px: 2 }}>
-        <Button fullWidth variant='outlined' startIcon={<LocalShippingIcon />}
-          onClick={() => setShowTraceDialog(true)}
-          sx={{ borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 600 }}>
-          Registrar movimiento físico
-        </Button>
-      </Stack>
+        {/* Items */}
+        <Typography variant='subtitle1' fontWeight={700} sx={{ px: 2, mt: 3, mb: 1 }}>Ítems del servicio</Typography>
+        <Stack spacing={1.5} sx={{ px: 2 }}>
+          {items.map(item => (
+            <Card key={item.id} sx={{ borderRadius: 3 }} elevation={1}>
+              <CardContent sx={{ p: 2 }}>
+                <Typography variant='subtitle2' fontWeight={700}>{item.itemName}</Typography>
+                <FormControl fullWidth size='small' sx={{ mt: 1 }}>
+                  <InputLabel>Estado</InputLabel>
+                  <Select value={draftItems[item.id] || 'pending'} label='Estado'
+                    onChange={e => setDraftItems(p => ({ ...p, [item.id]: e.target.value as any }))}>
+                    {STATUS_FLOW.map(s => <MenuItem key={s} value={s}>{CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS[s]}</MenuItem>)}
+                  </Select>
+                </FormControl>
+                <TextField fullWidth size='small' multiline minRows={2} placeholder='Notas técnicas'
+                  value={draftNotes[item.id] || ''} onChange={e => setDraftNotes(p => ({ ...p, [item.id]: e.target.value }))} sx={{ mt: 1 }} />
+              </CardContent>
+            </Card>
+          ))}
+          {items.length > 0 && (
+            <Button fullWidth variant='contained' onClick={handleSaveProgress} disabled={saving}
+              sx={{ borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 700 }}>
+              {saving ? 'Guardando...' : 'Guardar avance técnico'}
+            </Button>
+          )}
+        </Stack>
 
-      {/* Signature */}
-      <Typography variant='subtitle1' fontWeight={700} sx={{ px: 2, mt: 3, mb: 1 }}>
-        Firma de recepción
-      </Typography>
-      <Card sx={{ mx: 2, borderRadius: 3 }} elevation={1}>
-        <CardContent sx={{ p: 2 }}>
-          <TextField fullWidth size='small' label='Nombre de quien recibe' value={deliveryName}
-            onChange={(e) => setDeliveryName(e.target.value)} sx={{ mb: 2 }} />
-          <SignaturePad value={deliverySignature} onChange={setDeliverySignature} height={140} />
-          <Button fullWidth variant='contained' onClick={handleSaveSignature}
-            disabled={!deliverySignature}
-            sx={{ mt: 2, borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 700 }}>
-            Guardar firma
+        {/* Logistics */}
+        <Typography variant='subtitle1' fontWeight={700} sx={{ px: 2, mt: 3, mb: 1 }}>Logística</Typography>
+        <Stack spacing={1} sx={{ px: 2 }}>
+          <Button fullWidth variant='outlined' startIcon={<InventoryIcon />}
+            onClick={() => setShowLogistics(true)}
+            sx={{ borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 600 }}>
+            Diligenciar control de ingreso
           </Button>
-        </CardContent>
-      </Card>
+          <Button fullWidth variant='outlined' startIcon={<AddCircleOutlineIcon />}
+            onClick={() => setShowTrace(true)}
+            sx={{ borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 600 }}>
+            Registrar movimiento físico
+          </Button>
+        </Stack>
 
-      {/* Cuts */}
-      {status === 'in_execution' || status === 'technically_completed' ? (
-        <>
-          <Typography variant='subtitle1' fontWeight={700} sx={{ px: 2, mt: 3, mb: 1 }}>
-            Cortes
-          </Typography>
-          <Stack spacing={1} sx={{ px: 2 }}>
-            <Button fullWidth variant='outlined' onClick={() => setShowCutDialog(true)}
+        {/* Adjustments */}
+        <Typography variant='subtitle1' fontWeight={700} sx={{ px: 2, mt: 3, mb: 1 }}>Novedades</Typography>
+        <Stack spacing={1} sx={{ px: 2 }}>
+          <Button fullWidth variant='outlined' color='warning' startIcon={<WarningAmberIcon />}
+            onClick={() => setShowAdjust(true)}
+            sx={{ borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 600 }}>
+            Reportar novedad
+          </Button>
+        </Stack>
+
+        {/* Signature */}
+        <Typography variant='subtitle1' fontWeight={700} sx={{ px: 2, mt: 3, mb: 1 }}>Firma de recepción</Typography>
+        <Card sx={{ mx: 2, borderRadius: 3 }} elevation={1}>
+          <CardContent sx={{ p: 2 }}>
+            <TextField fullWidth size='small' label='Nombre de quien recibe' value={deliveryName} onChange={e => setDeliveryName(e.target.value)} sx={{ mb: 2 }} />
+            <SignaturePad value={deliverySignature} onChange={setDeliverySignature} height={120} />
+            <Button fullWidth variant='contained' onClick={() => handleAction('sig', () => apiCall('put', `/calibration-services/${serviceId}/delivery-signature`, { deliveryName: deliveryName.trim() || null, deliverySignatureData: deliverySignature }), 'Firma guardada')}
+              disabled={!deliverySignature || actionLoading === 'sig'}
+              sx={{ mt: 2, borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 700 }}>
+              Guardar firma
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Cuts */}
+        <Typography variant='subtitle1' fontWeight={700} sx={{ px: 2, mt: 3, mb: 1 }}>Cortes</Typography>
+        <Stack spacing={1} sx={{ px: 2 }}>
+          {cuts.map((cut: CalibrationServiceCut) => {
+            const cs = CUT_STATUSES[cut.status] || { label: cut.status, color: '#6b7280' }
+            return (
+              <Card key={cut.id} sx={{ borderRadius: 2 }} elevation={0} variant='outlined'>
+                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                  <Stack direction='row' justifyContent='space-between' alignItems='center'>
+                    <Box>
+                      <Typography variant='body2' fontWeight={700}>{cut.cutCode || `Corte #${cut.id}`}</Typography>
+                      <Chip size='small' label={cs.label} sx={{ bgcolor: cs.color, color: '#fff', fontSize: '0.65rem', height: 20, mt: 0.25 }} />
+                    </Box>
+                    {cut.status === 'draft' && (
+                      <Button size='small' variant='contained' color='info'
+                        onClick={() => handleAction(`ready-${cut.id}`, () => apiCall('post', `/calibration-services/${serviceId}/cuts/${cut.id}/ready-for-invoicing`), 'Marcado listo para facturar')}
+                        disabled={actionLoading === `ready-${cut.id}`}
+                        sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.75rem' }}>
+                        Listo facturar
+                      </Button>
+                    )}
+                  </Stack>
+                </CardContent>
+              </Card>
+            )
+          })}
+          {['in_execution', 'technically_completed'].includes(status) && (
+            <Button fullWidth variant='outlined' onClick={() => setShowCut(true)}
               sx={{ borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 600 }}>
               Crear corte
             </Button>
-          </Stack>
-        </>
-      ) : null}
+          )}
+        </Stack>
 
-      {/* Traceability Dialog */}
-      <Dialog open={showTraceDialog} onClose={() => setShowTraceDialog(false)} fullWidth>
-        <DialogTitle>Registrar movimiento</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <FormControl fullWidth size='small'>
+        {/* === DIALOGS === */}
+
+        {/* Logistics Dialog */}
+        <Dialog open={showLogistics} onClose={() => setShowLogistics(false)} fullWidth>
+          <DialogTitle>Control de ingreso</DialogTitle>
+          <DialogContent>
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <TextField fullWidth size='small' type='date' label='Fecha ingreso' value={logIntake} onChange={e => setLogIntake(e.target.value)} InputLabelProps={{ shrink: true }} />
+              <TextField fullWidth size='small' type='date' label='Fecha entrega' value={logDelivery} onChange={e => setLogDelivery(e.target.value)} InputLabelProps={{ shrink: true }} />
+              <TextField fullWidth size='small' label='Empresa solicitante' value={logCompany} onChange={e => setLogCompany(e.target.value)} />
+              <TextField fullWidth size='small' label='Contacto' value={logContact} onChange={e => setLogContact(e.target.value)} />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowLogistics(false)}>Cancelar</Button>
+            <Button variant='contained' onClick={() => handleAction('log', async () => {
+              await apiCall('put', `/calibration-services/${serviceId}/logistics-control`, {
+                intakeDate: logIntake || null, deliveryDate: logDelivery || null,
+                requesterCompanyName: logCompany || null, requesterContactName: logContact || null,
+                items: items.map((i, idx) => ({
+                  rowNumber: idx + 1, equipmentName: i.itemName, serviceScope: 'NA',
+                  physicalInspectionIn: null, physicalInspectionOut: null, operationalInspectionIn: null, operationalInspectionOut: null
+                }))
+              })
+            }, 'Control guardado')} disabled={actionLoading === 'log'}>Guardar</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Trace Dialog */}
+        <Dialog open={showTrace} onClose={() => setShowTrace(false)} fullWidth>
+          <DialogTitle>Registrar movimiento</DialogTitle>
+          <DialogContent>
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <FormControl fullWidth size='small'>
+                <InputLabel>Tipo</InputLabel>
+                <Select value={traceMovement} label='Tipo' onChange={e => setTraceMovement(e.target.value as any)}>
+                  <MenuItem value='pickup'>Recogida</MenuItem>
+                  <MenuItem value='delivery'>Entrega</MenuItem>
+                </Select>
+              </FormControl>
+              <TextField fullWidth size='small' label='Contacto' value={traceContact} onChange={e => setTraceContact(e.target.value)} />
+              <TextField fullWidth size='small' label='Ubicación' value={traceLocation} onChange={e => setTraceLocation(e.target.value)} />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowTrace(false)}>Cancelar</Button>
+            <Button variant='contained' onClick={() => handleAction('trace', () => apiCall('post', `/calibration-services/${serviceId}/physical-traceability`, {
+              movementType: traceMovement, occurredAt: new Date().toISOString(), contactName: traceContact, location: traceLocation || null, notes: null
+            }), 'Movimiento registrado')} disabled={actionLoading === 'trace'}>Guardar</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Adjustment Dialog */}
+        <Dialog open={showAdjust} onClose={() => setShowAdjust(false)} fullWidth>
+          <DialogTitle>Reportar novedad</DialogTitle>
+          <DialogContent>
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <FormControl fullWidth size='small'>
+                <InputLabel>Ítem</InputLabel>
+                <Select value={adjItemId} label='Ítem' onChange={e => setAdjItemId(e.target.value)}>
+                  {items.map(i => <MenuItem key={i.id} value={String(i.id)}>{i.itemName}</MenuItem>)}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth size='small'>
+                <InputLabel>Tipo</InputLabel>
+                <Select value={adjChangeType} label='Tipo' onChange={e => setAdjChangeType(e.target.value)}>
+                  <MenuItem value='quantity_more'>Cantidad mayor</MenuItem>
+                  <MenuItem value='quantity_less'>Cantidad menor</MenuItem>
+                  <MenuItem value='extra_item'>Ítem extra</MenuItem>
+                  <MenuItem value='item_removed'>Ítm retirado</MenuItem>
+                  <MenuItem value='other'>Otra</MenuItem>
+                </Select>
+              </FormControl>
+              <TextField fullWidth size='small' label='Cantidad' type='number' value={adjQuantity} onChange={e => setAdjQuantity(e.target.value)} />
+              <TextField fullWidth size='small' multiline minRows={2} label='Motivo' value={adjReason} onChange={e => setAdjReason(e.target.value)} />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowAdjust(false)}>Cancelar</Button>
+            <Button variant='contained' color='warning' onClick={() => handleAction('adj', async () => {
+              await apiCall('post', `/calibration-services/${serviceId}/adjustments`, {
+                adjustments: [{
+                  serviceItemId: adjItemId ? Number(adjItemId) : null,
+                  changeType: adjChangeType, differenceQuantity: adjQuantity ? Number(adjQuantity) : 0, reason: adjReason || null
+                }]
+              })
+            }, 'Novedad reportada')} disabled={actionLoading === 'adj'}>Reportar</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Cut Dialog */}
+        <Dialog open={showCut} onClose={() => setShowCut(false)} fullWidth>
+          <DialogTitle>Crear corte</DialogTitle>
+          <DialogContent>
+            <FormControl fullWidth size='small' sx={{ mt: 1 }}>
               <InputLabel>Tipo</InputLabel>
-              <Select value={traceMovement} label='Tipo' onChange={(e) => setTraceMovement(e.target.value as any)}>
-                <MenuItem value='pickup'>Recogida</MenuItem>
-                <MenuItem value='delivery'>Entrega</MenuItem>
+              <Select value={cutType} label='Tipo' onChange={e => setCutType(e.target.value as any)}>
+                <MenuItem value='partial'>Parcial</MenuItem>
+                <MenuItem value='final'>Final</MenuItem>
               </Select>
             </FormControl>
-            <TextField fullWidth size='small' label='Contacto' value={traceContact} onChange={(e) => setTraceContact(e.target.value)} />
-            <TextField fullWidth size='small' label='Ubicación' value={traceLocation} onChange={(e) => setTraceLocation(e.target.value)} />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowTraceDialog(false)}>Cancelar</Button>
-          <Button variant='contained' onClick={handleRegisterTrace}>Guardar</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Cut Dialog */}
-      <Dialog open={showCutDialog} onClose={() => setShowCutDialog(false)} fullWidth>
-        <DialogTitle>Crear corte</DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth size='small' sx={{ mt: 1 }}>
-            <InputLabel>Tipo de corte</InputLabel>
-            <Select value={cutType} label='Tipo de corte' onChange={(e) => setCutType(e.target.value as any)}>
-              <MenuItem value='partial'>Parcial</MenuItem>
-              <MenuItem value='final'>Final</MenuItem>
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowCutDialog(false)}>Cancelar</Button>
-          <Button variant='contained' onClick={handleCreateCut} disabled={actionLoading === 'cut'}>Crear</Button>
-        </DialogActions>
-      </Dialog>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowCut(false)}>Cancelar</Button>
+            <Button variant='contained' onClick={() => handleAction('cut', async () => {
+              if (items.length) await apiCall('put', `/calibration-services/${serviceId}/item-progress`, {
+                items: items.map(i => ({ itemId: i.id, operationalStatus: draftItems[i.id] || 'pending', technicalNotes: draftNotes[i.id] || '' }))
+              })
+              await apiCall('post', `/calibration-services/${serviceId}/cuts`, {
+                cutType, notes: null, items: items.filter(i => draftItems[i.id] === 'completed').map(i => ({ serviceItemId: i.id, quantity: 1 }))
+              })
+            }, 'Corte creado')} disabled={actionLoading === 'cut'}>Crear</Button>
+          </DialogActions>
+        </Dialog>
+      </>
+      )}
     </Box>
   )
 }
