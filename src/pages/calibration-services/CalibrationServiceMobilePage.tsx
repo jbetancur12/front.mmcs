@@ -213,7 +213,7 @@ return (
                   <Button fullWidth variant='contained' startIcon={<PlayArrowIcon />}
                     onClick={() => handleAction('start', () => apiCall('post', `/calibration-services/${serviceId}/start-execution`, { startedAt: new Date().toISOString() }), 'Ejecución iniciada')}
                     disabled={actionLoading === 'start'}
-                    sx={{ borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 700 }}>
+                    sx={{ borderRadius: '16px', py: 2, textTransform: 'none', fontWeight: 700, '&:active': { transform: 'scale(0.97)' } }}>
                     Iniciar ejecución
                   </Button>
                 )}
@@ -221,7 +221,7 @@ return (
                   <Button fullWidth variant='contained' color='success' startIcon={<CheckCircleIcon />}
                     onClick={() => handleAction('complete', () => apiCall('post', `/calibration-services/${serviceId}/complete-execution`, { technicallyCompletedAt: new Date().toISOString() }), 'Ejecución finalizada')}
                     disabled={!allCompleted || actionLoading === 'complete'}
-                    sx={{ borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 700 }}>
+                    sx={{ borderRadius: '16px', py: 2, textTransform: 'none', fontWeight: 700, '&:active': { transform: 'scale(0.97)' } }}>
                     {allCompleted ? 'Finalizar ejecución' : 'Completa todos los ítems primero'}
                   </Button>
                 )}
@@ -242,7 +242,7 @@ return (
         <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400 }}>Ítems del servicio</Typography>
         <Stack spacing={1.5} sx={{ px: 2 }}>
           {items.map(item => (
-            <Card key={item.id} sx={{ borderRadius: 3 }} elevation={1}>
+            <Card key={item.id} sx={{ borderRadius: '16px', border: `1px solid ${G.gray100}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
               <CardContent sx={{ p: 2 }}>
                 <Typography variant='subtitle2' fontWeight={700}>{item.itemName}</Typography>
                 <FormControl fullWidth size='small' sx={{ mt: 1 }}>
@@ -259,7 +259,7 @@ return (
           ))}
           {items.length > 0 && (
             <Button fullWidth variant='contained' onClick={handleSaveProgress} disabled={saving}
-              sx={{ borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 700 }}>
+              sx={{ borderRadius: '16px', py: 2, textTransform: 'none', fontWeight: 700, '&:active': { transform: 'scale(0.97)' } }}>
               {saving ? 'Guardando...' : 'Guardar avance técnico'}
             </Button>
           )}
@@ -270,12 +270,12 @@ return (
         <Stack spacing={1} sx={{ px: 2 }}>
           <Button fullWidth variant='outlined' startIcon={<InventoryIcon />}
             onClick={() => setShowLogistics(true)}
-            sx={{ borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 600 }}>
+            sx={{ borderRadius: '16px', py: 1.5, textTransform: 'none', fontWeight: 600, '&:active': { transform: 'scale(0.97)' } }}>
             Diligenciar control de ingreso
           </Button>
           <Button fullWidth variant='outlined' startIcon={<AddCircleOutlineIcon />}
             onClick={() => setShowTrace(true)}
-            sx={{ borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 600 }}>
+            sx={{ borderRadius: '16px', py: 1.5, textTransform: 'none', fontWeight: 600, '&:active': { transform: 'scale(0.97)' } }}>
             Registrar movimiento físico
           </Button>
         </Stack>
@@ -285,7 +285,7 @@ return (
         <Stack spacing={1} sx={{ px: 2 }}>
           <Button fullWidth variant='outlined' color='warning' startIcon={<WarningAmberIcon />}
             onClick={() => setShowAdjust(true)}
-            sx={{ borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 600 }}>
+            sx={{ borderRadius: '16px', py: 1.5, textTransform: 'none', fontWeight: 600, '&:active': { transform: 'scale(0.97)' } }}>
             Reportar novedad
           </Button>
         </Stack>
@@ -332,7 +332,7 @@ return (
           })}
           {['in_execution', 'technically_completed'].includes(status) && (
             <Button fullWidth variant='outlined' onClick={() => setShowCut(true)}
-              sx={{ borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 600 }}>
+              sx={{ borderRadius: '16px', py: 1.5, textTransform: 'none', fontWeight: 600, '&:active': { transform: 'scale(0.97)' } }}>
               Crear corte
             </Button>
           )}
