@@ -2,14 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   Alert, Box, Button, Card, CardContent,
   Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle,
-  Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle,
   FormControl, InputLabel, MenuItem, Select, Stack, TextField, Typography
 } from '@mui/material'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from 'react-query'
 import { Toaster, toast } from 'react-hot-toast'
 import { axiosPrivate } from '@utils/api'
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
@@ -82,7 +80,25 @@ const MobilePage = () => {
   const [logIntake, setLogIntake] = useState('')
   const [logDelivery, setLogDelivery] = useState('')
   const [logCompany, setLogCompany] = useState('')
+  const [logOffer, setLogOffer] = useState('')
+  const [logAddress, setLogAddress] = useState('')
+  const [logPhone, setLogPhone] = useState('')
   const [logContact, setLogContact] = useState('')
+  const [logCity, setLogCity] = useState('')
+  const [logEquipment, setLogEquipment] = useState<Array<{
+    equipmentName: string; brand: string; model: string; serial: string; asset: string; location: string;
+    physIn: string | null; physOut: string | null; opIn: string | null; opOut: string | null
+  }>>([])
+  const [logNoSerial, setLogNoSerial] = useState<string>('')
+  const [logCalPoints, setLogCalPoints] = useState<string>('')
+  const [logSpecialCond, setLogSpecialCond] = useState<string>('')
+  const [logCertIncluded, setLogCertIncluded] = useState<string>('')
+  const [logStamp, setLogStamp] = useState<string>('')
+  const [logObs, setLogObs] = useState('')
+  const [logDeliveryName, setLogDeliveryName] = useState('')
+  const [logDeliverySig, setLogDeliverySig] = useState<string | null>(null)
+  const [logReceiptName, setLogReceiptName] = useState('')
+  const [logReceiptSig, setLogReceiptSig] = useState<string | null>(null)
 
   // Signature
   const [deliveryName, setDeliveryName] = useState('')
@@ -281,25 +297,116 @@ const MobilePage = () => {
         {/* === DIALOGS === */}
 
         {/* Logistics Dialog */}
-        <Dialog open={showLogistics} onClose={() => setShowLogistics(false)} fullWidth>
-          <DialogTitle>Control de ingreso</DialogTitle>
-          <DialogContent>
+        <Dialog open={showLogistics} onClose={() => setShowLogistics(false)} fullWidth maxWidth='sm'>
+          <DialogTitle>Control de ingreso y entrega</DialogTitle>
+          <DialogContent dividers>
             <Stack spacing={2} sx={{ mt: 1 }}>
-              <TextField fullWidth size='small' type='date' label='Fecha ingreso' value={logIntake} onChange={e => setLogIntake(e.target.value)} InputLabelProps={{ shrink: true }} />
-              <TextField fullWidth size='small' type='date' label='Fecha entrega' value={logDelivery} onChange={e => setLogDelivery(e.target.value)} InputLabelProps={{ shrink: true }} />
-              <TextField fullWidth size='small' label='Empresa solicitante' value={logCompany} onChange={e => setLogCompany(e.target.value)} />
+              <Typography variant='subtitle2' fontWeight={700}>Fechas</Typography>
+              <Stack direction='row' spacing={1}>
+                <TextField fullWidth size='small' type='date' label='Fecha ingreso' value={logIntake} onChange={e => setLogIntake(e.target.value)} InputLabelProps={{ shrink: true }} />
+                <TextField fullWidth size='small' type='date' label='Fecha entrega' value={logDelivery} onChange={e => setLogDelivery(e.target.value)} InputLabelProps={{ shrink: true }} />
+              </Stack>
+
+              <Typography variant='subtitle2' fontWeight={700}>Solicitante</Typography>
+              <TextField fullWidth size='small' label='Empresa' value={logCompany} onChange={e => setLogCompany(e.target.value)} />
+              <Stack direction='row' spacing={1}>
+                <TextField fullWidth size='small' label='Oferta' value={logOffer} onChange={e => setLogOffer(e.target.value)} />
+                <TextField fullWidth size='small' label='Teléfono' value={logPhone} onChange={e => setLogPhone(e.target.value)} />
+              </Stack>
               <TextField fullWidth size='small' label='Contacto' value={logContact} onChange={e => setLogContact(e.target.value)} />
+              <Stack direction='row' spacing={1}>
+                <TextField fullWidth size='small' label='Dirección' value={logAddress} onChange={e => setLogAddress(e.target.value)} />
+                <TextField fullWidth size='small' label='Ciudad' value={logCity} onChange={e => setLogCity(e.target.value)} />
+              </Stack>
+
+              <Typography variant='subtitle2' fontWeight={700}>Equipos</Typography>
+              {logEquipment.map((eq, i) => (
+                <Card key={i} variant='outlined' sx={{ borderRadius: 2 }}>
+                  <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                    <Stack spacing={1}>
+                      <TextField fullWidth size='small' label='Equipo' value={eq.equipmentName}
+                        onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], equipmentName: e.target.value }; setLogEquipment(n) }} />
+                      <Stack direction='row' spacing={1}>
+                        <TextField size='small' label='Marca' value={eq.brand} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], brand: e.target.value }; setLogEquipment(n) }} sx={{ flex: 1 }} />
+                        <TextField size='small' label='Modelo' value={eq.model} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], model: e.target.value }; setLogEquipment(n) }} sx={{ flex: 1 }} />
+                      </Stack>
+                      <Stack direction='row' spacing={1}>
+                        <TextField size='small' label='Serial' value={eq.serial} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], serial: e.target.value }; setLogEquipment(n) }} sx={{ flex: 1 }} />
+                        <TextField size='small' label='Activo fijo' value={eq.asset} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], asset: e.target.value }; setLogEquipment(n) }} sx={{ flex: 1 }} />
+                      </Stack>
+                      <Stack direction='row' spacing={0.5}>
+                        {(['physIn', 'physOut', 'opIn', 'opOut'] as const).map(f => {
+                          const labels: Record<string, string> = { physIn: 'Fís. ing', physOut: 'Fís. sal', opIn: 'Oper. ing', opOut: 'Oper. sal' }
+                          return (
+                            <FormControl key={f} size='small' sx={{ flex: 1 }}>
+                              <InputLabel>{labels[f]}</InputLabel>
+                              <Select value={eq[f as keyof typeof eq] || ''} label={labels[f]}
+                                onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], [f]: e.target.value || null }; setLogEquipment(n) }}>
+                                <MenuItem value=''><em>—</em></MenuItem>
+                                <MenuItem value='B'>B</MenuItem><MenuItem value='M'>M</MenuItem><MenuItem value='NA'>NA</MenuItem><MenuItem value='SI'>SI</MenuItem>
+                              </Select>
+                            </FormControl>
+                          )
+                        })}
+                      </Stack>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              ))}
+              <Button variant='outlined' size='small' onClick={() => setLogEquipment(p => [...p, {
+                equipmentName: '', brand: '', model: '', serial: '', asset: '', location: '',
+                physIn: null, physOut: null, opIn: null, opOut: null
+              }])} sx={{ borderRadius: 2, textTransform: 'none' }}>
+                + Agregar equipo
+              </Button>
+
+              <Typography variant='subtitle2' fontWeight={700}>Validaciones</Typography>
+              <Stack spacing={1}>
+                {[
+                  { label: 'Autoriza codificación', val: logNoSerial, set: setLogNoSerial },
+                  { label: 'Define pts. calibración', val: logCalPoints, set: setLogCalPoints },
+                  { label: 'Condición especial', val: logSpecialCond, set: setLogSpecialCond },
+                  { label: 'Incluye certificado', val: logCertIncluded, set: setLogCertIncluded },
+                  { label: 'Incluye estampilla', val: logStamp, set: setLogStamp },
+                ].map(f => (
+                  <FormControl key={f.label} fullWidth size='small'>
+                    <InputLabel>{f.label}</InputLabel>
+                    <Select value={f.val} label={f.label} onChange={e => f.set(e.target.value)}>
+                      <MenuItem value=''>Sin definir</MenuItem><MenuItem value='true'>Sí</MenuItem><MenuItem value='false'>No</MenuItem>
+                    </Select>
+                  </FormControl>
+                ))}
+              </Stack>
+
+              <Typography variant='subtitle2' fontWeight={700}>Firmas</Typography>
+              <TextField fullWidth size='small' label='Entrega (nombre)' value={logDeliveryName} onChange={e => setLogDeliveryName(e.target.value)} />
+              <SignaturePad value={logDeliverySig} onChange={setLogDeliverySig} height={100} />
+              <TextField fullWidth size='small' label='Recibe (nombre)' value={logReceiptName} onChange={e => setLogReceiptName(e.target.value)} />
+              <SignaturePad value={logReceiptSig} onChange={setLogReceiptSig} height={100} />
+
+              <TextField fullWidth size='small' multiline minRows={2} label='Observaciones' value={logObs} onChange={e => setLogObs(e.target.value)} />
             </Stack>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setShowLogistics(false)}>Cancelar</Button>
             <Button variant='contained' onClick={() => handleAction('log', async () => {
+              const bool = (v: string) => v === 'true' ? true : v === 'false' ? false : null
               await apiCall('put', `/calibration-services/${serviceId}/logistics-control`, {
                 intakeDate: logIntake || null, deliveryDate: logDelivery || null,
-                requesterCompanyName: logCompany || null, requesterContactName: logContact || null,
-                items: items.map((i, idx) => ({
-                  rowNumber: idx + 1, equipmentName: i.itemName, serviceScope: 'NA',
-                  physicalInspectionIn: null, physicalInspectionOut: null, operationalInspectionIn: null, operationalInspectionOut: null
+                requesterCompanyName: logCompany || null, requesterOfferNumber: logOffer || null,
+                requesterAddress: logAddress || null, requesterPhone: logPhone || null,
+                requesterContactName: logContact || null, requesterCity: logCity || null,
+                noSerialAuthorization: bool(logNoSerial), calibrationPointsRequested: bool(logCalPoints),
+                specialCondition: bool(logSpecialCond), calibrationCertificateIncluded: bool(logCertIncluded),
+                stampIncluded: bool(logStamp), observations: logObs || null,
+                deliveredToClientName: logDeliveryName || null, deliveredToClientSignature: logDeliverySig,
+                receivedByClientName: logReceiptName || null, receivedByClientSignature: logReceiptSig,
+                items: logEquipment.map((e, i) => ({
+                  rowNumber: i + 1, equipmentName: e.equipmentName, brand: e.brand || null, model: e.model || null,
+                  serialNumber: e.serial || null, assetNumber: e.asset || null, location: e.location || null,
+                  serviceScope: 'NA',
+                  physicalInspectionIn: e.physIn as any, physicalInspectionOut: e.physOut as any,
+                  operationalInspectionIn: e.opIn as any, operationalInspectionOut: e.opOut as any
                 }))
               })
             }, 'Control guardado')} disabled={actionLoading === 'log'}>Guardar</Button>
