@@ -19,7 +19,8 @@ export const CALIBRATION_SERVICE_ALLOWED_ROLES = [
   'comp_admin',
   'comp_requester',
   'comp_supervisor',
-  'invoicing'
+  'invoicing',
+  'calibration_coordinator'
 ] as const
 
 export const CALIBRATION_SERVICE_TECHNICAL_ROLES = ['metrologist'] as const
@@ -57,7 +58,8 @@ export const CALIBRATION_SERVICE_ODS_ROLES =
 
 export const CALIBRATION_SERVICE_SCHEDULE_ROLES = [
   'admin',
-  'super_admin'
+  'super_admin',
+  'calibration_coordinator'
 ] as const
 
 export const CALIBRATION_SERVICE_REPROGRAM_ROLES =
