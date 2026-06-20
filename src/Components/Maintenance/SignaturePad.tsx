@@ -148,9 +148,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     if (previousData) {
       const image = new Image()
       image.onload = () => {
-        const imgWidth = image.naturalWidth || width
-        const imgHeight = image.naturalHeight || height
-        context.drawImage(image, 0, 0, Math.min(imgWidth, width), Math.min(imgHeight, height))
+        context.drawImage(image, 0, 0, width, height)
       }
       image.src = previousData
     }
