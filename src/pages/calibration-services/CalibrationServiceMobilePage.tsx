@@ -1,14 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Alert, Box, Button, Card, CardContent,
+  Alert, Autocomplete, Box, Button, Card, CardContent,
   Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle,
-  FormControl, InputLabel, MenuItem, Select, Stack, TextField, Typography
+  FormControl, IconButton, InputLabel, MenuItem, Select, Stack, TextField, Typography
 } from '@mui/material'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from 'react-query'
 import { Toaster, toast } from 'react-hot-toast'
 import { axiosPrivate } from '@utils/api'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
+import SearchIcon from '@mui/icons-material/Search'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
@@ -320,12 +322,23 @@ const MobilePage = () => {
               </Stack>
 
               <Typography variant='subtitle2' fontWeight={700}>Equipos</Typography>
+              <DeviceSearch
+                onSelect={(name) => setLogEquipment(p => [...p, {
+                  equipmentName: name, brand: '', model: '', serial: '', asset: '', location: '',
+                  physIn: null, physOut: null, opIn: null, opOut: null
+                }])}
+              />
               {logEquipment.map((eq, i) => (
                 <Card key={i} variant='outlined' sx={{ borderRadius: 2 }}>
                   <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                     <Stack spacing={1}>
-                      <TextField fullWidth size='small' label='Equipo' value={eq.equipmentName}
-                        onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], equipmentName: e.target.value }; setLogEquipment(n) }} />
+                      <Stack direction='row' spacing={1} alignItems='center'>
+                        <TextField fullWidth size='small' label='Equipo' value={eq.equipmentName}
+                          onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], equipmentName: e.target.value }; setLogEquipment(n) }} />
+                        <IconButton size='small' color='error' onClick={() => setLogEquipment(p => p.filter((_, idx) => idx !== i))}>
+                          <DeleteOutlineIcon />
+                        </IconButton>
+                      </Stack>
                       <Stack direction='row' spacing={1}>
                         <TextField size='small' label='Marca' value={eq.brand} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], brand: e.target.value }; setLogEquipment(n) }} sx={{ flex: 1 }} />
                         <TextField size='small' label='Modelo' value={eq.model} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], model: e.target.value }; setLogEquipment(n) }} sx={{ flex: 1 }} />
@@ -502,6 +515,33 @@ const MobilePage = () => {
       </>
       )}
     </Box>
+  )
+}
+
+const DeviceSearch = ({ onSelect }: { onSelect: (name: string) => void }) => {
+  const [query, setQuery] = useState('')
+  const [options, setOptions] = useState<Array<{ id: number; name: string }>>([])
+  const [loading, setLoading] = useState(false)
+  const timer = useRef<ReturnType<typeof setTimeout>>()
+  useEffect(() => {
+    clearTimeout(timer.current)
+    if (query.trim().length < 2) { setOptions([]); return }
+    timer.current = setTimeout(async () => {
+      setLoading(true)
+      try { const res = await axiosPrivate.get('/devices', { params: { q: query.trim() } }); setOptions((res.data || []).map((d: any) => ({ id: d.id, name: d.name }))) }
+      catch { setOptions([]) }
+      setLoading(false)
+    }, 300)
+    return () => clearTimeout(timer.current)
+  }, [query])
+
+  return (
+    <Autocomplete size='small' options={options} loading={loading} inputValue={query} onInputChange={(_, v) => setQuery(v)}
+      getOptionLabel={o => o.name} noOptionsText='Escribe para buscar...'
+      onChange={(_, v) => { if (v) { onSelect(v.name); setQuery('') } }}
+      renderInput={p => <TextField {...p} placeholder='Buscar equipo del catálogo...' InputProps={{ ...p.InputProps, startAdornment: <SearchIcon sx={{ mr: 0.5, color: '#9ca3af', fontSize: 20 }} /> }} />}
+      sx={{ mb: 1 }}
+    />
   )
 }
 
