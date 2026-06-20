@@ -10,6 +10,9 @@ import {
 const CalibrationServicesPage = lazy(
   () => import('../pages/calibration-services/CalibrationServicesPage')
 )
+const CalibrationServiceMobilePage = lazy(
+  () => import('../pages/calibration-services/CalibrationServiceMobilePage')
+)
 const CalibrationServiceDetailsPage = lazy(
   () => import('../pages/calibration-services/CalibrationServiceDetailsPage')
 )
@@ -61,6 +64,10 @@ const CalibrationServiceRoutes = (role: string[]) => {
         <Route
           path='calibration-services/schedule'
           element={<CalibrationServiceSchedulePage />}
+        />
+        <Route
+          path='calibration-services/mobile/:serviceId'
+          element={<CalibrationServiceMobilePage />}
         />
         <Route
           path='calibration-services/customers'
