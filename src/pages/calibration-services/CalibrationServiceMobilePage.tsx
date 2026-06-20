@@ -342,110 +342,208 @@ return (
 
         {/* Logistics Dialog */}
         <Dialog open={showLogistics} onClose={() => setShowLogistics(false)} fullScreen>
-          <DialogTitle>Control de ingreso y entrega</DialogTitle>
-          <DialogContent dividers>
-            <Stack spacing={2} sx={{ mt: 1 }}>
-              <Typography variant='subtitle2' fontWeight={700}>Fechas</Typography>
-              <Stack direction='row' spacing={1}>
-                <TextField fullWidth size='small' type='date' label='Fecha ingreso' value={logIntake} onChange={e => setLogIntake(e.target.value)} InputLabelProps={{ shrink: true }} />
-                <TextField fullWidth size='small' type='date' label='Fecha entrega' value={logDelivery} onChange={e => setLogDelivery(e.target.value)} InputLabelProps={{ shrink: true }} />
+          <Box sx={{ minHeight: '100vh', bgcolor: G.gray50, display: 'flex', flexDirection: 'column' }}>
+            {/* Header */}
+            <Box sx={{ bgcolor: G.green, px: 2, pt: 2, pb: 1.5 }}>
+              <Stack direction='row' spacing={2} alignItems='center' sx={{ mb: 1 }}>
+                <IconButton size='small' onClick={() => setShowLogistics(false)} sx={{ bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '50%', width: 32, height: 32 }}>
+                  <ArrowBackIcon sx={{ color: 'white', fontSize: 18 }} />
+                </IconButton>
+                <Box>
+                  <Typography variant='caption' sx={{ color: 'rgba(255,255,255,0.7)' }}>← Servicios</Typography>
+                  <Typography variant='body1' fontWeight={700} sx={{ color: 'white', fontSize: '0.9rem' }}>Control de ingreso y entrega</Typography>
+                </Box>
               </Stack>
+              <Stack direction='row' spacing={1} alignItems='center' flexWrap='wrap'>
+                <Typography variant='caption' fontWeight={600} sx={{ color: 'white' }}>{s.serviceCode}</Typography>
+                <Typography variant='caption' sx={{ color: 'rgba(255,255,255,0.6)' }}>{s.customer?.nombre || ''}</Typography>
+                <Box component='span' sx={{ bgcolor: G.yellowLight, color: '#b45309', fontSize: '0.6rem', fontWeight: 600, px: 1.5, py: 0.2, borderRadius: '999px' }}>
+                  {CALIBRATION_SERVICE_STATUS_LABELS[status]}
+                </Box>
+              </Stack>
+            </Box>
 
-              <Typography variant='subtitle2' fontWeight={700}>Solicitante</Typography>
-              <TextField fullWidth size='small' label='Empresa' value={logCompany} onChange={e => setLogCompany(e.target.value)} />
-              <Stack direction='row' spacing={1}>
-                <TextField fullWidth size='small' label='Oferta' value={logOffer} onChange={e => setLogOffer(e.target.value)} />
-                <TextField fullWidth size='small' label='Teléfono' value={logPhone} onChange={e => setLogPhone(e.target.value)} />
-              </Stack>
-              <TextField fullWidth size='small' label='Contacto' value={logContact} onChange={e => setLogContact(e.target.value)} />
-              <Stack direction='row' spacing={1}>
-                <TextField fullWidth size='small' label='Dirección' value={logAddress} onChange={e => setLogAddress(e.target.value)} />
-                <TextField fullWidth size='small' label='Ciudad' value={logCity} onChange={e => setLogCity(e.target.value)} />
-              </Stack>
-
-              <Typography variant='subtitle2' fontWeight={700}>Equipos</Typography>
-              <DeviceSearch
-                onSelect={(name) => setLogEquipment(p => [...p, {
-                  equipmentName: name, brand: '', model: '', serial: '', asset: '', location: '',
-                  physIn: null, physOut: null, opIn: null, opOut: null
-                }])}
-              />
-              {logEquipment.map((eq, i) => (
-                <Card key={i} variant='outlined' sx={{ borderRadius: 2 }}>
-                  <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                    <Stack spacing={1}>
-                      <Stack direction='row' spacing={1} alignItems='center'>
-                        <TextField fullWidth size='small' label='Equipo' value={eq.equipmentName}
-                          onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], equipmentName: e.target.value }; setLogEquipment(n) }} />
-                        <IconButton size='small' color='error' onClick={() => setLogEquipment(p => p.filter((_, idx) => idx !== i))}>
-                          <DeleteOutlineIcon />
-                        </IconButton>
-                      </Stack>
-                      <Stack direction='row' spacing={1}>
-                        <TextField size='small' label='Marca' value={eq.brand} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], brand: e.target.value }; setLogEquipment(n) }} sx={{ flex: 1 }} />
-                        <TextField size='small' label='Modelo' value={eq.model} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], model: e.target.value }; setLogEquipment(n) }} sx={{ flex: 1 }} />
-                      </Stack>
-                      <Stack direction='row' spacing={1}>
-                        <TextField size='small' label='Serial' value={eq.serial} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], serial: e.target.value }; setLogEquipment(n) }} sx={{ flex: 1 }} />
-                        <TextField size='small' label='Activo fijo' value={eq.asset} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], asset: e.target.value }; setLogEquipment(n) }} sx={{ flex: 1 }} />
-                      </Stack>
-                      <Stack direction='row' spacing={0.5}>
-                        {(['physIn', 'physOut', 'opIn', 'opOut'] as const).map(f => {
-                          const labels: Record<string, string> = { physIn: 'Fís. ing', physOut: 'Fís. sal', opIn: 'Oper. ing', opOut: 'Oper. sal' }
-                          return (
-                            <FormControl key={f} size='small' sx={{ flex: 1 }}>
-                              <InputLabel>{labels[f]}</InputLabel>
-                              <Select value={eq[f as keyof typeof eq] || ''} label={labels[f]}
-                                onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], [f]: e.target.value || null }; setLogEquipment(n) }}>
-                                <MenuItem value=''><em>—</em></MenuItem>
-                                <MenuItem value='B'>B</MenuItem><MenuItem value='M'>M</MenuItem><MenuItem value='NA'>NA</MenuItem><MenuItem value='SI'>SI</MenuItem>
-                              </Select>
-                            </FormControl>
-                          )
-                        })}
-                      </Stack>
-                    </Stack>
+            {/* Scrollable content */}
+            <Box sx={{ flex: 1, overflowY: 'auto', px: 2, py: 3, display: 'flex', flexDirection: 'column', gap: 3, pb: 24 }}>
+              {/* Fechas */}
+              <Box>
+                <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400, mb: 1.5 }}>Fechas</Typography>
+                <Card sx={{ borderRadius: '16px', border: `1px solid ${G.gray100}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                  <CardContent sx={{ p: 2, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                    <Box>
+                      <Typography variant='caption' sx={{ color: G.gray400, fontWeight: 500 }}>Fecha ingreso</Typography>
+                      <TextField fullWidth size='small' type='date' value={logIntake} onChange={e => setLogIntake(e.target.value)} InputLabelProps={{ shrink: true }}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', mt: 0.5 } }} />
+                    </Box>
+                    <Box>
+                      <Typography variant='caption' sx={{ color: G.gray400, fontWeight: 500 }}>Fecha entrega</Typography>
+                      <TextField fullWidth size='small' type='date' value={logDelivery} onChange={e => setLogDelivery(e.target.value)} InputLabelProps={{ shrink: true }}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', mt: 0.5 } }} />
+                    </Box>
                   </CardContent>
                 </Card>
-              ))}
-              <Button variant='outlined' size='small' onClick={() => setLogEquipment(p => [...p, {
-                equipmentName: '', brand: '', model: '', serial: '', asset: '', location: '',
-                physIn: null, physOut: null, opIn: null, opOut: null
-              }])} sx={{ borderRadius: 2, textTransform: 'none' }}>
-                + Agregar equipo
-              </Button>
+              </Box>
 
-              <Typography variant='subtitle2' fontWeight={700}>Validaciones</Typography>
-              <Stack spacing={1}>
-                {[
-                  { label: 'Autoriza codificación', val: logNoSerial, set: setLogNoSerial },
-                  { label: 'Define pts. calibración', val: logCalPoints, set: setLogCalPoints },
-                  { label: 'Condición especial', val: logSpecialCond, set: setLogSpecialCond },
-                  { label: 'Incluye certificado', val: logCertIncluded, set: setLogCertIncluded },
-                  { label: 'Incluye estampilla', val: logStamp, set: setLogStamp },
-                ].map(f => (
-                  <FormControl key={f.label} fullWidth size='small'>
-                    <InputLabel>{f.label}</InputLabel>
-                    <Select value={f.val} label={f.label} onChange={e => f.set(e.target.value)}>
-                      <MenuItem value=''>Sin definir</MenuItem><MenuItem value='true'>Sí</MenuItem><MenuItem value='false'>No</MenuItem>
-                    </Select>
-                  </FormControl>
-                ))}
-              </Stack>
+              {/* Solicitante */}
+              <Box>
+                <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400, mb: 1.5 }}>Solicitante</Typography>
+                <Card sx={{ borderRadius: '16px', border: `1px solid ${G.gray100}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                  <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <TextField fullWidth size='small' label='Empresa' value={logCompany} onChange={e => setLogCompany(e.target.value)}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
+                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+                      <TextField size='small' label='Oferta' value={logOffer} onChange={e => setLogOffer(e.target.value)}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
+                      <TextField size='small' label='Teléfono' value={logPhone} onChange={e => setLogPhone(e.target.value)}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
+                    </Box>
+                    <TextField fullWidth size='small' label='Contacto' value={logContact} onChange={e => setLogContact(e.target.value)}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
+                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+                      <TextField size='small' label='Dirección' value={logAddress} onChange={e => setLogAddress(e.target.value)}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
+                      <TextField size='small' label='Ciudad' value={logCity} onChange={e => setLogCity(e.target.value)}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Box>
 
-              <Typography variant='subtitle2' fontWeight={700}>Firmas</Typography>
-              <TextField fullWidth size='small' label='Entrega (nombre)' value={logDeliveryName} onChange={e => setLogDeliveryName(e.target.value)} />
-              <SignaturePad value={logDeliverySig} onChange={setLogDeliverySig} height={100} />
-              <TextField fullWidth size='small' label='Recibe (nombre)' value={logReceiptName} onChange={e => setLogReceiptName(e.target.value)} />
-              <SignaturePad value={logReceiptSig} onChange={setLogReceiptSig} height={100} />
+              {/* Equipos */}
+              <Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                  <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400 }}>Equipos</Typography>
+                  <Typography variant='caption' sx={{ color: G.green, fontWeight: 600 }}>{logEquipment.length} equipo{logEquipment.length !== 1 ? 's' : ''}</Typography>
+                </Box>
+                <DeviceSearch onSelect={(name) => setLogEquipment(p => [...p, {
+                  equipmentName: name, brand: '', model: '', serial: '', asset: '', location: '',
+                  physIn: null, physOut: null, opIn: null, opOut: null
+                }])} />
+                <Stack spacing={1.5}>
+                  {logEquipment.map((eq, i) => (
+                    <Card key={i} variant='outlined' sx={{ borderRadius: '16px', border: `1px solid ${G.gray200}` }}>
+                      <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                        <Stack spacing={1.5}>
+                          <Stack direction='row' spacing={1} alignItems='center'>
+                            <TextField fullWidth size='small' label='Equipo' value={eq.equipmentName}
+                              onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], equipmentName: e.target.value }; setLogEquipment(n) }}
+                              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
+                            <IconButton size='small' onClick={() => setLogEquipment(p => p.filter((_, idx) => idx !== i))} sx={{ color: G.red }}>
+                              <DeleteOutlineIcon fontSize='small' />
+                            </IconButton>
+                          </Stack>
+                          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                            <TextField size='small' label='Marca' value={eq.brand} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], brand: e.target.value }; setLogEquipment(n) }}
+                              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
+                            <TextField size='small' label='Modelo' value={eq.model} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], model: e.target.value }; setLogEquipment(n) }}
+                              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
+                          </Box>
+                          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                            <TextField size='small' label='Serial' value={eq.serial} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], serial: e.target.value }; setLogEquipment(n) }}
+                              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
+                            <TextField size='small' label='Activo fijo' value={eq.asset} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], asset: e.target.value }; setLogEquipment(n) }}
+                              sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
+                          </Box>
+                          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.5 }}>
+                            {(['physIn', 'physOut', 'opIn', 'opOut'] as const).map(f => {
+                              const labels: Record<string, string> = { physIn: 'Fís. ing', physOut: 'Fís. sal', opIn: 'Oper. ing', opOut: 'Oper. sal' }
+                              return (
+                                <FormControl key={f} size='small'>
+                                  <InputLabel>{labels[f]}</InputLabel>
+                                  <Select value={eq[f as keyof typeof eq] || ''} label={labels[f]}
+                                    onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], [f]: e.target.value || null }; setLogEquipment(n) }}
+                                    sx={{ borderRadius: '10px' }}>
+                                    <MenuItem value=''><em>—</em></MenuItem>
+                                    <MenuItem value='B'>B</MenuItem><MenuItem value='M'>M</MenuItem><MenuItem value='NA'>NA</MenuItem><MenuItem value='SI'>SI</MenuItem>
+                                  </Select>
+                                </FormControl>
+                              )
+                            })}
+                          </Box>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </Stack>
+                <Button fullWidth variant='outlined' onClick={() => setLogEquipment(p => [...p, {
+                  equipmentName: '', brand: '', model: '', serial: '', asset: '', location: '',
+                  physIn: null, physOut: null, opIn: null, opOut: null
+                }])}
+                  sx={{ mt: 1.5, borderStyle: 'dashed', borderColor: G.green, color: G.green, borderRadius: '16px', textTransform: 'none', fontWeight: 600, '&:active': { transform: 'scale(0.97)' } }}>
+                  + Agregar equipo
+                </Button>
+              </Box>
 
-              <TextField fullWidth size='small' multiline minRows={2} label='Observaciones' value={logObs} onChange={e => setLogObs(e.target.value)} />
-            </Stack>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setShowLogistics(false)}>Cancelar</Button>
-            <Button variant='contained' onClick={() => handleAction('log', async () => {
-              const bool = (v: string) => v === 'true' ? true : v === 'false' ? false : null
+              {/* Validaciones */}
+              <Box>
+                <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400, mb: 1.5 }}>Validaciones</Typography>
+                <Stack spacing={1.5}>
+                  {[
+                    { label: 'Autoriza codificación', val: logNoSerial, set: setLogNoSerial },
+                    { label: 'Define pts. calibración', val: logCalPoints, set: setLogCalPoints },
+                    { label: 'Condición especial', val: logSpecialCond, set: setLogSpecialCond },
+                    { label: 'Incluye certificado', val: logCertIncluded, set: setLogCertIncluded },
+                    { label: 'Incluye estampilla', val: logStamp, set: setLogStamp },
+                  ].map(f => (
+                    <FormControl key={f.label} fullWidth size='small'>
+                      <InputLabel>{f.label}</InputLabel>
+                      <Select value={f.val} label={f.label} onChange={e => f.set(e.target.value)} sx={{ borderRadius: '12px' }}>
+                        <MenuItem value=''>Sin definir</MenuItem><MenuItem value='true'>Sí</MenuItem><MenuItem value='false'>No</MenuItem>
+                      </Select>
+                    </FormControl>
+                  ))}
+                </Stack>
+              </Box>
+
+              {/* Firmas */}
+              <Box>
+                <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400, mb: 1.5 }}>Firmas</Typography>
+                <Card sx={{ borderRadius: '16px', border: `1px solid ${G.gray100}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                  <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <Box>
+                      <Stack direction='row' spacing={1} alignItems='center' sx={{ mb: 2, pb: 1, borderBottom: `1px solid ${G.gray100}` }}>
+                        <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: G.green, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700 }}>1</Box>
+                        <Typography variant='body2' fontWeight={600} sx={{ color: G.dark }}>Quien entrega</Typography>
+                      </Stack>
+                      <TextField fullWidth size='small' label='Nombre completo' value={logDeliveryName} onChange={e => setLogDeliveryName(e.target.value)}
+                        sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
+                      <TextField fullWidth size='small' label='Cédula / ID'
+                        sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
+                      <SignaturePad value={logDeliverySig} onChange={setLogDeliverySig} height={100} />
+                    </Box>
+                    <Box sx={{ borderTop: `1px solid ${G.gray100}`, pt: 2 }}>
+                      <Stack direction='row' spacing={1} alignItems='center' sx={{ mb: 2, pb: 1, borderBottom: `1px solid ${G.gray100}` }}>
+                        <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: G.greenDark, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700 }}>2</Box>
+                        <Typography variant='body2' fontWeight={600} sx={{ color: G.dark }}>Quien recibe</Typography>
+                      </Stack>
+                      <TextField fullWidth size='small' label='Nombre completo' value={logReceiptName} onChange={e => setLogReceiptName(e.target.value)}
+                        sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
+                      <TextField fullWidth size='small' label='Cargo'
+                        sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
+                      <SignaturePad value={logReceiptSig} onChange={setLogReceiptSig} height={100} />
+                    </Box>
+                    <Box sx={{ borderTop: `1px solid ${G.gray100}`, pt: 2 }}>
+                      <Typography variant='caption' sx={{ color: G.gray400, mb: 1.5, display: 'block' }}>
+                        ¿Prefieres subir la firma como imagen?
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Box>
+
+              <TextField fullWidth size='small' multiline minRows={2} label='Observaciones' value={logObs} onChange={e => setLogObs(e.target.value)}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
+            </Box>
+
+            {/* Sticky bottom bar */}
+            <Box sx={{ position: 'sticky', bottom: 0, left: 0, right: 0, bgcolor: G.white, borderTop: `1px solid ${G.gray100}`, px: 2, py: 1.5 }}>
+              <Stack direction='row' spacing={1.5}>
+                <Button fullWidth onClick={() => setShowLogistics(false)}
+                  sx={{ borderRadius: '16px', py: 1.5, border: `1px solid ${G.gray200}`, color: G.gray600, textTransform: 'none', fontWeight: 600, '&:active': { transform: 'scale(0.97)' } }}>
+                  Cancelar
+                </Button>
+                <Button fullWidth variant='contained' onClick={() => handleAction('log', async () => {
+                  const bool = (v: string) => v === 'true' ? true : v === 'false' ? false : null
               await apiCall('put', `/calibration-services/${serviceId}/logistics-control`, {
                 intakeDate: logIntake || null, deliveryDate: logDelivery || null,
                 requesterCompanyName: logCompany || null, requesterOfferNumber: logOffer || null,
@@ -464,9 +562,15 @@ return (
                   operationalInspectionIn: e.opIn as any, operationalInspectionOut: e.opOut as any
                 }))
               })
-            }, 'Control guardado')} disabled={actionLoading === 'log'}>Guardar</Button>
-          </DialogActions>
+            }, 'Control guardado')} disabled={actionLoading === 'log'}
+            sx={{ borderRadius: '16px', py: 1.5, textTransform: 'none', fontWeight: 700, bgcolor: G.green, '&:hover': { bgcolor: G.greenDark }, '&:active': { transform: 'scale(0.97)' } }}>
+            Guardar
+          </Button>
+          </Stack>
+          </Box>
+          </Box>
         </Dialog>
+        {/* end Logistics Dialog */}
 
         {/* Trace Dialog */}
         <Dialog open={showTrace} onClose={() => setShowTrace(false)} fullWidth>
