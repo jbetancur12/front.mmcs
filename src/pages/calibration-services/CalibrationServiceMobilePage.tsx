@@ -299,7 +299,7 @@ const MobilePage = () => {
         {/* === DIALOGS === */}
 
         {/* Logistics Dialog */}
-        <Dialog open={showLogistics} onClose={() => setShowLogistics(false)} fullWidth maxWidth='sm'>
+        <Dialog open={showLogistics} onClose={() => setShowLogistics(false)} fullScreen>
           <DialogTitle>Control de ingreso y entrega</DialogTitle>
           <DialogContent dividers>
             <Stack spacing={2} sx={{ mt: 1 }}>
