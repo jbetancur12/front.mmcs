@@ -145,15 +145,27 @@ const MobilePage = () => {
   const handleCreateCut = async () => {
     setActionLoading('cut')
     try {
+      // Primero guardar avance técnico para que el backend vea el estado actualizado
+      if (service?.items?.length) {
+        await axiosPrivate.put(`/calibration-services/${serviceId}/item-progress`, {
+          items: (service?.items || []).map(item => ({
+            itemId: item.id,
+            operationalStatus: draftItems[item.id] || 'pending',
+            technicalNotes: draftNotes[item.id] || ''
+          }))
+        })
+      }
       await axiosPrivate.post(`/calibration-services/${serviceId}/cuts`, {
         cutType,
         notes: null,
-        items: (service?.items || []).map(i => ({ serviceItemId: i.id, quantity: 1 }))
+        items: (service?.items || []).filter(i => draftItems[i.id] === 'completed').map(i => ({ serviceItemId: i.id, quantity: 1 }))
       })
       toast.success('Corte creado')
       setShowCutDialog(false)
       void refetch()
-    } catch { toast.error('Error al crear corte') }
+    } catch (e: any) {
+      toast.error(e?.response?.data?.error || 'Error al crear corte')
+    }
     setActionLoading(null)
   }
 
