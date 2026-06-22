@@ -71,7 +71,8 @@ export const CALIBRATION_SERVICE_REASSIGN_ROLES =
 export const CALIBRATION_SERVICE_EXECUTION_ROLES = [
   'admin',
   'super_admin',
-  'metrologist'
+  'metrologist',
+  'calibration_coordinator'
 ] as const
 
 export const CALIBRATION_SERVICE_PAUSE_ROLES =
