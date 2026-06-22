@@ -235,7 +235,6 @@ return (
                   </Button>
           )}
         </Stack>
-        </Collapse>
             </CardContent>
           </Card>
         )}
@@ -282,6 +281,7 @@ return (
             </Button>
           )}
         </Stack>
+        </Collapse>
 
         {/* Logistics */}
         <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400 }}>Logística</Typography>
