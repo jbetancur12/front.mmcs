@@ -45,6 +45,13 @@ const CUT_STATUSES: Record<string, { label: string; color: string }> = {
 const getOps = (s: any) => (s?.otherFields?.operations || {})
 const getScheduledDate = (s: any) => getOps(s)?.scheduledDate || getOps(s)?.scheduledFor
 
+const getEffectiveQty = (item: any, adjustments: any[] = []) => {
+  const base = item.quantity || 1
+  const delta = adjustments.filter(a => a.serviceItemId === item.id && ['approved', 'applied_to_cut'].includes(a.status) && a.changeType !== 'extra_item')
+    .reduce((sum: number, a: any) => sum + (a.differenceQuantity || 0), 0)
+  return Math.max(base + delta, 0)
+}
+
 const MobilePage = () => {
   const { serviceId } = useParams()
   const navigate = useNavigate()
@@ -256,7 +263,7 @@ return (
                 <Stack spacing={1}>
                   <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
                     <Typography variant='body2' fontWeight={700} sx={{ flex: 1, fontSize: '0.8rem' }}>{item.itemName}</Typography>
-                    <Typography variant='caption' fontWeight={600} sx={{ color: G.gray400, whiteSpace: 'nowrap', ml: 1 }}>Cant: {item.quantity || 1}</Typography>
+                    <Typography variant='caption' fontWeight={600} sx={{ color: G.gray400, whiteSpace: 'nowrap', ml: 1 }}>Cant: {getEffectiveQty(item, s?.adjustments)}</Typography>
                   </Stack>
                   <Stack direction='row' spacing={1} alignItems='center'>
                     <FormControl size='small' sx={{ minWidth: 140 }}>
