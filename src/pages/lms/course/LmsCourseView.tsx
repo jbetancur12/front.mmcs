@@ -1125,43 +1125,43 @@ const LmsCourseView: React.FC = () => {
                 </Box>
               </Box>
 
-              {/* Alerts */}
-              {courseProgress.percentage === 100 && (
-                <Alert severity="success" sx={{ mb: 3, borderRadius: 2, border: '1px solid rgba(45,155,95,0.18)' }}>
-                  <AlertTitle>Curso completado</AlertTitle>
-                  Ya cerraste todo el recorrido de aprendizaje.
-                  {course.hasCertificate && hasGeneratedCertificate && (
-                    <Button variant="contained" color="success" size="small" startIcon={<CertificateIcon />} sx={{ ml: 2 }} onClick={handleOpenCurrentCertificate}>Abrir certificado</Button>
-                  )}
-                  {course.hasCertificate && !hasGeneratedCertificate && (
-                    <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                      <Chip label="Preparando certificado..." color="success" size="small" />
-                      <Typography variant="body2" color="text.secondary">Seguiremos revisando automáticamente hasta que esté disponible.</Typography>
-                    </Box>
-                  )}
-                </Alert>
-              )}
-
-              {certificateReadyNoticeVisible && (
-                <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }} action={<Button color="inherit" size="small" onClick={handleOpenCurrentCertificate}>Abrir certificado</Button>} onClose={() => setCertificateReadyNoticeVisible(false)}>
-                  <AlertTitle>Certificado disponible</AlertTitle>
-                  Tu certificado ya quedó listo.
-                </Alert>
-              )}
-
-              {currentLesson.type === 'quiz' && latestQuizOutcome && (
-                <Alert severity={latestQuizOutcome.passed ? 'success' : 'warning'} sx={{ mb: 3, borderRadius: 2 }}>
-                  <AlertTitle>{latestQuizOutcome.passed ? 'Quiz aprobado' : 'Aún no alcanzas el puntaje mínimo'}</AlertTitle>
-                  {latestQuizOutcome.passed ? (
-                    latestQuizOutcome.completesCourse ? 'Completaste el curso.' : 'Ya puedes seguir con la siguiente lección.'
-                  ) : (
-                    <>Lograste <strong>{latestQuizOutcome.percentage}%</strong> y necesitas <strong>{latestQuizOutcome.passingPercentage}%</strong> para aprobar. {latestQuizOutcome.attemptsRemaining > 0 ? `Te quedan ${latestQuizOutcome.attemptsRemaining} intento(s).` : 'Ya no quedan intentos.'}</>
-                  )}
-                </Alert>
-              )}
-
               {/* Content */}
               <Box sx={{ maxWidth: 720, mx: 'auto', mb: 4 }}>
+                {/* Alerts */}
+                {courseProgress.percentage === 100 && (
+                  <Alert severity="success" sx={{ mb: 3, borderRadius: 2, border: '1px solid rgba(45,155,95,0.18)' }}>
+                    <AlertTitle>Curso completado</AlertTitle>
+                    Ya cerraste todo el recorrido de aprendizaje.
+                    {course.hasCertificate && hasGeneratedCertificate && (
+                      <Button variant="contained" color="success" size="small" startIcon={<CertificateIcon />} sx={{ ml: 2 }} onClick={handleOpenCurrentCertificate}>Abrir certificado</Button>
+                    )}
+                    {course.hasCertificate && !hasGeneratedCertificate && (
+                      <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                        <Chip label="Preparando certificado..." color="success" size="small" />
+                        <Typography variant="body2" color="text.secondary">Seguiremos revisando automáticamente hasta que esté disponible.</Typography>
+                      </Box>
+                    )}
+                  </Alert>
+                )}
+
+                {certificateReadyNoticeVisible && (
+                  <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }} action={<Button color="inherit" size="small" onClick={handleOpenCurrentCertificate}>Abrir certificado</Button>} onClose={() => setCertificateReadyNoticeVisible(false)}>
+                    <AlertTitle>Certificado disponible</AlertTitle>
+                    Tu certificado ya quedó listo.
+                  </Alert>
+                )}
+
+                {currentLesson.type === 'quiz' && latestQuizOutcome && (
+                  <Alert severity={latestQuizOutcome.passed ? 'success' : 'warning'} sx={{ mb: 3, borderRadius: 2 }}>
+                    <AlertTitle>{latestQuizOutcome.passed ? 'Quiz aprobado' : 'Aún no alcanzas el puntaje mínimo'}</AlertTitle>
+                    {latestQuizOutcome.passed ? (
+                      latestQuizOutcome.completesCourse ? 'Completaste el curso.' : 'Ya puedes seguir con la siguiente lección.'
+                    ) : (
+                      <>Lograste <strong>{latestQuizOutcome.percentage}%</strong> y necesitas <strong>{latestQuizOutcome.passingPercentage}%</strong> para aprobar. {latestQuizOutcome.attemptsRemaining > 0 ? `Te quedan ${latestQuizOutcome.attemptsRemaining} intento(s).` : 'Ya no quedan intentos.'}</>
+                    )}
+                  </Alert>
+                )}
+
                 {/* Description / intro */}
                 {currentLesson.content.description && (
                   <Typography variant='body2' sx={{ color: '#0f1117', lineHeight: 1.8, mb: 4, fontSize: '0.8rem' }}>
