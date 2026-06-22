@@ -240,26 +240,34 @@ return (
 
         {/* Items */}
         <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400 }}>Ítems del servicio</Typography>
-        <Stack spacing={1.5} sx={{ px: 2 }}>
+        <Stack spacing={1} sx={{ px: 2 }}>
           {items.map(item => (
             <Card key={item.id} sx={{ borderRadius: '16px', border: `1px solid ${G.gray100}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-              <CardContent sx={{ p: 2 }}>
-                <Typography variant='subtitle2' fontWeight={700}>{item.itemName}</Typography>
-                <FormControl fullWidth size='small' sx={{ mt: 1 }}>
-                  <InputLabel>Estado</InputLabel>
-                  <Select value={draftItems[item.id] || 'pending'} label='Estado'
-                    onChange={e => setDraftItems(p => ({ ...p, [item.id]: e.target.value as any }))}>
-                    {STATUS_FLOW.map(s => <MenuItem key={s} value={s}>{CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS[s]}</MenuItem>)}
-                  </Select>
-                </FormControl>
-                <TextField fullWidth size='small' multiline minRows={2} placeholder='Notas técnicas'
-                  value={draftNotes[item.id] || ''} onChange={e => setDraftNotes(p => ({ ...p, [item.id]: e.target.value }))} sx={{ mt: 1 }} />
+              <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                <Stack spacing={1}>
+                  <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
+                    <Typography variant='body2' fontWeight={700} sx={{ flex: 1, fontSize: '0.8rem' }}>{item.itemName}</Typography>
+                    <Typography variant='caption' fontWeight={600} sx={{ color: G.gray400, whiteSpace: 'nowrap', ml: 1 }}>Cant: {item.quantity || 1}</Typography>
+                  </Stack>
+                  <Stack direction='row' spacing={1} alignItems='center'>
+                    <FormControl size='small' sx={{ minWidth: 140 }}>
+                      <Select value={draftItems[item.id] || 'pending'}
+                        onChange={e => setDraftItems(p => ({ ...p, [item.id]: e.target.value as any }))}
+                        sx={{ borderRadius: '10px', fontSize: '0.8rem', height: 36 }}>
+                        {STATUS_FLOW.map(s => <MenuItem key={s} value={s} sx={{ fontSize: '0.8rem' }}>{CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS[s]}</MenuItem>)}
+                      </Select>
+                    </FormControl>
+                    <TextField size='small' placeholder='Notas' multiline maxRows={2}
+                      value={draftNotes[item.id] || ''} onChange={e => setDraftNotes(p => ({ ...p, [item.id]: e.target.value }))}
+                      sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '10px', fontSize: '0.8rem' } }} />
+                  </Stack>
+                </Stack>
               </CardContent>
             </Card>
           ))}
           {items.length > 0 && (
             <Button fullWidth variant='contained' onClick={handleSaveProgress} disabled={saving}
-              sx={{ borderRadius: '16px', py: 2, textTransform: 'none', fontWeight: 700, '&:active': { transform: 'scale(0.97)' } }}>
+              sx={{ borderRadius: '16px', py: 1.5, textTransform: 'none', fontWeight: 700, '&:active': { transform: 'scale(0.97)' } }}>
               {saving ? 'Guardando...' : 'Guardar avance técnico'}
             </Button>
           )}
