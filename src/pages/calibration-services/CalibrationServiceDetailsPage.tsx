@@ -781,7 +781,7 @@ const CalibrationServiceDetailsPage = () => {
   const rawExecutionCustomerName = service.executionCustomerName || null
   const rawExecutionSiteName = service.executionSiteName || null
   const canEditExecutionCustomer =
-    !service.odsCode &&
+    useHasRole(['admin', 'super_admin', 'calibration_coordinator']) &&
     service.status !== 'cancelled' &&
     service.status !== 'closed'
   const odsDetails = getOtherFieldRecord(service.otherFields, 'ods')
