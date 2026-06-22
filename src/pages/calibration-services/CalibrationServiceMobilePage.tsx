@@ -631,22 +631,23 @@ return (
                   <MenuItem value='quantity_more'>Cantidad mayor</MenuItem>
                   <MenuItem value='quantity_less'>Cantidad menor</MenuItem>
                   <MenuItem value='extra_item'>Ítem extra</MenuItem>
-                  <MenuItem value='item_removed'>Ítm retirado</MenuItem>
-                  <MenuItem value='other'>Otra</MenuItem>
+                  <MenuItem value='not_received'>No recibido</MenuItem>
+                  <MenuItem value='scope_change'>Cambio de alcance</MenuItem>
                 </Select>
               </FormControl>
-              <TextField fullWidth size='small' label='Cantidad' type='number' value={adjQuantity} onChange={e => setAdjQuantity(e.target.value)} />
-              <TextField fullWidth size='small' multiline minRows={2} label='Motivo' value={adjReason} onChange={e => setAdjReason(e.target.value)} />
+              <TextField fullWidth size='small' label='Cantidad real' type='number' value={adjQuantity} onChange={e => setAdjQuantity(e.target.value)} helperText='Cantidad que se encontró realmente' />
+              <TextField fullWidth size='small' multiline minRows={2} label='Motivo (mín. 5 caracteres)' value={adjReason} onChange={e => setAdjReason(e.target.value)} />
             </Stack>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setShowAdjust(false)}>Cancelar</Button>
             <Button variant='contained' color='warning' onClick={() => handleAction('adj', async () => {
               await apiCall('post', `/calibration-services/${serviceId}/adjustments`, {
-                adjustments: [{
-                  serviceItemId: adjItemId ? Number(adjItemId) : null,
-                  changeType: adjChangeType, differenceQuantity: adjQuantity ? Number(adjQuantity) : 0, reason: adjReason || null
-                }]
+                serviceItemId: adjItemId ? Number(adjItemId) : null,
+                changeType: adjChangeType,
+                quotedQuantity: 1,
+                actualQuantity: adjQuantity ? Number(adjQuantity) : 1,
+                description: adjReason && adjReason.length >= 5 ? adjReason : `Novedad por ${adjChangeType.replace('_', ' ')}`
               })
             }, 'Novedad reportada')} disabled={actionLoading === 'adj'}>Reportar</Button>
           </DialogActions>
