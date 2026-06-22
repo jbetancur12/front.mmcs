@@ -808,7 +808,7 @@ const LmsCourseView: React.FC = () => {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        bgcolor: '#0b1724',
+        bgcolor: '#0a2e1a',
         color: '#e2e8f0'
       }}
     >
@@ -830,7 +830,7 @@ const LmsCourseView: React.FC = () => {
             py: 0.5,
             borderRadius: 0.5,
             bgcolor: 'rgba(13,110,138,0.3)',
-            color: '#7dd3e8',
+            color: '#7ddfa8',
             mb: 2.5
           }}
         >
@@ -850,7 +850,7 @@ const LmsCourseView: React.FC = () => {
             <Typography variant='caption' sx={{ color: 'rgba(240,244,248,0.5)', fontSize: '0.65rem' }}>
               Tu progreso
             </Typography>
-            <Typography variant='caption' sx={{ color: '#7dd3e8', fontWeight: 700, fontSize: '0.7rem' }}>
+            <Typography variant='caption' sx={{ color: '#7ddfa8', fontWeight: 700, fontSize: '0.7rem' }}>
               {Math.round(courseProgress.percentage)}%
             </Typography>
           </Box>
@@ -863,7 +863,7 @@ const LmsCourseView: React.FC = () => {
               bgcolor: 'rgba(255,255,255,0.08)',
               '& .MuiLinearProgress-bar': {
                 borderRadius: 999,
-                bgcolor: '#0d8aaa',
+                bgcolor: '#00A651',
                 transition: 'width 0.5s ease'
               }
             }}
@@ -941,7 +941,7 @@ const LmsCourseView: React.FC = () => {
                           opacity: isUnlocked ? 1 : 0.45,
                           bgcolor: isCurrent ? 'rgba(13,110,138,0.18)' : 'transparent',
                           borderLeft: '2px solid',
-                          borderLeftColor: isCurrent ? '#0d8aaa' : 'transparent',
+                          borderLeftColor: isCurrent ? '#00A651' : 'transparent',
                           '&:hover': isUnlocked ? { bgcolor: isCurrent ? 'rgba(13,110,138,0.25)' : 'rgba(255,255,255,0.04)' } : {}
                         }}
                       >
@@ -1044,7 +1044,7 @@ const LmsCourseView: React.FC = () => {
             position: 'relative',
             height: '100%',
             borderRight: 'none',
-            background: '#0b1724'
+            background: '#0a2e1a'
           }
         }}
       >
@@ -1093,7 +1093,7 @@ const LmsCourseView: React.FC = () => {
             {course.title}
           </Typography>
           <Typography variant='caption' sx={{ color: '#94a3b8' }}>/</Typography>
-          <Typography variant='caption' sx={{ color: '#0d6e8a', fontWeight: 600, fontSize: '0.7rem' }}>
+          <Typography variant='caption' sx={{ color: '#00A651', fontWeight: 600, fontSize: '0.7rem' }}>
             {currentLesson?.title || 'Curso'}
           </Typography>
           <Box sx={{ flex: 1 }} />
@@ -1232,8 +1232,8 @@ const LmsCourseView: React.FC = () => {
                             bgcolor: '#ffffff',
                             cursor: 'pointer',
                             transition: 'all 0.15s ease',
-                            '&:hover': { borderColor: '#0d6e8a', bgcolor: '#f8fbfc' },
-                            '&:hover .resource-download': { color: '#0d6e8a' }
+                            '&:hover': { borderColor: '#00A651', bgcolor: '#f8fbfc' },
+                            '&:hover .resource-download': { color: '#00A651' }
                           }}
                         >
                           <Box
@@ -1249,9 +1249,9 @@ const LmsCourseView: React.FC = () => {
                             }}
                           >
                             {resource.resourceType === 'link' ? (
-                              <ExternalLinkIcon sx={{ fontSize: 14, color: '#0d6e8a' }} />
+                              <ExternalLinkIcon sx={{ fontSize: 14, color: '#00A651' }} />
                             ) : (
-                              <DescriptionIcon sx={{ fontSize: 14, color: '#0d6e8a' }} />
+                              <DescriptionIcon sx={{ fontSize: 14, color: '#00A651' }} />
                             )}
                           </Box>
                           <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -1309,13 +1309,13 @@ const LmsCourseView: React.FC = () => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       transition: 'all 0.15s ease',
-                      borderColor: currentLessonCompleted ? '#0d6e8a' : '#d1d5db',
-                      bgcolor: currentLessonCompleted ? '#0d6e8a' : 'transparent'
+                      borderColor: currentLessonCompleted ? '#00A651' : '#d1d5db',
+                      bgcolor: currentLessonCompleted ? '#00A651' : 'transparent'
                     }}
                   >
                     {currentLessonCompleted && <CheckIcon sx={{ fontSize: 13, color: '#ffffff' }} />}
                   </Box>
-                  <Typography variant='caption' sx={{ color: currentLessonCompleted ? '#0d6e8a' : '#6b6b72', fontWeight: 500, fontSize: '0.75rem' }}>
+                  <Typography variant='caption' sx={{ color: currentLessonCompleted ? '#00A651' : '#6b6b72', fontWeight: 500, fontSize: '0.75rem' }}>
                     {currentLessonCompleted ? 'Completado' : 'Marcar como completado'}
                   </Typography>
                 </Box>
@@ -1339,8 +1339,8 @@ const LmsCourseView: React.FC = () => {
                         py: 1,
                         fontSize: '0.8rem',
                         fontWeight: 600,
-                        bgcolor: '#0d6e8a',
-                        '&:hover': { bgcolor: '#0b5e75', opacity: 0.9 },
+                        bgcolor: '#00A651',
+                        '&:hover': { bgcolor: '#005c38', opacity: 0.9 },
                         '&:active': { transform: 'scale(0.98)' },
                         transition: 'all 0.15s ease'
                       }}
@@ -1366,7 +1366,7 @@ const LmsCourseView: React.FC = () => {
                         endIcon={<SkipNextIcon />}
                         onClick={handleNextLesson}
                         disabled={!nextLesson || !isLessonUnlocked(nextLesson.moduleIndex, nextLesson.lessonIndex)}
-                        sx={{ borderRadius: 1, px: 2, fontSize: '0.75rem', bgcolor: '#0d6e8a', '&:hover': { bgcolor: '#0b5e75' } }}
+                        sx={{ borderRadius: 1, px: 2, fontSize: '0.75rem', bgcolor: '#00A651', '&:hover': { bgcolor: '#005c38' } }}
                       >
                         {isMobile ? 'Siguiente' : 'Siguiente Lección'}
                       </Button>
