@@ -1161,7 +1161,7 @@ const LmsCourseView: React.FC = () => {
               )}
 
               {/* Content */}
-              <Box sx={{ maxWidth: 720, mb: 4 }}>
+              <Box sx={{ maxWidth: 720, mx: 'auto', mb: 4 }}>
                 {/* Description / intro */}
                 {currentLesson.content.description && (
                   <Typography variant='body2' sx={{ color: '#0f1117', lineHeight: 1.8, mb: 4, fontSize: '0.8rem' }}>
