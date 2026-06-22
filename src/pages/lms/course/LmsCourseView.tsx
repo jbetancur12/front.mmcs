@@ -1127,28 +1127,33 @@ const LmsCourseView: React.FC = () => {
 
               {/* Content */}
               <Box sx={{ maxWidth: 720, mx: 'auto', mb: 4 }}>
-                {/* Alerts */}
                 {courseProgress.percentage === 100 && (
-                  <Alert severity="success" sx={{ mb: 3, borderRadius: 2, border: '1px solid rgba(45,155,95,0.18)' }}>
-                    <AlertTitle>Curso completado</AlertTitle>
-                    Ya cerraste todo el recorrido de aprendizaje.
+                  <Box sx={{ textAlign: 'center', mb: 4, py: 3, px: 2, bgcolor: '#e8f7ef', borderRadius: 3 }}>
+                    <Typography variant='h6' fontWeight={700} sx={{ color: '#007a3d', mb: 0.5 }}>🎉 Curso completado</Typography>
+                    <Typography variant='body2' sx={{ color: '#4b5563', mb: 2 }}>Ya cerraste todo el recorrido de aprendizaje.</Typography>
                     {course.hasCertificate && hasGeneratedCertificate && (
-                      <Button variant="contained" color="success" size="small" startIcon={<CertificateIcon />} sx={{ ml: 2 }} onClick={handleOpenCurrentCertificate}>Abrir certificado</Button>
+                      <Button variant='contained' size='small' startIcon={<CertificateIcon />} onClick={handleOpenCurrentCertificate}
+                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, bgcolor: '#00A651', '&:hover': { bgcolor: '#007a3d' } }}>
+                        Abrir certificado
+                      </Button>
                     )}
                     {course.hasCertificate && !hasGeneratedCertificate && (
-                      <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                        <Chip label="Preparando certificado..." color="success" size="small" />
-                        <Typography variant="body2" color="text.secondary">Seguiremos revisando automáticamente hasta que esté disponible.</Typography>
-                      </Box>
+                      <Typography variant='caption' color='text.secondary'>Preparando certificado...</Typography>
                     )}
-                  </Alert>
+                  </Box>
                 )}
 
                 {certificateReadyNoticeVisible && (
-                  <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }} action={<Button color="inherit" size="small" onClick={handleOpenCurrentCertificate}>Abrir certificado</Button>} onClose={() => setCertificateReadyNoticeVisible(false)}>
-                    <AlertTitle>Certificado disponible</AlertTitle>
-                    Tu certificado ya quedó listo.
-                  </Alert>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, p: 2, bgcolor: '#e8f7ef', borderRadius: 2 }}>
+                    <Box>
+                      <Typography variant='body2' fontWeight={600} sx={{ color: '#007a3d' }}>Certificado disponible</Typography>
+                      <Typography variant='caption' color='text.secondary'>Tu certificado ya quedó listo.</Typography>
+                    </Box>
+                    <Button size='small' variant='contained' onClick={handleOpenCurrentCertificate}
+                      sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.75rem', bgcolor: '#00A651', '&:hover': { bgcolor: '#007a3d' } }}>
+                      Abrir
+                    </Button>
+                  </Box>
                 )}
 
                 {currentLesson.type === 'quiz' && latestQuizOutcome && (
