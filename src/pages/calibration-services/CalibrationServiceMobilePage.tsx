@@ -19,10 +19,10 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import SearchIcon from '@mui/icons-material/Search'
 import SignaturePad from '../../Components/Maintenance/SignaturePad'
 import {
-  CalibrationService, CalibrationServiceCut, CalibrationServiceOperationalItemStatus
+  CalibrationService, CalibrationServiceCut, CalibrationServiceOperationalItemStatus, CalibrationServiceStatus
 } from '../../types/calibrationService'
 import {
-  CALIBRATION_SERVICE_STATUS_COLORS, CALIBRATION_SERVICE_STATUS_LABELS,
+  CALIBRATION_SERVICE_STATUS_LABELS,
   CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS
 } from '../../constants/calibrationServices'
 
@@ -206,7 +206,7 @@ return (
         <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mt: 1, flexWrap: 'wrap' }}>
           <Typography variant='body2' fontWeight={600} sx={{ fontSize: '0.75rem' }}>{s.customer?.nombre || s.executionCustomerName}</Typography>
           <Box component='span' sx={{ bgcolor: `${G.greenDark}99`, color: 'white', fontSize: '0.65rem', fontWeight: 600, px: 1.5, py: 0.3, borderRadius: '999px' }}>
-            {CALIBRATION_SERVICE_STATUS_LABELS[status]}
+                        {CALIBRATION_SERVICE_STATUS_LABELS[status as CalibrationServiceStatus]}
           </Box>
           {s.odsCode && <Box component='span' sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', fontSize: '0.65rem', fontWeight: 600, px: 1.5, py: 0.3, borderRadius: '999px' }}>{s.odsCode}</Box>}
           {scheduledDate && <Box component='span' sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', fontSize: '0.65rem', fontWeight: 600, px: 1.5, py: 0.3, borderRadius: '999px' }}>{new Date(scheduledDate).toLocaleDateString('es-CO')}</Box>}
@@ -384,7 +384,7 @@ return (
                 <Typography variant='caption' fontWeight={600} sx={{ color: 'white' }}>{s.serviceCode}</Typography>
                 <Typography variant='caption' sx={{ color: 'rgba(255,255,255,0.6)' }}>{s.customer?.nombre || ''}</Typography>
                 <Box component='span' sx={{ bgcolor: G.yellowLight, color: '#b45309', fontSize: '0.6rem', fontWeight: 600, px: 1.5, py: 0.2, borderRadius: '999px' }}>
-                  {CALIBRATION_SERVICE_STATUS_LABELS[status]}
+                              {CALIBRATION_SERVICE_STATUS_LABELS[status as CalibrationServiceStatus]}
                 </Box>
               </Stack>
             </Box>
