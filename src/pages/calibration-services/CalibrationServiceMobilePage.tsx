@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Alert, Autocomplete, Box, Button, Card, CardContent,
-  Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle,
+  Chip, CircularProgress, Collapse, Dialog, DialogActions, DialogContent, DialogTitle,
   FormControl, IconButton, InputLabel, MenuItem, Select, Stack, TextField, Typography
 } from '@mui/material'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -66,6 +66,7 @@ const MobilePage = () => {
   const [draftNotes, setDraftNotes] = useState<Record<number, string>>({})
   const [saving, setSaving] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [itemsExpanded, setItemsExpanded] = useState(true)
 
   // Dialog states
   const [showTrace, setShowTrace] = useState(false)
@@ -232,14 +233,23 @@ return (
                     sx={{ textTransform: 'none' }}>
                     Pausar servicio
                   </Button>
-                )}
-              </Stack>
+          )}
+        </Stack>
+        </Collapse>
             </CardContent>
           </Card>
         )}
 
         {/* Items */}
-        <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400 }}>Ítems del servicio</Typography>
+        <Box sx={{ px: 2 }}>
+          <Stack direction='row' justifyContent='space-between' alignItems='center' sx={{ mt: 3, mb: 1, cursor: 'pointer' }} onClick={() => setItemsExpanded(v => !v)}>
+            <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400 }}>
+              Ítems del servicio ({items.length})
+            </Typography>
+            <Typography variant='caption' sx={{ color: G.green, fontWeight: 600 }}>{itemsExpanded ? 'Ocultar' : 'Mostrar'}</Typography>
+          </Stack>
+        </Box>
+        <Collapse in={itemsExpanded}>
         <Stack spacing={1} sx={{ px: 2 }}>
           {items.map(item => (
             <Card key={item.id} sx={{ borderRadius: '16px', border: `1px solid ${G.gray100}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
