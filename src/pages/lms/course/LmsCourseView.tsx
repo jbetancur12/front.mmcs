@@ -30,6 +30,7 @@ import {
   Menu as MenuIcon,
   Close as CloseIcon,
   AccessTime as AccessTimeIcon,
+  CheckCircle as CheckCircleIcon,
   EmojiEvents as CertificateIcon,
   Description as DescriptionIcon,
   PlayCircleOutline as PlayCircleIcon,
@@ -1128,7 +1129,8 @@ const LmsCourseView: React.FC = () => {
               <Box sx={{ maxWidth: 720, mx: 'auto', mb: 4 }}>
                 {courseProgress.percentage === 100 && (
                   <Box sx={{ textAlign: 'center', mb: 4, py: 3, px: 2, bgcolor: '#e8f7ef', borderRadius: 3 }}>
-                    <Typography variant='h6' fontWeight={700} sx={{ color: '#007a3d', mb: 0.5 }}>🎉 Curso completado</Typography>
+                    <CheckCircleIcon sx={{ fontSize: 36, color: '#00A651', mb: 1 }} />
+                    <Typography variant='h6' fontWeight={700} sx={{ color: '#007a3d', mb: 0.5 }}>Curso completado</Typography>
                     <Typography variant='body2' sx={{ color: '#4b5563', mb: 2 }}>Ya cerraste todo el recorrido de aprendizaje.</Typography>
                     {course.hasCertificate && hasGeneratedCertificate && (
                       <Button variant='contained' size='small' startIcon={<CertificateIcon />} onClick={handleOpenCurrentCertificate}
