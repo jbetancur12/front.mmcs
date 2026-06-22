@@ -502,6 +502,8 @@ const CalibrationServiceDetailsPage = () => {
   ])
   const canGenerateQuotePdf = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const canGenerateOdsPdf = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
+  const canEditExecutionCustomerRole =
+    useHasRole(['admin', 'super_admin', 'calibration_coordinator'])
   const { data: assignableMetrologists = [] } =
     useCalibrationAssignableMetrologists(canScheduleServiceRole)
   const requestedAction = searchParams.get('open')
@@ -781,7 +783,7 @@ const CalibrationServiceDetailsPage = () => {
   const rawExecutionCustomerName = service.executionCustomerName || null
   const rawExecutionSiteName = service.executionSiteName || null
   const canEditExecutionCustomer =
-    useHasRole(['admin', 'super_admin', 'calibration_coordinator']) &&
+    canEditExecutionCustomerRole &&
     service.status !== 'cancelled' &&
     service.status !== 'closed'
   const odsDetails = getOtherFieldRecord(service.otherFields, 'ods')
