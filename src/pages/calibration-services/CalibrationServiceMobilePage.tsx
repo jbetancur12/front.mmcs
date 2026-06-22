@@ -642,14 +642,17 @@ return (
           <DialogActions>
             <Button onClick={() => setShowAdjust(false)}>Cancelar</Button>
             <Button variant='contained' color='warning' onClick={() => handleAction('adj', async () => {
+              const quotedQty = items.find(i => String(i.id) === adjItemId)?.quantity || 1
               await apiCall('post', `/calibration-services/${serviceId}/adjustments`, {
                 serviceItemId: adjItemId ? Number(adjItemId) : null,
                 changeType: adjChangeType,
-                quotedQuantity: 1,
+                quotedQuantity: quotedQty,
                 actualQuantity: adjQuantity ? Number(adjQuantity) : 1,
                 description: adjReason && adjReason.length >= 5 ? adjReason : `Novedad por ${adjChangeType.replace('_', ' ')}`,
                 contractModificationRequired: false
               })
+              setShowAdjust(false)
+              setAdjItemId(''); setAdjChangeType('quantity_more'); setAdjQuantity(''); setAdjReason('')
             }, 'Novedad reportada')} disabled={actionLoading === 'adj'}>Reportar</Button>
           </DialogActions>
         </Dialog>
