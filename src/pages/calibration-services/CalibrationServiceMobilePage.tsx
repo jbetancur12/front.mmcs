@@ -647,7 +647,8 @@ return (
                 changeType: adjChangeType,
                 quotedQuantity: 1,
                 actualQuantity: adjQuantity ? Number(adjQuantity) : 1,
-                description: adjReason && adjReason.length >= 5 ? adjReason : `Novedad por ${adjChangeType.replace('_', ' ')}`
+                description: adjReason && adjReason.length >= 5 ? adjReason : `Novedad por ${adjChangeType.replace('_', ' ')}`,
+                contractModificationRequired: false
               })
             }, 'Novedad reportada')} disabled={actionLoading === 'adj'}>Reportar</Button>
           </DialogActions>
