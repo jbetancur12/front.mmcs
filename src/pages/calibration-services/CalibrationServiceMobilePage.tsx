@@ -47,7 +47,8 @@ const getScheduledDate = (s: any) => getOps(s)?.scheduledDate || getOps(s)?.sche
 
 const getEffectiveQty = (item: any, adjustments: any[] = []) => {
   const base = item.quantity || 1
-  const delta = adjustments.filter(a => a.serviceItemId === item.id && ['approved', 'applied_to_cut'].includes(a.status) && a.changeType !== 'extra_item')
+  const approvedStatuses = ['approved', 'applied_to_cut', 'customer_approved', 'tacitly_accepted']
+  const delta = adjustments.filter(a => a.serviceItemId === item.id && approvedStatuses.includes(a.status) && a.changeType !== 'extra_item')
     .reduce((sum: number, a: any) => sum + (a.differenceQuantity || 0), 0)
   return Math.max(base + delta, 0)
 }

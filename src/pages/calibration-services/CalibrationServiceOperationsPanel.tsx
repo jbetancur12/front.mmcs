@@ -94,7 +94,7 @@ const getEffectiveQuantity = (
       return accumulator
     }
 
-    if (!['approved', 'applied_to_cut'].includes(adjustment.status)) {
+    if (!['approved', 'applied_to_cut', 'customer_approved', 'tacitly_accepted'].includes(adjustment.status)) {
       return accumulator
     }
 
