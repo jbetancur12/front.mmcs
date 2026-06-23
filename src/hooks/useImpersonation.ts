@@ -132,6 +132,15 @@ export const useImpersonation = () => {
       setTimeout(() => { window.location.href = '/' }, 500)
     } catch (error) {
       console.error('Error stopping impersonation:', error)
+      // Aunque falle, limpiar estado local para desbloquear la UI
+      localStorage.removeItem(STORAGE_KEY_IMPERSONATOR)
+      localStorage.removeItem(STORAGE_KEY_TARGET)
+      setState({
+        isImpersonating: false,
+        impersonator: null,
+        targetUser: null,
+      })
+      setTimeout(() => { window.location.href = '/' }, 300)
     }
   }, [])
 
