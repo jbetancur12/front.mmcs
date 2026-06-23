@@ -594,6 +594,7 @@ const ModernCustomerProfile: React.FC = () => {
       } catch (error) {
         console.error('Error al eliminar el certificado:', error)
         bigToast('Error al eliminar el certificado', 'error')
+        throw error
       }
     },
     [axiosPrivate, refetch, queryClient, id]

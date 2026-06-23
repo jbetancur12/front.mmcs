@@ -336,9 +336,11 @@ const ListDataSheet: React.FC = () => {
         setFilteredTableData([...filteredTableData])
       } else {
         console.error('Error al eliminar la hoja de datos')
+        bigToast('Error al eliminar la hoja de datos', 'error')
       }
     } catch (error) {
       console.error('Error de red:', error)
+      bigToast('Error al eliminar la hoja de datos', 'error')
     }
   }
 
@@ -845,7 +847,7 @@ const ListDataSheet: React.FC = () => {
   }
 
   const RowActions = ({ row, table }: { row: any; table: any }) => {
-    const isAdmin = $userStore.rol.includes('admin')
+    const isAdmin = $userStore.rol.some((role) => ['admin', 'metrologist'].includes(role))
     const [localAnchorEl, setLocalAnchorEl] = useState<null | HTMLElement>(null)
 
     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
