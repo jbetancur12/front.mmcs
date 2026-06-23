@@ -101,18 +101,12 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({ certificate, onDelete, se
   }
 
   const handleDelete = async () => {
-    const isConfirmed = window.confirm(
-      `¿Estás seguro de que deseas eliminar el equipo "${certificate.device?.name || 'Sin nombre'}"? Esta acción no se puede deshacer.`
-    )
-
-    if (isConfirmed) {
-      try {
-        await onDelete(certificate.id)
-        bigToast('Equipo eliminado exitosamente', 'success')
-      } catch (error) {
-        bigToast('Error al eliminar el equipo', 'error')
-        console.error('Error deleting equipment:', error)
-      }
+    try {
+      await onDelete(certificate.id)
+      bigToast('Equipo eliminado exitosamente', 'success')
+    } catch (error) {
+      bigToast('Error al eliminar el equipo', 'error')
+      console.error('Error deleting equipment:', error)
     }
     handleMenuClose()
   }
