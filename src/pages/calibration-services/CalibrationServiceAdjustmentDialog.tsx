@@ -179,11 +179,6 @@ const CalibrationServiceAdjustmentDialog = ({
     [filteredItems, page]
   )
 
-  const allFilteredSelected = useMemo(
-    () => filteredItems.length > 0 && filteredItems.every((item) => item.selected),
-    [filteredItems]
-  )
-
   const handleToggleSelectedItem =
     (serviceItemIdValue: number) =>
     (_event: ChangeEvent<HTMLInputElement>, checked: boolean) => {
@@ -193,20 +188,6 @@ const CalibrationServiceAdjustmentDialog = ({
             ? { ...item, selected: checked }
             : item
         )
-      )
-    }
-
-  const handleToggleSelectAll = (
-    _event: ChangeEvent<HTMLInputElement>,
-    checked: boolean
-  ) => {
-    const filteredIds = new Set(filteredItems.map((i) => i.serviceItemId))
-    setSelectedItems((currentItems) =>
-      currentItems.map((item) =>
-        filteredIds.has(item.serviceItemId)
-          ? { ...item, selected: checked }
-          : item
-      )
     )
   }
 
@@ -401,19 +382,7 @@ const CalibrationServiceAdjustmentDialog = ({
                     <Table size='small' stickyHeader>
                       <TableHead>
                         <TableRow>
-                          <TableCell padding='checkbox' sx={{ width: 48 }}>
-                            <Checkbox
-                              checked={allFilteredSelected}
-                              indeterminate={
-                                !allFilteredSelected &&
-                                filteredItems.some((item) => item.selected)
-                              }
-                              onChange={handleToggleSelectAll}
-                              inputProps={{
-                                'aria-label': 'Seleccionar todos los ítems'
-                              }}
-                            />
-                          </TableCell>
+                          <TableCell padding='checkbox' sx={{ width: 48 }} />
                           <TableCell sx={{ fontWeight: 600 }}>
                             Ítem
                           </TableCell>
