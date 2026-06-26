@@ -703,7 +703,6 @@ const CalibrationServicesPage = () => {
     CalibrationServiceSlaIndicatorColor | typeof FILTER_ALL
   >(FILTER_ALL)
   const [siteFilter, setSiteFilter] = useState('')
-  const [customerFilter, setCustomerFilter] = useState<string>(FILTER_ALL)
   const [metrologistFilter, setMetrologistFilter] = useState<string>(FILTER_ALL)
   const [hasAdjustmentsFilter, setHasAdjustmentsFilter] = useState<string>(FILTER_ALL)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
@@ -738,10 +737,6 @@ const CalibrationServicesPage = () => {
 
   if (!isTechnicalOnlyView && approvalFilter !== FILTER_ALL) {
     queryFilters.approvalStatus = approvalFilter
-  }
-
-  if (customerFilter !== FILTER_ALL) {
-    queryFilters.customerId = Number(customerFilter)
   }
 
   if (hasAdjustmentsFilter !== FILTER_ALL) {
@@ -779,21 +774,6 @@ const CalibrationServicesPage = () => {
   }, [viewMode])
 
   const services = data?.services ?? []
-  const customerOptions = services
-    .filter((service) => service.customer?.id)
-    .reduce<Array<{ id: string; label: string }>>((accumulator, service) => {
-      const customerId = String(service.customer?.id)
-      if (accumulator.some((customer) => customer.id === customerId)) {
-        return accumulator
-      }
-
-      accumulator.push({
-        id: customerId,
-        label: service.customer?.nombre || service.executionCustomerName || 'Cliente'
-      })
-      return accumulator
-    }, [])
-    .sort((left, right) => left.label.localeCompare(right.label, 'es'))
   const metrologistOptions = services
     .reduce<Array<{ id: string; label: string }>>((accumulator, service) => {
       const names = getMetrologistNames(service)
@@ -905,7 +885,6 @@ const CalibrationServicesPage = () => {
     scopeFilter !== FILTER_ALL,
     slaFilter !== FILTER_ALL,
     siteFilter.trim(),
-    customerFilter !== FILTER_ALL,
     metrologistFilter !== FILTER_ALL,
     hasAdjustmentsFilter !== FILTER_ALL,
     showOnlyMyLoad,
@@ -920,7 +899,6 @@ const CalibrationServicesPage = () => {
     setScopeFilter(FILTER_ALL)
     setSlaFilter(FILTER_ALL)
     setSiteFilter('')
-    setCustomerFilter(FILTER_ALL)
     setMetrologistFilter(FILTER_ALL)
     setHasAdjustmentsFilter(FILTER_ALL)
     setShowOnlyMyLoad(false)
@@ -1990,9 +1968,6 @@ const CalibrationServicesPage = () => {
               {statusFilter !== FILTER_ALL ? (
                 <Chip size='small' label={`Estado: ${CALIBRATION_SERVICE_STATUS_LABELS[statusFilter] || statusFilter}`} onDelete={() => setStatusFilter(FILTER_ALL)} variant='outlined' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
               ) : null}
-              {customerFilter !== FILTER_ALL ? (
-                <Chip size='small' label={`Cliente: ${customerFilter}`} onDelete={() => setCustomerFilter(FILTER_ALL)} variant='outlined' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
-              ) : null}
               {showOnlyMyLoad ? (
                 <Chip size='small' label='Mi carga' onDelete={() => setShowOnlyMyLoad(false)} variant='outlined' color='success' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
               ) : null}
@@ -2064,22 +2039,6 @@ const CalibrationServicesPage = () => {
                   </TextField>
                 </Grid>
               ) : null}
-              <Grid item xs={12} md={4}>
-                <TextField
-                  select
-                  fullWidth
-                  label='Cliente'
-                  value={customerFilter}
-                  onChange={(event) => setCustomerFilter(event.target.value)}
-                >
-                  <MenuItem value={FILTER_ALL}>Todos los clientes</MenuItem>
-                  {customerOptions.map((customer) => (
-                    <MenuItem key={customer.id} value={customer.id}>
-                      {customer.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
               {!isTechnicalOnlyView ? (
                 <Grid item xs={12} md={4}>
                   <TextField
