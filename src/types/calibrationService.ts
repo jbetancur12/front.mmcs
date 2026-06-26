@@ -492,6 +492,7 @@ export interface CalibrationServiceFilters {
   status?: CalibrationServiceStatus
   approvalStatus?: CalibrationServiceApprovalStatus
   customerId?: number
+  hasAdjustments?: string
   limit?: number
   offset?: number
 }

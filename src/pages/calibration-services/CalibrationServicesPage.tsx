@@ -705,6 +705,7 @@ const CalibrationServicesPage = () => {
   const [siteFilter, setSiteFilter] = useState('')
   const [customerFilter, setCustomerFilter] = useState<string>(FILTER_ALL)
   const [metrologistFilter, setMetrologistFilter] = useState<string>(FILTER_ALL)
+  const [hasAdjustmentsFilter, setHasAdjustmentsFilter] = useState<string>(FILTER_ALL)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
   const [isSlaConfigDialogOpen, setIsSlaConfigDialogOpen] = useState(false)
   const [areFiltersOpen, setAreFiltersOpen] = useState(false)
@@ -741,6 +742,10 @@ const CalibrationServicesPage = () => {
 
   if (customerFilter !== FILTER_ALL) {
     queryFilters.customerId = Number(customerFilter)
+  }
+
+  if (hasAdjustmentsFilter !== FILTER_ALL) {
+    queryFilters.hasAdjustments = hasAdjustmentsFilter
   }
 
   const {
@@ -902,6 +907,7 @@ const CalibrationServicesPage = () => {
     siteFilter.trim(),
     customerFilter !== FILTER_ALL,
     metrologistFilter !== FILTER_ALL,
+    hasAdjustmentsFilter !== FILTER_ALL,
     showOnlyMyLoad,
     showOnlyReadyForInvoice,
     showOnlyInvoicedCut
@@ -916,6 +922,7 @@ const CalibrationServicesPage = () => {
     setSiteFilter('')
     setCustomerFilter(FILTER_ALL)
     setMetrologistFilter(FILTER_ALL)
+    setHasAdjustmentsFilter(FILTER_ALL)
     setShowOnlyMyLoad(false)
     setShowOnlyReadyForInvoice(false)
     setShowOnlyInvoicedCut(false)
@@ -1995,6 +2002,9 @@ const CalibrationServicesPage = () => {
               {showOnlyInvoicedCut ? (
                 <Chip size='small' label='Facturados' onDelete={() => setShowOnlyInvoicedCut(false)} variant='outlined' color='success' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
               ) : null}
+              {hasAdjustmentsFilter !== FILTER_ALL ? (
+                <Chip size='small' label={`Novedades: ${hasAdjustmentsFilter === 'true' ? 'Con' : 'Sin'}`} onDelete={() => setHasAdjustmentsFilter(FILTER_ALL)} variant='outlined' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
+              ) : null}
             </Stack>
           ) : null}
 
@@ -2129,6 +2139,19 @@ const CalibrationServicesPage = () => {
                       {option.label}
                     </MenuItem>
                   ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  select
+                  fullWidth
+                  label='Novedades'
+                  value={hasAdjustmentsFilter}
+                  onChange={(event) => setHasAdjustmentsFilter(event.target.value)}
+                >
+                  <MenuItem value={FILTER_ALL}>Todas</MenuItem>
+                  <MenuItem value='true'>Con novedades</MenuItem>
+                  <MenuItem value='false'>Sin novedades</MenuItem>
                 </TextField>
               </Grid>
               <Grid item xs={12}>
