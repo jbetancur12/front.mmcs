@@ -17,9 +17,11 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import PauseIcon from '@mui/icons-material/Pause'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import SearchIcon from '@mui/icons-material/Search'
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
+import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined'
 import SignaturePad from '../../Components/Maintenance/SignaturePad'
 import {
-  CalibrationService, CalibrationServiceCut, CalibrationServiceOperationalItemStatus, CalibrationServiceStatus
+  CalibrationService, CalibrationServiceCut, CalibrationServiceDocument, CalibrationServiceOperationalItemStatus, CalibrationServiceStatus
 } from '../../types/calibrationService'
 import {
   CALIBRATION_SERVICE_STATUS_LABELS,
@@ -151,6 +153,26 @@ const MobilePage = () => {
   const [logReceiptName, setLogReceiptName] = useState('')
   const [logReceiptSig, setLogReceiptSig] = useState<string | null>(null)
 
+  // ODS view
+  const [odsLoading, setOdsLoading] = useState(false)
+
+  const handleViewOds = async () => {
+    if (!s) return
+    setOdsLoading(true)
+    try {
+      let odsDoc = (s.documents || []).find((d: CalibrationServiceDocument) => d.documentType === 'ods_pdf')
+      if (!odsDoc) {
+        odsDoc = await (await axiosPrivate.post(`/calibration-services/${serviceId}/generate-ods-pdf`)).data as CalibrationServiceDocument
+        void refetch()
+      }
+      const blob = await (await axiosPrivate.get(`/calibration-services/${serviceId}/documents/${odsDoc.id}/download`, { responseType: 'blob' })).data as Blob
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+      setTimeout(() => URL.revokeObjectURL(url), 30000)
+    } catch { toast.error('No se pudo cargar la ODS') }
+    setOdsLoading(false)
+  }
+
   // Signature
   const [deliveryName, setDeliveryName] = useState('')
   const [deliverySignature, setDeliverySignature] = useState<string | null>(null)
@@ -212,6 +234,49 @@ return (
           {scheduledDate && <Box component='span' sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', fontSize: '0.65rem', fontWeight: 600, px: 1.5, py: 0.3, borderRadius: '999px' }}>{new Date(scheduledDate).toLocaleDateString('es-CO')}</Box>}
         </Stack>
       </Box>
+
+      {/* Customer info card */}
+      <Card sx={{ mx: 2, mt: 2, borderRadius: 3, border: `1px solid ${G.gray100}` }} elevation={0}>
+        <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+          <Stack spacing={1}>
+            <Stack direction='row' spacing={1} alignItems='center'>
+              <BusinessOutlinedIcon sx={{ color: G.gray400, fontSize: 16 }} />
+              <Typography variant='body2' fontWeight={700} sx={{ color: G.dark, fontSize: '0.8rem' }}>
+                {s.customer?.nombre || s.executionCustomerName || 'Cliente pendiente'}
+              </Typography>
+            </Stack>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0.5, pl: 3 }}>
+              {s.executionSiteName || s.customerSite ? (
+                <Typography variant='caption' sx={{ color: G.gray600, gridColumn: 'span 2' }}>
+                  Sitio: {s.executionSiteName || s.customerSite}
+                </Typography>
+              ) : null}
+              {s.contactName ? (
+                <Typography variant='caption' sx={{ color: G.gray600 }}>Contacto: {s.contactName}</Typography>
+              ) : null}
+              {s.contactPhone ? (
+                <Typography variant='caption' sx={{ color: G.gray600 }}>Tel: {s.contactPhone}</Typography>
+              ) : null}
+              {s.city || s.address ? (
+                <Typography variant='caption' sx={{ color: G.gray600, gridColumn: 'span 2' }}>
+                  {[s.address, s.city].filter(Boolean).join(', ')}
+                </Typography>
+              ) : null}
+            </Box>
+          </Stack>
+        </CardContent>
+      </Card>
+
+      {/* ODS view button */}
+      {s.odsCode ? (
+        <Box sx={{ px: 2, mt: 1.5 }}>
+          <Button fullWidth variant='contained' startIcon={<VisibilityOutlinedIcon />}
+            onClick={handleViewOds} disabled={odsLoading}
+            sx={{ borderRadius: '16px', py: 1.5, textTransform: 'none', fontWeight: 700, bgcolor: G.dark, '&:hover': { bgcolor: '#2d2d4a' }, '&:active': { transform: 'scale(0.97)' } }}>
+            {odsLoading ? 'Cargando...' : `Ver ODS ${s.odsCode}`}
+          </Button>
+        </Box>
+      ) : null}
 
         {/* Execution */}
         {['scheduled', 'in_execution'].includes(status) && (
