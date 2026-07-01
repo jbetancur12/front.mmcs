@@ -281,6 +281,7 @@ const CalibrationServiceWorkspacePage = () => {
   const queryClient = useQueryClient()
   const { serviceId } = useParams<{ serviceId?: string }>()
   const isEditing = Boolean(serviceId)
+  const isAdmin = useHasRole(['admin', 'super_admin'])
   const canAccessWorkspace = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const {
     data: sequenceConfig,
@@ -1752,6 +1753,7 @@ const CalibrationServiceWorkspacePage = () => {
           open={isSequenceDialogOpen}
           isLoading={upsertSequenceConfig.isLoading}
           config={sequenceConfig}
+          isAdmin={isAdmin}
           onClose={() => setIsSequenceDialogOpen(false)}
           onSubmit={handleSaveSequenceConfig}
         />

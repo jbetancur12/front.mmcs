@@ -717,8 +717,9 @@ const CalibrationServicesPage = () => {
   const canRunExecution = useHasRole([...CALIBRATION_SERVICE_EXECUTION_ROLES])
   const canViewModule = useHasRole([...CALIBRATION_SERVICE_ALLOWED_ROLES])
   const canViewAnalytics = useHasRole([...CALIBRATION_SERVICE_ANALYTICS_ROLES])
+  const isAdmin = useHasRole(['admin', 'super_admin'])
   const canManageSequenceConfig = canCreateServices
-  const canManageSlaConfig = useHasRole(['admin', 'super_admin'])
+  const canManageSlaConfig = isAdmin
   const hasTechnicalRole = useHasRole([...CALIBRATION_SERVICE_TECHNICAL_ROLES])
   const hasCommercialVisibility = useHasRole([
     ...CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES
@@ -2694,6 +2695,7 @@ const CalibrationServicesPage = () => {
           open={isSequenceDialogOpen}
           isLoading={upsertSequenceConfig.isLoading}
           config={sequenceConfig}
+          isAdmin={isAdmin}
           onClose={() => setIsSequenceDialogOpen(false)}
           onSubmit={handleSaveSequenceConfig}
         />

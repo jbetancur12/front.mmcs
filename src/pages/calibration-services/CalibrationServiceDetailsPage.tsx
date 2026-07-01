@@ -368,6 +368,7 @@ const CalibrationServiceDetailsPage = () => {
     isError,
     error
   } = useCalibrationService(serviceId)
+  const isAdmin = useHasRole(['admin', 'super_admin'])
   const canManageSequenceConfig = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
   const { data: sequenceConfig, isLoading: isLoadingSequenceConfig } =
     useCalibrationServiceSequenceConfig(canManageSequenceConfig)
@@ -3951,6 +3952,7 @@ const CalibrationServiceDetailsPage = () => {
           open={isSequenceDialogOpen}
           isLoading={upsertSequenceConfig.isLoading}
           config={sequenceConfig}
+          isAdmin={isAdmin}
           onClose={() => setIsSequenceDialogOpen(false)}
           onSubmit={handleSaveSequenceConfig}
         />
