@@ -15,6 +15,7 @@ import {
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined'
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined'
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import {
   CALIBRATION_SERVICE_DOCUMENT_COLORS,
   CALIBRATION_SERVICE_DOCUMENT_LABELS
@@ -50,6 +51,7 @@ interface CalibrationServiceDocumentsPanelProps {
   onGenerateQuotePdf: () => Promise<void> | void
   onGenerateOdsPdf: () => Promise<void> | void
   onDownloadDocument: (documentId: number, fileName: string) => Promise<void> | void
+  onViewDocument: (documentId: number, fileName: string) => Promise<void> | void
   onUploadDocument: (payload: {
     file: File
     documentType: ManualCalibrationDocumentType
@@ -85,6 +87,7 @@ const CalibrationServiceDocumentsPanel = ({
   onGenerateQuotePdf,
   onGenerateOdsPdf,
   onDownloadDocument,
+  onViewDocument,
   onUploadDocument
 }: CalibrationServiceDocumentsPanelProps) => {
   const [selectedType, setSelectedType] =
@@ -134,19 +137,34 @@ const CalibrationServiceDocumentsPanel = ({
             key={document.id}
             disableGutters
             secondaryAction={
-              <Button
-                size='small'
-                startIcon={<DownloadOutlinedIcon />}
-                onClick={() =>
-                  void onDownloadDocument(
-                    document.id,
-                    document.originalFileName || `${serviceCode}.pdf`
-                  )
-                }
-                disabled={isBusy}
-              >
-                Descargar
-              </Button>
+              <Stack direction='row' spacing={1}>
+                <Button
+                  size='small'
+                  startIcon={<VisibilityOutlinedIcon />}
+                  onClick={() =>
+                    void onViewDocument(
+                      document.id,
+                      document.originalFileName || `${serviceCode}.pdf`
+                    )
+                  }
+                  disabled={isBusy}
+                >
+                  Ver
+                </Button>
+                <Button
+                  size='small'
+                  startIcon={<DownloadOutlinedIcon />}
+                  onClick={() =>
+                    void onDownloadDocument(
+                      document.id,
+                      document.originalFileName || `${serviceCode}.pdf`
+                    )
+                  }
+                  disabled={isBusy}
+                >
+                  Descargar
+                </Button>
+              </Stack>
             }
           >
             <ListItemText

@@ -33,6 +33,7 @@ import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined'
 import AutorenewOutlinedIcon from '@mui/icons-material/AutorenewOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined'
+import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
 import { Toaster, toast } from 'react-hot-toast'
 import { ReactNode, useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -94,6 +95,7 @@ import CalibrationServiceOdsDialog, {
   CalibrationServiceOdsDialogValues
 } from './CalibrationServiceOdsDialog'
 import CalibrationServiceDocumentsPanel from './CalibrationServiceDocumentsPanel'
+import PDFViewer from '../../Components/PDFViewer'
 import CalibrationServiceOperationsPanel from './CalibrationServiceOperationsPanel'
 import CalibrationServiceCutsPanel from './CalibrationServiceCutsPanel'
 import CalibrationServiceCutDialog from './CalibrationServiceCutDialog'
@@ -125,6 +127,7 @@ import CalibrationServiceLogisticsControlDialog, {
   CalibrationServiceLogisticsControlDialogValues
 } from './CalibrationServiceLogisticsControlDialog'
 import CalibrationServiceSendLogisticsEmailDialog from './CalibrationServiceSendLogisticsEmailDialog'
+import useAxiosPrivate from '@utils/use-axios-private'
 
 type DetailTab =
   | 'summary'
@@ -454,6 +457,11 @@ const CalibrationServiceDetailsPage = () => {
     useState<CalibrationServiceAdjustment | null>(null)
   const [sendAdjustmentPreview, setSendAdjustmentPreview] =
     useState<CalibrationServiceSendPreviewResult | null>(null)
+  const [viewDocumentId, setViewDocumentId] = useState<number | null>(null)
+  const [viewDocumentFileName, setViewDocumentFileName] = useState('')
+  const [viewDocumentBlobUrl, setViewDocumentBlobUrl] = useState('')
+  const [viewDocumentIsImage, setViewDocumentIsImage] = useState(false)
+  const axiosPrivate = useAxiosPrivate()
   const [activeTab, setActiveTab] = useState<DetailTab>(() =>
     getStoredDetailTab(serviceId)
   )
@@ -736,6 +744,38 @@ const CalibrationServiceDetailsPage = () => {
     searchParams,
     setSearchParams
   ])
+
+  useEffect(() => {
+    if (!viewDocumentId || !service) return
+
+    let cancelled = false
+
+    const loadBlob = async () => {
+      try {
+        const response = await axiosPrivate.get(
+          `/calibration-services/${service.id}/documents/${viewDocumentId}/download`,
+          { responseType: 'blob' }
+        )
+        if (cancelled) return
+        const blob = response.data as Blob
+        const url = URL.createObjectURL(blob)
+        setViewDocumentBlobUrl(url)
+        setViewDocumentIsImage(blob.type.startsWith('image/'))
+      } catch {
+        if (!cancelled) {
+          setViewDocumentBlobUrl('')
+          setViewDocumentIsImage(false)
+        }
+      }
+    }
+
+    loadBlob()
+
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewDocumentId])
 
   if (isLoading || isLoadingSequenceConfig) {
     return (
@@ -2300,6 +2340,22 @@ const CalibrationServiceDetailsPage = () => {
     }
   }
 
+  const handleViewDocument = (documentId: number, fileName: string) => {
+    if (viewDocumentBlobUrl) URL.revokeObjectURL(viewDocumentBlobUrl)
+    setViewDocumentBlobUrl('')
+    setViewDocumentIsImage(false)
+    setViewDocumentId(documentId)
+    setViewDocumentFileName(fileName)
+  }
+
+  const handleCloseViewDocument = () => {
+    if (viewDocumentBlobUrl) URL.revokeObjectURL(viewDocumentBlobUrl)
+    setViewDocumentId(null)
+    setViewDocumentFileName('')
+    setViewDocumentBlobUrl('')
+    setViewDocumentIsImage(false)
+  }
+
   const handleGenerateQuotePdf = async () => {
     try {
       const document = await generateQuotePdf.mutateAsync({
@@ -3528,6 +3584,7 @@ const CalibrationServiceDetailsPage = () => {
                   onGenerateQuotePdf={handleGenerateQuotePdf}
                   onGenerateOdsPdf={handleGenerateOdsPdf}
                   onDownloadDocument={handleDownloadDocument}
+                  onViewDocument={handleViewDocument}
                   onUploadDocument={handleUploadSupportDocument}
                 />
               </DetailTabPanel>
@@ -3945,6 +4002,47 @@ const CalibrationServiceDetailsPage = () => {
             Guardar
           </Button>
         </DialogActions>
+      </Dialog>
+      <Dialog
+        open={Boolean(viewDocumentId)}
+        onClose={handleCloseViewDocument}
+        maxWidth='lg'
+        fullWidth
+      >
+        <DialogTitle>
+          <Stack
+            direction='row'
+            justifyContent='space-between'
+            alignItems='center'
+          >
+            <Typography variant='h6' fontWeight={700}>
+              {viewDocumentFileName}
+            </Typography>
+            <IconButton onClick={handleCloseViewDocument} size='small'>
+              <CloseOutlinedIcon />
+            </IconButton>
+          </Stack>
+        </DialogTitle>
+        <DialogContent dividers sx={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          {viewDocumentBlobUrl && viewDocumentIsImage ? (
+            <Box
+              component='img'
+              src={viewDocumentBlobUrl}
+              alt={viewDocumentFileName}
+              sx={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain' }}
+            />
+          ) : viewDocumentId && !viewDocumentIsImage ? (
+            <Box sx={{ flex: 1, width: '100%' }}>
+              <PDFViewer
+                view='preview'
+                buttons
+                downloadUrl={`/calibration-services/${service.id}/documents/${viewDocumentId}/download`}
+              />
+            </Box>
+          ) : (
+            <Typography color='text.secondary'>Cargando vista previa...</Typography>
+          )}
+        </DialogContent>
       </Dialog>
     </Box>
   )

@@ -100,6 +100,7 @@ import {
 const FILTER_ALL = 'all'
 const FILTER_UNASSIGNED = 'unassigned'
 const CALIBRATION_SERVICES_VIEW_STORAGE_KEY = 'calibrationServicesViewMode'
+const CALIBRATION_SERVICES_FILTERS_STORAGE_KEY = 'calibrationServicesFilters'
 
 type CalibrationServicesViewMode = 'list' | 'table' | 'kanban'
 
@@ -288,6 +289,41 @@ const getStoredViewMode = (): CalibrationServicesViewMode => {
   )
 
   return storedValue === 'kanban' ? 'kanban' : storedValue === 'table' ? 'table' : 'list'
+}
+
+interface StoredFilters {
+  search?: string
+  statusFilter?: string
+  approvalFilter?: string
+  scopeFilter?: string
+  slaFilter?: string
+  siteFilter?: string
+  metrologistFilter?: string
+  hasAdjustmentsFilter?: string
+  showOnlyMyLoad?: boolean
+  showOnlyReadyForInvoice?: boolean
+  showOnlyInvoicedCut?: boolean
+  areFiltersOpen?: boolean
+}
+
+const getStoredFilters = (): StoredFilters => {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = window.sessionStorage.getItem(CALIBRATION_SERVICES_FILTERS_STORAGE_KEY)
+    return raw ? (JSON.parse(raw) as StoredFilters) : {}
+  } catch {
+    return {}
+  }
+}
+
+const saveStoredFilters = (filters: StoredFilters) => {
+  if (typeof window === 'undefined') return
+  try {
+    window.sessionStorage.setItem(
+      CALIBRATION_SERVICES_FILTERS_STORAGE_KEY,
+      JSON.stringify(filters)
+    )
+  } catch { /* quota exceeded */ }
 }
 
 const getSlaVisualTone = (color?: CalibrationServiceSlaIndicatorColor) => {
@@ -689,34 +725,35 @@ const CalibrationServicesPage = () => {
   ])
   const isTechnicalOnlyView = hasTechnicalRole && !hasCommercialVisibility
 
-  const [search, setSearch] = useState('')
+  const storedFilters = getStoredFilters()
+  const [search, setSearch] = useState(storedFilters.search ?? '')
   const [statusFilter, setStatusFilter] = useState<
     CalibrationServiceStatus | typeof FILTER_ALL
-  >(FILTER_ALL)
+  >((storedFilters.statusFilter as CalibrationServiceStatus | typeof FILTER_ALL) ?? FILTER_ALL)
   const [approvalFilter, setApprovalFilter] = useState<
     CalibrationServiceApprovalStatus | typeof FILTER_ALL
-  >(FILTER_ALL)
+  >((storedFilters.approvalFilter as CalibrationServiceApprovalStatus | typeof FILTER_ALL) ?? FILTER_ALL)
   const [scopeFilter, setScopeFilter] = useState<
     CalibrationServiceScopeType | typeof FILTER_ALL
-  >(FILTER_ALL)
+  >((storedFilters.scopeFilter as CalibrationServiceScopeType | typeof FILTER_ALL) ?? FILTER_ALL)
   const [slaFilter, setSlaFilter] = useState<
     CalibrationServiceSlaIndicatorColor | typeof FILTER_ALL
-  >(FILTER_ALL)
-  const [siteFilter, setSiteFilter] = useState('')
-  const [metrologistFilter, setMetrologistFilter] = useState<string>(FILTER_ALL)
-  const [hasAdjustmentsFilter, setHasAdjustmentsFilter] = useState<string>(FILTER_ALL)
+  >((storedFilters.slaFilter as CalibrationServiceSlaIndicatorColor | typeof FILTER_ALL) ?? FILTER_ALL)
+  const [siteFilter, setSiteFilter] = useState(storedFilters.siteFilter ?? '')
+  const [metrologistFilter, setMetrologistFilter] = useState<string>(storedFilters.metrologistFilter ?? FILTER_ALL)
+  const [hasAdjustmentsFilter, setHasAdjustmentsFilter] = useState<string>(storedFilters.hasAdjustmentsFilter ?? FILTER_ALL)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
   const [isSlaConfigDialogOpen, setIsSlaConfigDialogOpen] = useState(false)
-  const [areFiltersOpen, setAreFiltersOpen] = useState(false)
+  const [areFiltersOpen, setAreFiltersOpen] = useState(storedFilters.areFiltersOpen ?? false)
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
   const [templateTerms, setTemplateTerms] = useState<CalibrationServiceQuoteTerms>({})
   const { data: quoteTermsTemplate } = useCalibrationServiceQuoteTermsTemplate(canCreateServices)
   const [viewMode, setViewMode] = useState<CalibrationServicesViewMode>(
     getStoredViewMode
   )
-  const [showOnlyMyLoad, setShowOnlyMyLoad] = useState(false)
-  const [showOnlyReadyForInvoice, setShowOnlyReadyForInvoice] = useState(false)
-  const [showOnlyInvoicedCut, setShowOnlyInvoicedCut] = useState(false)
+  const [showOnlyMyLoad, setShowOnlyMyLoad] = useState(storedFilters.showOnlyMyLoad ?? false)
+  const [showOnlyReadyForInvoice, setShowOnlyReadyForInvoice] = useState(storedFilters.showOnlyReadyForInvoice ?? false)
+  const [showOnlyInvoicedCut, setShowOnlyInvoicedCut] = useState(storedFilters.showOnlyInvoicedCut ?? false)
   const [moreAnchorEl, setMoreAnchorEl] = useState<HTMLElement | null>(null)
   const kanbanScrollRef = useRef<HTMLDivElement | null>(null)
   const kanbanTopScrollRef = useRef<HTMLDivElement | null>(null)
@@ -772,6 +809,36 @@ const CalibrationServicesPage = () => {
       viewMode
     )
   }, [viewMode])
+
+  useEffect(() => {
+    saveStoredFilters({
+      search,
+      statusFilter,
+      approvalFilter,
+      scopeFilter,
+      slaFilter,
+      siteFilter,
+      metrologistFilter,
+      hasAdjustmentsFilter,
+      showOnlyMyLoad,
+      showOnlyReadyForInvoice,
+      showOnlyInvoicedCut,
+      areFiltersOpen
+    })
+  }, [
+    search,
+    statusFilter,
+    approvalFilter,
+    scopeFilter,
+    slaFilter,
+    siteFilter,
+    metrologistFilter,
+    hasAdjustmentsFilter,
+    showOnlyMyLoad,
+    showOnlyReadyForInvoice,
+    showOnlyInvoicedCut,
+    areFiltersOpen
+  ])
 
   const services = data?.services ?? []
   const metrologistOptions = services
@@ -904,6 +971,9 @@ const CalibrationServicesPage = () => {
     setShowOnlyMyLoad(false)
     setShowOnlyReadyForInvoice(false)
     setShowOnlyInvoicedCut(false)
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem(CALIBRATION_SERVICES_FILTERS_STORAGE_KEY)
+    }
   }
 
   const kanbanColumns = useMemo(
