@@ -127,7 +127,7 @@ class MaintenanceErrorBoundary extends Component<Props, State> {
                 onClick={this.handleRetry}
                 startIcon={<Refresh />}
                 sx={{
-                  backgroundColor: '#2f7d32',
+                  backgroundColor: '#00A651',
                   borderRadius: '12px',
                   '&:hover': {
                     backgroundColor: '#27672a'

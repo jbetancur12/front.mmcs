@@ -364,8 +364,8 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
       >
         <Avatar
           sx={{
-            backgroundColor: '#eef6ee',
-            color: '#2f7d32',
+            backgroundColor: '#e8f7ef',
+            color: '#00A651',
             width: 48,
             height: 48
           }}
@@ -513,7 +513,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
               minHeight: 44,
               ...(showPhotoUpload
                 ? {
-                    backgroundColor: '#2f7d32',
+                    backgroundColor: '#00A651',
                     '&:hover': { backgroundColor: '#27672a' }
                   }
                 : {
@@ -777,7 +777,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
             borderWidth: 2,
             py: 1.5,
             '&:hover': {
-              borderColor: '#2f7d32',
+              borderColor: '#00A651',
               backgroundColor: '#f8fafc',
               borderStyle: 'solid'
             }
@@ -855,7 +855,7 @@ const CompletionCostsDialog: React.FC<CompletionCostsDialogProps> = ({
           startIcon={loading ? <CircularProgress size={20} /> : <CheckCircle />}
           sx={{
             borderRadius: '12px',
-            backgroundColor: '#2f7d32',
+            backgroundColor: '#00A651',
             minHeight: 48,
             fontWeight: 600,
             '&:hover': {

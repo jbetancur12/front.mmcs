@@ -142,7 +142,7 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
   const getDotColors = (color: 'primary' | 'success' | 'error' | 'secondary' | 'default') => {
     switch (color) {
       case 'primary':
-        return { bg: '#eef6ee', fg: '#2f7d32' }
+        return { bg: '#e8f7ef', fg: '#00A651' }
       case 'success':
         return { bg: '#ecfdf5', fg: '#059669' }
       case 'error':
@@ -255,8 +255,8 @@ const MaintenanceTimeline: React.FC<MaintenanceTimelineProps> = ({
                           width: 20,
                           height: 20,
                           fontSize: '0.65rem',
-                          backgroundColor: '#eef6ee',
-                          color: '#2f7d32'
+                          backgroundColor: '#e8f7ef',
+                          color: '#00A651'
                         }}
                       >
                         {getInitials(entry.performedBy)}

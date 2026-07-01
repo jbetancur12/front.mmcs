@@ -310,7 +310,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
             backgroundColor: disabled || uploading ? '#ffffff' : '#f8fafc'
           },
           '&:focus': {
-            outline: '2px solid #6dc662',
+            outline: '2px solid #00bf75',
             outlineOffset: '2px'
           }
         }}
@@ -319,7 +319,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
           <input {...getInputProps()} aria-hidden="true" />
           <Box
             sx={{
-              backgroundColor: disabled || uploading ? '#f1f5f9' : '#eef6ee',
+              backgroundColor: disabled || uploading ? '#f1f5f9' : '#e8f7ef',
               borderRadius: '50%',
               width: 80,
               height: 80,
@@ -333,7 +333,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
             <CloudUpload
               sx={{
                 fontSize: 40,
-                color: disabled || uploading ? 'grey.400' : '#2f7d32'
+                color: disabled || uploading ? 'grey.400' : '#00A651'
               }}
             />
           </Box>
@@ -399,7 +399,7 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
               borderRadius: 4,
               backgroundColor: '#e2e8f0',
               '& .MuiLinearProgress-bar': {
-                backgroundColor: '#2f7d32',
+                backgroundColor: '#00A651',
                 borderRadius: 4
               }
             }}
@@ -504,8 +504,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                         size='small'
                         label={getLocalizedFileType(file)}
                         sx={{
-                          backgroundColor: '#eef6ee',
-                          color: '#2f7d32',
+                          backgroundColor: '#e8f7ef',
+                          color: '#00A651',
                           borderRadius: '6px',
                           fontWeight: 500,
                           border: 'none'
@@ -543,8 +543,8 @@ const MaintenanceFileUpload: React.FC<MaintenanceFileUploadProps> = ({
                               size='small'
                               onClick={() => onFileView(file)}
                               sx={{
-                                backgroundColor: '#eef6ee',
-                                color: '#2f7d32',
+                                backgroundColor: '#e8f7ef',
+                                color: '#00A651',
                                 borderRadius: '6px',
                                 '&:hover': {
                                   backgroundColor: '#dbeedb'

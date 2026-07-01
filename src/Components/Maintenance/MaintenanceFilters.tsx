@@ -124,7 +124,7 @@ const MaintenanceFilters: React.FC<MaintenanceFiltersProps> = ({
         flexWrap='wrap'
       >
         <Box display='flex' alignItems='center' gap={1}>
-          <FilterList sx={{ color: '#2f7d32' }} />
+          <FilterList sx={{ color: '#00A651' }} />
           <Typography
             variant='h6'
             sx={{ fontSize: '1.125rem', fontWeight: 600, color: '#0f172a' }}

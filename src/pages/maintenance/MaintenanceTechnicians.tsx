@@ -315,7 +315,7 @@ const MaintenanceTechnicians: React.FC = () => {
         <Box display='flex' alignItems='center' gap={2}>
           <Box
             sx={{
-              backgroundColor: '#eef6ee',
+              backgroundColor: '#e8f7ef',
               borderRadius: '10px',
               p: 1.5,
               display: 'flex',
@@ -323,7 +323,7 @@ const MaintenanceTechnicians: React.FC = () => {
               justifyContent: 'center'
             }}
           >
-            <People sx={{ fontSize: 32, color: '#2f7d32' }} />
+            <People sx={{ fontSize: 32, color: '#00A651' }} />
           </Box>
           <Box>
             <Typography
@@ -348,7 +348,7 @@ const MaintenanceTechnicians: React.FC = () => {
           startIcon={<Add />}
           onClick={() => setDialogOpen(true)}
           sx={{
-            backgroundColor: '#2f7d32',
+            backgroundColor: '#00A651',
             borderRadius: '12px',
             alignSelf: { xs: 'stretch', md: 'auto' },
             '&:hover': {
@@ -379,7 +379,7 @@ const MaintenanceTechnicians: React.FC = () => {
                     variant='h4'
                     sx={{
                       fontWeight: 700,
-                          color: '#6dc662'
+                          color: '#00bf75'
                     }}
                   >
                     {technicians?.length || 0}
@@ -394,7 +394,7 @@ const MaintenanceTechnicians: React.FC = () => {
                 </Box>
                 <Box
                   sx={{
-                    backgroundColor: '#eef6ee',
+                    backgroundColor: '#e8f7ef',
                     borderRadius: '10px',
                     p: 1.5,
                     display: 'flex',
@@ -402,7 +402,7 @@ const MaintenanceTechnicians: React.FC = () => {
                     justifyContent: 'center'
                   }}
                 >
-                  <People sx={{ fontSize: 40, color: '#2f7d32' }} />
+                  <People sx={{ fontSize: 40, color: '#00A651' }} />
                 </Box>
               </Box>
             </CardContent>
@@ -443,7 +443,7 @@ const MaintenanceTechnicians: React.FC = () => {
                 </Box>
                 <Box
                   sx={{
-                    backgroundColor: '#eef6ee',
+                    backgroundColor: '#e8f7ef',
                     borderRadius: '10px',
                     p: 1.5,
                     display: 'flex',
@@ -451,7 +451,7 @@ const MaintenanceTechnicians: React.FC = () => {
                     justifyContent: 'center'
                   }}
                 >
-                  <CheckCircle sx={{ fontSize: 40, color: '#2f7d32' }} />
+                  <CheckCircle sx={{ fontSize: 40, color: '#00A651' }} />
                 </Box>
               </Box>
             </CardContent>
@@ -597,8 +597,8 @@ const MaintenanceTechnicians: React.FC = () => {
               size='small'
               label={`${technicians?.length || 0} registrados`}
               sx={{
-                backgroundColor: '#eef6ee',
-                color: '#2f7d32',
+                backgroundColor: '#e8f7ef',
+                color: '#00A651',
                 fontWeight: 600
               }}
             />
@@ -660,8 +660,8 @@ const MaintenanceTechnicians: React.FC = () => {
                         <Box display='flex' alignItems='center' gap={2}>
                           <Avatar
                             sx={{
-                              bgcolor: '#eef6ee',
-                              color: '#2f7d32',
+                              bgcolor: '#e8f7ef',
+                              color: '#00A651',
                               fontWeight: 700
                             }}
                           >
@@ -724,13 +724,13 @@ const MaintenanceTechnicians: React.FC = () => {
                           sx={{
                             backgroundColor:
                               technician.status === 'active'
-                                ? '#eef6ee'
+                                ? '#e8f7ef'
                                 : technician.status === 'inactive'
                                   ? '#fef2f2'
                                   : '#fff7db',
                             color:
                               technician.status === 'active'
-                                ? '#2f7d32'
+                                ? '#00A651'
                                 : technician.status === 'inactive'
                                   ? '#b91c1c'
                                   : '#b45309',
@@ -821,7 +821,7 @@ const MaintenanceTechnicians: React.FC = () => {
                             }}
                             sx={{
                               color:
-                                technician.status === 'active' ? '#d97706' : '#2f7d32',
+                                technician.status === 'active' ? '#d97706' : '#00A651',
                               backgroundColor: '#f8fafc',
                               border: '1px solid #e5e7eb',
                               mr: 0.5,

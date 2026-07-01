@@ -124,7 +124,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
           left: 0,
           right: 0,
           height: '3px',
-          background: '#2f7d32',
+          background: '#00A651',
           opacity: 0.8
         },
         '&:hover': {
@@ -151,7 +151,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
           <Box display='flex' alignItems='center' gap={1.5}>
             <Box
               sx={{
-                backgroundColor: '#eef6ee',
+                backgroundColor: '#e8f7ef',
                 borderRadius: '8px',
                 p: 1,
                 display: 'flex',
@@ -161,7 +161,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                 minHeight: 36
               }}
             >
-              <Build sx={{ color: '#2f7d32', fontSize: 18 }} />
+              <Build sx={{ color: '#00A651', fontSize: 18 }} />
             </Box>
             <Box>
               <Typography
@@ -494,7 +494,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
             sx={{
               textTransform: 'none',
               fontSize: { xs: '0.75rem', sm: '0.8rem' },
-              color: '#2f7d32',
+              color: '#00A651',
               borderRadius: '6px',
               fontWeight: 500,
               minHeight: { xs: 28, sm: 32 },
@@ -539,7 +539,7 @@ const MaintenanceTicketCard: React.FC<MaintenanceTicketCardProps> = ({
                 startIcon={<Visibility />}
                 aria-label={`Ver detalles del ticket ${safeText(ticket.ticketCode, 'sin código')}`}
                 sx={{
-                  color: '#2f7d32',
+                  color: '#00A651',
                   borderRadius: '6px',
                   fontWeight: 500,
                   fontSize: { xs: '0.75rem', sm: '0.8rem' },

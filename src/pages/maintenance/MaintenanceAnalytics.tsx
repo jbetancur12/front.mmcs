@@ -178,7 +178,7 @@ const MaintenanceAnalytics: React.FC = () => {
         <Box display='flex' alignItems='center' gap={2}>
           <Box
             sx={{
-              background: 'linear-gradient(135deg, #0f766e 0%, #2f7d32 100%)',
+              background: 'linear-gradient(135deg, #0f766e 0%, #00A651 100%)',
               borderRadius: '12px',
               p: 1.5,
               display: 'flex',
@@ -220,7 +220,7 @@ const MaintenanceAnalytics: React.FC = () => {
             onClick={exportToExcel}
             disabled={!analytics}
             sx={{
-              backgroundColor: '#2f7d32',
+              backgroundColor: '#00A651',
               '&:hover': {
                 backgroundColor: '#27672a'
               }
@@ -439,7 +439,7 @@ const MaintenanceAnalytics: React.FC = () => {
                               borderRadius: 999,
                               backgroundColor: '#e2e8f0',
                               '& .MuiLinearProgress-bar': {
-                                backgroundColor: '#2f7d32',
+                                backgroundColor: '#00A651',
                                 borderRadius: 999
                               }
                             }}

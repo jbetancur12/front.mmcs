@@ -1471,7 +1471,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                       <Print
                         fontSize='small'
                         aria-hidden='true'
-                        sx={{ color: '#6dc662' }}
+                        sx={{ color: '#00bf75' }}
                       />
                     </ListItemIcon>
                     <ListItemText
@@ -1523,7 +1523,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                     }}
                   >
                     <ListItemIcon>
-                      <Assessment fontSize='small' aria-hidden='true' sx={{ color: '#6dc662' }} />
+                      <Assessment fontSize='small' aria-hidden='true' sx={{ color: '#00bf75' }} />
                     </ListItemIcon>
                     <ListItemText
                       primary='Reporte de Estado'
@@ -1561,7 +1561,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                         aria-hidden='true'
                         sx={{
                           color: ticket.status === MaintenanceStatus.COMPLETED
-                            ? '#6dc662'
+                            ? '#00bf75'
                             : 'text.disabled'
                         }}
                       />
@@ -1606,7 +1606,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                         aria-hidden='true'
                         sx={{
                           color: (ticket.actualCost || ticket.estimatedCost)
-                            ? '#6dc662'
+                            ? '#00bf75'
                             : 'text.disabled'
                         }}
                       />
@@ -1664,13 +1664,13 @@ const MaintenanceTicketDetails: React.FC = () => {
                       minHeight: 48,
                       fontSize: { xs: '0.813rem', sm: '0.875rem' },
                       background:
-                        'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                        'linear-gradient(135deg, #00bf75 0%, #008f4f 100%)',
                       borderRadius: '12px',
                       boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
                       transition: 'all 0.2s ease-in-out',
                       '&:hover': {
                         background:
-                          'linear-gradient(135deg, #5ab052 0%, #4a9642 100%)',
+                          'linear-gradient(135deg, #008f4f 0%, #4a9642 100%)',
                         transform: 'translateY(-2px)',
                         boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
                       },
@@ -1700,13 +1700,13 @@ const MaintenanceTicketDetails: React.FC = () => {
                     minHeight: 48,
                     fontSize: { xs: '0.813rem', sm: '0.875rem' },
                     background:
-                      'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                      'linear-gradient(135deg, #00bf75 0%, #008f4f 100%)',
                     borderRadius: '12px',
                     boxShadow: '0 4px 12px rgba(109, 198, 98, 0.3)',
                     transition: 'all 0.2s ease-in-out',
                     '&:hover': {
                       background:
-                        'linear-gradient(135deg, #5ab052 0%, #4a9642 100%)',
+                        'linear-gradient(135deg, #008f4f 0%, #4a9642 100%)',
                       transform: 'translateY(-2px)',
                       boxShadow: '0 6px 20px rgba(109, 198, 98, 0.4)'
                     }
@@ -1940,8 +1940,8 @@ const MaintenanceTicketDetails: React.FC = () => {
                       }
                       aria-label={`Enviar email a ${ticket.customerEmail}`}
                       sx={{
-                        backgroundColor: '#eef6ee',
-                        color: '#2f7d32',
+                        backgroundColor: '#e8f7ef',
+                        color: '#00A651',
                         borderRadius: '8px',
                         '&:hover': {
                           backgroundColor: '#dbeedb'
@@ -1959,8 +1959,8 @@ const MaintenanceTicketDetails: React.FC = () => {
                       }
                       aria-label={`Llamar al cliente ${ticket.customerPhone}`}
                       sx={{
-                        backgroundColor: '#eef6ee',
-                        color: '#2f7d32',
+                        backgroundColor: '#e8f7ef',
+                        color: '#00A651',
                         borderRadius: '8px',
                         '&:hover': {
                           backgroundColor: '#dbeedb'
@@ -2176,7 +2176,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               <Box display='flex' alignItems='center' gap={1} mb={2}>
                 <Box
                   sx={{
-                    backgroundColor: '#eef6ee',
+                    backgroundColor: '#e8f7ef',
                     borderRadius: '8px',
                     p: 1,
                     display: 'flex',
@@ -2185,7 +2185,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   }}
                 >
                   <Build
-                    sx={{ color: '#2f7d32', fontSize: 20 }}
+                    sx={{ color: '#00A651', fontSize: 20 }}
                     aria-hidden='true'
                   />
                 </Box>
@@ -2228,8 +2228,8 @@ const MaintenanceTicketDetails: React.FC = () => {
                         label={ticket.equipmentType}
                         sx={{
                           fontWeight: 'medium',
-                          backgroundColor: '#eef6ee',
-                          color: '#2f7d32',
+                          backgroundColor: '#e8f7ef',
+                          color: '#00A651',
                           borderRadius: '8px',
                           border: '1px solid #dbeedb'
                         }}
@@ -2343,7 +2343,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               <Box display='flex' alignItems='center' gap={1} mb={2}>
                 <Box
                   sx={{
-                    backgroundColor: '#eef6ee',
+                    backgroundColor: '#e8f7ef',
                     borderRadius: '8px',
                     p: 1,
                     display: 'flex',
@@ -2352,7 +2352,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   }}
                 >
                   <Description
-                    sx={{ color: '#2f7d32', fontSize: 20 }}
+                    sx={{ color: '#00A651', fontSize: 20 }}
                     aria-hidden='true'
                   />
                 </Box>
@@ -2560,7 +2560,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                 <Box
                   sx={{
                     background:
-                      'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                      'linear-gradient(135deg, #00bf75 0%, #008f4f 100%)',
                     borderRadius: '8px',
                     p: 1,
                     display: 'flex',
@@ -2574,7 +2574,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   variant='h6'
                   sx={{
                     fontWeight: 600,
-                    color: '#6dc662'
+                    color: '#00bf75'
                   }}
                 >
                   Técnico Asignado
@@ -2895,7 +2895,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                 <Box
                   sx={{
                     background:
-                      'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                      'linear-gradient(135deg, #00bf75 0%, #008f4f 100%)',
                     borderRadius: '8px',
                     p: 1,
                     display: 'flex',
@@ -2909,7 +2909,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   variant='h6'
                   sx={{
                     fontWeight: 600,
-                    color: '#6dc662'
+                    color: '#00bf75'
                   }}
                 >
                   Programación
@@ -3013,7 +3013,7 @@ const MaintenanceTicketDetails: React.FC = () => {
               <Box display='flex' alignItems='center' gap={1} mb={2}>
                 <Box
                   sx={{
-                    background: 'linear-gradient(135deg, #6dc662 0%, #5ab052 100%)',
+                    background: 'linear-gradient(135deg, #00bf75 0%, #008f4f 100%)',
                     borderRadius: '8px',
                     p: 1,
                     display: 'flex',
@@ -3027,7 +3027,7 @@ const MaintenanceTicketDetails: React.FC = () => {
                   variant='h6'
                   sx={{
                     fontWeight: 600,
-                    color: '#6dc662'
+                    color: '#00bf75'
                   }}
                 >
                   Costos

@@ -641,7 +641,7 @@ const MaintenanceDashboard: React.FC = () => {
         <Box display='flex' alignItems='center' gap={{ xs: 1, sm: 2 }}>
           <Box
             sx={{
-              backgroundColor: '#eef6ee',
+              backgroundColor: '#e8f7ef',
               borderRadius: '10px',
               p: 1.5,
               display: 'flex',
@@ -650,7 +650,7 @@ const MaintenanceDashboard: React.FC = () => {
             }}
           >
             <Dashboard
-              sx={{ fontSize: { xs: 28, sm: 32 }, color: '#2f7d32' }}
+              sx={{ fontSize: { xs: 28, sm: 32 }, color: '#00A651' }}
             />
           </Box>
           <Box>
@@ -767,7 +767,7 @@ const MaintenanceDashboard: React.FC = () => {
               sx={{
                 minHeight: 48,
                 fontSize: { xs: '0.813rem', sm: '0.875rem' },
-                backgroundColor: '#2f7d32',
+                backgroundColor: '#00A651',
                 borderRadius: '12px',
                 '&:hover': {
                   backgroundColor: '#27672a'
@@ -828,7 +828,7 @@ const MaintenanceDashboard: React.FC = () => {
                             md: '2.125rem'
                           },
                           fontWeight: 700,
-                          color: '#6dc662'
+                          color: '#00bf75'
                         }}
                       >
                         {stats?.metrics?.totalTickets || 0}
@@ -846,7 +846,7 @@ const MaintenanceDashboard: React.FC = () => {
                     </Box>
                     <Box
                       sx={{
-                        backgroundColor: '#eef6ee',
+                        backgroundColor: '#e8f7ef',
                         borderRadius: '10px',
                         p: 1.5,
                         display: 'flex',
@@ -855,7 +855,7 @@ const MaintenanceDashboard: React.FC = () => {
                       }}
                     >
                       <Assignment
-                        sx={{ fontSize: { xs: 32, sm: 40 }, color: '#2f7d32' }}
+                        sx={{ fontSize: { xs: 32, sm: 40 }, color: '#00A651' }}
                         aria-hidden='true'
                       />
                     </Box>
@@ -964,7 +964,7 @@ const MaintenanceDashboard: React.FC = () => {
                     </Box>
                     <Box
                       sx={{
-                        backgroundColor: '#eef6ee',
+                        backgroundColor: '#e8f7ef',
                         borderRadius: '10px',
                         p: 1.5,
                         display: 'flex',
@@ -973,7 +973,7 @@ const MaintenanceDashboard: React.FC = () => {
                       }}
                     >
                       <CheckCircle
-                        sx={{ fontSize: { xs: 32, sm: 40 }, color: '#2f7d32' }}
+                        sx={{ fontSize: { xs: 32, sm: 40 }, color: '#00A651' }}
                         aria-hidden='true'
                       />
                     </Box>
@@ -1152,8 +1152,8 @@ const MaintenanceDashboard: React.FC = () => {
                   label: 'Cierre efectivo',
                   value: `${completionRate}%`,
                   helper: 'Tickets completados sobre el total',
-                  color: '#2f7d32',
-                  background: '#eef6ee'
+                  color: '#00A651',
+                  background: '#e8f7ef'
                 },
                 {
                   label: 'Carga activa',
@@ -1297,8 +1297,8 @@ const MaintenanceDashboard: React.FC = () => {
                   label={`${ticketsData.pagination.totalItems} total`}
                   size='small'
                   sx={{
-                    backgroundColor: '#eef6ee',
-                    color: '#2f7d32',
+                    backgroundColor: '#e8f7ef',
+                    color: '#00A651',
                     fontWeight: 600
                   }}
                 />

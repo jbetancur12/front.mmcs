@@ -282,7 +282,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                       fontSize: '0.875rem',
                       backgroundColor:
                         getRoleColor(comment.authorType || comment.userRole) === 'primary'
-                          ? '#eef6ee'
+                          ? '#e8f7ef'
                           : getRoleColor(comment.authorType || comment.userRole) === 'error'
                             ? '#fef2f2'
                             : getRoleColor(comment.authorType || comment.userRole) === 'success'
@@ -292,7 +292,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                                 : '#f1f5f9',
                       color:
                         getRoleColor(comment.authorType || comment.userRole) === 'primary'
-                          ? '#2f7d32'
+                          ? '#00A651'
                           : getRoleColor(comment.authorType || comment.userRole) === 'error'
                             ? '#dc2626'
                             : getRoleColor(comment.authorType || comment.userRole) === 'success'
@@ -319,10 +319,10 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                           borderRadius: '6px',
                           fontWeight: 500,
                           background: getRoleColor(comment.authorType || comment.userRole) === 'primary' 
-                            ? '#eef6ee'
+                            ? '#e8f7ef'
                             : undefined,
                           color: getRoleColor(comment.authorType || comment.userRole) === 'primary' 
-                            ? '#2f7d32' 
+                            ? '#00A651' 
                             : undefined,
                           border: getRoleColor(comment.authorType || comment.userRole) === 'primary' 
                             ? 'none' 
@@ -481,11 +481,11 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                     borderColor: '#86c88a',
                   },
                   '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#2f7d32',
+                    borderColor: '#00A651',
                   },
                 },
                 '& .MuiInputLabel-root.Mui-focused': {
-                  color: '#2f7d32',
+                  color: '#00A651',
                 }
               }}
             />
@@ -545,7 +545,7 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
                 disabled={!newComment.trim() || submitting || loading}
                 size='small'
                 sx={{
-                  backgroundColor: '#2f7d32',
+                  backgroundColor: '#00A651',
                   borderRadius: '8px',
                   '&:hover': {
                     backgroundColor: '#27672a'

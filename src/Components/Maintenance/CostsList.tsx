@@ -118,7 +118,7 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
             <DialogTitle>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
                     <Box display="flex" alignItems="center">
-                        <AttachMoney sx={{ mr: 1, color: '#2f7d32' }} />
+                        <AttachMoney sx={{ mr: 1, color: '#00A651' }} />
                         <Typography variant="h6">Costo del Servicio</Typography>
                         <Box ml={2}>{statusChip}</Box> {/* 👈 Colocamos el Chip aquí */}
                     </Box>
@@ -161,8 +161,8 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
                                             sx={{
                                                 width: 32,
                                                 height: 32,
-                                                backgroundColor: '#eef6ee',
-                                                color: '#2f7d32',
+                                                backgroundColor: '#e8f7ef',
+                                                color: '#00A651',
                                                 fontSize: '0.875rem',
                                                 fontWeight: 700
                                             }}
@@ -239,7 +239,7 @@ const CostsListDialog: React.FC<CostsListDialogProps> = ({
                         )
                     }
                     sx={{
-                        backgroundColor: '#2f7d32',
+                        backgroundColor: '#00A651',
                         '&:hover': { backgroundColor: '#27672a' }
                     }}
                 >
