@@ -30,7 +30,7 @@ interface CalibrationServiceCutInvoiceDialogProps {
   }) => void | Promise<void>
 }
 
-const buildTodayValue = () => new Date().toISOString().slice(0, 16)
+const buildTodayValue = () => new Date().toISOString().slice(0, 10)
 
 const CalibrationServiceCutInvoiceDialog = ({
   open,
@@ -53,7 +53,7 @@ const CalibrationServiceCutInvoiceDialog = ({
     setInvoiceReference(cut.invoiceReference || '')
     setInvoicedAt(
       cut.invoicedAt
-        ? new Date(cut.invoicedAt).toISOString().slice(0, 16)
+        ? new Date(cut.invoicedAt).toISOString().slice(0, 10)
         : buildTodayValue()
     )
     setInvoiceNotes(cut.invoiceNotes || '')
@@ -74,7 +74,7 @@ const CalibrationServiceCutInvoiceDialog = ({
 
     void onSubmit({
       invoiceReference: trimmedReference,
-      invoicedAt: new Date(invoicedAt).toISOString(),
+      invoicedAt: new Date(`${invoicedAt}T12:00:00`).toISOString(),
       invoiceNotes: invoiceNotes.trim() || null,
       invoiceFile,
       customerHasCredit
@@ -117,7 +117,7 @@ const CalibrationServiceCutInvoiceDialog = ({
           />
           <TextField
             label='Fecha de facturación'
-            type='datetime-local'
+            type='date'
             value={invoicedAt}
             onChange={(event) => setInvoicedAt(event.target.value)}
             fullWidth
