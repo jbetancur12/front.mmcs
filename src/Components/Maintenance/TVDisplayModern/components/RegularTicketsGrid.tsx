@@ -1,6 +1,6 @@
 import React from 'react'
 import { Grid, Card, CardContent, Box, Typography } from '@mui/material'
-import { AccessTime, Handyman as HandymanIcon } from '@mui/icons-material' // Añadir HandymanIcon
+import { AccessTime, DescriptionOutlined, Handyman as HandymanIcon } from '@mui/icons-material'
 import { RegularTicketsGridProps } from '../types'
 import { useModernStyles } from '../hooks/useModernStyles'
 import MaintenancePriorityBadge from '../../MaintenancePriorityBadge'
@@ -115,9 +115,14 @@ const RegularTicketsGrid: React.FC<RegularTicketsGridProps> = ({
                     lineHeight: 1.2
                   }}
                 >
-                  {ticket.ticketCode}
-                </Typography>
-              <MaintenancePriorityBadge priority={ticket.priority} size='small' />
+                  {ticket.ticketCode}
+                  {requiresTechnicalReport && (
+                    <DescriptionOutlined
+                      sx={{ fontSize: '0.85rem', color: colors.warning, ml: 0.5, verticalAlign: 'middle' }}
+                    />
+                  )}
+                </Typography>
+              <MaintenancePriorityBadge priority={ticket.priority} size='small' />
             </Box>
 
             {/* 2. TÍTULO PRINCIPAL: TIPO DE EQUIPO */}
