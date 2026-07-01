@@ -804,6 +804,9 @@ const CalibrationServiceWorkspacePage = () => {
       return 'Selecciona la sede del servicio.'
     }
     if (!formState.requestChannel?.trim()) return 'Define la via de solicitud.'
+    if (formState.contactEmail?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formState.contactEmail.trim())) {
+      return 'El email de contacto no es válido. Ingresa un email con formato correcto (ej: usuario@dominio.com).'
+    }
     const validItems = formState.items.filter(
       (item) => item.itemName.trim() || item.instrumentName?.trim()
     )
