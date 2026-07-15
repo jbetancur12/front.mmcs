@@ -1945,7 +1945,7 @@ const CalibrationServicesPage = () => {
               <Button
                 variant={hasCutsReadyForInvoicing ? 'contained' : 'outlined'}
                 color={hasCutsReadyForInvoicing ? 'info' : 'inherit'}
-                onClick={() => setHasCutsReadyForInvoicing((prev) => prev ? undefined : 'true')}
+                onClick={() => { setHasCutsReadyForInvoicing((prev) => prev ? undefined : 'true'); setHasCutsInvoiced(undefined) }}
                 disabled={readyForInvoiceCount === 0 && !hasCutsReadyForInvoicing}
                 sx={hasCutsReadyForInvoicing ? { borderRadius: '12px', textTransform: 'none', fontWeight: 700, minHeight: 44 } : secondaryButtonSx}
               >
@@ -1954,7 +1954,7 @@ const CalibrationServicesPage = () => {
               <Button
                 variant={hasCutsInvoiced ? 'contained' : 'outlined'}
                 color={hasCutsInvoiced ? 'success' : 'inherit'}
-                onClick={() => setHasCutsInvoiced((prev) => prev ? undefined : 'true')}
+                onClick={() => { setHasCutsInvoiced((prev) => prev ? undefined : 'true'); setHasCutsReadyForInvoicing(undefined) }}
                 disabled={invoicedCutCount === 0 && !hasCutsInvoiced}
                 sx={hasCutsInvoiced ? { borderRadius: '12px', textTransform: 'none', fontWeight: 700, minHeight: 44 } : secondaryButtonSx}
               >
