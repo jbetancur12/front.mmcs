@@ -29,45 +29,54 @@ type ReviewStage = 'technical' | 'commercial'
 
 interface CalibrationServiceAdjustmentReviewDialogProps {
   open: boolean
-  adjustment: CalibrationServiceAdjustment | null
+  adjustments: CalibrationServiceAdjustment[]
   reviewStage: ReviewStage
   isLoading?: boolean
   onClose: () => void
-  onSubmit: (values: {
-    reviewStage: ReviewStage
-    decision?: Extract<
-      CalibrationServiceAdjustmentStatus,
-      'approved' | 'rejected'
-    >
-    technicalDecision?: TechnicalDecision
-    technicalReviewNotes?: string | null
-    technicalReviewerRole?: string | null
-    technicalSignatureData?: string | null
-    contractModificationRequired?: boolean
-    supportChannel?: string | null
-    supportReference?: string | null
-    supportNotifiedAt?: string
-    commercialNotes?: string | null
-    pricingNotes?: string | null
-    approvedUnitPrice?: number | null
-    approvedTaxRate?: number | null
-    approvedTaxTotal?: number | null
-    approvedSubtotal?: number | null
-    approvedTotal?: number | null
-    useQuotedPrice?: boolean
-    applyDiscount?: boolean
-    customerApprovalRequired?: boolean
-  }) => void | Promise<void>
+  onSubmit: (
+    adjustmentId: number,
+    values: {
+      reviewStage: ReviewStage
+      decision?: Extract<
+        CalibrationServiceAdjustmentStatus,
+        'approved' | 'rejected'
+      >
+      technicalDecision?: TechnicalDecision
+      technicalReviewNotes?: string | null
+      technicalReviewerRole?: string | null
+      technicalSignatureData?: string | null
+      contractModificationRequired?: boolean
+      supportChannel?: string | null
+      supportReference?: string | null
+      supportNotifiedAt?: string
+      commercialNotes?: string | null
+      pricingNotes?: string | null
+      approvedUnitPrice?: number | null
+      approvedTaxRate?: number | null
+      approvedTaxTotal?: number | null
+      approvedSubtotal?: number | null
+      approvedTotal?: number | null
+      useQuotedPrice?: boolean
+      applyDiscount?: boolean
+      customerApprovalRequired?: boolean
+    }
+  ) => Promise<void>
 }
 
 const CalibrationServiceAdjustmentReviewDialog = ({
   open,
-  adjustment,
+  adjustments,
   reviewStage,
   isLoading = false,
   onClose,
   onSubmit
 }: CalibrationServiceAdjustmentReviewDialogProps) => {
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [isSaving, setIsSaving] = useState(false)
+  const adjustment = adjustments[currentIndex] || null
+  const totalItems = adjustments.length
+  const isLastItem = currentIndex >= totalItems - 1
+
   const [decision, setDecision] =
     useState<
       Extract<CalibrationServiceAdjustmentStatus, 'approved' | 'rejected'>
@@ -94,6 +103,7 @@ const CalibrationServiceAdjustmentReviewDialog = ({
   const [supportChannel, setSupportChannel] = useState('whatsapp')
   const [supportReference, setSupportReference] = useState('')
 
+  // Reset form when switching adjustment or reopening
   useEffect(() => {
     if (!open || !adjustment) {
       return
@@ -245,64 +255,89 @@ const CalibrationServiceAdjustmentReviewDialog = ({
     (isTechnicalReview ||
       adjustment?.otherFields?.technicalDecision === 'approved')
 
-  const handleSubmit = async () => {
-    if (!canSubmit) {
+  const handleSave = async (closeAfter: boolean) => {
+    if (!canSubmit || !adjustment) {
       return
     }
 
-    if (isTechnicalReview) {
-      await onSubmit({
-        reviewStage,
-        technicalDecision,
-        technicalReviewNotes: technicalReviewNotes.trim() || null,
-        technicalReviewerRole: technicalReviewerRole.trim() || null,
-        technicalSignatureData,
-        contractModificationRequired,
-        supportChannel: contractModificationRequired ? supportChannel : null,
-        supportReference: supportReference.trim() || null,
-        supportNotifiedAt: new Date().toISOString()
-      })
-      return
-    }
+    setIsSaving(true)
+    try {
+      if (isTechnicalReview) {
+        await onSubmit(adjustment.id, {
+          reviewStage,
+          technicalDecision,
+          technicalReviewNotes: technicalReviewNotes.trim() || null,
+          technicalReviewerRole: technicalReviewerRole.trim() || null,
+          technicalSignatureData,
+          contractModificationRequired,
+          supportChannel: contractModificationRequired ? supportChannel : null,
+          supportReference: supportReference.trim() || null,
+          supportNotifiedAt: new Date().toISOString()
+        })
+      } else {
+        await onSubmit(adjustment.id, {
+          reviewStage,
+          decision,
+          contractModificationRequired,
+          supportChannel: contractModificationRequired ? supportChannel : null,
+          supportReference: supportReference.trim() || null,
+          supportNotifiedAt: new Date().toISOString(),
+          commercialNotes: commercialNotes.trim() || null,
+          pricingNotes: pricingNotes.trim() || null,
+          approvedUnitPrice:
+            approvedUnitPrice && (!isQuantityLess || applyDiscount)
+              ? Number(approvedUnitPrice)
+              : 0,
+          approvedTaxRate: approvedTaxRate ? Number(approvedTaxRate) : null,
+          approvedTaxTotal:
+            approvedUnitPrice && (!isQuantityLess || applyDiscount)
+              ? signedTaxTotal
+              : 0,
+          approvedSubtotal:
+            approvedUnitPrice && (!isQuantityLess || applyDiscount)
+              ? signedSubtotal
+              : 0,
+          approvedTotal:
+            approvedUnitPrice && (!isQuantityLess || applyDiscount)
+              ? signedTotal
+              : 0,
+          useQuotedPrice,
+          applyDiscount,
+          customerApprovalRequired
+        })
+      }
 
-    await onSubmit({
-      reviewStage,
-      decision,
-      contractModificationRequired,
-      supportChannel: contractModificationRequired ? supportChannel : null,
-      supportReference: supportReference.trim() || null,
-      supportNotifiedAt: new Date().toISOString(),
-      commercialNotes: commercialNotes.trim() || null,
-      pricingNotes: pricingNotes.trim() || null,
-      approvedUnitPrice:
-        approvedUnitPrice && (!isQuantityLess || applyDiscount)
-          ? Number(approvedUnitPrice)
-          : 0,
-      approvedTaxRate: approvedTaxRate ? Number(approvedTaxRate) : null,
-      approvedTaxTotal:
-        approvedUnitPrice && (!isQuantityLess || applyDiscount)
-          ? signedTaxTotal
-          : 0,
-      approvedSubtotal:
-        approvedUnitPrice && (!isQuantityLess || applyDiscount)
-          ? signedSubtotal
-          : 0,
-      approvedTotal:
-        approvedUnitPrice && (!isQuantityLess || applyDiscount)
-          ? signedTotal
-          : 0,
-      useQuotedPrice,
-      applyDiscount,
-      customerApprovalRequired
-    })
+      if (closeAfter || isLastItem) {
+        setCurrentIndex(0)
+        onClose()
+      } else {
+        setCurrentIndex((prev) => prev + 1)
+      }
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleClose = () => {
+    setCurrentIndex(0)
+    onClose()
   }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth='md' fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth='md' fullWidth>
       <DialogTitle>
-        {isTechnicalReview
-          ? 'Revisión técnica de novedad'
-          : 'Revisión comercial de novedad'}
+        <Stack direction='row' justifyContent='space-between' alignItems='center'>
+          <span>
+            {isTechnicalReview
+              ? 'Revisión técnica de novedad'
+              : 'Revisión comercial de novedad'}
+          </span>
+          {totalItems > 1 ? (
+            <Typography variant='body2' color='text.secondary'>
+              Novedad {currentIndex + 1} de {totalItems}
+            </Typography>
+          ) : null}
+        </Stack>
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={3} sx={{ mt: 0.5 }}>
@@ -618,16 +653,35 @@ const CalibrationServiceAdjustmentReviewDialog = ({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={isLoading}>
-          Cancelar
-        </Button>
-        <Button
-          variant='contained'
-          onClick={() => void handleSubmit()}
-          disabled={!canSubmit || isLoading}
+        <Stack
+          direction='row'
+          spacing={1}
+          sx={{ width: '100%', justifyContent: 'space-between' }}
         >
-          Guardar decisión
-        </Button>
+          <Button onClick={handleClose} disabled={isSaving || isLoading}>
+            Cancelar
+          </Button>
+          <Stack direction='row' spacing={1}>
+            {totalItems > 1 ? (
+              <Button
+                variant='outlined'
+                onClick={() => void handleSave(true)}
+                disabled={!canSubmit || isSaving || isLoading}
+              >
+                Guardar y cerrar
+              </Button>
+            ) : null}
+            <Button
+              variant='contained'
+              onClick={() => void handleSave(false)}
+              disabled={!canSubmit || isSaving || isLoading}
+            >
+              {isLastItem || totalItems <= 1
+                ? 'Guardar decisión'
+                : 'Guardar y siguiente'}
+            </Button>
+          </Stack>
+        </Stack>
       </DialogActions>
     </Dialog>
   )

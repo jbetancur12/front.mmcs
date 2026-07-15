@@ -38,7 +38,7 @@ interface CalibrationServiceAdjustmentsPanelProps {
   isBusy?: boolean
   onCreate: () => void
   onReview: (
-    adjustment: CalibrationServiceAdjustment,
+    adjustments: CalibrationServiceAdjustment[],
     reviewStage: 'technical' | 'commercial'
   ) => void
   onSendToCustomer?: (adjustment: CalibrationServiceAdjustment) => void
@@ -370,7 +370,16 @@ const CalibrationServiceAdjustmentsPanel = ({
                           <Button
                             size='small'
                             variant='outlined'
-                            onClick={() => onReview(adjustment, 'technical')}
+                            onClick={() =>
+                              onReview(
+                                adjustments.filter(
+                                  (a) =>
+                                    ['reported', 'customer_changes_requested', 'customer_rejected'].includes(a.status) &&
+                                    !(getAdjustmentOtherFields(a).technicalDecision === 'approved')
+                                ),
+                                'technical'
+                              )
+                            }
                             disabled={isBusy}
                           >
                             Revisión técnica
@@ -380,7 +389,16 @@ const CalibrationServiceAdjustmentsPanel = ({
                           <Button
                             size='small'
                             variant='outlined'
-                            onClick={() => onReview(adjustment, 'commercial')}
+                            onClick={() =>
+                              onReview(
+                                adjustments.filter(
+                                  (a) =>
+                                    a.status === 'reported' &&
+                                    getAdjustmentOtherFields(a).technicalDecision === 'approved'
+                                ),
+                                'commercial'
+                              )
+                            }
                             disabled={isBusy}
                           >
                             Revisión comercial
@@ -395,7 +413,16 @@ const CalibrationServiceAdjustmentsPanel = ({
                           <Button
                             size='small'
                             variant='outlined'
-                            onClick={() => onReview(adjustment, 'technical')}
+                            onClick={() =>
+                              onReview(
+                                adjustments.filter(
+                                  (a) =>
+                                    ['customer_changes_requested', 'customer_rejected'].includes(a.status) &&
+                                    !(getAdjustmentOtherFields(a).technicalDecision === 'approved')
+                                ),
+                                'technical'
+                              )
+                            }
                             disabled={isBusy}
                           >
                             Replantear

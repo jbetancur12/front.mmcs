@@ -446,8 +446,8 @@ const CalibrationServiceDetailsPage = () => {
     useState<CalibrationServiceCut | null>(null)
   const [selectedCutForDocumentControl, setSelectedCutForDocumentControl] =
     useState<CalibrationServiceCut | null>(null)
-  const [selectedAdjustment, setSelectedAdjustment] =
-    useState<CalibrationServiceAdjustment | null>(null)
+  const [selectedAdjustmentsForReview, setSelectedAdjustmentsForReview] =
+    useState<CalibrationServiceAdjustment[]>([])
   const [selectedAdjustmentReviewStage, setSelectedAdjustmentReviewStage] =
     useState<'technical' | 'commercial'>('technical')
   const [
@@ -1968,41 +1968,38 @@ const CalibrationServiceDetailsPage = () => {
     }
   }
 
-  const handleReviewAdjustment = async (values: {
-    reviewStage?: 'technical' | 'commercial'
-    decision?: 'approved' | 'rejected'
-    technicalDecision?: 'approved' | 'rejected'
-    technicalReviewNotes?: string | null
-    technicalReviewerRole?: string | null
-    technicalSignatureData?: string | null
-    contractModificationRequired?: boolean
-    supportChannel?: string | null
-    supportReference?: string | null
-    supportNotifiedAt?: string
-    commercialNotes?: string | null
-    pricingNotes?: string | null
-    approvedUnitPrice?: number | null
-    approvedTaxRate?: number | null
-    approvedTaxTotal?: number | null
-    approvedSubtotal?: number | null
-    approvedTotal?: number | null
-    useQuotedPrice?: boolean
-    applyDiscount?: boolean
-    customerApprovalRequired?: boolean
-  }) => {
-    if (!selectedAdjustment) {
-      return
+  const handleReviewAdjustment = async (
+    adjustmentId: number,
+    values: {
+      reviewStage?: 'technical' | 'commercial'
+      decision?: 'approved' | 'rejected'
+      technicalDecision?: 'approved' | 'rejected'
+      technicalReviewNotes?: string | null
+      technicalReviewerRole?: string | null
+      technicalSignatureData?: string | null
+      contractModificationRequired?: boolean
+      supportChannel?: string | null
+      supportReference?: string | null
+      supportNotifiedAt?: string
+      commercialNotes?: string | null
+      pricingNotes?: string | null
+      approvedUnitPrice?: number | null
+      approvedTaxRate?: number | null
+      approvedTaxTotal?: number | null
+      approvedSubtotal?: number | null
+      approvedTotal?: number | null
+      useQuotedPrice?: boolean
+      applyDiscount?: boolean
+      customerApprovalRequired?: boolean
     }
-
+  ) => {
     try {
       await reviewAdjustment.mutateAsync({
         serviceId: String(service.id),
-        adjustmentId: String(selectedAdjustment.id),
+        adjustmentId: String(adjustmentId),
         ...values
       })
       toast.success('La revisión de la novedad quedó guardada.')
-      setSelectedAdjustment(null)
-      setSelectedAdjustmentReviewStage('technical')
       setActiveTab('adjustments')
     } catch (adjustmentError) {
       console.error(adjustmentError)
@@ -3493,8 +3490,8 @@ const CalibrationServiceDetailsPage = () => {
                   isTechnicalOnlyView={isTechnicalOnlyView}
                   isBusy={isOperationalBusy}
                   onCreate={() => setIsAdjustmentDialogOpen(true)}
-                  onReview={(adjustment, reviewStage) => {
-                    setSelectedAdjustment(adjustment)
+                  onReview={(adjustments, reviewStage) => {
+                    setSelectedAdjustmentsForReview(adjustments)
                     setSelectedAdjustmentReviewStage(reviewStage)
                   }}
                   onSendToCustomer={(adjustment) => {
@@ -3911,14 +3908,14 @@ const CalibrationServiceDetailsPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      {selectedAdjustment ? (
+      {selectedAdjustmentsForReview.length > 0 ? (
         <CalibrationServiceAdjustmentReviewDialog
-          open={Boolean(selectedAdjustment)}
-          adjustment={selectedAdjustment}
+          open={selectedAdjustmentsForReview.length > 0}
+          adjustments={selectedAdjustmentsForReview}
           reviewStage={selectedAdjustmentReviewStage}
           isLoading={isOperationalBusy}
           onClose={() => {
-            setSelectedAdjustment(null)
+            setSelectedAdjustmentsForReview([])
             setSelectedAdjustmentReviewStage('technical')
           }}
           onSubmit={handleReviewAdjustment}
