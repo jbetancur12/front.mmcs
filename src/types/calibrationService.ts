@@ -493,6 +493,8 @@ export interface CalibrationServiceFilters {
   approvalStatus?: CalibrationServiceApprovalStatus
   customerId?: number
   hasAdjustments?: string
+  hasCutsReadyForInvoicing?: string
+  hasCutsInvoiced?: string
   limit?: number
   offset?: number
 }

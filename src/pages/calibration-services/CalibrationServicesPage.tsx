@@ -301,8 +301,6 @@ interface StoredFilters {
   metrologistFilter?: string
   hasAdjustmentsFilter?: string
   showOnlyMyLoad?: boolean
-  showOnlyReadyForInvoice?: boolean
-  showOnlyInvoicedCut?: boolean
   areFiltersOpen?: boolean
 }
 
@@ -753,8 +751,8 @@ const CalibrationServicesPage = () => {
     getStoredViewMode
   )
   const [showOnlyMyLoad, setShowOnlyMyLoad] = useState(storedFilters.showOnlyMyLoad ?? false)
-  const [showOnlyReadyForInvoice, setShowOnlyReadyForInvoice] = useState(storedFilters.showOnlyReadyForInvoice ?? false)
-  const [showOnlyInvoicedCut, setShowOnlyInvoicedCut] = useState(storedFilters.showOnlyInvoicedCut ?? false)
+  const [hasCutsReadyForInvoicing, setHasCutsReadyForInvoicing] = useState<string | undefined>(undefined)
+  const [hasCutsInvoiced, setHasCutsInvoiced] = useState<string | undefined>(undefined)
   const [moreAnchorEl, setMoreAnchorEl] = useState<HTMLElement | null>(null)
   const kanbanScrollRef = useRef<HTMLDivElement | null>(null)
   const kanbanTopScrollRef = useRef<HTMLDivElement | null>(null)
@@ -769,8 +767,12 @@ const CalibrationServicesPage = () => {
     queryFilters.search = deferredSearch.trim()
   }
 
-  if (statusFilter !== FILTER_ALL && (statusFilter as string) !== 'invoiced') {
-    queryFilters.status = statusFilter
+  if (statusFilter !== FILTER_ALL) {
+    if ((statusFilter as string) === 'invoiced') {
+      queryFilters.hasCutsInvoiced = 'true'
+    } else {
+      queryFilters.status = statusFilter
+    }
   }
 
   if (!isTechnicalOnlyView && approvalFilter !== FILTER_ALL) {
@@ -779,6 +781,14 @@ const CalibrationServicesPage = () => {
 
   if (hasAdjustmentsFilter !== FILTER_ALL) {
     queryFilters.hasAdjustments = hasAdjustmentsFilter
+  }
+
+  if (hasCutsReadyForInvoicing) {
+    queryFilters.hasCutsReadyForInvoicing = hasCutsReadyForInvoicing
+  }
+
+  if (hasCutsInvoiced) {
+    queryFilters.hasCutsInvoiced = hasCutsInvoiced
   }
 
   const {
@@ -822,8 +832,6 @@ const CalibrationServicesPage = () => {
       metrologistFilter,
       hasAdjustmentsFilter,
       showOnlyMyLoad,
-      showOnlyReadyForInvoice,
-      showOnlyInvoicedCut,
       areFiltersOpen
     })
   }, [
@@ -836,8 +844,6 @@ const CalibrationServicesPage = () => {
     metrologistFilter,
     hasAdjustmentsFilter,
     showOnlyMyLoad,
-    showOnlyReadyForInvoice,
-    showOnlyInvoicedCut,
     areFiltersOpen
   ])
 
@@ -873,10 +879,6 @@ const CalibrationServicesPage = () => {
     const currentMetrologistNames = getMetrologistNames(service)
     const currentMetrologistEmails = getMetrologistEmails(service)
 
-    if ((statusFilter as string) === 'invoiced' && !(service.cuts || []).some(c => c.status === 'invoiced')) {
-      return false
-    }
-
     if (scopeFilter !== FILTER_ALL && service.scopeType !== scopeFilter) {
       return false
     }
@@ -906,13 +908,6 @@ const CalibrationServicesPage = () => {
       if (!currentUserEmail || !currentMetrologistEmails.some(e => e.toLowerCase() === currentUserEmail)) {
         return false
       }
-    }
-
-    if (showOnlyReadyForInvoice && !(service.cuts || []).some(c => c.status === 'ready_for_invoicing')) {
-      return false
-    }
-    if (showOnlyInvoicedCut && !(service.cuts || []).some(c => c.status === 'invoiced')) {
-      return false
     }
 
     return matchesSiteFilter(service, siteFilter)
@@ -956,8 +951,8 @@ const CalibrationServicesPage = () => {
     metrologistFilter !== FILTER_ALL,
     hasAdjustmentsFilter !== FILTER_ALL,
     showOnlyMyLoad,
-    showOnlyReadyForInvoice,
-    showOnlyInvoicedCut
+    hasCutsReadyForInvoicing,
+    hasCutsInvoiced
   ].filter(Boolean).length
 
   const clearFilters = () => {
@@ -970,8 +965,8 @@ const CalibrationServicesPage = () => {
     setMetrologistFilter(FILTER_ALL)
     setHasAdjustmentsFilter(FILTER_ALL)
     setShowOnlyMyLoad(false)
-    setShowOnlyReadyForInvoice(false)
-    setShowOnlyInvoicedCut(false)
+    setHasCutsReadyForInvoicing(undefined)
+    setHasCutsInvoiced(undefined)
     if (typeof window !== 'undefined') {
       window.sessionStorage.removeItem(CALIBRATION_SERVICES_FILTERS_STORAGE_KEY)
     }
@@ -1948,22 +1943,22 @@ const CalibrationServicesPage = () => {
                 {showOnlyMyLoad ? `Mi carga (${visibleServices.length})` : `Mi carga${myLoadCount > 0 ? ` (${myLoadCount})` : ''}`}
               </Button>
               <Button
-                variant={showOnlyReadyForInvoice ? 'contained' : 'outlined'}
-                color={showOnlyReadyForInvoice ? 'info' : 'inherit'}
-                onClick={() => setShowOnlyReadyForInvoice((v) => !v)}
+                variant={hasCutsReadyForInvoicing ? 'contained' : 'outlined'}
+                color={hasCutsReadyForInvoicing ? 'info' : 'inherit'}
+                onClick={() => setHasCutsReadyForInvoicing((prev) => prev ? undefined : 'true')}
                 disabled={readyForInvoiceCount === 0}
-                sx={showOnlyReadyForInvoice ? { borderRadius: '12px', textTransform: 'none', fontWeight: 700, minHeight: 44 } : secondaryButtonSx}
+                sx={hasCutsReadyForInvoicing ? { borderRadius: '12px', textTransform: 'none', fontWeight: 700, minHeight: 44 } : secondaryButtonSx}
               >
-                {showOnlyReadyForInvoice ? `Por facturar (${visibleServices.length})` : `Por facturar${readyForInvoiceCount > 0 ? ` (${readyForInvoiceCount})` : ''}`}
+                {hasCutsReadyForInvoicing ? `Por facturar (${visibleServices.length})` : `Por facturar${readyForInvoiceCount > 0 ? ` (${readyForInvoiceCount})` : ''}`}
               </Button>
               <Button
-                variant={showOnlyInvoicedCut ? 'contained' : 'outlined'}
-                color={showOnlyInvoicedCut ? 'success' : 'inherit'}
-                onClick={() => setShowOnlyInvoicedCut((v) => !v)}
+                variant={hasCutsInvoiced ? 'contained' : 'outlined'}
+                color={hasCutsInvoiced ? 'success' : 'inherit'}
+                onClick={() => setHasCutsInvoiced((prev) => prev ? undefined : 'true')}
                 disabled={invoicedCutCount === 0}
-                sx={showOnlyInvoicedCut ? { borderRadius: '12px', textTransform: 'none', fontWeight: 700, minHeight: 44 } : secondaryButtonSx}
+                sx={hasCutsInvoiced ? { borderRadius: '12px', textTransform: 'none', fontWeight: 700, minHeight: 44 } : secondaryButtonSx}
               >
-                {showOnlyInvoicedCut ? `Facturados (${visibleServices.length})` : `Facturados${invoicedCutCount > 0 ? ` (${invoicedCutCount})` : ''}`}
+                {hasCutsInvoiced ? `Facturados (${visibleServices.length})` : `Facturados${invoicedCutCount > 0 ? ` (${invoicedCutCount})` : ''}`}
               </Button>
               <ToggleButtonGroup
                 size='small'
@@ -2042,11 +2037,11 @@ const CalibrationServicesPage = () => {
               {showOnlyMyLoad ? (
                 <Chip size='small' label='Mi carga' onDelete={() => setShowOnlyMyLoad(false)} variant='outlined' color='success' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
               ) : null}
-              {showOnlyReadyForInvoice ? (
-                <Chip size='small' label='Por facturar' onDelete={() => setShowOnlyReadyForInvoice(false)} variant='outlined' color='info' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
+              {hasCutsReadyForInvoicing ? (
+                <Chip size='small' label='Por facturar' onDelete={() => setHasCutsReadyForInvoicing(undefined)} variant='outlined' color='info' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
               ) : null}
-              {showOnlyInvoicedCut ? (
-                <Chip size='small' label='Facturados' onDelete={() => setShowOnlyInvoicedCut(false)} variant='outlined' color='success' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
+              {hasCutsInvoiced ? (
+                <Chip size='small' label='Facturados' onDelete={() => setHasCutsInvoiced(undefined)} variant='outlined' color='success' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
               ) : null}
               {hasAdjustmentsFilter !== FILTER_ALL ? (
                 <Chip size='small' label={`Novedades: ${hasAdjustmentsFilter === 'true' ? 'Con' : 'Sin'}`} onDelete={() => setHasAdjustmentsFilter(FILTER_ALL)} variant='outlined' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
