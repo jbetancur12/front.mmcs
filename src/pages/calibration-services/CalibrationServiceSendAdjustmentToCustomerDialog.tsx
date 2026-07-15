@@ -6,6 +6,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  LinearProgress,
   Stack,
   TextField,
   Typography
@@ -16,20 +17,20 @@ import { CalibrationServiceSendPreviewResult } from '../../types/calibrationServ
 interface CalibrationServiceSendAdjustmentToCustomerDialogProps {
   open: boolean
   service: CalibrationService
-  adjustment: CalibrationServiceAdjustment | null
+  adjustments: CalibrationServiceAdjustment[]
   isLoading?: boolean
   sendPreview?: CalibrationServiceSendPreviewResult | null
   onClose: () => void
   onSubmit: (values: {
     recipientEmail?: string | null
     recipientName?: string | null
-  }) => void | Promise<void>
+  }) => Promise<void>
 }
 
 const CalibrationServiceSendAdjustmentToCustomerDialog = ({
   open,
   service,
-  adjustment,
+  adjustments,
   isLoading = false,
   sendPreview = null,
   onClose,
@@ -51,6 +52,7 @@ const CalibrationServiceSendAdjustmentToCustomerDialog = ({
 
   const [recipientEmail, setRecipientEmail] = useState('')
   const [recipientName, setRecipientName] = useState('')
+  const [progress, setProgress] = useState({ current: 0, total: 0 })
 
   useEffect(() => {
     if (!open) {
@@ -59,25 +61,61 @@ const CalibrationServiceSendAdjustmentToCustomerDialog = ({
 
     setRecipientEmail(defaultRecipientEmail)
     setRecipientName(defaultRecipientName)
+    setProgress({ current: 0, total: 0 })
   }, [open, defaultRecipientEmail, defaultRecipientName])
 
+  const isSending = progress.total > 0
+
   const handleSubmit = async () => {
+    setProgress({ current: 1, total: adjustments.length })
     await onSubmit({
       recipientEmail: recipientEmail.trim() || null,
       recipientName: recipientName.trim() || null
     })
+    setProgress({ current: 0, total: 0 })
   }
 
   return (
-    <Dialog open={open} onClose={isLoading ? undefined : onClose} fullWidth maxWidth='sm'>
-      <DialogTitle>Enviar novedad al cliente</DialogTitle>
+    <Dialog open={open} onClose={isSending ? undefined : onClose} fullWidth maxWidth='sm'>
+      <DialogTitle>
+        {adjustments.length > 1
+          ? `Enviar ${adjustments.length} novedades al cliente`
+          : 'Enviar novedad al cliente'}
+      </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2.5} sx={{ mt: 0.5 }}>
-          <Typography variant='body2' color='text.secondary'>
-            Vamos a enviar la novedad{' '}
-            <strong>{adjustment?.itemName || 'sin ítem'}</strong> al cliente para su
-            validación.
-          </Typography>
+          {adjustments.length > 1 ? (
+            <Alert severity='info'>
+              Se enviarán <strong>{adjustments.length} novedades</strong> en correos
+              individuales al mismo destinatario. Cada correo detalla una novedad.
+            </Alert>
+          ) : (
+            <Typography variant='body2' color='text.secondary'>
+              Vamos a enviar la novedad{' '}
+              <strong>{adjustments[0]?.itemName || 'sin ítem'}</strong> al cliente para su
+              validación.
+            </Typography>
+          )}
+
+          {adjustments.length > 1 ? (
+            <Stack spacing={0.5}>
+              <Typography variant='subtitle2' fontWeight={700}>
+                Novedades a enviar:
+              </Typography>
+              {adjustments.map((a) => (
+                <Typography key={a.id} variant='body2' color='text.secondary'>
+                  • {a.itemName} —{' '}
+                  {({
+                    quantity_less: 'Cant. menor',
+                    quantity_more: 'Cant. mayor',
+                    extra_item: 'Item adicional',
+                    not_received: 'No recibido',
+                    scope_change: 'Cambio alcance'
+                  }[a.changeType] || a.changeType)}
+                </Typography>
+              ))}
+            </Stack>
+          ) : null}
 
           <Alert severity='info'>
             Correo sugerido según la regla actual: <strong>{defaultSource}</strong>.
@@ -108,18 +146,32 @@ const CalibrationServiceSendAdjustmentToCustomerDialog = ({
             onChange={(event) => setRecipientEmail(event.target.value)}
             helperText='Puedes dejar el sugerido o cambiarlo antes de enviar.'
           />
+
+          {isSending ? (
+            <Stack spacing={1}>
+              <LinearProgress
+                variant='determinate'
+                value={(progress.current / progress.total) * 100}
+              />
+              <Typography variant='caption' color='text.secondary' textAlign='center'>
+                Enviando {progress.current} de {progress.total}...
+              </Typography>
+            </Stack>
+          ) : null}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={isLoading}>
+        <Button onClick={onClose} disabled={isLoading || isSending}>
           Cancelar
         </Button>
         <Button
           variant='contained'
           onClick={() => void handleSubmit()}
-          disabled={isLoading || !recipientEmail.trim()}
+          disabled={isLoading || isSending || !recipientEmail.trim()}
         >
-          Enviar correo
+          {adjustments.length > 1
+            ? `Enviar ${adjustments.length} correos`
+            : 'Enviar correo'}
         </Button>
       </DialogActions>
     </Dialog>

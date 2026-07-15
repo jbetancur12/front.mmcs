@@ -41,9 +41,9 @@ interface CalibrationServiceAdjustmentsPanelProps {
     adjustments: CalibrationServiceAdjustment[],
     reviewStage: 'technical' | 'commercial'
   ) => void
-  onSendToCustomer?: (adjustment: CalibrationServiceAdjustment) => void
+  onSendToCustomer?: (adjustments: CalibrationServiceAdjustment[]) => void
   onRegisterCustomerResponse?: (
-    adjustment: CalibrationServiceAdjustment
+    adjustments: CalibrationServiceAdjustment[]
   ) => void
   onGenerateDocument?: (adjustment: CalibrationServiceAdjustment) => void
   onGenerateSummaryDocument?: () => void
@@ -434,7 +434,13 @@ const CalibrationServiceAdjustmentsPanel = ({
                           <Button
                             size='small'
                             variant='outlined'
-                            onClick={() => onSendToCustomer(adjustment)}
+                            onClick={() =>
+                              onSendToCustomer(
+                                adjustments.filter(
+                                  (a) => a.status === 'pending_customer_approval'
+                                )
+                              )
+                            }
                             disabled={isBusy}
                           >
                             Enviar al cliente
@@ -447,7 +453,11 @@ const CalibrationServiceAdjustmentsPanel = ({
                             size='small'
                             variant='text'
                             onClick={() =>
-                              onRegisterCustomerResponse(adjustment)
+                              onRegisterCustomerResponse(
+                                adjustments.filter(
+                                  (a) => a.status === 'pending_customer_approval'
+                                )
+                              )
                             }
                             disabled={isBusy}
                           >

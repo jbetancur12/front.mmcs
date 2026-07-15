@@ -451,11 +451,11 @@ const CalibrationServiceDetailsPage = () => {
   const [selectedAdjustmentReviewStage, setSelectedAdjustmentReviewStage] =
     useState<'technical' | 'commercial'>('technical')
   const [
-    selectedAdjustmentForCustomerResponse,
-    setSelectedAdjustmentForCustomerResponse
-  ] = useState<CalibrationServiceAdjustment | null>(null)
-  const [selectedAdjustmentForSend, setSelectedAdjustmentForSend] =
-    useState<CalibrationServiceAdjustment | null>(null)
+    selectedAdjustmentsForCustomerResponse,
+    setSelectedAdjustmentsForCustomerResponse
+  ] = useState<CalibrationServiceAdjustment[]>([])
+  const [selectedAdjustmentsForSend, setSelectedAdjustmentsForSend] =
+    useState<CalibrationServiceAdjustment[]>([])
   const [sendAdjustmentPreview, setSendAdjustmentPreview] =
     useState<CalibrationServiceSendPreviewResult | null>(null)
   const [viewDocumentId, setViewDocumentId] = useState<number | null>(null)
@@ -2011,92 +2011,104 @@ const CalibrationServiceDetailsPage = () => {
     recipientEmail?: string | null
     recipientName?: string | null
   }) => {
-    if (!selectedAdjustmentForSend) {
+    const pending = selectedAdjustmentsForSend
+    if (!pending.length) {
       return
     }
 
-    try {
-      const result = await sendAdjustmentToCustomer.mutateAsync({
-        serviceId: String(service.id),
-        adjustmentId: String(selectedAdjustmentForSend.id),
-        recipientEmail: values.recipientEmail,
-        recipientName: values.recipientName,
-        sentAt: new Date().toISOString()
-      })
-      toast.success('La novedad quedó enviada al cliente.')
-      setSelectedAdjustmentForSend(null)
-      setSendAdjustmentPreview(null)
-      if (result.delivery?.isDevOverride) {
-        toast(
-          `Modo desarrollo: normalmente iría a ${result.delivery.intendedRecipient || 'sin correo definido'}, pero se envió a ${result.delivery.actualRecipient || 'sin correo de override'}.`,
-          {
-            duration: 7000,
-            icon: 'ℹ️'
-          }
-        )
-      } else if (result.delivery?.actualRecipient) {
-        toast(
-          result.delivery.requestedRecipient &&
-            result.delivery.intendedRecipient &&
-            result.delivery.requestedRecipient !==
-              result.delivery.intendedRecipient
-            ? `Normalmente iría a ${result.delivery.intendedRecipient}, pero se envió a ${result.delivery.actualRecipient}.`
-            : `Se envió al correo ${result.delivery.actualRecipient}.`,
-          {
-            duration: 5000,
-            icon: '📧'
-          }
-        )
+    let successCount = 0
+    let failCount = 0
+
+    for (const adj of pending) {
+      try {
+        const result = await sendAdjustmentToCustomer.mutateAsync({
+          serviceId: String(service.id),
+          adjustmentId: String(adj.id),
+          recipientEmail: values.recipientEmail,
+          recipientName: values.recipientName,
+          sentAt: new Date().toISOString()
+        })
+        successCount++
+        if (result.delivery?.actualRecipient) {
+          toast(
+            `Enviado a ${result.delivery.actualRecipient}`,
+            { duration: 3000, icon: '📧' }
+          )
+        }
+      } catch (sendError) {
+        console.error(sendError)
+        failCount++
       }
-      setActiveTab('adjustments')
-    } catch (adjustmentError) {
-      console.error(adjustmentError)
-      toast.error('No pudimos enviar la novedad al cliente.')
+    }
+
+    setSelectedAdjustmentsForSend([])
+    setSendAdjustmentPreview(null)
+    setActiveTab('adjustments')
+
+    if (failCount === 0) {
+      toast.success(`${successCount} novedad(es) enviada(s) al cliente.`)
+    } else {
+      toast.error(`${successCount} enviada(s), ${failCount} fallida(s).`)
     }
   }
 
-  const handleRegisterAdjustmentCustomerResponse = async (values: {
-    decision: 'approved' | 'rejected' | 'changes_requested'
-    responseChannel?: string | null
-    responseReference?: string | null
-    notes?: string | null
-    evidenceFile?: File | null
-  }) => {
-    if (!selectedAdjustmentForCustomerResponse) {
+  const handleRegisterAdjustmentCustomerResponse = async (
+    entries: Array<{
+      adjustmentId: number
+      decision: 'approved' | 'rejected' | 'changes_requested'
+      responseChannel?: string | null
+      responseReference?: string | null
+      notes?: string | null
+      evidenceFile?: File | null
+    }>
+  ) => {
+    const pending = selectedAdjustmentsForCustomerResponse
+    if (!pending.length) {
       return
     }
 
-    try {
-      let evidenceDocumentId: number | null = null
+    let successCount = 0
+    let failCount = 0
 
-      if (values.evidenceFile) {
-        const uploadedDocument = await uploadDocument.mutateAsync({
+    for (const entry of entries) {
+      try {
+        let evidenceDocumentId: number | null = null
+
+        if (entry.evidenceFile) {
+          const uploadedDocument = await uploadDocument.mutateAsync({
+            serviceId: String(service.id),
+            file: entry.evidenceFile,
+            documentType: 'supporting_attachment',
+            title: `Evidencia respuesta novedad`,
+            notes: entry.notes?.trim() || undefined
+          })
+          evidenceDocumentId = uploadedDocument.id
+        }
+
+        await respondAdjustment.mutateAsync({
           serviceId: String(service.id),
-          file: values.evidenceFile,
-          documentType: 'supporting_attachment',
-          title: `Evidencia respuesta novedad ${selectedAdjustmentForCustomerResponse.itemName}`,
-          notes: values.notes?.trim() || undefined
+          adjustmentId: String(entry.adjustmentId),
+          decision: entry.decision,
+          responseChannel: entry.responseChannel,
+          responseReference: entry.responseReference,
+          notes: entry.notes,
+          evidenceDocumentId,
+          respondedAt: new Date().toISOString()
         })
-
-        evidenceDocumentId = uploadedDocument.id
+        successCount++
+      } catch (adjustmentError) {
+        console.error(adjustmentError)
+        failCount++
       }
+    }
 
-      await respondAdjustment.mutateAsync({
-        serviceId: String(service.id),
-        adjustmentId: String(selectedAdjustmentForCustomerResponse.id),
-        decision: values.decision,
-        responseChannel: values.responseChannel,
-        responseReference: values.responseReference,
-        notes: values.notes,
-        evidenceDocumentId,
-        respondedAt: new Date().toISOString()
-      })
-      toast.success('La respuesta del cliente quedó registrada.')
-      setSelectedAdjustmentForCustomerResponse(null)
-      setActiveTab('adjustments')
-    } catch (adjustmentError) {
-      console.error(adjustmentError)
-      toast.error('No pudimos registrar la respuesta del cliente.')
+    setSelectedAdjustmentsForCustomerResponse([])
+    setActiveTab('adjustments')
+
+    if (failCount === 0) {
+      toast.success(`${successCount} respuesta(s) registrada(s).`)
+    } else {
+      toast.error(`${successCount} registrada(s), ${failCount} fallida(s).`)
     }
   }
 
@@ -3494,8 +3506,8 @@ const CalibrationServiceDetailsPage = () => {
                     setSelectedAdjustmentsForReview(adjustments)
                     setSelectedAdjustmentReviewStage(reviewStage)
                   }}
-                  onSendToCustomer={(adjustment) => {
-                    setSelectedAdjustmentForSend(adjustment)
+                  onSendToCustomer={(adjustments) => {
+                    setSelectedAdjustmentsForSend(adjustments)
                     setSendAdjustmentPreview(
                       getEmailSendPreview(
                         service.contactEmail,
@@ -3503,8 +3515,8 @@ const CalibrationServiceDetailsPage = () => {
                       )
                     )
                   }}
-                  onRegisterCustomerResponse={(adjustment) =>
-                    setSelectedAdjustmentForCustomerResponse(adjustment)
+                  onRegisterCustomerResponse={(adjustments) =>
+                    setSelectedAdjustmentsForCustomerResponse(adjustments)
                   }
                   onGenerateDocument={handleGenerateAdjustmentPdf}
                   onGenerateSummaryDocument={handleGenerateAdjustmentSummaryPdf}
@@ -3921,26 +3933,26 @@ const CalibrationServiceDetailsPage = () => {
           onSubmit={handleReviewAdjustment}
         />
       ) : null}
-      {selectedAdjustmentForSend ? (
+      {selectedAdjustmentsForSend.length > 0 ? (
         <CalibrationServiceSendAdjustmentToCustomerDialog
-          open={Boolean(selectedAdjustmentForSend)}
+          open={selectedAdjustmentsForSend.length > 0}
           service={service}
-          adjustment={selectedAdjustmentForSend}
+          adjustments={selectedAdjustmentsForSend}
           isLoading={isOperationalBusy}
           sendPreview={sendAdjustmentPreview}
           onClose={() => {
-            setSelectedAdjustmentForSend(null)
+            setSelectedAdjustmentsForSend([])
             setSendAdjustmentPreview(null)
           }}
           onSubmit={handleSendAdjustmentToCustomer}
         />
       ) : null}
-      {selectedAdjustmentForCustomerResponse ? (
+      {selectedAdjustmentsForCustomerResponse.length > 0 ? (
         <CalibrationServiceAdjustmentCustomerResponseDialog
-          open={Boolean(selectedAdjustmentForCustomerResponse)}
-          adjustment={selectedAdjustmentForCustomerResponse}
+          open={selectedAdjustmentsForCustomerResponse.length > 0}
+          adjustments={selectedAdjustmentsForCustomerResponse}
           isLoading={isOperationalBusy}
-          onClose={() => setSelectedAdjustmentForCustomerResponse(null)}
+          onClose={() => setSelectedAdjustmentsForCustomerResponse([])}
           onSubmit={handleRegisterAdjustmentCustomerResponse}
         />
       ) : null}
