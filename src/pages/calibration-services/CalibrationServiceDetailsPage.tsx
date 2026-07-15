@@ -398,6 +398,7 @@ const CalibrationServiceDetailsPage = () => {
     createAdjustment,
     reviewAdjustment,
     sendAdjustmentToCustomer,
+    batchSendAdjustmentsToCustomer,
     respondAdjustment,
     updateCustomerSignature,
     markCutReadyForInvoicing,
@@ -2016,40 +2017,30 @@ const CalibrationServiceDetailsPage = () => {
       return
     }
 
-    let successCount = 0
-    let failCount = 0
-
-    for (const adj of pending) {
-      try {
-        const result = await sendAdjustmentToCustomer.mutateAsync({
-          serviceId: String(service.id),
-          adjustmentId: String(adj.id),
-          recipientEmail: values.recipientEmail,
-          recipientName: values.recipientName,
-          sentAt: new Date().toISOString()
-        })
-        successCount++
-        if (result.delivery?.actualRecipient) {
-          toast(
-            `Enviado a ${result.delivery.actualRecipient}`,
-            { duration: 3000, icon: '📧' }
-          )
-        }
-      } catch (sendError) {
-        console.error(sendError)
-        failCount++
+    try {
+      const result = await batchSendAdjustmentsToCustomer.mutateAsync({
+        serviceId: String(service.id),
+        adjustmentIds: pending.map((a) => a.id),
+        recipientEmail: values.recipientEmail,
+        recipientName: values.recipientName,
+        sentAt: new Date().toISOString()
+      })
+      if (result.delivery?.actualRecipient) {
+        toast(
+          `${result.delivery.adjustmentCount} novedades enviadas a ${result.delivery.actualRecipient}`,
+          { duration: 5000, icon: '📧' }
+        )
+      } else {
+        toast.success(`${pending.length} novedad(es) enviada(s) al cliente.`)
       }
+    } catch (sendError) {
+      console.error(sendError)
+      toast.error('No pudimos enviar las novedades al cliente.')
     }
 
     setSelectedAdjustmentsForSend([])
     setSendAdjustmentPreview(null)
     setActiveTab('adjustments')
-
-    if (failCount === 0) {
-      toast.success(`${successCount} novedad(es) enviada(s) al cliente.`)
-    } else {
-      toast.error(`${successCount} enviada(s), ${failCount} fallida(s).`)
-    }
   }
 
   const handleRegisterAdjustmentCustomerResponse = async (

@@ -410,6 +410,23 @@ const calibrationServiceApi = {
     return response.data
   },
 
+  batchSendAdjustmentsToCustomer: async ({
+    serviceId,
+    ...payload
+  }: {
+    serviceId: string
+    adjustmentIds: number[]
+    recipientEmail?: string | null
+    recipientName?: string | null
+    sentAt?: string
+  }): Promise<{ service: CalibrationService; delivery: CalibrationServiceAdjustmentSendResult['delivery'] }> => {
+    const response = await axiosPrivate.post<{ service: CalibrationService; delivery: CalibrationServiceAdjustmentSendResult['delivery'] }>(
+      `/calibration-services/${serviceId}/adjustments/batch/send-to-customer`,
+      payload
+    )
+    return response.data
+  },
+
   respondAdjustment: async ({
     serviceId,
     adjustmentId,
@@ -725,6 +742,7 @@ export const useCalibrationServiceMutations = () => {
   const createAdjustment = useMutation(calibrationServiceApi.createAdjustment, { onSuccess: (s: any) => { iA(); iD(s.id) } })
   const reviewAdjustment = useMutation(calibrationServiceApi.reviewAdjustment, { onSuccess: (s: any) => { iA(); iD(s.id) } })
   const sendAdjustmentToCustomer = useMutation(calibrationServiceApi.sendAdjustmentToCustomer, { onSuccess: ({ service }: any) => { iA(); iD(service.id) } })
+  const batchSendAdjustmentsToCustomer = useMutation(calibrationServiceApi.batchSendAdjustmentsToCustomer, { onSuccess: ({ service }: any) => { iA(); iD(service.id) } })
   const respondAdjustment = useMutation(calibrationServiceApi.respondAdjustment, { onSuccess: (s: any) => { iA(); iD(s.id) } })
   const markCutReadyForInvoicing = useMutation(calibrationServiceApi.markCutReadyForInvoicing, { onSuccess: (s: any) => { iA(); iD(s.id) } })
   const markCutInvoiced = useMutation(calibrationServiceApi.markCutInvoiced, { onSuccess: (s: any) => { iA(); iD(s.id) } })
@@ -744,5 +762,5 @@ export const useCalibrationServiceMutations = () => {
   const updateExecutionCustomer = useMutation(calibrationServiceApi.updateExecutionCustomer, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail]) } })
   const upsertQuoteTermsTemplate = useMutation(calibrationServiceApi.upsertQuoteTermsTemplate, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template']) } })
 
-  return { createService, updateService, uploadDocument, requestApproval, approveService, rejectService, requestChanges, issueOds, scheduleService, rescheduleService, reassignService, pauseService, resumeService, cancelService, startExecution, completeExecution, closeService, updateItemProgress, registerPhysicalTraceability, updateLogisticsControl, createCut, createAdjustment, reviewAdjustment, sendAdjustmentToCustomer, respondAdjustment, markCutReadyForInvoicing, markCutInvoiced, registerCutPayment, updateCutDocumentControl, generateQuotePdf, generateOdsPdf, generateAdjustmentPdf, generateAdjustmentSummaryPdf, generateLogisticsPdf, sendLogisticsControlEmail, downloadDocument, upsertSequenceConfig, upsertSlaConfig, upsertQuoteTermsTemplate, updateCustomerSignature, updateDeliverySignature, updateExecutionCustomer }
+  return { createService, updateService, uploadDocument, requestApproval, approveService, rejectService, requestChanges, issueOds, scheduleService, rescheduleService, reassignService, pauseService, resumeService, cancelService, startExecution, completeExecution, closeService, updateItemProgress, registerPhysicalTraceability, updateLogisticsControl, createCut, createAdjustment, reviewAdjustment, sendAdjustmentToCustomer, batchSendAdjustmentsToCustomer, respondAdjustment, markCutReadyForInvoicing, markCutInvoiced, registerCutPayment, updateCutDocumentControl, generateQuotePdf, generateOdsPdf, generateAdjustmentPdf, generateAdjustmentSummaryPdf, generateLogisticsPdf, sendLogisticsControlEmail, downloadDocument, upsertSequenceConfig, upsertSlaConfig, upsertQuoteTermsTemplate, updateCustomerSignature, updateDeliverySignature, updateExecutionCustomer }
 }
