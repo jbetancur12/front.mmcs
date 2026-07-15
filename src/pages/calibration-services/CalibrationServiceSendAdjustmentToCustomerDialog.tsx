@@ -86,8 +86,9 @@ const CalibrationServiceSendAdjustmentToCustomerDialog = ({
         <Stack spacing={2.5} sx={{ mt: 0.5 }}>
           {adjustments.length > 1 ? (
             <Alert severity='info'>
-              Se enviarán <strong>{adjustments.length} novedades</strong> en correos
-              individuales al mismo destinatario. Cada correo detalla una novedad.
+              Se enviará un <strong>solo correo</strong> con las{' '}
+              <strong>{adjustments.length} novedades</strong> consolidadas.
+              El cliente ve todo en un solo mensaje.
             </Alert>
           ) : (
             <Typography variant='body2' color='text.secondary'>
@@ -170,7 +171,7 @@ const CalibrationServiceSendAdjustmentToCustomerDialog = ({
           disabled={isLoading || isSending || !recipientEmail.trim()}
         >
           {adjustments.length > 1
-            ? `Enviar ${adjustments.length} correos`
+            ? `Enviar consolidado (${adjustments.length})`
             : 'Enviar correo'}
         </Button>
       </DialogActions>
