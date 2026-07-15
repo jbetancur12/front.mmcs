@@ -252,9 +252,6 @@ const CalibrationServiceAdjustmentsPanel = ({
                   otherFields.contractModificationRequired !== false
                 const hasTechnicalApproval =
                   otherFields.technicalDecision === 'approved'
-                const hasTechnicalDecision = Boolean(
-                  otherFields.technicalDecision
-                )
                 const canRunTechnicalReview =
                   canTechnicalReview &&
                   [
