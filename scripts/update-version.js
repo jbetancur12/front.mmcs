@@ -92,6 +92,12 @@ if (changelogRegex.test(newContent)) {
   );
 }
 
+// Actualizar package.json
+const packagePath = path.join(__dirname, '../package.json');
+const packageContent = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+packageContent.version = newVersion;
+fs.writeFileSync(packagePath, JSON.stringify(packageContent, null, 2) + '\n');
+
 // Escribir archivo actualizado
 fs.writeFileSync(versionPath, newContent);
 
