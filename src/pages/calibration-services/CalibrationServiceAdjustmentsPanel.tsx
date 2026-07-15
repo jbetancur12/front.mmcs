@@ -405,7 +405,6 @@ const CalibrationServiceAdjustmentsPanel = ({
                           </Button>
                         ) : null}
                         {canTechnicalReview &&
-                        hasTechnicalDecision &&
                         [
                           'customer_changes_requested',
                           'customer_rejected'
@@ -417,8 +416,7 @@ const CalibrationServiceAdjustmentsPanel = ({
                               onReview(
                                 adjustments.filter(
                                   (a) =>
-                                    ['customer_changes_requested', 'customer_rejected'].includes(a.status) &&
-                                    !(getAdjustmentOtherFields(a).technicalDecision === 'approved')
+                                    ['customer_changes_requested', 'customer_rejected'].includes(a.status)
                                 ),
                                 'technical'
                               )
