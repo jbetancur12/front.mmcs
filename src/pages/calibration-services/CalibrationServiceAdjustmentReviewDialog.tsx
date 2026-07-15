@@ -472,14 +472,59 @@ const CalibrationServiceAdjustmentReviewDialog = ({
           </Stack>
 
           {/* ── Per-item section: changes on each navigation ── */}
-          <Stack spacing={2}>
+          <Stack
+            spacing={2}
+            sx={{
+              p: 2,
+              bgcolor: 'info.soft',
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'info.light'
+            }}
+          >
             <Typography variant='subtitle2' fontWeight={800}>
               Novedad actual
             </Typography>
-            <Typography variant='body2' color='text.secondary'>
-              {adjustment?.itemName || 'Sin ítem'} ·{' '}
-              {adjustment?.description || ''}
-            </Typography>
+            <Stack
+              direction='row'
+              spacing={1.5}
+              alignItems='center'
+              sx={{
+                bgcolor: 'background.paper',
+                borderRadius: 1.5,
+                p: 1.5,
+                border: '1px solid',
+                borderColor: 'secondary.light'
+              }}
+            >
+              <Typography
+                variant='body1'
+                fontWeight={700}
+                color='primary.main'
+              >
+                {adjustment?.itemName || 'Sin ítem'}
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                ·
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                {adjustment?.description || ''}
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                ·
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                {adjustment?.changeType
+                  ? ({
+                      quantity_less: 'Cant. menor',
+                      quantity_more: 'Cant. mayor',
+                      extra_item: 'Item adicional',
+                      not_received: 'No recibido',
+                      scope_change: 'Cambio alcance'
+                    }[adjustment.changeType] || adjustment.changeType)
+                  : ''}
+              </Typography>
+            </Stack>
 
             {isTechnicalReview ? (
               <Stack spacing={2}>
