@@ -404,7 +404,7 @@ const CalibrationServiceAdjustmentsPanel = ({
                             Revisión comercial
                           </Button>
                         ) : null}
-                        {canTechnicalReview &&
+                        {(canTechnicalReview || canCommercialReview) &&
                         [
                           'customer_changes_requested',
                           'customer_rejected'
@@ -418,7 +418,7 @@ const CalibrationServiceAdjustmentsPanel = ({
                                   (a) =>
                                     ['customer_changes_requested', 'customer_rejected'].includes(a.status)
                                 ),
-                                'technical'
+                                hasTechnicalApproval ? 'commercial' : 'technical'
                               )
                             }
                             disabled={isBusy}
