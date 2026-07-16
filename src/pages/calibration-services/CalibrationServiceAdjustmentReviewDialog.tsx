@@ -218,6 +218,8 @@ const CalibrationServiceAdjustmentReviewDialog = ({
   const needsPricing = Boolean(adjustment?.requiresCommercialAdjustment)
   const isQuantityMore = adjustment?.changeType === 'quantity_more'
   const isQuantityLess = adjustment?.changeType === 'quantity_less'
+  const isNotReceived = adjustment?.changeType === 'not_received'
+  const isCreditType = isQuantityLess || isNotReceived
   const hasQuotedItemPrice =
     adjustment?.serviceItem?.unitPrice !== null &&
     adjustment?.serviceItem?.unitPrice !== undefined
@@ -261,11 +263,11 @@ const CalibrationServiceAdjustmentReviewDialog = ({
   const approvedTaxTotal = approvedSubtotal * (approvedTaxRateNumber / 100)
   const approvedTotal = approvedSubtotal + approvedTaxTotal
   const signedSubtotal =
-    isQuantityLess && applyDiscount ? -approvedSubtotal : approvedSubtotal
+    isCreditType ? -approvedSubtotal : approvedSubtotal
   const signedTaxTotal =
-    isQuantityLess && applyDiscount ? -approvedTaxTotal : approvedTaxTotal
+    isCreditType ? -approvedTaxTotal : approvedTaxTotal
   const signedTotal =
-    isQuantityLess && applyDiscount ? -approvedTotal : approvedTotal
+    isCreditType ? -approvedTotal : approvedTotal
   const canSubmit =
     (!commonContractModification || Boolean(commonSupportChannel)) &&
     (isTechnicalReview ||
@@ -278,6 +280,8 @@ const CalibrationServiceAdjustmentReviewDialog = ({
 
     setIsSaving(true)
     try {
+      const autoApplyDiscount = isCreditType
+
       if (isTechnicalReview) {
         await onSubmit(adjustment.id, {
           reviewStage,
@@ -300,25 +304,13 @@ const CalibrationServiceAdjustmentReviewDialog = ({
           supportNotifiedAt: new Date().toISOString(),
           commercialNotes: commercialNotes.trim() || null,
           pricingNotes: pricingNotes.trim() || null,
-          approvedUnitPrice:
-            approvedUnitPrice && (!isQuantityLess || applyDiscount)
-              ? Number(approvedUnitPrice)
-              : 0,
+          approvedUnitPrice: approvedUnitPrice ? Number(approvedUnitPrice) : 0,
           approvedTaxRate: approvedTaxRate ? Number(approvedTaxRate) : null,
-          approvedTaxTotal:
-            approvedUnitPrice && (!isQuantityLess || applyDiscount)
-              ? signedTaxTotal
-              : 0,
-          approvedSubtotal:
-            approvedUnitPrice && (!isQuantityLess || applyDiscount)
-              ? signedSubtotal
-              : 0,
-          approvedTotal:
-            approvedUnitPrice && (!isQuantityLess || applyDiscount)
-              ? signedTotal
-              : 0,
+          approvedTaxTotal: approvedUnitPrice ? signedTaxTotal : 0,
+          approvedSubtotal: approvedUnitPrice ? signedSubtotal : 0,
+          approvedTotal: approvedUnitPrice ? signedTotal : 0,
           useQuotedPrice,
-          applyDiscount,
+          applyDiscount: autoApplyDiscount,
           customerApprovalRequired
         })
       }
@@ -486,9 +478,6 @@ const CalibrationServiceAdjustmentReviewDialog = ({
               Novedad actual
             </Typography>
             <Stack
-              direction='row'
-              spacing={1.5}
-              alignItems='center'
               sx={{
                 bgcolor: 'background.paper',
                 borderRadius: 1.5,
@@ -496,34 +485,38 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                 border: '1px solid',
                 borderColor: 'secondary.light'
               }}
+              spacing={1}
             >
-              <Typography
-                variant='body1'
-                fontWeight={700}
-                color='primary.main'
-              >
-                {adjustment?.itemName || 'Sin ítem'}
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                ·
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                {adjustment?.description || ''}
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                ·
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                {adjustment?.changeType
-                  ? ({
+              <Stack direction='row' spacing={1} alignItems='center' flexWrap='wrap'>
+                <Typography variant='body1' fontWeight={700} color='primary.main'>
+                  {adjustment?.itemName || 'Sin ítem'}
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  · {({
                       quantity_less: 'Cant. menor',
                       quantity_more: 'Cant. mayor',
                       extra_item: 'Item adicional',
                       not_received: 'No recibido',
                       scope_change: 'Cambio alcance'
-                    }[adjustment.changeType] || adjustment.changeType)
-                  : ''}
-              </Typography>
+                    }[adjustment?.changeType || ''] || adjustment?.changeType || '')}
+                </Typography>
+              </Stack>
+              <Stack direction='row' spacing={2} flexWrap='wrap'>
+                <Typography variant='caption' color='text.secondary'>
+                  Cotizado: <strong>{adjustment?.quotedQuantity ?? '—'}</strong>
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  Real: <strong>{adjustment?.actualQuantity ?? '—'}</strong>
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  Diferencia: <strong sx={{ color: (adjustment?.differenceQuantity || 0) > 0 ? 'error.main' : 'success.main' }}>
+                    {adjustment?.differenceQuantity ?? '—'}
+                  </strong>
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  {adjustment?.description ? `· ${adjustment.description}` : ''}
+                </Typography>
+              </Stack>
             </Stack>
 
             {isTechnicalReview ? (
@@ -641,21 +634,6 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                         />
                       </Grid>
                     ) : null}
-                    {isQuantityLess ? (
-                      <Grid item xs={12}>
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={applyDiscount}
-                              onChange={(event) =>
-                                setApplyDiscount(event.target.checked)
-                              }
-                            />
-                          }
-                          label='Descontar del valor original por la menor cantidad recibida o ejecutada'
-                        />
-                      </Grid>
-                    ) : null}
                     <Grid item xs={12} md={4}>
                       <TextField
                         fullWidth
@@ -697,7 +675,11 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                           inputComponent: NumericFormatCustom as never,
                           readOnly: true
                         }}
-                        helperText='Se calcula automáticamente'
+                        helperText={
+                          isCreditType
+                            ? 'Valor negativo por menor cantidad (crédito)'
+                            : 'Se calcula automáticamente'
+                        }
                       />
                     </Grid>
                     <Grid item xs={12} md={4}>
@@ -722,8 +704,8 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                           readOnly: true
                         }}
                         helperText={
-                          isQuantityLess && !applyDiscount
-                            ? 'No se aplicará descuento económico'
+                          isCreditType
+                            ? 'Valor negativo: se descuenta automáticamente por ser menor cantidad'
                             : 'Se calcula automáticamente'
                         }
                       />
