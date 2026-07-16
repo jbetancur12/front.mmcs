@@ -143,6 +143,7 @@ const CalibrationServiceAdjustmentDialog = ({
   const isExtraItem = changeType === 'extra_item'
   const isQuantityMore = changeType === 'quantity_more'
   const isQuantityLess = changeType === 'quantity_less'
+  const isNotReceived = changeType === 'not_received'
   const actualQuantityLabel = isExtraItem
     ? 'Cantidad real'
     : isQuantityMore
@@ -158,9 +159,27 @@ const CalibrationServiceAdjustmentDialog = ({
         ? 'Escribe la cantidad total realmente recibida o ejecutada.'
         : 'Indica la cantidad real total del ítem.'
   const selectedBatchItems = selectedItems.filter((item) => item.selected)
+
+  const quantityErrors = useMemo(() => {
+    if (isExtraItem || isNotReceived) return []
+    const errors: string[] = []
+    for (const item of selectedBatchItems) {
+      const actual = Number(item.actualQuantity)
+      if (Number.isNaN(actual)) continue
+      if (isQuantityMore && actual <= item.quotedQuantity) {
+        errors.push(`${item.itemName}: Cant. real (${actual}) debe ser MAYOR que cotizada (${item.quotedQuantity})`)
+      }
+      if (isQuantityLess && actual >= item.quotedQuantity) {
+        errors.push(`${item.itemName}: Cant. real (${actual}) debe ser MENOR que cotizada (${item.quotedQuantity})`)
+      }
+    }
+    return errors
+  }, [selectedBatchItems, isQuantityMore, isQuantityLess, isExtraItem, isNotReceived])
+
   const canSubmit =
     description.trim().length >= 5 &&
     (!contractModificationRequired || Boolean(supportChannel)) &&
+    quantityErrors.length === 0 &&
     (isExtraItem
       ? actualQuantity.trim() && itemName.trim()
       : selectedBatchItems.length > 0 &&
@@ -577,6 +596,15 @@ const CalibrationServiceAdjustmentDialog = ({
           </Grid>
         </Stack>
       </DialogContent>
+      {quantityErrors.length > 0 ? (
+        <Stack spacing={0.5} sx={{ px: 3, py: 1 }}>
+          {quantityErrors.map((err, i) => (
+            <Typography key={i} variant='caption' color='error.main'>
+              ⚠ {err}
+            </Typography>
+          ))}
+        </Stack>
+      ) : null}
       <DialogActions>
         <Button onClick={onClose} disabled={isLoading}>
           Cancelar
