@@ -104,7 +104,6 @@ const CalibrationServiceAdjustmentReviewDialog = ({
   const [approvedUnitPrice, setApprovedUnitPrice] = useState('')
   const [approvedTaxRate, setApprovedTaxRate] = useState('')
   const [useQuotedPrice, setUseQuotedPrice] = useState(false)
-  const [applyDiscount, setApplyDiscount] = useState(true)
   const [customerApprovalRequired, setCustomerApprovalRequired] = useState(false)
 
   // Reset per-item fields on navigation
@@ -157,12 +156,6 @@ const CalibrationServiceAdjustmentReviewDialog = ({
               adjustment.serviceItem?.unitPrice !== null &&
                 adjustment.serviceItem?.unitPrice !== undefined
             )
-    )
-    setApplyDiscount(
-      adjustment.otherFields &&
-        typeof adjustment.otherFields.applyDiscount === 'boolean'
-        ? adjustment.otherFields.applyDiscount
-        : adjustment.changeType === 'quantity_less'
     )
     setCustomerApprovalRequired(
       adjustment.otherFields &&
