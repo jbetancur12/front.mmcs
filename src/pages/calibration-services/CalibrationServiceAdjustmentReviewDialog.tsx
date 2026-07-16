@@ -509,9 +509,17 @@ const CalibrationServiceAdjustmentReviewDialog = ({
                   Real: <strong>{adjustment?.actualQuantity ?? '—'}</strong>
                 </Typography>
                 <Typography variant='caption' color='text.secondary'>
-                  Diferencia: <strong sx={{ color: (adjustment?.differenceQuantity || 0) > 0 ? 'error.main' : 'success.main' }}>
-                    {adjustment?.differenceQuantity ?? '—'}
-                  </strong>
+                  Diferencia:{' '}
+                  <Typography
+                    component='span'
+                    variant='caption'
+                    fontWeight={700}
+                    color={(adjustment?.differenceQuantity || 0) > 0 ? 'warning.main' : 'text.primary'}
+                  >
+                    {adjustment?.differenceQuantity != null
+                      ? `${adjustment.differenceQuantity > 0 ? '+' : ''}${adjustment.differenceQuantity}`
+                      : '—'}
+                  </Typography>
                 </Typography>
                 <Typography variant='caption' color='text.secondary'>
                   {adjustment?.description ? `· ${adjustment.description}` : ''}
