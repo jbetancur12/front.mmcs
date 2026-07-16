@@ -1,5 +1,6 @@
 import { ChangeEvent, useEffect, useMemo, useState } from 'react'
 import {
+  Alert,
   Button,
   Checkbox,
   Dialog,
@@ -68,14 +69,34 @@ const CalibrationServiceAdjustmentDialog = ({
   onClose,
   onSubmit
 }: CalibrationServiceAdjustmentDialogProps) => {
+  const itemsWithAdjustment = useMemo(
+    () => new Set(
+      (service.adjustments || [])
+        .filter((adj) => adj.status !== 'rejected' && adj.serviceItemId != null)
+        .map((adj) => adj.serviceItemId)
+    ),
+    [service.adjustments]
+  )
+
+  const blockedCount = useMemo(
+    () => (service.items || []).filter(
+      (item) =>
+        (item.otherFields?.operationalStatus === 'completed' ||
+         item.otherFields?.operationalStatus === 'in_progress') &&
+        itemsWithAdjustment.has(item.id)
+    ).length,
+    [service.items, itemsWithAdjustment]
+  )
+
   const eligibleItems = useMemo(
     () =>
       (service.items || []).filter(
         (item) =>
-          item.otherFields?.operationalStatus === 'completed' ||
-          item.otherFields?.operationalStatus === 'in_progress'
+          (item.otherFields?.operationalStatus === 'completed' ||
+           item.otherFields?.operationalStatus === 'in_progress') &&
+          !itemsWithAdjustment.has(item.id)
       ),
-    [service.items]
+    [service.items, itemsWithAdjustment]
   )
 
   const [serviceItemId, setServiceItemId] = useState<string>('')
@@ -518,6 +539,12 @@ const CalibrationServiceAdjustmentDialog = ({
                       `${from}–${to} de ${count}`
                     }
                   />
+                  {blockedCount > 0 ? (
+                    <Alert severity='info' sx={{ mt: 1 }}>
+                      {blockedCount} ítem(s) ya tienen novedad registrada y no aparecen
+                      en la lista. Solo se permite una novedad por ítem.
+                    </Alert>
+                  ) : null}
                   {selectedBatchItems.length > 0 && (
                     <Typography variant='caption' color='primary' sx={{ pl: 0.5 }}>
                       {selectedBatchItems.length} ítem
