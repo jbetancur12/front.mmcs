@@ -158,6 +158,18 @@ const CalibrationServiceAdjustmentDialog = ({
       : isQuantityLess
         ? 'Escribe la cantidad total realmente recibida o ejecutada.'
         : 'Indica la cantidad real total del ítem.'
+  const getEffectiveQuantity = (itemId: number) => {
+    const serviceItem = eligibleItems.find((i) => i.id === itemId)
+    if (!serviceItem) return 0
+    const approvedDelta = (service.adjustments || []).reduce((acc, adj) => {
+      if (adj.serviceItemId !== itemId) return acc
+      if (!['approved', 'applied_to_cut'].includes(adj.status)) return acc
+      if (adj.changeType === 'extra_item') return acc
+      return acc + (adj.differenceQuantity || 0)
+    }, 0)
+    return Math.max((serviceItem.quantity || 0) + approvedDelta, 0)
+  }
+
   const selectedBatchItems = selectedItems.filter((item) => item.selected)
 
   const quantityErrors = useMemo(() => {
@@ -405,8 +417,11 @@ const CalibrationServiceAdjustmentDialog = ({
                           <TableCell sx={{ fontWeight: 600 }}>
                             Ítem
                           </TableCell>
-                          <TableCell sx={{ fontWeight: 600 }} width={120}>
+                          <TableCell sx={{ fontWeight: 600 }} width={80}>
                             Cotizado
+                          </TableCell>
+                          <TableCell sx={{ fontWeight: 600 }} width={80}>
+                            Efectivo
                           </TableCell>
                           <TableCell sx={{ fontWeight: 600 }} width={200}>
                             {actualQuantityLabel}
@@ -450,6 +465,11 @@ const CalibrationServiceAdjustmentDialog = ({
                             <TableCell>
                               <Typography variant='body2' color='text.secondary'>
                                 {item.quotedQuantity}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant='body2' fontWeight={600}>
+                                {getEffectiveQuantity(item.serviceItemId)}
                               </Typography>
                             </TableCell>
                             <TableCell>
