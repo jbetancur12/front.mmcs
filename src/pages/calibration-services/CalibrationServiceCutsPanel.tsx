@@ -1,4 +1,5 @@
-import { Alert, Box, Button, Chip, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
+import { useState } from 'react'
+import { Alert, Box, Button, Chip, Dialog, DialogContent, DialogTitle, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
 import { CalibrationServiceCut } from '../../types/calibrationService'
 import {
   CALIBRATION_SERVICE_CUT_DOCUMENT_STATUS_LABELS,
@@ -35,11 +36,14 @@ const CalibrationServiceCutsPanel = ({
   onRegisterPayment,
   onUpdateDocumentControl
 }: CalibrationServiceCutsPanelProps) => {
+  const [detailCut, setDetailCut] = useState<CalibrationServiceCut | null>(null)
+
   if (!cuts.length) {
     return <Alert severity='info'>Este servicio todavía no tiene cortes creados.</Alert>
   }
 
   return (
+    <>
     <Box sx={{ overflowX: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
       <Table size='small'>
         <TableHead>
@@ -89,13 +93,19 @@ const CalibrationServiceCutsPanel = ({
                 />
               </TableCell>
               <TableCell>
-                <Stack spacing={0.5}>
-                  {(cut.items || []).map((item) => (
-                    <Typography key={item.id} variant='body2'>
-                      {item.serviceItem?.itemName || `Ítem ${item.serviceItemId}`} · {item.quantity}
-                    </Typography>
-                  ))}
-                </Stack>
+                <Chip
+                  size='small'
+                  color='primary'
+                  variant='filled'
+                  label={`${(cut.items || []).length} ítems`}
+                  onClick={() => setDetailCut(cut)}
+                  sx={{
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    transition: 'all 0.2s ease',
+                    '&:hover': { transform: 'scale(1.06)' }
+                  }}
+                />
               </TableCell>
               <TableCell>
                 {cut.releasedAt
@@ -211,6 +221,28 @@ const CalibrationServiceCutsPanel = ({
         </TableBody>
       </Table>
     </Box>
+    <Dialog open={!!detailCut} onClose={() => setDetailCut(null)} maxWidth='xs' fullWidth>
+      <DialogTitle>Items del corte</DialogTitle>
+      <DialogContent>
+        <Table size='small'>
+          <TableHead>
+            <TableRow>
+              <TableCell>Nombre</TableCell>
+              <TableCell align='right'>Cantidad</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {(detailCut?.items || []).map(item => (
+              <TableRow key={item.id}>
+                <TableCell>{item.serviceItem?.itemName || `Ítem ${item.serviceItemId}`}</TableCell>
+                <TableCell align='right'>{item.quantity}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }
 
