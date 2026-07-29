@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import {
   Alert,
@@ -288,14 +288,8 @@ const CalibrationServiceWorkspacePage = () => {
     isLoading: isLoadingSequenceConfig
   } = useCalibrationServiceSequenceConfig(canAccessWorkspace)
   const { data: service, isLoading: isLoadingService } = useCalibrationService(serviceId)
-  const { data: quoteTermsTemplate } =
+  const { data: quoteTermsTemplate, isLoading: isLoadingTemplate } =
     useCalibrationServiceQuoteTermsTemplate(canAccessWorkspace && !isEditing)
-
-  useEffect(() => {
-    if (!isEditing && canAccessWorkspace) {
-      queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template'])
-    }
-  }, [isEditing, canAccessWorkspace, queryClient])
   const {
     createService,
     updateService,
@@ -339,7 +333,7 @@ const CalibrationServiceWorkspacePage = () => {
   const [requestEvidenceFile, setRequestEvidenceFile] = useState<File | null>(null)
   const [requestEvidenceTitle, setRequestEvidenceTitle] = useState('')
   const [hydrated, setHydrated] = useState(false)
-  const [templateHydrated, setTemplateHydrated] = useState(false)
+  const templateHydratedRef = useRef(false)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
   const [customerDialogMode, setCustomerDialogMode] = useState<'customer' | 'site' | null>(null)
   const [catalogPickerOpen, setCatalogPickerOpen] = useState(false)
@@ -489,8 +483,9 @@ const CalibrationServiceWorkspacePage = () => {
   }, [hydrated, service])
 
   useEffect(() => {
-    if (isEditing || templateHydrated || !quoteTermsTemplate?.terms) return
+    if (isEditing || templateHydratedRef.current || isLoadingTemplate || !quoteTermsTemplate?.terms) return
 
+    templateHydratedRef.current = true
     setFormState((previous) => ({
       ...previous,
       quoteTerms: mergeCalibrationQuoteTerms(quoteTermsTemplate.terms),
@@ -498,8 +493,7 @@ const CalibrationServiceWorkspacePage = () => {
         stripHtml(quoteTermsTemplate.terms.commercialComments) ||
         previous.commercialComments
     }))
-    setTemplateHydrated(true)
-  }, [isEditing, quoteTermsTemplate?.terms, templateHydrated])
+  }, [isEditing, isLoadingTemplate, quoteTermsTemplate?.terms])
 
   const customerOptions =
     customers.length > 0
