@@ -513,7 +513,7 @@ const CalibrationServiceDetailsPage = () => {
   const canGenerateQuotePdf = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const canGenerateOdsPdf = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
   const canEditExecutionCustomerRole =
-    useHasRole(['admin', 'super_admin', 'calibration_coordinator'])
+    useHasRole(['admin', 'super_admin', 'calibration_coordinator', 'comp_admin', 'comp_requester', 'comp_supervisor'])
   const { data: assignableMetrologists = [] } =
     useCalibrationAssignableMetrologists(canScheduleServiceRole)
   const requestedAction = searchParams.get('open')
@@ -3968,7 +3968,7 @@ const CalibrationServiceDetailsPage = () => {
           <Stack spacing={2} sx={{ mt: 0.5 }}>
             <Typography variant='body2' color='text.secondary'>
               Define o actualiza el cliente y sede donde realmente se presta el
-              servicio. Solo editable si aún no se ha emitido la ODS.
+              servicio.
             </Typography>
             <TextField
               fullWidth
