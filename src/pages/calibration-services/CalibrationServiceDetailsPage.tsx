@@ -1480,8 +1480,6 @@ const CalibrationServiceDetailsPage = () => {
           : undefined,
         executionCustomerName: values.executionCustomerName.trim() || null,
         executionSiteName: values.executionSiteName.trim() || null,
-        contactName: values.contactName.trim() || null,
-        contactEmail: values.contactEmail.trim() || null,
         internalNotes: values.internalNotes.trim() || null,
         scheduledFor: values.scheduledFor
           ? new Date(`${values.scheduledFor}T12:00:00`).toISOString()
