@@ -329,7 +329,19 @@ const CalibrationServiceWorkspacePage = () => {
     staleTime: 5 * 60 * 1000
   })
 
-  const [formState, setFormState] = useState<FormState>(createInitialFormState)
+  const [formState, setFormState] = useState<FormState>(() => {
+    const cached = queryClient.getQueryData<{ terms: CalibrationServiceQuoteTerms }>(
+      [CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template']
+    )
+    if (cached?.terms) {
+      return {
+        ...createInitialFormState(),
+        quoteTerms: mergeCalibrationQuoteTerms(cached.terms),
+        commercialComments: stripHtml(cached.terms.commercialComments) || ''
+      }
+    }
+    return createInitialFormState()
+  })
   const [requestEvidenceFile, setRequestEvidenceFile] = useState<File | null>(null)
   const [requestEvidenceTitle, setRequestEvidenceTitle] = useState('')
   const [hydrated, setHydrated] = useState(false)
