@@ -1230,12 +1230,6 @@ const CalibrationServiceDetailsPage = () => {
     executionCustomerName:
       service.executionCustomerName || service.customer?.nombre || '',
     executionSiteName: service.executionSiteName || service.customerSite || '',
-    contactName: service.contactName || '',
-    contactEmail: service.contactEmail || '',
-    contactPhone: service.contactPhone || '',
-    city: service.city || '',
-    department: service.department || '',
-    address: service.address || '',
     internalNotes: service.internalNotes || '',
     scheduledFor:
       typeof odsDetails?.scheduledFor === 'string'
@@ -1488,10 +1482,6 @@ const CalibrationServiceDetailsPage = () => {
         executionSiteName: values.executionSiteName.trim() || null,
         contactName: values.contactName.trim() || null,
         contactEmail: values.contactEmail.trim() || null,
-        contactPhone: values.contactPhone.trim() || null,
-        city: values.city.trim() || null,
-        department: values.department.trim() || null,
-        address: values.address.trim() || null,
         internalNotes: values.internalNotes.trim() || null,
         scheduledFor: values.scheduledFor
           ? new Date(`${values.scheduledFor}T12:00:00`).toISOString()

@@ -18,13 +18,6 @@ export interface CalibrationServiceOdsDialogValues {
   issuedAt: string
   executionCustomerName: string
   executionSiteName: string
-  contactName: string
-  contactEmail: string
-  contactPhone: string
-  city: string
-  department: string
-  address: string
-  internalNotes: string
   scheduledFor: string
   scheduleWindow: string
   serviceComments: string
@@ -34,6 +27,7 @@ export interface CalibrationServiceOdsDialogValues {
   signerRole: string
   externalReference: string
   receptionNotes: string
+  internalNotes: string
   generatePdfImmediately: boolean
 }
 
@@ -162,69 +156,6 @@ const CalibrationServiceOdsDialog = ({
                 value={values.executionSiteName}
                 disabled={isLoading}
                 onChange={(event) => setField('executionSiteName', event.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label='Contacto'
-                value={values.contactName}
-                disabled={isLoading}
-                onChange={(event) => setField('contactName', event.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label='Email'
-                value={values.contactEmail}
-                disabled={isLoading}
-                onChange={(event) => setField('contactEmail', event.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label='Teléfono'
-                value={values.contactPhone}
-                disabled={isLoading}
-                onChange={(event) => setField('contactPhone', event.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label='Ciudad'
-                value={values.city}
-                disabled={isLoading}
-                onChange={(event) => setField('city', event.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label='Departamento'
-                value={values.department}
-                disabled={isLoading}
-                onChange={(event) => setField('department', event.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label='Referencia externa'
-                value={values.externalReference}
-                disabled={isLoading}
-                onChange={(event) => setField('externalReference', event.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label='Dirección'
-                value={values.address}
-                disabled={isLoading}
-                onChange={(event) => setField('address', event.target.value)}
               />
             </Grid>
           </Grid>
