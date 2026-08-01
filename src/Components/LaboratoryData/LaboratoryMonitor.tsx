@@ -38,6 +38,7 @@ import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import HistoricalCharts from './HistoricalCharts'
 import html2canvas from 'html2canvas'
+import { jsPDF } from 'jspdf'
 import { FileDownloadOutlined } from '@mui/icons-material'
 import LaboratoryMqttGuide from '../LaboratoryMqttGuide'
 
@@ -341,16 +342,49 @@ const LaboratoryMonitor: React.FC = () => {
 
   const handleCaptura = async () => {
     if (boxRef.current) {
-      html2canvas(boxRef.current).then((canvas) => {
-        const imageUrl = canvas.toDataURL('image/png')
+      const canvas = await html2canvas(boxRef.current, { scale: 2 })
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const pageHeight = pdf.internal.pageSize.getHeight()
+      const imgWidth = pageWidth
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+      const scale = pageHeight / imgHeight
+      const height = scale < 1 ? imgHeight * scale : imgHeight
 
-        const link = document.createElement('a')
-        link.href = imageUrl
-        link.download = `Control de condiciones ambientales ${format(selectedDate || new Date(), 'yyyy-MM-dd')}.png`
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-      })
+      let heightLeft = height
+      let position = 0
+
+      pdf.addImage(
+        canvas.toDataURL('image/png'),
+        'PNG',
+        0,
+        position,
+        imgWidth,
+        height,
+        undefined,
+        'FAST'
+      )
+      heightLeft -= pageHeight
+
+      while (heightLeft > 0) {
+        position = heightLeft - height
+        pdf.addPage()
+        pdf.addImage(
+          canvas.toDataURL('image/png'),
+          'PNG',
+          0,
+          position,
+          imgWidth,
+          height,
+          undefined,
+          'FAST'
+        )
+        heightLeft -= pageHeight
+      }
+
+      pdf.save(
+        `Control de condiciones ambientales ${format(selectedDate || new Date(), 'yyyy-MM-dd')}.pdf`
+      )
     } else {
       console.error('La referencia al elemento no está disponible.')
     }
