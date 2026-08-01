@@ -277,11 +277,11 @@ const SupplierDetailsPage: React.FC = () => {
         return
       }
 
-      const maxSizeInBytes = 5 * 1024 * 1024 // 5MB
+      const maxSizeInBytes = 10 * 1024 * 1024 // 10MB
       if (file.size > maxSizeInBytes) {
         Swal.fire(
           'Archivo Demasiado Grande',
-          `El archivo seleccionado excede el tamaño máximo permitido de 5MB. Tamaño actual: ${(file.size / 1024 / 1024).toFixed(2)}MB`,
+          `El archivo seleccionado excede el tamaño máximo permitido de 10MB. Tamaño actual: ${(file.size / 1024 / 1024).toFixed(2)}MB`,
           'error'
         )
         event.target.value = '' // Limpiar el input
@@ -677,6 +677,9 @@ const SupplierDetailsPage: React.FC = () => {
           Documentos Requeridos (
           {supplier.typePerson === 1 ? 'Persona Natural' : 'Persona Jurídica'})
         </Typography>
+        <Alert severity='info' sx={{ mb: 2 }}>
+          Solo se permiten archivos PDF. Tamaño máximo: 10MB por documento.
+        </Alert>
         {supplier.documents && supplier.documents.length > 0 && (
           <>
             <Typography variant='subtitle1' sx={{ mt: 2, mb: 1 }}>
@@ -741,7 +744,9 @@ const SupplierDetailsPage: React.FC = () => {
                   <ListItemText
                     primary={doc.label}
                     secondary={
-                      doc.file ? doc.file.name : 'Ningún archivo seleccionado'
+                      doc.file
+                        ? `${doc.file.name} (${(doc.file.size / 1024 / 1024).toFixed(2)}MB)`
+                        : 'Ningún archivo seleccionado'
                     }
                   />
                   <Button
