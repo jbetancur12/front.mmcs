@@ -26,7 +26,8 @@ import {
   Avatar,
   Chip,
   Fade,
-  Alert
+  Alert,
+  Switch
 } from '@mui/material'
 
 import React, { useCallback, useEffect, useState } from 'react'
@@ -173,6 +174,22 @@ const Table: React.FC = () => {
     } catch (error) {
       console.error('Error de red:', error)
       bigToast('Error al eliminar usuario', 'error')
+    }
+  }
+
+  const handleToggleActive = async (user: UserData) => {
+    try {
+      await axiosPrivate.put(`/users/${user.id}`, {
+        active: !user.active
+      })
+      bigToast(
+        `Usuario ${!user.active ? 'activado' : 'desactivado'} con éxito`,
+        'success'
+      )
+      fetchUsers()
+    } catch (error) {
+      console.error('Error al cambiar estado del usuario:', error)
+      bigToast('Error al actualizar el estado del usuario', 'error')
     }
   }
 
@@ -480,8 +497,29 @@ const Table: React.FC = () => {
                         />
                       </Box>
 
-                      {/* Action Buttons - Moved to bottom for better visibility */}
                       <Box display='flex' alignItems='center' gap={0.5}>
+                        <Tooltip
+                          title={
+                            user.active
+                              ? 'Desactivar usuario'
+                              : 'Activar usuario'
+                          }
+                        >
+                          <Switch
+                            size='small'
+                            checked={user.active}
+                            onChange={() => handleToggleActive(user)}
+                            sx={{
+                              '& .MuiSwitch-switchBase.Mui-checked': {
+                                color: '#10b981',
+                                '& + .MuiSwitch-track': {
+                                  backgroundColor: '#10b981'
+                                }
+                              }
+                            }}
+                          />
+                        </Tooltip>
+
                         <Tooltip title='Editar usuario'>
                           <IconButton
                             size='small'
