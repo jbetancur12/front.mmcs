@@ -110,7 +110,9 @@ const CalibrationServiceLogisticsControlDialog = ({
     if (open) {
       setValues(initialValues)
     }
-  }, [initialValues, open])
+    // initialValues se recrea en cada render del padre; solo reseteamos al abrir
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   const handleChange =
     (field: keyof CalibrationServiceLogisticsControlDialogValues) =>
