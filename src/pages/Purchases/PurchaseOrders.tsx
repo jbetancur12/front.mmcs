@@ -65,7 +65,12 @@ const PurchaseOrders: React.FC = () => {
     },
     { accessorKey: 'supplier.name', header: 'Proveedor' },
     { accessorKey: 'supplier.phone', header: 'Teléfono' },
-    { accessorKey: 'paymentMethod', header: 'Método de Pago' },
+    {
+      accessorKey: 'purchaseRequest.purchaseType',
+      header: 'Tipo',
+      filterVariant: 'select',
+      filterSelectOptions: ['I', 'II']
+    },
     {
       accessorKey: 'total',
       header: 'Total',
