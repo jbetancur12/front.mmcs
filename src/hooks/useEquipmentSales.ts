@@ -2,8 +2,10 @@ import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { axiosPrivate } from '@utils/api'
 import {
   EquipmentQuotation,
+  EquipmentQuotationDocument,
   EquipmentQuotationListResponse,
   EquipmentQuotationPayload,
+  EquipmentQuotationSequenceConfig,
   EquipmentProduct,
   EquipmentProductListResponse,
   EquipmentProductPayload
@@ -14,8 +16,23 @@ export const EQUIPMENT_SALES_QUERY_KEYS = {
   quotations: 'equipment-quotations',
   quotation: 'equipment-quotation',
   products: 'equipment-products',
-  quoteTermsTemplate: 'equipment-quote-terms-template'
+  quoteTermsTemplate: 'equipment-quote-terms-template',
+  sequenceConfig: 'equipment-sequence-config',
+  documents: 'equipment-quotation-documents'
 } as const
+
+export interface EquipmentQuotationDecisionPayload {
+  quotationId: number | string
+  approvalChannel?: string
+  approvalReference?: string | null
+  approvalNotes?: string | null
+  approvedAt?: string
+  rejectedAt?: string
+  rejectionReason?: string
+  changeRequestReason?: string
+  requestedAt?: string
+  evidenceDocumentId?: number | null
+}
 
 const equipmentSalesApi = {
   listQuotations: async (params?: Record<string, unknown>): Promise<EquipmentQuotationListResponse> => {
@@ -34,20 +51,24 @@ const equipmentSalesApi = {
     const { data } = await axiosPrivate.put<EquipmentQuotation>(`/equipment-sales/${id}`, payload)
     return data
   },
-  sendQuotation: async (id: number | string): Promise<EquipmentQuotation> => {
-    const { data } = await axiosPrivate.post<EquipmentQuotation>(`/equipment-sales/${id}/send`)
+  requestApproval: async (id: number | string): Promise<EquipmentQuotation> => {
+    const { data } = await axiosPrivate.post<EquipmentQuotation>(`/equipment-sales/${id}/request-approval`)
     return data
   },
-  acceptQuotation: async (id: number | string): Promise<EquipmentQuotation> => {
-    const { data } = await axiosPrivate.post<EquipmentQuotation>(`/equipment-sales/${id}/accept`)
+  approveQuotation: async ({ quotationId, ...body }: EquipmentQuotationDecisionPayload): Promise<EquipmentQuotation> => {
+    const { data } = await axiosPrivate.post<EquipmentQuotation>(`/equipment-sales/${quotationId}/approve`, body)
+    return data
+  },
+  rejectQuotation: async ({ quotationId, ...body }: EquipmentQuotationDecisionPayload): Promise<EquipmentQuotation> => {
+    const { data } = await axiosPrivate.post<EquipmentQuotation>(`/equipment-sales/${quotationId}/reject`, body)
+    return data
+  },
+  requestChanges: async ({ quotationId, ...body }: EquipmentQuotationDecisionPayload): Promise<EquipmentQuotation> => {
+    const { data } = await axiosPrivate.post<EquipmentQuotation>(`/equipment-sales/${quotationId}/request-changes`, body)
     return data
   },
   markAsReadyForInvoice: async (id: number | string): Promise<EquipmentQuotation> => {
     const { data } = await axiosPrivate.post<EquipmentQuotation>(`/equipment-sales/${id}/ready-for-invoicing`)
-    return data
-  },
-  rejectQuotation: async (id: number | string, reason?: string): Promise<EquipmentQuotation> => {
-    const { data } = await axiosPrivate.post<EquipmentQuotation>(`/equipment-sales/${id}/reject`, { reason })
     return data
   },
   invoiceQuotation: async (id: number | string): Promise<EquipmentQuotation> => {
@@ -56,6 +77,43 @@ const equipmentSalesApi = {
   },
   cancelQuotation: async (id: number | string, reason?: string): Promise<EquipmentQuotation> => {
     const { data } = await axiosPrivate.post<EquipmentQuotation>(`/equipment-sales/${id}/cancel`, { reason })
+    return data
+  },
+  generateQuotePdf: async (quotationId: number | string): Promise<EquipmentQuotationDocument> => {
+    const { data } = await axiosPrivate.post<EquipmentQuotationDocument>(`/equipment-sales/${quotationId}/generate-pdf`)
+    return data
+  },
+  getDocuments: async (quotationId: number | string): Promise<{ quotationId: number; documents: EquipmentQuotationDocument[] }> => {
+    const { data } = await axiosPrivate.get(`/equipment-sales/${quotationId}/documents`)
+    return data
+  },
+  uploadDocument: async ({
+    quotationId,
+    file,
+    documentType,
+    title,
+    notes
+  }: {
+    quotationId: number | string
+    file: File
+    documentType: string
+    title?: string
+    notes?: string
+  }): Promise<EquipmentQuotationDocument> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('documentType', documentType)
+    if (title) formData.append('title', title)
+    if (notes) formData.append('notes', notes)
+    const { data } = await axiosPrivate.post<EquipmentQuotationDocument>(
+      `/equipment-sales/${quotationId}/documents`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    )
+    return data
+  },
+  downloadDocument: async ({ quotationId, documentId }: { quotationId: number | string; documentId: number | string }): Promise<Blob> => {
+    const { data } = await axiosPrivate.get(`/equipment-sales/${quotationId}/documents/${documentId}/download`, { responseType: 'blob' })
     return data
   },
   listProducts: async (params?: Record<string, unknown>): Promise<EquipmentProductListResponse> => {
@@ -83,6 +141,14 @@ const equipmentSalesApi = {
   },
   upsertQuoteTermsTemplate: async (terms: Record<string, string>): Promise<{ terms: Record<string, string>; updatedAt: string; updatedByName: string }> => {
     const { data } = await axiosPrivate.put('/equipment-sales/config/quote-terms', { terms })
+    return data
+  },
+  getSequenceConfig: async (): Promise<EquipmentQuotationSequenceConfig> => {
+    const { data } = await axiosPrivate.get('/equipment-sales/config/sequence')
+    return data
+  },
+  upsertSequenceConfig: async (values: { nextQuoteNumber: number }): Promise<EquipmentQuotationSequenceConfig> => {
+    const { data } = await axiosPrivate.put('/equipment-sales/config/sequence', values)
     return data
   }
 }
@@ -123,54 +189,98 @@ export const useEquipmentQuoteTermsTemplate = (enabled?: boolean) => {
   })
 }
 
+export const useEquipmentSequenceConfig = (enabled?: boolean) => {
+  return useQuery({
+    queryKey: [EQUIPMENT_SALES_QUERY_KEYS.sequenceConfig],
+    queryFn: () => equipmentSalesApi.getSequenceConfig(),
+    enabled,
+    staleTime: 5 * 60 * 1000
+  })
+}
+
+export const useEquipmentQuotationDocuments = (quotationId?: number | string | null) => {
+  return useQuery({
+    queryKey: [EQUIPMENT_SALES_QUERY_KEYS.documents, quotationId],
+    queryFn: () => equipmentSalesApi.getDocuments(quotationId!),
+    enabled: !!quotationId,
+    staleTime: 30 * 1000
+  })
+}
+
 export const useEquipmentSalesMutations = () => {
   const queryClient = useQueryClient()
 
-  const invalidateAll = () => {
+  const invalidateQuotation = (id: number | string | undefined) => {
     queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.quotations])
-    queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.quotation])
+    if (id !== undefined) {
+      const key = String(id)
+      queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.quotation, key])
+      queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.documents, key])
+    }
   }
 
   const createQuotation = useMutation({
     mutationFn: equipmentSalesApi.createQuotation,
-    onSuccess: () => invalidateAll()
+    onSuccess: () => invalidateQuotation(undefined)
   })
 
   const updateQuotation = useMutation({
     mutationFn: equipmentSalesApi.updateQuotation,
-    onSuccess: () => invalidateAll()
+    onSuccess: (data) => invalidateQuotation(data.id)
   })
 
-  const sendQuotation = useMutation({
-    mutationFn: equipmentSalesApi.sendQuotation,
-    onSuccess: () => invalidateAll()
+  const requestApproval = useMutation({
+    mutationFn: equipmentSalesApi.requestApproval,
+    onSuccess: (data) => invalidateQuotation(data.id)
   })
 
-  const acceptQuotation = useMutation({
-    mutationFn: equipmentSalesApi.acceptQuotation,
-    onSuccess: () => invalidateAll()
+  const approveQuotation = useMutation({
+    mutationFn: equipmentSalesApi.approveQuotation,
+    onSuccess: (data) => invalidateQuotation(data.id)
+  })
+
+  const rejectQuotation = useMutation({
+    mutationFn: equipmentSalesApi.rejectQuotation,
+    onSuccess: (data) => invalidateQuotation(data.id)
+  })
+
+  const requestChanges = useMutation({
+    mutationFn: equipmentSalesApi.requestChanges,
+    onSuccess: (data) => invalidateQuotation(data.id)
   })
 
   const readyForInvoice = useMutation({
     mutationFn: equipmentSalesApi.markAsReadyForInvoice,
-    onSuccess: () => invalidateAll()
-  })
-
-  const rejectQuotation = useMutation({
-    mutationFn: ({ id, reason }: { id: number | string; reason?: string }) =>
-      equipmentSalesApi.rejectQuotation(id, reason),
-    onSuccess: () => invalidateAll()
+    onSuccess: (data) => invalidateQuotation(data.id)
   })
 
   const invoiceQuotation = useMutation({
     mutationFn: equipmentSalesApi.invoiceQuotation,
-    onSuccess: () => invalidateAll()
+    onSuccess: (data) => invalidateQuotation(data.id)
   })
 
   const cancelQuotation = useMutation({
     mutationFn: ({ id, reason }: { id: number | string; reason?: string }) =>
       equipmentSalesApi.cancelQuotation(id, reason),
-    onSuccess: () => invalidateAll()
+    onSuccess: (data) => invalidateQuotation(data.id)
+  })
+
+  const generateQuotePdf = useMutation({
+    mutationFn: equipmentSalesApi.generateQuotePdf,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.documents, String(variables)])
+    }
+  })
+
+  const uploadDocument = useMutation({
+    mutationFn: equipmentSalesApi.uploadDocument,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.documents, String(variables.quotationId)])
+    }
+  })
+
+  const downloadDocument = useMutation({
+    mutationFn: equipmentSalesApi.downloadDocument
   })
 
   const createProduct = useMutation({
@@ -193,18 +303,28 @@ export const useEquipmentSalesMutations = () => {
     onSuccess: () => queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.quoteTermsTemplate])
   })
 
+  const upsertSequenceConfig = useMutation({
+    mutationFn: equipmentSalesApi.upsertSequenceConfig,
+    onSuccess: () => queryClient.invalidateQueries([EQUIPMENT_SALES_QUERY_KEYS.sequenceConfig])
+  })
+
   return {
     createQuotation,
     updateQuotation,
-    sendQuotation,
-    acceptQuotation,
-    readyForInvoice,
+    requestApproval,
+    approveQuotation,
     rejectQuotation,
+    requestChanges,
+    readyForInvoice,
     invoiceQuotation,
     cancelQuotation,
+    generateQuotePdf,
+    uploadDocument,
+    downloadDocument,
     createProduct,
     updateProduct,
     deleteProduct,
-    saveQuoteTermsTemplate
+    saveQuoteTermsTemplate,
+    upsertSequenceConfig
   }
 }

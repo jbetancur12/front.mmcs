@@ -1,11 +1,82 @@
 export type EquipmentQuotationStatus =
   | 'draft'
-  | 'sent'
-  | 'accepted'
+  | 'pending_approval'
+  | 'approved'
   | 'ready_for_invoicing'
   | 'rejected'
   | 'invoiced'
   | 'cancelled'
+
+export type EquipmentQuotationCustomerResponseType =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'changes_requested'
+  | null
+
+export type EquipmentQuotationDocumentType =
+  | 'request_evidence'
+  | 'approval_evidence'
+  | 'rejection_evidence'
+  | 'quote_pdf'
+  | 'supporting_attachment'
+
+export interface EquipmentQuotationDocument {
+  id: number
+  quotationId: number
+  uploadedByUserId: number | null
+  documentType: EquipmentQuotationDocumentType
+  title: string | null
+  originalFileName: string
+  storedFileName: string
+  fileMimeType: string | null
+  fileSize: number | null
+  version: number
+  generatedBySystem: boolean
+  notes: string | null
+  uploadedAt: string
+  otherFields: Record<string, unknown>
+  uploadedBy: { id: number; nombre: string; email: string } | null
+}
+
+export interface EquipmentQuotationSequenceConfig {
+  initialized: boolean
+  quotePrefix: string
+  nextQuoteNumber: number | null
+  quotePreview: string | null
+  initializedAt: string | null
+  initializedByName: string | null
+  updatedAt: string | null
+  updatedByName: string | null
+}
+
+export interface EquipmentCustomerSite {
+  id?: number
+  customerId?: number
+  name: string
+  address?: string
+  city?: string
+  department?: string
+  country?: string
+  contactName?: string
+  contactEmail?: string
+  contactPhone?: string
+  notes?: string
+  isActive?: boolean
+}
+
+export interface EquipmentCustomerOption {
+  id: number
+  nombre: string
+  identificacion: string
+  email?: string
+  telefono?: string
+  ciudad?: string
+  departamento?: string
+  direccion?: string
+  sede?: string[]
+  sites?: EquipmentCustomerSite[]
+}
 
 export interface EquipmentProduct {
   id: number
@@ -53,6 +124,7 @@ export interface EquipmentQuotationItemPayload {
 export interface EquipmentQuotationPayload {
   customerId: number | null
   customerSite: string | null
+  requestChannel: string | null
   contactName: string | null
   contactEmail: string | null
   contactPhone: string | null
@@ -99,6 +171,9 @@ export interface EquipmentQuotation {
   status: EquipmentQuotationStatus
   customerId: number | null
   customerSite: string | null
+  requestChannel: string | null
+  approvalChannel: string | null
+  approvalReference: string | null
   contactName: string | null
   contactEmail: string | null
   contactPhone: string | null

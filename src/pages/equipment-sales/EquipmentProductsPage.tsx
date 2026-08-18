@@ -1,10 +1,11 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Box, Button, Dialog, DialogActions, DialogContent,
   DialogTitle, Grid, IconButton, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, TextField, Typography, Paper, TablePagination
 } from '@mui/material'
-import { Add, Edit, Delete } from '@mui/icons-material'
+import { Add, Edit, Delete, ArrowBack } from '@mui/icons-material'
 import Swal from 'sweetalert2'
 import { useEquipmentProducts, useEquipmentSalesMutations } from '../../hooks/useEquipmentSales'
 import { EquipmentProduct, EquipmentProductPayload } from '../../types/equipmentSales'
@@ -15,6 +16,7 @@ const emptyProduct: EquipmentProductPayload = {
 }
 
 const EquipmentProductsPage = () => {
+  const navigate = useNavigate()
   const [page, setPage] = useState(0)
   const [search, setSearch] = useState('')
   const { data } = useEquipmentProducts({ page: page + 1, limit: 50, search: search || undefined })
@@ -50,7 +52,10 @@ const EquipmentProductsPage = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant='h5' sx={{ fontWeight: 700 }}>Catálogo de Productos - Venta de Equipos</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <IconButton onClick={() => navigate('/equipment-sales')}><ArrowBack /></IconButton>
+          <Typography variant='h5' sx={{ fontWeight: 700 }}>Catálogo de Productos - Venta de Equipos</Typography>
+        </Box>
         <Button variant='contained' startIcon={<Add />} onClick={openCreate}>Nuevo Producto</Button>
       </Box>
 
