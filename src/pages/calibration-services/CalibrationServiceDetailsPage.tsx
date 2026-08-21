@@ -1872,15 +1872,38 @@ const CalibrationServiceDetailsPage = () => {
         return
       }
 
-      await createCut.mutateAsync({
+      const updatedService = await createCut.mutateAsync({
         serviceId: String(service.id),
         cutType: values.cutType,
         notes: values.notes.trim() || null,
         items: values.items
       })
-      toast.success('El corte quedó creado.')
       setIsCutDialogOpen(false)
       setActiveTab('cuts')
+
+      const newCut = [...(updatedService?.cuts || [])].sort(
+        (a, b) => b.id - a.id
+      )[0]
+
+      if (!newCut) {
+        toast.success('El corte quedó creado.')
+        return
+      }
+
+      try {
+        await markCutReadyForInvoicing.mutateAsync({
+          serviceId: String(service.id),
+          cutId: String(newCut.id),
+          readyForInvoicingAt: new Date().toISOString()
+        })
+        toast.success('El corte quedó creado y listo para facturar.')
+      } catch (readyError) {
+        const message =
+          (readyError as { response?: { data?: { error?: string } } })
+            ?.response?.data?.error ||
+          'El corte se creó pero no pudo marcarse listo para facturar.'
+        toast.error(message)
+      }
     } catch (cutError) {
       console.error(cutError)
       toast.error('No pudimos crear el corte.')
