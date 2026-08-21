@@ -340,7 +340,7 @@ const DataSheetPDF: React.FC<Props> = ({ dataSheet }) => {
       <Text style={tw('text-center')}>
         Contáctenos: 3113441682 - (606) 3256584 comercial@metromedicslab.com.co
       </Text>
-      <Text style={tw('text-center')}>www.metromedics.co</Text>
+      <Text style={tw('text-center')}>www.metromedicslab.com</Text>
     </View>
   )
 

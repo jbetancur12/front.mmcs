@@ -194,7 +194,7 @@ const DEFAULT_TEMPLATE_HTML = `
 
   <div class="web-strip">
     <div class="dot"></div>
-    <span class="ws-text">www.metromedics.co</span>
+    <span class="ws-text">www.metromedicslab.com</span>
     <div class="dot"></div>
   </div>
 

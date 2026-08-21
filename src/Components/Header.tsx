@@ -130,7 +130,7 @@ function Header({ toggleMobileMenu }: HeaderProps) {
         <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
           <Box
             component="a"
-            href="https://metromedics.co"
+            href="https://metromedicslab.com"
             sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
           >
             <Box
