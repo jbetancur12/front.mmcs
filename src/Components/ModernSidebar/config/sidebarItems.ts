@@ -34,7 +34,7 @@ export const createSidebarItems = (_userStore: any): ModernSidebarItem[] => [
     type: 'dropdown',
     label: 'Academia',
     icon: sidebarIcons.school,
-    roles: ['admin', 'employee', 'client'],
+    roles: ['admin', 'employee', 'user'],
     moduleName: 'Basic',
     children: [
       {
@@ -42,7 +42,7 @@ export const createSidebarItems = (_userStore: any): ModernSidebarItem[] => [
         type: 'link',
         label: 'Dashboard',
         to: '/lms',
-        roles: ['admin', 'employee', 'client'],
+        roles: ['admin', 'employee', 'user'],
         moduleName: 'Basic'
       },
       {
@@ -114,7 +114,7 @@ export const createSidebarItems = (_userStore: any): ModernSidebarItem[] => [
         type: 'link',
         label: 'Mis Certificados',
         to: '/lms/certificates',
-        roles: ['employee', 'client'],
+        roles: ['employee', 'user'],
         moduleName: 'Basic'
       },
       {
@@ -122,7 +122,7 @@ export const createSidebarItems = (_userStore: any): ModernSidebarItem[] => [
         type: 'link',
         label: 'Cursos Públicos',
         to: '/lms/client',
-        roles: ['client'],
+        roles: ['user'],
         moduleName: 'Basic'
       }
     ]

@@ -17,6 +17,7 @@ import {
 } from 'src/utils/lmsIdentity'
 import { CALIBRATION_SERVICE_ALLOWED_ROLES } from 'src/constants/calibrationServices'
 import { EQUIPMENT_SALES_ALLOWED_ROLES } from 'src/constants/equipmentSales'
+import { audienceIncludes } from 'src/constants/modules'
 
 const iconClass =
   'w-5 h-5 text-gray-600 transition-all duration-300 group-hover:text-white dark:text-gray-300 dark:group-hover:text-white group-hover:scale-110 group-hover:drop-shadow-sm'
@@ -185,12 +186,12 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Mis Certificados',
         url: 'lms/certificates',
-        roles: ['employee', 'client']
+        roles: ['employee', 'user']
       },
       {
         label: 'Mi Aprendizaje',
         url: 'lms/client',
-        roles: ['client']
+        roles: ['user']
       }
     ]
   },
@@ -453,6 +454,12 @@ const SideBar = ({
   }
 
   const hasModuleAccess = (moduleName: string) => {
+    // Audiencia: módulos internal/client/both vs tipo de usuario.
+    // Interno = sin customer; cliente = con customer.
+    const userType = $userStore.customer ? 'client' : 'internal'
+    if (!audienceIncludes(moduleName, userType)) return false
+
+    // Licensing: solo aplica a usuarios de cliente
     if (!$userStore.customer) return true
     return $userStore.customer.modules.some(
       (m) => m.name === moduleName && m.customerModules.isActive

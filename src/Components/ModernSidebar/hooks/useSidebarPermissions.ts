@@ -2,6 +2,10 @@ import { useMemo } from 'react'
 import { useStore } from '@nanostores/react'
 import { userStore, UserData } from '../../../store/userStore'
 import { ModernSidebarItem } from '../types/sidebar.types'
+import { audienceIncludes } from '../../../constants/modules'
+
+const getUserType = ($user: UserData | null): 'internal' | 'client' =>
+  $user?.customer ? 'client' : 'internal'
 
 export const useSidebarPermissions = () => {
   const $userStore = useStore(userStore)
@@ -25,19 +29,23 @@ export const useSidebarPermissions = () => {
   }, [permissionsCache])
 
   const hasModuleAccess = useMemo(() => {
-    return (moduleName: string): boolean => {
-      if (!$userStore.customer) return true
-      
+    return (moduleName: string, userType: 'internal' | 'client'): boolean => {
+      // Audiencia: módulos internal/client/both vs tipo de usuario
+      if (!audienceIncludes(moduleName, userType)) return false
+
+      // Licensing: solo aplica a usuarios de cliente
+      if (userType !== 'client' || !$userStore.customer) return true
+
       const cacheKey = `module-${moduleName}-${$userStore.customer.id}`
-      
+
       if (permissionsCache.has(cacheKey)) {
         return permissionsCache.get(cacheKey)!
       }
-      
+
       const hasAccess = $userStore.customer.modules.some(
         (m) => m.name === moduleName && m.customerModules.isActive
       )
-      
+
       permissionsCache.set(cacheKey, hasAccess)
       return hasAccess
     }
@@ -55,32 +63,39 @@ export const useSidebarPermissions = () => {
 
   const filterItemsByPermissions = useMemo(() => {
     return (items: ModernSidebarItem[]): ModernSidebarItem[] => {
-      return items.filter(item => {
-        // Verificar permisos de rol
-        const hasRolePermission = canViewModule(item.roles, $userStore.rol)
-        if (!hasRolePermission) return false
+      const userType = getUserType($userStore)
 
-        // Verificar acceso al módulo
-        const hasModulePermission = hasModuleAccess(item.moduleName)
-        if (!hasModulePermission) return false
+      return items
+        .filter(item => {
+          // Verificar permisos de rol
+          const hasRolePermission = canViewModule(item.roles, $userStore.rol)
+          if (!hasRolePermission) return false
 
-        // Si es un dropdown, filtrar sus elementos hijos
-        if (item.type === 'dropdown' && item.children) {
-          const filteredChildren = item.children.filter(child => 
-            canViewModule(child.roles, $userStore.rol)
-          )
-          
-          // Solo mostrar el dropdown si tiene elementos hijos visibles
-          if (filteredChildren.length === 0) return false
-          
-          // Actualizar el item con los hijos filtrados
-          item.children = filteredChildren
-        }
+          // Verificar audiencia + licensing del módulo
+          const hasModulePermission = hasModuleAccess(item.moduleName, userType)
+          if (!hasModulePermission) return false
 
-        return true
-      })
+          return true
+        })
+        .map(item => {
+          // Si es un dropdown, filtrar sus elementos hijos (sin mutar el original)
+          if (item.type === 'dropdown' && item.children) {
+            const filteredChildren = item.children.filter(child =>
+              canViewModule(child.roles, $userStore.rol) &&
+              hasModuleAccess(child.moduleName, userType)
+            )
+
+            // Solo mostrar el dropdown si tiene elementos hijos visibles
+            if (filteredChildren.length === 0) return null
+
+            return { ...item, children: filteredChildren }
+          }
+
+          return item
+        })
+        .filter((item): item is ModernSidebarItem => item !== null)
     }
-  }, [canViewModule, hasModuleAccess, $userStore.rol])
+  }, [canViewModule, hasModuleAccess, $userStore])
 
   const isItemActive = useMemo(() => {
     return (item: ModernSidebarItem, currentPath: string): boolean => {
