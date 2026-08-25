@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
+import { ROLES } from 'src/constants/roles'
 
 const ProductosServicios = lazy(() => import('../pages/ProductosServicios'))
 
@@ -11,7 +12,7 @@ const ProductCatalogRoutes = (role: string[]) => {
         <ProtectedRoute
           isAuthenticated={localStorage.getItem('accessToken') !== null}
           userRole={role}
-          roles={['admin']}
+          roles={[ROLES.ADMIN]}
         />
       }
     >

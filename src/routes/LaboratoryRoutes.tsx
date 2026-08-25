@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react' // Import lazy y Suspense
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute' // Asegúrate que la ruta sea correcta
+import { ROLES } from 'src/constants/roles'
 import CircularProgress from '@mui/material/CircularProgress' // Para el fallback de Suspense
 import Box from '@mui/material/Box' // Para centrar el fallback
 
@@ -29,7 +30,7 @@ const LaboratoryRoutes = (role: string[]) => {
             // Verifica si el usuario está autenticado (ej: revisando el token)
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role} // Roles del usuario actual
-            roles={['admin']} // Roles permitidos para acceder a estas rutas (ajusta según necesidad)
+            roles={[ROLES.ADMIN]} // Roles permitidos para acceder a estas rutas (ajusta según necesidad)
           />
         }
       >

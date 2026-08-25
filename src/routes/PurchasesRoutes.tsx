@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
+import { ROLES } from 'src/constants/roles'
 import PersonnelManagementPage from 'src/pages/Admin/PersonnelManagementPage'
 import CircularProgress from '@mui/material/CircularProgress'
 import Box from '@mui/material/Box'
@@ -62,7 +63,7 @@ const SupplierRoutes = (role: string[]) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['admin', 'comp_admin', 'comp_requester', 'comp_supervisor']}
+            roles={[ROLES.ADMIN, ROLES.COMP_ADMIN, ROLES.COMP_REQUESTER, ROLES.COMP_SUPERVISOR]}
           />
         }
       >

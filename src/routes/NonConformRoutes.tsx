@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react' // Import lazy y Suspense
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute' // Asegúrate que la ruta sea correcta
+import { ROLES } from 'src/constants/roles'
 import CircularProgress from '@mui/material/CircularProgress' // Para el fallback de Suspense
 import Box from '@mui/material/Box' // Para centrar el fallback
 
@@ -17,7 +18,7 @@ const NonConformRoutes = (role: string[]) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['admin']}
+            roles={[ROLES.ADMIN]}
           />
         }
       >

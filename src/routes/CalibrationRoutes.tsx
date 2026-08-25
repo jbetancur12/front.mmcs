@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
+import { ROLES } from 'src/constants/roles'
 
 const Templates = lazy(() => import('../pages/Templates'))
 const Equipos = lazy(() => import('../pages/Equipos'))
@@ -18,7 +19,7 @@ const CalibrationRoutes = (role: string[]) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['admin', 'metrologist']}
+            roles={[ROLES.ADMIN, ROLES.METROLOGIST]}
           />
         }
       >

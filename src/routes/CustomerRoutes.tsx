@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
+import { ROLES } from 'src/constants/roles'
 
 const Customers = lazy(() => import('../pages/Customers'))
 const ModernCustomer = lazy(() => import('../pages/ModernCustomer'))
@@ -18,7 +19,7 @@ const CustomerRoutes = (role: string[]) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['admin', 'metrologist', 'user']}
+            roles={[ROLES.ADMIN, ROLES.METROLOGIST, ROLES.USER]}
           />
         }
       >
@@ -31,7 +32,7 @@ const CustomerRoutes = (role: string[]) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['admin', 'user', 'metrologist']}
+            roles={[ROLES.ADMIN, ROLES.USER, ROLES.METROLOGIST]}
           />
         }
       >

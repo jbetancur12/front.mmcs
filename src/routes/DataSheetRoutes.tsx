@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
+import { ROLES } from 'src/constants/roles'
 import DevicesOnLoan from 'src/Components/DataSheet/DevicesOnLoan'
 const DatasheetsList = lazy(
   () => import('../Components/DataSheet/ListDataSheet')
@@ -37,7 +38,7 @@ const DataSheetRoutes = (role: string[]) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={['admin', 'metrologist']}
+            roles={[ROLES.ADMIN, ROLES.METROLOGIST]}
           />
         }
       >
