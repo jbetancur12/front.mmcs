@@ -281,8 +281,6 @@ const Table: React.FC = () => {
     switch (role) {
       case 'user':
         return { bg: '#f0f9ff', color: '#1e40af', label: 'Usuario' }
-      case 'fleet':
-        return { bg: '#fef3c7', color: '#d97706', label: 'Flota' }
       default:
         return { bg: '#f3f4f6', color: '#374151', label: role }
     }

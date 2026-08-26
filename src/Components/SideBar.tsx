@@ -339,7 +339,7 @@ const sidebarItems = ($userStore: UserData) => [
     label: 'Flota',
     to: '/fleet',
     icon: <CarRepair className={iconClass} />,
-    roles: ['admin', 'fleet'],
+    roles: ['admin'],
     moduleName: 'Fleet'
   },
   {
