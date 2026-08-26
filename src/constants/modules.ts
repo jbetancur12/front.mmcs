@@ -16,13 +16,24 @@ export const MODULE_AUDIENCE = {
   fleet: 'internal',
   iot: 'internal',
   purchases: 'internal',
-  quality: 'both',
+  quality: 'internal',
   lms: 'both',
 } as const
 
 export type ModuleName = keyof typeof MODULE_AUDIENCE
 
 export type Audience = 'internal' | 'client' | 'both'
+
+/**
+ * Marcador de módulos core: visibles para todos (internos y clientes)
+ * sin audiencia ni licencia. Es una convención explícita, no un módulo
+ * de la BD.
+ */
+export const BASIC_MODULE = 'Basic'
+
+/** Core = sin moduleName, 'Basic', o cualquier valor no registrado en el catálogo. */
+export const isCoreModule = (moduleName?: string): boolean =>
+  !moduleName || getModuleAudience(moduleName) === undefined
 
 // Match case-insensitive: el sidebar tiene variantes legacy ('Fleet', 'Iot')
 export const getModuleAudience = (moduleName?: string): Audience | undefined => {

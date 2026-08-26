@@ -17,7 +17,11 @@ import {
 } from 'src/utils/lmsIdentity'
 import { CALIBRATION_SERVICE_ALLOWED_ROLES } from 'src/constants/calibrationServices'
 import { EQUIPMENT_SALES_ALLOWED_ROLES } from 'src/constants/equipmentSales'
-import { audienceIncludes } from 'src/constants/modules'
+import { audienceIncludes, isCoreModule, getModuleAudience } from 'src/constants/modules'
+
+// Advertir una sola vez por moduleName desconocido (atrapa typos como
+// 'Flota' vs 'fleet' que quedarían silenciosamente como core).
+const warnedUnknownModules = new Set<string>()
 
 const iconClass =
   'w-5 h-5 text-gray-600 transition-all duration-300 group-hover:text-white dark:text-gray-300 dark:group-hover:text-white group-hover:scale-110 group-hover:drop-shadow-sm'
@@ -454,9 +458,22 @@ const SideBar = ({
   }
 
   const hasModuleAccess = (moduleName: string) => {
+    // Core (Basic / sin módulo): visible para todos, sin gate.
+    if (isCoreModule(moduleName)) return true
+
+    const userType = $userStore.customer ? 'client' : 'internal'
+    if (!getModuleAudience(moduleName)) {
+      if (!warnedUnknownModules.has(moduleName)) {
+        warnedUnknownModules.add(moduleName)
+        console.warn(
+          `[sidebar] moduleName "${moduleName}" no está en el catálogo de módulos — se trata como core. ¿Typo?`
+        )
+      }
+      return true
+    }
+
     // Audiencia: módulos internal/client/both vs tipo de usuario.
     // Interno = sin customer; cliente = con customer.
-    const userType = $userStore.customer ? 'client' : 'internal'
     if (!audienceIncludes(moduleName, userType)) return false
 
     // Licensing: solo aplica a usuarios de cliente
