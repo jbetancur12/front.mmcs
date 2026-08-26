@@ -27,3 +27,33 @@ export const ROLES = {
 } as const
 
 export type RoleName = (typeof ROLES)[keyof typeof ROLES]
+
+/**
+ * Etiquetas en español para mostrar roles en UI (asignación de usuarios,
+ * chips, tablas). Única fuente: no duplicar mapas locales en componentes.
+ * Clave = nombre EXACTO en la tabla `roles` ('Training Manager' lleva
+ * espacio y mayúsculas).
+ */
+export const ROLE_LABELS_ES: Record<string, string> = {
+  admin: 'Administrador',
+  super_admin: 'Super admin',
+  user: 'Usuario',
+  metrologist: 'Metrólogo',
+  employee: 'Empleado',
+  lms_only: 'Solo LMS',
+  invoicing: 'Facturación',
+  'Training Manager': 'Gestor de Capacitación',
+  mantenimiento: 'Mantenimiento',
+  technician: 'Técnico',
+  maintenance_coordinator: 'Coord. de mantenimiento',
+  comp_admin: 'Admin comercial',
+  comp_requester: 'Solicitante comercial',
+  calibration_coordinator: 'Coord. de calibración',
+  technical_director: 'Director técnico',
+}
+
+/** Label en español o el nombre crudo si no está mapeado. */
+export const getRoleLabelEs = (roleName?: string | null): string => {
+  if (!roleName) return ''
+  return ROLE_LABELS_ES[roleName] ?? roleName
+}

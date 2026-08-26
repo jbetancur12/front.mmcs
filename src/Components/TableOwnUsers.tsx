@@ -42,6 +42,7 @@ import {
   handleErrorWithAlert
 } from '../utils/sweetAlert'
 import { useUsers, useUserMutations, QUERY_KEYS } from '../hooks/useUsers'
+import { getRoleLabelEs } from 'src/constants/roles'
 
 // Define interfaces
 interface Role {
@@ -50,25 +51,10 @@ interface Role {
   description: string
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  admin: 'Admin',
-  super_admin: 'Super admin',
-  employee: 'Empleado',
-  user: 'Usuario',
-  metrologist: 'Metrólogo',
-  mantenimiento: 'Mantenimiento',
-  technician: 'Técnico',
-  maintenance_coordinator: 'Coord. mantenimiento',
-  purchases_admin: 'Compras',
-  invoicing: 'Facturación',
-  training_manager: 'Training manager',
-  lms_admin: 'LMS admin',
-  lms_only: 'Solo LMS'
-}
-
 const getRoleChipLabel = (role: Role) => {
-  if (ROLE_LABELS[role.name]) {
-    return ROLE_LABELS[role.name]
+  const label = getRoleLabelEs(role.name)
+  if (label !== role.name) {
+    return label
   }
 
   const compactDescription = role.description?.split(' - ')[0]?.trim()

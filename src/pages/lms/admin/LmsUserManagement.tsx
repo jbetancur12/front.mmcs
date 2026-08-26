@@ -38,6 +38,7 @@ import {
 } from '@mui/icons-material'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { getRoleLabelEs } from 'src/constants/roles'
 
 type LmsRoleOption = {
   id: number
@@ -117,27 +118,12 @@ const emptyForm: LmsUserForm = {
 const isValidEmail = (value: string) => /\S+@\S+\.\S+/.test(value)
 
 const getRoleLabel = (roleName: string, description?: string | null) => {
-  const baseLabel =
-    roleName === 'Training Manager'
-      ? 'Gestor de Capacitación'
-      : roleName === 'employee'
-        ? 'Empleado interno'
-        : roleName === 'user'
-          ? 'Usuario cliente'
-          : roleName
+  const baseLabel = getRoleLabelEs(roleName)
 
   return description ? `${baseLabel}: ${description}` : baseLabel
 }
 
-const getCompactRoleLabel = (roleName: string) => {
-  if (roleName === 'Training Manager') return 'Gestor LMS'
-  if (roleName === 'employee') return 'Empleado'
-  if (roleName === 'user') return 'Cliente'
-  if (roleName === 'maintenance_coordinator') return 'Coord. mantenimiento'
-  if (roleName === 'metrologist') return 'Metrólogo'
-  if (roleName === 'technician') return 'Técnico'
-  return roleName
-}
+const getCompactRoleLabel = getRoleLabelEs
 
 const LmsUserManagement: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
