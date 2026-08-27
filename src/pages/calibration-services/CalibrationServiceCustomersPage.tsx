@@ -284,20 +284,6 @@ const CalibrationServiceCustomersPage = () => {
               Crear cliente
             </Button>
           ) : null}
-          {canManageCustomers && selectedCustomer ? (
-            <Button variant='contained' startIcon={<EditOutlinedIcon />}
-              onClick={() => { setIsEditingCustomer(true); setCustomerDialogMode('customer') }}
-              sx={{
-                background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)', borderRadius: '10px',
-                textTransform: 'none', fontWeight: 700, px: 3, whiteSpace: 'nowrap',
-                boxShadow: '0 4px 6px -1px rgba(2,132,199,0.25)',
-                '&:hover': { background: 'linear-gradient(135deg, #0284c7 0%, #075985 100%)',
-                  boxShadow: '0 6px 12px -2px rgba(2,132,199,0.3)' }
-              }}
-            >
-              Editar cliente
-            </Button>
-          ) : null}
         </Stack>
       </Box>
 
@@ -445,12 +431,20 @@ const CalibrationServiceCustomersPage = () => {
                     sx={{ mr: 0 }}
                   />
                   {canManageCustomers ? (
-                    <Button size='small' variant='outlined' startIcon={<PlaceOutlinedIcon />}
-                      sx={{ borderRadius: '8px', textTransform: 'none', fontSize: '0.8rem' }}
-                      onClick={() => { setSelectedCustomer(customer); setCustomerDialogMode('site') }}
-                    >
-                      Nueva sede
-                    </Button>
+                    <Stack direction='row' spacing={1} flexWrap='wrap'>
+                      <Button size='small' variant='outlined' startIcon={<EditOutlinedIcon />}
+                        sx={{ borderRadius: '8px', textTransform: 'none', fontSize: '0.8rem' }}
+                        onClick={() => { setIsEditingCustomer(true); setSelectedCustomer(customer); setCustomerDialogMode('customer') }}
+                      >
+                        Editar cliente
+                      </Button>
+                      <Button size='small' variant='outlined' startIcon={<PlaceOutlinedIcon />}
+                        sx={{ borderRadius: '8px', textTransform: 'none', fontSize: '0.8rem' }}
+                        onClick={() => { setIsEditingCustomer(false); setSelectedCustomer(customer); setCustomerDialogMode('site') }}
+                      >
+                        Nueva sede
+                      </Button>
+                    </Stack>
                   ) : null}
                 </Stack>
               </Stack>
