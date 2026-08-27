@@ -18,7 +18,6 @@ export const CALIBRATION_SERVICE_ALLOWED_ROLES = [
   'metrologist',
   'comp_admin',
   'comp_requester',
-  'comp_supervisor',
   'invoicing',
   'calibration_coordinator'
 ] as const
@@ -30,7 +29,6 @@ export const CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES = [
   'super_admin',
   'comp_admin',
   'comp_requester',
-  'comp_supervisor',
   'invoicing'
 ] as const
 
@@ -39,14 +37,12 @@ export const CALIBRATION_SERVICE_EDIT_ROLES = [
   'super_admin',
   'comp_admin',
   'comp_requester',
-  'comp_supervisor'
 ] as const
 
 export const CALIBRATION_SERVICE_ANALYTICS_ROLES = [
   'admin',
   'super_admin',
   'comp_admin',
-  'comp_supervisor',
   'metrologist'
 ] as const
 
@@ -100,8 +96,7 @@ export const CALIBRATION_SERVICE_ADJUSTMENT_COMMERCIAL_REVIEW_ROLES = [
   'admin',
   'super_admin',
   'comp_admin',
-  'comp_requester',
-  'comp_supervisor'
+  'comp_requester'
 ] as const
 
 export const CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES = [

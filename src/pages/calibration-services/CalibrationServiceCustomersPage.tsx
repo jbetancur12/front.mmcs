@@ -69,6 +69,7 @@ const CalibrationServiceCustomersPage = () => {
   const canManageCustomers = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const [search, setSearch] = useState('')
   const [customerDialogMode, setCustomerDialogMode] = useState<'customer' | 'site' | null>(null)
+  const [isEditingCustomer, setIsEditingCustomer] = useState(false)
   const [selectedCustomer, setSelectedCustomer] =
     useState<CalibrationServiceCustomer | null>(null)
   const [selectedSite, setSelectedSite] =
@@ -122,6 +123,26 @@ const CalibrationServiceCustomersPage = () => {
       queryClient.invalidateQueries(customerQueryKey)
       setCustomerDialogMode(null)
       toast.success('Cliente creado para calibración.')
+    }
+  })
+
+  const updateCustomerMutation = useMutation({
+    mutationFn: async (values: CalibrationServiceCustomerDialogValues) => {
+      if (!selectedCustomer?.id) {
+        throw new Error('Selecciona un cliente antes de editarlo.')
+      }
+      const response = await axiosPrivate.put<CalibrationServiceCustomer>(
+        `/customers/${selectedCustomer.id}`,
+        values.customer
+      )
+      return response.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(customerQueryKey)
+      setCustomerDialogMode(null)
+      setSelectedCustomer(null)
+      setIsEditingCustomer(false)
+      toast.success('Cliente actualizado.')
     }
   })
 
@@ -251,7 +272,7 @@ const CalibrationServiceCustomersPage = () => {
           </Box>
           {canManageCustomers ? (
             <Button variant='contained' startIcon={<AddBusinessOutlinedIcon />}
-              onClick={() => { setSelectedCustomer(null); setCustomerDialogMode('customer') }}
+              onClick={() => { setIsEditingCustomer(false); setSelectedCustomer(null); setCustomerDialogMode('customer') }}
               sx={{
                 background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', borderRadius: '10px',
                 textTransform: 'none', fontWeight: 700, px: 3, whiteSpace: 'nowrap',
@@ -261,6 +282,20 @@ const CalibrationServiceCustomersPage = () => {
               }}
             >
               Crear cliente
+            </Button>
+          ) : null}
+          {canManageCustomers && selectedCustomer ? (
+            <Button variant='contained' startIcon={<EditOutlinedIcon />}
+              onClick={() => { setIsEditingCustomer(true); setCustomerDialogMode('customer') }}
+              sx={{
+                background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)', borderRadius: '10px',
+                textTransform: 'none', fontWeight: 700, px: 3, whiteSpace: 'nowrap',
+                boxShadow: '0 4px 6px -1px rgba(2,132,199,0.25)',
+                '&:hover': { background: 'linear-gradient(135deg, #0284c7 0%, #075985 100%)',
+                  boxShadow: '0 6px 12px -2px rgba(2,132,199,0.3)' }
+              }}
+            >
+              Editar cliente
             </Button>
           ) : null}
         </Stack>
@@ -523,14 +558,18 @@ const CalibrationServiceCustomersPage = () => {
       <CalibrationServiceCustomerDialog
         open={customerDialogMode !== null}
         mode={customerDialogMode || 'customer'}
-        customer={selectedCustomer}
+        customer={isEditingCustomer ? selectedCustomer : null}
         site={selectedSite}
-        isSubmitting={createCustomerMutation.isLoading || createCustomerSiteMutation.isLoading || updateCustomerSiteMutation.isLoading}
-        onClose={() => { setCustomerDialogMode(null); setSelectedCustomer(null); setSelectedSite(null) }}
+        isSubmitting={createCustomerMutation.isLoading || createCustomerSiteMutation.isLoading || updateCustomerSiteMutation.isLoading || updateCustomerMutation.isLoading}
+        onClose={() => { setCustomerDialogMode(null); setSelectedCustomer(null); setSelectedSite(null); setIsEditingCustomer(false) }}
         onSubmit={(values) => {
           if (customerDialogMode === 'site') {
             if (selectedSite) { updateCustomerSiteMutation.mutate(values); return }
             createCustomerSiteMutation.mutate(values)
+            return
+          }
+          if (isEditingCustomer && selectedCustomer) {
+            updateCustomerMutation.mutate(values)
             return
           }
           createCustomerMutation.mutate(values)
