@@ -112,6 +112,24 @@ const CalibrationServiceCustomerDialog = ({
       return
     }
 
+    if (mode === 'customer' && customer) {
+      setValues({
+        customer: {
+          nombre: customer.nombre || '',
+          identificacion: customer.identificacion || '',
+          email: customer.email || '',
+          telefono: customer.telefono || '',
+          direccion: customer.direccion || '',
+          ciudad: customer.ciudad || '',
+          departamento: customer.departamento || '',
+          pais: 'Colombia',
+          certificateProfileEnabled: customer.certificateProfileEnabled ?? true
+        },
+        site: { ...emptyValues.site }
+      })
+      return
+    }
+
     setValues(emptyValues)
   }, [customer, mode, open, site])
 
@@ -142,9 +160,13 @@ const CalibrationServiceCustomerDialog = ({
     onSubmit(values)
   }
 
+  const isEdit = mode === 'customer' && Boolean(customer)
+
   const title =
     mode === 'customer'
-      ? 'Crear cliente comercial'
+      ? isEdit
+        ? 'Editar cliente comercial'
+        : 'Crear cliente comercial'
       : site?.id
         ? 'Editar sede del cliente'
         : 'Crear sede del cliente'
@@ -231,6 +253,7 @@ const CalibrationServiceCustomerDialog = ({
             </Alert>
           )}
 
+          {isEdit ? null : (
           <Box>
             <Typography variant='subtitle1' fontWeight={800} mb={2}>
               Sede
@@ -314,6 +337,7 @@ const CalibrationServiceCustomerDialog = ({
               </Grid>
             </Grid>
           </Box>
+          )}
         </Stack>
       </DialogContent>
       <DialogActions>
@@ -324,7 +348,9 @@ const CalibrationServiceCustomerDialog = ({
           {isSubmitting
             ? 'Guardando...'
             : mode === 'customer'
-              ? 'Crear cliente'
+              ? isEdit
+                ? 'Guardar cambios'
+                : 'Crear cliente'
               : site?.id
                 ? 'Guardar sede'
                 : 'Crear sede'}
