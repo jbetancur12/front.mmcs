@@ -47,7 +47,7 @@ const EquipmentSalesSequenceConfigDialog = ({
     }
   }, [config?.initialized, config?.nextQuoteNumber, open])
 
-  const quotePreview = `${config?.quotePrefix || 'COT-EQ-'}${String(nextQuoteNumber).padStart(4, '0')}`
+  const quotePreview = `${config?.quotePrefix || 'VT-'}${String(nextQuoteNumber).padStart(4, '0')}`
   const hasQuoteChanged =
     isAlreadyInitialized && Number(nextQuoteNumber) !== (config?.nextQuoteNumber ?? 0)
 

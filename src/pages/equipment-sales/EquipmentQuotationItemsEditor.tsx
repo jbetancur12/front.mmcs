@@ -8,11 +8,13 @@ import {
   Button,
   Chip,
   Divider,
+  FormControlLabel,
   Grid,
   IconButton,
   InputAdornment,
   Paper,
   Stack,
+  Switch,
   Table,
   TableBody,
   TableCell,
@@ -302,9 +304,20 @@ const EquipmentQuotationItemsEditor = ({
                 onChange={(event) => setItemField(item.localId, 'unitPrice', Number(event.target.value))} />
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              <TextField fullWidth size='small' type='number' label='IVA %' value={item.taxRate}
-                disabled={!canEdit || isBusy} inputProps={{ min: 0, step: 0.1 }}
-                onChange={(event) => setItemField(item.localId, 'taxRate', Number(event.target.value))} />
+              <Stack direction='row' alignItems='center' spacing={0.5}>
+                <FormControlLabel
+                  control={
+                    <Switch size='small' checked={toNumber(item.taxRate) > 0}
+                      disabled={!canEdit || isBusy}
+                      onChange={(event) => setItemField(item.localId, 'taxRate', event.target.checked ? 19 : 0)} />
+                  }
+                  label='IVA'
+                  sx={{ mr: 0.5, '& .MuiFormControlLabel-label': { fontSize: '0.8rem', fontWeight: 600 } }}
+                />
+                <TextField fullWidth size='small' type='number' label='IVA %' value={item.taxRate}
+                  disabled={!canEdit || isBusy || toNumber(item.taxRate) <= 0} inputProps={{ min: 0, step: 0.1 }}
+                  onChange={(event) => setItemField(item.localId, 'taxRate', Number(event.target.value))} />
+              </Stack>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <TextField fullWidth size='small' type='number' label='Garantía (meses)' value={item.warrantyMonths ?? ''}
