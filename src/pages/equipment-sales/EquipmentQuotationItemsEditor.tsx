@@ -384,6 +384,12 @@ const EquipmentQuotationItemsEditor = ({
     )
   }
 
+  const handleAddBlankItem = () => {
+    const newItem = createEmptyItem()
+    onChange([...items, newItem])
+    setExpandedIds((prev) => new Set(prev).add(newItem.localId))
+  }
+
   const handleRemoveItem = (localId: string) => {
     if (items.length <= 1) {
       onChange([createEmptyItem()])
@@ -411,6 +417,14 @@ const EquipmentQuotationItemsEditor = ({
             title={viewMode === 'accordion' ? 'Vista tabla' : 'Vista detalle'}>
             {viewMode === 'accordion' ? <TableChartOutlinedIcon fontSize='small' /> : <ViewStreamOutlinedIcon fontSize='small' />}
           </IconButton>
+          <Button variant='outlined' startIcon={<AddOutlinedIcon />} onClick={handleAddBlankItem} disabled={!canEdit || isBusy}
+            sx={{
+              borderRadius: '10px', textTransform: 'none', fontWeight: 700, px: 2.5, whiteSpace: 'nowrap',
+              borderColor: '#10b981', color: '#059669',
+              '&:hover': { borderColor: '#059669', backgroundColor: 'rgba(16,185,129,0.06)' }
+            }}>
+            En blanco
+          </Button>
           <Button variant='contained' startIcon={<AddOutlinedIcon />} onClick={onAddItem} disabled={!canEdit || isBusy}
             sx={{
               background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', borderRadius: '10px',
