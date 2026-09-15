@@ -10,14 +10,17 @@ import {
   Button,
   Alert,
   Grid,
-  Tooltip
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   School as SchoolIcon,
-  EmojiEvents as AwardIcon
+  EmojiEvents as AwardIcon,
+  ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material'
 import { useQuery } from 'react-query'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -206,13 +209,6 @@ const LmsUserCourseReview = () => {
                     label={lessonStatusLabel(lesson.progress?.status)}
                     color={lessonStatusColor(lesson.progress?.status) as any}
                   />
-                  {lesson.progress?.completed_at && (
-                    <Tooltip title="Fecha de finalización">
-                      <Typography variant="caption" color="text.secondary">
-                        {new Date(lesson.progress.completed_at).toLocaleDateString('es-ES')}
-                      </Typography>
-                    </Tooltip>
-                  )}
                 </Box>
 
                 {lesson.quiz && (
@@ -221,13 +217,20 @@ const LmsUserCourseReview = () => {
                       <Typography variant="subtitle2" fontWeight="medium">
                         Quiz: {lesson.quiz.title}
                       </Typography>
-                      <Chip size="small" variant="outlined" label={`Aprobación ${lesson.quiz.passing_percentage}%`} />
+                      <Chip size="small" variant="outlined" label={`Aprobación: ${lesson.quiz.passing_percentage}%`} />
                       {quizAttempts.length > 0 ? (
-                        <Chip
-                          size="small"
-                          color={quizAttempts.some((a: any) => a.passed) ? 'success' : 'error'}
-                          label={quizAttempts.some((a: any) => a.passed) ? 'Aprobado' : 'No aprobado'}
-                        />
+                        <>
+                          <Chip
+                            size="small"
+                            color={quizAttempts.some((a: any) => a.passed) ? 'success' : 'error'}
+                            label={quizAttempts.some((a: any) => a.passed) ? 'Aprobado' : 'No aprobado'}
+                          />
+                          <Chip
+                            size="small"
+                            variant="outlined"
+                            label={`Mejor intento: ${Math.max(...quizAttempts.map((a: any) => a.percentage))}%`}
+                          />
+                        </>
                       ) : (
                         <Chip size="small" variant="outlined" label="Sin intentos" />
                       )}
@@ -235,7 +238,9 @@ const LmsUserCourseReview = () => {
 
                     {quizAttempts.length > 0 && (
                       <>
-                        {/* Selector de intento */}
+                        <Typography variant="overline" color="text.secondary">
+                          Intentos ({quizAttempts.length})
+                        </Typography>
                         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
                           {quizAttempts.map((attempt: any) => (
                             <Button
@@ -247,41 +252,57 @@ const LmsUserCourseReview = () => {
                                 setSelectedAttempt((prev) => ({ ...prev, [lesson.quiz.id]: attempt.id }))
                               }
                             >
-                              Intento {attempt.attempt_number}: {attempt.percentage}%
+                              Intento {attempt.attempt_number} · {attempt.percentage}%
                             </Button>
                           ))}
                         </Box>
 
                         {active && (
-                          <Paper variant="outlined" sx={{ p: 2, bgcolor: 'grey.50' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-                              <AwardIcon color={active.passed ? 'success' : 'disabled'} />
-                              <Typography variant="subtitle2">
-                                Intento {active.attempt_number}: {active.score}/{active.total_points} puntos (
-                                {active.percentage}%)
-                              </Typography>
-                              <Chip
-                                size="small"
-                                color={active.passed ? 'success' : 'error'}
-                                label={active.passed ? 'Aprobado' : 'No aprobado'}
-                              />
-                              {active.completed_at && (
-                                <Typography variant="caption" color="text.secondary">
-                                  {new Date(active.completed_at).toLocaleString('es-ES')}
+                          <Accordion variant="outlined" disableGutters>
+                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                                <AwardIcon color={active.passed ? 'success' : 'disabled'} />
+                                <Typography variant="body2" fontWeight="medium">
+                                  Respuestas del Intento {active.attempt_number}
                                 </Typography>
-                              )}
-                            </Box>
+                                <Chip
+                                  size="small"
+                                  label={`${active.score}/${active.total_points} pts · ${active.percentage}%`}
+                                />
+                                <Chip
+                                  size="small"
+                                  color={active.passed ? 'success' : 'error'}
+                                  label={active.passed ? 'Aprobado' : 'No aprobado'}
+                                />
+                              </Box>
+                            </AccordionSummary>
+                            <AccordionDetails>
 
-                            {lesson.quiz.questions.map((question: any) => {
+                            {lesson.quiz.questions.map((question: any, questionIndex: number) => {
                               const answer = active.answers.find((a: any) => a.question_id === question.id)
                               const chosen = answer?.chosen || []
+                              const toLetter = (index: number) => String.fromCharCode(65 + index)
+                              const typeLabel =
+                                question.type === 'multiple'
+                                  ? 'Selección múltiple'
+                                  : question.type === 'boolean'
+                                    ? 'Verdadero / Falso'
+                                    : 'Selección única'
+                              const chosenLetters = chosen.map(toLetter).join(', ') || '—'
+                              const correctLetters = question.correct_answers.map(toLetter).join(', ') || '—'
 
                               return (
-                                <Box key={question.id} sx={{ mb: 2.5 }}>
-                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                                    <Typography variant="body2" fontWeight="medium" sx={{ flexGrow: 1 }}>
-                                      {question.question}
-                                    </Typography>
+                                <Paper key={question.id} variant="outlined" sx={{ p: 2, mb: 2 }}>
+                                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1.5 }}>
+                                    <Chip size="small" color="primary" label={`Pregunta ${questionIndex + 1}`} />
+                                    <Box sx={{ flexGrow: 1 }}>
+                                      <Typography variant="subtitle1" fontWeight="medium">
+                                        {question.question}
+                                      </Typography>
+                                      <Typography variant="caption" color="text.secondary">
+                                        {typeLabel} · {question.points} punto(s)
+                                      </Typography>
+                                    </Box>
                                     <Chip
                                       size="small"
                                       color={answer?.is_correct ? 'success' : 'error'}
@@ -290,9 +311,18 @@ const LmsUserCourseReview = () => {
                                     />
                                   </Box>
 
+                                  <Typography variant="overline" color="text.secondary">
+                                    Opciones de respuesta
+                                  </Typography>
+
                                   {question.options.map((option: string, optionIndex: number) => {
                                     const isCorrect = question.correct_answers.includes(optionIndex)
                                     const isPicked = chosen.includes(optionIndex)
+                                    const borderColor = isCorrect
+                                      ? 'success.main'
+                                      : isPicked
+                                        ? 'error.main'
+                                        : 'divider'
                                     const bg = isCorrect
                                       ? 'success.light'
                                       : isPicked
@@ -305,39 +335,73 @@ const LmsUserCourseReview = () => {
                                         sx={{
                                           display: 'flex',
                                           alignItems: 'center',
-                                          gap: 1,
+                                          gap: 1.5,
                                           px: 1.5,
                                           py: 0.75,
-                                          mb: 0.5,
+                                          mb: 0.75,
                                           borderRadius: 1,
+                                          border: '1px solid',
+                                          borderColor,
                                           bgcolor: bg
                                         }}
                                       >
+                                        <Box
+                                          sx={{
+                                            width: 26,
+                                            height: 26,
+                                            borderRadius: '50%',
+                                            border: '1px solid',
+                                            borderColor,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontWeight: 'bold',
+                                            fontSize: 13,
+                                            flexShrink: 0
+                                          }}
+                                        >
+                                          {toLetter(optionIndex)}
+                                        </Box>
                                         <Typography variant="body2" sx={{ flexGrow: 1 }}>
                                           {option}
                                         </Typography>
-                                        {isPicked && <Chip size="small" label="Elegida" variant="outlined" />}
-                                        {isCorrect && <Chip size="small" color="success" label="Correcta" />}
-                                        {isPicked && !isCorrect && (
-                                          <Chip size="small" color="error" label="Incorrecta" />
+                                        {isPicked && (
+                                          <Chip
+                                            size="small"
+                                            color={isCorrect ? 'success' : 'error'}
+                                            label="Tu respuesta"
+                                          />
+                                        )}
+                                        {isCorrect && !isPicked && (
+                                          <Chip size="small" color="success" variant="outlined" label="Correcta" />
                                         )}
                                       </Box>
                                     )
                                   })}
 
+                                  <Box sx={{ mt: 1, display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                                    <Typography variant="body2">
+                                      Tu respuesta: <strong>{chosenLetters}</strong>
+                                    </Typography>
+                                    <Typography variant="body2">
+                                      Respuesta correcta: <strong>{correctLetters}</strong>
+                                    </Typography>
+                                  </Box>
+
                                   {question.explanation && (
                                     <Typography
                                       variant="caption"
                                       color="text.secondary"
-                                      sx={{ mt: 0.5, display: 'block' }}
+                                      sx={{ mt: 1, display: 'block' }}
                                     >
                                       {question.explanation}
                                     </Typography>
                                   )}
-                                </Box>
+                                </Paper>
                               )
                             })}
-                          </Paper>
+                            </AccordionDetails>
+                          </Accordion>
                         )}
                       </>
                     )}
