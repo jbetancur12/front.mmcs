@@ -74,7 +74,7 @@ import {
   useSetUserAssignmentDates,
   useResetUserCourseProgress
 } from '../../../hooks/useLms'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 interface ComplianceRecord {
   id: number
@@ -210,28 +210,32 @@ const LmsComplianceTracker: React.FC = () => {
     severity: 'success'
   })
 
-  // Modo edición oculto por defecto: se habilita con Ctrl+Shift+E
-  // (solo para admin / training manager). Las protecciones reales están en el backend.
+  // Modo edición oculto por defecto: se habilita con ?show=true (se recuerda
+  // en sessionStorage); ?show=false lo apaga. La protección real está en el backend.
   const $userStore = useStore(userStore)
   const canEdit = hasLmsAdminAccess($userStore.rol) || hasTrainingManagerRole($userStore.rol)
   const [editMode, setEditMode] = useState(() => sessionStorage.getItem('lms:compliance:edit') === '1')
+  const [searchParams, setSearchParams] = useSearchParams()
 
   useEffect(() => {
-    if (!canEdit) return
-    const handler = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.shiftKey && event.code === 'KeyE') {
-        event.preventDefault()
-        setEditMode((prev) => {
-          const next = !prev
-          sessionStorage.setItem('lms:compliance:edit', next ? '1' : '0')
-          if (!next) setSelectedKeys([])
-          return next
-        })
-      }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [canEdit])
+    const showParam = searchParams.get('show')
+    if (showParam !== 'true' && showParam !== 'false') return
+
+    const next = canEdit && showParam === 'true'
+    setEditMode(next)
+    sessionStorage.setItem('lms:compliance:edit', next ? '1' : '0')
+    if (!next) setSelectedKeys([])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, canEdit])
+
+  const disableEditMode = () => {
+    sessionStorage.setItem('lms:compliance:edit', '0')
+    setEditMode(false)
+    setSelectedKeys([])
+    const next = new URLSearchParams(searchParams)
+    next.set('show', 'false')
+    setSearchParams(next, { replace: true })
+  }
 
   // Transform API data to component format
   const complianceRecords = useMemo(() => {
@@ -821,7 +825,12 @@ const LmsComplianceTracker: React.FC = () => {
         ))}
         <Chip label={`${recordsWithoutFollowUp} sin seguimiento`} color="info" variant="outlined" />
         {canEdit && editMode && (
-          <Chip label="Modo edición (Ctrl+Shift+E)" color="secondary" variant="outlined" />
+          <Chip
+            label="Modo edición — ocultar"
+            color="secondary"
+            variant="outlined"
+            onClick={disableEditMode}
+          />
         )}
       </Box>
 
@@ -945,14 +954,14 @@ const LmsComplianceTracker: React.FC = () => {
                   ) : (
                     prioritizedRecords.map((record) => (
                     <TableRow key={`${record.userId}-${record.courseId}`}>
-                      <TableCell padding="checkbox">
-                        {editMode && (
+                      {editMode && (
+                        <TableCell padding="checkbox">
                           <Checkbox
                             checked={selectedKeys.includes(recordKey(record))}
                             onChange={() => toggleSelect(recordKey(record))}
                           />
-                        )}
-                      </TableCell>
+                        </TableCell>
+                      )}
                       <TableCell>
                         <Box>
                           <Typography variant="body2" fontWeight="medium">
@@ -1656,7 +1665,7 @@ const LmsComplianceTracker: React.FC = () => {
                 </Grid>
               </Box>
 
-              {/* Fechas editables (calendario de cumplimiento) — visibles con Ctrl+Shift+E */}
+              {/* Fechas editables (calendario de cumplimiento) — visibles con ?show=true */}
               {editMode && (
               <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 2 }}>
