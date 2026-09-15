@@ -157,6 +157,7 @@ const LmsComplianceTracker: React.FC = () => {
   const [filterAnchorEl, setFilterAnchorEl] = useState<HTMLButtonElement | null>(null)
   const [filters, setFilters] = useState({
     status: [] as string[],
+    userQuery: '',
     department: '',
     courseId: null as number | null,
     daysUntilDeadline: null as number | null
@@ -317,6 +318,7 @@ const LmsComplianceTracker: React.FC = () => {
       case 'overdue':
         setFilters({
           status: ['overdue'],
+          userQuery: '',
           department: '',
           courseId: null,
           daysUntilDeadline: null
@@ -326,6 +328,7 @@ const LmsComplianceTracker: React.FC = () => {
       case 'deadline_approaching':
         setFilters({
           status: [],
+          userQuery: '',
           department: '',
           courseId: null,
           daysUntilDeadline: 7
@@ -335,6 +338,7 @@ const LmsComplianceTracker: React.FC = () => {
       case 'not_started':
         setFilters({
           status: ['pending'],
+          userQuery: '',
           department: '',
           courseId: null,
           daysUntilDeadline: null
@@ -351,6 +355,12 @@ const LmsComplianceTracker: React.FC = () => {
     // Filter by status
     if (filters.status.length > 0) {
       filtered = filtered.filter(r => filters.status.includes(r.status))
+    }
+
+    // Filter by user name (full or partial, case-insensitive)
+    if (filters.userQuery.trim()) {
+      const term = filters.userQuery.trim().toLowerCase()
+      filtered = filtered.filter(r => (r.userName || '').toLowerCase().includes(term))
     }
 
     // Filter by department
@@ -495,6 +505,7 @@ const LmsComplianceTracker: React.FC = () => {
   const handleClearFilters = () => {
     setFilters({
       status: [],
+      userQuery: '',
       department: '',
       courseId: null,
       daysUntilDeadline: null
@@ -504,6 +515,7 @@ const LmsComplianceTracker: React.FC = () => {
   const activeFiltersCount = useMemo(() => {
     let count = 0
     if (filters.status.length > 0) count++
+    if (filters.userQuery.trim()) count++
     if (filters.department) count++
     if (filters.courseId) count++
     if (filters.daysUntilDeadline !== null) count++
@@ -676,7 +688,7 @@ const LmsComplianceTracker: React.FC = () => {
                     </TableRow>
                   ) : (
                     prioritizedRecords.map((record) => (
-                    <TableRow key={record.id}>
+                    <TableRow key={`${record.userId}-${record.courseId}`}>
                       <TableCell>
                         <Box>
                           <Typography variant="body2" fontWeight="medium">
@@ -790,7 +802,7 @@ const LmsComplianceTracker: React.FC = () => {
             ) : (
               <List>
                 {overdueRecords.map((record) => (
-                <ListItem key={record.id}>
+                <ListItem key={`${record.userId}-${record.courseId}`}>
                   <ListItemIcon>
                     <WarningIcon color="error" />
                   </ListItemIcon>
@@ -836,7 +848,7 @@ const LmsComplianceTracker: React.FC = () => {
             ) : (
               <List>
                 {approachingDeadline.map((record) => (
-                <ListItem key={record.id}>
+                <ListItem key={`${record.userId}-${record.courseId}`}>
                   <ListItemIcon>
                     <ScheduleIcon color="warning" />
                   </ListItemIcon>
@@ -882,7 +894,7 @@ const LmsComplianceTracker: React.FC = () => {
             ) : (
               <List>
                 {completedRecords.map((record) => (
-                <ListItem key={record.id}>
+                <ListItem key={`${record.userId}-${record.courseId}`}>
                   <ListItemIcon>
                     <CheckCircleIcon color="success" />
                   </ListItemIcon>
@@ -972,7 +984,7 @@ const LmsComplianceTracker: React.FC = () => {
                       </TableHead>
                       <TableBody>
                         {course.records.map((record) => (
-                          <TableRow key={record.id}>
+                          <TableRow key={`${record.userId}-${record.courseId}`}>
                             <TableCell>
                               <Box>
                                 <Typography variant="body2" fontWeight="medium">
@@ -1087,6 +1099,17 @@ const LmsComplianceTracker: React.FC = () => {
           </Box>
 
           <Divider sx={{ mb: 2 }} />
+
+          {/* Usuario */}
+          <TextField
+            fullWidth
+            size="small"
+            label="Usuario"
+            placeholder="Nombre"
+            value={filters.userQuery}
+            onChange={(e) => setFilters(prev => ({ ...prev, userQuery: e.target.value }))}
+            sx={{ mb: 3 }}
+          />
 
           {/* Estado */}
           <Box sx={{ mb: 3 }}>
