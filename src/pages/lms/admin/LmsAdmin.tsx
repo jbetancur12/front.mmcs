@@ -189,6 +189,15 @@ const LmsAdmin: React.FC = () => {
       color: '#f59e0b',
       gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
       route: '/lms/admin/certificate-templates'
+    },
+    {
+      id: 'issued-certificates',
+      title: 'Certificados emitidos',
+      description: 'Buscar, validar y reimprimir',
+      icon: <CertificateIcon />,
+      color: '#0ea5e9',
+      gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+      route: '/lms/admin/certificates'
     }
   ]
 

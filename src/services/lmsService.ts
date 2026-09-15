@@ -1466,6 +1466,24 @@ class LMSService {
     return response.data.data
   }
 
+  /**
+   * Reset a user's progress for a course (admin). Keeps issued certificates.
+   */
+  async resetUserCourseProgress(userId: number, courseId: number): Promise<any> {
+    const response = await axiosPrivate.delete(
+      `${this.baseURL}/progress/users/${userId}/courses/${courseId}/reset`
+    )
+    return response.data
+  }
+
+  /**
+   * Search issued certificates (admin). Includes hidden-by-reset ones.
+   */
+  async searchAdminCertificates(params: { q?: string; courseId?: number }): Promise<any> {
+    const response = await axiosPrivate.get(`${this.baseURL}/certificates/admin/search`, { params })
+    return response.data?.data || []
+  }
+
   // ===========================
   // Notifications
   // ===========================

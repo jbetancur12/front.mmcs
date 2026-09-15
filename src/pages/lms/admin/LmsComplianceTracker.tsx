@@ -67,7 +67,8 @@ import {
   useMandatoryTrainingStatus,
   useTriggerManualReminders,
   useSetCourseCompletionDate,
-  useSetUserAssignmentDates
+  useSetUserAssignmentDates,
+  useResetUserCourseProgress
 } from '../../../hooks/useLms'
 import { useNavigate } from 'react-router-dom'
 
@@ -182,6 +183,7 @@ const LmsComplianceTracker: React.FC = () => {
   const triggerManualRemindersMutation = useTriggerManualReminders()
   const setCompletionMutation = useSetCourseCompletionDate()
   const setUserDatesMutation = useSetUserAssignmentDates()
+  const resetProgressMutation = useResetUserCourseProgress()
 
   // Edición de fechas (modal detalle)
   const [dateScope, setDateScope] = useState<'user' | 'group' | 'group-clear'>('user')
@@ -420,6 +422,24 @@ const LmsComplianceTracker: React.FC = () => {
       setSnackbar({ open: true, message: e?.message || 'No se pudo restablecer', severity: 'error' })
     } finally {
       setSavingDates(false)
+    }
+  }
+
+  const handleResetCourse = async () => {
+    if (!detailsRecord) return
+    const confirmed = window.confirm(
+      `¿Reiniciar el avance de ${detailsRecord.userName} en "${detailsRecord.courseTitle}"?\n\nSe borran el progreso y los recordatorios. Los certificados emitidos se conservan.`
+    )
+    if (!confirmed) return
+    try {
+      await resetProgressMutation.mutateAsync({
+        userId: detailsRecord.userId,
+        courseId: detailsRecord.courseId
+      })
+      setSnackbar({ open: true, message: 'Curso reiniciado', severity: 'success' })
+      handleCloseDetails()
+    } catch (e: any) {
+      setSnackbar({ open: true, message: e?.message || 'No se pudo reiniciar el curso', severity: 'error' })
     }
   }
 
@@ -1788,6 +1808,13 @@ const LmsComplianceTracker: React.FC = () => {
               Enviar Recordatorio
             </Button>
           )}
+          <Button
+            color="error"
+            onClick={handleResetCourse}
+            disabled={resetProgressMutation.isLoading}
+          >
+            Reiniciar curso
+          </Button>
           <Button
             variant="contained"
             startIcon={<SchoolIcon />}

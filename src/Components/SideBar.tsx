@@ -183,6 +183,11 @@ const sidebarItems = ($userStore: UserData) => [
         roles: [...LMS_ADMIN_ROUTE_ROLES]
       },
       {
+        label: 'Certificados Emitidos',
+        url: 'lms/admin/certificates',
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
+      },
+      {
         label: 'Mi Aprendizaje',
         url: 'lms/employee',
         roles: ['employee']
