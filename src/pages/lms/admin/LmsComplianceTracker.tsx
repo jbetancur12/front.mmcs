@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react'
+import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import {
   Box,
   Card,
@@ -64,6 +64,9 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { getRoleLabelEs } from 'src/constants/roles'
+import { useStore } from '@nanostores/react'
+import { userStore } from 'src/store/userStore'
+import { hasLmsAdminAccess, hasTrainingManagerRole } from 'src/utils/lmsIdentity'
 import {
   useMandatoryTrainingStatus,
   useTriggerManualReminders,
@@ -206,6 +209,29 @@ const LmsComplianceTracker: React.FC = () => {
     message: '',
     severity: 'success'
   })
+
+  // Modo edición oculto por defecto: se habilita con Ctrl+Shift+E
+  // (solo para admin / training manager). Las protecciones reales están en el backend.
+  const $userStore = useStore(userStore)
+  const canEdit = hasLmsAdminAccess($userStore.rol) || hasTrainingManagerRole($userStore.rol)
+  const [editMode, setEditMode] = useState(() => sessionStorage.getItem('lms:compliance:edit') === '1')
+
+  useEffect(() => {
+    if (!canEdit) return
+    const handler = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.shiftKey && event.code === 'KeyE') {
+        event.preventDefault()
+        setEditMode((prev) => {
+          const next = !prev
+          sessionStorage.setItem('lms:compliance:edit', next ? '1' : '0')
+          if (!next) setSelectedKeys([])
+          return next
+        })
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [canEdit])
 
   // Transform API data to component format
   const complianceRecords = useMemo(() => {
@@ -794,6 +820,9 @@ const LmsComplianceTracker: React.FC = () => {
           <Chip key={item} label={item} variant="outlined" />
         ))}
         <Chip label={`${recordsWithoutFollowUp} sin seguimiento`} color="info" variant="outlined" />
+        {canEdit && editMode && (
+          <Chip label="Modo edición (Ctrl+Shift+E)" color="secondary" variant="outlined" />
+        )}
       </Box>
 
       {prioritizedRecords[0] && (
@@ -841,7 +870,7 @@ const LmsComplianceTracker: React.FC = () => {
             subheader="Usa filtros para aislar áreas, cursos o estados antes de exportar o disparar recordatorios manuales."
             action={
               <Box sx={{ display: 'flex', gap: 1 }}>
-                {selectedRecords.length > 0 && (
+                {editMode && selectedRecords.length > 0 && (
                   <Button
                     startIcon={<EditCalendarIcon />}
                     size="small"
@@ -877,14 +906,16 @@ const LmsComplianceTracker: React.FC = () => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        indeterminate={someVisibleSelected}
-                        checked={allVisibleSelected}
-                        onChange={toggleSelectAll}
-                        inputProps={{ 'aria-label': 'Seleccionar todos' }}
-                      />
-                    </TableCell>
+                    {editMode && (
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          indeterminate={someVisibleSelected}
+                          checked={allVisibleSelected}
+                          onChange={toggleSelectAll}
+                          inputProps={{ 'aria-label': 'Seleccionar todos' }}
+                        />
+                      </TableCell>
+                    )}
                     <TableCell>Usuario</TableCell>
                     <TableCell>Curso</TableCell>
                     <TableCell>Departamento</TableCell>
@@ -898,7 +929,7 @@ const LmsComplianceTracker: React.FC = () => {
                 <TableBody>
                   {filteredRecords.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} align="center" sx={{ py: 8 }}>
+                      <TableCell colSpan={editMode ? 9 : 8} align="center" sx={{ py: 8 }}>
                         <Typography variant="body1" color="text.secondary">
                           No se encontraron registros con los filtros aplicados
                         </Typography>
@@ -915,10 +946,12 @@ const LmsComplianceTracker: React.FC = () => {
                     prioritizedRecords.map((record) => (
                     <TableRow key={`${record.userId}-${record.courseId}`}>
                       <TableCell padding="checkbox">
-                        <Checkbox
-                          checked={selectedKeys.includes(recordKey(record))}
-                          onChange={() => toggleSelect(recordKey(record))}
-                        />
+                        {editMode && (
+                          <Checkbox
+                            checked={selectedKeys.includes(recordKey(record))}
+                            onChange={() => toggleSelect(recordKey(record))}
+                          />
+                        )}
                       </TableCell>
                       <TableCell>
                         <Box>
@@ -1204,19 +1237,21 @@ const LmsComplianceTracker: React.FC = () => {
                     <Table size="small">
                       <TableHead>
                         <TableRow>
-                          <TableCell padding="checkbox">
-                            <Checkbox
-                              checked={course.records.length > 0 && course.records.every((r) => selectedKeys.includes(recordKey(r)))}
-                              indeterminate={course.records.some((r) => selectedKeys.includes(recordKey(r))) && !course.records.every((r) => selectedKeys.includes(recordKey(r)))}
-                              onChange={() => {
-                                const keys = course.records.map(recordKey)
-                                const all = keys.every((k) => selectedKeys.includes(k))
-                                setSelectedKeys((prev) => all
-                                  ? prev.filter((k) => !keys.includes(k))
-                                  : Array.from(new Set([...prev, ...keys])))
-                              }}
-                            />
-                          </TableCell>
+                          {editMode && (
+                            <TableCell padding="checkbox">
+                              <Checkbox
+                                checked={course.records.length > 0 && course.records.every((r) => selectedKeys.includes(recordKey(r)))}
+                                indeterminate={course.records.some((r) => selectedKeys.includes(recordKey(r))) && !course.records.every((r) => selectedKeys.includes(recordKey(r)))}
+                                onChange={() => {
+                                  const keys = course.records.map(recordKey)
+                                  const all = keys.every((k) => selectedKeys.includes(k))
+                                  setSelectedKeys((prev) => all
+                                    ? prev.filter((k) => !keys.includes(k))
+                                    : Array.from(new Set([...prev, ...keys])))
+                                }}
+                              />
+                            </TableCell>
+                          )}
                           <TableCell>Usuario</TableCell>
                           <TableCell>Departamento</TableCell>
                           <TableCell>Progreso</TableCell>
@@ -1229,12 +1264,14 @@ const LmsComplianceTracker: React.FC = () => {
                       <TableBody>
                         {course.records.map((record) => (
                           <TableRow key={`${record.userId}-${record.courseId}`}>
-                            <TableCell padding="checkbox">
-                              <Checkbox
-                                checked={selectedKeys.includes(recordKey(record))}
-                                onChange={() => toggleSelect(recordKey(record))}
-                              />
-                            </TableCell>
+                            {editMode && (
+                              <TableCell padding="checkbox">
+                                <Checkbox
+                                  checked={selectedKeys.includes(recordKey(record))}
+                                  onChange={() => toggleSelect(recordKey(record))}
+                                />
+                              </TableCell>
+                            )}
                             <TableCell>
                               <Box>
                                 <Typography variant="body2" fontWeight="medium">
@@ -1619,7 +1656,8 @@ const LmsComplianceTracker: React.FC = () => {
                 </Grid>
               </Box>
 
-              {/* Fechas editables (calendario de cumplimiento) */}
+              {/* Fechas editables (calendario de cumplimiento) — visibles con Ctrl+Shift+E */}
+              {editMode && (
               <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 2 }}>
                   Editar fechas
@@ -1687,6 +1725,7 @@ const LmsComplianceTracker: React.FC = () => {
                   </Button>
                 </Box>
               </Box>
+              )}
 
               {/* Información de tiempo */}
               <Box sx={{ mb: 3 }}>
@@ -1819,13 +1858,15 @@ const LmsComplianceTracker: React.FC = () => {
               Enviar Recordatorio
             </Button>
           )}
-          <Button
-            color="error"
-            onClick={handleResetCourse}
-            disabled={resetProgressMutation.isLoading}
-          >
-            Reiniciar curso
-          </Button>
+          {editMode && (
+            <Button
+              color="error"
+              onClick={handleResetCourse}
+              disabled={resetProgressMutation.isLoading}
+            >
+              Reiniciar curso
+            </Button>
+          )}
           <Button
             variant="contained"
             startIcon={<SchoolIcon />}
