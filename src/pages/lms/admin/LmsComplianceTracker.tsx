@@ -1881,7 +1881,7 @@ const LmsComplianceTracker: React.FC = () => {
             startIcon={<SchoolIcon />}
             onClick={() => {
               if (detailsRecord) {
-                navigate(`/lms/course/${detailsRecord.courseId}`)
+                navigate(`/lms/admin/users/${detailsRecord.userId}/courses/${detailsRecord.courseId}/review`)
               }
             }}
           >

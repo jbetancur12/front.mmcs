@@ -1477,6 +1477,16 @@ class LMSService {
   }
 
   /**
+   * Admin review of another user's course progress (lessons + quizzes with answers).
+   */
+  async getCourseReviewForAdmin(userId: number, courseId: number): Promise<any> {
+    const response = await axiosPrivate.get(
+      `${this.baseURL}/progress/admin/users/${userId}/courses/${courseId}/review`
+    )
+    return response.data?.data
+  }
+
+  /**
    * Search issued certificates (admin). Includes hidden-by-reset ones.
    */
   async searchAdminCertificates(params: { q?: string; courseId?: number }): Promise<any> {
