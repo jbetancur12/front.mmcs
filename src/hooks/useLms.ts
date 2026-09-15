@@ -1257,6 +1257,28 @@ export const useSetUserAssignmentDates = (
 }
 
 /**
+ * Reset a user's progress for a course (admin). Certificates are preserved.
+ */
+export const useResetUserCourseProgress = (
+  options?: UseMutationOptions<any, Error, { userId: number; courseId: number }>
+) => {
+  const queryClient = useQueryClient()
+
+  return useMutation(
+    (data: { userId: number; courseId: number }) =>
+      lmsService.resetUserCourseProgress(data.userId, data.courseId),
+    {
+      ...options,
+      onSuccess: (data, variables, context) => {
+        queryClient.invalidateQueries(['analytics', 'mandatory-training'])
+        queryClient.invalidateQueries(['lms-all-assignments'])
+        options?.onSuccess?.(data, variables, context)
+      }
+    }
+  )
+}
+
+/**
  * Get assignment management analytics
  */
 export const useAssignmentManagementAnalytics = (

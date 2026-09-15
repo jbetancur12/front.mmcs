@@ -28,6 +28,7 @@ const LmsQuizManagement = lazy(() => import('../pages/lms/admin/LmsQuizManagemen
 const LmsCourseAssignmentInterface = lazy(() => import('../pages/lms/admin/LmsCourseAssignmentInterface'))
 const LmsComplianceTracker = lazy(() => import('../pages/lms/admin/LmsComplianceTracker'))
 const LmsCertificateTemplates = lazy(() => import('../pages/lms/admin/LmsCertificateTemplates'))
+const LmsIssuedCertificates = lazy(() => import('../pages/lms/admin/LmsIssuedCertificates'))
 const LmsCertificateView = lazy(() => import('../pages/lms/course/LmsCertificateView'))
 
 const LmsRoutes = (role: string[]) => {
@@ -85,6 +86,7 @@ const LmsRoutes = (role: string[]) => {
         <Route path='lms/admin/assignments' element={<LmsCourseAssignmentInterface />} />
         <Route path='lms/admin/compliance' element={<LmsComplianceTracker />} />
         <Route path='lms/admin/certificate-templates' element={<LmsCertificateTemplates />} />
+        <Route path='lms/admin/certificates' element={<LmsIssuedCertificates />} />
         <Route path='lms/admin/jobs' element={<Navigate to='/lms/admin' replace />} />
       </Route>
     </>
