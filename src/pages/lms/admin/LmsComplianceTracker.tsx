@@ -161,24 +161,45 @@ const getCompliancePriority = (record: ComplianceRecord) => {
 
 const recordKey = (record: Pick<ComplianceRecord, 'userId' | 'courseId'>) => `${record.userId}-${record.courseId}`
 
+const DEFAULT_FILTERS: {
+  status: string[]
+  userQuery: string
+  department: string
+  courseId: number | null
+  daysUntilDeadline: number | null
+} = {
+  status: [],
+  userQuery: '',
+  department: '',
+  courseId: null,
+  daysUntilDeadline: null
+}
+
+const readStoredFilters = (): typeof DEFAULT_FILTERS => {
+  try {
+    const raw = sessionStorage.getItem('lms:compliance:filters')
+    if (!raw) return { ...DEFAULT_FILTERS }
+    return { ...DEFAULT_FILTERS, ...JSON.parse(raw) }
+  } catch {
+    return { ...DEFAULT_FILTERS }
+  }
+}
+
 const LmsComplianceTracker: React.FC = () => {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState(0)
+  const [activeTab, setActiveTab] = useState(() => {
+    const raw = sessionStorage.getItem('lms:compliance:tab')
+    return raw ? Number(raw) || 0 : 0
+  })
   const [selectedRecord, setSelectedRecord] = useState<ComplianceRecord | null>(null)
   const [openDialog, setOpenDialog] = useState(false)
   const [reminderMessage, setReminderMessage] = useState('')
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false)
   const [detailsRecord, setDetailsRecord] = useState<ComplianceRecord | null>(null)
 
-  // Filtros
+  // Filtros (persistidos en sessionStorage para sobrevivir la navegación)
   const [filterAnchorEl, setFilterAnchorEl] = useState<HTMLButtonElement | null>(null)
-  const [filters, setFilters] = useState({
-    status: [] as string[],
-    userQuery: '',
-    department: '',
-    courseId: null as number | null,
-    daysUntilDeadline: null as number | null
-  })
+  const [filters, setFilters] = useState(readStoredFilters)
 
   // Fetch mandatory training status from API
   const { data: trainingData, isLoading, error } = useMandatoryTrainingStatus({
@@ -227,6 +248,15 @@ const LmsComplianceTracker: React.FC = () => {
     if (!next) setSelectedKeys([])
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, canEdit])
+
+  // Persistir filtros y tab entre navegaciones
+  useEffect(() => {
+    sessionStorage.setItem('lms:compliance:filters', JSON.stringify(filters))
+  }, [filters])
+
+  useEffect(() => {
+    sessionStorage.setItem('lms:compliance:tab', String(activeTab))
+  }, [activeTab])
 
   const disableEditMode = () => {
     sessionStorage.setItem('lms:compliance:edit', '0')
