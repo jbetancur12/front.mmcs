@@ -1176,6 +1176,87 @@ export const useTriggerManualReminders = (
 }
 
 /**
+ * Set/override course completion date (single user or batch)
+ */
+export const useSetCourseCompletionDate = (
+  options?: UseMutationOptions<
+    any,
+    Error,
+    { completedAt: string; userId?: number; courseId?: number; items?: Array<{ userId: number; courseId: number }> }
+  >
+) => {
+  const queryClient = useQueryClient()
+
+  return useMutation(
+    (data: { completedAt: string; userId?: number; courseId?: number; items?: Array<{ userId: number; courseId: number }> }) =>
+      data.items && data.items.length > 0
+        ? lmsService.bulkSetCourseCompletionDates(data.completedAt, data.items)
+        : lmsService.setCourseCompletionDate(data.userId as number, data.courseId as number, data.completedAt),
+    {
+      ...options,
+      onSuccess: (data, variables, context) => {
+        queryClient.invalidateQueries(['analytics', 'mandatory-training'])
+        options?.onSuccess?.(data, variables, context)
+      }
+    }
+  )
+}
+
+/**
+ * Set, clear or scope per-user assignment date overrides (assigned_at / deadline)
+ */
+export const useSetUserAssignmentDates = (
+  options?: UseMutationOptions<
+    any,
+    Error,
+    {
+      scope: 'user' | 'clear' | 'group' | 'group-clear'
+      userId?: number
+      courseId: number
+      assignmentId?: number
+      assigned_at?: string | null
+      deadline?: string | null
+    }
+  >
+) => {
+  const queryClient = useQueryClient()
+
+  return useMutation(
+    (data: {
+      scope: 'user' | 'clear' | 'group' | 'group-clear'
+      userId?: number
+      courseId: number
+      assignmentId?: number
+      assigned_at?: string | null
+      deadline?: string | null
+    }) => {
+      const dates = { assigned_at: data.assigned_at, deadline: data.deadline }
+
+      switch (data.scope) {
+        case 'clear':
+          return lmsService.clearUserAssignmentDates(data.userId as number, data.courseId)
+        case 'group':
+          return lmsService.updateAssignmentDates(data.assignmentId as number, dates)
+        case 'group-clear':
+          return lmsService
+            .clearCourseUserDates(data.courseId)
+            .then(() => lmsService.updateAssignmentDates(data.assignmentId as number, dates))
+        default:
+          return lmsService.setUserAssignmentDates(data.userId as number, data.courseId, dates)
+      }
+    },
+    {
+      ...options,
+      onSuccess: (data, variables, context) => {
+        queryClient.invalidateQueries(['analytics', 'mandatory-training'])
+        queryClient.invalidateQueries(['lms-all-assignments'])
+        options?.onSuccess?.(data, variables, context)
+      }
+    }
+  )
+}
+
+/**
  * Get assignment management analytics
  */
 export const useAssignmentManagementAnalytics = (

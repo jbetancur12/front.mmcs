@@ -80,6 +80,7 @@ export interface Course {
   user_deadline?: string  // Deadline específico del usuario (calculado por el backend)
   learningContinuity?: null | {
     lastAccessedAt: string | null
+    completedAt?: string | null
     nextLesson: null | {
       lessonId: number
       title: string
@@ -330,6 +331,7 @@ export interface Certificate {
   certificateNumber?: string
   issued_at?: string
   issuedAt?: string
+  completionDate?: string
   expires_at?: string
   file_url?: string
   pdfPath?: string | null
@@ -1387,6 +1389,80 @@ class LMSService {
     customMessage?: string;
   }): Promise<any> {
     const response = await axiosPrivate.post(`${this.baseURL}/analytics/reminders/trigger-manual`, data)
+    return response.data.data
+  }
+
+  /**
+   * Override the completion date of a course for a single user (admin/compliance)
+   */
+  async setCourseCompletionDate(userId: number, courseId: number, completedAt: string): Promise<any> {
+    const response = await axiosPrivate.put(
+      `${this.baseURL}/progress/users/${userId}/courses/${courseId}/completed-at`,
+      { completedAt }
+    )
+    return response.data.data
+  }
+
+  /**
+   * Override completion dates for many user/course pairs at once
+   */
+  async bulkSetCourseCompletionDates(
+    completedAt: string,
+    items: Array<{ userId: number; courseId: number }>
+  ): Promise<any> {
+    const response = await axiosPrivate.post(
+      `${this.baseURL}/progress/completion-dates/bulk`,
+      { completedAt, items }
+    )
+    return response.data.data
+  }
+
+  /**
+   * Set per-user assignment date overrides (assigned_at / deadline)
+   */
+  async setUserAssignmentDates(
+    userId: number,
+    courseId: number,
+    data: { assigned_at?: string | null; deadline?: string | null }
+  ): Promise<any> {
+    const response = await axiosPrivate.put(
+      `${this.baseURL}/assignments/user-dates/${userId}/courses/${courseId}`,
+      data
+    )
+    return response.data.data
+  }
+
+  /**
+   * Reset per-user assignment dates so the user inherits the group values
+   */
+  async clearUserAssignmentDates(userId: number, courseId: number): Promise<any> {
+    const response = await axiosPrivate.delete(
+      `${this.baseURL}/assignments/user-dates/${userId}/courses/${courseId}`
+    )
+    return response.data.data
+  }
+
+  /**
+   * Update group-level assignment dates (applies to the whole assignment)
+   */
+  async updateAssignmentDates(
+    assignmentId: number,
+    data: { assigned_at?: string | null; deadline?: string | null }
+  ): Promise<any> {
+    const response = await axiosPrivate.put(
+      `${this.baseURL}/assignments/assignments/${assignmentId}`,
+      data
+    )
+    return response.data.data
+  }
+
+  /**
+   * Clear every per-user date override of a course (all users back to group)
+   */
+  async clearCourseUserDates(courseId: number): Promise<any> {
+    const response = await axiosPrivate.delete(
+      `${this.baseURL}/assignments/user-dates/courses/${courseId}`
+    )
     return response.data.data
   }
 

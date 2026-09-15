@@ -165,11 +165,12 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   }
 
   // Process courses data
-  const { mandatoryCourses, optionalCourses, stats } = useMemo(() => {
+  const { mandatoryCourses, optionalCourses, completedCourses, stats } = useMemo(() => {
     if (!coursesData) {
       return {
         mandatoryCourses: [],
         optionalCourses: [],
+        completedCourses: [],
         stats: {
           totalCourses: 0,
           completedCourses: 0,
@@ -227,7 +228,8 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         daysUntilDeadline,
         isOverdue,
         nextLessonLabel: getNextLessonLabel(course),
-        lastAccessLabel: formatLastAccess(course.learningContinuity?.lastAccessedAt)
+        lastAccessLabel: formatLastAccess(course.learningContinuity?.lastAccessedAt),
+        completedAt: course.learningContinuity?.completedAt || earnedCertificate?.completionDate || null
       }
 
       if (courseIsMandatory) {
@@ -278,6 +280,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     return {
       mandatoryCourses: mandatory,
       optionalCourses: optional,
+      completedCourses: allEnrichedCourses.filter((course) => course.progress === 100),
       stats: {
         totalCourses,
         completedCourses,
@@ -548,6 +551,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
           <Tab label='Mis Cursos' />
           <Tab label='Mis Certificados' />
           <Tab label='Notificaciones' />
+          <Tab label='Finalizados' />
         </Tabs>
 
         {activeTab === 0 && (
@@ -1294,6 +1298,91 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         {activeTab === 4 && (
           <Box>
             <LmsNotificationCenter userRole="employee" userId={currentUser.id} />
+          </Box>
+        )}
+
+        {activeTab === 5 && (
+          <Box>
+            {completedCourses.length === 0 ? (
+              <Card variant='outlined' sx={{ p: 4, textAlign: 'center' }}>
+                <CheckCircleIcon sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
+                <Typography variant='h6' color='text.secondary'>
+                  Aún no tienes cursos finalizados
+                </Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  Cuando completes un curso aparecerá aquí con su fecha de finalización.
+                </Typography>
+              </Card>
+            ) : (
+              <Grid container spacing={3}>
+                {completedCourses.map((course: any) => (
+                  <Grid item xs={12} md={6} lg={4} key={course.id}>
+                    <Card
+                      variant='outlined'
+                      sx={{
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        borderColor: 'success.main',
+                        transition: 'all 0.3s',
+                        '&:hover': { transform: 'translateY(-4px)', boxShadow: 4 }
+                      }}
+                    >
+                      <CardContent sx={{ flex: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                          <Avatar sx={{ bgcolor: 'success.main', mr: 2, width: 56, height: 56 }}>
+                            <CheckCircleIcon sx={{ fontSize: 32 }} />
+                          </Avatar>
+                          <Box>
+                            <Chip
+                              label={course.isMandatory ? 'OBLIGATORIO' : 'FINALIZADO'}
+                              size='small'
+                              color={course.isMandatory ? 'error' : 'success'}
+                              sx={{ mb: 0.5, fontWeight: 'bold' }}
+                            />
+                            <Typography variant='caption' color='text.secondary' display='block'>
+                              {course.completedAt
+                                ? `Finalizado el ${new Date(course.completedAt).toLocaleDateString('es-ES')}`
+                                : 'Fecha de finalización no registrada'}
+                            </Typography>
+                          </Box>
+                        </Box>
+
+                        <Typography variant='h6' gutterBottom>
+                          {course.title}
+                        </Typography>
+
+                        <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                          {course.totalLessons} lecciones completadas
+                        </Typography>
+                      </CardContent>
+
+                      <Box sx={{ p: 2, pt: 0, display: 'flex', gap: 1 }}>
+                        <Button
+                          variant='contained'
+                          color='success'
+                          startIcon={<PlayArrowIcon />}
+                          fullWidth
+                          onClick={() => navigate(`/lms/course/${course.id}`)}
+                        >
+                          Ver curso
+                        </Button>
+                        {course.earnedCertificate && (
+                          <Button
+                            variant='outlined'
+                            color='warning'
+                            startIcon={<AwardIcon />}
+                            onClick={() => navigate(`/lms/certificate/${course.earnedCertificate.id}`)}
+                          >
+                            Certificado
+                          </Button>
+                        )}
+                      </Box>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            )}
           </Box>
         )}
       </Box>

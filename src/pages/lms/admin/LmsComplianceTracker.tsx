@@ -41,7 +41,8 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Divider
+  Divider,
+  Snackbar
 } from '@mui/material'
 import {
   Warning as WarningIcon,
@@ -56,9 +57,18 @@ import {
   Error as ErrorIcon,
   ExpandMore as ExpandMoreIcon,
   Close as CloseIcon,
-  School as SchoolIcon
+  School as SchoolIcon,
+  EditCalendar as EditCalendarIcon
 } from '@mui/icons-material'
-import { useMandatoryTrainingStatus, useTriggerManualReminders } from '../../../hooks/useLms'
+import { DatePicker } from '@mui/x-date-pickers/DatePicker'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import {
+  useMandatoryTrainingStatus,
+  useTriggerManualReminders,
+  useSetCourseCompletionDate,
+  useSetUserAssignmentDates
+} from '../../../hooks/useLms'
 import { useNavigate } from 'react-router-dom'
 
 interface ComplianceRecord {
@@ -144,6 +154,8 @@ const getCompliancePriority = (record: ComplianceRecord) => {
   return 5
 }
 
+const recordKey = (record: Pick<ComplianceRecord, 'userId' | 'courseId'>) => `${record.userId}-${record.courseId}`
+
 const LmsComplianceTracker: React.FC = () => {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState(0)
@@ -168,6 +180,29 @@ const LmsComplianceTracker: React.FC = () => {
     includeCompleted: true
   })
   const triggerManualRemindersMutation = useTriggerManualReminders()
+  const setCompletionMutation = useSetCourseCompletionDate()
+  const setUserDatesMutation = useSetUserAssignmentDates()
+
+  // Edición de fechas (modal detalle)
+  const [dateScope, setDateScope] = useState<'user' | 'group' | 'group-clear'>('user')
+  const [editAssignedAt, setEditAssignedAt] = useState<Date | null>(null)
+  const [editDeadline, setEditDeadline] = useState<Date | null>(null)
+  const [editCompletedAt, setEditCompletedAt] = useState<Date | null>(null)
+  const [savingDates, setSavingDates] = useState(false)
+
+  // Selección múltiple + edición en lote
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([])
+  const [bulkOpen, setBulkOpen] = useState(false)
+  const [bulkCompletedAt, setBulkCompletedAt] = useState<Date | null>(null)
+  const [bulkAssignedAt, setBulkAssignedAt] = useState<Date | null>(null)
+  const [bulkDeadline, setBulkDeadline] = useState<Date | null>(null)
+  const [bulkSaving, setBulkSaving] = useState(false)
+
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  })
 
   // Transform API data to component format
   const complianceRecords = useMemo(() => {
@@ -304,12 +339,145 @@ const LmsComplianceTracker: React.FC = () => {
 
   const handleViewDetails = (record: ComplianceRecord) => {
     setDetailsRecord(record)
+    setDateScope('user')
+    setEditAssignedAt(record.assignedDate ? new Date(record.assignedDate) : null)
+    setEditDeadline(record.deadline ? new Date(record.deadline) : null)
+    setEditCompletedAt(record.completedDate ? new Date(record.completedDate) : null)
     setOpenDetailsDialog(true)
   }
 
   const handleCloseDetails = () => {
     setOpenDetailsDialog(false)
     setDetailsRecord(null)
+  }
+
+  const handleSaveDates = async () => {
+    if (!detailsRecord) return
+
+    if (
+      detailsRecord.status === 'completed' &&
+      editCompletedAt &&
+      editAssignedAt &&
+      editCompletedAt < editAssignedAt
+    ) {
+      setSnackbar({
+        open: true,
+        message: 'La fecha de finalización no puede ser anterior a la fecha de asignación',
+        severity: 'error'
+      })
+      return
+    }
+
+    setSavingDates(true)
+    try {
+      const jobs: Promise<any>[] = [
+        setUserDatesMutation.mutateAsync({
+          scope: dateScope,
+          userId: detailsRecord.userId,
+          courseId: detailsRecord.courseId,
+          assignmentId: detailsRecord.id,
+          assigned_at: editAssignedAt ? editAssignedAt.toISOString() : null,
+          deadline: editDeadline ? editDeadline.toISOString() : null
+        })
+      ]
+
+      if (detailsRecord.status === 'completed' && editCompletedAt) {
+        jobs.push(
+          setCompletionMutation.mutateAsync({
+            userId: detailsRecord.userId,
+            courseId: detailsRecord.courseId,
+            completedAt: editCompletedAt.toISOString()
+          })
+        )
+      }
+
+      await Promise.all(jobs)
+      setSnackbar({ open: true, message: 'Fechas actualizadas', severity: 'success' })
+      handleCloseDetails()
+    } catch (e: any) {
+      setSnackbar({
+        open: true,
+        message: e?.message || 'No se pudieron actualizar las fechas',
+        severity: 'error'
+      })
+    } finally {
+      setSavingDates(false)
+    }
+  }
+
+  const handleResetToGroup = async () => {
+    if (!detailsRecord) return
+    setSavingDates(true)
+    try {
+      await setUserDatesMutation.mutateAsync({
+        scope: 'clear',
+        userId: detailsRecord.userId,
+        courseId: detailsRecord.courseId
+      })
+      setSnackbar({ open: true, message: 'Fechas restablecidas al grupo', severity: 'success' })
+      handleCloseDetails()
+    } catch (e: any) {
+      setSnackbar({ open: true, message: e?.message || 'No se pudo restablecer', severity: 'error' })
+    } finally {
+      setSavingDates(false)
+    }
+  }
+
+  const toggleSelect = (key: string) =>
+    setSelectedKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]))
+
+  const handleBulkApply = async () => {
+    const selected = filteredRecords.filter((r) => selectedKeys.includes(recordKey(r)))
+    if (selected.length === 0) return
+
+    if (bulkCompletedAt && bulkAssignedAt && bulkCompletedAt < bulkAssignedAt) {
+      setSnackbar({
+        open: true,
+        message: 'La fecha de finalización no puede ser anterior a la fecha de asignación',
+        severity: 'error'
+      })
+      return
+    }
+
+    setBulkSaving(true)
+    try {
+      const jobs: Promise<any>[] = []
+
+      if (bulkCompletedAt) {
+        jobs.push(
+          setCompletionMutation.mutateAsync({
+            completedAt: bulkCompletedAt.toISOString(),
+            items: selected.map((r) => ({ userId: r.userId, courseId: r.courseId }))
+          })
+        )
+      }
+
+      if (bulkAssignedAt || bulkDeadline) {
+        for (const r of selected) {
+          jobs.push(
+            setUserDatesMutation.mutateAsync({
+              scope: 'user',
+              userId: r.userId,
+              courseId: r.courseId,
+              assigned_at: bulkAssignedAt ? bulkAssignedAt.toISOString() : undefined,
+              deadline: bulkDeadline ? bulkDeadline.toISOString() : undefined
+            })
+          )
+        }
+      }
+
+      await Promise.all(jobs)
+      setSnackbar({ open: true, message: `Fechas aplicadas a ${selected.length} registro(s)`, severity: 'success' })
+      setBulkOpen(false)
+      setSelectedKeys([])
+      setBulkCompletedAt(null)
+      setBulkAssignedAt(null)
+      setBulkDeadline(null)
+    } catch (e: any) {
+      setSnackbar({ open: true, message: e?.message || 'No se pudo aplicar en lote', severity: 'error' })
+    } finally {
+      setBulkSaving(false)
+    }
   }
 
   const handleAlertClick = (alertType: string) => {
@@ -414,6 +582,23 @@ const LmsComplianceTracker: React.FC = () => {
   const overdueRecords = useMemo(() => applyUserFilters(baseOverdueRecords), [baseOverdueRecords, applyUserFilters])
   const approachingDeadline = useMemo(() => applyUserFilters(baseApproachingDeadline), [baseApproachingDeadline, applyUserFilters])
   const completedRecords = useMemo(() => applyUserFilters(baseCompletedRecords), [baseCompletedRecords, applyUserFilters])
+
+  // Selección múltiple sobre los registros visibles
+  const visibleKeys = useMemo(() => filteredRecords.map(recordKey), [filteredRecords])
+  const selectedRecords = useMemo(
+    () => filteredRecords.filter((r) => selectedKeys.includes(recordKey(r))),
+    [filteredRecords, selectedKeys]
+  )
+  const allVisibleSelected = visibleKeys.length > 0 && visibleKeys.every((k) => selectedKeys.includes(k))
+  const someVisibleSelected = visibleKeys.some((k) => selectedKeys.includes(k)) && !allVisibleSelected
+
+  const toggleSelectAll = () => {
+    if (allVisibleSelected) {
+      setSelectedKeys((prev) => prev.filter((k) => !visibleKeys.includes(k)))
+    } else {
+      setSelectedKeys((prev) => Array.from(new Set([...prev, ...visibleKeys])))
+    }
+  }
 
   // Get unique values for filter options
   const uniqueDepartments = useMemo(() => {
@@ -635,6 +820,17 @@ const LmsComplianceTracker: React.FC = () => {
             subheader="Usa filtros para aislar áreas, cursos o estados antes de exportar o disparar recordatorios manuales."
             action={
               <Box sx={{ display: 'flex', gap: 1 }}>
+                {selectedRecords.length > 0 && (
+                  <Button
+                    startIcon={<EditCalendarIcon />}
+                    size="small"
+                    onClick={() => setBulkOpen(true)}
+                    variant="contained"
+                    color="secondary"
+                  >
+                    Cambiar fechas ({selectedRecords.length})
+                  </Button>
+                )}
                 <Button
                   startIcon={<FilterListIcon />}
                   size="small"
@@ -660,6 +856,14 @@ const LmsComplianceTracker: React.FC = () => {
               <Table>
                 <TableHead>
                   <TableRow>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        indeterminate={someVisibleSelected}
+                        checked={allVisibleSelected}
+                        onChange={toggleSelectAll}
+                        inputProps={{ 'aria-label': 'Seleccionar todos' }}
+                      />
+                    </TableCell>
                     <TableCell>Usuario</TableCell>
                     <TableCell>Curso</TableCell>
                     <TableCell>Departamento</TableCell>
@@ -673,7 +877,7 @@ const LmsComplianceTracker: React.FC = () => {
                 <TableBody>
                   {filteredRecords.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
+                      <TableCell colSpan={9} align="center" sx={{ py: 8 }}>
                         <Typography variant="body1" color="text.secondary">
                           No se encontraron registros con los filtros aplicados
                         </Typography>
@@ -689,6 +893,12 @@ const LmsComplianceTracker: React.FC = () => {
                   ) : (
                     prioritizedRecords.map((record) => (
                     <TableRow key={`${record.userId}-${record.courseId}`}>
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          checked={selectedKeys.includes(recordKey(record))}
+                          onChange={() => toggleSelect(recordKey(record))}
+                        />
+                      </TableCell>
                       <TableCell>
                         <Box>
                           <Typography variant="body2" fontWeight="medium">
@@ -973,6 +1183,19 @@ const LmsComplianceTracker: React.FC = () => {
                     <Table size="small">
                       <TableHead>
                         <TableRow>
+                          <TableCell padding="checkbox">
+                            <Checkbox
+                              checked={course.records.length > 0 && course.records.every((r) => selectedKeys.includes(recordKey(r)))}
+                              indeterminate={course.records.some((r) => selectedKeys.includes(recordKey(r))) && !course.records.every((r) => selectedKeys.includes(recordKey(r)))}
+                              onChange={() => {
+                                const keys = course.records.map(recordKey)
+                                const all = keys.every((k) => selectedKeys.includes(k))
+                                setSelectedKeys((prev) => all
+                                  ? prev.filter((k) => !keys.includes(k))
+                                  : Array.from(new Set([...prev, ...keys])))
+                              }}
+                            />
+                          </TableCell>
                           <TableCell>Usuario</TableCell>
                           <TableCell>Departamento</TableCell>
                           <TableCell>Progreso</TableCell>
@@ -985,15 +1208,11 @@ const LmsComplianceTracker: React.FC = () => {
                       <TableBody>
                         {course.records.map((record) => (
                           <TableRow key={`${record.userId}-${record.courseId}`}>
-                            <TableCell>
-                              <Box>
-                                <Typography variant="body2" fontWeight="medium">
-                                  {record.userName}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {record.userEmail}
-                                </Typography>
-                              </Box>
+                            <TableCell padding="checkbox">
+                              <Checkbox
+                                checked={selectedKeys.includes(recordKey(record))}
+                                onChange={() => toggleSelect(recordKey(record))}
+                              />
                             </TableCell>
                             <TableCell>
                               <Chip label={record.department} size="small" variant="outlined" />
@@ -1348,7 +1567,7 @@ const LmsComplianceTracker: React.FC = () => {
                         Fecha Asignación
                       </Typography>
                       <Typography variant="body1" fontWeight="medium">
-                        {new Date(detailsRecord.assignedDate).toLocaleDateString()}
+                        {detailsRecord.assignedDate ? new Date(detailsRecord.assignedDate).toLocaleDateString() : 'Sin fecha'}
                       </Typography>
                     </Box>
                   </Grid>
@@ -1367,6 +1586,75 @@ const LmsComplianceTracker: React.FC = () => {
                     </Box>
                   </Grid>
                 </Grid>
+              </Box>
+
+              {/* Fechas editables (calendario de cumplimiento) */}
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" fontWeight="medium" sx={{ mb: 2 }}>
+                  Editar fechas
+                </Typography>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <DatePicker
+                        label="Fecha de asignación"
+                        value={editAssignedAt}
+                        onChange={(newValue) => setEditAssignedAt(newValue)}
+                        slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <DatePicker
+                        label="Fecha límite"
+                        value={editDeadline}
+                        onChange={(newValue) => setEditDeadline(newValue)}
+                        slotProps={{ textField: { fullWidth: true, size: 'small', helperText: 'Vacío = sin fecha límite' } }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      {detailsRecord.status === 'completed' ? (
+                        <DatePicker
+                          label="Fecha de finalización"
+                          value={editCompletedAt}
+                          onChange={(newValue) => setEditCompletedAt(newValue)}
+                          minDate={editAssignedAt ?? undefined}
+                          maxDate={new Date()}
+                          slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                        />
+                      ) : (
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Fecha de finalización"
+                          value="Solo cursos completados"
+                          disabled
+                        />
+                      )}
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel>Aplicar a</InputLabel>
+                        <Select
+                          label="Aplicar a"
+                          value={dateScope}
+                          onChange={(e) => setDateScope(e.target.value as any)}
+                        >
+                          <MenuItem value="user">Solo este usuario</MenuItem>
+                          <MenuItem value="group">Todo el grupo (asignación)</MenuItem>
+                          <MenuItem value="group-clear">Todo el grupo + limpiar personalizados</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  </Grid>
+                </LocalizationProvider>
+                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 2 }}>
+                  <Button size="small" variant="outlined" onClick={handleResetToGroup} disabled={savingDates}>
+                    Restablecer al grupo
+                  </Button>
+                  <Button size="small" variant="contained" onClick={handleSaveDates} disabled={savingDates}>
+                    Guardar fechas
+                  </Button>
+                </Box>
               </Box>
 
               {/* Información de tiempo */}
@@ -1513,6 +1801,67 @@ const LmsComplianceTracker: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Diálogo de edición de fechas en lote */}
+      <Dialog open={bulkOpen} onClose={() => setBulkOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Cambiar fechas ({selectedRecords.length} registro(s))</DialogTitle>
+        <DialogContent>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            Solo se modifica la fecha de finalización de los registros ya completados; el resto se omite.
+          </Alert>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <Grid container spacing={2} sx={{ mt: 0 }}>
+              <Grid item xs={12}>
+                <DatePicker
+                  label="Fecha de finalización"
+                  value={bulkCompletedAt}
+                  onChange={(newValue) => setBulkCompletedAt(newValue)}
+                  minDate={bulkAssignedAt ?? undefined}
+                  maxDate={new Date()}
+                  slotProps={{ textField: { fullWidth: true, size: 'small', helperText: 'Solo aplica a usuarios con el curso completado' } }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <DatePicker
+                  label="Fecha de asignación (opcional)"
+                  value={bulkAssignedAt}
+                  onChange={(newValue) => setBulkAssignedAt(newValue)}
+                  slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <DatePicker
+                  label="Fecha límite (opcional)"
+                  value={bulkDeadline}
+                  onChange={(newValue) => setBulkDeadline(newValue)}
+                  slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+                />
+              </Grid>
+            </Grid>
+          </LocalizationProvider>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBulkOpen(false)}>Cancelar</Button>
+          <Button
+            variant="contained"
+            onClick={handleBulkApply}
+            disabled={bulkSaving || (!bulkCompletedAt && !bulkAssignedAt && !bulkDeadline)}
+          >
+            Aplicar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar((s) => ({ ...s, open: false }))}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }
