@@ -63,6 +63,7 @@ import {
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { getRoleLabelEs } from 'src/constants/roles'
 import {
   useMandatoryTrainingStatus,
   useTriggerManualReminders,
@@ -667,7 +668,7 @@ const LmsComplianceTracker: React.FC = () => {
       r.userName,
       r.userEmail,
       r.courseTitle,
-      r.department,
+      r.department ? getRoleLabelEs(r.department) : 'N/A',
       getStatusLabel(r.status),
       `${r.progress}%`,
       new Date(r.deadline).toLocaleDateString(),
@@ -935,7 +936,7 @@ const LmsComplianceTracker: React.FC = () => {
                         </Typography>
                       </TableCell>
                       <TableCell>
-                        <Chip label={record.department} size="small" variant="outlined" />
+                        <Chip label={getRoleLabelEs(record.department)} size="small" variant="outlined" />
                       </TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 100 }}>
@@ -1235,7 +1236,17 @@ const LmsComplianceTracker: React.FC = () => {
                               />
                             </TableCell>
                             <TableCell>
-                              <Chip label={record.department} size="small" variant="outlined" />
+                              <Box>
+                                <Typography variant="body2" fontWeight="medium">
+                                  {record.userName}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {record.userEmail}
+                                </Typography>
+                              </Box>
+                            </TableCell>
+                            <TableCell>
+                              <Chip label={getRoleLabelEs(record.department)} size="small" variant="outlined" />
                             </TableCell>
                             <TableCell>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 100 }}>
@@ -1405,7 +1416,7 @@ const LmsComplianceTracker: React.FC = () => {
             >
               <MenuItem value="">Todos</MenuItem>
               {uniqueDepartments.map(dept => (
-                <MenuItem key={dept} value={dept}>{dept}</MenuItem>
+                <MenuItem key={dept} value={dept}>{getRoleLabelEs(dept)}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -1540,7 +1551,7 @@ const LmsComplianceTracker: React.FC = () => {
                       {detailsRecord.courseTitle}
                     </Typography>
                     <Chip
-                      label={detailsRecord.department}
+                      label={getRoleLabelEs(detailsRecord.department)}
                       size="small"
                       variant="outlined"
                       sx={{ mt: 0.5 }}
@@ -1772,7 +1783,7 @@ const LmsComplianceTracker: React.FC = () => {
                           Rol/Departamento
                         </Typography>
                         <Typography variant="body2" fontWeight="medium">
-                          {detailsRecord.department}
+                          {getRoleLabelEs(detailsRecord.department)}
                         </Typography>
                       </Box>
                     </Box>
