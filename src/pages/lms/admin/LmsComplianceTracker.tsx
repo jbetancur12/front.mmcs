@@ -1671,10 +1671,16 @@ const LmsComplianceTracker: React.FC = () => {
                   <Grid item xs={12} md={4}>
                     <Box sx={{ textAlign: 'center', p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        Fecha Asignación
+                        Fecha Finalización
                       </Typography>
-                      <Typography variant="body1" fontWeight="medium">
-                        {detailsRecord.assignedDate ? new Date(detailsRecord.assignedDate).toLocaleDateString() : 'Sin fecha'}
+                      <Typography
+                        variant="body1"
+                        fontWeight="medium"
+                        color={detailsRecord.completedDate ? 'success.main' : 'text.secondary'}
+                      >
+                        {detailsRecord.completedDate
+                          ? new Date(detailsRecord.completedDate).toLocaleDateString()
+                          : 'No finalizado'}
                       </Typography>
                     </Box>
                   </Grid>
