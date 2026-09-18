@@ -36,6 +36,7 @@ import ViewStreamOutlinedIcon from '@mui/icons-material/ViewStreamOutlined'
 import MaterialReactTable from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Toaster, toast } from 'react-hot-toast'
+import Swal from 'sweetalert2'
 import { useEquipmentQuotations, useEquipmentSalesMutations, useEquipmentQuoteTermsTemplate } from '../../hooks/useEquipmentSales'
 import { EQUIPMENT_QUOTATION_STATUS_COLORS, EQUIPMENT_QUOTATION_STATUS_LABELS } from '../../constants/equipmentSales'
 import { EquipmentQuotation, EquipmentQuotationStatus } from '../../types/equipmentSales'
@@ -128,8 +129,16 @@ const EquipmentSalesPage = () => {
   }
 
   const handleSend = async (quotation: EquipmentQuotation) => {
-    const result = await window.confirm(`¿Marcar la cotización ${quotation.quoteCode} como enviada al cliente?`)
-    if (!result) return
+    const result = await Swal.fire({
+      icon: 'question',
+      title: `¿Marcar la cotización ${quotation.quoteCode} como enviada al cliente?`,
+      showCancelButton: true,
+      confirmButtonText: 'Sí, marcar como enviada',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      reverseButtons: true
+    })
+    if (!result.isConfirmed) return
     try {
       await mutations.requestApproval.mutateAsync(quotation.id)
       toast.success('Cotización enviada al cliente.')

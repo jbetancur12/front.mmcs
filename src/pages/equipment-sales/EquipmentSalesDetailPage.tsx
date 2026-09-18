@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useStore } from '@nanostores/react'
 import {
@@ -11,6 +11,8 @@ import {
   CircularProgress,
   Grid,
   Stack,
+  Tab,
+  Tabs,
   Typography
 } from '@mui/material'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
@@ -20,6 +22,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import { Toaster, toast } from 'react-hot-toast'
+import Swal from 'sweetalert2'
 import { userStore } from 'src/store/userStore'
 import { useHasRole } from '../../utils/functions'
 import EquipmentSalesSequenceConfigDialog from './EquipmentSalesSequenceConfigDialog'
@@ -57,6 +60,29 @@ const formatDate = (value?: string | null) =>
       })
     : '—'
 
+type DetailTab = 'summary' | 'items' | 'terms' | 'documents'
+
+const detailTabs: readonly DetailTab[] = ['summary', 'items', 'terms', 'documents']
+
+const getStoredDetailTab = (quotationId?: string): DetailTab => {
+  if (!quotationId || typeof window === 'undefined') return 'summary'
+  const storedTab = window.sessionStorage.getItem(`equipment-quotation-detail-tab:${quotationId}`)
+  return detailTabs.includes(storedTab as DetailTab) ? (storedTab as DetailTab) : 'summary'
+}
+
+const DetailTabPanel = ({
+  value,
+  tab,
+  children
+}: {
+  value: DetailTab
+  tab: DetailTab
+  children: ReactNode
+}) => {
+  if (value !== tab) return null
+  return <Box sx={{ pt: 3 }}>{children}</Box>
+}
+
 const EquipmentSalesDetailPage = () => {
   const navigate = useNavigate()
   const { quotationId } = useParams<{ quotationId?: string }>()
@@ -66,7 +92,17 @@ const EquipmentSalesDetailPage = () => {
   const mutations = useEquipmentSalesMutations()
   const [decisionMode, setDecisionMode] = useState<EquipmentQuotationDecisionMode | null>(null)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<DetailTab>(() => getStoredDetailTab(quotationId))
   const isAdmin = useHasRole(['admin', 'super_admin'])
+
+  useEffect(() => {
+    setActiveTab(getStoredDetailTab(quotationId))
+  }, [quotationId])
+
+  useEffect(() => {
+    if (!quotationId) return
+    window.sessionStorage.setItem(`equipment-quotation-detail-tab:${quotationId}`, activeTab)
+  }, [activeTab, quotationId])
 
   const canEdit = useMemo(
     () => ['admin', 'super_admin', 'comp_admin', 'comp_requester', 'comp_supervisor'].some((r) => $user.rol?.includes(r)),
@@ -76,7 +112,16 @@ const EquipmentSalesDetailPage = () => {
   const { data: sequenceConfig } = useEquipmentSequenceConfig(canEdit)
 
   const documents = documentsData?.documents || []
-  const officialPdfDocuments = documents.filter((d) => d.documentType === 'quote_pdf')
+  // Solo la version vigente del PDF oficial: al enviar se regenera y las
+  // versiones previas (con marca BORRADOR) quedan como historico.
+  const officialPdfVersions = documents.filter((d) => d.documentType === 'quote_pdf')
+  const latestOfficialPdfVersion = officialPdfVersions.reduce(
+    (max, document) => Math.max(max, document.version || 0),
+    0
+  )
+  const officialPdfDocuments = officialPdfVersions.filter(
+    (document) => (document.version || 0) === latestOfficialPdfVersion
+  )
   const decisionDocuments = documents.filter((d) =>
     ['approval_evidence', 'rejection_evidence'].includes(d.documentType)
   )
@@ -85,10 +130,26 @@ const EquipmentSalesDetailPage = () => {
   )
 
   const handleRequestApproval = async () => {
-    const result = await window.confirm('¿Marcar la cotización como enviada al cliente?')
-    if (!result || !quotation) return
+    const result = await Swal.fire({
+      icon: 'question',
+      title: '¿Marcar la cotización como enviada al cliente?',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, marcar como enviada',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      reverseButtons: true
+    })
+    if (!result.isConfirmed || !quotation) return
     try {
       await mutations.requestApproval.mutateAsync(quotation.id)
+      // Regenera el PDF oficial para que deje de llevar la marca de agua BORRADOR.
+      try {
+        await mutations.generateQuotePdf.mutateAsync(quotation.id)
+      } catch (pdfError) {
+        console.error(pdfError)
+        toast.error('La cotización se envió, pero no se pudo regenerar el PDF.')
+        return
+      }
       toast.success('La cotización quedó marcada como enviada al cliente.')
     } catch (error) {
       console.error(error)
@@ -222,8 +283,16 @@ const EquipmentSalesDetailPage = () => {
   }
 
   const handleReadyForInvoice = async () => {
-    const result = await window.confirm('¿Marcar esta cotización como lista para facturar?')
-    if (!result || !quotation) return
+    const result = await Swal.fire({
+      icon: 'question',
+      title: '¿Marcar esta cotización como lista para facturar?',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, continuar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      reverseButtons: true
+    })
+    if (!result.isConfirmed || !quotation) return
     try {
       await mutations.readyForInvoice.mutateAsync(quotation.id)
       toast.success('La cotización quedó lista para facturar.')
@@ -234,8 +303,16 @@ const EquipmentSalesDetailPage = () => {
   }
 
   const handleInvoice = async () => {
-    const result = await window.confirm('¿Marcar esta cotización como facturada?')
-    if (!result || !quotation) return
+    const result = await Swal.fire({
+      icon: 'question',
+      title: '¿Marcar esta cotización como facturada?',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, facturar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      reverseButtons: true
+    })
+    if (!result.isConfirmed || !quotation) return
     try {
       await mutations.invoiceQuotation.mutateAsync(quotation.id)
       toast.success('La cotización quedó facturada.')
@@ -380,8 +457,21 @@ const EquipmentSalesDetailPage = () => {
 
       <Grid container spacing={3}>
         <Grid item xs={12} lg={8}>
-          <Card elevation={0} sx={{ mb: 3, borderRadius: '16px', border: '1px solid rgba(0,0,0,0.06)' }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', border: '1px solid rgba(0,0,0,0.06)' }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+              <Tabs
+                value={activeTab}
+                onChange={(_, value: DetailTab) => setActiveTab(value)}
+                variant='scrollable'
+                allowScrollButtonsMobile
+              >
+                <Tab label='Resumen' value='summary' />
+                <Tab label={`Productos (${quotation.items?.length || 0})`} value='items' />
+                <Tab label='Términos' value='terms' />
+                <Tab label={`Documentos (${documents.length})`} value='documents' />
+              </Tabs>
+
+              <DetailTabPanel value={activeTab} tab='summary'>
               <Typography variant='h6' fontWeight={800} sx={{ mb: 2 }}>Información del cliente</Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
@@ -411,12 +501,8 @@ const EquipmentSalesDetailPage = () => {
                   </Typography>
                 </Grid>
               </Grid>
-            </CardContent>
-          </Card>
 
-          <Card elevation={0} sx={{ mb: 3, borderRadius: '16px', border: '1px solid rgba(0,0,0,0.06)' }}>
-            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Typography variant='h6' fontWeight={800} sx={{ mb: 2 }}>Condiciones comerciales</Typography>
+              <Typography variant='h6' fontWeight={800} sx={{ mt: 3, mb: 2 }}>Condiciones comerciales</Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={4}>
                   <Typography variant='body2'><strong>Validez:</strong> {quotation.validityDays ? `${quotation.validityDays} días` : 'N/A'}</Typography>
@@ -441,11 +527,9 @@ const EquipmentSalesDetailPage = () => {
                   </Grid>
                 ) : null}
               </Grid>
-            </CardContent>
-          </Card>
+              </DetailTabPanel>
 
-          <Card elevation={0} sx={{ mb: 3, borderRadius: '16px', border: '1px solid rgba(0,0,0,0.06)' }}>
-            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+              <DetailTabPanel value={activeTab} tab='items'>
               <Typography variant='h6' fontWeight={800} sx={{ mb: 2 }}>
                 Productos cotizados ({quotation.items?.length || 0})
               </Typography>
@@ -498,13 +582,11 @@ const EquipmentSalesDetailPage = () => {
               ) : (
                 <Alert severity='info'>Aún no hay productos registrados.</Alert>
               )}
-            </CardContent>
-          </Card>
+              </DetailTabPanel>
 
-          {termEntries.length ? (
-            <Card elevation={0} sx={{ mb: 3, borderRadius: '16px', border: '1px solid rgba(0,0,0,0.06)' }}>
-              <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-                <Typography variant='h6' fontWeight={800} sx={{ mb: 2 }}>Términos de la cotización</Typography>
+              <DetailTabPanel value={activeTab} tab='terms'>
+              <Typography variant='h6' fontWeight={800} sx={{ mb: 2 }}>Términos de la cotización</Typography>
+              {termEntries.length ? (
                 <Stack spacing={2}>
                   {termEntries.map(([key, value]) => (
                     <Box key={key}>
@@ -518,13 +600,12 @@ const EquipmentSalesDetailPage = () => {
                     </Box>
                   ))}
                 </Stack>
-              </CardContent>
-            </Card>
-          ) : null}
+              ) : (
+                <Alert severity='info'>Esta cotización no tiene términos registrados.</Alert>
+              )}
+              </DetailTabPanel>
 
-          <Card elevation={0} sx={{ borderRadius: '16px', border: '1px solid rgba(0,0,0,0.06)' }}>
-            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Typography variant='h6' fontWeight={800} sx={{ mb: 2 }}>Documentos</Typography>
+              <DetailTabPanel value={activeTab} tab='documents'>
               <EquipmentSalesDocumentsPanel
                 quoteCode={quotation.quoteCode}
                 hasCustomer={Boolean(quotation.customerId)}
@@ -545,6 +626,7 @@ const EquipmentSalesDetailPage = () => {
                   })
                 }}
               />
+              </DetailTabPanel>
             </CardContent>
           </Card>
         </Grid>
@@ -596,9 +678,6 @@ const EquipmentSalesDetailPage = () => {
                   <Button variant='outlined' onClick={() => setDecisionMode('request_changes')} disabled={isBusy} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}>
                     Solicitar modificación
                   </Button>
-                  <Button variant='outlined' startIcon={<EditOutlinedIcon />} onClick={() => navigate(`/equipment-sales/${quotation.id}/edit`)} disabled={isBusy} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}>
-                    Editar
-                  </Button>
                 </Stack>
               ) : null}
 
@@ -614,7 +693,7 @@ const EquipmentSalesDetailPage = () => {
                 </Button>
               ) : null}
 
-              {['draft', 'pending_approval'].includes(quotation.status) ? (
+              {quotation.status === 'draft' ? (
                 <Button variant='text' color='error' startIcon={<BlockOutlinedIcon />} onClick={handleCancel} disabled={isBusy} fullWidth sx={{ mt: 1, borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}>
                   Cancelar cotización
                 </Button>

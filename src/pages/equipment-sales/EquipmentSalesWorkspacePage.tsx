@@ -47,6 +47,7 @@ import {
   EQUIPMENT_SALES_QUERY_KEYS,
   useEquipmentProducts,
   useEquipmentQuotation,
+  useEquipmentQuotationDocuments,
   useEquipmentQuoteTermsTemplate,
   useEquipmentSalesMutations,
   useEquipmentSequenceConfig
@@ -209,11 +210,16 @@ const EquipmentSalesWorkspacePage = () => {
   const canAccessWorkspace = useHasRole([...EQUIPMENT_SALES_EDIT_ROLES])
   const { data: sequenceConfig, isLoading: isLoadingSequenceConfig } = useEquipmentSequenceConfig(canAccessWorkspace)
   const { data: quotation, isLoading: isLoadingQuotation } = useEquipmentQuotation(quotationId)
+  const { data: documentsData } = useEquipmentQuotationDocuments(quotationId)
+  const existingRequestEvidence = documentsData?.documents?.find(
+    (document) => document.documentType === 'request_evidence'
+  )
   const { data: quoteTermsTemplate, isLoading: isLoadingTemplate } =
     useEquipmentQuoteTermsTemplate(canAccessWorkspace && !isEditing)
   const {
     createQuotation,
     updateQuotation,
+    requestApproval,
     uploadDocument,
     generateQuotePdf,
     downloadDocument,
@@ -589,7 +595,7 @@ const EquipmentSalesWorkspacePage = () => {
         }
       }
     }
-    if (!requestEvidenceFile) {
+    if (!requestEvidenceFile && !existingRequestEvidence) {
       return 'Debes adjuntar la evidencia de solicitud.'
     }
     return null
@@ -622,6 +628,11 @@ const EquipmentSalesWorkspacePage = () => {
         }
       }
       if (targetStatus === 'pending_approval') {
+        if (isEditing) {
+          // El PUT no cambia el estado: hay que pasar la cotizacion a "enviada"
+          // para que el PDF deje de generarse como borrador.
+          await requestApproval.mutateAsync(savedQuotation.id)
+        }
         try {
           const pdfDocument = await generateQuotePdf.mutateAsync(String(savedQuotation.id))
           const fileBlob = await downloadDocument.mutateAsync({
@@ -954,8 +965,15 @@ const EquipmentSalesWorkspacePage = () => {
                   <Typography variant='subtitle2' fontWeight={700} sx={{ color: '#374151' }}>
                     Evidencia de solicitud *
                   </Typography>
-                  {requestEvidenceFile ? (
-                    <Chip icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />} size='small' label='Adjunta' color='success' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }} />
+                  {requestEvidenceFile || existingRequestEvidence ? (
+                    <Chip
+                      icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />}
+                      size='small'
+                      label={requestEvidenceFile ? 'Adjunta' : 'Ya adjunta'}
+                      color='success'
+                      variant='outlined'
+                      sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }}
+                    />
                   ) : (
                     <Chip size='small' label='Obligatorio' color='error' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 } }} />
                   )}
@@ -973,7 +991,11 @@ const EquipmentSalesWorkspacePage = () => {
                       />
                     </Button>
                     <Typography variant='body2' color='text.secondary'>
-                      {requestEvidenceFile ? requestEvidenceFile.name : 'Adjunta PDF, imagen o soporte documental de la solicitud.'}
+                      {requestEvidenceFile
+                        ? `${requestEvidenceFile.name} (reemplazará la evidencia actual)`
+                        : existingRequestEvidence
+                          ? `${existingRequestEvidence.originalFileName || 'Evidencia adjunta'} · ya cargada. Sube un archivo solo si deseas reemplazarla.`
+                          : 'Adjunta PDF, imagen o soporte documental de la solicitud.'}
                     </Typography>
                   </Stack>
                 </Stack>
