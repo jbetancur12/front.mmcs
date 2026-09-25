@@ -495,8 +495,19 @@ export interface CalibrationServiceFilters {
   hasAdjustments?: string
   hasCutsReadyForInvoicing?: string
   hasCutsInvoiced?: string
+  billingStatus?: 'enviado' | 'no_enviado'
+  paymentStatus?: 'pagado' | 'pendiente'
   limit?: number
   offset?: number
+}
+
+export interface CalibrationServiceCertificateSendResult {
+  id: number
+  serviceId: number
+  sentBy: string
+  sentAt: string
+  status: 'success' | 'error'
+  method: string
 }
 
 export interface CalibrationServiceListResponse {

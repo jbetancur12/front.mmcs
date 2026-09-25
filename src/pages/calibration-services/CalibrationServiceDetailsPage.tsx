@@ -41,6 +41,7 @@ import {
   CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES,
   CALIBRATION_SERVICE_ADJUSTMENT_COMMERCIAL_REVIEW_ROLES,
   CALIBRATION_SERVICE_ADJUSTMENT_TECHNICAL_REVIEW_ROLES,
+  CALIBRATION_SERVICE_ANALYST_ROLES,
   CALIBRATION_SERVICE_APPROVAL_ROLES,
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
@@ -411,6 +412,7 @@ const CalibrationServiceDetailsPage = () => {
     generateAdjustmentSummaryPdf,
     generateLogisticsPdf,
     sendLogisticsControlEmail,
+    sendCertificate,
     downloadDocument,
     upsertSequenceConfig
   } = useCalibrationServiceMutations()
@@ -518,6 +520,9 @@ const CalibrationServiceDetailsPage = () => {
     useCalibrationAssignableMetrologists(canScheduleServiceRole)
   const requestedAction = searchParams.get('open')
   const isTechnicalOnlyView = hasTechnicalRole && !hasCommercialVisibility
+  const isAnalystOnlyView =
+    useHasRole([...CALIBRATION_SERVICE_ANALYST_ROLES]) && !hasCommercialVisibility
+  const hideFinancialInfo = isTechnicalOnlyView || isAnalystOnlyView
   const canIssueOds =
     canIssueOdsRole &&
     service?.status === 'approved' &&
@@ -1335,6 +1340,16 @@ const CalibrationServiceDetailsPage = () => {
     } catch (requestError) {
       console.error(requestError)
       toast.error('No pudimos marcar la cotización como enviada al cliente.')
+    }
+  }
+
+  const handleSendCertificate = async () => {
+    try {
+      await sendCertificate.mutateAsync({ serviceId: String(service.id) })
+      toast.success('El certificado quedó registrado como enviado.')
+    } catch (sendError) {
+      console.error(sendError)
+      toast.error('No pudimos registrar el envío del certificado.')
     }
   }
 
@@ -2642,6 +2657,21 @@ const CalibrationServiceDetailsPage = () => {
               Enviar cotización
             </Button>
           ) : null}
+          {isAnalystOnlyView ? (
+            <Button
+              variant='contained'
+              startIcon={<SendOutlinedIcon />}
+              onClick={() => void handleSendCertificate()}
+              disabled={
+                !(service.cuts ?? []).some((cut) => cut.status === 'invoiced') ||
+                sendCertificate.isLoading
+              }
+              disableElevation
+              sx={{ borderRadius: 2 }}
+            >
+              Enviar certificado
+            </Button>
+          ) : null}
           {canDecideApproval ? (
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <Button
@@ -3274,13 +3304,13 @@ const CalibrationServiceDetailsPage = () => {
                           <TableCell>Instrumento</TableCell>
                           <TableCell>Tipo servicio</TableCell>
                           <TableCell align='right'>Cantidad</TableCell>
-                          {!isTechnicalOnlyView ? (
+                          {!hideFinancialInfo ? (
                             <TableCell align='right'>Precio unitario</TableCell>
                           ) : null}
-                          {!isTechnicalOnlyView ? (
+                          {!hideFinancialInfo ? (
                             <TableCell align='right'>Subtotal</TableCell>
                           ) : null}
-                          {!isTechnicalOnlyView ? (
+                          {!hideFinancialInfo ? (
                             <TableCell align='right'>Total</TableCell>
                           ) : null}
                         </TableRow>
@@ -3368,7 +3398,7 @@ const CalibrationServiceDetailsPage = () => {
                                   ) : null}
                                 </Stack>
                               </TableCell>
-                              {!isTechnicalOnlyView ? (
+                              {!hideFinancialInfo ? (
                                 <TableCell align='right'>
                                   <Stack spacing={0.5} alignItems='flex-end'>
                                     <Typography variant='body2'>
@@ -3409,7 +3439,7 @@ const CalibrationServiceDetailsPage = () => {
                                   </Stack>
                                 </TableCell>
                               ) : null}
-                              {!isTechnicalOnlyView ? (
+                              {!hideFinancialInfo ? (
                                 <TableCell align='right'>
                                   <Stack spacing={0.5} alignItems='flex-end'>
                                     <Typography variant='body2'>
@@ -3428,7 +3458,7 @@ const CalibrationServiceDetailsPage = () => {
                                   </Stack>
                                 </TableCell>
                               ) : null}
-                              {!isTechnicalOnlyView ? (
+                              {!hideFinancialInfo ? (
                                 <TableCell align='right'>
                                   {currencyFormatter.format(effectiveTotal)}
                                 </TableCell>
@@ -3661,7 +3691,7 @@ const CalibrationServiceDetailsPage = () => {
                     {service.events?.length || 0}
                   </Typography>
                 </Stack>
-                {!isTechnicalOnlyView ? (
+                {!isTechnicalOnlyView && !isAnalystOnlyView ? (
                   <>
                     <Divider />
                     <Stack direction='row' justifyContent='space-between'>

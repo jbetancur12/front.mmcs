@@ -23,7 +23,8 @@ export const ROLES = {
   COMP_REQUESTER: 'comp_requester',
   // Calibración
   CALIBRATION_COORDINATOR: 'calibration_coordinator',
-  TECHNICAL_DIRECTOR: 'technical_director'
+  TECHNICAL_DIRECTOR: 'technical_director',
+  ANALISTA_DATOS: 'analista_datos'
 } as const
 
 export type RoleName = (typeof ROLES)[keyof typeof ROLES]
@@ -50,6 +51,7 @@ export const ROLE_LABELS_ES: Record<string, string> = {
   comp_requester: 'Solicitante comercial',
   calibration_coordinator: 'Coord. de calibración',
   technical_director: 'Director técnico',
+  analista_datos: 'Analista de Datos',
 }
 
 /** Label en español o el nombre crudo si no está mapeado. */
