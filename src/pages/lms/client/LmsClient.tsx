@@ -3,10 +3,8 @@ import {
   Box,
   Card,
   CardContent,
-  CardHeader,
   Typography,
   Button,
-  LinearProgress,
   Grid,
   Tabs,
   Tab,
@@ -19,24 +17,13 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider,
-  CircularProgress,
-  Alert
+  CircularProgress
 } from '@mui/material'
 import {
   MenuBook as BookOpenIcon,
-  CheckCircle as CheckCircleIcon,
-  Schedule as ScheduleIcon,
-  TrendingUp as TrendingUpIcon,
-  Logout as LogoutIcon,
   Search as SearchIcon,
   PlayArrow as PlayArrowIcon,
   EmojiEvents as AwardIcon,
-  NewReleases as NewReleasesIcon,
   Error as ErrorIcon
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
@@ -44,11 +31,11 @@ import { useStore } from '@nanostores/react'
 import { userStore } from '../../../store/userStore'
 import { useAvailableCourses, useUserCertificates } from '../../../hooks/useLms'
 import LmsNotificationCenter from '../shared/LmsNotificationCenter'
+import LmsCourseGrid, { getCourseTone } from '../shared/LmsCourseGrid'
+import { alpha } from '@mui/material/styles'
+import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
 import type { Certificate, Course } from '../../../services/lmsService'
-import {
-  getCourseAudienceLabel,
-  getLearningVisibilityLabel
-} from '../../../utils/lmsAudience'
+import { getCourseAudienceLabel } from '../../../utils/lmsAudience'
 import {
   getCourseCompletedLessons,
   getCourseProgressPercentage,
@@ -103,7 +90,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
   }
 
   // Process courses data
-  const { availableCourses, stats, categories, continueCourses, newCourses } = useMemo(() => {
+  const { availableCourses, stats, categories } = useMemo(() => {
     if (!coursesData) {
       return {
         availableCourses: [],
@@ -115,9 +102,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
           certificatesEarned: 0,
           totalHoursLearned: 0
         },
-        categories: ['Todos'],
-        continueCourses: [],
-        newCourses: []
+        categories: ['Todos']
       }
     }
 
@@ -161,28 +146,6 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
     // Extraer categorías únicas
     const uniqueCategories: string[] = ['Todos', ...Array.from(new Set(enrichedCourses.map(c => c.category)))]
 
-    const continueLearning = enrichedCourses
-      .filter(c => c.progress > 0 && c.progress < 100)
-      .sort((a, b) => b.progress - a.progress)
-      .slice(0, 3)
-      .map((c) => ({
-        id: c.id,
-        title: c.title,
-        progress: c.progress,
-        category: c.category,
-        nextLessonLabel: c.nextLessonLabel
-      }))
-
-    const newest = [...enrichedCourses]
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .slice(0, 2)
-      .map(c => ({
-        id: c.id,
-        title: c.title,
-        releaseDate: c.created_at,
-        category: c.category
-      }))
-
     return {
       availableCourses: enrichedCourses,
       stats: {
@@ -195,9 +158,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
           enrichedCourses.reduce((sum, course) => sum + getCourseTimeSpentMinutes(course), 0) / 60
         )
       },
-      categories: uniqueCategories,
-      continueCourses: continueLearning,
-      newCourses: newest
+      categories: uniqueCategories
     }
   }, [coursesData, userCertificates])
 
@@ -220,37 +181,6 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
     return filtered
   }, [availableCourses, selectedCategory, searchTerm])
 
-  const nextLearningAction = useMemo(() => {
-    const inProgress = availableCourses
-      .filter((course) => course.progress > 0 && course.progress < 100)
-      .sort((left, right) => right.progress - left.progress)[0]
-
-    if (inProgress) {
-      return {
-        title: inProgress.title,
-        description: inProgress.nextLessonLabel
-          ? `Vas en ${inProgress.progress}% y tu siguiente lección es ${inProgress.nextLessonLabel}.`
-          : `Ya avanzaste ${inProgress.progress}% en este curso. Retomarlo es la forma más rápida de seguir aprendiendo.`,
-        cta: 'Continuar curso',
-        courseId: inProgress.id,
-        section: 0
-      }
-    }
-
-    const recommended = availableCourses[0]
-    if (recommended) {
-      return {
-        title: recommended.title,
-        description: 'Aún no tienes cursos en progreso. Este es un buen punto para comenzar.',
-        cta: 'Comenzar curso',
-        courseId: recommended.id,
-        section: 1
-      }
-    }
-
-    return null
-  }, [availableCourses])
-
   const heroSummaryChips = useMemo(
     () => [
       {
@@ -268,11 +198,6 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
     ],
     [stats]
   )
-
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser')
-    navigate('/')
-  }
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)
@@ -347,31 +272,17 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
             }}
           >
             <Box sx={{ maxWidth: 760 }}>
-              <Typography variant='overline' color='info.main' sx={{ fontWeight: 700 }}>
-                Ruta de aprendizaje para clientes
-              </Typography>
               <Typography
                 variant='h4'
                 component='h1'
-                sx={{ fontWeight: 'bold', color: 'text.primary', mt: 0.5 }}
+                sx={{ fontWeight: 'bold', color: 'text.primary' }}
               >
-                Mi Aprendizaje
+                Hola, {String(currentUser.name || '').split(' ')[0].charAt(0).toUpperCase() + String(currentUser.name || '').split(' ')[0].slice(1).toLowerCase()}
               </Typography>
               <Typography variant='body1' color='text.secondary' sx={{ mt: 0.5 }}>
-                Bienvenido, {currentUser.name}
+                Tus cursos y los de tu empresa, en un solo lugar
               </Typography>
-              <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
-                {getLearningVisibilityLabel('client')}
-              </Typography>
-              <Typography
-                variant='body2'
-                color='text.secondary'
-                sx={{ mt: 1.5, maxWidth: 640 }}
-              >
-                Este espacio reúne los cursos disponibles para tu empresa y los compartidos.
-                Si ya empezaste uno, lo verás priorizado para retomar sin perder contexto.
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1.5 }}>
                 <Chip label='Usuario cliente' color='info' />
                 {heroSummaryChips.map((chip) => (
                   <Chip
@@ -394,11 +305,11 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
               </Button>
               <Button
                 variant='outlined'
-                startIcon={<LogoutIcon />}
-                onClick={handleLogout}
                 size='small'
+                startIcon={<NotificationsNoneIcon />}
+                onClick={() => setActiveTab(3)}
               >
-                Cerrar Sesión
+                Notificaciones
               </Button>
             </Box>
           </Box>
@@ -408,337 +319,131 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
       <Box
         sx={{ maxWidth: 'xl', mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: 4 }}
       >
-        <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 4 }}>
-          <Tab label='Mi Progreso' />
+        <Tabs
+          value={activeTab > 2 ? false : activeTab}
+          onChange={handleTabChange}
+          variant='scrollable'
+          scrollButtons='auto'
+          allowScrollButtonsMobile
+          sx={{ mb: 3 }}
+        >
+          <Tab label='Inicio' />
           <Tab label='Mis Cursos' />
           <Tab label='Mis Certificados' />
-          <Tab label='Notificaciones' />
         </Tabs>
 
-        {activeTab === 0 && (
-          <Box>
-            <Alert severity='info' sx={{ mb: 3 }}>
-              Como usuario cliente, aquí verás los cursos disponibles para tu empresa y los cursos
-              compartidos. No manejas asignaciones obligatorias: avanzas desde catálogo y
-              certificados obtenidos.
-            </Alert>
-            {nextLearningAction && (
-              <Card
-                sx={{
-                  mb: 3,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  background:
-                    nextLearningAction.section === 0
-                      ? 'linear-gradient(135deg, rgba(239,246,255,1) 0%, rgba(255,255,255,1) 100%)'
-                      : 'linear-gradient(135deg, rgba(240,253,250,1) 0%, rgba(255,255,255,1) 100%)'
-                }}
-              >
-                <CardContent>
-                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <Typography variant='overline' color='text.secondary'>
-                      Siguiente paso recomendado
-                    </Typography>
-                    <Chip
-                      label={nextLearningAction.section === 0 ? 'Retoma tu avance' : 'Listo para comenzar'}
-                      size='small'
-                      color={nextLearningAction.section === 0 ? 'info' : 'success'}
-                    />
-                  </Box>
-                  <Typography variant='h6' sx={{ mt: 1 }}>
-                    {nextLearningAction.title}
-                  </Typography>
-                  <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                    {nextLearningAction.description}
-                  </Typography>
-                  <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 2 }}>
-                    El panel te ayudará a retomar primero lo que ya comenzaste y luego a elegir tu siguiente curso.
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    <Button
-                      variant='contained'
-                      startIcon={<PlayArrowIcon />}
-                      onClick={() => handleCourseClick(nextLearningAction.courseId)}
-                    >
-                      {nextLearningAction.cta}
-                    </Button>
-                    <Button
-                      variant='outlined'
-                      onClick={() => setActiveTab(nextLearningAction.section)}
-                    >
-                      Ver esta sección
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            )}
-            {/* Estadísticas principales */}
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-              <Grid item xs={12} sm={6} lg={3}>
-                <Card>
-                  <CardHeader
-                    avatar={<BookOpenIcon color='primary' />}
-                    title='Cursos Totales'
-                    titleTypographyProps={{
-                      variant: 'body2',
-                      color: 'text.secondary'
-                    }}
-                  />
-                  <CardContent>
-                    <Typography
-                      variant='h4'
-                      component='div'
-                      sx={{ fontWeight: 'bold' }}
-                    >
-                      {stats.totalCourses}
-                    </Typography>
-                    <Typography variant='body2' color='text.secondary'>
-                      {stats.completedCourses} completados
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              <Grid item xs={12} sm={6} lg={3}>
-                <Card>
-                  <CardHeader
-                    avatar={<TrendingUpIcon color='success' />}
-                    title='Progreso Promedio'
-                    titleTypographyProps={{
-                      variant: 'body2',
-                      color: 'text.secondary'
-                    }}
-                  />
-                  <CardContent>
-                    <Typography
-                      variant='h4'
-                      component='div'
-                      sx={{ fontWeight: 'bold' }}
-                    >
-                      {stats.averageProgress}%
-                    </Typography>
-                    <LinearProgress
+        {activeTab === 0 && (() => {
+          const pending = availableCourses.filter((course: any) => course.progress < 100)
+          const hero = [...pending].sort((left: any, right: any) => right.progress - left.progress)[0]
+          const others = pending.filter((course: any) => !hero || course.id !== hero.id)
+          const heroTone = hero ? getCourseTone(hero) : null
+          return (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {hero && heroTone && (
+                <Card
+                  variant='outlined'
+                  sx={(theme) => ({
+                    borderRadius: 3,
+                    p: { xs: 2, sm: 3 },
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 3,
+                    flexWrap: 'wrap',
+                    bgcolor: alpha(theme.palette[heroTone.color].main, 0.08),
+                    borderColor: alpha(theme.palette[heroTone.color].main, 0.35)
+                  })}
+                >
+                  <Box sx={{ position: 'relative', width: 88, height: 88, flex: 'none' }}>
+                    <CircularProgress
                       variant='determinate'
-                      value={stats.averageProgress}
-                      sx={{ mt: 1 }}
+                      value={100}
+                      size={88}
+                      thickness={4}
+                      sx={{ position: 'absolute', color: 'action.hover' }}
                     />
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              <Grid item xs={12} sm={6} lg={3}>
-                <Card>
-                  <CardHeader
-                    avatar={<CheckCircleIcon color='warning' />}
-                    title='Certificados'
-                    titleTypographyProps={{
-                      variant: 'body2',
-                      color: 'text.secondary'
-                    }}
-                  />
-                  <CardContent>
-                    <Typography
-                      variant='h4'
-                      component='div'
-                      sx={{ fontWeight: 'bold' }}
+                    <CircularProgress
+                      variant='determinate'
+                      value={hero.progress || 0}
+                      size={88}
+                      thickness={4}
+                      color={heroTone.color}
+                      sx={{ position: 'absolute' }}
+                    />
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: `${heroTone.color}.main`
+                      }}
                     >
-                      {stats.certificatesEarned}
+                      {hero.progress > 0 ? (
+                        <Typography variant='h6'>{hero.progress}%</Typography>
+                      ) : (
+                        React.cloneElement(heroTone.icon, { sx: { fontSize: 38 } })
+                      )}
+                    </Box>
+                  </Box>
+                  <Box sx={{ flex: '1 1 260px', minWidth: 0 }}>
+                    <Typography variant='overline' color='text.secondary'>
+                      {hero.progress > 0 ? 'Continúa donde quedaste' : 'Te recomendamos empezar'}
                     </Typography>
-                    <Typography variant='body2' color='text.secondary'>
-                      Obtenidos
+                    <Typography variant='h5' sx={{ fontWeight: 600, lineHeight: 1.25 }}>
+                      {hero.title}
                     </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              <Grid item xs={12} sm={6} lg={3}>
-                <Card>
-                  <CardHeader
-                    avatar={<ScheduleIcon color='info' />}
-                    title='Horas Aprendidas'
-                    titleTypographyProps={{
-                      variant: 'body2',
-                      color: 'text.secondary'
-                    }}
-                  />
-                  <CardContent>
-                    <Typography
-                      variant='h4'
-                      component='div'
-                      sx={{ fontWeight: 'bold' }}
-                    >
-                      {stats.totalHoursLearned}h
+                    <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
+                      {hero.completedLessons}/{hero.totalLessons} lecciones
+                      {hero.nextLessonLabel ? ` · Sigue: ${hero.nextLessonLabel}` : ''}
                     </Typography>
-                    <Typography variant='body2' color='text.secondary'>
-                      Tiempo registrado
-                    </Typography>
-                  </CardContent>
+                  </Box>
+                  <Button
+                    size='large'
+                    variant='contained'
+                    startIcon={<PlayArrowIcon />}
+                    onClick={() => handleCourseClick(hero.id)}
+                  >
+                    {hero.progress > 0 ? 'Continuar' : 'Comenzar'}
+                  </Button>
                 </Card>
-              </Grid>
-            </Grid>
+              )}
 
-            {/* Cursos con progreso */}
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={8}>
-                <Card>
-                  <CardHeader title='Cursos con progreso' />
-                  <CardContent>
-                    {availableCourses.filter(course => course.progress > 0).length > 0 ? (
-                      <List>
-                        {availableCourses
-                          .filter(course => course.progress > 0)
-                          .map((course) => (
-                            <React.Fragment key={course.id}>
-                              <ListItem
-                                button
-                                onClick={() => handleCourseClick(course.id)}
-                                sx={{ px: 0 }}
-                              >
-                                <ListItemIcon>
-                                  <Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}>
-                                    <BookOpenIcon />
-                                  </Avatar>
-                                </ListItemIcon>
-                                <ListItemText
-                                  primary={
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <Typography variant="body1" fontWeight="medium">
-                                        {course.title}
-                                      </Typography>
-                                      <Chip
-                                        label={course.category}
-                                        size="small"
-                                        variant="outlined"
-                                      />
-                                    </Box>
-                                  }
-                                  secondary={
-                                    <Box>
-                                      <Typography variant="body2" color="text.secondary">
-                                        {course.instructor} • {course.duration}
-                                      </Typography>
-                                      {course.nextLessonLabel && (
-                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                                          Sigue: {course.nextLessonLabel}
-                                        </Typography>
-                                      )}
-                                      {course.lastAccessLabel && (
-                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                                          Última actividad: {course.lastAccessLabel}
-                                        </Typography>
-                                      )}
-                                      <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                                        <LinearProgress
-                                          variant="determinate"
-                                          value={course.progress}
-                                          sx={{ flex: 1, mr: 2, height: 6, borderRadius: 3 }}
-                                        />
-                                        <Typography variant="caption" color="text.secondary">
-                                          {course.progress}%
-                                        </Typography>
-                                      </Box>
-                                    </Box>
-                                  }
-                                />
-                                <Button
-                                  variant={course.progress === 100 && course.earnedCertificate ? 'outlined' : 'contained'}
-                                  size="small"
-                                  startIcon={course.progress === 100 ? <AwardIcon /> : <PlayArrowIcon />}
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    if (course.progress === 100 && course.earnedCertificate) {
-                                      navigate(`/lms/certificate/${course.earnedCertificate.id}`)
-                                      return
-                                    }
+              {others.length > 0 && (
+                <Box>
+                  <Typography variant='h6' sx={{ mb: 2 }}>
+                    Disponibles para ti ({others.length})
+                  </Typography>
+                  <LmsCourseGrid courses={others} onOpen={handleCourseClick} />
+                </Box>
+              )}
 
-                                    handleCourseClick(course.id)
-                                  }}
-                                >
-                                  {course.progress === 100 && course.earnedCertificate ? 'Ver Certificado' : 'Continuar'}
-                                </Button>
-                              </ListItem>
-                              <Divider />
-                            </React.Fragment>
-                          ))}
-                      </List>
-                    ) : (
-                      <Box sx={{ textAlign: 'center', py: 4 }}>
-                        <BookOpenIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-                        <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
-                          Aún no tienes cursos con progreso
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          Revisa tus cursos disponibles y comienza tu aprendizaje
-                        </Typography>
-                        <Button variant="contained" onClick={() => setActiveTab(1)}>
-                          Ver mis cursos
-                        </Button>
-                      </Box>
-                    )}
-                  </CardContent>
+              {availableCourses.length === 0 && (
+                <Card variant='outlined' sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}>
+                  <BookOpenIcon sx={{ fontSize: 56, color: 'info.main', mb: 1 }} />
+                  <Typography variant='h6'>Aún no hay cursos para tu empresa</Typography>
+                  <Typography variant='body2' color='text.secondary' sx={{ maxWidth: 480, mx: 'auto' }}>
+                    Cuando Metromedics publique cursos para tu empresa aparecerán aquí. Si esperabas
+                    alguno, escribe a tu contacto en Metromedics para confirmarlo.
+                  </Typography>
                 </Card>
-              </Grid>
+              )}
 
-              <Grid item xs={12} md={4}>
-                <Card sx={{ mb: 2 }}>
-                  <CardHeader title="Continuar aprendiendo" />
-                  <CardContent>
-                    {continueCourses.length > 0 ? (
-                      <List dense>
-                        {continueCourses.map((course) => (
-                          <ListItem key={course.id} sx={{ px: 0 }}>
-                            <ListItemIcon><PlayArrowIcon color="primary" /></ListItemIcon>
-                            <ListItemText
-                              primary={course.title}
-                              secondary={
-                                course.nextLessonLabel
-                                  ? `${course.progress}% completado • Sigue con ${course.nextLessonLabel}`
-                                  : `${course.progress}% completado • ${course.category}`
-                              }
-                            />
-                            <Button size="small" onClick={() => handleCourseClick(course.id)}>
-                              Retomar
-                            </Button>
-                          </ListItem>
-                        ))}
-                      </List>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        Aún no tienes cursos en progreso.
-                      </Typography>
-                    )}
-                  </CardContent>
+              {availableCourses.length > 0 && pending.length === 0 && (
+                <Card variant='outlined' sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}>
+                  <AwardIcon sx={{ fontSize: 56, color: 'success.main', mb: 1 }} />
+                  <Typography variant='h6'>Completaste todos tus cursos</Typography>
+                  <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                    Puedes repasar cualquiera desde Mis Cursos o descargar tus certificados.
+                  </Typography>
+                  <Button variant='outlined' onClick={() => setActiveTab(1)}>
+                    Ver mis cursos
+                  </Button>
                 </Card>
-
-                <Card>
-                  <CardHeader title="Para seguir aprendiendo" />
-                  <CardContent>
-                    {newCourses.length > 0 ? (
-                      <List dense>
-                        {newCourses.map((course) => (
-                          <ListItem key={course.id} sx={{ px: 0 }}>
-                            <ListItemIcon><NewReleasesIcon color="info" /></ListItemIcon>
-                            <ListItemText
-                              primary={course.title}
-                              secondary={`Agregado el ${new Date(course.releaseDate).toLocaleDateString('es-CO')} • ${course.category}`}
-                            />
-                            <Button size="small" onClick={() => handleCourseClick(course.id)}>
-                              Ver curso
-                            </Button>
-                          </ListItem>
-                        ))}
-                      </List>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        No hay cursos nuevos para este momento
-                      </Typography>
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-          </Box>
-        )}
+              )}
+            </Box>
+          )
+        })()}
 
         {activeTab === 1 && (
           <Box>
@@ -786,92 +491,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
 
             {/* Lista de cursos */}
             {filteredCourses.length > 0 ? (
-              <Grid container spacing={3}>
-                {filteredCourses.map((course) => (
-                  <Grid item xs={12} md={6} lg={4} key={course.id}>
-                    <Card
-                      variant='outlined'
-                      sx={{ cursor: 'pointer', height: '100%' }}
-                      onClick={() => handleCourseClick(course.id)}
-                    >
-                      <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-                          <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
-                            <BookOpenIcon />
-                          </Avatar>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant='h6' component='div' sx={{ mb: 0.5 }}>
-                              {course.title}
-                            </Typography>
-                            <Typography variant='body2' color='text.secondary'>
-                              {course.instructor}
-                            </Typography>
-                            {course.nextLessonLabel && (
-                              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
-                                Sigue: {course.nextLessonLabel}
-                              </Typography>
-                            )}
-                            {course.lastAccessLabel && (
-                              <Typography variant='caption' color='text.secondary' sx={{ display: 'block' }}>
-                                Última actividad: {course.lastAccessLabel}
-                              </Typography>
-                            )}
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
-                              <Typography variant='caption' color='text.secondary'>
-                                {course.duration}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        </Box>
-
-                        <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                          {course.description}
-                        </Typography>
-
-                        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                          <Chip
-                            label={course.category}
-                            size="small"
-                            variant="outlined"
-                          />
-                          <Chip
-                            label={`${course.totalLessons} lecciones`}
-                            size="small"
-                            variant="outlined"
-                          />
-                        </Box>
-
-                        {course.progress > 0 ? (
-                          <Box sx={{ mb: 2 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                              <Typography variant='caption'>Tu progreso</Typography>
-                              <Typography variant='caption'>{course.progress}%</Typography>
-                            </Box>
-                            <LinearProgress
-                              variant='determinate'
-                              value={course.progress}
-                              sx={{ height: 6, borderRadius: 3 }}
-                            />
-                          </Box>
-                        ) : null}
-
-                        <Button
-                          variant={course.progress > 0 ? 'outlined' : 'contained'}
-                          size="small"
-                          fullWidth
-                          startIcon={<PlayArrowIcon />}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleCourseClick(course.id)
-                          }}
-                        >
-                          {course.progress > 0 ? 'Continuar' : 'Comenzar'}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
+              <LmsCourseGrid courses={filteredCourses} onOpen={handleCourseClick} />
             ) : (
               <Box sx={{ textAlign: 'center', py: 4 }}>
                 <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
@@ -953,10 +573,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap' }}>
                   <Button variant="contained" onClick={() => setActiveTab(1)}>
-                    Ver mi aprendizaje
-                  </Button>
-                  <Button variant="outlined" onClick={() => navigate('/lms/certificates')}>
-                    Ir a certificados
+                    Ver mis cursos
                   </Button>
                 </Box>
               </Box>
