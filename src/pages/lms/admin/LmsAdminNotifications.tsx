@@ -11,10 +11,11 @@ const LmsAdminNotifications: React.FC = () => {
     <Box sx={{ p: { xs: 2, md: 4 }, minHeight: '100vh', bgcolor: 'grey.50' }}>
       <Box sx={{ mb: 3 }}>
         <Typography variant='h4' sx={{ fontWeight: 700, mb: 1 }}>
-          Notificaciones LMS
+          Mis notificaciones
         </Typography>
         <Typography color='text.secondary'>
-          Revisa aquí los avisos recientes del LMS y entra rápido al punto correcto del flujo.
+          Tus avisos del LMS (asignaciones, recordatorios y certificados). Para ver el estado de todos los
+          usuarios, usa Cumplimiento.
         </Typography>
       </Box>
 

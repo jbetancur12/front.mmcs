@@ -1697,7 +1697,7 @@ const LmsCertificateTemplates: React.FC = () => {
             Plantillas de Certificados
           </Typography>
           <Typography variant='body1' color='text.secondary'>
-            Administra el diseno base de los certificados generados por el LMS.
+            Administra el diseño base de los certificados generados por el LMS.
           </Typography>
         </Box>
 
@@ -1705,6 +1705,15 @@ const LmsCertificateTemplates: React.FC = () => {
           Nueva Plantilla
         </Button>
       </Box>
+
+      {!isLoading &&
+        templateCards.length > 0 &&
+        !templateCards.some((template) => template.isDefault || template.is_default) && (
+          <Alert severity='warning' sx={{ mb: 3 }}>
+            Ninguna plantilla está marcada como «por defecto». Edita una y activa «Plantilla por defecto»
+            para que los cursos sin plantilla propia usen ese diseño.
+          </Alert>
+        )}
 
       {isLoading ? (
         <Typography color='text.secondary'>Cargando plantillas...</Typography>

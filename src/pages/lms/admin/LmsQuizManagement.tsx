@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Box,
   Card,
@@ -130,6 +131,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
 }) => {
   const questionCategorySuggestions = ['Seguridad', 'Calidad', 'Cumplimiento', 'Inducción', 'Evaluación técnica']
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const axiosPrivate = useAxiosPrivate()
 
   const [activeTab, setActiveTab] = useState(0)
@@ -780,6 +782,27 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
         <Typography sx={{ ml: 3 }} variant="h6">
           Cargando quiz...
         </Typography>
+      </Box>
+    )
+  }
+
+  // Abierto directo por su ruta (sin curso ni lección), no hay un quiz que editar
+  if (!courseId && !lessonId && !initialQuizId) {
+    return (
+      <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'grey.50' }}>
+        <Card variant='outlined' sx={{ maxWidth: 560, mx: 'auto', mt: 6, borderRadius: 3, textAlign: 'center' }}>
+          <CardContent sx={{ p: 4 }}>
+            <Typography variant='h5' sx={{ fontWeight: 600, mb: 1 }}>
+              Los quizzes se editan desde cada curso
+            </Typography>
+            <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
+              Abre el contenido de un curso, elige una lección de tipo quiz y configura aquí sus preguntas.
+            </Typography>
+            <Button variant='contained' onClick={() => navigate('/lms/admin/courses')}>
+              Ir a gestión de cursos
+            </Button>
+          </CardContent>
+        </Card>
       </Box>
     )
   }
