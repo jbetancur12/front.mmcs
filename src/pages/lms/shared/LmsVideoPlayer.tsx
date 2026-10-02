@@ -17,6 +17,7 @@ import {
 } from '@mui/icons-material'
 import { api } from 'src/config'
 import useAxiosPrivate from 'src/utils/use-axios-private'
+import { buildGDriveEmbedUrl } from 'src/utils/gdrive'
 
 interface LmsVideoPlayerProps {
   src: string
@@ -49,14 +50,6 @@ const LmsVideoPlayer: React.FC<LmsVideoPlayerProps> = ({
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [resolvedSrc, setResolvedSrc] = useState(videoSource === 'minio' ? '' : src)
-
-  // Google Drive video handling
-  const buildGDriveEmbedUrl = (url: string): string => {
-    if (url.includes('/preview')) return url
-    const match = url.match(/\/file\/d\/([^\/?#]+)/)
-    if (match) return `https://drive.google.com/file/d/${match[1]}/preview`
-    return url
-  }
 
   // YouTube video handling
   const getYouTubeEmbedUrl = (url: string): string => {

@@ -59,6 +59,7 @@ import {
 } from 'src/utils/lmsAudience'
 import { buildLessonResourceDownloadUrl, buildLmsVideoStreamUrl } from 'src/services/lmsService'
 import PDFViewer from 'src/Components/PDFViewer'
+import { buildGDriveEmbedUrl } from 'src/utils/gdrive'
 
 
 interface CourseUnit {
@@ -151,7 +152,7 @@ const convertToEmbedUrl = (url: string): string => {
 const resolveLessonVideoUrl = (lesson: any): string => {
   if (!lesson?.video_url) return ''
   if (lesson.video_source === 'minio') return buildLmsVideoStreamUrl(lesson.video_url)
-  if (lesson.video_source === 'gdrive') return lesson.video_url
+  if (lesson.video_source === 'gdrive') return buildGDriveEmbedUrl(lesson.video_url)
   return convertToEmbedUrl(lesson.video_url)
 }
 
