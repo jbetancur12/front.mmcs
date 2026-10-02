@@ -423,7 +423,7 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
     return (
       <Card>
         <CardContent>
-          <Typography variant="h4" gutterBottom>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
             {quizConfig.title}
           </Typography>
           
@@ -433,36 +433,38 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
             </Typography>
           )}
           
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Información del Quiz
-            </Typography>
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2 }}>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="body2" color="text.secondary">Preguntas</Typography>
-                <Typography variant="h6">{shuffledQuestions.length}</Typography>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+              gap: 1.5,
+              mb: 3
+            }}
+          >
+            {[
+              { label: 'Preguntas', value: String(shuffledQuestions.length) },
+              { label: 'Puntos totales', value: String(shuffledQuestions.reduce((sum, q) => sum + q.points, 0)) },
+              { label: 'Para aprobar', value: `${quizConfig.passingPercentage}%` },
+              { label: 'Intentos restantes', value: String(quizConfig.maxAttempts - userAttempts.length) },
+              ...(quizConfig.timeLimitMinutes
+                ? [{ label: 'Tiempo límite', value: `${quizConfig.timeLimitMinutes} min` }]
+                : [])
+            ].map((item) => (
+              <Paper
+                key={item.label}
+                variant="outlined"
+                sx={{ p: 2, borderRadius: 3, textAlign: 'center', bgcolor: 'action.hover' }}
+              >
+                <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
+                  {item.value}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {item.label}
+                </Typography>
               </Paper>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="body2" color="text.secondary">Puntos Totales</Typography>
-                <Typography variant="h6">{shuffledQuestions.reduce((sum, q) => sum + q.points, 0)}</Typography>
-              </Paper>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="body2" color="text.secondary">Para Aprobar</Typography>
-                <Typography variant="h6">{quizConfig.passingPercentage}%</Typography>
-              </Paper>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="body2" color="text.secondary">Intentos Restantes</Typography>
-                <Typography variant="h6">{quizConfig.maxAttempts - userAttempts.length}</Typography>
-              </Paper>
-              {quizConfig.timeLimitMinutes && (
-                <Paper sx={{ p: 2 }}>
-                  <Typography variant="body2" color="text.secondary">Tiempo Límite</Typography>
-                  <Typography variant="h6">{quizConfig.timeLimitMinutes} min</Typography>
-                </Paper>
-              )}
-            </Box>
+            ))}
           </Box>
-          
+
           {userAttempts.length > 0 && (
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom>
