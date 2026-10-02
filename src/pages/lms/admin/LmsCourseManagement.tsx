@@ -769,15 +769,15 @@ const LmsCourseManagement: React.FC = () => {
         configurar asignaciones desde las acciones de cada fila.
       </Alert>
 
-      <TableContainer component={Paper}>
-        <Table>
+      <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+        <Table size='small'>
           <TableHead>
             <TableRow>
               <TableCell>Título</TableCell>
-              <TableCell>Audiencia</TableCell>
-              <TableCell>Duración</TableCell>
-              <TableCell>Módulos</TableCell>
-              <TableCell>Progreso</TableCell>
+              <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Audiencia</TableCell>
+              <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Duración</TableCell>
+              <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Módulos</TableCell>
+              <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Progreso</TableCell>
               <TableCell>Estado</TableCell>
               <TableCell>Acciones</TableCell>
             </TableRow>
@@ -822,7 +822,16 @@ const LmsCourseManagement: React.FC = () => {
                       >
                         {course.description}
                       </Typography>
-                      <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                      <Typography
+                        variant='caption'
+                        color='text.secondary'
+                        sx={{ display: { xs: 'block', md: 'none' }, mt: 0.5 }}
+                      >
+                        {getCourseAudienceLabel(course.audience)} ·{' '}
+                        {formatDuration(getDerivedCourseDuration(course))} ·{' '}
+                        {course._count?.modules || 0} módulos · {course._count?.progress || 0} usuarios
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
                         {course.is_mandatory && (
                           <Chip label='Obligatorio' color='error' size='small' />
                         )}
@@ -843,16 +852,16 @@ const LmsCourseManagement: React.FC = () => {
                       </Box>
                     </Box>
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                     <Chip 
                       label={getCourseAudienceLabel(course.audience)} 
                       color={course.audience === 'both' ? 'primary' : 'default'}
                       size='small' 
                     />
                   </TableCell>
-                  <TableCell>{formatDuration(getDerivedCourseDuration(course))}</TableCell>
-                  <TableCell>{course._count?.modules || 0}</TableCell>
-                  <TableCell>{course._count?.progress || 0} usuarios</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{formatDuration(getDerivedCourseDuration(course))}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{course._count?.modules || 0}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{course._count?.progress || 0} usuarios</TableCell>
                   <TableCell>
                     <Chip
                       label={getStatusLabel(course.status)}
@@ -861,7 +870,7 @@ const LmsCourseManagement: React.FC = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', maxWidth: { xs: 84, md: 'none' } }}>
                       <Tooltip title="Editar curso">
                         <IconButton
                           size='small'
