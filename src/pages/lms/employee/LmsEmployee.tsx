@@ -20,7 +20,11 @@ import {
   ListItemIcon,
   Divider,
   CircularProgress,
-  IconButton
+  IconButton,
+  TextField,
+  InputAdornment,
+  ToggleButton,
+  ToggleButtonGroup
 } from '@mui/material'
 import {
   MenuBook as BookOpenIcon,
@@ -37,6 +41,8 @@ import {
   Visibility as VisibilityIcon,
   Verified as VerifiedIcon
 } from '@mui/icons-material'
+import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
+import SearchIcon from '@mui/icons-material/Search'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../../../store/userStore'
@@ -145,6 +151,11 @@ const getAssignmentBackedProgress = (
 
 const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   const [activeTab, setActiveTab] = useState(0)
+  const [courseSearch, setCourseSearch] = useState('')
+  const [courseFilter, setCourseFilter] = useState<'pending' | 'completed'>('pending')
+  const normalizedSearch = courseSearch.trim().toLowerCase()
+  const matchesSearch = (course: any) =>
+    !normalizedSearch || String(course.title || '').toLowerCase().includes(normalizedSearch)
   const navigate = useNavigate()
   const $userStore = useStore(userStore)
 
@@ -529,6 +540,14 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
               </Button>
               <Button
                 variant='outlined'
+                size='small'
+                startIcon={<NotificationsNoneIcon />}
+                onClick={() => setActiveTab(4)}
+              >
+                Notificaciones
+              </Button>
+              <Button
+                variant='outlined'
                 startIcon={<LogoutIcon />}
                 onClick={handleLogout}
                 size='small'
@@ -544,7 +563,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         sx={{ maxWidth: 'xl', mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 2, md: 3 } }}
       >
         <Tabs
-          value={activeTab}
+          value={activeTab > 3 ? false : activeTab}
           onChange={handleTabChange}
           variant='scrollable'
           scrollButtons='auto'
@@ -555,8 +574,6 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
           <Tab label='Cursos Obligatorios' />
           <Tab label='Mis Cursos' />
           <Tab label='Mis Certificados' />
-          <Tab label='Notificaciones' />
-          <Tab label='Finalizados' />
         </Tabs>
 
         {activeTab === 0 && (
@@ -1130,6 +1147,44 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         )}
 
         {activeTab === 2 && (
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 2,
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              mb: 3
+            }}
+          >
+            <TextField
+              size='small'
+              placeholder='Buscar curso...'
+              value={courseSearch}
+              onChange={(event) => setCourseSearch(event.target.value)}
+              sx={{ minWidth: { xs: '100%', sm: 280 } }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position='start'>
+                    <SearchIcon fontSize='small' />
+                  </InputAdornment>
+                )
+              }}
+            />
+            <ToggleButtonGroup
+              size='small'
+              exclusive
+              value={courseFilter}
+              onChange={(_event, value) => value && setCourseFilter(value)}
+            >
+              <ToggleButton value='pending'>Disponibles</ToggleButton>
+              <ToggleButton value='completed'>
+                Finalizados ({completedCourses.length})
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+        )}
+
+        {activeTab === 2 && courseFilter === 'pending' && (
           <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
               <Typography variant='h6'>
@@ -1148,7 +1203,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
             )}
 
             <Grid container spacing={3}>
-              {optionalCourses.map((course) => (
+              {optionalCourses.filter(matchesSearch).map((course) => (
                 <Grid item xs={12} md={6} lg={4} key={course.id}>
                   <Card
                     variant='outlined'
@@ -1370,7 +1425,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
           </Box>
         )}
 
-        {activeTab === 5 && (
+        {activeTab === 2 && courseFilter === 'completed' && (
           <Box>
             {completedCourses.length === 0 ? (
               <Card variant='outlined' sx={{ p: 4, textAlign: 'center' }}>
@@ -1384,7 +1439,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
               </Card>
             ) : (
               <Grid container spacing={3}>
-                {completedCourses.map((course: any) => (
+                {completedCourses.filter(matchesSearch).map((course: any) => (
                   <Grid item xs={12} md={6} lg={4} key={course.id}>
                     <Card
                       variant='outlined'
