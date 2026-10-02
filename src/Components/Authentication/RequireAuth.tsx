@@ -19,6 +19,8 @@ const clearInvalidSession = () => {
   localStorage.removeItem('accessToken')
   localStorage.removeItem('refreshToken')
   localStorage.removeItem('sessionExpiresAt')
+  localStorage.removeItem('impersonator')
+  localStorage.removeItem('impersonationTarget')
   localStorage.removeItem('user')
   localStorage.removeItem('userProfile')
 

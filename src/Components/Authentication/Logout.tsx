@@ -22,6 +22,8 @@ const LogoutButton: React.FC = () => {
     }
     localStorage.removeItem('accessToken')
     localStorage.removeItem('sessionExpiresAt')
+    localStorage.removeItem('impersonator')
+    localStorage.removeItem('impersonationTarget')
     localStorage.removeItem('columnFiltersCustomers') // Limpiar filtros
     localStorage.removeItem('columnFiltersHV') // Limpiar filtros
     userStore.set({
