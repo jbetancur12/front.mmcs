@@ -43,10 +43,7 @@ import { userStore } from '../../../store/userStore'
 import LmsNotificationCenter from '../shared/LmsNotificationCenter'
 import { useAvailableCourses, useUserAssignments, useUserCertificates } from '../../../hooks/useLms'
 import type { Certificate, Course } from '../../../services/lmsService'
-import {
-  getCourseAudienceLabel,
-  getLearningVisibilityLabel
-} from '../../../utils/lmsAudience'
+import { getCourseAudienceLabel } from '../../../utils/lmsAudience'
 import {
   getCourseCompletedLessons,
   getCourseProgressPercentage,
@@ -483,7 +480,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
             maxWidth: 'xl',
             mx: 'auto',
             px: { xs: 2, sm: 3, lg: 4 },
-            py: { xs: 3, md: 4 }
+            py: { xs: 2, md: 2.5 }
           }}
         >
           <Box
@@ -509,18 +506,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
               <Typography variant='body1' color='text.secondary' sx={{ mt: 0.5 }}>
                 Bienvenido, {currentUser.name}
               </Typography>
-              <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
-                {getLearningVisibilityLabel('internal')}
-              </Typography>
-              <Typography
-                variant='body2'
-                color='text.secondary'
-                sx={{ mt: 1.5, maxWidth: 640 }}
-              >
-                Aquí verás primero lo obligatorio, luego lo que ya traes en progreso y, al final,
-                el resto de cursos disponibles para seguir fortaleciendo tu ruta.
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1.5 }}>
                 <Chip label='Empleado interno' color='secondary' />
                 {heroSummaryChips.map((chip) => (
                   <Chip
@@ -555,9 +541,16 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
       </Paper>
 
       <Box
-        sx={{ maxWidth: 'xl', mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: 4 }}
+        sx={{ maxWidth: 'xl', mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 2, md: 3 } }}
       >
-        <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 4 }}>
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          variant='scrollable'
+          scrollButtons='auto'
+          allowScrollButtonsMobile
+          sx={{ mb: 3 }}
+        >
           <Tab label='Mi Progreso' />
           <Tab label='Cursos Obligatorios' />
           <Tab label='Mis Cursos' />
@@ -568,11 +561,84 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
 
         {activeTab === 0 && (
           <Box>
-            <Alert severity='info' sx={{ mb: 3 }}>
-              Como usuario interno, aquí verás tanto cursos obligatorios como cursos disponibles
-              para profundizar tu aprendizaje. Lo urgente siempre aparece primero en
-              <strong> Cursos Obligatorios</strong>.
-            </Alert>
+            {nextLearningAction && (
+              <Card
+                sx={{
+                  mb: 3,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  background:
+                    nextLearningAction.kind === 'mandatory'
+                      ? 'linear-gradient(135deg, rgba(254,242,242,1) 0%, rgba(255,255,255,1) 100%)'
+                      : 'linear-gradient(135deg, rgba(239,246,255,1) 0%, rgba(255,255,255,1) 100%)'
+                }}
+              >
+                <CardContent>
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <Typography variant='overline' color='text.secondary'>
+                      Siguiente paso recomendado
+                    </Typography>
+                    <Chip
+                      label={
+                        nextLearningAction.kind === 'mandatory'
+                          ? 'Prioridad alta'
+                          : nextLearningAction.kind === 'completed'
+                            ? 'Ruta completada'
+                          : nextLearningAction.kind === 'progress'
+                            ? 'Retoma tu avance'
+                            : 'Disponible para comenzar'
+                      }
+                      size='small'
+                      color={
+                        nextLearningAction.kind === 'mandatory'
+                          ? 'error'
+                          : nextLearningAction.kind === 'completed'
+                            ? 'success'
+                          : nextLearningAction.kind === 'progress'
+                            ? 'info'
+                            : 'success'
+                      }
+                    />
+                  </Box>
+                  <Typography variant='h6' sx={{ mt: 1 }}>
+                    {nextLearningAction.title}
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                    {nextLearningAction.description}
+                  </Typography>
+                  {stats.overdueTraining > 1 && (
+                    <Typography variant='body2' color='error.main' sx={{ mb: 2 }}>
+                      Tienes {stats.overdueTraining} cursos obligatorios vencidos.{' '}
+                      <Button size='small' onClick={() => setActiveTab(1)}>
+                        Ver todos
+                      </Button>
+                    </Typography>
+                  )}
+                  <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 2 }}>
+                    {nextLearningAction.kind === 'completed'
+                      ? 'Como ya terminaste lo activo, este panel te deja a mano un curso completado para repasar sin perder el contexto.'
+                      : 'Tu panel seguirá priorizando esta recomendación hasta que completes el siguiente hito.'}
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    <Button
+                      variant='contained'
+                      startIcon={<PlayArrowIcon />}
+                      onClick={() => handleCourseClick(nextLearningAction.courseId)}
+                    >
+                      {nextLearningAction.cta}
+                    </Button>
+                    <Button
+                      variant='outlined'
+                      onClick={() =>
+                        setActiveTab(nextLearningAction.kind === 'mandatory' ? 1 : 2)
+                      }
+                    >
+                      Ver esta sección
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            )}
             {assignedOptionalCourses.length > 0 && (
               <Card variant='outlined' sx={{ mb: 3, borderColor: 'primary.light' }}>
                 <CardContent>
@@ -639,88 +705,6 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                 </CardContent>
               </Card>
             )}
-            {nextLearningAction && (
-              <Card
-                sx={{
-                  mb: 3,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  background:
-                    nextLearningAction.kind === 'mandatory'
-                      ? 'linear-gradient(135deg, rgba(254,242,242,1) 0%, rgba(255,255,255,1) 100%)'
-                      : 'linear-gradient(135deg, rgba(239,246,255,1) 0%, rgba(255,255,255,1) 100%)'
-                }}
-              >
-                <CardContent>
-                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <Typography variant='overline' color='text.secondary'>
-                      Siguiente paso recomendado
-                    </Typography>
-                    <Chip
-                      label={
-                        nextLearningAction.kind === 'mandatory'
-                          ? 'Prioridad alta'
-                          : nextLearningAction.kind === 'completed'
-                            ? 'Ruta completada'
-                          : nextLearningAction.kind === 'progress'
-                            ? 'Retoma tu avance'
-                            : 'Disponible para comenzar'
-                      }
-                      size='small'
-                      color={
-                        nextLearningAction.kind === 'mandatory'
-                          ? 'error'
-                          : nextLearningAction.kind === 'completed'
-                            ? 'success'
-                          : nextLearningAction.kind === 'progress'
-                            ? 'info'
-                            : 'success'
-                      }
-                    />
-                  </Box>
-                  <Typography variant='h6' sx={{ mt: 1 }}>
-                    {nextLearningAction.title}
-                  </Typography>
-                  <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                    {nextLearningAction.description}
-                  </Typography>
-                  <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 2 }}>
-                    {nextLearningAction.kind === 'completed'
-                      ? 'Como ya terminaste lo activo, este panel te deja a mano un curso completado para repasar sin perder el contexto.'
-                      : 'Tu panel seguirá priorizando esta recomendación hasta que completes el siguiente hito.'}
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    <Button
-                      variant='contained'
-                      startIcon={<PlayArrowIcon />}
-                      onClick={() => handleCourseClick(nextLearningAction.courseId)}
-                    >
-                      {nextLearningAction.cta}
-                    </Button>
-                    <Button
-                      variant='outlined'
-                      onClick={() =>
-                        setActiveTab(nextLearningAction.kind === 'mandatory' ? 1 : 2)
-                      }
-                    >
-                      Ver esta sección
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            )}
-            {/* Alertas importantes */}
-            {stats.overdueTraining > 0 && (
-              <Alert severity="error" sx={{ mb: 3 }}>
-                <Typography variant="body2">
-                  <strong>¡Atención!</strong> Tienes {stats.overdueTraining} curso(s) obligatorio(s) vencido(s).
-                  <Button size="small" sx={{ ml: 2 }} onClick={() => setActiveTab(1)}>
-                    Ver cursos obligatorios
-                  </Button>
-                </Typography>
-              </Alert>
-            )}
-
             {/* Estadísticas principales */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
               <Grid item xs={12} sm={6} lg={3}>
