@@ -149,6 +149,14 @@ const getAssignmentBackedProgress = (
   }
 }
 
+const formatLearnedTime = (minutes: number) => {
+  if (!minutes || minutes < 1) return '0 min'
+  if (minutes < 60) return `${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  return rest ? `${hours}h ${rest}m` : `${hours}h`
+}
+
 const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   const [activeTab, setActiveTab] = useState(0)
   const [courseSearch, setCourseSearch] = useState('')
@@ -186,7 +194,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
           inProgressCourses: 0,
           averageProgress: 0,
           certificatesEarned: 0,
-          totalHoursLearned: 0,
+          totalMinutesLearned: 0,
           mandatoryCourses: 0,
           mandatoryCompleted: 0,
           overdueTraining: 0
@@ -291,9 +299,6 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
       return totalHours + getCourseTimeSpentMinutes(course)
     }, 0)
 
-    // Convertir minutos a horas
-    const totalHoursLearnedRounded = Math.round(totalHoursLearned / 60)
-
     return {
       mandatoryCourses: mandatory,
       optionalCourses: optional,
@@ -307,7 +312,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         inProgressCourses,
         averageProgress,
         certificatesEarned, // ✅ Ahora usa datos reales
-        totalHoursLearned: totalHoursLearnedRounded, // ✅ Ahora usa tiempo real
+        totalMinutesLearned: Math.round(totalHoursLearned), // minutos reales registrados
         mandatoryCourses: mandatory.length,
         mandatoryCompleted,
         overdueTraining
@@ -817,7 +822,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                       component='div'
                       sx={{ fontWeight: 'bold' }}
                     >
-                      {stats.totalHoursLearned}h
+                      {formatLearnedTime(stats.totalMinutesLearned)}
                     </Typography>
                     <Typography variant='body2' color='text.secondary'>
                       Tiempo registrado
@@ -933,7 +938,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                           <Typography variant="body2" fontWeight="medium" color={course.isOverdue ? 'error.main' : 'warning.main'}>
                             {course.title}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant="caption" color="text.secondary" display="block">
                             {course.isOverdue 
                               ? `Vencido hace ${Math.abs(course.daysUntilDeadline!)} días`
                               : `Vence en ${course.daysUntilDeadline} días`
