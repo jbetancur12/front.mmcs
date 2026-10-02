@@ -44,6 +44,7 @@ import {
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon
 } from '@mui/icons-material'
+import { alpha } from '@mui/material/styles'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useUserCertificates, useCertificate, useDownloadCertificate } from '../../../hooks/useLms'
 import { lmsService, type Certificate as ApiCertificate } from '../../../services/lmsService'
@@ -98,14 +99,28 @@ const normalizeCertificate = (certificate: ApiCertificate | Certificate): Certif
 const getOrganizationName = (certificate?: Certificate | null) =>
   certificate?.certificateData?.organizationName || 'MMCS Learning Management System'
 
-const getCourseDurationLabel = (certificate?: Certificate | null) => {
-  const duration = certificate?.certificateData?.courseDuration
+const formatMinutes = (minutes: number) => {
+  if (minutes < 60) return `${minutes} minuto${minutes === 1 ? '' : 's'}`
+  const hours = Math.floor(minutes / 60)
+  const rest = Math.round(minutes % 60)
+  return rest ? `${hours} h ${rest} min` : `${hours} hora${hours === 1 ? '' : 's'}`
+}
 
-  if (!duration || duration <= 0) {
+const getCourseDurationLabel = (certificate?: Certificate | null) => {
+  const duration: unknown = certificate?.certificateData?.courseDuration
+
+  // Algunos certificados guardan la duración como texto ("40 horas"): se muestra tal cual
+  if (typeof duration === 'string') {
+    const text = duration.trim()
+    if (!text) return 'Duración no registrada'
+    return /^\d+(\.\d+)?$/.test(text) ? formatMinutes(Number(text)) : text
+  }
+
+  if (typeof duration !== 'number' || !(duration > 0)) {
     return 'Duración no registrada'
   }
 
-  return `${duration} minuto${duration === 1 ? '' : 's'}`
+  return formatMinutes(duration)
 }
 
 const LmsCertificateView: React.FC = () => {
@@ -420,7 +435,7 @@ const LmsCertificateView: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: { xs: 2, md: 3 }, minHeight: '100vh', bgcolor: 'grey.50' }}>
       {viewMode === 'single' && certificate ? (
         // Single Certificate View
         <Box>
@@ -652,89 +667,73 @@ const LmsCertificateView: React.FC = () => {
                       height: '100%',
                       display: 'flex',
                       flexDirection: 'column',
+                      borderRadius: 3,
+                      overflow: 'hidden',
                       border: '1px solid',
                       borderColor: 'divider',
-                      background:
-                        'linear-gradient(180deg, rgba(248,250,252,1) 0%, rgba(255,255,255,1) 42%)'
+                      transition: 'transform .15s ease, box-shadow .15s ease',
+                      '&:hover': { transform: 'translateY(-3px)', boxShadow: 4 }
                     }}
                   >
-                    <CardHeader
-                      title={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <CertificateIcon color="primary" />
-                          <Typography variant="h6" component="div" noWrap>
-                            {cert.courseTitle}
-                          </Typography>
-                        </Box>
-                      }
-                      action={
-                        <Chip
-                          label={`Emitido ${new Date(cert.issuedAt).toLocaleDateString('es-ES')}`}
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                        />
-                      }
-                    />
+                    <Box
+                      sx={(theme) => ({
+                        height: 84,
+                        px: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        bgcolor: alpha(theme.palette.warning.main, 0.14),
+                        color: 'warning.main'
+                      })}
+                    >
+                      <CertificateIcon sx={{ fontSize: 40 }} />
+                      <Chip size='small' color='success' icon={<VerifiedIcon />} label='Verificado' />
+                    </Box>
                     <CardContent sx={{ flexGrow: 1 }}>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Certificado N°: {cert.certificateNumber}
+                      <Typography
+                        variant='subtitle1'
+                        sx={{
+                          fontWeight: 600,
+                          lineHeight: 1.3,
+                          minHeight: '2.6em',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}
+                      >
+                        {cert.courseTitle}
                       </Typography>
-
-                      {cert.courseDescription && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          {cert.courseDescription}
-                        </Typography>
-                      )}
-
-                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+                      <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.75 }}>
+                        Emitido {cert.issuedAt ? new Date(cert.issuedAt).toLocaleDateString('es-ES') : 'N/A'}
+                        {' · '}N° {cert.certificateNumber}
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1.5 }}>
                         <Chip size='small' label={getOrganizationName(cert)} variant='outlined' />
                         <Chip size='small' label={getCourseDurationLabel(cert)} variant='outlined' />
                       </Box>
-
-                      <Typography variant="body2" sx={{ mb: 1 }}>
-                        <strong>Organización:</strong> {getOrganizationName(cert)}
-                      </Typography>
-
-                      <Typography variant="body2" sx={{ mb: 1 }}>
-                        <strong>Duración:</strong> {getCourseDurationLabel(cert)}
-                      </Typography>
-                      
-                      <Typography variant="body2" sx={{ mb: 1 }}>
-                        <strong>Completado:</strong> {new Date(cert.completion_date).toLocaleDateString('es-ES')}
-                      </Typography>
-                      
-                      <Typography variant="body2" sx={{ mb: 2 }}>
-                        <strong>Emitido:</strong> {cert.issuedAt ? new Date(cert.issuedAt).toLocaleDateString('es-ES') : 'N/A'}
-                      </Typography>
-
-                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        <Tooltip title="Ver certificado">
-                          <IconButton
-                            size="small"
-                            onClick={() => navigate(`/lms/certificate/${cert.id}`)}
-                          >
-                            <VisibilityIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Descargar PDF">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDownloadCertificate(cert.id)}
-                          >
-                            <DownloadIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Compartir">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleShareCertificate(cert)}
-                          >
-                            <ShareIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
                     </CardContent>
+                    <Box sx={{ p: 2, pt: 0, display: 'flex', gap: 1 }}>
+                      <Button
+                        fullWidth
+                        variant='contained'
+                        color='warning'
+                        startIcon={<VisibilityIcon />}
+                        onClick={() => navigate(`/lms/certificate/${cert.id}`)}
+                      >
+                        Ver certificado
+                      </Button>
+                      <Tooltip title='Descargar PDF'>
+                        <IconButton color='primary' onClick={() => handleDownloadCertificate(cert.id)}>
+                          <DownloadIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title='Compartir'>
+                        <IconButton color='primary' onClick={() => handleShareCertificate(cert)}>
+                          <ShareIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                   </Card>
                 </Grid>
               ))}
