@@ -390,8 +390,8 @@ const getCompactColumnTitle = (title: string) => {
       return 'Programar'
     case 'En servicio':
       return 'Servicio'
-    case 'Pendiente administrativo':
-      return 'Admin'
+    case 'Facturación y cierre':
+      return 'Fact./cierre'
     default:
       return title
   }
@@ -494,8 +494,8 @@ const hasPendingReleasableQuantities = (service: CalibrationService) =>
   })
 
 const getServiceOperationalFocus = (service: CalibrationService) => {
-  if (service.status === 'closed') {
-    return { label: 'Cierre final completado', color: 'success' as const }
+  if (service.status !== 'technically_completed') {
+    return null
   }
 
   const cuts = service.cuts || []
@@ -505,31 +505,23 @@ const getServiceOperationalFocus = (service: CalibrationService) => {
     cuts.length > 0 &&
     cuts.every((cut) => cut.otherFields?.documentControl?.status === 'sent')
 
-  if (
-    service.status === 'technically_completed' &&
-    allCutsSent &&
-    !hasPendingReleasableQuantities(service)
-  ) {
+  if (allCutsSent && !hasPendingReleasableQuantities(service)) {
     return { label: 'Listo para cierre final', color: 'success' as const }
   }
 
-  if (service.status === 'technically_completed' && hasPendingReleasableQuantities(service)) {
+  if (hasPendingReleasableQuantities(service)) {
     return { label: 'Pendiente corte', color: 'warning' as const }
   }
 
-  if (service.status === 'technically_completed' && allCutsInvoiced) {
-    return { label: 'Pendiente documental', color: 'warning' as const }
+  if (allCutsInvoiced) {
+    return { label: 'Facturado', color: 'success' as const }
   }
 
-  if (service.status === 'technically_completed' && cuts.length > 0) {
-    return { label: 'Pendiente facturación', color: 'secondary' as const }
+  if (cuts.length > 0) {
+    return { label: 'Por facturar', color: 'info' as const }
   }
 
-  if (service.status === 'technically_completed') {
-    return { label: 'Pendiente administrativo', color: 'info' as const }
-  }
-
-  return null
+  return { label: 'Pendiente administrativo', color: 'default' as const }
 }
 
 const getKanbanColumns = (
@@ -613,8 +605,8 @@ const getKanbanColumns = (
     },
     {
       key: 'pending_close',
-      title: 'Pendiente administrativo',
-      description: 'Finalizados técnicamente o pendientes administrativos',
+      title: 'Facturación y cierre',
+      description: 'Finalizados técnicamente: por facturar, facturados o listos para cierre',
       accent: '#3b82f6',
       priority: 1
     },
@@ -1095,9 +1087,6 @@ const CalibrationServicesPage = () => {
           assignedMetrologistEmail.toLowerCase() ===
             $userStore.email.toLowerCase()
       )
-    const shouldShowOperationalFocusBadge =
-      serviceOperationalFocus &&
-      serviceOperationalFocus.label !== service.slaIndicator?.label
     const canEdit = canCreateServices && service.status === 'draft'
     const canRequestApproval =
       canCreateServices && service.status === 'draft'
@@ -1205,19 +1194,16 @@ const CalibrationServicesPage = () => {
                     }
                   />
                 ) : null}
-                {shouldShowOperationalFocusBadge ? (
+                {serviceOperationalFocus ? (
                   <Chip
                     size='small'
                     color={serviceOperationalFocus.color}
-                    variant='outlined'
+                    variant='filled'
                     label={serviceOperationalFocus.label}
                   />
                 ) : null}
                 {service.odsCode ? (
                   <Chip size='small' variant='outlined' label={service.odsCode} />
-                ) : null}
-                {(service.cuts || []).some(c => c.status === 'ready_for_invoicing') ? (
-                  <Chip size='small' color='info' variant='outlined' label='Por facturar' />
                 ) : null}
                 {(service.otherFields as any)?.hasEquipmentSale === true ? (
                   <Chip size='small' color='warning' variant='outlined' label='Venta Eq.' />
@@ -2355,6 +2341,24 @@ const CalibrationServicesPage = () => {
               Cell: ({ cell }) => <Chip size='small' color={CALIBRATION_SERVICE_STATUS_COLORS[cell.getValue<CalibrationServiceStatus>()]} label={CALIBRATION_SERVICE_STATUS_LABELS[cell.getValue<CalibrationServiceStatus>()]} />
             },
             {
+              accessorFn: (s) => getServiceOperationalFocus(s)?.label ?? '',
+              id: 'billing',
+              header: 'Facturación',
+              size: 150,
+              filterVariant: 'select',
+              filterSelectOptions: [
+                { text: 'Por facturar', value: 'Por facturar' },
+                { text: 'Facturado', value: 'Facturado' },
+                { text: 'Pendiente corte', value: 'Pendiente corte' },
+                { text: 'Listo para cierre final', value: 'Listo para cierre final' },
+                { text: 'Pendiente administrativo', value: 'Pendiente administrativo' }
+              ],
+              Cell: ({ row }) => {
+                const focus = getServiceOperationalFocus(row.original)
+                return focus ? <Chip size='small' color={focus.color} variant='outlined' label={focus.label} /> : <Typography variant='body2' sx={{ color: ui.muted }}>—</Typography>
+              }
+            },
+            {
               accessorKey: 'slaIndicator.color',
               header: 'SLA',
               size: 90,
@@ -2362,7 +2366,7 @@ const CalibrationServicesPage = () => {
               filterSelectOptions: SLA_OPTIONS.filter(o => o.value !== FILTER_ALL).map(o => ({ text: o.label, value: o.value })),
               Cell: ({ row }) => <Chip size='small' color={CALIBRATION_SERVICE_SLA_COLORS[row.original.slaIndicator?.color || 'gray']} label={row.original.slaIndicator?.label || '—'} />
             },
-            ...(!isTechnicalOnlyView ? [{
+            ...(!isTechnicalOnlyView && !isAnalystOnlyView ? [{
               accessorKey: 'approvalStatus' as const,
               header: 'Respuesta cliente' as const,
               size: 130 as const,
@@ -2370,24 +2374,7 @@ const CalibrationServicesPage = () => {
               filterSelectOptions: (APPROVAL_OPTIONS as any[]).filter((o: any) => o.value !== FILTER_ALL).map((o: any) => ({ text: o.label, value: o.value })),
               Cell: ({ cell }: any) => <Chip size='small' color={(CALIBRATION_SERVICE_APPROVAL_COLORS as any)[cell.getValue() as string]} label={(CALIBRATION_SERVICE_APPROVAL_LABELS as any)[cell.getValue() as string]} />
             }] : []),
-            {
-              accessorFn: (s) => {
-                const names = getMetrologistNames(s)
-                return names.length > 0 ? names.join(', ') : ''
-              },
-              header: 'Metrólogo(s)',
-              size: 160,
-              Cell: ({ cell }) => {
-                const name = cell.getValue<string>()
-                return name ? <Typography variant='body2' sx={{ color: ui.muted }}>{name}</Typography> : <Typography variant='body2' sx={{ color: ui.muted }}>—</Typography>
-              }
-            },
-            {
-              accessorFn: (s) => s.items?.length ?? 0,
-              header: 'Ítems',
-              size: 60
-            },
-            ...(!isTechnicalOnlyView ? [{
+            ...(!isTechnicalOnlyView && !isAnalystOnlyView ? [{
               accessorFn: (s: CalibrationService) => getItemsTotal(s),
               header: 'Valor' as const,
               size: 100 as const,
@@ -2569,6 +2556,7 @@ const CalibrationServicesPage = () => {
                         service.customer?.nombre ||
                         service.executionCustomerName ||
                         'Cliente pendiente'
+                      const serviceFocus = getServiceOperationalFocus(service)
 
                       return (
                         <Card
@@ -2691,6 +2679,14 @@ const CalibrationServicesPage = () => {
                                     }
                                   />
                                 ) : null}
+                                {serviceFocus ? (
+                                  <Chip
+                                    size='small'
+                                    color={serviceFocus.color}
+                                    variant='outlined'
+                                    label={serviceFocus.label}
+                                  />
+                                ) : null}
                               </Stack>
 
                               {service.scopeType === 'site' ? (
@@ -2733,9 +2729,6 @@ const CalibrationServicesPage = () => {
                                   {service.items?.length ?? 0} item
                                   {(service.items?.length ?? 0) === 1 ? '' : 's'}
                                 </Typography>
-                                {(service.cuts || []).some(c => c.status === 'ready_for_invoicing') ? (
-                                  <Chip size='small' color='info' variant='outlined' label='Facturar' sx={{ height: 20, '& .MuiChip-label': { fontSize: '0.65rem', px: 0.5 } }} />
-                                ) : null}
                                 {(service.otherFields as any)?.hasEquipmentSale === true ? (
                                   <Chip size='small' color='warning' variant='outlined' label='Venta' sx={{ height: 20, '& .MuiChip-label': { fontSize: '0.65rem', px: 0.5 } }} />
                                 ) : null}
