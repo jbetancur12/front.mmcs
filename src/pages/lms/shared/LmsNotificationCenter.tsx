@@ -246,7 +246,6 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
   const actionRequiredCount = notifications.filter(
     (notification) => hasNotificationAction(notification) && !notification.read
   ).length
-  const reviewedCount = notifications.filter((notification) => notification.read).length
 
   const filteredNotifications = useMemo(() => {
     return notifications
@@ -379,13 +378,11 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
                   {feedbackMessage}
                 </Alert>
               ) : null}
-              <Alert severity={actionRequiredCount > 0 ? 'warning' : 'info'} sx={{ mb: 2 }}>
-                {actionRequiredCount > 0
-                  ? `Tienes ${actionRequiredCount} aviso(s) que te pueden devolver a una acción concreta del LMS.`
-                  : unreadCount > 0
-                    ? `Tienes ${unreadCount} aviso(s) por revisar.`
-                    : `Bandeja al día. ${reviewedCount} aviso(s) revisado(s) recientemente.`}
-              </Alert>
+              {unreadCount > 0 && (
+                <Alert severity={actionRequiredCount > 0 ? 'warning' : 'info'} sx={{ mb: 2 }}>
+                  Tienes {unreadCount} aviso(s) sin leer.
+                </Alert>
+              )}
             </Box>
           )}
           {isLoading ? (
@@ -433,23 +430,11 @@ const LmsNotificationCenter: React.FC<LmsNotificationCenterProps> = ({
                           >
                             {getNotificationDisplayTitle(notification)}
                           </Typography>
-                          <Chip
-                            label={notification.severity}
-                            size='small'
-                            color={getPriorityColor(notification)}
-                            sx={{ fontSize: '0.7rem' }}
-                          />
-                          <Chip
-                            label={getNotificationContextLabel(notification)}
-                            size='small'
-                            variant='outlined'
-                            sx={{ fontSize: '0.7rem' }}
-                          />
-                          {hasNotificationAction(notification) && !notification.read && (
+                          {notification.severity !== 'info' && (
                             <Chip
-                              label='Acción disponible'
+                              label={notification.severity}
                               size='small'
-                              color='primary'
+                              color={getPriorityColor(notification)}
                               sx={{ fontSize: '0.7rem' }}
                             />
                           )}
