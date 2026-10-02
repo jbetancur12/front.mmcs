@@ -713,11 +713,6 @@ const LmsContentEditor: React.FC<LmsContentEditorProps> = ({
 
   return (
     <Stack spacing={3}>
-      <Alert severity="info">
-        Flujo recomendado dentro del contenido: crea una <strong>sección</strong>, agrega una o varias
-        <strong> lecciones</strong> y usa <strong>recursos de apoyo</strong> para PDFs, documentos o enlaces
-        complementarios.
-      </Alert>
 
       <Stack spacing={3}>
         <Card variant="outlined">

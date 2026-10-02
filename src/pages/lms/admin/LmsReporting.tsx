@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import {
   Alert,
-  AlertTitle,
   Box,
   Button,
   Card,
@@ -545,7 +544,7 @@ const LmsReporting: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'grey.50' }}>
       <Stack spacing={3}>
         <Card sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
           <CardContent>
@@ -566,10 +565,6 @@ const LmsReporting: React.FC = () => {
                   </Button>
                 </Stack>
               </Box>
-              <Alert severity='info' icon={<ScheduleIcon />}>
-                <AlertTitle>Uso esperado</AlertTitle>
-                Esta superficie ya trabaja con datos reales, pero sigue limitada a lo que el backend soporta hoy.
-              </Alert>
             </Stack>
           </CardContent>
         </Card>
@@ -579,36 +574,9 @@ const LmsReporting: React.FC = () => {
             Reportes LMS
           </Typography>
           <Typography variant='body1' color='text.secondary'>
-            Esta pantalla ahora usa el backend real para plantillas, reportes recientes y
-            programaciones. También permite generar reportes rápidos desde las plantillas y
-            descargar los reportes ya completados.
+            Crea plantillas, programa reportes y descarga los que ya se generaron.
           </Typography>
         </Box>
-
-        <Alert severity='info'>
-          Disponible hoy: CRUD real de plantillas, listado real de reportes generados y
-          programación real de reportes. Pendiente: configuración más profunda de filtros y definición
-          final del catálogo de reportes de negocio.
-        </Alert>
-
-        <Alert severity='success'>
-          Recomendación actual: usa primero <strong>Progreso de usuarios</strong>, <strong>Cumplimiento</strong>
-          {' '}y <strong>Analítica de cursos</strong>. El modo <strong>Personalizado</strong> queda como opción de uso puntual,
-          no como punto de partida.
-        </Alert>
-
-        <Alert severity='info'>
-          Si tu prioridad hoy es seguimiento operativo, empieza por <strong>Cumplimiento</strong>.
-          {complianceTemplate ? (
-            <>
-              {' '}Ya tienes una plantilla lista para generar o programar ese reporte.
-            </>
-          ) : (
-            <>
-              {' '}Si todavía no existe, crea primero una plantilla de ese tipo y úsala como base.
-            </>
-          )}
-        </Alert>
 
         {!complianceTemplate && (
           <Button

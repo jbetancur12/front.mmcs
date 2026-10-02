@@ -248,7 +248,7 @@ const LmsCourseAssignments: React.FC = () => {
   }, 0)
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'grey.50' }}>
       {!assignmentsSupported && (
         <Alert severity="info" sx={{ mb: 3 }}>
           Los cursos para clientes funcionan por catálogo. Las asignaciones y fechas límite del LMS solo aplican a usuarios internos.

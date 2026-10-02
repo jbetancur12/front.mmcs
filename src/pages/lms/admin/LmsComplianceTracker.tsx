@@ -845,10 +845,6 @@ const LmsComplianceTracker: React.FC = () => {
         </Typography>
       </Box>
 
-      <Alert severity="info" sx={{ mb: 3 }}>
-        Revisa primero las alertas de vencimiento, luego aplica filtros para encontrar a quién recordarle qué curso. Esta vista corresponde al flujo obligatorio de usuarios internos; los clientes siguen un modelo de catálogo.
-      </Alert>
-
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
         {currentTabSummary.map((item) => (
           <Chip key={item} label={item} variant="outlined" />

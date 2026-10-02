@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Alert,
-  AlertTitle,
   Box,
   Card,
   CardContent,
@@ -471,11 +470,6 @@ const LmsCourseAssignmentInterface: React.FC = () => {
       || courses.find((course) => course.id === selectedCourse),
     [assignableCourses, courses, selectedCourse]
   )
-  const assignmentGuidance = [
-    'Revisa primero las asignaciones activas para evitar duplicar reglas o fechas límite.',
-    'Crea nuevas asignaciones solo para cursos internos o compartidos que realmente deban ser obligatorios.'
-  ]
-
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)
     const nextParams = new URLSearchParams(searchParams)
@@ -785,10 +779,6 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                   </Box>
                 </Grid>
               </Grid>
-              <Alert severity="info" sx={{ mt: 2 }}>
-                <AlertTitle>Flujo recomendado</AlertTitle>
-                1. Revisa asignaciones activas. 2. Crea o ajusta la regla. 3. Si hace falta, envía el recordatorio desde la misma asignación.
-              </Alert>
             </CardContent>
           </Card>
 
@@ -796,10 +786,6 @@ const LmsCourseAssignmentInterface: React.FC = () => {
           <Tab label="Asignaciones Activas" />
           <Tab label="Crear Asignación" />
         </Tabs>
-
-        <Alert severity="info" sx={{ mb: 3 }}>
-          {assignmentGuidance[activeTab]}
-        </Alert>
 
           {activeTab === 0 && (
           <Box>

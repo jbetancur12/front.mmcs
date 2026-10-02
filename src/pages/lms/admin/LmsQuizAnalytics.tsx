@@ -79,7 +79,7 @@ export const LmsQuizAnalyticsPanel: React.FC = () => {
   )
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'grey.50' }}>
       <Stack spacing={3}>
         <Box>
           <Typography variant='h4' component='h1' sx={{ fontWeight: 700, mb: 1 }}>

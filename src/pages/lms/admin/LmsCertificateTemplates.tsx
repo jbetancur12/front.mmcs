@@ -1681,7 +1681,7 @@ const LmsCertificateTemplates: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'grey.50' }}>
       <Box
         sx={{
           display: 'flex',
@@ -1705,11 +1705,6 @@ const LmsCertificateTemplates: React.FC = () => {
           Nueva Plantilla
         </Button>
       </Box>
-
-      <Alert severity='info' sx={{ mb: 3 }}>
-        Gestiona aquí el diseño oficial del certificado. La plantilla marcada como{' '}
-        <strong>por defecto</strong> se usará automáticamente al emitir nuevos certificados.
-      </Alert>
 
       {isLoading ? (
         <Typography color='text.secondary'>Cargando plantillas...</Typography>
@@ -2292,8 +2287,7 @@ const LmsCertificateTemplates: React.FC = () => {
         <DialogTitle>{previewTemplate?.name || 'Vista previa de plantilla'}</DialogTitle>
         <DialogContent>
           <Alert severity='info' sx={{ mb: 2 }}>
-            Esta vista previa viene del backend real y usa datos de ejemplo del servicio de
-            certificados.
+            Vista previa con datos de ejemplo.
           </Alert>
           <Paper
             sx={{

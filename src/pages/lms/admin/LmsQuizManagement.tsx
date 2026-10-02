@@ -19,7 +19,6 @@ import {
   DialogActions,
   Grid,
   Alert,
-  AlertTitle,
   Switch,
   FormControlLabel,
   Tabs,
@@ -50,8 +49,7 @@ import {
   QuestionAnswer as QuestionIcon,
   Assessment as AssessmentIcon,
   Warning as WarningIcon,
-  CheckCircle as CheckCircleIcon,
-  AutoAwesome as AutoAwesomeIcon
+  CheckCircle as CheckCircleIcon
 } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -876,12 +874,6 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
               ))}
             </Grid>
 
-            <Alert severity={quizValidationErrors.length === 0 ? 'info' : 'warning'} icon={<AutoAwesomeIcon />}>
-              <AlertTitle>Recomendación de flujo</AlertTitle>
-              {quizValidationErrors.length === 0
-                ? 'La configuración base está consistente. Si ya agregaste preguntas, prueba la vista previa antes de guardar.'
-                : 'Empieza por completar el título y agregar al menos una pregunta. El editor técnico sigue disponible abajo.'}
-            </Alert>
           </Stack>
         </CardContent>
       </Card>

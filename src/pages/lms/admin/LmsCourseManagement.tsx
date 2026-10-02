@@ -743,7 +743,7 @@ const LmsCourseManagement: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'grey.50' }}>
       <Box
         sx={{
           display: 'flex',
@@ -763,11 +763,6 @@ const LmsCourseManagement: React.FC = () => {
           Crear Curso
         </Button>
       </Box>
-
-      <Alert severity='info' sx={{ mb: 3 }}>
-        Define aquí la ficha base del curso. Después podrás editar contenido, publicar el curso y
-        configurar asignaciones desde las acciones de cada fila.
-      </Alert>
 
       <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
         <Table size='small'>

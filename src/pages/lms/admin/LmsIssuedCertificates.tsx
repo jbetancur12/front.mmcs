@@ -64,7 +64,7 @@ const LmsIssuedCertificates = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'grey.50' }}>
       <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 1 }}>
         Certificados emitidos
       </Typography>

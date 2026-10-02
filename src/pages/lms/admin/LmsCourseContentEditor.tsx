@@ -375,7 +375,7 @@ const LmsCourseContentEditor: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'grey.50' }}>
       <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
         <IconButton onClick={() => navigate('/lms/admin/courses')}>
           <ArrowBackIcon />

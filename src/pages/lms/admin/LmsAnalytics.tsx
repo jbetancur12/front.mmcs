@@ -259,8 +259,7 @@ const LmsAnalytics: React.FC = () => {
               Analíticas LMS
             </Typography>
             <Typography color='text.secondary'>
-              Panel real basado en el backend actual del LMS. Sin datos demo ni resúmenes
-              simulados.
+              Actividad, cumplimiento y rendimiento de los cursos del LMS.
             </Typography>
           </Box>
 
@@ -284,12 +283,6 @@ const LmsAnalytics: React.FC = () => {
             </Button>
           </Stack>
         </Box>
-
-        <Alert severity='info' sx={{ mb: 3 }}>
-          Usa este panel para responder tres preguntas rápidas: cuántas personas están activas,
-          qué cursos funcionan mejor y dónde se está frenando la finalización. Ajusta fechas y tipo
-          de usuario antes de exportar el resumen.
-        </Alert>
 
         <Paper sx={{ p: 2, mb: 3 }}>
           <Typography variant='subtitle2' sx={{ mb: 1.5 }}>

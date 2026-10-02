@@ -392,7 +392,7 @@ const LmsUserManagement: React.FC = () => {
   }, [search, userTypeFilter, lmsOnlyFilter, activeFilter])
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'grey.50' }}>
       <Box
         sx={{
           display: 'flex',
@@ -416,11 +416,6 @@ const LmsUserManagement: React.FC = () => {
           Nuevo Usuario LMS
         </Button>
       </Box>
-
-      <Alert severity='info' sx={{ mb: 3 }}>
-        Usa esta pantalla para resolver tres cosas en una sola operación: si el usuario es interno
-        o cliente, si debe quedar restringido al LMS y qué rol operativo tendrá dentro del módulo.
-      </Alert>
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
         <Chip label={`${summary.totalFiltered} usuarios filtrados`} variant='outlined' />
