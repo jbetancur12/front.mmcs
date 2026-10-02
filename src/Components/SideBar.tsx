@@ -140,7 +140,7 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Dashboard',
         url: 'lms',
-        roles: [...LMS_ACCESS_MENU_ROLES]
+        roles: [...LMS_ADMIN_ROUTE_ROLES]
       },
       {
         label: 'Gestión de Cursos',
@@ -607,10 +607,10 @@ const SideBar = ({
                 <div className='flex items-start justify-between gap-2'>
                   <div>
                     <p className='text-sm font-semibold text-gray-900 dark:text-white'>
-                      Tip rapido del LMS
+                      Tip rápido del LMS
                     </p>
                     <p className='mt-1 text-xs leading-5 text-gray-600 dark:text-gray-300'>
-                      Puedes presionar este boton para ocultar el menu y ganar mas espacio mientras trabajas en Academia.
+                      Puedes presionar este botón para ocultar el menú y ganar más espacio mientras trabajas en Academia.
                     </p>
                   </div>
                   <button

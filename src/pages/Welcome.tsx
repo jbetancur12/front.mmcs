@@ -1,10 +1,15 @@
 import React from 'react'
-import { Container, Typography, Paper } from '@mui/material'
+import { Container, Typography, Paper, Button } from '@mui/material'
+import { useNavigate } from 'react-router-dom'
 import { userStore } from 'src/store/userStore'
 import { useStore } from '@nanostores/react'
 
 const Welcome: React.FC = () => {
   const $userStore = useStore(userStore)
+  const navigate = useNavigate()
+  const hasLearningAccess = ($userStore.rol || []).some((role) =>
+    ['employee', 'user', 'client', 'lms_only', 'Training Manager', 'admin'].includes(role)
+  )
   return (
     <Container maxWidth='md' sx={{ mt: 8, minHeight: '80vh' }}>
       <Paper
@@ -33,6 +38,16 @@ const Welcome: React.FC = () => {
         <Typography variant='h6' component='p' sx={{ mt: 3, color: '#00796B' }}>
           Para empezar, selecciona una de las opciones del menú de la izquierda.
         </Typography>
+        {hasLearningAccess && (
+          <Button
+            variant='contained'
+            size='large'
+            sx={{ mt: 3 }}
+            onClick={() => navigate('/lms')}
+          >
+            Ir a Mi Aprendizaje
+          </Button>
+        )}
       </Paper>
 
     </Container>
