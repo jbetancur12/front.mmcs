@@ -21,10 +21,7 @@ import {
   ToggleButtonGroup
 } from '@mui/material'
 import {
-  MenuBook as BookOpenIcon,
   CheckCircle as CheckCircleIcon,
-  Warning as WarningIcon,
-  Assignment as AssignmentIcon,
   PlayArrow as PlayArrowIcon,
   EmojiEvents as AwardIcon,
   Error as ErrorIcon,
@@ -74,13 +71,6 @@ const getMandatoryPriority = (course: { isOverdue?: boolean; daysUntilDeadline?:
   if (typeof course.daysUntilDeadline === 'number' && course.daysUntilDeadline <= 7) return 1
   if (typeof course.daysUntilDeadline === 'number') return 2
   return 3
-}
-
-const getDeadlineTone = (course: { isOverdue?: boolean; daysUntilDeadline?: number; progress?: number }) => {
-  if (course.progress === 100) return 'success'
-  if (course.isOverdue) return 'error'
-  if (typeof course.daysUntilDeadline === 'number' && course.daysUntilDeadline <= 7) return 'warning'
-  return 'default'
 }
 
 const formatLastAccess = (lastAccessedAt?: string | null) => {
@@ -151,7 +141,7 @@ const formatLearnedTime = (minutes: number) => {
 const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   const [activeTab, setActiveTab] = useState(0)
   const [courseSearch, setCourseSearch] = useState('')
-  const [courseFilter, setCourseFilter] = useState<'pending' | 'completed'>('pending')
+  const [courseFilter, setCourseFilter] = useState<'all' | 'mandatory' | 'optional' | 'completed'>('all')
   const normalizedSearch = courseSearch.trim().toLowerCase()
   const matchesSearch = (course: any) =>
     !normalizedSearch || String(course.title || '').toLowerCase().includes(normalizedSearch)
@@ -228,7 +218,9 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
       const courseIsMandatory = assignment?.course?.is_mandatory ?? course.is_mandatory ?? false
       const deadline = assignment?.deadline
       const daysUntilDeadline = getDaysUntilDeadline(deadline)
-      const isOverdue = assignment?.isOverdue ?? (daysUntilDeadline !== undefined && daysUntilDeadline < 0)
+      const isOverdue =
+        progress < 100 &&
+        Boolean(assignment?.isOverdue ?? (daysUntilDeadline !== undefined && daysUntilDeadline < 0))
 
       const enrichedCourse = {
         ...course,
@@ -430,6 +422,115 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
       </Box>
     )
   }
+
+  const renderCourseList = (
+    list: any[],
+    options: { showKind?: boolean; showDescription?: boolean } = {}
+  ) => (
+    <Paper variant='outlined' sx={{ overflow: 'hidden' }}>
+      {list.map((course: any, index: number) => {
+        const done = course.progress === 100
+        const overdue = !done && Boolean(course.isOverdue)
+        const soon =
+          !done &&
+          !overdue &&
+          typeof course.daysUntilDeadline === 'number' &&
+          course.daysUntilDeadline <= 7
+        const kind = course.isMandatory ? 'Obligatorio' : course.isAssigned ? 'Asignado' : 'Opcional'
+        return (
+          <Box
+            key={course.id}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 2,
+              flexWrap: 'wrap',
+              px: 2,
+              py: 1.5,
+              borderTop: index === 0 ? 'none' : '1px solid',
+              borderColor: 'divider',
+              borderLeft: '4px solid',
+              borderLeftColor: overdue ? 'error.main' : soon ? 'warning.main' : 'transparent'
+            }}
+          >
+            <Box sx={{ minWidth: 0, flex: '1 1 260px' }}>
+              <Typography variant='subtitle2'>{course.title}</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 0.5 }}>
+                {options.showKind && (
+                  <Typography variant='caption' color='text.secondary'>
+                    {kind}
+                  </Typography>
+                )}
+                {done && <Chip size='small' color='success' label='Completado' />}
+                {overdue && (
+                  <Chip
+                    size='small'
+                    color='error'
+                    label={`Vencido hace ${Math.abs(course.daysUntilDeadline)} d`}
+                  />
+                )}
+                {soon && (
+                  <Chip size='small' color='warning' label={`Vence en ${course.daysUntilDeadline} d`} />
+                )}
+                {!done && !overdue && !soon && typeof course.daysUntilDeadline === 'number' && (
+                  <Typography variant='caption' color='text.secondary'>
+                    vence en {course.daysUntilDeadline} días
+                  </Typography>
+                )}
+                <Typography variant='caption' color='text.secondary'>
+                  {course.completedLessons}/{course.totalLessons} lecciones
+                </Typography>
+              </Box>
+              {options.showDescription && course.description && (
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    mt: 0.5
+                  }}
+                >
+                  {course.description}
+                </Typography>
+              )}
+              {course.progress > 0 && !done && (
+                <>
+                  {course.nextLessonLabel && (
+                    <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
+                      Sigue: {course.nextLessonLabel}
+                    </Typography>
+                  )}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, maxWidth: 360 }}>
+                    <LinearProgress
+                      variant='determinate'
+                      value={course.progress}
+                      sx={{ flex: 1, height: 6, borderRadius: 3 }}
+                    />
+                    <Typography variant='caption' color='text.secondary'>
+                      {course.progress}%
+                    </Typography>
+                  </Box>
+                </>
+              )}
+            </Box>
+            <Button
+              size='small'
+              variant={course.progress === 0 && index === 0 ? 'contained' : 'outlined'}
+              startIcon={done ? <CheckCircleIcon /> : <PlayArrowIcon />}
+              color={done ? 'success' : 'primary'}
+              onClick={() => handleCourseClick(course.id)}
+            >
+              {done ? 'Repasar' : course.progress > 0 ? 'Retomar' : 'Comenzar'}
+            </Button>
+          </Box>
+        )
+      })}
+    </Paper>
+  )
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
@@ -677,164 +778,32 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
 
         {activeTab === 1 && (
           <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Typography variant='h6'>
-                Cursos Obligatorios
-              </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+              <Typography variant='h6'>Cursos Obligatorios</Typography>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                 {stats.overdueTraining > 0 && (
-                  <Chip
-                    label={`${stats.overdueTraining} vencidos`}
-                    color="error"
-                    size="small"
-                  />
+                  <Chip label={`${stats.overdueTraining} vencidos`} color='error' size='small' />
                 )}
                 <Chip
                   label={`${mandatoryCourses.filter(course => typeof course.daysUntilDeadline === 'number' && course.daysUntilDeadline <= 7 && course.progress < 100 && !course.isOverdue).length} próximos`}
-                  color="warning"
-                  size="small"
-                  variant="outlined"
+                  color='warning'
+                  size='small'
+                  variant='outlined'
                 />
                 <Chip
                   label={`${stats.mandatoryCompleted} completados`}
-                  color="success"
-                  size="small"
-                  variant="outlined"
+                  color='success'
+                  size='small'
+                  variant='outlined'
                 />
               </Box>
             </Box>
 
-            <Alert severity={stats.overdueTraining > 0 ? 'warning' : 'info'} sx={{ mb: 3 }}>
-              {stats.overdueTraining > 0
-                ? 'Tus cursos obligatorios están ordenados por prioridad: primero vencidos, luego próximos a vencer y después el resto.'
-                : 'Aquí verás primero los cursos con fecha más cercana. Si un curso vence o se atrasa, quedará destacado al inicio.'}
-            </Alert>
-
-            <Grid container spacing={3}>
-              {mandatoryCourses.length === 0 ? (
-                <Grid item xs={12}>
-                  <Alert severity="success">
-                    No tienes cursos obligatorios activos en este momento.
-                  </Alert>
-                </Grid>
-              ) : mandatoryCourses.map((course) => (
-                <Grid item xs={12} md={6} key={course.id}>
-                  <Card 
-                    variant='outlined'
-                    sx={{ 
-                      cursor: 'pointer',
-                      border: course.isOverdue ? 2 : 1,
-                      borderColor: course.isOverdue ? 'error.main' : course.daysUntilDeadline && course.daysUntilDeadline <= 7 ? 'warning.main' : 'divider'
-                    }}
-                    onClick={() => handleCourseClick(course.id)}
-                  >
-                    <CardContent>
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-                        <Avatar sx={{ bgcolor: course.isOverdue ? 'error.main' : 'warning.main', mr: 2 }}>
-                          {course.isOverdue ? <WarningIcon /> : <AssignmentIcon />}
-                        </Avatar>
-                        <Box sx={{ flex: 1 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                            <Typography variant='h6' component='div'>
-                              {course.title}
-                            </Typography>
-                            <Chip 
-                              label="OBLIGATORIO" 
-                              size="small" 
-                              color="error"
-                              sx={{ fontSize: '0.7rem' }}
-                            />
-                            <Chip
-                              label={
-                                course.progress === 100
-                                  ? 'Completado'
-                                  : course.isOverdue
-                                    ? 'Vencido'
-                                    : typeof course.daysUntilDeadline === 'number' && course.daysUntilDeadline <= 7
-                                      ? 'Próximo a vencer'
-                                      : 'Activo'
-                              }
-                              size="small"
-                              color={getDeadlineTone(course) as any}
-                              variant={course.progress === 100 ? 'filled' : 'outlined'}
-                            />
-                          </Box>
-                          <Typography variant='body2' color='text.secondary'>
-                            {course.instructor} • {course.duration}
-                          </Typography>
-                          {course.nextLessonLabel && (
-                            <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
-                              Sigue: {course.nextLessonLabel}
-                            </Typography>
-                          )}
-                          {course.lastAccessLabel && (
-                            <Typography variant='caption' color='text.secondary' sx={{ display: 'block' }}>
-                              Última actividad: {course.lastAccessLabel}
-                            </Typography>
-                          )}
-                          {course.deadline && (
-                            <Typography 
-                              variant='caption' 
-                              color={course.isOverdue ? 'error.main' : course.daysUntilDeadline && course.daysUntilDeadline <= 7 ? 'warning.main' : 'text.secondary'}
-                              sx={{ fontWeight: 'medium' }}
-                            >
-                              {course.isOverdue 
-                                ? `⚠️ Vencido hace ${Math.abs(course.daysUntilDeadline!)} días`
-                                : `📅 Vence en ${course.daysUntilDeadline} días`
-                              }
-                            </Typography>
-                          )}
-                        </Box>
-                      </Box>
-                      
-                      <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                        {course.description}
-                      </Typography>
-                      
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant='caption' color='text.secondary'>
-                          {course.completedLessons}/{course.totalLessons} lecciones
-                        </Typography>
-                        <Chip
-                          label={`${course.progress}%`}
-                          color={course.progress === 100 ? 'success' : course.isOverdue ? 'error' : course.progress > 0 ? 'warning' : 'default'}
-                          size='small'
-                        />
-                      </Box>
-                      
-                      <LinearProgress
-                        variant='determinate'
-                        value={course.progress}
-                        sx={{ 
-                          height: 8, 
-                          borderRadius: 4,
-                          backgroundColor: 'grey.200',
-                          '& .MuiLinearProgress-bar': {
-                            backgroundColor: course.isOverdue ? 'error.main' : course.progress > 0 ? 'success.main' : 'warning.main'
-                          }
-                        }}
-                      />
-                      
-                      <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                        <Button
-                          variant={course.progress === 100 ? 'outlined' : course.progress > 0 ? 'outlined' : 'contained'}
-                          size="small"
-                          fullWidth
-                          startIcon={course.progress === 100 ? <CheckCircleIcon /> : <PlayArrowIcon />}
-                          color={course.progress === 100 ? 'success' : course.isOverdue ? 'error' : 'primary'}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleCourseClick(course.id)
-                          }}
-                        >
-                          {course.progress === 100 ? 'Repasar contenido' : course.progress > 0 ? 'Continuar' : 'Comenzar'}
-                        </Button>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
+            {mandatoryCourses.length === 0 ? (
+              <Alert severity='success'>No tienes cursos obligatorios activos en este momento.</Alert>
+            ) : (
+              renderCourseList(mandatoryCourses)
+            )}
           </Box>
         )}
 
@@ -867,8 +836,11 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
               exclusive
               value={courseFilter}
               onChange={(_event, value) => value && setCourseFilter(value)}
+              sx={{ flexWrap: 'wrap' }}
             >
-              <ToggleButton value='pending'>Disponibles</ToggleButton>
+              <ToggleButton value='all'>Todos</ToggleButton>
+              <ToggleButton value='mandatory'>Obligatorios</ToggleButton>
+              <ToggleButton value='optional'>Opcionales</ToggleButton>
               <ToggleButton value='completed'>
                 Finalizados ({completedCourses.length})
               </ToggleButton>
@@ -876,105 +848,30 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
           </Box>
         )}
 
-        {activeTab === 2 && courseFilter === 'pending' && (
-          <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Typography variant='h6'>
-                Cursos Opcionales
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                {optionalCourses.length} cursos disponibles
-              </Typography>
-            </Box>
+        {activeTab === 2 && courseFilter !== 'completed' && (() => {
+          const pool =
+            courseFilter === 'mandatory'
+              ? mandatoryCourses
+              : courseFilter === 'optional'
+                ? optionalCourses
+                : [...mandatoryCourses, ...optionalCourses]
+          const visible = pool.filter((course: any) => course.progress < 100).filter(matchesSearch)
 
-            {optionalCourses.length === 0 && (
-              <Alert severity='info' sx={{ mb: 3 }}>
-                Aún no tienes cursos opcionales disponibles. Si esperabas un curso, escribe al área
-                de Gestión Humana para confirmar que te lo asignaron y que está publicado.
+          if (visible.length === 0) {
+            return (
+              <Alert severity='info'>
+                {normalizedSearch
+                  ? `No hay cursos que coincidan con «${courseSearch.trim()}».`
+                  : 'No tienes cursos pendientes en esta categoría. Si esperabas un curso, escribe al área de Gestión Humana para confirmar que te lo asignaron y que está publicado.'}
               </Alert>
-            )}
+            )
+          }
 
-            <Grid container spacing={3}>
-              {optionalCourses.filter(matchesSearch).map((course) => (
-                <Grid item xs={12} md={6} lg={4} key={course.id}>
-                  <Card
-                    variant='outlined'
-                    sx={{ cursor: 'pointer', height: '100%' }}
-                    onClick={() => handleCourseClick(course.id)}
-                  >
-                    <CardContent>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
-                          <BookOpenIcon />
-                        </Avatar>
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant='h6' component='div'>
-                            {course.title}
-                          </Typography>
-                          <Typography variant='body2' color='text.secondary'>
-                            {course.instructor}
-                          </Typography>
-                          {course.nextLessonLabel && (
-                            <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
-                              Sigue: {course.nextLessonLabel}
-                            </Typography>
-                          )}
-                        </Box>
-                        <Chip label={course.category} size='small' variant='outlined' />
-                      </Box>
-                      
-                      <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-                        {course.description}
-                      </Typography>
-
-                      {course.progress === 100 && (
-                        <Alert severity='success' sx={{ mb: 2 }}>
-                          Ya completaste este curso obligatorio. Puedes volver a entrar cuando quieras para repasar su contenido.
-                        </Alert>
-                      )}
-                      
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant='caption' color='text.secondary'>
-                          {course.completedLessons}/{course.totalLessons} lecciones
-                        </Typography>
-                        <Typography variant='caption' color='text.secondary'>
-                          {course.duration}
-                        </Typography>
-                      </Box>
-                      
-                      {course.progress > 0 && (
-                        <Box sx={{ mb: 2 }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                            <Typography variant='caption'>Progreso</Typography>
-                            <Typography variant='caption'>{course.progress}%</Typography>
-                          </Box>
-                          <LinearProgress
-                            variant='determinate'
-                            value={course.progress}
-                            sx={{ height: 6, borderRadius: 3 }}
-                          />
-                        </Box>
-                      )}
-                      
-                      <Button
-                        variant={course.progress > 0 ? 'outlined' : 'contained'}
-                        size="small"
-                        fullWidth
-                        startIcon={<PlayArrowIcon />}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleCourseClick(course.id)
-                        }}
-                      >
-                        {course.progress === 100 ? 'Revisar' : course.progress > 0 ? 'Continuar' : 'Comenzar'}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        )}
+          return renderCourseList(visible, {
+            showKind: courseFilter === 'all',
+            showDescription: true
+          })
+        })()}
 
         {activeTab === 3 && (
           <Box>
@@ -1007,11 +904,8 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                       Completa cursos que otorgan certificados para verlos aquí
                     </Typography>
                     <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap' }}>
-                      <Button variant='contained' onClick={() => setActiveTab(1)}>
+                      <Button variant='contained' onClick={() => setActiveTab(2)}>
                         Ver mis cursos
-                      </Button>
-                      <Button variant='outlined' onClick={() => navigate('/lms/certificates')}>
-                        Ir a certificados
                       </Button>
                     </Box>
                   </Box>
