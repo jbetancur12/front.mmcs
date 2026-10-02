@@ -427,7 +427,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     list: any[],
     options: { showKind?: boolean; showDescription?: boolean } = {}
   ) => (
-    <Paper variant='outlined' sx={{ overflow: 'hidden' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {list.map((course: any, index: number) => {
         const done = course.progress === 100
         const overdue = !done && Boolean(course.isOverdue)
@@ -446,17 +446,19 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
               justifyContent: 'space-between',
               gap: 2,
               flexWrap: 'wrap',
-              px: 2,
-              py: 1.5,
-              borderTop: index === 0 ? 'none' : '1px solid',
+              px: 2.5,
+              py: 2,
+              border: '1px solid',
               borderColor: 'divider',
+              borderRadius: 2,
+              bgcolor: 'background.paper',
               borderLeft: '4px solid',
               borderLeftColor: overdue ? 'error.main' : soon ? 'warning.main' : 'transparent'
             }}
           >
             <Box sx={{ minWidth: 0, flex: '1 1 260px' }}>
-              <Typography variant='subtitle2'>{course.title}</Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 0.5 }}>
+              <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>{course.title}</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 1 }}>
                 {options.showKind && (
                   <Typography variant='caption' color='text.secondary'>
                     {kind}
@@ -504,7 +506,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                       Sigue: {course.nextLessonLabel}
                     </Typography>
                   )}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, maxWidth: 360 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5, maxWidth: 360 }}>
                     <LinearProgress
                       variant='determinate'
                       value={course.progress}
@@ -529,7 +531,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
           </Box>
         )
       })}
-    </Paper>
+    </Box>
   )
 
   return (
@@ -630,7 +632,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                 <Typography variant='h6' sx={{ mb: 1.5 }}>
                   Requiere tu atención ({homeFeed.attention.length})
                 </Typography>
-                <Paper variant='outlined' sx={{ overflow: 'hidden' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   {homeFeed.attention.map((course: any, index: number) => {
                     const overdue = Boolean(course.isOverdue)
                     const soon =
@@ -646,17 +648,19 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                           justifyContent: 'space-between',
                           gap: 2,
                           flexWrap: 'wrap',
-                          px: 2,
-                          py: 1.5,
-                          borderTop: index === 0 ? 'none' : '1px solid',
-                          borderColor: 'divider',
+                          px: 2.5,
+              py: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 2,
+              bgcolor: 'background.paper',
                           borderLeft: '4px solid',
                           borderLeftColor: overdue ? 'error.main' : soon ? 'warning.main' : 'transparent'
                         }}
                       >
                         <Box sx={{ minWidth: 0, flex: '1 1 260px' }}>
-                          <Typography variant='subtitle2'>{course.title}</Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 0.5 }}>
+                          <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>{course.title}</Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 1 }}>
                             <Typography variant='caption' color='text.secondary'>
                               {course.homeKind === 'mandatory' ? 'Obligatorio' : 'Asignado'}
                             </Typography>
@@ -681,7 +685,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                             )}
                           </Box>
                           {course.progress > 0 && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, maxWidth: 360 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5, maxWidth: 360 }}>
                               <LinearProgress
                                 variant='determinate'
                                 value={course.progress}
@@ -704,7 +708,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                       </Box>
                     )
                   })}
-                </Paper>
+                </Box>
               </Box>
             )}
 
@@ -713,8 +717,8 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                 <Typography variant='h6' sx={{ mb: 1.5 }}>
                   Continúa donde quedaste
                 </Typography>
-                <Paper variant='outlined' sx={{ overflow: 'hidden' }}>
-                  {homeFeed.resume.map((course: any, index: number) => (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {homeFeed.resume.map((course: any) => (
                     <Box
                       key={course.id}
                       sx={{
@@ -723,15 +727,17 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                         justifyContent: 'space-between',
                         gap: 2,
                         flexWrap: 'wrap',
-                        px: 2,
-                        py: 1.5,
-                        borderTop: index === 0 ? 'none' : '1px solid',
-                        borderColor: 'divider'
+                        px: 2.5,
+              py: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 2,
+              bgcolor: 'background.paper'
                       }}
                     >
                       <Box sx={{ minWidth: 0, flex: '1 1 260px' }}>
-                        <Typography variant='subtitle2'>{course.title}</Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, maxWidth: 360 }}>
+                        <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>{course.title}</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5, maxWidth: 360 }}>
                           <LinearProgress
                             variant='determinate'
                             value={course.progress}
@@ -752,7 +758,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
                       </Button>
                     </Box>
                   ))}
-                </Paper>
+                </Box>
               </Box>
             )}
 
