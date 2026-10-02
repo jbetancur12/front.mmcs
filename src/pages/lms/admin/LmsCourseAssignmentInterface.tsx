@@ -1027,29 +1027,33 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                       >
                         {assignableCourses.map((course) => (
                           <MenuItem key={course.id} value={course.id}>
-                            {course.title} ({course.duration})
+                            {course.duration ? `${course.title} (${course.duration})` : course.title}
                           </MenuItem>
                         ))}
                       </Select>
                     </FormControl>
                   </Grid>
 
-                  {selectedCourseData?.status && selectedCourseData.status !== 'published' && (
-                    <Grid item xs={12}>
-                      <Alert severity='warning'>
-                        Este curso no está publicado: los usuarios asignados no lo verán hasta que se publique.
-                      </Alert>
-                    </Grid>
-                  )}
-                  {selectedCourseData && selectedCourseData.is_mandatory === false && (
-                    <Grid item xs={12}>
-                      <Alert severity='info'>
-                        Este curso no es obligatorio. A los usuarios asignados les aparecerá en
-                        «Asignados a ti» y en «Mis Cursos», pero no en «Cursos Obligatorios».
-                        Márcalo como obligatorio si quieres que lo exijan.
-                      </Alert>
-                    </Grid>
-                  )}
+                  {selectedCourseData &&
+                    (selectedCourseData.status !== 'published' || selectedCourseData.is_mandatory === false) && (
+                      <Grid item xs={12}>
+                        <Alert
+                          severity={selectedCourseData.status !== 'published' ? 'warning' : 'info'}
+                        >
+                          {selectedCourseData.status !== 'published' && (
+                            <div>
+                              Este curso no está publicado: los usuarios asignados no lo verán hasta que se publique.
+                            </div>
+                          )}
+                          {selectedCourseData.is_mandatory === false && (
+                            <div>
+                              No es obligatorio: les aparecerá en «Asignados a ti» y «Mis Cursos», no en
+                              «Cursos Obligatorios». Márcalo como obligatorio si debe exigirse.
+                            </div>
+                          )}
+                        </Alert>
+                      </Grid>
+                    )}
 
                   {assignmentType === 'users' ? (
                     <Grid item xs={12} md={6}>

@@ -1140,6 +1140,13 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
               </Typography>
             </Box>
 
+            {optionalCourses.length === 0 && (
+              <Alert severity='info' sx={{ mb: 3 }}>
+                Aún no tienes cursos opcionales disponibles. Si esperabas un curso, escribe al área
+                de Gestión Humana para confirmar que te lo asignaron y que está publicado.
+              </Alert>
+            )}
+
             <Grid container spacing={3}>
               {optionalCourses.map((course) => (
                 <Grid item xs={12} md={6} lg={4} key={course.id}>

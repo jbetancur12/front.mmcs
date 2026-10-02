@@ -809,16 +809,20 @@ const LmsCourseManagement: React.FC = () => {
                       <Typography variant='subtitle2' fontWeight='bold'>
                         {course.title}
                       </Typography>
-                      <Typography variant='caption' color='text.secondary'>
+                      <Typography
+                        variant='caption'
+                        color='text.secondary'
+                        title={course.description}
+                        sx={{
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}
+                      >
                         {course.description}
                       </Typography>
                       <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                        <Chip
-                          label={getStatusLabel(course.status)}
-                          color={getStatusColor(course.status) as any}
-                          size='small'
-                          variant='outlined'
-                        />
                         {course.is_mandatory && (
                           <Chip label='Obligatorio' color='error' size='small' />
                         )}
