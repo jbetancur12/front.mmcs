@@ -51,6 +51,8 @@ interface Course {
   duration: string
   category: string
   audience?: 'internal' | 'client' | 'both'
+  is_mandatory?: boolean
+  status?: string
 }
 
 // Backend response interface
@@ -1031,6 +1033,23 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                       </Select>
                     </FormControl>
                   </Grid>
+
+                  {selectedCourseData?.status && selectedCourseData.status !== 'published' && (
+                    <Grid item xs={12}>
+                      <Alert severity='warning'>
+                        Este curso no está publicado: los usuarios asignados no lo verán hasta que se publique.
+                      </Alert>
+                    </Grid>
+                  )}
+                  {selectedCourseData && selectedCourseData.is_mandatory === false && (
+                    <Grid item xs={12}>
+                      <Alert severity='info'>
+                        Este curso no es obligatorio. A los usuarios asignados les aparecerá en
+                        «Asignados a ti» y en «Mis Cursos», pero no en «Cursos Obligatorios».
+                        Márcalo como obligatorio si quieres que lo exijan.
+                      </Alert>
+                    </Grid>
+                  )}
 
                   {assignmentType === 'users' ? (
                     <Grid item xs={12} md={6}>

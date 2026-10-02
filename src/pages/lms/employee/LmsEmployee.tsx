@@ -165,11 +165,12 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   }
 
   // Process courses data
-  const { mandatoryCourses, optionalCourses, completedCourses, stats } = useMemo(() => {
+  const { mandatoryCourses, optionalCourses, assignedOptionalCourses, completedCourses, stats } = useMemo(() => {
     if (!coursesData) {
       return {
         mandatoryCourses: [],
         optionalCourses: [],
+        assignedOptionalCourses: [],
         completedCourses: [],
         stats: {
           totalCourses: 0,
@@ -194,9 +195,16 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     const certificatesByCourseId = new Map(
       userCertificates.map((certificate: Certificate) => [certificate.course_id, certificate])
     )
-    const assignmentsByCourseId = new Map(
-      allAssignments.map((assignment: any) => [assignment.course_id, assignment])
-    )
+    // Un curso puede tener varias asignaciones (rol + usuario): se usa la de fecha límite más próxima
+    const assignmentsByCourseId = new Map<number, any>()
+    allAssignments.forEach((assignment: any) => {
+      const current = assignmentsByCourseId.get(assignment.course_id)
+      const time = (value?: string | null) =>
+        value ? new Date(value).getTime() : Number.MAX_SAFE_INTEGER
+      if (!current || time(assignment.deadline) < time(current.deadline)) {
+        assignmentsByCourseId.set(assignment.course_id, assignment)
+      }
+    })
 
     // Separar cursos obligatorios y opcionales
     const mandatory: any[] = []
@@ -224,6 +232,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         instructor: course.creator?.nombre || 'Instructor',
         duration: `${totalLessons} lecciones`,
         earnedCertificate,
+        isAssigned: Boolean(assignment),
         deadline,
         daysUntilDeadline,
         isOverdue,
@@ -280,6 +289,9 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     return {
       mandatoryCourses: mandatory,
       optionalCourses: optional,
+      assignedOptionalCourses: optional.filter(
+        (course) => course.isAssigned && course.progress < 100
+      ),
       completedCourses: allEnrichedCourses.filter((course) => course.progress === 100),
       stats: {
         totalCourses,
@@ -561,6 +573,72 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
               para profundizar tu aprendizaje. Lo urgente siempre aparece primero en
               <strong> Cursos Obligatorios</strong>.
             </Alert>
+            {assignedOptionalCourses.length > 0 && (
+              <Card variant='outlined' sx={{ mb: 3, borderColor: 'primary.light' }}>
+                <CardContent>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: 1,
+                      mb: 1
+                    }}
+                  >
+                    <Typography variant='h6'>
+                      Asignados a ti ({assignedOptionalCourses.length})
+                    </Typography>
+                    <Button size='small' onClick={() => setActiveTab(2)}>
+                      Ver todos en Mis Cursos
+                    </Button>
+                  </Box>
+                  <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                    Cursos que te asignaron y que no son obligatorios.
+                  </Typography>
+                  {assignedOptionalCourses.map((course: any) => (
+                    <Box
+                      key={course.id}
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 2,
+                        flexWrap: 'wrap',
+                        py: 1,
+                        borderTop: '1px solid',
+                        borderColor: 'divider'
+                      }}
+                    >
+                      <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Typography variant='subtitle2' noWrap>
+                          {course.title}
+                        </Typography>
+                        <Typography variant='caption' color='text.secondary'>
+                          {course.progress > 0
+                            ? `${course.progress}% completado`
+                            : 'Sin iniciar'}
+                          {typeof course.daysUntilDeadline === 'number' &&
+                            ` · ${
+                              course.daysUntilDeadline < 0
+                                ? 'vencido'
+                                : `vence en ${course.daysUntilDeadline} día(s)`
+                            }`}
+                        </Typography>
+                      </Box>
+                      <Button
+                        size='small'
+                        variant='contained'
+                        startIcon={<PlayArrowIcon />}
+                        onClick={() => handleCourseClick(course.id)}
+                      >
+                        {course.progress > 0 ? 'Continuar' : 'Comenzar'}
+                      </Button>
+                    </Box>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
             {nextLearningAction && (
               <Card
                 sx={{
