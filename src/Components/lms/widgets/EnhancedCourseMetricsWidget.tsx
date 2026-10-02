@@ -81,7 +81,7 @@ interface CourseMetrics {
     completionRate: number
     totalUsers: number
     enrollmentCount: number
-    averageRating: number
+    averageRating: number | null
     isMandatory: boolean
     timeToComplete: number
     trend: 'up' | 'down' | 'stable'
@@ -215,9 +215,8 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
     }
   }
 
-  const completionTrend = data.completionTrend?.direction || 
-    ((data.averageCompletionRate || 0) >= 80 ? 'up' : 
-     (data.averageCompletionRate || 0) >= 60 ? 'stable' : 'down')
+  // Solo se muestra la flecha si el backend entrega una tendencia real
+  const completionTrend = data.completionTrend?.direction ?? null
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setSelectedTab(newValue)
@@ -322,7 +321,7 @@ const EnhancedCourseMetricsWidget: React.FC<EnhancedCourseMetricsWidgetProps> = 
               Tasa de Finalización Promedio
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              {getTrendIcon(completionTrend)}
+              {completionTrend && getTrendIcon(completionTrend)}
               <Typography variant="body2" sx={{ fontWeight: 700, color: colors.gray[800], ml: 0.5 }}>
                 {data.averageCompletionRate || 0}%
               </Typography>

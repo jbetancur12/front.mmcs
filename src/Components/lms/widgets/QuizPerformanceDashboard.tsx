@@ -100,7 +100,7 @@ interface QuizAnalytics {
     courseTitle: string
     quizTitle: string
     totalAttempts: number
-    averageTimeSpent: number
+    averageTimeSpent: number | null
     difficultyLevel: 'easy' | 'medium' | 'hard' | 'very_hard'
   }>
   timeSpentAnalysis?: {
@@ -129,7 +129,7 @@ interface QuizAnalytics {
     questionText: string
     successRate: number
     totalAttempts: number
-    averageTimeSpent: number
+    averageTimeSpent: number | null
     courseTitle: string
     quizTitle: string
   }>
@@ -272,7 +272,7 @@ const QuizPerformanceDashboard: React.FC<QuizPerformanceDashboardProps> = ({
                     {question.totalAttempts} intentos
                   </Typography>
                   <Typography variant="caption">
-                    {question.averageTimeSpent}min prom.
+                    {typeof question.averageTimeSpent === 'number' ? `${question.averageTimeSpent}min prom.` : ''}
                   </Typography>
                 </Box>
               </Paper>

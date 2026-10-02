@@ -16,7 +16,6 @@ import {
   People as PeopleIcon,
   Business as BusinessIcon,
   PersonOutline as PersonOutlineIcon,
-  TrendingUp as TrendingUpIcon,
   Assessment as AssessmentIcon
 } from '@mui/icons-material'
 import { LmsDashboardScope } from '../../../utils/lmsIdentity'
@@ -392,17 +391,6 @@ const UserAnalyticsWidget: React.FC<UserAnalyticsWidgetProps> = ({
           pt: 2, 
           borderTop: `1px solid ${colors.gray[200]}` 
         }}>
-          <Box sx={{ textAlign: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 0.5 }}>
-              <TrendingUpIcon sx={{ color: colors.success, fontSize: 16, mr: 0.5 }} />
-              <Typography variant="body2" sx={{ fontWeight: 700, color: colors.success }}>
-                +{Math.round(engagementRate * 0.1)}%
-              </Typography>
-            </Box>
-            <Typography variant="caption" color={colors.gray[500]}>
-              Este Mes
-            </Typography>
-          </Box>
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="body2" sx={{ fontWeight: 700, color: colors.gray[800] }}>
               {Math.round(((data.completionRateByUserType?.internal || 0) + (data.completionRateByUserType?.client || 0)) / 2)}%
