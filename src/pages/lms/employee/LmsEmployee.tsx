@@ -659,6 +659,49 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
           const heroDone = hero ? hero.progress === 100 : false
           return (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {stats.mandatoryCourses > 0 && (() => {
+                const missing = stats.mandatoryCourses - stats.mandatoryCompleted
+                const percent = Math.round((stats.mandatoryCompleted / stats.mandatoryCourses) * 100)
+                return (
+                  <Card variant='outlined' sx={{ borderRadius: 3, p: 2.5 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'baseline',
+                        flexWrap: 'wrap',
+                        gap: 1,
+                        mb: 1.5
+                      }}
+                    >
+                      <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+                        {missing === 0
+                          ? '¡Estás al día con tus cursos obligatorios!'
+                          : missing === 1
+                            ? 'Te falta 1 curso obligatorio para estar al día'
+                            : `Te faltan ${missing} cursos obligatorios para estar al día`}
+                      </Typography>
+                      <Typography variant='body2' color='text.secondary'>
+                        {stats.mandatoryCompleted} de {stats.mandatoryCourses} completados
+                      </Typography>
+                    </Box>
+                    <LinearProgress
+                      variant='determinate'
+                      value={percent}
+                      color={stats.overdueTraining > 0 ? 'error' : 'success'}
+                      sx={{ height: 10, borderRadius: 5 }}
+                    />
+                    {stats.overdueTraining > 0 && (
+                      <Typography variant='caption' color='error.main' sx={{ display: 'block', mt: 1 }}>
+                        {stats.overdueTraining === 1
+                          ? '1 está vencido: empieza por ese.'
+                          : `${stats.overdueTraining} están vencidos: empieza por esos.`}
+                      </Typography>
+                    )}
+                  </Card>
+                )
+              })()}
+
               {hero && heroTone && (
                 <Card
                   variant='outlined'
