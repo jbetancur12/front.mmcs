@@ -38,6 +38,7 @@ import { bigToast } from './ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
 import ResetPasswordModal from './ResetPasswordModal'
 import Swal from 'sweetalert2'
+import { showActivationEmailFailedAlert } from '../utils/sweetAlert'
 import withReactContent from 'sweetalert2-react-content'
 
 // Define interfaces
@@ -77,7 +78,11 @@ const Table: React.FC = () => {
       const response = await axiosPrivate.post(`/auth/register`, userData, {})
 
       if (response.status >= 200 && response.status < 300) {
-        bigToast('Usuario creado exitosamente!', 'success')
+        if (response.data?.emailSent === false) {
+          await showActivationEmailFailedAlert(userData.email, response.data.emailError)
+        } else {
+          bigToast('Usuario creado exitosamente!', 'success')
+        }
         fetchUsers() // Refresh data after creation
       } else {
         bigToast('Error al crear usuario', 'error')

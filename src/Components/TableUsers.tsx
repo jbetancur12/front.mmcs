@@ -22,6 +22,7 @@ import {
 } from 'material-react-table'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
+import { showActivationEmailFailedAlert } from '../utils/sweetAlert'
 
 // Define interfaces
 export interface UserData {
@@ -53,10 +54,14 @@ const Table: React.FC = () => {
       const response = await axiosPrivate.post(`/auth/register`, userData, {})
 
       if (response.status === 201) {
-        toast.success('Usuario Creado Exitosamente!', {
-          duration: 4000,
-          position: 'top-center'
-        })
+        if (response.data?.emailSent === false) {
+          await showActivationEmailFailedAlert(userData.email, response.data.emailError)
+        } else {
+          toast.success('Usuario Creado Exitosamente!', {
+            duration: 4000,
+            position: 'top-center'
+          })
+        }
         fetchUsers() // Refresh data after creation
       } else {
         console.error('Error al crear usuario')

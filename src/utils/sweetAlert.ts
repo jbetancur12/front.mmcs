@@ -166,3 +166,15 @@ export const handleErrorWithAlert = async (error: unknown): Promise<string> => {
 export const closeLoadingAlert = () => {
   MySwal.close()
 }
+// Aviso cuando el usuario se creó pero el correo de activación no pudo enviarse
+export const showActivationEmailFailedAlert = async (email: string, reason?: string | null) => {
+  return await MySwal.fire({
+    title: 'Usuario creado, pero el correo NO se envió',
+    html: `El usuario <b>${email}</b> quedó registrado, pero no se pudo enviar el correo de activación.<br/><br/>` +
+      'Debes activarlo manualmente o restablecer su contraseña (el usuario no recibirá ningún enlace).' +
+      (reason ? `<br/><br/><small>Detalle: ${reason}</small>` : ''),
+    icon: 'warning',
+    confirmButtonText: 'Entendido',
+    confirmButtonColor: '#f39c12',
+  })
+}

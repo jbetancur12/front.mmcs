@@ -37,6 +37,7 @@ import { Delete, Edit, Search, Clear, FilterList, PersonAdd, Add, HelpOutline } 
 import {
   showDeleteConfirmation,
   showSuccessAlert,
+  showActivationEmailFailedAlert,
   showLoadingAlert,
   closeLoadingAlert,
   handleErrorWithAlert
@@ -117,6 +118,8 @@ export interface UserData {
   email: string
   phone?: string | null
   createdAt: string
+  emailSent?: boolean
+  emailError?: string | null
 }
 
 const fetchRoles = async () => {
@@ -855,10 +858,14 @@ const TableOwnUsers: React.FC = () => {
         contraseña: 'Metromedics@2025'
       }
 
-      await createUser.mutateAsync(createData)
+      const created = await createUser.mutateAsync(createData)
       closeLoadingAlert()
 
-      await showSuccessAlert('Usuario creado exitosamente')
+      if (created?.emailSent === false) {
+        await showActivationEmailFailedAlert(createData.email, created.emailError)
+      } else {
+        await showSuccessAlert('Usuario creado exitosamente')
+      }
     } catch (error) {
       closeLoadingAlert()
       await handleErrorWithAlert(error)
