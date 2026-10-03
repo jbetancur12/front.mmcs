@@ -166,15 +166,96 @@ export const handleErrorWithAlert = async (error: unknown): Promise<string> => {
 export const closeLoadingAlert = () => {
   MySwal.close()
 }
-// Aviso cuando el usuario se creó pero el correo de activación no pudo enviarse
-export const showActivationEmailFailedAlert = async (email: string, reason?: string | null) => {
-  return await MySwal.fire({
-    title: 'Usuario creado, pero el correo NO se envió',
-    html: `El usuario <b>${email}</b> quedó registrado, pero no se pudo enviar el correo de activación.<br/><br/>` +
-      'Debes activarlo manualmente o restablecer su contraseña (el usuario no recibirá ningún enlace).' +
-      (reason ? `<br/><br/><small>Detalle: ${reason}</small>` : ''),
-    icon: 'warning',
-    confirmButtonText: 'Entendido',
-    confirmButtonColor: '#f39c12',
+export interface ActivationLinkInfo {
+  nombre?: string | null
+  email: string
+  phone?: string | null
+  activationUrl: string
+  /** undefined = no aplica (solo se consultó el enlace) */
+  emailSent?: boolean
+  emailError?: string | null
+}
+
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
+// Normaliza un teléfono colombiano a formato internacional para wa.me ('' si no es usable)
+export const normalizeWhatsappPhone = (phone?: string | null) => {
+  const digits = String(phone ?? '').replace(/D/g, '')
+  if (digits.length === 10 && digits.startsWith('3')) return `57${digits}`
+  if (digits.length === 12 && digits.startsWith('57')) return digits
+  return digits.length >= 11 ? digits : ''
+}
+
+export const buildActivationWhatsappUrl = (info: ActivationLinkInfo) => {
+  const saludo = info.nombre ? `Hola ${info.nombre}, ` : 'Hola, '
+  const text =
+    `${saludo}ya tienes acceso a la plataforma de Metromedics. ` +
+    `Activa tu cuenta y crea tu contraseña aquí: ${info.activationUrl}`
+  return `https://wa.me/${normalizeWhatsappPhone(info.phone)}?text=${encodeURIComponent(text)}`
+}
+
+const copyToClipboard = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch {
+    // Fallback para contextos sin Clipboard API
+    const el = document.createElement('textarea')
+    el.value = text
+    el.style.position = 'fixed'
+    el.style.opacity = '0'
+    document.body.appendChild(el)
+    el.select()
+    const ok = document.execCommand('copy')
+    document.body.removeChild(el)
+    return ok
+  }
+}
+
+// Diálogo con el enlace de activación: copiar o enviar por WhatsApp.
+// Se usa al crear un usuario y al consultar/reenviar la activación de uno pendiente.
+export const showActivationLinkDialog = async (info: ActivationLinkInfo) => {
+  const emailStatus =
+    info.emailSent === true
+      ? '<p style="color:#15803d">✔ Se envió el correo de activación a <b>' + escapeHtml(info.email) + '</b>.</p>'
+      : info.emailSent === false
+        ? '<p style="color:#b45309">⚠ <b>No se pudo enviar el correo</b> a ' + escapeHtml(info.email) +
+          (info.emailError ? '<br/><small>' + escapeHtml(info.emailError) + '</small>' : '') + '</p>'
+        : ''
+
+  return MySwal.fire({
+    title: info.emailSent === false ? 'Usuario sin correo de activación' : 'Enlace de activación',
+    icon: info.emailSent === false ? 'warning' : 'info',
+    html:
+      emailStatus +
+      '<p style="font-size:14px">Comparte este enlace con el usuario para que cree su contraseña. ' +
+      'Un enlace generado antes para este usuario deja de funcionar.</p>' +
+      '<input readonly id="activation-url" style="width:100%;padding:8px;font-size:12px;border:1px solid #ccc;border-radius:6px" value="' +
+      escapeHtml(info.activationUrl) + '" onclick="this.select()" />' +
+      '<p id="activation-copied" style="color:#15803d;font-size:13px;min-height:18px;margin-top:6px"></p>',
+    showDenyButton: true,
+    showCancelButton: true,
+    confirmButtonText: 'Copiar enlace',
+    denyButtonText: 'Enviar por WhatsApp',
+    cancelButtonText: 'Cerrar',
+    confirmButtonColor: '#3085d6',
+    denyButtonColor: '#16a34a',
+    // Devolver false mantiene el diálogo abierto tras copiar / abrir WhatsApp
+    preConfirm: async () => {
+      const ok = await copyToClipboard(info.activationUrl)
+      const msg = document.getElementById('activation-copied')
+      if (msg) msg.textContent = ok ? '¡Enlace copiado!' : 'No se pudo copiar, selecciónalo manualmente.'
+      return false
+    },
+    preDeny: () => {
+      window.open(buildActivationWhatsappUrl(info), '_blank', 'noopener,noreferrer')
+      return false
+    },
   })
 }

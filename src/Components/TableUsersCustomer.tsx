@@ -5,6 +5,8 @@ import {
   Person,
   Email,
   VpnKey,
+  Link as LinkIcon,
+  ForwardToInbox,
   CheckCircle,
   Cancel
 } from '@mui/icons-material'
@@ -38,7 +40,8 @@ import { bigToast } from './ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
 import ResetPasswordModal from './ResetPasswordModal'
 import Swal from 'sweetalert2'
-import { showActivationEmailFailedAlert } from '../utils/sweetAlert'
+import { showActivationLinkDialog } from '../utils/sweetAlert'
+import { fetchActivationLink, resendActivationEmail } from '../utils/userActivation'
 import withReactContent from 'sweetalert2-react-content'
 
 // Define interfaces
@@ -48,6 +51,7 @@ export interface UserData {
   email: string
   contraseña: string
   active: boolean
+  phone?: string | null
   customer: {
     id: number
     nombre: string
@@ -78,8 +82,15 @@ const Table: React.FC = () => {
       const response = await axiosPrivate.post(`/auth/register`, userData, {})
 
       if (response.status >= 200 && response.status < 300) {
-        if (response.data?.emailSent === false) {
-          await showActivationEmailFailedAlert(userData.email, response.data.emailError)
+        if (response.data?.activationUrl) {
+          await showActivationLinkDialog({
+            nombre: userData.nombre,
+            email: userData.email,
+            phone: response.data.phone,
+            activationUrl: response.data.activationUrl,
+            emailSent: response.data.emailSent,
+            emailError: response.data.emailError
+          })
         } else {
           bigToast('Usuario creado exitosamente!', 'success')
         }
@@ -90,6 +101,28 @@ const Table: React.FC = () => {
     } catch (error) {
       console.error('Error de red:', error)
       bigToast('Error al crear usuario', 'error')
+    }
+  }
+
+
+  // Enlace de activación / reenvío de correo para usuarios que aún no activan su cuenta
+  const handleActivationLink = async (target: { id: number }) => {
+    try {
+      const info = await fetchActivationLink(target.id)
+      await showActivationLinkDialog(info)
+    } catch (error) {
+      console.error('Error obteniendo enlace de activación:', error)
+      bigToast('No se pudo generar el enlace de activación', 'error')
+    }
+  }
+
+  const handleResendActivation = async (target: { id: number }) => {
+    try {
+      const info = await resendActivationEmail(target.id)
+      await showActivationLinkDialog(info)
+    } catch (error) {
+      console.error('Error reenviando activación:', error)
+      bigToast('No se pudo reenviar la activación', 'error')
     }
   }
 
@@ -538,6 +571,29 @@ const Table: React.FC = () => {
                             <Edit fontSize='small' />
                           </IconButton>
                         </Tooltip>
+
+                        {user.active !== true && (
+                          <>
+                            <Tooltip title='Enlace de activación (copiar / WhatsApp)'>
+                              <IconButton
+                                size='small'
+                                onClick={() => handleActivationLink(user)}
+                                sx={{ color: '#6b7280', '&:hover': { backgroundColor: '#eff6ff', color: '#2563eb' } }}
+                              >
+                                <LinkIcon fontSize='small' />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title='Reenviar correo de activación'>
+                              <IconButton
+                                size='small'
+                                onClick={() => handleResendActivation(user)}
+                                sx={{ color: '#6b7280', '&:hover': { backgroundColor: '#eff6ff', color: '#2563eb' } }}
+                              >
+                                <ForwardToInbox fontSize='small' />
+                              </IconButton>
+                            </Tooltip>
+                          </>
+                        )}
 
                         <Tooltip title='Restablecer contraseña'>
                           <IconButton

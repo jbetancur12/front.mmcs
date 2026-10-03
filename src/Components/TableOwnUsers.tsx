@@ -33,15 +33,17 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 
 import { axiosPrivate } from '@utils/api'
 import { useQuery } from 'react-query'
-import { Delete, Edit, Search, Clear, FilterList, PersonAdd, Add, HelpOutline } from '@mui/icons-material'
+import { Link as LinkIcon, ForwardToInbox, Delete, Edit, Search, Clear, FilterList, PersonAdd, Add, HelpOutline } from '@mui/icons-material'
 import {
   showDeleteConfirmation,
   showSuccessAlert,
-  showActivationEmailFailedAlert,
+  showActivationLinkDialog,
+  showErrorAlert,
   showLoadingAlert,
   closeLoadingAlert,
   handleErrorWithAlert
 } from '../utils/sweetAlert'
+import { fetchActivationLink, resendActivationEmail } from '../utils/userActivation'
 import { useUsers, useUserMutations, QUERY_KEYS } from '../hooks/useUsers'
 import { getRoleLabelEs } from 'src/constants/roles'
 
@@ -118,6 +120,8 @@ export interface UserData {
   email: string
   phone?: string | null
   createdAt: string
+  active?: boolean
+  activationUrl?: string
   emailSent?: boolean
   emailError?: string | null
 }
@@ -845,6 +849,16 @@ const TableOwnUsers: React.FC = () => {
     [getCommonEditTextFieldProps, roles, loadingRoles]
   )
 
+  const handleActivationLink = useCallback(async (target: UserData, resend: boolean) => {
+    try {
+      const info = resend ? await resendActivationEmail(target.id) : await fetchActivationLink(target.id)
+      await showActivationLinkDialog(info)
+    } catch (error) {
+      console.error('Error con la activación del usuario:', error)
+      await showErrorAlert('No se pudo generar el enlace de activación')
+    }
+  }, [])
+
   const onCreateUser = useCallback(async (userData: UserData) => {
     // Show loading indicator
     showLoadingAlert('Creando usuario...')
@@ -861,8 +875,15 @@ const TableOwnUsers: React.FC = () => {
       const created = await createUser.mutateAsync(createData)
       closeLoadingAlert()
 
-      if (created?.emailSent === false) {
-        await showActivationEmailFailedAlert(createData.email, created.emailError)
+      if (created?.activationUrl) {
+        await showActivationLinkDialog({
+          nombre: createData.nombre,
+          email: createData.email,
+          phone: createData.phone,
+          activationUrl: created.activationUrl,
+          emailSent: created.emailSent,
+          emailError: created.emailError
+        })
       } else {
         await showSuccessAlert('Usuario creado exitosamente')
       }
@@ -1103,6 +1124,28 @@ const TableOwnUsers: React.FC = () => {
                         <Edit fontSize="small" />
                       </IconButton>
                     </Tooltip>
+                    {row.original.active !== true && (
+                      <>
+                        <Tooltip arrow placement="left" title="Enlace de activación (copiar / WhatsApp)">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleActivationLink(row.original, false)}
+                            aria-label={`Enlace de activación de ${row.getValue('nombre')}`}
+                          >
+                            <LinkIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip arrow placement="left" title="Reenviar correo de activación">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleActivationLink(row.original, true)}
+                            aria-label={`Reenviar activación a ${row.getValue('nombre')}`}
+                          >
+                            <ForwardToInbox fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </>
+                    )}
                     <Tooltip arrow placement="right" title="Eliminar Usuario">
                       <IconButton
                         className="delete-button"
