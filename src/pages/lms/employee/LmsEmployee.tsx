@@ -9,7 +9,6 @@ import {
   Grid,
   Tabs,
   Tab,
-  Paper,
   Chip,
   Alert,
   CircularProgress,
@@ -35,6 +34,12 @@ import {
 } from '@mui/icons-material'
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
 import SearchIcon from '@mui/icons-material/Search'
+import SchoolIcon from '@mui/icons-material/School'
+import AssignmentIcon from '@mui/icons-material/Assignment'
+import WarningAmberIcon from '@mui/icons-material/WarningAmber'
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { alpha } from '@mui/material/styles'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '@nanostores/react'
@@ -352,24 +357,6 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
     return completedCourseRecognitions
   }, [mandatoryCourses, optionalCourses, userCertificates])
 
-  const heroSummaryChips = useMemo(
-    () => [
-      {
-        label: `${stats.mandatoryCourses} obligatorios`,
-        color: stats.overdueTraining > 0 ? 'error' : 'warning'
-      },
-      {
-        label: `${stats.inProgressCourses} en progreso`,
-        color: 'info'
-      },
-      {
-        label: `${stats.certificatesEarned} certificados`,
-        color: 'success'
-      }
-    ],
-    [stats]
-  )
-
   // Inicio: una sola lista de prioridad (sin repetir cursos entre bloques)
   const homeFeed = useMemo(() => {
     const urgency = (course: any) => {
@@ -563,81 +550,62 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
-      {/* Header */}
-      <Paper
-        elevation={0}
-        sx={{
-          borderBottom: 1,
-          borderColor: 'divider',
-          background:
-            'linear-gradient(135deg, rgba(13,148,136,0.12) 0%, rgba(255,255,255,1) 55%, rgba(14,116,144,0.08) 100%)'
-        }}
-      >
-        <Box
-          sx={{
-            maxWidth: 'xl',
-            mx: 'auto',
-            px: { xs: 2, sm: 3, lg: 4 },
-            py: { xs: 2, md: 2.5 }
-          }}
-        >
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: { xs: 'flex-start', md: 'center' },
-              gap: 2,
-              flexWrap: 'wrap'
-            }}
-          >
-            <Box sx={{ maxWidth: 760 }}>
-              <Typography
-                variant='h4'
-                component='h1'
-                sx={{ fontWeight: 'bold', color: 'text.primary', mt: 0.5 }}
-              >
-                Hola, {String(currentUser.name || '').split(' ')[0].charAt(0).toUpperCase() + String(currentUser.name || '').split(' ')[0].slice(1).toLowerCase()}
-              </Typography>
-              <Typography variant='body1' color='text.secondary' sx={{ mt: 0.5 }}>
-                Llevas {formatLearnedTime(stats.totalMinutesLearned)} de aprendizaje registrado
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1.5 }}>
-                <Chip label='Empleado interno' color='secondary' />
-                {heroSummaryChips.map((chip) => (
-                  <Chip
-                    key={chip.label}
-                    label={chip.label}
-                    color={chip.color as 'error' | 'warning' | 'info' | 'success'}
-                    variant='outlined'
-                  />
-                ))}
-              </Box>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-              <Button
-                variant='contained'
-                color='primary'
-                startIcon={<AwardIcon />}
-                onClick={() => navigate('/lms/certificates')}
-              >
-                Ver certificados
-              </Button>
-              <Button
-                variant='outlined'
-                size='small'
-                startIcon={<NotificationsNoneIcon />}
-                onClick={() => setActiveTab(4)}
-              >
-                Notificaciones
-              </Button>
-            </Box>
-          </Box>
-        </Box>
-      </Paper>
-
       <Box
         sx={{ maxWidth: 'xl', mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: { xs: 2, md: 3 } }}
       >
+        <LmsPageHeader
+          title={`Hola, ${String(currentUser.name || '').split(' ')[0].charAt(0).toUpperCase() + String(currentUser.name || '').split(' ')[0].slice(1).toLowerCase()}`}
+          subtitle={`Llevas ${formatLearnedTime(stats.totalMinutesLearned)} de aprendizaje registrado`}
+          icon={<SchoolIcon />}
+          actions={
+            <Button variant='outlined' startIcon={<NotificationsNoneIcon />} onClick={() => setActiveTab(4)}>
+              Notificaciones
+            </Button>
+          }
+        />
+
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <LmsStatCard
+              label='Obligatorios'
+              value={stats.mandatoryCourses}
+              icon={<AssignmentIcon />}
+              tone='blue'
+              active={activeTab === 1}
+              onClick={() => setActiveTab(1)}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <LmsStatCard
+              label='Vencidos'
+              value={stats.overdueTraining}
+              icon={<WarningAmberIcon />}
+              tone={stats.overdueTraining > 0 ? 'red' : 'green'}
+              onClick={() => setActiveTab(1)}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <LmsStatCard
+              label='En progreso'
+              value={stats.inProgressCourses}
+              icon={<PlayCircleOutlineIcon />}
+              tone='orange'
+              active={activeTab === 2}
+              onClick={() => setActiveTab(2)}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <LmsStatCard
+              label='Certificados'
+              value={stats.certificatesEarned}
+              icon={<AwardIcon />}
+              tone='teal'
+              active={activeTab === 3}
+              onClick={() => setActiveTab(3)}
+            />
+          </Grid>
+        </Grid>
+
         <Tabs
           value={activeTab > 3 ? false : activeTab}
           onChange={handleTabChange}
