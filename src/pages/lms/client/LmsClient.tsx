@@ -8,7 +8,6 @@ import {
   Grid,
   Tabs,
   Tab,
-  Paper,
   Chip,
   Avatar,
   TextField,
@@ -34,6 +33,12 @@ import LmsNotificationCenter from '../shared/LmsNotificationCenter'
 import LmsCourseGrid, { getCourseTone } from '../shared/LmsCourseGrid'
 import { alpha } from '@mui/material/styles'
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
+import SchoolIcon from '@mui/icons-material/School'
+import MenuBookIcon from '@mui/icons-material/MenuBook'
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline'
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import type { Certificate, Course } from '../../../services/lmsService'
 import { getCourseAudienceLabel } from '../../../utils/lmsAudience'
 import {
@@ -181,24 +186,6 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
     return filtered
   }, [availableCourses, selectedCategory, searchTerm])
 
-  const heroSummaryChips = useMemo(
-    () => [
-      {
-        label: `${stats.inProgressCourses} en progreso`,
-        color: 'info'
-      },
-      {
-        label: `${stats.completedCourses} completados`,
-        color: 'success'
-      },
-      {
-        label: `${stats.certificatesEarned} certificados`,
-        color: 'warning'
-      }
-    ],
-    [stats]
-  )
-
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)
   }
@@ -244,81 +231,61 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
-      {/* Header */}
-      <Paper
-        elevation={0}
-        sx={{
-          borderBottom: 1,
-          borderColor: 'divider',
-          background:
-            'linear-gradient(135deg, rgba(224,242,254,1) 0%, rgba(255,255,255,1) 55%, rgba(219,234,254,0.9) 100%)'
-        }}
-      >
-        <Box
-          sx={{
-            maxWidth: 'xl',
-            mx: 'auto',
-            px: { xs: 2, sm: 3, lg: 4 },
-            py: { xs: 3, md: 4 }
-          }}
-        >
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: { xs: 'flex-start', md: 'center' },
-              gap: 2,
-              flexWrap: 'wrap'
-            }}
-          >
-            <Box sx={{ maxWidth: 760 }}>
-              <Typography
-                variant='h4'
-                component='h1'
-                sx={{ fontWeight: 'bold', color: 'text.primary' }}
-              >
-                Hola, {String(currentUser.name || '').split(' ')[0].charAt(0).toUpperCase() + String(currentUser.name || '').split(' ')[0].slice(1).toLowerCase()}
-              </Typography>
-              <Typography variant='body1' color='text.secondary' sx={{ mt: 0.5 }}>
-                Tus cursos y los de tu empresa, en un solo lugar
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1.5 }}>
-                <Chip label='Usuario cliente' color='info' />
-                {heroSummaryChips.map((chip) => (
-                  <Chip
-                    key={chip.label}
-                    label={chip.label}
-                    color={chip.color as 'info' | 'success' | 'warning'}
-                    variant='outlined'
-                  />
-                ))}
-              </Box>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-              <Button
-                variant='contained'
-                color='info'
-                startIcon={<AwardIcon />}
-                onClick={() => navigate('/lms/certificates')}
-              >
-                Ver certificados
-              </Button>
-              <Button
-                variant='outlined'
-                size='small'
-                startIcon={<NotificationsNoneIcon />}
-                onClick={() => setActiveTab(3)}
-              >
-                Notificaciones
-              </Button>
-            </Box>
-          </Box>
-        </Box>
-      </Paper>
-
       <Box
         sx={{ maxWidth: 'xl', mx: 'auto', px: { xs: 2, sm: 3, lg: 4 }, py: 4 }}
       >
+        <LmsPageHeader
+          title={`Hola, ${String(currentUser.name || '').split(' ')[0].charAt(0).toUpperCase() + String(currentUser.name || '').split(' ')[0].slice(1).toLowerCase()}`}
+          subtitle='Tus cursos y los de tu empresa, en un solo lugar'
+          icon={<SchoolIcon />}
+          actions={
+            <Button variant='outlined' startIcon={<NotificationsNoneIcon />} onClick={() => setActiveTab(3)}>
+              Notificaciones
+            </Button>
+          }
+        />
+
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <LmsStatCard
+              label='Cursos disponibles'
+              value={stats.totalCourses}
+              icon={<MenuBookIcon />}
+              tone='blue'
+              active={activeTab === 1}
+              onClick={() => setActiveTab(1)}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <LmsStatCard
+              label='En progreso'
+              value={stats.inProgressCourses}
+              icon={<PlayCircleOutlineIcon />}
+              tone='orange'
+              onClick={() => setActiveTab(1)}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <LmsStatCard
+              label='Completados'
+              value={stats.completedCourses}
+              icon={<CheckCircleOutlineIcon />}
+              tone='green'
+              onClick={() => setActiveTab(1)}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <LmsStatCard
+              label='Certificados'
+              value={stats.certificatesEarned}
+              icon={<AwardIcon />}
+              tone='teal'
+              active={activeTab === 2}
+              onClick={() => setActiveTab(2)}
+            />
+          </Grid>
+        </Grid>
+
         <Tabs
           value={activeTab > 2 ? false : activeTab}
           onChange={handleTabChange}
