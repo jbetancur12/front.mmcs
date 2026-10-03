@@ -47,9 +47,9 @@ import {
   YAxis
 } from 'recharts'
 import { axiosPrivate } from '@utils/api'
+import CalibrationServiceStatusChip from './CalibrationServiceStatusChip'
 import {
   CALIBRATION_SERVICE_SLA_COLORS,
-  CALIBRATION_SERVICE_STATUS_COLORS,
   CALIBRATION_SERVICE_STATUS_LABELS
 } from '../../constants/calibrationServices'
 import {
@@ -424,11 +424,7 @@ const CalibrationServiceAnalyticsPage = () => {
         accessorKey: 'status',
         header: 'Estado',
         Cell: ({ row }) => (
-          <Chip
-            size='small'
-            label={CALIBRATION_SERVICE_STATUS_LABELS[row.original.status]}
-            color={CALIBRATION_SERVICE_STATUS_COLORS[row.original.status]}
-          />
+          <CalibrationServiceStatusChip status={row.original.status} />
         )
       },
       {

@@ -6,7 +6,6 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   Grid,
   IconButton,
   MenuItem,
@@ -24,10 +23,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import SignaturePad from '../../Components/Maintenance/SignaturePad'
-import {
-  CALIBRATION_SERVICE_STATUS_LABELS,
-  CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS
-} from '../../constants/calibrationServices'
+import CalibrationServiceStatusChip from './CalibrationServiceStatusChip'
+import { CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS } from '../../constants/calibrationServices'
 import {
   CalibrationService,
   CalibrationServiceItemProgressEntryPayload,
@@ -356,11 +353,7 @@ const CalibrationServiceOperationsPanel = ({
             Estado actual
           </Typography>
           <Box mt={0.5}>
-            <Chip
-              size='small'
-              color='primary'
-              label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]}
-            />
+            <CalibrationServiceStatusChip status={service.status} />
           </Box>
         </Grid>
         {operations.programmingNotes ? (
@@ -431,11 +424,9 @@ const CalibrationServiceOperationsPanel = ({
             <TableHead>
               <TableRow>
                 <TableCell>Ítem</TableCell>
-                <TableCell>Puntos de calibración</TableCell>
                 <TableCell align='right'>Cant.</TableCell>
                 <TableCell align='right'>Ejecutado</TableCell>
                 <TableCell align='right'>Pendiente</TableCell>
-                <TableCell align='right'>Liberado a corte</TableCell>
                 <TableCell>Estado técnico</TableCell>
                 <TableCell>Notas técnicas</TableCell>
               </TableRow>
@@ -458,17 +449,33 @@ const CalibrationServiceOperationsPanel = ({
                   effectiveQuantity - executedQuantity,
                   0
                 )
+                const calibrationPointsInfo =
+                  item.otherFields?.hasCalibrationPoints !== false
+                    ? [
+                        item.otherFields?.calibrationPointCount
+                          ? `Puntos: ${item.otherFields.calibrationPointCount}`
+                          : '',
+                        item.otherFields?.measurementRange
+                          ? `Rango: ${item.otherFields.measurementRange}`
+                          : ''
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')
+                    : ''
 
                 return (
                   <TableRow key={item.id}>
-                    <TableCell>{item.itemName}</TableCell>
-                    <TableCell>
-                      {item.otherFields?.hasCalibrationPoints !== false
-                        ? [
-                            item.otherFields?.calibrationPointCount ? `Cantidad puntos: ${item.otherFields.calibrationPointCount}` : '',
-                            item.otherFields?.measurementRange ? `Rango medición: ${item.otherFields.measurementRange}` : ''
-                          ].filter(Boolean).join(' · ') || 'Sin registrar'
-                        : 'No aplica'}
+                    <TableCell sx={{ minWidth: 160 }}>
+                      {item.itemName}
+                      {calibrationPointsInfo ? (
+                        <Typography
+                          variant='caption'
+                          color='text.secondary'
+                          display='block'
+                        >
+                          {calibrationPointsInfo}
+                        </Typography>
+                      ) : null}
                     </TableCell>
                     <TableCell align='right'>{effectiveQuantity}</TableCell>
                     <TableCell align='right' sx={{ minWidth: 100 }}>
@@ -490,10 +497,18 @@ const CalibrationServiceOperationsPanel = ({
                       ) : (
                         executedQuantity
                       )}
+                      {releasedQuantity > 0 ? (
+                        <Typography
+                          variant='caption'
+                          color='text.secondary'
+                          display='block'
+                        >
+                          {releasedQuantity} a corte
+                        </Typography>
+                      ) : null}
                     </TableCell>
                     <TableCell align='right'>{pendingQuantity}</TableCell>
-                    <TableCell align='right'>{releasedQuantity}</TableCell>
-                    <TableCell sx={{ minWidth: 180 }}>
+                    <TableCell sx={{ minWidth: 150 }}>
                       {canEditProgress ? (
                         <TextField
                           select
@@ -516,7 +531,7 @@ const CalibrationServiceOperationsPanel = ({
                         ]
                       )}
                     </TableCell>
-                    <TableCell sx={{ minWidth: 260 }}>
+                    <TableCell sx={{ minWidth: 200 }}>
                       {canEditProgress ? (
                         <TextField
                           fullWidth

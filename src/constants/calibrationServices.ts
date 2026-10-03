@@ -161,11 +161,63 @@ export const CALIBRATION_SERVICE_STATUS_COLORS: Record<
   ods_issued: 'info',
   pending_programming: 'secondary',
   scheduled: 'primary',
-  in_execution: 'success',
-  technically_completed: 'info',
+  in_execution: 'warning',
+  technically_completed: 'success',
   cancelled: 'error',
   closed: 'default'
 }
+
+// Borde = estado alcanzado o en espera; relleno = en curso o terminado.
+export const CALIBRATION_SERVICE_STATUS_VARIANTS: Record<
+  CalibrationServiceStatus,
+  'filled' | 'outlined'
+> = {
+  draft: 'outlined',
+  pending_approval: 'filled',
+  rejected: 'filled',
+  approved: 'outlined',
+  ods_issued: 'outlined',
+  pending_programming: 'filled',
+  scheduled: 'outlined',
+  in_execution: 'filled',
+  technically_completed: 'filled',
+  cancelled: 'filled',
+  closed: 'filled'
+}
+
+const CHIP_ACCENT_HEX: Record<string, string> = {
+  default: '#9ca3af',
+  warning: '#f59e0b',
+  error: '#ef4444',
+  success: '#10b981',
+  info: '#3b82f6',
+  secondary: '#8b5cf6',
+  primary: '#00BFA5'
+}
+
+// Color de la barra lateral de las tarjetas: sale del mismo mapa que el chip.
+export const getCalibrationServiceStatusAccent = (
+  status: CalibrationServiceStatus
+) =>
+  CHIP_ACCENT_HEX[CALIBRATION_SERVICE_STATUS_COLORS[status] || 'default']
+
+const normalizeChipLabel = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/^servicio /, '')
+    .replace(/[ao]$/, '')
+    .trim()
+
+// El chip de SLA a veces repite el estado ("Programada" / "Programado").
+export const isSlaLabelRedundantWithStatus = (
+  status: CalibrationServiceStatus,
+  slaLabel?: string | null
+) =>
+  Boolean(slaLabel) &&
+  normalizeChipLabel(slaLabel as string) ===
+    normalizeChipLabel(CALIBRATION_SERVICE_STATUS_LABELS[status])
 
 export const CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS: Record<
   CalibrationServiceOperationalItemStatus,

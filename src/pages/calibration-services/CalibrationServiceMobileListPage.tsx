@@ -3,7 +3,6 @@ import {
   Box,
   Card,
   CardContent,
-  Chip,
   CircularProgress,
   Stack,
   TextField,
@@ -19,10 +18,7 @@ import {
   CalibrationService,
   CalibrationServiceStatus
 } from '../../types/calibrationService'
-import {
-  CALIBRATION_SERVICE_STATUS_COLORS,
-  CALIBRATION_SERVICE_STATUS_LABELS
-} from '../../constants/calibrationServices'
+import CalibrationServiceStatusChip from './CalibrationServiceStatusChip'
 
 const getMetrologistNames = (s: CalibrationService): string[] => {
   const ops: any = s.otherFields?.operations
@@ -115,8 +111,7 @@ const MobileListPage = () => {
                       <Typography variant='subtitle2' fontWeight={800}>{s.serviceCode}</Typography>
                       {s.odsCode && <Typography variant='caption' color='#059669' fontWeight={600}>{s.odsCode}</Typography>}
                     </Box>
-                    <Chip size='small' label={CALIBRATION_SERVICE_STATUS_LABELS[s.status]}
-                      color={(CALIBRATION_SERVICE_STATUS_COLORS as any)[s.status] || 'default'} />
+                    <CalibrationServiceStatusChip status={s.status} />
                   </Stack>
                   <Typography variant='body2' color='text.secondary' sx={{ mt: 0.5 }}>
                     {s.customer?.nombre || s.executionCustomerName || '—'}

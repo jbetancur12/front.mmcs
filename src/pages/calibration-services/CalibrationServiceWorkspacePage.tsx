@@ -958,10 +958,6 @@ const CalibrationServiceWorkspacePage = () => {
         py: { xs: 2, md: 3 },
         minHeight: '100vh',
         backgroundColor: '#f8fafb',
-        '@keyframes fadeUp': {
-          from: { opacity: 0, transform: 'translateY(15px)' },
-          to: { opacity: 1, transform: 'translateY(0)' }
-        }
       }}
     >
       <Toaster position='top-center' />
@@ -975,7 +971,6 @@ const CalibrationServiceWorkspacePage = () => {
           mb: 3,
           position: 'relative',
           overflow: 'hidden',
-          animation: 'fadeUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both',
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -1086,7 +1081,6 @@ const CalibrationServiceWorkspacePage = () => {
           borderRadius: '14px',
           border: '1px solid rgba(0,0,0,0.06)',
           overflow: 'hidden',
-          animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.08s both'
         }}
       >
         <Tabs
@@ -1140,7 +1134,7 @@ const CalibrationServiceWorkspacePage = () => {
       <Grid container spacing={2.5}>
         <Grid item xs={12} lg={8}>
           <div style={{ display: activeSection !== 0 ? 'none' : undefined }}>
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #10b981, #34d399)' } }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #10b981, #34d399)' } }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
                 <GroupOutlinedIcon sx={{ color: '#059669', fontSize: 22 }} />
@@ -1315,7 +1309,7 @@ const CalibrationServiceWorkspacePage = () => {
           </div>
 
           <div style={{ display: activeSection !== 1 ? 'none' : undefined }}>
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #f59e0b, #fbbf24)' } }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #f59e0b, #fbbf24)' } }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
                 <Inventory2OutlinedIcon sx={{ color: '#d97706', fontSize: 22 }} />
@@ -1407,7 +1401,7 @@ const CalibrationServiceWorkspacePage = () => {
 
 
           <div style={{ display: activeSection !== 2 ? 'none' : undefined }}>
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #8b5cf6, #a78bfa)' } }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #8b5cf6, #a78bfa)' } }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
                 <UploadFileOutlinedIcon sx={{ color: '#7c3aed', fontSize: 22 }} />
@@ -1463,7 +1457,7 @@ const CalibrationServiceWorkspacePage = () => {
           </div>
 
           <div style={{ display: activeSection !== 3 ? 'none' : undefined }}>
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.25s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #ec4899, #f472b6)' } }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #ec4899, #f472b6)' } }}>
             <CardContent sx={{ p: { xs: 2, md: 3 }, pBottom: { xs: 2, md: 3 } }}>
               <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
                 <RequestQuoteOutlinedIcon sx={{ color: '#db2777', fontSize: 22 }} />
@@ -1495,7 +1489,7 @@ const CalibrationServiceWorkspacePage = () => {
           </div>
 
           <div style={{ display: activeSection !== 4 ? 'none' : undefined }}>
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both', position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #6366f1, #818cf8)' } }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #6366f1, #818cf8)' } }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
                 <ReceiptLongOutlinedIcon sx={{ color: '#4f46e5', fontSize: 22 }} />
@@ -1645,7 +1639,7 @@ const CalibrationServiceWorkspacePage = () => {
         </Grid>
 
         <Grid item xs={12} lg={4}>
-          <Card elevation={0} sx={{ borderRadius: '16px', border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(14px)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)', position: { lg: 'sticky' }, top: { lg: 24 }, animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both' }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(14px)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)', position: { lg: 'sticky' }, top: { lg: 24 },}}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2 }}>
                 <ReceiptLongOutlinedIcon sx={{ color: '#059669', fontSize: 22 }} />

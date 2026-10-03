@@ -19,6 +19,7 @@ import {
   Divider,
   Grid,
   IconButton,
+  Tooltip,
   Menu,
   MenuItem,
   Stack,
@@ -66,9 +67,10 @@ import {
   CALIBRATION_SERVICE_ODS_ROLES,
   CALIBRATION_SERVICE_SCHEDULE_ROLES,
   CALIBRATION_SERVICE_SLA_COLORS,
-  CALIBRATION_SERVICE_STATUS_COLORS,
   CALIBRATION_SERVICE_STATUS_LABELS,
-  CALIBRATION_SERVICE_TECHNICAL_ROLES
+  CALIBRATION_SERVICE_TECHNICAL_ROLES,
+  getCalibrationServiceStatusAccent,
+  isSlaLabelRedundantWithStatus
 } from '../../constants/calibrationServices'
 import {
   useCalibrationServiceMutations,
@@ -90,6 +92,7 @@ import {
 import { userStore } from '../../store/userStore'
 import { useHasRole } from '../../utils/functions'
 import CalibrationServiceRichTextEditor from './CalibrationServiceRichTextEditor'
+import CalibrationServiceStatusChip from './CalibrationServiceStatusChip'
 import CalibrationServiceSequenceConfigDialog from './CalibrationServiceSequenceConfigDialog'
 import CalibrationServiceSlaConfigDialog from './CalibrationServiceSlaConfigDialog'
 import {
@@ -199,20 +202,6 @@ const ui = {
   glass: 'rgba(255, 255, 255, 0.75)'
 }
 
-const STATUS_BORDER_COLORS: Record<string, string> = {
-  draft: '#d1d5db',
-  pending_approval: '#f59e0b',
-  rejected: '#ef4444',
-  approved: '#10b981',
-  ods_issued: '#3b82f6',
-  pending_programming: '#8b5cf6',
-  scheduled: '#6366f1',
-  in_execution: '#10b981',
-  technically_completed: '#3b82f6',
-  cancelled: '#ef4444',
-  closed: '#9ca3af'
-}
-
 const softCardSx = {
   background: ui.glass,
   backdropFilter: 'blur(12px)',
@@ -220,7 +209,6 @@ const softCardSx = {
   borderRadius: '16px',
   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-  animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) both',
   '&:hover': {
     borderColor: 'rgba(16, 185, 129, 0.3)',
     boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.1), 0 4px 6px -2px rgba(16, 185, 129, 0.05)',
@@ -1110,7 +1098,7 @@ const CalibrationServicesPage = () => {
         '&::before': {
           content: '""', position: 'absolute', left: 0, top: 12, bottom: 12,
           width: 3, borderRadius: '2px',
-          background: `linear-gradient(180deg, ${STATUS_BORDER_COLORS[service.status] || '#d1d5db'}, ${alpha(STATUS_BORDER_COLORS[service.status] || '#d1d5db', 0.3)})`
+          background: `linear-gradient(180deg, ${getCalibrationServiceStatusAccent(service.status)}, ${alpha(getCalibrationServiceStatusAccent(service.status), 0.3)})`
         }
       }}>
         <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
@@ -1141,11 +1129,7 @@ const CalibrationServicesPage = () => {
                     </Box>
                   ) : null}
                 </Typography>
-                <Chip
-                  size='small'
-                  color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]}
-                  label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]}
-                />
+                <CalibrationServiceStatusChip status={service.status} />
                 {!isTechnicalOnlyView ? (
                   <Chip
                     size='small'
@@ -1161,15 +1145,20 @@ const CalibrationServicesPage = () => {
                     }
                   />
                 ) : null}
-                <Chip
-                  size='small'
-                  color={
-                    CALIBRATION_SERVICE_SLA_COLORS[
-                      service.slaIndicator?.color || 'gray'
-                    ]
-                  }
-                  label={service.slaIndicator?.label || 'SLA no iniciado'}
-                />
+                {isSlaLabelRedundantWithStatus(
+                  service.status,
+                  service.slaIndicator?.label
+                ) ? null : (
+                  <Chip
+                    size='small'
+                    color={
+                      CALIBRATION_SERVICE_SLA_COLORS[
+                        service.slaIndicator?.color || 'gray'
+                      ]
+                    }
+                    label={service.slaIndicator?.label || 'SLA no iniciado'}
+                  />
+                )}
                 {['yellow', 'red'].includes(
                   service.slaIndicator?.color || 'gray'
                 ) ? (
@@ -1267,7 +1256,12 @@ const CalibrationServicesPage = () => {
                 >
                   {assignedMetrologistNames.length > 1
                     ? `Metrólogos: ${assignedMetrologistNames.join(', ')}`
-                    : `Responsable metrológico: <strong>${assignedMetrologistName}</strong>`}
+                    : (
+                      <>
+                        Responsable metrológico:{' '}
+                        <strong>{assignedMetrologistName}</strong>
+                      </>
+                    )}
                   {assignedMetrologistEmails.length > 0 && !isTechnicalOnlyView
                     ? ` · ${assignedMetrologistEmails.join(', ')}`
                     : ''}
@@ -1632,10 +1626,6 @@ const CalibrationServicesPage = () => {
         px: { xs: 2, md: 3 },
         py: { xs: 2, md: 3 },
         color: ui.text,
-        '@keyframes fadeUp': {
-          from: { opacity: 0, transform: 'translateY(15px)' },
-          to: { opacity: 1, transform: 'translateY(0)' }
-        }
       }}
     >
       <Toaster position='top-center' />
@@ -1649,7 +1639,6 @@ const CalibrationServicesPage = () => {
           mb: 3,
           position: 'relative',
           overflow: 'hidden',
-          animation: 'fadeUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both',
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -1697,7 +1686,13 @@ const CalibrationServicesPage = () => {
             </Typography>
           </Box>
 
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1}
+            flexWrap='wrap'
+            useFlexGap
+            justifyContent={{ md: 'flex-end' }}
+          >
             {canViewAnalytics ? (
               <Button
                 variant='outlined'
@@ -1894,7 +1889,6 @@ const CalibrationServicesPage = () => {
               border: `1px solid ${alpha(ui.info, 0.18)}`,
               bgcolor: alpha(ui.info, 0.06),
               color: ui.textSecondary,
-              animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both',
               '& .MuiAlert-icon': { color: ui.info }
             }}
           >
@@ -1911,7 +1905,6 @@ const CalibrationServicesPage = () => {
               border: `1px solid ${alpha(ui.green, 0.18)}`,
               bgcolor: ui.greenLight,
               color: ui.textSecondary,
-              animation: 'fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.25s both',
               '& .MuiAlert-icon': { color: ui.green }
             }}
           >
@@ -2338,7 +2331,7 @@ const CalibrationServicesPage = () => {
               size: 130,
               filterVariant: 'select',
               filterSelectOptions: STATUS_OPTIONS.filter(o => o.value !== FILTER_ALL).map(o => ({ text: o.label, value: o.value })),
-              Cell: ({ cell }) => <Chip size='small' color={CALIBRATION_SERVICE_STATUS_COLORS[cell.getValue<CalibrationServiceStatus>()]} label={CALIBRATION_SERVICE_STATUS_LABELS[cell.getValue<CalibrationServiceStatus>()]} />
+              Cell: ({ cell }) => <CalibrationServiceStatusChip status={cell.getValue<CalibrationServiceStatus>()} />
             },
             {
               accessorFn: (s) => getServiceOperationalFocus(s)?.label ?? '',
@@ -2390,11 +2383,28 @@ const CalibrationServicesPage = () => {
               id: 'actions',
               header: '',
               size: 80,
-              Cell: ({ row }) => <Button size='small' variant='outlined' onClick={() => openServiceDetail(row.original.id)} sx={secondaryButtonSx}>Ver</Button>
+              enablePinning: true,
+              Cell: ({ row }) => (
+                <Tooltip title='Ver detalle'>
+                  <IconButton
+                    size='small'
+                    aria-label='Ver detalle'
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      openServiceDetail(row.original.id)
+                    }}
+                    sx={{ color: ui.greenDark }}
+                  >
+                    <VisibilityOutlinedIcon fontSize='small' />
+                  </IconButton>
+                </Tooltip>
+              )
             }
           ]}
           data={visibleServices}
           enableColumnActions={false}
+          enablePinning
+          initialState={{ columnPinning: { right: ['actions'] } }}
           enableColumnFilters
           enableGlobalFilter
           enablePagination={false}
@@ -2402,9 +2412,10 @@ const CalibrationServicesPage = () => {
           enableBottomToolbar={false}
           enableTopToolbar
           localization={MRT_Localization_ES}
-          muiTableBodyRowProps={{
-            sx: { cursor: 'pointer' }
-          }}
+          muiTableBodyRowProps={({ row }) => ({
+            onClick: () => openServiceDetail(row.original.id),
+            sx: { cursor: 'pointer', '&:hover td': { backgroundColor: ui.greenLight } }
+          })}
           muiTableProps={{
             sx: { borderRadius: '16px', border: `1px solid ${ui.border}`, '& td': { py: 0.75 } }
           }}
@@ -2655,14 +2666,8 @@ const CalibrationServicesPage = () => {
                                 flexWrap='wrap'
                                 useFlexGap
                               >
-                                <Chip
-                                  size='small'
-                                  color={
-                                    CALIBRATION_SERVICE_STATUS_COLORS[service.status]
-                                  }
-                                  label={
-                                    CALIBRATION_SERVICE_STATUS_LABELS[service.status]
-                                  }
+                                <CalibrationServiceStatusChip
+                                  status={service.status}
                                 />
                                 {!isTechnicalOnlyView ? (
                                   <Chip

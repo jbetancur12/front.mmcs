@@ -62,9 +62,8 @@ import {
   CALIBRATION_SERVICE_REPROGRAM_ROLES,
   CALIBRATION_SERVICE_SCHEDULE_ROLES,
   CALIBRATION_SERVICE_SLA_COLORS,
-  CALIBRATION_SERVICE_STATUS_COLORS,
-  CALIBRATION_SERVICE_STATUS_LABELS,
-  CALIBRATION_SERVICE_TECHNICAL_ROLES
+  CALIBRATION_SERVICE_TECHNICAL_ROLES,
+  isSlaLabelRedundantWithStatus
 } from '../../constants/calibrationServices'
 import {
   useCalibrationAssignableMetrologists,
@@ -99,6 +98,7 @@ import CalibrationServiceOdsDialog, {
 } from './CalibrationServiceOdsDialog'
 import CalibrationServiceDocumentsPanel from './CalibrationServiceDocumentsPanel'
 import PDFViewer from '../../Components/PDFViewer'
+import CalibrationServiceStatusChip from './CalibrationServiceStatusChip'
 import { getApiErrorMessage } from '../../utils/apiError'
 import CalibrationServiceOperationsPanel from './CalibrationServiceOperationsPanel'
 import CalibrationServiceCutsPanel from './CalibrationServiceCutsPanel'
@@ -2614,12 +2614,7 @@ const CalibrationServiceDetailsPage = () => {
               {service.serviceCode}
             </Typography>
 
-            <Chip
-              size='small'
-              color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]}
-              label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]}
-              sx={{ fontWeight: 600 }}
-            />
+            <CalibrationServiceStatusChip status={service.status} />
             {service.isPaused ? (
               <Chip
                 size='small'
@@ -2641,16 +2636,21 @@ const CalibrationServiceDetailsPage = () => {
                 sx={{ fontWeight: 600 }}
               />
             ) : null}
-            <Chip
-              size='small'
-              color={
-                CALIBRATION_SERVICE_SLA_COLORS[
-                  service.slaIndicator?.color || 'gray'
-                ]
-              }
-              label={service.slaIndicator?.label || 'SLA no iniciado'}
-              sx={{ fontWeight: 600 }}
-            />
+            {isSlaLabelRedundantWithStatus(
+              service.status,
+              service.slaIndicator?.label
+            ) ? null : (
+              <Chip
+                size='small'
+                color={
+                  CALIBRATION_SERVICE_SLA_COLORS[
+                    service.slaIndicator?.color || 'gray'
+                  ]
+                }
+                label={service.slaIndicator?.label || 'SLA no iniciado'}
+                sx={{ fontWeight: 600 }}
+              />
+            )}
             {['yellow', 'red'].includes(
               service.slaIndicator?.color || 'gray'
             ) ? (

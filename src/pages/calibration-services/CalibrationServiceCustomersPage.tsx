@@ -228,10 +228,6 @@ const CalibrationServiceCustomersPage = () => {
         py: { xs: 2, md: 3 },
         minHeight: '100vh',
         backgroundColor: '#f8fafb',
-        '@keyframes fadeUp': {
-          from: { opacity: 0, transform: 'translateY(12px)' },
-          to: { opacity: 1, transform: 'translateY(0)' }
-        }
       }}
     >
       <Toaster position='top-center' />
@@ -242,7 +238,6 @@ const CalibrationServiceCustomersPage = () => {
           background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #020617 100%)',
           borderRadius: '20px', p: { xs: 3, md: 4 }, mb: 3,
           position: 'relative', overflow: 'hidden',
-          animation: 'fadeUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both',
           '&::before': {
             content: '""', position: 'absolute', top: 0, right: 0,
             width: '40%', height: '100%',
@@ -288,7 +283,7 @@ const CalibrationServiceCustomersPage = () => {
       </Box>
 
       {/* ── Stat cards ── */}
-      <Grid container spacing={2.5} mb={3} sx={{ animation: 'fadeUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.08s both' }}>
+      <Grid container spacing={2.5} mb={3}>
         <Grid item xs={12} md={4}>
           <Card elevation={0} sx={{ borderRadius: '14px', border: '1px solid rgba(0,0,0,0.06)', background: 'linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(5,150,105,0.02) 100%)', overflow: 'visible' }}>
             <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
@@ -327,7 +322,6 @@ const CalibrationServiceCustomersPage = () => {
       {/* ── Search bar ── */}
       <Paper elevation={0} sx={{
         borderRadius: '12px', mb: 2.5, border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden',
-        animation: 'fadeUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.12s both'
       }}>
         <Box sx={{ p: 2 }}>
           <TextField
@@ -352,7 +346,7 @@ const CalibrationServiceCustomersPage = () => {
 
       {/* ── Customers list ── */}
       <Stack spacing={2.5}>
-        {customers.map((customer, index) => (
+        {customers.map((customer) => (
           <Paper
             key={customer.id}
             elevation={0}
@@ -360,7 +354,6 @@ const CalibrationServiceCustomersPage = () => {
               borderRadius: '14px', border: '1px solid rgba(0,0,0,0.06)',
               background: '#fff',
               overflow: 'hidden',
-              animation: `fadeUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) ${0.15 + index * 0.04}s both`,
               transition: 'box-shadow 0.2s, border-color 0.2s',
               '&:hover': { borderColor: 'rgba(16,185,129,0.2)', boxShadow: '0 4px 12px rgba(0,0,0,0.04)' }
             }}
@@ -516,7 +509,6 @@ const CalibrationServiceCustomersPage = () => {
           <Paper elevation={0} sx={{
             p: 4, textAlign: 'center', borderRadius: '12px',
             border: '1px dashed', borderColor: 'divider',
-            animation: 'fadeUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both'
           }}>
             <BusinessOutlinedIcon sx={{ fontSize: 48, color: '#d1d5db', mb: 1.5 }} />
             <Typography variant='body1' fontWeight={600} sx={{ color: '#6b7280', mb: 0.5 }}>
@@ -534,7 +526,6 @@ const CalibrationServiceCustomersPage = () => {
       {/* ── Pagination ── */}
       <Paper elevation={0} sx={{
         mt: 2.5, borderRadius: '12px', border: '1px solid rgba(0,0,0,0.06)',
-        animation: 'fadeUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both'
       }}>
         <TablePagination
           component='div'
