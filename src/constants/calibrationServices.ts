@@ -243,7 +243,8 @@ export const CALIBRATION_SERVICE_EVENT_LABELS: Record<
   adjustment_reported: 'Novedad reportada',
   adjustment_reviewed: 'Novedad revisada',
   ods_issued: 'ODS emitida',
-  document_uploaded: 'Documento cargado'
+  document_uploaded: 'Documento cargado',
+  certificate_sent: 'Certificado enviado'
 }
 
 export const CALIBRATION_SERVICE_EVENT_COLORS: Record<
@@ -258,7 +259,8 @@ export const CALIBRATION_SERVICE_EVENT_COLORS: Record<
   adjustment_reported: 'warning',
   adjustment_reviewed: 'info',
   ods_issued: 'info',
-  document_uploaded: 'secondary'
+  document_uploaded: 'secondary',
+  certificate_sent: 'success'
 }
 
 export const CALIBRATION_SERVICE_ADJUSTMENT_TYPE_LABELS: Record<

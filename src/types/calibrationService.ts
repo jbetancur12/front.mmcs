@@ -111,6 +111,7 @@ export type CalibrationServiceEventType =
   | 'adjustment_reviewed'
   | 'ods_issued'
   | 'document_uploaded'
+  | 'certificate_sent'
 
 export interface CalibrationServiceCustomer {
   id: number

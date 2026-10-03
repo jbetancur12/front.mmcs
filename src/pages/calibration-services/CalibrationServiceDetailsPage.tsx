@@ -1343,6 +1343,13 @@ const CalibrationServiceDetailsPage = () => {
     }
   }
 
+  const lastCertificateSent = (service?.events ?? [])
+    .filter((event) => event.eventType === 'certificate_sent')
+    .sort(
+      (a, b) =>
+        new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime()
+    )[0]
+
   const handleSendCertificate = async () => {
     try {
       await sendCertificate.mutateAsync({ serviceId: String(service.id) })
@@ -2657,6 +2664,16 @@ const CalibrationServiceDetailsPage = () => {
               Enviar cotización
             </Button>
           ) : null}
+          {isAnalystOnlyView && lastCertificateSent ? (
+            <Chip
+              color='success'
+              variant='outlined'
+              icon={<CheckCircleOutlineOutlinedIcon />}
+              label={`Certificado enviado ${formatDateValue(
+                lastCertificateSent.occurredAt
+              )} por ${lastCertificateSent.performedByName}`}
+            />
+          ) : null}
           {isAnalystOnlyView ? (
             <Button
               variant='contained'
@@ -2669,7 +2686,9 @@ const CalibrationServiceDetailsPage = () => {
               disableElevation
               sx={{ borderRadius: 2 }}
             >
-              Enviar certificado
+              {lastCertificateSent
+                ? 'Reenviar certificado'
+                : 'Marcar certificado enviado'}
             </Button>
           ) : null}
           {canDecideApproval ? (
