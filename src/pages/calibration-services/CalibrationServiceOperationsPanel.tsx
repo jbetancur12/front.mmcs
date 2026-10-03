@@ -8,6 +8,7 @@ import {
   Button,
   Chip,
   Grid,
+  IconButton,
   MenuItem,
   Stack,
   Table,
@@ -16,9 +17,12 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Tooltip,
   Typography
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import SignaturePad from '../../Components/Maintenance/SignaturePad'
 import {
   CALIBRATION_SERVICE_STATUS_LABELS,
@@ -85,6 +89,20 @@ const getReleasedQuantity = (item: CalibrationServiceOperationalItem) => {
   return 0
 }
 
+const getExecutedQuantity = (
+  item: CalibrationServiceOperationalItem,
+  effectiveQuantity: number
+) => {
+  const stored = Number(item.otherFields?.executedQuantity)
+  const recorded = Number.isFinite(stored)
+    ? stored
+    : getItemStatus(item) === 'completed'
+      ? effectiveQuantity
+      : 0
+
+  return Math.min(Math.max(recorded, getReleasedQuantity(item)), effectiveQuantity)
+}
+
 const getEffectiveQuantity = (
   service: CalibrationService,
   item: CalibrationServiceOperationalItem
@@ -114,7 +132,7 @@ interface CalibrationServiceOperationsPanelProps {
   isBusy?: boolean
   onSaveProgress: (
     items: CalibrationServiceItemProgressEntryPayload[]
-  ) => void | Promise<void>
+  ) => boolean | void | Promise<boolean | void>
   deliveryName?: string | null
   deliveryRole?: string | null
   deliverySignatureData?: string | null
@@ -124,6 +142,8 @@ interface CalibrationServiceOperationsPanelProps {
     deliverySignatureData: string | null
   }) => void | Promise<void>
   isUpdatingDeliverySignature?: boolean
+  onGenerateProgressPdf?: () => void | Promise<void>
+  isGeneratingProgressPdf?: boolean
 }
 
 const CalibrationServiceOperationsPanel = ({
@@ -135,7 +155,9 @@ const CalibrationServiceOperationsPanel = ({
   deliveryRole: initialDeliveryRole,
   deliverySignatureData: initialDeliverySignatureData,
   onUpdateDeliverySignature,
-  isUpdatingDeliverySignature = false
+  isUpdatingDeliverySignature = false,
+  onGenerateProgressPdf,
+  isGeneratingProgressPdf = false
 }: CalibrationServiceOperationsPanelProps) => {
   const operations = getOperationsSummary(service.otherFields)
   const [deliveryName, setDeliveryName] = useState(initialDeliveryName ?? '')
@@ -158,12 +180,15 @@ const CalibrationServiceOperationsPanel = ({
     CalibrationServiceItemProgressEntryPayload[]
   >([])
 
-  useEffect(() => {
-    setDraftItems(
-      (service.items || []).map((item) => ({
+  const buildSavedItems = (): CalibrationServiceItemProgressEntryPayload[] =>
+    (service.items || []).map((item) => ({
         itemId: item.id,
         operationalStatus: getItemStatus(item),
         technicalNotes: getItemText(item, 'technicalNotes'),
+        executedQuantity: getExecutedQuantity(
+          item,
+          getEffectiveQuantity(service, item)
+        ),
         scheduledFor:
           typeof item.otherFields?.scheduledFor === 'string'
             ? item.otherFields.scheduledFor.slice(0, 10)
@@ -176,9 +201,15 @@ const CalibrationServiceOperationsPanel = ({
           typeof item.otherFields?.completedAt === 'string'
             ? item.otherFields.completedAt
             : null
-      }))
-    )
-  }, [service.items])
+    }))
+
+  useEffect(() => {
+    setDraftItems(buildSavedItems())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [service.items, service.adjustments])
+
+  const hasUnsavedChanges =
+    JSON.stringify(draftItems) !== JSON.stringify(buildSavedItems())
 
   const handleItemChange =
     (
@@ -198,8 +229,55 @@ const CalibrationServiceOperationsPanel = ({
       )
     }
 
+  const handleExecutedChange =
+    (itemId: number, maxQuantity: number) =>
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const parsed = parseInt(event.target.value, 10)
+      const executedQuantity = Number.isNaN(parsed)
+        ? 0
+        : Math.min(Math.max(parsed, 0), maxQuantity)
+
+      setDraftItems((currentItems) =>
+        currentItems.map((item) =>
+          item.itemId === itemId ? { ...item, executedQuantity } : item
+        )
+      )
+    }
+
+  const handleStatusChange =
+    (itemId: number, effectiveQuantity: number) =>
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const operationalStatus = event.target
+        .value as CalibrationServiceOperationalItemStatus
+
+      setDraftItems((currentItems) =>
+        currentItems.map((item) =>
+          item.itemId === itemId
+            ? {
+                ...item,
+                operationalStatus,
+                executedQuantity:
+                  operationalStatus === 'completed'
+                    ? effectiveQuantity
+                    : item.executedQuantity
+              }
+            : item
+        )
+      )
+    }
+
   const handleSave = async () => {
     await onSaveProgress(draftItems)
+  }
+
+  const handleGeneratePdf = async () => {
+    if (canEditProgress && hasUnsavedChanges) {
+      const saved = await onSaveProgress(draftItems)
+      if (saved === false) {
+        return
+      }
+    }
+    await onGenerateProgressPdf?.()
   }
 
   return (
@@ -303,6 +381,50 @@ const CalibrationServiceOperationsPanel = ({
         ) : null}
       </Grid>
 
+      <Stack direction='row' spacing={0.5} alignItems='center'>
+        <Typography variant='subtitle2' fontWeight={600}>
+          Avance técnico por ítem
+        </Typography>
+        <Tooltip
+          arrow
+          enterTouchDelay={0}
+          leaveTouchDelay={8000}
+          title={
+            <Box sx={{ p: 0.5 }}>
+              <Typography variant='caption' component='div' fontWeight={700}>
+                ¿Cómo usar el avance técnico?
+              </Typography>
+              <Typography variant='caption' component='div'>
+                1. Cambia el <strong>Estado técnico</strong> de cada ítem
+                (programado, en proceso o completado).
+              </Typography>
+              <Typography variant='caption' component='div'>
+                2. En <strong>Ejecutado</strong> escribe cuántas unidades ya
+                se hicieron. Al marcar Completado se llena con el total.
+              </Typography>
+              <Typography variant='caption' component='div'>
+                3. Agrega las <strong>Notas técnicas</strong> si hace falta.
+                Puedes guardar con <strong>Guardar avance técnico</strong>.
+              </Typography>
+              <Typography variant='caption' component='div'>
+                4. Pulsa <strong>Generar anexo de avance técnico</strong> para
+                descargar el PDF con lo ofertado, lo ejecutado y lo pendiente.
+                Si hay cambios sin guardar, se guardan automáticamente antes
+                de generarlo. Queda en los documentos del servicio como
+                soporte para el cliente.
+              </Typography>
+              <Typography variant='caption' component='div' sx={{ mt: 0.5 }}>
+                «Liberado a corte» es lo ya incluido en cortes.
+              </Typography>
+            </Box>
+          }
+        >
+          <IconButton size='small' aria-label='Cómo usar el avance técnico'>
+            <InfoOutlinedIcon fontSize='small' />
+          </IconButton>
+        </Tooltip>
+      </Stack>
+
       {service.items?.length ? (
         <Box sx={{ overflowX: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
           <Table size='small'>
@@ -311,8 +433,9 @@ const CalibrationServiceOperationsPanel = ({
                 <TableCell>Ítem</TableCell>
                 <TableCell>Puntos de calibración</TableCell>
                 <TableCell align='right'>Cant.</TableCell>
-                <TableCell align='right'>Liberado</TableCell>
-                <TableCell align='right'>Disponible</TableCell>
+                <TableCell align='right'>Ejecutado</TableCell>
+                <TableCell align='right'>Pendiente</TableCell>
+                <TableCell align='right'>Liberado a corte</TableCell>
                 <TableCell>Estado técnico</TableCell>
                 <TableCell>Notas técnicas</TableCell>
               </TableRow>
@@ -324,8 +447,15 @@ const CalibrationServiceOperationsPanel = ({
                 )
                 const releasedQuantity = getReleasedQuantity(item)
                 const effectiveQuantity = getEffectiveQuantity(service, item)
-                const availableQuantity = Math.max(
-                  effectiveQuantity - releasedQuantity,
+                const executedQuantity = Math.max(
+                  Math.min(
+                    draftItem?.executedQuantity ?? 0,
+                    effectiveQuantity
+                  ),
+                  releasedQuantity
+                )
+                const pendingQuantity = Math.max(
+                  effectiveQuantity - executedQuantity,
                   0
                 )
 
@@ -341,8 +471,28 @@ const CalibrationServiceOperationsPanel = ({
                         : 'No aplica'}
                     </TableCell>
                     <TableCell align='right'>{effectiveQuantity}</TableCell>
+                    <TableCell align='right' sx={{ minWidth: 100 }}>
+                      {canEditProgress ? (
+                        <TextField
+                          size='small'
+                          type='number'
+                          value={executedQuantity}
+                          onChange={handleExecutedChange(
+                            item.id,
+                            effectiveQuantity
+                          )}
+                          inputProps={{
+                            min: releasedQuantity,
+                            max: effectiveQuantity,
+                            style: { textAlign: 'right' }
+                          }}
+                        />
+                      ) : (
+                        executedQuantity
+                      )}
+                    </TableCell>
+                    <TableCell align='right'>{pendingQuantity}</TableCell>
                     <TableCell align='right'>{releasedQuantity}</TableCell>
-                    <TableCell align='right'>{availableQuantity}</TableCell>
                     <TableCell sx={{ minWidth: 180 }}>
                       {canEditProgress ? (
                         <TextField
@@ -350,7 +500,7 @@ const CalibrationServiceOperationsPanel = ({
                           fullWidth
                           size='small'
                           value={draftItem?.operationalStatus || 'pending'}
-                          onChange={handleItemChange(item.id, 'operationalStatus')}
+                          onChange={handleStatusChange(item.id, effectiveQuantity)}
                         >
                           {OPERATIONAL_STATUS_OPTIONS.map((statusOption) => (
                             <MenuItem key={statusOption} value={statusOption}>
@@ -391,11 +541,23 @@ const CalibrationServiceOperationsPanel = ({
         <Alert severity='info'>Aún no hay ítems para gestionar operativamente.</Alert>
       )}
 
-      {canEditProgress ? (
-        <Stack direction='row' justifyContent='flex-end'>
-          <Button variant='contained' onClick={() => void handleSave()} disabled={isBusy}>
-            Guardar avance técnico
-          </Button>
+      {canEditProgress || onGenerateProgressPdf ? (
+        <Stack direction='row' spacing={1} justifyContent='flex-end'>
+          {onGenerateProgressPdf && service.items?.length ? (
+            <Button
+              variant='outlined'
+              startIcon={<PictureAsPdfIcon />}
+              onClick={() => void handleGeneratePdf()}
+              disabled={isGeneratingProgressPdf || isBusy}
+            >
+              Generar anexo de avance técnico
+            </Button>
+          ) : null}
+          {canEditProgress ? (
+            <Button variant='contained' onClick={() => void handleSave()} disabled={isBusy}>
+              Guardar avance técnico
+            </Button>
+          ) : null}
         </Stack>
       ) : null}
 

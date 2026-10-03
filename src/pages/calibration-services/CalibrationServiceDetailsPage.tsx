@@ -411,6 +411,7 @@ const CalibrationServiceDetailsPage = () => {
     generateAdjustmentPdf,
     generateAdjustmentSummaryPdf,
     generateLogisticsPdf,
+    generateTechnicalProgressPdf,
     sendLogisticsControlEmail,
     sendCertificate,
     downloadDocument,
@@ -1190,6 +1191,7 @@ const CalibrationServiceDetailsPage = () => {
     generateAdjustmentPdf.isLoading ||
     generateAdjustmentSummaryPdf.isLoading ||
     generateLogisticsPdf.isLoading ||
+    generateTechnicalProgressPdf.isLoading ||
     sendLogisticsControlEmail.isLoading ||
     downloadDocument.isLoading
   const decisionDocuments = service.documents?.filter((document) =>
@@ -1205,7 +1207,8 @@ const CalibrationServiceDetailsPage = () => {
       'adjustment_pdf',
       'adjustment_summary_pdf',
       'adjustment_customer_response_pdf',
-      'logistics_control_pdf'
+      'logistics_control_pdf',
+      'technical_progress_pdf'
     ].includes(document.documentType)
   )
   const supportDocuments = service.documents?.filter(
@@ -1217,6 +1220,7 @@ const CalibrationServiceDetailsPage = () => {
         'adjustment_summary_pdf',
         'adjustment_customer_response_pdf',
         'logistics_control_pdf',
+        'technical_progress_pdf',
         'approval_evidence',
         'rejection_evidence'
       ].includes(document.documentType)
@@ -2330,9 +2334,11 @@ const CalibrationServiceDetailsPage = () => {
         }))
       })
       toast.success('El avance técnico por ítem quedó actualizado.')
+      return true
     } catch (progressError) {
       console.error(progressError)
       toast.error('No pudimos guardar el avance técnico por ítem.')
+      return false
     }
   }
 
@@ -2439,6 +2445,23 @@ const CalibrationServiceDetailsPage = () => {
     } catch (pdfError) {
       console.error(pdfError)
       toast.error('No pudimos generar el anexo PDF de la novedad.')
+    }
+  }
+
+  const handleGenerateTechnicalProgressPdf = async () => {
+    try {
+      const document = await generateTechnicalProgressPdf.mutateAsync({
+        serviceId: String(service.id)
+      })
+      toast.success('El anexo de avance técnico quedó generado.')
+      await handleDownloadDocument(
+        document.id,
+        document.originalFileName ||
+          `anexo-avance-tecnico-${service.serviceCode}.pdf`
+      )
+    } catch (pdfError) {
+      console.error(pdfError)
+      toast.error('No pudimos generar el anexo de avance técnico.')
     }
   }
 
@@ -3520,6 +3543,8 @@ const CalibrationServiceDetailsPage = () => {
                       canEditProgress={canUpdateOperationalProgress}
                       isBusy={isOperationalBusy}
                       onSaveProgress={handleSaveOperationalProgress}
+                      onGenerateProgressPdf={handleGenerateTechnicalProgressPdf}
+                      isGeneratingProgressPdf={isDocumentBusy}
                       deliveryName={deliveryName}
                       deliveryRole={deliveryRole}
                       deliverySignatureData={deliverySignatureData}

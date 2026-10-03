@@ -210,6 +210,7 @@ export const CALIBRATION_SERVICE_DOCUMENT_LABELS: Record<
   adjustment_summary_pdf: 'PDF consolidado de novedades',
   adjustment_customer_response_pdf: 'PDF respuesta cliente novedad',
   logistics_control_pdf: 'PDF control ingreso/entrega',
+  technical_progress_pdf: 'Anexo avance técnico',
   invoice_attachment: 'Soporte de factura',
   supporting_attachment: 'Soporte adjunto'
 }
@@ -227,6 +228,7 @@ export const CALIBRATION_SERVICE_DOCUMENT_COLORS: Record<
   adjustment_summary_pdf: 'secondary',
   adjustment_customer_response_pdf: 'secondary',
   logistics_control_pdf: 'secondary',
+  technical_progress_pdf: 'secondary',
   invoice_attachment: 'info',
   supporting_attachment: 'default'
 }

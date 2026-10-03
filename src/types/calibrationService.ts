@@ -91,6 +91,7 @@ export type CalibrationServiceDocumentType =
   | 'adjustment_summary_pdf'
   | 'adjustment_customer_response_pdf'
   | 'logistics_control_pdf'
+  | 'technical_progress_pdf'
   | 'invoice_attachment'
   | 'supporting_attachment'
 
@@ -887,6 +888,7 @@ export interface CalibrationServiceItemProgressEntryPayload {
   itemId: number
   operationalStatus: CalibrationServiceOperationalItemStatus
   technicalNotes?: string | null
+  executedQuantity?: number | null
   scheduledFor?: string | null
   startedAt?: string | null
   completedAt?: string | null
