@@ -34,11 +34,13 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   PersonOff as PersonOffIcon,
-  Person as PersonIcon
+  Person as PersonIcon,
+  People as PeopleIcon
 } from '@mui/icons-material'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { getRoleLabelEs } from 'src/constants/roles'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 
 type LmsRoleOption = {
   id: number
@@ -392,30 +394,17 @@ const LmsUserManagement: React.FC = () => {
   }, [search, userTypeFilter, lmsOnlyFilter, activeFilter])
 
   return (
-    <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'grey.50' }}>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: { xs: 'flex-start', md: 'center' },
-          flexDirection: { xs: 'column', md: 'row' },
-          gap: 2,
-          mb: 3
-        }}
-      >
-        <Box>
-          <Typography variant='h4' component='h1' gutterBottom>
-            Gestión de Usuarios LMS
-          </Typography>
-          <Typography color='text.secondary'>
-            Crea y administra accesos LMS reales para internos, clientes y usuarios restringidos solo al LMS.
-          </Typography>
-        </Box>
-
-        <Button variant='contained' startIcon={<AddIcon />} onClick={handleOpenCreate}>
-          Nuevo Usuario LMS
-        </Button>
-      </Box>
+    <Box sx={{ p: 3, maxWidth: 1536, mx: 'auto' }}>
+      <LmsPageHeader
+        title='Gestión de Usuarios LMS'
+        subtitle='Crea y administra accesos para internos, clientes y usuarios solo LMS'
+        icon={<PeopleIcon />}
+        actions={
+          <Button variant='contained' startIcon={<AddIcon />} onClick={handleOpenCreate}>
+            Nuevo Usuario LMS
+          </Button>
+        }
+      />
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
         <Chip label={`${summary.totalFiltered} usuarios filtrados`} variant='outlined' />

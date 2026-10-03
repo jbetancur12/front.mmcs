@@ -44,12 +44,14 @@ import {
   Analytics as AnalyticsIcon,
   Publish as PublishIcon,
   Archive as ArchiveIcon,
+  School as SchoolIcon,
 } from '@mui/icons-material'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { getCourseAudienceLabel } from '../../../utils/lmsAudience'
 import SignaturePad from '../../../Components/Maintenance/SignaturePad'
 import { useCertificateTemplates } from '../../../hooks/useLms'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 
 interface Course {
   id: number
@@ -743,26 +745,17 @@ const LmsCourseManagement: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'grey.50' }}>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 3
-        }}
-      >
-        <Typography variant='h4' component='h1'>
-          Gestión de Cursos
-        </Typography>
-        <Button
-          variant='contained'
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-        >
-          Crear Curso
-        </Button>
-      </Box>
+    <Box sx={{ p: 3, maxWidth: 1536, mx: 'auto' }}>
+      <LmsPageHeader
+        title='Gestión de Cursos'
+        subtitle='Crea, publica y asigna los cursos del LMS'
+        icon={<SchoolIcon />}
+        actions={
+          <Button variant='contained' startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
+            Crear Curso
+          </Button>
+        }
+      />
 
       <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
         <Table size='small'>

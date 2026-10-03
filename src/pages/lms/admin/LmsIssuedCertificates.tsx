@@ -19,10 +19,11 @@ import {
   CircularProgress,
   InputAdornment
 } from '@mui/material'
-import { Search as SearchIcon } from '@mui/icons-material'
+import { Search as SearchIcon, WorkspacePremium as WorkspacePremiumIcon } from '@mui/icons-material'
 import { useQuery } from 'react-query'
 import { useNavigate } from 'react-router-dom'
 import { lmsService } from 'src/services/lmsService'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 
 interface AdminCertificate {
   id: number
@@ -64,14 +65,12 @@ const LmsIssuedCertificates = () => {
   }
 
   return (
-    <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'grey.50' }}>
-      <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 1 }}>
-        Certificados emitidos
-      </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Busca por código, nombre o correo. El nombre mostrado es el registrado al emitir el certificado
-        (puede diferir del nombre actual de la cuenta). Incluye certificados ocultos por reinicio de curso.
-      </Typography>
+    <Box sx={{ p: 3, maxWidth: 1536, mx: 'auto' }}>
+      <LmsPageHeader
+        title='Certificados emitidos'
+        subtitle='Busca por código, nombre o correo. Incluye certificados ocultos por reinicio de curso.'
+        icon={<WorkspacePremiumIcon />}
+      />
 
       <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
         <TextField

@@ -36,7 +36,8 @@ import {
   ContentCopy as CopyIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
-  Preview as PreviewIcon
+  Preview as PreviewIcon,
+  WorkspacePremium as WorkspacePremiumIcon
 } from '@mui/icons-material'
 import SignaturePad from '../../../Components/Maintenance/SignaturePad'
 import {
@@ -53,6 +54,7 @@ import type {
 } from '../../../services/lmsService'
 import { sanitizeHtml } from '../../../utils/htmlSanitizer'
 import certificateTemplateBackground from 'src/assets/template.png'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -1681,30 +1683,17 @@ const LmsCertificateTemplates: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'grey.50' }}>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: { xs: 'flex-start', md: 'center' },
-          gap: 2,
-          flexDirection: { xs: 'column', md: 'row' },
-          mb: 3
-        }}
-      >
-        <Box>
-          <Typography variant='h4' component='h1' gutterBottom>
-            Plantillas de Certificados
-          </Typography>
-          <Typography variant='body1' color='text.secondary'>
-            Administra el diseño base de los certificados generados por el LMS.
-          </Typography>
-        </Box>
-
-        <Button variant='contained' startIcon={<AddIcon />} onClick={handleCreate}>
-          Nueva Plantilla
-        </Button>
-      </Box>
+    <Box sx={{ p: 3, maxWidth: 1536, mx: 'auto' }}>
+      <LmsPageHeader
+        title='Plantillas de Certificados'
+        subtitle='Administra el diseño base de los certificados generados por el LMS'
+        icon={<WorkspacePremiumIcon />}
+        actions={
+          <Button variant='contained' startIcon={<AddIcon />} onClick={handleCreate}>
+            Nueva Plantilla
+          </Button>
+        }
+      />
 
       {!isLoading &&
         templateCards.length > 0 &&

@@ -43,6 +43,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import { getCourseAudienceLabel } from '../../../utils/lmsAudience'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 
 interface Course {
   id: number
@@ -256,30 +257,26 @@ const LmsCourseAssignments: React.FC = () => {
       )}
 
       {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <IconButton
-          onClick={() => navigate('/lms/admin/courses')}
-          sx={{ mr: 2 }}
-        >
-          <ArrowBackIcon />
-        </IconButton>
-        <Box sx={{ flexGrow: 1 }}>
-          <Typography variant='h4' component='h1'>
-            Asignaciones: {course.title}
-          </Typography>
-          <Typography variant='body2' color='text.secondary'>
-            Gestiona quién tiene acceso a este curso
-          </Typography>
-        </Box>
-        <Button
-          variant='contained'
-          startIcon={<AddIcon />}
-          onClick={handleOpenDialog}
-          disabled={!assignmentsSupported}
-        >
-          Nueva Asignación
-        </Button>
-      </Box>
+      <LmsPageHeader
+        title={`Asignaciones: ${course.title}`}
+        subtitle='Gestiona quién tiene acceso a este curso'
+        icon={<AssignmentIcon />}
+        actions={
+          <>
+            <Button variant='outlined' startIcon={<ArrowBackIcon />} onClick={() => navigate('/lms/admin/courses')}>
+              Cursos
+            </Button>
+            <Button
+              variant='contained'
+              startIcon={<AddIcon />}
+              onClick={handleOpenDialog}
+              disabled={!assignmentsSupported}
+            >
+              Nueva Asignación
+            </Button>
+          </>
+        }
+      />
 
       <Grid container spacing={3}>
         {/* Información del curso */}

@@ -28,6 +28,7 @@ import {
   CheckCircle as CheckCircleIcon,
   Download as DownloadIcon,
   Groups as GroupsIcon,
+  Insights as InsightsIcon,
   Refresh as RefreshIcon,
   Warning as WarningIcon
 } from '@mui/icons-material'
@@ -50,6 +51,7 @@ import {
   useMandatoryTrainingAnalytics
 } from '../../../hooks/useLms'
 import { LmsQuizAnalyticsPanel } from './LmsQuizAnalytics'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 
 type DashboardFilters = {
   startDate?: string
@@ -243,26 +245,12 @@ const LmsAnalytics: React.FC = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-      <Box sx={{ p: 3 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: { xs: 'flex-start', md: 'center' },
-            flexDirection: { xs: 'column', md: 'row' },
-            gap: 2,
-            mb: 3
-          }}
-        >
-          <Box>
-            <Typography variant='h4' component='h1' gutterBottom>
-              Analíticas LMS
-            </Typography>
-            <Typography color='text.secondary'>
-              Actividad, cumplimiento y rendimiento de los cursos del LMS.
-            </Typography>
-          </Box>
-
+      <Box sx={{ p: 3, maxWidth: 1536, mx: 'auto' }}>
+        <LmsPageHeader
+          title='Analíticas LMS'
+          subtitle='Actividad, cumplimiento y rendimiento de los cursos'
+          icon={<InsightsIcon />}
+          actions={
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
             <Button
               variant='text'
@@ -282,7 +270,8 @@ const LmsAnalytics: React.FC = () => {
               Exportar resumen
             </Button>
           </Stack>
-        </Box>
+          }
+        />
 
         <Paper sx={{ p: 2, mb: 3 }}>
           <Typography variant='subtitle2' sx={{ mb: 1.5 }}>

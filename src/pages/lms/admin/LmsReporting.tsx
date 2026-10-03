@@ -38,6 +38,7 @@ import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { Toast } from 'src/Components/ExcelManipulation/Utils'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 
 type ReportType = 'user_progress' | 'course_analytics' | 'compliance' | 'quiz_performance' | 'custom'
 type ReportFormat = 'csv' | 'pdf' | 'xlsx'
@@ -544,7 +545,7 @@ const LmsReporting: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'grey.50' }}>
+    <Box sx={{ p: 3, maxWidth: 1536, mx: 'auto' }}>
       <Stack spacing={3}>
         <Card sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
           <CardContent>
@@ -569,14 +570,11 @@ const LmsReporting: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Box>
-          <Typography variant='h4' component='h1' sx={{ fontWeight: 700, mb: 1 }}>
-            Reportes LMS
-          </Typography>
-          <Typography variant='body1' color='text.secondary'>
-            Crea plantillas, programa reportes y descarga los que ya se generaron.
-          </Typography>
-        </Box>
+        <LmsPageHeader
+          title='Reportes LMS'
+          subtitle='Crea plantillas, programa reportes y descarga los que ya se generaron'
+          icon={<SummarizeIcon />}
+        />
 
         {!complianceTemplate && (
           <Button
