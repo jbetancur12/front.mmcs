@@ -1261,6 +1261,9 @@ const LmsCourseView: React.FC = () => {
                     quizConfig={currentQuizConfig}
                     userAttempts={userQuizAttempts}
                     onComplete={handleQuizComplete}
+                    hideTitle={
+                      (currentQuizConfig.title || '').trim().toLowerCase() === (currentLesson.title || '').trim().toLowerCase()
+                    }
                   />
                 )}
 

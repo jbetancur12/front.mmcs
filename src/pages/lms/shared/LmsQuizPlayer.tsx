@@ -85,6 +85,8 @@ interface LmsQuizPlayerProps {
   onComplete?: (attempt: QuizAttempt) => void
   onSaveProgress?: (answers: (number | number[])[]) => void
   isPreview?: boolean
+  /** Oculta el título de la pantalla de inicio cuando la página ya lo muestra. */
+  hideTitle?: boolean
 }
 
 const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
@@ -92,6 +94,7 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
   userAttempts = [],
   onComplete,
   onSaveProgress,
+  hideTitle = false,
   isPreview = false
 }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -428,9 +431,11 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
     return (
       <Card>
         <CardContent>
-          <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
-            {quizConfig.title}
-          </Typography>
+          {!hideTitle && (
+            <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
+              {quizConfig.title}
+            </Typography>
+          )}
           
           {quizConfig.instructions && (
             <Typography variant="body1" sx={{ mb: 3 }}>
