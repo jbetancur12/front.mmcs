@@ -19,7 +19,6 @@ import {
   DialogActions,
   Paper,
   Stack,
-  Divider,
   Skeleton,
 } from '@mui/material'
 import {
@@ -65,6 +64,7 @@ import {
 } from '../../../utils/lmsAudience'
 import { buildLessonResourceDownloadUrl, buildLmsVideoStreamUrl } from '../../../services/lmsService'
 import PDFViewer from 'src/Components/PDFViewer'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 
 const fadeIn = { animation: 'fadeSlideIn 0.35s ease-out' }
 const styles = `
@@ -1451,7 +1451,8 @@ const LmsCourseView: React.FC = () => {
             width: 80,
             height: 80,
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #00A58E 0%, #53cf89 100%)',
+            background: 'linear-gradient(135deg, #4caf50 0%, #00BFA5 100%)',
+            boxShadow: 3,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1473,22 +1474,11 @@ const LmsCourseView: React.FC = () => {
         </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 2 }}>
-            <Paper variant='outlined' sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(248,252,249,0.8)' }}>
-              <Stack direction='row' spacing={3} justifyContent='center' divider={<Divider orientation='vertical' flexItem />}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant='h4' sx={{ fontWeight: 800, color: '#00A58E' }}>{courseProgress.completed}</Typography>
-                  <Typography variant='caption' color='text.secondary'>Lecciones</Typography>
-                </Box>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant='h4' sx={{ fontWeight: 800, color: '#183153' }}>{Math.round(courseProgress.percentage)}%</Typography>
-                  <Typography variant='caption' color='text.secondary'>Progreso</Typography>
-                </Box>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant='h4' sx={{ fontWeight: 800, color: '#0e6ba8' }}>{course.duration}</Typography>
-                  <Typography variant='caption' color='text.secondary'>Duración</Typography>
-                </Box>
-              </Stack>
-            </Paper>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 1.5 }}>
+              <LmsStatCard label='Lecciones' value={courseProgress.completed} tone='teal' icon={<BookIcon />} />
+              <LmsStatCard label='Progreso' value={`${Math.round(courseProgress.percentage)}%`} tone='green' icon={<CheckCircleIcon />} />
+              <LmsStatCard label='Duración' value={course.duration} tone='blue' icon={<AccessTimeIcon />} />
+            </Box>
             <Box sx={{ textAlign: 'center' }}>
               <Typography variant="body2" color="text.secondary">
                 Ya puedes cerrar esta etapa del aprendizaje y revisar tu certificado o volver a tu ruta.
