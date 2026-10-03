@@ -50,7 +50,10 @@ interface CalibrationServiceDocumentsPanelProps {
   isBusy?: boolean
   onGenerateQuotePdf: () => Promise<void> | void
   onGenerateOdsPdf: () => Promise<void> | void
-  onDownloadDocument: (documentId: number, fileName: string) => Promise<void> | void
+  onDownloadDocument: (
+    documentId: number,
+    fileName: string
+  ) => Promise<void> | void
   onViewDocument: (documentId: number, fileName: string) => Promise<void> | void
   onUploadDocument: (payload: {
     file: File
@@ -120,77 +123,124 @@ const CalibrationServiceDocumentsPanel = ({
 
   const showQuotePdfAction =
     canGenerateQuotePdf ||
-    officialPdfDocuments.some((document) => document.documentType === 'quote_pdf')
+    officialPdfDocuments.some(
+      (document) => document.documentType === 'quote_pdf'
+    )
   const showOdsPdfAction =
     canGenerateOdsPdf ||
     officialPdfDocuments.some((document) => document.documentType === 'ods_pdf')
 
-  const renderDocumentList = (documents: CalibrationServiceDocument[]) => {
-    if (!documents.length) {
+  const renderDocumentList = (
+    unsortedDocuments: CalibrationServiceDocument[]
+  ) => {
+    if (!unsortedDocuments.length) {
       return null
     }
 
+    // Más reciente primero; la versión vigente es la más alta de cada
+    // documento (mismo tipo y título) cuando existen varias versiones.
+    const documents = [...unsortedDocuments].sort(
+      (a, b) =>
+        new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+    )
+    const documentKey = (document: CalibrationServiceDocument) =>
+      `${document.documentType}|${document.title || document.originalFileName}`
+    const latestVersionByKey = new Map<string, number>()
+    const versionsByKey = new Map<string, number>()
+    documents.forEach((document) => {
+      const key = documentKey(document)
+      latestVersionByKey.set(
+        key,
+        Math.max(latestVersionByKey.get(key) ?? 0, document.version)
+      )
+      versionsByKey.set(key, (versionsByKey.get(key) ?? 0) + 1)
+    })
+
     return (
       <List dense disablePadding>
-        {documents.map((document) => (
-          <ListItem
-            key={document.id}
-            disableGutters
-            secondaryAction={
-              <Stack direction='row' spacing={1}>
-                <Button
-                  size='small'
-                  startIcon={<VisibilityOutlinedIcon />}
-                  onClick={() =>
-                    void onViewDocument(
-                      document.id,
-                      document.originalFileName || `${serviceCode}.pdf`
-                    )
-                  }
-                  disabled={isBusy}
-                >
-                  Ver
-                </Button>
-                <Button
-                  size='small'
-                  startIcon={<DownloadOutlinedIcon />}
-                  onClick={() =>
-                    void onDownloadDocument(
-                      document.id,
-                      document.originalFileName || `${serviceCode}.pdf`
-                    )
-                  }
-                  disabled={isBusy}
-                >
-                  Descargar
-                </Button>
-              </Stack>
-            }
-          >
-            <ListItemText
-              primary={
-                <Stack
-                  direction={{ xs: 'column', md: 'row' }}
-                  spacing={1}
-                  alignItems={{ xs: 'flex-start', md: 'center' }}
-                >
-                  <Typography variant='body2' fontWeight={600}>
-                    {document.title || document.originalFileName}
-                  </Typography>
-                  {(document as CalibrationServiceDocument).otherFields?.wasDraft ? (
-                    <Chip size='small' color='warning' label='BORRADOR' />
-                  ) : null}
-                  <Chip
+        {documents.map((document) => {
+          const key = documentKey(document)
+          const hasVersions = (versionsByKey.get(key) ?? 0) > 1
+          const isLatest = document.version === latestVersionByKey.get(key)
+
+          return (
+            <ListItem
+              key={document.id}
+              disableGutters
+              sx={hasVersions && !isLatest ? { opacity: 0.65 } : undefined}
+              secondaryAction={
+                <Stack direction='row' spacing={1}>
+                  <Button
                     size='small'
-                    color={CALIBRATION_SERVICE_DOCUMENT_COLORS[document.documentType]}
-                    label={CALIBRATION_SERVICE_DOCUMENT_LABELS[document.documentType]}
-                  />
+                    startIcon={<VisibilityOutlinedIcon />}
+                    onClick={() =>
+                      void onViewDocument(
+                        document.id,
+                        document.originalFileName || `${serviceCode}.pdf`
+                      )
+                    }
+                    disabled={isBusy}
+                  >
+                    Ver
+                  </Button>
+                  <Button
+                    size='small'
+                    startIcon={<DownloadOutlinedIcon />}
+                    onClick={() =>
+                      void onDownloadDocument(
+                        document.id,
+                        document.originalFileName || `${serviceCode}.pdf`
+                      )
+                    }
+                    disabled={isBusy}
+                  >
+                    Descargar
+                  </Button>
                 </Stack>
               }
-              secondary={`v${document.version} · ${formatDateValue(document.uploadedAt)}`}
-            />
-          </ListItem>
-        ))}
+            >
+              <ListItemText
+                primary={
+                  <Stack
+                    direction={{ xs: 'column', md: 'row' }}
+                    spacing={1}
+                    alignItems={{ xs: 'flex-start', md: 'center' }}
+                  >
+                    <Typography variant='body2' fontWeight={600}>
+                      {document.title || document.originalFileName}
+                    </Typography>
+                    {(document as CalibrationServiceDocument).otherFields
+                      ?.wasDraft ? (
+                      <Chip size='small' color='warning' label='BORRADOR' />
+                    ) : null}
+                    <Chip
+                      size='small'
+                      color={
+                        CALIBRATION_SERVICE_DOCUMENT_COLORS[
+                          document.documentType
+                        ]
+                      }
+                      label={
+                        CALIBRATION_SERVICE_DOCUMENT_LABELS[
+                          document.documentType
+                        ]
+                      }
+                    />
+                    {hasVersions ? (
+                      <Chip
+                        size='small'
+                        variant={isLatest ? 'filled' : 'outlined'}
+                        color={isLatest ? 'success' : 'default'}
+                        label={isLatest ? 'Vigente' : 'Versión anterior'}
+                      />
+                    ) : null}
+                  </Stack>
+                }
+                secondary={`v${document.version} · ${formatDateValue(document.uploadedAt)}`}
+              />
+            </ListItem>
+          )
+        })}
       </List>
     )
   }
@@ -204,7 +254,9 @@ const CalibrationServiceDocumentsPanel = ({
               variant='outlined'
               startIcon={<PictureAsPdfOutlinedIcon />}
               onClick={() => void onGenerateQuotePdf()}
-              disabled={isBusy || !hasItems || !hasCustomer || !canGenerateQuotePdf}
+              disabled={
+                isBusy || !hasItems || !hasCustomer || !canGenerateQuotePdf
+              }
             >
               Generar cotización PDF
             </Button>
@@ -222,7 +274,14 @@ const CalibrationServiceDocumentsPanel = ({
         </Stack>
       ) : null}
 
-      <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3 }}>
+      <Box
+        sx={{
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 2,
+          p: 3
+        }}
+      >
         <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
           PDFs oficiales
         </Typography>
@@ -236,7 +295,14 @@ const CalibrationServiceDocumentsPanel = ({
       </Box>
 
       {canUploadDocuments ? (
-        <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3 }}>
+        <Box
+          sx={{
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 2,
+            p: 3
+          }}
+        >
           <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
             Cargar evidencia o soporte
           </Typography>
@@ -247,7 +313,9 @@ const CalibrationServiceDocumentsPanel = ({
               label='Tipo documental'
               value={selectedType}
               onChange={(event) =>
-                setSelectedType(event.target.value as ManualCalibrationDocumentType)
+                setSelectedType(
+                  event.target.value as ManualCalibrationDocumentType
+                )
               }
               disabled={isBusy}
             >
@@ -308,7 +376,6 @@ const CalibrationServiceDocumentsPanel = ({
               Subir documento
             </Button>
           </Stack>
-
         </Box>
       ) : (
         <Alert severity='info'>
@@ -317,7 +384,14 @@ const CalibrationServiceDocumentsPanel = ({
         </Alert>
       )}
 
-      <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3 }}>
+      <Box
+        sx={{
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 2,
+          p: 3
+        }}
+      >
         <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
           Respuesta del cliente sobre novedades
         </Typography>
@@ -333,18 +407,25 @@ const CalibrationServiceDocumentsPanel = ({
             auditoría.
           </Alert>
         )}
-        {adjustmentCustomerResponseDocuments.length ? (
-          renderDocumentList(adjustmentCustomerResponseDocuments)
-        ) : null}
+        {adjustmentCustomerResponseDocuments.length
+          ? renderDocumentList(adjustmentCustomerResponseDocuments)
+          : null}
       </Box>
 
-      <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3 }}>
+      <Box
+        sx={{
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 2,
+          p: 3
+        }}
+      >
         <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
           Evidencias de decisión del servicio
         </Typography>
-        {decisionDocuments.length ? (
-          renderDocumentList(decisionDocuments)
-        ) : null}
+        {decisionDocuments.length
+          ? renderDocumentList(decisionDocuments)
+          : null}
         {!decisionDocuments.length ? (
           <Alert severity='info' sx={{ mb: 2 }}>
             Aquí aparecen las evidencias de aprobación o rechazo general de la
@@ -353,7 +434,14 @@ const CalibrationServiceDocumentsPanel = ({
         ) : null}
       </Box>
 
-      <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 3 }}>
+      <Box
+        sx={{
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 2,
+          p: 3
+        }}
+      >
         <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
           Evidencias y soportes
         </Typography>

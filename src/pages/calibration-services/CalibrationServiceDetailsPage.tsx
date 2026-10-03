@@ -22,11 +22,13 @@ import {
   TableRow,
   Tabs,
   TextField,
+  Tooltip,
   Typography
 } from '@mui/material'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
 import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
+import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined'
@@ -35,7 +37,7 @@ import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
 import { Toaster, toast } from 'react-hot-toast'
-import { ReactNode, useEffect, useState } from 'react'
+import { ReactElement, ReactNode, useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES,
@@ -97,6 +99,7 @@ import CalibrationServiceOdsDialog, {
 } from './CalibrationServiceOdsDialog'
 import CalibrationServiceDocumentsPanel from './CalibrationServiceDocumentsPanel'
 import PDFViewer from '../../Components/PDFViewer'
+import { getApiErrorMessage } from '../../utils/apiError'
 import CalibrationServiceOperationsPanel from './CalibrationServiceOperationsPanel'
 import CalibrationServiceCutsPanel from './CalibrationServiceCutsPanel'
 import CalibrationServiceCutDialog from './CalibrationServiceCutDialog'
@@ -152,6 +155,21 @@ const detailTabs: readonly DetailTab[] = [
   'guide',
   'history'
 ]
+
+const BlockedActionTooltip = ({
+  reason,
+  children
+}: {
+  reason: string | null
+  children: ReactElement
+}) =>
+  reason ? (
+    <Tooltip title={reason} arrow enterTouchDelay={0}>
+      <span>{children}</span>
+    </Tooltip>
+  ) : (
+    children
+  )
 
 const getStoredDetailTab = (serviceId?: string): DetailTab => {
   if (!serviceId || typeof window === 'undefined') {
@@ -610,6 +628,23 @@ const CalibrationServiceDetailsPage = () => {
     !service?.isPaused &&
     ['in_execution', 'technically_completed'].includes(service?.status || '') &&
     hasReleasableItems
+  const showCompleteExecution =
+    canRunExecutionRole && service?.status === 'in_execution'
+  const pendingExecutionItems = (service?.items || []).filter(
+    (item) => item.otherFields?.operationalStatus !== 'completed'
+  ).length
+  const completeExecutionBlockedReason = allItemsOperationallyCompleted
+    ? null
+    : `Faltan ${pendingExecutionItems} ítem(s) por marcar como Completado en la pestaña Operación.`
+  const showCreateCut =
+    canRunExecutionRole &&
+    !service?.isPaused &&
+    ['in_execution', 'technically_completed'].includes(service?.status || '')
+  const createCutBlockedReason = hasReleasableItems
+    ? null
+    : 'No hay ítems en progreso o completados con cantidad por liberar. Registra el avance en la pestaña Operación.'
+  const showTechnicalProgressPdf =
+    canRunExecutionRole && Boolean(service?.items?.length)
   const canMarkCutReady =
     canRunExecutionRole &&
     !service?.isPaused &&
@@ -685,6 +720,16 @@ const CalibrationServiceDetailsPage = () => {
     service?.status === 'technically_completed' &&
     allCutsSent &&
     !hasReleasableItems
+  const showCloseService =
+    canCloseServiceRole &&
+    !service?.isPaused &&
+    service?.status === 'technically_completed' &&
+    hasCuts
+  const closeServiceBlockedReason = !allCutsSent
+    ? 'Faltan cortes con el certificado enviado (control documental).'
+    : hasReleasableItems
+      ? 'Aún hay cantidades por liberar: crea un nuevo corte para ellas.'
+      : null
 
   useEffect(() => {
     setActiveTab(getStoredDetailTab(serviceId))
@@ -1343,7 +1388,7 @@ const CalibrationServiceDetailsPage = () => {
       toast.success('La cotización quedó enviada al cliente.')
     } catch (requestError) {
       console.error(requestError)
-      toast.error('No pudimos marcar la cotización como enviada al cliente.')
+      toast.error(getApiErrorMessage(requestError, 'No pudimos marcar la cotización como enviada al cliente.'))
     }
   }
 
@@ -1360,7 +1405,7 @@ const CalibrationServiceDetailsPage = () => {
       toast.success('El certificado quedó registrado como enviado.')
     } catch (sendError) {
       console.error(sendError)
-      toast.error('No pudimos registrar el envío del certificado.')
+      toast.error(getApiErrorMessage(sendError, 'No pudimos registrar el envío del certificado.'))
     }
   }
 
@@ -1488,11 +1533,14 @@ const CalibrationServiceDetailsPage = () => {
     } catch (decisionError) {
       console.error(decisionError)
       toast.error(
-        decisionMode === 'approve'
-          ? 'No pudimos registrar la aprobación del cliente.'
-          : decisionMode === 'reject'
-            ? 'No pudimos registrar el rechazo del cliente.'
-            : 'No pudimos registrar la solicitud de modificación.'
+        getApiErrorMessage(
+          decisionError,
+          decisionMode === 'approve'
+            ? 'No pudimos registrar la aprobación del cliente.'
+            : decisionMode === 'reject'
+              ? 'No pudimos registrar el rechazo del cliente.'
+              : 'No pudimos registrar la solicitud de modificación.'
+        )
       )
     }
   }
@@ -1545,7 +1593,7 @@ const CalibrationServiceDetailsPage = () => {
       setIsOdsDialogOpen(false)
     } catch (odsError) {
       console.error(odsError)
-      toast.error('No pudimos emitir la ODS.')
+      toast.error(getApiErrorMessage(odsError, 'No pudimos emitir la ODS.'))
     }
   }
 
@@ -1597,7 +1645,7 @@ const CalibrationServiceDetailsPage = () => {
       setActiveTab('operations')
     } catch (scheduleError) {
       console.error(scheduleError)
-      toast.error('No pudimos guardar la programación del servicio.')
+      toast.error(getApiErrorMessage(scheduleError, 'No pudimos guardar la programación del servicio.'))
     }
   }
 
@@ -1633,7 +1681,7 @@ const CalibrationServiceDetailsPage = () => {
       setActiveTab('operations')
     } catch (rescheduleError) {
       console.error(rescheduleError)
-      toast.error('No pudimos registrar la reprogramación del servicio.')
+      toast.error(getApiErrorMessage(rescheduleError, 'No pudimos registrar la reprogramación del servicio.'))
     }
   }
 
@@ -1671,7 +1719,7 @@ const CalibrationServiceDetailsPage = () => {
       setActiveTab('operations')
     } catch (reassignError) {
       console.error(reassignError)
-      toast.error('No pudimos reasignar el metrólogo.')
+      toast.error(getApiErrorMessage(reassignError, 'No pudimos reasignar el metrólogo.'))
     }
   }
 
@@ -1694,7 +1742,7 @@ const CalibrationServiceDetailsPage = () => {
       setIsPauseDialogOpen(false)
     } catch (pauseError) {
       console.error(pauseError)
-      toast.error('No pudimos pausar el servicio.')
+      toast.error(getApiErrorMessage(pauseError, 'No pudimos pausar el servicio.'))
     }
   }
 
@@ -1712,7 +1760,7 @@ const CalibrationServiceDetailsPage = () => {
       setIsResumeDialogOpen(false)
     } catch (resumeError) {
       console.error(resumeError)
-      toast.error('No pudimos reanudar el servicio.')
+      toast.error(getApiErrorMessage(resumeError, 'No pudimos reanudar el servicio.'))
     }
   }
 
@@ -1736,7 +1784,7 @@ const CalibrationServiceDetailsPage = () => {
       setActiveTab('summary')
     } catch (cancelError) {
       console.error(cancelError)
-      toast.error('No pudimos cancelar el servicio.')
+      toast.error(getApiErrorMessage(cancelError, 'No pudimos cancelar el servicio.'))
     }
   }
 
@@ -1764,7 +1812,7 @@ const CalibrationServiceDetailsPage = () => {
       setActiveTab('logistics')
     } catch (traceabilityError) {
       console.error(traceabilityError)
-      toast.error('No pudimos registrar la trazabilidad física.')
+      toast.error(getApiErrorMessage(traceabilityError, 'No pudimos registrar la trazabilidad física.'))
     }
   }
 
@@ -1782,7 +1830,7 @@ const CalibrationServiceDetailsPage = () => {
       setActiveTab('logistics')
     } catch (logisticsError) {
       console.error(logisticsError)
-      toast.error('No pudimos guardar la ficha logística.')
+      toast.error(getApiErrorMessage(logisticsError, 'No pudimos guardar la ficha logística.'))
     }
   }
 
@@ -1800,7 +1848,7 @@ const CalibrationServiceDetailsPage = () => {
       setActiveTab('logistics')
     } catch (logisticsPdfError) {
       console.error(logisticsPdfError)
-      toast.error('No pudimos generar el PDF de control de ingreso y entrega.')
+      toast.error(getApiErrorMessage(logisticsPdfError, 'No pudimos generar el PDF de control de ingreso y entrega.'))
     }
   }
 
@@ -1833,7 +1881,7 @@ const CalibrationServiceDetailsPage = () => {
       setActiveTab('logistics')
     } catch (logisticsEmailError) {
       console.error(logisticsEmailError)
-      toast.error('No pudimos enviar el formato logístico por correo.')
+      toast.error(getApiErrorMessage(logisticsEmailError, 'No pudimos enviar el formato logístico por correo.'))
     }
   }
 
@@ -1848,7 +1896,7 @@ const CalibrationServiceDetailsPage = () => {
       setActiveTab('operations')
     } catch (executionError) {
       console.error(executionError)
-      toast.error('No pudimos iniciar la ejecución del servicio.')
+      toast.error(getApiErrorMessage(executionError, 'No pudimos iniciar la ejecución del servicio.'))
     }
   }
 
@@ -1863,7 +1911,7 @@ const CalibrationServiceDetailsPage = () => {
       setActiveTab('operations')
     } catch (completeError) {
       console.error(completeError)
-      toast.error('No pudimos finalizar técnicamente el servicio.')
+      toast.error(getApiErrorMessage(completeError, 'No pudimos finalizar técnicamente el servicio.'))
     }
   }
 
@@ -1883,7 +1931,7 @@ const CalibrationServiceDetailsPage = () => {
       setActiveTab('summary')
     } catch (closeError) {
       console.error(closeError)
-      toast.error('No pudimos cerrar el servicio.')
+      toast.error(getApiErrorMessage(closeError, 'No pudimos cerrar el servicio.'))
     }
   }
 
@@ -1932,7 +1980,7 @@ const CalibrationServiceDetailsPage = () => {
       }
     } catch (cutError) {
       console.error(cutError)
-      toast.error('No pudimos crear el corte.')
+      toast.error(getApiErrorMessage(cutError, 'No pudimos crear el corte.'))
     }
   }
 
@@ -2041,7 +2089,7 @@ const CalibrationServiceDetailsPage = () => {
       setActiveTab('adjustments')
     } catch (adjustmentError) {
       console.error(adjustmentError)
-      toast.error('No pudimos guardar la revisión de la novedad.')
+      toast.error(getApiErrorMessage(adjustmentError, 'No pudimos guardar la revisión de la novedad.'))
     }
   }
 
@@ -2072,7 +2120,7 @@ const CalibrationServiceDetailsPage = () => {
       }
     } catch (sendError) {
       console.error(sendError)
-      toast.error('No pudimos enviar las novedades al cliente.')
+      toast.error(getApiErrorMessage(sendError, 'No pudimos enviar las novedades al cliente.'))
     }
 
     setSelectedAdjustmentsForSend([])
@@ -2198,7 +2246,7 @@ const CalibrationServiceDetailsPage = () => {
       setActiveTab('cuts')
     } catch (cutError) {
       console.error(cutError)
-      toast.error('No pudimos registrar la facturación del corte.')
+      toast.error(getApiErrorMessage(cutError, 'No pudimos registrar la facturación del corte.'))
     }
   }
 
@@ -2217,7 +2265,7 @@ const CalibrationServiceDetailsPage = () => {
       setActiveTab('cuts')
     } catch (cutError) {
       console.error(cutError)
-      toast.error('No pudimos registrar el pago del corte.')
+      toast.error(getApiErrorMessage(cutError, 'No pudimos registrar el pago del corte.'))
     }
   }
 
@@ -2284,7 +2332,7 @@ const CalibrationServiceDetailsPage = () => {
       setActiveTab('cuts')
     } catch (cutError) {
       console.error(cutError)
-      toast.error('No pudimos actualizar el control documental del corte.')
+      toast.error(getApiErrorMessage(cutError, 'No pudimos actualizar el control documental del corte.'))
     }
   }
 
@@ -2301,7 +2349,7 @@ const CalibrationServiceDetailsPage = () => {
       toast.success('Recepción conforme guardada.')
     } catch (error) {
       console.error(error)
-      toast.error('No pudimos guardar la recepción conforme.')
+      toast.error(getApiErrorMessage(error, 'No pudimos guardar la recepción conforme.'))
     }
   }
 
@@ -2318,7 +2366,7 @@ const CalibrationServiceDetailsPage = () => {
       setIsExecutionCustomerDialogOpen(false)
     } catch (error) {
       console.error(error)
-      toast.error('No pudimos actualizar el cliente de ejecución.')
+      toast.error(getApiErrorMessage(error, 'No pudimos actualizar el cliente de ejecución.'))
     }
   }
 
@@ -2337,7 +2385,7 @@ const CalibrationServiceDetailsPage = () => {
       return true
     } catch (progressError) {
       console.error(progressError)
-      toast.error('No pudimos guardar el avance técnico por ítem.')
+      toast.error(getApiErrorMessage(progressError, 'No pudimos guardar el avance técnico por ítem.'))
       return false
     }
   }
@@ -2352,7 +2400,7 @@ const CalibrationServiceDetailsPage = () => {
       setIsSequenceDialogOpen(false)
     } catch (configError) {
       console.error(configError)
-      toast.error('No pudimos guardar la configuración inicial del módulo.')
+      toast.error(getApiErrorMessage(configError, 'No pudimos guardar la configuración inicial del módulo.'))
     }
   }
 
@@ -2376,7 +2424,7 @@ const CalibrationServiceDetailsPage = () => {
       window.URL.revokeObjectURL(objectUrl)
     } catch (downloadError) {
       console.error(downloadError)
-      toast.error('No pudimos descargar el documento.')
+      toast.error(getApiErrorMessage(downloadError, 'No pudimos descargar el documento.'))
     }
   }
 
@@ -2408,7 +2456,7 @@ const CalibrationServiceDetailsPage = () => {
       )
     } catch (pdfError) {
       console.error(pdfError)
-      toast.error('No pudimos generar la cotización PDF.')
+      toast.error(getApiErrorMessage(pdfError, 'No pudimos generar la cotización PDF.'))
     }
   }
 
@@ -2424,7 +2472,7 @@ const CalibrationServiceDetailsPage = () => {
       )
     } catch (pdfError) {
       console.error(pdfError)
-      toast.error('No pudimos generar la ODS PDF.')
+      toast.error(getApiErrorMessage(pdfError, 'No pudimos generar la ODS PDF.'))
     }
   }
 
@@ -2444,7 +2492,7 @@ const CalibrationServiceDetailsPage = () => {
       )
     } catch (pdfError) {
       console.error(pdfError)
-      toast.error('No pudimos generar el anexo PDF de la novedad.')
+      toast.error(getApiErrorMessage(pdfError, 'No pudimos generar el anexo PDF de la novedad.'))
     }
   }
 
@@ -2461,7 +2509,7 @@ const CalibrationServiceDetailsPage = () => {
       )
     } catch (pdfError) {
       console.error(pdfError)
-      toast.error('No pudimos generar el anexo de avance técnico.')
+      toast.error(getApiErrorMessage(pdfError, 'No pudimos generar el anexo de avance técnico.'))
     }
   }
 
@@ -2478,7 +2526,7 @@ const CalibrationServiceDetailsPage = () => {
       )
     } catch (pdfError) {
       console.error(pdfError)
-      toast.error('No pudimos generar el consolidado PDF de novedades.')
+      toast.error(getApiErrorMessage(pdfError, 'No pudimos generar el consolidado PDF de novedades.'))
     }
   }
 
@@ -2494,7 +2542,7 @@ const CalibrationServiceDetailsPage = () => {
       toast.success('Firma del cliente guardada.')
     } catch (error) {
       console.error(error)
-      toast.error('No pudimos guardar la firma del cliente.')
+      toast.error(getApiErrorMessage(error, 'No pudimos guardar la firma del cliente.'))
     }
   }
 
@@ -2524,7 +2572,7 @@ const CalibrationServiceDetailsPage = () => {
       toast.success('El documento quedó cargado al servicio.')
     } catch (uploadError) {
       console.error(uploadError)
-      toast.error('No pudimos cargar el documento.')
+      toast.error(getApiErrorMessage(uploadError, 'No pudimos cargar el documento.'))
       throw uploadError
     }
   }
@@ -2837,30 +2885,34 @@ const CalibrationServiceDetailsPage = () => {
               Iniciar ejecución
             </Button>
           ) : null}
-          {canCompleteExecution ? (
-            <Button
-              variant='contained'
-              color='secondary'
-              startIcon={<CheckCircleOutlineOutlinedIcon />}
-              onClick={() => void handleCompleteExecution()}
-              disabled={isOperationalBusy}
-              disableElevation
-              sx={{ borderRadius: 2 }}
-            >
-              Finalizar ejecución
-            </Button>
+          {showCompleteExecution ? (
+            <BlockedActionTooltip reason={completeExecutionBlockedReason}>
+              <Button
+                variant='contained'
+                color='secondary'
+                startIcon={<CheckCircleOutlineOutlinedIcon />}
+                onClick={() => void handleCompleteExecution()}
+                disabled={isOperationalBusy || !canCompleteExecution}
+                disableElevation
+                sx={{ borderRadius: 2 }}
+              >
+                Finalizar ejecución
+              </Button>
+            </BlockedActionTooltip>
           ) : null}
-          {canCreateCut ? (
-            <Button
-              variant='outlined'
-              color='primary'
-              startIcon={<DescriptionOutlinedIcon />}
-              onClick={() => setIsCutDialogOpen(true)}
-              disabled={isOperationalBusy}
-              sx={{ borderRadius: 2 }}
-            >
-              Crear corte
-            </Button>
+          {showCreateCut ? (
+            <BlockedActionTooltip reason={createCutBlockedReason}>
+              <Button
+                variant='outlined'
+                color='primary'
+                startIcon={<DescriptionOutlinedIcon />}
+                onClick={() => setIsCutDialogOpen(true)}
+                disabled={isOperationalBusy || !canCreateCut}
+                sx={{ borderRadius: 2 }}
+              >
+                Crear corte
+              </Button>
+            </BlockedActionTooltip>
           ) : null}
           {canCancelService ? (
             <Button
@@ -2874,18 +2926,20 @@ const CalibrationServiceDetailsPage = () => {
               Cancelar servicio
             </Button>
           ) : null}
-          {canCloseService ? (
-            <Button
-              variant='contained'
-              color='inherit'
-              startIcon={<CheckCircleOutlineOutlinedIcon />}
-              onClick={() => setIsCloseDialogOpen(true)}
-              disabled={isOperationalBusy}
-              disableElevation
-              sx={{ borderRadius: 2 }}
-            >
-              Cerrar servicio
-            </Button>
+          {showCloseService ? (
+            <BlockedActionTooltip reason={closeServiceBlockedReason}>
+              <Button
+                variant='contained'
+                color='inherit'
+                startIcon={<CheckCircleOutlineOutlinedIcon />}
+                onClick={() => setIsCloseDialogOpen(true)}
+                disabled={isOperationalBusy || !canCloseService}
+                disableElevation
+                sx={{ borderRadius: 2 }}
+              >
+                Cerrar servicio
+              </Button>
+            </BlockedActionTooltip>
           ) : null}
           {canEdit ? (
             <Button
@@ -3603,6 +3657,42 @@ const CalibrationServiceDetailsPage = () => {
               </DetailTabPanel>
 
               <DetailTabPanel value={activeTab} tab='cuts'>
+                {showCreateCut || showTechnicalProgressPdf ? (
+                  <Stack
+                    direction='row'
+                    spacing={1}
+                    justifyContent='flex-end'
+                    flexWrap='wrap'
+                    useFlexGap
+                    sx={{ mb: 2 }}
+                  >
+                    {showTechnicalProgressPdf ? (
+                      <Button
+                        variant='outlined'
+                        startIcon={<PictureAsPdfOutlinedIcon />}
+                        onClick={() => void handleGenerateTechnicalProgressPdf()}
+                        disabled={isDocumentBusy}
+                        sx={{ borderRadius: 2 }}
+                      >
+                        Anexo de avance técnico
+                      </Button>
+                    ) : null}
+                    {showCreateCut ? (
+                      <BlockedActionTooltip reason={createCutBlockedReason}>
+                        <Button
+                          variant='contained'
+                          startIcon={<DescriptionOutlinedIcon />}
+                          onClick={() => setIsCutDialogOpen(true)}
+                          disabled={isOperationalBusy || !canCreateCut}
+                          disableElevation
+                          sx={{ borderRadius: 2 }}
+                        >
+                          Nuevo corte
+                        </Button>
+                      </BlockedActionTooltip>
+                    ) : null}
+                  </Stack>
+                ) : null}
                 {shouldShowCutsNextStepGuidance ? (
                   <Alert severity='info' sx={{ mb: 2 }}>
                     El servicio ya terminó técnicamente y todavía no tiene
