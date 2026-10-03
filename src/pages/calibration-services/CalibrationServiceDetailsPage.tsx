@@ -13,6 +13,8 @@ import {
   Divider,
   Grid,
   IconButton,
+  Menu,
+  MenuItem,
   Stack,
   Tab,
   Table,
@@ -29,6 +31,7 @@ import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
 import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined'
@@ -41,6 +44,7 @@ import { ReactElement, ReactNode, useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES,
+  CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS,
   CALIBRATION_SERVICE_ADJUSTMENT_COMMERCIAL_REVIEW_ROLES,
   CALIBRATION_SERVICE_ADJUSTMENT_TECHNICAL_REVIEW_ROLES,
   CALIBRATION_SERVICE_ANALYST_ROLES,
@@ -444,6 +448,8 @@ const CalibrationServiceDetailsPage = () => {
   const [isPauseDialogOpen, setIsPauseDialogOpen] = useState(false)
   const [isResumeDialogOpen, setIsResumeDialogOpen] = useState(false)
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
+  const [moreActionsAnchor, setMoreActionsAnchor] =
+    useState<HTMLElement | null>(null)
   const [isLogisticsControlDialogOpen, setIsLogisticsControlDialogOpen] =
     useState(false)
   const [isSendLogisticsEmailDialogOpen, setIsSendLogisticsEmailDialogOpen] =
@@ -1279,6 +1285,16 @@ const CalibrationServiceDetailsPage = () => {
         'customer_changes_requested'
       ].includes(adjustment.status)
   )
+  const blockingAdjustments = (service.adjustments || []).filter(
+    (adjustment) =>
+      [
+        'reported',
+        'pending_customer_approval',
+        'customer_changes_requested'
+      ].includes(adjustment.status) ||
+      (adjustment.status === 'customer_rejected' &&
+        adjustment.otherFields?.contractModificationRequired !== false)
+  )
   const odsDialogInitialValues: CalibrationServiceOdsDialogValues = {
     issuedAt: buildTodayValue(),
     executionCustomerName:
@@ -1299,7 +1315,7 @@ const CalibrationServiceDetailsPage = () => {
         ? odsDetails.modificationReason
         : '',
     customerAgreements: odsCustomerAgreements,
-    signerName: odsSignerName,
+    signerName: odsSignerName || service.contactName || '',
     signerRole:
       typeof odsDetails?.signerRole === 'string' ? odsDetails.signerRole : '',
     externalReference:
@@ -1321,8 +1337,12 @@ const CalibrationServiceDetailsPage = () => {
       : '',
     assignedMetrologistUserIds: operationsAssignedMetrologistUserIds,
     operationalResponsibleName: operationsResponsibleName,
-    operationalResponsibleRole: operationsResponsibleRole,
-    programmingNotes: operationsProgrammingNotes
+    operationalResponsibleRole: operationsResponsibleRole || 'Metrologo',
+    programmingNotes:
+      operationsProgrammingNotes ||
+      (odsScheduleWindow
+        ? `Ventana indicada en la ODS: ${odsScheduleWindow}`
+        : '')
   }
   const rescheduleDialogInitialValues: CalibrationServiceRescheduleDialogValues =
     {
@@ -2824,41 +2844,69 @@ const CalibrationServiceDetailsPage = () => {
               Programar servicio
             </Button>
           ) : null}
-          {canReprogramService ? (
-            <Button
-              variant='outlined'
-              color='primary'
-              startIcon={<AutorenewOutlinedIcon />}
-              onClick={() => setIsRescheduleDialogOpen(true)}
-              disabled={isOperationalBusy}
-              sx={{ borderRadius: 2 }}
-            >
-              Reprogramar
-            </Button>
-          ) : null}
-          {canReassignService ? (
-            <Button
-              variant='outlined'
-              color='primary'
-              startIcon={<AutorenewOutlinedIcon />}
-              onClick={() => setIsReassignDialogOpen(true)}
-              disabled={isOperationalBusy}
-              sx={{ borderRadius: 2 }}
-            >
-              Reasignar metrólogo
-            </Button>
-          ) : null}
-          {canPauseService ? (
-            <Button
-              variant='outlined'
-              color='warning'
-              startIcon={<WarningAmberOutlinedIcon />}
-              onClick={() => setIsPauseDialogOpen(true)}
-              disabled={isOperationalBusy}
-              sx={{ borderRadius: 2 }}
-            >
-              Pausar servicio
-            </Button>
+          {canReprogramService ||
+          canReassignService ||
+          canPauseService ||
+          canCancelService ? (
+            <>
+              <Button
+                variant='outlined'
+                color='inherit'
+                endIcon={<ExpandMoreIcon />}
+                onClick={(event) => setMoreActionsAnchor(event.currentTarget)}
+                disabled={isOperationalBusy}
+                sx={{ borderRadius: 2 }}
+              >
+                Más acciones
+              </Button>
+              <Menu
+                anchorEl={moreActionsAnchor}
+                open={Boolean(moreActionsAnchor)}
+                onClose={() => setMoreActionsAnchor(null)}
+              >
+                {canReprogramService ? (
+                  <MenuItem
+                    onClick={() => {
+                      setMoreActionsAnchor(null)
+                      setIsRescheduleDialogOpen(true)
+                    }}
+                  >
+                    Reprogramar
+                  </MenuItem>
+                ) : null}
+                {canReassignService ? (
+                  <MenuItem
+                    onClick={() => {
+                      setMoreActionsAnchor(null)
+                      setIsReassignDialogOpen(true)
+                    }}
+                  >
+                    Reasignar metrólogo
+                  </MenuItem>
+                ) : null}
+                {canPauseService ? (
+                  <MenuItem
+                    onClick={() => {
+                      setMoreActionsAnchor(null)
+                      setIsPauseDialogOpen(true)
+                    }}
+                  >
+                    Pausar servicio
+                  </MenuItem>
+                ) : null}
+                {canCancelService ? (
+                  <MenuItem
+                    onClick={() => {
+                      setMoreActionsAnchor(null)
+                      setIsCancelDialogOpen(true)
+                    }}
+                    sx={{ color: 'error.main' }}
+                  >
+                    Cancelar servicio
+                  </MenuItem>
+                ) : null}
+              </Menu>
+            </>
           ) : null}
           {canResumeService ? (
             <Button
@@ -2914,18 +2962,6 @@ const CalibrationServiceDetailsPage = () => {
                 Crear corte
               </Button>
             </BlockedActionTooltip>
-          ) : null}
-          {canCancelService ? (
-            <Button
-              variant='outlined'
-              color='error'
-              startIcon={<HighlightOffOutlinedIcon />}
-              onClick={() => setIsCancelDialogOpen(true)}
-              disabled={isOperationalBusy}
-              sx={{ borderRadius: 2 }}
-            >
-              Cancelar servicio
-            </Button>
           ) : null}
           {showCloseService ? (
             <BlockedActionTooltip reason={closeServiceBlockedReason}>
@@ -3720,10 +3756,47 @@ const CalibrationServiceDetailsPage = () => {
                     <strong> cierre final</strong>.
                   </Alert>
                 ) : null}
-                {unresolvedCommercialAdjustments.length ? (
-                  <Alert severity='warning' sx={{ mb: 2 }}>
-                    Antes de dejar un corte listo para facturar, revisa las
-                    novedades con impacto económico pendientes.
+                {blockingAdjustments.length ? (
+                  <Alert
+                    severity='warning'
+                    sx={{ mb: 2, '& .MuiAlert-message': { overflow: 'visible' } }}
+                    action={
+                      <Button
+                        color='inherit'
+                        size='small'
+                        sx={{ whiteSpace: 'nowrap' }}
+                        onClick={() => setActiveTab('adjustments')}
+                      >
+                        Ver novedades
+                      </Button>
+                    }
+                  >
+                    <Typography variant='body2' fontWeight={700}>
+                      {blockingAdjustments.length === 1
+                        ? 'Hay 1 novedad por resolver antes de dejar un corte listo para facturar:'
+                        : `Hay ${blockingAdjustments.length} novedades por resolver antes de dejar un corte listo para facturar:`}
+                    </Typography>
+                    <Box component='ul' sx={{ m: 0, mt: 0.5, pl: 2.5 }}>
+                      {blockingAdjustments.slice(0, 5).map((adjustment) => (
+                        <li key={adjustment.id}>
+                          <Typography variant='body2'>
+                            {adjustment.itemName} ·{' '}
+                            {
+                              CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS[
+                                adjustment.status
+                              ]
+                            }
+                          </Typography>
+                        </li>
+                      ))}
+                      {blockingAdjustments.length > 5 ? (
+                        <li>
+                          <Typography variant='body2'>
+                            y {blockingAdjustments.length - 5} más
+                          </Typography>
+                        </li>
+                      ) : null}
+                    </Box>
                   </Alert>
                 ) : null}
                 <CalibrationServiceCutsPanel
