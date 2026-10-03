@@ -46,7 +46,8 @@ const EVENT_ICON_MAP: Record<CalibrationServiceEventType, JSX.Element> = {
   adjustment_reported: <PlaylistAddCheckOutlined fontSize='small' />,
   adjustment_reviewed: <DescriptionOutlined fontSize='small' />,
   ods_issued: <DescriptionOutlined fontSize='small' />,
-  document_uploaded: <AttachFileOutlined fontSize='small' />
+  document_uploaded: <AttachFileOutlined fontSize='small' />,
+  certificate_sent: <SendOutlined fontSize='small' />
 }
 
 const getDotPalette = (

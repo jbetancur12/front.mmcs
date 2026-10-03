@@ -37,6 +37,7 @@ import {
   CalibrationServiceSendAdjustmentToCustomerPayload,
   CalibrationServiceSendLogisticsControlEmailPayload,
   CalibrationServiceLogisticsEmailSendResult,
+  CalibrationServiceCertificateSendResult,
   CalibrationServiceResumePayload,
   CalibrationServiceSchedulePayload,
   CalibrationServiceSequenceConfig,
@@ -542,6 +543,20 @@ const calibrationServiceApi = {
     return response.data
   },
 
+  sendCertificate: async ({
+    serviceId,
+    method
+  }: {
+    serviceId: string
+    method?: string
+  }): Promise<CalibrationServiceCertificateSendResult> => {
+    const response = await axiosPrivate.post<CalibrationServiceCertificateSendResult>(
+      `/calibration-services/${serviceId}/certificate/send`,
+      { method }
+    )
+    return response.data
+  },
+
   updateCustomerSignature: async ({
     serviceId,
     customerSignatureData
@@ -754,6 +769,7 @@ export const useCalibrationServiceMutations = () => {
   const generateAdjustmentSummaryPdf = useMutation(calibrationServiceApi.generateAdjustmentSummaryPdf, { onSuccess: (_: any, v: any) => { iD(v.serviceId) } })
   const generateLogisticsPdf = useMutation(calibrationServiceApi.generateLogisticsPdf, { onSuccess: (_: any, v: any) => { iD(v.serviceId) } })
   const sendLogisticsControlEmail = useMutation(calibrationServiceApi.sendLogisticsControlEmail, { onSuccess: (r: any, v: any) => { queryClient.setQueryData([CALIBRATION_SERVICE_QUERY_KEYS.detail, v.serviceId], r.service); iD(v.serviceId) } })
+  const sendCertificate = useMutation(calibrationServiceApi.sendCertificate, { onSuccess: (_: any, v: any) => { iA(); iD(v.serviceId) } })
   const downloadDocument = useMutation(calibrationServiceApi.downloadDocument)
   const upsertSequenceConfig = useMutation(calibrationServiceApi.upsertSequenceConfig, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all, 'sequence-config']) } })
   const upsertSlaConfig = useMutation(calibrationServiceApi.upsertSlaConfig)
@@ -762,5 +778,5 @@ export const useCalibrationServiceMutations = () => {
   const updateExecutionCustomer = useMutation(calibrationServiceApi.updateExecutionCustomer, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail]) } })
   const upsertQuoteTermsTemplate = useMutation(calibrationServiceApi.upsertQuoteTermsTemplate, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template']) } })
 
-  return { createService, updateService, uploadDocument, requestApproval, approveService, rejectService, requestChanges, issueOds, scheduleService, rescheduleService, reassignService, pauseService, resumeService, cancelService, startExecution, completeExecution, closeService, updateItemProgress, registerPhysicalTraceability, updateLogisticsControl, createCut, createAdjustment, reviewAdjustment, sendAdjustmentToCustomer, batchSendAdjustmentsToCustomer, respondAdjustment, markCutReadyForInvoicing, markCutInvoiced, registerCutPayment, updateCutDocumentControl, generateQuotePdf, generateOdsPdf, generateAdjustmentPdf, generateAdjustmentSummaryPdf, generateLogisticsPdf, sendLogisticsControlEmail, downloadDocument, upsertSequenceConfig, upsertSlaConfig, upsertQuoteTermsTemplate, updateCustomerSignature, updateDeliverySignature, updateExecutionCustomer }
+  return { createService, updateService, uploadDocument, requestApproval, approveService, rejectService, requestChanges, issueOds, scheduleService, rescheduleService, reassignService, pauseService, resumeService, cancelService, startExecution, completeExecution, closeService, updateItemProgress, registerPhysicalTraceability, updateLogisticsControl, createCut, createAdjustment, reviewAdjustment, sendAdjustmentToCustomer, batchSendAdjustmentsToCustomer, respondAdjustment, markCutReadyForInvoicing, markCutInvoiced, registerCutPayment, updateCutDocumentControl, generateQuotePdf, generateOdsPdf, generateAdjustmentPdf, generateAdjustmentSummaryPdf, generateLogisticsPdf, sendLogisticsControlEmail, sendCertificate, downloadDocument, upsertSequenceConfig, upsertSlaConfig, upsertQuoteTermsTemplate, updateCustomerSignature, updateDeliverySignature, updateExecutionCustomer }
 }
