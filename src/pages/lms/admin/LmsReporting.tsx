@@ -547,33 +547,15 @@ const LmsReporting: React.FC = () => {
   return (
     <Box sx={{ p: 3, maxWidth: 1536, mx: 'auto' }}>
       <Stack spacing={3}>
-        <Card sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-          <CardContent>
-            <Stack spacing={2}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
-                <Box>
-                  <Typography variant='h5' sx={{ fontWeight: 700, mb: 0.5 }}>
-                    Centro de Reportes LMS
-                  </Typography>
-                  <Typography variant='body2' color='text.secondary'>
-                    Flujo recomendado: plantillas primero, programaciones después y revisión histórica al final.
-                  </Typography>
-                </Box>
-                <Stack direction='row' spacing={1} alignItems='center'>
-                  <Chip color='info' icon={<SummarizeIcon />} label={`${summary.templates} plantilla(s) listas`} />
-                  <Button variant='text' onClick={() => navigate('/lms/admin/analytics')}>
-                    Ver analíticas
-                  </Button>
-                </Stack>
-              </Box>
-            </Stack>
-          </CardContent>
-        </Card>
-
         <LmsPageHeader
           title='Reportes LMS'
           subtitle='Crea plantillas, programa reportes y descarga los que ya se generaron'
           icon={<SummarizeIcon />}
+          actions={
+            <Button variant='outlined' onClick={() => navigate('/lms/admin/analytics')}>
+              Ver analíticas
+            </Button>
+          }
         />
 
         {!complianceTemplate && (

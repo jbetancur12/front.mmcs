@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -6,12 +6,6 @@ import {
   Button,
   Grid,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   Chip,
   Dialog,
@@ -30,7 +24,6 @@ import {
   OutlinedInput,
   Alert,
   Snackbar,
-  TablePagination,
   Tooltip,
   CircularProgress
 } from '@mui/material'
@@ -51,6 +44,8 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { getCourseAudienceLabel } from '../../../utils/lmsAudience'
 import SignaturePad from '../../../Components/Maintenance/SignaturePad'
 import { useCertificateTemplates } from '../../../hooks/useLms'
+import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
+import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 
 interface Course {
@@ -122,6 +117,13 @@ interface CourseAssignment {
   role?: string
   assigned_at: string
 }
+
+const STATUS_FILTERS: Array<{ value: 'all' | Course['status']; label: string }> = [
+  { value: 'all', label: 'Todos' },
+  { value: 'published', label: 'Publicados' },
+  { value: 'draft', label: 'Borradores' },
+  { value: 'archived', label: 'Archivados' }
+]
 
 const getDerivedCourseDuration = (course?: Pick<Course, 'estimated_duration_minutes' | 'modules'> | null) => {
   if (!course) {
@@ -224,6 +226,14 @@ const LmsCourseManagement: React.FC = () => {
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | Course['status']>('all')
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput.trim()), 400)
+    return () => clearTimeout(timer)
+  }, [searchInput])
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' })
   const [formErrors, setFormErrors] = useState<CourseFormErrors>({})
   const [courseActionDialog, setCourseActionDialog] = useState<CourseActionDialogState>({
@@ -267,14 +277,16 @@ const LmsCourseManagement: React.FC = () => {
   const customerOptions = optionsData?.customers || []
 
   // Query para obtener cursos
-  const { data: coursesResponse, isLoading, error } = useQuery<{courses: Course[], total: number}>(
-    ['lms-courses', page, rowsPerPage],
+  const { data: coursesResponse, isLoading, isFetching, error } = useQuery<{courses: Course[], total: number}>(
+    ['lms-courses', page, rowsPerPage, search, statusFilter],
     async () => {
       const response = await axiosPrivate.get('/lms/courses', {
         params: {
           page: page + 1,
           limit: rowsPerPage,
-          include: 'modules,assignments,_count'
+          include: 'modules,assignments,_count',
+          ...(search ? { search } : {}),
+          ...(statusFilter !== 'all' ? { status: statusFilter } : {})
         }
       })
       return response.data
@@ -661,15 +673,6 @@ const LmsCourseManagement: React.FC = () => {
     navigate(`/lms/admin/analytics?courseId=${courseId}`)
   }
 
-  const handleChangePage = (_event: unknown, newPage: number) => {
-    setPage(newPage)
-  }
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
-  }
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'published':
@@ -717,6 +720,88 @@ const LmsCourseManagement: React.FC = () => {
     || formData.estimated_duration_minutes < 1
     || (includesClientAudience && !formData.all_clients && formData.target_customer_ids.length === 0)
 
+  const columns = useMemo<MRT_ColumnDef<Course>[]>(
+    () => [
+      {
+        id: 'titulo',
+        header: 'Curso',
+        size: 380,
+        Cell: ({ row }) => {
+          const course = row.original
+          return (
+            <Box>
+              <Typography variant='subtitle2' fontWeight='bold'>
+                {course.title}
+              </Typography>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                title={course.description}
+                sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+              >
+                {course.description}
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+                {course.is_mandatory && <Chip label='Obligatorio' color='error' size='small' />}
+                {course.has_certificate && <Chip label='Con certificado' color='info' size='small' />}
+                {(course.audience === 'client' || course.audience === 'both') && (
+                  <Chip
+                    label={
+                      course.all_clients === false
+                        ? `${course.targetCustomers?.length || 0} empresa(s)`
+                        : 'Todos los clientes'
+                    }
+                    size='small'
+                    variant='outlined'
+                  />
+                )}
+              </Box>
+            </Box>
+          )
+        }
+      },
+      {
+        id: 'audiencia',
+        header: 'Audiencia',
+        size: 110,
+        Cell: ({ row }) => (
+          <Chip
+            label={getCourseAudienceLabel(row.original.audience)}
+            color={row.original.audience === 'both' ? 'primary' : 'default'}
+            size='small'
+          />
+        )
+      },
+      {
+        id: 'duracion',
+        header: 'Duración',
+        size: 90,
+        Cell: ({ row }) => formatDuration(getDerivedCourseDuration(row.original))
+      },
+      { id: 'modulos', header: 'Módulos', size: 90, Cell: ({ row }) => row.original._count?.modules || 0 },
+      {
+        id: 'progreso',
+        header: 'Usuarios',
+        size: 100,
+        Cell: ({ row }) => row.original._count?.progress || 0
+      },
+      {
+        id: 'estado',
+        header: 'Estado',
+        size: 110,
+        Cell: ({ row }) => (
+          <Chip
+            label={getStatusLabel(row.original.status)}
+            color={getStatusColor(row.original.status) as any}
+            size='small'
+          />
+        )
+      }
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  )
+
   if (isLoading) {
     return (
       <Box
@@ -757,108 +842,62 @@ const LmsCourseManagement: React.FC = () => {
         }
       />
 
-      <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-        <Table size='small'>
-          <TableHead>
-            <TableRow>
-              <TableCell>Título</TableCell>
-              <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Audiencia</TableCell>
-              <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Duración</TableCell>
-              <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Módulos</TableCell>
-              <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Progreso</TableCell>
-              <TableCell>Estado</TableCell>
-              <TableCell>Acciones</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {courses.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} align="center">
-                  <Box sx={{ py: 4 }}>
-                    <Typography color="text.secondary">
-                      No hay cursos disponibles
-                    </Typography>
-                    <Button
-                      variant="contained"
-                      startIcon={<AddIcon />}
-                      onClick={() => handleOpenDialog()}
-                      sx={{ mt: 2 }}
-                    >
-                      Crear primer curso
-                    </Button>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ) : (
-              courses.map((course) => (
-                <TableRow key={course.id}>
-                  <TableCell>
-                    <Box>
-                      <Typography variant='subtitle2' fontWeight='bold'>
-                        {course.title}
-                      </Typography>
-                      <Typography
-                        variant='caption'
-                        color='text.secondary'
-                        title={course.description}
-                        sx={{
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden'
-                        }}
-                      >
-                        {course.description}
-                      </Typography>
-                      <Typography
-                        variant='caption'
-                        color='text.secondary'
-                        sx={{ display: { xs: 'block', md: 'none' }, mt: 0.5 }}
-                      >
-                        {getCourseAudienceLabel(course.audience)} ·{' '}
-                        {formatDuration(getDerivedCourseDuration(course))} ·{' '}
-                        {course._count?.modules || 0} módulos · {course._count?.progress || 0} usuarios
-                      </Typography>
-                      <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
-                        {course.is_mandatory && (
-                          <Chip label='Obligatorio' color='error' size='small' />
-                        )}
-                        {course.has_certificate && (
-                          <Chip label='Con certificado' color='info' size='small' />
-                        )}
-                        {(course.audience === 'client' || course.audience === 'both') && (
-                          <Chip
-                            label={
-                              course.all_clients === false
-                                ? `${course.targetCustomers?.length || 0} empresa(s)`
-                                : 'Todos los clientes'
-                            }
-                            size='small'
-                            variant='outlined'
-                          />
-                        )}
-                      </Box>
-                    </Box>
-                  </TableCell>
-                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                    <Chip 
-                      label={getCourseAudienceLabel(course.audience)} 
-                      color={course.audience === 'both' ? 'primary' : 'default'}
-                      size='small' 
-                    />
-                  </TableCell>
-                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{formatDuration(getDerivedCourseDuration(course))}</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{course._count?.modules || 0}</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{course._count?.progress || 0} usuarios</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={getStatusLabel(course.status)}
-                      color={getStatusColor(course.status) as any}
-                      size='small'
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', maxWidth: { xs: 84, md: 'none' } }}>
+      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+        {STATUS_FILTERS.map((option) => (
+          <Chip
+            key={option.value}
+            label={option.label}
+            clickable
+            color={statusFilter === option.value ? 'primary' : 'default'}
+            variant={statusFilter === option.value ? 'filled' : 'outlined'}
+            onClick={() => {
+              setStatusFilter(option.value)
+              setPage(0)
+            }}
+          />
+        ))}
+      </Box>
+
+      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+        <MaterialReactTable
+          columns={columns}
+          data={courses}
+          localization={MRT_Localization_ES}
+          getRowId={(row) => String(row.id)}
+          manualPagination
+          manualFiltering
+          rowCount={totalCourses}
+          onPaginationChange={(updater) => {
+            const next = typeof updater === 'function' ? updater({ pageIndex: page, pageSize: rowsPerPage }) : updater
+            if (next.pageSize !== rowsPerPage) setRowsPerPage(next.pageSize)
+            setPage(next.pageIndex)
+          }}
+          onGlobalFilterChange={(value) => {
+            setSearchInput(value ?? '')
+            setPage(0)
+          }}
+          state={{
+            isLoading,
+            showProgressBars: isFetching,
+            pagination: { pageIndex: page, pageSize: rowsPerPage },
+            globalFilter: searchInput
+          }}
+          enableColumnFilters={false}
+          enableSorting={false}
+          enableGlobalFilter
+          positionGlobalFilter='left'
+          muiSearchTextFieldProps={{
+            placeholder: 'Buscar curso por título o descripción...',
+            sx: { minWidth: { xs: '200px', md: '340px' } },
+            variant: 'outlined'
+          }}
+          enableRowActions
+          positionActionsColumn='last'
+          displayColumnDefOptions={{ 'mrt-row-actions': { header: 'Acciones', size: 300 } }}
+          renderRowActions={({ row }) => {
+            const course = row.original
+            return (
+              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'nowrap' }}>
                       <Tooltip title="Editar curso">
                         <IconButton
                           size='small'
@@ -942,23 +981,34 @@ const LmsCourseManagement: React.FC = () => {
                           <DeleteIcon />
                         </IconButton>
                       </Tooltip>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={totalCourses}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
+              </Box>
+            )
+          }}
+          renderEmptyRowsFallback={() => (
+            <Box sx={{ py: 8, textAlign: 'center' }}>
+              <Typography color='text.secondary'>
+                {searchInput || statusFilter !== 'all' ? 'Ningún curso coincide con la búsqueda' : 'No hay cursos disponibles'}
+              </Typography>
+              {!searchInput && statusFilter === 'all' && (
+                <Button variant='contained' startIcon={<AddIcon />} onClick={() => handleOpenDialog()} sx={{ mt: 2 }}>
+                  Crear primer curso
+                </Button>
+              )}
+            </Box>
+          )}
+          muiTableProps={{
+            sx: {
+              '& .MuiTableHead-root .MuiTableCell-root': { backgroundColor: '#f5f5f5', fontWeight: 600 },
+              '& .MuiTableBody-root .MuiTableRow-root:hover': { backgroundColor: 'rgba(0, 191, 165, 0.04)' }
+            }
+          }}
+          muiTopToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
+          muiBottomToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
+          muiTablePaginationProps={{ rowsPerPageOptions: [5, 10, 25, 50] }}
+          enablePinning
+          initialState={{ density: 'comfortable', showGlobalFilter: true, columnPinning: { right: ['mrt-row-actions'] } }}
         />
-      </TableContainer>
+      </Paper>
 
       {/* Dialog para crear/editar curso */}
       <Dialog
