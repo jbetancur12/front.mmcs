@@ -4,6 +4,7 @@ import {
   Box,
   Typography,
   Button,
+  Chip,
   LinearProgress,
   IconButton,
   Drawer,
@@ -748,7 +749,7 @@ const LmsCourseView: React.FC = () => {
     return (
       <>
       <style>{styles}</style>
-      <Box sx={{ display: 'flex', height: '100%', minHeight: '100vh', overflow: 'hidden', bgcolor: '#f6fbf8' }}>
+      <Box sx={{ display: 'flex', height: '100%', minHeight: '100vh', overflow: 'hidden', bgcolor: '#f3fbfa' }}>
         <Box sx={{ width: 344, display: { xs: 'none', md: 'block' }, p: 2 }}>
           <Box sx={{ mb: 2 }}>
             <Skeleton variant="text" width={100} height={14} sx={{ mb: 1 }} />
@@ -808,7 +809,7 @@ const LmsCourseView: React.FC = () => {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        bgcolor: '#0a2e1a',
+        bgcolor: '#0b3532',
         color: '#e2e8f0'
       }}
     >
@@ -829,8 +830,8 @@ const LmsCourseView: React.FC = () => {
             px: 1.5,
             py: 0.5,
             borderRadius: 0.5,
-            bgcolor: 'rgba(13,110,138,0.3)',
-            color: '#7ddfa8',
+            bgcolor: 'rgba(0,191,165,0.3)',
+            color: '#5EEAD4',
             mb: 2.5
           }}
         >
@@ -850,7 +851,7 @@ const LmsCourseView: React.FC = () => {
             <Typography variant='caption' sx={{ color: 'rgba(240,244,248,0.65)', fontSize: '0.78rem' }}>
               Tu progreso
             </Typography>
-            <Typography variant='caption' sx={{ color: '#7ddfa8', fontWeight: 700, fontSize: '1rem' }}>
+            <Typography variant='caption' sx={{ color: '#5EEAD4', fontWeight: 700, fontSize: '1rem' }}>
               {Math.round(courseProgress.percentage)}%
             </Typography>
           </Box>
@@ -863,7 +864,7 @@ const LmsCourseView: React.FC = () => {
               bgcolor: 'rgba(255,255,255,0.08)',
               '& .MuiLinearProgress-bar': {
                 borderRadius: 999,
-                bgcolor: '#00A651',
+                bgcolor: '#00BFA5',
                 transition: 'width 0.5s ease'
               }
             }}
@@ -942,10 +943,10 @@ const LmsCourseView: React.FC = () => {
                           cursor: isUnlocked ? 'pointer' : 'default',
                           transition: 'all 0.15s ease',
                           opacity: isUnlocked ? 1 : 0.45,
-                          bgcolor: isCurrent ? 'rgba(13,110,138,0.18)' : 'transparent',
+                          bgcolor: isCurrent ? 'rgba(0,191,165,0.18)' : 'transparent',
                           borderLeft: '2px solid',
-                          borderLeftColor: isCurrent ? '#00A651' : 'transparent',
-                          '&:hover': isUnlocked ? { bgcolor: isCurrent ? 'rgba(13,110,138,0.25)' : 'rgba(255,255,255,0.04)' } : {}
+                          borderLeftColor: isCurrent ? '#00BFA5' : 'transparent',
+                          '&:hover': isUnlocked ? { bgcolor: isCurrent ? 'rgba(0,191,165,0.25)' : 'rgba(255,255,255,0.04)' } : {}
                         }}
                       >
                         {/* Status icon */}
@@ -1015,7 +1016,7 @@ const LmsCourseView: React.FC = () => {
         minHeight: '100vh',
         overflow: 'hidden',
         background:
-          'radial-gradient(circle at top left, rgba(67,199,127,0.12), transparent 30%), linear-gradient(180deg, #f6fbf8 0%, #edf5f1 100%)'
+          'radial-gradient(circle at top left, rgba(67,199,127,0.12), transparent 30%), linear-gradient(180deg, #f3fbfa 0%, #ecf6f5 100%)'
       }}
     >
       {/* Mobile FAB for sidebar */}
@@ -1047,7 +1048,7 @@ const LmsCourseView: React.FC = () => {
             position: 'relative',
             height: '100%',
             borderRight: 'none',
-            background: '#0a2e1a'
+            background: '#0b3532'
           }
         }}
       >
@@ -1103,12 +1104,12 @@ const LmsCourseView: React.FC = () => {
           <Typography
             variant='caption'
             noWrap
-            sx={{ color: '#00A651', fontWeight: 600, fontSize: '0.82rem', minWidth: 0, flex: '0 1 auto' }}
+            sx={{ color: '#00BFA5', fontWeight: 600, fontSize: '0.82rem', minWidth: 0, flex: '0 1 auto' }}
           >
             {currentLesson?.title || 'Curso'}
           </Typography>
           <Box sx={{ flex: 1 }} />
-          <Typography variant='caption' sx={{ color: '#00A651', fontWeight: 700, fontSize: '0.85rem' }}>
+          <Typography variant='caption' sx={{ color: '#00BFA5', fontWeight: 700, fontSize: '0.85rem' }}>
             {Math.round(courseProgress.percentage)}%
           </Typography>
         </Box>
@@ -1119,7 +1120,7 @@ const LmsCourseView: React.FC = () => {
             height: 4,
             flexShrink: 0,
             bgcolor: '#e2e8f0',
-            '& .MuiLinearProgress-bar': { bgcolor: '#00A651', transition: 'width 0.5s ease' }
+            '& .MuiLinearProgress-bar': { bgcolor: '#00BFA5', transition: 'width 0.5s ease' }
           }}
         />
 
@@ -1134,31 +1135,31 @@ const LmsCourseView: React.FC = () => {
               </Typography>
 
               {/* Meta */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap', mb: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <AccessTimeIcon sx={{ fontSize: 13, color: '#6b6b72' }} />
-                  <Typography variant='caption' sx={{ color: '#6b6b72', fontSize: '0.82rem' }}>
-                    {currentLesson.duration} · {getContentTypeLabel(currentLesson.type)}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <PeopleIcon sx={{ fontSize: 13, color: '#6b6b72' }} />
-                  <Typography variant='caption' sx={{ color: '#6b6b72', fontSize: '0.82rem' }}>
-                    {course.category} · {course.isMandatory ? 'Obligatorio' : 'Voluntario'}
-                  </Typography>
-                </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 3 }}>
+                <Chip
+                  size='small'
+                  icon={<AccessTimeIcon />}
+                  label={`${currentLesson.duration} · ${getContentTypeLabel(currentLesson.type)}`}
+                  sx={{ bgcolor: '#E0F7F4', color: '#00695C', '& .MuiChip-icon': { color: '#00897B' } }}
+                />
+                <Chip
+                  size='small'
+                  variant='outlined'
+                  icon={<PeopleIcon />}
+                  label={`${course.category} · ${course.isMandatory ? 'Obligatorio' : 'Voluntario'}`}
+                />
               </Box>
 
               {/* Content */}
               <Box sx={{ maxWidth: currentLesson.type === 'video' ? 'min(1040px, calc((100vh - 390px) * 1.78))' : 800, mx: 'auto', mb: 4 }}>
                 {courseProgress.percentage === 100 && (
-                  <Box sx={{ textAlign: 'center', mb: 4, py: 3, px: 2, bgcolor: '#e8f7ef', borderRadius: 3 }}>
-                    <CheckCircleIcon sx={{ fontSize: 36, color: '#00A651', mb: 1 }} />
-                    <Typography variant='h6' fontWeight={700} sx={{ color: '#007a3d', mb: 0.5 }}>Curso completado</Typography>
+                  <Box sx={{ textAlign: 'center', mb: 4, py: 3, px: 2, bgcolor: '#E0F7F4', borderRadius: 3 }}>
+                    <CheckCircleIcon sx={{ fontSize: 36, color: '#00BFA5', mb: 1 }} />
+                    <Typography variant='h6' fontWeight={700} sx={{ color: '#00897B', mb: 0.5 }}>Curso completado</Typography>
                     <Typography variant='body2' sx={{ color: '#4b5563', mb: 2 }}>Ya cerraste todo el recorrido de aprendizaje.</Typography>
                     {course.hasCertificate && hasGeneratedCertificate && (
                       <Button variant='contained' size='small' startIcon={<CertificateIcon />} onClick={handleOpenCurrentCertificate}
-                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, bgcolor: '#00A651', '&:hover': { bgcolor: '#007a3d' } }}>
+                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}>
                         Abrir certificado
                       </Button>
                     )}
@@ -1169,13 +1170,13 @@ const LmsCourseView: React.FC = () => {
                 )}
 
                 {certificateReadyNoticeVisible && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, p: 2, bgcolor: '#e8f7ef', borderRadius: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, p: 2, bgcolor: '#E0F7F4', borderRadius: 2 }}>
                     <Box>
-                      <Typography variant='body2' fontWeight={600} sx={{ color: '#007a3d' }}>Certificado disponible</Typography>
+                      <Typography variant='body2' fontWeight={600} sx={{ color: '#00897B' }}>Certificado disponible</Typography>
                       <Typography variant='caption' color='text.secondary'>Tu certificado ya quedó listo.</Typography>
                     </Box>
                     <Button size='small' variant='contained' onClick={handleOpenCurrentCertificate}
-                      sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.75rem', bgcolor: '#00A651', '&:hover': { bgcolor: '#007a3d' } }}>
+                      sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.75rem', bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}>
                       Abrir
                     </Button>
                   </Box>
@@ -1213,8 +1214,8 @@ const LmsCourseView: React.FC = () => {
                         px: 2,
                         py: 1.5,
                         borderRadius: 2,
-                        bgcolor: '#e8f7ef',
-                        color: '#007a3d'
+                        bgcolor: '#E0F7F4',
+                        color: '#00897B'
                       }}
                     >
                       <CheckCircleIcon sx={{ fontSize: 24 }} />
@@ -1287,8 +1288,8 @@ const LmsCourseView: React.FC = () => {
                             bgcolor: '#ffffff',
                             cursor: 'pointer',
                             transition: 'all 0.15s ease',
-                            '&:hover': { borderColor: '#00A651', bgcolor: '#f8fbfc' },
-                            '&:hover .resource-download': { color: '#00A651' }
+                            '&:hover': { borderColor: '#00BFA5', bgcolor: '#f8fbfc' },
+                            '&:hover .resource-download': { color: '#00BFA5' }
                           }}
                         >
                           <Box
@@ -1304,9 +1305,9 @@ const LmsCourseView: React.FC = () => {
                             }}
                           >
                             {resource.resourceType === 'link' ? (
-                              <ExternalLinkIcon sx={{ fontSize: 14, color: '#00A651' }} />
+                              <ExternalLinkIcon sx={{ fontSize: 14, color: '#00BFA5' }} />
                             ) : (
-                              <DescriptionIcon sx={{ fontSize: 14, color: '#00A651' }} />
+                              <DescriptionIcon sx={{ fontSize: 14, color: '#00BFA5' }} />
                             )}
                           </Box>
                           <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -1365,13 +1366,13 @@ const LmsCourseView: React.FC = () => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       transition: 'all 0.15s ease',
-                      borderColor: currentLessonCompleted ? '#00A651' : '#d1d5db',
-                      bgcolor: currentLessonCompleted ? '#00A651' : 'transparent'
+                      borderColor: currentLessonCompleted ? '#00BFA5' : '#d1d5db',
+                      bgcolor: currentLessonCompleted ? '#00BFA5' : 'transparent'
                     }}
                   >
                     {currentLessonCompleted && <CheckIcon sx={{ fontSize: 13, color: '#ffffff' }} />}
                   </Box>
-                  <Typography variant='caption' sx={{ color: currentLessonCompleted ? '#00A651' : '#6b6b72', fontWeight: 500, fontSize: '0.75rem' }}>
+                  <Typography variant='caption' sx={{ color: currentLessonCompleted ? '#00BFA5' : '#6b6b72', fontWeight: 500, fontSize: '0.75rem' }}>
                     {currentLessonCompleted ? 'Completado' : 'Marcar como completado'}
                   </Typography>
                 </Box>
@@ -1395,8 +1396,8 @@ const LmsCourseView: React.FC = () => {
                         py: 1,
                         fontSize: '0.8rem',
                         fontWeight: 600,
-                        bgcolor: '#00A651',
-                        '&:hover': { bgcolor: '#005c38', opacity: 0.9 },
+                        bgcolor: '#00BFA5',
+                        '&:hover': { bgcolor: '#00695C', opacity: 0.9 },
                         '&:active': { transform: 'scale(0.98)' },
                         transition: 'all 0.15s ease'
                       }}
@@ -1422,7 +1423,7 @@ const LmsCourseView: React.FC = () => {
                         endIcon={<SkipNextIcon />}
                         onClick={handleNextLesson}
                         disabled={!nextLesson || !isLessonUnlocked(nextLesson.moduleIndex, nextLesson.lessonIndex)}
-                        sx={{ borderRadius: 1, px: { xs: 1.25, sm: 2 }, fontSize: '0.85rem', bgcolor: '#00A651', '&:hover': { bgcolor: '#005c38' } }}
+                        sx={{ borderRadius: 1, px: { xs: 1.25, sm: 2 }, fontSize: '0.85rem', bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00695C' } }}
                       >
                         {isMobile ? 'Siguiente' : 'Siguiente Lección'}
                       </Button>
@@ -1447,7 +1448,7 @@ const LmsCourseView: React.FC = () => {
             width: 80,
             height: 80,
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #2d9b5f 0%, #53cf89 100%)',
+            background: 'linear-gradient(135deg, #00A58E 0%, #53cf89 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1463,7 +1464,7 @@ const LmsCourseView: React.FC = () => {
           <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
             Has completado exitosamente el curso
           </Typography>
-          <Typography variant="h6" sx={{ fontWeight: 700, color: '#2d9b5f', mt: 0.5 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: '#00A58E', mt: 0.5 }}>
             "{course.title}"
           </Typography>
         </DialogTitle>
@@ -1472,7 +1473,7 @@ const LmsCourseView: React.FC = () => {
             <Paper variant='outlined' sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(248,252,249,0.8)' }}>
               <Stack direction='row' spacing={3} justifyContent='center' divider={<Divider orientation='vertical' flexItem />}>
                 <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant='h4' sx={{ fontWeight: 800, color: '#2d9b5f' }}>{courseProgress.completed}</Typography>
+                  <Typography variant='h4' sx={{ fontWeight: 800, color: '#00A58E' }}>{courseProgress.completed}</Typography>
                   <Typography variant='caption' color='text.secondary'>Lecciones</Typography>
                 </Box>
                 <Box sx={{ textAlign: 'center' }}>
