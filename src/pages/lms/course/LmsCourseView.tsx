@@ -1169,7 +1169,7 @@ const LmsCourseView: React.FC = () => {
                   </Box>
                 )}
 
-                {certificateReadyNoticeVisible && (
+                {certificateReadyNoticeVisible && !(courseProgress.percentage === 100 && hasGeneratedCertificate) && (
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, p: 2, bgcolor: '#E0F7F4', borderRadius: 2 }}>
                     <Box>
                       <Typography variant='body2' fontWeight={600} sx={{ color: '#00897B' }}>Certificado disponible</Typography>
@@ -1182,7 +1182,7 @@ const LmsCourseView: React.FC = () => {
                   </Box>
                 )}
 
-                {currentLesson.type === 'quiz' && latestQuizOutcome && (
+                {currentLesson.type === 'quiz' && latestQuizOutcome && !(latestQuizOutcome.passed && latestQuizOutcome.completesCourse && courseProgress.percentage === 100) && (
                   <Alert severity={latestQuizOutcome.passed ? 'success' : 'warning'} sx={{ mb: 3, borderRadius: 2 }}>
                     <AlertTitle>{latestQuizOutcome.passed ? 'Quiz aprobado' : 'Aún no alcanzas el puntaje mínimo'}</AlertTitle>
                     {latestQuizOutcome.passed ? (
