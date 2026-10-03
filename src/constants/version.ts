@@ -8,8 +8,8 @@ interface AppConfig {
 }
 
 export const APP_CONFIG: AppConfig = {
-  VERSION: '1.6.0',
-  BUILD_DATE: '2026-10-02',
+  VERSION: '1.6.1',
+  BUILD_DATE: '2026-10-03',
   ENVIRONMENT:
     typeof import.meta !== 'undefined' && import.meta.env
       ? import.meta.env.VITE_ENV || 'development'
@@ -19,7 +19,7 @@ export const APP_CONFIG: AppConfig = {
   CHANGELOG: {
     '1.2.1': 'Fix token authentication + LMS content editor',
     '1.2.0': 'LMS module improvements',
-    '1.6.0': 'Rediseno del LMS: estudiante, administracion y analiticas con datos reales'
+    '1.6.1': 'Version update'
   } as Record<string, string>,
 
   // Configuración de limpieza
