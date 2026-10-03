@@ -8,7 +8,7 @@ interface AppConfig {
 }
 
 export const APP_CONFIG: AppConfig = {
-  VERSION: '1.6.3',
+  VERSION: '1.6.4',
   BUILD_DATE: '2026-10-03',
   ENVIRONMENT:
     typeof import.meta !== 'undefined' && import.meta.env
@@ -20,7 +20,8 @@ export const APP_CONFIG: AppConfig = {
     '1.2.1': 'Fix token authentication + LMS content editor',
     '1.2.0': 'LMS module improvements',
     '1.6.2': 'Rol analista de datos: envio de certificado',
-    '1.6.3': 'Usuarios y roles: encabezado, estado de activación y menú de acciones'
+    '1.6.3': 'Usuarios y roles: encabezado, estado de activación y menú de acciones',
+    '1.6.4': 'Anexo PDF de avance técnico en calibración'
   } as Record<string, string>,
 
   // Configuración de limpieza
