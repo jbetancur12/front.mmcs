@@ -2627,6 +2627,7 @@ const CalibrationServiceDetailsPage = () => {
             {!isTechnicalOnlyView ? (
               <Chip
                 size='small'
+                variant='outlined'
                 color={
                   CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]
                 }

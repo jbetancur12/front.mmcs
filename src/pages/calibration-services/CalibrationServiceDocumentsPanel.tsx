@@ -167,7 +167,11 @@ const CalibrationServiceDocumentsPanel = ({
             <ListItem
               key={document.id}
               disableGutters
-              sx={hasVersions && !isLatest ? { opacity: 0.65 } : undefined}
+              sx={{
+              pr: 24,
+              flexWrap: 'wrap',
+              opacity: hasVersions && !isLatest ? 0.65 : 1
+            }}
               secondaryAction={
                 <Stack direction='row' spacing={1}>
                   <Button
@@ -202,9 +206,11 @@ const CalibrationServiceDocumentsPanel = ({
               <ListItemText
                 primary={
                   <Stack
-                    direction={{ xs: 'column', md: 'row' }}
+                    direction='row'
+                    flexWrap='wrap'
+                    useFlexGap
                     spacing={1}
-                    alignItems={{ xs: 'flex-start', md: 'center' }}
+                    alignItems='center'
                   >
                     <Typography variant='body2' fontWeight={600}>
                       {document.title || document.originalFileName}

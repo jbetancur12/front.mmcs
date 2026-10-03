@@ -1133,6 +1133,7 @@ const CalibrationServicesPage = () => {
                 {!isTechnicalOnlyView ? (
                   <Chip
                     size='small'
+                    variant='outlined'
                     color={
                       CALIBRATION_SERVICE_APPROVAL_COLORS[
                         service.approvalStatus
@@ -2672,7 +2673,8 @@ const CalibrationServicesPage = () => {
                                 {!isTechnicalOnlyView ? (
                                   <Chip
                                     size='small'
-                                    color={
+                                    variant='outlined'
+                    color={
                                       CALIBRATION_SERVICE_APPROVAL_COLORS[
                                         service.approvalStatus
                                       ]

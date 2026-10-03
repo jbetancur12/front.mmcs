@@ -20,6 +20,7 @@ export const CALIBRATION_SERVICE_ALLOWED_ROLES = [
   'comp_requester',
   'invoicing',
   'calibration_coordinator',
+  'technical_director',
   'analista_datos'
 ] as const
 

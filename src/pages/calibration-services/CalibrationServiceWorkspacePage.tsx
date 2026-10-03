@@ -1030,7 +1030,7 @@ const CalibrationServiceWorkspacePage = () => {
           {service ? (
             <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
               <Chip color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]} label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]} sx={{ fontWeight: 700, borderRadius: '8px' }} />
-              <Chip color={CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]} label={CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]} sx={{ fontWeight: 700, borderRadius: '8px' }} />
+              <Chip variant='outlined' color={CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]} label={CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]} sx={{ fontWeight: 700, borderRadius: '8px' }} />
             </Stack>
           ) : null}
         </Stack>
