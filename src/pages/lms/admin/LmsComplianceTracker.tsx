@@ -26,9 +26,9 @@ import {
   TextField,
   CircularProgress,
   Popover,
-  InputAdornment,
+  Container,
+  Paper,
   Tooltip,
-  TablePagination,
   FormControl,
   InputLabel,
   Select,
@@ -42,10 +42,14 @@ import {
   Divider,
   Snackbar
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
+import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
+import { MRT_Localization_ES } from 'material-react-table/locales/es'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import {
   Warning as WarningIcon,
-  Search as SearchIcon,
+  CheckCircle as CheckCircleIcon,
+  Refresh as RefreshIcon,
   Schedule as ScheduleIcon,
   Assignment as AssignmentIcon,
   Person as PersonIcon,
@@ -187,8 +191,6 @@ const LmsComplianceTracker: React.FC = () => {
   const [quick, setQuick] = useState<QuickFilter>(
     () => (sessionStorage.getItem('lms:compliance:quick') as QuickFilter) || 'all'
   )
-  const [page, setPage] = useState(0)
-  const [rowsPerPage, setRowsPerPage] = useState(25)
   const [selectedRecord, setSelectedRecord] = useState<ComplianceRecord | null>(null)
   const [openDialog, setOpenDialog] = useState(false)
   const [reminderMessage, setReminderMessage] = useState('')
@@ -200,7 +202,7 @@ const LmsComplianceTracker: React.FC = () => {
   const [filters, setFilters] = useState(readStoredFilters)
 
   // Fetch mandatory training status from API
-  const { data: trainingData, isLoading, error } = useMandatoryTrainingStatus({
+  const { data: trainingData, isLoading, error, refetch, isFetching } = useMandatoryTrainingStatus({
     includeCompleted: true
   })
   const triggerManualRemindersMutation = useTriggerManualReminders()
@@ -260,10 +262,7 @@ const LmsComplianceTracker: React.FC = () => {
     sessionStorage.setItem('lms:compliance:quick', quick)
   }, [quick])
 
-  // Al cambiar filtros o el indicador activo se vuelve a la primera página
-  useEffect(() => {
-    setPage(0)
-  }, [filters, quick])
+
 
   const disableEditMode = () => {
     sessionStorage.setItem('lms:compliance:edit', '0')
@@ -629,40 +628,117 @@ const LmsComplianceTracker: React.FC = () => {
         return prioritizedRecords
     }
   }, [prioritizedRecords, quick])
-  const pagedRecords = tableRecords.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+
+  const rowSelectionState = useMemo<Record<string, boolean>>(
+    () => Object.fromEntries(selectedKeys.map((key) => [key, true])),
+    [selectedKeys]
+  )
+
+  const handleRowSelectionChange = (updater: any) => {
+    const next: Record<string, boolean> = typeof updater === 'function' ? updater(rowSelectionState) : updater
+    setSelectedKeys(Object.keys(next).filter((key) => next[key]))
+  }
+
+  const columns = useMemo<MRT_ColumnDef<ComplianceRecord>[]>(
+    () => [
+      {
+        id: 'usuario',
+        header: 'Usuario',
+        accessorFn: (record) => `${record.userName} ${record.userEmail}`,
+        enableColumnFilter: false,
+        size: 210,
+        Cell: ({ row }) => (
+          <Box>
+            <Typography variant='body2' fontWeight='medium'>
+              {row.original.userName}
+            </Typography>
+            <Typography variant='caption' color='text.secondary'>
+              {row.original.userEmail}
+            </Typography>
+          </Box>
+        )
+      },
+      {
+        id: 'curso',
+        header: 'Curso',
+        accessorKey: 'courseTitle',
+        filterVariant: 'select',
+        size: 200
+      },
+      {
+        id: 'rol',
+        header: 'Rol',
+        accessorFn: (record) => getRoleLabelEs(record.department),
+        filterVariant: 'select',
+        size: 110,
+        Cell: ({ cell }) => <Chip label={cell.getValue<string>()} size='small' variant='outlined' />
+      },
+      {
+        id: 'estado',
+        header: 'Estado',
+        accessorFn: (record) => getStatusLabel(record.status),
+        filterVariant: 'select',
+        size: 180,
+        Cell: ({ row }) => {
+          const record = row.original
+          const deadlineText = record.deadline
+            ? new Date(record.deadline).toLocaleDateString('es-CO')
+            : 'Sin fecha límite'
+          const showLabel = record.isOverdue || hasUpcomingDeadline(record)
+          return (
+            <Box>
+              <Chip
+                label={getStatusLabel(record.status)}
+                color={getStatusColor(record.status) as any}
+                size='small'
+              />
+              <Typography
+                variant='caption'
+                display='block'
+                sx={{ mt: 0.5 }}
+                color={record.isOverdue ? 'error.main' : hasUpcomingDeadline(record) ? 'warning.main' : 'text.secondary'}
+              >
+                {deadlineText}
+                {showLabel ? ` · ${formatDeadlineLabel(record)}` : ''}
+              </Typography>
+            </Box>
+          )
+        }
+      },
+      {
+        id: 'progreso',
+        header: 'Progreso',
+        accessorKey: 'progress',
+        enableColumnFilter: false,
+        size: 130,
+        Cell: ({ row }) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 90 }}>
+            <LinearProgress
+              variant='determinate'
+              value={row.original.progress}
+              sx={{ flex: 1, height: 6, borderRadius: 3 }}
+            />
+            <Typography variant='caption'>{row.original.progress}%</Typography>
+          </Box>
+        )
+      },
+      {
+        id: 'seguimiento',
+        header: 'Último seguimiento',
+        accessorFn: (record) => formatFollowUpLabel(record),
+        enableColumnFilter: false,
+        size: 170
+      }
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  )
 
   // Selección múltiple sobre los registros visibles
-  const visibleKeys = useMemo(() => tableRecords.map(recordKey), [tableRecords])
   const selectedRecords = useMemo(
     () => tableRecords.filter((r) => selectedKeys.includes(recordKey(r))),
     [tableRecords, selectedKeys]
   )
-  const allVisibleSelected = visibleKeys.length > 0 && visibleKeys.every((k) => selectedKeys.includes(k))
-  const someVisibleSelected = visibleKeys.some((k) => selectedKeys.includes(k)) && !allVisibleSelected
-
-  const toggleSelectAll = () => {
-    if (allVisibleSelected) {
-      setSelectedKeys((prev) => prev.filter((k) => !visibleKeys.includes(k)))
-    } else {
-      setSelectedKeys((prev) => Array.from(new Set([...prev, ...visibleKeys])))
-    }
-  }
-
-  // Get unique values for filter options
-  const uniqueDepartments = useMemo(() => {
-    return Array.from(new Set(complianceRecords.map(r => r.department))).filter(d => d && d !== 'N/A')
-  }, [complianceRecords])
-
-  const uniqueCourses = useMemo(() => {
-    const courseMap = new Map<number, string>()
-    complianceRecords.forEach(r => {
-      if (!courseMap.has(r.courseId)) {
-        courseMap.set(r.courseId, r.courseTitle)
-      }
-    })
-    return Array.from(courseMap.entries()).map(([id, title]) => ({ id, title }))
-  }, [complianceRecords])
-
   // Group records by course
   const recordsByCourse = useMemo(() => {
     const grouped = new Map<number, { courseTitle: string; records: ComplianceRecord[] }>()
@@ -689,9 +765,9 @@ const LmsComplianceTracker: React.FC = () => {
   }, [filteredRecords])
 
   // Export to CSV
-  const handleExport = () => {
+  const handleExport = (records: ComplianceRecord[] = tableRecords) => {
     const headers = ['Usuario', 'Email', 'Curso', 'Rol', 'Estado', 'Progreso', 'Fecha límite', 'Días restantes']
-    const rows = tableRecords.map(r => [
+    const rows = records.map(r => [
       r.userName,
       r.userEmail,
       r.courseTitle,
@@ -745,15 +821,6 @@ const LmsComplianceTracker: React.FC = () => {
     })
   }
 
-  const activeFiltersCount = useMemo(() => {
-    let count = 0
-    if (filters.status.length > 0) count++
-    if (filters.userQuery.trim()) count++
-    if (filters.department) count++
-    if (filters.courseId) count++
-    if (filters.daysUntilDeadline !== null) count++
-    return count
-  }, [filters])
 
   const openFiltersPopover = Boolean(filterAnchorEl)
   // Loading state
@@ -791,14 +858,94 @@ const LmsComplianceTracker: React.FC = () => {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', p: 3 }}>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 1 }}>
-          Seguimiento de Cumplimiento
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Monitorea el progreso de cursos obligatorios y gestiona vencimientos (Solo usuarios internos)
-        </Typography>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title='Seguimiento de Cumplimiento'
+        subtitle='Progreso de cursos obligatorios y vencimientos de usuarios internos'
+        icon={<AssignmentIcon />}
+        actions={
+          <Tooltip title='Actualizar datos'>
+            <span>
+              <IconButton
+                onClick={() => refetch()}
+                disabled={isFetching}
+                sx={{ bgcolor: '#f5f5f5', '&:hover': { bgcolor: '#e0e0e0' } }}
+              >
+                <RefreshIcon
+                  sx={{
+                    animation: isFetching ? 'spin 1s linear infinite' : 'none',
+                    '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } }
+                  }}
+                />
+              </IconButton>
+            </span>
+          </Tooltip>
+        }
+      />
+
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(5, 1fr)' },
+          gap: 3,
+          mb: 4
+        }}
+      >
+        <LmsStatCard
+          label='Todos los registros'
+          value={filteredRecords.length}
+          icon={<AssignmentIcon />}
+          tone='blue'
+          active={quick === 'all' && activeTab === 0}
+          onClick={() => {
+            setQuick('all')
+            setActiveTab(0)
+          }}
+        />
+        <LmsStatCard
+          label='Vencidos'
+          value={overdueRecords.length}
+          icon={<ErrorIcon />}
+          tone='red'
+          active={quick === 'overdue' && activeTab === 0}
+          onClick={() => {
+            setQuick('overdue')
+            setActiveTab(0)
+          }}
+        />
+        <LmsStatCard
+          label='Vencen en 7 días'
+          value={approachingDeadline.length}
+          icon={<ScheduleIcon />}
+          tone='orange'
+          active={quick === 'soon' && activeTab === 0}
+          onClick={() => {
+            setQuick('soon')
+            setActiveTab(0)
+          }}
+        />
+        <LmsStatCard
+          label='Sin comenzar'
+          value={pendingRecords.length}
+          icon={<PersonIcon />}
+          tone='teal'
+          active={quick === 'pending' && activeTab === 0}
+          onClick={() => {
+            setQuick('pending')
+            setActiveTab(0)
+          }}
+        />
+        <LmsStatCard
+          label='Completados'
+          value={completedRecords.length}
+          icon={<CheckCircleIcon />}
+          tone='green'
+          active={quick === 'completed' && activeTab === 0}
+          onClick={() => {
+            setQuick('completed')
+            setActiveTab(0)
+          }}
+        />
       </Box>
 
       {prioritizedRecords[0] && (
@@ -807,341 +954,120 @@ const LmsComplianceTracker: React.FC = () => {
         </Alert>
       )}
 
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(5, 1fr)' },
-          gap: 1.5,
-          mb: 3
-        }}
-      >
-        {([
-          { key: 'all', label: 'Todos los registros', value: filteredRecords.length, color: 'primary' },
-          { key: 'overdue', label: 'Vencidos', value: overdueRecords.length, color: 'error' },
-          { key: 'soon', label: 'Vencen en 7 días', value: approachingDeadline.length, color: 'warning' },
-          { key: 'pending', label: 'Sin comenzar', value: pendingRecords.length, color: 'info' },
-          { key: 'completed', label: 'Completados', value: completedRecords.length, color: 'success' }
-        ] as Array<{ key: QuickFilter; label: string; value: number; color: 'primary' | 'error' | 'warning' | 'info' | 'success' }>).map((tile) => {
-          const active = quick === tile.key && activeTab === 0
-          return (
-            <Box
-              key={tile.key}
-              role='button'
-              tabIndex={0}
-              onClick={() => {
-                setQuick(tile.key)
-                setActiveTab(0)
-              }}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  setQuick(tile.key)
-                  setActiveTab(0)
-                }
-              }}
-              sx={(theme) => ({
-                cursor: 'pointer',
-                borderRadius: 3,
-                p: 2,
-                border: '1px solid',
-                borderColor: active ? `${tile.color}.main` : 'divider',
-                bgcolor: active ? alpha(theme.palette[tile.color].main, 0.1) : 'background.paper',
-                transition: 'box-shadow .15s ease, border-color .15s ease',
-                '&:hover': { boxShadow: 2 }
-              })}
-            >
-              <Typography variant='h4' sx={{ fontWeight: 700, color: `${tile.color}.main`, lineHeight: 1.1 }}>
-                {tile.value}
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                {tile.label}
-              </Typography>
-            </Box>
-          )
-        })}
-      </Box>
-
       <Tabs value={activeTab === 4 ? 4 : 0} onChange={handleTabChange} sx={{ mb: 2 }}>
         <Tab value={0} label='Registros' />
         <Tab value={4} label={`Por curso (${recordsByCourse.length})`} />
       </Tabs>
 
       {activeTab === 0 && (
-        <Card variant='outlined' sx={{ borderRadius: 3, overflow: 'hidden' }}>
-          <Box sx={{ p: 2, display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center' }}>
-            <TextField
-              size='small'
-              placeholder='Buscar por nombre, correo o curso...'
-              value={filters.userQuery}
-              onChange={(event) => setFilters((prev) => ({ ...prev, userQuery: event.target.value }))}
-              sx={{ flex: '1 1 260px', minWidth: 220 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position='start'>
-                    <SearchIcon fontSize='small' />
-                  </InputAdornment>
-                )
-              }}
-            />
-            <FormControl size='small' sx={{ minWidth: 200 }}>
-              <InputLabel>Curso</InputLabel>
-              <Select
-                label='Curso'
-                value={filters.courseId ?? ''}
-                onChange={(event) =>
-                  setFilters((prev) => ({ ...prev, courseId: event.target.value ? Number(event.target.value) : null }))
-                }
-              >
-                <MenuItem value=''>Todos los cursos</MenuItem>
-                {uniqueCourses.map((course) => (
-                  <MenuItem key={course.id} value={course.id}>
-                    {course.title}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl size='small' sx={{ minWidth: 160 }}>
-              <InputLabel>Rol</InputLabel>
-              <Select
-                label='Rol'
-                value={filters.department}
-                onChange={(event) => setFilters((prev) => ({ ...prev, department: String(event.target.value) }))}
-              >
-                <MenuItem value=''>Todos los roles</MenuItem>
-                {uniqueDepartments.map((department) => (
-                  <MenuItem key={department} value={department}>
-                    {getRoleLabelEs(department)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <Button
-              startIcon={<FilterListIcon />}
-              size='small'
-              onClick={handleOpenFilters}
-              variant={filters.status.length > 0 || filters.daysUntilDeadline !== null ? 'contained' : 'outlined'}
-              color={filters.status.length > 0 || filters.daysUntilDeadline !== null ? 'primary' : 'inherit'}
-            >
-              Más filtros
-            </Button>
-            {(activeFiltersCount > 0 || quick !== 'all') && (
-              <Button
-                size='small'
-                onClick={() => {
-                  handleClearFilters()
-                  setQuick('all')
-                }}
-              >
-                Limpiar todo
-              </Button>
-            )}
-            <Box sx={{ flex: 1 }} />
-            {canEdit && editMode && (
-              <Chip label='Modo edición — ocultar' color='secondary' variant='outlined' onClick={disableEditMode} />
-            )}
-            {editMode && selectedRecords.length > 0 && (
-              <Button
-                startIcon={<EditCalendarIcon />}
-                size='small'
-                onClick={() => setBulkOpen(true)}
-                variant='contained'
-                color='secondary'
-              >
-                Cambiar fechas ({selectedRecords.length})
-              </Button>
-            )}
-            <Button startIcon={<DownloadIcon />} size='small' onClick={handleExport} variant='outlined'>
-              Exportar
-            </Button>
-          </Box>
-
-          <Box sx={{ px: 2, pb: 1.5, display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
-            <Typography variant='body2' color='text.secondary'>
-              {tableRecords.length} de {complianceRecords.length} registros
-            </Typography>
-            {quick !== 'all' && (
-              <Chip
-                size='small'
-                color='primary'
-                label={
-                  quick === 'overdue'
-                    ? 'Solo vencidos'
-                    : quick === 'soon'
-                      ? 'Vencen en 7 días'
-                      : quick === 'pending'
-                        ? 'Sin comenzar'
-                        : 'Completados'
-                }
-                onDelete={() => setQuick('all')}
-              />
-            )}
-            {filters.status.map((status) => (
-              <Chip
-                key={status}
-                size='small'
-                label={getStatusLabel(status)}
-                onDelete={() => handleStatusFilterChange(status)}
-              />
-            ))}
-            {filters.daysUntilDeadline !== null && (
-              <Chip
-                size='small'
-                label={`Vence en ≤ ${filters.daysUntilDeadline} días`}
-                onDelete={() => setFilters((prev) => ({ ...prev, daysUntilDeadline: null }))}
-              />
-            )}
-          </Box>
-
-          <TableContainer sx={{ maxHeight: 640 }}>
-            <Table stickyHeader size='small'>
-              <TableHead>
-                <TableRow>
-                  {editMode && (
-                    <TableCell padding='checkbox'>
-                      <Checkbox
-                        indeterminate={someVisibleSelected}
-                        checked={allVisibleSelected}
-                        onChange={toggleSelectAll}
-                        inputProps={{ 'aria-label': 'Seleccionar todos' }}
-                      />
-                    </TableCell>
-                  )}
-                  <TableCell>Usuario</TableCell>
-                  <TableCell>Curso</TableCell>
-                  <TableCell>Estado</TableCell>
-                  <TableCell>Progreso</TableCell>
-                  <TableCell>Último seguimiento</TableCell>
-                  <TableCell
-                    align='right'
-                    sx={{ position: 'sticky', right: 0, zIndex: 3, bgcolor: 'background.paper' }}
+        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+          <MaterialReactTable
+            columns={columns}
+            data={tableRecords}
+            localization={MRT_Localization_ES}
+            getRowId={(row) => recordKey(row)}
+            enableRowSelection={editMode}
+            onRowSelectionChange={handleRowSelectionChange}
+            state={{ rowSelection: rowSelectionState }}
+            enableRowActions
+            positionActionsColumn='last'
+            displayColumnDefOptions={{ 'mrt-row-actions': { header: 'Acciones', size: 120 } }}
+            renderRowActions={({ row }) => (
+              <Box sx={{ display: 'flex', gap: 0.5 }}>
+                <Tooltip title='Ver detalle'>
+                  <IconButton
+                    size='small'
+                    onClick={() => handleViewDetails(row.original)}
+                    sx={{ color: '#00BFA5', '&:hover': { bgcolor: 'rgba(0, 191, 165, 0.1)' } }}
                   >
-                    Acciones
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {tableRecords.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={editMode ? 7 : 6} align='center' sx={{ py: 8 }}>
-                      <Typography variant='body1' color='text.secondary'>
-                        No se encontraron registros con los filtros aplicados
-                      </Typography>
-                      <Button
-                        variant='text'
-                        onClick={() => {
-                          handleClearFilters()
-                          setQuick('all')
-                        }}
-                        sx={{ mt: 2 }}
-                      >
-                        Limpiar filtros
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  pagedRecords.map((record) => {
-                    const deadlineText = record.deadline
-                      ? new Date(record.deadline).toLocaleDateString('es-CO')
-                      : 'Sin fecha límite'
-                    const showDeadlineLabel = record.isOverdue || hasUpcomingDeadline(record)
-                    return (
-                      <TableRow key={`${record.userId}-${record.courseId}`} hover>
-                        {editMode && (
-                          <TableCell padding='checkbox'>
-                            <Checkbox
-                              checked={selectedKeys.includes(recordKey(record))}
-                              onChange={() => toggleSelect(recordKey(record))}
-                            />
-                          </TableCell>
-                        )}
-                        <TableCell>
-                          <Typography variant='body2' fontWeight='medium'>
-                            {record.userName}
-                          </Typography>
-                          <Typography variant='caption' color='text.secondary'>
-                            {record.userEmail}
-                          </Typography>
-                        </TableCell>
-                        <TableCell sx={{ maxWidth: 260 }}>
-                          <Typography variant='body2'>{record.courseTitle}</Typography>
-                          <Typography variant='caption' color='text.secondary'>
-                            Rol: {getRoleLabelEs(record.department)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={getStatusLabel(record.status)}
-                            color={getStatusColor(record.status) as any}
-                            size='small'
-                          />
-                          <Typography
-                            variant='caption'
-                            display='block'
-                            sx={{ mt: 0.5 }}
-                            color={record.isOverdue ? 'error.main' : hasUpcomingDeadline(record) ? 'warning.main' : 'text.secondary'}
-                          >
-                            {deadlineText}
-                            {showDeadlineLabel ? ` · ${formatDeadlineLabel(record)}` : ''}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 110 }}>
-                            <LinearProgress
-                              variant='determinate'
-                              value={record.progress}
-                              sx={{ flex: 1, height: 6, borderRadius: 3 }}
-                            />
-                            <Typography variant='caption'>{record.progress}%</Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant='body2'>{formatFollowUpLabel(record)}</Typography>
-                        </TableCell>
-                        <TableCell
-                          align='right'
-                          sx={{
-                            position: 'sticky',
-                            right: 0,
-                            bgcolor: 'background.paper',
-                            boxShadow: '-6px 0 8px -6px rgba(0,0,0,0.15)'
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-                            <Tooltip title='Ver detalle'>
-                              <IconButton size='small' onClick={() => handleViewDetails(record)}>
-                                <VisibilityIcon />
-                              </IconButton>
-                            </Tooltip>
-                            {record.status !== 'completed' && (
-                              <Tooltip title='Enviar recordatorio'>
-                                <IconButton size='small' color='primary' onClick={() => handleSendReminder(record)}>
-                                  <SendIcon />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })
+                    <VisibilityIcon />
+                  </IconButton>
+                </Tooltip>
+                {row.original.status !== 'completed' && (
+                  <Tooltip title='Enviar recordatorio'>
+                    <IconButton size='small' color='primary' onClick={() => handleSendReminder(row.original)}>
+                      <SendIcon />
+                    </IconButton>
+                  </Tooltip>
                 )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            component='div'
-            count={tableRecords.length}
-            page={page}
-            onPageChange={(_event, next) => setPage(next)}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={(event) => {
-              setRowsPerPage(parseInt(event.target.value, 10))
-              setPage(0)
+              </Box>
+            )}
+            renderTopToolbarCustomActions={({ table }) => (
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                <Button
+                  size='small'
+                  startIcon={<FilterListIcon />}
+                  onClick={handleOpenFilters}
+                  variant={filters.status.length > 0 || filters.daysUntilDeadline !== null ? 'contained' : 'outlined'}
+                  color={filters.status.length > 0 || filters.daysUntilDeadline !== null ? 'primary' : 'inherit'}
+                >
+                  Más filtros
+                </Button>
+                <Button
+                  size='small'
+                  startIcon={<DownloadIcon />}
+                  variant='outlined'
+                  onClick={() => handleExport(table.getPrePaginationRowModel().rows.map((row) => row.original))}
+                >
+                  Exportar
+                </Button>
+                {editMode && selectedRecords.length > 0 && (
+                  <Button
+                    size='small'
+                    startIcon={<EditCalendarIcon />}
+                    variant='contained'
+                    color='secondary'
+                    onClick={() => setBulkOpen(true)}
+                  >
+                    Cambiar fechas ({selectedRecords.length})
+                  </Button>
+                )}
+                {canEdit && editMode && (
+                  <Chip label='Modo edición — ocultar' color='secondary' variant='outlined' onClick={disableEditMode} />
+                )}
+              </Box>
+            )}
+            enableGlobalFilter
+            positionGlobalFilter='left'
+            globalFilterFn='contains'
+            muiSearchTextFieldProps={{
+              placeholder: 'Buscar por nombre, correo o curso...',
+              sx: { minWidth: { xs: '200px', md: '340px' } },
+              variant: 'outlined'
             }}
-            rowsPerPageOptions={[10, 25, 50, 100]}
-            labelRowsPerPage='Filas por página'
-            labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count}`}
+            renderEmptyRowsFallback={() => (
+              <Box sx={{ py: 8, textAlign: 'center' }}>
+                <Typography variant='body1' color='text.secondary'>
+                  No se encontraron registros con los filtros aplicados
+                </Typography>
+              </Box>
+            )}
+            muiTableProps={{
+              sx: {
+                '& .MuiTableHead-root': {
+                  '& .MuiTableCell-root': { backgroundColor: '#f5f5f5', fontWeight: 600 }
+                },
+                '& .MuiTableBody-root': {
+                  '& .MuiTableRow-root:hover': { backgroundColor: 'rgba(0, 191, 165, 0.04)' }
+                }
+              }
+            }}
+            muiTopToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
+            muiBottomToolbarProps={{ sx: { backgroundColor: '#fafafa' } }}
+            muiTablePaginationProps={{ rowsPerPageOptions: [10, 25, 50, 100] }}
+            enablePinning
+            initialState={{
+              density: 'compact',
+              showGlobalFilter: true,
+              pagination: { pageSize: 25, pageIndex: 0 },
+              columnPinning: { right: ['mrt-row-actions'] }
+            }}
+            enableColumnFilterModes
+            enableFacetedValues
+            enableStickyHeader
+            muiTableContainerProps={{ sx: { maxHeight: '640px' } }}
           />
-        </Card>
+        </Paper>
       )}
 
       {activeTab === 4 && (
@@ -1153,7 +1079,7 @@ const LmsComplianceTracker: React.FC = () => {
               <Button
                 startIcon={<DownloadIcon />}
                 size="small"
-                onClick={handleExport}
+                onClick={() => handleExport()}
                 variant="outlined"
               >
                 Exportar
@@ -1876,7 +1802,7 @@ const LmsComplianceTracker: React.FC = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Box>
+    </Container>
   )
 }
 
