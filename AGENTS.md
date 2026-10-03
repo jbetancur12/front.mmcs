@@ -50,6 +50,25 @@ Alias de imports: `src/...` (baseUrl `.`), `@utils/*`, `@stores/*`, `@hooks/*`, 
 - Funcionalidad de mantenimiento bajo feature flags: `src/features/maintenanceFlags.ts`.
 - Tests: Jest/Testing Library (`src/test/lms`); archivos `*.test.tsx`.
 
+## Look and feel (obligatorio en cualquier módulo)
+
+Toda pantalla nueva o que se rediseñe, de cualquier módulo (Compras, Calibración, Mantenimiento, Flota, LMS, etc.), usa el mismo estilo del dashboard (`/`) y de `/customers`; no inventes uno propio.
+
+- Encabezado de página: `src/Components/lms/admin/LmsPageHeader.tsx` (ícono en círculo de color, título h4 en negrita, frase corta, acciones a la derecha).
+- Indicadores/KPIs: `src/Components/lms/admin/LmsStatCard.tsx` (degradados `blue|green|orange|red|teal`; con `onClick` sirven de filtro o atajo de pestaña). Aunque estén en la carpeta `lms`, son genéricos: impórtalos, no los dupliques.
+- Tablas de datos: Material React Table con `MRT_Localization_ES`, búsqueda global visible y acciones fijas a la derecha (`enablePinning`, `columnPinning: { right: ['mrt-row-actions'] }`). Con paginación en servidor: `manualPagination` y `manualFiltering`.
+- Paleta: verde azulado `#00BFA5` (hover `#00897B`, fondo suave `#E0F7F4`); éxito `#4caf50 → #00BFA5`.
+- Layout: `Container maxWidth='xl'`, sin fondo gris propio, `spacing={3}` entre tarjetas, sin saturación visual y vista móvil revisada.
+- Referencia de aplicación: módulo LMS (admin, estudiante, cliente, curso, quiz).
+
+Patrones por tipo de pantalla (extraídos de `/customers`, `/customers/:id` y `/settings`):
+
+- **Listado** (`/customers`, `src/pages/CustomersTable.tsx`): `Container maxWidth='xl' sx={{ py: 3 }}`; encabezado con ícono de 32 px (`primary.main`) + h4 en negrita, o el círculo de `LmsPageHeader`; botón principal `bgcolor #00BFA5` con hover `#00ACC1`; tabla dentro de `Paper elevation={2}` con `borderRadius: 2`; MRT con encabezado `#f5f5f5` (peso 600), hover de fila `rgba(0,191,165,0.04)`, toolbars `#fafafa`, densidad cómoda, búsqueda de ~300 px; primera columna con `Avatar` pequeño `#00BFA5` + nombre en 600 + id en `caption`; datos de contacto con íconos grises de 16 px; estado como `Chip` outlined (`success`/`default`); acciones: ver `#00BFA5`, editar `primary`, borrar `error`.
+- **Detalle de una entidad** (`/customers/:id`, `src/Components/ModernCustomerProfile.tsx`): `Container maxWidth='lg'`; banner superior con degradado esmeralda `linear-gradient(135deg, #10b981, #059669)`, `borderRadius: 20px`, círculos decorativos translúcidos, avatar y datos de contacto; debajo, 4 indicadores en tarjetas blancas (`elevation 0`, `borderRadius 16px`, borde `#e5e7eb`) con ícono en cajita pastel de 48 px y número h4 en negrita; pestañas dentro de una tarjeta igual (`fullWidth`, `textTransform: none`, peso 600, indicador `#10b981` de 3 px, alto 64); botones primarios con degradado esmeralda y secundarios con degradado azul `#3b82f6 → #2563eb`.
+- **Diálogos de formulario** (`/settings`, `src/Components/TableOwnUsers.tsx`): cabecera con degradado esmeralda, `borderRadius` 16–20 px, títulos centrados.
+- Hay dos verdes en uso: turquesa `#00BFA5` (dashboard, listados, LMS) y esmeralda `#10b981`/`#059669` (perfil de entidad y diálogos). Usa turquesa en listados, encabezados y botones; el esmeralda se reserva para el banner de detalle y las cabeceras de diálogo.
+- `/settings` (Usuarios y roles) ya sigue el patrón de listado: `Container xl`, `LmsPageHeader`, botón turquesa en el encabezado y foco de búsqueda/hover turquesa. Deuda restante: grises de Tailwind (`#374151`, `#6b7280`) en búsqueda y filtros, y diálogos de crear/editar con cabecera esmeralda; el detalle `/customers/:id` usa `Container lg` mientras el listado usa `xl`.
+
 ## LMS / integración con el backend
 
 - Sigue `../.claude/lms/assignments-integration-analysis.md` al implementar tareas LMS y actualízalo si cambia la integración.

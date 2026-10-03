@@ -3,6 +3,11 @@ import {
   Box,
   Button,
   CircularProgress,
+  Container,
+  Divider,
+  ListItemIcon,
+  Menu,
+  MenuItem,
   Dialog,
   DialogActions,
   DialogContent,
@@ -33,7 +38,7 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 
 import { axiosPrivate } from '@utils/api'
 import { useQuery } from 'react-query'
-import { Link as LinkIcon, ForwardToInbox, Delete, Edit, Search, Clear, FilterList, PersonAdd, Add, HelpOutline } from '@mui/icons-material'
+import { MoreVert, ManageAccounts as ManageAccountsIcon, Link as LinkIcon, ForwardToInbox, Delete, Edit, Search, Clear, FilterList, PersonAdd, Add, HelpOutline } from '@mui/icons-material'
 import {
   showDeleteConfirmation,
   showSuccessAlert,
@@ -46,6 +51,7 @@ import {
 import { fetchActivationLink, resendActivationEmail } from '../utils/userActivation'
 import { useUsers, useUserMutations, QUERY_KEYS } from '../hooks/useUsers'
 import { getRoleLabelEs } from 'src/constants/roles'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 
 // Define interfaces
 interface Role {
@@ -253,10 +259,10 @@ const EnhancedSearch: React.FC<{
             backgroundColor: '#ffffff',
             borderRadius: '8px',
             '&:hover .MuiOutlinedInput-notchedOutline': {
-              borderColor: '#1976d2'
+              borderColor: '#00BFA5'
             },
             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-              borderColor: '#1976d2',
+              borderColor: '#00BFA5',
               borderWidth: '2px'
             }
           }
@@ -548,7 +554,7 @@ const modernTableStyles = {
   '& .MuiTableBody-root .MuiTableRow-root': {
     transition: 'background-color 0.2s ease-in-out',
     '&:hover': {
-      backgroundColor: '#f8fafc'
+      backgroundColor: 'rgba(0, 191, 165, 0.04)'
     }
   },
 
@@ -567,7 +573,8 @@ const modernTableStyles = {
   // Action buttons container styling
   '& .action-buttons': {
     display: 'flex',
-    gap: '8px',
+    flexWrap: 'nowrap',
+    gap: '4px',
     justifyContent: 'center',
     alignItems: 'center'
   },
@@ -641,6 +648,71 @@ const modernTableStyles = {
 }
 
 // Main component
+// Menú de acciones por fila: un solo botón de tres puntos, sin importar cuántas acciones haya
+const UserRowActions: React.FC<{
+  user: UserData
+  name: string
+  busy: boolean
+  onEdit: () => void
+  onActivationLink: (resend: boolean) => void
+  onDelete: () => void
+}> = ({ user, name, busy, onEdit, onActivationLink, onDelete }) => {
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
+  const close = () => setAnchorEl(null)
+  const run = (action: () => void) => () => {
+    close()
+    action()
+  }
+
+  return (
+    <>
+      <Tooltip arrow title='Acciones'>
+        <IconButton
+          size='small'
+          disabled={busy}
+          onClick={(event) => setAnchorEl(event.currentTarget)}
+          aria-label={`Acciones para el usuario ${name}`}
+          aria-haspopup='menu'
+          aria-expanded={Boolean(anchorEl)}
+        >
+          <MoreVert fontSize='small' />
+        </IconButton>
+      </Tooltip>
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={close}>
+        <MenuItem onClick={run(onEdit)}>
+          <ListItemIcon>
+            <Edit fontSize='small' sx={{ color: '#1976d2' }} />
+          </ListItemIcon>
+          Editar usuario
+        </MenuItem>
+        {user.active !== true && (
+          <MenuItem onClick={run(() => onActivationLink(false))}>
+            <ListItemIcon>
+              <LinkIcon fontSize='small' />
+            </ListItemIcon>
+            Enlace de activación
+          </MenuItem>
+        )}
+        {user.active !== true && (
+          <MenuItem onClick={run(() => onActivationLink(true))}>
+            <ListItemIcon>
+              <ForwardToInbox fontSize='small' />
+            </ListItemIcon>
+            Reenviar correo de activación
+          </MenuItem>
+        )}
+        <Divider />
+        <MenuItem onClick={run(onDelete)} sx={{ color: 'error.main' }}>
+          <ListItemIcon>
+            <Delete fontSize='small' color='error' />
+          </ListItemIcon>
+          Eliminar usuario
+        </MenuItem>
+      </Menu>
+    </>
+  )
+}
+
 const TableOwnUsers: React.FC = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -844,6 +916,21 @@ const TableOwnUsers: React.FC = () => {
             />
           )
         }
+      },
+      {
+        id: 'estado',
+        header: 'Estado',
+        accessorFn: (user) => (user.active === true ? 'Activo' : 'Pendiente'),
+        enableEditing: false,
+        size: 150,
+        Cell: ({ row }) =>
+          row.original.active === true ? (
+            <Chip label='Activo' size='small' color='success' variant='outlined' />
+          ) : (
+            <Tooltip arrow title='Aún no activó su cuenta. Usa el enlace o reenvía el correo de activación.'>
+              <Chip label='Pendiente de activación' size='small' color='warning' variant='outlined' />
+            </Tooltip>
+          )
       }
     ],
     [getCommonEditTextFieldProps, roles, loadingRoles]
@@ -984,7 +1071,24 @@ const TableOwnUsers: React.FC = () => {
 
   // Render the component
   return (
-    <>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title='Usuarios y roles'
+        subtitle='Administra las cuentas, los roles y la activación de acceso al sistema'
+        icon={<ManageAccountsIcon />}
+        actions={
+          <Button
+            variant='contained'
+            startIcon={createUser.isLoading ? <CircularProgress size={16} color='inherit' /> : <Add />}
+            onClick={() => setCreateModalOpen(true)}
+            disabled={createUser.isLoading}
+            aria-label='Abrir formulario para crear un nuevo usuario'
+            sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00ACC1' } }}
+          >
+            {createUser.isLoading ? 'Creando...' : 'Crear Nuevo Usuario'}
+          </Button>
+        }
+      />
 
       {/* Show skeleton loader when initially loading users */}
       {loadingUsers && users.length === 0 ? (
@@ -1026,6 +1130,9 @@ const TableOwnUsers: React.FC = () => {
               <MaterialReactTable
                 enableHiding={false}
                 enableColumnActions={false}
+                displayColumnDefOptions={{
+                  'mrt-row-actions': { header: 'Acciones', size: 90, minSize: 90 }
+                }}
                 localization={MRT_Localization_ES}
                 initialState={{
                   columnVisibility: {
@@ -1097,125 +1204,17 @@ const TableOwnUsers: React.FC = () => {
                 onEditingRowSave={handleSaveRowEdits}
                 onEditingRowCancel={handleCancelRowEdits}
                 renderRowActions={({ row }) => (
-                  <Box
-                    className="action-buttons"
-                    role="group"
-                    aria-label={`Acciones para el usuario ${row.getValue('nombre')}`}
-                  >
-                    <Tooltip arrow placement="left" title="Editar Usuario">
-                      <IconButton
-                        className="edit-button"
-                        onClick={() => {
-                          setEditingUser(row.original)
-                          setEditModalOpen(true)
-                        }}
-                        disabled={updateUser.isLoading || deleteUser.isLoading}
-                        size="small"
-                        aria-label={`Editar usuario ${row.getValue('nombre')}`}
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault()
-                            setEditingUser(row.original)
-                            setEditModalOpen(true)
-                          }
-                        }}
-                      >
-                        <Edit fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    {row.original.active !== true && (
-                      <>
-                        <Tooltip arrow placement="left" title="Enlace de activación (copiar / WhatsApp)">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleActivationLink(row.original, false)}
-                            aria-label={`Enlace de activación de ${row.getValue('nombre')}`}
-                          >
-                            <LinkIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip arrow placement="left" title="Reenviar correo de activación">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleActivationLink(row.original, true)}
-                            aria-label={`Reenviar activación a ${row.getValue('nombre')}`}
-                          >
-                            <ForwardToInbox fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </>
-                    )}
-                    <Tooltip arrow placement="right" title="Eliminar Usuario">
-                      <IconButton
-                        className="delete-button"
-                        onClick={() => handleDeleteRow(row)}
-                        disabled={updateUser.isLoading || deleteUser.isLoading}
-                        size="small"
-                        aria-label={`Eliminar usuario ${row.getValue('nombre')}`}
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault()
-                            handleDeleteRow(row)
-                          }
-                        }}
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                )}
-                renderTopToolbarCustomActions={() => (
-                  <Button
-                    variant="contained"
-                    onClick={() => setCreateModalOpen(true)}
-                    disabled={createUser.isLoading}
-                    startIcon={createUser.isLoading ? <CircularProgress size={16} color="inherit" /> : undefined}
-                    aria-label="Abrir formulario para crear un nuevo usuario"
-                    aria-describedby="create-user-description"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault()
-                        setCreateModalOpen(true)
-                      }
+                  <UserRowActions
+                    user={row.original}
+                    name={String(row.getValue('nombre'))}
+                    busy={updateUser.isLoading || deleteUser.isLoading}
+                    onEdit={() => {
+                      setEditingUser(row.original)
+                      setEditModalOpen(true)
                     }}
-                    sx={{
-                      borderRadius: '8px',
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      px: 3,
-                      py: 1.5,
-                      boxShadow: '0 2px 8px rgba(25, 118, 210, 0.3)',
-                      transition: 'all 0.2s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 4px 12px rgba(25, 118, 210, 0.4)'
-                      },
-                      '&:disabled': {
-                        backgroundColor: '#e0e0e0',
-                        color: '#9e9e9e',
-                        transform: 'none',
-                        boxShadow: 'none'
-                      }
-                    }}
-                  >
-                    {createUser.isLoading ? 'Creando...' : 'Crear Nuevo Usuario'}
-                    {/* Hidden description for screen readers */}
-                    <Box
-                      id="create-user-description"
-                      sx={{
-                        position: 'absolute',
-                        left: '-10000px',
-                        width: '1px',
-                        height: '1px',
-                        overflow: 'hidden'
-                      }}
-                    >
-                      Abre un formulario modal para crear un nuevo usuario del sistema
-                    </Box>
-                  </Button>
+                    onActivationLink={(resend) => handleActivationLink(row.original, resend)}
+                    onDelete={() => handleDeleteRow(row)}
+                  />
                 )}
               />
             </Box>
@@ -1244,7 +1243,7 @@ const TableOwnUsers: React.FC = () => {
         loadingRoles={loadingRoles}
         isUpdating={updateUser.isLoading}
       />
-    </>
+    </Container>
   )
 }
 
