@@ -1153,18 +1153,18 @@ const LmsCourseView: React.FC = () => {
               {/* Content */}
               <Box sx={{ maxWidth: currentLesson.type === 'video' ? 'min(1040px, calc((100vh - 390px) * 1.78))' : 800, mx: 'auto', mb: 4 }}>
                 {courseProgress.percentage === 100 && (
-                  <Box sx={{ textAlign: 'center', mb: 4, py: 3, px: 2, bgcolor: '#E0F7F4', borderRadius: 3 }}>
-                    <CheckCircleIcon sx={{ fontSize: 36, color: '#00BFA5', mb: 1 }} />
-                    <Typography variant='h6' fontWeight={700} sx={{ color: '#00897B', mb: 0.5 }}>Curso completado</Typography>
-                    <Typography variant='body2' sx={{ color: '#4b5563', mb: 2 }}>Ya cerraste todo el recorrido de aprendizaje.</Typography>
+                  <Box sx={{ textAlign: 'center', mb: 4, py: 3, px: 2, borderRadius: 3, color: 'white', boxShadow: 3, background: 'linear-gradient(135deg, #4caf50 0%, #00BFA5 100%)' }}>
+                    <CheckCircleIcon sx={{ fontSize: 44, color: 'white', mb: 1 }} />
+                    <Typography variant='h6' fontWeight={700} sx={{ mb: 0.5 }}>¡Curso completado!</Typography>
+                    <Typography variant='body2' sx={{ opacity: 0.95, mb: 2 }}>Ya cerraste todo el recorrido de aprendizaje.</Typography>
                     {course.hasCertificate && hasGeneratedCertificate && (
                       <Button variant='contained' size='small' startIcon={<CertificateIcon />} onClick={handleOpenCurrentCertificate}
-                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}>
+                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, bgcolor: 'white', color: '#00695C', '&:hover': { bgcolor: '#E0F7F4' } }}>
                         Abrir certificado
                       </Button>
                     )}
                     {course.hasCertificate && !hasGeneratedCertificate && (
-                      <Typography variant='caption' color='text.secondary'>Preparando certificado...</Typography>
+                      <Typography variant='caption' sx={{ opacity: 0.9 }}>Preparando certificado...</Typography>
                     )}
                   </Box>
                 )}

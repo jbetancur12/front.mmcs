@@ -29,12 +29,17 @@ import {
   CheckCircle as CheckIcon,
   Cancel as CancelIcon,
   EmojiEvents as TrophyIcon,
+  HelpOutline as HelpOutlineIcon,
+  CheckCircleOutline as CheckCircleOutlineIcon,
+  Replay as ReplayIcon,
+  TimerOutlined as TimerOutlinedIcon,
   Timer as TimerIcon,
   NavigateNext as NextIcon,
   NavigateBefore as PrevIcon,
   Flag as FlagIcon,
   Warning as WarningIcon
 } from '@mui/icons-material'
+import LmsStatCard, { type LmsStatTone } from 'src/Components/lms/admin/LmsStatCard'
 
 interface QuizQuestion {
   id: number
@@ -436,32 +441,23 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-              gap: 1.5,
+              gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+              gap: 2,
               mb: 3
             }}
           >
-            {[
-              { label: 'Preguntas', value: String(shuffledQuestions.length) },
-              { label: 'Puntos totales', value: String(shuffledQuestions.reduce((sum, q) => sum + q.points, 0)) },
-              { label: 'Para aprobar', value: `${quizConfig.passingPercentage}%` },
-              { label: 'Intentos restantes', value: String(quizConfig.maxAttempts - userAttempts.length) },
-              ...(quizConfig.timeLimitMinutes
-                ? [{ label: 'Tiempo límite', value: `${quizConfig.timeLimitMinutes} min` }]
-                : [])
-            ].map((item) => (
-              <Paper
-                key={item.label}
-                variant="outlined"
-                sx={{ p: 2, borderRadius: 3, textAlign: 'center', bgcolor: 'action.hover' }}
-              >
-                <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
-                  {item.value}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {item.label}
-                </Typography>
-              </Paper>
+            {(
+              [
+                { label: 'Preguntas', value: String(shuffledQuestions.length), tone: 'blue', icon: <HelpOutlineIcon /> },
+                { label: 'Puntos totales', value: String(shuffledQuestions.reduce((sum, q) => sum + q.points, 0)), tone: 'teal', icon: <TrophyIcon /> },
+                { label: 'Para aprobar', value: `${quizConfig.passingPercentage}%`, tone: 'green', icon: <CheckCircleOutlineIcon /> },
+                { label: 'Intentos restantes', value: String(quizConfig.maxAttempts - userAttempts.length), tone: 'orange', icon: <ReplayIcon /> },
+                ...(quizConfig.timeLimitMinutes
+                  ? [{ label: 'Tiempo límite', value: `${quizConfig.timeLimitMinutes} min`, tone: 'red', icon: <TimerOutlinedIcon /> }]
+                  : [])
+              ] as Array<{ label: string; value: string; tone: LmsStatTone; icon: React.ReactElement }>
+            ).map((item) => (
+              <LmsStatCard key={item.label} label={item.label} value={item.value} tone={item.tone} icon={item.icon} />
             ))}
           </Box>
 
@@ -591,23 +587,30 @@ const LmsQuizPlayer: React.FC<LmsQuizPlayerProps> = ({
     return (
       <Card>
         <CardContent>
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              Resultados del Quiz
-            </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2, mb: 2 }}>
-              <TrophyIcon color={currentAttempt.passed ? 'success' : 'error'} sx={{ fontSize: 40 }} />
-              <Typography variant="h4">
-                {currentAttempt.score}/{currentAttempt.totalPoints} puntos
-              </Typography>
-            </Box>
-            <Typography variant="h6" color={currentAttempt.passed ? 'success.main' : 'error.main'}>
-              {achievedPercentage}% -
-              {currentAttempt.passed ? ' ¡Aprobado!' : ' No aprobado'}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Tiempo empleado: {formatTime(currentAttempt.timeSpent)}
-            </Typography>
+          <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
+            Resultados del Quiz · {currentAttempt.passed ? '¡Aprobado!' : 'No aprobado'}
+          </Typography>
+          <Box
+            sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 2, mb: 3 }}
+          >
+            <LmsStatCard
+              label='Resultado'
+              value={`${achievedPercentage}%`}
+              tone={currentAttempt.passed ? 'green' : 'red'}
+              icon={<TrophyIcon />}
+            />
+            <LmsStatCard
+              label='Puntos'
+              value={`${currentAttempt.score}/${currentAttempt.totalPoints}`}
+              tone='blue'
+              icon={<CheckCircleOutlineIcon />}
+            />
+            <LmsStatCard
+              label='Tiempo empleado'
+              value={formatTime(currentAttempt.timeSpent)}
+              tone='teal'
+              icon={<TimerOutlinedIcon />}
+            />
           </Box>
 
           <Alert severity={currentAttempt.passed ? 'success' : 'warning'} sx={{ mb: 3 }}>
