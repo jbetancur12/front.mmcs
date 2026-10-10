@@ -19,6 +19,7 @@ import {
   EmojiEvents as CertificateIcon,
   TrendingUp as AnalyticsIcon,
   Assignment as AssignmentIcon,
+  AccountTree as PlanIcon,
   Assessment as AssessmentIcon,
   Add as AddIcon,
   Warning as WarningIcon,
@@ -152,6 +153,16 @@ const LmsAdmin: React.FC = () => {
       color: colors.warning,
       gradient: `linear-gradient(135deg, ${colors.warning} 0%, #ea580c 100%)`,
       route: '/lms/admin/assignments'
+    },
+    {
+      id: 'training-plans',
+      title: 'Planes de formación',
+      description: 'Cursos agrupados por cargo',
+      icon: <PlanIcon />,
+      color: '#00BFA5',
+      gradient: 'linear-gradient(135deg, #00BFA5 0%, #00897B 100%)',
+      route: '/lms/admin/plans',
+      isNew: true
     },
     {
       id: 'analytics',

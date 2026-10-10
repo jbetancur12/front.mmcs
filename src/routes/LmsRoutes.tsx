@@ -27,6 +27,7 @@ const LmsCourseAssignments = lazy(() => import('../pages/lms/admin/LmsCourseAssi
 const LmsQuizManagement = lazy(() => import('../pages/lms/admin/LmsQuizManagement'))
 const LmsCourseAssignmentInterface = lazy(() => import('../pages/lms/admin/LmsCourseAssignmentInterface'))
 const LmsComplianceTracker = lazy(() => import('../pages/lms/admin/LmsComplianceTracker'))
+const LmsTrainingPlans = lazy(() => import('../pages/lms/admin/LmsTrainingPlans'))
 const LmsUserCourseReview = lazy(() => import('../pages/lms/admin/LmsUserCourseReview'))
 const LmsCertificateTemplates = lazy(() => import('../pages/lms/admin/LmsCertificateTemplates'))
 const LmsIssuedCertificates = lazy(() => import('../pages/lms/admin/LmsIssuedCertificates'))
@@ -85,6 +86,7 @@ const LmsRoutes = (role: string[]) => {
         <Route path='lms/admin/quiz-analytics' element={<Navigate to='/lms/admin/analytics' replace />} />
         <Route path='lms/admin/quiz-validator' element={<Navigate to='/lms/admin/quiz-management' replace />} />
         <Route path='lms/admin/assignments' element={<LmsCourseAssignmentInterface />} />
+        <Route path='lms/admin/plans' element={<LmsTrainingPlans />} />
         <Route path='lms/admin/compliance' element={<LmsComplianceTracker />} />
         <Route
           path='lms/admin/users/:userId/courses/:courseId/review'

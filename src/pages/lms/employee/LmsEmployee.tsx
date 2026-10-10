@@ -45,7 +45,8 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../../../store/userStore'
 import LmsNotificationCenter from '../shared/LmsNotificationCenter'
-import { useAvailableCourses, useUserAssignments, useUserCertificates } from '../../../hooks/useLms'
+import { useAvailableCourses, useMyPlans, useUserAssignments, useUserCertificates } from '../../../hooks/useLms'
+import MyTrainingPlans from './MyTrainingPlans'
 import type { Certificate, Course } from '../../../services/lmsService'
 import { getCourseAudienceLabel } from '../../../utils/lmsAudience'
 import {
@@ -181,6 +182,8 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
   const { data: coursesData, isLoading, error } = useAvailableCourses()
   const { data: userAssignments, isLoading: assignmentsLoading, error: assignmentsError } = useUserAssignments()
   const { data: userCertificates = [] } = useUserCertificates()
+  const { data: myPlans, isLoading: myPlansLoading, error: myPlansError } = useMyPlans()
+  const hasPlans = (myPlans?.plans.length ?? 0) > 0
 
   // Usar el usuario del store si no se proporciona uno
   const currentUser = user || {
@@ -607,17 +610,18 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         </Grid>
 
         <Tabs
-          value={activeTab > 3 ? false : activeTab}
+          value={activeTab === 4 ? false : activeTab}
           onChange={handleTabChange}
           variant='scrollable'
           scrollButtons='auto'
           allowScrollButtonsMobile
           sx={{ mb: 3 }}
         >
-          <Tab label='Inicio' />
-          <Tab label='Cursos Obligatorios' />
-          <Tab label='Mis Cursos' />
-          <Tab label='Mis Certificados' />
+          <Tab label='Inicio' value={0} />
+          <Tab label='Cursos Obligatorios' value={1} />
+          <Tab label='Mis Cursos' value={2} />
+          {hasPlans && <Tab label='Mis planes' value={5} />}
+          <Tab label='Mis Certificados' value={3} />
         </Tabs>
 
         {activeTab === 0 && (() => {
@@ -1007,6 +1011,10 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
               )
             })()}
           </Box>
+        )}
+
+        {activeTab === 5 && (
+          <MyTrainingPlans data={myPlans} isLoading={myPlansLoading} error={myPlansError} />
         )}
 
         {activeTab === 4 && (

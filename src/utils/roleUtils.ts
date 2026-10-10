@@ -170,6 +170,7 @@ export const getFilteredQuickActions = (userRole: LMSRole, allActions: any[]) =>
       case 'course-management':
         return permissions.canViewAllCourses || permissions.canEditCourses
       case 'assignments':
+      case 'training-plans':
         return permissions.canManageAssignments
       case 'analytics':
         return permissions.canViewAnalytics

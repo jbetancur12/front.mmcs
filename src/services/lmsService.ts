@@ -737,6 +737,236 @@ export interface UpdateCourseRequest {
   status?: CourseStatus
 }
 
+// ===========================
+// Training plans (planes de formación)
+// ===========================
+
+export type PlanTargetType = 'role' | 'all' | 'users'
+export type PlanCourseAction = 'crear' | 'reutilizar' | 'omitir'
+
+export interface PlanTarget {
+  type: PlanTargetType
+  role: string | null
+  all_employees: boolean
+  user_ids: number[] | null
+  label?: string
+}
+
+export interface PlanWarning {
+  code: string
+  message: string
+  course_id?: number
+}
+
+export interface PlanCourseItem {
+  course_id: number
+  position: number
+  deadline_days: number | null
+  title: string | null
+  status: CourseStatus | null
+  audience: CourseAudience | null
+  is_mandatory?: boolean | null
+}
+
+export interface PlanEffectiveCourse extends PlanCourseItem {
+  source_plan_id: number
+  source_plan_name: string | null
+  inherited: boolean
+  eligible: boolean
+  skip_reason: string | null
+}
+
+export interface PlanRef {
+  id: number
+  name: string | null
+}
+
+export interface TrainingPlanSummary {
+  id: number
+  name: string
+  description: string | null
+  is_active: boolean
+  created_by: number | null
+  creator?: { id: number; nombre: string; email: string } | null
+  created_at: string
+  updated_at: string
+  own_course_count: number
+  include_count: number
+  included_by_count: number
+  effective_course_count: number | null
+  assignment_count: number
+}
+
+export interface TrainingPlanDetail extends Omit<TrainingPlanSummary, 'own_course_count' | 'include_count' | 'included_by_count'> {
+  courses: PlanCourseItem[]
+  includes: PlanRef[]
+  included_by: PlanRef[]
+  effective_courses: PlanEffectiveCourse[]
+  effective_course_count: number
+  warnings: PlanWarning[]
+}
+
+export interface SaveTrainingPlanRequest {
+  name?: string
+  description?: string | null
+  is_active?: boolean
+  courses?: Array<{ course_id: number; position?: number; deadline_days?: number | null }>
+  include_plan_ids?: number[]
+  notify?: boolean
+}
+
+export interface PlanImpactDestination {
+  plan_assignment_id: number
+  plan_id: number
+  plan_name: string | null
+  target: string
+  added_course_ids: number[]
+  removed_course_ids: number[]
+  deadline_changed_course_ids: number[]
+  users_count: number
+}
+
+export interface PlanImpact {
+  affected_plan_ids: number[]
+  destinations: PlanImpactDestination[]
+  destinations_count: number
+  users_count: number
+  message: string
+}
+
+export interface UpdateTrainingPlanResult {
+  dry_run: boolean
+  impact: PlanImpact
+  warnings: PlanWarning[]
+  plan?: TrainingPlanDetail
+  notifications_sent?: number
+}
+
+export interface PlanAssignmentInput {
+  role?: string
+  all_employees?: boolean
+  user_ids?: number[]
+  deadline?: string | null
+  deadline_days?: number | null
+  send_notification?: boolean
+}
+
+export interface PlanAssignmentPreviewCourse {
+  course_id: number
+  title: string | null
+  status: CourseStatus | null
+  inherited: boolean
+  source_plan_id: number
+  source_plan_name: string | null
+  deadline_days: number | null
+  action: PlanCourseAction
+  reason?: string
+  existing_assignment_id?: number | null
+  existing_is_manual?: boolean | null
+  warning?: string | null
+}
+
+export interface PlanAssignmentPreview {
+  plan: PlanRef
+  target: PlanTarget
+  deadline: string | null
+  deadline_days: number | null
+  courses: PlanAssignmentPreviewCourse[]
+  summary: { total: number; create: number; reuse: number; skip: number }
+  affected_users: { count: number; users: Array<{ id: number; nombre: string; email: string }> }
+  already_assigned: boolean
+  existing_plan_assignment_id: number | null
+  replaces: Array<{ id: number; target: string }>
+  warnings: PlanWarning[]
+}
+
+export interface PlanAssignmentResult {
+  plan_assignment: { id: number }
+  summary: { total: number; created: number; reused: number; skipped: number }
+  affected_users_count: number
+  notifications_sent: number
+  replaced_plan_assignment_ids: number[]
+  warnings: PlanWarning[]
+}
+
+export interface PlanAssignmentRow {
+  id: number
+  plan_id: number
+  role: string | null
+  all_employees: boolean
+  user_ids: number[] | null
+  deadline: string | null
+  deadline_days: number | null
+  created_at: string
+  creator?: { id: number; nombre: string; email: string } | null
+  target: PlanTarget
+  course_count: number
+  origin_count: number
+  stats: { users: number; completed_users: number; users_with_overdue: number; avg_progress: number }
+}
+
+export interface DeadlineSource {
+  type: 'manual' | 'plan' | 'override'
+  assignment_id?: number
+  plan_assignment_id?: number
+  plan_id?: number
+  plan_name?: string | null
+}
+
+export interface PlanProgressSummary {
+  total_courses: number
+  completed_courses: number
+  progress_percentage: number
+  overdue_courses: number
+  next_deadline: string | null
+  next_deadline_source?: DeadlineSource | null
+  last_activity: string | null
+}
+
+export interface MyPlanCourse {
+  course_id: number
+  title: string
+  inherited: boolean
+  source_plan_id: number
+  source_plan_name: string | null
+  total_lessons: number
+  completed_lessons: number
+  completion_percentage: number
+  is_completed: boolean
+  deadline: string | null
+  deadline_source: DeadlineSource | null
+  is_overdue: boolean
+  last_activity: string | null
+}
+
+export interface MyPlan extends PlanProgressSummary {
+  id: number
+  name: string
+  description: string | null
+  plan_assignment_ids: number[]
+  courses: MyPlanCourse[]
+}
+
+export interface MyPlansResponse {
+  plans: MyPlan[]
+  unique_courses: PlanProgressSummary & { courses?: MyPlanCourse[] }
+}
+
+export interface PlanUserProgress extends Omit<PlanProgressSummary, 'next_deadline_source'> {
+  user_id: number
+  nombre: string
+  email: string
+  plan_assignment_ids: number[]
+  overdue_course_ids: number[]
+}
+
+export interface PlanProgressResponse {
+  plan: PlanRef
+  total_courses: number
+  summary: { users: number; completed_users: number; users_with_overdue: number; avg_progress: number }
+  users: PlanUserProgress[]
+}
+
 export interface CourseQueryParams {
   status?: CourseStatus
   audience?: CourseAudience
@@ -1711,6 +1941,75 @@ class LMSService {
     return response.data
   }
 
+  // ===========================
+  // Training plans (planes de formación)
+  // ===========================
+
+  async getTrainingPlans(): Promise<TrainingPlanSummary[]> {
+    const response = await axiosPrivate.get(`${this.baseURL}/plans`)
+    return this.unwrapResponse<{ plans: TrainingPlanSummary[] }>(response.data).plans
+  }
+
+  async getTrainingPlan(id: number): Promise<TrainingPlanDetail> {
+    const response = await axiosPrivate.get(`${this.baseURL}/plans/${id}`)
+    return this.unwrapResponse<TrainingPlanDetail>(response.data)
+  }
+
+  async createTrainingPlan(data: SaveTrainingPlanRequest): Promise<{ plan: TrainingPlanDetail; warnings: PlanWarning[] }> {
+    const response = await axiosPrivate.post(`${this.baseURL}/plans`, data)
+    return this.unwrapResponse(response.data)
+  }
+
+  /** Con dryRun devuelve solo el impacto sobre las asignaciones (HU-4). */
+  async updateTrainingPlan(id: number, data: SaveTrainingPlanRequest, dryRun = false): Promise<UpdateTrainingPlanResult> {
+    const response = await axiosPrivate.put(`${this.baseURL}/plans/${id}`, data, {
+      params: dryRun ? { dryRun: true } : undefined
+    })
+    return this.unwrapResponse<UpdateTrainingPlanResult>(response.data)
+  }
+
+  async deleteTrainingPlan(id: number, cascade = false): Promise<void> {
+    await axiosPrivate.delete(`${this.baseURL}/plans/${id}`, {
+      params: cascade ? { cascade: true } : undefined
+    })
+  }
+
+  async previewPlanAssignment(id: number, data: PlanAssignmentInput): Promise<PlanAssignmentPreview> {
+    const response = await axiosPrivate.post(`${this.baseURL}/plans/${id}/assign/preview`, data)
+    return this.unwrapResponse<PlanAssignmentPreview>(response.data)
+  }
+
+  async assignTrainingPlan(id: number, data: PlanAssignmentInput): Promise<PlanAssignmentResult> {
+    const response = await axiosPrivate.post(`${this.baseURL}/plans/${id}/assign`, data)
+    return this.unwrapResponse<PlanAssignmentResult>(response.data)
+  }
+
+  async getPlanAssignments(id: number): Promise<PlanAssignmentRow[]> {
+    const response = await axiosPrivate.get(`${this.baseURL}/plans/${id}/assignments`)
+    return this.unwrapResponse<{ assignments: PlanAssignmentRow[] }>(response.data).assignments
+  }
+
+  async unassignTrainingPlan(planAssignmentId: number): Promise<void> {
+    await axiosPrivate.delete(`${this.baseURL}/plans/assignments/${planAssignmentId}`)
+  }
+
+  async getPlanProgress(id: number): Promise<PlanProgressResponse> {
+    const response = await axiosPrivate.get(`${this.baseURL}/plans/${id}/progress`)
+    return this.unwrapResponse<PlanProgressResponse>(response.data)
+  }
+
+  /** Empleados internos activos (selector de destino por usuario). */
+  async getInternalUsers(): Promise<Array<{ id: number; name: string; email: string }>> {
+    const response = await axiosPrivate.get(`${this.baseURL}/users`, {
+      params: { userType: 'internal', active: true, limit: 1000 }
+    })
+    return response.data?.data || []
+  }
+
+  async getMyPlans(): Promise<MyPlansResponse> {
+    const response = await axiosPrivate.get(`${this.baseURL}/plans/my`)
+    return this.unwrapResponse<MyPlansResponse>(response.data)
+  }
 }
 
 // Export singleton instance

@@ -23,7 +23,10 @@ import type {
   CreateQuizRequest,
   LmsPermissions,
   UpdateAssignmentResult,
-  CourseProgressResponse
+  CourseProgressResponse,
+  PlanAssignmentInput,
+  SaveTrainingPlanRequest,
+  TrainingPlanDetail
 } from 'src/services/lmsService'
 import { Toast } from 'src/Components/ExcelManipulation/Utils'
 
@@ -1442,6 +1445,93 @@ export const useMarkAllNotificationsAsRead = (
       }
     }
   )
+}
+
+// ===========================
+// Training plans (planes de formación)
+// Los avisos (toasts) los muestra cada pantalla: los rechazos de negocio
+// (409 de plan asignado, ciclo, etc.) necesitan su propio texto.
+// ===========================
+
+type PlanQueryOptions = { enabled?: boolean }
+
+export const useTrainingPlans = (options?: PlanQueryOptions) =>
+  useQuery(queryKeys.plans.list(), () => lmsService.getTrainingPlans(), {
+    staleTime: 60 * 1000,
+    ...options
+  })
+
+export const useTrainingPlan = (id: number | null, options?: PlanQueryOptions) =>
+  useQuery(queryKeys.plans.detail(id ?? 0), () => lmsService.getTrainingPlan(id as number), {
+    enabled: Boolean(id),
+    staleTime: 30 * 1000,
+    ...options
+  })
+
+export const usePlanAssignments = (id: number | null, options?: PlanQueryOptions) =>
+  useQuery(queryKeys.plans.assignments(id ?? 0), () => lmsService.getPlanAssignments(id as number), {
+    enabled: Boolean(id),
+    ...options
+  })
+
+export const usePlanProgress = (id: number | null, options?: PlanQueryOptions) =>
+  useQuery(queryKeys.plans.progress(id ?? 0), () => lmsService.getPlanProgress(id as number), {
+    enabled: Boolean(id),
+    ...options
+  })
+
+/** Misma clave que la pantalla de Asignaciones para compartir caché. */
+export const useInternalUsers = (options?: PlanQueryOptions) =>
+  useQuery(['lms-internal-users'], () => lmsService.getInternalUsers(), {
+    staleTime: 5 * 60 * 1000,
+    ...options
+  })
+
+export const useMyPlans = (options?: PlanQueryOptions) =>
+  useQuery(queryKeys.plans.my(), () => lmsService.getMyPlans(), {
+    staleTime: 3 * 60 * 1000,
+    ...options
+  })
+
+/** Invalida planes y asignaciones: un cambio de plan crea o borra filas por curso. */
+const useInvalidatePlans = () => {
+  const queryClient = useQueryClient()
+  return () => {
+    queryClient.invalidateQueries(queryKeys.plans.all)
+    queryClient.invalidateQueries(queryKeys.assignments.all)
+  }
+}
+
+export const useSaveTrainingPlan = () => {
+  const invalidate = useInvalidatePlans()
+  return useMutation(
+    async ({ id, data }: { id?: number; data: SaveTrainingPlanRequest }): Promise<{ plan?: TrainingPlanDetail }> =>
+      id ? lmsService.updateTrainingPlan(id, data) : lmsService.createTrainingPlan(data),
+    { onSuccess: invalidate }
+  )
+}
+
+export const useDeleteTrainingPlan = () => {
+  const invalidate = useInvalidatePlans()
+  return useMutation(
+    ({ id, cascade }: { id: number; cascade?: boolean }) => lmsService.deleteTrainingPlan(id, cascade),
+    { onSuccess: invalidate }
+  )
+}
+
+export const useAssignTrainingPlan = () => {
+  const invalidate = useInvalidatePlans()
+  return useMutation(
+    ({ id, data }: { id: number; data: PlanAssignmentInput }) => lmsService.assignTrainingPlan(id, data),
+    { onSuccess: invalidate }
+  )
+}
+
+export const useUnassignTrainingPlan = () => {
+  const invalidate = useInvalidatePlans()
+  return useMutation((planAssignmentId: number) => lmsService.unassignTrainingPlan(planAssignmentId), {
+    onSuccess: invalidate
+  })
 }
 
 // ===========================

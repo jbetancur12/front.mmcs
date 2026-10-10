@@ -26,3 +26,31 @@ export const getApiErrorMessage = (error: unknown, fallback: string) => {
 
   return reason ? `${fallback} ${reason.trim()}` : fallback
 }
+
+interface StructuredApiError {
+  response?: {
+    status?: number
+    data?: { error?: { code?: string; message?: string } | string }
+  }
+}
+
+/** Código de error del backend LMS (`{ error: { code, message } }`), si lo hay. */
+export const getApiErrorCode = (error: unknown): string | null => {
+  const payload = (error as StructuredApiError)?.response?.data?.error
+  return payload && typeof payload === 'object' ? payload.code ?? null : null
+}
+
+/**
+ * Como getApiErrorMessage, pero entiende las respuestas del errorHandler del
+ * backend, donde el motivo viene en `error.message`. Devuelve solo el motivo
+ * en rechazos 4xx y el texto base en otros casos.
+ */
+export const getStructuredApiErrorMessage = (error: unknown, fallback: string) => {
+  const response = (error as StructuredApiError)?.response
+  const status = response?.status ?? 0
+  if (status < 400 || status >= 500) return fallback
+
+  const payload = response?.data?.error
+  const reason = typeof payload === 'string' ? payload : payload?.message
+  return reason && reason.trim() ? reason.trim() : fallback
+}

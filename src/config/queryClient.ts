@@ -80,6 +80,16 @@ export const queryKeys = {
     templatePreview: (id: number) => [...queryKeys.certificates.all, 'templates', id, 'preview'] as const
   },
 
+  // Training plans (planes de formación)
+  plans: {
+    all: ['training-plans'] as const,
+    list: () => [...queryKeys.plans.all, 'list'] as const,
+    detail: (id: number) => [...queryKeys.plans.all, 'detail', id] as const,
+    assignments: (id: number) => [...queryKeys.plans.all, 'assignments', id] as const,
+    progress: (id: number) => [...queryKeys.plans.all, 'progress', id] as const,
+    my: () => [...queryKeys.plans.all, 'my'] as const
+  },
+
   // Assignments
   assignments: {
     all: ['assignments'] as const,
