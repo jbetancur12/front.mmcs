@@ -397,6 +397,7 @@ const EquipmentSalesDetailPage = () => {
             </Typography>
             <Typography variant='body2' sx={{ mt: 1, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, fontSize: '0.9rem' }}>
               {quotation.customer?.nombre || 'Cliente no especificado'} · Emitida {formatDate(quotation.createdAt)}
+              {quotation.createdBy ? ` por ${quotation.createdBy.nombre}` : ''}
               {quotation.approvalChannel ? ` · Aprobada vía ${quotation.approvalChannel}` : ''}
             </Typography>
           </Box>
@@ -476,6 +477,9 @@ const EquipmentSalesDetailPage = () => {
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
                   <Typography variant='body2'><strong>Cliente:</strong> {quotation.customer?.nombre || 'N/A'}</Typography>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography variant='body2'><strong>Creada por:</strong> {quotation.createdBy ? `${quotation.createdBy.nombre} (${quotation.createdBy.email})` : 'Sin registro'}</Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <Typography variant='body2'><strong>NIT:</strong> {quotation.customer?.identificacion || 'N/A'}</Typography>

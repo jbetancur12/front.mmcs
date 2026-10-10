@@ -332,6 +332,9 @@ const EquipmentSalesPage = () => {
                     <Typography variant='body2'>
                       <strong>Total:</strong> {currencyFormatter.format(quotation.grandTotal)}
                     </Typography>
+                    <Typography variant='caption' color='text.secondary' sx={{ display: 'block' }}>
+                      Creada por {quotation.createdBy?.nombre || 'Sin registro'}
+                    </Typography>
                     <Typography variant='caption' color='text.secondary'>
                       {new Date(quotation.createdAt).toLocaleDateString('es-CO')}
                     </Typography>
@@ -372,6 +375,17 @@ const EquipmentSalesPage = () => {
               size: 220,
               Cell: ({ cell }) => (
                 <Typography variant='body2' sx={{ color: '#6b7280', fontWeight: 600 }}>
+                  {cell.getValue<string>()}
+                </Typography>
+              )
+            },
+            {
+              accessorFn: (q) => q.createdBy?.nombre || 'Sin registro',
+              id: 'createdBy',
+              header: 'Creada por',
+              size: 180,
+              Cell: ({ cell }) => (
+                <Typography variant='body2' sx={{ color: '#6b7280' }}>
                   {cell.getValue<string>()}
                 </Typography>
               )
@@ -470,6 +484,9 @@ const EquipmentSalesPage = () => {
                         {currencyFormatter.format(quotation.grandTotal)}
                       </Typography>
                       <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
+                        Creada por {quotation.createdBy?.nombre || 'Sin registro'}
+                      </Typography>
+                      <Typography variant='caption' color='text.secondary' sx={{ display: 'block' }}>
                         {new Date(quotation.createdAt).toLocaleDateString('es-CO')}
                       </Typography>
                     </CardContent>
