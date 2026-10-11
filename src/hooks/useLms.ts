@@ -1534,6 +1534,18 @@ export const useUnassignTrainingPlan = () => {
   })
 }
 
+/** Destinos de usuarios que se pueden unificar (consulta sin cambios). */
+export const useMergeablePlanAssignments = (planId: number | null, options?: PlanQueryOptions) =>
+  useQuery(queryKeys.plans.mergeable(planId ?? 0), () => lmsService.mergePlanAssignments(planId as number, true), {
+    enabled: Boolean(planId),
+    ...options
+  })
+
+export const useMergePlanAssignments = () => {
+  const invalidate = useInvalidatePlans()
+  return useMutation((planId: number) => lmsService.mergePlanAssignments(planId), { onSuccess: invalidate })
+}
+
 export const useUpdatePlanAssignmentUsers = () => {
   const invalidate = useInvalidatePlans()
   return useMutation(

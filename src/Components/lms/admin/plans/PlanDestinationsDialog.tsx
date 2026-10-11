@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import {
+  Alert,
   Box,
   Button,
   Chip,
@@ -27,10 +28,13 @@ import {
   GroupAdd as AssignIcon,
   Groups as DestinationsIcon,
   LinkOff as UnassignIcon,
-  ManageAccounts as EditUsersIcon
+  ManageAccounts as EditUsersIcon,
+  MergeType as MergeIcon
 } from '@mui/icons-material'
 import {
   useInternalUsers,
+  useMergePlanAssignments,
+  useMergeablePlanAssignments,
   usePlanAssignments,
   useUnassignTrainingPlan
 } from 'src/hooks/useLms'
@@ -97,6 +101,46 @@ const PlanDestinationsDialog: React.FC<PlanDestinationsDialogProps> = ({
   const { data: assignments = [], isLoading } = usePlanAssignments(planId)
   const { data: internalUsers = [] } = useInternalUsers({ enabled: open })
   const unassignMutation = useUnassignTrainingPlan()
+  const { data: mergeable } = useMergeablePlanAssignments(planId)
+  const mergeMutation = useMergePlanAssignments()
+  const mergeGroups = mergeable?.groups ?? []
+
+  // Destinos de usuarios con el mismo plazo creados por separado: se unen en uno
+  const handleMerge = async () => {
+    if (!plan || mergeGroups.length === 0) return
+    const detail = mergeGroups
+      .map((group) => {
+        const plazo = describePlanDeadline(
+          group.plazo.deadline,
+          group.plazo.deadline_days
+        )
+        return `<li><b>${escapeHtml(plazo)}</b>: ${group.merged_ids.length + 1} destinos → 1 con ${group.total_users} persona(s)</li>`
+      })
+      .join('')
+    const confirmation = await Swal.fire({
+      icon: 'question',
+      title: '¿Unificar destinos?',
+      html: `<ul style="text-align:left">${detail}</ul>Cada persona conserva sus cursos, su fecha límite, su progreso y sus certificados.`,
+      showCancelButton: true,
+      confirmButtonText: 'Unificar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#00BFA5'
+    })
+    if (!confirmation.isConfirmed) return
+
+    try {
+      await mergeMutation.mutateAsync(plan.id)
+      Toast.fire({ icon: 'success', title: 'Destinos unificados' })
+    } catch (error) {
+      Toast.fire({
+        icon: 'error',
+        title: getStructuredApiErrorMessage(
+          error,
+          'No se pudieron unificar los destinos.'
+        )
+      })
+    }
+  }
   const [editing, setEditing] = useState<PlanAssignmentRow | null>(null)
 
   const userNames = useMemo(
@@ -188,6 +232,27 @@ const PlanDestinationsDialog: React.FC<PlanDestinationsDialogProps> = ({
             </Button>
           )}
         </Box>
+        {mergeGroups.length > 0 && (
+          <Alert
+            severity='info'
+            sx={{ mb: 2 }}
+            action={
+              <Button
+                color='inherit'
+                size='small'
+                startIcon={<MergeIcon />}
+                onClick={handleMerge}
+                disabled={mergeMutation.isLoading}
+              >
+                Unificar destinos
+              </Button>
+            }
+          >
+            Hay destinos de usuarios con el mismo plazo creados por separado.
+            Puedes unirlos en uno solo; nadie pierde cursos ni cambia su fecha
+            límite.
+          </Alert>
+        )}
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
             <CircularProgress sx={{ color: PLAN_TEAL }} />

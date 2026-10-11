@@ -886,6 +886,21 @@ export interface PlanAssignmentPreview {
   warnings: PlanWarning[]
 }
 
+export interface PlanMergeGroup {
+  survivor_id: number
+  merged_ids: number[]
+  plazo: { deadline: string | null; deadline_days: number | null }
+  users_before: string[]
+  users_added: string[]
+  total_users: number
+}
+
+export interface PlanMergeResult {
+  dry_run: boolean
+  plan: PlanRef
+  groups: PlanMergeGroup[]
+}
+
 export interface PlanAssignmentResult {
   plan_assignment: { id: number }
   merged?: boolean
@@ -2035,6 +2050,14 @@ class LMSService {
 
   async unassignTrainingPlan(planAssignmentId: number): Promise<void> {
     await axiosPrivate.delete(`${this.baseURL}/plans/assignments/${planAssignmentId}`)
+  }
+
+  /** Unifica los destinos de usuarios con el mismo plazo; con dryRun solo los lista. */
+  async mergePlanAssignments(planId: number, dryRun = false): Promise<PlanMergeResult> {
+    const response = await axiosPrivate.post(`${this.baseURL}/plans/${planId}/merge-assignments`, null, {
+      params: dryRun ? { dryRun: true } : undefined
+    })
+    return this.unwrapResponse<PlanMergeResult>(response.data)
   }
 
   /** Cambia los usuarios de un destino "usuarios concretos" sin rehacerlo. */
