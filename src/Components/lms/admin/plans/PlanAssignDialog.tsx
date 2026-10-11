@@ -292,7 +292,15 @@ const PlanAssignDialog: React.FC<PlanAssignDialogProps> = ({ open, plan, onClose
                         ].filter(Boolean).join(' · ') || null}
                         sx={{ minWidth: 0 }}
                       />
-                      <Chip size='small' label={ACTION_CHIP[course.action].label} sx={ACTION_CHIP[course.action].sx} />
+                      <Chip
+                        size='small'
+                        label={
+                          course.action === 'reutilizar'
+                            ? course.existing_is_manual ? 'Ya asignado (directo)' : 'Ya en otro plan'
+                            : ACTION_CHIP[course.action].label
+                        }
+                        sx={ACTION_CHIP[course.action].sx}
+                      />
                     </ListItem>
                   </React.Fragment>
                 ))}

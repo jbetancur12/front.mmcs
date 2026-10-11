@@ -24,7 +24,9 @@ import {
   LinearProgress,
   Tabs,
   Tab,
-  TextField
+  TextField,
+  Pagination,
+  Tooltip
 } from '@mui/material'
 import { Autocomplete } from '@mui/lab'
 import {
@@ -35,7 +37,9 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   Add as AddIcon,
+  AccountTree as PlanIcon,
 } from '@mui/icons-material'
+import { describePlanDeadline } from 'src/Components/lms/admin/plans/planUi'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
@@ -55,6 +59,15 @@ interface Course {
 }
 
 // Backend response interface
+// Plan de formación que sostiene la fila (su plazo es por persona)
+interface PlanOrigin {
+  plan_id: number | null
+  plan_name: string | null
+  plan_assignment_id: number | null
+  deadline: string | null
+  deadline_days: number | null
+}
+
 interface BackendAssignment {
   id: number
   course_id: number
@@ -71,6 +84,9 @@ interface BackendAssignment {
   all_employees: boolean
   role?: string
   deadline: string | null
+  is_manual?: boolean
+  managed_by_plan?: boolean
+  plan_origins?: PlanOrigin[]
   created_by: number
   creator?: {
     id: number
@@ -128,6 +144,9 @@ interface Assignment {
   }
   progress: number
   createdAt: string
+  isManual: boolean
+  managedByPlan: boolean
+  planOrigins: PlanOrigin[]
   reminderSummary: {
     totalNotifications: number
     reminderNotifications: number
@@ -162,6 +181,9 @@ const transformAssignment = (backendAssignment: BackendAssignment): Assignment =
     },
     progress: Math.round(backendAssignment.progress_stats.avgProgress || 0),
     createdAt: backendAssignment.created_at,
+    isManual: backendAssignment.is_manual !== false,
+    managedByPlan: Boolean(backendAssignment.managed_by_plan),
+    planOrigins: backendAssignment.plan_origins || [],
     reminderSummary: backendAssignment.reminder_summary || {
       totalNotifications: 0,
       reminderNotifications: 0,
@@ -212,6 +234,12 @@ const getUrgencyColor = (level: Assignment['urgency']['level']) => {
 }
 
 const formatDeadlineInsight = (assignment: Assignment) => {
+  // Filas de planes: el plazo se calcula por persona a partir del plan
+  if (!assignment.deadline && assignment.planOrigins.length > 0) {
+    return assignment.planOrigins
+      .map((origin) => `${describePlanDeadline(origin.deadline, origin.deadline_days)} (por plan)`)
+      .join(' · ')
+  }
   if (!assignment.deadline) return 'Sin fecha límite'
   if (assignment.status === 'completed') return 'Completada'
   if (assignment.status === 'overdue' && typeof assignment.daysUntilDeadline === 'number') {
@@ -243,7 +271,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
   const [deadlineDays, setDeadlineDays] = useState<number>(30)
   const [deadline, setDeadline] = useState<Date | null>(null)
   const [assignmentType, setAssignmentType] = useState<'role' | 'all' | 'users'>('role')
-  const page = 0
+  const [page, setPage] = useState(0)
   const rowsPerPage = 10
 
   // Edit modal states
@@ -505,11 +533,13 @@ const LmsCourseAssignmentInterface: React.FC = () => {
 
   const handleCourseSelection = (courseId: number | '') => {
     setSelectedCourse(courseId)
+    setPage(0)
     syncCourseInSearch(courseId)
   }
 
   const handleStatusSelection = (status: 'all' | 'active' | 'completed' | 'overdue') => {
     setSelectedStatus(status)
+    setPage(0)
     const nextParams = new URLSearchParams(searchParams)
     nextParams.set('tab', activeTab === 1 ? 'create' : 'active')
     if (selectedCourse) {
@@ -624,11 +654,15 @@ const LmsCourseAssignmentInterface: React.FC = () => {
     })
   }
 
-  const handleDeleteAssignment = (assignmentId: number) => {
+  const handleDeleteAssignment = (assignment: Assignment) => {
+    const assignmentId = assignment.id
+    const planNames = assignment.planOrigins.map((origin) => origin.plan_name).filter(Boolean).join(', ')
     Swal.fire({
       icon: 'warning',
       title: '¿Eliminar asignación?',
-      text: 'Esta acción no se puede deshacer',
+      text: planNames
+        ? `Se quita la asignación directa; el curso sigue asignado por el plan ${planNames}.`
+        : 'Esta acción no se puede deshacer',
       showCancelButton: true,
       confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar',
@@ -791,7 +825,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
           <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
               <Typography variant="h6">
-                Asignaciones Activas ({assignments.length})
+                Asignaciones Activas ({assignmentsResponse?.total ?? assignments.length})
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                 <FormControl size="small" sx={{ minWidth: 280 }}>
@@ -839,11 +873,11 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                     <CardContent>
                       <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                         <Box sx={{ flex: 1 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
                             <Avatar sx={{ bgcolor: 'primary.main' }}>
                               <AssignmentIcon />
                             </Avatar>
-                            <Box>
+                            <Box sx={{ flex: '1 1 260px', minWidth: 0 }}>
                               <Typography variant="h6" component="div">
                                 {assignment.courseTitle}
                               </Typography>
@@ -862,6 +896,17 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                               size="small"
                               variant="outlined"
                             />
+                            {assignment.planOrigins.map((origin) => (
+                              <Chip
+                                key={origin.plan_assignment_id ?? origin.plan_name}
+                                icon={<PlanIcon />}
+                                label={`Plan ${origin.plan_name ?? ''}`}
+                                size="small"
+                                clickable
+                                onClick={() => navigate('/lms/admin/plans')}
+                                sx={{ bgcolor: '#E0F7F4', color: '#00695C', '& .MuiChip-icon': { color: '#00695C' } }}
+                              />
+                            ))}
                           </Box>
 
                           <Grid container spacing={2} sx={{ mb: 2 }}>
@@ -965,21 +1010,38 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                           >
                             <NotificationsIcon />
                           </IconButton>
-                          <IconButton
-                            size="small"
-                            title="Editar asignación"
-                            onClick={() => handleOpenEditDialog(assignment)}
-                          >
-                            <EditIcon />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            title="Eliminar asignación"
-                            onClick={() => handleDeleteAssignment(assignment.id)}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
+                          {assignment.managedByPlan ? (
+                            // Solo la sostienen planes: se cambia o retira desde el plan
+                            <Tooltip title="Esta asignación la crea un plan de formación; edítala o retírala desde el plan">
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<PlanIcon />}
+                                onClick={() => navigate('/lms/admin/plans')}
+                                sx={{ borderColor: '#00BFA5', color: '#00897B' }}
+                              >
+                                Gestionar en Planes
+                              </Button>
+                            </Tooltip>
+                          ) : (
+                            <>
+                              <IconButton
+                                size="small"
+                                title="Editar asignación"
+                                onClick={() => handleOpenEditDialog(assignment)}
+                              >
+                                <EditIcon />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                color="error"
+                                title="Eliminar asignación"
+                                onClick={() => handleDeleteAssignment(assignment)}
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </>
+                          )}
                         </Box>
                       </Box>
                     </CardContent>
@@ -994,6 +1056,17 @@ const LmsCourseAssignmentInterface: React.FC = () => {
                 </Grid>
               )}
             </Grid>
+            {(assignmentsResponse?.total ?? 0) > rowsPerPage && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                <Pagination
+                  count={Math.ceil((assignmentsResponse?.total ?? 0) / rowsPerPage)}
+                  page={page + 1}
+                  onChange={(_, value) => setPage(value - 1)}
+                  color="primary"
+                  shape="rounded"
+                />
+              </Box>
+            )}
           </Box>
         )}
 

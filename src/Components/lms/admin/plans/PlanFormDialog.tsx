@@ -65,6 +65,7 @@ interface EffectiveRow {
   course_id: number
   title: string
   source: string | null
+  status: string | null
 }
 
 const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }) => {
@@ -140,21 +141,30 @@ const PlanFormDialog: React.FC<PlanFormDialogProps> = ({ open, planId, onClose }
     courses.forEach((item) => {
       if (seen.has(item.course_id)) return
       seen.add(item.course_id)
-      rows.push({ course_id: item.course_id, title: courseById.get(item.course_id)?.title ?? `Curso ${item.course_id}`, source: null })
+      rows.push({
+        course_id: item.course_id,
+        title: courseById.get(item.course_id)?.title ?? `Curso ${item.course_id}`,
+        source: null,
+        status: courseById.get(item.course_id)?.status ?? null
+      })
     })
     includedQueries.forEach((query) => {
       query.data?.effective_courses.forEach((course) => {
         if (seen.has(course.course_id)) return
         seen.add(course.course_id)
-        rows.push({ course_id: course.course_id, title: course.title ?? `Curso ${course.course_id}`, source: course.source_plan_name })
+        rows.push({
+          course_id: course.course_id,
+          title: course.title ?? `Curso ${course.course_id}`,
+          source: course.source_plan_name,
+          status: course.status
+        })
       })
     })
     return rows
   }, [courses, includedQueries, courseById])
 
-  const draftCourses = courses
-    .map((item) => courseById.get(item.course_id))
-    .filter((course): course is Course => Boolean(course) && course!.status !== 'published')
+  // Propios y heredados: un curso en borrador se asigna pero no es visible
+  const draftCourses = effectiveRows.filter((row) => row.status && row.status !== 'published')
 
   const availableCourses = catalog.filter((course) => !courses.some((item) => item.course_id === course.id))
   const includesLoading = includedQueries.some((query) => query.isLoading)
