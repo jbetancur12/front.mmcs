@@ -1534,6 +1534,15 @@ export const useUnassignTrainingPlan = () => {
   })
 }
 
+export const useUpdatePlanAssignmentUsers = () => {
+  const invalidate = useInvalidatePlans()
+  return useMutation(
+    ({ id, userIds, notify }: { id: number; userIds: number[]; notify: boolean }) =>
+      lmsService.updatePlanAssignmentUsers(id, { user_ids: userIds, send_notification: notify }),
+    { onSuccess: invalidate }
+  )
+}
+
 // ===========================
 // Export all hooks
 // ===========================

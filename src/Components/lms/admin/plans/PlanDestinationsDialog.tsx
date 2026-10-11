@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import {
@@ -26,9 +26,16 @@ import {
   FactCheck as ComplianceIcon,
   GroupAdd as AssignIcon,
   Groups as DestinationsIcon,
-  LinkOff as UnassignIcon
+  LinkOff as UnassignIcon,
+  ManageAccounts as EditUsersIcon
 } from '@mui/icons-material'
-import { usePlanAssignments, useUnassignTrainingPlan } from 'src/hooks/useLms'
+import {
+  useInternalUsers,
+  usePlanAssignments,
+  useUnassignTrainingPlan
+} from 'src/hooks/useLms'
+import type { PlanAssignmentRow } from 'src/services/lmsService'
+import PlanAssignmentUsersDialog from './PlanAssignmentUsersDialog'
 import { Toast } from 'src/Components/ExcelManipulation/Utils'
 import { getStructuredApiErrorMessage } from 'src/utils/apiError'
 import {
@@ -47,6 +54,15 @@ interface PlanDestinationsDialogProps {
   onClose: () => void
   onAssign: () => void
 }
+
+const escapeHtml = (value: string) =>
+  value.replace(
+    /[&<>"']/g,
+    (char) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[
+        char
+      ] as string
+  )
 
 const ProgressCell: React.FC<{ value: number }> = ({ value }) => (
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 120 }}>
@@ -79,13 +95,35 @@ const PlanDestinationsDialog: React.FC<PlanDestinationsDialogProps> = ({
   const planId = open && plan ? plan.id : null
 
   const { data: assignments = [], isLoading } = usePlanAssignments(planId)
+  const { data: internalUsers = [] } = useInternalUsers({ enabled: open })
   const unassignMutation = useUnassignTrainingPlan()
+  const [editing, setEditing] = useState<PlanAssignmentRow | null>(null)
 
-  const handleUnassign = async (id: number, label: string, users: number) => {
+  const userNames = useMemo(
+    () => new Map(internalUsers.map((user) => [user.id, user.name])),
+    [internalUsers]
+  )
+  const namesOf = (row: PlanAssignmentRow) =>
+    (row.target.user_ids ?? []).map(
+      (id) => userNames.get(id) ?? `Usuario ${id}`
+    )
+
+  /** Usuarios concretos: los nombres; rol o todos: la etiqueta y cuántas personas. */
+  const describeForConfirm = (row: PlanAssignmentRow) => {
+    if (row.target.type === 'users') {
+      const names = namesOf(row)
+      const shown = names.slice(0, 6).map(escapeHtml).join(', ')
+      return names.length > 6 ? `${shown} y ${names.length - 6} más` : shown
+    }
+    return `${escapeHtml(describeTarget(row.target))} (${row.stats.users} persona${row.stats.users === 1 ? '' : 's'})`
+  }
+
+  const handleUnassign = async (row: PlanAssignmentRow) => {
+    const id = row.id
     const confirmation = await Swal.fire({
       icon: 'warning',
       title: '¿Desasignar el plan?',
-      html: `Se retirará <b>${plan?.name}</b> de <b>${label}</b> (${users} usuario(s)).<br/>Se conservan las asignaciones directas, las de otros planes, el progreso y los certificados.`,
+      html: `Se retirará <b>${escapeHtml(plan?.name ?? '')}</b> de <b>${describeForConfirm(row)}</b>.<br/>Se conservan las asignaciones directas, las de otros planes, el progreso y los certificados.`,
       showCancelButton: true,
       confirmButtonText: 'Desasignar',
       cancelButtonText: 'Cancelar',
@@ -197,6 +235,16 @@ const PlanDestinationsDialog: React.FC<PlanDestinationsDialogProps> = ({
                         <Typography variant='body2' fontWeight={600}>
                           {label}
                         </Typography>
+                        {row.target.type === 'users' && (
+                          <Typography variant='body2' color='text.secondary'>
+                            {(() => {
+                              const names = namesOf(row)
+                              return names.length > 3
+                                ? `${names.slice(0, 3).join(', ')} y ${names.length - 3} más`
+                                : names.join(', ')
+                            })()}
+                          </Typography>
+                        )}
                         <Typography variant='caption' color='text.secondary'>
                           Desde {formatPlanDate(row.created_at)}
                           {row.creator ? ` · ${row.creator.nombre}` : ''}
@@ -231,16 +279,25 @@ const PlanDestinationsDialog: React.FC<PlanDestinationsDialogProps> = ({
                           completaron
                         </Typography>
                       </TableCell>
-                      <TableCell align='right'>
+                      <TableCell align='right' sx={{ whiteSpace: 'nowrap' }}>
+                        {row.target.type === 'users' && (
+                          <Tooltip title='Editar usuarios'>
+                            <IconButton
+                              size='small'
+                              color='primary'
+                              onClick={() => setEditing(row)}
+                            >
+                              <EditUsersIcon />
+                            </IconButton>
+                          </Tooltip>
+                        )}
                         <Tooltip title='Desasignar'>
                           <span>
                             <IconButton
                               color='error'
                               size='small'
                               disabled={unassignMutation.isLoading}
-                              onClick={() =>
-                                handleUnassign(row.id, label, row.stats.users)
-                              }
+                              onClick={() => handleUnassign(row)}
                             >
                               <UnassignIcon />
                             </IconButton>
@@ -255,6 +312,13 @@ const PlanDestinationsDialog: React.FC<PlanDestinationsDialogProps> = ({
           </TableContainer>
         )}
       </DialogContent>
+      <PlanAssignmentUsersDialog
+        open={Boolean(editing)}
+        planName={plan?.name ?? ''}
+        planAssignmentId={editing?.id ?? null}
+        userIds={editing?.target.user_ids ?? []}
+        onClose={() => setEditing(null)}
+      />
     </Dialog>
   )
 }

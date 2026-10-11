@@ -121,8 +121,10 @@ const PlanAssignDialog: React.FC<PlanAssignDialogProps> = ({ open, plan, onClose
       const result = await assignMutation.mutateAsync({ id: plan.id, data: { ...buildInput(), send_notification: notify } })
       Toast.fire({
         icon: 'success',
-        title: 'Plan asignado',
-        text: `${result.summary.created} asignaciones nuevas, ${result.summary.reused} reutilizadas · ${result.affected_users_count} usuario(s)`
+        title: result.merged ? 'Usuarios agregados al destino existente' : 'Plan asignado',
+        text: result.merged
+          ? `${result.affected_users_count} usuario(s) agregado(s); no se creó un destino nuevo`
+          : `${result.summary.created} asignaciones nuevas, ${result.summary.reused} reutilizadas · ${result.affected_users_count} usuario(s)`
       })
       onClose()
     } catch (error) {
@@ -233,7 +235,18 @@ const PlanAssignDialog: React.FC<PlanAssignDialogProps> = ({ open, plan, onClose
             <Divider sx={{ mb: 2 }} />
             {preview.already_assigned && (
               <Alert severity='error' sx={{ mb: 2 }}>
-                Este destino ya tiene asignado el plan. Para cambiarlo, desasígnalo primero desde Destinos.
+                {preview.target.type === 'users'
+                  ? 'Esos usuarios ya tienen este plan con el mismo plazo. Para cambiar el destino usa Editar usuarios en Destinos.'
+                  : 'Este destino ya tiene asignado el plan. Para cambiarlo, desasígnalo primero desde Destinos.'}
+              </Alert>
+            )}
+            {preview.merge_into && (
+              <Alert severity='info' sx={{ mb: 2 }}>
+                Ya hay un destino de este plan con el mismo plazo
+                {preview.merge_into.current_users.length > 0
+                  ? ` (${preview.merge_into.current_users.map((user) => user.nombre).join(', ')})`
+                  : ''}
+                . Se agregarán a ese destino en lugar de crear uno nuevo; quienes ya estaban conservan su fecha.
               </Alert>
             )}
             {preview.replaces.length > 0 && (

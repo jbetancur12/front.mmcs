@@ -875,6 +875,12 @@ export interface PlanAssignmentPreview {
   summary: { total: number; create: number; reuse: number; skip: number }
   affected_users: { count: number; users: Array<{ id: number; nombre: string; email: string }> }
   already_assigned: boolean
+  /** Usuarios concretos con el mismo plazo: se suman a este destino en vez de crear otro. */
+  merge_into?: {
+    plan_assignment_id: number
+    current_users: Array<{ id: number; nombre: string }>
+    added_user_ids: number[]
+  } | null
   existing_plan_assignment_id: number | null
   replaces: Array<{ id: number; target: string }>
   warnings: PlanWarning[]
@@ -882,6 +888,7 @@ export interface PlanAssignmentPreview {
 
 export interface PlanAssignmentResult {
   plan_assignment: { id: number }
+  merged?: boolean
   summary: { total: number; created: number; reused: number; skipped: number }
   affected_users_count: number
   notifications_sent: number
@@ -2028,6 +2035,15 @@ class LMSService {
 
   async unassignTrainingPlan(planAssignmentId: number): Promise<void> {
     await axiosPrivate.delete(`${this.baseURL}/plans/assignments/${planAssignmentId}`)
+  }
+
+  /** Cambia los usuarios de un destino "usuarios concretos" sin rehacerlo. */
+  async updatePlanAssignmentUsers(
+    planAssignmentId: number,
+    data: { user_ids: number[]; send_notification?: boolean }
+  ): Promise<{ added_user_ids: number[]; removed_user_ids: number[]; notifications_sent: number }> {
+    const response = await axiosPrivate.put(`${this.baseURL}/plans/assignments/${planAssignmentId}/users`, data)
+    return this.unwrapResponse(response.data)
   }
 
   /** HU-7: por defecto solo cursos obligatorios. */
