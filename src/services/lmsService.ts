@@ -952,18 +952,55 @@ export interface MyPlansResponse {
   unique_courses: PlanProgressSummary & { courses?: MyPlanCourse[] }
 }
 
+export type PlanComplianceStatus = 'completed' | 'overdue' | 'in_progress' | 'not_started' | 'no_courses'
+
+/** Destino por el que una persona recibe el plan (directo o por un plan que lo incluye). */
+export interface PlanProgressDestination {
+  plan_assignment_id: number
+  plan_id: number
+  plan_name: string | null
+  inherited: boolean
+  target: string
+}
+
+export interface PlanUserCourseProgress {
+  course_id: number
+  title: string
+  source_plan_name: string | null
+  is_completed: boolean
+  is_overdue: boolean
+  completion_percentage: number
+  deadline: string | null
+  deadline_source: DeadlineSource | null
+  last_activity: string | null
+}
+
 export interface PlanUserProgress extends Omit<PlanProgressSummary, 'next_deadline_source'> {
   user_id: number
   nombre: string
   email: string
   plan_assignment_ids: number[]
+  destinations: PlanProgressDestination[]
+  status: PlanComplianceStatus
   overdue_course_ids: number[]
+  courses: PlanUserCourseProgress[]
 }
 
 export interface PlanProgressResponse {
   plan: PlanRef
+  mandatory_only: boolean
   total_courses: number
-  summary: { users: number; completed_users: number; users_with_overdue: number; avg_progress: number }
+  excluded_courses: number
+  courses: Array<{ course_id: number; title: string; source_plan_name: string | null; inherited: boolean }>
+  destinations: PlanProgressDestination[]
+  summary: {
+    users: number
+    completed_users: number
+    users_with_overdue: number
+    in_progress_users: number
+    not_started_users: number
+    avg_progress: number
+  }
   users: PlanUserProgress[]
 }
 
@@ -1993,8 +2030,11 @@ class LMSService {
     await axiosPrivate.delete(`${this.baseURL}/plans/assignments/${planAssignmentId}`)
   }
 
-  async getPlanProgress(id: number): Promise<PlanProgressResponse> {
-    const response = await axiosPrivate.get(`${this.baseURL}/plans/${id}/progress`)
+  /** HU-7: por defecto solo cursos obligatorios. */
+  async getPlanProgress(id: number, mandatoryOnly = true): Promise<PlanProgressResponse> {
+    const response = await axiosPrivate.get(`${this.baseURL}/plans/${id}/progress`, {
+      params: mandatoryOnly ? undefined : { mandatoryOnly: false }
+    })
     return this.unwrapResponse<PlanProgressResponse>(response.data)
   }
 

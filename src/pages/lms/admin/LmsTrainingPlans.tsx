@@ -47,7 +47,7 @@ const LmsTrainingPlans: React.FC = () => {
   const [formPlanId, setFormPlanId] = useState<number | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [assignPlan, setAssignPlan] = useState<TrainingPlanSummary | null>(null)
-  const [destinations, setDestinations] = useState<{ plan: TrainingPlanSummary; tab: 0 | 1 } | null>(null)
+  const [destinations, setDestinations] = useState<{ plan: TrainingPlanSummary } | null>(null)
 
   const stats = useMemo(() => ({
     total: plans.length,
@@ -164,7 +164,7 @@ const LmsTrainingPlans: React.FC = () => {
           <Chip
             size='small'
             clickable
-            onClick={() => setDestinations({ plan: row.original, tab: 0 })}
+            onClick={() => setDestinations({ plan: row.original })}
             label={`${row.original.assignment_count} destino(s)`}
             sx={{ bgcolor: '#E0F7F4', color: '#00695C', fontWeight: 600 }}
           />
@@ -238,8 +238,8 @@ const LmsTrainingPlans: React.FC = () => {
                     <AssignIcon />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title='Destinos y cumplimiento'>
-                  <IconButton size='small' color='info' onClick={() => setDestinations({ plan: row.original, tab: 0 })}>
+                <Tooltip title='Destinos'>
+                  <IconButton size='small' color='info' onClick={() => setDestinations({ plan: row.original })}>
                     <DestinationsIcon />
                   </IconButton>
                 </Tooltip>
@@ -292,7 +292,6 @@ const LmsTrainingPlans: React.FC = () => {
       <PlanDestinationsDialog
         open={Boolean(destinations)}
         plan={destinations?.plan ?? null}
-        initialTab={destinations?.tab ?? 0}
         onClose={() => setDestinations(null)}
         onAssign={() => {
           const plan = destinations?.plan ?? null

@@ -1474,8 +1474,8 @@ export const usePlanAssignments = (id: number | null, options?: PlanQueryOptions
     ...options
   })
 
-export const usePlanProgress = (id: number | null, options?: PlanQueryOptions) =>
-  useQuery(queryKeys.plans.progress(id ?? 0), () => lmsService.getPlanProgress(id as number), {
+export const usePlanProgress = (id: number | null, mandatoryOnly = true, options?: PlanQueryOptions) =>
+  useQuery(queryKeys.plans.progress(id ?? 0, mandatoryOnly), () => lmsService.getPlanProgress(id as number, mandatoryOnly), {
     enabled: Boolean(id),
     ...options
   })

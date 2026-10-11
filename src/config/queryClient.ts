@@ -86,7 +86,7 @@ export const queryKeys = {
     list: () => [...queryKeys.plans.all, 'list'] as const,
     detail: (id: number) => [...queryKeys.plans.all, 'detail', id] as const,
     assignments: (id: number) => [...queryKeys.plans.all, 'assignments', id] as const,
-    progress: (id: number) => [...queryKeys.plans.all, 'progress', id] as const,
+    progress: (id: number, mandatoryOnly = true) => [...queryKeys.plans.all, 'progress', id, mandatoryOnly] as const,
     my: () => [...queryKeys.plans.all, 'my'] as const
   },
 

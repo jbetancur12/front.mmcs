@@ -46,6 +46,7 @@ import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import PlanComplianceTab from 'src/Components/lms/admin/plans/PlanComplianceTab'
 import {
   Warning as WarningIcon,
   CheckCircle as CheckCircleIcon,
@@ -182,10 +183,12 @@ const readStoredFilters = (): typeof DEFAULT_FILTERS => {
 
 const LmsComplianceTracker: React.FC = () => {
   const navigate = useNavigate()
+  // Vistas: registros (0), por curso (4) y por plan de formación (5).
+  // ?tab=plan&planId=N abre directamente el cumplimiento de un plan.
   const [activeTab, setActiveTab] = useState(() => {
-    const raw = sessionStorage.getItem('lms:compliance:tab')
-    // Solo existen dos vistas: registros (0) y por curso (4)
-    return raw && Number(raw) === 4 ? 4 : 0
+    if (new URLSearchParams(window.location.search).get('tab') === 'plan') return 5
+    const raw = Number(sessionStorage.getItem('lms:compliance:tab'))
+    return raw === 4 || raw === 5 ? raw : 0
   })
   type QuickFilter = 'all' | 'overdue' | 'soon' | 'pending' | 'completed'
   const [quick, setQuick] = useState<QuickFilter>(
@@ -321,6 +324,13 @@ const LmsComplianceTracker: React.FC = () => {
   // Calculate compliance alerts from data
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue)
+    // ?tab=plan solo describe la vista por plan; al salir de ella se limpia
+    if (newValue !== 5 && searchParams.get('tab') === 'plan') {
+      const next = new URLSearchParams(searchParams)
+      next.delete('tab')
+      next.delete('planId')
+      setSearchParams(next, { replace: true })
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -954,10 +964,24 @@ const LmsComplianceTracker: React.FC = () => {
         </Alert>
       )}
 
-      <Tabs value={activeTab === 4 ? 4 : 0} onChange={handleTabChange} sx={{ mb: 2 }}>
+      <Tabs value={activeTab === 4 || activeTab === 5 ? activeTab : 0} onChange={handleTabChange} sx={{ mb: 2 }}>
         <Tab value={0} label='Registros' />
         <Tab value={4} label={`Por curso (${recordsByCourse.length})`} />
+        <Tab value={5} label='Por plan' />
       </Tabs>
+
+      {activeTab === 5 && (
+        <PlanComplianceTab
+          initialPlanId={Number(searchParams.get('planId')) || null}
+          onPlanChange={(planId) => {
+            const next = new URLSearchParams(searchParams)
+            next.set('tab', 'plan')
+            if (planId) next.set('planId', String(planId))
+            else next.delete('planId')
+            setSearchParams(next, { replace: true })
+          }}
+        />
+      )}
 
       {activeTab === 0 && (
         <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
