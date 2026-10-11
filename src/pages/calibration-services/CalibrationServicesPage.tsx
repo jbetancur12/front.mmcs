@@ -2321,10 +2321,28 @@ const CalibrationServicesPage = () => {
               )
             },
             {
-              accessorFn: (s) => s.customer?.nombre || s.executionCustomerName || '',
+              id: 'customer',
+              accessorFn: (s) =>
+                [
+                  s.customer?.nombre || s.executionCustomerName || '',
+                  s.scopeType === 'site' ? getServiceSiteLabel(s) : ''
+                ]
+                  .filter(Boolean)
+                  .join(' '),
               header: 'Cliente',
               size: 200,
-              Cell: ({ cell }) => <Typography variant='body2' sx={{ color: ui.textSecondary, fontWeight: 600 }}>{cell.getValue<string>()}</Typography>
+              Cell: ({ row }) => (
+                <Stack spacing={0.5}>
+                  <Typography variant='body2' sx={{ color: ui.textSecondary, fontWeight: 600, lineHeight: 1.2 }}>
+                    {row.original.customer?.nombre || row.original.executionCustomerName || ''}
+                  </Typography>
+                  {row.original.scopeType === 'site' ? (
+                    <Typography variant='caption' sx={{ color: ui.muted }}>
+                      Sede: {getServiceSiteLabel(row.original)}
+                    </Typography>
+                  ) : null}
+                </Stack>
+              )
             },
             {
               accessorKey: 'status',
