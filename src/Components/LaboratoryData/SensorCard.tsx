@@ -1,4 +1,6 @@
 import React from 'react'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
@@ -53,6 +55,7 @@ const SensorCard: React.FC<SensorCardProps> = ({
   onEditClick,
   onDeleteClick
 }) => {
+  const canManage = useCan(PERMISSIONS.LABORATORY_DEVICE_MANAGE)
   // Usar un color por defecto si sensor.color es null o undefined
   const cardBorderColor = sensor.color || '#cccccc' // Gris por defecto si no hay color
 
@@ -73,43 +76,45 @@ const SensorCard: React.FC<SensorCardProps> = ({
     >
       {/* --- Botones de Editar y Eliminar --- */}
       {/* Posicionados arriba a la derecha */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 4,
-          right: 4,
-          zIndex: 1,
-          display: 'flex',
-          gap: 0.5
-        }}
-      >
-        <Tooltip title={`Editar ${sensor.name}`}>
-          <IconButton
-            size='small'
-            onClick={() => onEditClick(sensor)}
-            aria-label='editar sensor'
-            sx={{
-              backgroundColor: 'rgba(255, 255, 255, 0.7)',
-              '&:hover': { backgroundColor: 'rgba(220, 220, 220, 0.8)' }
-            }}
-          >
-            <EditIcon fontSize='small' sx={{ color: 'text.secondary' }} />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title={`Eliminar ${sensor.name}`}>
-          <IconButton
-            size='small'
-            onClick={() => onDeleteClick(sensor.id)}
-            aria-label='eliminar sensor'
-            sx={{
-              backgroundColor: 'rgba(255, 255, 255, 0.7)',
-              '&:hover': { backgroundColor: 'rgba(220, 220, 220, 0.8)' }
-            }}
-          >
-            <DeleteIcon fontSize='small' sx={{ color: 'error.main' }} />
-          </IconButton>
-        </Tooltip>
-      </Box>
+      {canManage && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 4,
+            right: 4,
+            zIndex: 1,
+            display: 'flex',
+            gap: 0.5
+          }}
+        >
+          <Tooltip title={`Editar ${sensor.name}`}>
+            <IconButton
+              size='small'
+              onClick={() => onEditClick(sensor)}
+              aria-label='editar sensor'
+              sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                '&:hover': { backgroundColor: 'rgba(220, 220, 220, 0.8)' }
+              }}
+            >
+              <EditIcon fontSize='small' sx={{ color: 'text.secondary' }} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={`Eliminar ${sensor.name}`}>
+            <IconButton
+              size='small'
+              onClick={() => onDeleteClick(sensor.id)}
+              aria-label='eliminar sensor'
+              sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                '&:hover': { backgroundColor: 'rgba(220, 220, 220, 0.8)' }
+              }}
+            >
+              <DeleteIcon fontSize='small' sx={{ color: 'error.main' }} />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )}
 
       <CardContent
         sx={{ flexGrow: 1, p: 2, display: 'flex', flexDirection: 'column' }}

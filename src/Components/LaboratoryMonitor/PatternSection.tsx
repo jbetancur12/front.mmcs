@@ -1,5 +1,7 @@
 // src/Components/LaboratoryMonitor/PatternSection.tsx
 import React, { useState } from 'react'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 import { Box, Typography, Button, CircularProgress } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import {
@@ -52,6 +54,7 @@ export const PatternSection: React.FC<PatternSectionProps> = ({
   stabilityAlerts,
   onAcknowledgeStability
 }) => {
+  const canManage = useCan(PERMISSIONS.LABORATORY_CALIBRATION_MANAGE)
   const [isAddPatternModalOpen, setIsAddPatternModalOpen] = useState(false)
 
   const handleOpenAddPatternModal = () => setIsAddPatternModalOpen(true)
@@ -81,14 +84,16 @@ export const PatternSection: React.FC<PatternSectionProps> = ({
         }}
       >
         <Typography variant='h5'>Patrones</Typography>
-        <Button
-          variant='contained'
-          startIcon={<AddIcon />}
-          onClick={handleOpenAddPatternModal}
-          disabled={isLoadingAddPattern}
-        >
-          Agregar Patrón
-        </Button>
+        {canManage && (
+          <Button
+            variant='contained'
+            startIcon={<AddIcon />}
+            onClick={handleOpenAddPatternModal}
+            disabled={isLoadingAddPattern}
+          >
+            Agregar Patrón
+          </Button>
+        )}
       </Box>
 
       {patterns && patterns.length > 0 ? (

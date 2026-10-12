@@ -1,5 +1,7 @@
 // src/Components/LaboratoryMonitor/PatternItem.tsx
 import React, { useState } from 'react'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 import {
   Box,
   Typography,
@@ -55,6 +57,7 @@ export const PatternItem: React.FC<PatternItemProps> = ({
   alertStatus,
   onAcknowledge
 }) => {
+  const canManage = useCan(PERMISSIONS.LABORATORY_CALIBRATION_MANAGE)
   const [isAddSensorModalOpen, setIsAddSensorModalOpen] = useState(false)
 
   const handleOpenAddSensorModal = () => setIsAddSensorModalOpen(true)
@@ -88,38 +91,40 @@ export const PatternItem: React.FC<PatternItemProps> = ({
         <Typography variant='h6' component='div'>
           {pattern.name}
         </Typography>
-        <Box>
-          <Button
-            variant='outlined'
-            size='small'
-            startIcon={<AddIcon />}
-            onClick={handleOpenAddSensorModal}
-            sx={{ mr: 1 }}
-            disabled={isLoadingAddSensor}
-          >
-            Sensor
-          </Button>
-          <IconButton
-            aria-label='Eliminar patrón'
-            onClick={() => onDeletePattern(pattern.id)}
-            color='error'
-            disabled={isLoadingDeletePattern}
-          >
-            {isLoadingDeletePattern ? (
-              <CircularProgress size={20} color='inherit' />
-            ) : (
-              <DeleteIcon />
-            )}
-          </IconButton>
-          <Tooltip title='Configurar Visualización de Datos'>
-            <IconButton
-              onClick={() => onConfigurePattern(pattern)}
+        {canManage && (
+          <Box>
+            <Button
+              variant='outlined'
               size='small'
+              startIcon={<AddIcon />}
+              onClick={handleOpenAddSensorModal}
+              sx={{ mr: 1 }}
+              disabled={isLoadingAddSensor}
             >
-              <Settings />
+              Sensor
+            </Button>
+            <IconButton
+              aria-label='Eliminar patrón'
+              onClick={() => onDeletePattern(pattern.id)}
+              color='error'
+              disabled={isLoadingDeletePattern}
+            >
+              {isLoadingDeletePattern ? (
+                <CircularProgress size={20} color='inherit' />
+              ) : (
+                <DeleteIcon />
+              )}
             </IconButton>
-          </Tooltip>
-        </Box>
+            <Tooltip title='Configurar Visualización de Datos'>
+              <IconButton
+                onClick={() => onConfigurePattern(pattern)}
+                size='small'
+              >
+                <Settings />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        )}
       </Box>
       <Divider sx={{ mb: 2 }} />
       {isStable && !alertStatus?.acknowledged && (

@@ -13,7 +13,11 @@ import { BiSolidReport } from 'react-icons/bi'
 import DropdownButton from './DropdownButton' // Importa el componente del dropdown si ya lo tienes
 import { useStore } from '@nanostores/react'
 import { UserData, userStore } from 'src/store/userStore'
-import { CarRepair, PrecisionManufacturing, ScienceOutlined } from '@mui/icons-material'
+import {
+  CarRepair,
+  PrecisionManufacturing,
+  ScienceOutlined
+} from '@mui/icons-material'
 import {
   getEffectiveLmsMenuRoles,
   isLmsOnlyUser,
@@ -21,7 +25,11 @@ import {
   LMS_ADMIN_ROUTE_ROLES
 } from 'src/utils/lmsIdentity'
 import { CALIBRATION_SERVICE_ALLOWED_ROLES } from 'src/constants/calibrationServices'
-import { audienceIncludes, isCoreModule, getModuleAudience } from 'src/constants/modules'
+import {
+  audienceIncludes,
+  isCoreModule,
+  getModuleAudience
+} from 'src/constants/modules'
 
 import { ROLES, ROLE_GROUPS } from 'src/constants/roles'
 import {
@@ -38,7 +46,10 @@ const iconClass =
 
 const LMS_SIDEBAR_HINT_DISMISSED_KEY = 'lms-sidebar-hint-dismissed'
 
-const apiVersionPromise = axiosPrivate.get('/version').then(r => r.data.version).catch(() => null)
+const apiVersionPromise = axiosPrivate
+  .get('/version')
+  .then((r) => r.data.version)
+  .catch(() => null)
 
 // Helper para verificar si un módulo debe ser visible
 const canViewModule = (roles: string[], userRole: string[]) => {
@@ -251,7 +262,8 @@ const sidebarItems = ($userStore: UserData) => [
   {
     type: 'dropdown',
     buttonText: 'Calidad',
-    roles: [ROLES.ADMIN],
+    roles: [] as string[],
+    permission: PERMISSIONS.NONCONFORM_REPORT_VIEW,
     moduleName: 'Basic',
     pathData:
       'M12 2l2.9 6.9 7.1.6-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.6z',
@@ -259,7 +271,7 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Trabajo no Conforme',
         url: '/non-conform-work-reports',
-        roles: [ROLES.ADMIN]
+        permission: PERMISSIONS.NONCONFORM_REPORT_VIEW
       }
     ]
   },
@@ -282,21 +294,38 @@ const sidebarItems = ($userStore: UserData) => [
         url: 'asset-life-sheets',
         roles: [ROLES.ADMIN]
       },
-      { label: 'Alertas', url: 'datasheets/alerts', roles: ROLE_GROUPS.METROLOGY_STAFF }
+      {
+        label: 'Alertas',
+        url: 'datasheets/alerts',
+        roles: ROLE_GROUPS.METROLOGY_STAFF
+      }
     ]
   },
   {
     type: 'dropdown',
     buttonText: 'Laboratorio', // Texto del botón principal
-    roles: [ROLES.ADMIN], // Roles que pueden ver este menú
+    // Migrado a capacidades: se ve si el usuario puede ver al menos uno de sus ítems
+    roles: [] as string[],
+    permission: [
+      PERMISSIONS.LABORATORY_DEVICE_VIEW,
+      PERMISSIONS.LABORATORY_CALIBRATION_VIEW
+    ] as readonly PermissionKey[],
     moduleName: 'Basic', // Nombre interno del módulo (opcional, ajusta según tu sistema)
     // Path SVG para un icono de matraz/laboratorio (puedes reemplazarlo)
 
     pathData:
       'M19 19V8.83l-6-6-6 6V19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zm-7-7h2v5h-2z',
     menuItems: [
-      { label: 'Condiciones', url: 'laboratory/conditions', roles: [ROLES.ADMIN] }, // Sub-item Condiciones
-      { label: 'Patrones', url: 'laboratory/patterns', roles: [ROLES.ADMIN] } // Sub-item Patrones
+      {
+        label: 'Condiciones',
+        url: 'laboratory/conditions',
+        permission: PERMISSIONS.LABORATORY_DEVICE_VIEW
+      }, // Sub-item Condiciones
+      {
+        label: 'Patrones',
+        url: 'laboratory/patterns',
+        permission: PERMISSIONS.LABORATORY_CALIBRATION_VIEW
+      } // Sub-item Patrones
     ]
   },
   // {
@@ -477,7 +506,9 @@ const SideBar = ({
     }
 
     try {
-      setIsLmsHintDismissed(window.localStorage.getItem(LMS_SIDEBAR_HINT_DISMISSED_KEY) === 'true')
+      setIsLmsHintDismissed(
+        window.localStorage.getItem(LMS_SIDEBAR_HINT_DISMISSED_KEY) === 'true'
+      )
     } catch {
       setIsLmsHintDismissed(false)
     }
@@ -538,7 +569,10 @@ const SideBar = ({
       <div className='flex-1 overflow-y-auto px-3 py-4 scrollbar-thin scrollbar-thumb-gray-300/50 dark:scrollbar-thumb-gray-600/50 scrollbar-track-transparent hover:scrollbar-thumb-gray-400/70'>
         <ul className='space-y-1.5'>
           {sidebarItems($userStore).map((item, index) => {
-            if (isLmsOnlyUser($userStore.rol, $userStore.lmsOnly) && !isLmsSidebarItem(item)) {
+            if (
+              isLmsOnlyUser($userStore.rol, $userStore.lmsOnly) &&
+              !isLmsSidebarItem(item)
+            ) {
               return null
             }
 
@@ -560,7 +594,10 @@ const SideBar = ({
                   <Link
                     to={item.to}
                     className={`flex items-center p-2.5 text-sm font-medium rounded-lg transition-all duration-250 group relative ${
-                      pathname === item.to || (item.to && item.to !== '/' && pathname.startsWith(item.to + '/'))
+                      pathname === item.to ||
+                      (item.to &&
+                        item.to !== '/' &&
+                        pathname.startsWith(item.to + '/'))
                         ? 'bg-[#6dc662]/12 text-[#6dc662] shadow-sm shadow-[#6dc662]/15 border-l-3 border-[#6dc662] dark:bg-[#6dc662]/20 dark:text-[#6dc662]'
                         : 'text-gray-700 hover:bg-gray-50/80 hover:text-gray-900 hover:shadow-sm hover:shadow-gray-200/30 dark:text-gray-300 dark:hover:bg-gray-800/40 dark:hover:text-white'
                     } ${sidebarMinimized ? 'justify-center px-2' : ''}`}
@@ -612,7 +649,9 @@ const SideBar = ({
                   )
                 : canViewModule(
                     item.roles,
-                    (item.buttonText === 'Academia' || item.buttonText === 'LMS') ? effectiveLmsMenuRoles : $userStore.rol
+                    item.buttonText === 'Academia' || item.buttonText === 'LMS'
+                      ? effectiveLmsMenuRoles
+                      : $userStore.rol
                   ))
             ) {
               return (
@@ -622,7 +661,7 @@ const SideBar = ({
                   menuItems={item.menuItems ?? []}
                   pathData={item.pathData ?? ''}
                   rol={
-                    (item.buttonText === 'Academia' || item.buttonText === 'LMS')
+                    item.buttonText === 'Academia' || item.buttonText === 'LMS'
                       ? effectiveLmsMenuRoles
                       : $userStore.rol
                   }
@@ -644,7 +683,12 @@ const SideBar = ({
           <div className='mb-3 rounded-2xl border border-[#6dc662]/20 bg-gradient-to-br from-[#f5fff2] via-white to-[#eef9ff] p-3 shadow-sm shadow-[#6dc662]/10 dark:border-[#6dc662]/25 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900'>
             <div className='flex items-start gap-3'>
               <div className='mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#6dc662]/15 text-[#4f9f45] dark:bg-[#6dc662]/20 dark:text-[#8be27f]'>
-                <svg className='h-4 w-4' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                <svg
+                  className='h-4 w-4'
+                  fill='none'
+                  viewBox='0 0 24 24'
+                  stroke='currentColor'
+                >
                   <path
                     strokeLinecap='round'
                     strokeLinejoin='round'
@@ -660,7 +704,8 @@ const SideBar = ({
                       Tip rápido del LMS
                     </p>
                     <p className='mt-1 text-xs leading-5 text-gray-600 dark:text-gray-300'>
-                      Puedes presionar este botón para ocultar el menú y ganar más espacio mientras trabajas en Academia.
+                      Puedes presionar este botón para ocultar el menú y ganar
+                      más espacio mientras trabajas en Academia.
                     </p>
                   </div>
                   <button
@@ -669,7 +714,12 @@ const SideBar = ({
                     className='rounded-full p-1 text-gray-400 transition hover:bg-white/80 hover:text-gray-600 dark:hover:bg-gray-700/80 dark:hover:text-gray-200'
                     aria-label='Cerrar ayuda del LMS'
                   >
-                    <svg className='h-4 w-4' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                    <svg
+                      className='h-4 w-4'
+                      fill='none'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                    >
                       <path
                         strokeLinecap='round'
                         strokeLinejoin='round'
@@ -738,11 +788,16 @@ const SideBar = ({
                 />
               </svg>
             )}
-              </button>
+          </button>
           {!userMinimized && (
             <span className='text-[0.6rem] text-gray-400 dark:text-gray-500 text-center block mt-1 leading-tight'>
               <span>v{import.meta.env.VITE_APP_VERSION}</span>
-              {apiVersion && <><br />API v{apiVersion}</>}
+              {apiVersion && (
+                <>
+                  <br />
+                  API v{apiVersion}
+                </>
+              )}
             </span>
           )}
         </div>

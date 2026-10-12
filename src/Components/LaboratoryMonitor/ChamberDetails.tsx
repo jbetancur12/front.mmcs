@@ -1,5 +1,7 @@
 // src/Components/LaboratoryMonitor/ChamberDetails.tsx
 import React, { useEffect, useRef, useState } from 'react'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 import { Box, Typography, Button, Paper, CircularProgress } from '@mui/material'
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
@@ -106,6 +108,7 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
   isDeletingChamber = false,
   onConfigurePattern
 }) => {
+  const canManage = useCan(PERMISSIONS.LABORATORY_CALIBRATION_MANAGE)
   const speak = (message: string) => {
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(message)
@@ -234,32 +237,34 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
           Detalles de la Cámara: <strong>{chamber.name}</strong>
         </Typography>
         {/* <Button onClick={() => speak(chamber.name)}>Click</Button> */}
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            variant='outlined'
-            size='small'
-            onClick={onEditChamber}
-            startIcon={<EditIcon />}
-          >
-            Editar Nombre
-          </Button>
-          <Button
-            variant='outlined'
-            color='error'
-            size='small'
-            onClick={() => onDeleteChamber(chamber.id)}
-            startIcon={
-              isDeletingChamber ? (
-                <CircularProgress size={16} color='inherit' />
-              ) : (
-                <DeleteIcon />
-              )
-            }
-            disabled={isDeletingChamber}
-          >
-            {isDeletingChamber ? 'Eliminando...' : 'Eliminar Cámara'}
-          </Button>
-        </Box>
+        {canManage && (
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant='outlined'
+              size='small'
+              onClick={onEditChamber}
+              startIcon={<EditIcon />}
+            >
+              Editar Nombre
+            </Button>
+            <Button
+              variant='outlined'
+              color='error'
+              size='small'
+              onClick={() => onDeleteChamber(chamber.id)}
+              startIcon={
+                isDeletingChamber ? (
+                  <CircularProgress size={16} color='inherit' />
+                ) : (
+                  <DeleteIcon />
+                )
+              }
+              disabled={isDeletingChamber}
+            >
+              {isDeletingChamber ? 'Eliminando...' : 'Eliminar Cámara'}
+            </Button>
+          </Box>
+        )}
       </Box>
       <Box
         sx={{

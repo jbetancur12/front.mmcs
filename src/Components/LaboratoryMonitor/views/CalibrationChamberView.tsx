@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 import {
   Box,
   Typography,
@@ -67,6 +69,7 @@ export const generateSensorSummary = (
 }
 
 const CalibrationChamberView: React.FC = () => {
+  const canManage = useCan(PERMISSIONS.LABORATORY_CALIBRATION_MANAGE)
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
 
@@ -590,16 +593,18 @@ const CalibrationChamberView: React.FC = () => {
             <Typography variant='h4' component='h1'>
               Cámaras Ambientales
             </Typography>
-            <Button
-              variant='contained'
-              startIcon={<AddCircleOutlineIcon />}
-              onClick={handleOpenCreateModal}
-              disabled={createChamberMutation.isLoading}
-            >
-              {createChamberMutation.isLoading
-                ? 'Agregando...'
-                : 'Agregar Cámara'}
-            </Button>
+            {canManage && (
+              <Button
+                variant='contained'
+                startIcon={<AddCircleOutlineIcon />}
+                onClick={handleOpenCreateModal}
+                disabled={createChamberMutation.isLoading}
+              >
+                {createChamberMutation.isLoading
+                  ? 'Agregando...'
+                  : 'Agregar Cámara'}
+              </Button>
+            )}
           </Box>
         </Grid>
 

@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 import {
   Box,
   Button,
@@ -103,6 +105,7 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
   onView,
   onCreate
 }) => {
+  const canManage = useCan(PERMISSIONS.NONCONFORM_REPORT_MANAGE)
   const axiosPrivate = useAxiosPrivate()
   const [rows, setRows] = useState<NonConformWorkReport[]>([])
   const [loading, setLoading] = useState(true)
@@ -342,9 +345,11 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
               label='Mostrar solo reportes con alerta de revisión'
             />
           )}
-          <Button variant='contained' color='primary' onClick={onCreate}>
-            Nuevo reporte
-          </Button>
+          {canManage && (
+            <Button variant='contained' color='primary' onClick={onCreate}>
+              Nuevo reporte
+            </Button>
+          )}
         </Box>
       </Box>
 
@@ -365,24 +370,28 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
                   <VisibilityIcon fontSize='small' />
                 </IconButton>
               </Tooltip>
-              <Tooltip title='Editar'>
-                <IconButton
-                  size='small'
-                  onClick={() => onEdit && onEdit(row.original)}
-                >
-                  <EditIcon fontSize='small' />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title='Eliminar'>
-                <IconButton
-                  size='small'
-                  onClick={() =>
-                    row.original.id && handleDelete(row.original.id)
-                  }
-                >
-                  <DeleteIcon color='error' fontSize='small' />
-                </IconButton>
-              </Tooltip>
+              {canManage && (
+                <>
+                  <Tooltip title='Editar'>
+                    <IconButton
+                      size='small'
+                      onClick={() => onEdit && onEdit(row.original)}
+                    >
+                      <EditIcon fontSize='small' />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title='Eliminar'>
+                    <IconButton
+                      size='small'
+                      onClick={() =>
+                        row.original.id && handleDelete(row.original.id)
+                      }
+                    >
+                      <DeleteIcon color='error' fontSize='small' />
+                    </IconButton>
+                  </Tooltip>
+                </>
+              )}
             </Box>
           )}
           initialState={{

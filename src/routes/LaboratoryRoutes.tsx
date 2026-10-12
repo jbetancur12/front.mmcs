@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react' // Import lazy y Suspense
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute' // Asegúrate que la ruta sea correcta
-import { ROLES } from 'src/constants/roles'
+import { PERMISSIONS, PermissionKey } from 'src/constants/permissions'
 import CircularProgress from '@mui/material/CircularProgress' // Para el fallback de Suspense
 import Box from '@mui/material/Box' // Para centrar el fallback
 
@@ -21,68 +21,51 @@ const LaboratoryPatterns = lazy(
 // Componente funcional que define las rutas de Laboratorio
 // Recibe los roles del usuario actual como prop para ProtectedRoute
 const LaboratoryRoutes = (role: string[]) => {
+  const isAuthenticated = localStorage.getItem('accessToken') !== null
+
+  // Cada página exige la capacidad que el backend le pide a sus endpoints
+  const guard = (permission: PermissionKey | readonly PermissionKey[]) => (
+    <ProtectedRoute
+      isAuthenticated={isAuthenticated}
+      userRole={role}
+      permission={permission}
+    />
+  )
+
+  const fallback = (
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '80vh'
+      }}
+    >
+      <CircularProgress />
+    </Box>
+  )
+
   return (
     <>
-      {/* Envolver las rutas específicas en ProtectedRoute */}
-      <Route
-        element={
-          <ProtectedRoute
-            // Verifica si el usuario está autenticado (ej: revisando el token)
-            isAuthenticated={localStorage.getItem('accessToken') !== null}
-            userRole={role} // Roles del usuario actual
-            roles={[ROLES.ADMIN]} // Roles permitidos para acceder a estas rutas (ajusta según necesidad)
-          />
-        }
-      >
-        {/* Ruta base para la sección de Laboratorio */}
-        {/* Puedes tener una ruta 'index' si hay una página principal */}
-        {/* <Route path='laboratory' element={<LaboratoryDashboard />} /> */}
-
-        {/* Rutas anidadas para las sub-secciones */}
-        {/* Usamos Suspense para manejar la carga de los componentes lazy */}
+      <Route element={guard(PERMISSIONS.LABORATORY_DEVICE_VIEW)}>
         <Route
-          path='laboratory/conditions' // Ruta para Condiciones
+          path='laboratory/conditions'
           element={
-            <Suspense
-              fallback={
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    height: '80vh'
-                  }}
-                >
-                  <CircularProgress />
-                </Box>
-              }
-            >
+            <Suspense fallback={fallback}>
               <LaboratoryConditions />
             </Suspense>
           }
         />
+      </Route>
+      <Route element={guard(PERMISSIONS.LABORATORY_CALIBRATION_VIEW)}>
         <Route
-          path='laboratory/patterns' // Ruta para Patrones
+          path='laboratory/patterns'
           element={
-            <Suspense
-              fallback={
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    height: '80vh'
-                  }}
-                >
-                  <CircularProgress />
-                </Box>
-              }
-            >
+            <Suspense fallback={fallback}>
               <LaboratoryPatterns />
             </Suspense>
           }
         />
-        {/* Agrega aquí más rutas anidadas si es necesario */}
       </Route>
     </>
   )

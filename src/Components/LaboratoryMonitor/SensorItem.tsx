@@ -1,5 +1,7 @@
 // src/Components/LaboratoryMonitor/SensorItem.tsx
 import React, { useState } from 'react' // useMemo no se usa pero puede quedar
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 import {
   Accordion,
   AccordionSummary,
@@ -37,6 +39,7 @@ export const SensorItem: React.FC<SensorItemProps> = ({
   onDeleteSensor,
   isLoadingDelete = false
 }) => {
+  const canManage = useCan(PERMISSIONS.LABORATORY_CALIBRATION_MANAGE)
   // Desestructurar el sensor que viene de React Query (actualizado por WS)
   const {
     id: sensorId,
@@ -104,25 +107,27 @@ export const SensorItem: React.FC<SensorItemProps> = ({
             </MuiTooltip>
           )}
           <Chip label={getSensorTypeLabel()} size='small' variant='outlined' />
-          <MuiTooltip title='Eliminar Sensor'>
-            <span>
-              <IconButton
-                size='small'
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDeleteSensor(sensorId)
-                }}
-                disabled={isLoadingDelete}
-                color='error'
-              >
-                {isLoadingDelete ? (
-                  <CircularProgress size={20} color='inherit' />
-                ) : (
-                  <DeleteIcon fontSize='small' />
-                )}
-              </IconButton>
-            </span>
-          </MuiTooltip>
+          {canManage && (
+            <MuiTooltip title='Eliminar Sensor'>
+              <span>
+                <IconButton
+                  size='small'
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDeleteSensor(sensorId)
+                  }}
+                  disabled={isLoadingDelete}
+                  color='error'
+                >
+                  {isLoadingDelete ? (
+                    <CircularProgress size={20} color='inherit' />
+                  ) : (
+                    <DeleteIcon fontSize='small' />
+                  )}
+                </IconButton>
+              </span>
+            </MuiTooltip>
+          )}
         </Box>
       </AccordionSummary>
       <AccordionDetails sx={{ backgroundColor: 'grey.50', p: 2 }}>

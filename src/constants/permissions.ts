@@ -156,6 +156,26 @@ export const PERMISSIONS = {
   CUSTOMERS_MODULE_CATALOG_VIEW: 'customers:module_catalog:view',
   /** Crear módulos en el catálogo del sistema */
   CUSTOMERS_MODULE_CATALOG_MANAGE: 'customers:module_catalog:manage',
+  /** Ver los sensores de condiciones del laboratorio y su histórico */
+  LABORATORY_DEVICE_VIEW: 'laboratory:device:view',
+  /** Crear, editar y eliminar los sensores de condiciones del laboratorio */
+  LABORATORY_DEVICE_MANAGE: 'laboratory:device:manage',
+  /** Ver cámaras, patrones, sensores y lecturas de calibración del laboratorio */
+  LABORATORY_CALIBRATION_VIEW: 'laboratory:calibration:view',
+  /** Crear, editar y eliminar cámaras, patrones y sensores, y configurar un patrón */
+  LABORATORY_CALIBRATION_MANAGE: 'laboratory:calibration:manage',
+  /** Listar dispositivos IoT (el usuario de una empresa solo ve los suyos: regla del controlador) */
+  IOT_DEVICE_LIST: 'iot:device:list',
+  /** Ver dispositivos IoT por id o cliente, su histórico, energía, alarmas, eventos y datos agregados */
+  IOT_DEVICE_VIEW: 'iot:device:view',
+  /** Crear, editar y eliminar dispositivos IoT y configurar sus módulos */
+  IOT_DEVICE_MANAGE: 'iot:device:manage',
+  /** Crear y editar alarmas de dispositivos IoT */
+  IOT_ALARM_MANAGE: 'iot:alarm:manage',
+  /** Ver los informes de trabajo no conforme, sus alertas y verificar códigos */
+  NONCONFORM_REPORT_VIEW: 'nonconform:report:view',
+  /** Crear, editar y eliminar informes de trabajo no conforme */
+  NONCONFORM_REPORT_MANAGE: 'nonconform:report:manage',
   /** Ver roles, capacidades y la auditoría de cambios */
   RBAC_VIEW: 'rbac:view',
   /** Crear roles y activar o desactivar capacidades */

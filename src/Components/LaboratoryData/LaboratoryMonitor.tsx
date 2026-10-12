@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 
@@ -121,6 +123,7 @@ interface HistoricalApiResponse {
 // --- COMPONENTE ---
 
 const LaboratoryMonitor: React.FC = () => {
+  const canManage = useCan(PERMISSIONS.LABORATORY_DEVICE_MANAGE)
   const axiosPrivate = useAxiosPrivate()
   const { lastMessage } = useWebSocket()
   const boxRef = useRef<HTMLDivElement>(null)
@@ -431,14 +434,16 @@ const LaboratoryMonitor: React.FC = () => {
           Monitoreo de Laboratorio
         </Typography>
         <Box className='flex items-center space-x-4'>
-          <Button
-            variant='contained'
-            startIcon={<AddIcon />}
-            onClick={handleOpenAddModal}
-            className='bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded normal-case'
-          >
-            Agregar Sensor
-          </Button>
+          {canManage && (
+            <Button
+              variant='contained'
+              startIcon={<AddIcon />}
+              onClick={handleOpenAddModal}
+              className='bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded normal-case'
+            >
+              Agregar Sensor
+            </Button>
+          )}
         </Box>
       </Box>
       {/* Lista de Tarjetas (sin cambios) */}

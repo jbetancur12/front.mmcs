@@ -8,6 +8,8 @@ import { loadDevices } from 'src/store/deviceIotStore'
 import { DeviceIot } from '../../types'
 import { useDeleteDevice } from '../hooks/useDeviceMutations'
 import Swal from 'sweetalert2'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 
 const DeviceList = () => {
   const { data: devices } = useDevices()
@@ -16,6 +18,7 @@ const DeviceList = () => {
     null
   )
   const deleteDevice = useDeleteDevice()
+  const canManage = useCan(PERMISSIONS.IOT_DEVICE_MANAGE)
 
   useEffect(() => {
     if (devices) loadDevices(devices)
@@ -53,15 +56,18 @@ const DeviceList = () => {
   return (
     <div>
       <Stack direction='row' spacing={2} mb={2}>
-        <Button variant='contained' onClick={() => setOpen(true)}>
-          Agregar Dispositivo
-        </Button>
+        {canManage && (
+          <Button variant='contained' onClick={() => setOpen(true)}>
+            Agregar Dispositivo
+          </Button>
+        )}
       </Stack>
 
       <DeviceTable
         data={devices || []}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        canManage={canManage}
       />
 
       <AddDeviceModal

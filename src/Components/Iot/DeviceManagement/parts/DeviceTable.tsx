@@ -29,15 +29,22 @@ export interface DeviceTableProps {
   data: DeviceIot[]
   onEdit: (device: DeviceIot) => void
   onDelete: (device: DeviceIot) => void
+  /** Editar y eliminar solo para quien puede gestionar dispositivos */
+  canManage?: boolean
 }
 
-export const DeviceTable = ({ data, onEdit, onDelete }: DeviceTableProps) => (
+export const DeviceTable = ({
+  data,
+  onEdit,
+  onDelete,
+  canManage = true
+}: DeviceTableProps) => (
   <MaterialReactTable
     columns={deviceColumns}
     data={data}
     enableColumnFilters={false}
     enablePagination
-    enableRowActions={true}
+    enableRowActions={canManage}
     renderRowActions={({ row }) => (
       <Stack direction='row' spacing={1}>
         <IconButton color='primary' onClick={() => onEdit(row.original)}>

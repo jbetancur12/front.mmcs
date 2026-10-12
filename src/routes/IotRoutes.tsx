@@ -1,7 +1,7 @@
 import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
-import { ROLE_GROUPS } from 'src/constants/roles'
+import { PERMISSIONS, PermissionKey } from 'src/constants/permissions'
 
 const Iot = lazy(() => import('../pages/Iot/Iot'))
 const DeviceList = lazy(() => import('../pages/Iot/DeviceList'))
@@ -11,26 +11,34 @@ const CustomersManagement = lazy(
 )
 
 const IotRoutes = (role: string[]) => {
+  const isAuthenticated = localStorage.getItem('accessToken') !== null
+
+  // Cada página exige la capacidad que el backend le pide a sus endpoints
+  const guard = (permission: PermissionKey | readonly PermissionKey[]) => (
+    <ProtectedRoute
+      isAuthenticated={isAuthenticated}
+      userRole={role}
+      permission={permission}
+    />
+  )
+
   return (
     <>
-      <Route
-        element={
-          <ProtectedRoute
-            isAuthenticated={localStorage.getItem('accessToken') !== null}
-            userRole={role}
-            roles={ROLE_GROUPS.ADMIN_AND_CLIENT}
-          />
-        }
-      >
+      <Route element={guard(PERMISSIONS.IOT_DEVICE_LIST)}>
         <Route path='iot'>
           <Route index element={<DeviceList />} />
           <Route path='map' element={<Iot />} />
-          <Route path='email-settings' element={<EmailSettingsPage />} />
-          <Route
-            path='customers-management'
-            element={<CustomersManagement />}
-          />
         </Route>
+      </Route>
+      <Route element={guard(PERMISSIONS.IOT_DEVICE_VIEW)}>
+        <Route path='iot/email-settings' element={<EmailSettingsPage />} />
+      </Route>
+      {/* Usa las empresas con módulo IoT (GET /customers/available-modules) */}
+      <Route element={guard(PERMISSIONS.CUSTOMERS_CUSTOMER_MANAGE)}>
+        <Route
+          path='iot/customers-management'
+          element={<CustomersManagement />}
+        />
       </Route>
     </>
   )
