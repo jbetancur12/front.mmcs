@@ -27,6 +27,7 @@ import BlockIcon from '@mui/icons-material/Block'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import SearchIcon from '@mui/icons-material/Search'
 import { ROLE_LABELS_ES } from 'src/constants/roles'
+import { PERMISSION_SCREENS } from 'src/constants/permissionScreens'
 import { RbacMatrix, RbacRole } from '../../types/rbac'
 
 /** Nombre legible de cada módulo del catálogo; si falta, se muestra la clave. */
@@ -40,7 +41,74 @@ export const RBAC_MODULE_LABELS: Record<string, string> = {
   nonconform: 'Trabajo no conforme',
   users: 'Usuarios y perfiles',
   system: 'Sistema',
+  calibration: 'Calibración',
+  lms: 'Academia (LMS)',
+  fleet: 'Flota',
+  assets: 'Activos de TI',
+  repositories: 'Repositorios',
+  tools: 'Utilidades',
   rbac: 'Administración de permisos'
+}
+
+const MAX_VISIBLE_SCREENS = 3
+
+/** Dónde se usa una capacidad en la plataforma: pantallas (URL del front) y acciones dentro de ellas. */
+const ScreenInfo: React.FC<{ permissionKey: string }> = ({ permissionKey }) => {
+  const screens = PERMISSION_SCREENS[permissionKey] ?? []
+  if (screens.length === 0) {
+    return (
+      <Typography variant='caption' color='text.disabled' component='div'>
+        Sin pantalla propia: regla interna o acción sin botón visible
+      </Typography>
+    )
+  }
+  const visible = screens.slice(0, MAX_VISIBLE_SCREENS)
+  const hidden = screens.slice(MAX_VISIBLE_SCREENS)
+  const describe = (s: (typeof screens)[number]) =>
+    `${s.label} (${s.path})${
+      s.kind === 'action'
+        ? ' · botón o sección dentro de la pantalla'
+        : s.kind === 'related'
+          ? ' · pantalla que realiza esta operación'
+          : ''
+    }`
+  return (
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
+      {visible.map((s) => (
+        <Tooltip key={s.path + s.kind} title={describe(s)}>
+          <Chip
+            size='small'
+            variant='outlined'
+            label={s.label}
+            sx={{
+              height: 22,
+              fontSize: 11,
+              borderStyle: s.kind === 'related' ? 'dashed' : 'solid',
+              borderColor: s.kind === 'screen' ? '#00BFA5' : 'divider',
+              color: s.kind === 'screen' ? '#00897B' : 'text.secondary',
+              bgcolor: s.kind === 'screen' ? '#E0F7F4' : 'transparent'
+            }}
+          />
+        </Tooltip>
+      ))}
+      {hidden.length > 0 && (
+        <Tooltip
+          title={
+            <Box component='span' sx={{ whiteSpace: 'pre-line' }}>
+              {hidden.map(describe).join('\n')}
+            </Box>
+          }
+        >
+          <Chip
+            size='small'
+            variant='outlined'
+            label={`+${hidden.length} más`}
+            sx={{ height: 22, fontSize: 11 }}
+          />
+        </Tooltip>
+      )}
+    </Box>
+  )
 }
 
 export const moduleLabel = (module: string) =>
@@ -115,7 +183,12 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
       if (!term) return true
       return (
         p.key.toLowerCase().includes(term) ||
-        (p.description ?? '').toLowerCase().includes(term)
+        (p.description ?? '').toLowerCase().includes(term) ||
+        (PERMISSION_SCREENS[p.key] ?? []).some(
+          (s) =>
+            s.label.toLowerCase().includes(term) ||
+            s.path.toLowerCase().includes(term)
+        )
       )
     })
     return modules
@@ -305,6 +378,7 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                       <Typography variant='caption' color='text.secondary'>
                         {permission.description}
                       </Typography>
+                      <ScreenInfo permissionKey={permission.key} />
                     </TableCell>
                     {matrix.roles.map((role) => {
                       const key = cellKey(role.id, permission.key)
