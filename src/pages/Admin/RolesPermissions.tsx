@@ -22,6 +22,7 @@ import LmsStatCard from '../../Components/lms/admin/LmsStatCard'
 import PermissionMatrix, {
   cellKey
 } from '../../Components/Rbac/PermissionMatrix'
+import RolePermissionsView from '../../Components/Rbac/RolePermissionsView'
 import RbacAuditTable from '../../Components/Rbac/RbacAuditTable'
 import ChangesDialog, {
   PendingChange
@@ -46,7 +47,7 @@ import { rbacErrorMessage } from '../../utils/rbacErrors'
 const TEAL = '#00BFA5'
 
 const RolesPermissions: React.FC = () => {
-  const [tab, setTab] = useState<'matrix' | 'audit'>('matrix')
+  const [tab, setTab] = useState<'matrix' | 'role' | 'audit'>('matrix')
   const { data: matrix, isLoading, isError } = useRbacMatrix()
   const refresh = useRefreshRbac()
   const updatePermissions = useUpdateRolePermissions()
@@ -314,11 +315,12 @@ const RolesPermissions: React.FC = () => {
           sx={{ '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 } }}
         >
           <Tab value='matrix' label='Matriz de permisos' />
+          <Tab value='role' label='Por rol' />
           <Tab value='audit' label='Auditoría' />
         </Tabs>
       </Paper>
 
-      {tab === 'matrix' && (
+      {(tab === 'matrix' || tab === 'role') && (
         <>
           {isError && (
             <Alert severity='error'>
@@ -330,7 +332,17 @@ const RolesPermissions: React.FC = () => {
               Cargando matriz…
             </Box>
           )}
-          {matrix && (
+          {matrix && tab === 'role' && (
+            <RolePermissionsView
+              matrix={matrix}
+              editable={canManage}
+              effectiveGrants={effectiveGrants}
+              changedCells={changedCells}
+              lockedReason={lockedReason}
+              onToggle={handleToggle}
+            />
+          )}
+          {matrix && tab === 'matrix' && (
             <PermissionMatrix
               matrix={matrix}
               editable={canManage}

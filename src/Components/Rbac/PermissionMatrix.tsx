@@ -53,7 +53,7 @@ export const RBAC_MODULE_LABELS: Record<string, string> = {
 const MAX_VISIBLE_SCREENS = 3
 
 /** Dónde se usa una capacidad en la plataforma: pantallas (URL del front) y acciones dentro de ellas. */
-const ScreenInfo: React.FC<{ permissionKey: string }> = ({ permissionKey }) => {
+export const ScreenInfo: React.FC<{ permissionKey: string }> = ({ permissionKey }) => {
   const screens = PERMISSION_SCREENS[permissionKey] ?? []
   if (screens.length === 0) {
     return (
