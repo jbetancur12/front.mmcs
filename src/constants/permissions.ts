@@ -132,7 +132,7 @@ export const PERMISSIONS = {
   SALES_CONFIG_MANAGE: 'sales:config:manage',
   /** Consultar el catálogo de empresas y sus sedes (lo usan los selectores de cotizaciones, servicios y mapas) */
   CUSTOMERS_CUSTOMER_CATALOG: 'customers:customer:catalog',
-  /** Ver la ficha de una empresa (el usuario de una empresa cliente solo ve la suya: regla del controlador) */
+  /** Ver la ficha de una empresa. OJO: el controlador NO limita al usuario de una empresa cliente a la suya (pendiente, ver docs/rbac/RUTAS_SOLO_SESION.md) */
   CUSTOMERS_CUSTOMER_VIEW: 'customers:customer:view',
   /** Crear empresas */
   CUSTOMERS_CUSTOMER_CREATE: 'customers:customer:create',
@@ -178,7 +178,7 @@ export const PERMISSIONS = {
   NONCONFORM_REPORT_MANAGE: 'nonconform:report:manage',
   /** Listar los usuarios y los usuarios internos */
   USERS_USER_LIST: 'users:user:list',
-  /** Ver un usuario y sus archivos (el usuario de una empresa cliente solo el suyo: regla del controlador) */
+  /** Ver un usuario. OJO: el controlador NO limita al usuario de una empresa cliente al suyo (pendiente, ver docs/rbac/RUTAS_SOLO_SESION.md) */
   USERS_USER_VIEW: 'users:user:view',
   /** Crear usuarios (registro), con sus roles */
   USERS_USER_CREATE: 'users:user:create',
