@@ -39,6 +39,7 @@ import { useParams } from 'react-router-dom'
 import { bigToast } from './ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
 import ResetPasswordModal from './ResetPasswordModal'
+import { useHasRole } from '@utils/functions'
 import Swal from 'sweetalert2'
 import { showActivationLinkDialog } from '../utils/sweetAlert'
 import { fetchActivationLink, resendActivationEmail } from '../utils/userActivation'
@@ -65,6 +66,8 @@ export interface UserData {
 // Main component
 const Table: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
+  // Eliminar usuarios es solo de admin (DELETE /users/:id); el metrólogo ve la pestaña pero no el botón
+  const canDeleteUsers = useHasRole(['admin'])
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<UserData[]>([])
   const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false)
@@ -614,21 +617,23 @@ const Table: React.FC = () => {
                           </IconButton>
                         </Tooltip>
 
-                        <Tooltip title='Eliminar usuario'>
-                          <IconButton
-                            size='small'
-                            onClick={() => handleDeleteUser(user)}
-                            sx={{
-                              color: '#6b7280',
-                              '&:hover': {
-                                backgroundColor: '#fef2f2',
-                                color: '#dc2626'
-                              }
-                            }}
-                          >
-                            <Delete fontSize='small' />
-                          </IconButton>
-                        </Tooltip>
+                        {canDeleteUsers && (
+                          <Tooltip title='Eliminar usuario'>
+                            <IconButton
+                              size='small'
+                              onClick={() => handleDeleteUser(user)}
+                              sx={{
+                                color: '#6b7280',
+                                '&:hover': {
+                                  backgroundColor: '#fef2f2',
+                                  color: '#dc2626'
+                                }
+                              }}
+                            >
+                              <Delete fontSize='small' />
+                            </IconButton>
+                          </Tooltip>
+                        )}
                       </Box>
                     </Box>
                   </CardContent>

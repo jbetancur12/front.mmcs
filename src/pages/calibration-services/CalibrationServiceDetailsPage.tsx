@@ -540,7 +540,7 @@ const CalibrationServiceDetailsPage = () => {
   const canGenerateQuotePdf = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const canGenerateOdsPdf = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
   const canEditExecutionCustomerRole =
-    useHasRole(['admin', 'super_admin', 'calibration_coordinator', 'comp_admin', 'comp_requester', 'comp_supervisor'])
+    useHasRole(['admin', 'super_admin', 'calibration_coordinator', 'comp_admin', 'comp_requester'])
   const { data: assignableMetrologists = [] } =
     useCalibrationAssignableMetrologists(canScheduleServiceRole)
   const requestedAction = searchParams.get('open')

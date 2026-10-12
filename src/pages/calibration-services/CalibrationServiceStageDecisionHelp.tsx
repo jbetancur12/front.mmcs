@@ -47,7 +47,6 @@ const roleLabels: Record<string, string> = {
   super_admin: 'Super admin',
   comp_admin: 'Comp. admin',
   comp_requester: 'Comp. requester',
-  comp_supervisor: 'Comp. supervisor',
   metrologist: 'Metrologo',
   invoicing: 'Facturacion'
 }
@@ -100,7 +99,7 @@ const buildDecisionItems = ({
         title: 'Enviar cotización',
         detail:
           'Cuando el borrador ya esté listo, se envía al cliente y el flujo pasa a respuesta comercial.',
-        roles: ['admin', 'super_admin', 'comp_admin', 'comp_requester', 'comp_supervisor'],
+        roles: ['admin', 'super_admin', 'comp_admin', 'comp_requester'],
         tone: 'info'
       }
     ]
@@ -111,20 +110,20 @@ const buildDecisionItems = ({
       {
         title: 'Cliente aprueba',
         detail: 'La cotización queda aprobada y habilita emisión de ODS.',
-        roles: ['admin', 'super_admin', 'comp_admin', 'comp_requester', 'comp_supervisor'],
+        roles: ['admin', 'super_admin', 'comp_admin', 'comp_requester'],
         tone: 'success'
       },
       {
         title: 'Cliente rechaza',
         detail: 'El servicio queda rechazado y no continúa a ODS.',
-        roles: ['admin', 'super_admin', 'comp_admin', 'comp_requester', 'comp_supervisor'],
+        roles: ['admin', 'super_admin', 'comp_admin', 'comp_requester'],
         tone: 'error'
       },
       {
         title: 'Cliente solicita modificación',
         detail:
           'La cotización vuelve a borrador para ajustes, reenviando la propuesta sin perder historial.',
-        roles: ['admin', 'super_admin', 'comp_admin', 'comp_requester', 'comp_supervisor'],
+        roles: ['admin', 'super_admin', 'comp_admin', 'comp_requester'],
         tone: 'warning'
       }
     ]
@@ -136,7 +135,7 @@ const buildDecisionItems = ({
         title: 'Estado final comercial',
         detail:
           'El caso quedó rechazado por el cliente. Solo mantiene trazabilidad y consulta histórica.',
-        roles: ['admin', 'super_admin', 'comp_admin', 'comp_requester', 'comp_supervisor'],
+        roles: ['admin', 'super_admin', 'comp_admin', 'comp_requester'],
         tone: 'default'
       }
     ]
@@ -147,7 +146,7 @@ const buildDecisionItems = ({
       {
         title: 'Emitir ODS',
         detail: 'Convierte la aprobación del cliente en orden operativa del servicio.',
-        roles: ['admin', 'super_admin', 'comp_admin', 'comp_requester', 'comp_supervisor'],
+        roles: ['admin', 'super_admin', 'comp_admin', 'comp_requester'],
         tone: 'info'
       }
     ]
@@ -159,7 +158,7 @@ const buildDecisionItems = ({
         title: 'Programar servicio',
         detail:
           'Define fecha compromiso, fecha programada y responsable operativo para pasar a ejecución.',
-        roles: ['admin', 'super_admin', 'comp_admin', 'comp_supervisor'],
+        roles: ['admin', 'super_admin', 'comp_admin'],
         tone: 'info'
       }
     ]
@@ -170,7 +169,7 @@ const buildDecisionItems = ({
       {
         title: 'Iniciar ejecución',
         detail: 'Da inicio al trabajo técnico y habilita avance por ítem.',
-        roles: ['admin', 'super_admin', 'comp_admin', 'comp_supervisor', 'metrologist'],
+        roles: ['admin', 'super_admin', 'comp_admin', 'metrologist'],
         tone: 'success'
       }
     ]
@@ -181,14 +180,14 @@ const buildDecisionItems = ({
       {
         title: 'Seguir ejecución normal',
         detail: 'Actualizar avance por ítem y completar técnicamente el servicio.',
-        roles: ['admin', 'super_admin', 'comp_admin', 'comp_supervisor', 'metrologist'],
+        roles: ['admin', 'super_admin', 'comp_admin', 'metrologist'],
         tone: 'success'
       },
       {
         title: 'Registrar novedad',
         detail:
           'Si cambió cantidad, apareció un ítem adicional o hubo diferencia con lo cotizado, se reporta aquí.',
-        roles: ['admin', 'super_admin', 'comp_admin', 'comp_supervisor', 'metrologist'],
+        roles: ['admin', 'super_admin', 'comp_admin', 'metrologist'],
         tone: 'warning'
       }
     ]
@@ -201,14 +200,14 @@ const buildDecisionItems = ({
         detail: hasCuts
           ? 'Con el cierre técnico ya hecho, define si el corte pasa a listo para facturar o si necesitas otro corte.'
           : 'Si todo salió junto, crea un corte final. Si solo salió una parte, crea un corte parcial.',
-        roles: ['admin', 'super_admin', 'comp_admin', 'comp_supervisor', 'metrologist'],
+        roles: ['admin', 'super_admin', 'comp_admin', 'metrologist'],
         tone: 'info'
       },
       {
         title: 'Registrar novedades posteriores',
         detail:
           'Aún puedes registrar y revisar novedades antes de facturar, especialmente si afectan cantidades o precio.',
-        roles: ['admin', 'super_admin', 'comp_admin', 'comp_supervisor', 'metrologist'],
+        roles: ['admin', 'super_admin', 'comp_admin', 'metrologist'],
         tone: 'warning'
       }
     ]
@@ -218,7 +217,7 @@ const buildDecisionItems = ({
         title: 'Resolver novedades económicas',
         detail:
           'Antes de dejar cortes listos para facturar, las novedades con impacto económico deben quedar revisadas.',
-        roles: ['admin', 'super_admin', 'comp_admin', 'comp_requester', 'comp_supervisor', 'invoicing'],
+        roles: ['admin', 'super_admin', 'comp_admin', 'comp_requester', 'invoicing'],
         tone: 'warning'
       })
     }
@@ -227,7 +226,7 @@ const buildDecisionItems = ({
       items.push({
         title: 'Cerrar servicio',
         detail: 'Si todos los cortes ya fueron enviados, el servicio queda listo para cierre final.',
-        roles: ['admin', 'super_admin', 'comp_admin', 'comp_supervisor', 'invoicing'],
+        roles: ['admin', 'super_admin', 'comp_admin', 'invoicing'],
         tone: 'success'
       })
     }
@@ -241,7 +240,7 @@ const buildDecisionItems = ({
         title: 'Flujo completado',
         detail:
           'El servicio ya cerró su flujo técnico, administrativo y documental. Solo queda disponible la consulta histórica.',
-        roles: ['admin', 'super_admin', 'comp_admin', 'comp_supervisor', 'invoicing'],
+        roles: ['admin', 'super_admin', 'comp_admin', 'invoicing'],
         tone: 'default'
       }
     ]
@@ -251,7 +250,7 @@ const buildDecisionItems = ({
     {
       title: 'Consultar flujo',
       detail: 'Revisa la pestaña Guía para ver el mapa completo del proceso y sus desvíos.',
-      roles: ['admin', 'super_admin', 'comp_admin', 'comp_requester', 'comp_supervisor', 'metrologist', 'invoicing'],
+      roles: ['admin', 'super_admin', 'comp_admin', 'comp_requester', 'metrologist', 'invoicing'],
       tone: 'info'
     }
   ]

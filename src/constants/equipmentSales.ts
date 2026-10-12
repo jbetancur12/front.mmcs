@@ -5,7 +5,6 @@ export const EQUIPMENT_SALES_ALLOWED_ROLES = [
   'super_admin',
   'comp_admin',
   'comp_requester',
-  'comp_supervisor',
   'invoicing'
 ] as const
 
@@ -13,8 +12,7 @@ export const EQUIPMENT_SALES_EDIT_ROLES = [
   'admin',
   'super_admin',
   'comp_admin',
-  'comp_requester',
-  'comp_supervisor'
+  'comp_requester'
 ] as const
 
 export const EQUIPMENT_SALES_INVOICE_ROLES = [
@@ -27,8 +25,7 @@ export const EQUIPMENT_SALES_PRODUCT_ROLES = [
   'admin',
   'super_admin',
   'comp_admin',
-  'comp_requester',
-  'comp_supervisor'
+  'comp_requester'
 ] as const
 
 export const EQUIPMENT_QUOTATION_STATUS_LABELS: Record<string, string> = {

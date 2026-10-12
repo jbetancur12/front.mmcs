@@ -38,7 +38,7 @@ const RenderRowActions = ({
   const status = row.original.status as PurchaseRequestStatus
   const allowActions = {
     creationOrder: useHasRole(['admin', 'comp_requester', 'comp_admin']),
-    approval: useHasRole(['admin', 'comp_approver', 'comp_admin'])
+    approval: useHasRole(['admin', 'comp_admin'])
   }
 
   const [orderModalOpen, setOrderModalOpen] = useState(false)

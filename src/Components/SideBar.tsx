@@ -76,12 +76,7 @@ const sidebarItems = ($userStore: UserData) => [
     roles: [
       'admin',
       'comp_admin',
-      'comp_requester',
-      'comp_supervisor',
-      'comp_analyst',
-      'comp_orderer',
-      'comp_approver',
-      'comp_verifier'
+      'comp_requester'
     ],
     moduleName: 'Basic',
     pathData:
@@ -90,42 +85,42 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Selección de Proveedores',
         url: 'purchases/supplier-selection',
-        roles: ['admin', 'comp_admin', 'comp_requester', 'comp_supervisor']
+        roles: ['admin', 'comp_admin', 'comp_requester']
       },
       {
         label: 'Lista de Proveedores',
         url: 'purchases/suppliers',
-        roles: ['admin', 'comp_admin', 'comp_requester', 'comp_supervisor']
+        roles: ['admin', 'comp_admin', 'comp_requester']
       },
       {
         label: 'Solicitudes de Compra',
         url: 'purchases/requests',
-        roles: ['admin', 'comp_admin', 'comp_requester', 'comp_supervisor']
+        roles: ['admin', 'comp_admin', 'comp_requester']
       },
       {
         label: 'Ordenes de Compra',
         url: 'purchases/orders',
-        roles: ['admin', 'comp_admin', 'comp_requester', 'comp_supervisor']
+        roles: ['admin', 'comp_admin', 'comp_requester']
       },
       {
         label: 'Verificaciones',
         url: 'purchases/verifications',
-        roles: ['admin', 'comp_admin', 'comp_requester', 'comp_supervisor']
+        roles: ['admin', 'comp_admin', 'comp_requester']
       },
       {
         label: 'Parametros Fiscales',
         url: 'purchases/fiscal-parameters',
-        roles: ['admin', 'comp_admin', 'comp_requester', 'comp_supervisor']
+        roles: ['admin', 'comp_admin', 'comp_requester']
       },
       {
         label: 'Evaluaciones de Proveedores',
         url: 'purchases/suppliers/evaluations',
-        roles: ['admin', 'comp_admin', 'comp_requester', 'comp_supervisor']
+        roles: ['admin', 'comp_admin', 'comp_requester']
       },
       {
         label: 'Estadísticas',
         url: 'purchases/statistics',
-        roles: ['admin', 'comp_admin', 'comp_supervisor']
+        roles: ['admin', 'comp_admin']
       }
     ]
   },

@@ -105,7 +105,7 @@ const EquipmentSalesDetailPage = () => {
   }, [activeTab, quotationId])
 
   const canEdit = useMemo(
-    () => ['admin', 'super_admin', 'comp_admin', 'comp_requester', 'comp_supervisor'].some((r) => $user.rol?.includes(r)),
+    () => ['admin', 'super_admin', 'comp_admin', 'comp_requester'].some((r) => $user.rol?.includes(r)),
     [$user.rol]
   )
 

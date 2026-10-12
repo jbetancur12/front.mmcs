@@ -44,7 +44,6 @@ const roleLabels: Record<string, string> = {
   super_admin: 'Super admin',
   comp_admin: 'Comp. admin',
   comp_requester: 'Comp. requester',
-  comp_supervisor: 'Comp. supervisor',
   metrologist: 'Metrologo',
   invoicing: 'Facturacion'
 }
