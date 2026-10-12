@@ -3,7 +3,12 @@ import {
   Box,
   Checkbox,
   Chip,
+  IconButton,
   InputAdornment,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
   Paper,
   Table,
   TableBody,
@@ -16,8 +21,12 @@ import {
   Typography
 } from '@mui/material'
 import LockIcon from '@mui/icons-material/Lock'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
+import EditIcon from '@mui/icons-material/Edit'
+import BlockIcon from '@mui/icons-material/Block'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import SearchIcon from '@mui/icons-material/Search'
-import { getRoleLabelEs } from 'src/constants/roles'
+import { ROLE_LABELS_ES } from 'src/constants/roles'
 import { RbacMatrix, RbacRole } from '../../types/rbac'
 
 /** Nombre legible de cada módulo del catálogo; si falta, se muestra la clave. */
@@ -28,6 +37,13 @@ export const RBAC_MODULE_LABELS: Record<string, string> = {
 
 export const moduleLabel = (module: string) =>
   RBAC_MODULE_LABELS[module] ?? module
+
+/**
+ * Nombre que se muestra de un rol: la etiqueta conocida; si es un rol creado desde el panel, su
+ * descripción (el nombre es un identificador técnico); y si no, el nombre tal cual.
+ */
+export const roleDisplayName = (role: Pick<RbacRole, 'name' | 'description'>) =>
+  ROLE_LABELS_ES[role.name] ?? (role.description || role.name)
 
 const TEAL = '#00BFA5'
 const FIRST_COL_WIDTH = 340
@@ -46,6 +62,10 @@ interface PermissionMatrixProps {
   /** Motivo por el que una casilla concreta no se puede cambiar (candado y tooltip). */
   lockedReason?: (roleId: number, permissionKey: string) => string | null
   onToggle?: (roleId: number, permissionKey: string, granted: boolean) => void
+  /** Muestra el menú de cada rol (editar, activar/desactivar). Solo quien puede gestionar. */
+  canManage?: boolean
+  onEditRole?: (role: RbacRole) => void
+  onToggleRole?: (role: RbacRole) => void
 }
 
 export const cellKey = (roleId: number, permissionKey: string) =>
@@ -57,9 +77,15 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
   changedCells,
   editable = false,
   lockedReason,
-  onToggle
+  onToggle,
+  canManage = false,
+  onEditRole,
+  onToggleRole
 }) => {
   const [search, setSearch] = useState('')
+  const [menu, setMenu] = useState<{ anchor: HTMLElement; role: RbacRole } | null>(
+    null
+  )
   const [moduleFilter, setModuleFilter] = useState<string | null>(null)
 
   const serverGrants = useMemo(
@@ -105,9 +131,21 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
     >
       <Tooltip title={role.description || role.name}>
         <Box>
-          <Typography variant='body2' fontWeight={600} noWrap>
-            {getRoleLabelEs(role.name)}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+            <Typography variant='body2' fontWeight={600} noWrap>
+              {roleDisplayName(role)}
+            </Typography>
+            {canManage && (
+              <IconButton
+                size='small'
+                aria-label={`Opciones del rol ${roleDisplayName(role)}`}
+                onClick={(e) => setMenu({ anchor: e.currentTarget, role })}
+                sx={{ p: 0.25 }}
+              >
+                <MoreVertIcon fontSize='small' />
+              </IconButton>
+            )}
+          </Box>
           <Typography variant='caption' color='text.secondary'>
             {role.userCount} {role.userCount === 1 ? 'usuario' : 'usuarios'}
           </Typography>
@@ -285,7 +323,7 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                                   onToggle?.(role.id, permission.key, e.target.checked)
                                 }
                                 inputProps={{
-                                  'aria-label': `${permission.key} para ${getRoleLabelEs(role.name)}`
+                                  'aria-label': `${permission.key} para ${roleDisplayName(role)}`
                                 }}
                                 sx={{
                                   color: '#bdbdbd',
@@ -307,6 +345,44 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
           </TableBody>
         </Table>
       </TableContainer>
+
+      <Menu
+        anchorEl={menu?.anchor}
+        open={Boolean(menu)}
+        onClose={() => setMenu(null)}
+      >
+        <MenuItem
+          onClick={() => {
+            if (menu) onEditRole?.(menu.role)
+            setMenu(null)
+          }}
+        >
+          <ListItemIcon>
+            <EditIcon fontSize='small' />
+          </ListItemIcon>
+          <ListItemText>Editar descripción</ListItemText>
+        </MenuItem>
+        <MenuItem
+          disabled={Boolean(menu?.role.isSystem)}
+          onClick={() => {
+            if (menu) onToggleRole?.(menu.role)
+            setMenu(null)
+          }}
+        >
+          <ListItemIcon>
+            {menu?.role.isActive ? (
+              <BlockIcon fontSize='small' />
+            ) : (
+              <CheckCircleIcon fontSize='small' />
+            )}
+          </ListItemIcon>
+          <ListItemText
+            secondary={menu?.role.isSystem ? 'Los roles de sistema no se desactivan' : undefined}
+          >
+            {menu?.role.isActive ? 'Desactivar rol' : 'Activar rol'}
+          </ListItemText>
+        </MenuItem>
+      </Menu>
     </Paper>
   )
 }

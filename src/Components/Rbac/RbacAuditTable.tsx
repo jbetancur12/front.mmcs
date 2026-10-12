@@ -137,7 +137,11 @@ const RbacAuditTable: React.FC = () => {
         columns={columns}
         data={data?.items ?? []}
         localization={MRT_Localization_ES}
-        getRowId={(row) => String(row.id)}
+        // Mientras carga, MRT genera filas vacías sin id: darles a todas la misma clave deja filas
+        // viejas colgadas cuando llegan los datos.
+        getRowId={(row, index) =>
+          row?.id != null ? String(row.id) : `cargando-${index}`
+        }
         manualPagination
         rowCount={data?.total ?? 0}
         onPaginationChange={setPagination}

@@ -1,9 +1,10 @@
-import { useQuery } from 'react-query'
+import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { axiosPrivate } from '../utils/api'
 import {
   RbacAuditParams,
   RbacAuditResponse,
-  RbacMatrix
+  RbacMatrix,
+  RbacRole
 } from '../types/rbac'
 
 export const rbacKeys = {
@@ -25,6 +26,66 @@ export const useRbacAudit = (params: RbacAuditParams) =>
   useQuery<RbacAuditResponse>(
     rbacKeys.audit(params),
     async () =>
-      (await axiosPrivate.get<RbacAuditResponse>('/rbac/audit', { params })).data,
+      (await axiosPrivate.get<RbacAuditResponse>('/rbac/audit', { params }))
+        .data,
     { keepPreviousData: true }
   )
+
+export interface UpdateRolePermissionsInput {
+  roleId: number
+  grant: string[]
+  revoke: string[]
+}
+
+export interface UpdateRolePermissionsResult {
+  roleId: number
+  roleName: string
+  granted: string[]
+  revoked: string[]
+}
+
+/**
+ * Otorga y/o quita capacidades a un rol. No invalida solo: quien guarda varios roles a la vez
+ * refresca una sola vez al final (ver useRefreshRbac).
+ */
+export const useUpdateRolePermissions = () =>
+  useMutation<UpdateRolePermissionsResult, unknown, UpdateRolePermissionsInput>(
+    async ({ roleId, grant, revoke }) =>
+      (
+        await axiosPrivate.put<UpdateRolePermissionsResult>(
+          `/rbac/roles/${roleId}/permissions`,
+          { grant, revoke }
+        )
+      ).data
+  )
+
+/** Refresca la matriz y la auditoría (después de cualquier escritura). */
+export const useRefreshRbac = () => {
+  const queryClient = useQueryClient()
+  return () => queryClient.invalidateQueries(rbacKeys.all)
+}
+
+export const useCreateRole = () => {
+  const refresh = useRefreshRbac()
+  return useMutation<
+    RbacRole,
+    unknown,
+    { name: string; description?: string }
+  >(
+    async (input) => (await axiosPrivate.post<RbacRole>('/rbac/roles', input)).data,
+    { onSuccess: () => refresh() }
+  )
+}
+
+export const useUpdateRole = () => {
+  const refresh = useRefreshRbac()
+  return useMutation<
+    RbacRole,
+    unknown,
+    { roleId: number; description?: string; isActive?: boolean }
+  >(
+    async ({ roleId, ...body }) =>
+      (await axiosPrivate.patch<RbacRole>(`/rbac/roles/${roleId}`, body)).data,
+    { onSuccess: () => refresh() }
+  )
+}
