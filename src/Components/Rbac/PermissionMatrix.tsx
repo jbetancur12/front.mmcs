@@ -172,7 +172,10 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
   const grants = effectiveGrants ?? serverGrants
 
   const modules = useMemo(
-    () => Array.from(new Set(matrix.permissions.map((p) => p.module))),
+    () =>
+      Array.from(new Set(matrix.permissions.map((p) => p.module))).sort((a, b) =>
+        moduleLabel(a).localeCompare(moduleLabel(b), 'es')
+      ),
     [matrix.permissions]
   )
 

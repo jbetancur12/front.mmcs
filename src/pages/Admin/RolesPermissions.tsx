@@ -244,7 +244,7 @@ const RolesPermissions: React.FC = () => {
     <Container maxWidth='xl' sx={{ py: 3 }}>
       <LmsPageHeader
         title='Roles y permisos'
-        subtitle='Qué puede hacer cada rol en los módulos que ya se gestionan desde aquí'
+        subtitle='Qué puede hacer cada rol en cada módulo y en qué pantallas se refleja'
         icon={<AdminPanelSettingsIcon />}
         actions={
           canManage ? (
@@ -292,9 +292,9 @@ const RolesPermissions: React.FC = () => {
       </Grid>
 
       <Alert severity='info' sx={{ mb: 3 }}>
-        Por ahora solo los módulos que aparecen en la matriz se controlan desde
-        este panel. El resto de la aplicación sigue con sus permisos fijos por
-        rol y se irá migrando módulo por módulo.
+        Marca o desmarca una capacidad para dar o quitar ese permiso a un rol. Bajo
+        cada capacidad verás las pantallas de la plataforma donde interviene. Los
+        cambios se aplican de inmediato y quedan en la auditoría.
       </Alert>
       {!canManage && (
         <Alert severity='warning' sx={{ mb: 3 }}>
