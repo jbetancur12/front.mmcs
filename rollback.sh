@@ -26,7 +26,6 @@ pause_before_exit() {
 trap pause_before_exit EXIT
 
 SERVER="${DEPLOY_HOST:-metromedics@209.97.156.169}"
-SITE_URL="${SITE_URL:-https://app.metromedics.co/}"
 TARGET="${1:-}"
 
 echo "Conectando a $SERVER (rollback del front)..."
@@ -85,18 +84,18 @@ fi
 
 echo "Ahora publicado: $(current_build)"
 [ -f "$ROOT/index.html" ] || { echo "ERROR: el sitio publicado no tiene index.html"; exit 1; }
+
+# Comprobación en el propio servidor (contra el nginx local, con el Host del sitio)
+CODE="$(curl -sk -o /dev/null -w '%{http_code}' --max-time 10 -H "Host: app.metromedics.co" https://localhost/ || true)"
+if [ "$CODE" = "200" ]; then
+  echo "El sitio responde (HTTP 200)."
+else
+  echo "ATENCIÓN: el sitio respondió HTTP ${CODE:-sin respuesta} en el servidor."; exit 1
+fi
 REMOTE
 )
 
 ssh -T "$SERVER" "bash -c $(printf '%q' "$REMOTE_SCRIPT") remote-script \"$TARGET\""
 
 if [ "$TARGET" = "--list" ]; then exit 0; fi
-
-echo "Comprobando que el sitio responda ($SITE_URL)..."
-CODE="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$SITE_URL" || true)"
-if [ "$CODE" = "200" ]; then
-  echo "ROLLBACK OK: el sitio responde (HTTP 200). Recarga con Ctrl+F5 para ver la versión anterior."
-else
-  echo "ATENCIÓN: el sitio respondió HTTP ${CODE:-sin respuesta}. Revisa en el navegador."
-  exit 1
-fi
+echo "ROLLBACK OK. Recarga con Ctrl+F5 para ver la versión publicada."
