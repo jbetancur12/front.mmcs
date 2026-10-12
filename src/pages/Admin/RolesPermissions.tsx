@@ -47,7 +47,7 @@ import { rbacErrorMessage } from '../../utils/rbacErrors'
 const TEAL = '#00BFA5'
 
 const RolesPermissions: React.FC = () => {
-  const [tab, setTab] = useState<'matrix' | 'role' | 'audit'>('matrix')
+  const [tab, setTab] = useState<'matrix' | 'role' | 'audit'>('role')
   const { data: matrix, isLoading, isError } = useRbacMatrix()
   const refresh = useRefreshRbac()
   const updatePermissions = useUpdateRolePermissions()
@@ -314,8 +314,8 @@ const RolesPermissions: React.FC = () => {
           TabIndicatorProps={{ sx: { bgcolor: TEAL } }}
           sx={{ '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 } }}
         >
-          <Tab value='matrix' label='Matriz de permisos' />
           <Tab value='role' label='Por rol' />
+          <Tab value='matrix' label='Comparar roles' />
           <Tab value='audit' label='Auditoría' />
         </Tabs>
       </Paper>
@@ -338,8 +338,17 @@ const RolesPermissions: React.FC = () => {
               editable={canManage}
               effectiveGrants={effectiveGrants}
               changedCells={changedCells}
+              changes={changes}
+              canManage={canManage}
               lockedReason={lockedReason}
               onToggle={handleToggle}
+              onDiscard={() => {
+                setPending({})
+                setSaveErrors({})
+              }}
+              onReview={() => setReviewOpen(true)}
+              onEditRole={setEditRole}
+              onToggleRole={setToggleRole}
             />
           )}
           {matrix && tab === 'matrix' && (
@@ -359,7 +368,7 @@ const RolesPermissions: React.FC = () => {
       )}
       {tab === 'audit' && <RbacAuditTable />}
 
-      {changes.length > 0 && (
+      {changes.length > 0 && tab !== 'role' && (
         <Paper
           elevation={8}
           sx={{

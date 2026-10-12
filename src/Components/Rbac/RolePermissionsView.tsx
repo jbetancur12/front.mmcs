@@ -3,8 +3,10 @@ import {
   Box,
   Button,
   Chip,
+  Grid,
   InputAdornment,
-  MenuItem,
+  List,
+  ListItemButton,
   Paper,
   Switch,
   TextField,
@@ -17,6 +19,7 @@ import LockIcon from '@mui/icons-material/Lock'
 import SearchIcon from '@mui/icons-material/Search'
 import { PERMISSION_SCREENS } from 'src/constants/permissionScreens'
 import { RbacMatrix, RbacRole } from '../../types/rbac'
+import { PendingChange } from './ChangesDialog'
 import {
   ScreenInfo,
   cellKey,
@@ -25,6 +28,10 @@ import {
 } from './PermissionMatrix'
 
 const TEAL = '#00BFA5'
+const TEAL_DARK = '#00897B'
+const TEAL_SOFT = '#E0F7F4'
+const AMBER_SOFT = '#fff8e1'
+const AMBER = '#ffb74d'
 
 type StatusFilter = 'all' | 'granted' | 'missing'
 
@@ -34,22 +41,40 @@ interface RolePermissionsViewProps {
   effectiveGrants: Set<string>
   /** Claves con un cambio pendiente de guardar (se resaltan). */
   changedCells: Set<string>
+  /** Cambios pendientes de todos los roles, para el panel "Lo que cambia". */
+  changes: PendingChange[]
   editable: boolean
+  canManage: boolean
   lockedReason: (roleId: number, permissionKey: string) => string | null
   onToggle: (roleId: number, permissionKey: string, granted: boolean) => void
+  onDiscard: () => void
+  onReview: () => void
+  onEditRole: (role: RbacRole) => void
+  onToggleRole: (role: RbacRole) => void
 }
 
+/** Pantallas (no botones) que una capacidad abre o cierra: es lo que el administrador percibe. */
+const screensOf = (key: string) =>
+  (PERMISSION_SCREENS[key] ?? []).filter((s) => s.kind === 'screen')
+
 /**
- * Vista "Por rol": se elige un rol y se ven (y editan) todas sus capacidades, agrupadas por módulo.
- * Comparte el estado de cambios pendientes con la matriz: lo que se marque aquí se ve allá y viceversa.
+ * Vista "Por rol": roles a la izquierda, capacidades del rol elegido al centro y, a la derecha, un panel fijo
+ * "Lo que cambia" con cada cambio pendiente, a cuántas personas toca y qué pantallas aparecen o desaparecen.
+ * Comparte el estado de cambios pendientes con la matriz.
  */
 const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
   matrix,
   effectiveGrants,
   changedCells,
+  changes,
   editable,
+  canManage,
   lockedReason,
-  onToggle
+  onToggle,
+  onDiscard,
+  onReview,
+  onEditRole,
+  onToggleRole
 }) => {
   const sortedRoles = useMemo(
     () =>
@@ -59,15 +84,26 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
     [matrix.roles]
   )
   const [roleId, setRoleId] = useState<number | ''>(
-    () => sortedRoles.find((r) => r.name === 'admin')?.id ?? sortedRoles[0]?.id ?? ''
+    () =>
+      sortedRoles.find((r) => r.name === 'admin')?.id ?? sortedRoles[0]?.id ?? ''
   )
   const [moduleFilter, setModuleFilter] = useState<string>('')
   const [status, setStatus] = useState<StatusFilter>('all')
   const [search, setSearch] = useState('')
+  const [roleSearch, setRoleSearch] = useState('')
 
   const role: RbacRole | undefined = matrix.roles.find((r) => r.id === roleId)
   const has = (key: string) =>
     role ? effectiveGrants.has(cellKey(role.id, key)) : false
+
+  const permissionByKey = useMemo(
+    () => new Map(matrix.permissions.map((p) => [p.key, p])),
+    [matrix.permissions]
+  )
+  const roleById = useMemo(
+    () => new Map(matrix.roles.map((r) => [r.id, r])),
+    [matrix.roles]
+  )
 
   const modules = useMemo(
     () =>
@@ -76,6 +112,21 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
       ),
     [matrix.permissions]
   )
+
+  const grantedByRole = useMemo(() => {
+    const out = new Map<number, number>()
+    for (const key of effectiveGrants) {
+      const id = Number(key.split('|')[0])
+      out.set(id, (out.get(id) ?? 0) + 1)
+    }
+    return out
+  }, [effectiveGrants])
+
+  const pendingByRole = useMemo(() => {
+    const out = new Map<number, number>()
+    for (const c of changes) out.set(c.roleId, (out.get(c.roleId) ?? 0) + 1)
+    return out
+  }, [changes])
 
   const countsByModule = useMemo(() => {
     const out = new Map<string, { granted: number; total: number }>()
@@ -88,11 +139,13 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
     return out
   }, [matrix.permissions, effectiveGrants, role])
 
-  const totalGranted = useMemo(
-    () =>
-      Array.from(countsByModule.values()).reduce((n, c) => n + c.granted, 0),
-    [countsByModule]
-  )
+  const roleList = useMemo(() => {
+    const term = roleSearch.trim().toLowerCase()
+    if (!term) return sortedRoles
+    return sortedRoles.filter((r) =>
+      roleDisplayName(r).toLowerCase().includes(term)
+    )
+  }, [sortedRoles, roleSearch])
 
   const groups = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -128,239 +181,452 @@ const RolePermissionsView: React.FC<RolePermissionsViewProps> = ({
     }
   }
 
-  return (
-    <Paper elevation={2} sx={{ borderRadius: 2, p: 2.5 }}>
-      <Box
-        sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}
+  // --- panel "Lo que cambia"
+  const affectedUsers = useMemo(
+    () =>
+      Array.from(new Set(changes.map((c) => c.roleId))).reduce(
+        (n, id) => n + (roleById.get(id)?.userCount ?? 0),
+        0
+      ),
+    [changes, roleById]
+  )
+  const changesByRole = useMemo(() => {
+    const out = new Map<number, PendingChange[]>()
+    for (const c of changes) out.set(c.roleId, [...(out.get(c.roleId) ?? []), c])
+    return Array.from(out.entries())
+  }, [changes])
+
+  const renderRoleItem = (r: RbacRole) => {
+    const pending = pendingByRole.get(r.id) ?? 0
+    const selected = r.id === roleId
+    return (
+      <ListItemButton
+        key={r.id}
+        selected={selected}
+        onClick={() => setRoleId(r.id)}
+        sx={{
+          borderRadius: 1.5,
+          mb: 0.5,
+          alignItems: 'flex-start',
+          opacity: r.isActive ? 1 : 0.55,
+          '&.Mui-selected': { bgcolor: TEAL_SOFT, boxShadow: `inset 3px 0 0 ${TEAL}` },
+          '&.Mui-selected:hover': { bgcolor: TEAL_SOFT }
+        }}
       >
-        <TextField
-          select
-          size='small'
-          label='Rol'
-          value={roleId}
-          onChange={(e) => setRoleId(Number(e.target.value))}
-          sx={{ minWidth: 260 }}
-        >
-          {sortedRoles.map((r) => (
-            <MenuItem key={r.id} value={r.id}>
-              {roleDisplayName(r)}
-              {!r.isActive ? ' (inactivo)' : ''}
-            </MenuItem>
-          ))}
-        </TextField>
-        <TextField
-          select
-          size='small'
-          label='Módulo'
-          value={moduleFilter}
-          onChange={(e) => setModuleFilter(e.target.value)}
-          sx={{ minWidth: 260 }}
-        >
-          <MenuItem value=''>Todos los módulos</MenuItem>
-          {modules.map((m) => {
-            const c = countsByModule.get(m)
-            return (
-              <MenuItem key={m} value={m}>
-                {moduleLabel(m)} ({c?.granted ?? 0}/{c?.total ?? 0})
-              </MenuItem>
-            )
-          })}
-        </TextField>
-        <ToggleButtonGroup
-          exclusive
-          size='small'
-          value={status}
-          onChange={(_, v: StatusFilter | null) => v && setStatus(v)}
-          aria-label='Filtrar por estado'
-        >
-          <ToggleButton value='all' sx={{ textTransform: 'none' }}>
-            Todas
-          </ToggleButton>
-          <ToggleButton value='granted' sx={{ textTransform: 'none' }}>
-            Las que tiene
-          </ToggleButton>
-          <ToggleButton value='missing' sx={{ textTransform: 'none' }}>
-            Las que no tiene
-          </ToggleButton>
-        </ToggleButtonGroup>
-        <TextField
-          size='small'
-          placeholder='Buscar capacidad, pantalla o URL…'
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          sx={{ minWidth: 280, flex: 1 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position='start'>
-                <SearchIcon fontSize='small' />
-              </InputAdornment>
-            )
-          }}
-        />
-      </Box>
-
-      {role && (
-        <Box
-          sx={{
-            mt: 2,
-            p: 1.5,
-            borderRadius: 2,
-            bgcolor: '#E0F7F4',
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            gap: 1.5
-          }}
-        >
-          <Typography fontWeight={700}>{roleDisplayName(role)}</Typography>
-          <Chip
-            size='small'
-            label={`${totalGranted} de ${matrix.permissions.length} capacidades`}
-            sx={{ bgcolor: TEAL, color: '#fff', fontWeight: 600 }}
-          />
-          <Chip
-            size='small'
-            variant='outlined'
-            label={`${role.userCount} ${role.userCount === 1 ? 'usuario' : 'usuarios'}`}
-          />
-          {!role.isActive && (
-            <Chip size='small' color='warning' label='Rol inactivo' />
-          )}
-          {role.description && (
-            <Typography variant='caption' color='text.secondary'>
-              {role.description}
-            </Typography>
-          )}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography variant='body2' fontWeight={selected ? 700 : 500} noWrap>
+            {roleDisplayName(r)}
+          </Typography>
+          <Typography variant='caption' color='text.secondary'>
+            {r.userCount} {r.userCount === 1 ? 'usuario' : 'usuarios'} ·{' '}
+            {grantedByRole.get(r.id) ?? 0} capacidades
+            {!r.isActive ? ' · inactivo' : ''}
+          </Typography>
         </Box>
-      )}
+        {pending > 0 && (
+          <Tooltip title={`${pending} cambios sin guardar en este rol`}>
+            <Chip
+              size='small'
+              label={pending}
+              sx={{ bgcolor: AMBER, color: '#5d4037', fontWeight: 700, height: 20 }}
+            />
+          </Tooltip>
+        )}
+      </ListItemButton>
+    )
+  }
 
-      {groups.length === 0 && (
-        <Typography color='text.secondary' sx={{ py: 4, textAlign: 'center' }}>
-          No hay capacidades que coincidan con el filtro.
-        </Typography>
-      )}
+  return (
+    <Grid container spacing={2} alignItems='flex-start'>
+      {/* Roles */}
+      <Grid item xs={12} md={3} lg={2.5}>
+        <Paper elevation={2} sx={{ borderRadius: 2, p: 1.5 }}>
+          <TextField
+            size='small'
+            fullWidth
+            placeholder='Buscar rol…'
+            value={roleSearch}
+            onChange={(e) => setRoleSearch(e.target.value)}
+            sx={{ mb: 1 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position='start'>
+                  <SearchIcon fontSize='small' />
+                </InputAdornment>
+              )
+            }}
+          />
+          <List
+            disablePadding
+            sx={{ maxHeight: { xs: 260, md: 'calc(100vh - 280px)' }, overflowY: 'auto' }}
+            aria-label='Roles'
+          >
+            {roleList.map(renderRoleItem)}
+            {roleList.length === 0 && (
+              <Typography variant='caption' color='text.secondary' sx={{ p: 1 }}>
+                Ningún rol coincide con la búsqueda.
+              </Typography>
+            )}
+          </List>
+        </Paper>
+      </Grid>
 
-      {groups.map((group) => {
-        const c = countsByModule.get(group.module)
-        const keys = group.items.map((p) => p.key)
-        return (
-          <Box key={group.module} sx={{ mt: 2.5 }}>
+      {/* Capacidades del rol */}
+      <Grid item xs={12} md={6} lg={6.5}>
+        <Paper elevation={2} sx={{ borderRadius: 2, p: 2 }}>
+          {role && (
             <Box
               sx={{
+                p: 1.5,
+                borderRadius: 2,
+                bgcolor: TEAL_SOFT,
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
                 flexWrap: 'wrap',
-                gap: 1,
-                px: 1.5,
-                py: 0.75,
-                borderRadius: 1.5,
-                bgcolor: '#e0f2f1'
+                alignItems: 'center',
+                gap: 1.5
               }}
             >
-              <Typography fontWeight={700} sx={{ color: '#00695c' }}>
-                {moduleLabel(group.module)} · {c?.granted ?? 0}/{c?.total ?? 0}
+              <Typography variant='h6' fontWeight={700}>
+                {roleDisplayName(role)}
               </Typography>
-              {editable && (
-                <Box sx={{ display: 'flex', gap: 1 }}>
+              <Chip
+                size='small'
+                label={`${grantedByRole.get(role.id) ?? 0} de ${matrix.permissions.length} capacidades`}
+                sx={{ bgcolor: TEAL, color: '#fff', fontWeight: 600 }}
+              />
+              {!role.isActive && (
+                <Chip size='small' color='warning' label='Rol inactivo' />
+              )}
+              {role.description && (
+                <Typography variant='caption' color='text.secondary' sx={{ flexBasis: '100%' }}>
+                  {role.description}
+                </Typography>
+              )}
+              {canManage && (
+                <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
                   <Button
                     size='small'
-                    onClick={() => setAll(keys, true)}
+                    onClick={() => onEditRole(role)}
                     sx={{ textTransform: 'none' }}
                   >
-                    Dar todas
+                    Editar rol
                   </Button>
-                  <Button
-                    size='small'
-                    color='inherit'
-                    onClick={() => setAll(keys, false)}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    Quitar todas
-                  </Button>
+                  {!role.isSystem && (
+                    <Button
+                      size='small'
+                      color='inherit'
+                      onClick={() => onToggleRole(role)}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      {role.isActive ? 'Desactivar' : 'Activar'}
+                    </Button>
+                  )}
                 </Box>
               )}
             </Box>
-            {group.items.map((p) => {
-              const granted = has(p.key)
-              const reason = role ? lockedReason(role.id, p.key) : null
-              const disabled = !editable || Boolean(reason) || !role
-              const changed = role
-                ? changedCells.has(cellKey(role.id, p.key))
-                : false
+          )}
+
+          {/* Módulos: índice con contador del rol elegido */}
+          <Box
+            sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', mt: 2 }}
+            role='group'
+            aria-label='Filtrar por módulo'
+          >
+            <Chip
+              label='Todos'
+              onClick={() => setModuleFilter('')}
+              sx={{
+                bgcolor: moduleFilter === '' ? TEAL : 'transparent',
+                color: moduleFilter === '' ? '#fff' : 'text.primary',
+                border: '1px solid',
+                borderColor: moduleFilter === '' ? TEAL : 'divider',
+                fontWeight: 600
+              }}
+            />
+            {modules.map((m) => {
+              const c = countsByModule.get(m)
+              const active = moduleFilter === m
+              const empty = (c?.granted ?? 0) === 0
               return (
-                <Box
-                  key={p.key}
+                <Chip
+                  key={m}
+                  onClick={() => setModuleFilter(active ? '' : m)}
+                  label={`${moduleLabel(m)} ${c?.granted ?? 0}/${c?.total ?? 0}`}
                   sx={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 1.5,
-                    px: 1.5,
-                    py: 1,
-                    borderBottom: '1px solid #eee',
-                    bgcolor: changed ? '#fff8e1' : 'transparent'
+                    bgcolor: active ? TEAL : 'transparent',
+                    color: active ? '#fff' : empty ? 'text.disabled' : 'text.primary',
+                    border: '1px solid',
+                    borderColor: active ? TEAL : 'divider'
                   }}
-                >
-                  <Tooltip title={reason ?? ''} disableHoverListener={!reason}>
-                    <span>
-                      <Switch
-                        checked={granted}
-                        disabled={disabled}
-                        onChange={(e) =>
-                          role && onToggle(role.id, p.key, e.target.checked)
-                        }
-                        color='primary'
-                        inputProps={{
-                          'aria-label': `${p.key} para ${role ? roleDisplayName(role) : ''}`
-                        }}
-                        sx={{
-                          '& .MuiSwitch-switchBase.Mui-checked': { color: TEAL },
-                          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track':
-                            { bgcolor: TEAL }
-                        }}
-                      />
-                    </span>
-                  </Tooltip>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography
-                        variant='body2'
-                        sx={{ fontFamily: 'monospace', fontWeight: 600 }}
-                      >
-                        {p.key}
-                      </Typography>
-                      {p.isSensitive && (
-                        <Tooltip title='Capacidad sensible: solo un super administrador puede otorgarla o quitarla'>
-                          <Chip
-                            size='small'
-                            color='warning'
-                            variant='outlined'
-                            icon={<LockIcon sx={{ fontSize: 14 }} />}
-                            label='Sensible'
-                          />
-                        </Tooltip>
-                      )}
-                      {changed && (
-                        <Chip
-                          size='small'
-                          color='warning'
-                          label='Sin guardar'
-                          sx={{ height: 20, fontSize: 11 }}
-                        />
-                      )}
-                    </Box>
-                    <Typography variant='caption' color='text.secondary'>
-                      {p.description}
-                    </Typography>
-                    <ScreenInfo permissionKey={p.key} />
-                  </Box>
-                </Box>
+                />
               )
             })}
           </Box>
-        )
-      })}
-    </Paper>
+
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mt: 2 }}>
+            <ToggleButtonGroup
+              exclusive
+              size='small'
+              value={status}
+              onChange={(_, v: StatusFilter | null) => v && setStatus(v)}
+              aria-label='Filtrar por estado'
+            >
+              <ToggleButton value='all' sx={{ textTransform: 'none' }}>
+                Todas
+              </ToggleButton>
+              <ToggleButton value='granted' sx={{ textTransform: 'none' }}>
+                Las que tiene
+              </ToggleButton>
+              <ToggleButton value='missing' sx={{ textTransform: 'none' }}>
+                Las que no tiene
+              </ToggleButton>
+            </ToggleButtonGroup>
+            <TextField
+              size='small'
+              placeholder='Buscar capacidad, pantalla o URL…'
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              sx={{ flex: 1, minWidth: 220 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position='start'>
+                    <SearchIcon fontSize='small' />
+                  </InputAdornment>
+                )
+              }}
+            />
+          </Box>
+
+          {groups.length === 0 && (
+            <Typography color='text.secondary' sx={{ py: 4, textAlign: 'center' }}>
+              Ninguna capacidad coincide con el filtro. Cambia el módulo o
+              limpia la búsqueda.
+            </Typography>
+          )}
+
+          {groups.map((group) => {
+            const c = countsByModule.get(group.module)
+            const keys = group.items.map((p) => p.key)
+            return (
+              <Box key={group.module} sx={{ mt: 2.5 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: 1,
+                    px: 1.5,
+                    py: 0.75,
+                    borderRadius: 1.5,
+                    bgcolor: '#f5f5f5'
+                  }}
+                >
+                  <Typography fontWeight={700}>
+                    {moduleLabel(group.module)}{' '}
+                    <Typography component='span' color='text.secondary'>
+                      {c?.granted ?? 0} de {c?.total ?? 0}
+                    </Typography>
+                  </Typography>
+                  {editable && (
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Button
+                        size='small'
+                        onClick={() => setAll(keys, true)}
+                        sx={{ textTransform: 'none', color: TEAL_DARK }}
+                      >
+                        Dar todas
+                      </Button>
+                      <Button
+                        size='small'
+                        color='inherit'
+                        onClick={() => setAll(keys, false)}
+                        sx={{ textTransform: 'none' }}
+                      >
+                        Quitar todas
+                      </Button>
+                    </Box>
+                  )}
+                </Box>
+                {group.items.map((p) => {
+                  const granted = has(p.key)
+                  const reason = role ? lockedReason(role.id, p.key) : null
+                  const disabled = !editable || Boolean(reason) || !role
+                  const changed = role
+                    ? changedCells.has(cellKey(role.id, p.key))
+                    : false
+                  return (
+                    <Box
+                      key={p.key}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 1.5,
+                        px: 1.5,
+                        py: 1,
+                        borderBottom: '1px solid #eee',
+                        bgcolor: changed ? AMBER_SOFT : 'transparent',
+                        boxShadow: changed ? `inset 3px 0 0 ${AMBER}` : 'none'
+                      }}
+                    >
+                      <Tooltip title={reason ?? ''} disableHoverListener={!reason}>
+                        <span>
+                          <Switch
+                            checked={granted}
+                            disabled={disabled}
+                            onChange={(e) =>
+                              role && onToggle(role.id, p.key, e.target.checked)
+                            }
+                            inputProps={{
+                              'aria-label': `${p.key} para ${role ? roleDisplayName(role) : ''}`
+                            }}
+                            sx={{
+                              '& .MuiSwitch-switchBase.Mui-checked': { color: TEAL },
+                              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track':
+                                { bgcolor: TEAL }
+                            }}
+                          />
+                        </span>
+                      </Tooltip>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                          <Typography
+                            variant='body2'
+                            sx={{ fontFamily: 'monospace', fontWeight: 600 }}
+                          >
+                            {p.key}
+                          </Typography>
+                          {p.isSensitive && (
+                            <Tooltip title='Capacidad sensible: solo un super administrador puede otorgarla o quitarla'>
+                              <Chip
+                                size='small'
+                                color='warning'
+                                variant='outlined'
+                                icon={<LockIcon sx={{ fontSize: 14 }} />}
+                                label='Sensible'
+                              />
+                            </Tooltip>
+                          )}
+                        </Box>
+                        <Typography variant='caption' color='text.secondary'>
+                          {p.description}
+                        </Typography>
+                        <ScreenInfo permissionKey={p.key} />
+                      </Box>
+                    </Box>
+                  )
+                })}
+              </Box>
+            )
+          })}
+        </Paper>
+      </Grid>
+
+      {/* Lo que cambia */}
+      <Grid item xs={12} md={3} lg={3}>
+        <Paper
+          elevation={2}
+          sx={{
+            borderRadius: 2,
+            p: 2,
+            position: { md: 'sticky' },
+            top: { md: 16 },
+            border: changes.length > 0 ? `1px solid ${AMBER}` : '1px solid transparent',
+            bgcolor: changes.length > 0 ? AMBER_SOFT : 'background.paper'
+          }}
+          role='region'
+          aria-label='Lo que cambia'
+        >
+          <Typography variant='subtitle1' fontWeight={700}>
+            Lo que cambia
+          </Typography>
+          {changes.length === 0 ? (
+            <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
+              Aún no hay cambios. Marca o desmarca una capacidad y verás aquí a
+              quién afecta y qué pantallas aparecen o desaparecen.
+            </Typography>
+          ) : (
+            <>
+              <Typography variant='body2' sx={{ mt: 0.5 }}>
+                {changes.length}{' '}
+                {changes.length === 1 ? 'cambio sin guardar' : 'cambios sin guardar'}
+                {affectedUsers > 0
+                  ? `, hasta ${affectedUsers} ${affectedUsers === 1 ? 'usuario' : 'usuarios'}`
+                  : ''}
+              </Typography>
+              <Box sx={{ maxHeight: { md: 'calc(100vh - 360px)' }, overflowY: 'auto', mt: 1 }}>
+                {changesByRole.map(([id, items]) => {
+                  const r = roleById.get(id)
+                  return (
+                    <Box key={id} sx={{ mb: 1.5 }}>
+                      <Typography variant='caption' fontWeight={700}>
+                        {r ? roleDisplayName(r) : 'Rol desconocido'}
+                        {r ? ` · ${r.userCount} ${r.userCount === 1 ? 'usuario' : 'usuarios'}` : ''}
+                      </Typography>
+                      {items.map((c) => {
+                        const screens = screensOf(c.permissionKey)
+                        const perm = permissionByKey.get(c.permissionKey)
+                        return (
+                          <Box
+                            key={c.permissionKey}
+                            sx={{ display: 'flex', gap: 1, mt: 0.5 }}
+                          >
+                            <Typography
+                              component='span'
+                              fontWeight={700}
+                              sx={{ color: c.granted ? TEAL_DARK : 'error.main', width: 14 }}
+                            >
+                              {c.granted ? '+' : '−'}
+                            </Typography>
+                            <Box sx={{ minWidth: 0 }}>
+                              <Typography
+                                variant='caption'
+                                sx={{ fontFamily: 'monospace', fontWeight: 600, wordBreak: 'break-all' }}
+                              >
+                                {c.permissionKey}
+                              </Typography>
+                              {perm?.description && (
+                                <Typography variant='caption' color='text.secondary' component='div'>
+                                  {perm.description}
+                                </Typography>
+                              )}
+                              {screens.length > 0 && (
+                                <Typography variant='caption' color='text.secondary' component='div'>
+                                  {c.granted ? 'Se habilita' : 'Se oculta'}:{' '}
+                                  {screens.slice(0, 2).map((s) => s.label).join(', ')}
+                                  {screens.length > 2 ? ` y ${screens.length - 2} más` : ''}
+                                </Typography>
+                              )}
+                            </Box>
+                          </Box>
+                        )
+                      })}
+                    </Box>
+                  )
+                })}
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1, mt: 1.5 }}>
+                <Button onClick={onDiscard} sx={{ textTransform: 'none' }}>
+                  Descartar
+                </Button>
+                <Button
+                  fullWidth
+                  variant='contained'
+                  onClick={onReview}
+                  sx={{
+                    textTransform: 'none',
+                    bgcolor: TEAL,
+                    '&:hover': { bgcolor: TEAL_DARK }
+                  }}
+                >
+                  Revisar y guardar
+                </Button>
+              </Box>
+            </>
+          )}
+        </Paper>
+      </Grid>
+    </Grid>
   )
 }
 
