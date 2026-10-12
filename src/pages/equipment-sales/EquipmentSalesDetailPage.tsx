@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useStore } from '@nanostores/react'
 import {
   Alert,
   Box,
@@ -23,8 +22,8 @@ import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import { Toaster, toast } from 'react-hot-toast'
 import Swal from 'sweetalert2'
-import { userStore } from 'src/store/userStore'
-import { useHasRole } from '../../utils/functions'
+import { useCan, useHasRole } from '../../utils/functions'
+import { PERMISSIONS } from 'src/constants/permissions'
 import EquipmentSalesSequenceConfigDialog from './EquipmentSalesSequenceConfigDialog'
 import {
   useEquipmentQuotation,
@@ -34,8 +33,7 @@ import {
 } from '../../hooks/useEquipmentSales'
 import {
   EQUIPMENT_QUOTATION_STATUS_COLORS,
-  EQUIPMENT_QUOTATION_STATUS_LABELS,
-  EQUIPMENT_SALES_INVOICE_ROLES
+  EQUIPMENT_QUOTATION_STATUS_LABELS
 } from '../../constants/equipmentSales'
 import { EquipmentQuotationDocumentType } from '../../types/equipmentSales'
 import EquipmentQuotationApprovalDialog, {
@@ -87,7 +85,6 @@ const DetailTabPanel = ({
 const EquipmentSalesDetailPage = () => {
   const navigate = useNavigate()
   const { quotationId } = useParams<{ quotationId?: string }>()
-  const $user = useStore(userStore)
   const { data: quotation, isLoading } = useEquipmentQuotation(quotationId)
   const { data: documentsData } = useEquipmentQuotationDocuments(quotationId)
   const mutations = useEquipmentSalesMutations()
@@ -105,10 +102,13 @@ const EquipmentSalesDetailPage = () => {
     window.sessionStorage.setItem(`equipment-quotation-detail-tab:${quotationId}`, activeTab)
   }, [activeTab, quotationId])
 
-  const canEdit = useMemo(
-    () => ['admin', 'super_admin', 'comp_admin', 'comp_requester'].some((r) => $user.rol?.includes(r)),
-    [$user.rol]
-  )
+  // Cada acción se muestra según la capacidad que el backend le pide a su endpoint
+  const canEdit = useCan(PERMISSIONS.SALES_CONFIG_MANAGE)
+  const canUpdate = useCan(PERMISSIONS.SALES_QUOTATION_UPDATE)
+  const canWorkflow = useCan(PERMISSIONS.SALES_QUOTATION_WORKFLOW)
+  const canInvoice = useCan(PERMISSIONS.SALES_QUOTATION_INVOICE)
+  const canUploadDocuments = useCan(PERMISSIONS.SALES_QUOTATION_DOCUMENT_UPLOAD)
+  const canGeneratePdf = useCan(PERMISSIONS.SALES_QUOTATION_PDF)
 
   const { data: sequenceConfig } = useEquipmentSequenceConfig(canEdit)
 
@@ -615,8 +615,8 @@ const EquipmentSalesDetailPage = () => {
                 quoteCode={quotation.quoteCode}
                 hasCustomer={Boolean(quotation.customerId)}
                 hasItems={Boolean(quotation.items?.length)}
-                canUploadDocuments={canEdit}
-                canGenerateQuotePdf={canEdit && quotation.status === 'draft'}
+                canUploadDocuments={canUploadDocuments}
+                canGenerateQuotePdf={canGeneratePdf && quotation.status === 'draft'}
                 officialPdfDocuments={officialPdfDocuments}
                 decisionDocuments={decisionDocuments}
                 supportDocuments={supportDocuments}
@@ -661,18 +661,22 @@ const EquipmentSalesDetailPage = () => {
                 </Box>
               </Stack>
 
-              {quotation.status === 'draft' ? (
+              {quotation.status === 'draft' && (canWorkflow || canUpdate) ? (
                 <Stack spacing={1}>
-                  <Button variant='contained' startIcon={<SendOutlinedIcon />} onClick={handleRequestApproval} disabled={isBusy} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}>
+                  {canWorkflow ? (
+                    <Button variant='contained' startIcon={<SendOutlinedIcon />} onClick={handleRequestApproval} disabled={isBusy} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}>
                     Enviar cotización
                   </Button>
-                  <Button variant='outlined' startIcon={<EditOutlinedIcon />} onClick={() => navigate(`/equipment-sales/${quotation.id}/edit`)} disabled={isBusy} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}>
+                  ) : null}
+                  {canUpdate ? (
+                    <Button variant='outlined' startIcon={<EditOutlinedIcon />} onClick={() => navigate(`/equipment-sales/${quotation.id}/edit`)} disabled={isBusy} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}>
                     Editar
                   </Button>
+                  ) : null}
                 </Stack>
               ) : null}
 
-              {quotation.status === 'pending_approval' ? (
+              {quotation.status === 'pending_approval' && canWorkflow ? (
                 <Stack spacing={1}>
                   <Button variant='contained' color='success' startIcon={<CheckCircleOutlineOutlinedIcon />} onClick={() => setDecisionMode('approve')} disabled={isBusy} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}>
                     Registrar aprobación cliente
@@ -686,19 +690,19 @@ const EquipmentSalesDetailPage = () => {
                 </Stack>
               ) : null}
 
-              {quotation.status === 'approved' ? (
+              {quotation.status === 'approved' && canWorkflow ? (
                 <Button variant='contained' color='success' startIcon={<CheckCircleOutlineOutlinedIcon />} onClick={handleReadyForInvoice} disabled={isBusy} fullWidth sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}>
                   Lista para facturar
                 </Button>
               ) : null}
 
-              {quotation.status === 'ready_for_invoicing' && EQUIPMENT_SALES_INVOICE_ROLES.some((r) => $user.rol?.includes(r)) ? (
+              {quotation.status === 'ready_for_invoicing' && canInvoice ? (
                 <Button variant='contained' startIcon={<ReceiptLongOutlinedIcon />} onClick={handleInvoice} disabled={isBusy} fullWidth sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}>
                   Facturar
                 </Button>
               ) : null}
 
-              {quotation.status === 'draft' ? (
+              {quotation.status === 'draft' && canWorkflow ? (
                 <Button variant='text' color='error' startIcon={<BlockOutlinedIcon />} onClick={handleCancel} disabled={isBusy} fullWidth sx={{ mt: 1, borderRadius: '10px', textTransform: 'none', fontWeight: 600 }}>
                   Cancelar cotización
                 </Button>

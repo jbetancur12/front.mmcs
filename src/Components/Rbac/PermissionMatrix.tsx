@@ -32,6 +32,8 @@ import { RbacMatrix, RbacRole } from '../../types/rbac'
 /** Nombre legible de cada módulo del catálogo; si falta, se muestra la clave. */
 export const RBAC_MODULE_LABELS: Record<string, string> = {
   maintenance: 'Mantenimiento',
+  purchases: 'Compras',
+  sales: 'Venta de equipos',
   rbac: 'Administración de permisos'
 }
 

@@ -39,7 +39,6 @@ import { Toaster, toast } from 'react-hot-toast'
 import { axiosPrivate } from '@utils/api'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  EQUIPMENT_SALES_EDIT_ROLES,
   EQUIPMENT_QUOTATION_STATUS_COLORS,
   EQUIPMENT_QUOTATION_STATUS_LABELS
 } from '../../constants/equipmentSales'
@@ -57,7 +56,8 @@ import {
   EquipmentProduct,
   EquipmentQuotationPayload
 } from '../../types/equipmentSales'
-import { useHasRole } from '../../utils/functions'
+import { useCan, useHasRole } from '../../utils/functions'
+import { PERMISSIONS } from 'src/constants/permissions'
 import EquipmentQuotationItemsEditor, {
   FormItem,
   createEmptyItem,
@@ -208,7 +208,10 @@ const EquipmentSalesWorkspacePage = () => {
   const { quotationId } = useParams<{ quotationId?: string }>()
   const isEditing = Boolean(quotationId)
   const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
-  const canAccessWorkspace = useHasRole([...EQUIPMENT_SALES_EDIT_ROLES])
+  // Crear exige "crear" y editar exige "editar"; la ruta ya filtra, esto cubre el cambio en vivo
+  const canCreateQuotation = useCan(PERMISSIONS.SALES_QUOTATION_CREATE)
+  const canUpdateQuotation = useCan(PERMISSIONS.SALES_QUOTATION_UPDATE)
+  const canAccessWorkspace = quotationId ? canUpdateQuotation : canCreateQuotation
   const { data: sequenceConfig, isLoading: isLoadingSequenceConfig } = useEquipmentSequenceConfig(canAccessWorkspace)
   const { data: quotation, isLoading: isLoadingQuotation } = useEquipmentQuotation(quotationId)
   const { data: documentsData } = useEquipmentQuotationDocuments(quotationId)

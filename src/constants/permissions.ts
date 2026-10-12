@@ -110,6 +110,26 @@ export const PERMISSIONS = {
   PURCHASES_PERSONNEL_MANAGE: 'purchases:personnel:manage',
   /** Gestionar los parámetros fiscales (listar todos, crear, editar y eliminar) */
   PURCHASES_FISCAL_PARAMETER_MANAGE: 'purchases:fiscal_parameter:manage',
+  /** Ver las cotizaciones de venta de equipos, sus documentos y descargarlos */
+  SALES_QUOTATION_VIEW: 'sales:quotation:view',
+  /** Crear cotizaciones de venta de equipos */
+  SALES_QUOTATION_CREATE: 'sales:quotation:create',
+  /** Editar cotizaciones de venta de equipos */
+  SALES_QUOTATION_UPDATE: 'sales:quotation:update',
+  /** Mover una cotización por el flujo: enviar al cliente, registrar aprobación, rechazo o cambios, dejarla lista para facturar y cancelarla */
+  SALES_QUOTATION_WORKFLOW: 'sales:quotation:workflow',
+  /** Facturar una cotización que está lista para facturar */
+  SALES_QUOTATION_INVOICE: 'sales:quotation:invoice',
+  /** Subir documentos y evidencias a una cotización */
+  SALES_QUOTATION_DOCUMENT_UPLOAD: 'sales:quotation:document_upload',
+  /** Generar el PDF de una cotización */
+  SALES_QUOTATION_PDF: 'sales:quotation:pdf',
+  /** Ver el catálogo de productos de venta de equipos */
+  SALES_PRODUCT_VIEW: 'sales:product:view',
+  /** Crear, editar y desactivar productos de venta de equipos */
+  SALES_PRODUCT_MANAGE: 'sales:product:manage',
+  /** Ver y editar el consecutivo y la plantilla de términos de las cotizaciones (cambiar un consecutivo ya iniciado sigue siendo solo de admin y super_admin: regla del controlador) */
+  SALES_CONFIG_MANAGE: 'sales:config:manage',
   /** Ver roles, capacidades y la auditoría de cambios */
   RBAC_VIEW: 'rbac:view',
   /** Crear roles y activar o desactivar capacidades */

@@ -21,7 +21,6 @@ import {
   LMS_ADMIN_ROUTE_ROLES
 } from 'src/utils/lmsIdentity'
 import { CALIBRATION_SERVICE_ALLOWED_ROLES } from 'src/constants/calibrationServices'
-import { EQUIPMENT_SALES_ALLOWED_ROLES } from 'src/constants/equipmentSales'
 import { audienceIncludes, isCoreModule, getModuleAudience } from 'src/constants/modules'
 
 import { ROLES, ROLE_GROUPS } from 'src/constants/roles'
@@ -364,7 +363,8 @@ const sidebarItems = ($userStore: UserData) => [
     label: 'Venta Equipos',
     to: '/equipment-sales',
     icon: <PrecisionManufacturing className={iconClass} />,
-    roles: [...EQUIPMENT_SALES_ALLOWED_ROLES],
+    roles: [] as string[],
+    permission: PERMISSIONS.SALES_QUOTATION_VIEW,
     moduleName: 'Basic'
   },
   {

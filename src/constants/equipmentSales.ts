@@ -1,24 +1,5 @@
 import { ChipProps } from '@mui/material'
 
-import { ROLES, ROLE_GROUPS } from 'src/constants/roles'
-export const EQUIPMENT_SALES_ALLOWED_ROLES = [
-  ROLES.ADMIN,
-  ROLES.SUPER_ADMIN,
-  ROLES.COMP_ADMIN,
-  ROLES.COMP_REQUESTER,
-  ROLES.INVOICING
-] as const
-
-export const EQUIPMENT_SALES_EDIT_ROLES = ROLE_GROUPS.COMMERCIAL_EDITORS
-
-export const EQUIPMENT_SALES_INVOICE_ROLES = [
-  ROLES.ADMIN,
-  ROLES.SUPER_ADMIN,
-  ROLES.INVOICING
-] as const
-
-export const EQUIPMENT_SALES_PRODUCT_ROLES = ROLE_GROUPS.COMMERCIAL_EDITORS
-
 export const EQUIPMENT_QUOTATION_STATUS_LABELS: Record<string, string> = {
   draft: 'Borrador',
   pending_approval: 'Cotización enviada',

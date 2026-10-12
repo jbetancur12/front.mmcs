@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 import {
   Accordion,
   AccordionDetails,
@@ -66,6 +68,11 @@ const QUOTATION_STATUS_COLORS: Record<string, string> = EQUIPMENT_QUOTATION_STAT
 
 const EquipmentSalesPage = () => {
   const navigate = useNavigate()
+  const canCreate = useCan(PERMISSIONS.SALES_QUOTATION_CREATE)
+  const canUpdate = useCan(PERMISSIONS.SALES_QUOTATION_UPDATE)
+  const canWorkflow = useCan(PERMISSIONS.SALES_QUOTATION_WORKFLOW)
+  const canSeeProducts = useCan(PERMISSIONS.SALES_PRODUCT_VIEW)
+  const canConfig = useCan(PERMISSIONS.SALES_CONFIG_MANAGE)
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(15)
   const [statusFilter, setStatusFilter] = useState('')
@@ -158,18 +165,18 @@ const EquipmentSalesPage = () => {
 
   const renderQuickActions = (quotation: EquipmentQuotation) => (
     <Stack direction='row' spacing={0.5}>
-      {quotation.status === 'draft' ? (
+      {quotation.status === 'draft' && (canUpdate || canWorkflow) ? (
         <>
-          <Tooltip title='Editar'>
+          {canUpdate ? (<Tooltip title='Editar'>
             <IconButton size='small' onClick={(e) => { e.stopPropagation(); navigate(`/equipment-sales/${quotation.id}/edit`) }}>
               <EditOutlinedIcon fontSize='small' />
             </IconButton>
-          </Tooltip>
-          <Tooltip title='Enviar al cliente'>
+          </Tooltip>) : null}
+          {canWorkflow ? (<Tooltip title='Enviar al cliente'>
             <IconButton size='small' color='primary' onClick={(e) => { e.stopPropagation(); void handleSend(quotation) }}>
               <SendOutlinedIcon fontSize='small' />
             </IconButton>
-          </Tooltip>
+          </Tooltip>) : null}
         </>
       ) : null}
       <Tooltip title='Ver detalle'>
@@ -209,10 +216,13 @@ const EquipmentSalesPage = () => {
             <Button variant='text' startIcon={<GroupOutlinedIcon />} onClick={() => navigate('/calibration-services/customers')} sx={{ color: 'rgba(255,255,255,0.85)', textTransform: 'none', fontWeight: 600, '&:hover': { backgroundColor: 'rgba(255,255,255,0.10)' } }}>
               Clientes
             </Button>
-            <Button variant='text' startIcon={<Inventory2OutlinedIcon />} onClick={() => navigate('/equipment-sales/products')} sx={{ color: 'rgba(255,255,255,0.85)', textTransform: 'none', fontWeight: 600, '&:hover': { backgroundColor: 'rgba(255,255,255,0.10)' } }}>
+            {canSeeProducts ? (
+                    <Button variant='text' startIcon={<Inventory2OutlinedIcon />} onClick={() => navigate('/equipment-sales/products')} sx={{ color: 'rgba(255,255,255,0.85)', textTransform: 'none', fontWeight: 600, '&:hover': { backgroundColor: 'rgba(255,255,255,0.10)' } }}>
               Productos
             </Button>
-            <Button
+                  ) : null}
+            {canCreate ? (
+                    <Button
               variant='contained'
               startIcon={<AddOutlinedIcon />}
               onClick={() => navigate('/equipment-sales/new')}
@@ -220,6 +230,7 @@ const EquipmentSalesPage = () => {
             >
               Nueva Cotización
             </Button>
+                  ) : null}
           </Stack>
         </Stack>
       </Box>
@@ -259,9 +270,11 @@ const EquipmentSalesPage = () => {
           {filteredQuotations.length} cotización{filteredQuotations.length !== 1 ? 'es' : ''}
         </Typography>
         <Stack direction='row' spacing={1} alignItems='center'>
-          <Button variant='outlined' size='small' startIcon={<ExpandMoreOutlinedIcon />} onClick={handleOpenTemplate} sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '8px' }}>
+          {canConfig ? (
+                    <Button variant='outlined' size='small' startIcon={<ExpandMoreOutlinedIcon />} onClick={handleOpenTemplate} sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '8px' }}>
             Plantilla términos
           </Button>
+                  ) : null}
           <Stack direction='row' spacing={0.5}>
             <IconButton size='small' onClick={() => setViewMode('list')} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '8px', color: viewMode === 'list' ? '#059669' : 'text.secondary' }}>
               <ViewStreamOutlinedIcon fontSize='small' />
@@ -307,9 +320,11 @@ const EquipmentSalesPage = () => {
               ? 'Ninguna cotización coincide con el filtro de estado.'
               : 'Aún no hay cotizaciones de venta de equipos.'}
           </Typography>
-          <Button variant='contained' startIcon={<AddOutlinedIcon />} onClick={() => navigate('/equipment-sales/new')} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}>
+          {canCreate ? (
+                    <Button variant='contained' startIcon={<AddOutlinedIcon />} onClick={() => navigate('/equipment-sales/new')} sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 700 }}>
             Nueva Cotización
           </Button>
+                  ) : null}
         </Paper>
       ) : viewMode === 'list' ? (
         <>
