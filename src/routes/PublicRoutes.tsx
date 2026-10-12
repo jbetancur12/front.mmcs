@@ -27,6 +27,10 @@ const CalibrationServiceAdjustmentBatchResponsePage = lazy(
       '../pages/calibration-services/CalibrationServiceAdjustmentBatchResponsePage'
     )
 )
+const CalibrationServiceRemoteSignaturePage = lazy(
+  () =>
+    import('../pages/calibration-services/CalibrationServiceRemoteSignaturePage')
+)
 
 const LoadingFallback = () => (
   <Box
@@ -116,6 +120,14 @@ const PublicRoutes = (
       element={
         <Suspense fallback={<LoadingFallback />}>
           <CalibrationServiceAdjustmentCustomerResponsePage />
+        </Suspense>
+      }
+    />
+    <Route
+      path='/calibration-services/sign'
+      element={
+        <Suspense fallback={<LoadingFallback />}>
+          <CalibrationServiceRemoteSignaturePage />
         </Suspense>
       }
     />

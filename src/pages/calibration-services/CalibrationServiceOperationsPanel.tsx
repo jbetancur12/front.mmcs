@@ -23,6 +23,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import SignaturePad from '../../Components/Maintenance/SignaturePad'
+import CalibrationServiceRemoteSignatureLink from './CalibrationServiceRemoteSignatureLink'
 import CalibrationServiceStatusChip from './CalibrationServiceStatusChip'
 import { CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS } from '../../constants/calibrationServices'
 import {
@@ -162,6 +163,10 @@ const CalibrationServiceOperationsPanel = ({
   const [deliverySignature, setDeliverySignature] = useState<string | null>(
     initialDeliverySignatureData ?? null
   )
+  // Si el cliente firmó por enlace, esa firma queda bloqueada en la plataforma.
+  const isSignedByRemoteLink =
+    Boolean(initialDeliverySignatureData) &&
+    Boolean((service.otherFields?.remoteSignature as { usedAt?: string } | undefined)?.usedAt)
   const hasDeliveryChanged =
     deliveryName !== (initialDeliveryName ?? '') ||
     deliveryRole !== (initialDeliveryRole ?? '') ||
@@ -597,12 +602,19 @@ const CalibrationServiceOperationsPanel = ({
               Datos de la persona que recibe el servicio a satisfacción. Aparecen
               en la Orden de Servicio (ODS) como constancia de recibido.
             </Typography>
+            <CalibrationServiceRemoteSignatureLink
+              serviceId={service.id}
+              serviceCode={service.serviceCode}
+              otherFields={service.otherFields}
+              hasSignature={Boolean(initialDeliverySignatureData)}
+            />
             <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
                   size='small'
                   label='Nombre de quien recibe'
+                  disabled={isSignedByRemoteLink}
                   value={deliveryName}
                   onChange={(e) => setDeliveryName(e.target.value)}
                 />
@@ -612,6 +624,7 @@ const CalibrationServiceOperationsPanel = ({
                   fullWidth
                   size='small'
                   label='Cargo'
+                  disabled={isSignedByRemoteLink}
                   value={deliveryRole}
                   onChange={(e) => setDeliveryRole(e.target.value)}
                 />
@@ -620,6 +633,7 @@ const CalibrationServiceOperationsPanel = ({
             <SignaturePad
               value={deliverySignature}
               onChange={setDeliverySignature}
+              disabled={isSignedByRemoteLink}
               height={160}
               helperText='Firma de recepción conforme del servicio.'
             />
@@ -632,7 +646,7 @@ const CalibrationServiceOperationsPanel = ({
                   setDeliveryRole(initialDeliveryRole ?? '')
                   setDeliverySignature(initialDeliverySignatureData ?? null)
                 }}
-                disabled={isUpdatingDeliverySignature}
+                disabled={isUpdatingDeliverySignature || isSignedByRemoteLink}
               >
                 Cancelar
               </Button>
@@ -646,7 +660,11 @@ const CalibrationServiceOperationsPanel = ({
                     deliverySignatureData: deliverySignature
                   })
                 }
-                disabled={!hasDeliveryChanged || isUpdatingDeliverySignature}
+                disabled={
+                  !hasDeliveryChanged ||
+                  isUpdatingDeliverySignature ||
+                  isSignedByRemoteLink
+                }
               >
                 Guardar recepción conforme
               </Button>

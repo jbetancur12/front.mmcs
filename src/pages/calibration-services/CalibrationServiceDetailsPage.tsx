@@ -310,7 +310,8 @@ const getEmailSendPreview = (
   const envOverride = import.meta.env.VITE_DEV_EMAIL_OVERRIDE
   const intendedRecipient = contactEmail || customerEmail || null
 
-  if (!envOverride) {
+  // El backend solo redirige el correo en desarrollo; en producción no hay override.
+  if (!envOverride || !import.meta.env.DEV) {
     return {
       intendedRecipient,
       actualRecipient: intendedRecipient,
