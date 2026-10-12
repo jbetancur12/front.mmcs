@@ -14,20 +14,34 @@ export const PERMISSIONS = {
   MAINTENANCE_TICKET_VIEW: 'maintenance:ticket:view',
   /** Crear tickets de mantenimiento */
   MAINTENANCE_TICKET_CREATE: 'maintenance:ticket:create',
-  /** Editar tickets (el técnico solo ciertos campos: regla del controlador) */
+  /** Editar tickets (sin maintenance:ticket:manage_all, solo los asignados y ciertos campos) */
   MAINTENANCE_TICKET_UPDATE: 'maintenance:ticket:update',
   /** Eliminar tickets */
   MAINTENANCE_TICKET_DELETE: 'maintenance:ticket:delete',
   /** Crear o editar el informe técnico de un ticket */
   MAINTENANCE_TECHNICAL_REPORT_EDIT: 'maintenance:technical_report:edit',
+  /** Operar sobre cualquier ticket, informe técnico o técnico. Sin esta capacidad solo se trabaja sobre los tickets asignados a uno mismo y con campos limitados */
+  MAINTENANCE_TICKET_MANAGE_ALL: 'maintenance:ticket:manage_all',
   /** Comentar tickets */
   MAINTENANCE_COMMENT_CREATE: 'maintenance:comment:create',
-  /** Editar o eliminar comentarios (autor o coordinación: regla del controlador) */
+  /** Editar o eliminar comentarios (propios; los ajenos con maintenance:comment:moderate) */
   MAINTENANCE_COMMENT_MANAGE: 'maintenance:comment:manage',
+  /** Ver los comentarios internos de un ticket (los demás solo ven los visibles al cliente) */
+  MAINTENANCE_COMMENT_VIEW_INTERNAL: 'maintenance:comment:view_internal',
+  /** Editar o eliminar comentarios de otras personas (sin ella, solo los propios) */
+  MAINTENANCE_COMMENT_MODERATE: 'maintenance:comment:moderate',
   /** Subir archivos a un ticket */
   MAINTENANCE_FILE_UPLOAD: 'maintenance:file:upload',
   /** Editar o eliminar archivos de tickets */
   MAINTENANCE_FILE_MANAGE: 'maintenance:file:manage',
+  /** Ver también los archivos no públicos de un ticket (los demás solo ven los públicos) */
+  MAINTENANCE_FILE_VIEW_ALL: 'maintenance:file:view_all',
+  /** Ver los archivos desactivados de un ticket */
+  MAINTENANCE_FILE_VIEW_INACTIVE: 'maintenance:file:view_inactive',
+  /** Editar o eliminar archivos subidos por cualquier persona (sin ella, solo los propios) */
+  MAINTENANCE_FILE_MANAGE_ALL: 'maintenance:file:manage_all',
+  /** Editar o eliminar los archivos que subió un técnico */
+  MAINTENANCE_FILE_MANAGE_TECHNICIAN_UPLOADS: 'maintenance:file:manage_technician_uploads',
   /** Ver estadísticas de archivos */
   MAINTENANCE_FILE_STATISTICS: 'maintenance:file:statistics',
   /** Ver protocolos de mantenimiento */
@@ -166,8 +180,10 @@ export const PERMISSIONS = {
   LABORATORY_CALIBRATION_VIEW: 'laboratory:calibration:view',
   /** Crear, editar y eliminar cámaras, patrones y sensores, y configurar un patrón */
   LABORATORY_CALIBRATION_MANAGE: 'laboratory:calibration:manage',
-  /** Listar dispositivos IoT (el usuario de una empresa solo ve los suyos: regla del controlador) */
+  /** Listar dispositivos IoT (solo los de su empresa; todos con iot:device:view_all) */
   IOT_DEVICE_LIST: 'iot:device:list',
+  /** Ver los dispositivos IoT de todas las empresas en el listado (sin ella, solo los de su empresa) */
+  IOT_DEVICE_VIEW_ALL: 'iot:device:view_all',
   /** Ver dispositivos IoT por id o cliente, su histórico, energía, alarmas, eventos y datos agregados */
   IOT_DEVICE_VIEW: 'iot:device:view',
   /** Crear, editar y eliminar dispositivos IoT y configurar sus módulos */
@@ -200,9 +216,9 @@ export const PERMISSIONS = {
   USERS_IMPERSONATION_USE: 'users:impersonation:use',
   /** Crear, editar y eliminar perfiles de biomédicos, su imagen y su hoja de vida */
   USERS_PROFILE_MANAGE: 'users:profile:manage',
-  /** Ver la configuración general del sistema */
+  /** Ver las contraseñas de libros Excel guardadas (Subir Excel) */
   SYSTEM_SETTINGS_VIEW: 'system:settings:view',
-  /** Crear, editar y eliminar la configuración general del sistema */
+  /** Crear, editar y eliminar las contraseñas de libros Excel guardadas (Subir Excel) */
   SYSTEM_SETTINGS_MANAGE: 'system:settings:manage',
   /** Ver los servicios de calibración, su línea de tiempo, documentos, notificaciones, SLA y configuración de WhatsApp */
   CALIBRATION_SERVICE_VIEW: 'calibration:service:view',

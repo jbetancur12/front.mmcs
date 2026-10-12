@@ -82,7 +82,6 @@ import MaintenanceTechnicalReportDialog from '../../Components/Maintenance/Maint
 import { maintenanceSignaturesEnabled } from '../../features/maintenanceFlags'
 import type { CompletionPhotoInput } from '../../Components/Maintenance/CompletionCostsDialog'
 
-import { ROLES } from 'src/constants/roles'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 /**
@@ -153,7 +152,8 @@ const MaintenanceDashboard: React.FC = () => {
   }
 
   // Check user permissions
-  const isTechnician = $userStore.rol.includes(ROLES.TECHNICIAN)
+  // Sin alcance total sobre los tickets (capacidad), solo se ven y operan los asignados a uno mismo
+  const isTechnician = !useCan(PERMISSIONS.MAINTENANCE_TICKET_MANAGE_ALL)
   const canListTechnicians = useCan(PERMISSIONS.MAINTENANCE_TECHNICIAN_LIST)
   const canCreateTickets = useCan(PERMISSIONS.MAINTENANCE_TICKET_CREATE)
 

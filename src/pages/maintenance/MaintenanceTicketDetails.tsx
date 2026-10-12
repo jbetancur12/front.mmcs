@@ -213,7 +213,8 @@ const MaintenanceTicketDetails: React.FC = () => {
   // Asignar técnicos exige poder listarlos (GET /maintenance/technicians)
   const canManageTechnicians = useCan(PERMISSIONS.MAINTENANCE_TECHNICIAN_LIST)
   const currentUserRole = $userStore.rol[0] || ROLES.USER
-  const isTechnician = $userStore.rol.includes(ROLES.TECHNICIAN)
+  // Sin alcance total sobre los tickets (capacidad), solo se ven y operan los asignados a uno mismo
+  const isTechnician = !useCan(PERMISSIONS.MAINTENANCE_TICKET_MANAGE_ALL)
 
   // API hooks
   const {
