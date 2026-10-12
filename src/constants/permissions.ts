@@ -130,6 +130,32 @@ export const PERMISSIONS = {
   SALES_PRODUCT_MANAGE: 'sales:product:manage',
   /** Ver y editar el consecutivo y la plantilla de términos de las cotizaciones (cambiar un consecutivo ya iniciado sigue siendo solo de admin y super_admin: regla del controlador) */
   SALES_CONFIG_MANAGE: 'sales:config:manage',
+  /** Consultar el catálogo de empresas y sus sedes (lo usan los selectores de cotizaciones, servicios y mapas) */
+  CUSTOMERS_CUSTOMER_CATALOG: 'customers:customer:catalog',
+  /** Ver la ficha de una empresa (el usuario de una empresa cliente solo ve la suya: regla del controlador) */
+  CUSTOMERS_CUSTOMER_VIEW: 'customers:customer:view',
+  /** Crear empresas */
+  CUSTOMERS_CUSTOMER_CREATE: 'customers:customer:create',
+  /** Editar empresas (datos, estado activo y perfil de certificados) */
+  CUSTOMERS_CUSTOMER_UPDATE: 'customers:customer:update',
+  /** Eliminar empresas */
+  CUSTOMERS_CUSTOMER_DELETE: 'customers:customer:delete',
+  /** Gestionar empresas: pantalla de empresas, archivos, usuarios, correos de notificación y empresas con módulo IoT */
+  CUSTOMERS_CUSTOMER_MANAGE: 'customers:customer:manage',
+  /** Cambiar la imagen de una empresa */
+  CUSTOMERS_CUSTOMER_AVATAR: 'customers:customer:avatar',
+  /** Agregar, editar y eliminar las sedes de una empresa */
+  CUSTOMERS_SITE_MANAGE: 'customers:site:manage',
+  /** Ver los módulos contratados por una empresa */
+  CUSTOMERS_MODULE_VIEW: 'customers:module:view',
+  /** Activar o desactivar módulos a una empresa */
+  CUSTOMERS_MODULE_ASSIGN: 'customers:module:assign',
+  /** Ver, asignar y quitar los cursos de la academia de una empresa */
+  CUSTOMERS_LMS_COURSE_MANAGE: 'customers:lms_course:manage',
+  /** Ver el catálogo de módulos del sistema */
+  CUSTOMERS_MODULE_CATALOG_VIEW: 'customers:module_catalog:view',
+  /** Crear módulos en el catálogo del sistema */
+  CUSTOMERS_MODULE_CATALOG_MANAGE: 'customers:module_catalog:manage',
   /** Ver roles, capacidades y la auditoría de cambios */
   RBAC_VIEW: 'rbac:view',
   /** Crear roles y activar o desactivar capacidades */

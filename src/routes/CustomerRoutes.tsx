@@ -1,7 +1,7 @@
 import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
-import { ROLES } from 'src/constants/roles'
+import { PERMISSIONS, PermissionKey } from 'src/constants/permissions'
 
 const Customers = lazy(() => import('../pages/Customers'))
 const ModernCustomer = lazy(() => import('../pages/ModernCustomer'))
@@ -12,32 +12,27 @@ const DashboardCustomer = lazy(
 )
 
 const CustomerRoutes = (role: string[]) => {
+  const isAuthenticated = localStorage.getItem('accessToken') !== null
+
+  // Cada página exige la capacidad que el backend le pide a sus endpoints
+  const guard = (permission: PermissionKey | readonly PermissionKey[]) => (
+    <ProtectedRoute
+      isAuthenticated={isAuthenticated}
+      userRole={role}
+      permission={permission}
+    />
+  )
+
   return (
     <>
-      <Route
-        element={
-          <ProtectedRoute
-            isAuthenticated={localStorage.getItem('accessToken') !== null}
-            userRole={role}
-            roles={[ROLES.ADMIN, ROLES.METROLOGIST, ROLES.USER]}
-          />
-        }
-      >
+      {/* Listado de empresas: solo quien las gestiona (el usuario de una empresa cliente va a su ficha) */}
+      <Route element={guard(PERMISSIONS.CUSTOMERS_CUSTOMER_MANAGE)}>
         <Route path='customers'>
           <Route index element={<Customers />} />
         </Route>
       </Route>
-      <Route
-        element={
-          <ProtectedRoute
-            isAuthenticated={localStorage.getItem('accessToken') !== null}
-            userRole={role}
-            roles={[ROLES.ADMIN, ROLES.USER, ROLES.METROLOGIST]}
-          />
-        }
-      >
+      <Route element={guard(PERMISSIONS.CUSTOMERS_CUSTOMER_VIEW)}>
         <Route path='customers'>
-          <Route index element={<Customers />} />
           <Route path='certificates-due/:id' element={<DashboardCustomer />} />
           <Route path=':id' element={<ModernCustomer />} />
           <Route

@@ -68,7 +68,9 @@ import { CreateFileModal } from './TableFiles/CreateFileModal/CreateFileModal'
 import { bigToast } from './ExcelManipulation/Utils'
 import { MySwal } from '@utils/sweetAlert'
 
-import { ROLE_GROUPS, hasAnyRole, ROLES } from 'src/constants/roles'
+import { ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 // API URL
 const minioUrl = import.meta.env.VITE_MINIO_URL
 
@@ -456,7 +458,12 @@ const ModernCustomerProfile: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
   const queryClient = useQueryClient()
-  const canManageLmsCourses = $userStore.rol.includes(ROLES.ADMIN)
+  // Cada elemento se muestra según la capacidad que el backend le pide a su endpoint
+  const canManageLmsCourses = useCan(PERMISSIONS.CUSTOMERS_LMS_COURSE_MANAGE)
+  const canManageCustomer = useCan(PERMISSIONS.CUSTOMERS_CUSTOMER_MANAGE)
+  const canUpdateCustomer = useCan(PERMISSIONS.CUSTOMERS_CUSTOMER_UPDATE)
+  const canChangeAvatar = useCan(PERMISSIONS.CUSTOMERS_CUSTOMER_AVATAR)
+  const canViewModules = useCan(PERMISSIONS.CUSTOMERS_MODULE_VIEW)
 
   // State
   const [activeTab, setActiveTab] = useState<TabValue>(() => {
@@ -873,7 +880,7 @@ const ModernCustomerProfile: React.FC = () => {
     const checkPermission = async () => {
       try {
         if (
-          hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) ||
+          canManageCustomer ||
           id === String($userStore.customer.id)
         ) {
           setHasPermission(true)
@@ -895,8 +902,9 @@ const ModernCustomerProfile: React.FC = () => {
     return () => {
       setLoading(true)
     }
-  }, [id, $userStore.rol, $userStore.customer, navigate])
+  }, [id, canManageCustomer, $userStore.customer, navigate])
 
+  // Solo para subir archivos (módulo de archivos, aún por rol)
   const isAdmin = hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF)
 
 
@@ -1053,7 +1061,7 @@ const ModernCustomerProfile: React.FC = () => {
                     style={{ display: 'none' }}
                     onChange={handleImageChange}
                   />
-                  {isAdmin && (
+                  {canChangeAvatar && (
                     <Tooltip title='Cambiar imagen'>
                       <IconButton
                         sx={{
@@ -1105,7 +1113,7 @@ const ModernCustomerProfile: React.FC = () => {
                   <ModernSwitch
                     checked={customerData?.isActive || false}
                     onChange={handleStatusChange}
-                    disabled={!isAdmin}
+                    disabled={!canUpdateCustomer}
                   />
                 </Box>{' '}
               </Box>
@@ -1462,7 +1470,7 @@ const ModernCustomerProfile: React.FC = () => {
             icon={<CalendarToday />}
             iconPosition='start'
           />
-          {isAdmin && (
+          {canManageCustomer && (
             <Tab
               value='users'
               label='Usuarios'
@@ -1474,7 +1482,7 @@ const ModernCustomerProfile: React.FC = () => {
               }}
             />
           )}
-          {isAdmin && (
+          {canViewModules && (
             <Tab
               value='modules'
               label='Módulos'
@@ -1956,10 +1964,9 @@ const ModernCustomerProfile: React.FC = () => {
                 Administra los usuarios asociados a este cliente.
               </Typography>
 
-              {!isAdmin ? (
+              {!canManageCustomer ? (
                 <Alert severity='warning' sx={{ mt: 3 }}>
-                  No tienes permisos para ver esta sección. Solo administradores
-                  y metrólogos pueden acceder.
+                  Tu rol no tiene acceso a esta sección.
                 </Alert>
               ) : (
                 <Box sx={{ mt: 3 }}>
@@ -1989,10 +1996,9 @@ const ModernCustomerProfile: React.FC = () => {
                 Configura los módulos y funcionalidades disponibles.
               </Typography>
 
-              {!isAdmin ? (
+              {!canViewModules ? (
                 <Alert severity='warning' sx={{ mt: 3 }}>
-                  No tienes permisos para ver esta sección. Solo administradores
-                  y metrólogos pueden acceder.
+                  Tu rol no tiene acceso a esta sección.
                 </Alert>
               ) : !id ? (
                 <Alert severity='error' sx={{ mt: 3 }}>

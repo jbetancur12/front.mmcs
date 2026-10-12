@@ -85,6 +85,7 @@ const sidebarItems = ($userStore: UserData) => [
     type: 'link',
     label: 'Empresas',
     to: '/customers',
+    permission: PERMISSIONS.CUSTOMERS_CUSTOMER_MANAGE,
     icon: <FaHospitalUser className={iconClass} />,
     roles: ROLE_GROUPS.METROLOGY_STAFF,
     moduleName: 'Basic'

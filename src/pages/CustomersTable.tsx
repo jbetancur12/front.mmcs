@@ -29,6 +29,8 @@ import CreateCustomerModal from '../Components/CreateCustomerModal.tsx'
 import EditCustomerModal from '../Components/EditCustomerModal.tsx'
 
 import { ROLES } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 export interface CustomerData {
   id?: number
   nombre: string
@@ -46,6 +48,9 @@ export interface CustomerData {
 const CustomersTable: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
+  const canCreate = useCan(PERMISSIONS.CUSTOMERS_CUSTOMER_CREATE)
+  const canUpdate = useCan(PERMISSIONS.CUSTOMERS_CUSTOMER_UPDATE)
+  const canDelete = useCan(PERMISSIONS.CUSTOMERS_CUSTOMER_DELETE)
   const [customers, setCustomers] = useState<CustomerData[]>([])
   const [loading, setLoading] = useState(true)
   const [createModalOpen, setCreateModalOpen] = useState(false)
@@ -316,6 +321,7 @@ const CustomersTable: React.FC = () => {
             </Typography>
           </Box>
 
+{canCreate && (
           <Button
             variant='contained'
             startIcon={<Add />}
@@ -330,6 +336,7 @@ const CustomersTable: React.FC = () => {
           >
             Crear Cliente
           </Button>
+)}
         </Box>
       </Box>
 
@@ -360,6 +367,7 @@ const CustomersTable: React.FC = () => {
                   <Visibility />
                 </IconButton>
               </Tooltip>
+{canUpdate && (
               <Tooltip title='Editar'>
                 <IconButton
                   size='small'
@@ -369,6 +377,8 @@ const CustomersTable: React.FC = () => {
                   <Edit />
                 </IconButton>
               </Tooltip>
+)}
+{canDelete && (
               <Tooltip title='Eliminar'>
                 <IconButton
                   size='small'
@@ -378,6 +388,7 @@ const CustomersTable: React.FC = () => {
                   <Delete />
                 </IconButton>
               </Tooltip>
+)}
             </Box>
           )}
           muiTableProps={{
