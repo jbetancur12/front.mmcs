@@ -580,6 +580,31 @@ const calibrationServiceApi = {
     return response.data
   },
 
+  createRemoteSignatureLink: async ({
+    serviceId,
+    expiresInHours
+  }: {
+    serviceId: string
+    expiresInHours?: number
+  }): Promise<{ url: string; expiresAt: string }> => {
+    const response = await axiosPrivate.post<{ url: string; expiresAt: string }>(
+      `/calibration-services/${serviceId}/remote-signature-link`,
+      { expiresInHours }
+    )
+    return response.data
+  },
+
+  revokeRemoteSignatureLink: async ({
+    serviceId
+  }: {
+    serviceId: string
+  }): Promise<{ revoked: boolean }> => {
+    const response = await axiosPrivate.delete<{ revoked: boolean }>(
+      `/calibration-services/${serviceId}/remote-signature-link`
+    )
+    return response.data
+  },
+
   updateDeliverySignature: async ({
     serviceId,
     deliveryName,
@@ -784,9 +809,11 @@ export const useCalibrationServiceMutations = () => {
   const upsertSequenceConfig = useMutation(calibrationServiceApi.upsertSequenceConfig, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all, 'sequence-config']) } })
   const upsertSlaConfig = useMutation(calibrationServiceApi.upsertSlaConfig)
   const updateCustomerSignature = useMutation(calibrationServiceApi.updateCustomerSignature, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail]) } })
+  const createRemoteSignatureLink = useMutation(calibrationServiceApi.createRemoteSignatureLink, { onSuccess: (_: any, v: any) => { iD(v.serviceId) } })
+  const revokeRemoteSignatureLink = useMutation(calibrationServiceApi.revokeRemoteSignatureLink, { onSuccess: (_: any, v: any) => { iD(v.serviceId) } })
   const updateDeliverySignature = useMutation(calibrationServiceApi.updateDeliverySignature, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail]) } })
   const updateExecutionCustomer = useMutation(calibrationServiceApi.updateExecutionCustomer, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail]) } })
   const upsertQuoteTermsTemplate = useMutation(calibrationServiceApi.upsertQuoteTermsTemplate, { onSuccess: () => { queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all, 'quote-terms-template']) } })
 
-  return { createService, updateService, uploadDocument, requestApproval, approveService, rejectService, requestChanges, issueOds, scheduleService, rescheduleService, reassignService, pauseService, resumeService, cancelService, startExecution, completeExecution, closeService, updateItemProgress, registerPhysicalTraceability, updateLogisticsControl, createCut, createAdjustment, reviewAdjustment, sendAdjustmentToCustomer, batchSendAdjustmentsToCustomer, respondAdjustment, markCutReadyForInvoicing, markCutInvoiced, registerCutPayment, updateCutDocumentControl, generateQuotePdf, generateOdsPdf, generateAdjustmentPdf, generateAdjustmentSummaryPdf, generateLogisticsPdf, generateTechnicalProgressPdf, sendLogisticsControlEmail, sendCertificate, downloadDocument, upsertSequenceConfig, upsertSlaConfig, upsertQuoteTermsTemplate, updateCustomerSignature, updateDeliverySignature, updateExecutionCustomer }
+  return { createService, updateService, uploadDocument, requestApproval, approveService, rejectService, requestChanges, issueOds, scheduleService, rescheduleService, reassignService, pauseService, resumeService, cancelService, startExecution, completeExecution, closeService, updateItemProgress, registerPhysicalTraceability, updateLogisticsControl, createCut, createAdjustment, reviewAdjustment, sendAdjustmentToCustomer, batchSendAdjustmentsToCustomer, respondAdjustment, markCutReadyForInvoicing, markCutInvoiced, registerCutPayment, updateCutDocumentControl, generateQuotePdf, generateOdsPdf, generateAdjustmentPdf, generateAdjustmentSummaryPdf, generateLogisticsPdf, generateTechnicalProgressPdf, sendLogisticsControlEmail, sendCertificate, downloadDocument, upsertSequenceConfig, upsertSlaConfig, upsertQuoteTermsTemplate, updateCustomerSignature, createRemoteSignatureLink, revokeRemoteSignatureLink, updateDeliverySignature, updateExecutionCustomer }
 }
