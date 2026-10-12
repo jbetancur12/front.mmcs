@@ -50,7 +50,7 @@ current_build() {
 
 if [ "$TARGET" = "--list" ]; then
   echo "Publicado ahora: $(current_build)"
-  [ -d "$PREV" ] && echo "html.prev existe (./rollback.sh sin argumentos vuelve a él)" || echo "html.prev no existe"
+  [ -d "$PREV" ] && echo "html.prev existe (el rollback sin argumentos vuelve a él)" || echo "html.prev no existe"
   echo "--- Builds guardados (más reciente primero):"
   for d in $(ls -dt "$BASE"/build*/ 2>/dev/null); do echo "  $(basename "$d")  ($(date -r "$d" '+%Y-%m-%d %H:%M'))"; done
   exit 0
@@ -59,7 +59,7 @@ fi
 echo "Publicado ahora: $(current_build)"
 
 if [ -z "$TARGET" ]; then
-  [ -d "$PREV" ] || { echo "ERROR: no hay html.prev. Usa ./rollback.sh --list y elige un build."; exit 1; }
+  [ -d "$PREV" ] || { echo "ERROR: no hay html.prev. Lista los builds con --list y elige uno."; exit 1; }
   # Intercambio: el sitio actual queda como html.prev (reversible)
   rm -rf "$ROOT.swap"   # resto de un intento anterior interrumpido
   mv "$ROOT" "$ROOT.swap"
@@ -69,7 +69,7 @@ if [ -z "$TARGET" ]; then
 else
   case "$TARGET" in build*) NAME="$TARGET" ;; *) NAME="build$TARGET" ;; esac
   SRC="$BASE/$NAME"
-  [ -f "$SRC/index.html" ] || { echo "ERROR: $NAME no existe o no tiene index.html. Usa ./rollback.sh --list"; exit 1; }
+  [ -f "$SRC/index.html" ] || { echo "ERROR: $NAME no existe o no tiene index.html. Lista los builds con --list"; exit 1; }
   NEW="$ROOT.new"
   rm -rf "$NEW"
   cp -a "$SRC" "$NEW"

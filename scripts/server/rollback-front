@@ -1,0 +1,69 @@
+#!/bin/bash
+# Se instala en el servidor (~/bin/rollback-front) para poder volver atrás desde cualquier SSH, sin tener los repos.
+#   rollback-front              vuelve al despliegue anterior (html.prev; reversible)
+#   rollback-front --list       lista los builds guardados
+#   rollback-front <build>      publica un build guardado (ej. 20261011-051046)
+# Es el mismo script remoto que usa ./rollback.sh desde tu máquina.
+set -euo pipefail
+TARGET="${1:-}"
+BASE="/home/metromedics/mmcs/frontend"
+ROOT="/var/www/app.metromedics.co/html"
+PREV="$ROOT.prev"
+
+current_build() {
+  # Qué build coincide con lo publicado (por el index-*.js que carga index.html)
+  local entry
+  entry="$(grep -o 'assets/index-[A-Za-z0-9_-]*\.js' "$ROOT/index.html" 2>/dev/null | head -1 || true)"
+  [ -n "$entry" ] || { echo "(desconocido)"; return; }
+  for d in $(ls -dt "$BASE"/build*/ 2>/dev/null); do
+    if [ -f "$d$entry" ]; then basename "$d"; return; fi
+  done
+  echo "(no coincide con un build guardado)"
+}
+
+if [ "$TARGET" = "--list" ]; then
+  echo "Publicado ahora: $(current_build)"
+  [ -d "$PREV" ] && echo "html.prev existe (el rollback sin argumentos vuelve a él)" || echo "html.prev no existe"
+  echo "--- Builds guardados (más reciente primero):"
+  for d in $(ls -dt "$BASE"/build*/ 2>/dev/null); do echo "  $(basename "$d")  ($(date -r "$d" '+%Y-%m-%d %H:%M'))"; done
+  exit 0
+fi
+
+echo "Publicado ahora: $(current_build)"
+
+if [ -z "$TARGET" ]; then
+  [ -d "$PREV" ] || { echo "ERROR: no hay html.prev. Lista los builds con --list y elige uno."; exit 1; }
+  # Intercambio: el sitio actual queda como html.prev (reversible)
+  rm -rf "$ROOT.swap"   # resto de un intento anterior interrumpido
+  mv "$ROOT" "$ROOT.swap"
+  mv "$PREV" "$ROOT"
+  mv "$ROOT.swap" "$PREV"
+  echo "Publicado el despliegue anterior."
+else
+  case "$TARGET" in build*) NAME="$TARGET" ;; *) NAME="build$TARGET" ;; esac
+  SRC="$BASE/$NAME"
+  [ -f "$SRC/index.html" ] || { echo "ERROR: $NAME no existe o no tiene index.html. Lista los builds con --list"; exit 1; }
+  NEW="$ROOT.new"
+  rm -rf "$NEW"
+  cp -a "$SRC" "$NEW"
+  # Conserva los assets del sitio actual para que las pestañas abiertas no den 404
+  if [ -d "$ROOT/assets" ]; then
+    mkdir -p "$NEW/assets"
+    cp -n -p "$ROOT"/assets/* "$NEW/assets/" 2>/dev/null || true
+  fi
+  rm -rf "$PREV"
+  mv "$ROOT" "$PREV"
+  mv "$NEW" "$ROOT"
+  echo "Publicado $NAME."
+fi
+
+echo "Ahora publicado: $(current_build)"
+[ -f "$ROOT/index.html" ] || { echo "ERROR: el sitio publicado no tiene index.html"; exit 1; }
+
+# Comprobación en el propio servidor (contra el nginx local, con el Host del sitio)
+CODE="$(curl -sk -o /dev/null -w '%{http_code}' --max-time 10 -H "Host: app.metromedicslab.com" https://localhost/ || true)"
+if [ "$CODE" = "200" ]; then
+  echo "El sitio responde (HTTP 200)."
+else
+  echo "ATENCIÓN: el sitio respondió HTTP ${CODE:-sin respuesta} en el servidor."; exit 1
+fi
