@@ -61,6 +61,7 @@ echo "Publicado ahora: $(current_build)"
 if [ -z "$TARGET" ]; then
   [ -d "$PREV" ] || { echo "ERROR: no hay html.prev. Usa ./rollback.sh --list y elige un build."; exit 1; }
   # Intercambio: el sitio actual queda como html.prev (reversible)
+  rm -rf "$ROOT.swap"   # resto de un intento anterior interrumpido
   mv "$ROOT" "$ROOT.swap"
   mv "$PREV" "$ROOT"
   mv "$ROOT.swap" "$PREV"
