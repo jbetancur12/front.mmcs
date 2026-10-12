@@ -377,7 +377,19 @@ for (const k of sorted) {
   out += `  '${k}': [\n${list.map((s) => `    { path: ${JSON.stringify(s.path)}, label: ${JSON.stringify(s.label)}, kind: '${s.kind}' }`).join(',\n')}\n  ],\n`;
 }
 out += '}\n';
-fs.writeFileSync(OUT, out);
+const OUT_TEXT = out;
+// Con --check no escribe: falla si el archivo commiteado no coincide con lo que se generaría hoy
+if (process.argv.includes('--check')) {
+  const norm = (t) => t.split('\r\n').join('\n');
+  const current = fs.existsSync(OUT) ? norm(fs.readFileSync(OUT, 'utf8')) : '';
+  if (current !== norm(OUT_TEXT)) {
+    console.error('DESACTUALIZADO: ' + OUT + '. Regénéralo con: npm run permission-screens');
+    process.exit(1);
+  }
+  console.log('ok: ' + OUT + ' está al día');
+  process.exit(0);
+}
+fs.writeFileSync(OUT, OUT_TEXT);
 const total = Object.keys(NAME_TO_KEY).length;
 console.log(`ok: ${sorted.length} de ${total} capacidades con pantalla; ${screens.length} rutas, ${menu.length} ítems de menú`);
 const without = Object.values(NAME_TO_KEY).filter((k) => !result[k]);
