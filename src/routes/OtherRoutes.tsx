@@ -32,7 +32,31 @@ const OtherRoutes = (role: string[]) => {
         <Route index element={<Dashboard />} />
 
         <Route path='users' element={<Clientes />} />
+      </Route>
+
+      {/* Repositorio de archivos y utilidades de administración: cada una pide su capacidad; si no, a /welcome */}
+      <Route
+        element={
+          <ProtectedRoute
+            isAuthenticated={localStorage.getItem('accessToken') !== null}
+            userRole={role}
+            permission={PERMISSIONS.REPOSITORIES_REPOSITORY_VIEW}
+            fallbackRoute={true}
+          />
+        }
+      >
         <Route path='/repository' element={<Repository />} />
+      </Route>
+      <Route
+        element={
+          <ProtectedRoute
+            isAuthenticated={localStorage.getItem('accessToken') !== null}
+            userRole={role}
+            permission={PERMISSIONS.TOOLS_UTILITY_USE}
+            fallbackRoute={true}
+          />
+        }
+      >
         <Route path='/excel-manipulation' element={<ExcelManipulation />} />
         <Route path='/pdf-script' element={<ScriptGenerator />} />
         <Route path='/gotemberg' element={<Gotemberg />} />

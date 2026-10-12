@@ -378,6 +378,16 @@ export const PERMISSIONS = {
   FLEET_REMINDER_VIEW: 'fleet:reminder:view',
   /** Crear, editar y eliminar recordatorios de la flota */
   FLEET_REMINDER_MANAGE: 'fleet:reminder:manage',
+  /** Ver las hojas de vida de activos de TI (PCs, portátiles, TVs), su imagen, su PDF y el cronograma de mantenimiento */
+  ASSETS_LIFE_SHEET_VIEW: 'assets:life_sheet:view',
+  /** Crear, editar y eliminar hojas de vida de activos de TI y registrar sus intervenciones */
+  ASSETS_LIFE_SHEET_MANAGE: 'assets:life_sheet:manage',
+  /** Ver los archivos del repositorio */
+  REPOSITORIES_REPOSITORY_VIEW: 'repositories:repository:view',
+  /** Subir, editar y eliminar archivos del repositorio */
+  REPOSITORIES_REPOSITORY_MANAGE: 'repositories:repository:manage',
+  /** Usar las utilidades de administración: procesar Excel, generar y convertir PDF, generar scripts y agregar módulos */
+  TOOLS_UTILITY_USE: 'tools:utility:use',
   /** Ver roles, capacidades y la auditoría de cambios */
   RBAC_VIEW: 'rbac:view',
   /** Crear roles y activar o desactivar capacidades */

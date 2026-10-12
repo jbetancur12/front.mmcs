@@ -53,6 +53,8 @@ import type {
   AssetLifeSheetFormValues
 } from 'src/types/assetLifeSheet'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 
 const emptyAccessory = (): AssetLifeSheetAccessory => ({ accessoryType: '' })
 const emptyMaintenanceTask = (): AssetLifeSheetMaintenanceTask => ({
@@ -105,6 +107,7 @@ const formatDate = (value?: string | null) => {
 }
 
 const AssetLifeSheetsPage = () => {
+  const canManage = useCan(PERMISSIONS.ASSETS_LIFE_SHEET_MANAGE)
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
 
@@ -533,9 +536,11 @@ const AssetLifeSheetsPage = () => {
           >
             Cronograma PDF
           </Button>
+{canManage && (
           <Button variant='contained' startIcon={<Add />} onClick={openCreate}>
             Nuevo activo
           </Button>
+)}
         </Stack>
       </Stack>
 
@@ -585,15 +590,19 @@ const AssetLifeSheetsPage = () => {
             <IconButton onClick={() => setSelectedAsset(row.original)}>
               <Visibility />
             </IconButton>
+{canManage && (
             <IconButton onClick={() => openEdit(row.original)}>
               <Edit />
             </IconButton>
+)}
             <IconButton onClick={() => downloadPdf(row.original)}>
               <Download />
             </IconButton>
+{canManage && (
             <IconButton onClick={() => setAssetPendingDelete(row.original)}>
               <Delete />
             </IconButton>
+)}
           </Stack>
         )}
       />
@@ -1192,6 +1201,7 @@ const AssetLifeSheetsPage = () => {
             >
               PDF
             </Button>
+{canManage && (
             <Button
               variant='outlined'
               startIcon={<Edit />}
@@ -1199,6 +1209,8 @@ const AssetLifeSheetsPage = () => {
             >
               Editar
             </Button>
+)}
+{canManage && (
             <Button
               variant='contained'
               startIcon={<History />}
@@ -1206,6 +1218,7 @@ const AssetLifeSheetsPage = () => {
             >
               Intervención
             </Button>
+)}
           </Stack>
 
           <Paper variant='outlined' sx={{ p: 2, borderRadius: 2 }}>

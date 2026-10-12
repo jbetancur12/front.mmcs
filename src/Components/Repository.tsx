@@ -20,6 +20,8 @@ import { CloudUpload, Delete, Download, Visibility } from '@mui/icons-material'
 
 import useAxiosPrivate from '@utils/use-axios-private'
 import { fetchMinioObjectBlob } from '@utils/minio'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 
 export interface FileData {
   name: string
@@ -37,6 +39,7 @@ export interface RepositoryData extends FileData {
 
 const Repository = () => {
   const axiosPrivate = useAxiosPrivate()
+  const canManage = useCan(PERMISSIONS.REPOSITORIES_REPOSITORY_MANAGE)
   const [tableData, setTableData] = useState<RepositoryData[]>([])
   const [loading, setLoading] = useState<boolean>(false)
   const [createModalOpen, setCreateModalOpen] = useState(false)
@@ -213,14 +216,16 @@ const Repository = () => {
         data={tableData}
         localization={MRT_Localization_ES}
         enableRowActions={true}
-        renderTopToolbarCustomActions={() => (
-          <button
-            className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded '
-            onClick={() => setCreateModalOpen(true)}
-          >
-            Subir Nuevo Archivo
-          </button>
-        )}
+        renderTopToolbarCustomActions={() =>
+          canManage ? (
+            <button
+              className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded '
+              onClick={() => setCreateModalOpen(true)}
+            >
+              Subir Nuevo Archivo
+            </button>
+          ) : null
+        }
         renderRowActions={({ row }) => {
           return (
             <Box
@@ -247,9 +252,11 @@ const Repository = () => {
               <Button onClick={(e) => handleClick(e, row.original.path)}>
                 <Visibility />
               </Button>
+{canManage && (
               <Button onClick={() => handleDelete(row.original.id)}>
                 <Delete />
               </Button>
+)}
             </Box>
           )
         }}

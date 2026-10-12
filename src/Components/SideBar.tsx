@@ -291,7 +291,7 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Hoja de Vida TI',
         url: 'asset-life-sheets',
-        roles: [ROLES.ADMIN]
+        permission: PERMISSIONS.ASSETS_LIFE_SHEET_MANAGE
       },
       {
         label: 'Alertas',
