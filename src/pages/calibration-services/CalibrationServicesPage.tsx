@@ -125,8 +125,7 @@ const STATUS_OPTIONS: Array<{
   { value: 'pending_approval', label: 'Cotización enviada' },
   { value: 'rejected', label: 'Rechazada' },
   { value: 'approved', label: 'Aprobada por cliente' },
-  { value: 'ods_issued', label: 'ODS emitida' },
-  { value: 'pending_programming', label: 'Pendiente de programación' },
+  { value: 'ods_issued', label: 'ODS emitida · pendiente de programar' },
   { value: 'scheduled', label: 'Programada' },
   { value: 'in_execution', label: 'En ejecución' },
   { value: 'technically_completed', label: 'Finalizada técnicamente' },
@@ -140,8 +139,7 @@ const TECHNICAL_STATUS_OPTIONS: Array<{
   label: string
 }> = [
   { value: FILTER_ALL, label: 'Todos los estados técnicos' },
-  { value: 'ods_issued', label: 'ODS emitida' },
-  { value: 'pending_programming', label: 'Pendiente de programación' },
+  { value: 'ods_issued', label: 'ODS emitida · pendiente de programar' },
   { value: 'scheduled', label: 'Programada' },
   { value: 'in_execution', label: 'En ejecución' },
   { value: 'technically_completed', label: 'Finalizada técnicamente' },
@@ -907,7 +905,7 @@ const CalibrationServicesPage = () => {
   })
 
   const counts = useMemo(() => {
-    let pendingApproval = 0, requestedChanges = 0, odsIssued = 0, pendingProgramming = 0
+    let pendingApproval = 0, requestedChanges = 0, odsIssued = 0
     let scheduled = 0, inExecution = 0, technicallyCompleted = 0, closed = 0
     let readyToClose = 0, pendingDocumentControl = 0, readyForOds = 0, urgent = 0
     let readyForInvoice = 0
@@ -916,7 +914,6 @@ const CalibrationServicesPage = () => {
     for (const service of visibleServices) {
       if (service.status === 'pending_approval') pendingApproval++
       if (service.status === 'ods_issued') odsIssued++
-      if (service.status === 'pending_programming') pendingProgramming++
       if (service.status === 'scheduled') scheduled++
       if (service.status === 'in_execution') inExecution++
       if (service.status === 'technically_completed') technicallyCompleted++
@@ -930,10 +927,10 @@ const CalibrationServicesPage = () => {
       if ((service.cuts || []).some(c => c.status === 'invoiced')) invoicedCut++
     }
 
-    return { pendingApproval, requestedChanges, odsIssued, pendingProgramming, scheduled, inExecution, technicallyCompleted, closed, readyToClose, pendingDocumentControl, readyForOds, urgent, readyForInvoice, invoicedCut }
+    return { pendingApproval, requestedChanges, odsIssued, scheduled, inExecution, technicallyCompleted, closed, readyToClose, pendingDocumentControl, readyForOds, urgent, readyForInvoice, invoicedCut }
   }, [visibleServices])
 
-  const { pendingApproval: pendingApprovalCount, requestedChanges: requestedChangesCount, odsIssued: odsIssuedCount, pendingProgramming: pendingProgrammingCount, scheduled: scheduledCount, inExecution: inExecutionCount, technicallyCompleted: technicallyCompletedCount, closed: closedCount, readyToClose: readyToCloseCount, pendingDocumentControl: pendingDocumentControlCount, readyForOds: readyForOdsCount, urgent: urgentCount, readyForInvoice: readyForInvoiceCount, invoicedCut: invoicedCutCount } = counts
+  const { pendingApproval: pendingApprovalCount, requestedChanges: requestedChangesCount, odsIssued: odsIssuedCount, scheduled: scheduledCount, inExecution: inExecutionCount, technicallyCompleted: technicallyCompletedCount, closed: closedCount, readyToClose: readyToCloseCount, pendingDocumentControl: pendingDocumentControlCount, readyForOds: readyForOdsCount, urgent: urgentCount, readyForInvoice: readyForInvoiceCount, invoicedCut: invoicedCutCount } = counts
   const activeFiltersCount = [
     search.trim(),
     statusFilter !== FILTER_ALL,
@@ -1814,29 +1811,29 @@ const CalibrationServicesPage = () => {
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', cursor: 'pointer', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: `linear-gradient(180deg, ${ui.warning}, ${alpha(ui.warning, 0.4)})` } }} onClick={() => { setStatusFilter(isTechnicalOnlyView ? 'ods_issued' : 'pending_approval'); setAreFiltersOpen(true) }}>
+          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', cursor: 'pointer', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: `linear-gradient(180deg, ${ui.warning}, ${alpha(ui.warning, 0.4)})` } }} onClick={() => { setStatusFilter(isTechnicalOnlyView ? 'scheduled' : 'pending_approval'); setAreFiltersOpen(true) }}>
             <CardContent sx={{ p: 2 }}>
               <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
                 <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
-                  {isTechnicalOnlyView ? 'ODS emitidas' : 'Pendientes respuesta'}
+                  {isTechnicalOnlyView ? 'Programadas' : 'Pendientes respuesta'}
                 </Typography>
                 <Box sx={{ width: 42, height: 42, borderRadius: '14px', background: `linear-gradient(135deg, ${alpha(ui.warning, 0.15)} 0%, ${alpha(ui.warning, 0.08)} 100%)`, color: ui.warning, display: 'grid', placeItems: 'center', boxShadow: `0 2px 8px ${alpha(ui.warning, 0.12)}` }}>
                   <WarningAmberOutlinedIcon fontSize='small' />
                 </Box>
               </Stack>
               <Typography variant='h3' fontWeight={700} sx={{ mt: 1.5, mb: 0.5, color: ui.text, lineHeight: 1.2 }}>
-                {isTechnicalOnlyView ? odsIssuedCount : pendingApprovalCount}
+                {isTechnicalOnlyView ? scheduledCount : pendingApprovalCount}
               </Typography>
               <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500, lineHeight: 1.5, display: 'block' }}>
                 {isTechnicalOnlyView
-                  ? 'Servicios ya liberados al frente técnico'
+                  ? 'Servicios con fecha asignada, listos para ejecutar'
                   : 'Cotizaciones enviadas esperando respuesta'}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} md={3}>
-          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', cursor: 'pointer', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: `linear-gradient(180deg, ${ui.greenDark}, ${alpha(ui.green, 0.4)})` } }} onClick={() => { setStatusFilter(isTechnicalOnlyView ? 'pending_programming' : 'approved'); setAreFiltersOpen(true) }}>
+          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', cursor: 'pointer', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: `linear-gradient(180deg, ${ui.greenDark}, ${alpha(ui.green, 0.4)})` } }} onClick={() => { setStatusFilter(isTechnicalOnlyView ? 'ods_issued' : 'approved'); setAreFiltersOpen(true) }}>
             <CardContent sx={{ p: 2 }}>
               <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
                 <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
@@ -1847,7 +1844,7 @@ const CalibrationServicesPage = () => {
                 </Box>
               </Stack>
               <Typography variant='h3' fontWeight={700} sx={{ mt: 1.5, mb: 0.5, color: ui.text, lineHeight: 1.2 }}>
-                {isTechnicalOnlyView ? pendingProgrammingCount : readyForOdsCount}
+                {isTechnicalOnlyView ? odsIssuedCount : readyForOdsCount}
               </Typography>
               <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500, lineHeight: 1.5, display: 'block' }}>
                 {isTechnicalOnlyView
