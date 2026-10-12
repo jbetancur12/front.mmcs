@@ -2,12 +2,22 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
+import { hasPermission, PermissionKey } from 'src/constants/permissions'
 
 interface DropdownButtonProps {
   buttonText: string
-  menuItems: { label: string; url: string; roles: string[] }[]
+  menuItems: {
+    label: string
+    url: string
+    /** Visibilidad por rol (menús que aún no migraron a capacidades) */
+    roles?: string[]
+    /** Visibilidad por capacidad (any-of): lo que el backend dice que el usuario puede hacer */
+    permission?: PermissionKey | readonly PermissionKey[]
+  }[]
   pathData: string
   rol: string[]
+  /** Capacidades del usuario (sesión); necesarias para los ítems con `permission` */
+  permissions?: string[]
   currentPath: string
   onlyIcons?: boolean
   onItemClick?: () => void
@@ -18,13 +28,19 @@ const DropdownButton: React.FC<DropdownButtonProps> = ({
   menuItems,
   pathData,
   rol,
+  permissions,
   currentPath,
   onlyIcons = false,
   onItemClick
 }) => {
+  const isItemVisible = (item: DropdownButtonProps['menuItems'][number]) =>
+    item.permission
+      ? hasPermission(permissions, item.permission)
+      : (item.roles ?? []).some((role) => rol.includes(role))
+
   // Verificar si la página actual pertenece a este dropdown
   const isCurrentPageInDropdown = menuItems
-    .filter((item) => item.roles.some((role) => rol.includes(role)))
+    .filter(isItemVisible)
     .some((item) => currentPath === `/${item.url}`)
   
   const [isDropdownOpen, setIsDropdownOpen] = useState(isCurrentPageInDropdown)
@@ -55,7 +71,7 @@ const DropdownButton: React.FC<DropdownButtonProps> = ({
   const handleItemClick = (itemUrl: string) => {
     // Solo cerrar el dropdown si navegamos fuera de las opciones de este dropdown
     const willStayInDropdown = menuItems
-      .filter((item) => item.roles.some((role) => rol.includes(role)))
+      .filter(isItemVisible)
       .some((item) => `/${item.url}` === itemUrl)
     
     if (!willStayInDropdown) {
@@ -125,7 +141,7 @@ const DropdownButton: React.FC<DropdownButtonProps> = ({
           PaperProps={{ style: { minWidth: 180 } }}
         >
           {menuItems
-            .filter((item) => item.roles.some((role) => rol.includes(role)))
+            .filter(isItemVisible)
             .map((item) => (
               <MenuItem
                 key={item.label}
@@ -141,7 +157,7 @@ const DropdownButton: React.FC<DropdownButtonProps> = ({
       ) : (
         <ul className={`${isDropdownOpen || isCurrentPageInDropdown ? 'block' : 'hidden'} mt-1 space-y-1 transition-all duration-200`}>
           {menuItems
-            .filter((item) => item.roles.some((role) => rol.includes(role))) // Filtrar elementos basados en los roles permitidos
+            .filter(isItemVisible) // Filtrar elementos según permisos o roles
             .map((item) => (
               <li key={item.label} className='relative'>
                 <Link

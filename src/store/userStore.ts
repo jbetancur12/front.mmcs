@@ -13,6 +13,11 @@ export interface UserData {
   nombre: string
   email: string
   rol: string[]
+  /**
+   * Capacidades que el backend entrega en /auth/validateToken (ver constants/permissions.ts).
+   * `undefined` = el backend aún no las envía.
+   */
+  permissions?: string[]
   userType?: 'internal' | 'client'
   lmsOnly?: boolean
   customer: {
@@ -27,6 +32,7 @@ export const userStore = atom<UserData>({
   nombre: '',
   email: '',
   rol: [''],
+  permissions: [],
   userType: 'internal',
   lmsOnly: false,
   customer: {

@@ -30,6 +30,7 @@ const LogoutButton: React.FC = () => {
       nombre: '',
       email: '',
       rol: [''],
+      permissions: [],
       userType: 'internal',
       lmsOnly: false,
       customer: {

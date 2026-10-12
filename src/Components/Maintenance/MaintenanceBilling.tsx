@@ -35,10 +35,9 @@ import {
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import { toast } from 'react-toastify'
 import useAxiosPrivate from '../../utils/use-axios-private'
-import { useStore } from '@nanostores/react'
-import { userStore } from 'src/store/userStore'
 
-import { ROLES } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 interface MaintenanceTicketCost {
   id: string
   name: string
@@ -88,9 +87,7 @@ const MaintenanceBilling: React.FC = () => {
   const [expandedRow, setExpandedRow] = useState<string | null>(null)
 
   const queryClient = useQueryClient()
-  const $userStore = useStore(userStore)
-  const canPerformActions =
-    $userStore.rol.includes(ROLES.INVOICING) || $userStore.rol.includes(ROLES.ADMIN)
+  const canPerformActions = useCan(PERMISSIONS.MAINTENANCE_INVOICING_MANAGE)
 
   const axiosPrivate = useAxiosPrivate()
 

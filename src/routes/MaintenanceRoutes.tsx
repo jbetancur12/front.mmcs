@@ -1,7 +1,7 @@
 import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
-import { ROLES, ROLE_GROUPS } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
 
 // Lazy load maintenance components
 const MaintenanceDashboard = lazy(
@@ -25,40 +25,52 @@ const MaintenanceAnalytics = lazy(
 
 /**
  * MaintenanceRoutes defines the private routes for the maintenance module
- * These routes require authentication and specific role permissions
+ * These routes require authentication and the capability that the backend grants to the
+ * user's role (see constants/permissions.ts); a role change in the admin panel applies on
+ * the next navigation.
  *
  * @param role - Array of user roles to check permissions
  */
 const MaintenanceRoutes = (role: string[]) => {
+  const isAuthenticated = localStorage.getItem('accessToken') !== null
+
   return (
     <>
+      {/* Dashboard y detalle de ticket */}
       <Route
         element={
           <ProtectedRoute
-            isAuthenticated={localStorage.getItem('accessToken') !== null}
+            isAuthenticated={isAuthenticated}
             userRole={role}
-            roles={ROLE_GROUPS.MAINTENANCE_STAFF}
+            permission={PERMISSIONS.MAINTENANCE_TICKET_VIEW}
           />
         }
       >
-        {/* Dashboard - Main maintenance overview */}
         <Route path='maintenance' element={<MaintenanceDashboard />} />
-        <Route path='maintenance/analytics' element={<MaintenanceAnalytics />} />
-
-        {/* Individual ticket view - Available to admin, maintenance, and technician roles */}
         <Route
           path='maintenance/tickets/:ticketId'
           element={<MaintenanceTicketDetails />}
         />
       </Route>
-
-      {/* Technicians Management - Admin and Maintenance Coordinator */}
+      {/* Analítica */}
       <Route
         element={
           <ProtectedRoute
-            isAuthenticated={localStorage.getItem('accessToken') !== null}
+            isAuthenticated={isAuthenticated}
             userRole={role}
-            roles={ROLE_GROUPS.MAINTENANCE_MANAGERS}
+            permission={PERMISSIONS.MAINTENANCE_ANALYTICS_VIEW}
+          />
+        }
+      >
+        <Route path='maintenance/analytics' element={<MaintenanceAnalytics />} />
+      </Route>
+      {/* Gestión de técnicos */}
+      <Route
+        element={
+          <ProtectedRoute
+            isAuthenticated={isAuthenticated}
+            userRole={role}
+            permission={PERMISSIONS.MAINTENANCE_TECHNICIAN_LIST}
           />
         }
       >
@@ -66,19 +78,29 @@ const MaintenanceRoutes = (role: string[]) => {
           path='maintenance/technicians'
           element={<MaintenanceTechnicians />}
         />
+      </Route>
+      {/* Gestión de protocolos */}
+      <Route
+        element={
+          <ProtectedRoute
+            isAuthenticated={isAuthenticated}
+            userRole={role}
+            permission={PERMISSIONS.MAINTENANCE_PROTOCOL_MANAGE}
+          />
+        }
+      >
         <Route
           path='maintenance/protocols'
           element={<MaintenanceProtocols />}
         />
       </Route>
-
-      {/* Billing Management - Admin, Maintenance, and Maintenance Coordinator */}
+      {/* Facturación */}
       <Route
         element={
           <ProtectedRoute
-            isAuthenticated={localStorage.getItem('accessToken') !== null}
+            isAuthenticated={isAuthenticated}
             userRole={role}
-            roles={[ROLES.ADMIN, ROLES.MAINTENANCE_COORDINATOR, ROLES.INVOICING]}
+            permission={PERMISSIONS.MAINTENANCE_INVOICING_VIEW}
           />
         }
       >

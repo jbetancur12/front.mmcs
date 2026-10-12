@@ -83,6 +83,8 @@ import { maintenanceSignaturesEnabled } from '../../features/maintenanceFlags'
 import type { CompletionPhotoInput } from '../../Components/Maintenance/CompletionCostsDialog'
 
 import { ROLES } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 /**
  * MaintenanceDashboard component provides an admin interface for managing maintenance tickets
  * Includes statistics, ticket management, and real-time updates
@@ -152,9 +154,8 @@ const MaintenanceDashboard: React.FC = () => {
 
   // Check user permissions
   const isTechnician = $userStore.rol.includes(ROLES.TECHNICIAN)
-  const isAdmin =
-    $userStore.rol.includes(ROLES.ADMIN) ||
-    $userStore.rol.includes(ROLES.MAINTENANCE_COORDINATOR)
+  const canListTechnicians = useCan(PERMISSIONS.MAINTENANCE_TECHNICIAN_LIST)
+  const canCreateTickets = useCan(PERMISSIONS.MAINTENANCE_TICKET_CREATE)
 
   // Get technician ID if user is a technician
   const currentTechnicianEmail = useMemo(() => {
@@ -211,7 +212,7 @@ const MaintenanceDashboard: React.FC = () => {
       : ''
   )
   // Only admins can access technicians list
-  const { data: technicians } = useMaintenanceTechnicians(isAdmin)
+  const { data: technicians } = useMaintenanceTechnicians(canListTechnicians)
   const updateTicketMutation = useUpdateMaintenanceTicket()
   const updateTechnicianMutation = useUpdateMaintenanceTechnician()
   const deleteTicketMutation = useDeleteMaintenanceTicket()
@@ -282,7 +283,7 @@ const MaintenanceDashboard: React.FC = () => {
   // Keyboard shortcuts
   useKeyboardShortcuts({
     onNewTicket: () => {
-      if (isAdmin) {
+      if (canCreateTickets) {
         navigate('/maintenance/new')
       }
     },

@@ -20,6 +20,11 @@ import { EQUIPMENT_SALES_ALLOWED_ROLES } from 'src/constants/equipmentSales'
 import { audienceIncludes, isCoreModule, getModuleAudience } from 'src/constants/modules'
 
 import { ROLES, ROLE_GROUPS } from 'src/constants/roles'
+import {
+  hasPermission,
+  PERMISSIONS,
+  PermissionKey
+} from 'src/constants/permissions'
 // Advertir una sola vez por moduleName desconocido (atrapa typos como
 // 'Flota' vs 'fleet' que quedarían silenciosamente como core).
 const warnedUnknownModules = new Set<string>()
@@ -35,6 +40,16 @@ const apiVersionPromise = axiosPrivate.get('/version').then(r => r.data.version)
 const canViewModule = (roles: string[], userRole: string[]) => {
   return userRole.some((role) => roles.includes(role))
 }
+
+// Los ítems migrados a capacidades llevan `permission` (any-of) en vez de depender de `roles`.
+// Se lee con `in` porque los ítems del sidebar son objetos literales de forma distinta.
+const getItemPermission = (
+  item: object
+): PermissionKey | readonly PermissionKey[] | undefined =>
+  'permission' in item
+    ? (item as { permission: PermissionKey | readonly PermissionKey[] })
+        .permission
+    : undefined
 
 const getLinkToCustomer = (to: string, $userStore: UserData) => {
   if (!$userStore.customer) {
@@ -347,13 +362,14 @@ const sidebarItems = ($userStore: UserData) => [
   {
     type: 'dropdown',
     buttonText: 'Mantenimiento',
-    roles: [
-      ROLES.ADMIN,
-      ROLES.MANTENIMIENTO,
-      ROLES.TECHNICIAN,
-      ROLES.MAINTENANCE_COORDINATOR,
-      ROLES.INVOICING
-    ],
+    // Migrado a capacidades: se ve si el usuario puede ver al menos uno de sus ítems
+    roles: [] as string[],
+    permission: [
+      PERMISSIONS.MAINTENANCE_TICKET_VIEW,
+      PERMISSIONS.MAINTENANCE_TECHNICIAN_LIST,
+      PERMISSIONS.MAINTENANCE_PROTOCOL_MANAGE,
+      PERMISSIONS.MAINTENANCE_INVOICING_VIEW
+    ] as readonly PermissionKey[],
     moduleName: 'Basic',
     pathData:
       'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z',
@@ -361,22 +377,22 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Dashboard',
         url: 'maintenance',
-        roles: ROLE_GROUPS.MAINTENANCE_STAFF
+        permission: PERMISSIONS.MAINTENANCE_TICKET_VIEW
       },
       {
         label: 'Técnicos',
         url: 'maintenance/technicians',
-        roles: ROLE_GROUPS.MAINTENANCE_MANAGERS
+        permission: PERMISSIONS.MAINTENANCE_TECHNICIAN_LIST
       },
       {
         label: 'Protocolos',
         url: 'maintenance/protocols',
-        roles: [ROLES.ADMIN, ROLES.MANTENIMIENTO, ROLES.MAINTENANCE_COORDINATOR]
+        permission: PERMISSIONS.MAINTENANCE_PROTOCOL_MANAGE
       },
       {
         label: 'Facturación',
         url: 'maintenance/billing',
-        roles: [ROLES.ADMIN, ROLES.MANTENIMIENTO, ROLES.INVOICING]
+        permission: PERMISSIONS.MAINTENANCE_INVOICING_VIEW
       }
     ]
   },
@@ -553,10 +569,17 @@ const SideBar = ({
               )
             } else if (
               item.type === 'dropdown' &&
-              canViewModule(
-                item.roles,
-                (item.buttonText === 'Academia' || item.buttonText === 'LMS') ? effectiveLmsMenuRoles : $userStore.rol
-              )
+              (getItemPermission(item)
+                ? hasPermission(
+                    $userStore.permissions,
+                    getItemPermission(item) as
+                      | PermissionKey
+                      | readonly PermissionKey[]
+                  )
+                : canViewModule(
+                    item.roles,
+                    (item.buttonText === 'Academia' || item.buttonText === 'LMS') ? effectiveLmsMenuRoles : $userStore.rol
+                  ))
             ) {
               return (
                 <DropdownButton
@@ -569,6 +592,7 @@ const SideBar = ({
                       ? effectiveLmsMenuRoles
                       : $userStore.rol
                   }
+                  permissions={$userStore.permissions}
                   currentPath={pathname}
                   onlyIcons={sidebarMinimized}
                   onItemClick={handleLinkClick}

@@ -131,6 +131,8 @@ import { useStore } from '@nanostores/react'
 import { userStore } from '../../store/userStore'
 
 import { ROLES } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 export const formatCurrency = (amount: number | undefined) => {
   if (!amount) return 'No especificado'
   return new Intl.NumberFormat('es-CO', {
@@ -208,9 +210,8 @@ const MaintenanceTicketDetails: React.FC = () => {
     boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
   }
 
-  const canManageTechnicians =
-    $userStore.rol.includes(ROLES.ADMIN) ||
-    $userStore.rol.includes(ROLES.MAINTENANCE_COORDINATOR)
+  // Asignar técnicos exige poder listarlos (GET /maintenance/technicians)
+  const canManageTechnicians = useCan(PERMISSIONS.MAINTENANCE_TECHNICIAN_LIST)
   const currentUserRole = $userStore.rol[0] || ROLES.USER
   const isTechnician = $userStore.rol.includes(ROLES.TECHNICIAN)
 
