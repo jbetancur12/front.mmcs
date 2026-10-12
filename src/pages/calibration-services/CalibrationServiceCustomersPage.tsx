@@ -35,15 +35,15 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import { Toaster, toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import { axiosPrivate } from '@utils/api'
-import { CALIBRATION_SERVICE_EDIT_ROLES } from '../../constants/calibrationServices'
 import {
   CalibrationServiceCustomer,
   CalibrationServiceCustomerSite
 } from '../../types/calibrationService'
-import { useHasRole } from '../../utils/functions'
 import CalibrationServiceCustomerDialog, {
   CalibrationServiceCustomerDialogValues
 } from './CalibrationServiceCustomerDialog'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 
 const customerQueryKey = ['calibration-service-customers']
 const DEFAULT_PAGE_SIZE = 10
@@ -66,7 +66,7 @@ const getCustomerSiteCount = (customer: CalibrationServiceCustomer) => {
 const CalibrationServiceCustomersPage = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const canManageCustomers = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
+  const canManageCustomers = useCan(PERMISSIONS.CALIBRATION_SERVICE_CREATE)
   const [search, setSearch] = useState('')
   const [customerDialogMode, setCustomerDialogMode] = useState<'customer' | 'site' | null>(null)
   const [isEditingCustomer, setIsEditingCustomer] = useState(false)

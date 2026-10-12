@@ -202,6 +202,60 @@ export const PERMISSIONS = {
   SYSTEM_SETTINGS_VIEW: 'system:settings:view',
   /** Crear, editar y eliminar la configuración general del sistema */
   SYSTEM_SETTINGS_MANAGE: 'system:settings:manage',
+  /** Ver los servicios de calibración, su línea de tiempo, documentos, notificaciones, SLA y configuración de WhatsApp */
+  CALIBRATION_SERVICE_VIEW: 'calibration:service:view',
+  /** Crear servicios de calibración */
+  CALIBRATION_SERVICE_CREATE: 'calibration:service:create',
+  /** Editar servicios de calibración */
+  CALIBRATION_SERVICE_UPDATE: 'calibration:service:update',
+  /** Enviar la cotización de un servicio a aprobación del cliente */
+  CALIBRATION_SERVICE_REQUEST_APPROVAL: 'calibration:service:request_approval',
+  /** Generar el PDF de cotización de un servicio */
+  CALIBRATION_SERVICE_QUOTE_PDF: 'calibration:service:quote_pdf',
+  /** Ver y editar la plantilla de términos de las cotizaciones de servicios */
+  CALIBRATION_SERVICE_QUOTE_TERMS: 'calibration:service:quote_terms',
+  /** Registrar la aprobación, el rechazo o la solicitud de cambios del cliente sobre un servicio */
+  CALIBRATION_SERVICE_DECIDE: 'calibration:service:decide',
+  /** Emitir la orden de servicio (ODS) y generar su PDF */
+  CALIBRATION_SERVICE_ODS: 'calibration:service:ods',
+  /** Programar un servicio y ver los metrólogos asignables */
+  CALIBRATION_SERVICE_SCHEDULE: 'calibration:service:schedule',
+  /** Reprogramar un servicio */
+  CALIBRATION_SERVICE_RESCHEDULE: 'calibration:service:reschedule',
+  /** Reasignar el metrólogo de un servicio */
+  CALIBRATION_SERVICE_REASSIGN: 'calibration:service:reassign',
+  /** Pausar y reanudar un servicio */
+  CALIBRATION_SERVICE_PAUSE: 'calibration:service:pause',
+  /** Cancelar un servicio */
+  CALIBRATION_SERVICE_CANCEL: 'calibration:service:cancel',
+  /** Ejecutar un servicio: iniciar y terminar, avances por ítem, cortes, ajustes, firmas y PDF de avance técnico */
+  CALIBRATION_SERVICE_EXECUTE: 'calibration:service:execute',
+  /** Registrar los datos del cliente durante la ejecución de un servicio */
+  CALIBRATION_SERVICE_EXECUTION_CUSTOMER: 'calibration:service:execution_customer',
+  /** Hacer la revisión técnica de un ajuste (desviación) */
+  CALIBRATION_ADJUSTMENT_REVIEW_TECHNICAL: 'calibration:adjustment:review_technical',
+  /** Hacer la revisión económica de un ajuste, enviarlo al cliente y registrar su respuesta (también habilita sus PDF junto con la revisión técnica) */
+  CALIBRATION_ADJUSTMENT_COMMERCIAL: 'calibration:adjustment:commercial',
+  /** Marcar un corte como facturado y registrar su pago */
+  CALIBRATION_SERVICE_INVOICING: 'calibration:service:invoicing',
+  /** Cerrar un servicio */
+  CALIBRATION_SERVICE_CLOSE: 'calibration:service:close',
+  /** Controlar los documentos de un corte */
+  CALIBRATION_SERVICE_DOCUMENT_CONTROL: 'calibration:service:document_control',
+  /** Subir documentos a un servicio */
+  CALIBRATION_SERVICE_DOCUMENT_UPLOAD: 'calibration:service:document_upload',
+  /** Registrar la trazabilidad física y el control logístico de un servicio (incluye PDF y correo) */
+  CALIBRATION_SERVICE_TRACEABILITY: 'calibration:service:traceability',
+  /** Enviar al cliente el certificado de un servicio */
+  CALIBRATION_SERVICE_CERTIFICATE_SEND: 'calibration:service:certificate_send',
+  /** Ver y editar el consecutivo de los servicios de calibración */
+  CALIBRATION_CONFIG_SEQUENCE: 'calibration:config:sequence',
+  /** Editar la configuración de SLA */
+  CALIBRATION_CONFIG_SLA_MANAGE: 'calibration:config:sla_manage',
+  /** Crear, editar y eliminar la configuración de WhatsApp de los servicios */
+  CALIBRATION_CONFIG_WHATSAPP_MANAGE: 'calibration:config:whatsapp_manage',
+  /** Ver las analíticas de servicios de calibración */
+  CALIBRATION_ANALYTICS_VIEW: 'calibration:analytics:view',
   /** Ver roles, capacidades y la auditoría de cambios */
   RBAC_VIEW: 'rbac:view',
   /** Crear roles y activar o desactivar capacidades */

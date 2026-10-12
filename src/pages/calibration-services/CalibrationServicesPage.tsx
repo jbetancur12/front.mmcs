@@ -55,17 +55,10 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Toaster, toast } from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import {
-  CALIBRATION_SERVICE_ALLOWED_ROLES,
   CALIBRATION_SERVICE_ANALYST_ROLES,
-  CALIBRATION_SERVICE_ANALYTICS_ROLES,
-  CALIBRATION_SERVICE_APPROVAL_ROLES,
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
   CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES,
-  CALIBRATION_SERVICE_EDIT_ROLES,
-  CALIBRATION_SERVICE_EXECUTION_ROLES,
-  CALIBRATION_SERVICE_ODS_ROLES,
-  CALIBRATION_SERVICE_SCHEDULE_ROLES,
   CALIBRATION_SERVICE_SLA_COLORS,
   CALIBRATION_SERVICE_STATUS_LABELS,
   CALIBRATION_SERVICE_TECHNICAL_ROLES,
@@ -102,6 +95,8 @@ import {
 } from './calibrationQuoteTerms'
 
 import { ROLE_GROUPS } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 const FILTER_ALL = 'all'
 const FILTER_UNASSIGNED = 'unassigned'
 const CALIBRATION_SERVICES_VIEW_STORAGE_KEY = 'calibrationServicesViewMode'
@@ -688,18 +683,16 @@ const CalibrationServicesPage = () => {
   const $userStore = useStore(userStore)
   const { requestApproval, upsertSequenceConfig, upsertSlaConfig, upsertQuoteTermsTemplate, sendCertificate } =
     useCalibrationServiceMutations()
-  const canCreateServices = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
-  const canTakeApprovalDecision = useHasRole([
-    ...CALIBRATION_SERVICE_APPROVAL_ROLES
-  ])
-  const canIssueOds = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
-  const canScheduleService = useHasRole([...CALIBRATION_SERVICE_SCHEDULE_ROLES])
-  const canRunExecution = useHasRole([...CALIBRATION_SERVICE_EXECUTION_ROLES])
-  const canViewModule = useHasRole([...CALIBRATION_SERVICE_ALLOWED_ROLES])
-  const canViewAnalytics = useHasRole([...CALIBRATION_SERVICE_ANALYTICS_ROLES])
+  const canCreateServices = useCan(PERMISSIONS.CALIBRATION_SERVICE_CREATE)
+  const canTakeApprovalDecision = useCan(PERMISSIONS.CALIBRATION_SERVICE_DECIDE)
+  const canIssueOds = useCan(PERMISSIONS.CALIBRATION_SERVICE_ODS)
+  const canScheduleService = useCan(PERMISSIONS.CALIBRATION_SERVICE_SCHEDULE)
+  const canRunExecution = useCan(PERMISSIONS.CALIBRATION_SERVICE_EXECUTE)
+  const canViewModule = useCan(PERMISSIONS.CALIBRATION_SERVICE_VIEW)
+  const canViewAnalytics = useCan(PERMISSIONS.CALIBRATION_ANALYTICS_VIEW)
   const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
   const canManageSequenceConfig = canCreateServices
-  const canManageSlaConfig = isAdmin
+  const canManageSlaConfig = useCan(PERMISSIONS.CALIBRATION_CONFIG_SLA_MANAGE)
   const hasTechnicalRole = useHasRole([...CALIBRATION_SERVICE_TECHNICAL_ROLES])
   const hasCommercialVisibility = useHasRole([
     ...CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES

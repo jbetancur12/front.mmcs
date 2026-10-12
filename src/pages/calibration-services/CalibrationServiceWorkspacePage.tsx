@@ -45,7 +45,6 @@ import { Toaster, toast } from 'react-hot-toast'
 import { axiosPrivate } from '@utils/api'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  CALIBRATION_SERVICE_EDIT_ROLES,
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
   CALIBRATION_SERVICE_STATUS_COLORS,
@@ -83,6 +82,8 @@ import {
 import { NumericFormatCustom } from '../../Components/NumericFormatCustom'
 
 import { ROLE_GROUPS } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 type FormItem = CalibrationServiceItemPayload & { localId: string }
 type FormState = Omit<CalibrationServicePayload, 'items'> & { items: FormItem[] }
 
@@ -283,7 +284,10 @@ const CalibrationServiceWorkspacePage = () => {
   const { serviceId } = useParams<{ serviceId?: string }>()
   const isEditing = Boolean(serviceId)
   const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
-  const canAccessWorkspace = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
+  // Crear exige "crear" y editar exige "editar"; la ruta ya filtra, esto cubre el cambio en vivo
+  const canCreateService = useCan(PERMISSIONS.CALIBRATION_SERVICE_CREATE)
+  const canUpdateService = useCan(PERMISSIONS.CALIBRATION_SERVICE_UPDATE)
+  const canAccessWorkspace = isEditing ? canUpdateService : canCreateService
   const {
     data: sequenceConfig,
     isLoading: isLoadingSequenceConfig

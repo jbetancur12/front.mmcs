@@ -24,7 +24,6 @@ import {
   LMS_ACCESS_MENU_ROLES,
   LMS_ADMIN_ROUTE_ROLES
 } from 'src/utils/lmsIdentity'
-import { CALIBRATION_SERVICE_ALLOWED_ROLES } from 'src/constants/calibrationServices'
 import {
   audienceIncludes,
   isCoreModule,
@@ -385,7 +384,8 @@ const sidebarItems = ($userStore: UserData) => [
     label: 'Servicios Cal.',
     to: '/calibration-services',
     icon: <ScienceOutlined className={iconClass} />,
-    roles: [...CALIBRATION_SERVICE_ALLOWED_ROLES],
+    roles: [] as string[],
+    permission: PERMISSIONS.CALIBRATION_SERVICE_VIEW,
     moduleName: 'Basic'
   },
   {

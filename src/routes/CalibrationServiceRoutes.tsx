@@ -1,11 +1,7 @@
 import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
-import {
-  CALIBRATION_SERVICE_ALLOWED_ROLES,
-  CALIBRATION_SERVICE_ANALYTICS_ROLES,
-  CALIBRATION_SERVICE_EDIT_ROLES
-} from '../constants/calibrationServices'
+import { PERMISSIONS } from 'src/constants/permissions'
 
 const CalibrationServicesPage = lazy(
   () => import('../pages/calibration-services/CalibrationServicesPage')
@@ -46,7 +42,7 @@ const CalibrationServiceRoutes = (role: string[]) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={[...CALIBRATION_SERVICE_ALLOWED_ROLES]}
+            permission={PERMISSIONS.CALIBRATION_SERVICE_VIEW}
           />
         }
       >
@@ -60,7 +56,7 @@ const CalibrationServiceRoutes = (role: string[]) => {
             <ProtectedRoute
               isAuthenticated={localStorage.getItem('accessToken') !== null}
               userRole={role}
-              roles={[...CALIBRATION_SERVICE_ANALYTICS_ROLES]}
+              permission={PERMISSIONS.CALIBRATION_ANALYTICS_VIEW}
             />
           }
         >
@@ -97,7 +93,7 @@ const CalibrationServiceRoutes = (role: string[]) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={[...CALIBRATION_SERVICE_EDIT_ROLES]}
+            permission={PERMISSIONS.CALIBRATION_SERVICE_CREATE}
           />
         }
       >

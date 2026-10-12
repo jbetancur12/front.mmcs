@@ -43,28 +43,11 @@ import { Toaster, toast } from 'react-hot-toast'
 import { ReactElement, ReactNode, useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
-  CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES,
   CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS,
-  CALIBRATION_SERVICE_ADJUSTMENT_COMMERCIAL_REVIEW_ROLES,
-  CALIBRATION_SERVICE_ADJUSTMENT_TECHNICAL_REVIEW_ROLES,
   CALIBRATION_SERVICE_ANALYST_ROLES,
-  CALIBRATION_SERVICE_APPROVAL_ROLES,
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
   CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES,
-  CALIBRATION_SERVICE_CANCEL_ROLES,
-  CALIBRATION_SERVICE_CLOSE_ROLES,
-  CALIBRATION_SERVICE_DOCUMENT_CONTROL_ROLES,
-  CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES,
-  CALIBRATION_SERVICE_EDIT_ROLES,
-  CALIBRATION_SERVICE_EXECUTION_ROLES,
-  CALIBRATION_SERVICE_INVOICING_ROLES,
-  CALIBRATION_SERVICE_ODS_ROLES,
-  CALIBRATION_SERVICE_PAUSE_ROLES,
-  CALIBRATION_SERVICE_PHYSICAL_TRACEABILITY_ROLES,
-  CALIBRATION_SERVICE_REASSIGN_ROLES,
-  CALIBRATION_SERVICE_REPROGRAM_ROLES,
-  CALIBRATION_SERVICE_SCHEDULE_ROLES,
   CALIBRATION_SERVICE_SLA_COLORS,
   CALIBRATION_SERVICE_TECHNICAL_ROLES,
   isSlaLabelRedundantWithStatus
@@ -137,7 +120,9 @@ import CalibrationServiceLogisticsControlDialog, {
 import CalibrationServiceSendLogisticsEmailDialog from './CalibrationServiceSendLogisticsEmailDialog'
 import useAxiosPrivate from '@utils/use-axios-private'
 
-import { ROLES, ROLE_GROUPS } from 'src/constants/roles'
+import { ROLE_GROUPS } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 type DetailTab =
   | 'summary'
   | 'items'
@@ -393,7 +378,7 @@ const CalibrationServiceDetailsPage = () => {
     error
   } = useCalibrationService(serviceId)
   const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
-  const canManageSequenceConfig = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
+  const canManageSequenceConfig = useCan(PERMISSIONS.CALIBRATION_CONFIG_SEQUENCE)
   const { data: sequenceConfig, isLoading: isLoadingSequenceConfig } =
     useCalibrationServiceSequenceConfig(canManageSequenceConfig)
   const { data: slaConfig } = useCalibrationServiceSlaConfig(Boolean(serviceId))
@@ -495,53 +480,31 @@ const CalibrationServiceDetailsPage = () => {
   const [activeTab, setActiveTab] = useState<DetailTab>(() =>
     getStoredDetailTab(serviceId)
   )
-  const canEditService = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
-  const canTakeApprovalDecision = useHasRole([
-    ...CALIBRATION_SERVICE_APPROVAL_ROLES
-  ])
-  const canIssueOdsRole = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
-  const canScheduleServiceRole = useHasRole([
-    ...CALIBRATION_SERVICE_SCHEDULE_ROLES
-  ])
-  const canReprogramServiceRole = useHasRole([
-    ...CALIBRATION_SERVICE_REPROGRAM_ROLES
-  ])
-  const canReassignServiceRole = useHasRole([
-    ...CALIBRATION_SERVICE_REASSIGN_ROLES
-  ])
-  const canRunExecutionRole = useHasRole([
-    ...CALIBRATION_SERVICE_EXECUTION_ROLES
-  ])
-  const canPauseServiceRole = useHasRole([...CALIBRATION_SERVICE_PAUSE_ROLES])
-  const canCancelServiceRole = useHasRole([...CALIBRATION_SERVICE_CANCEL_ROLES])
-  const canRegisterPhysicalTraceabilityRole = useHasRole([
-    ...CALIBRATION_SERVICE_PHYSICAL_TRACEABILITY_ROLES
-  ])
-  const canReportAdjustmentRole = useHasRole([
-    ...CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES
-  ])
-  const canReviewAdjustmentTechnically = useHasRole([
-    ...CALIBRATION_SERVICE_ADJUSTMENT_TECHNICAL_REVIEW_ROLES
-  ])
-  const canReviewAdjustmentCommercially = useHasRole([
-    ...CALIBRATION_SERVICE_ADJUSTMENT_COMMERCIAL_REVIEW_ROLES
-  ])
-  const canUpdateDocumentControlRole = useHasRole([
-    ...CALIBRATION_SERVICE_DOCUMENT_CONTROL_ROLES
-  ])
-  const canCloseServiceRole = useHasRole([...CALIBRATION_SERVICE_CLOSE_ROLES])
-  const canInvoiceCutRole = useHasRole([...CALIBRATION_SERVICE_INVOICING_ROLES])
-  const canUploadDocuments = useHasRole([
-    ...CALIBRATION_SERVICE_DOCUMENT_UPLOAD_ROLES
-  ])
+  const canEditService = useCan(PERMISSIONS.CALIBRATION_SERVICE_UPDATE)
+  const canTakeApprovalDecision = useCan(PERMISSIONS.CALIBRATION_SERVICE_DECIDE)
+  const canIssueOdsRole = useCan(PERMISSIONS.CALIBRATION_SERVICE_ODS)
+  const canScheduleServiceRole = useCan(PERMISSIONS.CALIBRATION_SERVICE_SCHEDULE)
+  const canReprogramServiceRole = useCan(PERMISSIONS.CALIBRATION_SERVICE_RESCHEDULE)
+  const canReassignServiceRole = useCan(PERMISSIONS.CALIBRATION_SERVICE_REASSIGN)
+  const canRunExecutionRole = useCan(PERMISSIONS.CALIBRATION_SERVICE_EXECUTE)
+  const canPauseServiceRole = useCan(PERMISSIONS.CALIBRATION_SERVICE_PAUSE)
+  const canCancelServiceRole = useCan(PERMISSIONS.CALIBRATION_SERVICE_CANCEL)
+  const canRegisterPhysicalTraceabilityRole = useCan(PERMISSIONS.CALIBRATION_SERVICE_TRACEABILITY)
+  const canReportAdjustmentRole = useCan(PERMISSIONS.CALIBRATION_SERVICE_EXECUTE)
+  const canReviewAdjustmentTechnically = useCan(PERMISSIONS.CALIBRATION_ADJUSTMENT_REVIEW_TECHNICAL)
+  const canReviewAdjustmentCommercially = useCan(PERMISSIONS.CALIBRATION_ADJUSTMENT_COMMERCIAL)
+  const canUpdateDocumentControlRole = useCan(PERMISSIONS.CALIBRATION_SERVICE_DOCUMENT_CONTROL)
+  const canCloseServiceRole = useCan(PERMISSIONS.CALIBRATION_SERVICE_CLOSE)
+  const canInvoiceCutRole = useCan(PERMISSIONS.CALIBRATION_SERVICE_INVOICING)
+  const canUploadDocuments = useCan(PERMISSIONS.CALIBRATION_SERVICE_DOCUMENT_UPLOAD)
   const hasTechnicalRole = useHasRole([...CALIBRATION_SERVICE_TECHNICAL_ROLES])
   const hasCommercialVisibility = useHasRole([
     ...CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES
   ])
-  const canGenerateQuotePdf = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
-  const canGenerateOdsPdf = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
+  const canGenerateQuotePdf = useCan(PERMISSIONS.CALIBRATION_SERVICE_QUOTE_PDF)
+  const canGenerateOdsPdf = useCan(PERMISSIONS.CALIBRATION_SERVICE_ODS)
   const canEditExecutionCustomerRole =
-    useHasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.CALIBRATION_COORDINATOR, ROLES.COMP_ADMIN, ROLES.COMP_REQUESTER])
+    useCan(PERMISSIONS.CALIBRATION_SERVICE_EXECUTION_CUSTOMER)
   const { data: assignableMetrologists = [] } =
     useCalibrationAssignableMetrologists(canScheduleServiceRole)
   const requestedAction = searchParams.get('open')
