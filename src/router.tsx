@@ -30,6 +30,7 @@ import { Box, CircularProgress, Typography } from '@mui/material'
 import LaboratoryRoutes from './routes/LaboratoryRoutes'
 import NonConformRoutes from './routes/NonConformRoutes'
 import MaintenanceRoutes from './routes/MaintenanceRoutes'
+import RbacRoutes from './routes/RbacRoutes'
 import AssetLifeSheetRoutes from './routes/AssetLifeSheetRoutes'
 import CalibrationServiceRoutes from './routes/CalibrationServiceRoutes'
 import EquipmentSalesRoutes from './routes/EquipmentSalesRoutes'
@@ -89,6 +90,7 @@ function Router() {
           {LaboratoryRoutes($userStore.rol)}
           {NonConformRoutes($userStore.rol)}
           {MaintenanceRoutes($userStore.rol)}
+          {RbacRoutes($userStore.rol)}
           {AssetLifeSheetRoutes($userStore.rol)}
           {CalibrationServiceRoutes($userStore.rol)}
           {EquipmentSalesRoutes($userStore.rol)}

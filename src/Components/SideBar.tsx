@@ -2,7 +2,12 @@ import { useEffect, useState } from 'react'
 import { axiosPrivate } from '@utils/api'
 import { Link, useLocation } from 'react-router-dom'
 import { FaHospitalUser, FaUser } from 'react-icons/fa'
-import { MdMicrowave, MdDashboard, MdOutlineSettings } from 'react-icons/md'
+import {
+  MdMicrowave,
+  MdDashboard,
+  MdOutlineSettings,
+  MdAdminPanelSettings
+} from 'react-icons/md'
 import { BiSolidReport } from 'react-icons/bi'
 
 import DropdownButton from './DropdownButton' // Importa el componente del dropdown si ya lo tienes
@@ -403,6 +408,16 @@ const sidebarItems = ($userStore: UserData) => [
     icon: <MdOutlineSettings className={iconClass} />,
     roles: [ROLES.ADMIN],
     moduleName: 'Basic'
+  },
+  {
+    type: 'link',
+    label: 'Roles y permisos',
+    to: '/settings/roles',
+    icon: <MdAdminPanelSettings className={iconClass} />,
+    // Por capacidad: lo ve quien el backend dice que tiene rbac:view
+    roles: [] as string[],
+    permission: PERMISSIONS.RBAC_VIEW as PermissionKey,
+    moduleName: 'Basic'
   }
   // Otros ítems...
 ]
@@ -518,7 +533,14 @@ const SideBar = ({
             if (
               item.type === 'link' &&
               item.to &&
-              canViewModule(item.roles, $userStore.rol) &&
+              (getItemPermission(item)
+                ? hasPermission(
+                    $userStore.permissions,
+                    getItemPermission(item) as
+                      | PermissionKey
+                      | readonly PermissionKey[]
+                  )
+                : canViewModule(item.roles, $userStore.rol)) &&
               hasModuleAccess(item.moduleName)
             ) {
               return (
