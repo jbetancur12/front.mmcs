@@ -108,6 +108,8 @@ export const PERMISSIONS = {
   PURCHASES_PERSONNEL_VIEW: 'purchases:personnel:view',
   /** Crear, editar y eliminar personal de compras */
   PURCHASES_PERSONNEL_MANAGE: 'purchases:personnel:manage',
+  /** Consultar los parámetros fiscales activos (los usa el modal de generar una orden de compra) */
+  PURCHASES_FISCAL_PARAMETER_VIEW: 'purchases:fiscal_parameter:view',
   /** Gestionar los parámetros fiscales (listar todos, crear, editar y eliminar) */
   PURCHASES_FISCAL_PARAMETER_MANAGE: 'purchases:fiscal_parameter:manage',
   /** Ver las cotizaciones de venta de equipos, sus documentos y descargarlos */
@@ -258,6 +260,8 @@ export const PERMISSIONS = {
   CALIBRATION_ANALYTICS_VIEW: 'calibration:analytics:view',
   /** Crear certificados y archivos de equipos de una empresa (incluida la carga directa del PDF) */
   CALIBRATION_FILE_CREATE: 'calibration:file:create',
+  /** Listar los certificados y ver los próximos a vencer (el usuario de una empresa solo ve los de su empresa: el controlador filtra por customers:customer:manage) */
+  CALIBRATION_FILE_LIST: 'calibration:file:list',
   /** Editar certificados y archivos de equipos, y cambiar su sede */
   CALIBRATION_FILE_UPDATE: 'calibration:file:update',
   /** Eliminar certificados y archivos de equipos */
