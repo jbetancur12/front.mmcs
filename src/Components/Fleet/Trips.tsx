@@ -27,6 +27,8 @@ import { format } from 'date-fns'
 import { vehicleStore } from '../../store/vehicleStore'
 import { useStore } from '@nanostores/react'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 
 // Tipos e interfaces para los datos de Trip
 
@@ -39,6 +41,7 @@ const fetchTrips = async (
 }
 
 const TripsTable = () => {
+  const canManage = useCan(PERMISSIONS.FLEET_TRIP_MANAGE)
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
   const $vehicleStore = useStore(vehicleStore)
@@ -300,6 +303,7 @@ const TripsTable = () => {
                 mt: 2
               }}
             >
+{canManage && (
               <Button
                 variant='contained'
                 onClick={handleCreateTrip}
@@ -310,6 +314,7 @@ const TripsTable = () => {
               >
                 Terminar Viaje
               </Button>
+)}
             </Box>
           </CardContent>
         </Card>
@@ -320,7 +325,7 @@ const TripsTable = () => {
         localization={MRT_Localization_ES}
         enableColumnOrdering
         editingMode='modal'
-        enableEditing
+        enableEditing={canManage}
         onEditingRowSave={handleSaveRowEdits}
         onEditingRowCancel={() => setValidationErrors({})}
         initialState={{ columnVisibility: { id: false, vehicleId: false } }}
@@ -338,15 +343,17 @@ const TripsTable = () => {
                 <Edit />
               </IconButton>
             </Tooltip> */}
+{canManage && (
             <Tooltip arrow placement='right' title='Eliminar'>
               <IconButton color='error' onClick={() => handleDeleteRow(row)}>
                 <Delete />
               </IconButton>
             </Tooltip>
+)}
           </Box>
         )}
         renderTopToolbarCustomActions={() =>
-          !lastTrip?.endDate && lastTrip?.startDate ? null : (
+          !canManage || (!lastTrip?.endDate && lastTrip?.startDate) ? null : (
             <Button
               variant='contained'
               onClick={handleCreateTrip}

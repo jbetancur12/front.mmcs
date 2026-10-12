@@ -21,6 +21,8 @@ import { bigToast } from '../ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 
 const MySwal = withReactContent(Swal)
 
@@ -37,6 +39,7 @@ const fetchInterventionTypes = async (): Promise<InterventionType[]> => {
 }
 
 const InterventionTypes = () => {
+  const canManage = useCan(PERMISSIONS.FLEET_INTERVENTION_TYPE_MANAGE)
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const axiosPrivate = useAxiosPrivate()
@@ -175,9 +178,11 @@ const InterventionTypes = () => {
           <Typography variant='h4'>Tipos de Intervención</Typography>
         </Stack>
 
+{canManage && (
         <Button variant='contained' onClick={handleAddNew}>
           Agregar Nuevo
         </Button>
+)}
       </Box>
       <Grid container spacing={2}>
         {interventionTypes.map((type) => (
@@ -199,6 +204,7 @@ const InterventionTypes = () => {
                   Requiere Recordatorio: {type.requiresReminder ? 'Sí' : 'No'}
                 </Typography>
               </CardContent>
+{canManage && (
               <CardActions>
                 <IconButton onClick={() => handleEdit(type.id as number)}>
                   <Edit />
@@ -210,6 +216,7 @@ const InterventionTypes = () => {
                   <Delete />
                 </IconButton>
               </CardActions>
+)}
             </Card>
           </Grid>
         ))}

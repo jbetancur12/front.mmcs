@@ -408,7 +408,8 @@ const sidebarItems = ($userStore: UserData) => [
     label: 'Flota',
     to: '/fleet',
     icon: <CarRepair className={iconClass} />,
-    roles: [ROLES.ADMIN],
+    roles: [] as string[],
+    permission: PERMISSIONS.FLEET_VEHICLE_VIEW,
     moduleName: 'Fleet'
   },
   {

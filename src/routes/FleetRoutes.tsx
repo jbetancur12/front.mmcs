@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
+import { PERMISSIONS, PermissionKey } from 'src/constants/permissions'
 
 const Fleet = lazy(() => import('../pages/Fleet'))
 const Documents = lazy(() => import('../Components/Fleet/Documents'))
@@ -23,28 +24,37 @@ const VehicleDataSheetPDF = lazy(
 )
 
 const FleetRoutes = (role: string[]) => {
+  const isAuthenticated = localStorage.getItem('accessToken') !== null
+
+  // Cada página exige la capacidad que el backend le pide a sus endpoints
+  const guard = (permission: PermissionKey | readonly PermissionKey[]) => (
+    <ProtectedRoute
+      isAuthenticated={isAuthenticated}
+      userRole={role}
+      permission={permission}
+    />
+  )
+
   return (
     <>
-      <Route
-        element={
-          <ProtectedRoute
-            isAuthenticated={localStorage.getItem('accessToken') !== null}
-            userRole={role}
-            roles={['*']}
-          />
-        }
-      >
-        <Route path='fleet'>
-          <Route index element={<Fleet />} />
-          <Route path='interventions' element={<InterventionTypes />} />
-          <Route path=':id/documents' element={<Documents />} />
-          <Route path=':id/documents/:docId' element={<DocumentViewPDF />} />
-          <Route path=':id/data-sheet' element={<VehicleDataSheetPDF />} />
-          <Route path=':id/inspections' element={<InspectionsTable />} />
-          <Route path=':id/trip' element={<TripsTable />} />
-          <Route path=':id/trip/new' element={<NewTrip />} />
-          <Route path=':id/interventions' element={<MaintenanceRecords />} />
-        </Route>
+      <Route element={guard(PERMISSIONS.FLEET_VEHICLE_VIEW)}>
+        <Route path='fleet' element={<Fleet />} />
+        <Route path='fleet/:id/documents' element={<Documents />} />
+        <Route path='fleet/:id/documents/:docId' element={<DocumentViewPDF />} />
+        <Route path='fleet/:id/data-sheet' element={<VehicleDataSheetPDF />} />
+        <Route path='fleet/:id/inspections' element={<InspectionsTable />} />
+      </Route>
+      <Route element={guard(PERMISSIONS.FLEET_INTERVENTION_TYPE_VIEW)}>
+        <Route path='fleet/interventions' element={<InterventionTypes />} />
+      </Route>
+      <Route element={guard(PERMISSIONS.FLEET_TRIP_VIEW)}>
+        <Route path='fleet/:id/trip' element={<TripsTable />} />
+      </Route>
+      <Route element={guard(PERMISSIONS.FLEET_TRIP_MANAGE)}>
+        <Route path='fleet/:id/trip/new' element={<NewTrip />} />
+      </Route>
+      <Route element={guard(PERMISSIONS.FLEET_MAINTENANCE_VIEW)}>
+        <Route path='fleet/:id/interventions' element={<MaintenanceRecords />} />
       </Route>
     </>
   )

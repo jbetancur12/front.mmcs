@@ -9,8 +9,11 @@ import AddMaintenanceRecordModal from './AddMaintenanceRecordModal'
 import { format } from 'date-fns'
 import { ArrowBack, Plumbing } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 
 const MaintenanceRecords: React.FC = () => {
+  const canManage = useCan(PERMISSIONS.FLEET_MAINTENANCE_MANAGE)
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const axiosPrivate = useAxiosPrivate()
@@ -89,6 +92,7 @@ const MaintenanceRecords: React.FC = () => {
           justifyContent: 'space-between'
         }}
       >
+{canManage && (
         <Button
           variant='contained'
           color='primary'
@@ -96,6 +100,7 @@ const MaintenanceRecords: React.FC = () => {
         >
           Agregar Intervencion
         </Button>
+)}
 
         <Button>
           <IconButton onClick={() => navigate('/fleet/interventions')}>

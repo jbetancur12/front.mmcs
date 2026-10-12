@@ -36,6 +36,8 @@ import { useFormik } from 'formik'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useStore } from '@nanostores/react'
 import { userStore } from 'src/store/userStore'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 
 const validationSchema = yup.object().shape({
   pictureUrl: yup.mixed().required('Imagen es obligatoria'),
@@ -119,6 +121,7 @@ const validationSchema = yup.object().shape({
 })
 
 const Fleet = () => {
+  const canManage = useCan(PERMISSIONS.FLEET_VEHICLE_MANAGE)
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
   const customerId = $userStore.customer?.id || null
@@ -344,7 +347,7 @@ const Fleet = () => {
       localization={MRT_Localization_ES}
       enableColumnOrdering
       editingMode='modal'
-      enableEditing
+      enableEditing={canManage}
       onEditingRowSave={handleSaveRowEdits}
       onEditingRowCancel={() => setValidationErrors({})}
       initialState={{ columnVisibility: { id: false } }}
@@ -383,6 +386,8 @@ const Fleet = () => {
               </IconButton>
             </Link>
           </Tooltip>
+{canManage && (
+<>
           <Divider orientation='vertical' flexItem />
           <Tooltip arrow placement='right' title='Editar'>
             <IconButton onClick={() => table.setEditingRow(row)}>
@@ -394,9 +399,11 @@ const Fleet = () => {
               <Delete />
             </IconButton>
           </Tooltip>
+</>
+)}
         </Box>
       )}
-      renderTopToolbarCustomActions={() => (
+      renderTopToolbarCustomActions={() => canManage ? (
         <>
           <Button
             variant='contained'
@@ -416,7 +423,7 @@ const Fleet = () => {
             formik={formik}
           />
         </>
-      )}
+      ) : null}
     />
   )
 }

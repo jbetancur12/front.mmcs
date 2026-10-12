@@ -40,8 +40,13 @@ import { format, parseISO } from 'date-fns'
 import { VisuallyHiddenInput } from '../TableFiles'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { MySwal } from '../ExcelManipulation/Utils'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 
 const Documents: React.FC = () => {
+  const canUpload = useCan(PERMISSIONS.FLEET_VEHICLE_DOCUMENT_UPLOAD)
+  // Editar y eliminar usan PUT y DELETE /document/:id
+  const canManageDocuments = useCan(PERMISSIONS.CALIBRATION_DOCUMENT_MANAGE)
   const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -150,9 +155,11 @@ const Documents: React.FC = () => {
       <IconButton onClick={() => navigate('/fleet')} sx={{ mr: 2 }}>
         <ArrowBack />
       </IconButton>
+{canUpload && (
       <Button variant='contained' onClick={() => handleOpen()}>
         Agregar Documento
       </Button>
+)}
 
       <Box sx={{ p: 2 }}>
         <Typography variant='h5' sx={{ mb: 2 }}>
@@ -215,6 +222,8 @@ const Documents: React.FC = () => {
                       <Download />
                     </IconButton>
                   </Tooltip>
+{canManageDocuments && (
+<>
                   <Divider orientation='vertical' flexItem />
                   <Tooltip title='Editar'>
                     <IconButton onClick={() => handleOpen(doc)}>
@@ -241,6 +250,8 @@ const Documents: React.FC = () => {
                       <Delete />
                     </IconButton>
                   </Tooltip>
+</>
+)}
                 </CardActions>
               </Card>
             </Grid>

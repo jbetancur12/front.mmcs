@@ -352,6 +352,32 @@ export const PERMISSIONS = {
   LMS_TRAINING_MANAGER_ADMIN: 'lms:training_manager:admin',
   /** Ver los errores reportados por el LMS */
   LMS_ERROR_REPORT_VIEW: 'lms:error_report:view',
+  /** Ver los vehículos, su estado, sus inspecciones y sus documentos */
+  FLEET_VEHICLE_VIEW: 'fleet:vehicle:view',
+  /** Crear, editar y eliminar vehículos */
+  FLEET_VEHICLE_MANAGE: 'fleet:vehicle:manage',
+  /** Subir documentos de un vehículo */
+  FLEET_VEHICLE_DOCUMENT_UPLOAD: 'fleet:vehicle:document_upload',
+  /** Ver los viajes de los vehículos */
+  FLEET_TRIP_VIEW: 'fleet:trip:view',
+  /** Crear, editar, terminar y eliminar viajes (con o sin inspección) */
+  FLEET_TRIP_MANAGE: 'fleet:trip:manage',
+  /** Ver los registros de mantenimiento de vehículos */
+  FLEET_MAINTENANCE_VIEW: 'fleet:maintenance:view',
+  /** Crear, editar y eliminar registros de mantenimiento de vehículos */
+  FLEET_MAINTENANCE_MANAGE: 'fleet:maintenance:manage',
+  /** Ver los tipos de intervención */
+  FLEET_INTERVENTION_TYPE_VIEW: 'fleet:intervention_type:view',
+  /** Crear, editar y eliminar tipos de intervención */
+  FLEET_INTERVENTION_TYPE_MANAGE: 'fleet:intervention_type:manage',
+  /** Ver las inspecciones de vehículos */
+  FLEET_INSPECTION_VIEW: 'fleet:inspection:view',
+  /** Crear, editar y eliminar inspecciones de vehículos */
+  FLEET_INSPECTION_MANAGE: 'fleet:inspection:manage',
+  /** Ver los recordatorios de la flota */
+  FLEET_REMINDER_VIEW: 'fleet:reminder:view',
+  /** Crear, editar y eliminar recordatorios de la flota */
+  FLEET_REMINDER_MANAGE: 'fleet:reminder:manage',
   /** Ver roles, capacidades y la auditoría de cambios */
   RBAC_VIEW: 'rbac:view',
   /** Crear roles y activar o desactivar capacidades */
