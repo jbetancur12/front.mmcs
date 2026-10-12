@@ -320,6 +320,38 @@ export const PERMISSIONS = {
   CALIBRATION_PRODUCT_MANAGE: 'calibration:product:manage',
   /** Descargar los informes de inventario, calibración, mantenimiento, préstamos y entradas y salidas de equipos */
   CALIBRATION_REPORT_VIEW: 'calibration:report:view',
+  /** Administrar la capacitación: ver los datos de cualquier usuario y operar el LMS como administrador (también decide la bandera canManageTraining del LMS) */
+  LMS_TRAINING_MANAGE: 'lms:training:manage',
+  /** Gestionar cursos, contenido, evaluaciones y archivos del LMS */
+  LMS_COURSE_MANAGE: 'lms:course:manage',
+  /** Gestionar las asignaciones de cursos */
+  LMS_ASSIGNMENT_MANAGE: 'lms:assignment:manage',
+  /** Gestionar los planes de formación */
+  LMS_PLAN_MANAGE: 'lms:plan:manage',
+  /** Generar y gestionar los reportes del LMS */
+  LMS_REPORT_MANAGE: 'lms:report:manage',
+  /** Ver analíticas de cursos, progreso y evaluaciones */
+  LMS_ANALYTICS_VIEW: 'lms:analytics:view',
+  /** Gestionar certificados del LMS (listados y acciones de administración) */
+  LMS_CERTIFICATE_MANAGE: 'lms:certificate:manage',
+  /** Ver los tableros analíticos del LMS */
+  LMS_DASHBOARD_VIEW: 'lms:dashboard:view',
+  /** Gestionar las notificaciones del LMS */
+  LMS_NOTIFICATION_MANAGE: 'lms:notification:manage',
+  /** Administrar los trabajos y la configuración de notificaciones del LMS */
+  LMS_NOTIFICATION_ADMIN: 'lms:notification:admin',
+  /** Gestionar el banco de preguntas */
+  LMS_QUESTION_BANK_MANAGE: 'lms:question_bank:manage',
+  /** Consultar usuarios del LMS */
+  LMS_USER_MANAGE: 'lms:user:manage',
+  /** Gestionar videos del LMS */
+  LMS_VIDEO_MANAGE: 'lms:video:manage',
+  /** Ver el panel del responsable de formación */
+  LMS_TRAINING_MANAGER_VIEW: 'lms:training_manager:view',
+  /** Administrar el panel del responsable de formación */
+  LMS_TRAINING_MANAGER_ADMIN: 'lms:training_manager:admin',
+  /** Ver los errores reportados por el LMS */
+  LMS_ERROR_REPORT_VIEW: 'lms:error_report:view',
   /** Ver roles, capacidades y la auditoría de cambios */
   RBAC_VIEW: 'rbac:view',
   /** Crear roles y activar o desactivar capacidades */

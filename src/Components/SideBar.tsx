@@ -21,8 +21,7 @@ import {
 import {
   getEffectiveLmsMenuRoles,
   isLmsOnlyUser,
-  LMS_ACCESS_MENU_ROLES,
-  LMS_ADMIN_ROUTE_ROLES
+  LMS_ACCESS_MENU_ROLES
 } from 'src/utils/lmsIdentity'
 import {
   audienceIncludes,
@@ -173,57 +172,57 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Dashboard',
         url: 'lms',
-        roles: [...LMS_ADMIN_ROUTE_ROLES]
+        permission: PERMISSIONS.LMS_TRAINING_MANAGE
       },
       {
         label: 'Gestión de Cursos',
         url: 'lms/admin/courses',
-        roles: [...LMS_ADMIN_ROUTE_ROLES]
+        permission: PERMISSIONS.LMS_COURSE_MANAGE
       },
       {
         label: 'Gestión de Usuarios',
         url: 'lms/admin/users',
-        roles: [...LMS_ADMIN_ROUTE_ROLES]
+        permission: PERMISSIONS.LMS_USER_MANAGE
       },
       {
         label: 'Analíticas',
         url: 'lms/admin/analytics',
-        roles: [...LMS_ADMIN_ROUTE_ROLES]
+        permission: PERMISSIONS.LMS_DASHBOARD_VIEW
       },
       {
         label: 'Mis notificaciones',
         url: 'lms/admin/notifications',
-        roles: [...LMS_ADMIN_ROUTE_ROLES]
+        permission: PERMISSIONS.LMS_NOTIFICATION_MANAGE
       },
       {
         label: 'Reportes',
         url: 'lms/admin/reporting',
-        roles: [...LMS_ADMIN_ROUTE_ROLES]
+        permission: PERMISSIONS.LMS_REPORT_MANAGE
       },
       {
         label: 'Asignaciones',
         url: 'lms/admin/assignments',
-        roles: [...LMS_ADMIN_ROUTE_ROLES]
+        permission: PERMISSIONS.LMS_ASSIGNMENT_MANAGE
       },
       {
         label: 'Planes de formación',
         url: 'lms/admin/plans',
-        roles: [...LMS_ADMIN_ROUTE_ROLES]
+        permission: PERMISSIONS.LMS_PLAN_MANAGE
       },
       {
         label: 'Cumplimiento',
         url: 'lms/admin/compliance',
-        roles: [...LMS_ADMIN_ROUTE_ROLES]
+        permission: PERMISSIONS.LMS_NOTIFICATION_MANAGE
       },
       {
         label: 'Plantillas de Certificados',
         url: 'lms/admin/certificate-templates',
-        roles: [...LMS_ADMIN_ROUTE_ROLES]
+        permission: PERMISSIONS.LMS_CERTIFICATE_MANAGE
       },
       {
         label: 'Certificados Emitidos',
         url: 'lms/admin/certificates',
-        roles: [...LMS_ADMIN_ROUTE_ROLES]
+        permission: PERMISSIONS.LMS_CERTIFICATE_MANAGE
       },
       {
         label: 'Mi Aprendizaje',

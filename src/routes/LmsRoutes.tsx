@@ -1,7 +1,7 @@
 import { lazy } from 'react'
 import { Navigate, Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
-import { LMS_ADMIN_ROUTE_ROLES } from 'src/utils/lmsIdentity'
+import { PERMISSIONS, PermissionKey } from 'src/constants/permissions'
 
 const LmsDashboard = lazy(() => import('../pages/lms/LmsDashboard'))
 const LmsAdmin = lazy(() => import('../pages/lms/admin/LmsAdmin'))
@@ -34,6 +34,15 @@ const LmsIssuedCertificates = lazy(() => import('../pages/lms/admin/LmsIssuedCer
 const LmsCertificateView = lazy(() => import('../pages/lms/course/LmsCertificateView'))
 
 const LmsRoutes = (role: string[]) => {
+  const isAuthenticated = localStorage.getItem('accessToken') !== null
+  const guard = (permission: PermissionKey | readonly PermissionKey[]) => (
+    <ProtectedRoute
+      isAuthenticated={isAuthenticated}
+      userRole={role}
+      permission={permission}
+    />
+  )
+
   return (
     <>
       <Route path='lms/certificates/verify/:certificateNumber' element={<LmsCertificateView />} />
@@ -59,42 +68,51 @@ const LmsRoutes = (role: string[]) => {
         <Route path='lms/certificates' element={<LmsCertificateView />} />
       </Route>
 
-      <Route
-        element={
-          <ProtectedRoute
-            isAuthenticated={localStorage.getItem('accessToken') !== null}
-            userRole={role}
-            roles={[...LMS_ADMIN_ROUTE_ROLES]}
-          />
-        }
-      >
+      {/* Administración del LMS: cada página exige la capacidad que el backend le pide a sus endpoints */}
+      <Route element={guard(PERMISSIONS.LMS_TRAINING_MANAGE)}>
         <Route path='lms/admin' element={<LmsAdmin />} />
+        <Route
+          path='lms/admin/users/:userId/courses/:courseId/review'
+          element={<LmsUserCourseReview />}
+        />
+        <Route path='lms/admin/jobs' element={<Navigate to='/lms/admin' replace />} />
+      </Route>
+      <Route element={guard(PERMISSIONS.LMS_COURSE_MANAGE)}>
         <Route path='lms/admin/courses' element={<LmsCourseManagement />} />
         <Route
           path='lms/admin/courses/:courseId/content'
           element={<LmsCourseContentEditor />}
         />
         <Route path='lms/admin/dashboard' element={<Navigate to='/lms/admin/courses' replace />} />
-        <Route path='lms/admin/users' element={<LmsUserManagement />} />
-        <Route path='lms/admin/analytics' element={<LmsAnalytics />} />
-        <Route path='lms/admin/notifications' element={<LmsAdminNotifications />} />
-        <Route path='lms/admin/reporting' element={<LmsReporting />} />
-        <Route path='lms/admin/reports' element={<LmsReporting />} />
-        <Route path='lms/admin/courses/:courseId/assignments' element={<LmsCourseAssignments />} />
         <Route path='lms/admin/quiz-management' element={<LmsQuizManagement />} />
         <Route path='lms/admin/question-bank' element={<Navigate to='/lms/admin/quiz-management' replace />} />
-        <Route path='lms/admin/quiz-analytics' element={<Navigate to='/lms/admin/analytics' replace />} />
         <Route path='lms/admin/quiz-validator' element={<Navigate to='/lms/admin/quiz-management' replace />} />
-        <Route path='lms/admin/assignments' element={<LmsCourseAssignmentInterface />} />
-        <Route path='lms/admin/plans' element={<LmsTrainingPlans />} />
+      </Route>
+      <Route element={guard(PERMISSIONS.LMS_USER_MANAGE)}>
+        <Route path='lms/admin/users' element={<LmsUserManagement />} />
+      </Route>
+      <Route element={guard(PERMISSIONS.LMS_DASHBOARD_VIEW)}>
+        <Route path='lms/admin/analytics' element={<LmsAnalytics />} />
+        <Route path='lms/admin/quiz-analytics' element={<Navigate to='/lms/admin/analytics' replace />} />
+      </Route>
+      <Route element={guard(PERMISSIONS.LMS_NOTIFICATION_MANAGE)}>
+        <Route path='lms/admin/notifications' element={<LmsAdminNotifications />} />
         <Route path='lms/admin/compliance' element={<LmsComplianceTracker />} />
-        <Route
-          path='lms/admin/users/:userId/courses/:courseId/review'
-          element={<LmsUserCourseReview />}
-        />
+      </Route>
+      <Route element={guard(PERMISSIONS.LMS_REPORT_MANAGE)}>
+        <Route path='lms/admin/reporting' element={<LmsReporting />} />
+        <Route path='lms/admin/reports' element={<LmsReporting />} />
+      </Route>
+      <Route element={guard(PERMISSIONS.LMS_ASSIGNMENT_MANAGE)}>
+        <Route path='lms/admin/courses/:courseId/assignments' element={<LmsCourseAssignments />} />
+        <Route path='lms/admin/assignments' element={<LmsCourseAssignmentInterface />} />
+      </Route>
+      <Route element={guard(PERMISSIONS.LMS_PLAN_MANAGE)}>
+        <Route path='lms/admin/plans' element={<LmsTrainingPlans />} />
+      </Route>
+      <Route element={guard(PERMISSIONS.LMS_CERTIFICATE_MANAGE)}>
         <Route path='lms/admin/certificate-templates' element={<LmsCertificateTemplates />} />
         <Route path='lms/admin/certificates' element={<LmsIssuedCertificates />} />
-        <Route path='lms/admin/jobs' element={<Navigate to='/lms/admin' replace />} />
       </Route>
     </>
   )

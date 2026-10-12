@@ -68,9 +68,8 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { getRoleLabelEs } from 'src/constants/roles'
-import { useStore } from '@nanostores/react'
-import { userStore } from 'src/store/userStore'
-import { hasLmsAdminAccess, hasTrainingManagerRole } from 'src/utils/lmsIdentity'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 import {
   useMandatoryTrainingStatus,
   useTriggerManualReminders,
@@ -236,8 +235,8 @@ const LmsComplianceTracker: React.FC = () => {
 
   // Modo edición oculto por defecto: se habilita con ?show=true (se recuerda
   // en sessionStorage); ?show=false lo apaga. La protección real está en el backend.
-  const $userStore = useStore(userStore)
-  const canEdit = hasLmsAdminAccess($userStore.rol) || hasTrainingManagerRole($userStore.rol)
+  // El modo de edición cambia fechas de asignaciones
+  const canEdit = useCan(PERMISSIONS.LMS_ASSIGNMENT_MANAGE)
   const [editMode, setEditMode] = useState(() => sessionStorage.getItem('lms:compliance:edit') === '1')
   const [searchParams, setSearchParams] = useSearchParams()
 
