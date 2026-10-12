@@ -27,6 +27,8 @@ import {
   CloudSync
 } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { useCan } from '@utils/functions'
+import { PERMISSIONS } from 'src/constants/permissions'
 import { Module } from 'src/store/userStore'
 import { bigToast } from './ExcelManipulation/Utils'
 
@@ -36,6 +38,7 @@ interface CustomerModulesProps {
 
 const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
   const axiosPrivate = useAxiosPrivate()
+  const canAssignModules = useCan(PERMISSIONS.CUSTOMERS_MODULE_ASSIGN)
   const [modules, setModules] = useState<Module[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
@@ -272,7 +275,7 @@ const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
                               <Switch
                                 checked={module.customerModules.isActive}
                                 onChange={(e) => handleModuleChange(module.id, e.target.checked)}
-                                disabled={isUpdating}
+                                disabled={isUpdating || !canAssignModules}
                                 sx={{
                                   '& .MuiSwitch-switchBase.Mui-checked': {
                                     color: '#10b981',

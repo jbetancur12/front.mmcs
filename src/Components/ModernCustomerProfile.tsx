@@ -463,6 +463,7 @@ const ModernCustomerProfile: React.FC = () => {
   const canUpdateCustomer = useCan(PERMISSIONS.CUSTOMERS_CUSTOMER_UPDATE)
   const canChangeAvatar = useCan(PERMISSIONS.CUSTOMERS_CUSTOMER_AVATAR)
   const canViewModules = useCan(PERMISSIONS.CUSTOMERS_MODULE_VIEW)
+  const canListCustomerUsers = useCan(PERMISSIONS.CUSTOMERS_USER_LIST)
   const canCreateFile = useCan(PERMISSIONS.CALIBRATION_FILE_CREATE)
 
   // State
@@ -870,10 +871,20 @@ const ModernCustomerProfile: React.FC = () => {
   }, [searchTerm, setSearchParams])
 
   useEffect(() => {
-    if (activeTab === 'lmsCourses' && !canManageLmsCourses) {
+    if (
+      (activeTab === 'lmsCourses' && !canManageLmsCourses) ||
+      (activeTab === 'users' && !canListCustomerUsers) ||
+      (activeTab === 'modules' && !canViewModules)
+    ) {
       handleTabChange('equipment')
     }
-  }, [activeTab, canManageLmsCourses, handleTabChange])
+  }, [
+    activeTab,
+    canManageLmsCourses,
+    canListCustomerUsers,
+    canViewModules,
+    handleTabChange
+  ])
 
   // Permission check
   useEffect(() => {
@@ -1469,7 +1480,7 @@ const ModernCustomerProfile: React.FC = () => {
             icon={<CalendarToday />}
             iconPosition='start'
           />
-          {canManageCustomer && (
+          {canListCustomerUsers && (
             <Tab
               value='users'
               label='Usuarios'
@@ -1963,7 +1974,7 @@ const ModernCustomerProfile: React.FC = () => {
                 Administra los usuarios asociados a este cliente.
               </Typography>
 
-              {!canManageCustomer ? (
+              {!canListCustomerUsers ? (
                 <Alert severity='warning' sx={{ mt: 3 }}>
                   Tu rol no tiene acceso a esta sección.
                 </Alert>

@@ -162,6 +162,8 @@ export const PERMISSIONS = {
   CUSTOMERS_CUSTOMER_AVATAR: 'customers:customer:avatar',
   /** Agregar, editar y eliminar las sedes de una empresa */
   CUSTOMERS_SITE_MANAGE: 'customers:site:manage',
+  /** Ver los usuarios de una empresa (pestaña Usuarios de la ficha de empresa) */
+  CUSTOMERS_USER_LIST: 'customers:user:list',
   /** Ver los módulos contratados por una empresa */
   CUSTOMERS_MODULE_VIEW: 'customers:module:view',
   /** Activar o desactivar módulos a una empresa */
