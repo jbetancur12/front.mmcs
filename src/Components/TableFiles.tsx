@@ -57,6 +57,8 @@ import { customerStore } from '../store/customerStore'
 import useAxiosPrivate from '@utils/use-axios-private'
 
 import { ROLES, ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 export function convertirCadena(cadena) {
   // Reemplazar espacios con guiones y convertir a minúsculas
   const cadenaFormateada = cadena.replace(/\s+/g, '-').toLowerCase()
@@ -124,6 +126,8 @@ interface ResourceOption {
 const Table: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
+  const canDeleteFile = useCan(PERMISSIONS.CALIBRATION_FILE_DELETE)
+  const canCreateFile = useCan(PERMISSIONS.CALIBRATION_FILE_CREATE)
 
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<FileData[]>([])
@@ -593,7 +597,7 @@ const Table: React.FC = () => {
                 <Edit />
               </IconButton>
             </Tooltip> */}
-              {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
+              {canDeleteFile && (
                 <Tooltip arrow placement='right' title='Delete'>
                   <IconButton
                     color='error'
@@ -618,12 +622,7 @@ const Table: React.FC = () => {
         }}
         // <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear Equipo</button>
         renderTopToolbarCustomActions={() => {
-          if (
-            $userStore.rol.some(
-              (role) => !ROLE_GROUPS.METROLOGY_STAFF.includes(role)
-            )
-          )
-            return
+          if (!canCreateFile) return
           return (
             <Button
               onClick={() => setCreateModalOpen(true)}

@@ -278,7 +278,8 @@ const sidebarItems = ($userStore: UserData) => [
   {
     type: 'dropdown',
     buttonText: 'Inventario',
-    roles: ROLE_GROUPS.METROLOGY_STAFF,
+    roles: [] as string[],
+    permission: PERMISSIONS.CALIBRATION_DATASHEET_VIEW,
     moduleName: 'Basic',
     pathData:
       'M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H8v-2h6v2zm3-4H8v-2h8v2zm0-4H8V7h8v2z',
@@ -286,7 +287,7 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Hoja de Vida',
         url: 'datasheets',
-        roles: ROLE_GROUPS.METROLOGY_STAFF
+        permission: PERMISSIONS.CALIBRATION_DATASHEET_VIEW
       },
       {
         label: 'Hoja de Vida TI',
@@ -296,7 +297,7 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Alertas',
         url: 'datasheets/alerts',
-        roles: ROLE_GROUPS.METROLOGY_STAFF
+        permission: PERMISSIONS.CALIBRATION_DATASHEET_VIEW
       }
     ]
   },
@@ -347,7 +348,13 @@ const sidebarItems = ($userStore: UserData) => [
   {
     type: 'dropdown',
     buttonText: 'Calibraciones',
-    roles: ROLE_GROUPS.METROLOGY_STAFF,
+    roles: [] as string[],
+    permission: [
+      PERMISSIONS.CALIBRATION_DEVICE_VIEW,
+      PERMISSIONS.CALIBRATION_CERTIFICATE_TYPE_MANAGE,
+      PERMISSIONS.CALIBRATION_FILE_CREATE,
+      PERMISSIONS.CALIBRATION_TEMPLATE_VIEW
+    ] as readonly PermissionKey[],
     moduleName: 'Basic',
     pathData:
       'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 13.17l6.59-6.59L20 8l-8 8z',
@@ -355,12 +362,12 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Equipos',
         url: 'calibraciones/equipos',
-        roles: ROLE_GROUPS.METROLOGY_STAFF
+        permission: PERMISSIONS.CALIBRATION_DEVICE_VIEW
       },
       {
         label: 'Tipos de Certificado',
         url: 'calibraciones/tipos-de-certificado',
-        roles: [ROLES.ADMIN]
+        permission: PERMISSIONS.CALIBRATION_CERTIFICATE_TYPE_MANAGE
       },
       {
         label: 'Certificados',
@@ -370,12 +377,12 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Subir Excel',
         url: 'calibraciones/subir-excel',
-        roles: ROLE_GROUPS.METROLOGY_STAFF
+        permission: PERMISSIONS.CALIBRATION_FILE_CREATE
       },
       {
         label: 'Plantillas',
         url: 'calibraciones/templates',
-        roles: ROLE_GROUPS.METROLOGY_STAFF
+        permission: PERMISSIONS.CALIBRATION_TEMPLATE_VIEW
       }
     ]
   },

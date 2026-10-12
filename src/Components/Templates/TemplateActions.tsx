@@ -14,6 +14,8 @@ import {
   DeleteButton,
   DuplicateButton
 } from './styles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 
 interface TemplateActionsProps {
   template: TemplatesData
@@ -29,6 +31,9 @@ const TemplateActions: React.FC<TemplateActionsProps> = ({
   onDuplicate
 }) => {
   const { announce } = useAccessibility()
+  const canManage = useCan(PERMISSIONS.CALIBRATION_TEMPLATE_MANAGE)
+  // Editar, duplicar y eliminar piden la capacidad de gestionar plantillas
+  if (!canManage) return null
 
   const handleEdit = () => {
     announce(`Editando plantilla: ${template.name}`)

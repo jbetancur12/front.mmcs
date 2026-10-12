@@ -62,10 +62,9 @@ import Swal from 'sweetalert2'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { DatePicker } from '@mui/x-date-pickers'
 import { format, parseISO } from 'date-fns'
-import { useStore } from '@nanostores/react'
-import { userStore } from '@stores/userStore'
 
-import { ROLE_GROUPS, hasAnyRole, ROLES } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 // Interfaces y tipos
 
 export interface CalibrationHistory {
@@ -212,7 +211,7 @@ const menuOptions = [
 
 // Main component
 const ListDataSheet: React.FC = () => {
-  const $userStore = useStore(userStore)
+  const canCreateDataSheet = useCan(PERMISSIONS.CALIBRATION_DATASHEET_CREATE)
   const [inventoryAnchorEl, setInventoryAnchorEl] =
     useState<null | HTMLElement>(null)
   const [calibrationAnchorEl, setCalibrationAnchorEl] =
@@ -848,7 +847,10 @@ const ListDataSheet: React.FC = () => {
   }
 
   const RowActions = ({ row, table }: { row: any; table: any }) => {
-    const isAdmin = hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF)
+    const canViewDetail = useCan(PERMISSIONS.CALIBRATION_DATASHEET_DETAIL)
+    const canViewMaintenance = useCan(PERMISSIONS.CALIBRATION_INSPECTION_MAINTENANCE_VIEW)
+    const canUpdateDataSheet = useCan(PERMISSIONS.CALIBRATION_DATASHEET_UPDATE)
+    const canDeleteDataSheet = useCan(PERMISSIONS.CALIBRATION_DATASHEET_DELETE)
     const [localAnchorEl, setLocalAnchorEl] = useState<null | HTMLElement>(null)
 
     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -911,7 +913,7 @@ const ListDataSheet: React.FC = () => {
           }}
           disablePortal
         >
-          {isAdmin && (
+          {canViewDetail && (
             <MuiMenuItem
               component={Link}
               to={`${row.original.id}`}
@@ -924,7 +926,7 @@ const ListDataSheet: React.FC = () => {
             </MuiMenuItem>
           )}
 
-          {isAdmin && (
+          {canViewMaintenance && (
             <MuiMenuItem
               component={Link}
               to={`${row.original.id}/inspection-maintenance`}
@@ -948,7 +950,7 @@ const ListDataSheet: React.FC = () => {
             In/Out
           </MuiMenuItem>
 
-          {row.original.invoiceUrl && isAdmin && (
+          {row.original.invoiceUrl && canViewDetail && (
             <MuiMenuItem
               onClick={() => {
                 handleMenuClose()
@@ -964,7 +966,7 @@ const ListDataSheet: React.FC = () => {
 
           <Divider />
 
-          {isAdmin && (
+          {canUpdateDataSheet && (
             <MuiMenuItem
               onClick={() => {
                 handleMenuClose()
@@ -1136,7 +1138,7 @@ const ListDataSheet: React.FC = () => {
             </MuiMenuItem>
           )}
 
-          {isAdmin && (
+          {canDeleteDataSheet && (
             <MuiMenuItem
               onClick={() => {
                 handleDeleteRow(row)
@@ -1211,7 +1213,7 @@ const ListDataSheet: React.FC = () => {
           <RowActions row={row} table={table} />
         )}
         renderTopToolbarCustomActions={() => {
-          if (!$userStore.rol.includes(ROLES.ADMIN)) {
+          if (!canCreateDataSheet) {
             return
           }
           return (

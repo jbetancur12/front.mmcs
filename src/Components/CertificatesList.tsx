@@ -1,8 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { AxiosError, AxiosResponse, isAxiosError } from 'axios'
-import { useStore } from '@nanostores/react'
-import { userStore } from '../store/userStore'
 import {
   Button,
   Dialog,
@@ -34,7 +32,8 @@ import {
 } from '@mui/icons-material'
 import PDFViewer from './PDFViewer'
 
-import { ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 interface Certificate {
   id: number
   calibrationDate: string
@@ -56,7 +55,7 @@ function CertificatesList({ refreshTrigger }: CertificatesListProps) {
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
 
-  const $userStore = useStore(userStore)
+  const canDeleteCertificate = useCan(PERMISSIONS.CALIBRATION_CERTIFICATE_HISTORY_DELETE)
 
   // const years = certificates.map((certificate) => {
   //   const getYear = new Date(certificate.calibrationDate).getFullYear()
@@ -343,7 +342,7 @@ function CertificatesList({ refreshTrigger }: CertificatesListProps) {
                         </Button>
                       </Tooltip>
 
-                      {hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) && (
+                      {canDeleteCertificate && (
                         <Tooltip title='Eliminar certificado'>
                           <Button
                             variant='outlined'

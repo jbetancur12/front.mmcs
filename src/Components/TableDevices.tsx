@@ -29,6 +29,8 @@ import { loadOptions, mapOptions } from '../utils/loadOptions'
 import { bigToast, styles } from './ExcelManipulation/Utils'
 import { TemplatesData } from './Templates'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 
 // Define interfaces
 export interface DeviceData {
@@ -49,6 +51,7 @@ export interface DeviceData {
 
 // Main component
 const Table: React.FC = () => {
+  const canManageDevices = useCan(PERMISSIONS.CALIBRATION_DEVICE_MANAGE)
   const axiosPrivate = useAxiosPrivate()
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<DeviceData[]>([])
@@ -292,7 +295,8 @@ const Table: React.FC = () => {
         data={tableData}
         editingMode='modal' //default
         enableColumnOrdering
-        enableEditing
+        enableEditing={canManageDevices}
+        enableRowActions={canManageDevices}
         onEditingRowSave={handleSaveRowEdits}
         onEditingRowCancel={handleCancelRowEdits}
         initialState={{
@@ -320,7 +324,8 @@ const Table: React.FC = () => {
           </Box>
         )}
         // <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear Equipo</button>
-        renderTopToolbarCustomActions={() => (
+        renderTopToolbarCustomActions={() =>
+          canManageDevices ? (
           <Button
             variant='contained'
             onClick={() => setCreateModalOpen(true)}
@@ -331,7 +336,8 @@ const Table: React.FC = () => {
           >
             Crear Nuevo Equipo
           </Button>
-        )}
+          ) : null
+        }
       />
       <CreateNewDeviceModal
         columns={columns}

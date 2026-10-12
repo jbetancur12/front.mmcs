@@ -16,12 +16,11 @@ import {
   Add,
   FilterAltOff
 } from '@mui/icons-material'
-import { userStore } from '@stores/userStore'
-import { useStore } from '@nanostores/react'
 import { useFileActions } from '../hooks/useFileActions'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { handleDownload } from '../utils/fileHandlers'
-import { ROLES, ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 // import PDFViewer from 'src/Components/PDFViewer'
 
 // Key for sessionStorage
@@ -50,7 +49,8 @@ export const TableView = ({
   axiosPrivate,
   openModal
 }: TableViewProps) => {
-  const $userStore = useStore(userStore)
+  const canDeleteFile = useCan(PERMISSIONS.CALIBRATION_FILE_DELETE)
+  const canCreateFile = useCan(PERMISSIONS.CALIBRATION_FILE_CREATE)
   const { handleDeleteRow } = useFileActions(axiosPrivate, fetchFiles)
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string
@@ -316,7 +316,7 @@ export const TableView = ({
           <Box
             sx={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}
           >
-            {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
+            {canDeleteFile && (
               <Tooltip arrow placement='top' title='Eliminar'>
                 <IconButton
                   onClick={() => handleDeleteRow(Number(row.original.id))}
@@ -391,7 +391,7 @@ export const TableView = ({
               />
             )}
 
-            {hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) && (
+            {canCreateFile && (
                 <Button
                   onClick={() => openModal(true)}
                   variant='contained'

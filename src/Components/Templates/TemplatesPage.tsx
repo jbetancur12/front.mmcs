@@ -15,8 +15,11 @@ import { AnimationProvider } from './AnimationProvider'
 import { AnimatedBox } from './AnimatedComponents'
 import { useAccessibility } from './hooks/useAccessibility'
 import { CreateButton, PageHeader, ContentContainer } from './styles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 
 const TemplatesPage: React.FC = () => {
+  const canManageTemplates = useCan(PERMISSIONS.CALIBRATION_TEMPLATE_MANAGE)
   const axiosPrivate = useAxiosPrivate()
   const { announce } = useAccessibility({ announceChanges: true })
 
@@ -195,15 +198,23 @@ const TemplatesPage: React.FC = () => {
               Administra las plantillas para el procesamiento de datos Excel
             </Typography>
           </Box>
+{canManageTemplates && (
           <CreateButton
             startIcon={<AddIcon />}
             onClick={() => setCreateModalOpen(true)}
           >
             Crear Nueva Plantilla
           </CreateButton>
+)}
         </PageHeader>
 
-        <EmptyState onCreateTemplate={() => setCreateModalOpen(true)} />
+        {canManageTemplates ? (
+          <EmptyState onCreateTemplate={() => setCreateModalOpen(true)} />
+        ) : (
+          <Typography color='text.secondary'>
+            No hay plantillas para mostrar.
+          </Typography>
+        )}
 
         <CreateTemplateModal
           open={createModalOpen}
@@ -234,6 +245,7 @@ const TemplatesPage: React.FC = () => {
               </Typography>
             </AnimatedBox>
             <AnimatedBox animation='slideDown' delay={200}>
+{canManageTemplates && (
               <CreateButton
                 id='create-template'
                 startIcon={<AddIcon />}
@@ -245,6 +257,7 @@ const TemplatesPage: React.FC = () => {
               >
                 Crear Nueva Plantilla
               </CreateButton>
+)}
             </AnimatedBox>
             <Typography
               id='create-template-help'

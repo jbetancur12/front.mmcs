@@ -34,12 +34,11 @@ import {
 } from '@mui/icons-material'
 import toast, { Toaster } from 'react-hot-toast'
 import PDFViewer from '../Components/PDFViewer.js'
-import { userStore } from '../store/userStore.js'
-import { useStore } from '@nanostores/react'
 import useAxiosPrivate from '@utils/use-axios-private.js'
 import Swal from 'sweetalert2'
 
-import { ROLES, hasAnyRole } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 interface TraceabilityDocument {
   id: number
   name: string
@@ -59,7 +58,7 @@ const initialState: CreateDocumentForm = {
 
 const Traceability = () => {
   const axiosPrivate = useAxiosPrivate()
-  const $userStore = useStore(userStore)
+  const canManageTraceability = useCan(PERMISSIONS.CALIBRATION_TRACEABILITY_MANAGE)
   const [traceabilities, setTraceabilities] = useState<TraceabilityDocument[]>([])
   const [loading, setLoading] = useState(true)
   const [openModal, setOpenModal] = useState(false)
@@ -506,7 +505,7 @@ const Traceability = () => {
           Limpiar búsqueda
         </Button>
       )}
-      {!debouncedSearchTerm && hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
+      {!debouncedSearchTerm && canManageTraceability && (
         <Button
           variant="contained"
           startIcon={<CloudUpload />}
@@ -570,7 +569,7 @@ const Traceability = () => {
                   ""
             }
           />
-          {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
+          {canManageTraceability && (
             <Button
               variant="contained"
               startIcon={<CloudUpload />}
@@ -675,7 +674,7 @@ const Traceability = () => {
                       </Button>
 
                       <Box sx={{ display: 'flex', gap: 1 }}>
-                        {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
+                        {canManageTraceability && (
                           <>
                             <IconButton
                               size="small"

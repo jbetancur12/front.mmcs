@@ -68,7 +68,6 @@ import { CreateFileModal } from './TableFiles/CreateFileModal/CreateFileModal'
 import { bigToast } from './ExcelManipulation/Utils'
 import { MySwal } from '@utils/sweetAlert'
 
-import { ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 // API URL
@@ -464,6 +463,7 @@ const ModernCustomerProfile: React.FC = () => {
   const canUpdateCustomer = useCan(PERMISSIONS.CUSTOMERS_CUSTOMER_UPDATE)
   const canChangeAvatar = useCan(PERMISSIONS.CUSTOMERS_CUSTOMER_AVATAR)
   const canViewModules = useCan(PERMISSIONS.CUSTOMERS_MODULE_VIEW)
+  const canCreateFile = useCan(PERMISSIONS.CALIBRATION_FILE_CREATE)
 
   // State
   const [activeTab, setActiveTab] = useState<TabValue>(() => {
@@ -905,7 +905,6 @@ const ModernCustomerProfile: React.FC = () => {
   }, [id, canManageCustomer, $userStore.customer, navigate])
 
   // Solo para subir archivos (módulo de archivos, aún por rol)
-  const isAdmin = hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF)
 
 
 
@@ -1653,7 +1652,7 @@ const ModernCustomerProfile: React.FC = () => {
                     </Grid>
 
                     <Grid item xs={12} md={3}>
-                      {isAdmin && (
+                      {canCreateFile && (
                         <Button
                           fullWidth
                           variant='contained'

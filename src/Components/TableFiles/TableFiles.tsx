@@ -2,17 +2,16 @@ import { useState } from 'react'
 import { useFileData } from './hooks/useFileData'
 import { TableView } from './TableView/TableView'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { useStore } from '@nanostores/react'
-import { userStore } from '@stores/userStore'
 import { CreateFileModal } from './CreateFileModal/CreateFileModal'
 import Loader from '../Loader2'
 
-import { ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 const TableFiles = () => {
   const axiosPrivate = useAxiosPrivate()
   const { tableData, loading, rowCount, fetchFiles } = useFileData()
   const [createModalOpen, setCreateModalOpen] = useState(false)
-  const $user = useStore(userStore)
+  const canCreateFile = useCan(PERMISSIONS.CALIBRATION_FILE_CREATE)
 
   return (
     <>
@@ -25,7 +24,7 @@ const TableFiles = () => {
         axiosPrivate={axiosPrivate}
         openModal={() => setCreateModalOpen(true)}
       />
-      {hasAnyRole($user.rol, ROLE_GROUPS.METROLOGY_STAFF) && (
+      {canCreateFile && (
         <CreateFileModal
           open={createModalOpen}
           onClose={() => setCreateModalOpen(false)}

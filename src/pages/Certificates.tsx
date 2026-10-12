@@ -41,7 +41,8 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { createRoot } from 'react-dom/client'
 import { addYears, format } from 'date-fns'
 
-import { ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 const fieldLabels: { [key: string]: string } = {
   compania: 'Compañía',
   equipo: 'Equipo',
@@ -80,6 +81,8 @@ function Certificates() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const $userStore = useStore(userStore)
+  const canBulkReassign = useCan(PERMISSIONS.CALIBRATION_FILE_BULK_REASSIGN)
+  const canEditFile = useCan(PERMISSIONS.CALIBRATION_FILE_UPDATE)
   const MySwal = withReactContent(Swal)
 
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -594,7 +597,7 @@ function Certificates() {
           </Box>
         </Box>
 
-        {hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) && (
+        {canBulkReassign && (
           <Box display="flex" gap={1}>
             <Button
               variant="outlined"
@@ -803,7 +806,7 @@ function Certificates() {
                       Última Calibración
                     </Typography>
                   </Box>
-                  {hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) && (
+                  {canEditFile && (
                     <Tooltip title="Editar fecha">
                       <IconButton 
                         size="small" 
@@ -902,10 +905,10 @@ const CompactDetailRow: React.FC<CompactDetailRowProps> = ({
   editable = false,
   field,
   onEdit,
-  userRoles = []
 }) => {
+  const canEditFileField = useCan(PERMISSIONS.CALIBRATION_FILE_UPDATE)
   const canEdit = editable && 
-    hasAnyRole(userRoles, ROLE_GROUPS.METROLOGY_STAFF) && 
+    canEditFileField && 
     onEdit && 
     field
 

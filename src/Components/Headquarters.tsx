@@ -27,10 +27,9 @@ import {
 } from '@mui/icons-material'
 
 import SelectedHq from './SelectedHq'
-import { useStore } from '@nanostores/react'
-import { userStore } from '../store/userStore'
 
-import { ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 interface HeadquartersProps {
   setSelectedSede: (sede: string | null) => void
   selectedSede: string | null
@@ -53,7 +52,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
   const [selectedSedeString, setSelectedSedeString] = React.useState<
     string | null
   >(null)
-  const $userStore = useStore(userStore)
+  const canManageSites = useCan(PERMISSIONS.CUSTOMERS_SITE_MANAGE)
   const [isAdding, setIsAdding] = React.useState(false)
   const [newSede, setNewSede] = React.useState('')
 
@@ -123,7 +122,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
               </Box>
             </Box>
 
-            {hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) && (
+            {canManageSites && (
               <Button
                 variant="contained"
                 startIcon={<Add />}
@@ -333,7 +332,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
                                 </Typography>
                               </Box>
 
-                              {hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) && (
+                              {canManageSites && (
                                 <Box display="flex">
                                   <Tooltip title="Editar sede">
                                     <IconButton

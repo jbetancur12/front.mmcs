@@ -24,6 +24,8 @@ import toast, { Toaster } from 'react-hot-toast'
 
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import useAxiosPrivate from '@utils/use-axios-private'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 
 // Define interfaces
 export interface CertificateTypeData {
@@ -35,6 +37,7 @@ export interface CertificateTypeData {
 
 // Main component
 const Table: React.FC = () => {
+  const canManageCertificateTypes = useCan(PERMISSIONS.CALIBRATION_CERTIFICATE_TYPE_MANAGE)
   const axiosPrivate = useAxiosPrivate()
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<CertificateTypeData[]>([])
@@ -251,7 +254,8 @@ const Table: React.FC = () => {
         data={tableData}
         editingMode='modal' //default
         enableColumnOrdering
-        enableEditing
+        enableEditing={canManageCertificateTypes}
+        enableRowActions={canManageCertificateTypes}
         onEditingRowSave={handleSaveRowEdits}
         onEditingRowCancel={handleCancelRowEdits}
         renderRowActions={({ row, table }) => (
@@ -269,7 +273,8 @@ const Table: React.FC = () => {
           </Box>
         )}
         // <button onClick={() => setIsModalOpen(true)} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Crear Equipo</button>
-        renderTopToolbarCustomActions={() => (
+        renderTopToolbarCustomActions={() =>
+          canManageCertificateTypes ? (
           <Button
             variant='contained'
             onClick={() => setCreateModalOpen(true)}
@@ -280,7 +285,8 @@ const Table: React.FC = () => {
           >
             Crear Nuevo Tipo de Certificado
           </Button>
-        )}
+          ) : null
+        }
       />
       <CreateNewAccountModal
         columns={columns}

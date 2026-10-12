@@ -256,6 +256,70 @@ export const PERMISSIONS = {
   CALIBRATION_CONFIG_WHATSAPP_MANAGE: 'calibration:config:whatsapp_manage',
   /** Ver las analíticas de servicios de calibración */
   CALIBRATION_ANALYTICS_VIEW: 'calibration:analytics:view',
+  /** Crear certificados y archivos de equipos de una empresa (incluida la carga directa del PDF) */
+  CALIBRATION_FILE_CREATE: 'calibration:file:create',
+  /** Editar certificados y archivos de equipos, y cambiar su sede */
+  CALIBRATION_FILE_UPDATE: 'calibration:file:update',
+  /** Eliminar certificados y archivos de equipos */
+  CALIBRATION_FILE_DELETE: 'calibration:file:delete',
+  /** Reasignar equipos en lote (vista previa y aplicación) */
+  CALIBRATION_FILE_BULK_REASSIGN: 'calibration:file:bulk_reassign',
+  /** Ver los certificados próximos a vencer agrupados (el usuario de una empresa solo los suyos: regla del controlador) */
+  CALIBRATION_FILE_EXPIRING_GROUPED: 'calibration:file:expiring_grouped',
+  /** Ver el listado de hojas de datos de equipos, sus alertas y su estado */
+  CALIBRATION_DATASHEET_VIEW: 'calibration:datasheet:view',
+  /** Ver el detalle de una hoja de datos, su reporte de entradas y salidas y su factura */
+  CALIBRATION_DATASHEET_DETAIL: 'calibration:datasheet:detail',
+  /** Crear hojas de datos de equipos */
+  CALIBRATION_DATASHEET_CREATE: 'calibration:datasheet:create',
+  /** Editar hojas de datos de equipos, su estado, imagen y factura */
+  CALIBRATION_DATASHEET_UPDATE: 'calibration:datasheet:update',
+  /** Eliminar hojas de datos de equipos */
+  CALIBRATION_DATASHEET_DELETE: 'calibration:datasheet:delete',
+  /** Ver el listado de equipos */
+  CALIBRATION_DEVICE_VIEW: 'calibration:device:view',
+  /** Ver el detalle, crear, editar y eliminar equipos */
+  CALIBRATION_DEVICE_MANAGE: 'calibration:device:manage',
+  /** Ver los registros de calibración */
+  CALIBRATION_RECORD_VIEW: 'calibration:record:view',
+  /** Crear, editar y eliminar registros de calibración */
+  CALIBRATION_RECORD_MANAGE: 'calibration:record:manage',
+  /** Ver el historial de calibraciones */
+  CALIBRATION_HISTORY_VIEW: 'calibration:history:view',
+  /** Crear y editar el historial de calibraciones */
+  CALIBRATION_HISTORY_MANAGE: 'calibration:history:manage',
+  /** Ver el listado de tipos de certificado */
+  CALIBRATION_CERTIFICATE_TYPE_VIEW: 'calibration:certificate_type:view',
+  /** Ver el detalle, crear, editar y eliminar tipos de certificado */
+  CALIBRATION_CERTIFICATE_TYPE_MANAGE: 'calibration:certificate_type:manage',
+  /** Eliminar un registro del historial de certificados */
+  CALIBRATION_CERTIFICATE_HISTORY_DELETE: 'calibration:certificate_history:delete',
+  /** Ver el listado de plantillas */
+  CALIBRATION_TEMPLATE_VIEW: 'calibration:template:view',
+  /** Ver el detalle, crear, editar y eliminar plantillas */
+  CALIBRATION_TEMPLATE_MANAGE: 'calibration:template:manage',
+  /** Ver documentos */
+  CALIBRATION_DOCUMENT_VIEW: 'calibration:document:view',
+  /** Crear, editar y eliminar documentos */
+  CALIBRATION_DOCUMENT_MANAGE: 'calibration:document:manage',
+  /** Crear, editar y eliminar trazabilidades */
+  CALIBRATION_TRACEABILITY_MANAGE: 'calibration:traceability:manage',
+  /** Ver el detalle de una entrada o salida de equipo */
+  CALIBRATION_EQUIPMENT_INOUT_VIEW: 'calibration:equipment_inout:view',
+  /** Listar las entradas y salidas de equipos */
+  CALIBRATION_EQUIPMENT_INOUT_LIST: 'calibration:equipment_inout:list',
+  /** Registrar, editar y eliminar entradas y salidas de equipos */
+  CALIBRATION_EQUIPMENT_INOUT_MANAGE: 'calibration:equipment_inout:manage',
+  /** Ver las inspecciones y mantenimientos de equipos */
+  CALIBRATION_INSPECTION_MAINTENANCE_VIEW: 'calibration:inspection_maintenance:view',
+  /** Crear, editar y eliminar inspecciones y mantenimientos de equipos */
+  CALIBRATION_INSPECTION_MAINTENANCE_MANAGE: 'calibration:inspection_maintenance:manage',
+  /** Ver el catálogo de productos y servicios */
+  CALIBRATION_PRODUCT_VIEW: 'calibration:product:view',
+  /** Crear, editar, eliminar, importar y actualizar precios de productos y servicios */
+  CALIBRATION_PRODUCT_MANAGE: 'calibration:product:manage',
+  /** Descargar los informes de inventario, calibración, mantenimiento, préstamos y entradas y salidas de equipos */
+  CALIBRATION_REPORT_VIEW: 'calibration:report:view',
   /** Ver roles, capacidades y la auditoría de cambios */
   RBAC_VIEW: 'rbac:view',
   /** Crear roles y activar o desactivar capacidades */
