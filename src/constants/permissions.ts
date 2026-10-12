@@ -194,8 +194,6 @@ export const PERMISSIONS = {
   USERS_USER_ACTIVATION: 'users:user:activation',
   /** Listar los roles (para asignarlos a personas y a cursos) */
   USERS_ROLE_LIST: 'users:role:list',
-  /** Cambiar el rol de un usuario (endpoint sin uso en la interfaz) */
-  USERS_ROLE_ASSIGN: 'users:role:assign',
   /** Suplantar a otro usuario y ver la lista de candidatos */
   USERS_IMPERSONATION_USE: 'users:impersonation:use',
   /** Crear, editar y eliminar perfiles de biomédicos, su imagen y su hoja de vida */
