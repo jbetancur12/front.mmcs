@@ -1,15 +1,19 @@
 import React, { useMemo, useState } from 'react'
 import {
+  Autocomplete,
   Box,
+  Button,
   Checkbox,
   Chip,
   IconButton,
   InputAdornment,
+  FormControlLabel,
   ListItemIcon,
   ListItemText,
   Menu,
   MenuItem,
   Paper,
+  Switch,
   Table,
   TableBody,
   TableCell,
@@ -121,6 +125,9 @@ export const moduleLabel = (module: string) =>
 export const roleDisplayName = (role: Pick<RbacRole, 'name' | 'description'>) =>
   ROLE_LABELS_ES[role.name] ?? (role.description || role.name)
 
+const shownRolesSelected = (roles: RbacRole[], ids: number[]) =>
+  roles.filter((r) => ids.includes(r.id))
+
 const TEAL = '#00BFA5'
 const FIRST_COL_WIDTH = 340
 
@@ -163,6 +170,9 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
     null
   )
   const [moduleFilter, setModuleFilter] = useState<string | null>(null)
+  // Roles a comparar: vacío = todos. "Solo diferencias" oculta lo que todos los roles mostrados tienen igual.
+  const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([])
+  const [onlyDifferences, setOnlyDifferences] = useState(false)
 
   const serverGrants = useMemo(
     () =>
@@ -179,10 +189,22 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
     [matrix.permissions]
   )
 
+  const shownRoles = useMemo(
+    () =>
+      selectedRoleIds.length === 0
+        ? matrix.roles
+        : matrix.roles.filter((r) => selectedRoleIds.includes(r.id)),
+    [matrix.roles, selectedRoleIds]
+  )
+
   const visibleGroups = useMemo(() => {
     const term = search.trim().toLowerCase()
     const filtered = matrix.permissions.filter((p) => {
       if (moduleFilter && p.module !== moduleFilter) return false
+      if (onlyDifferences && shownRoles.length >= 2) {
+        const granted = shownRoles.map((r) => grants.has(cellKey(r.id, p.key)))
+        if (granted.every((g) => g === granted[0])) return false
+      }
       if (!term) return true
       return (
         p.key.toLowerCase().includes(term) ||
@@ -200,7 +222,7 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
         items: filtered.filter((p) => p.module === module)
       }))
       .filter((group) => group.items.length > 0)
-  }, [matrix.permissions, modules, moduleFilter, search])
+  }, [matrix.permissions, modules, moduleFilter, search, onlyDifferences, shownRoles, grants])
 
   const renderRoleHeader = (role: RbacRole) => (
     <TableCell
@@ -256,6 +278,53 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
           borderBottom: '1px solid #eee'
         }}
       >
+        <Autocomplete
+          multiple
+          size='small'
+          options={matrix.roles}
+          value={shownRolesSelected(matrix.roles, selectedRoleIds)}
+          getOptionLabel={(r) => roleDisplayName(r)}
+          isOptionEqualToValue={(a, b) => a.id === b.id}
+          onChange={(_, value) => setSelectedRoleIds(value.map((r) => r.id))}
+          noOptionsText='Ningún rol coincide'
+          sx={{ minWidth: 300, maxWidth: 520, flex: 1 }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label='Roles a comparar'
+              placeholder={selectedRoleIds.length === 0 ? 'Todos los roles' : ''}
+            />
+          )}
+        />
+        {selectedRoleIds.length > 0 && (
+          <Button
+            size='small'
+            onClick={() => setSelectedRoleIds([])}
+            sx={{ textTransform: 'none' }}
+          >
+            Ver todos
+          </Button>
+        )}
+        <Tooltip
+          title={
+            shownRoles.length < 2
+              ? 'Elige al menos dos roles para ver sus diferencias'
+              : 'Oculta las capacidades que todos los roles mostrados tienen igual'
+          }
+        >
+          <span>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={onlyDifferences}
+                  disabled={shownRoles.length < 2}
+                  onChange={(e) => setOnlyDifferences(e.target.checked)}
+                />
+              }
+              label='Solo diferencias'
+            />
+          </span>
+        </Tooltip>
         <TextField
           size='small'
           placeholder='Buscar capacidad…'
@@ -316,13 +385,13 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
               >
                 Capacidad
               </TableCell>
-              {matrix.roles.map(renderRoleHeader)}
+              {shownRoles.map(renderRoleHeader)}
             </TableRow>
           </TableHead>
           <TableBody>
             {visibleGroups.length === 0 && (
               <TableRow>
-                <TableCell colSpan={matrix.roles.length + 1}>
+                <TableCell colSpan={shownRoles.length + 1}>
                   <Typography color='text.secondary' sx={{ py: 3 }} align='center'>
                     Ninguna capacidad coincide con la búsqueda.
                   </Typography>
@@ -333,7 +402,7 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
               <React.Fragment key={group.module}>
                 <TableRow>
                   <TableCell
-                    colSpan={matrix.roles.length + 1}
+                    colSpan={shownRoles.length + 1}
                     sx={{
                       bgcolor: '#E0F7F4',
                       color: '#00695C',
@@ -383,7 +452,7 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                       </Typography>
                       <ScreenInfo permissionKey={permission.key} />
                     </TableCell>
-                    {matrix.roles.map((role) => {
+                    {shownRoles.map((role) => {
                       const key = cellKey(role.id, permission.key)
                       const checked = grants.has(key)
                       const reason = lockedReason?.(role.id, permission.key) ?? null
