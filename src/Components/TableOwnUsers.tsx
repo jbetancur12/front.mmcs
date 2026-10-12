@@ -52,6 +52,8 @@ import { fetchActivationLink, resendActivationEmail } from '../utils/userActivat
 import { useUsers, useUserMutations, QUERY_KEYS } from '../hooks/useUsers'
 import { getRoleLabelEs, ROLES } from 'src/constants/roles'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 
 // Define interfaces
 interface Role {
@@ -657,6 +659,9 @@ const UserRowActions: React.FC<{
   onActivationLink: (resend: boolean) => void
   onDelete: () => void
 }> = ({ user, name, busy, onEdit, onActivationLink, onDelete }) => {
+  const canUpdate = useCan(PERMISSIONS.USERS_USER_UPDATE_INTERNAL)
+  const canActivate = useCan(PERMISSIONS.USERS_USER_ACTIVATION)
+  const canDelete = useCan(PERMISSIONS.USERS_USER_DELETE)
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const close = () => setAnchorEl(null)
   const run = (action: () => void) => () => {
@@ -679,13 +684,15 @@ const UserRowActions: React.FC<{
         </IconButton>
       </Tooltip>
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={close}>
+{canUpdate && (
         <MenuItem onClick={run(onEdit)}>
           <ListItemIcon>
             <Edit fontSize='small' sx={{ color: '#1976d2' }} />
           </ListItemIcon>
           Editar usuario
         </MenuItem>
-        {user.active !== true && (
+)}
+        {canActivate && user.active !== true && (
           <MenuItem onClick={run(() => onActivationLink(false))}>
             <ListItemIcon>
               <LinkIcon fontSize='small' />
@@ -693,7 +700,7 @@ const UserRowActions: React.FC<{
             Enlace de activación
           </MenuItem>
         )}
-        {user.active !== true && (
+        {canActivate && user.active !== true && (
           <MenuItem onClick={run(() => onActivationLink(true))}>
             <ListItemIcon>
               <ForwardToInbox fontSize='small' />
@@ -701,6 +708,8 @@ const UserRowActions: React.FC<{
             Reenviar correo de activación
           </MenuItem>
         )}
+{canDelete && (
+        <>
         <Divider />
         <MenuItem onClick={run(onDelete)} sx={{ color: 'error.main' }}>
           <ListItemIcon>
@@ -708,12 +717,15 @@ const UserRowActions: React.FC<{
           </ListItemIcon>
           Eliminar usuario
         </MenuItem>
+        </>
+)}
       </Menu>
     </>
   )
 }
 
 const TableOwnUsers: React.FC = () => {
+  const canCreateUser = useCan(PERMISSIONS.USERS_USER_CREATE)
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
 
@@ -1077,6 +1089,7 @@ const TableOwnUsers: React.FC = () => {
         subtitle='Administra las cuentas, los roles y la activación de acceso al sistema'
         icon={<ManageAccountsIcon />}
         actions={
+          canCreateUser ? (
           <Button
             variant='contained'
             startIcon={createUser.isLoading ? <CircularProgress size={16} color='inherit' /> : <Add />}
@@ -1087,6 +1100,7 @@ const TableOwnUsers: React.FC = () => {
           >
             {createUser.isLoading ? 'Creando...' : 'Crear Nuevo Usuario'}
           </Button>
+          ) : undefined
         }
       />
 
@@ -1097,7 +1111,13 @@ const TableOwnUsers: React.FC = () => {
         </Box>
       ) : users.length === 0 ? (
         /* Show empty state when no users exist */
-        <EmptyState onCreateUser={() => setCreateModalOpen(true)} />
+        canCreateUser ? (
+          <EmptyState onCreateUser={() => setCreateModalOpen(true)} />
+        ) : (
+          <Typography color='text.secondary' sx={{ p: 4, textAlign: 'center' }}>
+            No hay usuarios para mostrar.
+          </Typography>
+        )
       ) : (
         <>
           {/* Enhanced search component */}

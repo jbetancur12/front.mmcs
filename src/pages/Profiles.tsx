@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 
 import {
   Button,
@@ -29,14 +31,11 @@ import {
   Visibility
 } from '@mui/icons-material'
 import ModalProfile from '../Components/ModalProfile'
-import { userStore } from '../store/userStore'
-import { useStore } from '@nanostores/react'
 import useAxiosPrivate from '@utils/use-axios-private'
 import toast, { Toaster } from 'react-hot-toast'
 import Swal from 'sweetalert2'
 import { buildMinioObjectUrl } from '@utils/minio'
 
-import { ROLES, hasAnyRole } from 'src/constants/roles'
 export interface Profile {
   id: number
   name: string
@@ -48,9 +47,9 @@ export interface Profile {
 }
 
 const Profiles: React.FC = () => {
+  const canManageProfiles = useCan(PERMISSIONS.USERS_PROFILE_MANAGE)
   const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
-  const $userStore = useStore(userStore)
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [openModal, setOpenModal] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -243,7 +242,7 @@ const Profiles: React.FC = () => {
           Limpiar búsqueda
         </Button>
       )}
-      {!debouncedSearchTerm && hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
+      {!debouncedSearchTerm && canManageProfiles && (
         <Button
           variant="contained"
           startIcon={<Add />}
@@ -314,7 +313,7 @@ const Profiles: React.FC = () => {
               ""
             }
           />
-          {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
+          {canManageProfiles && (
             <Button
               variant="contained"
               startIcon={<Add />}
@@ -437,7 +436,7 @@ const Profiles: React.FC = () => {
                         Ver Perfil
                       </Button>
                       
-                      {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
+                      {canManageProfiles && (
                         <IconButton
                           size="small"
                           color="error"

@@ -34,6 +34,12 @@ export const RBAC_MODULE_LABELS: Record<string, string> = {
   maintenance: 'Mantenimiento',
   purchases: 'Compras',
   sales: 'Venta de equipos',
+  customers: 'Clientes y módulos',
+  laboratory: 'Laboratorio',
+  iot: 'IoT',
+  nonconform: 'Trabajo no conforme',
+  users: 'Usuarios y perfiles',
+  system: 'Sistema',
   rbac: 'Administración de permisos'
 }
 

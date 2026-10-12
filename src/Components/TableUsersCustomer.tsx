@@ -39,7 +39,8 @@ import { useParams } from 'react-router-dom'
 import { bigToast } from './ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
 import ResetPasswordModal from './ResetPasswordModal'
-import { useHasRole } from '@utils/functions'
+import { useCan } from '@utils/functions'
+import { PERMISSIONS } from 'src/constants/permissions'
 import Swal from 'sweetalert2'
 import { showActivationLinkDialog } from '../utils/sweetAlert'
 import { fetchActivationLink, resendActivationEmail } from '../utils/userActivation'
@@ -68,7 +69,10 @@ export interface UserData {
 const Table: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   // Eliminar usuarios es solo de admin (DELETE /users/:id); el metrólogo ve la pestaña pero no el botón
-  const canDeleteUsers = useHasRole([ROLES.ADMIN])
+  const canDeleteUsers = useCan(PERMISSIONS.USERS_USER_DELETE)
+  const canCreateUsers = useCan(PERMISSIONS.USERS_USER_CREATE)
+  const canUpdateUsers = useCan(PERMISSIONS.USERS_USER_UPDATE)
+  const canResetPassword = useCan(PERMISSIONS.USERS_USER_PASSWORD_RESET)
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<UserData[]>([])
   const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false)
@@ -406,6 +410,7 @@ const Table: React.FC = () => {
           </Box>
         </Box>
 
+{canCreateUsers && (
         <Button
           variant='contained'
           startIcon={<Add />}
@@ -423,6 +428,7 @@ const Table: React.FC = () => {
         >
           Crear Usuario
         </Button>
+)}
       </Box>
 
       {/* Users Grid */}
@@ -549,6 +555,7 @@ const Table: React.FC = () => {
                             size='small'
                             checked={user.active}
                             onChange={() => handleToggleActive(user)}
+                            disabled={!canUpdateUsers}
                             sx={{
                               '& .MuiSwitch-switchBase.Mui-checked': {
                                 color: '#10b981',
@@ -599,6 +606,7 @@ const Table: React.FC = () => {
                           </>
                         )}
 
+{canResetPassword && (
                         <Tooltip title='Restablecer contraseña'>
                           <IconButton
                             size='small'
@@ -617,6 +625,7 @@ const Table: React.FC = () => {
                             <VpnKey fontSize='small' />
                           </IconButton>
                         </Tooltip>
+)}
 
                         {canDeleteUsers && (
                           <Tooltip title='Eliminar usuario'>

@@ -176,6 +176,34 @@ export const PERMISSIONS = {
   NONCONFORM_REPORT_VIEW: 'nonconform:report:view',
   /** Crear, editar y eliminar informes de trabajo no conforme */
   NONCONFORM_REPORT_MANAGE: 'nonconform:report:manage',
+  /** Listar los usuarios y los usuarios internos */
+  USERS_USER_LIST: 'users:user:list',
+  /** Ver un usuario y sus archivos (el usuario de una empresa cliente solo el suyo: regla del controlador) */
+  USERS_USER_VIEW: 'users:user:view',
+  /** Crear usuarios (registro), con sus roles */
+  USERS_USER_CREATE: 'users:user:create',
+  /** Editar un usuario de una empresa (datos y estado activo) */
+  USERS_USER_UPDATE: 'users:user:update',
+  /** Editar usuarios internos, incluidos sus roles */
+  USERS_USER_UPDATE_INTERNAL: 'users:user:update_internal',
+  /** Eliminar usuarios */
+  USERS_USER_DELETE: 'users:user:delete',
+  /** Cambiar la contraseña de otro usuario */
+  USERS_USER_PASSWORD_RESET: 'users:user:password_reset',
+  /** Generar y reenviar el enlace de activación de un usuario */
+  USERS_USER_ACTIVATION: 'users:user:activation',
+  /** Listar los roles (para asignarlos a personas y a cursos) */
+  USERS_ROLE_LIST: 'users:role:list',
+  /** Cambiar el rol de un usuario (endpoint sin uso en la interfaz) */
+  USERS_ROLE_ASSIGN: 'users:role:assign',
+  /** Suplantar a otro usuario y ver la lista de candidatos */
+  USERS_IMPERSONATION_USE: 'users:impersonation:use',
+  /** Crear, editar y eliminar perfiles de biomédicos, su imagen y su hoja de vida */
+  USERS_PROFILE_MANAGE: 'users:profile:manage',
+  /** Ver la configuración general del sistema */
+  SYSTEM_SETTINGS_VIEW: 'system:settings:view',
+  /** Crear, editar y eliminar la configuración general del sistema */
+  SYSTEM_SETTINGS_MANAGE: 'system:settings:manage',
   /** Ver roles, capacidades y la auditoría de cambios */
   RBAC_VIEW: 'rbac:view',
   /** Crear roles y activar o desactivar capacidades */

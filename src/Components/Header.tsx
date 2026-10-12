@@ -29,6 +29,8 @@ import ImpersonationBar from './ImpersonationBar'
 import ImpersonationDialog from './ImpersonationDialog'
 
 import { ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 interface HeaderProps {
   toggleMobileMenu: () => void
 }
@@ -56,6 +58,7 @@ function Header({ toggleMobileMenu }: HeaderProps) {
   } = useImpersonation()
   
   const isMenuOpen = Boolean(anchorEl)
+  const canImpersonate = useCan(PERMISSIONS.USERS_IMPERSONATION_USE)
 
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
@@ -211,8 +214,8 @@ function Header({ toggleMobileMenu }: HeaderProps) {
             </Tooltip>
           )}
 
-          {/* Botón de suplantación - Solo admin */}
-          {hasAnyRole($userStore.rol, ROLE_GROUPS.ADMINS) && !$userStore.lmsOnly && (
+          {/* Botón de suplantación: según la capacidad */}
+          {canImpersonate && !$userStore.lmsOnly && (
             <Tooltip title="Suplantar usuario">
               <IconButton
                 color='inherit'

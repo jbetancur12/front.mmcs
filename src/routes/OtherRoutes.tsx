@@ -2,6 +2,7 @@ import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
 import { ROLE_GROUPS } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
 
 const Dashboard = lazy(() => import('../pages/Dashboard'))
 const Settings = lazy(() => import('../pages/Settings'))
@@ -29,13 +30,26 @@ const OtherRoutes = (role: string[]) => {
         }
       >
         <Route index element={<Dashboard />} />
-        <Route path='settings' element={<Settings />} />
 
         <Route path='users' element={<Clientes />} />
         <Route path='/repository' element={<Repository />} />
         <Route path='/excel-manipulation' element={<ExcelManipulation />} />
         <Route path='/pdf-script' element={<ScriptGenerator />} />
         <Route path='/gotemberg' element={<Gotemberg />} />
+      </Route>
+
+      {/* Ajustes (usuarios y roles): quien puede listar los usuarios; si no, a /welcome */}
+      <Route
+        element={
+          <ProtectedRoute
+            isAuthenticated={localStorage.getItem('accessToken') !== null}
+            userRole={role}
+            permission={PERMISSIONS.USERS_USER_LIST}
+            fallbackRoute={true}
+          />
+        }
+      >
+        <Route path='settings' element={<Settings />} />
       </Route>
 
       {/* Ruta de bienvenida para usuarios que no son admin */}

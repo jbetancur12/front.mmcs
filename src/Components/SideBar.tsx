@@ -446,6 +446,7 @@ const sidebarItems = ($userStore: UserData) => [
     type: 'link',
     label: 'Ajustes',
     to: '/settings',
+    permission: PERMISSIONS.USERS_USER_LIST,
     icon: <MdOutlineSettings className={iconClass} />,
     roles: [ROLES.ADMIN],
     moduleName: 'Basic'

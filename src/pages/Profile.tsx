@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import { PERMISSIONS } from 'src/constants/permissions'
+import { useCan } from '@utils/functions'
 
 import { useParams, useNavigate } from 'react-router-dom'
 
@@ -26,11 +28,8 @@ import {
 import PDFViewer from '../Components/PDFViewer'
 import IMGViewer from '../Components/IMGViewer'
 import Swal from 'sweetalert2'
-import { userStore } from '../store/userStore'
-import { useStore } from '@nanostores/react'
 import useAxiosPrivate from '@utils/use-axios-private'
 
-import { ROLES, hasAnyRole } from 'src/constants/roles'
 interface Profile {
   id: number
   name: string
@@ -43,8 +42,8 @@ interface Profile {
 }
 
 const Profile: React.FC = () => {
+  const canManageProfiles = useCan(PERMISSIONS.USERS_PROFILE_MANAGE)
   const axiosPrivate = useAxiosPrivate()
-  const $userStore = useStore(userStore)
   const navigate = useNavigate()
   const { id: idProfile } = useParams()
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -163,7 +162,7 @@ const Profile: React.FC = () => {
   }
 
   const handleClick = () => {
-    if (hasAnyRole($userStore.rol, [ROLES.ADMIN])) {
+    if (canManageProfiles) {
       document.getElementById('avatarInput')?.click()
     }
   }
@@ -384,7 +383,7 @@ const Profile: React.FC = () => {
           
           {/* Botones de Acción */}
           <Box>
-            {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && !isEditing && (
+            {canManageProfiles && !isEditing && (
               <IconButton
                 sx={{ 
                   color: 'white',
@@ -425,7 +424,7 @@ const Profile: React.FC = () => {
             {/* Imagen del Perfil */}
             <Box 
               sx={{ 
-                cursor: hasAnyRole($userStore.rol, [ROLES.ADMIN]) ? 'pointer' : 'default',
+                cursor: canManageProfiles ? 'pointer' : 'default',
                 textAlign: 'center'
               }}
               onClick={handleClick}
@@ -438,7 +437,7 @@ const Profile: React.FC = () => {
                 style={{ display: 'none' }}
                 onChange={handleImageChange}
               />
-              {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
+              {canManageProfiles && (
                 <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
                   Haz clic para cambiar imagen
                 </Typography>
@@ -487,7 +486,7 @@ const Profile: React.FC = () => {
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
                 Currículum Vitae
               </Typography>
-              {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && !isEditing && (
+              {canManageProfiles && !isEditing && (
                 <Button
                   variant='contained'
                   onClick={() => document.getElementById('cvInput')?.click()}
