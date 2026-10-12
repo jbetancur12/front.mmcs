@@ -1,115 +1,65 @@
 #!/bin/bash
+# Despliegue del front: build local -> subida comprimida -> publicación con swap atómico.
+# Rollback: ssh al servidor y ver "ROLLBACK" al final de este archivo.
+set -euo pipefail
 
-# Nombre del archivo de registro de errores
-error_log="error.log"
+SERVER="metromedics@209.97.156.169"
+REMOTE_BASE="/home/metromedics/mmcs/frontend"
+WEB_ROOT="/var/www/app.metromedics.co/html"
+KEEP_BUILDS=5
+KEEP_ASSET_DAYS=14
 
-# Limpiar errores viejos para no confundir este despliegue con uno anterior
-: > "$error_log"
+TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
 
-# Función para mostrar los errores
-show_errors() {
-  if [ -s "$error_log" ]; then
-    echo "Se produjeron errores. Consulta el archivo $error_log para más detalles."
-  else
-    echo "El script se ejecutó sin errores."
-  fi
-}
-
+# Evita desplegar un dist viejo si el build falla
+rm -rf dist
 echo "Ejecutando 'build'..."
 npm run build
 echo
 
-# Verificar que la carpeta 'dist' existe
-if [ ! -d "dist" ]; then
-  echo "La carpeta 'dist' no existe. Asegúrate de que el build se haya generado correctamente."
+if [ ! -f "dist/index.html" ]; then
+  echo "dist/index.html no existe. El build no se generó correctamente."
   exit 1
 fi
 
+echo "Subiendo 'dist' comprimido al servidor (build$TIMESTAMP)..."
+tar czf - dist | ssh "$SERVER" "set -e; mkdir -p $REMOTE_BASE/build$TIMESTAMP && tar xzf - -C $REMOTE_BASE/build$TIMESTAMP --strip-components=1"
 
+echo "Publicando en el servidor..."
+ssh "$SERVER" bash -s -- "$TIMESTAMP" "$REMOTE_BASE" "$WEB_ROOT" "$KEEP_BUILDS" "$KEEP_ASSET_DAYS" << 'EOF'
+set -euo pipefail
+TS="$1"; BASE="$2"; ROOT="$3"; KEEP_BUILDS="$4"; KEEP_DAYS="$5"
+NEW="$ROOT.new"
+PREV="$ROOT.prev"
 
-# Copiar la carpeta al servidor remoto
-echo "Limpiando carpeta 'dist' remota previa..."
-ssh metromedics@209.97.156.169 'rm -rf /home/metromedics/mmcs/frontend/dist' 2>>"$error_log"
-if [ $? -ne 0 ]; then
-  echo "Error al limpiar la carpeta 'dist' remota."
-  show_errors
-  exit 1
+# 1. Preparar el sitio nuevo al lado (mismo filesystem)
+rm -rf "$NEW"
+cp -a "$BASE/build$TS" "$NEW"
+
+# 2. Conservar assets de builds anteriores (hash distinto) para que las pestañas
+#    abiertas no den 404 en chunks lazy. -n no pisa los nuevos; -p conserva fecha.
+if [ -d "$ROOT/assets" ]; then
+  mkdir -p "$NEW/assets"
+  cp -n -p "$ROOT"/assets/* "$NEW/assets/" 2>/dev/null || true
+  find "$NEW/assets" -type f -mtime +"$KEEP_DAYS" -delete
 fi
 
-echo "Copiando la carpeta 'dist' al servidor remoto..."
-scp -r "dist" metromedics@209.97.156.169:/home/metromedics/mmcs/frontend 2>>"$error_log"
-if [ $? -ne 0 ]; then
-  echo "Error al copiar la carpeta 'dist' al servidor remoto."
-  show_errors
-  exit 1
-fi
+# 3. Swap (dos renames consecutivos, sin ventana de sitio vacío)
+rm -rf "$PREV"
+if [ -d "$ROOT" ]; then mv "$ROOT" "$PREV"; fi
+mv "$NEW" "$ROOT"
 
-# Conectarse al servidor remoto y mover archivos al directorio de producción.
-echo "Conectándose al servidor remoto y moviendo archivos..."
-ssh metromedics@209.97.156.169 << 'EOF'
-  set -euxo pipefail
-  cd /home/metromedics/mmcs/frontend
-  
-  # Obtener la fecha y hora actual
-  timestamp=$(date +"%Y%m%d-%H%M%S")
-  mv dist "build$timestamp"
-  
-  # Verificar el resultado del mv
-  if [ $? -ne 0 ]; then
-    echo "Error al mover la carpeta 'dist' al directorio de producción." >&2
-    exit 1
-  fi
+echo "Build publicado:"
+ls -1 "$ROOT"/assets/index-*.js 2>/dev/null | tail -n 1
 
-  # Hacer backup del sitio actualmente publicado antes de reemplazarlo
-  if [ -d /var/www/app.metromedics.co/html ] && [ "$(ls -A /var/www/app.metromedics.co/html 2>/dev/null)" ]; then
-    mkdir -p /var/www/app.metromedics.co/backups
-    mkdir -p "/var/www/app.metromedics.co/backups/$timestamp"
-    cp -a /var/www/app.metromedics.co/html/. "/var/www/app.metromedics.co/backups/$timestamp/"
-
-    if [ $? -ne 0 ]; then
-      echo "Error al crear el backup del sitio actual." >&2
-      exit 1
-    fi
-  fi
-
-  # Limpiar el contenido actual para no mezclar assets de builds anteriores
-  mkdir -p /var/www/app.metromedics.co/html
-  find /var/www/app.metromedics.co/html -mindepth 1 -maxdepth 1 -exec rm -rf {} +
-
-  if [ $? -ne 0 ]; then
-    echo "Error al limpiar el directorio de producción." >&2
-    exit 1
-  fi
-
-  cp -a "build$timestamp"/. /var/www/app.metromedics.co/html/
-  
-  # Verificar el resultado del cp
-  if [ $? -ne 0 ]; then
-    echo "Error al copiar los archivos al directorio de producción." >&2
-    exit 1
-  fi
-
-  echo "Build publicado:"
-  ls -1 /var/www/app.metromedics.co/html/assets/index-*.js 2>/dev/null | tail -n 1
-
-  # Conservar solo las dos carpetas más recientes en el directorio /home/metromedics/mmcs/frontend
-  cd /home/metromedics/mmcs/frontend
-  # Listar los directorios ordenados por fecha de modificación (más reciente primero) y eliminar los que no sean los dos más recientes
-  dirs_to_delete=$(ls -dt */ | awk 'NR>5')
-  
-  # Eliminar los directorios que no se deben conservar
-  if [ -n "$dirs_to_delete" ]; then
-    echo "Eliminando directorios antiguos..."
-    rm -rf $dirs_to_delete
-  fi
-
+# 4. Podar builds antiguos (solo carpetas build*)
+cd "$BASE"
+ls -dt build*/ 2>/dev/null | tail -n +"$((KEEP_BUILDS + 1))" | xargs -r rm -rf
 EOF
 
-if [ $? -ne 0 ]; then
-  echo "Error durante la publicación remota."
-  show_errors
-  exit 1
-fi
+echo "Despliegue OK: build$TIMESTAMP"
 
-# Mostrar errores
-show_errors
+# ROLLBACK (inmediato, al sitio anterior):
+#   ssh metromedics@209.97.156.169 'cd /var/www/app.metromedics.co && mv html html.bad && mv html.prev html && rm -rf html.bad'
+# O re-publicar un build guardado:
+#   ssh ... 'rsync -a --delete /home/metromedics/mmcs/frontend/build<TS>/ /var/www/app.metromedics.co/html/'
