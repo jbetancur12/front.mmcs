@@ -63,6 +63,12 @@ const ChangesDialog: React.FC<ChangesDialogProps> = ({
     (g) => g.role && ownRoleNames.includes(g.role.name)
   )
   const hasRevocations = changes.some((c) => !c.granted)
+  const touchesMyRevocation = groups.some(
+    (g) =>
+      g.role &&
+      ownRoleNames.includes(g.role.name) &&
+      g.items.some((c) => !c.granted)
+  )
 
   return (
     <Dialog open={open} onClose={saving ? undefined : onCancel} maxWidth='sm' fullWidth>
@@ -79,6 +85,8 @@ const ChangesDialog: React.FC<ChangesDialogProps> = ({
         {touchesMe && (
           <Alert severity='warning' sx={{ mb: 2 }}>
             Uno de estos roles es tuyo: el cambio también te afecta a ti.
+            {touchesMyRevocation &&
+              ' Si te quitas una capacidad, no podrás volver a otorgártela tú: tendría que hacerlo otro rol o un super administrador.'}
           </Alert>
         )}
 

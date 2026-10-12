@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useCan } from '@utils/functions'
+import { PERMISSIONS } from 'src/constants/permissions'
 import {
   Container,
   Typography,
@@ -178,6 +180,9 @@ const getEvaluationStatusAlertInfo = (
 }
 
 const SupplierDetailsPage: React.FC = () => {
+  // El backend solo deja evaluar y editar proveedores a admin y comp_admin
+  const canEvaluateSupplier = useCan(PERMISSIONS.PURCHASES_EVALUATION_MANAGE)
+  const canEditSupplier = useCan(PERMISSIONS.PURCHASES_SUPPLIER_UPDATE)
   const { supplierId } = useParams<{ supplierId: string }>()
   const navigate = useNavigate()
   const axiosPrivate = useAxiosPrivate()
@@ -577,23 +582,27 @@ const SupplierDetailsPage: React.FC = () => {
         <Box>
           {' '}
           {/* Contenedor para los botones de acción */}
-          <Button
-            variant='outlined' // Estilo diferente para que no compita visualmente con "Editar"
-            color='secondary'
-            startIcon={<Assessment />}
-            onClick={handleOpenEvaluationModal} // <--- NUEVO BOTÓN Y HANDLER
-            sx={{ mr: 1 }} // Margen si tienes más botones
-          >
-            Evaluar Proveedor
-          </Button>
-          <Button
-            variant='contained'
-            color='primary'
-            startIcon={<Edit />}
-            onClick={() => navigate(`/purchases/suppliers/edit/${supplierId}`)} // Ajusta la ruta de edición
-          >
-            Editar Proveedor
-          </Button>
+          {canEvaluateSupplier && (
+            <Button
+              variant='outlined' // Estilo diferente para que no compita visualmente con "Editar"
+              color='secondary'
+              startIcon={<Assessment />}
+              onClick={handleOpenEvaluationModal} // <--- NUEVO BOTÓN Y HANDLER
+              sx={{ mr: 1 }} // Margen si tienes más botones
+            >
+              Evaluar Proveedor
+            </Button>
+          )}
+          {canEditSupplier && (
+            <Button
+              variant='contained'
+              color='primary'
+              startIcon={<Edit />}
+              onClick={() => navigate(`/purchases/suppliers/edit/${supplierId}`)} // Ajusta la ruta de edición
+            >
+              Editar Proveedor
+            </Button>
+          )}
         </Box>
       </Box>
       {isLoadingEvalStatus && (

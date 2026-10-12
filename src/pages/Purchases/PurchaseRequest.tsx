@@ -19,7 +19,7 @@ import { differenceInDays, format } from 'date-fns'
 import RenderRowActions from 'src/Components/Purchases/RenderRowActions'
 import { useQuery, useQueryClient } from 'react-query'
 import Swal from 'sweetalert2'
-import { useHasRole } from '@utils/functions'
+import { useCan } from '@utils/functions'
 import { PurchaseRequestModal } from 'src/Components/Purchases/purchase-request-modal'
 import { useNavigate } from 'react-router-dom'
 import { FaUser } from 'react-icons/fa'
@@ -33,7 +33,7 @@ import {
 } from '../../utils/tableStateUtils'
 import ActiveFiltersIndicator from '../../Components/Table/ActiveFiltersIndicator'
 
-import { ROLE_GROUPS } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
 // Función para obtener las solicitudes de compra
 const fetchPurchaseRequests = async (
   axiosPrivate: ReturnType<typeof useAxiosPrivate>
@@ -49,7 +49,7 @@ const PurchaseRequest: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const allowCreationRequest = useHasRole(ROLE_GROUPS.COMMERCIAL_STAFF)
+  const allowCreationRequest = useCan(PERMISSIONS.PURCHASES_REQUEST_CREATE)
 
   // Use the new generic persistent table state
   const tableConfig = getModuleTableConfig('purchases')

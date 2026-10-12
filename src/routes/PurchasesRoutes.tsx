@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
-import { ROLE_GROUPS } from 'src/constants/roles'
+import { PERMISSIONS, PermissionKey } from 'src/constants/permissions'
 import PersonnelManagementPage from 'src/pages/Admin/PersonnelManagementPage'
 import CircularProgress from '@mui/material/CircularProgress'
 import Box from '@mui/material/Box'
@@ -56,64 +56,92 @@ const PDFViewerWithSuspense = ({ path }: { path: string }) => (
 )
 
 const SupplierRoutes = (role: string[]) => {
+  const isAuthenticated = localStorage.getItem('accessToken') !== null
+
+  // Cada página exige la capacidad que el backend le pide a sus endpoints
+  const guard = (permission: PermissionKey | readonly PermissionKey[]) => (
+    <ProtectedRoute
+      isAuthenticated={isAuthenticated}
+      userRole={role}
+      permission={permission}
+    />
+  )
+
   return (
     <>
-      <Route
-        element={
-          <ProtectedRoute
-            isAuthenticated={localStorage.getItem('accessToken') !== null}
-            userRole={role}
-            roles={ROLE_GROUPS.COMMERCIAL_STAFF}
-          />
-        }
-      >
-        <Route path='purchases'>
-          <Route
-            path='personnel-management'
-            element={<PersonnelManagementPage />}
-          />
-          <Route path='fiscal-parameters' element={<FiscalParametersPage />} />
-
-          <Route path='supplier-selection' element={<SuppliersSelection />} />
-
-          <Route
-            path='supplier-selection/:id'
-            element={<PDFViewerWithSuspense path='fog-mmcs-10' />}
-          />
-          <Route path='suppliers' element={<SuppliersTable />} />
-          <Route
-            path='suppliers/evaluations'
-            element={<ListAllSupplierEvaluationsPage />}
-          />
-          <Route
-            path='suppliers/details/:supplierId'
-            element={<SupplierDetailsPage />}
-          />
-          <Route
-            path='suppliers/edit/:supplierId'
-            element={<SupplierEditPage />}
-          />
-          <Route
-            path='suppliers/report'
-            element={<PDFViewerWithSuspense path='fog-mmcs-11' />}
-          />
-          <Route path='requests' element={<PurchaseRequest />} />
-          <Route
-            path='requests/:id'
-            element={<PDFViewerWithSuspense path='fog-mmcs-12' />}
-          />
-          <Route path='orders' element={<PurchaseOrders />} />
-          <Route
-            path='orders/:id'
-            element={<PDFViewerWithSuspense path='fog-mmcs-13' />}
-          />
-          <Route path='verifications' element={<PurchaseVerifications />} />
-          <Route
-            path='verifications/:id'
-            element={<PDFViewerWithSuspense path='fog-mmcs-14' />}
-          />
-          <Route path='statistics' element={<PurchaseStatistics />} />
-        </Route>
+      <Route element={guard(PERMISSIONS.PURCHASES_PERSONNEL_VIEW)}>
+        <Route
+          path='purchases/personnel-management'
+          element={<PersonnelManagementPage />}
+        />
+      </Route>
+      <Route element={guard(PERMISSIONS.PURCHASES_FISCAL_PARAMETER_MANAGE)}>
+        <Route
+          path='purchases/fiscal-parameters'
+          element={<FiscalParametersPage />}
+        />
+      </Route>
+      <Route element={guard(PERMISSIONS.PURCHASES_SUPPLIER_SELECTION_VIEW)}>
+        <Route
+          path='purchases/supplier-selection'
+          element={<SuppliersSelection />}
+        />
+        <Route
+          path='purchases/supplier-selection/:id'
+          element={<PDFViewerWithSuspense path='fog-mmcs-10' />}
+        />
+      </Route>
+      <Route element={guard(PERMISSIONS.PURCHASES_SUPPLIER_VIEW)}>
+        <Route path='purchases/suppliers' element={<SuppliersTable />} />
+        <Route
+          path='purchases/suppliers/details/:supplierId'
+          element={<SupplierDetailsPage />}
+        />
+      </Route>
+      <Route element={guard(PERMISSIONS.PURCHASES_SUPPLIER_UPDATE)}>
+        <Route
+          path='purchases/suppliers/edit/:supplierId'
+          element={<SupplierEditPage />}
+        />
+      </Route>
+      <Route element={guard(PERMISSIONS.PURCHASES_EVALUATION_VIEW)}>
+        <Route
+          path='purchases/suppliers/evaluations'
+          element={<ListAllSupplierEvaluationsPage />}
+        />
+      </Route>
+      <Route element={guard(PERMISSIONS.PURCHASES_REPORT_VIEW)}>
+        <Route
+          path='purchases/suppliers/report'
+          element={<PDFViewerWithSuspense path='fog-mmcs-11' />}
+        />
+      </Route>
+      <Route element={guard(PERMISSIONS.PURCHASES_REQUEST_VIEW)}>
+        <Route path='purchases/requests' element={<PurchaseRequest />} />
+        <Route
+          path='purchases/requests/:id'
+          element={<PDFViewerWithSuspense path='fog-mmcs-12' />}
+        />
+      </Route>
+      <Route element={guard(PERMISSIONS.PURCHASES_ORDER_VIEW)}>
+        <Route path='purchases/orders' element={<PurchaseOrders />} />
+        <Route
+          path='purchases/orders/:id'
+          element={<PDFViewerWithSuspense path='fog-mmcs-13' />}
+        />
+      </Route>
+      <Route element={guard(PERMISSIONS.PURCHASES_VERIFICATION_VIEW)}>
+        <Route
+          path='purchases/verifications'
+          element={<PurchaseVerifications />}
+        />
+        <Route
+          path='purchases/verifications/:id'
+          element={<PDFViewerWithSuspense path='fog-mmcs-14' />}
+        />
+      </Route>
+      <Route element={guard(PERMISSIONS.PURCHASES_STATISTICS_VIEW)}>
+        <Route path='purchases/statistics' element={<PurchaseStatistics />} />
       </Route>
     </>
   )

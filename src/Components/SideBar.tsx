@@ -94,7 +94,18 @@ const sidebarItems = ($userStore: UserData) => [
   {
     type: 'dropdown',
     buttonText: 'Compras',
-    roles: ROLE_GROUPS.COMMERCIAL_STAFF,
+    // Migrado a capacidades: se ve si el usuario puede ver al menos uno de sus ítems
+    roles: [] as string[],
+    permission: [
+      PERMISSIONS.PURCHASES_SUPPLIER_SELECTION_VIEW,
+      PERMISSIONS.PURCHASES_SUPPLIER_VIEW,
+      PERMISSIONS.PURCHASES_REQUEST_VIEW,
+      PERMISSIONS.PURCHASES_ORDER_VIEW,
+      PERMISSIONS.PURCHASES_VERIFICATION_VIEW,
+      PERMISSIONS.PURCHASES_FISCAL_PARAMETER_MANAGE,
+      PERMISSIONS.PURCHASES_EVALUATION_VIEW,
+      PERMISSIONS.PURCHASES_STATISTICS_VIEW
+    ] as readonly PermissionKey[],
     moduleName: 'Basic',
     pathData:
       'M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2zM7.16 14l.84-2h7.45c.75 0 1.41-.41 1.75-1.03l3.24-5.88A1 1 0 0 0 20 4H5.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7.42c-.14 0-.25-.11-.26-.25z',
@@ -102,42 +113,42 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Selección de Proveedores',
         url: 'purchases/supplier-selection',
-        roles: ROLE_GROUPS.COMMERCIAL_STAFF
+        permission: PERMISSIONS.PURCHASES_SUPPLIER_SELECTION_VIEW
       },
       {
         label: 'Lista de Proveedores',
         url: 'purchases/suppliers',
-        roles: ROLE_GROUPS.COMMERCIAL_STAFF
+        permission: PERMISSIONS.PURCHASES_SUPPLIER_VIEW
       },
       {
         label: 'Solicitudes de Compra',
         url: 'purchases/requests',
-        roles: ROLE_GROUPS.COMMERCIAL_STAFF
+        permission: PERMISSIONS.PURCHASES_REQUEST_VIEW
       },
       {
         label: 'Ordenes de Compra',
         url: 'purchases/orders',
-        roles: ROLE_GROUPS.COMMERCIAL_STAFF
+        permission: PERMISSIONS.PURCHASES_ORDER_VIEW
       },
       {
         label: 'Verificaciones',
         url: 'purchases/verifications',
-        roles: ROLE_GROUPS.COMMERCIAL_STAFF
+        permission: PERMISSIONS.PURCHASES_VERIFICATION_VIEW
       },
       {
         label: 'Parametros Fiscales',
         url: 'purchases/fiscal-parameters',
-        roles: ROLE_GROUPS.COMMERCIAL_STAFF
+        permission: PERMISSIONS.PURCHASES_FISCAL_PARAMETER_MANAGE
       },
       {
         label: 'Evaluaciones de Proveedores',
         url: 'purchases/suppliers/evaluations',
-        roles: ROLE_GROUPS.COMMERCIAL_STAFF
+        permission: PERMISSIONS.PURCHASES_EVALUATION_VIEW
       },
       {
         label: 'Estadísticas',
         url: 'purchases/statistics',
-        roles: [ROLES.ADMIN, ROLES.COMP_ADMIN]
+        permission: PERMISSIONS.PURCHASES_STATISTICS_VIEW
       }
     ]
   },

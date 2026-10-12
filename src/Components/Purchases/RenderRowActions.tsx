@@ -17,11 +17,11 @@ import Swal from 'sweetalert2'
 import GenerateOrderModal from './GenerateOrderModal'
 
 import { PurchaseRequest, PurchaseRequestItem } from 'src/pages/Purchases/Types'
-import { useHasRole } from '@utils/functions'
+import { useCan } from '@utils/functions'
 import UploadQuotationModal from './UploadQuotationModal'
 import { useState } from 'react'
 
-import { ROLES, ROLE_GROUPS } from 'src/constants/roles'
+import { PERMISSIONS } from 'src/constants/permissions'
 type RenderRowActionsProps = {
   row: { original: PurchaseRequest }
   queryClient: QueryClient
@@ -38,8 +38,9 @@ const RenderRowActions = ({
 
   const status = row.original.status as PurchaseRequestStatus
   const allowActions = {
-    creationOrder: useHasRole(ROLE_GROUPS.COMMERCIAL_STAFF),
-    approval: useHasRole([ROLES.ADMIN, ROLES.COMP_ADMIN])
+    creationOrder: useCan(PERMISSIONS.PURCHASES_ORDER_CREATE),
+    // pre-aprobar, aprobar y rechazar
+    approval: useCan(PERMISSIONS.PURCHASES_REQUEST_DECIDE)
   }
 
   const [orderModalOpen, setOrderModalOpen] = useState(false)

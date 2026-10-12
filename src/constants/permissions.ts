@@ -52,6 +52,64 @@ export const PERMISSIONS = {
   MAINTENANCE_INVOICING_VIEW: 'maintenance:invoicing:view',
   /** Marcar tickets como facturados */
   MAINTENANCE_INVOICING_MANAGE: 'maintenance:invoicing:manage',
+  /** Ver solicitudes de compra */
+  PURCHASES_REQUEST_VIEW: 'purchases:request:view',
+  /** Crear solicitudes de compra */
+  PURCHASES_REQUEST_CREATE: 'purchases:request:create',
+  /** Editar solicitudes de compra */
+  PURCHASES_REQUEST_UPDATE: 'purchases:request:update',
+  /** Pre-aprobar, aprobar o rechazar solicitudes de compra */
+  PURCHASES_REQUEST_DECIDE: 'purchases:request:decide',
+  /** Asignar proveedores a los ítems de una solicitud */
+  PURCHASES_REQUEST_ASSIGN_SUPPLIERS: 'purchases:request:assign_suppliers',
+  /** Fijar el consecutivo inicial de solicitudes */
+  PURCHASES_REQUEST_SET_INITIAL_ID: 'purchases:request:set_initial_id',
+  /** Ver cotizaciones de compra */
+  PURCHASES_QUOTATION_VIEW: 'purchases:quotation:view',
+  /** Registrar cotizaciones de compra */
+  PURCHASES_QUOTATION_CREATE: 'purchases:quotation:create',
+  /** Aceptar una cotización de compra */
+  PURCHASES_QUOTATION_ACCEPT: 'purchases:quotation:accept',
+  /** Ver órdenes de compra y el historial de compras por proveedor */
+  PURCHASES_ORDER_VIEW: 'purchases:order:view',
+  /** Generar órdenes de compra */
+  PURCHASES_ORDER_CREATE: 'purchases:order:create',
+  /** Ver verificaciones de compra */
+  PURCHASES_VERIFICATION_VIEW: 'purchases:verification:view',
+  /** Crear verificaciones de compra */
+  PURCHASES_VERIFICATION_CREATE: 'purchases:verification:create',
+  /** Editar verificaciones de compra */
+  PURCHASES_VERIFICATION_UPDATE: 'purchases:verification:update',
+  /** Ver proveedores, sus documentos y el estado de sus evaluaciones */
+  PURCHASES_SUPPLIER_VIEW: 'purchases:supplier:view',
+  /** Registrar proveedores */
+  PURCHASES_SUPPLIER_CREATE: 'purchases:supplier:create',
+  /** Editar los datos de un proveedor */
+  PURCHASES_SUPPLIER_UPDATE: 'purchases:supplier:update',
+  /** Cambiar la retención de un proveedor */
+  PURCHASES_SUPPLIER_RETENTION: 'purchases:supplier:retention',
+  /** Subir documentos de un proveedor */
+  PURCHASES_SUPPLIER_DOCUMENT_UPLOAD: 'purchases:supplier:document_upload',
+  /** Ver la selección de proveedores */
+  PURCHASES_SUPPLIER_SELECTION_VIEW: 'purchases:supplier_selection:view',
+  /** Crear y editar la selección de proveedores */
+  PURCHASES_SUPPLIER_SELECTION_MANAGE: 'purchases:supplier_selection:manage',
+  /** Ver evaluaciones de proveedores */
+  PURCHASES_EVALUATION_VIEW: 'purchases:evaluation:view',
+  /** Crear y editar evaluaciones de proveedores */
+  PURCHASES_EVALUATION_MANAGE: 'purchases:evaluation:manage',
+  /** Ver las estadísticas de compras */
+  PURCHASES_STATISTICS_VIEW: 'purchases:statistics:view',
+  /** Descargar los informes PDF de compras (proveedores, solicitudes, órdenes, verificaciones, evaluaciones y cotizaciones) */
+  PURCHASES_REPORT_VIEW: 'purchases:report:view',
+  /** Descargar el informe de selección de proveedores (FOG-MMCS-10) */
+  PURCHASES_REPORT_SELECTION: 'purchases:report:selection',
+  /** Ver el personal de compras */
+  PURCHASES_PERSONNEL_VIEW: 'purchases:personnel:view',
+  /** Crear, editar y eliminar personal de compras */
+  PURCHASES_PERSONNEL_MANAGE: 'purchases:personnel:manage',
+  /** Gestionar los parámetros fiscales (listar todos, crear, editar y eliminar) */
+  PURCHASES_FISCAL_PARAMETER_MANAGE: 'purchases:fiscal_parameter:manage',
   /** Ver roles, capacidades y la auditoría de cambios */
   RBAC_VIEW: 'rbac:view',
   /** Crear roles y activar o desactivar capacidades */
