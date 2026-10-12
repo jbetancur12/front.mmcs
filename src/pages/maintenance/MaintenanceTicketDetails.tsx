@@ -130,6 +130,7 @@ import CostsListDialog from 'src/Components/Maintenance/CostsList'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../../store/userStore'
 
+import { ROLES } from 'src/constants/roles'
 export const formatCurrency = (amount: number | undefined) => {
   if (!amount) return 'No especificado'
   return new Intl.NumberFormat('es-CO', {
@@ -208,10 +209,10 @@ const MaintenanceTicketDetails: React.FC = () => {
   }
 
   const canManageTechnicians =
-    $userStore.rol.includes('admin') ||
-    $userStore.rol.includes('maintenance_coordinator')
-  const currentUserRole = $userStore.rol[0] || 'user'
-  const isTechnician = $userStore.rol.includes('technician')
+    $userStore.rol.includes(ROLES.ADMIN) ||
+    $userStore.rol.includes(ROLES.MAINTENANCE_COORDINATOR)
+  const currentUserRole = $userStore.rol[0] || ROLES.USER
+  const isTechnician = $userStore.rol.includes(ROLES.TECHNICIAN)
 
   // API hooks
   const {

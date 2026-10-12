@@ -24,6 +24,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { userStore } from '@stores/userStore'
 import { useStore } from '@nanostores/react'
 
+import { ROLES, hasAnyRole } from 'src/constants/roles'
 // Componente Chip personalizado con icono y tooltip
 const FilterChip = ({
   value,
@@ -292,7 +293,7 @@ export const FilterPanel = ({
             }}
           />
 
-          {$userStore.rol.some((role) => ['admin'].includes(role)) && (
+          {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
             <Box mb={2}>
               <Box
                 sx={{ fontSize: '0.875rem', color: 'text.secondary', mb: 1 }}

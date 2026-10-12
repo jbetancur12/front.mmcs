@@ -12,43 +12,34 @@ import {
   CalibrationServiceStatus
 } from '../types/calibrationService'
 
+import { ROLES, ROLE_GROUPS } from 'src/constants/roles'
 export const CALIBRATION_SERVICE_ALLOWED_ROLES = [
-  'admin',
-  'super_admin',
-  'metrologist',
-  'comp_admin',
-  'comp_requester',
-  'invoicing',
-  'calibration_coordinator',
-  'technical_director',
-  'analista_datos'
+  ROLES.ADMIN,
+  ROLES.SUPER_ADMIN,
+  ROLES.METROLOGIST,
+  ROLES.COMP_ADMIN,
+  ROLES.COMP_REQUESTER,
+  ROLES.INVOICING,
+  ROLES.CALIBRATION_COORDINATOR,
+  ROLES.TECHNICAL_DIRECTOR,
+  ROLES.ANALISTA_DATOS
 ] as const
 
-export const CALIBRATION_SERVICE_ANALYST_ROLES = ['analista_datos'] as const
+export const CALIBRATION_SERVICE_ANALYST_ROLES = [ROLES.ANALISTA_DATOS] as const
 
-export const CALIBRATION_SERVICE_TECHNICAL_ROLES = ['metrologist'] as const
+export const CALIBRATION_SERVICE_TECHNICAL_ROLES = [ROLES.METROLOGIST] as const
 
 export const CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES = [
-  'admin',
-  'super_admin',
-  'comp_admin',
-  'comp_requester',
-  'invoicing'
+  ROLES.ADMIN,
+  ROLES.SUPER_ADMIN,
+  ROLES.COMP_ADMIN,
+  ROLES.COMP_REQUESTER,
+  ROLES.INVOICING
 ] as const
 
-export const CALIBRATION_SERVICE_EDIT_ROLES = [
-  'admin',
-  'super_admin',
-  'comp_admin',
-  'comp_requester',
-] as const
+export const CALIBRATION_SERVICE_EDIT_ROLES = ROLE_GROUPS.COMMERCIAL_EDITORS
 
-export const CALIBRATION_SERVICE_ANALYTICS_ROLES = [
-  'admin',
-  'super_admin',
-  'comp_admin',
-  'metrologist'
-] as const
+export const CALIBRATION_SERVICE_ANALYTICS_ROLES = ROLE_GROUPS.CUSTOMER_WRITE
 
 export const CALIBRATION_SERVICE_APPROVAL_ROLES =
   CALIBRATION_SERVICE_EDIT_ROLES
@@ -57,9 +48,9 @@ export const CALIBRATION_SERVICE_ODS_ROLES =
   CALIBRATION_SERVICE_EDIT_ROLES
 
 export const CALIBRATION_SERVICE_SCHEDULE_ROLES = [
-  'admin',
-  'super_admin',
-  'calibration_coordinator'
+  ROLES.ADMIN,
+  ROLES.SUPER_ADMIN,
+  ROLES.CALIBRATION_COORDINATOR
 ] as const
 
 export const CALIBRATION_SERVICE_REPROGRAM_ROLES =
@@ -69,10 +60,10 @@ export const CALIBRATION_SERVICE_REASSIGN_ROLES =
   CALIBRATION_SERVICE_SCHEDULE_ROLES
 
 export const CALIBRATION_SERVICE_EXECUTION_ROLES = [
-  'admin',
-  'super_admin',
-  'metrologist',
-  'calibration_coordinator'
+  ROLES.ADMIN,
+  ROLES.SUPER_ADMIN,
+  ROLES.METROLOGIST,
+  ROLES.CALIBRATION_COORDINATOR
 ] as const
 
 export const CALIBRATION_SERVICE_PAUSE_ROLES =
@@ -81,27 +72,19 @@ export const CALIBRATION_SERVICE_PAUSE_ROLES =
 export const CALIBRATION_SERVICE_PHYSICAL_TRACEABILITY_ROLES =
   CALIBRATION_SERVICE_EXECUTION_ROLES
 
-export const CALIBRATION_SERVICE_CANCEL_ROLES = [
-  'admin',
-  'super_admin'
-] as const
+export const CALIBRATION_SERVICE_CANCEL_ROLES = ROLE_GROUPS.ADMINS
 
 export const CALIBRATION_SERVICE_ADJUSTMENT_REPORT_ROLES =
   CALIBRATION_SERVICE_EXECUTION_ROLES
 
 export const CALIBRATION_SERVICE_ADJUSTMENT_TECHNICAL_REVIEW_ROLES = [
-  'admin',
-  'super_admin',
-  'technical_director',
-  'calibration_coordinator'
+  ROLES.ADMIN,
+  ROLES.SUPER_ADMIN,
+  ROLES.TECHNICAL_DIRECTOR,
+  ROLES.CALIBRATION_COORDINATOR
 ] as const
 
-export const CALIBRATION_SERVICE_ADJUSTMENT_COMMERCIAL_REVIEW_ROLES = [
-  'admin',
-  'super_admin',
-  'comp_admin',
-  'comp_requester'
-] as const
+export const CALIBRATION_SERVICE_ADJUSTMENT_COMMERCIAL_REVIEW_ROLES = ROLE_GROUPS.COMMERCIAL_EDITORS
 
 export const CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES = [
   ...CALIBRATION_SERVICE_ADJUSTMENT_TECHNICAL_REVIEW_ROLES,
@@ -109,15 +92,12 @@ export const CALIBRATION_SERVICE_ADJUSTMENT_REVIEW_ROLES = [
 ] as const
 
 export const CALIBRATION_SERVICE_INVOICING_ROLES = [
-  'admin',
-  'super_admin',
-  'invoicing'
+  ROLES.ADMIN,
+  ROLES.SUPER_ADMIN,
+  ROLES.INVOICING
 ] as const
 
-export const CALIBRATION_SERVICE_DOCUMENT_CONTROL_ROLES = [
-  'admin',
-  'metrologist'
-] as const
+export const CALIBRATION_SERVICE_DOCUMENT_CONTROL_ROLES = ROLE_GROUPS.METROLOGY_STAFF
 
 export const CALIBRATION_SERVICE_CLOSE_ROLES =
   CALIBRATION_SERVICE_INVOICING_ROLES

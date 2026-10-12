@@ -28,6 +28,7 @@ import { MaintenanceComment } from '../../types/maintenance'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
+import { ROLES, ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
 interface MaintenanceCommentsListProps {
   comments: MaintenanceComment[]
   onAddComment: (comment: string, isInternal: boolean) => Promise<void>
@@ -74,11 +75,13 @@ const MaintenanceCommentsList: React.FC<MaintenanceCommentsListProps> = ({
     boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
   }
 
-  const canAddInternalComments = ['admin', 'mantenimiento'].includes(
-    currentUserRole
+  const canAddInternalComments = hasAnyRole(
+    [currentUserRole],
+    [ROLES.ADMIN, ROLES.MANTENIMIENTO]
   )
-  const isPrivilegedUser = ['admin', 'maintenance_coordinator'].includes(
-    currentUserRole
+  const isPrivilegedUser = hasAnyRole(
+    [currentUserRole],
+    ROLE_GROUPS.MAINTENANCE_MANAGERS
   )
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -21,6 +21,7 @@ import { useHasRole } from '@utils/functions'
 import UploadQuotationModal from './UploadQuotationModal'
 import { useState } from 'react'
 
+import { ROLES, ROLE_GROUPS } from 'src/constants/roles'
 type RenderRowActionsProps = {
   row: { original: PurchaseRequest }
   queryClient: QueryClient
@@ -37,8 +38,8 @@ const RenderRowActions = ({
 
   const status = row.original.status as PurchaseRequestStatus
   const allowActions = {
-    creationOrder: useHasRole(['admin', 'comp_requester', 'comp_admin']),
-    approval: useHasRole(['admin', 'comp_admin'])
+    creationOrder: useHasRole(ROLE_GROUPS.COMMERCIAL_STAFF),
+    approval: useHasRole([ROLES.ADMIN, ROLES.COMP_ADMIN])
   }
 
   const [orderModalOpen, setOrderModalOpen] = useState(false)

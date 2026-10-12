@@ -41,6 +41,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { createRoot } from 'react-dom/client'
 import { addYears, format } from 'date-fns'
 
+import { ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
 const fieldLabels: { [key: string]: string } = {
   compania: 'Compañía',
   equipo: 'Equipo',
@@ -593,7 +594,7 @@ function Certificates() {
           </Box>
         </Box>
 
-        {$userStore.rol.some((role) => ['admin', 'metrologist'].includes(role)) && (
+        {hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) && (
           <Box display="flex" gap={1}>
             <Button
               variant="outlined"
@@ -802,7 +803,7 @@ function Certificates() {
                       Última Calibración
                     </Typography>
                   </Box>
-                  {$userStore.rol.some((role) => ['admin', 'metrologist'].includes(role)) && (
+                  {hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) && (
                     <Tooltip title="Editar fecha">
                       <IconButton 
                         size="small" 
@@ -904,7 +905,7 @@ const CompactDetailRow: React.FC<CompactDetailRowProps> = ({
   userRoles = []
 }) => {
   const canEdit = editable && 
-    userRoles.some((role) => ['admin', 'metrologist'].includes(role)) && 
+    hasAnyRole(userRoles, ROLE_GROUPS.METROLOGY_STAFF) && 
     onEdit && 
     field
 

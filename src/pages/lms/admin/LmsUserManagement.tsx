@@ -39,7 +39,7 @@ import {
 } from '@mui/icons-material'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { getRoleLabelEs } from 'src/constants/roles'
+import { getRoleLabelEs, ROLES } from 'src/constants/roles'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 
 type LmsRoleOption = {
@@ -112,7 +112,7 @@ const emptyForm: LmsUserForm = {
   password: '',
   userType: 'internal',
   customerId: '',
-  roles: ['employee'],
+  roles: [ROLES.EMPLOYEE],
   lmsOnly: false,
   active: true
 }
@@ -331,7 +331,7 @@ const LmsUserManagement: React.FC = () => {
       password: '',
       userType: user.userType,
       customerId: user.customerId ? String(user.customerId) : '',
-      roles: user.roles.filter((role) => role !== 'lms_only'),
+      roles: user.roles.filter((role) => role !== ROLES.LMS_ONLY),
       lmsOnly: user.lmsOnly,
       active: user.active
     })
@@ -340,7 +340,7 @@ const LmsUserManagement: React.FC = () => {
 
   const effectiveRoles = useMemo(() => {
     const roles = new Set(form.roles)
-    const lmsOnlyRole = optionsData?.defaults?.lmsOnlyRole || 'lms_only'
+    const lmsOnlyRole = optionsData?.defaults?.lmsOnlyRole || ROLES.LMS_ONLY
     if (form.lmsOnly) {
       roles.add(lmsOnlyRole)
     } else {
@@ -361,7 +361,7 @@ const LmsUserManagement: React.FC = () => {
     !isValidEmail(normalizedEmail) ||
     (!editingUser && form.password.trim().length < 8) ||
     (needsCustomer && !form.customerId) ||
-    effectiveRoles.filter((role) => role !== 'lms_only').length === 0
+    effectiveRoles.filter((role) => role !== ROLES.LMS_ONLY).length === 0
 
   const handleToggleRole = (roleName: string) => {
     setForm((prev) => {
@@ -528,7 +528,7 @@ const LmsUserManagement: React.FC = () => {
                       <TableCell>{user.customerName || 'Sin cliente'}</TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {user.roles.filter((role) => role !== 'lms_only').map((role) => (
+                          {user.roles.filter((role) => role !== ROLES.LMS_ONLY).map((role) => (
                             <Chip key={role} label={getCompactRoleLabel(role)} size='small' variant='outlined' />
                           ))}
                         </Box>
@@ -671,8 +671,8 @@ const LmsUserManagement: React.FC = () => {
                 Perfil resultante: <strong>{form.userType === 'client' ? 'Cliente' : 'Interno'}</strong>
                 {needsCustomer ? ` · ${selectedCustomerName || 'Cliente pendiente por seleccionar'}` : ' · Sin empresa asociada'}
                 {form.lmsOnly ? ' · Solo LMS' : ' · Acceso mixto'}
-                {effectiveRoles.filter((role) => role !== 'lms_only').length > 0
-                  ? ` · Roles: ${effectiveRoles.filter((role) => role !== 'lms_only').join(', ')}`
+                {effectiveRoles.filter((role) => role !== ROLES.LMS_ONLY).length > 0
+                  ? ` · Roles: ${effectiveRoles.filter((role) => role !== ROLES.LMS_ONLY).join(', ')}`
                   : ' · Selecciona al menos un rol operativo'}
               </Alert>
             </Grid>
@@ -708,11 +708,11 @@ const LmsUserManagement: React.FC = () => {
               <FormGroup>
                 <Grid container spacing={1}>
                   {roleOptions
-                    .filter((role) => role.name !== 'lms_only')
+                    .filter((role) => role.name !== ROLES.LMS_ONLY)
                     .map((role) => {
                       const disabled =
                         form.userType === 'client' &&
-                        (role.name === 'admin' || role.name === 'Training Manager' || role.name === 'employee')
+                        (role.name === ROLES.ADMIN || role.name === ROLES.TRAINING_MANAGER || role.name === ROLES.EMPLOYEE)
 
                       return (
                         <Grid item xs={12} md={6} key={role.id}>
@@ -735,9 +735,9 @@ const LmsUserManagement: React.FC = () => {
                 {effectiveRoles.map((role) => (
                   <Chip
                     key={role}
-                    label={role === 'lms_only' ? 'Solo LMS' : getRoleLabel(role)}
+                    label={role === ROLES.LMS_ONLY ? 'Solo LMS' : getRoleLabel(role)}
                     size='small'
-                    color={role === 'lms_only' ? 'warning' : 'default'}
+                    color={role === ROLES.LMS_ONLY ? 'warning' : 'default'}
                   />
                 ))}
               </Box>

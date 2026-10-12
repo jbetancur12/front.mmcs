@@ -65,6 +65,7 @@ import { format, parseISO } from 'date-fns'
 import { useStore } from '@nanostores/react'
 import { userStore } from '@stores/userStore'
 
+import { ROLE_GROUPS, hasAnyRole, ROLES } from 'src/constants/roles'
 // Interfaces y tipos
 
 export interface CalibrationHistory {
@@ -847,7 +848,7 @@ const ListDataSheet: React.FC = () => {
   }
 
   const RowActions = ({ row, table }: { row: any; table: any }) => {
-    const isAdmin = $userStore.rol.some((role) => ['admin', 'metrologist'].includes(role))
+    const isAdmin = hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF)
     const [localAnchorEl, setLocalAnchorEl] = useState<null | HTMLElement>(null)
 
     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -1210,7 +1211,7 @@ const ListDataSheet: React.FC = () => {
           <RowActions row={row} table={table} />
         )}
         renderTopToolbarCustomActions={() => {
-          if (!$userStore.rol.includes('admin')) {
+          if (!$userStore.rol.includes(ROLES.ADMIN)) {
             return
           }
           return (

@@ -30,6 +30,7 @@ import SelectedHq from './SelectedHq'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
 
+import { ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
 interface HeadquartersProps {
   setSelectedSede: (sede: string | null) => void
   selectedSede: string | null
@@ -122,7 +123,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
               </Box>
             </Box>
 
-            {$userStore.rol.some((role) => ['admin', 'metrologist'].includes(role)) && (
+            {hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) && (
               <Button
                 variant="contained"
                 startIcon={<Add />}
@@ -332,7 +333,7 @@ const Headquarters: React.FC<HeadquartersProps> = ({
                                 </Typography>
                               </Box>
 
-                              {$userStore.rol.some((role) => ['admin', 'metrologist'].includes(role)) && (
+                              {hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) && (
                                 <Box display="flex">
                                   <Tooltip title="Editar sede">
                                     <IconButton

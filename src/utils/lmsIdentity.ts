@@ -1,5 +1,6 @@
 import { UserData } from '../store/userStore'
 
+import { ROLES } from 'src/constants/roles'
 export const LMS_ONLY_ROLE = 'lms_only'
 export const TRAINING_MANAGER_ROLE = 'Training Manager'
 
@@ -14,15 +15,15 @@ export type LmsManagementRole = 'admin' | 'training_manager' | 'user'
 export type LmsDashboardScope = 'admin' | 'training_manager' | 'limited'
 
 export const LMS_ACCESS_MENU_ROLES = [
-  'admin',
-  'employee',
+  ROLES.ADMIN,
+  ROLES.EMPLOYEE,
   'client',
   TRAINING_MANAGER_ROLE,
   LMS_ONLY_ROLE
 ] as const
 
 export const LMS_ADMIN_ROUTE_ROLES = [
-  'admin',
+  ROLES.ADMIN,
   TRAINING_MANAGER_ROLE,
   'training_manager'
 ] as const
@@ -52,7 +53,7 @@ export const hasTrainingManagerRole = (roles: string[] = []): boolean => {
 
 export const hasLmsAdminAccess = (roles: string[] = []): boolean => {
   const normalizedRoles = normalizeLmsRoles(roles)
-  return normalizedRoles.includes('admin') || normalizedRoles.includes(TRAINING_MANAGER_ROLE)
+  return normalizedRoles.includes(ROLES.ADMIN) || normalizedRoles.includes(TRAINING_MANAGER_ROLE)
 }
 
 export const isLmsOnlyUser = (roles: string[] = [], lmsOnly = false): boolean => {

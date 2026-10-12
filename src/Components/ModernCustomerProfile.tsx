@@ -68,6 +68,7 @@ import { CreateFileModal } from './TableFiles/CreateFileModal/CreateFileModal'
 import { bigToast } from './ExcelManipulation/Utils'
 import { MySwal } from '@utils/sweetAlert'
 
+import { ROLE_GROUPS, hasAnyRole, ROLES } from 'src/constants/roles'
 // API URL
 const minioUrl = import.meta.env.VITE_MINIO_URL
 
@@ -455,7 +456,7 @@ const ModernCustomerProfile: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
   const queryClient = useQueryClient()
-  const canManageLmsCourses = $userStore.rol.includes('admin')
+  const canManageLmsCourses = $userStore.rol.includes(ROLES.ADMIN)
 
   // State
   const [activeTab, setActiveTab] = useState<TabValue>(() => {
@@ -872,9 +873,7 @@ const ModernCustomerProfile: React.FC = () => {
     const checkPermission = async () => {
       try {
         if (
-          $userStore.rol.some((role) =>
-            ['admin', 'metrologist'].includes(role)
-          ) ||
+          hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) ||
           id === String($userStore.customer.id)
         ) {
           setHasPermission(true)
@@ -898,9 +897,7 @@ const ModernCustomerProfile: React.FC = () => {
     }
   }, [id, $userStore.rol, $userStore.customer, navigate])
 
-  const isAdmin = $userStore.rol.some((role) =>
-    ['admin', 'metrologist'].includes(role)
-  )
+  const isAdmin = hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF)
 
 
 

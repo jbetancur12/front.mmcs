@@ -56,6 +56,7 @@ import {
 import { customerStore } from '../store/customerStore'
 import useAxiosPrivate from '@utils/use-axios-private'
 
+import { ROLES, ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
 export function convertirCadena(cadena) {
   // Reemplazar espacios con guiones y convertir a minúsculas
   const cadenaFormateada = cadena.replace(/\s+/g, '-').toLowerCase()
@@ -592,7 +593,7 @@ const Table: React.FC = () => {
                 <Edit />
               </IconButton>
             </Tooltip> */}
-              {$userStore.rol.some((role) => ['admin'].includes(role)) && (
+              {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
                 <Tooltip arrow placement='right' title='Delete'>
                   <IconButton
                     color='error'
@@ -619,7 +620,7 @@ const Table: React.FC = () => {
         renderTopToolbarCustomActions={() => {
           if (
             $userStore.rol.some(
-              (role) => !['admin', 'metrologist'].includes(role)
+              (role) => !ROLE_GROUPS.METROLOGY_STAFF.includes(role)
             )
           )
             return

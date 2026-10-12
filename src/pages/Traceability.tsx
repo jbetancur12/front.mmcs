@@ -39,6 +39,7 @@ import { useStore } from '@nanostores/react'
 import useAxiosPrivate from '@utils/use-axios-private.js'
 import Swal from 'sweetalert2'
 
+import { ROLES, hasAnyRole } from 'src/constants/roles'
 interface TraceabilityDocument {
   id: number
   name: string
@@ -505,7 +506,7 @@ const Traceability = () => {
           Limpiar búsqueda
         </Button>
       )}
-      {!debouncedSearchTerm && $userStore.rol.some((role) => ['admin'].includes(role)) && (
+      {!debouncedSearchTerm && hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
         <Button
           variant="contained"
           startIcon={<CloudUpload />}
@@ -569,7 +570,7 @@ const Traceability = () => {
                   ""
             }
           />
-          {$userStore.rol.some((role) => ['admin'].includes(role)) && (
+          {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
             <Button
               variant="contained"
               startIcon={<CloudUpload />}
@@ -674,7 +675,7 @@ const Traceability = () => {
                       </Button>
 
                       <Box sx={{ display: 'flex', gap: 1 }}>
-                        {$userStore.rol.some((role) => ['admin'].includes(role)) && (
+                        {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
                           <>
                             <IconButton
                               size="small"

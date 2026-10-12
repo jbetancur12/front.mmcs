@@ -28,6 +28,7 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { bigToast, MySwal } from './ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
 
+import { ROLES } from 'src/constants/roles'
 // Define interfaces
 export interface CustomerData {
   id?: number
@@ -91,7 +92,7 @@ const Table: React.FC = () => {
       if (response.statusText === 'OK') {
         // @ts-ignore: Ignorar el error en esta línea
         const filteredData = response.data.filter(
-          (customer: CustomerData) => customer.rol !== 'admin'
+          (customer: CustomerData) => customer.rol !== ROLES.ADMIN
         )
         setTableData(filteredData)
         setFilteredTableData(filteredData)

@@ -33,6 +33,7 @@ import {
 } from '../../utils/tableStateUtils'
 import ActiveFiltersIndicator from '../../Components/Table/ActiveFiltersIndicator'
 
+import { ROLE_GROUPS } from 'src/constants/roles'
 // Función para obtener las solicitudes de compra
 const fetchPurchaseRequests = async (
   axiosPrivate: ReturnType<typeof useAxiosPrivate>
@@ -48,11 +49,7 @@ const PurchaseRequest: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const allowCreationRequest = useHasRole([
-    'admin',
-    'comp_requester',
-    'comp_admin'
-  ])
+  const allowCreationRequest = useHasRole(ROLE_GROUPS.COMMERCIAL_STAFF)
 
   // Use the new generic persistent table state
   const tableConfig = getModuleTableConfig('purchases')

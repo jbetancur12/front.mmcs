@@ -30,6 +30,7 @@ import { userStore } from '../store/userStore'
 import { useStore } from '@nanostores/react'
 import useAxiosPrivate from '@utils/use-axios-private'
 
+import { ROLES, hasAnyRole } from 'src/constants/roles'
 interface Profile {
   id: number
   name: string
@@ -162,7 +163,7 @@ const Profile: React.FC = () => {
   }
 
   const handleClick = () => {
-    if ($userStore.rol.some((role) => ['admin'].includes(role))) {
+    if (hasAnyRole($userStore.rol, [ROLES.ADMIN])) {
       document.getElementById('avatarInput')?.click()
     }
   }
@@ -383,7 +384,7 @@ const Profile: React.FC = () => {
           
           {/* Botones de Acción */}
           <Box>
-            {$userStore.rol.some((role) => ['admin'].includes(role)) && !isEditing && (
+            {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && !isEditing && (
               <IconButton
                 sx={{ 
                   color: 'white',
@@ -424,7 +425,7 @@ const Profile: React.FC = () => {
             {/* Imagen del Perfil */}
             <Box 
               sx={{ 
-                cursor: $userStore.rol.some((role) => ['admin'].includes(role)) ? 'pointer' : 'default',
+                cursor: hasAnyRole($userStore.rol, [ROLES.ADMIN]) ? 'pointer' : 'default',
                 textAlign: 'center'
               }}
               onClick={handleClick}
@@ -437,7 +438,7 @@ const Profile: React.FC = () => {
                 style={{ display: 'none' }}
                 onChange={handleImageChange}
               />
-              {$userStore.rol.some((role) => ['admin'].includes(role)) && (
+              {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
                 <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
                   Haz clic para cambiar imagen
                 </Typography>
@@ -486,7 +487,7 @@ const Profile: React.FC = () => {
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
                 Currículum Vitae
               </Typography>
-              {$userStore.rol.some((role) => ['admin'].includes(role)) && !isEditing && (
+              {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && !isEditing && (
                 <Button
                   variant='contained'
                   onClick={() => document.getElementById('cvInput')?.click()}

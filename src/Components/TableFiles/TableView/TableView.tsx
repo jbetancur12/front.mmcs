@@ -21,6 +21,7 @@ import { useStore } from '@nanostores/react'
 import { useFileActions } from '../hooks/useFileActions'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { handleDownload } from '../utils/fileHandlers'
+import { ROLES, ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
 // import PDFViewer from 'src/Components/PDFViewer'
 
 // Key for sessionStorage
@@ -315,7 +316,7 @@ export const TableView = ({
           <Box
             sx={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}
           >
-            {$userStore.rol.some((role) => ['admin'].includes(role)) && (
+            {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
               <Tooltip arrow placement='top' title='Eliminar'>
                 <IconButton
                   onClick={() => handleDeleteRow(Number(row.original.id))}
@@ -390,9 +391,7 @@ export const TableView = ({
               />
             )}
 
-            {$userStore.rol.some((role) =>
-              ['admin', 'metrologist'].includes(role)
-            ) && (
+            {hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) && (
                 <Button
                   onClick={() => openModal(true)}
                   variant='contained'

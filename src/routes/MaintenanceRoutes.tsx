@@ -1,7 +1,7 @@
 import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
-import { ROLES } from 'src/constants/roles'
+import { ROLES, ROLE_GROUPS } from 'src/constants/roles'
 
 // Lazy load maintenance components
 const MaintenanceDashboard = lazy(
@@ -37,12 +37,7 @@ const MaintenanceRoutes = (role: string[]) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={[
-              'admin',
-              'mantenimiento',
-              'technician',
-              'maintenance_coordinator'
-            ]}
+            roles={ROLE_GROUPS.MAINTENANCE_STAFF}
           />
         }
       >
@@ -63,7 +58,7 @@ const MaintenanceRoutes = (role: string[]) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={[ROLES.ADMIN, ROLES.MAINTENANCE_COORDINATOR]}
+            roles={ROLE_GROUPS.MAINTENANCE_MANAGERS}
           />
         }
       >

@@ -50,7 +50,7 @@ import {
 } from '../utils/sweetAlert'
 import { fetchActivationLink, resendActivationEmail } from '../utils/userActivation'
 import { useUsers, useUserMutations, QUERY_KEYS } from '../hooks/useUsers'
-import { getRoleLabelEs } from 'src/constants/roles'
+import { getRoleLabelEs, ROLES } from 'src/constants/roles'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 
 // Define interfaces
@@ -1299,7 +1299,7 @@ const CreateNewAccountModal = ({
   }, [])
 
   const validatePhone = useCallback((phone: string, roles: Role[]) => {
-    const isMetrologist = roles?.some((role) => role.name === 'metrologist')
+    const isMetrologist = roles?.some((role) => role.name === ROLES.METROLOGIST)
     if (isMetrologist && !phone) return 'El teléfono es obligatorio para metrólogos'
     if (phone && !/^[0-9+\-\s().]+$/.test(phone)) {
       return 'Usa solo números y símbolos + - ( ) .'
@@ -1373,7 +1373,7 @@ const CreateNewAccountModal = ({
     }
 
     try {
-      await onSubmit({...values, roles: [...values.roles, rolesList?.find(r => r.name === 'employee')]})
+      await onSubmit({...values, roles: [...values.roles, rolesList?.find(r => r.name === ROLES.EMPLOYEE)]})
       // Reset form on success
       setValues(initialValues)
       setErrors({})
@@ -1792,7 +1792,7 @@ const EditUserModal = ({
   }, [])
 
   const validatePhone = useCallback((phone: string, roles: Role[]) => {
-    const isMetrologist = roles?.some((role) => role.name === 'metrologist')
+    const isMetrologist = roles?.some((role) => role.name === ROLES.METROLOGIST)
     if (isMetrologist && !phone) return 'El teléfono es obligatorio para metrólogos'
     if (phone && !/^[0-9+\-\s().]+$/.test(phone)) {
       return 'Usa solo números y símbolos + - ( ) .'

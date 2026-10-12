@@ -1,4 +1,5 @@
-export const ASSET_LIFE_SHEET_ALLOWED_ROLES = ['admin']
+import { ROLES } from 'src/constants/roles'
+export const ASSET_LIFE_SHEET_ALLOWED_ROLES = [ROLES.ADMIN]
 
 export const ASSET_CATEGORY_OPTIONS = [
   { value: 'computo', label: 'Cómputo' },

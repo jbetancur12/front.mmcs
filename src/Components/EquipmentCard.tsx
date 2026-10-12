@@ -27,6 +27,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { useQueryClient } from 'react-query'
 import { bigToast } from './ExcelManipulation/Utils'
 
+import { ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
 export interface Certificate {
   id: number
   name: string
@@ -163,7 +164,7 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({ certificate, onDelete, se
       >
       <CardContent sx={{ p: 3 }}>
         {/* Header with Status */}
-        { rol.some((role) => ['admin', 'metrologist'].includes(role)) && <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+        { hasAnyRole(rol, ROLE_GROUPS.METROLOGY_STAFF) && <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
           <Chip
             label={status.label}
             size="small"

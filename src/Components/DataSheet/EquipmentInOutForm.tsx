@@ -29,6 +29,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { useStore } from '@nanostores/react'
 import { userStore } from '@stores/userStore'
 
+import { ROLES } from 'src/constants/roles'
 // Interfaz para los valores del formulario
 interface EquipmentFormValues {
   outReason: string
@@ -68,7 +69,7 @@ const validationSchema = Yup.object({
 const EquipmentForm: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
-  const isAdmin = $userStore.rol.some((role) => role === 'admin')
+  const isAdmin = $userStore.rol.some((role) => role === ROLES.ADMIN)
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [isEquipmentOut, setIsEquipmentOut] = useState<boolean>(false)

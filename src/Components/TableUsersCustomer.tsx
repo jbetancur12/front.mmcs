@@ -45,6 +45,7 @@ import { showActivationLinkDialog } from '../utils/sweetAlert'
 import { fetchActivationLink, resendActivationEmail } from '../utils/userActivation'
 import withReactContent from 'sweetalert2-react-content'
 
+import { ROLES } from 'src/constants/roles'
 // Define interfaces
 export interface UserData {
   id: number
@@ -67,7 +68,7 @@ export interface UserData {
 const Table: React.FC = () => {
   const axiosPrivate = useAxiosPrivate()
   // Eliminar usuarios es solo de admin (DELETE /users/:id); el metrólogo ve la pestaña pero no el botón
-  const canDeleteUsers = useHasRole(['admin'])
+  const canDeleteUsers = useHasRole([ROLES.ADMIN])
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [tableData, setTableData] = useState<UserData[]>([])
   const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false)
@@ -154,7 +155,7 @@ const Table: React.FC = () => {
 
       if (response.statusText === 'OK') {
         const filteredData = response.data.filter(
-          (user: UserData) => user.rol !== 'admin'
+          (user: UserData) => user.rol !== ROLES.ADMIN
         )
         setTableData(filteredData)
       }

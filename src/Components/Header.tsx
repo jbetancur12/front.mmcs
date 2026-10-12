@@ -28,6 +28,7 @@ import { useImpersonation } from '../hooks/useImpersonation'
 import ImpersonationBar from './ImpersonationBar'
 import ImpersonationDialog from './ImpersonationDialog'
 
+import { ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
 interface HeaderProps {
   toggleMobileMenu: () => void
 }
@@ -66,7 +67,7 @@ function Header({ toggleMobileMenu }: HeaderProps) {
 
   useEffect(() => {
     // Only fetch alerts for admin users to avoid authentication issues
-    if ($userStore.rol.some((role) => ['admin', 'metrologist'].includes(role)) && $userStore.email) {
+    if (hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) && $userStore.email) {
       const fetchAlerts = async () => {
         try {
           const response = await axiosPrivate('/dataSheet/alerts')
@@ -145,7 +146,7 @@ function Header({ toggleMobileMenu }: HeaderProps) {
         {/* Controles del header */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {/* Botón de alertas - Solo para admins */}
-          {!$userStore.lmsOnly && $userStore.rol.some((role) => ['admin', 'metrologist'].includes(role)) && (
+          {!$userStore.lmsOnly && hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) && (
             <Tooltip 
               title={hasAlerts ? `${totalAlerts} equipos con alertas pendientes` : 'No hay alertas'}
             >
@@ -211,7 +212,7 @@ function Header({ toggleMobileMenu }: HeaderProps) {
           )}
 
           {/* Botón de suplantación - Solo admin */}
-          {$userStore.rol.some((role) => ['admin', 'super_admin'].includes(role)) && !$userStore.lmsOnly && (
+          {hasAnyRole($userStore.rol, ROLE_GROUPS.ADMINS) && !$userStore.lmsOnly && (
             <Tooltip title="Suplantar usuario">
               <IconButton
                 color='inherit'

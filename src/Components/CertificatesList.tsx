@@ -34,6 +34,7 @@ import {
 } from '@mui/icons-material'
 import PDFViewer from './PDFViewer'
 
+import { ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
 interface Certificate {
   id: number
   calibrationDate: string
@@ -342,9 +343,7 @@ function CertificatesList({ refreshTrigger }: CertificatesListProps) {
                         </Button>
                       </Tooltip>
 
-                      {$userStore.rol.some((role) =>
-                        ['admin', 'metrologist'].includes(role)
-                      ) && (
+                      {hasAnyRole($userStore.rol, ROLE_GROUPS.METROLOGY_STAFF) && (
                         <Tooltip title='Eliminar certificado'>
                           <Button
                             variant='outlined'

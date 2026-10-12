@@ -38,6 +38,7 @@ import useAxiosPrivate from '../../utils/use-axios-private'
 import { useStore } from '@nanostores/react'
 import { userStore } from 'src/store/userStore'
 
+import { ROLES } from 'src/constants/roles'
 interface MaintenanceTicketCost {
   id: string
   name: string
@@ -89,7 +90,7 @@ const MaintenanceBilling: React.FC = () => {
   const queryClient = useQueryClient()
   const $userStore = useStore(userStore)
   const canPerformActions =
-    $userStore.rol.includes('invoicing') || $userStore.rol.includes('admin')
+    $userStore.rol.includes(ROLES.INVOICING) || $userStore.rol.includes(ROLES.ADMIN)
 
   const axiosPrivate = useAxiosPrivate()
 

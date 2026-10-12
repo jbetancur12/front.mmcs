@@ -45,6 +45,7 @@ import EquipmentQuotationApprovalDialog, {
 import EquipmentSalesDocumentsPanel from './EquipmentSalesDocumentsPanel'
 import { EQUIPMENT_QUOTE_TERM_LABELS } from './equipmentQuoteTerms'
 
+import { ROLE_GROUPS } from 'src/constants/roles'
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
   currency: 'COP',
@@ -93,7 +94,7 @@ const EquipmentSalesDetailPage = () => {
   const [decisionMode, setDecisionMode] = useState<EquipmentQuotationDecisionMode | null>(null)
   const [isSequenceDialogOpen, setIsSequenceDialogOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<DetailTab>(() => getStoredDetailTab(quotationId))
-  const isAdmin = useHasRole(['admin', 'super_admin'])
+  const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
 
   useEffect(() => {
     setActiveTab(getStoredDetailTab(quotationId))

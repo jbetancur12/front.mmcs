@@ -5,9 +5,10 @@ import {
   normalizeLmsRoles
 } from './lmsIdentity'
 
+import { ROLES } from 'src/constants/roles'
 // Define LMS role types
 export type LMSRole = 'admin' | 'training_manager' | 'user'
-export const LMS_MANAGEMENT_ROLES = ['admin', 'Training Manager'] as const
+export const LMS_MANAGEMENT_ROLES = [ROLES.ADMIN, ROLES.TRAINING_MANAGER] as const
 
 // Define role permissions
 export interface RolePermissions {
@@ -82,7 +83,7 @@ export const ROLE_PERMISSIONS: Record<LMSRole, RolePermissions> = {
 export const getUserLMSRole = (userRoles: string[]): LMSRole => {
   const normalizedRoles = normalizeLmsRoles(userRoles)
 
-  if (normalizedRoles.includes('admin') || normalizedRoles.includes('super_admin')) {
+  if (normalizedRoles.includes(ROLES.ADMIN) || normalizedRoles.includes(ROLES.SUPER_ADMIN)) {
     return 'admin'
   }
   if (hasTrainingManagerRole(normalizedRoles)) {

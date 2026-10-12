@@ -24,6 +24,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import { showActivationLinkDialog } from '../utils/sweetAlert'
 
+import { ROLES } from 'src/constants/roles'
 // Define interfaces
 export interface UserData {
   id: number
@@ -86,7 +87,7 @@ const Table: React.FC = () => {
       if (response.statusText === 'OK') {
         // @ts-ignore: Ignorar el error en esta línea
         const filteredData = response.data.filter(
-          (user: UserData) => user.rol !== 'admin'
+          (user: UserData) => user.rol !== ROLES.ADMIN
         )
         setTableData(filteredData)
         setFilteredTableData(filteredData)

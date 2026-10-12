@@ -19,6 +19,7 @@ import { CALIBRATION_SERVICE_ALLOWED_ROLES } from 'src/constants/calibrationServ
 import { EQUIPMENT_SALES_ALLOWED_ROLES } from 'src/constants/equipmentSales'
 import { audienceIncludes, isCoreModule, getModuleAudience } from 'src/constants/modules'
 
+import { ROLES, ROLE_GROUPS } from 'src/constants/roles'
 // Advertir una sola vez por moduleName desconocido (atrapa typos como
 // 'Flota' vs 'fleet' que quedarían silenciosamente como core).
 const warnedUnknownModules = new Set<string>()
@@ -50,7 +51,7 @@ const sidebarItems = ($userStore: UserData) => [
     label: 'Dashboard',
     to: '/',
     icon: <MdDashboard className={iconClass} />,
-    roles: ['admin', 'user'],
+    roles: ROLE_GROUPS.ADMIN_AND_CLIENT,
     moduleName: 'Basic'
   },
   {
@@ -58,7 +59,7 @@ const sidebarItems = ($userStore: UserData) => [
     label: 'Equipos',
     to: getLinkToCustomer(`customers/`, $userStore),
     icon: <MdMicrowave className={iconClass} />,
-    roles: ['user'],
+    roles: [ROLES.USER],
     moduleName: 'Basic'
   },
   {
@@ -66,18 +67,14 @@ const sidebarItems = ($userStore: UserData) => [
     label: 'Empresas',
     to: '/customers',
     icon: <FaHospitalUser className={iconClass} />,
-    roles: ['admin', 'metrologist'],
+    roles: ROLE_GROUPS.METROLOGY_STAFF,
     moduleName: 'Basic'
   },
 
   {
     type: 'dropdown',
     buttonText: 'Compras',
-    roles: [
-      'admin',
-      'comp_admin',
-      'comp_requester'
-    ],
+    roles: ROLE_GROUPS.COMMERCIAL_STAFF,
     moduleName: 'Basic',
     pathData:
       'M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2zM7.16 14l.84-2h7.45c.75 0 1.41-.41 1.75-1.03l3.24-5.88A1 1 0 0 0 20 4H5.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7.42c-.14 0-.25-.11-.26-.25z',
@@ -85,42 +82,42 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Selección de Proveedores',
         url: 'purchases/supplier-selection',
-        roles: ['admin', 'comp_admin', 'comp_requester']
+        roles: ROLE_GROUPS.COMMERCIAL_STAFF
       },
       {
         label: 'Lista de Proveedores',
         url: 'purchases/suppliers',
-        roles: ['admin', 'comp_admin', 'comp_requester']
+        roles: ROLE_GROUPS.COMMERCIAL_STAFF
       },
       {
         label: 'Solicitudes de Compra',
         url: 'purchases/requests',
-        roles: ['admin', 'comp_admin', 'comp_requester']
+        roles: ROLE_GROUPS.COMMERCIAL_STAFF
       },
       {
         label: 'Ordenes de Compra',
         url: 'purchases/orders',
-        roles: ['admin', 'comp_admin', 'comp_requester']
+        roles: ROLE_GROUPS.COMMERCIAL_STAFF
       },
       {
         label: 'Verificaciones',
         url: 'purchases/verifications',
-        roles: ['admin', 'comp_admin', 'comp_requester']
+        roles: ROLE_GROUPS.COMMERCIAL_STAFF
       },
       {
         label: 'Parametros Fiscales',
         url: 'purchases/fiscal-parameters',
-        roles: ['admin', 'comp_admin', 'comp_requester']
+        roles: ROLE_GROUPS.COMMERCIAL_STAFF
       },
       {
         label: 'Evaluaciones de Proveedores',
         url: 'purchases/suppliers/evaluations',
-        roles: ['admin', 'comp_admin', 'comp_requester']
+        roles: ROLE_GROUPS.COMMERCIAL_STAFF
       },
       {
         label: 'Estadísticas',
         url: 'purchases/statistics',
-        roles: ['admin', 'comp_admin']
+        roles: [ROLES.ADMIN, ROLES.COMP_ADMIN]
       }
     ]
   },
@@ -190,17 +187,17 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Mi Aprendizaje',
         url: 'lms/employee',
-        roles: ['employee']
+        roles: [ROLES.EMPLOYEE]
       },
       {
         label: 'Mis Certificados',
         url: 'lms/certificates',
-        roles: ['employee', 'user']
+        roles: [ROLES.EMPLOYEE, ROLES.USER]
       },
       {
         label: 'Mi Aprendizaje',
         url: 'lms/client',
-        roles: ['user']
+        roles: [ROLES.USER]
       }
     ]
   },
@@ -209,7 +206,7 @@ const sidebarItems = ($userStore: UserData) => [
     label: 'Biomedicos',
     to: '/profiles',
     icon: <FaUser className={iconClass} />,
-    roles: ['admin', 'user'],
+    roles: ROLE_GROUPS.ADMIN_AND_CLIENT,
     moduleName: 'Basic'
   },
   {
@@ -217,13 +214,13 @@ const sidebarItems = ($userStore: UserData) => [
     label: 'Trazabilidades',
     to: '/trazabilidad',
     icon: <BiSolidReport className={iconClass} />,
-    roles: ['admin', 'user'],
+    roles: ROLE_GROUPS.ADMIN_AND_CLIENT,
     moduleName: 'Basic'
   },
   {
     type: 'dropdown',
     buttonText: 'Calidad',
-    roles: ['admin'],
+    roles: [ROLES.ADMIN],
     moduleName: 'Basic',
     pathData:
       'M12 2l2.9 6.9 7.1.6-5.4 4.8 1.6 7-6.2-3.7-6.2 3.7 1.6-7-5.4-4.8 7.1-.6z',
@@ -231,7 +228,7 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Trabajo no Conforme',
         url: '/non-conform-work-reports',
-        roles: ['admin']
+        roles: [ROLES.ADMIN]
       }
     ]
   },
@@ -239,7 +236,7 @@ const sidebarItems = ($userStore: UserData) => [
   {
     type: 'dropdown',
     buttonText: 'Inventario',
-    roles: ['admin', 'metrologist'],
+    roles: ROLE_GROUPS.METROLOGY_STAFF,
     moduleName: 'Basic',
     pathData:
       'M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H8v-2h6v2zm3-4H8v-2h8v2zm0-4H8V7h8v2z',
@@ -247,51 +244,51 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Hoja de Vida',
         url: 'datasheets',
-        roles: ['admin', 'metrologist']
+        roles: ROLE_GROUPS.METROLOGY_STAFF
       },
       {
         label: 'Hoja de Vida TI',
         url: 'asset-life-sheets',
-        roles: ['admin']
+        roles: [ROLES.ADMIN]
       },
-      { label: 'Alertas', url: 'datasheets/alerts', roles: ['admin', 'metrologist'] }
+      { label: 'Alertas', url: 'datasheets/alerts', roles: ROLE_GROUPS.METROLOGY_STAFF }
     ]
   },
   {
     type: 'dropdown',
     buttonText: 'Laboratorio', // Texto del botón principal
-    roles: ['admin'], // Roles que pueden ver este menú
+    roles: [ROLES.ADMIN], // Roles que pueden ver este menú
     moduleName: 'Basic', // Nombre interno del módulo (opcional, ajusta según tu sistema)
     // Path SVG para un icono de matraz/laboratorio (puedes reemplazarlo)
 
     pathData:
       'M19 19V8.83l-6-6-6 6V19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zm-7-7h2v5h-2z',
     menuItems: [
-      { label: 'Condiciones', url: 'laboratory/conditions', roles: ['admin'] }, // Sub-item Condiciones
-      { label: 'Patrones', url: 'laboratory/patterns', roles: ['admin'] } // Sub-item Patrones
+      { label: 'Condiciones', url: 'laboratory/conditions', roles: [ROLES.ADMIN] }, // Sub-item Condiciones
+      { label: 'Patrones', url: 'laboratory/patterns', roles: [ROLES.ADMIN] } // Sub-item Patrones
     ]
   },
   // {
   //   type: 'dropdown',
   //   buttonText: 'Telemetría',
-  //   roles: ['admin', 'user'],
+  //   roles: ROLE_GROUPS.ADMIN_AND_CLIENT,
   //   moduleName: 'Iot',
   //   pathData:
   //     'M12 3C7.03 3 3 7.03 3 12s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zm0 16c-3.87 0-7-3.13-7-7 0-1.66.56-3.19 1.5-4.39l9.89 9.89C15.19 18.44 13.66 19 12 19zm4.5-2.61L6.61 7.5C7.81 6.56 9.34 6 11 6c3.87 0 7 3.13 7 7 0 1.66-.56 3.19-1.5 4.39z',
   //   menuItems: [
-  //     { label: 'Lista', url: 'iot', roles: ['admin'] },
-  //     { label: 'Map', url: 'iot/map', roles: ['admin', 'user'] },
+  //     { label: 'Lista', url: 'iot', roles: [ROLES.ADMIN] },
+  //     { label: 'Map', url: 'iot/map', roles: ROLE_GROUPS.ADMIN_AND_CLIENT },
   //     {
   //       label: 'Gestión de Clientes',
   //       url: 'iot/customers-management',
-  //       roles: ['admin']
+  //       roles: [ROLES.ADMIN]
   //     }
   //   ]
   // },
   {
     type: 'dropdown',
     buttonText: 'Calibraciones',
-    roles: ['admin', 'metrologist'],
+    roles: ROLE_GROUPS.METROLOGY_STAFF,
     moduleName: 'Basic',
     pathData:
       'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 13.17l6.59-6.59L20 8l-8 8z',
@@ -299,27 +296,27 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Equipos',
         url: 'calibraciones/equipos',
-        roles: ['admin', 'metrologist']
+        roles: ROLE_GROUPS.METROLOGY_STAFF
       },
       {
         label: 'Tipos de Certificado',
         url: 'calibraciones/tipos-de-certificado',
-        roles: ['admin']
+        roles: [ROLES.ADMIN]
       },
       {
         label: 'Certificados',
         url: 'calibraciones/certificados',
-        roles: ['admin', 'user', 'metrologist']
+        roles: [ROLES.ADMIN, ROLES.USER, ROLES.METROLOGIST]
       },
       {
         label: 'Subir Excel',
         url: 'calibraciones/subir-excel',
-        roles: ['admin', 'metrologist']
+        roles: ROLE_GROUPS.METROLOGY_STAFF
       },
       {
         label: 'Plantillas',
         url: 'calibraciones/templates',
-        roles: ['admin', 'metrologist']
+        roles: ROLE_GROUPS.METROLOGY_STAFF
       }
     ]
   },
@@ -344,18 +341,18 @@ const sidebarItems = ($userStore: UserData) => [
     label: 'Flota',
     to: '/fleet',
     icon: <CarRepair className={iconClass} />,
-    roles: ['admin'],
+    roles: [ROLES.ADMIN],
     moduleName: 'Fleet'
   },
   {
     type: 'dropdown',
     buttonText: 'Mantenimiento',
     roles: [
-      'admin',
-      'mantenimiento',
-      'technician',
-      'maintenance_coordinator',
-      'invoicing'
+      ROLES.ADMIN,
+      ROLES.MANTENIMIENTO,
+      ROLES.TECHNICIAN,
+      ROLES.MAINTENANCE_COORDINATOR,
+      ROLES.INVOICING
     ],
     moduleName: 'Basic',
     pathData:
@@ -364,27 +361,22 @@ const sidebarItems = ($userStore: UserData) => [
       {
         label: 'Dashboard',
         url: 'maintenance',
-        roles: [
-          'admin',
-          'mantenimiento',
-          'technician',
-          'maintenance_coordinator'
-        ]
+        roles: ROLE_GROUPS.MAINTENANCE_STAFF
       },
       {
         label: 'Técnicos',
         url: 'maintenance/technicians',
-        roles: ['admin', 'maintenance_coordinator']
+        roles: ROLE_GROUPS.MAINTENANCE_MANAGERS
       },
       {
         label: 'Protocolos',
         url: 'maintenance/protocols',
-        roles: ['admin', 'mantenimiento', 'maintenance_coordinator']
+        roles: [ROLES.ADMIN, ROLES.MANTENIMIENTO, ROLES.MAINTENANCE_COORDINATOR]
       },
       {
         label: 'Facturación',
         url: 'maintenance/billing',
-        roles: ['admin', 'mantenimiento', 'invoicing']
+        roles: [ROLES.ADMIN, ROLES.MANTENIMIENTO, ROLES.INVOICING]
       }
     ]
   },
@@ -393,7 +385,7 @@ const sidebarItems = ($userStore: UserData) => [
     label: 'Ajustes',
     to: '/settings',
     icon: <MdOutlineSettings className={iconClass} />,
-    roles: ['admin'],
+    roles: [ROLES.ADMIN],
     moduleName: 'Basic'
   }
   // Otros ítems...

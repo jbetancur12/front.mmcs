@@ -1,7 +1,7 @@
 import { lazy } from 'react'
 import { Route } from 'react-router-dom'
 import ProtectedRoute from 'src/Components/Authentication/ProtectedRoute'
-import { ROLES } from 'src/constants/roles'
+import { ROLE_GROUPS } from 'src/constants/roles'
 
 const Dashboard = lazy(() => import('../pages/Dashboard'))
 const Settings = lazy(() => import('../pages/Settings'))
@@ -23,7 +23,7 @@ const OtherRoutes = (role: string[]) => {
           <ProtectedRoute
             isAuthenticated={localStorage.getItem('accessToken') !== null}
             userRole={role}
-            roles={[ROLES.ADMIN, ROLES.USER]}
+            roles={ROLE_GROUPS.ADMIN_AND_CLIENT}
             fallbackRoute={true} // Si no es admin, redirige a /welcome
           />
         }

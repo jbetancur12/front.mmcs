@@ -82,6 +82,7 @@ import {
 } from './calibrationQuoteTerms'
 import { NumericFormatCustom } from '../../Components/NumericFormatCustom'
 
+import { ROLE_GROUPS } from 'src/constants/roles'
 type FormItem = CalibrationServiceItemPayload & { localId: string }
 type FormState = Omit<CalibrationServicePayload, 'items'> & { items: FormItem[] }
 
@@ -281,7 +282,7 @@ const CalibrationServiceWorkspacePage = () => {
   const queryClient = useQueryClient()
   const { serviceId } = useParams<{ serviceId?: string }>()
   const isEditing = Boolean(serviceId)
-  const isAdmin = useHasRole(['admin', 'super_admin'])
+  const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
   const canAccessWorkspace = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const {
     data: sequenceConfig,

@@ -76,6 +76,7 @@ import {
   mergeEquipmentQuoteTerms
 } from './equipmentQuoteTerms'
 
+import { ROLE_GROUPS } from 'src/constants/roles'
 type FormState = Omit<EquipmentQuotationPayload, 'items' | 'status' | 'quoteTerms'> & {
   items: FormItem[]
   quoteTerms: Record<string, string>
@@ -206,7 +207,7 @@ const EquipmentSalesWorkspacePage = () => {
   const queryClient = useQueryClient()
   const { quotationId } = useParams<{ quotationId?: string }>()
   const isEditing = Boolean(quotationId)
-  const isAdmin = useHasRole(['admin', 'super_admin'])
+  const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
   const canAccessWorkspace = useHasRole([...EQUIPMENT_SALES_EDIT_ROLES])
   const { data: sequenceConfig, isLoading: isLoadingSequenceConfig } = useEquipmentSequenceConfig(canAccessWorkspace)
   const { data: quotation, isLoading: isLoadingQuotation } = useEquipmentQuotation(quotationId)

@@ -7,6 +7,7 @@ import { userStore } from '@stores/userStore'
 import { CreateFileModal } from './CreateFileModal/CreateFileModal'
 import Loader from '../Loader2'
 
+import { ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
 const TableFiles = () => {
   const axiosPrivate = useAxiosPrivate()
   const { tableData, loading, rowCount, fetchFiles } = useFileData()
@@ -24,7 +25,7 @@ const TableFiles = () => {
         axiosPrivate={axiosPrivate}
         openModal={() => setCreateModalOpen(true)}
       />
-      {$user.rol.some((r) => ['admin', 'metrologist'].includes(r)) && (
+      {hasAnyRole($user.rol, ROLE_GROUPS.METROLOGY_STAFF) && (
         <CreateFileModal
           open={createModalOpen}
           onClose={() => setCreateModalOpen(false)}

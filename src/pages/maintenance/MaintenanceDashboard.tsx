@@ -82,6 +82,7 @@ import MaintenanceTechnicalReportDialog from '../../Components/Maintenance/Maint
 import { maintenanceSignaturesEnabled } from '../../features/maintenanceFlags'
 import type { CompletionPhotoInput } from '../../Components/Maintenance/CompletionCostsDialog'
 
+import { ROLES } from 'src/constants/roles'
 /**
  * MaintenanceDashboard component provides an admin interface for managing maintenance tickets
  * Includes statistics, ticket management, and real-time updates
@@ -150,10 +151,10 @@ const MaintenanceDashboard: React.FC = () => {
   }
 
   // Check user permissions
-  const isTechnician = $userStore.rol.includes('technician')
+  const isTechnician = $userStore.rol.includes(ROLES.TECHNICIAN)
   const isAdmin =
-    $userStore.rol.includes('admin') ||
-    $userStore.rol.includes('maintenance_coordinator')
+    $userStore.rol.includes(ROLES.ADMIN) ||
+    $userStore.rol.includes(ROLES.MAINTENANCE_COORDINATOR)
 
   // Get technician ID if user is a technician
   const currentTechnicianEmail = useMemo(() => {

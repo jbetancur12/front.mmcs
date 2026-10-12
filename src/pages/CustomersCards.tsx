@@ -34,6 +34,7 @@ import Swal from 'sweetalert2'
 import CreateCustomerModal from '../Components/CreateCustomerModal.tsx'
 import EditCustomerModal from '../Components/EditCustomerModal.tsx'
 
+import { ROLES } from 'src/constants/roles'
 export interface CustomerData {
   id?: number
   nombre: string
@@ -80,7 +81,7 @@ const CustomersCards: React.FC = () => {
 
       if (response.statusText === 'OK') {
         const filteredData = response.data.filter(
-          (customer: CustomerData) => customer.rol !== 'admin'
+          (customer: CustomerData) => customer.rol !== ROLES.ADMIN
         )
         setCustomers(filteredData)
       }

@@ -62,6 +62,7 @@ import PDFViewer from 'src/Components/PDFViewer'
 import { buildGDriveEmbedUrl } from 'src/utils/gdrive'
 
 
+import { ROLES } from 'src/constants/roles'
 interface CourseUnit {
   id: number
   title: string
@@ -347,7 +348,7 @@ const LmsCoursePreview: React.FC = () => {
     }
 
     // Verificar que el usuario es admin
-    if (!storeUser.rol.includes('admin')) {
+    if (!storeUser.rol.includes(ROLES.ADMIN)) {
       navigate('/lms')
       return
     }

@@ -101,6 +101,7 @@ import {
   mergeCalibrationQuoteTerms
 } from './calibrationQuoteTerms'
 
+import { ROLE_GROUPS } from 'src/constants/roles'
 const FILTER_ALL = 'all'
 const FILTER_UNASSIGNED = 'unassigned'
 const CALIBRATION_SERVICES_VIEW_STORAGE_KEY = 'calibrationServicesViewMode'
@@ -696,7 +697,7 @@ const CalibrationServicesPage = () => {
   const canRunExecution = useHasRole([...CALIBRATION_SERVICE_EXECUTION_ROLES])
   const canViewModule = useHasRole([...CALIBRATION_SERVICE_ALLOWED_ROLES])
   const canViewAnalytics = useHasRole([...CALIBRATION_SERVICE_ANALYTICS_ROLES])
-  const isAdmin = useHasRole(['admin', 'super_admin'])
+  const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
   const canManageSequenceConfig = canCreateServices
   const canManageSlaConfig = isAdmin
   const hasTechnicalRole = useHasRole([...CALIBRATION_SERVICE_TECHNICAL_ROLES])

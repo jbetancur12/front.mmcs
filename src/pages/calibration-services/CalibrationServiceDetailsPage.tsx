@@ -137,6 +137,7 @@ import CalibrationServiceLogisticsControlDialog, {
 import CalibrationServiceSendLogisticsEmailDialog from './CalibrationServiceSendLogisticsEmailDialog'
 import useAxiosPrivate from '@utils/use-axios-private'
 
+import { ROLES, ROLE_GROUPS } from 'src/constants/roles'
 type DetailTab =
   | 'summary'
   | 'items'
@@ -391,7 +392,7 @@ const CalibrationServiceDetailsPage = () => {
     isError,
     error
   } = useCalibrationService(serviceId)
-  const isAdmin = useHasRole(['admin', 'super_admin'])
+  const isAdmin = useHasRole(ROLE_GROUPS.ADMINS)
   const canManageSequenceConfig = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
   const { data: sequenceConfig, isLoading: isLoadingSequenceConfig } =
     useCalibrationServiceSequenceConfig(canManageSequenceConfig)
@@ -540,7 +541,7 @@ const CalibrationServiceDetailsPage = () => {
   const canGenerateQuotePdf = useHasRole([...CALIBRATION_SERVICE_EDIT_ROLES])
   const canGenerateOdsPdf = useHasRole([...CALIBRATION_SERVICE_ODS_ROLES])
   const canEditExecutionCustomerRole =
-    useHasRole(['admin', 'super_admin', 'calibration_coordinator', 'comp_admin', 'comp_requester'])
+    useHasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.CALIBRATION_COORDINATOR, ROLES.COMP_ADMIN, ROLES.COMP_REQUESTER])
   const { data: assignableMetrologists = [] } =
     useCalibrationAssignableMetrologists(canScheduleServiceRole)
   const requestedAction = searchParams.get('open')

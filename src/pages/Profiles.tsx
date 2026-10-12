@@ -36,6 +36,7 @@ import toast, { Toaster } from 'react-hot-toast'
 import Swal from 'sweetalert2'
 import { buildMinioObjectUrl } from '@utils/minio'
 
+import { ROLES, hasAnyRole } from 'src/constants/roles'
 export interface Profile {
   id: number
   name: string
@@ -242,7 +243,7 @@ const Profiles: React.FC = () => {
           Limpiar búsqueda
         </Button>
       )}
-      {!debouncedSearchTerm && $userStore.rol.some((role) => ['admin'].includes(role)) && (
+      {!debouncedSearchTerm && hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
         <Button
           variant="contained"
           startIcon={<Add />}
@@ -313,7 +314,7 @@ const Profiles: React.FC = () => {
               ""
             }
           />
-          {$userStore.rol.some((role) => ['admin'].includes(role)) && (
+          {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
             <Button
               variant="contained"
               startIcon={<Add />}
@@ -436,7 +437,7 @@ const Profiles: React.FC = () => {
                         Ver Perfil
                       </Button>
                       
-                      {$userStore.rol.some((role) => ['admin'].includes(role)) && (
+                      {hasAnyRole($userStore.rol, [ROLES.ADMIN]) && (
                         <IconButton
                           size="small"
                           color="error"
