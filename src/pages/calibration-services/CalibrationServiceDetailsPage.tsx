@@ -4029,6 +4029,7 @@ const CalibrationServiceDetailsPage = () => {
       {isLogisticsControlDialogOpen ? (
         <CalibrationServiceLogisticsControlDialog
           open={isLogisticsControlDialogOpen}
+          serviceId={String(service.id)}
           serviceCode={service.serviceCode}
           initialValues={logisticsControlInitialValues}
           isLoading={isOperationalBusy}

@@ -9,6 +9,8 @@ interface Device {
   internalCode: string
   equipmentInOuts: EquipmentInOut[]
   observationsOut?: string | null // Add this to store the observation
+  loanCustomer?: string | null // Cliente al que se le prestó (desde logística)
+  loanService?: string | null // Servicio de calibración del préstamo
 }
 
 interface EquipmentInOut {
@@ -23,6 +25,8 @@ interface EquipmentInOut {
   observationsIn: string | null
   observationsOut: string | null
   registeredBy: string
+  customer?: { id: number; nombre: string } | null
+  service?: { id: number; serviceCode: string } | null
 }
 
 const DevicesOnLoan = () => {
@@ -38,7 +42,9 @@ const DevicesOnLoan = () => {
       observationsOut:
         device.equipmentInOuts.length > 0
           ? device.equipmentInOuts[0].observationsOut
-          : null
+          : null,
+      loanCustomer: device.equipmentInOuts[0]?.customer?.nombre ?? null,
+      loanService: device.equipmentInOuts[0]?.service?.serviceCode ?? null
     }))
     setData(devicesWithObservations)
   }
@@ -64,6 +70,18 @@ const DevicesOnLoan = () => {
         accessorKey: 'internalCode',
         header: 'Código Interno',
         size: 150
+      },
+      {
+        accessorKey: 'loanCustomer',
+        header: 'Cliente',
+        size: 180,
+        Cell: ({ cell }) => cell.getValue<string | null>() || 'Sin registrar'
+      },
+      {
+        accessorKey: 'loanService',
+        header: 'Servicio',
+        size: 120,
+        Cell: ({ cell }) => cell.getValue<string | null>() || '—'
       },
       {
         accessorKey: 'observationsOut', // Access the new field
