@@ -870,6 +870,8 @@ export interface CalibrationServiceSendLogisticsControlEmailPayload {
   serviceId: string
   recipientEmail?: string | null
   recipientName?: string | null
+  sendWhatsApp?: boolean
+  whatsappPhone?: string | null
 }
 
 export interface CalibrationServiceStartExecutionPayload {
@@ -997,6 +999,13 @@ export interface CalibrationServiceLogisticsEmailSendResult {
     actualRecipient?: string | null
     isDevOverride: boolean
   }
+  whatsapp?: {
+    sent: boolean
+    reason?: string | null
+    intendedRecipient?: string | null
+    actualRecipient?: string | null
+    isDevOverride: boolean
+  } | null
 }
 
 export interface CalibrationServiceSendPreviewResult {

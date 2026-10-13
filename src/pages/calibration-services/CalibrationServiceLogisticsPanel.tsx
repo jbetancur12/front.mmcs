@@ -106,7 +106,7 @@ const CalibrationServiceLogisticsPanel = ({
               onClick={onSendEmail}
               disabled={isBusy}
             >
-              Enviar correo
+              Enviar formato
             </Button>
           ) : null}
           {canRegisterMovement ? (

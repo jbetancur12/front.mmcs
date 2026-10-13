@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   Alert,
   Button,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   Stack,
   TextField,
   Typography
@@ -24,6 +26,8 @@ interface Props {
   onSubmit: (values: {
     recipientEmail?: string | null
     recipientName?: string | null
+    sendWhatsApp?: boolean
+    whatsappPhone?: string | null
   }) => void | Promise<void>
 }
 
@@ -43,6 +47,10 @@ const CalibrationServiceSendLogisticsEmailDialog = ({
     () => service.contactName || service.customer?.nombre || '',
     [service.contactName, service.customer?.nombre]
   )
+  const defaultWhatsappPhone = useMemo(
+    () => service.contactPhone || service.customer?.telefono || '',
+    [service.contactPhone, service.customer?.telefono]
+  )
   const defaultSource = service.contactEmail
     ? 'correo de contacto del servicio'
     : service.customer?.email
@@ -51,6 +59,8 @@ const CalibrationServiceSendLogisticsEmailDialog = ({
 
   const [recipientEmail, setRecipientEmail] = useState('')
   const [recipientName, setRecipientName] = useState('')
+  const [sendWhatsApp, setSendWhatsApp] = useState(false)
+  const [whatsappPhone, setWhatsappPhone] = useState('')
 
   useEffect(() => {
     if (!open) {
@@ -59,12 +69,16 @@ const CalibrationServiceSendLogisticsEmailDialog = ({
 
     setRecipientEmail(defaultRecipientEmail)
     setRecipientName(defaultRecipientName)
-  }, [defaultRecipientEmail, defaultRecipientName, open])
+    setSendWhatsApp(false)
+    setWhatsappPhone(defaultWhatsappPhone)
+  }, [defaultRecipientEmail, defaultRecipientName, defaultWhatsappPhone, open])
 
   const handleSubmit = async () => {
     await onSubmit({
       recipientEmail: recipientEmail.trim() || null,
-      recipientName: recipientName.trim() || null
+      recipientName: recipientName.trim() || null,
+      sendWhatsApp,
+      whatsappPhone: sendWhatsApp ? whatsappPhone.trim() || null : null
     })
   }
 
@@ -75,7 +89,8 @@ const CalibrationServiceSendLogisticsEmailDialog = ({
         <Stack spacing={2.5} sx={{ mt: 0.5 }}>
           <Typography variant='body2' color='text.secondary'>
             Se generará una nueva versión del PDF de control de ingreso y entrega con
-            la información diligenciada actualmente y se enviará adjunta por correo.
+            la información diligenciada actualmente y se enviará adjunta por correo. También
+            puedes enviarlo por WhatsApp al mismo tiempo.
           </Typography>
 
           <Alert severity='info'>
@@ -107,6 +122,26 @@ const CalibrationServiceSendLogisticsEmailDialog = ({
             onChange={(event) => setRecipientEmail(event.target.value)}
             helperText='Puedes dejar el sugerido o cambiarlo antes de enviar.'
           />
+
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={sendWhatsApp}
+                onChange={(event) => setSendWhatsApp(event.target.checked)}
+              />
+            }
+            label='Enviar también por WhatsApp'
+          />
+
+          {sendWhatsApp ? (
+            <TextField
+              fullWidth
+              label='Número de WhatsApp'
+              value={whatsappPhone}
+              onChange={(event) => setWhatsappPhone(event.target.value)}
+              helperText='Debe ser un celular con WhatsApp (los teléfonos fijos no reciben). Por defecto: el teléfono de contacto del servicio.'
+            />
+          ) : null}
         </Stack>
       </DialogContent>
       <DialogActions>
@@ -116,9 +151,13 @@ const CalibrationServiceSendLogisticsEmailDialog = ({
         <Button
           variant='contained'
           onClick={() => void handleSubmit()}
-          disabled={isLoading || !recipientEmail.trim()}
+          disabled={
+            isLoading ||
+            !recipientEmail.trim() ||
+            (sendWhatsApp && !whatsappPhone.trim())
+          }
         >
-          Enviar correo
+          {sendWhatsApp ? 'Enviar correo y WhatsApp' : 'Enviar correo'}
         </Button>
       </DialogActions>
     </Dialog>
