@@ -34,7 +34,9 @@ import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
+import SwapHorizOutlinedIcon from '@mui/icons-material/SwapHorizOutlined'
 import SignaturePad from '../../Components/Maintenance/SignaturePad'
+import CalibrationServiceLoanEquipmentSection from './CalibrationServiceLoanEquipmentSection'
 import { axiosPrivate } from '@utils/api'
 import {
   CalibrationServiceLogisticsControlItem,
@@ -46,6 +48,7 @@ export interface CalibrationServiceLogisticsControlDialogValues
 
 interface Props {
   open: boolean
+  serviceId?: string
   serviceCode: string
   initialValues: CalibrationServiceLogisticsControlDialogValues
   isLoading?: boolean
@@ -97,6 +100,7 @@ const fromBooleanString = (value: string) =>
 
 const CalibrationServiceLogisticsControlDialog = ({
   open,
+  serviceId,
   serviceCode,
   initialValues,
   isLoading = false,
@@ -649,6 +653,17 @@ const CalibrationServiceLogisticsControlDialog = ({
               </Grid>
             </Grid>
           </Paper>
+
+          {serviceId ? (
+            <Paper {...sectionPaperProps}>
+              <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 2 }}>
+                <SwapHorizOutlinedIcon color='action' />
+                <Typography {...sectionTitleProps}>Equipos de préstamo</Typography>
+              </Stack>
+              <Divider sx={{ mb: 2 }} />
+              <CalibrationServiceLoanEquipmentSection serviceId={serviceId} />
+            </Paper>
+          ) : null}
 
           <Paper {...sectionPaperProps}>
             <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 2 }}>

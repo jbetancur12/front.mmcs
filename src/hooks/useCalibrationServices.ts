@@ -37,6 +37,10 @@ import {
   CalibrationServiceSendAdjustmentToCustomerPayload,
   CalibrationServiceSendLogisticsControlEmailPayload,
   CalibrationServiceLogisticsEmailSendResult,
+  CalibrationServiceLoanEquipment,
+  CalibrationServiceLoanEquipmentOption,
+  CalibrationServiceLoanOutPayload,
+  CalibrationServiceLoanReturnPayload,
   CalibrationServiceCertificateSendResult,
   CalibrationServiceResumePayload,
   CalibrationServiceSchedulePayload,
@@ -50,10 +54,67 @@ import {
 
 export const CALIBRATION_SERVICE_QUERY_KEYS = {
   all: 'calibration-services',
-  detail: 'calibration-service-detail'
+  detail: 'calibration-service-detail',
+  loans: 'calibration-service-loan-equipment',
+  availableLoans: 'calibration-available-loan-equipment'
 } as const
 
 const calibrationServiceApi = {
+  getLoanEquipment: async (
+    serviceId: string
+  ): Promise<CalibrationServiceLoanEquipment[]> => {
+    const response = await axiosPrivate.get<CalibrationServiceLoanEquipment[]>(
+      `/calibration-services/${serviceId}/loan-equipment`
+    )
+    return response.data
+  },
+
+  getAvailableLoanEquipment: async (
+    search: string
+  ): Promise<CalibrationServiceLoanEquipmentOption[]> => {
+    const response = await axiosPrivate.get<CalibrationServiceLoanEquipmentOption[]>(
+      '/calibration-services/loan-equipment/available',
+      { params: { search: search || undefined } }
+    )
+    return response.data
+  },
+
+  createLoanEquipment: async ({
+    serviceId,
+    ...payload
+  }: CalibrationServiceLoanOutPayload): Promise<CalibrationServiceLoanEquipment> => {
+    const response = await axiosPrivate.post<CalibrationServiceLoanEquipment>(
+      `/calibration-services/${serviceId}/loan-equipment`,
+      payload
+    )
+    return response.data
+  },
+
+  returnLoanEquipment: async ({
+    serviceId,
+    loanId,
+    ...payload
+  }: CalibrationServiceLoanReturnPayload): Promise<CalibrationServiceLoanEquipment> => {
+    const response = await axiosPrivate.post<CalibrationServiceLoanEquipment>(
+      `/calibration-services/${serviceId}/loan-equipment/${loanId}/return`,
+      payload
+    )
+    return response.data
+  },
+
+  cancelLoanEquipment: async ({
+    serviceId,
+    loanId
+  }: {
+    serviceId: string
+    loanId: number
+  }): Promise<{ cancelled: boolean }> => {
+    const response = await axiosPrivate.delete<{ cancelled: boolean }>(
+      `/calibration-services/${serviceId}/loan-equipment/${loanId}`
+    )
+    return response.data
+  },
+
   getSequenceConfig: async (): Promise<CalibrationServiceSequenceConfig> => {
     const response = await axiosPrivate.get<CalibrationServiceSequenceConfig>(
       '/calibration-services/config/sequence'
@@ -732,6 +793,40 @@ export const useCalibrationServiceQuoteTermsTemplate = (enabled = true) => {
     enabled,
     staleTime: 0
   })
+}
+
+export const useCalibrationServiceLoanEquipment = (serviceId?: string) => {
+  return useQuery({
+    queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.loans, serviceId],
+    queryFn: () => calibrationServiceApi.getLoanEquipment(serviceId as string),
+    enabled: Boolean(serviceId),
+    retry: 1
+  })
+}
+
+export const useAvailableLoanEquipment = (search: string, enabled = true) => {
+  return useQuery({
+    queryKey: [CALIBRATION_SERVICE_QUERY_KEYS.availableLoans, search],
+    queryFn: () => calibrationServiceApi.getAvailableLoanEquipment(search),
+    enabled,
+    keepPreviousData: true,
+    retry: 1
+  })
+}
+
+export const useCalibrationServiceLoanMutations = () => {
+  const queryClient = useQueryClient()
+  // Un préstamo cambia la lista del servicio, los equipos disponibles y el reporte de préstamos.
+  const refresh = () => {
+    queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.loans])
+    queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.availableLoans])
+  }
+
+  return {
+    createLoan: useMutation(calibrationServiceApi.createLoanEquipment, { onSuccess: refresh }),
+    returnLoan: useMutation(calibrationServiceApi.returnLoanEquipment, { onSuccess: refresh }),
+    cancelLoan: useMutation(calibrationServiceApi.cancelLoanEquipment, { onSuccess: refresh })
+  }
 }
 
 export const useCalibrationService = (serviceId?: string) => {

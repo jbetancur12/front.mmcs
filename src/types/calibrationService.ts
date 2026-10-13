@@ -1008,6 +1008,46 @@ export interface CalibrationServiceLogisticsEmailSendResult {
   } | null
 }
 
+export interface CalibrationServiceLoanEquipmentOption {
+  id: number
+  equipmentName: string | null
+  internalCode: string | null
+  brand?: string | null
+  model?: string | null
+  serialNumber?: string | null
+}
+
+export interface CalibrationServiceLoanEquipment
+  extends CalibrationServiceLoanEquipmentOption {
+  equipmentId: number
+  outDate: string
+  inDate: string | null
+  returned: boolean
+  visualOutInspection: string
+  operationalOutTest: string
+  observationsOut: string | null
+  visualInInspection: string | null
+  operationalInTest: string | null
+  observationsIn: string | null
+  registeredBy: string
+}
+
+export interface CalibrationServiceLoanOutPayload {
+  serviceId: string
+  equipmentId: number
+  visualOutInspection?: string | null
+  operationalOutTest?: string | null
+  observationsOut?: string | null
+}
+
+export interface CalibrationServiceLoanReturnPayload {
+  serviceId: string
+  loanId: number
+  visualInInspection?: string | null
+  operationalInTest?: string | null
+  observationsIn?: string | null
+}
+
 export interface CalibrationServiceSendPreviewResult {
   intendedRecipient?: string | null
   actualRecipient?: string | null
