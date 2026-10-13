@@ -1847,12 +1847,16 @@ const CalibrationServiceDetailsPage = () => {
   const handleSendLogisticsEmail = async (values: {
     recipientEmail?: string | null
     recipientName?: string | null
+    sendWhatsApp?: boolean
+    whatsappPhone?: string | null
   }) => {
     try {
       const result = await sendLogisticsControlEmail.mutateAsync({
         serviceId: String(service.id),
         recipientEmail: values.recipientEmail,
-        recipientName: values.recipientName
+        recipientName: values.recipientName,
+        sendWhatsApp: values.sendWhatsApp,
+        whatsappPhone: values.whatsappPhone
       })
 
       const actualRecipient = result.delivery?.actualRecipient
@@ -1861,6 +1865,19 @@ const CalibrationServiceDetailsPage = () => {
           ? `Formato logístico enviado a ${actualRecipient}.`
           : 'Formato logístico enviado.'
       )
+      if (result.whatsapp?.sent) {
+        toast.success(
+          `También se envió por WhatsApp a ${result.whatsapp.actualRecipient || 'el cliente'}.`
+        )
+      } else if (result.whatsapp) {
+        toast.error(
+          result.whatsapp.reason === 'provider_error'
+            ? 'El correo salió, pero WhatsApp rechazó el envío. Revisa que la plantilla esté aprobada y la conexión con WhatsApp.'
+            : result.whatsapp.reason === 'missing_recipient_phone'
+              ? 'El correo salió, pero no hay un número de WhatsApp válido.'
+              : 'El correo salió, pero el envío por WhatsApp no está activo en este ambiente.'
+        )
+      }
       setIsSendLogisticsEmailDialogOpen(false)
       setSendLogisticsPreview(null)
       setActiveTab('logistics')
