@@ -649,6 +649,11 @@ const CalibrationServiceLogisticsControlDialog = ({
                   label='Observaciones'
                   value={values.observations || ''}
                   onChange={handleChange('observations')}
+                  helperText={
+                    serviceId
+                      ? 'Los equipos de préstamo se agregan solos al PDF (solo su código interno).'
+                      : undefined
+                  }
                 />
               </Grid>
             </Grid>
