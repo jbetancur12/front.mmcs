@@ -281,7 +281,7 @@ const DEFAULT_TEMPLATE_HTML = `
           <text x="50" y="24" font-size="7" fill="#e8c96a" opacity=".75" font-family="serif">★</text>
         </svg>
         <div class="seal-name">METROMEDICS S.A.S.</div>
-        <div class="seal-nit">NIT: 900816433</div>
+        <div class="seal-nit">NIT: 900.816.433-3</div>
       </div>
 
       <div class="footer-block">
