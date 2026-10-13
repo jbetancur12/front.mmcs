@@ -6,6 +6,8 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp'
 import { toast } from 'react-hot-toast'
 import { useCalibrationServiceMutations } from '../../hooks/useCalibrationServices'
 import { getApiErrorMessage } from '../../utils/apiError'
+import { useCan } from '@utils/functions'
+import { PERMISSIONS } from 'src/constants/permissions'
 
 interface RemoteSignatureState {
   expiresAt?: string
@@ -32,6 +34,8 @@ const CalibrationServiceRemoteSignatureLink = ({
 }: CalibrationServiceRemoteSignatureLinkProps) => {
   const { createRemoteSignatureLink, revokeRemoteSignatureLink } =
     useCalibrationServiceMutations()
+  // Misma capacidad que el backend exige para generar o anular el enlace.
+  const canManageLink = useCan(PERMISSIONS.CALIBRATION_SERVICE_EXECUTE)
   // El enlace completo solo se conoce al generarlo (en el servidor se guarda su hash).
   const [generated, setGenerated] = useState<{ url: string; expiresAt: string } | null>(
     null
@@ -101,6 +105,11 @@ const CalibrationServiceRemoteSignatureLink = ({
         {signedAt}. Ya no puede firmarse ni modificarse desde la plataforma.
       </Alert>
     )
+  }
+
+  // Sin la capacidad no se muestra el recuadro de generar o anular el enlace.
+  if (!canManageLink) {
+    return null
   }
 
   return (
