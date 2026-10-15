@@ -107,6 +107,14 @@ export interface Certificate {
   searchMatches?: { field: string }[]
 }
 
+type StatusFilter = 'expired' | 'upcoming' | 'active'
+const STATUS_FILTERS: StatusFilter[] = ['expired', 'upcoming', 'active']
+const STATUS_LABELS: Record<StatusFilter, string> = {
+  expired: 'Vencidos',
+  upcoming: 'Próximos a vencer',
+  active: 'Activos'
+}
+
 interface ApiResponse {
   totalFiles: number
   totalPages: number
@@ -476,6 +484,12 @@ const ModernCustomerProfile: React.FC = () => {
 
   const [searchTerm, setSearchTerm] = useState(searchParams.get('query') || '')
   const [currentPage, setCurrentPage] = useState(1)
+  const [statusFilter, setStatusFilter] = useState<StatusFilter | null>(() => {
+    const param = searchParams.get('status')
+    return STATUS_FILTERS.includes(param as StatusFilter)
+      ? (param as StatusFilter)
+      : null
+  })
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [isDownloading, setIsDownloading] = useState(false)
   const [image, setImage] = useState('/images/pngaaa.com-4811116.png')
@@ -514,11 +528,15 @@ const ModernCustomerProfile: React.FC = () => {
 
   // Fetch certificates data (paginado)
   const { data: apiResponse, refetch } = useQuery<ApiResponse>(
-    ['certificates-data', id, searchTerm, currentPage],
+    ['certificates-data', id, searchTerm, currentPage, statusFilter],
     async () => {
       if (!id) throw new Error('No customer ID provided')
       const response = await axiosPrivate.get(`/files/customer/${id}`, {
-        params: { search: searchTerm, page: currentPage }
+        params: {
+          search: searchTerm,
+          page: currentPage,
+          ...(statusFilter && { status: statusFilter })
+        }
       })
       return response.data
     },
@@ -745,6 +763,30 @@ const ModernCustomerProfile: React.FC = () => {
     },
     [currentPage, apiResponse]
   )
+
+  const handleStatusFilter = useCallback(
+    (status: StatusFilter) => {
+      const next = statusFilter === status ? null : status
+      setStatusFilter(next)
+      setCurrentPage(1)
+      setSearchParams((prev) => {
+        const params = new URLSearchParams(prev)
+        if (next) params.set('status', next)
+        else params.delete('status')
+        return params
+      })
+    },
+    [statusFilter, setSearchParams]
+  )
+
+  const statusCardSx = (status: StatusFilter, color: string) => ({
+    borderRadius: '16px',
+    border: statusFilter === status ? `2px solid ${color}` : '1px solid #e5e7eb',
+    cursor: 'pointer',
+    transition: 'box-shadow 0.2s, transform 0.2s',
+    boxShadow: statusFilter === status ? `0 0 0 3px ${color}22` : 'none',
+    '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.1)', transform: 'translateY(-2px)' }
+  })
 
   const clearSearch = useCallback(() => {
     setSearchTerm('')
@@ -1242,7 +1284,8 @@ const ModernCustomerProfile: React.FC = () => {
         <Grid item xs={6} md={3}>
           <Card
             elevation={0}
-            sx={{ borderRadius: '16px', border: '1px solid #e5e7eb' }}
+            onClick={() => handleStatusFilter('expired')}
+            sx={statusCardSx('expired', '#d32f2f')}
           >
             <CardContent sx={{ textAlign: 'center', py: 3 }}>
               <Box
@@ -1294,7 +1337,8 @@ const ModernCustomerProfile: React.FC = () => {
         <Grid item xs={6} md={3}>
           <Card
             elevation={0}
-            sx={{ borderRadius: '16px', border: '1px solid #e5e7eb' }}
+            onClick={() => handleStatusFilter('upcoming')}
+            sx={statusCardSx('upcoming', '#f57c00')}
           >
             <CardContent sx={{ textAlign: 'center', py: 3 }}>
               <Box
@@ -1346,7 +1390,8 @@ const ModernCustomerProfile: React.FC = () => {
         <Grid item xs={6} md={3}>
           <Card
             elevation={0}
-            sx={{ borderRadius: '16px', border: '1px solid #e5e7eb' }}
+            onClick={() => handleStatusFilter('active')}
+            sx={statusCardSx('active', '#2e7d32')}
           >
             <CardContent sx={{ textAlign: 'center', py: 3 }}>
               <Box
@@ -1607,6 +1652,15 @@ const ModernCustomerProfile: React.FC = () => {
                 }}
               >
                 <CardContent sx={{ p: 3 }}>
+                  {statusFilter && (
+                    <Box sx={{ mb: 2 }}>
+                      <Chip
+                        label={`Mostrando: ${STATUS_LABELS[statusFilter]} (${apiResponse?.totalFiles ?? 0})`}
+                        onDelete={() => handleStatusFilter(statusFilter)}
+                        sx={{ fontWeight: 600, backgroundColor: '#e6f7f4', color: '#00897b' }}
+                      />
+                    </Box>
+                  )}
                   <Grid container spacing={3} alignItems='center'>
                     <Grid item xs={12} md={6}>
                       <TextField
