@@ -8,8 +8,8 @@ interface AppConfig {
 }
 
 export const APP_CONFIG: AppConfig = {
-  VERSION: '1.6.8',
-  BUILD_DATE: '2026-10-03',
+  VERSION: '1.6.9',
+  BUILD_DATE: '2026-10-15',
   ENVIRONMENT:
     typeof import.meta !== 'undefined' && import.meta.env
       ? import.meta.env.VITE_ENV || 'development'
@@ -25,7 +25,7 @@ export const APP_CONFIG: AppConfig = {
     '1.6.5': 'Calibración: mensajes de error claros, botones con motivo y documentos vigentes',
     '1.6.6': 'Calibración: chips de estado, tabla de bandeja y ajustes de operación',
     '1.6.7': 'Calibración: acceso del director técnico y ajustes de chips y documentos',
-    '1.6.8': 'Calibración: novedades bloqueantes, menú Más acciones y precarga'
+    '1.6.9': 'Filtro por estado en equipos del cliente'
   } as Record<string, string>,
 
   // Configuración de limpieza
