@@ -127,6 +127,7 @@ const STATUS_OPTIONS: Array<{
   { value: 'technically_completed', label: 'Finalizada técnicamente' },
   { value: 'cancelled', label: 'Cancelado' },
   { value: 'closed', label: 'Cerrado' },
+  { value: 'ready_for_invoicing' as any, label: 'Por facturar' },
   { value: 'invoiced' as any, label: 'Facturado' }
 ]
 
@@ -476,13 +477,32 @@ const hasPendingReleasableQuantities = (service: CalibrationService) =>
   })
 
 const getServiceOperationalFocus = (service: CalibrationService) => {
-  if (service.status !== 'technically_completed') {
-    return null
-  }
-
   const cuts = service.cuts || []
   const allCutsInvoiced =
     cuts.length > 0 && cuts.every((cut) => cut.status === 'invoiced')
+
+  // El estado de facturación sale de los cortes, aunque el servicio siga en ejecución
+  if (cuts.some((cut) => cut.status === 'ready_for_invoicing')) {
+    // Parcial: ya hay un corte para facturar pero al servicio aún le falta trabajo por cortar
+    const isFullyCut =
+      service.status === 'technically_completed' &&
+      !hasPendingReleasableQuantities(service)
+
+    return isFullyCut
+      ? { label: 'Por facturar', color: 'info' as const }
+      : { label: 'Por facturar corte', color: 'secondary' as const }
+  }
+
+  if (!allCutsInvoiced && cuts.some((cut) => cut.status === 'invoiced')) {
+    return { label: 'Facturado corte', color: 'success' as const }
+  }
+
+  if (service.status !== 'technically_completed') {
+    return allCutsInvoiced
+      ? { label: 'Facturado', color: 'success' as const }
+      : null
+  }
+
   const allCutsSent =
     cuts.length > 0 &&
     cuts.every((cut) => cut.otherFields?.documentControl?.status === 'sent')
@@ -726,8 +746,8 @@ const CalibrationServicesPage = () => {
     getStoredViewMode
   )
   const [showOnlyMyLoad, setShowOnlyMyLoad] = useState(storedFilters.showOnlyMyLoad ?? false)
-  const [hasCutsReadyForInvoicing, setHasCutsReadyForInvoicing] = useState<string | undefined>(undefined)
-  const [hasCutsInvoiced, setHasCutsInvoiced] = useState<string | undefined>(undefined)
+  const hasCutsReadyForInvoicing = (statusFilter as string) === 'ready_for_invoicing'
+  const hasCutsInvoiced = (statusFilter as string) === 'invoiced'
   const [billingStatusFilter, setBillingStatusFilter] = useState<string | undefined>(undefined)
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<string | undefined>(undefined)
   const [moreAnchorEl, setMoreAnchorEl] = useState<HTMLElement | null>(null)
@@ -747,6 +767,8 @@ const CalibrationServicesPage = () => {
   if (statusFilter !== FILTER_ALL) {
     if ((statusFilter as string) === 'invoiced') {
       queryFilters.hasCutsInvoiced = 'true'
+    } else if ((statusFilter as string) === 'ready_for_invoicing') {
+      queryFilters.hasCutsReadyForInvoicing = 'true'
     } else {
       queryFilters.status = statusFilter
     }
@@ -758,14 +780,6 @@ const CalibrationServicesPage = () => {
 
   if (hasAdjustmentsFilter !== FILTER_ALL) {
     queryFilters.hasAdjustments = hasAdjustmentsFilter
-  }
-
-  if (hasCutsReadyForInvoicing) {
-    queryFilters.hasCutsReadyForInvoicing = hasCutsReadyForInvoicing
-  }
-
-  if (hasCutsInvoiced) {
-    queryFilters.hasCutsInvoiced = hasCutsInvoiced
   }
 
   if (billingStatusFilter) {
@@ -902,8 +916,6 @@ const CalibrationServicesPage = () => {
     let pendingApproval = 0, requestedChanges = 0, odsIssued = 0
     let scheduled = 0, inExecution = 0, technicallyCompleted = 0, closed = 0
     let readyToClose = 0, pendingDocumentControl = 0, readyForOds = 0, urgent = 0
-    let readyForInvoice = 0
-    let invoicedCut = 0
 
     for (const service of visibleServices) {
       if (service.status === 'pending_approval') pendingApproval++
@@ -917,14 +929,12 @@ const CalibrationServicesPage = () => {
       if (service.slaIndicator?.activePhase === 'document_control') pendingDocumentControl++
       if (service.status === 'approved' && service.approvalStatus === 'approved' && !service.odsCode) readyForOds++
       if (['yellow', 'red'].includes(service.slaIndicator?.color || 'gray')) urgent++
-      if ((service.cuts || []).some(c => c.status === 'ready_for_invoicing')) readyForInvoice++
-      if ((service.cuts || []).some(c => c.status === 'invoiced')) invoicedCut++
     }
 
-    return { pendingApproval, requestedChanges, odsIssued, scheduled, inExecution, technicallyCompleted, closed, readyToClose, pendingDocumentControl, readyForOds, urgent, readyForInvoice, invoicedCut }
+    return { pendingApproval, requestedChanges, odsIssued, scheduled, inExecution, technicallyCompleted, closed, readyToClose, pendingDocumentControl, readyForOds, urgent }
   }, [visibleServices])
 
-  const { pendingApproval: pendingApprovalCount, requestedChanges: requestedChangesCount, odsIssued: odsIssuedCount, scheduled: scheduledCount, inExecution: inExecutionCount, technicallyCompleted: technicallyCompletedCount, closed: closedCount, readyToClose: readyToCloseCount, pendingDocumentControl: pendingDocumentControlCount, readyForOds: readyForOdsCount, urgent: urgentCount, readyForInvoice: readyForInvoiceCount, invoicedCut: invoicedCutCount } = counts
+  const { pendingApproval: pendingApprovalCount, requestedChanges: requestedChangesCount, odsIssued: odsIssuedCount, scheduled: scheduledCount, inExecution: inExecutionCount, technicallyCompleted: technicallyCompletedCount, closed: closedCount, readyToClose: readyToCloseCount, pendingDocumentControl: pendingDocumentControlCount, readyForOds: readyForOdsCount, urgent: urgentCount } = counts
   const activeFiltersCount = [
     search.trim(),
     statusFilter !== FILTER_ALL,
@@ -934,9 +944,7 @@ const CalibrationServicesPage = () => {
     siteFilter.trim(),
     metrologistFilter !== FILTER_ALL,
     hasAdjustmentsFilter !== FILTER_ALL,
-    showOnlyMyLoad,
-    hasCutsReadyForInvoicing,
-    hasCutsInvoiced
+    showOnlyMyLoad
   ].filter(Boolean).length
 
   const clearFilters = () => {
@@ -949,8 +957,6 @@ const CalibrationServicesPage = () => {
     setMetrologistFilter(FILTER_ALL)
     setHasAdjustmentsFilter(FILTER_ALL)
     setShowOnlyMyLoad(false)
-    setHasCutsReadyForInvoicing(undefined)
-    setHasCutsInvoiced(undefined)
     if (typeof window !== 'undefined') {
       window.sessionStorage.removeItem(CALIBRATION_SERVICES_FILTERS_STORAGE_KEY)
     }
@@ -1955,8 +1961,7 @@ const CalibrationServicesPage = () => {
               <Button
                 variant={hasCutsReadyForInvoicing ? 'contained' : 'outlined'}
                 color={hasCutsReadyForInvoicing ? 'info' : 'inherit'}
-                onClick={() => { setHasCutsReadyForInvoicing((prev) => prev ? undefined : 'true'); setHasCutsInvoiced(undefined) }}
-                disabled={readyForInvoiceCount === 0 && !hasCutsReadyForInvoicing}
+                onClick={() => setStatusFilter((prev) => ((prev as string) === 'ready_for_invoicing' ? FILTER_ALL : ('ready_for_invoicing' as any)))}
                 sx={hasCutsReadyForInvoicing ? { borderRadius: '12px', textTransform: 'none', fontWeight: 700, minHeight: 44 } : secondaryButtonSx}
               >
                 {hasCutsReadyForInvoicing ? `Por facturar (${visibleServices.length})` : 'Por facturar'}
@@ -1964,8 +1969,7 @@ const CalibrationServicesPage = () => {
               <Button
                 variant={hasCutsInvoiced ? 'contained' : 'outlined'}
                 color={hasCutsInvoiced ? 'success' : 'inherit'}
-                onClick={() => { setHasCutsInvoiced((prev) => prev ? undefined : 'true'); setHasCutsReadyForInvoicing(undefined) }}
-                disabled={invoicedCutCount === 0 && !hasCutsInvoiced}
+                onClick={() => setStatusFilter((prev) => ((prev as string) === 'invoiced' ? FILTER_ALL : ('invoiced' as any)))}
                 sx={hasCutsInvoiced ? { borderRadius: '12px', textTransform: 'none', fontWeight: 700, minHeight: 44 } : secondaryButtonSx}
               >
                 {hasCutsInvoiced ? `Facturados (${visibleServices.length})` : 'Facturados'}
@@ -2042,16 +2046,10 @@ const CalibrationServicesPage = () => {
                 <Chip size='small' label={`Buscar: "${search}"`} onDelete={() => setSearch('')} variant='outlined' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
               ) : null}
               {statusFilter !== FILTER_ALL ? (
-                <Chip size='small' label={`Estado: ${CALIBRATION_SERVICE_STATUS_LABELS[statusFilter] || statusFilter}`} onDelete={() => setStatusFilter(FILTER_ALL)} variant='outlined' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
+                <Chip size='small' label={`Estado: ${CALIBRATION_SERVICE_STATUS_LABELS[statusFilter] || STATUS_OPTIONS.find((option) => option.value === statusFilter)?.label || statusFilter}`} onDelete={() => setStatusFilter(FILTER_ALL)} variant='outlined' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
               ) : null}
               {showOnlyMyLoad ? (
                 <Chip size='small' label='Mi carga' onDelete={() => setShowOnlyMyLoad(false)} variant='outlined' color='success' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
-              ) : null}
-              {hasCutsReadyForInvoicing ? (
-                <Chip size='small' label='Por facturar' onDelete={() => setHasCutsReadyForInvoicing(undefined)} variant='outlined' color='info' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
-              ) : null}
-              {hasCutsInvoiced ? (
-                <Chip size='small' label='Facturados' onDelete={() => setHasCutsInvoiced(undefined)} variant='outlined' color='success' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
               ) : null}
               {hasAdjustmentsFilter !== FILTER_ALL ? (
                 <Chip size='small' label={`Novedades: ${hasAdjustmentsFilter === 'true' ? 'Con' : 'Sin'}`} onDelete={() => setHasAdjustmentsFilter(FILTER_ALL)} variant='outlined' sx={{ borderRadius: '8px', '& .MuiChip-label': { fontSize: '0.75rem' } }} />
@@ -2351,7 +2349,9 @@ const CalibrationServicesPage = () => {
               filterVariant: 'select',
               filterSelectOptions: [
                 { text: 'Por facturar', value: 'Por facturar' },
+                { text: 'Por facturar corte', value: 'Por facturar corte' },
                 { text: 'Facturado', value: 'Facturado' },
+                { text: 'Facturado corte', value: 'Facturado corte' },
                 { text: 'Pendiente corte', value: 'Pendiente corte' },
                 { text: 'Listo para cierre final', value: 'Listo para cierre final' },
                 { text: 'Pendiente administrativo', value: 'Pendiente administrativo' }
