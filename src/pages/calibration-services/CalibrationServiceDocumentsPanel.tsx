@@ -4,12 +4,12 @@ import {
   Box,
   Button,
   Chip,
-  List,
-  ListItem,
-  ListItemText,
+  IconButton,
   MenuItem,
+  Paper,
   Stack,
   TextField,
+  Tooltip,
   Typography
 } from '@mui/material'
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined'
@@ -157,104 +157,94 @@ const CalibrationServiceDocumentsPanel = ({
     })
 
     return (
-      <List dense disablePadding>
+      <Stack spacing={1.25}>
         {documents.map((document) => {
           const key = documentKey(document)
           const hasVersions = (versionsByKey.get(key) ?? 0) > 1
           const isLatest = document.version === latestVersionByKey.get(key)
+          const fileName = document.originalFileName || `${serviceCode}.pdf`
 
           return (
-            <ListItem
+            <Paper
               key={document.id}
-              disableGutters
+              variant='outlined'
               sx={{
-              pr: 24,
-              flexWrap: 'wrap',
-              opacity: hasVersions && !isLatest ? 0.65 : 1
-            }}
-              secondaryAction={
-                <Stack direction='row' spacing={1}>
-                  <Button
-                    size='small'
-                    startIcon={<VisibilityOutlinedIcon />}
-                    onClick={() =>
-                      void onViewDocument(
-                        document.id,
-                        document.originalFileName || `${serviceCode}.pdf`
-                      )
-                    }
-                    disabled={isBusy}
-                  >
-                    Ver
-                  </Button>
-                  <Button
-                    size='small'
-                    startIcon={<DownloadOutlinedIcon />}
-                    onClick={() =>
-                      void onDownloadDocument(
-                        document.id,
-                        document.originalFileName || `${serviceCode}.pdf`
-                      )
-                    }
-                    disabled={isBusy}
-                  >
-                    Descargar
-                  </Button>
-                </Stack>
-              }
+                p: 1.5,
+                borderRadius: '12px',
+                borderColor: '#e5e7eb',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                opacity: hasVersions && !isLatest ? 0.7 : 1
+              }}
             >
-              <ListItemText
-                primary={
-                  <Stack
-                    direction='row'
-                    flexWrap='wrap'
-                    useFlexGap
-                    spacing={1}
-                    alignItems='center'
-                  >
-                    <Typography variant='body2' fontWeight={600}>
-                      {document.title || document.originalFileName}
-                    </Typography>
-                    {(document as CalibrationServiceDocument).otherFields
-                      ?.wasDraft ? (
-                      <Chip size='small' color='warning' label='BORRADOR' />
-                    ) : null}
+              <PictureAsPdfOutlinedIcon sx={{ color: '#00897B', flexShrink: 0 }} />
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant='body2' fontWeight={600} sx={{ wordBreak: 'break-word' }}>
+                  {document.title || document.originalFileName}
+                </Typography>
+                <Stack direction='row' spacing={1} alignItems='center' useFlexGap flexWrap='wrap' sx={{ mt: 0.5 }}>
+                  <Typography variant='caption' color='text.secondary'>
+                    {`v${document.version} · ${formatDateValue(document.uploadedAt)}`}
+                  </Typography>
+                  {(document as CalibrationServiceDocument).otherFields?.wasDraft ? (
+                    <Chip size='small' variant='outlined' color='warning' label='Borrador' />
+                  ) : null}
+                  <Chip
+                    size='small'
+                    variant='outlined'
+                    color={CALIBRATION_SERVICE_DOCUMENT_COLORS[document.documentType]}
+                    label={CALIBRATION_SERVICE_DOCUMENT_LABELS[document.documentType]}
+                  />
+                  {hasVersions ? (
                     <Chip
                       size='small'
-                      color={
-                        CALIBRATION_SERVICE_DOCUMENT_COLORS[
-                          document.documentType
-                        ]
-                      }
-                      label={
-                        CALIBRATION_SERVICE_DOCUMENT_LABELS[
-                          document.documentType
-                        ]
-                      }
+                      variant={isLatest ? 'filled' : 'outlined'}
+                      color={isLatest ? 'success' : 'default'}
+                      label={isLatest ? 'Vigente' : 'Versión anterior'}
                     />
-                    {hasVersions ? (
-                      <Chip
-                        size='small'
-                        variant={isLatest ? 'filled' : 'outlined'}
-                        color={isLatest ? 'success' : 'default'}
-                        label={isLatest ? 'Vigente' : 'Versión anterior'}
-                      />
-                    ) : null}
-                  </Stack>
-                }
-                secondary={`v${document.version} · ${formatDateValue(document.uploadedAt)}`}
-              />
-            </ListItem>
+                  ) : null}
+                </Stack>
+              </Box>
+              <Stack direction='row' spacing={0.5} sx={{ flexShrink: 0 }}>
+                <Tooltip title='Ver'>
+                  <span>
+                    <IconButton
+                      size='small'
+                      aria-label={`Ver ${document.title || fileName}`}
+                      onClick={() => void onViewDocument(document.id, fileName)}
+                      disabled={isBusy}
+                      sx={{ color: '#00897B' }}
+                    >
+                      <VisibilityOutlinedIcon fontSize='small' />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title='Descargar'>
+                  <span>
+                    <IconButton
+                      size='small'
+                      aria-label={`Descargar ${document.title || fileName}`}
+                      onClick={() => void onDownloadDocument(document.id, fileName)}
+                      disabled={isBusy}
+                      sx={{ color: '#00897B' }}
+                    >
+                      <DownloadOutlinedIcon fontSize='small' />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </Stack>
+            </Paper>
           )
         })}
-      </List>
+      </Stack>
     )
   }
 
   return (
     <Stack spacing={3}>
       {showQuotePdfAction || showOdsPdfAction ? (
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+        <Stack direction='row' spacing={1} useFlexGap flexWrap='wrap'>
           {showQuotePdfAction ? (
             <Button
               variant='outlined'
@@ -263,6 +253,7 @@ const CalibrationServiceDocumentsPanel = ({
               disabled={
                 isBusy || !hasItems || !hasCustomer || !canGenerateQuotePdf
               }
+              sx={{ color: '#00897B', borderColor: '#00BFA5', textTransform: 'none', fontWeight: 600, '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
             >
               Generar cotización PDF
             </Button>
@@ -273,6 +264,7 @@ const CalibrationServiceDocumentsPanel = ({
               startIcon={<PictureAsPdfOutlinedIcon />}
               onClick={() => void onGenerateOdsPdf()}
               disabled={isBusy || !hasOds || !canGenerateOdsPdf}
+              sx={{ color: '#00897B', borderColor: '#00BFA5', textTransform: 'none', fontWeight: 600, '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
             >
               Generar ODS PDF
             </Button>
@@ -288,7 +280,7 @@ const CalibrationServiceDocumentsPanel = ({
           p: 3
         }}
       >
-        <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
+        <Typography variant='h6' fontWeight={700} gutterBottom sx={{ mb: 2 }}>
           PDFs oficiales
         </Typography>
         {officialPdfDocuments.length ? (
@@ -309,7 +301,7 @@ const CalibrationServiceDocumentsPanel = ({
             p: 3
           }}
         >
-          <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
+          <Typography variant='h6' fontWeight={700} gutterBottom sx={{ mb: 2 }}>
             Cargar evidencia o soporte
           </Typography>
           <Stack spacing={2}>
@@ -357,6 +349,7 @@ const CalibrationServiceDocumentsPanel = ({
                 variant='outlined'
                 startIcon={<UploadFileOutlinedIcon />}
                 disabled={isBusy}
+                sx={{ color: '#00897B', borderColor: '#00BFA5', textTransform: 'none', fontWeight: 600, '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
               >
                 Seleccionar archivo
                 <input
@@ -378,6 +371,7 @@ const CalibrationServiceDocumentsPanel = ({
               variant='contained'
               onClick={() => void handleUpload()}
               disabled={isBusy || !selectedFile}
+              sx={{ bgcolor: '#00BFA5', textTransform: 'none', fontWeight: 600, '&:hover': { bgcolor: '#00ACC1' } }}
             >
               Subir documento
             </Button>
@@ -398,7 +392,7 @@ const CalibrationServiceDocumentsPanel = ({
           p: 3
         }}
       >
-        <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
+        <Typography variant='h6' fontWeight={700} gutterBottom sx={{ mb: 2 }}>
           Respuesta del cliente sobre novedades
         </Typography>
         {adjustmentCustomerResponseDocuments.length ? (
@@ -426,7 +420,7 @@ const CalibrationServiceDocumentsPanel = ({
           p: 3
         }}
       >
-        <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
+        <Typography variant='h6' fontWeight={700} gutterBottom sx={{ mb: 2 }}>
           Evidencias de decisión del servicio
         </Typography>
         {decisionDocuments.length
@@ -448,7 +442,7 @@ const CalibrationServiceDocumentsPanel = ({
           p: 3
         }}
       >
-        <Typography variant='h6' fontWeight={800} gutterBottom sx={{ mb: 2 }}>
+        <Typography variant='h6' fontWeight={700} gutterBottom sx={{ mb: 2 }}>
           Evidencias y soportes
         </Typography>
         {supportDocuments.length ? (
