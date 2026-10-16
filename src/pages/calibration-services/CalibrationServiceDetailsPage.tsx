@@ -5,6 +5,7 @@ import {
   Card,
   CardContent,
   Chip,
+  Container,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -36,8 +37,6 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined'
 import AutorenewOutlinedIcon from '@mui/icons-material/AutorenewOutlined'
-import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
-import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
 import { Toaster, toast } from 'react-hot-toast'
 import { ReactElement, ReactNode, useEffect, useState } from 'react'
@@ -48,9 +47,7 @@ import {
   CALIBRATION_SERVICE_APPROVAL_COLORS,
   CALIBRATION_SERVICE_APPROVAL_LABELS,
   CALIBRATION_SERVICE_COMMERCIAL_VISIBILITY_ROLES,
-  CALIBRATION_SERVICE_SLA_COLORS,
-  CALIBRATION_SERVICE_TECHNICAL_ROLES,
-  isSlaLabelRedundantWithStatus
+  CALIBRATION_SERVICE_TECHNICAL_ROLES
 } from '../../constants/calibrationServices'
 import {
   useCalibrationAssignableMetrologists,
@@ -123,6 +120,7 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { ROLE_GROUPS } from 'src/constants/roles'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import CalibrationServiceStageTracker from './CalibrationServiceStageTracker'
 type DetailTab =
   | 'summary'
   | 'items'
@@ -2580,7 +2578,7 @@ const CalibrationServiceDetailsPage = () => {
   }
 
   return (
-    <Box p={{ xs: 2, md: 3 }}>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
       <Toaster position='top-center' />
       <Stack
         direction={{ xs: 'column', md: 'row' }}
@@ -2635,44 +2633,6 @@ const CalibrationServiceDetailsPage = () => {
                 }
                 label={
                   CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]
-                }
-                sx={{ fontWeight: 600 }}
-              />
-            ) : null}
-            {isSlaLabelRedundantWithStatus(
-              service.status,
-              service.slaIndicator?.label
-            ) ? null : (
-              <Chip
-                size='small'
-                color={
-                  CALIBRATION_SERVICE_SLA_COLORS[
-                    service.slaIndicator?.color || 'gray'
-                  ]
-                }
-                label={service.slaIndicator?.label || 'SLA no iniciado'}
-                sx={{ fontWeight: 600 }}
-              />
-            )}
-            {['yellow', 'red'].includes(
-              service.slaIndicator?.color || 'gray'
-            ) ? (
-              <Chip
-                size='small'
-                icon={
-                  service.slaIndicator?.color === 'red' ? (
-                    <ReportProblemOutlinedIcon />
-                  ) : (
-                    <WarningAmberOutlinedIcon />
-                  )
-                }
-                color={
-                  service.slaIndicator?.color === 'red' ? 'error' : 'warning'
-                }
-                label={
-                  service.slaIndicator?.color === 'red'
-                    ? 'Alerta vencida'
-                    : 'Alerta activa'
                 }
                 sx={{ fontWeight: 600 }}
               />
@@ -2997,49 +2957,17 @@ const CalibrationServiceDetailsPage = () => {
         </Alert>
       ) : null}
 
-      <Card sx={{ borderRadius: 3, mb: 2 }}>
-        <CardContent>
-          {isTechnicalOnlyView ? (
-            <Alert severity='info' sx={{ mb: 2 }}>
-              Vista técnica activa: aquí solo ves la ODS, el semáforo y los
-              datos operativos del servicio.
-            </Alert>
-          ) : null}
-          <Grid container spacing={2} alignItems='center'>
-            <Grid item xs={12} md={7}>
-              <Typography variant='subtitle2' color='text.secondary'>
-                Semáforo actual
-              </Typography>
-              <Typography variant='h6' fontWeight={700}>
-                {service.slaIndicator?.label || 'SLA no iniciado'}
-              </Typography>
-              <Typography
-                variant='body2'
-                color='text.secondary'
-                sx={{ mt: 0.5 }}
-              >
-                {service.slaIndicator?.message ||
-                  'Todavía no hay un SLA activo para este servicio.'}
-              </Typography>
-            </Grid>
-            <Grid item xs={12} md={5}>
-              <Stack spacing={0.75}>
-                <Typography variant='body2' color='text.secondary'>
-                  Días hábiles transcurridos:{' '}
-                  {service.slaIndicator?.businessDaysElapsed || 0}
-                </Typography>
-                <Typography variant='body2' color='text.secondary'>
-                  Umbral de alerta:{' '}
-                  {service.slaIndicator?.warningBusinessDays || 2}
-                </Typography>
-                <Typography variant='body2' color='text.secondary'>
-                  SLA objetivo: {service.slaIndicator?.targetBusinessDays || 3}
-                </Typography>
-              </Stack>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
+      {isTechnicalOnlyView ? (
+        <Alert severity='info' sx={{ mb: 2 }}>
+          Vista técnica activa: aquí solo ves la ODS, el semáforo y los
+          datos operativos del servicio.
+        </Alert>
+      ) : null}
+      <CalibrationServiceStageTracker
+        status={service.status}
+        sla={service.slaIndicator}
+        technicalOnly={isTechnicalOnlyView}
+      />
 
       <Grid container spacing={2}>
         <Grid item xs={12} lg={8}>
@@ -4278,7 +4206,7 @@ const CalibrationServiceDetailsPage = () => {
           )}
         </DialogContent>
       </Dialog>
-    </Box>
+    </Container>
   )
 }
 
