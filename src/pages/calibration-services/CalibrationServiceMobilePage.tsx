@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Alert, Autocomplete, Badge, BottomNavigation, BottomNavigationAction, Box, Button, Card, CardContent,
+  Alert, Autocomplete, Badge, BottomNavigation, BottomNavigationAction, Box, Button, Card, CardContent, Checkbox,
   Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle,
   FormControl, IconButton, InputLabel, LinearProgress, MenuItem, Paper, Select, Stack, TextField, ToggleButton, ToggleButtonGroup, Typography
 } from '@mui/material'
@@ -227,6 +227,8 @@ const MobilePage = () => {
 
   useEffect(() => {
     if (!s) return
+    const savedOps = getOps(s)
+    setDeliveryName(savedOps.deliveryName || ''); setDeliverySignature(savedOps.deliverySignatureData || null)
     setDraftItems({}); setDraftNotes({}); setDraftExecuted({})
     for (const item of (s.items || [])) {
       const st = (item as any).otherFields?.operationalStatus || 'pending'
@@ -281,6 +283,26 @@ const MobilePage = () => {
 type MobileTab = 'work' | 'intake' | 'issues' | 'close'
   const [tab, setTab] = useState<MobileTab>('work')
   const [openNotes, setOpenNotes] = useState<Record<number, boolean>>({})
+  const [cutSel, setCutSel] = useState<Record<number, { on: boolean; qty: number }>>({})
+
+  // Lo que se puede liberar a corte: ítems completados o en proceso con unidades sin liberar
+  const cutCandidates = items
+    .filter(i => ['completed', 'in_progress'].includes(draftItems[i.id] || 'pending'))
+    .map(i => ({ item: i, available: Math.max(getEffectiveQty(i, s?.adjustments) - getReleased(i), 0) }))
+    .filter(c => c.available > 0)
+
+  useEffect(() => {
+    if (!showCut) return
+    const next: Record<number, { on: boolean; qty: number }> = {}
+    for (const c of cutCandidates) {
+      const done = draftItems[c.item.id] === 'completed'
+      const executedFree = Math.max((draftExecuted[c.item.id] ?? 0) - getReleased(c.item), 0)
+      next[c.item.id] = { on: done, qty: done ? c.available : Math.min(Math.max(executedFree, 1), c.available) }
+    }
+    setCutSel(next)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showCut])
+  const cutSelected = cutCandidates.filter(c => cutSel[c.item.id]?.on && (cutSel[c.item.id]?.qty ?? 0) > 0)
 
   const adjustments = (s?.adjustments || []) as any[]
   const completedCount = items.filter(i => draftItems[i.id] === 'completed').length
@@ -562,12 +584,17 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
             <Stack spacing={2.5}>
               <Box>
                 <Typography sx={{ ...sectionTitle, mb: 1 }}>Firma de recepción</Typography>
+                {Boolean(getOps(s).deliverySignatureData) && (
+                  <Alert severity='success' icon={<CheckCircleIcon fontSize='inherit' />} sx={{ mb: 1, borderRadius: '12px' }}>
+                    Firmada por {getOps(s).deliveryName || 'quien recibe'}. Si firmas de nuevo, se reemplaza.
+                  </Alert>
+                )}
                 <Card elevation={0} sx={cardSx}>
                   <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                     <TextField fullWidth size='small' label='Nombre de quien recibe' value={deliveryName} onChange={e => setDeliveryName(e.target.value)} sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
                     <SignaturePad value={deliverySignature} onChange={setDeliverySignature} height={140} />
                     <Button fullWidth variant='contained' disableElevation
-                      onClick={() => handleAction('sig', () => apiCall('put', `/calibration-services/${serviceId}/delivery-signature`, { deliveryName: deliveryName.trim() || null, deliverySignatureData: deliverySignature }), 'Firma guardada')}
+                      onClick={() => handleAction('sig', () => apiCall('put', `/calibration-services/${serviceId}/delivery-signature`, { deliveryName: deliveryName.trim() || null, deliveryRole: getOps(s).deliveryRole ?? null, deliverySignatureData: deliverySignature }), 'Firma guardada')}
                       disabled={!deliverySignature || actionLoading === 'sig'}
                       sx={{ ...primarySx, mt: 2 }}>
                       Guardar firma
@@ -922,7 +949,7 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
                 </Select>
               </FormControl>
               <TextField fullWidth size='small' label='Cantidad real' type='number' value={adjQuantity} onChange={e => setAdjQuantity(e.target.value)} helperText='Cantidad que se encontró realmente' />
-              <TextField fullWidth size='small' multiline minRows={2} label='Motivo (mín. 5 caracteres)' value={adjReason} onChange={e => setAdjReason(e.target.value)} />
+              <TextField fullWidth size='small' multiline minRows={2} label='Motivo (mín. 5 caracteres)' error={adjReason.length > 0 && adjReason.trim().length < 5} value={adjReason} onChange={e => setAdjReason(e.target.value)} />
             </Stack>
           </DialogContent>
           <DialogActions>
@@ -939,7 +966,7 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
               })
               setShowAdjust(false)
               setAdjItemId(''); setAdjChangeType('quantity_more'); setAdjQuantity(''); setAdjReason('')
-            }, 'Novedad reportada')} disabled={actionLoading === 'adj'}>Reportar</Button>
+            }, 'Novedad reportada')} disabled={actionLoading === 'adj' || (adjChangeType !== 'extra_item' && !adjItemId) || adjQuantity === '' || adjReason.trim().length < 5}>Reportar</Button>
           </DialogActions>
         </Dialog>
 
@@ -947,22 +974,56 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
         <Dialog open={showCut} onClose={() => setShowCut(false)} fullWidth sx={sheetSx}>
           <DialogTitle>Crear corte</DialogTitle>
           <DialogContent>
-            <FormControl fullWidth size='small' sx={{ mt: 1 }}>
-              <InputLabel>Tipo</InputLabel>
-              <Select value={cutType} label='Tipo' onChange={e => setCutType(e.target.value as any)}>
-                <MenuItem value='partial'>Parcial</MenuItem>
-                <MenuItem value='final'>Final</MenuItem>
-              </Select>
-            </FormControl>
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <FormControl fullWidth size='small'>
+                <InputLabel>Tipo</InputLabel>
+                <Select value={cutType} label='Tipo' onChange={e => setCutType(e.target.value as any)}>
+                  <MenuItem value='partial'>Parcial</MenuItem>
+                  <MenuItem value='final'>Final</MenuItem>
+                </Select>
+              </FormControl>
+              <Typography variant='body2' fontWeight={700} sx={{ color: G.dark }}>Ítems que entran al corte</Typography>
+              {cutCandidates.length === 0 ? (
+                <Typography variant='body2' sx={{ color: G.gray600 }}>
+                  No hay unidades disponibles. Marca un ítem como completado o en proceso, o revisa que no estén ya todas en otro corte.
+                </Typography>
+              ) : cutCandidates.map(c => {
+                const sel = cutSel[c.item.id] || { on: false, qty: 1 }
+                const setQty = (q: number) => setCutSel(p => ({ ...p, [c.item.id]: { ...sel, qty: Math.min(Math.max(q, 1), c.available) } }))
+                return (
+                  <Box key={c.item.id} sx={{ border: `1px solid ${sel.on ? G.green : G.gray100}`, borderRadius: '14px', p: 1.25 }}>
+                    <Stack direction='row' alignItems='center' spacing={0.5}>
+                      <Checkbox checked={sel.on} onChange={(_, v) => setCutSel(p => ({ ...p, [c.item.id]: { ...sel, on: v } }))}
+                        inputProps={{ 'aria-label': `Incluir ${c.item.itemName}` }} sx={{ color: G.gray300, '&.Mui-checked': { color: G.green } }} />
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant='body2' fontWeight={700} sx={{ color: G.dark, lineHeight: 1.3 }}>{c.item.itemName}</Typography>
+                        <Typography variant='caption' sx={{ color: G.gray600 }}>{c.available} disponible{c.available === 1 ? '' : 's'}</Typography>
+                      </Box>
+                    </Stack>
+                    {sel.on && (
+                      <Stack direction='row' alignItems='center' justifyContent='flex-end' spacing={0.5} sx={{ mt: 0.5 }}>
+                        <IconButton aria-label='Restar uno' onClick={() => setQty(sel.qty - 1)} disabled={sel.qty <= 1}
+                          sx={{ bgcolor: G.white, border: `1px solid ${G.gray200}`, width: 40, height: 40 }}><RemoveIcon /></IconButton>
+                        <Typography fontWeight={700} sx={{ minWidth: 56, textAlign: 'center', color: G.dark }}>{sel.qty} de {c.available}</Typography>
+                        <IconButton aria-label='Sumar uno' onClick={() => setQty(sel.qty + 1)} disabled={sel.qty >= c.available}
+                          sx={{ bgcolor: G.green, color: 'white', width: 40, height: 40, '&:hover': { bgcolor: G.greenDark }, '&.Mui-disabled': { bgcolor: G.gray100, color: G.gray300 } }}><AddIcon /></IconButton>
+                      </Stack>
+                    )}
+                  </Box>
+                )
+              })}
+            </Stack>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setShowCut(false)}>Cancelar</Button>
             <Button variant='contained' disableElevation sx={primarySx} onClick={() => handleAction('cut', async () => {
               if (items.length) await apiCall('put', `/calibration-services/${serviceId}/item-progress`, progressPayload())
               await apiCall('post', `/calibration-services/${serviceId}/cuts`, {
-                cutType, notes: null, items: items.filter(i => draftItems[i.id] === 'completed').map(i => ({ serviceItemId: i.id, quantity: 1 }))
+                cutType, notes: null, items: cutSelected.map(c => ({ serviceItemId: c.item.id, quantity: cutSel[c.item.id].qty }))
               })
-            }, 'Corte creado', () => setShowCut(false))} disabled={actionLoading === 'cut'}>Crear</Button>
+            }, 'Corte creado', () => setShowCut(false))} disabled={actionLoading === 'cut' || cutSelected.length === 0}>
+              {cutSelected.length ? `Crear corte (${cutSelected.length})` : 'Crear corte'}
+            </Button>
           </DialogActions>
         </Dialog>
       </Box>
