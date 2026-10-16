@@ -5,6 +5,10 @@ import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 
 import Box from '@mui/material/Box'
+import Container from '@mui/material/Container'
+import { Sensors, Thermostat, WaterDrop } from '@mui/icons-material'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import AddIcon from '@mui/icons-material/Add'
 
 import CircularProgress from '@mui/material/CircularProgress'
@@ -121,6 +125,11 @@ interface HistoricalApiResponse {
 }
 
 // --- COMPONENTE ---
+
+const avgOf = (values: (number | null | undefined)[], unit: string) => {
+  const nums = values.filter((v): v is number => typeof v === 'number')
+  return nums.length ? `${(nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(1)}${unit}` : '—'
+}
 
 const LaboratoryMonitor: React.FC = () => {
   const canManage = useCan(PERMISSIONS.LABORATORY_DEVICE_MANAGE)
@@ -421,31 +430,34 @@ const LaboratoryMonitor: React.FC = () => {
 
   // Render principal si la lista de sensores cargó
   return (
-    <div className='container mx-auto p-6'>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title='Monitoreo de Laboratorio'
+        subtitle='Condiciones ambientales en tiempo real de cada sensor'
+        icon={<Thermostat />}
+        actions={
+          canManage ? (
+            <Button variant='contained' startIcon={<AddIcon />} onClick={handleOpenAddModal} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+              Agregar sensor
+            </Button>
+          ) : undefined
+        }
+      />
+
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Sensores' value={displayedDevices.length} icon={<Sensors />} tone='teal' />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Temperatura promedio' value={avgOf(displayedDevices.map((d) => d.lastTemperature), '°C')} icon={<Thermostat />} tone='orange' />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Humedad promedio' value={avgOf(displayedDevices.map((d) => d.lastHumidity), '%')} icon={<WaterDrop />} tone='blue' />
+        </Grid>
+      </Grid>
+
       <LaboratoryMqttGuide variant='conditions' />
 
-      {/* Cabecera: Título, Agregar Sensor */}
-      <Box className='flex justify-between items-center mb-8'>
-        <Typography
-          variant='h4'
-          component='h1'
-          className='font-bold text-gray-800'
-        >
-          Monitoreo de Laboratorio
-        </Typography>
-        <Box className='flex items-center space-x-4'>
-          {canManage && (
-            <Button
-              variant='contained'
-              startIcon={<AddIcon />}
-              onClick={handleOpenAddModal}
-              className='bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded normal-case'
-            >
-              Agregar Sensor
-            </Button>
-          )}
-        </Box>
-      </Box>
       {/* Lista de Tarjetas (sin cambios) */}
       {displayedDevices.length === 0 && !isLoadingDevices ? (
         <Typography>No hay sensores de laboratorio creados.</Typography>
@@ -891,7 +903,7 @@ const LaboratoryMonitor: React.FC = () => {
         }
         onSensorDeleted={handleSensorDeleted}
       />
-    </div> // Fin container principal
+    </Container>
   )
 }
 

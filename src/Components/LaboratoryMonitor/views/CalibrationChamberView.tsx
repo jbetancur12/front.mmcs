@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import { AcUnit, PauseCircleOutline, Speed } from '@mui/icons-material'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import {
-  Box,
   Typography,
   Button,
   Container,
@@ -578,34 +580,52 @@ const CalibrationChamberView: React.FC = () => {
       <ReactQueryDevtools initialIsOpen={false} />
       <Grid container spacing={3}>
         <Grid item xs={12}>
-          <LaboratoryMqttGuide variant='patterns' />
+          <LmsPageHeader
+            title='Cámaras Ambientales'
+            subtitle='Cámaras, patrones y sensores asociados a cada calibración'
+            icon={<AcUnit />}
+            actions={
+              canManage ? (
+                <Button
+                  variant='contained'
+                  startIcon={<AddCircleOutlineIcon />}
+                  onClick={handleOpenCreateModal}
+                  disabled={createChamberMutation.isLoading}
+                  sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}
+                >
+                  {createChamberMutation.isLoading ? 'Agregando...' : 'Agregar cámara'}
+                </Button>
+              ) : undefined
+            }
+          />
         </Grid>
 
         <Grid item xs={12}>
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mb: 2
-            }}
-          >
-            <Typography variant='h4' component='h1'>
-              Cámaras Ambientales
-            </Typography>
-            {canManage && (
-              <Button
-                variant='contained'
-                startIcon={<AddCircleOutlineIcon />}
-                onClick={handleOpenCreateModal}
-                disabled={createChamberMutation.isLoading}
-              >
-                {createChamberMutation.isLoading
-                  ? 'Agregando...'
-                  : 'Agregar Cámara'}
-              </Button>
-            )}
-          </Box>
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={4}>
+              <LmsStatCard label='Cámaras' value={chambers.length} icon={<AcUnit />} tone='teal' />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <LmsStatCard
+                label='En calibración'
+                value={chambers.filter((c) => c.status === CHAMBER_STATUS.CALIBRATING).length}
+                icon={<Speed />}
+                tone='orange'
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <LmsStatCard
+                label='En reposo'
+                value={chambers.filter((c) => c.status !== CHAMBER_STATUS.CALIBRATING).length}
+                icon={<PauseCircleOutline />}
+                tone='blue'
+              />
+            </Grid>
+          </Grid>
+        </Grid>
+
+        <Grid item xs={12}>
+          <LaboratoryMqttGuide variant='patterns' />
         </Grid>
 
         <Grid item xs={12}>
