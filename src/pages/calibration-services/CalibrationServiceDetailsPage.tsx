@@ -35,6 +35,15 @@ import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
+import EventOutlinedIcon from '@mui/icons-material/EventOutlined'
+import EventRepeatOutlinedIcon from '@mui/icons-material/EventRepeatOutlined'
+import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined'
+import PauseCircleOutlineOutlinedIcon from '@mui/icons-material/PauseCircleOutlineOutlined'
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
+import PlayArrowOutlinedIcon from '@mui/icons-material/PlayArrowOutlined'
+import TaskAltOutlinedIcon from '@mui/icons-material/TaskAltOutlined'
+import NoteAddOutlinedIcon from '@mui/icons-material/NoteAddOutlined'
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined'
 import AutorenewOutlinedIcon from '@mui/icons-material/AutorenewOutlined'
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined'
@@ -2578,6 +2587,28 @@ const CalibrationServiceDetailsPage = () => {
     }
   }
 
+  const primaryActionSx = {
+    borderRadius: 2,
+    textTransform: 'none',
+    fontWeight: 600,
+    bgcolor: '#00BFA5',
+    '&:hover': { bgcolor: '#00ACC1' },
+    '&.Mui-disabled': { bgcolor: '#e5e7eb', color: '#9ca3af' }
+  } as const
+  const secondaryActionSx = {
+    borderRadius: 2,
+    textTransform: 'none',
+    fontWeight: 600,
+    color: '#00897B',
+    borderColor: '#00BFA5',
+    '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+  } as const
+  const cautionActionSx = {
+    borderRadius: 2,
+    textTransform: 'none',
+    fontWeight: 600
+  } as const
+
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
       <Toaster position='top-center' />
@@ -2588,16 +2619,17 @@ const CalibrationServiceDetailsPage = () => {
         mb={4}
       >
         <Box flex={1} maxWidth={{ xs: '100%', md: '60%' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
           <Button
             startIcon={<ArrowBackOutlinedIcon />}
             onClick={() => navigate('/calibration-services')}
-            sx={{ mb: 2, ml: -1 }}
-            color='inherit'
+            sx={{ ml: -1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
             size='small'
           >
             Volver a la bandeja
           </Button>
           <CalibrationNotificationBell />
+          </Box>
 
           <Stack
             direction='row'
@@ -2608,9 +2640,9 @@ const CalibrationServiceDetailsPage = () => {
           >
             <Typography
               variant='h4'
-              fontWeight={800}
+              fontWeight={700}
               color='text.primary'
-              sx={{ letterSpacing: '-0.02em', mr: 1, lineHeight: 1 }}
+              sx={{ mr: 1, lineHeight: 1.1 }}
             >
               {service.serviceCode}
             </Typography>
@@ -2694,7 +2726,7 @@ const CalibrationServiceDetailsPage = () => {
               onClick={() => void handleRequestApproval()}
               disabled={isDecisionLoading}
               disableElevation
-              sx={{ borderRadius: 2 }}
+              sx={primaryActionSx}
             >
               Enviar cotización
             </Button>
@@ -2719,7 +2751,7 @@ const CalibrationServiceDetailsPage = () => {
                 sendCertificate.isLoading
               }
               disableElevation
-              sx={{ borderRadius: 2 }}
+              sx={primaryActionSx}
             >
               {lastCertificateSent
                 ? 'Reenviar certificado'
@@ -2727,49 +2759,50 @@ const CalibrationServiceDetailsPage = () => {
             </Button>
           ) : null}
           {canDecideApproval ? (
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ '& .MuiButton-root': { whiteSpace: 'nowrap' } }}>
               <Button
                 variant='outlined'
                 color='warning'
+                title='Registrar que el cliente pidió modificar la cotización'
                 startIcon={<AutorenewOutlinedIcon />}
                 onClick={() => setDecisionMode('request_changes')}
                 disabled={isDecisionLoading}
-                sx={{ borderRadius: 2 }}
+                sx={cautionActionSx}
               >
-                Registrar solicitud de modificación
+                Registrar cambios
               </Button>
               <Button
                 variant='outlined'
                 color='warning'
+                title='Registrar que el cliente rechazó la cotización'
                 startIcon={<HighlightOffOutlinedIcon />}
                 onClick={() => setDecisionMode('reject')}
                 disabled={isDecisionLoading}
-                sx={{ borderRadius: 2 }}
+                sx={cautionActionSx}
               >
-                Registrar rechazo cliente
+                Registrar rechazo
               </Button>
               <Button
                 variant='contained'
-                color='success'
+                title='Registrar que el cliente aprobó la cotización'
                 startIcon={<CheckCircleOutlineOutlinedIcon />}
                 onClick={() => setDecisionMode('approve')}
                 disabled={isDecisionLoading}
                 disableElevation
-                sx={{ borderRadius: 2 }}
+                sx={primaryActionSx}
               >
-                Registrar aprobación cliente
+                Registrar aprobación
               </Button>
             </Stack>
           ) : null}
           {canIssueOds ? (
             <Button
               variant='contained'
-              color='info'
               startIcon={<DescriptionOutlinedIcon />}
               onClick={() => setIsOdsDialogOpen(true)}
               disabled={isOdsLoading}
               disableElevation
-              sx={{ borderRadius: 2 }}
+              sx={primaryActionSx}
             >
               Emitir ODS
             </Button>
@@ -2777,12 +2810,11 @@ const CalibrationServiceDetailsPage = () => {
           {canScheduleService ? (
             <Button
               variant='contained'
-              color='primary'
-              startIcon={<DescriptionOutlinedIcon />}
+              startIcon={<EventOutlinedIcon />}
               onClick={() => setIsScheduleDialogOpen(true)}
               disabled={isOperationalBusy}
               disableElevation
-              sx={{ borderRadius: 2 }}
+              sx={primaryActionSx}
             >
               Programar servicio
             </Button>
@@ -2794,11 +2826,11 @@ const CalibrationServiceDetailsPage = () => {
             <>
               <Button
                 variant='outlined'
-                color='inherit'
                 endIcon={<ExpandMoreIcon />}
                 onClick={(event) => setMoreActionsAnchor(event.currentTarget)}
                 disabled={isOperationalBusy}
-                sx={{ borderRadius: 2 }}
+                aria-haspopup='menu'
+                sx={{ ...secondaryActionSx, color: 'text.primary', borderColor: '#d1d5db' }}
               >
                 Más acciones
               </Button>
@@ -2814,6 +2846,7 @@ const CalibrationServiceDetailsPage = () => {
                       setIsRescheduleDialogOpen(true)
                     }}
                   >
+                    <EventRepeatOutlinedIcon fontSize='small' sx={{ mr: 1.25 }} />
                     Reprogramar
                   </MenuItem>
                 ) : null}
@@ -2824,6 +2857,7 @@ const CalibrationServiceDetailsPage = () => {
                       setIsReassignDialogOpen(true)
                     }}
                   >
+                    <PersonOutlineOutlinedIcon fontSize='small' sx={{ mr: 1.25 }} />
                     Reasignar metrólogo
                   </MenuItem>
                 ) : null}
@@ -2834,6 +2868,7 @@ const CalibrationServiceDetailsPage = () => {
                       setIsPauseDialogOpen(true)
                     }}
                   >
+                    <PauseCircleOutlineOutlinedIcon fontSize='small' sx={{ mr: 1.25 }} />
                     Pausar servicio
                   </MenuItem>
                 ) : null}
@@ -2845,6 +2880,7 @@ const CalibrationServiceDetailsPage = () => {
                     }}
                     sx={{ color: 'error.main' }}
                   >
+                    <CancelOutlinedIcon fontSize='small' sx={{ mr: 1.25 }} />
                     Cancelar servicio
                   </MenuItem>
                 ) : null}
@@ -2854,12 +2890,11 @@ const CalibrationServiceDetailsPage = () => {
           {canResumeService ? (
             <Button
               variant='contained'
-              color='warning'
-              startIcon={<AutorenewOutlinedIcon />}
+              startIcon={<PlayArrowOutlinedIcon />}
               onClick={() => setIsResumeDialogOpen(true)}
               disabled={isOperationalBusy}
               disableElevation
-              sx={{ borderRadius: 2 }}
+              sx={primaryActionSx}
             >
               Reanudar servicio
             </Button>
@@ -2867,12 +2902,11 @@ const CalibrationServiceDetailsPage = () => {
           {canStartExecution ? (
             <Button
               variant='contained'
-              color='success'
-              startIcon={<CheckCircleOutlineOutlinedIcon />}
+              startIcon={<PlayArrowOutlinedIcon />}
               onClick={() => void handleStartExecution()}
               disabled={isOperationalBusy}
               disableElevation
-              sx={{ borderRadius: 2 }}
+              sx={primaryActionSx}
             >
               Iniciar ejecución
             </Button>
@@ -2881,12 +2915,11 @@ const CalibrationServiceDetailsPage = () => {
             <BlockedActionTooltip reason={completeExecutionBlockedReason}>
               <Button
                 variant='contained'
-                color='secondary'
-                startIcon={<CheckCircleOutlineOutlinedIcon />}
+                startIcon={<TaskAltOutlinedIcon />}
                 onClick={() => void handleCompleteExecution()}
                 disabled={isOperationalBusy || !canCompleteExecution}
                 disableElevation
-                sx={{ borderRadius: 2 }}
+                sx={primaryActionSx}
               >
                 Finalizar ejecución
               </Button>
@@ -2896,11 +2929,10 @@ const CalibrationServiceDetailsPage = () => {
             <BlockedActionTooltip reason={createCutBlockedReason}>
               <Button
                 variant='outlined'
-                color='primary'
-                startIcon={<DescriptionOutlinedIcon />}
+                startIcon={<NoteAddOutlinedIcon />}
                 onClick={() => setIsCutDialogOpen(true)}
                 disabled={isOperationalBusy || !canCreateCut}
-                sx={{ borderRadius: 2 }}
+                sx={secondaryActionSx}
               >
                 Crear corte
               </Button>
@@ -2910,12 +2942,11 @@ const CalibrationServiceDetailsPage = () => {
             <BlockedActionTooltip reason={closeServiceBlockedReason}>
               <Button
                 variant='contained'
-                color='inherit'
-                startIcon={<CheckCircleOutlineOutlinedIcon />}
+                startIcon={<LockOutlinedIcon />}
                 onClick={() => setIsCloseDialogOpen(true)}
                 disabled={isOperationalBusy || !canCloseService}
                 disableElevation
-                sx={{ borderRadius: 2 }}
+                sx={primaryActionSx}
               >
                 Cerrar servicio
               </Button>
@@ -2923,14 +2954,12 @@ const CalibrationServiceDetailsPage = () => {
           ) : null}
           {canEdit ? (
             <Button
-              variant='contained'
-              color='primary'
+              variant='outlined'
               startIcon={<EditOutlinedIcon />}
               onClick={() =>
                 navigate(`/calibration-services/${service.id}/edit`)
               }
-              disableElevation
-              sx={{ borderRadius: 2 }}
+              sx={secondaryActionSx}
             >
               Editar servicio
             </Button>
