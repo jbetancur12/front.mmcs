@@ -17,6 +17,8 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import PauseIcon from '@mui/icons-material/Pause'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import SearchIcon from '@mui/icons-material/Search'
+import AddIcon from '@mui/icons-material/Add'
+import RemoveIcon from '@mui/icons-material/Remove'
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined'
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
@@ -87,6 +89,20 @@ const sheetSx = {
   '& .MuiDialogActions-root .MuiButton-root': { minHeight: 44, borderRadius: '12px', textTransform: 'none', fontWeight: 600 }
 } as const
 
+const getReleased = (item: any) => {
+  const value = item.otherFields?.releasedQuantity
+  return typeof value === 'number' ? value : (parseInt(value, 10) || 0)
+}
+
+const getSavedExecuted = (item: any, adjustments: any[] = []) => {
+  const effective = getEffectiveQty(item, adjustments)
+  const stored = Number(item.otherFields?.executedQuantity)
+  const recorded = Number.isFinite(stored) && item.otherFields?.executedQuantity !== null && item.otherFields?.executedQuantity !== undefined
+    ? stored
+    : (item.otherFields?.operationalStatus === 'completed' ? effective : 0)
+  return Math.min(Math.max(recorded, getReleased(item)), effective)
+}
+
 const MobilePage = () => {
   const { serviceId } = useParams()
   const navigate = useNavigate()
@@ -101,11 +117,12 @@ const MobilePage = () => {
   const cuts = s?.cuts || []
   const status = s?.status || ''
   const scheduledDate = getScheduledDate(s)
-  const ops = getOps(s)
+  const paused = Boolean((s as any)?.isPaused)
 
   // Execution state
   const [draftItems, setDraftItems] = useState<Record<number, CalibrationServiceOperationalItemStatus>>({})
   const [draftNotes, setDraftNotes] = useState<Record<number, string>>({})
+  const [draftExecuted, setDraftExecuted] = useState<Record<number, number>>({})
   const [saving, setSaving] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
@@ -210,11 +227,12 @@ const MobilePage = () => {
 
   useEffect(() => {
     if (!s) return
-    setDraftItems({}); setDraftNotes({})
+    setDraftItems({}); setDraftNotes({}); setDraftExecuted({})
     for (const item of (s.items || [])) {
       const st = (item as any).otherFields?.operationalStatus || 'pending'
       setDraftItems(p => ({ ...p, [item.id]: st }))
       setDraftNotes(p => ({ ...p, [item.id]: (item as any).otherFields?.technicalNotes || '' }))
+      setDraftExecuted(p => ({ ...p, [item.id]: getSavedExecuted(item, s.adjustments) }))
     }
   }, [s?.id])
 
@@ -225,19 +243,36 @@ const MobilePage = () => {
     return res.data
   }
 
-  const handleAction = async (key: string, fn: () => Promise<any>, msg: string) => {
+  const handleAction = async (key: string, fn: () => Promise<any>, msg: string, onDone?: () => void) => {
     setActionLoading(key)
-    try { await fn(); toast.success(msg); void refetch() }
+    try { await fn(); toast.success(msg); void refetch(); onDone?.() }
     catch (e: any) { toast.error(e?.response?.data?.error || `Error: ${msg}`) }
     setActionLoading(null)
+  }
+
+  const progressPayload = () => ({
+    items: items.map(i => ({
+      itemId: i.id,
+      operationalStatus: draftItems[i.id] || 'pending',
+      technicalNotes: draftNotes[i.id] || '',
+      executedQuantity: draftItems[i.id] === 'completed' ? getEffectiveQty(i, s?.adjustments) : (draftExecuted[i.id] ?? 0)
+    }))
+  })
+
+  const setItemStatus = (item: any, next: CalibrationServiceOperationalItemStatus) => {
+    setDraftItems(p => ({ ...p, [item.id]: next }))
+    if (next === 'completed') setDraftExecuted(p => ({ ...p, [item.id]: getEffectiveQty(item, s?.adjustments) }))
+  }
+
+  const changeExecuted = (item: any, delta: number) => {
+    const max = getEffectiveQty(item, s?.adjustments)
+    setDraftExecuted(p => ({ ...p, [item.id]: Math.min(Math.max((p[item.id] ?? 0) + delta, getReleased(item)), max) }))
   }
 
   const handleSaveProgress = async () => {
     setSaving(true)
     try {
-      await apiCall('put', `/calibration-services/${serviceId}/item-progress`, {
-        items: items.map(i => ({ itemId: i.id, operationalStatus: draftItems[i.id] || 'pending', technicalNotes: draftNotes[i.id] || '' }))
-      })
+      await apiCall('put', `/calibration-services/${serviceId}/item-progress`, progressPayload())
       toast.success('Avance guardado'); void refetch()
     } catch { toast.error('Error al guardar') }
     setSaving(false)
@@ -254,6 +289,7 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
     const savedStatus = (i as any).otherFields?.operationalStatus || 'pending'
     const savedNotes = (i as any).otherFields?.technicalNotes || ''
     return (draftItems[i.id] || 'pending') !== savedStatus || (draftNotes[i.id] || '') !== savedNotes
+      || (draftExecuted[i.id] ?? 0) !== getSavedExecuted(i, s?.adjustments)
   })
   const controlSheet: any = (s?.otherFields as any)?.logistics?.controlSheet || {}
   const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([s?.address, s?.city].filter(Boolean).join(', '))}`
@@ -286,7 +322,7 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
             </IconButton>
             <Typography variant='h6' fontWeight={700} sx={{ flex: 1 }}>{s.serviceCode}</Typography>
             <Box component='span' sx={{ ...chipSx, bgcolor: 'rgba(255,255,255,0.22)' }}>
-              {ops?.isPaused ? 'En pausa' : CALIBRATION_SERVICE_STATUS_LABELS[status as CalibrationServiceStatus]}
+              {paused ? 'En pausa' : CALIBRATION_SERVICE_STATUS_LABELS[status as CalibrationServiceStatus]}
             </Box>
           </Stack>
           <Typography variant='body1' fontWeight={600} sx={{ mt: 0.5, lineHeight: 1.3 }}>
@@ -302,7 +338,24 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
           {tab === 'work' && (
             <Stack spacing={2}>
               {/* Paso principal */}
-              {['scheduled', 'in_execution'].includes(status) && (
+              {paused && (
+                <Card elevation={0} sx={{ ...cardSx, borderColor: '#f59e0b', bgcolor: '#fffbeb' }}>
+                  <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                    <Stack spacing={1.5}>
+                      <Typography sx={sectionTitle}>El servicio está en pausa</Typography>
+                      <Typography variant='body2' sx={{ color: G.gray600 }}>Mientras esté en pausa no puedes registrar avances. Reanúdalo para seguir trabajando.</Typography>
+                      <Button fullWidth variant='contained' disableElevation startIcon={<PlayArrowIcon />}
+                        onClick={() => handleAction('resume', () => apiCall('post', `/calibration-services/${serviceId}/resume`, { resumeNotes: null, resumedAt: new Date().toISOString() }), 'Servicio reanudado')}
+                        disabled={actionLoading === 'resume'}
+                        sx={{ ...primarySx, py: 1.75, fontSize: '1rem' }}>
+                        Reanudar servicio
+                      </Button>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              )}
+
+              {!paused && ['scheduled', 'in_execution'].includes(status) && (
                 <Card elevation={0} sx={cardSx}>
                   <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                     <Stack spacing={1.5}>
@@ -331,7 +384,7 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
                             sx={{ ...primarySx, py: 1.75, fontSize: '1rem' }}>
                             {!allCompleted ? `Faltan ${pendingCount} ítem${pendingCount === 1 ? '' : 's'}` : dirty ? 'Guarda el avance primero' : 'Finalizar ejecución'}
                           </Button>
-                          {!ops?.isPaused && (
+                          {!paused && (
                             <Button fullWidth variant='text' color='warning' startIcon={<PauseIcon />}
                               onClick={() => handleAction('pause', () => apiCall('post', `/calibration-services/${serviceId}/pause`, { pauseReason: 'Pausado desde móvil' }), 'Servicio pausado')}
                               disabled={actionLoading === 'pause'}
@@ -375,8 +428,8 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
               <Box>
                 <Stack direction='row' justifyContent='space-between' alignItems='center' sx={{ mb: 1 }}>
                   <Typography sx={sectionTitle}>Ítems ({items.length})</Typography>
-                  {pendingCount > 0 && items.length > 0 && (
-                    <Button size='small' onClick={() => setDraftItems(p => ({ ...p, ...Object.fromEntries(items.map(i => [i.id, 'completed'])) }))}
+                  {pendingCount > 0 && items.length > 0 && !paused && ['scheduled', 'in_execution'].includes(status) && (
+                    <Button size='small' onClick={() => items.forEach(i => setItemStatus(i, 'completed'))}
                       sx={{ textTransform: 'none', fontWeight: 600, color: G.greenDark }}>
                       Marcar todos completados
                     </Button>
@@ -396,7 +449,8 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
                               <Typography variant='body2' fontWeight={700} sx={{ color: G.gray600, whiteSpace: 'nowrap' }}>x{getEffectiveQty(item, s?.adjustments)}</Typography>
                             </Stack>
                             <ToggleButtonGroup exclusive fullWidth size='small' value={current} aria-label={`Estado de ${item.itemName}`}
-                              onChange={(_, v) => { if (v) setDraftItems(p => ({ ...p, [item.id]: v })) }}>
+                              disabled={paused || !['scheduled', 'in_execution'].includes(status)}
+                              onChange={(_, v) => { if (v) setItemStatus(item, v) }}>
                               {STATUS_FLOW.map(k => (
                                 <ToggleButton key={k} value={k} sx={{
                                   minHeight: 44, px: 0.5, textTransform: 'none', fontSize: '0.72rem', fontWeight: 600, color: G.gray600, borderColor: G.gray200,
@@ -408,6 +462,21 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
                                 </ToggleButton>
                               ))}
                             </ToggleButtonGroup>
+                            {current === 'in_progress' && (
+                              <Stack direction='row' alignItems='center' justifyContent='space-between' sx={{ bgcolor: G.gray50, borderRadius: '12px', p: 0.75 }}>
+                                <Box sx={{ pl: 1 }}>
+                                  <Typography variant='body2' fontWeight={600} sx={{ color: G.gray600 }}>Ejecutados</Typography>
+                                  {getReleased(item) > 0 && <Typography variant='caption' sx={{ color: G.gray400 }}>{getReleased(item)} ya en corte</Typography>}
+                                </Box>
+                                <Stack direction='row' alignItems='center' spacing={0.5}>
+                                  <IconButton aria-label='Restar uno' onClick={() => changeExecuted(item, -1)} disabled={paused || (draftExecuted[item.id] ?? 0) <= getReleased(item)}
+                                    sx={{ bgcolor: G.white, border: `1px solid ${G.gray200}`, width: 44, height: 44 }}><RemoveIcon /></IconButton>
+                                  <Typography fontWeight={700} sx={{ minWidth: 64, textAlign: 'center', color: G.dark }}>{draftExecuted[item.id] ?? 0} de {getEffectiveQty(item, s?.adjustments)}</Typography>
+                                  <IconButton aria-label='Sumar uno' onClick={() => changeExecuted(item, 1)} disabled={paused || (draftExecuted[item.id] ?? 0) >= getEffectiveQty(item, s?.adjustments)}
+                                    sx={{ bgcolor: G.green, color: 'white', width: 44, height: 44, '&:hover': { bgcolor: G.greenDark }, '&.Mui-disabled': { bgcolor: G.gray100, color: G.gray300 } }}><AddIcon /></IconButton>
+                                </Stack>
+                              </Stack>
+                            )}
                             {showNote ? (
                               <TextField size='small' multiline minRows={2} placeholder='Observaciones técnicas del ítem' value={noteValue}
                                 onChange={e => setDraftNotes(p => ({ ...p, [item.id]: e.target.value }))}
@@ -437,7 +506,11 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography fontWeight={700} sx={{ color: G.dark }}>Control de ingreso y entrega</Typography>
                   <Typography variant='body2' sx={{ color: G.gray600 }}>
-                    {controlSheet.intakeDate ? `Ingreso: ${controlSheet.intakeDate}` : 'Sin diligenciar'}{controlSheet.deliveryDate ? `  ·  Entrega: ${controlSheet.deliveryDate}` : ''}
+                    {[
+                      controlSheet.items?.length ? `${controlSheet.items.length} equipo${controlSheet.items.length === 1 ? '' : 's'}` : '',
+                      controlSheet.intakeDate ? `Ingreso ${controlSheet.intakeDate}` : '',
+                      controlSheet.deliveryDate ? `Entrega ${controlSheet.deliveryDate}` : ''
+                    ].filter(Boolean).join('  ·  ') || 'Sin diligenciar'}
                   </Typography>
                 </Box>
                 <ChevronRightIcon sx={{ color: G.gray300 }} />
@@ -670,22 +743,26 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
                             <TextField size='small' label='Activo fijo' value={eq.asset} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], asset: e.target.value }; setLogEquipment(n) }}
                               sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
                           </Box>
-                          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 0.5 }}>
-                            {(['physIn', 'physOut', 'opIn', 'opOut'] as const).map(f => {
-                              const labels: Record<string, string> = { physIn: 'Fís. ing', physOut: 'Fís. sal', opIn: 'Oper. ing', opOut: 'Oper. sal' }
-                              return (
-                                <FormControl key={f} size='small'>
-                                  <InputLabel>{labels[f]}</InputLabel>
-                                  <Select value={eq[f as keyof typeof eq] || ''} label={labels[f]}
-                                    onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], [f]: e.target.value || null }; setLogEquipment(n) }}
-                                    sx={{ borderRadius: '10px' }}>
-                                    <MenuItem value=''><em>—</em></MenuItem>
-                                    <MenuItem value='B'>B</MenuItem><MenuItem value='M'>M</MenuItem><MenuItem value='NA'>NA</MenuItem><MenuItem value='SI'>SI</MenuItem>
-                                  </Select>
-                                </FormControl>
-                              )
-                            })}
-                          </Box>
+                          <TextField size='small' label='Ubicación' value={eq.location} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], location: e.target.value }; setLogEquipment(n) }}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
+                          {(['physIn', 'physOut', 'opIn', 'opOut'] as const).map(fk => {
+                            const labels: Record<string, string> = { physIn: 'Inspección física al ingreso', physOut: 'Inspección física a la salida', opIn: 'Inspección operativa al ingreso', opOut: 'Inspección operativa a la salida' }
+                            return (
+                              <Box key={fk}>
+                                <Typography variant='caption' sx={{ color: G.gray600, fontWeight: 600 }}>{labels[fk]}</Typography>
+                                <ToggleButtonGroup exclusive fullWidth size='small' value={eq[fk] || null} aria-label={labels[fk]} sx={{ mt: 0.5 }}
+                                  onChange={(_, v) => { const n = [...logEquipment]; n[i] = { ...n[i], [fk]: v || null }; setLogEquipment(n) }}>
+                                  {['B', 'M', 'NA', 'SI'].map(o => (
+                                    <ToggleButton key={o} value={o} sx={{
+                                      minHeight: 40, textTransform: 'none', fontWeight: 600, color: G.gray600, borderColor: G.gray200,
+                                      '&.Mui-selected': { bgcolor: G.greenLight, color: G.greenDark, borderColor: G.green, fontWeight: 700 }
+                                    }}>{o}</ToggleButton>
+                                  ))}
+                                </ToggleButtonGroup>
+                              </Box>
+                            )
+                          })}
+                          <Typography variant='caption' sx={{ color: G.gray400 }}>B = bueno · M = malo · NA = no aplica · SI = sí</Typography>
                         </Stack>
                       </CardContent>
                     </Card>
@@ -703,22 +780,32 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
               {/* Validaciones */}
               <Box>
                 <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, color: G.dark, mb: 1.5 }}>Validaciones</Typography>
-                <Stack spacing={1.5}>
-                  {[
-                    { label: 'Autoriza codificación', val: logNoSerial, set: setLogNoSerial },
-                    { label: 'Define pts. calibración', val: logCalPoints, set: setLogCalPoints },
-                    { label: 'Condición especial', val: logSpecialCond, set: setLogSpecialCond },
-                    { label: 'Incluye certificado', val: logCertIncluded, set: setLogCertIncluded },
-                    { label: 'Incluye estampilla', val: logStamp, set: setLogStamp },
-                  ].map(f => (
-                    <FormControl key={f.label} fullWidth size='small'>
-                      <InputLabel>{f.label}</InputLabel>
-                      <Select value={f.val} label={f.label} onChange={e => f.set(e.target.value)} sx={{ borderRadius: '12px' }}>
-                        <MenuItem value=''>Sin definir</MenuItem><MenuItem value='true'>Sí</MenuItem><MenuItem value='false'>No</MenuItem>
-                      </Select>
-                    </FormControl>
-                  ))}
-                </Stack>
+                <Card elevation={0} sx={{ borderRadius: '16px', border: `1px solid ${G.gray100}` }}>
+                  <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
+                    {[
+                      { label: 'Autoriza codificación', val: logNoSerial, set: setLogNoSerial },
+                      { label: 'Define puntos de calibración', val: logCalPoints, set: setLogCalPoints },
+                      { label: 'Condición especial', val: logSpecialCond, set: setLogSpecialCond },
+                      { label: 'Incluye certificado', val: logCertIncluded, set: setLogCertIncluded },
+                      { label: 'Incluye estampilla', val: logStamp, set: setLogStamp },
+                    ].map((f, idx) => (
+                      <Stack key={f.label} direction='row' alignItems='center' justifyContent='space-between' spacing={1.5}
+                        sx={{ px: 2, py: 1.25, borderTop: idx ? `1px solid ${G.gray100}` : 'none' }}>
+                        <Typography variant='body2' fontWeight={600} sx={{ color: G.dark, flex: 1 }}>{f.label}</Typography>
+                        <ToggleButtonGroup exclusive size='small' value={f.val || null} aria-label={f.label}
+                          onChange={(_, v) => f.set(v || '')}>
+                          {[{ v: 'true', t: 'Sí' }, { v: 'false', t: 'No' }].map(o => (
+                            <ToggleButton key={o.v} value={o.v} sx={{
+                              minWidth: 56, minHeight: 40, textTransform: 'none', fontWeight: 600, color: G.gray600, borderColor: G.gray200,
+                              '&.Mui-selected': { bgcolor: o.v === 'true' ? G.green : G.greenLight, color: o.v === 'true' ? 'white' : G.greenDark, borderColor: G.green, fontWeight: 700,
+                                '&:hover': { bgcolor: o.v === 'true' ? G.greenDark : G.greenLight } }
+                            }}>{o.t}</ToggleButton>
+                          ))}
+                        </ToggleButtonGroup>
+                      </Stack>
+                    ))}
+                  </CardContent>
+                </Card>
               </Box>
 
               {/* Firmas */}
@@ -732,8 +819,6 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
                         <Typography variant='body2' fontWeight={600} sx={{ color: G.dark }}>Quien entrega</Typography>
                       </Stack>
                       <TextField fullWidth size='small' label='Nombre completo' value={logDeliveryName} onChange={e => setLogDeliveryName(e.target.value)}
-                        sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
-                      <TextField fullWidth size='small' label='Cédula / ID'
                         sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
                       <SignaturePad value={logDeliverySig} onChange={setLogDeliverySig} height={100} />
                     </Box>
@@ -743,15 +828,8 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
                         <Typography variant='body2' fontWeight={600} sx={{ color: G.dark }}>Quien recibe</Typography>
                       </Stack>
                       <TextField fullWidth size='small' label='Nombre completo' value={logReceiptName} onChange={e => setLogReceiptName(e.target.value)}
-                        sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
-                      <TextField fullWidth size='small' label='Cargo'
                         sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
                       <SignaturePad value={logReceiptSig} onChange={setLogReceiptSig} height={100} />
-                    </Box>
-                    <Box sx={{ borderTop: `1px solid ${G.gray100}`, pt: 2 }}>
-                      <Typography variant='caption' sx={{ color: G.gray400, mb: 1.5, display: 'block' }}>
-                        ¿Prefieres subir la firma como imagen?
-                      </Typography>
                     </Box>
                   </CardContent>
                 </Card>
@@ -788,7 +866,7 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
                   operationalInspectionIn: e.opIn as any, operationalInspectionOut: e.opOut as any
                 }))
               })
-            }, 'Control guardado')} disabled={actionLoading === 'log'}
+            }, 'Control guardado', () => setShowLogistics(false))} disabled={actionLoading === 'log'}
             sx={primarySx} disableElevation>
             Guardar
           </Button>
@@ -818,7 +896,7 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
             <Button onClick={() => setShowTrace(false)}>Cancelar</Button>
             <Button variant='contained' disableElevation sx={primarySx} onClick={() => handleAction('trace', () => apiCall('post', `/calibration-services/${serviceId}/physical-traceability`, {
               movementType: traceMovement, occurredAt: new Date().toISOString(), contactName: traceContact, location: traceLocation || null, notes: null
-            }), 'Movimiento registrado')} disabled={actionLoading === 'trace'}>Guardar</Button>
+            }), 'Movimiento registrado', () => { setShowTrace(false); setTraceContact(''); setTraceLocation('') })} disabled={actionLoading === 'trace'}>Guardar</Button>
           </DialogActions>
         </Dialog>
 
@@ -880,13 +958,11 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
           <DialogActions>
             <Button onClick={() => setShowCut(false)}>Cancelar</Button>
             <Button variant='contained' disableElevation sx={primarySx} onClick={() => handleAction('cut', async () => {
-              if (items.length) await apiCall('put', `/calibration-services/${serviceId}/item-progress`, {
-                items: items.map(i => ({ itemId: i.id, operationalStatus: draftItems[i.id] || 'pending', technicalNotes: draftNotes[i.id] || '' }))
-              })
+              if (items.length) await apiCall('put', `/calibration-services/${serviceId}/item-progress`, progressPayload())
               await apiCall('post', `/calibration-services/${serviceId}/cuts`, {
                 cutType, notes: null, items: items.filter(i => draftItems[i.id] === 'completed').map(i => ({ serviceItemId: i.id, quantity: 1 }))
               })
-            }, 'Corte creado')} disabled={actionLoading === 'cut'}>Crear</Button>
+            }, 'Corte creado', () => setShowCut(false))} disabled={actionLoading === 'cut'}>Crear</Button>
           </DialogActions>
         </Dialog>
       </Box>
