@@ -24,6 +24,8 @@ import {
   ListItemText,
   MenuItem,
   Paper,
+  Popper,
+  PopperProps,
   Select,
   Stack,
   Tab,
@@ -117,6 +119,11 @@ interface Requirement {
   forDraft: boolean
   pending: boolean
 }
+
+// La lista del selector de clientes es más ancha que el campo: los nombres largos se leen en una o dos líneas
+const WideListPopper = (props: PopperProps) => (
+  <Popper {...props} placement='bottom-start' style={{ ...props.style, width: 'fit-content', minWidth: 380, maxWidth: 'min(640px, 92vw)' }} />
+)
 
 const sectionCardSx = {
   borderRadius: '16px',
@@ -1237,10 +1244,13 @@ const CalibrationServiceWorkspacePage = () => {
                 </Typography>
               </Stack>
               <Grid container spacing={2}>
-                <Grid item xs={12} md>
+                <Grid item xs={12}>
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'flex-start' }}>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                     <Autocomplete
                       fullWidth
+                      PopperComponent={WideListPopper}
                       options={customerOptions}
                       value={selectedCustomer}
                       getOptionLabel={(option) =>
@@ -1276,9 +1286,9 @@ const CalibrationServiceWorkspacePage = () => {
                       </span>
                     </Tooltip>
                   </Stack>
-                </Grid>
-                <Grid item xs={12} md='auto'>
-                  <FormControl fullWidth sx={{ width: { md: 190 } }}>
+                    </Box>
+                    <Box sx={{ width: { xs: '100%', md: 190 }, flexShrink: 0 }}>
+                  <FormControl fullWidth>
                     <InputLabel>Alcance</InputLabel>
                     <Select
                       value={formState.scopeType || 'general'}
@@ -1290,6 +1300,8 @@ const CalibrationServiceWorkspacePage = () => {
                       <MenuItem value='site'>Sede específica</MenuItem>
                     </Select>
                   </FormControl>
+                    </Box>
+                  </Stack>
                 </Grid>
                 {formState.scopeType === 'site' ? (
                   <Grid item xs={12} md={6}>
