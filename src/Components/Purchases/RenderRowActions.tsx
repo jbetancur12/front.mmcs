@@ -139,8 +139,8 @@ const RenderRowActions = ({
           size='small'
           onClick={onEdit}
           disabled={row.original.status === 'aprobado' && row.original.hasOrder}
+          color='primary'
           sx={{
-            color: 'rgba(0, 0, 0, 0.54)', // Gris oscuro cuando está habilitado
             '&.Mui-disabled': {
               color: 'rgba(0, 0, 0, 0.26)' // Gris claro cuando está deshabilitado
             }
@@ -151,7 +151,7 @@ const RenderRowActions = ({
       </Tooltip>
       <Tooltip title='Ver'>
         <Link to={`${row.original.id}`}>
-          <IconButton size='small'>
+          <IconButton size='small' sx={{ color: '#00BFA5' }}>
             <Visibility />
           </IconButton>
         </Link>

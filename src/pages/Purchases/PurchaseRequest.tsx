@@ -1,6 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
-import { Button, Chip, Grid, IconButton, Tooltip } from '@mui/material'
+import {
+  Avatar,
+  Box,
+  Button,
+  Chip,
+  Grid,
+  IconButton,
+  Tooltip,
+  Typography
+} from '@mui/material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import {
   AccessTime,
@@ -210,19 +219,77 @@ const PurchaseRequest: React.FC = () => {
 
   // Definir las columnas de la tabla
   const columns: MRT_ColumnDef<IPurchaseRequest>[] = [
-    { accessorKey: 'purchaseCode', header: 'Código' },
-    { accessorKey: 'elaborationDate', header: 'Fecha de Elaboración' },
-    { accessorKey: 'applicantName', header: 'Nombre del Solicitante' },
+    {
+      accessorKey: 'purchaseCode',
+      header: 'Código',
+      size: 150,
+      Cell: ({ cell }) => (
+        <Typography variant='body2' fontWeight={600} noWrap>
+          {cell.getValue<string>()}
+        </Typography>
+      )
+    },
+    {
+      accessorKey: 'elaborationDate',
+      header: 'Elaborada el',
+      size: 120,
+      Cell: ({ cell }) => {
+        const date = cell.getValue<string>()
+        return date ? format(new Date(date), 'dd/MM/yyyy') : 'N/A'
+      }
+    },
+    {
+      accessorKey: 'applicantName',
+      header: 'Solicitante',
+      size: 230,
+      Cell: ({ cell }) => {
+        const name = cell.getValue<string>() ?? ''
+        const initials = name
+          .split(' ')
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((word) => word[0])
+          .join('')
+          .toUpperCase()
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Avatar
+              sx={{
+                bgcolor: PURCHASE_TEAL,
+                width: 28,
+                height: 28,
+                fontSize: 12
+              }}
+            >
+              {initials}
+            </Avatar>
+            <Typography variant='body2' noWrap>
+              {name}
+            </Typography>
+          </Box>
+        )
+      }
+    },
     {
       accessorKey: 'purchaseType',
       header: 'Tipo',
+      size: 80,
       filterVariant: 'select',
-      filterSelectOptions: ['I', 'II']
-    }, // <-- Solo muestra coincidencias exactas
+      filterSelectOptions: ['I', 'II'],
+      Cell: ({ cell }) => (
+        <Chip
+          label={cell.getValue<string>()}
+          size='small'
+          variant='outlined'
+          sx={{ minWidth: 36, fontWeight: 600 }}
+        />
+      )
+    },
     // En tu archivo de columnas
     {
       accessorKey: 'status',
       header: 'Estado',
+      size: 230,
       Cell: ({ cell }) => {
         const status = cell.getValue() as PurchaseRequestStatus
         let color: 'warning' | 'success' | 'error'
@@ -275,9 +342,10 @@ const PurchaseRequest: React.FC = () => {
 
         const chipElement = (
           <Chip
-            label={status.toUpperCase()}
+            label={status.charAt(0).toUpperCase() + status.slice(1)}
             color={color}
-            sx={estilo}
+            variant='outlined'
+            sx={{ ...estilo, backgroundColor: 'transparent' }}
             size='small'
             icon={
               {
@@ -305,12 +373,29 @@ const PurchaseRequest: React.FC = () => {
           )
         }
 
+        const request = cell.row.original
+        if (isLate(request)) {
+          const days = differenceInDays(new Date(), new Date(request.createdAt))
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {chipElement}
+              <Chip
+                label={`Sin orden · ${days} días`}
+                size='small'
+                color='warning'
+                variant='outlined'
+              />
+            </Box>
+          )
+        }
+
         return chipElement
       }
     },
     {
       accessorKey: 'approvalDate',
-      header: 'Aprobado el',
+      header: 'Aprobada el',
+      size: 120,
       Cell: ({ cell }) => {
         const date = cell.getValue() as string
         return date ? format(new Date(date), 'dd/MM/yyyy') : 'N/A'
@@ -423,7 +508,10 @@ const PurchaseRequest: React.FC = () => {
           onPaginationChange={tableHandlers.onPaginationChange}
           enableRowActions={true}
           enablePinning
-          initialState={{ columnPinning: { right: ['mrt-row-actions'] } }}
+          initialState={{
+            density: 'compact',
+            columnPinning: { right: ['mrt-row-actions'] }
+          }}
           muiSearchTextFieldProps={{
             ...purchaseTableStyle.muiSearchTextFieldProps,
             placeholder: 'Buscar solicitudes...'

@@ -7,7 +7,8 @@ import {
   Grid,
   IconButton,
   Stack,
-  Tooltip
+  Tooltip,
+  Typography
 } from '@mui/material'
 import {
   AssignmentTurnedIn,
@@ -85,20 +86,44 @@ const PurchaseOrders: React.FC = () => {
 
   // Definir las columnas de la tabla
   const columns: MRT_ColumnDef<IPurchaseOrder>[] = [
-    { accessorKey: 'code', header: 'Código' },
+    {
+      accessorKey: 'code',
+      header: 'Código',
+      size: 160,
+      Cell: ({ cell }) => (
+        <Typography variant='body2' fontWeight={600} noWrap>
+          {cell.getValue<string>()}
+        </Typography>
+      )
+    },
     {
       accessorKey: 'requestDate',
-      header: 'Fecha de Orden',
+      header: 'Fecha',
+      size: 110,
       Cell: ({ cell }) => {
         const date = cell.getValue() as string
         return date ? format(new Date(date), 'dd/MM/yyyy') : 'N/A'
       }
     },
-    { accessorKey: 'supplier.name', header: 'Proveedor' },
-    { accessorKey: 'supplier.phone', header: 'Teléfono' },
+    {
+      accessorKey: 'supplier.name',
+      header: 'Proveedor',
+      size: 220,
+      Cell: ({ cell, row }) => (
+        <Stack>
+          <Typography variant='body2' noWrap>
+            {cell.getValue<string>()}
+          </Typography>
+          <Typography variant='caption' color='text.secondary'>
+            {row.original.supplier?.phone}
+          </Typography>
+        </Stack>
+      )
+    },
     {
       id: 'sent',
       header: 'Enviada',
+      size: 170,
       enableSorting: false,
       Cell: ({ row }) => {
         const order = row.original
@@ -135,12 +160,36 @@ const PurchaseOrders: React.FC = () => {
     {
       accessorKey: 'purchaseRequest.purchaseType',
       header: 'Tipo',
+      size: 80,
       filterVariant: 'select',
-      filterSelectOptions: ['I', 'II']
+      filterSelectOptions: ['I', 'II'],
+      Cell: ({ cell }) => (
+        <Chip
+          label={cell.getValue<string>()}
+          size='small'
+          variant='outlined'
+          sx={{ minWidth: 36, fontWeight: 600 }}
+        />
+      )
+    },
+    {
+      id: 'verification',
+      header: 'Verificación',
+      size: 150,
+      accessorFn: (row) => (row.verified ? 'Verificada' : 'Por verificar'),
+      Cell: ({ row }) => (
+        <Chip
+          size='small'
+          variant='outlined'
+          color={row.original.verified ? 'success' : 'warning'}
+          label={row.original.verified ? 'Verificada' : 'Por verificar'}
+        />
+      )
     },
     {
       accessorKey: 'total',
       header: 'Total',
+      size: 130,
       Cell: ({ cell }) => {
         const total = cell.getValue() as number
         return total
@@ -225,7 +274,10 @@ const PurchaseOrders: React.FC = () => {
           state={{ isLoading }}
           enableRowActions={true}
           enablePinning
-          initialState={{ columnPinning: { right: ['mrt-row-actions'] } }}
+          initialState={{
+            density: 'compact',
+            columnPinning: { right: ['mrt-row-actions'] }
+          }}
           muiSearchTextFieldProps={{
             ...purchaseTableStyle.muiSearchTextFieldProps,
             placeholder: 'Buscar órdenes...'
@@ -301,7 +353,7 @@ const RenderRowActions: React.FC<RenderRowActionsProps> = ({
       <Divider orientation='vertical' flexItem />
       <Tooltip title='Ver'>
         <Link to={`${row.original.id}`}>
-          <IconButton size='small'>
+          <IconButton size='small' sx={{ color: '#00BFA5' }}>
             <Visibility />
           </IconButton>
         </Link>
@@ -316,7 +368,7 @@ const RenderRowActions: React.FC<RenderRowActionsProps> = ({
             onClick={() => openVerificationModal(row.original)}
             disabled={isVerified}
           >
-            <FactCheck color={isVerified ? 'disabled' : 'secondary'} />
+            <FactCheck color={isVerified ? 'disabled' : 'primary'} />
           </IconButton>
         </span>
       </Tooltip>
