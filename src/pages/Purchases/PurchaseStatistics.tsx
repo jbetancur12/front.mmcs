@@ -13,7 +13,10 @@ import {
   Legend, 
   ResponsiveContainer 
 } from 'recharts'
-import { Grid, Typography, Box, CircularProgress, Alert, Button, Select, MenuItem, FormControl, InputLabel, Card, CardContent, CardHeader } from '@mui/material'
+import { Container, Grid, Box, CircularProgress, Alert, Button, Select, MenuItem, FormControl, InputLabel, Card, CardContent, CardHeader } from '@mui/material'
+import { BarChart as BarChart, DateRange, ErrorOutline, FactCheck, HourglassEmpty, ListAlt, ReceiptLong, RemoveShoppingCart } from '@mui/icons-material'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
@@ -211,23 +214,26 @@ const PurchaseStatistics = () => {
   })
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <Typography variant="h4" component="h1" className="font-bold">
-          Estadísticas de Compras
-        </Typography>
-        
-        {/* Date Filter Controls */}
-        <div className="flex gap-4 items-center">
-          <Button 
-            variant={customDateRange ? "outlined" : "contained"}
+    <Container maxWidth='xl' sx={{ py: 3 }} className='space-y-6'>
+      <LmsPageHeader
+        title='Estadísticas de Compras'
+        subtitle='Solicitudes, órdenes y verificaciones del módulo de compras'
+        icon={<BarChart />}
+        actions={
+          <Button
+            variant={customDateRange ? 'outlined' : 'contained'}
+            startIcon={<DateRange />}
             onClick={() => setCustomDateRange(!customDateRange)}
+            sx={
+              customDateRange
+                ? { color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }
+                : { bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }
+            }
           >
-            {customDateRange ? 'Ocultar Filtros' : 'Filtro por Fechas'}
+            {customDateRange ? 'Ocultar filtros' : 'Filtro por fechas'}
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Custom Date Range Filter */}
       {customDateRange && (
@@ -258,70 +264,23 @@ const PurchaseStatistics = () => {
 
       {/* Overview Cards */}
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6} lg={2}>
-          <Card className="bg-blue-50">
-            <CardContent>
-              <Typography variant="h6" color="text.secondary">Total Solicitudes</Typography>
-              <Typography variant="h3" className="font-bold text-blue-600">
-                {statistics.overview.totalRequests}
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={6} sm={4} lg={2}>
+          <LmsStatCard label='Total solicitudes' value={statistics.overview.totalRequests} icon={<ListAlt />} tone='blue' />
         </Grid>
-        
-        <Grid item xs={12} md={6} lg={2}>
-          <Card className="bg-green-50">
-            <CardContent>
-              <Typography variant="h6" color="text.secondary">Total Órdenes</Typography>
-              <Typography variant="h3" className="font-bold text-green-600">
-                {statistics.overview.totalOrders}
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={6} sm={4} lg={2}>
+          <LmsStatCard label='Total órdenes' value={statistics.overview.totalOrders} icon={<ReceiptLong />} tone='teal' />
         </Grid>
-        
-        <Grid item xs={12} md={6} lg={2}>
-          <Card className="bg-purple-50">
-            <CardContent>
-              <Typography variant="h6" color="text.secondary">Verificaciones</Typography>
-              <Typography variant="h3" className="font-bold text-purple-600">
-                {statistics.overview.totalVerifications}
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={6} sm={4} lg={2}>
+          <LmsStatCard label='Verificaciones' value={statistics.overview.totalVerifications} icon={<FactCheck />} tone='green' />
         </Grid>
-        
-        <Grid item xs={12} md={6} lg={2}>
-          <Card className="bg-orange-50">
-            <CardContent>
-              <Typography variant="h6" color="text.secondary">Sin Orden</Typography>
-              <Typography variant="h3" className="font-bold text-orange-600">
-                {statistics.overview.requestsWithoutOrders}
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={6} sm={4} lg={2}>
+          <LmsStatCard label='Sin orden' value={statistics.overview.requestsWithoutOrders} icon={<RemoveShoppingCart />} tone='orange' />
         </Grid>
-        
-        <Grid item xs={12} md={6} lg={2}>
-          <Card className="bg-red-50">
-            <CardContent>
-              <Typography variant="h6" color="text.secondary">Sin Verificar</Typography>
-              <Typography variant="h3" className="font-bold text-red-600">
-                {statistics.overview.ordersWithoutVerification}
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={6} sm={4} lg={2}>
+          <LmsStatCard label='Sin verificar' value={statistics.overview.ordersWithoutVerification} icon={<ErrorOutline />} tone='red' />
         </Grid>
-        
-        <Grid item xs={12} md={6} lg={2}>
-          <Card className="bg-yellow-50">
-            <CardContent>
-              <Typography variant="h6" color="text.secondary">Pendientes</Typography>
-              <Typography variant="h3" className="font-bold text-yellow-600">
-                {statistics.overview.pendingVerifications}
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={6} sm={4} lg={2}>
+          <LmsStatCard label='Pendientes' value={statistics.overview.pendingVerifications} icon={<HourglassEmpty />} tone='orange' />
         </Grid>
       </Grid>
 
@@ -411,7 +370,7 @@ const PurchaseStatistics = () => {
         </Grid>
 
       </Grid>
-    </div>
+    </Container>
   )
 }
 

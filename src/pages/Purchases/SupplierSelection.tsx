@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
-import { Box, Button, IconButton, Tooltip, Typography } from '@mui/material'
+import { Box, Button, Grid, IconButton, Tooltip } from '@mui/material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { Criterion, SelectionSupplier } from './Types'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Link } from 'react-router-dom'
-import { Add, Edit, Visibility } from '@mui/icons-material'
+import { Add, CheckCircle, Edit, HowToReg, Visibility, WarningAmber } from '@mui/icons-material'
+import PurchasesPage from 'src/Components/Purchases/PurchasesPage'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 import SupplierSelectionModal from 'src/Components/Purchases/SupplierSelectionModal'
 
 // Definir el tipo para los proveedores
@@ -146,56 +148,59 @@ const SuppliersSelection: React.FC = () => {
 
   return (
     <>
-      <Typography variant='h5' sx={{ mb: 2 }}>
-        Selección de Proveedores
-      </Typography>
-
-      <MaterialReactTable
-        localization={MRT_Localization_ES}
-        columns={columns}
-        data={suppliers}
-        state={{ isLoading: loading }}
-        enableRowActions={true}
-        enablePinning
-        initialState={{ columnPinning: { right: ['mrt-row-actions'] } }}
-        renderRowActions={({ row }) => (
-          <Box sx={{ display: 'flex', gap: 0.5 }}>
-            <Tooltip title='Ver'>
-              <Link to={`${row.original.id}`}>
-                <IconButton size='small' sx={{ color: '#00BFA5' }}>
-                  <Visibility />
-                </IconButton>
-              </Link>
-            </Tooltip>
-            <Tooltip title='Editar evaluación'>
-              <IconButton
-                onClick={() => handleOpenEditModal(row.original)}
-                size='small'
-                color='primary'
-              >
-                <Edit />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        )}
-        renderTopToolbarCustomActions={() => (
-          <Button
-            variant='contained'
-            onClick={() => setModalOpen(true)}
-            startIcon={<Add />}
-            sx={{
-              backgroundColor: '#9CF08B',
-              fontWeight: 'bold',
-              color: '#2D4A27',
-              '&:hover': {
-                backgroundColor: '#6DC662' // Azul más oscuro en hover
-              }
-            }}
-          >
-            Nuevo Proveedor
+      <PurchasesPage
+        title='Selección de proveedores'
+        subtitle='Proveedores evaluados y aprobados para compras'
+        icon={<HowToReg />}
+        actions={
+          <Button variant='contained' startIcon={<Add />} onClick={() => setModalOpen(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+            Nuevo proveedor
           </Button>
-        )}
-      />
+        }
+        stats={
+          <Grid container spacing={3} sx={{ mb: 3 }}>
+            <Grid item xs={6} sm={4}>
+              <LmsStatCard label='Seleccionados' value={suppliers.length} icon={<HowToReg />} tone='teal' />
+            </Grid>
+            <Grid item xs={6} sm={4}>
+              <LmsStatCard label='Aprobados' value={suppliers.filter((x) => x.finalDecision === 'APPROVED').length} icon={<CheckCircle />} tone='green' />
+            </Grid>
+            <Grid item xs={6} sm={4}>
+              <LmsStatCard label='Con reserva' value={suppliers.filter((x) => x.finalDecision === 'APPROVED WITH RESERVE').length} icon={<WarningAmber />} tone='orange' />
+            </Grid>
+          </Grid>
+        }
+      >
+        <MaterialReactTable
+          {...purchaseTableStyle}
+          columns={columns}
+          data={suppliers}
+          state={{ isLoading: loading }}
+          enableRowActions={true}
+          enablePinning
+          initialState={{ columnPinning: { right: ['mrt-row-actions'] } }}
+          renderRowActions={({ row }) => (
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
+              <Tooltip title='Ver'>
+                <Link to={`${row.original.id}`}>
+                  <IconButton size='small' sx={{ color: '#00BFA5' }}>
+                    <Visibility />
+                  </IconButton>
+                </Link>
+              </Tooltip>
+              <Tooltip title='Editar evaluación'>
+                <IconButton
+                  onClick={() => handleOpenEditModal(row.original)}
+                  size='small'
+                  color='primary'
+                >
+                  <Edit />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
+        />
+      </PurchasesPage>
       <SupplierSelectionModal
         open={modalOpen}
         onClose={handleCloseModal}
