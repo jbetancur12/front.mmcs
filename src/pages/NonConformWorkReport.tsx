@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Box, Paper } from '@mui/material'
+import { Container, Paper } from '@mui/material'
 import NonConformWorkReportTable from 'src/Components/NonConformWorkReport/NonConformWorkReportTable'
 import NonConformWorkReportForm from 'src/Components/NonConformWorkReport/NonConformWorkReportForm'
 import { useNavigate } from 'react-router-dom'
@@ -35,24 +35,24 @@ const NonConformWorkReportPage = () => {
   }
 
   return (
-    <Box p={2}>
-      <Paper sx={{ p: 2 }}>
-        {mode === 'table' && (
-          <NonConformWorkReportTable
-            onCreate={handleCreate}
-            onEdit={handleEdit}
-            onView={handleView}
-          />
-        )}
-        {(mode === 'create' || mode === 'edit') && (
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      {mode === 'table' && (
+        <NonConformWorkReportTable
+          onCreate={handleCreate}
+          onEdit={handleEdit}
+          onView={handleView}
+        />
+      )}
+      {(mode === 'create' || mode === 'edit') && (
+        <Paper sx={{ p: 2 }}>
           <NonConformWorkReportForm
             initialData={editData || {}}
             onSuccess={handleSuccess}
             onCancel={handleCancel}
           />
-        )}
-      </Paper>
-    </Box>
+        </Paper>
+      )}
+    </Container>
   )
 }
 

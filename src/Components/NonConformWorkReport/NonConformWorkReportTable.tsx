@@ -5,20 +5,19 @@ import {
   Box,
   Button,
   IconButton,
-  Typography,
   Chip,
-  Alert,
-  Stack,
-  Switch,
-  FormControlLabel,
+  Grid,
   Tooltip,
   Paper
 } from '@mui/material'
 import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
-import { MRT_Localization_ES } from 'material-react-table/locales/es'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
 import VisibilityIcon from '@mui/icons-material/Visibility'
+import { Add, CheckCircle, FolderOpen, ListAlt, NotificationsActive, ReportProblemOutlined } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { NonConformWorkReport } from './NonConformWorkReport.types'
 import { format } from 'date-fns'
@@ -110,7 +109,7 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
   const [rows, setRows] = useState<NonConformWorkReport[]>([])
   const [loading, setLoading] = useState(true)
   const [alerts, setAlerts] = useState<NonConformWorkReportAlert[]>([])
-  const [alertsLoading, setAlertsLoading] = useState(true)
+  const [, setAlertsLoading] = useState(true)
   const [showOnlyAlerts, setShowOnlyAlerts] = useState(false)
 
   const fetchReports = async () => {
@@ -301,70 +300,67 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
     return rows
   }, [rows, showOnlyAlerts, alerts])
 
-  return (
-    <Box>
-      {/* ALERTAS DE REVISIÓN */}
-      {!alertsLoading && alerts.length > 0 && (
-        <Stack spacing={2} mb={2}>
-          <Alert
-            severity='warning'
-            action={
-              <Button
-                color='inherit'
-                size='small'
-                onClick={() => setShowOnlyAlerts(true)}
-              >
-                Ver alertas
-              </Button>
-            }
-            sx={{ fontWeight: 600 }}
-          >
-            <b>¡Tienes {alerts.length} reportes con revisión pendiente!</b> Usa
-            el filtro para ver solo los reportes con alerta de revisión.
-          </Alert>
-        </Stack>
-      )}
+  const openCount = rows.filter((r) => ['Open', 'Abierta'].includes(r.status)).length
+  const closedCount = rows.filter((r) => ['Closed', 'Cerrada'].includes(r.status)).length
 
-      <Box
-        display='flex'
-        justifyContent='space-between'
-        alignItems='center'
-        mb={2}
-      >
-        <Typography variant='h6'>Reportes de Trabajo No Conforme</Typography>
-        <Box display='flex' alignItems='center' gap={2}>
-          {alerts.length > 0 && (
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={showOnlyAlerts}
-                  onChange={(_, checked) => setShowOnlyAlerts(checked)}
-                  color='warning'
-                />
-              }
-              label='Mostrar solo reportes con alerta de revisión'
-            />
-          )}
-          {canManage && (
-            <Button variant='contained' color='primary' onClick={onCreate}>
+  return (
+    <>
+      <LmsPageHeader
+        title='Trabajo no conforme'
+        subtitle='Reportes TNC, su nivel de riesgo y las revisiones pendientes'
+        icon={<ReportProblemOutlined />}
+        actions={
+          canManage ? (
+            <Button variant='contained' startIcon={<Add />} onClick={onCreate} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
               Nuevo reporte
             </Button>
-          )}
-        </Box>
-      </Box>
+          ) : undefined
+        }
+      />
 
-      <Paper elevation={2} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={6} md={3}>
+          <LmsStatCard
+            label='Reportes'
+            value={rows.length}
+            icon={<ListAlt />}
+            tone='teal'
+            active={!showOnlyAlerts}
+            onClick={() => setShowOnlyAlerts(false)}
+          />
+        </Grid>
+        <Grid item xs={6} md={3}>
+          <LmsStatCard label='Abiertos' value={openCount} icon={<FolderOpen />} tone='orange' />
+        </Grid>
+        <Grid item xs={6} md={3}>
+          <LmsStatCard label='Cerrados' value={closedCount} icon={<CheckCircle />} tone='green' />
+        </Grid>
+        <Grid item xs={6} md={3}>
+          <LmsStatCard
+            label='Con revisión pendiente'
+            value={alerts.length}
+            icon={<NotificationsActive />}
+            tone={alerts.length > 0 ? 'red' : 'blue'}
+            active={showOnlyAlerts}
+            onClick={alerts.length > 0 ? () => setShowOnlyAlerts((v) => !v) : undefined}
+          />
+        </Grid>
+      </Grid>
+
+      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
         <MaterialReactTable
+          {...purchaseTableStyle}
           columns={columns}
           data={filteredRows}
           state={{ isLoading: loading }}
-          localization={MRT_Localization_ES}
           enableRowActions
+          enablePinning
           renderRowActions={({ row }) => (
             <Box sx={{ display: 'flex' }}>
               <Tooltip title='Ver'>
                 <IconButton
                   size='small'
+                  sx={{ color: '#00BFA5' }}
                   onClick={() => onView && onView(row.original)}
                 >
                   <VisibilityIcon fontSize='small' />
@@ -375,6 +371,7 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
                   <Tooltip title='Editar'>
                     <IconButton
                       size='small'
+                      color='primary'
                       onClick={() => onEdit && onEdit(row.original)}
                     >
                       <EditIcon fontSize='small' />
@@ -397,28 +394,12 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
           initialState={{
             density: 'compact',
             pagination: { pageSize: 10, pageIndex: 0 },
-            sorting: [{ id: 'tncCode', desc: true }]
-          }}
-          muiTablePaperProps={{
-            elevation: 0,
-            sx: {
-              borderRadius: '0'
-            }
-          }}
-          muiTableBodyCellProps={{
-            sx: {
-              textAlign: 'left'
-            }
-          }}
-          muiTableHeadCellProps={{
-            sx: {
-              fontWeight: 700,
-              backgroundColor: '#f5f5f5'
-            }
+            sorting: [{ id: 'tncCode', desc: true }],
+            columnPinning: { right: ['mrt-row-actions'] }
           }}
         />
       </Paper>
-    </Box>
+    </>
   )
 }
 
