@@ -55,7 +55,7 @@ const getDotPalette = (
 ) => {
   switch (color) {
     case 'primary':
-      return { bg: '#eef2ff', fg: '#4f46e5' }
+      return { bg: '#E0F7F4', fg: '#00897B' }
     case 'success':
       return { bg: '#ecfdf5', fg: '#059669' }
     case 'error':
@@ -138,8 +138,8 @@ const CalibrationServiceTimeline = ({
           }
         },
         '& .MuiTimelineConnector-root': {
-          backgroundColor: '#cbd5e1',
-          width: '3px'
+          backgroundColor: '#e5e7eb',
+          width: '2px'
         }
       }}
     >
@@ -189,6 +189,7 @@ const CalibrationServiceTimeline = ({
                 >
                   <Chip
                     size='small'
+                    variant='outlined'
                     color={eventColor}
                     label={CALIBRATION_SERVICE_EVENT_LABELS[event.eventType]}
                   />
@@ -197,7 +198,7 @@ const CalibrationServiceTimeline = ({
                   </Typography>
                 </Stack>
 
-                <Typography variant='body2' fontWeight={600}>
+                <Typography variant='body2' fontWeight={500}>
                   {event.description}
                 </Typography>
 

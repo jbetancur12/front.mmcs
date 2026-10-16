@@ -391,7 +391,7 @@ const CalibrationServiceOperationsPanel = ({
       {service.items?.length ? (
         <Box sx={{ overflowX: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
           <Table size='small'>
-            <TableHead>
+            <TableHead sx={{ bgcolor: '#f5f5f5', '& th': { fontWeight: 600 } }}>
               <TableRow>
                 <TableCell>Ítem</TableCell>
                 <TableCell align='right'>Cant.</TableCell>
@@ -478,7 +478,7 @@ const CalibrationServiceOperationsPanel = ({
                       ) : null}
                     </TableCell>
                     <TableCell align='right'>{pendingQuantity}</TableCell>
-                    <TableCell sx={{ minWidth: 150 }}>
+                    <TableCell sx={{ minWidth: 140 }}>
                       {canEditProgress ? (
                         <TextField
                           select
@@ -501,7 +501,7 @@ const CalibrationServiceOperationsPanel = ({
                         ]
                       )}
                     </TableCell>
-                    <TableCell sx={{ minWidth: 200 }}>
+                    <TableCell sx={{ minWidth: 170 }}>
                       {canEditProgress ? (
                         <TextField
                           fullWidth
@@ -527,19 +527,26 @@ const CalibrationServiceOperationsPanel = ({
       )}
 
       {canEditProgress || onGenerateProgressPdf ? (
-        <Stack direction='row' spacing={1} justifyContent='flex-end'>
+        <Stack direction='row' spacing={1} justifyContent='flex-end' useFlexGap flexWrap='wrap'>
           {onGenerateProgressPdf && service.items?.length ? (
             <Button
               variant='outlined'
               startIcon={<PictureAsPdfIcon />}
               onClick={() => void handleGeneratePdf()}
               disabled={isGeneratingProgressPdf || isBusy}
+              sx={{ color: '#00897B', borderColor: '#00BFA5', textTransform: 'none', fontWeight: 600, '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
             >
               Generar anexo de avance técnico
             </Button>
           ) : null}
           {canEditProgress ? (
-            <Button variant='contained' onClick={() => void handleSave()} disabled={isBusy}>
+            <Button
+              variant='contained'
+              onClick={() => void handleSave()}
+              disabled={isBusy}
+              disableElevation
+              sx={{ bgcolor: '#00BFA5', textTransform: 'none', fontWeight: 600, '&:hover': { bgcolor: '#00ACC1' } }}
+            >
               Guardar avance técnico
             </Button>
           ) : null}
@@ -602,7 +609,7 @@ const CalibrationServiceOperationsPanel = ({
               height={160}
               helperText='Firma de recepción conforme del servicio.'
             />
-            <Stack direction='row' spacing={1} justifyContent='flex-end'>
+            <Stack direction='row' spacing={1} justifyContent='flex-end' useFlexGap flexWrap='wrap'>
               <Button
                 size='small'
                 variant='outlined'
