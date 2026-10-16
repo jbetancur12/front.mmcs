@@ -1,7 +1,9 @@
 // Enhanced Templates Page - Main Container Component
 import React, { useState, useEffect, useCallback } from 'react'
-import { Typography, Box } from '@mui/material'
-import { Add as AddIcon } from '@mui/icons-material'
+import { Button, Container, Grid, Typography, Box } from '@mui/material'
+import { Add as AddIcon, Description } from '@mui/icons-material'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { bigToast } from '../ExcelManipulation/Utils'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { TemplatesData, TemplateData, ErrorState } from './types'
@@ -14,7 +16,6 @@ import SkipLinks from './SkipLinks'
 import { AnimationProvider } from './AnimationProvider'
 import { AnimatedBox } from './AnimatedComponents'
 import { useAccessibility } from './hooks/useAccessibility'
-import { CreateButton, PageHeader, ContentContainer } from './styles'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
@@ -179,34 +180,28 @@ const TemplatesPage: React.FC = () => {
   // Render loading state
   if (loading && templates.length === 0) {
     return (
-      <ContentContainer>
+      <Container maxWidth='xl' sx={{ py: 3 }}>
         <LoadingState />
-      </ContentContainer>
+      </Container>
     )
   }
 
   // Render empty state
   if (!loading && templates.length === 0 && !error) {
     return (
-      <ContentContainer>
-        <PageHeader>
-          <Box>
-            <Typography variant='h4' component='h1' gutterBottom>
-              Gestión de Plantillas
-            </Typography>
-            <Typography variant='body1' color='text.secondary'>
-              Administra las plantillas para el procesamiento de datos Excel
-            </Typography>
-          </Box>
-{canManageTemplates && (
-          <CreateButton
-            startIcon={<AddIcon />}
-            onClick={() => setCreateModalOpen(true)}
-          >
-            Crear Nueva Plantilla
-          </CreateButton>
-)}
-        </PageHeader>
+      <Container maxWidth='xl' sx={{ py: 3 }}>
+        <LmsPageHeader
+          title='Plantillas'
+          subtitle='Plantillas que definen las celdas de lectura de los archivos Excel'
+          icon={<Description />}
+          actions={
+            canManageTemplates && (
+            <Button variant='contained' startIcon={<AddIcon />} onClick={() => setCreateModalOpen(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+              Crear plantilla
+            </Button>
+          )
+          }
+        />
 
         {canManageTemplates ? (
           <EmptyState onCreateTemplate={() => setCreateModalOpen(true)} />
@@ -221,58 +216,54 @@ const TemplatesPage: React.FC = () => {
           onClose={() => setCreateModalOpen(false)}
           onSubmit={handleCreateTemplate}
         />
-      </ContentContainer>
+      </Container>
     )
   }
 
   return (
     <AnimationProvider>
-      <ContentContainer>
+      <Container maxWidth='xl' sx={{ py: 3 }}>
         {/* Skip Links for Accessibility */}
         <SkipLinks />
 
         {/* Main Content */}
         <Box component='main' id='main-content'>
-          <PageHeader>
-            <AnimatedBox animation='slideDown' delay={100}>
-              <Typography variant='h4' component='h1' gutterBottom>
-                Gestión de Plantillas de Mapeo Excel
-              </Typography>
-              <Typography variant='body1' color='text.secondary'>
-                Administra las plantillas que definen referencias de celdas para
-                automatizar la lectura de archivos Excel ({templates.length}{' '}
-                plantillas)
-              </Typography>
-            </AnimatedBox>
-            <AnimatedBox animation='slideDown' delay={200}>
-{canManageTemplates && (
-              <CreateButton
-                id='create-template'
-                startIcon={<AddIcon />}
-                onClick={() => {
-                  announce('Abriendo formulario para crear nueva plantilla')
-                  setCreateModalOpen(true)
-                }}
-                aria-describedby='create-template-help'
-              >
-                Crear Nueva Plantilla
-              </CreateButton>
-)}
-            </AnimatedBox>
-            <Typography
-              id='create-template-help'
-              variant='body2'
-              sx={{
-                position: 'absolute',
-                left: '-10000px',
-                width: '1px',
-                height: '1px',
-                overflow: 'hidden'
-              }}
-            >
-              Abre un formulario para crear una nueva plantilla de mapeo Excel
-            </Typography>
-          </PageHeader>
+          <LmsPageHeader
+            title='Plantillas'
+            subtitle='Plantillas que definen las celdas de lectura de los archivos Excel'
+            icon={<Description />}
+            actions={
+              canManageTemplates && (
+                <Button
+                  id='create-template'
+                  variant='contained'
+                  startIcon={<AddIcon />}
+                  onClick={() => {
+                    announce('Abriendo formulario para crear nueva plantilla')
+                    setCreateModalOpen(true)
+                  }}
+                  aria-describedby='create-template-help'
+                  sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}
+                >
+                  Crear plantilla
+                </Button>
+              )
+            }
+          />
+
+          <Grid container spacing={3} sx={{ mb: 3 }}>
+            <Grid item xs={12} sm={4}>
+              <LmsStatCard label='Plantillas' value={templates.length} icon={<Description />} tone='teal' />
+            </Grid>
+          </Grid>
+
+          <Typography
+            id='create-template-help'
+            variant='body2'
+            sx={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}
+          >
+            Abre un formulario para crear una nueva plantilla de mapeo Excel
+          </Typography>
 
           <AnimatedBox animation='fadeIn' delay={300}>
             <TemplatesTable
@@ -304,7 +295,7 @@ const TemplatesPage: React.FC = () => {
             />
           )}
         </Box>
-      </ContentContainer>
+      </Container>
     </AnimationProvider>
   )
 }
