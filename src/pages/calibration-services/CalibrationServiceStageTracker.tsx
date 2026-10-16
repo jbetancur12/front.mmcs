@@ -182,7 +182,9 @@ const CalibrationServiceStageTracker = ({
               <Box sx={{ width: { xs: '100%', md: 320 } }}>
                 <Stack direction='row' justifyContent='space-between' mb={0.5}>
                   <Typography variant='body2' fontWeight={600}>
-                    Día {elapsed} de {target} hábiles
+                    {elapsed > target
+                      ? `Van ${elapsed} días hábiles, el plazo es ${target}`
+                      : `Día ${elapsed} de ${target} hábiles`}
                   </Typography>
                   <Typography variant='caption' color='text.secondary'>
                     Amarillo desde el día {warning}
