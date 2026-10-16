@@ -8,7 +8,6 @@ import {
   Button,
   Typography,
   Box,
-  Grid,
   CircularProgress,
   Alert,
   Divider,
@@ -26,6 +25,17 @@ import {
   Add
 } from '@mui/icons-material'
 import CloseIcon from '@mui/icons-material/Close' // Icono para cerrar el modal
+import { PictureAsPdf } from '@mui/icons-material'
+import { format } from 'date-fns'
+import {
+  PURCHASE_TEAL,
+  PURCHASE_TEAL_HOVER
+} from './purchaseTableStyle'
+
+const tealButton = {
+  bgcolor: PURCHASE_TEAL,
+  '&:hover': { bgcolor: PURCHASE_TEAL_HOVER }
+}
 import useAxiosPrivate from '@utils/use-axios-private'
 import Swal from 'sweetalert2'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
@@ -45,6 +55,8 @@ interface Quotation {
   supplierId: number | string // Debe coincidir con ISupplier['id']
   filePath?: string
   originalFileName?: string
+  fileName?: string
+  createdAt?: string
   accepted?: boolean
 }
 
@@ -471,24 +483,56 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
           alignItems: 'center'
         }}
       >
-        Gestionar Cotizaciones para SR-{purchaseRequest.purchaseCode}
-        <IconButton onClick={onClose}>
+        <Box>
+          <Typography variant='h6' component='span' fontWeight={700}>
+            Cotizaciones · {purchaseRequest.purchaseCode}
+          </Typography>
+          <Typography variant='body2' color='text.secondary'>
+            {[
+              purchaseRequest.applicantName,
+              purchaseRequest.purchaseType
+                ? `Tipo ${purchaseRequest.purchaseType}`
+                : null
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </Typography>
+        </Box>
+        <IconButton onClick={onClose} aria-label='Cerrar'>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
       <DialogContent dividers>
         {' '}
         {/* dividers para mejor separación */}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 2
+          }}
+        >
+          <Typography variant='body2' color='text.secondary'>
+            {displayedSuppliers.length}{' '}
+            {displayedSuppliers.length === 1 ? 'proveedor' : 'proveedores'} ·{' '}
+            {purchaseRequest.quotations.length}{' '}
+            {purchaseRequest.quotations.length === 1
+              ? 'cotización'
+              : 'cotizaciones'}
+          </Typography>
           <Button
             variant={showAddSupplierSection ? 'outlined' : 'contained'}
             startIcon={<Add />}
             onClick={() => setShowAddSupplierSection(!showAddSupplierSection)}
             size='small'
+            sx={
+              showAddSupplierSection
+                ? { color: PURCHASE_TEAL, borderColor: PURCHASE_TEAL }
+                : tealButton
+            }
           >
-            {showAddSupplierSection
-              ? 'Cancelar Añadir Proveedor'
-              : 'Añadir Proveedor a Lista'}
+            {showAddSupplierSection ? 'Cancelar' : 'Añadir proveedor'}
           </Button>
         </Box>
         {showAddSupplierSection && (
@@ -539,16 +583,21 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
               onClick={handleAddSelectedSuppliers}
               disabled={selectedNewSuppliers.length === 0}
               size='small'
+              sx={tealButton}
             >
-              Añadir Seleccionados a Gestión
+              Añadir seleccionados
             </Button>
           </Paper>
         )}
         {displayedSuppliers.length === 0 && !showAddSupplierSection && (
-          <Alert severity='info' sx={{ mt: 2 }}>
-            No hay proveedores asociados o añadidos a esta solicitud. Puedes
-            añadir proveedores usando el botón de arriba.
-          </Alert>
+          <Box sx={{ textAlign: 'center', py: 5 }}>
+            <Typography variant='subtitle1' fontWeight={600}>
+              Aún no hay proveedores en esta solicitud
+            </Typography>
+            <Typography variant='body2' color='text.secondary'>
+              Añade un proveedor para cargar su cotización.
+            </Typography>
+          </Box>
         )}
         {displayedSuppliers.map((supplier, index) => {
           if (!supplier) return null
@@ -560,37 +609,151 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
 
           return (
             <React.Fragment key={supplier.id}>
-              <Paper elevation={2} sx={{ mb: 3, p: 2, borderRadius: 2 }}>
-                <Typography variant='h6' gutterBottom>
-                  {supplier.name}{' '}
-                  <Typography
-                    component='span'
-                    variant='body2'
-                    color='textSecondary'
-                  >
-                    ({supplier.taxId})
+              <Paper
+                variant='outlined'
+                sx={{ mb: 2, p: 2, borderRadius: 2 }}
+              >
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: 1,
+                    mb: 1.5
+                  }}
+                >
+                  <Typography variant='subtitle1' fontWeight={600}>
+                    {supplier.name}
+                    {supplier.taxId && (
+                      <Typography
+                        component='span'
+                        variant='body2'
+                        color='text.secondary'
+                      >
+                        {' '}
+                        · {supplier.taxId}
+                      </Typography>
+                    )}
                   </Typography>
-                </Typography>
-                <Grid container spacing={2} alignItems='flex-start'>
-                  <Grid item xs={12} md={existingQuotation ? 5 : 12}>
-                    {' '}
-                    {/* Columna para subir */}
+                  {existingQuotation?.accepted ? (
+                    <Chip
+                      icon={<CheckCircle />}
+                      label='Aceptada'
+                      color='success'
+                      size='small'
+                    />
+                  ) : existingQuotation ? (
+                    <Chip label='Subida' color='info' variant='outlined' size='small' />
+                  ) : (
+                    <Chip
+                      label='Pendiente'
+                      color='warning'
+                      variant='outlined'
+                      size='small'
+                    />
+                  )}
+                </Box>
+
+                {existingQuotation && (
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.5,
+                      mb: 1.5
+                    }}
+                  >
+                    <PictureAsPdf color='error' />
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant='body2' noWrap>
+                        {existingQuotation.fileName ||
+                          existingQuotation.originalFileName ||
+                          `Cotización de ${supplier.name}`}
+                      </Typography>
+                      {existingQuotation.createdAt && (
+                        <Typography variant='caption' color='text.secondary'>
+                          Subida el{' '}
+                          {format(
+                            new Date(existingQuotation.createdAt),
+                            'dd/MM/yyyy'
+                          )}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                )}
+
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  {existingQuotation && (
                     <Button
                       variant='outlined'
-                      component='label'
-                      startIcon={<CloudUpload />}
-                      fullWidth
+                      onClick={() => fetchPdfForView(supplierIdStr)}
+                      startIcon={
+                        currentActionState.pdfLoading ? (
+                          <CircularProgress size={20} />
+                        ) : (
+                          <Visibility />
+                        )
+                      }
                       disabled={
-                        !!existingQuotation ||
+                        currentActionState.pdfLoading ||
+                        currentActionState.accepting
+                      }
+                      size='small'
+                      sx={{ color: PURCHASE_TEAL, borderColor: PURCHASE_TEAL }}
+                    >
+                      {currentActionState.pdfUrl ? 'Ocultar PDF' : 'Ver cotización'}
+                    </Button>
+                  )}
+                  {existingQuotation && !existingQuotation.accepted && (
+                    <Button
+                      variant='contained'
+                      onClick={() => handleAcceptQuotation(supplierIdStr)}
+                      startIcon={
+                        currentActionState.accepting ||
+                        (acceptQuotationMutation.isLoading &&
+                          acceptQuotationMutation.variables ===
+                            supplierIdStr) ? (
+                          <CircularProgress color='inherit' size={20} />
+                        ) : (
+                          <CheckCircle />
+                        )
+                      }
+                      disabled={
+                        currentActionState.accepting ||
+                        (acceptQuotationMutation.isLoading &&
+                          acceptQuotationMutation.variables ===
+                            supplierIdStr) ||
+                        currentActionState.pdfLoading
+                      }
+                      size='small'
+                      sx={tealButton}
+                    >
+                      Aceptar
+                    </Button>
+                  )}
+                  {(!existingQuotation || !existingQuotation.accepted) && (
+                    <Button
+                      variant={existingQuotation ? 'text' : 'outlined'}
+                      component='label'
+                      size='small'
+                      startIcon={<CloudUpload />}
+                      disabled={
                         currentActionState.uploading ||
                         uploadMutation.isLoading
                       }
                       sx={{
                         textTransform: 'none',
-                        justifyContent: 'flex-start',
-                        textAlign: 'left',
-                        minHeight: 56
-                      }} // Para consistencia altura
+                        ...(existingQuotation
+                          ? { color: 'text.secondary' }
+                          : {
+                            color: PURCHASE_TEAL,
+                            borderColor: PURCHASE_TEAL,
+                            minHeight: 40,
+                            flexGrow: 1,
+                            justifyContent: 'flex-start'
+                          })
+                      }}
                     >
                       <Box
                         component='span'
@@ -602,8 +765,8 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
                       >
                         {selectedFiles[supplierIdStr]?.name ||
                           (existingQuotation
-                            ? 'Cotización Ya Subida'
-                            : 'Seleccionar PDF...')}
+                            ? 'Reemplazar PDF'
+                            : 'Seleccionar PDF de la cotización')}
                       </Box>
                       <input
                         type='file'
@@ -611,122 +774,34 @@ const UploadQuotationModal: FC<UploadQuotationModalProps> = ({
                         accept='application/pdf'
                         onChange={(e) => handleFileChange(e, supplierIdStr)}
                         disabled={
-                          !!existingQuotation ||
                           currentActionState.uploading ||
                           uploadMutation.isLoading
                         }
                       />
                     </Button>
-                    {!existingQuotation && selectedFiles[supplierIdStr] && (
-                      <Button
-                        variant='contained'
-                        onClick={() => handleUpload(supplierIdStr)}
-                        disabled={
-                          currentActionState.uploading ||
-                          uploadMutation.isLoading
-                        }
-                        startIcon={
-                          currentActionState.uploading ? (
-                            <CircularProgress color='inherit' size={20} />
-                          ) : (
-                            <CloudUpload />
-                          )
-                        }
-                        sx={{ mt: 1 }}
-                        fullWidth
-                      >
-                        Subir Cotización
-                      </Button>
-                    )}
-                  </Grid>
-
-                  {existingQuotation && (
-                    <Grid item xs={12} md={7}>
-                      {' '}
-                      {/* Columna para acciones de cotización existente */}
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: 1,
-                          width: '100%'
-                        }}
-                      >
-                        <Alert
-                          severity='info'
-                          sx={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center'
-                          }}
-                        >
-                          Cotización subida:{' '}
-                          {existingQuotation.originalFileName ||
-                            `Archivo de ${supplier.name}`}
-                        </Alert>
-                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                          <Button
-                            variant='outlined'
-                            onClick={() => fetchPdfForView(supplierIdStr)}
-                            startIcon={
-                              currentActionState.pdfLoading ? (
-                                <CircularProgress size={20} />
-                              ) : (
-                                <Visibility />
-                              )
-                            }
-                            disabled={
-                              currentActionState.pdfLoading ||
-                              currentActionState.accepting
-                            }
-                            size='small'
-                          >
-                            {currentActionState.pdfUrl
-                              ? 'Ocultar PDF'
-                              : 'Ver Cotización'}
-                          </Button>
-                          {!existingQuotation.accepted ? (
-                            <Button
-                              variant='contained'
-                              color='success'
-                              onClick={() =>
-                                handleAcceptQuotation(supplierIdStr)
-                              }
-                              startIcon={
-                                currentActionState.accepting ||
-                                (acceptQuotationMutation.isLoading &&
-                                  acceptQuotationMutation.variables ===
-                                    supplierIdStr) ? (
-                                  <CircularProgress color='inherit' size={20} />
-                                ) : (
-                                  <CheckCircle />
-                                )
-                              }
-                              disabled={
-                                currentActionState.accepting ||
-                                (acceptQuotationMutation.isLoading &&
-                                  acceptQuotationMutation.variables ===
-                                    supplierIdStr) ||
-                                currentActionState.pdfLoading
-                              }
-                              size='small'
-                            >
-                              Aceptar
-                            </Button>
-                          ) : (
-                            <Chip
-                              icon={<CheckCircle />}
-                              label='Aceptada'
-                              color='success'
-                              variant='outlined'
-                              size='small'
-                            />
-                          )}
-                        </Box>
-                      </Box>
-                    </Grid>
                   )}
-                </Grid>
+                  {selectedFiles[supplierIdStr] && (
+                    <Button
+                      variant='contained'
+                      size='small'
+                      onClick={() => handleUpload(supplierIdStr)}
+                      disabled={
+                        currentActionState.uploading ||
+                        uploadMutation.isLoading
+                      }
+                      startIcon={
+                        currentActionState.uploading ? (
+                          <CircularProgress color='inherit' size={20} />
+                        ) : (
+                          <CloudUpload />
+                        )
+                      }
+                      sx={tealButton}
+                    >
+                      {existingQuotation ? 'Subir reemplazo' : 'Subir cotización'}
+                    </Button>
+                  )}
+                </Box>
                 {currentActionState.error && (
                   <Alert
                     severity='error'
