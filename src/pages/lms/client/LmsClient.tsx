@@ -246,7 +246,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
         />
 
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} md={3}>
             <LmsStatCard
               label='Cursos disponibles'
               value={stats.totalCourses}
@@ -256,7 +256,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
               onClick={() => setActiveTab(1)}
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} md={3}>
             <LmsStatCard
               label='En progreso'
               value={stats.inProgressCourses}
@@ -265,7 +265,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
               onClick={() => setActiveTab(1)}
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} md={3}>
             <LmsStatCard
               label='Completados'
               value={stats.completedCourses}
@@ -274,7 +274,7 @@ const LmsClient: React.FC<ClientDashboardProps> = ({ user }) => {
               onClick={() => setActiveTab(1)}
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} md={3}>
             <LmsStatCard
               label='Certificados'
               value={stats.certificatesEarned}

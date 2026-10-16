@@ -4,6 +4,7 @@ import {
   Box,
   Card,
   CardContent,
+  Container,
   Typography,
   Button,
   TextField,
@@ -52,6 +53,8 @@ import {
   Warning as WarningIcon,
   CheckCircle as CheckCircleIcon
 } from '@mui/icons-material'
+import { Quiz } from '@mui/icons-material'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
 import quizService from '../../../services/quizService'
@@ -789,8 +792,13 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
   // Abierto directo por su ruta (sin curso ni lección), no hay un quiz que editar
   if (!courseId && !lessonId && !initialQuizId) {
     return (
-      <Box sx={{ p: 3, minHeight: '100vh', bgcolor: 'grey.50' }}>
-        <Card variant='outlined' sx={{ maxWidth: 560, mx: 'auto', mt: 6, borderRadius: 3, textAlign: 'center' }}>
+      <Container maxWidth='xl' sx={{ py: 3 }}>
+        <LmsPageHeader
+          title='Quizzes'
+          subtitle='Evaluaciones de las lecciones de cada curso'
+          icon={<Quiz />}
+        />
+        <Card variant='outlined' sx={{ maxWidth: 560, mx: 'auto', mt: 3, borderRadius: 3, textAlign: 'center' }}>
           <CardContent sx={{ p: 4 }}>
             <Typography variant='h5' sx={{ fontWeight: 600, mb: 1 }}>
               Los quizzes se editan desde cada curso
@@ -803,7 +811,7 @@ const LmsQuizManagement: React.FC<LmsQuizManagementProps> = ({
             </Button>
           </CardContent>
         </Card>
-      </Box>
+      </Container>
     )
   }
 

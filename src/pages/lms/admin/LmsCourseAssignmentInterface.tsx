@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   CardHeader,
+  Container,
   Typography,
   Button,
   Grid,
@@ -31,6 +32,8 @@ import {
 import { Autocomplete } from '@mui/lab'
 import {
   Assignment as AssignmentIcon,
+  EventBusy as EventBusyIcon,
+  VisibilityOff as VisibilityOffIcon,
   ArrowForward as ArrowForwardIcon,
   AutoStories as CourseIcon,
   Notifications as NotificationsIcon,
@@ -47,6 +50,8 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { useQuery, useQueryClient, useMutation } from 'react-query'
 import Swal from 'sweetalert2'
 
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 interface Course {
   id: number
   title: string
@@ -786,35 +791,33 @@ const LmsCourseAssignmentInterface: React.FC = () => {
 
   return (
       <LocalizationProvider dateAdapter={AdapterDateFns}>
-        <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50', p: 3 }}>
-          <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-            <CardContent>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={8}>
-                  <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
-                    Centro de Asignaciones LMS
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Esta pantalla se enfoca en obligatoriedad y fechas límite de usuarios internos. Los clientes siguen en modo catálogo.
-                  </Typography>
-                  {selectedCourseData && (
-                    <Alert severity="success" sx={{ mt: 2 }}>
-                      Estás trabajando sobre <strong>{selectedCourseData.title}</strong>. Ya no necesitas volver a buscar el curso para crear o revisar sus reglas.
-                    </Alert>
-                  )}
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
-                    <Chip color="primary" icon={<AssignmentIcon />} label={`${assignmentSummary.total} regla(s)`} />
-                    <Chip color="error" label={`${assignmentSummary.overdue} vencida(s)`} variant="outlined" />
-                    <Chip color="warning" label={`${assignmentSummary.needingAttention} por atender`} variant="outlined" />
-                    <Chip color="info" label={`${assignmentSummary.withoutFollowUp} sin seguimiento`} variant="outlined" />
-                    <Chip color="warning" icon={<NotificationsIcon />} label="Recordatorios desde cada regla" />
-                  </Box>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
+        <Container maxWidth='xl' sx={{ py: 3 }}>
+          <LmsPageHeader
+            title='Centro de Asignaciones LMS'
+            subtitle='Obligatoriedad y fechas límite de usuarios internos. Los clientes siguen en modo catálogo.'
+            icon={<AssignmentIcon />}
+          />
+
+          {selectedCourseData && (
+            <Alert severity='success' sx={{ mb: 3 }}>
+              Estás trabajando sobre <strong>{selectedCourseData.title}</strong>. Ya no necesitas volver a buscar el curso para crear o revisar sus reglas.
+            </Alert>
+          )}
+
+          <Grid container spacing={3} sx={{ mb: 3 }}>
+            <Grid item xs={6} md={3}>
+              <LmsStatCard label='Reglas' value={assignmentSummary.total} icon={<AssignmentIcon />} tone='teal' />
+            </Grid>
+            <Grid item xs={6} md={3}>
+              <LmsStatCard label='Vencidas' value={assignmentSummary.overdue} icon={<EventBusyIcon />} tone={assignmentSummary.overdue > 0 ? 'red' : 'green'} />
+            </Grid>
+            <Grid item xs={6} md={3}>
+              <LmsStatCard label='Por atender' value={assignmentSummary.needingAttention} icon={<NotificationsIcon />} tone='orange' />
+            </Grid>
+            <Grid item xs={6} md={3}>
+              <LmsStatCard label='Sin seguimiento' value={assignmentSummary.withoutFollowUp} icon={<VisibilityOffIcon />} tone='blue' />
+            </Grid>
+          </Grid>
 
         <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 3 }}>
           <Tab label="Asignaciones Activas" />
@@ -1233,7 +1236,7 @@ const LmsCourseAssignmentInterface: React.FC = () => {
           </Box>
         )}
 
-      </Box>
+        </Container>
 
       {/* Edit Assignment Modal */}
       <Dialog

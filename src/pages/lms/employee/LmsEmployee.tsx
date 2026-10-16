@@ -568,7 +568,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
         />
 
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} md={3}>
             <LmsStatCard
               label='Obligatorios'
               value={stats.mandatoryCourses}
@@ -578,7 +578,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
               onClick={() => setActiveTab(1)}
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} md={3}>
             <LmsStatCard
               label='Vencidos'
               value={stats.overdueTraining}
@@ -587,7 +587,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
               onClick={() => setActiveTab(1)}
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} md={3}>
             <LmsStatCard
               label='En progreso'
               value={stats.inProgressCourses}
@@ -597,7 +597,7 @@ const LmsEmployee: React.FC<EmployeeDashboardProps> = ({ user }) => {
               onClick={() => setActiveTab(2)}
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} md={3}>
             <LmsStatCard
               label='Certificados'
               value={stats.certificatesEarned}
