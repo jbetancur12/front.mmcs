@@ -207,6 +207,8 @@ const MobilePage = () => {
   const handleViewOds = async () => {
     if (!s) return
     setOdsLoading(true)
+    // Se abre en el toque: si se abre después de esperar el PDF, el navegador del celular la bloquea
+    const viewer = window.open('', '_blank')
     try {
       let odsDoc = (s.documents || []).find((d: CalibrationServiceDocument) => d.documentType === 'ods_pdf')
       if (!odsDoc) {
@@ -215,9 +217,10 @@ const MobilePage = () => {
       }
       const blob = await (await axiosPrivate.get(`/calibration-services/${serviceId}/documents/${odsDoc.id}/download`, { responseType: 'blob' })).data as Blob
       const url = URL.createObjectURL(blob)
-      window.open(url, '_blank')
+      if (viewer) viewer.location.href = url
+      else window.location.href = url
       setTimeout(() => URL.revokeObjectURL(url), 30000)
-    } catch { toast.error('No se pudo cargar la ODS') }
+    } catch { viewer?.close(); toast.error('No se pudo cargar la ODS') }
     setOdsLoading(false)
   }
 
@@ -229,6 +232,12 @@ const MobilePage = () => {
     if (!s) return
     const savedOps = getOps(s)
     setDeliveryName(savedOps.deliveryName || ''); setDeliverySignature(savedOps.deliverySignatureData || null)
+  }, [s?.id])
+
+  // Los borradores se rehacen cuando cambia lo guardado (por ejemplo, al iniciar la ejecución el servidor mueve el estado de los ítems)
+  const savedItemsKey = JSON.stringify((s?.items || []).map((i: any) => [i.id, i.quantity, i.otherFields?.operationalStatus, i.otherFields?.technicalNotes, i.otherFields?.executedQuantity, i.otherFields?.releasedQuantity])) + (s?.adjustments?.length ?? 0)
+  useEffect(() => {
+    if (!s) return
     setDraftItems({}); setDraftNotes({}); setDraftExecuted({})
     for (const item of (s.items || [])) {
       const st = (item as any).otherFields?.operationalStatus || 'pending'
@@ -236,7 +245,7 @@ const MobilePage = () => {
       setDraftNotes(p => ({ ...p, [item.id]: (item as any).otherFields?.technicalNotes || '' }))
       setDraftExecuted(p => ({ ...p, [item.id]: getSavedExecuted(item, s.adjustments) }))
     }
-  }, [s?.id])
+  }, [s?.id, savedItemsKey])
 
   const allCompleted = useMemo(() => items.length > 0 && items.every(i => draftItems[i.id] === 'completed'), [items, draftItems])
 
@@ -315,6 +324,7 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
   })
   const controlSheet: any = (s?.otherFields as any)?.logistics?.controlSheet || {}
   const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([s?.address, s?.city].filter(Boolean).join(', '))}`
+  const canEditItems = !paused && ['scheduled', 'in_execution'].includes(status)
   const canCreateCut = ['in_execution', 'technically_completed'].includes(status)
 
   const sectionTitle = { fontSize: '0.95rem', fontWeight: 700, color: G.dark } as const
@@ -372,6 +382,32 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
                         sx={{ ...primarySx, py: 1.75, fontSize: '1rem' }}>
                         Reanudar servicio
                       </Button>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              )}
+
+              {!['scheduled', 'in_execution'].includes(status) && (
+                <Card elevation={0} sx={cardSx}>
+                  <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                    <Stack spacing={1.25}>
+                      <Typography sx={sectionTitle}>
+                        {status === 'technically_completed' ? 'Ejecución finalizada'
+                          : status === 'closed' ? 'Servicio cerrado'
+                          : status === 'cancelled' ? 'Servicio cancelado'
+                          : 'Todavía no es hora de trabajar en campo'}
+                      </Typography>
+                      <Typography variant='body2' sx={{ color: G.gray600 }}>
+                        {status === 'technically_completed' ? 'Ya puedes crear el corte y registrar la firma de recepción.'
+                          : status === 'closed' ? 'No quedan acciones pendientes en este servicio.'
+                          : status === 'cancelled' ? 'Este servicio ya no admite cambios.'
+                          : `El servicio está en "${CALIBRATION_SERVICE_STATUS_LABELS[status as CalibrationServiceStatus] || status}". Aparecerán las acciones cuando esté programado.`}
+                      </Typography>
+                      {status === 'technically_completed' && (
+                        <Button fullWidth variant='contained' disableElevation onClick={() => { setTab('close'); window.scrollTo({ top: 0 }) }} sx={primarySx}>
+                          Ir a corte y firma
+                        </Button>
+                      )}
                     </Stack>
                   </CardContent>
                 </Card>
@@ -471,7 +507,7 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
                               <Typography variant='body2' fontWeight={700} sx={{ color: G.gray600, whiteSpace: 'nowrap' }}>x{getEffectiveQty(item, s?.adjustments)}</Typography>
                             </Stack>
                             <ToggleButtonGroup exclusive fullWidth size='small' value={current} aria-label={`Estado de ${item.itemName}`}
-                              disabled={paused || !['scheduled', 'in_execution'].includes(status)}
+                              disabled={!canEditItems}
                               onChange={(_, v) => { if (v) setItemStatus(item, v) }}>
                               {STATUS_FLOW.map(k => (
                                 <ToggleButton key={k} value={k} sx={{
@@ -500,10 +536,10 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
                               </Stack>
                             )}
                             {showNote ? (
-                              <TextField size='small' multiline minRows={2} placeholder='Observaciones técnicas del ítem' value={noteValue}
+                              <TextField size='small' multiline minRows={2} placeholder='Observaciones técnicas del ítem' value={noteValue} disabled={!canEditItems}
                                 onChange={e => setDraftNotes(p => ({ ...p, [item.id]: e.target.value }))}
                                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', fontSize: '0.9rem' } }} />
-                            ) : (
+                            ) : !canEditItems ? null : (
                               <Button size='small' startIcon={<EditNoteOutlinedIcon />} onClick={() => setOpenNotes(p => ({ ...p, [item.id]: true }))}
                                 sx={{ alignSelf: 'flex-start', textTransform: 'none', fontWeight: 600, color: G.gray600 }}>
                                 Agregar nota
@@ -1017,7 +1053,7 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
           <DialogActions>
             <Button onClick={() => setShowCut(false)}>Cancelar</Button>
             <Button variant='contained' disableElevation sx={primarySx} onClick={() => handleAction('cut', async () => {
-              if (items.length) await apiCall('put', `/calibration-services/${serviceId}/item-progress`, progressPayload())
+              if (dirty && ['scheduled', 'in_execution'].includes(status)) await apiCall('put', `/calibration-services/${serviceId}/item-progress`, progressPayload())
               await apiCall('post', `/calibration-services/${serviceId}/cuts`, {
                 cutType, notes: null, items: cutSelected.map(c => ({ serviceItemId: c.item.id, quantity: cutSel[c.item.id].qty }))
               })
@@ -1050,7 +1086,7 @@ const DeviceSearch = ({ onSelect }: { onSelect: (name: string) => void }) => {
   }, [query])
 
   return (
-    <Autocomplete size='small' options={options} loading={loading} inputValue={query} onInputChange={(_, v) => setQuery(v)}
+    <Autocomplete size='small' options={options} loading={loading} value={null} blurOnSelect inputValue={query} onInputChange={(_, v) => setQuery(v)}
       getOptionLabel={o => o.name} noOptionsText='Escribe para buscar...'
       onChange={(_, v) => { if (v) { onSelect(v.name); setQuery('') } }}
       renderInput={p => <TextField {...p} placeholder='Buscar equipo del catálogo...' InputProps={{ ...p.InputProps, startAdornment: <SearchIcon sx={{ mr: 0.5, color: '#9ca3af', fontSize: 20 }} /> }} />}
