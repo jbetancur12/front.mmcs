@@ -46,6 +46,7 @@ import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Toaster, toast } from 'react-hot-toast'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard, { LmsStatTone } from 'src/Components/lms/admin/LmsStatCard'
+import ListItemCard from 'src/Components/Common/ListItemCard'
 import Swal from 'sweetalert2'
 import { useEquipmentQuotations, useEquipmentSalesMutations, useEquipmentQuoteTermsTemplate } from '../../hooks/useEquipmentSales'
 import { EQUIPMENT_QUOTATION_STATUS_COLORS, EQUIPMENT_QUOTATION_STATUS_LABELS } from '../../constants/equipmentSales'
@@ -312,33 +313,18 @@ const EquipmentSalesPage = () => {
           <Grid container spacing={2}>
             {paginatedQuotations.map((quotation) => (
               <Grid item xs={12} sm={6} md={4} key={quotation.id}>
-                <Card
-                  elevation={0}
+                <ListItemCard
+                  title={quotation.quoteCode}
+                  subtitle={quotation.customer?.nombre || 'Cliente no especificado'}
+                  status={renderStatusChip(quotation.status)}
+                  highlight={<><strong>Total:</strong> {currencyFormatter.format(quotation.grandTotal)}</>}
+                  meta={[
+                    `Creada por ${quotation.createdBy?.nombre || 'Sin registro'}`,
+                    new Date(quotation.createdAt).toLocaleDateString('es-CO')
+                  ]}
+                  actions={renderQuickActions(quotation)}
                   onClick={() => navigate(`/equipment-sales/${quotation.id}`)}
-                  sx={{ cursor: 'pointer', borderRadius: '14px', border: '1px solid rgba(0,0,0,0.06)', '&:hover': { boxShadow: '0 6px 16px rgba(0,0,0,0.1)' } }}
-                >
-                  <CardContent>
-                    <Stack direction='row' justifyContent='space-between' alignItems='flex-start' sx={{ mb: 1 }}>
-                      <Typography variant='subtitle1' fontWeight={700}>{quotation.quoteCode}</Typography>
-                      {renderStatusChip(quotation.status)}
-                    </Stack>
-                    <Typography variant='body2' color='text.secondary' sx={{ mb: 1 }}>
-                      {quotation.customer?.nombre || 'Cliente no especificado'}
-                    </Typography>
-                    <Typography variant='body2'>
-                      <strong>Total:</strong> {currencyFormatter.format(quotation.grandTotal)}
-                    </Typography>
-                    <Typography variant='caption' color='text.secondary' sx={{ display: 'block' }}>
-                      Creada por {quotation.createdBy?.nombre || 'Sin registro'}
-                    </Typography>
-                    <Typography variant='caption' color='text.secondary'>
-                      {new Date(quotation.createdAt).toLocaleDateString('es-CO')}
-                    </Typography>
-                    <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end' }}>
-                      {renderQuickActions(quotation)}
-                    </Box>
-                  </CardContent>
-                </Card>
+                />
               </Grid>
             ))}
           </Grid>
