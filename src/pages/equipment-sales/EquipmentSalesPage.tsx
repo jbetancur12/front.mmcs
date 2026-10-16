@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
@@ -13,6 +13,7 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  Container,
   Dialog,
   DialogActions,
   DialogContent,
@@ -26,6 +27,11 @@ import {
   Typography
 } from '@mui/material'
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined'
+import EditNoteOutlined from '@mui/icons-material/EditNoteOutlined'
+import ListAltOutlined from '@mui/icons-material/ListAltOutlined'
+import ReceiptLongOutlined from '@mui/icons-material/ReceiptLongOutlined'
+import RequestQuoteOutlined from '@mui/icons-material/RequestQuoteOutlined'
+import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined'
 import ChevronRightOutlinedIcon from '@mui/icons-material/ChevronRightOutlined'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
@@ -38,6 +44,8 @@ import ViewStreamOutlinedIcon from '@mui/icons-material/ViewStreamOutlined'
 import MaterialReactTable from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Toaster, toast } from 'react-hot-toast'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard, { LmsStatTone } from 'src/Components/lms/admin/LmsStatCard'
 import Swal from 'sweetalert2'
 import { useEquipmentQuotations, useEquipmentSalesMutations, useEquipmentQuoteTermsTemplate } from '../../hooks/useEquipmentSales'
 import { EQUIPMENT_QUOTATION_STATUS_COLORS, EQUIPMENT_QUOTATION_STATUS_LABELS } from '../../constants/equipmentSales'
@@ -62,6 +70,14 @@ const STATUS_ORDER: EquipmentQuotationStatus[] = [
 ]
 
 type ViewMode = 'list' | 'table' | 'kanban'
+
+const KPI_STATUSES: { status: string; tone: LmsStatTone; icon: React.ReactElement }[] = [
+  { status: 'all', tone: 'blue', icon: <ListAltOutlined /> },
+  { status: 'draft', tone: 'teal', icon: <EditNoteOutlined /> },
+  { status: 'pending_approval', tone: 'orange', icon: <SendOutlinedIcon /> },
+  { status: 'approved', tone: 'green', icon: <TaskAltOutlined /> },
+  { status: 'ready_for_invoicing', tone: 'blue', icon: <ReceiptLongOutlined /> }
+]
 
 const QUOTATION_STATUS_LABELS: Record<string, string> = EQUIPMENT_QUOTATION_STATUS_LABELS
 const QUOTATION_STATUS_COLORS: Record<string, string> = EQUIPMENT_QUOTATION_STATUS_COLORS
@@ -188,78 +204,43 @@ const EquipmentSalesPage = () => {
   )
 
   return (
-    <Box sx={{ px: { xs: 2, md: 3 }, py: { xs: 2, md: 3 }, minHeight: '100vh', backgroundColor: '#f8fafb' }}>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
       <Toaster position='top-center' />
 
-      {/* ── Header banner ── */}
-      <Box
-        sx={{
-          background: 'linear-gradient(135deg, #0f766e 0%, #059669 50%, #047857 100%)',
-          borderRadius: '20px',
-          p: { xs: 3, md: 4 },
-          mb: 3,
-          position: 'relative',
-          overflow: 'hidden'
-        }}
-      >
-        <Stack direction={{ xs: 'column', md: 'row' }} justifyContent='space-between' alignItems={{ xs: 'flex-start', md: 'center' }} spacing={2}>
-          <Box>
-            <Typography variant='h4' fontWeight={800} sx={{ color: '#fff', lineHeight: 1.15, letterSpacing: '-0.025em', fontSize: { xs: '1.6rem', md: '2rem' } }}>
-              Cotizaciones — Venta de Equipos
-            </Typography>
-            <Typography variant='body2' sx={{ mt: 1, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, fontSize: '0.9rem' }}>
-              Gestiona el ciclo comercial de venta de equipos: borrador, cotización enviada,
-              aprobación del cliente y facturación.
-            </Typography>
-          </Box>
-          <Stack direction='row' spacing={1}>
-            <Button variant='text' startIcon={<GroupOutlinedIcon />} onClick={() => navigate('/calibration-services/customers')} sx={{ color: 'rgba(255,255,255,0.85)', textTransform: 'none', fontWeight: 600, '&:hover': { backgroundColor: 'rgba(255,255,255,0.10)' } }}>
+      <LmsPageHeader
+        title='Cotizaciones — Venta de Equipos'
+        subtitle='Ciclo comercial: borrador, cotización enviada, aprobación del cliente y facturación.'
+        icon={<RequestQuoteOutlined />}
+        actions={
+          <>
+            <Button variant='outlined' startIcon={<GroupOutlinedIcon />} onClick={() => navigate('/calibration-services/customers')} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
               Clientes
             </Button>
             {canSeeProducts ? (
-                    <Button variant='text' startIcon={<Inventory2OutlinedIcon />} onClick={() => navigate('/equipment-sales/products')} sx={{ color: 'rgba(255,255,255,0.85)', textTransform: 'none', fontWeight: 600, '&:hover': { backgroundColor: 'rgba(255,255,255,0.10)' } }}>
-              Productos
-            </Button>
-                  ) : null}
+              <Button variant='outlined' startIcon={<Inventory2OutlinedIcon />} onClick={() => navigate('/equipment-sales/products')} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+                Productos
+              </Button>
+            ) : null}
             {canCreate ? (
-                    <Button
-              variant='contained'
-              startIcon={<AddOutlinedIcon />}
-              onClick={() => navigate('/equipment-sales/new')}
-              sx={{ backgroundColor: '#fff', color: '#047857', textTransform: 'none', fontWeight: 700, borderRadius: '10px', '&:hover': { backgroundColor: '#f0fdf4' } }}
-            >
-              Nueva Cotización
-            </Button>
-                  ) : null}
-          </Stack>
-        </Stack>
-      </Box>
+              <Button variant='contained' startIcon={<AddOutlinedIcon />} onClick={() => navigate('/equipment-sales/new')} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+                Nueva cotización
+              </Button>
+            ) : null}
+          </>
+        }
+      />
 
-      {/* ── Stat cards ── */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        {['all', ...STATUS_ORDER].map((status) => (
-          <Grid item xs={6} sm={4} md={3} lg={2.4} key={status}>
-            <Card
-              elevation={0}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        {KPI_STATUSES.map(({ status, tone, icon }) => (
+          <Grid item xs={12} sm={6} md={4} lg={2.4} key={status}>
+            <LmsStatCard
+              label={status === 'all' ? 'Todas' : QUOTATION_STATUS_LABELS[status]}
+              value={status === 'all' ? quotations.length : statusCounts[status] ?? 0}
+              icon={icon}
+              tone={tone}
+              active={statusFilter === status || (status === 'all' && !statusFilter)}
               onClick={() => { setStatusFilter(status === 'all' ? '' : status); setPage(0) }}
-              sx={{
-                cursor: 'pointer',
-                borderRadius: '14px',
-                border: '1px solid rgba(0,0,0,0.06)',
-                borderLeft: status === 'all' ? '4px solid #059669' : `4px solid ${QUOTATION_STATUS_COLORS[status]}`,
-                backgroundColor: statusFilter === status || (status === 'all' && !statusFilter) ? 'rgba(16,185,129,0.06)' : '#fff',
-                '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }
-              }}
-            >
-              <CardContent sx={{ p: 2 }}>
-                <Typography variant='caption' fontWeight={600} color='text.secondary' sx={{ textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                  {status === 'all' ? 'Todas' : QUOTATION_STATUS_LABELS[status]}
-                </Typography>
-                <Typography variant='h5' fontWeight={800} sx={{ mt: 0.5 }}>
-                  {statusCounts[status] ?? 0}
-                </Typography>
-              </CardContent>
-            </Card>
+            />
           </Grid>
         ))}
       </Grid>
@@ -550,7 +531,7 @@ const EquipmentSalesPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Container>
   )
 }
 

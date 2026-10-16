@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
 import { useNavigate } from 'react-router-dom'
 import {
-  Box, Button, Dialog, DialogActions, DialogContent,
-  DialogTitle, Grid, IconButton, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, TextField, Typography, Paper, TablePagination
+  Box, Button, Container, Dialog, DialogActions, DialogContent,
+  DialogTitle, Grid, IconButton, TextField, Paper
 } from '@mui/material'
-import { Add, Edit, Delete, ArrowBack } from '@mui/icons-material'
+import { Add, Edit, Delete, ArrowBack, Inventory2Outlined } from '@mui/icons-material'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 import Swal from 'sweetalert2'
 import { useEquipmentProducts, useEquipmentSalesMutations } from '../../hooks/useEquipmentSales'
 import { EquipmentProduct, EquipmentProductPayload } from '../../types/equipmentSales'
@@ -49,57 +52,83 @@ const EquipmentProductsPage = () => {
     if (result.isConfirmed) { mutations.deleteProduct.mutate(id, { onSuccess: () => Swal.fire('Desactivado', '', 'success') }) }
   }
 
+  const columns = useMemo<MRT_ColumnDef<EquipmentProduct>[]>(
+    () => [
+      { accessorKey: 'name', header: 'Nombre', size: 260 },
+      { accessorKey: 'category', header: 'Categoría', size: 170, Cell: ({ row }) => <>{row.original.category || '-'}</> },
+      { accessorKey: 'defaultBrand', header: 'Marca', size: 110, Cell: ({ row }) => <>{row.original.defaultBrand || '-'}</> },
+      { accessorKey: 'defaultModel', header: 'Modelo', size: 110, Cell: ({ row }) => <>{row.original.defaultModel || '-'}</> },
+      {
+        accessorKey: 'defaultPrice',
+        header: 'Precio',
+        size: 150,
+        Cell: ({ row }) => <>{row.original.defaultPrice ? `${Number(row.original.defaultPrice).toLocaleString('es-CO')}` : '-'}</>
+      },
+      { accessorKey: 'taxRate', header: 'IVA %', size: 90, Cell: ({ row }) => <>{row.original.taxRate}%</> }
+    ],
+    []
+  )
+
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <IconButton onClick={() => navigate('/equipment-sales')}><ArrowBack /></IconButton>
-          <Typography variant='h5' sx={{ fontWeight: 700 }}>Catálogo de Productos - Venta de Equipos</Typography>
-        </Box>
-        <Button variant='contained' startIcon={<Add />} onClick={openCreate}>Nuevo Producto</Button>
-      </Box>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <Button
+        startIcon={<ArrowBack />}
+        onClick={() => navigate('/equipment-sales')}
+        sx={{ mb: 1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
+      >
+        Volver a cotizaciones
+      </Button>
 
-      <TextField size='small' placeholder='Buscar productos...' value={search}
-        onChange={(e) => { setSearch(e.target.value); setPage(0) }} sx={{ mb: 2, minWidth: 300 }} />
+      <LmsPageHeader
+        title='Catálogo de Productos'
+        subtitle='Productos que se pueden cotizar en venta de equipos'
+        icon={<Inventory2Outlined />}
+        actions={
+          <Button variant='contained' startIcon={<Add />} onClick={openCreate} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+            Nuevo producto
+          </Button>
+        }
+      />
 
-      <TableContainer component={Paper} variant='outlined'>
-        <Table size='small'>
-          <TableHead>
-            <TableRow>
-              <TableCell>Nombre</TableCell>
-              <TableCell>Categoría</TableCell>
-              <TableCell>Marca</TableCell>
-              <TableCell>Modelo</TableCell>
-              <TableCell align='right'>Precio sugerido</TableCell>
-              <TableCell align='right'>IVA %</TableCell>
-              <TableCell align='right'>Acciones</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {data?.data.map((p: EquipmentProduct) => (
-              <TableRow key={p.id} hover>
-                <TableCell>{p.name}</TableCell>
-                <TableCell>{p.category || '-'}</TableCell>
-                <TableCell>{p.defaultBrand || '-'}</TableCell>
-                <TableCell>{p.defaultModel || '-'}</TableCell>
-                <TableCell align='right'>
-                  {p.defaultPrice ? `$${Number(p.defaultPrice).toLocaleString('es-CO')}` : '-'}
-                </TableCell>
-                <TableCell align='right'>{p.taxRate}%</TableCell>
-                <TableCell align='right'>
-                  <IconButton size='small' onClick={() => openEdit(p)}><Edit fontSize='small' /></IconButton>
-                  <IconButton size='small' color='error' onClick={() => handleDelete(p.id, p.name)}><Delete fontSize='small' /></IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-            {(!data?.data || data.data.length === 0) && (
-              <TableRow><TableCell colSpan={7} align='center'><Typography variant='body2' color='text.secondary'>No hay productos</Typography></TableCell></TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      {data && <TablePagination component='div' count={data.total} page={page} onPageChange={(_, p) => setPage(p)}
-        rowsPerPage={50} rowsPerPageOptions={[50]} labelRowsPerPage='' />}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Productos' value={data?.total ?? 0} icon={<Inventory2Outlined />} tone='teal' />
+        </Grid>
+      </Grid>
+
+      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+        <MaterialReactTable
+          {...purchaseTableStyle}
+          columns={columns}
+          data={data?.data ?? []}
+          manualPagination
+          manualFiltering
+          enableColumnFilters={false}
+          enableSorting={false}
+          rowCount={data?.total ?? 0}
+          state={{ pagination: { pageIndex: page, pageSize: 50 }, globalFilter: search }}
+          onPaginationChange={(updater) => {
+            const next = typeof updater === 'function' ? updater({ pageIndex: page, pageSize: 50 }) : updater
+            setPage(next.pageIndex)
+          }}
+          onGlobalFilterChange={(value) => { setSearch(value ?? ''); setPage(0) }}
+          muiTablePaginationProps={{ rowsPerPageOptions: [50] }}
+          muiSearchTextFieldProps={{ ...purchaseTableStyle.muiSearchTextFieldProps, placeholder: 'Buscar productos...' }}
+          enablePinning
+          initialState={{ columnPinning: { right: ['mrt-row-actions'] } }}
+          enableRowActions
+          getRowId={(row, index) => String(row.id ?? `row-${index}`)}
+          renderRowActions={({ row }) => (
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
+              <IconButton size='small' color='primary' onClick={() => openEdit(row.original)}><Edit fontSize='small' /></IconButton>
+              <IconButton size='small' color='error' onClick={() => handleDelete(row.original.id, row.original.name)}><Delete fontSize='small' /></IconButton>
+            </Box>
+          )}
+          renderEmptyRowsFallback={() => (
+            <Box sx={{ py: 4, textAlign: 'center', color: 'text.secondary' }}>No hay productos</Box>
+          )}
+        />
+      </Paper>
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth='sm' fullWidth>
         <DialogTitle>{editingId ? 'Editar Producto' : 'Nuevo Producto'}</DialogTitle>
@@ -132,7 +161,7 @@ const EquipmentProductsPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Container>
   )
 }
 
