@@ -180,16 +180,11 @@ const CalibrationServiceStageTracker = ({
             </Stack>
             {showSla && (
               <Box sx={{ width: { xs: '100%', md: 320 } }}>
-                <Stack direction='row' justifyContent='space-between' mb={0.5}>
-                  <Typography variant='body2' fontWeight={600}>
-                    {elapsed > target
-                      ? `Van ${elapsed} días hábiles, el plazo es ${target}`
-                      : `Día ${elapsed} de ${target} hábiles`}
-                  </Typography>
-                  <Typography variant='caption' color='text.secondary'>
-                    Amarillo desde el día {warning}
-                  </Typography>
-                </Stack>
+                <Typography variant='body2' fontWeight={600} sx={{ mb: 0.5 }}>
+                  {elapsed > target
+                    ? `Van ${elapsed} días hábiles, el plazo es ${target}`
+                    : `Día ${elapsed} de ${target} hábiles`}
+                </Typography>
                 <Box sx={{ position: 'relative' }}>
                   <LinearProgress
                     variant='determinate'
@@ -198,6 +193,9 @@ const CalibrationServiceStageTracker = ({
                   />
                   <Box sx={{ position: 'absolute', top: -2, bottom: -2, left: `${warningAt}%`, width: 2, bgcolor: '#f59e0b', borderRadius: 1 }} aria-hidden />
                 </Box>
+                <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
+                  Amarillo desde el día {warning}
+                </Typography>
               </Box>
             )}
           </Stack>

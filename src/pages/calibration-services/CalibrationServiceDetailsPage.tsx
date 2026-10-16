@@ -3720,8 +3720,8 @@ const CalibrationServiceDetailsPage = () => {
                       </Typography>
                     </Stack>
                     <Stack direction='row' justifyContent='space-between'>
-                      <Typography variant='subtitle1'>Total</Typography>
-                      <Typography variant='subtitle1' fontWeight={700}>
+                      <Typography variant='subtitle1' fontWeight={700}>Total</Typography>
+                      <Typography variant='subtitle1' fontWeight={700} sx={{ color: '#00897B' }}>
                         {currencyFormatter.format(grandTotal)}
                       </Typography>
                     </Stack>
@@ -3950,9 +3950,10 @@ const CalibrationServiceDetailsPage = () => {
           </Button>
           <Button
             variant='contained'
-            color='inherit'
+            disableElevation
             onClick={() => void handleCloseService()}
             disabled={isOperationalBusy}
+            sx={primaryActionSx}
           >
             Confirmar cierre
           </Button>
@@ -4047,6 +4048,8 @@ const CalibrationServiceDetailsPage = () => {
               })
             }
             disabled={updateExecutionCustomer.isLoading}
+            disableElevation
+            sx={primaryActionSx}
           >
             Guardar
           </Button>
