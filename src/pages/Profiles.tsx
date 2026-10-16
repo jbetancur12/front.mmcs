@@ -36,6 +36,8 @@ import toast, { Toaster } from 'react-hot-toast'
 import Swal from 'sweetalert2'
 import { buildMinioObjectUrl } from '@utils/minio'
 
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 export interface Profile {
   id: number
   name: string
@@ -265,15 +267,29 @@ const Profiles: React.FC = () => {
       <Toaster />
       <ModalProfile open={openModal} onClose={() => setOpenModal(false)} />
 
-      {/* Header Section */}
-      <Box component="header" sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Person sx={{ mr: 2, fontSize: 32, color: 'primary.main' }} />
-          <Typography variant="h4" component="h1" fontWeight="bold">
-            Metrólogos
-          </Typography>
-        </Box>
-        
+      <LmsPageHeader
+        title='Metrólogos'
+        subtitle='Perfiles de los metrólogos del laboratorio'
+        icon={<Person />}
+        actions={
+          canManageProfiles && (
+            <Button variant='contained' startIcon={<Add />} onClick={handleOpenModal} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+              Crear perfil
+            </Button>
+          )
+        }
+      />
+
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={6} sm={4}>
+          <LmsStatCard label='Metrólogos' value={profiles.length} icon={<Person />} tone='teal' />
+        </Grid>
+        <Grid item xs={6} sm={4}>
+          <LmsStatCard label='Mostrando' value={filteredProfiles.length} icon={<Search />} tone='blue' />
+        </Grid>
+      </Grid>
+
+      <Box component="header" sx={{ mb: 3 }}>
         {/* Search and Create Section */}
         <Box sx={{ 
           display: 'flex', 
@@ -313,23 +329,6 @@ const Profiles: React.FC = () => {
               ""
             }
           />
-          {canManageProfiles && (
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={handleOpenModal}
-              sx={{ 
-                minWidth: 200,
-                bgcolor: '#00BFA5',
-                '&:hover': {
-                  bgcolor: '#00ACC1'
-                }
-              }}
-              aria-label="Crear nuevo perfil de metrólogo"
-            >
-              Crear Perfil
-            </Button>
-          )}
         </Box>
         
         {/* Results Count */}

@@ -39,6 +39,8 @@ import Swal from 'sweetalert2'
 
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 interface TraceabilityDocument {
   id: number
   name: string
@@ -521,15 +523,29 @@ const Traceability = () => {
     <Container maxWidth="xl" sx={{ py: 3 }}>
       <Toaster />
 
-      {/* Header Section */}
-      <Box component="header" sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <PictureAsPdf sx={{ mr: 2, fontSize: 32, color: 'primary.main' }} />
-          <Typography variant="h4" component="h1" fontWeight="bold">
-            Trazabilidades
-          </Typography>
-        </Box>
+      <LmsPageHeader
+        title='Trazabilidades'
+        subtitle='Documentos de trazabilidad de los patrones y equipos'
+        icon={<PictureAsPdf />}
+        actions={
+          canManageTraceability && (
+            <Button variant='contained' startIcon={<CloudUpload />} onClick={handleOpenModal} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+              Crear documento
+            </Button>
+          )
+        }
+      />
 
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={6} sm={4}>
+          <LmsStatCard label='Documentos' value={traceabilities.length} icon={<PictureAsPdf />} tone='teal' />
+        </Grid>
+        <Grid item xs={6} sm={4}>
+          <LmsStatCard label='Mostrando' value={filteredTraceabilities.length} icon={<Search />} tone='blue' />
+        </Grid>
+      </Grid>
+
+      <Box component="header" sx={{ mb: 3 }}>
         {/* Search and Create Section */}
         <Box sx={{
           display: 'flex',
@@ -569,17 +585,6 @@ const Traceability = () => {
                   ""
             }
           />
-          {canManageTraceability && (
-            <Button
-              variant="contained"
-              startIcon={<CloudUpload />}
-              onClick={handleOpenModal}
-              sx={{ minWidth: 200 }}
-              aria-label="Crear nuevo documento de trazabilidad"
-            >
-              Crear Documento
-            </Button>
-          )}
         </Box>
 
         {/* Results Count */}
