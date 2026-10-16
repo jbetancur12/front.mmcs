@@ -1,7 +1,10 @@
 // src/modules/components/ModulesView.tsx
 import { useEffect, useState } from 'react'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import { Button, CircularProgress, Box, Typography } from '@mui/material'
+import { Button, CircularProgress, Box, Container, Grid, Paper, Typography } from '@mui/material'
+import { Add, Apps } from '@mui/icons-material'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import Swal from 'sweetalert2'
 
 import ModuleForm from './ModuleForm'
@@ -49,13 +52,23 @@ const ModulesView = () => {
   }
 
   return (
-    <Box sx={{ height: 600, width: '100%', p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant='h4'>Módulos</Typography>
-        <Button variant='contained' onClick={() => setOpenModal(true)}>
-          Crear Nuevo Módulo
-        </Button>
-      </Box>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title='Módulos'
+        subtitle='Módulos de la plataforma que se pueden asignar a cada empresa'
+        icon={<Apps />}
+        actions={
+          <Button variant='contained' startIcon={<Add />} onClick={() => setOpenModal(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+            Crear módulo
+          </Button>
+        }
+      />
+
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Módulos' value={modules.length} icon={<Apps />} tone='teal' />
+        </Grid>
+      </Grid>
 
       {error && (
         <Typography color='error' sx={{ mb: 2 }}>
@@ -68,20 +81,19 @@ const ModulesView = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <DataGrid
-          rows={modules}
-          columns={columns}
-          getRowId={(row) => row.name}
-          autoHeight
-          sx={{
-            boxShadow: 2,
-            border: 2,
-            borderColor: 'primary.light',
-            '& .MuiDataGrid-cell:hover': {
-              color: 'primary.main'
-            }
-          }}
-        />
+        <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+          <DataGrid
+            rows={modules}
+            columns={columns}
+            getRowId={(row) => row.name}
+            autoHeight
+            sx={{
+              border: 0,
+              '& .MuiDataGrid-columnHeaders': { backgroundColor: '#f5f5f5', fontWeight: 600 },
+              '& .MuiDataGrid-row:hover': { backgroundColor: 'rgba(0, 191, 165, 0.04)' }
+            }}
+          />
+        </Paper>
       )}
 
       {/* Modal del formulario */}
@@ -116,7 +128,7 @@ const ModulesView = () => {
           </Box>
         </Box>
       )}
-    </Box>
+    </Container>
   )
 }
 
