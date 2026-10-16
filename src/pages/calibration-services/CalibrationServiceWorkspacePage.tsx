@@ -35,6 +35,7 @@ import {
   Typography
 } from '@mui/material'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import ArrowForwardOutlinedIcon from '@mui/icons-material/ArrowForwardOutlined'
 import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined'
 import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined'
@@ -1049,91 +1050,36 @@ const CalibrationServiceWorkspacePage = () => {
     <Container ref={containerRef} maxWidth='xl' sx={{ py: 3 }}>
       <Toaster position='top-center' />
 
-      {/* ── Header banner ── */}
-      <Box
-        sx={{
-          background: 'linear-gradient(135deg, #0f766e 0%, #059669 50%, #047857 100%)',
-          borderRadius: '20px',
-          p: { xs: 3, md: 4 },
-          mb: 3,
-          position: 'relative',
-          overflow: 'hidden',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            width: '45%',
-            height: '100%',
-            background: 'radial-gradient(ellipse at 70% 10%, rgba(255,255,255,0.10) 0%, transparent 65%)',
-            pointerEvents: 'none'
-          },
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            width: '100%',
-            height: '1px',
-            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)'
-          }
-        }}
-      >
-        <Stack
-          direction={{ xs: 'column', md: 'row' }}
-          justifyContent='space-between'
-          alignItems={{ xs: 'flex-start', md: 'center' }}
-          spacing={2}
-        >
-          <Box>
+      <LmsPageHeader
+        icon={<RequestQuoteOutlinedIcon />}
+        title={isEditing ? `Editar ${service?.quoteCode || service?.serviceCode || 'servicio'}` : 'Nuevo servicio de calibración'}
+        subtitle='Cotización base con cliente, sede, condiciones comerciales, ítems y evidencia de solicitud.'
+        actions={
+          <>
+            {service ? (
+              <>
+                <Chip color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]} label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]} sx={{ fontWeight: 700 }} />
+                <Chip variant='outlined' color={CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]} label={CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]} sx={{ fontWeight: 700 }} />
+              </>
+            ) : null}
+            {sequenceConfig?.initialized ? (
+              <Button variant='outlined' onClick={() => setIsSequenceDialogOpen(true)} sx={{ textTransform: 'none', fontWeight: 600 }}>
+                Configurar consecutivos
+              </Button>
+            ) : null}
             <Button
+              variant='outlined'
               startIcon={<ArrowBackOutlinedIcon />}
               onClick={() =>
                 navigate(isEditing && serviceId ? `/calibration-services/${serviceId}` : '/calibration-services')
               }
-              sx={{
-                mb: 1,
-                color: 'rgba(255,255,255,0.8)',
-                textTransform: 'none',
-                fontWeight: 600,
-                borderRadius: '10px',
-                fontSize: '0.85rem',
-                '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.10)',
-                  color: '#fff'
-                }
-              }}
+              sx={{ textTransform: 'none', fontWeight: 600 }}
             >
               Volver
             </Button>
-            <Typography variant='h4' fontWeight={700} sx={{ color: '#fff', lineHeight: 1.15, fontSize: { xs: '1.6rem', md: '2rem' } }}>
-              {isEditing ? `Editar ${service?.quoteCode || service?.serviceCode || 'servicio'}` : 'Nuevo servicio de calibración'}
-            </Typography>
-            <Typography variant='body2' sx={{ mt: 1, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, maxWidth: 700, fontSize: '0.9rem' }}>
-              Cotización base del servicio con cliente, sede, condiciones comerciales,
-              ítems y evidencia de solicitud.
-            </Typography>
-          </Box>
-          <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
-            {service ? (
-              <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
-                <Chip color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]} label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]} sx={{ fontWeight: 700, borderRadius: '8px' }} />
-                <Chip variant='outlined' color={CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]} label={CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]} sx={{ fontWeight: 700, borderRadius: '8px' }} />
-              </Stack>
-            ) : null}
-            {sequenceConfig?.initialized ? (
-              <Button
-                variant='outlined'
-                size='small'
-                onClick={() => setIsSequenceDialogOpen(true)}
-                sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.55)', textTransform: 'none', fontWeight: 600, borderRadius: '10px', '&:hover': { borderColor: '#fff', bgcolor: 'rgba(255,255,255,0.12)' } }}
-              >
-                Configurar consecutivos
-              </Button>
-            ) : null}
-          </Stack>
-        </Stack>
-      </Box>
+          </>
+        }
+      />
 
       {!canEdit ? (
         <Alert severity='warning' sx={{ mb: 3 }}>
