@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   Chip,
+  Grid,
   Dialog,
   DialogActions,
   DialogContent,
@@ -27,6 +28,9 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
+import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import PercentOutlinedIcon from '@mui/icons-material/PercentOutlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import React, { useEffect, useMemo, useState } from 'react'
@@ -305,30 +309,33 @@ const TableProducts: React.FC = () => {
 
   return (
     <>
-      <Paper
-        elevation={0}
-        sx={{
-          p: 2,
-          borderRadius: '12px',
-          mb: 2.5,
-          border: '1px solid rgba(0,0,0,0.06)',
-          background: 'rgba(16,185,129,0.03)',
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 3,
-          alignItems: 'center'
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Inventory2OutlinedIcon sx={{ color: '#059669', fontSize: 20 }} />
-          <Typography variant='body2' fontWeight={700}>
-            {totalProducts} producto{totalProducts !== 1 ? 's' : ''}
-          </Typography>
-          <Typography variant='caption' color='text.secondary'>
-            · {totalVariants} variante{totalVariants !== 1 ? 's' : ''}
-          </Typography>
-        </Box>
-      </Paper>
+      <LmsPageHeader
+        title='Productos y servicios'
+        subtitle='Catálogo base de servicios de calibración para las cotizaciones del módulo.'
+        icon={<Inventory2OutlinedIcon />}
+        actions={
+          <>
+            <Button variant='outlined' startIcon={<DownloadOutlinedIcon />} onClick={handleDownloadTemplate} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+              Plantilla
+            </Button>
+            <Button variant='outlined' startIcon={<CloudUploadOutlinedIcon />} onClick={() => setImportDialogOpen(true)} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+              Importar
+            </Button>
+            <Button variant='contained' startIcon={<AddCircleOutlineOutlinedIcon />} onClick={() => setCreateModalOpen(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+              Nuevo producto
+            </Button>
+          </>
+        }
+      />
+
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={6} sm={4}>
+          <LmsStatCard label='Productos' value={totalProducts} icon={<Inventory2OutlinedIcon />} tone='teal' />
+        </Grid>
+        <Grid item xs={6} sm={4}>
+          <LmsStatCard label='Variantes' value={totalVariants} icon={<LayersOutlinedIcon />} tone='blue' />
+        </Grid>
+      </Grid>
 
       <Paper
         elevation={0}
@@ -372,50 +379,21 @@ const TableProducts: React.FC = () => {
           variant='contained'
           startIcon={<PercentOutlinedIcon />}
           onClick={() => setConfirmationDialogOpen(true)}
-          sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, height: 36 }}
+          sx={{ bgcolor: '#00BFA5', textTransform: 'none', fontWeight: 600, height: 36, '&:hover': { bgcolor: '#00ACC1' } }}
         >
           Actualizar precios
         </Button>
-        <Divider orientation='vertical' flexItem sx={{ mx: 0.5 }} />
-        <Button
-          size='small'
-          variant='outlined'
-          startIcon={<DownloadOutlinedIcon />}
-          onClick={handleDownloadTemplate}
-          sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, height: 36 }}
-        >
-          Plantilla
-        </Button>
-        <Button
-          size='small'
-          variant='outlined'
-          startIcon={<CloudUploadOutlinedIcon />}
-          onClick={() => setImportDialogOpen(true)}
-          sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, height: 36 }}
-        >
-          Importar
-        </Button>
-        <Button
-          variant='contained'
-          onClick={() => setCreateModalOpen(true)}
-          sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 700, ml: 1 }}
-        >
-          + Nuevo producto
-        </Button>
       </Paper>
 
-      <Paper
-        elevation={0}
-        sx={{ borderRadius: '12px', border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden' }}
-      >
+      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
         <Box sx={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
             <thead>
-              <tr style={{ borderBottom: '2px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
+              <tr style={{ borderBottom: '1px solid #e5e7eb', backgroundColor: '#f5f5f5' }}>
                 <th style={{ width: 40, padding: '12px 8px' }}></th>
-                <th style={{ textAlign: 'left', padding: '12px 8px', fontWeight: 700, fontSize: '0.8rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Producto</th>
-                <th style={{ textAlign: 'left', padding: '12px 8px', fontWeight: 700, fontSize: '0.8rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', width: 200 }}>Alcance</th>
-                <th style={{ textAlign: 'left', padding: '12px 8px', fontWeight: 700, fontSize: '0.8rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Variantes</th>
+                <th style={{ textAlign: 'left', padding: '12px 8px', fontWeight: 600, fontSize: '0.85rem', color: '#374151', }}>Producto</th>
+                <th style={{ textAlign: 'left', padding: '12px 8px', fontWeight: 600, fontSize: '0.85rem', color: '#374151', width: 200 }}>Alcance</th>
+                <th style={{ textAlign: 'left', padding: '12px 8px', fontWeight: 600, fontSize: '0.85rem', color: '#374151', }}>Variantes</th>
                 <th style={{ width: 100, padding: '12px 8px' }}></th>
               </tr>
             </thead>
@@ -424,14 +402,14 @@ const TableProducts: React.FC = () => {
                 <React.Fragment key={product.id}>
                   <tr
                     style={{ borderBottom: '1px solid #e5e7eb' }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(0,0,0,0.02)' }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(0, 191, 165, 0.04)' }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = '' }}
                   >
                     <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                       <IconButton
                         size='small'
                         onClick={() => toggleRow(product.id)}
-                        sx={{ color: expandedRows.has(product.id) ? '#059669' : '#9ca3af' }}
+                        sx={{ color: expandedRows.has(product.id) ? '#00BFA5' : '#9ca3af' }}
                       >
                         {expandedRows.has(product.id) ? (
                           <ExpandLessIcon fontSize='small' />
@@ -475,6 +453,7 @@ const TableProducts: React.FC = () => {
                         <Tooltip title='Editar'>
                           <IconButton
                             size='small'
+                            color='primary'
                             onClick={() => {
                               setEditingProduct(product)
                               setEditModalOpen(true)
@@ -501,10 +480,10 @@ const TableProducts: React.FC = () => {
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                           <thead>
                             <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
-                              <th style={{ textAlign: 'left', padding: '8px', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Tipo</th>
-                              <th style={{ textAlign: 'right', padding: '8px', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Valor médica</th>
-                              <th style={{ textAlign: 'right', padding: '8px', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Valor industrial</th>
-                              <th style={{ textAlign: 'right', padding: '8px', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase' }}>Valor subcontratados</th>
+                              <th style={{ textAlign: 'left', padding: '8px', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280' }}>Tipo</th>
+                              <th style={{ textAlign: 'right', padding: '8px', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280' }}>Valor médica</th>
+                              <th style={{ textAlign: 'right', padding: '8px', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280' }}>Valor industrial</th>
+                              <th style={{ textAlign: 'right', padding: '8px', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280' }}>Valor subcontratados</th>
                             </tr>
                           </thead>
                           <tbody>
