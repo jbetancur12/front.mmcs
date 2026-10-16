@@ -638,7 +638,8 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/purchases/requests", label: "Compras › Solicitudes de Compra", kind: 'related' }
   ],
   'purchases:order:create': [
-    { path: "/purchases/requests", label: "Compras › Solicitudes de Compra", kind: 'action' }
+    { path: "/purchases/requests", label: "Compras › Solicitudes de Compra", kind: 'action' },
+    { path: "/purchases/orders", label: "Compras › Ordenes de Compra", kind: 'related' }
   ],
   'purchases:order:view': [
     { path: "/purchases/orders", label: "Compras › Ordenes de Compra", kind: 'screen' },
