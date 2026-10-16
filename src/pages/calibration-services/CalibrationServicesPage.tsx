@@ -2678,43 +2678,72 @@ const CalibrationServicesPage = () => {
       ) : null}
 
       <Dialog open={templateDialogOpen} onClose={() => setTemplateDialogOpen(false)} maxWidth='md' fullWidth>
-        <DialogTitle>Plantilla global de términos y condiciones</DialogTitle>
-        <DialogContent dividers>
-          <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-            Edita los términos que se cargarán por defecto al crear una nueva cotización.
-            Usa {'{{validityDays}}'}, {'{{paymentMethod}}'}, {'{{instrumentDeliveryTime}}'}, {'{{certificateDeliveryTime}}'} como variables dinámicas.
+        <DialogTitle sx={{ fontWeight: 700 }}>
+          Plantilla de términos y condiciones
+          <Typography variant='body2' color='text.secondary' sx={{ fontWeight: 400 }}>
+            Se carga por defecto al crear una cotización nueva.
           </Typography>
-          <Stack spacing={1.5}>
-            {CALIBRATION_QUOTE_TERM_KEYS.map((termKey) => (
-              <Accordion
-                key={termKey}
-                disableGutters
-                elevation={0}
-                sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px !important' }}
-              >
-                <AccordionSummary expandIcon={<ExpandMoreOutlinedIcon />}>
-                  <Typography fontWeight={800}>
-                    {CALIBRATION_QUOTE_TERM_LABELS[termKey]}
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <CalibrationServiceRichTextEditor
-                    value={templateTerms[termKey] || ''}
-                    placeholder={`Escribe ${CALIBRATION_QUOTE_TERM_LABELS[termKey].toLowerCase()}`}
-                    onChange={(value) => setTemplateTerm(termKey, value)}
-                  />
-                </AccordionDetails>
-              </Accordion>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Typography variant='body2' sx={{ mb: 1 }}>
+            Variables que se reemplazan con los datos de cada cotización. Toca una para copiarla.
+          </Typography>
+          <Stack direction='row' spacing={1} useFlexGap flexWrap='wrap' sx={{ mb: 2.5 }}>
+            {['validityDays', 'paymentMethod', 'instrumentDeliveryTime', 'certificateDeliveryTime'].map((variable) => (
+              <Tooltip key={variable} title='Copiar variable'>
+                <Chip
+                  label={`{{${variable}}}`}
+                  size='small'
+                  variant='outlined'
+                  onClick={() => {
+                    navigator.clipboard?.writeText(`{{${variable}}}`)
+                    toast.success('Variable copiada')
+                  }}
+                  sx={{ fontFamily: 'monospace', borderColor: '#00BFA5', color: '#00695C', '&:hover': { bgcolor: '#E0F7F4' } }}
+                />
+              </Tooltip>
             ))}
+          </Stack>
+          <Stack spacing={1.5}>
+            {CALIBRATION_QUOTE_TERM_KEYS.map((termKey) => {
+              const isEmpty = !(templateTerms[termKey] || '').replace(/<[^>]*>/g, '').trim()
+              return (
+                <Accordion
+                  key={termKey}
+                  disableGutters
+                  elevation={0}
+                  sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px !important', '&:before': { display: 'none' } }}
+                >
+                  <AccordionSummary expandIcon={<ExpandMoreOutlinedIcon />}>
+                    <Stack direction='row' alignItems='center' justifyContent='space-between' sx={{ width: '100%', pr: 1 }} spacing={1}>
+                      <Typography fontWeight={600}>
+                        {CALIBRATION_QUOTE_TERM_LABELS[termKey]}
+                      </Typography>
+                      <Typography variant='caption' sx={{ color: isEmpty ? '#b45309' : '#00695C', fontWeight: 600 }}>
+                        {isEmpty ? 'Sin texto' : 'Con texto'}
+                      </Typography>
+                    </Stack>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <CalibrationServiceRichTextEditor
+                      value={templateTerms[termKey] || ''}
+                      placeholder={`Escribe ${CALIBRATION_QUOTE_TERM_LABELS[termKey].toLowerCase()}`}
+                      onChange={(value) => setTemplateTerm(termKey, value)}
+                    />
+                  </AccordionDetails>
+                </Accordion>
+              )
+            })}
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setTemplateDialogOpen(false)}>Cancelar</Button>
+          <Button onClick={() => setTemplateDialogOpen(false)} sx={{ color: 'text.secondary' }}>Cancelar</Button>
           <Button
             variant='contained'
             startIcon={<SaveOutlinedIcon />}
             onClick={handleSaveTemplate}
             disabled={upsertQuoteTermsTemplate.isLoading}
+            sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00ACC1' } }}
           >
             Guardar plantilla
           </Button>
