@@ -222,7 +222,7 @@ const PurchaseOrders: React.FC = () => {
         icon={<ReceiptLong />}
         stats={
           <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={6} md={3}>
               <LmsStatCard
                 label='Todas'
                 value={purchaseOrders.length}
@@ -232,7 +232,7 @@ const PurchaseOrders: React.FC = () => {
                 onClick={() => setQuickFilter('all')}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={6} md={3}>
               <LmsStatCard
                 label='Sin enviar'
                 value={unsentCount}
@@ -242,7 +242,7 @@ const PurchaseOrders: React.FC = () => {
                 onClick={() => toggleQuick('unsent')}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={6} md={3}>
               <LmsStatCard
                 label='Envío vencido (3 días hábiles)'
                 value={overdueCount}
@@ -252,7 +252,7 @@ const PurchaseOrders: React.FC = () => {
                 onClick={() => toggleQuick('overdue')}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={6} md={3}>
               <LmsStatCard
                 label='Sin verificar'
                 value={unverifiedCount}

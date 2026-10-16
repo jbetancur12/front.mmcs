@@ -6,18 +6,22 @@ import {
   IconButton,
   Tooltip,
   Chip,
-  CircularProgress
+  CircularProgress,
+  Grid
 } from '@mui/material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useNavigate } from 'react-router-dom'
 import {
   Article,
   Visibility as VisibilityIcon,
+  CheckCircle,
   LocalShipping,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  WarningAmber
 } from '@mui/icons-material' // Añadido RefreshIcon
 import { useQuery } from 'react-query'
 import PurchasesPage from 'src/Components/Purchases/PurchasesPage'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import {
   PURCHASE_TEAL,
   PURCHASE_TEAL_HOVER,
@@ -193,6 +197,8 @@ const SuppliersTable: React.FC = () => {
 
   // Extraer la lista de proveedores del objeto de respuesta
   const suppliersForTable = apiResponse?.suppliers || []
+  const needsActionCount = suppliersForTable.filter((sp) => getEvaluationStatusInfo(sp)?.needsAction).length
+  const upToDateCount = suppliersForTable.filter((sp) => getEvaluationStatusInfo(sp)?.color === 'success').length
 
   const columns = useMemo<MRT_ColumnDef<Supplier>[]>(
     () => [
@@ -241,6 +247,24 @@ const SuppliersTable: React.FC = () => {
       title='Proveedores'
       subtitle='Consulta, evalúa y mantén al día los documentos de cada proveedor'
       icon={<LocalShipping />}
+      stats={
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={4}>
+            <LmsStatCard label='Proveedores' value={apiResponse?.totalItems ?? suppliersForTable.length} icon={<LocalShipping />} tone='teal' />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <LmsStatCard
+              label='Evaluación requerida'
+              value={needsActionCount}
+              icon={<WarningAmber />}
+              tone={needsActionCount > 0 ? 'red' : 'green'}
+            />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <LmsStatCard label='Evaluación al día' value={upToDateCount} icon={<CheckCircle />} tone='green' />
+          </Grid>
+        </Grid>
+      }
       actions={
         <>
           <Button

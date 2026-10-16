@@ -2,15 +2,18 @@
 import React, { useState, useMemo } from 'react'
 import {
   Container,
-  Typography,
   Button,
   Box,
+  Grid,
   IconButton,
+  Paper,
   Tooltip
 } from '@mui/material'
-import { Edit, Delete, Add, ArrowBack } from '@mui/icons-material'
+import { Edit, Delete, Add, ArrowBack, Badge, CheckCircle, PersonOff } from '@mui/icons-material'
 import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
-import { MRT_Localization_ES } from 'material-react-table/locales/es'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 import Swal from 'sweetalert2'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
@@ -138,78 +141,66 @@ const PersonnelManagementPage: React.FC = () => {
   )
 
   return (
-    <Container maxWidth='lg' sx={{ mt: 4, mb: 4 }}>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 3,
-          flexWrap: 'wrap', // Para que se ajuste en pantallas pequeñas
-          gap: 2 // Espacio entre elementos si se envuelven
-        }}
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <Button
+        startIcon={<ArrowBack />}
+        onClick={() => navigate('/purchases/requests')}
+        sx={{ mb: 1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
       >
-        {/* Botón para volver */}
-        <Button
-          variant='text' // 'text' es sutil, 'outlined' es otra buena opción
-          color='secondary'
-          startIcon={<ArrowBack />}
-          onClick={() => navigate('/purchases/requests')} // useNavigate(-1) navega a la página anterior en el historial
-        >
-          Volver
-        </Button>
+        Volver
+      </Button>
 
-        <Typography
-          variant='h4'
-          component='h1'
-          sx={{ flexGrow: 1, textAlign: 'center' }}
-        >
-          Gestión de Personal
-        </Typography>
-
-        <Button
-          variant='contained'
-          color='primary'
-          startIcon={<Add />}
-          onClick={() => handleOpenModal()}
-        >
-          Agregar Persona
-        </Button>
-      </Box>
-
-      <MaterialReactTable
-        columns={columns}
-        data={personnelList}
-        localization={MRT_Localization_ES}
-        enableRowActions
-        renderRowActions={({ row }) => (
-          <Box sx={{ display: 'flex', gap: '0.5rem' }}>
-            <Tooltip title='Editar'>
-              <IconButton
-                onClick={() => handleOpenModal(row.original)}
-                color='primary'
-                size='small'
-              >
-                <Edit />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title='Eliminar'>
-              <IconButton
-                onClick={() => handleDelete(row.original.id)}
-                color='error'
-                size='small'
-              >
-                <Delete />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        )}
-        initialState={{ density: 'compact' }}
-        state={{ isLoading, showAlertBanner: isError }}
-        muiToolbarAlertBannerProps={
-          isError ? { color: 'error', children: error?.message } : undefined
+      <LmsPageHeader
+        title='Gestión de Personal'
+        subtitle='Personas que firman y aprueban los documentos de compras'
+        icon={<Badge />}
+        actions={
+          <Button variant='contained' startIcon={<Add />} onClick={() => handleOpenModal()} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+            Agregar persona
+          </Button>
         }
       />
+
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Personal' value={personnelList.length} icon={<Badge />} tone='teal' />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Activos' value={personnelList.filter((p) => p.isActive).length} icon={<CheckCircle />} tone='green' />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Inactivos' value={personnelList.filter((p) => !p.isActive).length} icon={<PersonOff />} tone='orange' />
+        </Grid>
+      </Grid>
+
+      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+        <MaterialReactTable
+          {...purchaseTableStyle}
+          columns={columns}
+          data={personnelList}
+          enableRowActions
+          enablePinning
+          renderRowActions={({ row }) => (
+            <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+              <Tooltip title='Editar'>
+                <IconButton onClick={() => handleOpenModal(row.original)} color='primary' size='small'>
+                  <Edit />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title='Eliminar'>
+                <IconButton onClick={() => handleDelete(row.original.id)} color='error' size='small'>
+                  <Delete />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
+          initialState={{ density: 'compact', columnPinning: { right: ['mrt-row-actions'] } }}
+          state={{ isLoading, showAlertBanner: isError }}
+          muiToolbarAlertBannerProps={
+            isError ? { color: 'error', children: error?.message } : undefined
+          }
+        />
+      </Paper>
 
       {isModalOpen && (
         <PersonnelFormModal

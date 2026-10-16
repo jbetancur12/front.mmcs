@@ -442,7 +442,7 @@ const PurchaseRequest: React.FC = () => {
         }
         stats={
           <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={6} md={3}>
               <LmsStatCard
                 label='Todas'
                 value={totalRecords}
@@ -452,7 +452,7 @@ const PurchaseRequest: React.FC = () => {
                 onClick={() => setQuickFilter('all')}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={6} md={3}>
               <LmsStatCard
                 label='Pendientes de aprobar'
                 value={counts.pending}
@@ -462,7 +462,7 @@ const PurchaseRequest: React.FC = () => {
                 onClick={() => toggleQuick('pending')}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={6} md={3}>
               <LmsStatCard
                 label='Por generar orden'
                 value={counts.toOrder}
@@ -472,7 +472,7 @@ const PurchaseRequest: React.FC = () => {
                 onClick={() => toggleQuick('toOrder')}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={6} md={3}>
               <LmsStatCard
                 label='Sin orden hace más de 7 días'
                 value={counts.late}

@@ -1,17 +1,11 @@
 // src/pages/Admin/FiscalParametersManagementPage.tsx (o la ubicación que prefieras)
 
-import React, { useState, ChangeEvent } from 'react'
+import React, { useMemo, useState, ChangeEvent } from 'react'
+import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
 import {
   Container,
-  Typography,
   Button,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   Dialog,
   DialogTitle,
@@ -32,6 +26,9 @@ import {
   Tooltip
 } from '@mui/material'
 import {
+  AccountBalance,
+  Block,
+  CheckCircle,
   Edit,
   Delete,
   Add,
@@ -46,6 +43,9 @@ import Swal from 'sweetalert2'
 import { isAxiosError, AxiosResponse } from 'axios'
 import { SelectChangeEvent } from '@mui/material/Select'
 import { NumericFormat, NumberFormatValues } from 'react-number-format'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 
 // Interfaz para los parámetros fiscales
 interface FiscalParameter {
@@ -341,14 +341,43 @@ const FiscalParametersManagementPage: React.FC = () => {
     })
   }
 
-  if (isLoading && fiscalParams.length === 0) {
-    return (
-      <Container sx={{ textAlign: 'center', mt: 5, p: 2 }}>
-        <CircularProgress />
-        <Typography sx={{ mt: 1 }}>Cargando parámetros fiscales...</Typography>
-      </Container>
-    )
-  }
+  const columns = useMemo<MRT_ColumnDef<FiscalParameter>[]>(
+    () => [
+      { accessorKey: 'id', header: 'ID', size: 60 },
+      {
+        accessorKey: 'keyName',
+        header: 'Clave',
+        size: 240,
+        Cell: ({ row }) => <Box sx={{ fontWeight: 600 }}>{row.original.keyName}</Box>
+      },
+      {
+        accessorKey: 'value',
+        header: 'Valor',
+        size: 130,
+        Cell: ({ row }) => <>{formatDisplayValueInTable(row.original.value, row.original.valueType)}</>
+      },
+      {
+        accessorKey: 'valueType',
+        header: 'Tipo de valor',
+        size: 140,
+        Cell: ({ row }) => <Chip label={row.original.valueType} size='small' variant='outlined' />
+      },
+      { accessorKey: 'description', header: 'Descripción', size: 260 },
+      {
+        accessorKey: 'isActive',
+        header: 'Activo',
+        size: 100,
+        Cell: ({ row }) =>
+          row.original.isActive ? (
+            <Chip label='Sí' color='success' size='small' variant='outlined' />
+          ) : (
+            <Chip label='No' size='small' variant='outlined' />
+          )
+      }
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  )
 
   // Mostrar error solo si es la carga inicial y no hay datos cacheados
   if (queryIsError && fiscalParams.length === 0) {
@@ -363,174 +392,71 @@ const FiscalParametersManagementPage: React.FC = () => {
   }
 
   return (
-    <Container maxWidth='xl' sx={{ mt: 4, mb: 4 }}>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 3
-        }}
-      >
-        <Typography variant='h4' component='h1'>
-          Gestión de Parámetros Fiscales
-        </Typography>
-        <Box>
-          <Button
-            variant='outlined'
-            onClick={() => refetch()}
-            startIcon={
-              isFetching ? <CircularProgress size={18} /> : <RefreshIcon />
-            }
-            disabled={isFetching}
-            sx={{ mr: 1 }}
-            size='small'
-          >
-            Refrescar
-          </Button>
-          <Button
-            variant='contained'
-            color='primary'
-            startIcon={<Add />}
-            onClick={() => handleOpenDialog()}
-            size='small'
-          >
-            Nuevo Parámetro
-          </Button>
-        </Box>
-      </Box>
-      <Paper elevation={2}>
-        <TableContainer>
-          <Table stickyHeader size='small'>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 'bold', width: '5%' }}>
-                  ID
-                </TableCell>
-                <TableCell sx={{ fontWeight: 'bold', width: '20%' }}>
-                  Clave (keyName)
-                </TableCell>
-                <TableCell sx={{ fontWeight: 'bold', width: '15%' }}>
-                  Valor
-                </TableCell>
-                <TableCell sx={{ fontWeight: 'bold', width: '15%' }}>
-                  Tipo de Valor
-                </TableCell>
-                <TableCell sx={{ fontWeight: 'bold', width: '25%' }}>
-                  Descripción
-                </TableCell>
-                <TableCell
-                  sx={{ fontWeight: 'bold', width: '10%', textAlign: 'center' }}
-                >
-                  Activo
-                </TableCell>
-                <TableCell
-                  sx={{ fontWeight: 'bold', width: '10%', textAlign: 'right' }}
-                >
-                  Acciones
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {isFetching && fiscalParams.length > 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    align='center'
-                    sx={{ py: 0.5, borderBottom: 'none' }}
-                  >
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 1,
-                        opacity: 0.7,
-                        height: 20
-                      }}
-                    >
-                      <CircularProgress size={16} />{' '}
-                      <Typography variant='caption'>Actualizando...</Typography>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              )}
-              {!isLoading && fiscalParams.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} align='center'>
-                    No hay parámetros fiscales definidos.
-                  </TableCell>
-                </TableRow>
-              )}
-              {fiscalParams.map((param) => (
-                <TableRow hover key={param.id}>
-                  <TableCell>{param.id}</TableCell>
-                  <TableCell sx={{ fontWeight: 500 }}>
-                    {param.keyName}
-                  </TableCell>
-                  <TableCell>
-                    {formatDisplayValueInTable(param.value, param.valueType)}
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={param.valueType}
-                      size='small'
-                      variant='outlined'
-                    />
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      maxWidth: 250,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}
-                    title={param.description || ''}
-                  >
-                    {param.description}
-                  </TableCell>
-                  <TableCell align='center'>
-                    {param.isActive ? (
-                      <Chip
-                        label='Sí'
-                        color='success'
-                        size='small'
-                        variant='filled'
-                      />
-                    ) : (
-                      <Chip
-                        label='No'
-                        color='default'
-                        size='small'
-                        variant='outlined'
-                      />
-                    )}
-                  </TableCell>
-                  <TableCell align='right'>
-                    <Tooltip title='Editar'>
-                      <IconButton
-                        onClick={() => handleOpenDialog(param)}
-                        color='primary'
-                        size='small'
-                      >
-                        <Edit fontSize='small' />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title='Eliminar'>
-                      <IconButton
-                        onClick={() => handleDelete(param.id)}
-                        color='error'
-                        size='small'
-                      >
-                        <Delete fontSize='small' />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title='Parámetros fiscales'
+        subtitle='Bases mínimas y tasas de retención usadas en compras'
+        icon={<AccountBalance />}
+        actions={
+          <>
+            <Button
+              variant='outlined'
+              onClick={() => refetch()}
+              startIcon={isFetching ? <CircularProgress size={18} /> : <RefreshIcon />}
+              disabled={isFetching}
+              sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
+            >
+              Refrescar
+            </Button>
+            <Button variant='contained' startIcon={<Add />} onClick={() => handleOpenDialog()} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+              Nuevo parámetro
+            </Button>
+          </>
+        }
+      />
+
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Parámetros' value={fiscalParams.length} icon={<AccountBalance />} tone='teal' />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Activos' value={fiscalParams.filter((p) => p.isActive).length} icon={<CheckCircle />} tone='green' />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Inactivos' value={fiscalParams.filter((p) => !p.isActive).length} icon={<Block />} tone='orange' />
+        </Grid>
+      </Grid>
+
+      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+        <MaterialReactTable
+          {...purchaseTableStyle}
+          columns={columns}
+          data={fiscalParams}
+          enableRowActions
+          enablePinning
+          enableColumnActions={false}
+          initialState={{ density: 'compact', columnPinning: { right: ['mrt-row-actions'] } }}
+          state={{ isLoading: isLoading && fiscalParams.length === 0, showProgressBars: isFetching }}
+          renderRowActions={({ row }) => (
+            <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+              <Tooltip title='Editar'>
+                <IconButton onClick={() => handleOpenDialog(row.original)} color='primary' size='small'>
+                  <Edit fontSize='small' />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title='Eliminar'>
+                <IconButton onClick={() => handleDelete(row.original.id)} color='error' size='small'>
+                  <Delete fontSize='small' />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
+          renderEmptyRowsFallback={() => (
+            <Box sx={{ py: 4, textAlign: 'center', color: 'text.secondary' }}>
+              No hay parámetros fiscales definidos.
+            </Box>
+          )}
+        />
       </Paper>
 
       <Dialog

@@ -2,7 +2,8 @@
 import React, { useMemo, useState } from 'react'
 import {
   Container,
-  Typography,
+  Grid,
+  Paper,
   Box,
   Chip,
   IconButton,
@@ -12,8 +13,10 @@ import {
 import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
 import { useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private' // Ajusta la ruta
-import { MRT_Localization_ES } from 'material-react-table/locales/es'
-import { Edit, Add, Refresh, Close, PictureAsPdf } from '@mui/icons-material' // Importar iconos
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
+import { Edit, Add, Refresh, Close, PictureAsPdf, FactCheck, EmojiEvents, Star } from '@mui/icons-material' // Importar iconos
 import { useNavigate } from 'react-router-dom'
 
 // Asume que ISupplier y SupplierEvaluationData están en un archivo de tipos compartido
@@ -283,12 +286,52 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
   )
 
   return (
-    <Container maxWidth='xl' sx={{ mt: 2, mb: 4 }}>
-      <Typography variant='h4' gutterBottom component='h1'>
-        Listado de Evaluaciones de Proveedores
-      </Typography>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title='Evaluaciones de proveedores'
+        subtitle='Historial de evaluaciones y su condición final'
+        icon={<FactCheck />}
+        actions={
+          <>
+            <Button variant='outlined' startIcon={<Refresh />} onClick={() => refetch()} disabled={isLoading || isFetching} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+              Refrescar
+            </Button>
+            <Button variant='contained' startIcon={<Add />} onClick={handleOpenCreateModal} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+              Nueva evaluación
+            </Button>
+          </>
+        }
+      />
 
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Evaluaciones' value={evaluations.length} icon={<FactCheck />} tone='teal' />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard
+            label='Condición excelente'
+            value={evaluations.filter((e) => String(e.finalCondition ?? '').toUpperCase().includes('EXCELENTE')).length}
+            icon={<EmojiEvents />}
+            tone='green'
+          />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard
+            label='Puntaje promedio'
+            value={
+              evaluations.length
+                ? (evaluations.reduce((acc, e) => acc + (Number(e.totalScore) || 0), 0) / evaluations.length).toFixed(1)
+                : '0.0'
+            }
+            icon={<Star />}
+            tone='blue'
+          />
+        </Grid>
+      </Grid>
+
+      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
       <MaterialReactTable
+        {...purchaseTableStyle}
         columns={columns}
         data={evaluations}
         enableRowActions // Habilitar acciones por fila
@@ -325,27 +368,6 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
             </Tooltip> */}
           </Box>
         )}
-        renderTopToolbarCustomActions={() => (
-          <Box sx={{ display: 'flex', gap: '1rem', p: '4px' }}>
-            <Button
-              variant='contained'
-              startIcon={<Add />}
-              onClick={handleOpenCreateModal}
-              color='primary'
-            >
-              Nueva Evaluación
-            </Button>
-            <Button
-              variant='outlined'
-              startIcon={<Refresh />}
-              onClick={() => refetch()}
-              disabled={isLoading || isFetching}
-            >
-              Refrescar
-            </Button>
-          </Box>
-        )}
-        muiTableContainerProps={{ sx: { maxHeight: 'calc(100vh - 200px)' } }}
         muiToolbarAlertBannerProps={
           isError ? { color: 'error', children: error?.message } : undefined
         }
@@ -366,12 +388,12 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
           }
         }}
         state={{ isLoading, showProgressBars: isFetching }}
-        localization={MRT_Localization_ES}
         enableColumnResizing
         enableColumnOrdering
         enableGrouping
         enablePinning
       />
+      </Paper>
 
       {isFormModalOpen &&
         supplierForNewEvaluation && ( // Asegurar que supplierForNewEvaluation exista
