@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   Container,
   Paper,
@@ -15,19 +15,11 @@ import {
   Chip,
   IconButton,
   Alert,
-  Card,
-  CardContent,
   FormControlLabel,
   Snackbar,
   Switch,
   Autocomplete,
   MenuItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Tooltip,
   Rating
 } from '@mui/material'
@@ -57,6 +49,10 @@ import {
   TechnicianFormData
 } from '../../types/maintenance'
 
+import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
+import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 const validationSchema = Yup.object({
   name: Yup.string()
     .min(2, 'El nombre debe tener al menos 2 caracteres')
@@ -131,21 +127,6 @@ const MaintenanceTechnicians: React.FC = () => {
   const createTechnicianMutation = useCreateMaintenanceTechnician()
   const updateTechnicianMutation = useUpdateMaintenanceTechnician()
   const deleteTechnicianMutation = useDeleteMaintenanceTechnician()
-  const surfaceSx = {
-    backgroundColor: '#ffffff',
-    borderRadius: '14px',
-    border: '1px solid #e5e7eb',
-    boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
-  }
-  const statCardSx = {
-    ...surfaceSx,
-    transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-    '&:hover': {
-      borderColor: '#cbd5e1',
-      boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)'
-    }
-  }
-
   const formik = useFormik<TechnicianFormData>({
     initialValues: {
       name: '',
@@ -287,580 +268,219 @@ const MaintenanceTechnicians: React.FC = () => {
     }
   }
 
-  return (
-    <Container
-      maxWidth={false}
-      sx={{
-        py: { xs: 2, md: 3 },
-        backgroundColor: '#f8fafc',
-        minHeight: '100vh'
-      }}
-    >
-      {/* Header */}
-      <Box
-        display='flex'
-        justifyContent='space-between'
-        alignItems={{ xs: 'flex-start', md: 'center' }}
-        flexDirection={{ xs: 'column', md: 'row' }}
-        gap={2}
-        mb={3}
-        sx={{
-          backgroundColor: '#ffffff',
-          borderRadius: '14px',
-          p: 3,
-          boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
-          border: '1px solid #e5e7eb'
-        }}
-      >
-        <Box display='flex' alignItems='center' gap={2}>
-          <Box
-            sx={{
-              backgroundColor: '#e8f7ef',
-              borderRadius: '10px',
-              p: 1.5,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <People sx={{ fontSize: 32, color: '#00A651' }} />
+  const columns = useMemo<MRT_ColumnDef<MaintenanceTechnician>[]>(
+    () => [
+      {
+        accessorKey: 'name',
+        header: 'Técnico',
+        size: 240,
+        Cell: ({ row }) => (
+          <Box display='flex' alignItems='center' gap={1.5}>
+            <Avatar sx={{ bgcolor: '#00BFA5', color: '#fff', fontWeight: 600, width: 36, height: 36, fontSize: 14 }}>
+              {getInitials(row.original.name)}
+            </Avatar>
+            <Box>
+              <Typography variant='body2' fontWeight={600}>
+                {row.original.name}
+              </Typography>
+              <Typography variant='caption' color='text.secondary'>
+                ID: {row.original.id}
+              </Typography>
+            </Box>
           </Box>
+        )
+      },
+      {
+        id: 'contact',
+        header: 'Contacto',
+        size: 240,
+        accessorFn: (t) => `${t.email ?? ''} ${t.phone ?? ''}`,
+        Cell: ({ row }) => (
           <Box>
-            <Typography
-              variant='h4'
-              component='h1'
-              sx={{
-                fontWeight: 700,
-                color: '#0f172a',
-                letterSpacing: '-0.02em'
-              }}
-            >
-              Gestión de Técnicos
-            </Typography>
-            <Typography variant='subtitle1' color='text.secondary'>
-              Administración del equipo de mantenimiento
+            <Typography variant='body2'>{row.original.email}</Typography>
+            <Typography variant='caption' color='text.secondary'>
+              {row.original.phone}
             </Typography>
           </Box>
-        </Box>
+        )
+      },
+      {
+        id: 'specialization',
+        header: 'Especialización',
+        size: 220,
+        accessorFn: (t) => `${t.specialization ?? ''} ${t.certifications ?? ''}`,
+        Cell: ({ row }) => (
+          <Box>
+            <Chip size='small' variant='outlined' label={row.original.specialization || 'No especificado'} sx={{ maxWidth: 200 }} />
+            {row.original.certifications && (
+              <Typography variant='caption' color='text.secondary' display='block' sx={{ mt: 0.5 }}>
+                Cert: {row.original.certifications}
+              </Typography>
+            )}
+          </Box>
+        )
+      },
+      {
+        id: 'status',
+        header: 'Estado',
+        size: 130,
+        accessorFn: (t) => getStatusLabel(t.status),
+        Cell: ({ row }) => (
+          <Chip
+            size='small'
+            variant='outlined'
+            label={getStatusLabel(row.original.status)}
+            color={row.original.status === 'active' ? 'success' : row.original.status === 'inactive' ? 'error' : 'warning'}
+          />
+        )
+      },
+      {
+        id: 'availability',
+        header: 'Disponibilidad',
+        size: 150,
+        accessorFn: (t) => (t.isAvailable ? 'Disponible' : 'No Disponible'),
+        Cell: ({ row }) => (
+          <Chip
+            size='small'
+            variant='outlined'
+            label={row.original.isAvailable ? 'Disponible' : 'No Disponible'}
+            color={row.original.isAvailable ? 'success' : 'warning'}
+          />
+        )
+      },
+      {
+        accessorKey: 'rating',
+        header: 'Rating',
+        size: 190,
+        Cell: ({ row }) => (
+          <Box display='flex' alignItems='center' gap={0.5}>
+            <Rating value={row.original.rating || 0} readOnly size='small' precision={0.1} />
+            <Typography variant='caption'>({row.original.rating?.toFixed(1) || 0})</Typography>
+          </Box>
+        )
+      },
+      {
+        id: 'workload',
+        header: 'Carga de trabajo',
+        size: 170,
+        accessorFn: (t) => t.workload,
+        Cell: ({ row }) => (
+          <Box>
+            <Typography variant='body2' fontWeight={600}>
+              {row.original.workload}/{row.original.maxWorkload}
+            </Typography>
+            {row.original.metrics && (
+              <Typography variant='caption' display='block' color='text.secondary'>
+                {row.original.metrics.workloadPercentage}% utilización
+              </Typography>
+            )}
+          </Box>
+        )
+      }
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  )
 
-        <Button
-          variant='contained'
-          startIcon={<Add />}
-          onClick={() => setDialogOpen(true)}
-          sx={{
-            backgroundColor: '#00A651',
-            borderRadius: '12px',
-            alignSelf: { xs: 'stretch', md: 'auto' },
-            '&:hover': {
-              backgroundColor: '#27672a'
-            }
-          }}
-        >
-          Agregar Técnico
-        </Button>
-      </Box>
+  return (
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title='Gestión de Técnicos'
+        subtitle='Administración del equipo de mantenimiento'
+        icon={<People />}
+        actions={
+          <Button variant='contained' startIcon={<Add />} onClick={() => setDialogOpen(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+            Agregar Técnico
+          </Button>
+        }
+      />
 
-      {/* Statistics Cards */}
       <Grid container spacing={3} mb={3}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card
-            sx={{
-              ...statCardSx
-            }}
-          >
-            <CardContent>
-              <Box
-                display='flex'
-                alignItems='center'
-                justifyContent='space-between'
-              >
-                <Box>
-                  <Typography
-                    variant='h4'
-                    sx={{
-                      fontWeight: 700,
-                          color: '#00bf75'
-                    }}
-                  >
-                    {technicians?.length || 0}
-                  </Typography>
-                  <Typography
-                    variant='body2'
-                    color='text.secondary'
-                    sx={{ fontWeight: 500 }}
-                  >
-                    Total Técnicos
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    backgroundColor: '#e8f7ef',
-                    borderRadius: '10px',
-                    p: 1.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <People sx={{ fontSize: 40, color: '#00A651' }} />
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
+        <Grid item xs={6} md={3}>
+          <LmsStatCard label='Total Técnicos' value={technicians?.length || 0} icon={<People />} tone='teal' />
         </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card
-            sx={{
-              ...statCardSx
-            }}
-          >
-            <CardContent>
-              <Box
-                display='flex'
-                alignItems='center'
-                justifyContent='space-between'
-              >
-                <Box>
-                  <Typography
-                    variant='h4'
-                    sx={{
-                      fontWeight: 700,
-                      color: '#4caf50'
-                    }}
-                  >
-                    {technicians?.filter(
-                      (t) => t.status === 'active' && t.isAvailable
-                    ).length || 0}
-                  </Typography>
-                  <Typography
-                    variant='body2'
-                    color='text.secondary'
-                    sx={{ fontWeight: 500 }}
-                  >
-                    Disponibles
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    backgroundColor: '#e8f7ef',
-                    borderRadius: '10px',
-                    p: 1.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <CheckCircle sx={{ fontSize: 40, color: '#00A651' }} />
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
+        <Grid item xs={6} md={3}>
+          <LmsStatCard
+            label='Disponibles'
+            value={technicians?.filter((t) => t.status === 'active' && t.isAvailable).length || 0}
+            icon={<CheckCircle />}
+            tone='green'
+          />
         </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card
-            sx={{
-              ...statCardSx
-            }}
-          >
-            <CardContent>
-              <Box
-                display='flex'
-                alignItems='center'
-                justifyContent='space-between'
-              >
-                <Box>
-                  <Typography
-                    variant='h4'
-                    sx={{
-                      fontWeight: 700,
-                      color: '#ff9800'
-                    }}
-                  >
-                    {technicians?.filter(
-                      (t) => t.status === 'active' && !t.isAvailable
-                    ).length || 0}
-                  </Typography>
-                  <Typography
-                    variant='body2'
-                    color='text.secondary'
-                    sx={{ fontWeight: 500 }}
-                  >
-                    No Disponibles
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    backgroundColor: '#fff4e5',
-                    borderRadius: '10px',
-                    p: 1.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <Work sx={{ fontSize: 40, color: '#b45309' }} />
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
+        <Grid item xs={6} md={3}>
+          <LmsStatCard
+            label='No Disponibles'
+            value={technicians?.filter((t) => t.status === 'active' && !t.isAvailable).length || 0}
+            icon={<Work />}
+            tone='orange'
+          />
         </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card
-            sx={{
-              ...statCardSx
-            }}
-          >
-            <CardContent>
-              <Box
-                display='flex'
-                alignItems='center'
-                justifyContent='space-between'
-              >
-                <Box>
-                  <Typography
-                    variant='h4'
-                    sx={{
-                      fontWeight: 700,
-                      color: '#ffc107'
-                    }}
-                  >
-                    {technicians && technicians.length > 0
-                      ? (
-                          technicians.reduce(
-                            (acc, t) => acc + (t.rating || 0),
-                            0
-                          ) / technicians.length
-                        ).toFixed(1)
-                      : '0.0'}
-                  </Typography>
-                  <Typography
-                    variant='body2'
-                    color='text.secondary'
-                    sx={{ fontWeight: 500 }}
-                  >
-                    Rating Promedio
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    backgroundColor: '#fff7db',
-                    borderRadius: '10px',
-                    p: 1.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <Star sx={{ fontSize: 40, color: '#b45309' }} />
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
+        <Grid item xs={6} md={3}>
+          <LmsStatCard
+            label='Rating Promedio'
+            value={technicians && technicians.length > 0
+              ? (technicians.reduce((acc, t) => acc + (t.rating || 0), 0) / technicians.length).toFixed(1)
+              : '0.0'}
+            icon={<Star />}
+            tone='blue'
+          />
         </Grid>
       </Grid>
 
       {/* Technicians Table */}
-      <Paper
-        sx={{
-          ...surfaceSx
-        }}
-      >
-        <Box p={3}>
-          <Box
-            display='flex'
-            justifyContent='space-between'
-            alignItems={{ xs: 'flex-start', md: 'center' }}
-            flexDirection={{ xs: 'column', md: 'row' }}
-            gap={1}
-            mb={3}
-          >
-            <Box>
-              <Typography
-                variant='h6'
-                gutterBottom
-                sx={{
-                  fontWeight: 600,
-                  color: '#0f172a',
-                  mb: 0.5
-                }}
-              >
-                Lista de Técnicos
-              </Typography>
-              <Typography variant='body2' sx={{ color: '#64748b' }}>
-                Tabla más sobria para revisar disponibilidad, carga y acciones sin ruido visual.
-              </Typography>
-            </Box>
-            <Chip
-              size='small'
-              label={`${technicians?.length || 0} registrados`}
-              sx={{
-                backgroundColor: '#e8f7ef',
-                color: '#00A651',
-                fontWeight: 600
-              }}
-            />
-          </Box>
-
-          {isLoading ? (
-            <Box display='flex' justifyContent='center' py={4}>
-              <Typography>Cargando técnicos...</Typography>
-            </Box>
-          ) : !technicians?.length ? (
-            <Alert severity='info'>
+      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+        <MaterialReactTable
+          {...purchaseTableStyle}
+          columns={columns}
+          data={technicians ?? []}
+          state={{ isLoading }}
+          getRowId={(row, index) => String(row.id ?? `skeleton-${index}`)}
+          enablePinning
+          initialState={{ columnPinning: { right: ['mrt-row-actions'] }, density: 'comfortable' }}
+          enableRowActions
+          displayColumnDefOptions={{ 'mrt-row-actions': { header: 'Acciones', size: 150 } }}
+          renderRowActions={({ row }) => {
+            const technician = row.original
+            return (
+              <Box display='flex' gap={0.5}>
+                <Tooltip title='Editar'>
+                  <IconButton size='small' color='primary' onClick={() => handleEdit(technician)}>
+                    <Edit />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title={technician.status === 'active' ? 'Desactivar' : 'Reactivar'}>
+                  <IconButton
+                    size='small'
+                    onClick={() => {
+                      setTechnicianToToggle(technician)
+                      setStatusConfirmDialogOpen(true)
+                    }}
+                    sx={{ color: technician.status === 'active' ? 'warning.main' : '#00BFA5' }}
+                  >
+                    {technician.status === 'active' ? <PowerSettingsNew /> : <RestoreFromTrash />}
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Eliminar'>
+                  <IconButton
+                    size='small'
+                    color='error'
+                    onClick={() => {
+                      setTechnicianToDelete(technician)
+                      setDeleteDialogOpen(true)
+                    }}
+                  >
+                    <Delete />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            )
+          }}
+          renderEmptyRowsFallback={() => (
+            <Alert severity='info' sx={{ m: 2 }}>
               No hay técnicos registrados. Agregue el primer técnico.
             </Alert>
-          ) : (
-            <TableContainer sx={{ overflowX: 'auto' }}>
-              <Table sx={{ minWidth: 980 }}>
-                <TableHead>
-                  <TableRow>
-                    {[
-                      'Técnico',
-                      'Contacto',
-                      'Especialización',
-                      'Estado',
-                      'Disponibilidad',
-                      'Rating',
-                      'Carga de Trabajo',
-                      'Acciones'
-                    ].map((label) => (
-                      <TableCell
-                        key={label}
-                        sx={{
-                          color: '#64748b',
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.04em',
-                          borderBottom: '1px solid #e5e7eb',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        {label}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {technicians.map((technician) => (
-                    <TableRow
-                      key={technician.id}
-                      hover
-                      sx={{
-                        '& td': {
-                          borderBottom: '1px solid #eef2f7',
-                          py: 2
-                        }
-                      }}
-                    >
-                      <TableCell>
-                        <Box display='flex' alignItems='center' gap={2}>
-                          <Avatar
-                            sx={{
-                              bgcolor: '#e8f7ef',
-                              color: '#00A651',
-                              fontWeight: 700
-                            }}
-                          >
-                            {getInitials(technician.name)}
-                          </Avatar>
-                          <Box>
-                            <Typography variant='body1' fontWeight={600}>
-                              {technician.name}
-                            </Typography>
-                            <Typography
-                              variant='caption'
-                              color='text.secondary'
-                            >
-                              ID: {technician.id}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </TableCell>
-
-                      <TableCell>
-                        <Typography variant='body2'>
-                          {technician.email}
-                        </Typography>
-                        <Typography variant='caption' color='text.secondary'>
-                          {technician.phone}
-                        </Typography>
-                      </TableCell>
-
-                      <TableCell>
-                        <Chip
-                          size='small'
-                          label={technician.specialization || 'No especificado'}
-                          sx={{
-                            maxWidth: 220,
-                            backgroundColor: '#f8fafc',
-                            color: '#334155',
-                            border: '1px solid #e5e7eb',
-                            '& .MuiChip-label': {
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
-                            }
-                          }}
-                        />
-                        {technician.certifications && (
-                          <Typography
-                            variant='caption'
-                            color='text.secondary'
-                            display='block'
-                            sx={{ mt: 0.75 }}
-                          >
-                            Cert: {technician.certifications}
-                          </Typography>
-                        )}
-                      </TableCell>
-
-                      <TableCell>
-                        <Chip
-                          label={getStatusLabel(technician.status)}
-                          size='small'
-                          sx={{
-                            backgroundColor:
-                              technician.status === 'active'
-                                ? '#e8f7ef'
-                                : technician.status === 'inactive'
-                                  ? '#fef2f2'
-                                  : '#fff7db',
-                            color:
-                              technician.status === 'active'
-                                ? '#00A651'
-                                : technician.status === 'inactive'
-                                  ? '#b91c1c'
-                                  : '#b45309',
-                            fontWeight: 600
-                          }}
-                        />
-                      </TableCell>
-
-                      <TableCell>
-                        <Chip
-                          label={
-                            technician.isAvailable
-                              ? 'Disponible'
-                              : 'No Disponible'
-                          }
-                          size='small'
-                          sx={{
-                            backgroundColor: technician.isAvailable
-                              ? '#ecfdf5'
-                              : '#fff7ed',
-                            color: technician.isAvailable ? '#059669' : '#c2410c',
-                            fontWeight: 600
-                          }}
-                        />
-                      </TableCell>
-
-                      <TableCell>
-                        <Box display='flex' alignItems='center' gap={0.5}>
-                          <Rating
-                            value={technician.rating || 0}
-                            readOnly
-                            size='small'
-                            precision={0.1}
-                          />
-                          <Typography variant='caption'>
-                            ({technician.rating?.toFixed(1) || 0})
-                          </Typography>
-                        </Box>
-                      </TableCell>
-
-                      <TableCell>
-                        <Typography variant='body2' fontWeight={600}>
-                          {technician.workload}/{technician.maxWorkload}
-                        </Typography>
-                        <Typography variant='caption' color='text.secondary'>
-                          Actual/Máximo
-                        </Typography>
-                        {technician.metrics && (
-                          <Typography
-                            variant='caption'
-                            display='block'
-                            color='text.secondary'
-                          >
-                            {technician.metrics.workloadPercentage}% utilización
-                          </Typography>
-                        )}
-                      </TableCell>
-
-                      <TableCell>
-                        <Tooltip title='Editar'>
-                          <IconButton
-                            size='small'
-                            onClick={() => handleEdit(technician)}
-                            sx={{
-                              color: '#0ea5e9',
-                              backgroundColor: '#f8fafc',
-                              border: '1px solid #e5e7eb',
-                              mr: 0.5,
-                              '&:hover': { backgroundColor: '#eff6ff' }
-                            }}
-                          >
-                            <Edit />
-                          </IconButton>
-                        </Tooltip>
-
-                        <Tooltip
-                          title={
-                            technician.status === 'active'
-                              ? 'Desactivar'
-                              : 'Reactivar'
-                          }
-                        >
-                          <IconButton
-                            size='small'
-                            onClick={() => {
-                              setTechnicianToToggle(technician)
-                              setStatusConfirmDialogOpen(true)
-                            }}
-                            sx={{
-                              color:
-                                technician.status === 'active' ? '#d97706' : '#00A651',
-                              backgroundColor: '#f8fafc',
-                              border: '1px solid #e5e7eb',
-                              mr: 0.5,
-                              '&:hover': { backgroundColor: '#fff7ed' }
-                            }}
-                          >
-                            {technician.status === 'active' ? (
-                              <PowerSettingsNew />
-                            ) : (
-                              <RestoreFromTrash />
-                            )}
-                          </IconButton>
-                        </Tooltip>
-
-                        <Tooltip title='Eliminar'>
-                          <IconButton
-                            size='small'
-                            onClick={() => {
-                              setTechnicianToDelete(technician)
-                              setDeleteDialogOpen(true)
-                            }}
-                            sx={{
-                              color: '#ef4444',
-                              backgroundColor: '#f8fafc',
-                              border: '1px solid #e5e7eb',
-                              '&:hover': { backgroundColor: '#fef2f2' }
-                            }}
-                          >
-                            <Delete />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
           )}
-        </Box>
+        />
       </Paper>
 
       {/* Add/Edit Technician Dialog */}

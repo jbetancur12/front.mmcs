@@ -24,6 +24,12 @@ import {
 import {
   ArrowBack,
   Assessment,
+  Assignment,
+  AttachMoney,
+  CheckCircle,
+  FolderOpen,
+  Schedule,
+  SentimentSatisfied,
   Download,
   Engineering,
   Refresh
@@ -35,6 +41,8 @@ import {
 } from '../../hooks/useMaintenance'
 import { MaintenanceAnalyticsFilters } from '../../types/maintenance'
 
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard, { LmsStatTone } from 'src/Components/lms/admin/LmsStatCard'
 const getDefaultDateRange = () => {
   const today = new Date()
   const start = new Date()
@@ -52,6 +60,9 @@ const formatCurrency = (value: number) =>
     currency: 'COP',
     maximumFractionDigits: 0
   }).format(value || 0)
+
+const KPI_TONES: LmsStatTone[] = ['teal', 'blue', 'green', 'orange', 'red', 'blue']
+const KPI_ICONS = [<Assignment />, <FolderOpen />, <CheckCircle />, <Schedule />, <AttachMoney />, <SentimentSatisfied />]
 
 const formatHours = (value: number) => {
   if (!value) return '0 h'
@@ -162,74 +173,25 @@ const MaintenanceAnalytics: React.FC = () => {
     }
 
   return (
-    <Container maxWidth={false} sx={{ py: { xs: 2, sm: 3 }, px: { xs: 2, sm: 3 } }}>
-      <Box
-        display='flex'
-        flexDirection={{ xs: 'column', md: 'row' }}
-        justifyContent='space-between'
-        alignItems={{ xs: 'flex-start', md: 'center' }}
-        gap={2}
-        mb={3}
-        sx={{
-          ...surfaceSx,
-          p: { xs: 2, sm: 3 }
-        }}
-      >
-        <Box display='flex' alignItems='center' gap={2}>
-          <Box
-            sx={{
-              background: 'linear-gradient(135deg, #0f766e 0%, #00A651 100%)',
-              borderRadius: '12px',
-              p: 1.5,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <Assessment sx={{ color: '#fff', fontSize: 30 }} />
-          </Box>
-          <Box>
-            <Typography variant='h4' sx={{ fontWeight: 700, color: '#0f172a' }}>
-              Analíticas de Mantenimiento
-            </Typography>
-            <Typography variant='body1' color='text.secondary'>
-              Desempeño por técnico, volumen de tickets y métricas operativas.
-            </Typography>
-          </Box>
-        </Box>
-
-        <Stack direction='row' spacing={1} flexWrap='wrap'>
-          <Button
-            variant='outlined'
-            startIcon={<ArrowBack />}
-            onClick={() => navigate('/maintenance')}
-          >
-            Volver
-          </Button>
-          <Button
-            variant='outlined'
-            startIcon={<Refresh />}
-            onClick={() => refetch()}
-            disabled={isFetching}
-          >
-            Actualizar
-          </Button>
-          <Button
-            variant='contained'
-            startIcon={<Download />}
-            onClick={exportToExcel}
-            disabled={!analytics}
-            sx={{
-              backgroundColor: '#00A651',
-              '&:hover': {
-                backgroundColor: '#27672a'
-              }
-            }}
-          >
-            Descargar Excel
-          </Button>
-        </Stack>
-      </Box>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title='Analíticas de Mantenimiento'
+        subtitle='Desempeño por técnico, volumen de tickets y métricas operativas.'
+        icon={<Assessment />}
+        actions={
+          <>
+            <Button variant='outlined' startIcon={<ArrowBack />} onClick={() => navigate('/maintenance')} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+              Volver
+            </Button>
+            <Button variant='outlined' startIcon={<Refresh />} onClick={() => refetch()} disabled={isFetching} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+              Actualizar
+            </Button>
+            <Button variant='contained' startIcon={<Download />} onClick={exportToExcel} disabled={!analytics} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+              Descargar Excel
+            </Button>
+          </>
+        }
+      />
 
       <Paper sx={{ ...surfaceSx, p: { xs: 2, sm: 3 }, mb: 3 }}>
         <Grid container spacing={2}>
@@ -288,7 +250,7 @@ const MaintenanceAnalytics: React.FC = () => {
         <Alert severity='info'>Cargando analíticas de mantenimiento...</Alert>
       ) : (
         <>
-          <Grid container spacing={2.5} mb={3}>
+          <Grid container spacing={3} mb={3}>
             {[
               {
                 title: 'Tickets Totales',
@@ -320,21 +282,16 @@ const MaintenanceAnalytics: React.FC = () => {
                 value: analytics.overview.avgCustomerSatisfaction.toFixed(2),
                 hint: 'Escala 1 a 5'
               }
-            ].map((item) => (
-              <Grid item xs={12} sm={6} lg={4} xl={2} key={item.title}>
-                <Card sx={surfaceSx}>
-                  <CardContent>
-                    <Typography variant='overline' sx={{ color: '#64748b', fontWeight: 700 }}>
-                      {item.title}
-                    </Typography>
-                    <Typography variant='h4' sx={{ color: '#0f172a', fontWeight: 700, mt: 0.5 }}>
-                      {item.value}
-                    </Typography>
-                    <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
-                      {item.hint}
-                    </Typography>
-                  </CardContent>
-                </Card>
+            ].map((item, i) => (
+              <Grid item xs={12} sm={6} md={4} key={item.title}>
+                <LmsStatCard
+                  label={item.title}
+                  value={item.value}
+                  caption={item.hint}
+                  icon={KPI_ICONS[i]}
+                  tone={KPI_TONES[i]}
+                  compact
+                />
               </Grid>
             ))}
           </Grid>

@@ -1,31 +1,19 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   Box,
   Paper,
   Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Chip,
   IconButton,
-  Collapse,
+  Container,
   Button,
   ButtonGroup,
-  CircularProgress,
   Alert,
   Tooltip,
-  TablePagination,
-  Card,
-  CardContent,
   Grid,
   Divider
 } from '@mui/material'
 import {
-  ExpandMore,
-  ExpandLess,
   CheckCircle,
   Cancel,
   AttachMoney,
@@ -36,7 +24,11 @@ import { useQuery, useMutation, useQueryClient } from 'react-query'
 import { toast } from 'react-toastify'
 import useAxiosPrivate from '../../utils/use-axios-private'
 
+import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
+import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 import { PERMISSIONS } from 'src/constants/permissions'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import { useCan } from '@utils/functions'
 interface MaintenanceTicketCost {
   id: string
@@ -84,7 +76,6 @@ const MaintenanceBilling: React.FC = () => {
   const [filter, setFilter] = useState<FilterType>('not_invoiced')
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(20)
-  const [expandedRow, setExpandedRow] = useState<string | null>(null)
 
   const queryClient = useQueryClient()
   const canPerformActions = useCan(PERMISSIONS.MAINTENANCE_INVOICING_MANAGE)
@@ -137,26 +128,11 @@ const MaintenanceBilling: React.FC = () => {
     }
   })
 
-  const handleToggleExpand = (ticketId: string) => {
-    setExpandedRow(expandedRow === ticketId ? null : ticketId)
-  }
-
   const handleToggleInvoice = (ticketId: string, currentStatus: boolean) => {
     toggleInvoiceMutation.mutate({
       ticketId,
       isInvoiced: !currentStatus
     })
-  }
-
-  const handleChangePage = (_event: unknown, newPage: number) => {
-    setPage(newPage)
-  }
-
-  const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
   }
 
   const formatCurrency = (value: number) => {
@@ -196,6 +172,97 @@ const MaintenanceBilling: React.FC = () => {
     return `${hours} h ${remainingMinutes} min`
   }
 
+  const columns = useMemo<MRT_ColumnDef<BillingTicket>[]>(
+    () => [
+      {
+        accessorKey: 'ticketCode',
+        header: 'Ticket',
+        size: 120,
+        Cell: ({ row }) => (
+          <Typography variant='body2' fontWeight={600}>
+            {row.original.ticketCode}
+          </Typography>
+        )
+      },
+      {
+        accessorKey: 'customerName',
+        header: 'Cliente',
+        size: 180,
+        Cell: ({ row }) => (
+          <Box sx={{ maxWidth: 170, overflowWrap: 'anywhere' }}>
+            <Typography variant='body2'>{row.original.customerName}</Typography>
+            <Typography variant='caption' color='text.secondary'>
+              {row.original.customerEmail}
+            </Typography>
+          </Box>
+        )
+      },
+      {
+        accessorKey: 'equipmentType',
+        header: 'Equipo',
+        size: 170,
+        Cell: ({ row }) => (
+          <Box sx={{ maxWidth: 160, overflowWrap: 'anywhere' }}>
+            <Typography variant='body2'>{row.original.equipmentType}</Typography>
+            <Typography variant='caption' color='text.secondary'>
+              {row.original.equipmentBrand} {row.original.equipmentModel}
+            </Typography>
+          </Box>
+        )
+      },
+      {
+        accessorKey: 'actualCompletionDate',
+        header: 'Completado',
+        size: 120,
+        Cell: ({ row }) => (
+          <Typography variant='body2'>
+            {formatDate(row.original.actualCompletionDate)}
+          </Typography>
+        )
+      },
+      {
+        accessorKey: 'totalCost',
+        header: 'Total',
+        size: 120,
+        Cell: ({ row }) => {
+          const ticket = row.original
+          if (ticket.totalCost > 0) {
+            return (
+              <Typography variant='body2' fontWeight={700} color='#00897B'>
+                {formatCurrency(ticket.totalCost)}
+              </Typography>
+            )
+          }
+          if (ticket.technicianWorkMinutes) {
+            return (
+              <Typography variant='caption' color='text.secondary' sx={{ fontStyle: 'italic' }}>
+                Solo tiempo técnico
+              </Typography>
+            )
+          }
+          return (
+            <Typography variant='body2' fontWeight={700} color='#9ca3af'>
+              $0
+            </Typography>
+          )
+        }
+      },
+      {
+        accessorKey: 'isInvoiced',
+        header: 'Estado',
+        size: 170,
+        Cell: ({ row }) =>
+          row.original.isInvoiced ? (
+            <Chip label='Facturado' color='success' size='small' variant='outlined' icon={<CheckCircle />} />
+          ) : (
+            <Chip label='Sin facturar' color='error' size='small' variant='outlined' icon={<Cancel />} />
+          )
+      }
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  )
+
   if (error) {
     return (
       <Alert severity='error' sx={{ m: 3 }}>
@@ -205,76 +272,29 @@ const MaintenanceBilling: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Header */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant='h4' fontWeight={700} gutterBottom>
-          Control de Facturación
-        </Typography>
-        <Typography variant='body2' color='text.secondary'>
-          Gestión y seguimiento de facturación de servicios de mantenimiento
-        </Typography>
-      </Box>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title='Control de Facturación'
+        subtitle='Gestión y seguimiento de facturación de servicios de mantenimiento'
+        icon={<Receipt />}
+      />
 
-      {/* Summary Cards */}
       {data && (
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12} md={4}>
-            <Card elevation={2}>
-              <CardContent>
-                <Box display='flex' alignItems='center' gap={2}>
-                  <Receipt sx={{ fontSize: 40, color: '#3b82f6' }} />
-                  <Box>
-                    <Typography variant='body2' color='text.secondary'>
-                      Total Tickets
-                    </Typography>
-                    <Typography variant='h5' fontWeight={700}>
-                      {data.summary.totalTickets}
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={4}>
+            <LmsStatCard label='Total Tickets' value={data.summary.totalTickets} icon={<Receipt />} tone='blue' />
           </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Card elevation={2}>
-              <CardContent>
-                <Box display='flex' alignItems='center' gap={2}>
-                  <AttachMoney sx={{ fontSize: 40, color: '#10b981' }} />
-                  <Box>
-                    <Typography variant='body2' color='text.secondary'>
-                      Monto Total
-                    </Typography>
-                    <Typography variant='h5' fontWeight={700} color='#10b981'>
-                      {formatCurrency(data.summary.totalAmount)}
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
+          <Grid item xs={12} sm={4}>
+            <LmsStatCard label='Monto Total' value={formatCurrency(data.summary.totalAmount)} icon={<AttachMoney />} tone='green' compact />
           </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Card elevation={2}>
-              <CardContent>
-                <Box display='flex' alignItems='center' gap={2}>
-                  <Warning sx={{ fontSize: 40, color: '#f59e0b' }} />
-                  <Box>
-                    <Typography variant='body2' color='text.secondary'>
-                      Filtro Activo
-                    </Typography>
-                    <Typography variant='h6' fontWeight={600}>
-                      {filter === 'not_invoiced'
-                        ? 'Sin Facturar'
-                        : filter === 'invoiced'
-                          ? 'Facturados'
-                          : 'Todos'}
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
+          <Grid item xs={12} sm={4}>
+            <LmsStatCard
+              label='Filtro Activo'
+              value={filter === 'not_invoiced' ? 'Sin Facturar' : filter === 'invoiced' ? 'Facturados' : 'Todos'}
+              icon={<Warning />}
+              tone='orange'
+              compact
+            />
           </Grid>
         </Grid>
       )}
@@ -332,308 +352,173 @@ const MaintenanceBilling: React.FC = () => {
         </ButtonGroup>
       </Paper>
 
-      {/* Table */}
-      <TableContainer component={Paper} elevation={2}>
-        <Table>
-          <TableHead sx={{ backgroundColor: '#f3f4f6' }}>
-            <TableRow>
-              <TableCell width={50} />
-              <TableCell>
-                <Typography fontWeight={700}>Ticket</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography fontWeight={700}>Cliente</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography fontWeight={700}>Equipo</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography fontWeight={700}>Fecha Completado</Typography>
-              </TableCell>
-              <TableCell align='right'>
-                <Typography fontWeight={700}>Total</Typography>
-              </TableCell>
-              <TableCell align='center'>
-                <Typography fontWeight={700}>Estado</Typography>
-              </TableCell>
-              <TableCell align='center'>
-                <Typography fontWeight={700}>Acciones</Typography>
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={8} align='center' sx={{ py: 8 }}>
-                  <CircularProgress />
-                  <Typography
-                    variant='body2'
-                    color='text.secondary'
-                    sx={{ mt: 2 }}
-                  >
-                    Cargando tickets...
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : data?.tickets.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} align='center' sx={{ py: 8 }}>
-                    <Typography variant='h6' color='text.secondary'>
-                      No hay tickets completados para mostrar
-                    </Typography>
-                    <Typography
-                      variant='body2'
-                      color='text.secondary'
-                      sx={{ mt: 1 }}
-                    >
-                      {filter === 'not_invoiced'
-                        ? 'No hay tickets pendientes de facturar'
-                        : filter === 'invoiced'
-                          ? 'No hay tickets facturados'
-                          : 'No hay tickets completados'}
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              data?.tickets.map((ticket) => (
-                <React.Fragment key={ticket.id}>
-                  {/* Main Row */}
-                  <TableRow hover>
-                    <TableCell>
-                      <IconButton
-                        size='small'
-                        onClick={() => handleToggleExpand(ticket.id)}
-                      >
-                        {expandedRow === ticket.id ? (
-                          <ExpandLess />
-                        ) : (
-                          <ExpandMore />
-                        )}
-                      </IconButton>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant='body2' fontWeight={600}>
-                        {ticket.ticketCode}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant='body2'>
-                        {ticket.customerName}
-                      </Typography>
-                      <Typography variant='caption' color='text.secondary'>
-                        {ticket.customerEmail}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant='body2'>
-                        {ticket.equipmentType}
-                      </Typography>
-                      <Typography variant='caption' color='text.secondary'>
-                        {ticket.equipmentBrand} {ticket.equipmentModel}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant='body2'>
-                        {formatDate(ticket.actualCompletionDate)}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align='right'>
-                      {ticket.totalCost > 0 ? (
-                        <Typography variant='body1' fontWeight={700} color='#10b981'>
-                          {formatCurrency(ticket.totalCost)}
-                        </Typography>
-                      ) : ticket.technicianWorkMinutes ? (
-                        <Typography variant='caption' color='text.secondary' sx={{ fontStyle: 'italic' }}>
-                          Solo tiempo técnico
-                        </Typography>
-                      ) : (
-                        <Typography variant='body1' fontWeight={700} color='#9ca3af'>
-                          $0
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell align='center'>
-                      {ticket.isInvoiced ? (
-                        <Chip
-                          label='Facturado'
-                          color='success'
-                          size='small'
-                          icon={<CheckCircle />}
-                        />
-                      ) : (
-                        <Chip
-                          label='Sin Facturar'
-                          color='error'
-                          size='small'
-                          icon={<Cancel />}
-                        />
-                      )}
-                    </TableCell>
-                    <TableCell align='center'>
-                      <Tooltip
-                        title={
-                          ticket.isInvoiced
-                            ? 'Marcar como no facturado'
-                            : 'Marcar como facturado'
-                        }
-                      >
-                        <span>
-                          <IconButton
-                            size='small'
-                            onClick={() =>
-                              handleToggleInvoice(ticket.id, ticket.isInvoiced)
-                            }
-                            disabled={
-                              toggleInvoiceMutation.isLoading ||
-                              !canPerformActions
-                            }
-                            sx={{
-                              color: ticket.isInvoiced ? '#dc2626' : '#10b981',
-                              '&:hover': {
-                                backgroundColor: ticket.isInvoiced
-                                  ? 'rgba(220, 38, 38, 0.1)'
-                                  : 'rgba(16, 185, 129, 0.1)'
-                              }
-                            }}
-                          >
-                            {ticket.isInvoiced ? <Cancel /> : <CheckCircle />}
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-
-                  {/* Expanded Row - Cost Details */}
-                  <TableRow>
-                    <TableCell
-                      colSpan={8}
-                      sx={{ py: 0, backgroundColor: '#fafafa' }}
-                    >
-                      <Collapse
-                        in={expandedRow === ticket.id}
-                        timeout='auto'
-                        unmountOnExit
-                      >
-                        <Box sx={{ py: 3, px: 2 }}>
-                          <Typography
-                            variant='h6'
-                            gutterBottom
-                            fontWeight={600}
-                          >
-                            Desglose de Costos
-                          </Typography>
-                          <Typography
-                            variant='body2'
-                            color='text.secondary'
-                            sx={{ mb: 1 }}
-                          >
-                            Tiempo técnico registrado:{' '}
-                            <strong>
-                              {formatWorkMinutes(ticket.technicianWorkMinutes)}
-                            </strong>
-                          </Typography>
-                          <Divider sx={{ mb: 2 }} />
-                          {ticket.costs.length === 0 ? (
-                            <Alert severity='info' sx={{ mb: 2 }}>
-                              Sin costos de materiales — Este servicio no registró costos de materiales. El tiempo técnico registrado queda como referencia para la facturación externa.
-                            </Alert>
-                          ) : (
-                            <>
-                          <Grid container spacing={2}>
-                            {ticket.costs.map((cost) => (
-                              <Grid item xs={12} sm={6} md={4} key={cost.id}>
-                                <Paper
-                                  elevation={1}
-                                  sx={{
-                                    p: 2,
-                                    border: '1px solid #e5e7eb',
-                                    borderRadius: '8px'
-                                  }}
-                                >
-                                  <Typography
-                                    variant='subtitle2'
-                                    fontWeight={700}
-                                    gutterBottom
-                                  >
-                                    {cost.name}
-                                  </Typography>
-                                  {cost.description && (
-                                    <Typography
-                                      variant='caption'
-                                      color='text.secondary'
-                                      display='block'
-                                      sx={{ mb: 1 }}
-                                    >
-                                      {cost.description}
-                                    </Typography>
-                                  )}
-                                  <Typography
-                                    variant='h6'
-                                    fontWeight={700}
-                                    color='#10b981'
-                                  >
-                                    {formatCurrency(cost.amount)}
-                                  </Typography>
-                                </Paper>
-                              </Grid>
-                            ))}
-                          </Grid>
-                          <Box
-                            sx={{
-                              mt: 3,
-                              p: 2,
-                              backgroundColor: '#10b981',
-                              borderRadius: '8px',
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center'
-                            }}
-                          >
-                            <Typography
-                              variant='h6'
-                              fontWeight={700}
-                              color='white'
-                            >
-                              Total
-                            </Typography>
-                            <Typography
-                              variant='h5'
-                              fontWeight={700}
-                              color='white'
-                            >
-                              {formatCurrency(ticket.totalCost)}
-                            </Typography>
-                          </Box>
-                            </>
-                          )}
-                        </Box>
-                      </Collapse>
-                    </TableCell>
-                  </TableRow>
-                </React.Fragment>
-              ))
-            )}
-          </TableBody>
-        </Table>
-
-        {/* Pagination */}
-        {data && (
-          <TablePagination
-            component='div'
-            count={data.pagination.totalItems}
-            page={page}
-            onPageChange={handleChangePage}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            rowsPerPageOptions={[10, 20, 50, 100]}
-            labelRowsPerPage='Filas por página'
-            labelDisplayedRows={({ from, to, count }) =>
-              `${from}-${to} de ${count}`
+      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+        <MaterialReactTable
+          {...purchaseTableStyle}
+          columns={columns}
+          data={data?.tickets ?? []}
+          manualPagination
+          rowCount={data?.pagination.totalItems ?? 0}
+          state={{
+            isLoading,
+            pagination: { pageIndex: page, pageSize: rowsPerPage }
+          }}
+          onPaginationChange={(updater) => {
+            const next =
+              typeof updater === 'function'
+                ? updater({ pageIndex: page, pageSize: rowsPerPage })
+                : updater
+            if (next.pageSize !== rowsPerPage) {
+              setRowsPerPage(next.pageSize)
+              setPage(0)
+            } else {
+              setPage(next.pageIndex)
             }
-          />
-        )}
-      </TableContainer>
-    </Box>
+          }}
+          muiTablePaginationProps={{ rowsPerPageOptions: [10, 20, 50, 100] }}
+          enableGlobalFilter={false}
+          enableColumnFilters={false}
+          enableDensityToggle={false}
+          enableHiding={false}
+          enableSorting={false}
+          enableColumnActions={false}
+          enablePinning
+          getRowId={(row, index) => String(row.id ?? `skeleton-${index}`)}
+          initialState={{ columnPinning: { right: ['mrt-row-actions'] } }}
+          enableRowActions
+          displayColumnDefOptions={{
+            'mrt-row-actions': { header: 'Acciones', size: 90 },
+            'mrt-row-expand': { header: '', size: 50 }
+          }}
+          renderRowActions={({ row }) => {
+            const ticket = row.original
+            return (
+              <Tooltip title={ticket.isInvoiced ? 'Marcar como no facturado' : 'Marcar como facturado'}>
+                <span>
+                  <IconButton
+                    size='small'
+                    onClick={() => handleToggleInvoice(ticket.id, ticket.isInvoiced)}
+                    disabled={toggleInvoiceMutation.isLoading || !canPerformActions}
+                    sx={{ color: ticket.isInvoiced ? 'error.main' : '#00BFA5' }}
+                  >
+                    {ticket.isInvoiced ? <Cancel /> : <CheckCircle />}
+                  </IconButton>
+                </span>
+              </Tooltip>
+            )
+          }}
+          renderDetailPanel={({ row }) => (
+            <Box sx={{ py: 3, px: 2 }}>
+              <Typography
+                variant='h6'
+                gutterBottom
+                fontWeight={600}
+              >
+                Desglose de Costos
+              </Typography>
+              <Typography
+                variant='body2'
+                color='text.secondary'
+                sx={{ mb: 1 }}
+              >
+                Tiempo técnico registrado:{' '}
+                <strong>
+                  {formatWorkMinutes(row.original.technicianWorkMinutes)}
+                </strong>
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              {row.original.costs.length === 0 ? (
+                <Alert severity='info' sx={{ mb: 2 }}>
+                  Sin costos de materiales — Este servicio no registró costos de materiales. El tiempo técnico registrado queda como referencia para la facturación externa.
+                </Alert>
+              ) : (
+                <>
+              <Grid container spacing={2}>
+                {row.original.costs.map((cost) => (
+                  <Grid item xs={12} sm={6} md={4} key={cost.id}>
+                    <Paper
+                      elevation={1}
+                      sx={{
+                        p: 2,
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px'
+                      }}
+                    >
+                      <Typography
+                        variant='subtitle2'
+                        fontWeight={700}
+                        gutterBottom
+                      >
+                        {cost.name}
+                      </Typography>
+                      {cost.description && (
+                        <Typography
+                          variant='caption'
+                          color='text.secondary'
+                          display='block'
+                          sx={{ mb: 1 }}
+                        >
+                          {cost.description}
+                        </Typography>
+                      )}
+                      <Typography
+                        variant='h6'
+                        fontWeight={700}
+                        color='#10b981'
+                      >
+                        {formatCurrency(cost.amount)}
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                ))}
+              </Grid>
+              <Box
+                sx={{
+                  mt: 3,
+                  p: 2,
+                  backgroundColor: '#10b981',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <Typography
+                  variant='h6'
+                  fontWeight={700}
+                  color='white'
+                >
+                  Total
+                </Typography>
+                <Typography
+                  variant='h5'
+                  fontWeight={700}
+                  color='white'
+                >
+                  {formatCurrency(row.original.totalCost)}
+                </Typography>
+              </Box>
+                </>
+              )}
+            </Box>
+          )}
+          renderEmptyRowsFallback={() => (
+            <Box sx={{ py: 8, textAlign: 'center' }}>
+              <Typography variant='h6' color='text.secondary'>
+                No hay tickets completados para mostrar
+              </Typography>
+              <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
+                {filter === 'not_invoiced'
+            ? 'No hay tickets pendientes de facturar'
+            : filter === 'invoiced'
+              ? 'No hay tickets facturados'
+              : 'No hay tickets completados'}
+              </Typography>
+            </Box>
+          )}
+        />
+      </Paper>
+    </Container>
   )
 }
 

@@ -6,6 +6,7 @@ import {
   Box,
   Button,
   Chip,
+  Container,
   Dialog,
   DialogActions,
   DialogContent,
@@ -23,6 +24,8 @@ import {
 import {
   Add,
   ArrowBack,
+  Assignment,
+  CheckCircleOutline,
   DeleteOutline,
   EditOutlined,
   PlaylistAddCheck
@@ -42,6 +45,8 @@ import type {
   MaintenanceToolEquipmentSummary
 } from '../../types/maintenance'
 
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 const surfaceSx = {
   borderRadius: '16px',
   border: '1px solid #e5e7eb',
@@ -240,68 +245,41 @@ const MaintenanceProtocols = () => {
   }
 
   return (
-    <Box p={{ xs: 2, md: 3 }}>
-      <Paper sx={{ ...surfaceSx, p: { xs: 2, md: 3 }, mb: 3 }}>
-        <Stack
-          direction={{ xs: 'column', md: 'row' }}
-          alignItems={{ xs: 'flex-start', md: 'center' }}
-          justifyContent='space-between'
-          spacing={2}
-        >
-          <Stack direction='row' spacing={2} alignItems='center'>
-            <IconButton onClick={() => navigate('/maintenance')}>
-              <ArrowBack />
-            </IconButton>
-            <Box>
-              <Typography variant='h4' sx={{ fontWeight: 800 }}>
-                Protocolos de Mantenimiento
-              </Typography>
-              <Typography variant='body1' color='text.secondary'>
-                Catálogo editable de protocolos para el reporte técnico.
-              </Typography>
-            </Box>
-          </Stack>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <Button
+        startIcon={<ArrowBack />}
+        onClick={() => navigate('/maintenance')}
+        sx={{ mb: 1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
+      >
+        Volver al dashboard
+      </Button>
 
-          <Button
-            variant='contained'
-            startIcon={<Add />}
-            onClick={openCreateDialog}
-          >
+      <LmsPageHeader
+        title='Protocolos de Mantenimiento'
+        subtitle='Catálogo editable de protocolos para el reporte técnico.'
+        icon={<PlaylistAddCheck />}
+        actions={
+          <Button variant='contained' startIcon={<Add />} onClick={openCreateDialog} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
             Nuevo protocolo
           </Button>
-        </Stack>
-      </Paper>
+        }
+      />
 
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ ...surfaceSx, p: 2.5 }}>
-            <Typography variant='overline' color='text.secondary'>
-              Total protocolos
-            </Typography>
-            <Typography variant='h4' sx={{ fontWeight: 800 }}>
-              {protocols.length}
-            </Typography>
-          </Paper>
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Total protocolos' value={protocols.length} icon={<PlaylistAddCheck />} tone='teal' />
         </Grid>
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ ...surfaceSx, p: 2.5 }}>
-            <Typography variant='overline' color='text.secondary'>
-              Activos
-            </Typography>
-            <Typography variant='h4' sx={{ fontWeight: 800 }}>
-              {activeCount}
-            </Typography>
-          </Paper>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Activos' value={activeCount} icon={<CheckCircleOutline />} tone='green' />
         </Grid>
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ ...surfaceSx, p: 2.5 }}>
-            <Typography variant='overline' color='text.secondary'>
-              Uso esperado
-            </Typography>
-            <Typography variant='body1' sx={{ fontWeight: 600 }}>
-              Disponibles como presets del reporte técnico
-            </Typography>
-          </Paper>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard
+            label='Uso esperado'
+            value='Presets'
+            caption='Disponibles como presets del reporte técnico'
+            icon={<Assignment />}
+            tone='blue'
+          />
         </Grid>
       </Grid>
 
@@ -812,7 +790,7 @@ const MaintenanceProtocols = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Container>
   )
 }
 

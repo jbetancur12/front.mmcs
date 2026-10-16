@@ -6,8 +6,6 @@ import {
   Paper,
   Typography,
   Box,
-  Card,
-  CardContent,
   IconButton,
   Tooltip,
   Button,
@@ -69,6 +67,8 @@ import MaintenanceTicketCard from '../../Components/Maintenance/MaintenanceTicke
 import MaintenanceFiltersComponent from '../../Components/Maintenance/MaintenanceFilters'
 import MaintenanceStatusBadge from '../../Components/Maintenance/MaintenanceStatusBadge'
 import MaintenancePriorityBadge from '../../Components/Maintenance/MaintenancePriorityBadge'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import StatCardSkeleton from '../../Components/Maintenance/StatCardSkeleton'
 import TicketCardSkeleton from '../../Components/Maintenance/TicketCardSkeleton'
 import useMaintenanceWebSocket from '../../hooks/useMaintenanceWebSocket'
@@ -129,15 +129,6 @@ const MaintenanceDashboard: React.FC = () => {
     borderRadius: '14px',
     border: '1px solid #e5e7eb',
     boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
-  }
-
-  const statCardSx = {
-    ...surfaceSx,
-    transition: 'border-color 0.2s ease',
-    '&:hover': {
-      borderColor: '#cbd5e1',
-      boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)'
-    }
   }
 
   const showToast = (
@@ -615,442 +606,78 @@ const MaintenanceDashboard: React.FC = () => {
   }
 
   return (
-    <Container
-      maxWidth={false}
-      sx={{
-        py: { xs: 2, sm: 3, md: 3 },
-        px: { xs: 1, sm: 2, md: 3 },
-        backgroundColor: '#f8fafc',
-        minHeight: '100vh'
-      }}
-    >
-      {/* Header */}
-      <Box
-        display='flex'
-        flexDirection={{ xs: 'column', sm: 'row' }}
-        justifyContent='space-between'
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-        mb={{ xs: 2, sm: 3, md: 3 }}
-        gap={{ xs: 2, sm: 0 }}
-        sx={{
-          backgroundColor: '#ffffff',
-          borderRadius: '14px',
-          p: { xs: 2, sm: 3 },
-          boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
-          border: '1px solid #e5e7eb'
-        }}
-      >
-        <Box display='flex' alignItems='center' gap={{ xs: 1, sm: 2 }}>
-          <Box
-            sx={{
-              backgroundColor: '#e8f7ef',
-              borderRadius: '10px',
-              p: 1.5,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <Dashboard
-              sx={{ fontSize: { xs: 28, sm: 32 }, color: '#00A651' }}
-            />
-          </Box>
-          <Box>
-            <Typography
-              variant='h4'
-              component='h1'
-              sx={{
-                fontSize: { xs: '1.5rem', sm: '1.875rem', md: '2.125rem' },
-                fontWeight: 700,
-                color: '#0f172a',
-                letterSpacing: '-0.02em'
-              }}
-            >
-              Dashboard de Mantenimiento
-            </Typography>
-            <Typography
-              variant='subtitle1'
-              color='text.secondary'
-              sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
-            >
-              Gestión integral de tickets y técnicos
-            </Typography>
-          </Box>
-        </Box>
-
-        <Box display='flex' gap={{ xs: 0.5, sm: 1 }} flexWrap='wrap'>
-          <Tooltip title='Actualizar datos'>
-            <IconButton
-              onClick={handleRefresh}
-              aria-label='Actualizar datos del dashboard'
-              sx={{
-                minWidth: 48,
-                minHeight: 48,
-                backgroundColor: '#ffffff',
-                color: '#475569',
-                borderRadius: '12px',
-                border: '1px solid #e5e7eb',
-                '&:hover': {
-                  backgroundColor: '#f8fafc'
-                }
-              }}
-            >
-              <Refresh />
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title='Atajos de teclado (Shift + ?)'>
-            <IconButton
-              onClick={() => setShortcutsHelpOpen(true)}
-              aria-label='Mostrar atajos de teclado'
-              sx={{
-                minWidth: 48,
-                minHeight: 48,
-                backgroundColor: '#ffffff',
-                color: '#475569',
-                borderRadius: '12px',
-                border: '1px solid #e5e7eb',
-                '&:hover': {
-                  backgroundColor: '#f8fafc'
-                }
-              }}
-            >
-              <Help />
-            </IconButton>
-          </Tooltip>
-
-          <Button
-            variant='outlined'
-            startIcon={!isMobile && <FilterList />}
-            onClick={() => setShowFilters(!showFilters)}
-            aria-label={showFilters ? 'Ocultar filtros' : 'Mostrar filtros'}
-            aria-expanded={showFilters}
-            aria-controls='maintenance-filters-section'
-            size={isMobile ? 'small' : 'medium'}
-            sx={{
-              minHeight: 48,
-              fontSize: { xs: '0.813rem', sm: '0.875rem' },
-              borderColor: '#d1d5db',
-              color: '#334155',
-              borderRadius: '12px',
-              '&:hover': {
-                borderColor: '#94a3b8',
-                backgroundColor: '#f8fafc'
-              }
-            }}
-          >
-            {isMobile ? <FilterList /> : 'Filtros'}
-          </Button>
-          <Button
-            variant='outlined'
-            startIcon={!isMobile && <Assessment />}
-            href='/maintenance/analytics'
-            size={isMobile ? 'small' : 'medium'}
-            sx={{
-              minHeight: 48,
-              fontSize: { xs: '0.813rem', sm: '0.875rem' },
-              borderColor: '#d1d5db',
-              color: '#334155',
-              borderRadius: '12px',
-              '&:hover': {
-                borderColor: '#94a3b8',
-                backgroundColor: '#f8fafc'
-              }
-            }}
-          >
-            {isMobile ? <Assessment /> : 'Analíticas'}
-          </Button>
-          {!isTechnician && (
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title='Dashboard de Mantenimiento'
+        subtitle='Gestión integral de tickets y técnicos'
+        icon={<Dashboard />}
+        actions={
+          <Box display='flex' gap={1} flexWrap='wrap' alignItems='center'>
+            <Tooltip title='Actualizar datos'>
+              <IconButton onClick={handleRefresh} aria-label='Actualizar datos del dashboard'>
+                <Refresh />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title='Atajos de teclado (Shift + ?)'>
+              <IconButton onClick={() => setShortcutsHelpOpen(true)} aria-label='Mostrar atajos de teclado'>
+                <Help />
+              </IconButton>
+            </Tooltip>
             <Button
-              variant='contained'
-              startIcon={!isMobile && <Add />}
-              href='/maintenance/report'
-              size={isMobile ? 'small' : 'medium'}
-              sx={{
-                minHeight: 48,
-                fontSize: { xs: '0.813rem', sm: '0.875rem' },
-                backgroundColor: '#00A651',
-                borderRadius: '12px',
-                '&:hover': {
-                  backgroundColor: '#27672a'
-                }
-              }}
+              variant='outlined'
+              startIcon={!isMobile && <FilterList />}
+              onClick={() => setShowFilters(!showFilters)}
+              aria-label={showFilters ? 'Ocultar filtros' : 'Mostrar filtros'}
+              aria-expanded={showFilters}
+              aria-controls='maintenance-filters-section'
+              sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
             >
-              {isMobile ? <Add /> : 'Nueva Solicitud'}
+              {isMobile ? <FilterList /> : 'Filtros'}
             </Button>
-          )}
-        </Box>
-      </Box>
+            <Button
+              variant='outlined'
+              startIcon={!isMobile && <Assessment />}
+              href='/maintenance/analytics'
+              sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
+            >
+              {isMobile ? <Assessment /> : 'Analíticas'}
+            </Button>
+            {!isTechnician && (
+              <Button
+                variant='contained'
+                startIcon={!isMobile && <Add />}
+                href='/maintenance/report'
+                sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}
+              >
+                {isMobile ? <Add /> : 'Nueva Solicitud'}
+              </Button>
+            )}
+          </Box>
+        }
+      />
 
       {/* Stats Cards */}
-      <Grid
-        container
-        spacing={{ xs: 2, sm: 2, md: 3 }}
-        mb={{ xs: 2, sm: 3, md: 3 }}
-        role='region'
-        aria-label='Estadísticas del dashboard'
-      >
+      <Grid container spacing={3} mb={3} role='region' aria-label='Estadísticas del dashboard'>
         {statsLoading ? (
           <>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCardSkeleton />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCardSkeleton />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCardSkeleton />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCardSkeleton />
-            </Grid>
+            <Grid item xs={12} sm={6} md={3}><StatCardSkeleton /></Grid>
+            <Grid item xs={12} sm={6} md={3}><StatCardSkeleton /></Grid>
+            <Grid item xs={12} sm={6} md={3}><StatCardSkeleton /></Grid>
+            <Grid item xs={12} sm={6} md={3}><StatCardSkeleton /></Grid>
           </>
         ) : (
           <>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card
-                role='article'
-                aria-label='Total de tickets'
-                sx={statCardSx}
-              >
-                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                  <Box
-                    display='flex'
-                    alignItems='center'
-                    justifyContent='space-between'
-                  >
-                    <Box>
-                      <Typography
-                        variant='h4'
-                        aria-label={`Total de tickets: ${stats?.metrics?.totalTickets || 0}`}
-                        sx={{
-                          fontSize: {
-                            xs: '1.75rem',
-                            sm: '2rem',
-                            md: '2.125rem'
-                          },
-                          fontWeight: 700,
-                          color: '#00bf75'
-                        }}
-                      >
-                        {stats?.metrics?.totalTickets || 0}
-                      </Typography>
-                      <Typography
-                        variant='body2'
-                        color='text.secondary'
-                        sx={{
-                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                          fontWeight: 500
-                        }}
-                      >
-                        Total Tickets
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        backgroundColor: '#e8f7ef',
-                        borderRadius: '10px',
-                        p: 1.5,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      <Assignment
-                        sx={{ fontSize: { xs: 32, sm: 40 }, color: '#00A651' }}
-                        aria-hidden='true'
-                      />
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
+            <Grid item xs={6} md={3}>
+              <LmsStatCard label='Total Tickets' value={stats?.metrics?.totalTickets || 0} icon={<Assignment />} tone='teal' />
             </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card
-                role='article'
-                aria-label='Tickets pendientes'
-                sx={statCardSx}
-              >
-                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                  <Box
-                    display='flex'
-                    alignItems='center'
-                    justifyContent='space-between'
-                  >
-                    <Box>
-                      <Typography
-                        variant='h4'
-                        aria-label={`Tickets pendientes: ${stats?.metrics?.pendingTickets || 0}`}
-                        sx={{
-                          fontSize: {
-                            xs: '1.75rem',
-                            sm: '2rem',
-                            md: '2.125rem'
-                          },
-                          fontWeight: 700,
-                          color: '#ff9800'
-                        }}
-                      >
-                        {stats?.metrics?.pendingTickets || 0}
-                      </Typography>
-                      <Typography
-                        variant='body2'
-                        color='text.secondary'
-                        sx={{
-                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                          fontWeight: 500
-                        }}
-                      >
-                        Pendientes
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        backgroundColor: '#fff4e5',
-                        borderRadius: '10px',
-                        p: 1.5,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      <Build
-                        sx={{ fontSize: { xs: 32, sm: 40 }, color: '#b45309' }}
-                        aria-hidden='true'
-                      />
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
+            <Grid item xs={6} md={3}>
+              <LmsStatCard label='Pendientes' value={stats?.metrics?.pendingTickets || 0} icon={<Build />} tone='orange' />
             </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card
-                role='article'
-                aria-label='Tickets completados'
-                sx={statCardSx}
-              >
-                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                  <Box
-                    display='flex'
-                    alignItems='center'
-                    justifyContent='space-between'
-                  >
-                    <Box>
-                      <Typography
-                        variant='h4'
-                        aria-label={`Tickets completados: ${stats?.metrics?.completedTickets || 0}`}
-                        sx={{
-                          fontSize: {
-                            xs: '1.75rem',
-                            sm: '2rem',
-                            md: '2.125rem'
-                          },
-                          fontWeight: 700,
-                          color: '#4caf50'
-                        }}
-                      >
-                        {stats?.metrics?.completedTickets || 0}
-                      </Typography>
-                      <Typography
-                        variant='body2'
-                        color='text.secondary'
-                        sx={{
-                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                          fontWeight: 500
-                        }}
-                      >
-                        Completados
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        backgroundColor: '#e8f7ef',
-                        borderRadius: '10px',
-                        p: 1.5,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      <CheckCircle
-                        sx={{ fontSize: { xs: 32, sm: 40 }, color: '#00A651' }}
-                        aria-hidden='true'
-                      />
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
+            <Grid item xs={6} md={3}>
+              <LmsStatCard label='Completados' value={stats?.metrics?.completedTickets || 0} icon={<CheckCircle />} tone='green' />
             </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card
-                role='article'
-                aria-label='Tiempo promedio de resolución'
-                sx={statCardSx}
-              >
-                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                  <Box
-                    display='flex'
-                    alignItems='center'
-                    justifyContent='space-between'
-                  >
-                    <Box>
-                      <Typography
-                        variant='h4'
-                        aria-label={`Tiempo promedio de resolución: ${stats?.metrics?.avgResolutionTimeHours || 0} horas`}
-                        sx={{
-                          fontSize: {
-                            xs: '1.5rem',
-                            sm: '1.75rem',
-                            md: '1.9rem'
-                          },
-                          fontWeight: 700,
-                          color: '#2563eb'
-                        }}
-                      >
-                        {avgResolutionTimeDisplay}
-                      </Typography>
-                      <Typography
-                        variant='body2'
-                        color='text.secondary'
-                        sx={{
-                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                          fontWeight: 500
-                        }}
-                      >
-                        Tiempo Promedio
-                      </Typography>
-                      <Typography
-                        variant='caption'
-                        sx={{
-                          mt: 0.5,
-                          display: 'block',
-                          color: '#64748b'
-                        }}
-                      >
-                        Promedio de cierre
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        backgroundColor: '#eff6ff',
-                        borderRadius: '10px',
-                        p: 1.5,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      <TrendingUp
-                        sx={{ fontSize: { xs: 28, sm: 34 }, color: '#2563eb' }}
-                        aria-hidden='true'
-                      />
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
+            <Grid item xs={6} md={3}>
+              <LmsStatCard label='Tiempo Promedio' value={avgResolutionTimeDisplay} caption='Promedio de cierre' icon={<TrendingUp />} tone='blue' />
             </Grid>
           </>
         )}
