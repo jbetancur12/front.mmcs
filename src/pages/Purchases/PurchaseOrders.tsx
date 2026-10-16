@@ -1,32 +1,36 @@
 import React, { useState, useMemo } from 'react'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import {
-  Alert,
-  Box,
   Checkbox,
   Chip,
   Divider,
-  FormControlLabel,
+  Grid,
   IconButton,
   Stack,
-  Switch,
-  Tooltip,
-  Typography
+  Tooltip
 } from '@mui/material'
 import {
   AssignmentTurnedIn,
   FactCheck,
   HourglassEmpty,
+  ListAlt,
+  ReceiptLong,
+  ScheduleSend,
+  SendOutlined,
   Visibility
 } from '@mui/icons-material'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { PurchaseOrderData as IPurchaseOrder } from './Types'
-import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { differenceInDays, format } from 'date-fns'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import Swal from 'sweetalert2'
 import { Link } from 'react-router-dom'
 import CreatePurchaseVerificationModal from 'src/Components/Purchases/PurchaseVerificationModal'
+import PurchasesPage from 'src/Components/Purchases/PurchasesPage'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
+
+type QuickFilter = 'all' | 'unsent' | 'overdue' | 'unverified'
 
 // Función para obtener las órdenes de compra
 const fetchPurchaseOrders = async (
@@ -45,12 +49,15 @@ const PurchaseOrders: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedPurchaseOrder, setSelectedPurchaseOrder] =
     useState<IPurchaseOrder | null>(null)
-  const [showOnlyUnverified, setShowOnlyUnverified] = useState(false)
-  const [showOnlyUnsent, setShowOnlyUnsent] = useState(false)
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>('all')
 
   const purchaseOrders = data ?? []
 
+  const unsentCount = purchaseOrders.filter((o) => !o.sentAt).length
   const overdueCount = purchaseOrders.filter((o) => o.sendOverdue).length
+  const unverifiedCount = purchaseOrders.filter((o) => !o.verified).length
+  const toggleQuick = (value: QuickFilter) =>
+    setQuickFilter((current) => (current === value ? 'all' : value))
 
   const markSent = useMutation(
     ({ id, sent }: { id: number; sent: boolean }) =>
@@ -64,12 +71,17 @@ const PurchaseOrders: React.FC = () => {
   )
 
   const filteredOrders = useMemo(() => {
-    return purchaseOrders.filter(
-      (order) =>
-        (!showOnlyUnverified || !order.verified) &&
-        (!showOnlyUnsent || !order.sentAt)
-    )
-  }, [purchaseOrders, showOnlyUnverified, showOnlyUnsent])
+    switch (quickFilter) {
+      case 'unsent':
+        return purchaseOrders.filter((o) => !o.sentAt)
+      case 'overdue':
+        return purchaseOrders.filter((o) => o.sendOverdue)
+      case 'unverified':
+        return purchaseOrders.filter((o) => !o.verified)
+      default:
+        return purchaseOrders
+    }
+  }, [purchaseOrders, quickFilter])
 
   // Definir las columnas de la tabla
   const columns: MRT_ColumnDef<IPurchaseOrder>[] = [
@@ -157,100 +169,100 @@ const PurchaseOrders: React.FC = () => {
 
   return (
     <>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2
-        }}
+      <PurchasesPage
+        title='Órdenes de compra'
+        subtitle='Controla que cada orden salga al proveedor y se verifique al recibirla'
+        icon={<ReceiptLong />}
+        stats={
+          <Grid container spacing={3} sx={{ mb: 3 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <LmsStatCard
+                label='Todas'
+                value={purchaseOrders.length}
+                icon={<ListAlt />}
+                tone='teal'
+                active={quickFilter === 'all'}
+                onClick={() => setQuickFilter('all')}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <LmsStatCard
+                label='Sin enviar'
+                value={unsentCount}
+                icon={<SendOutlined />}
+                tone='blue'
+                active={quickFilter === 'unsent'}
+                onClick={() => toggleQuick('unsent')}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <LmsStatCard
+                label='Envío vencido (3 días hábiles)'
+                value={overdueCount}
+                icon={<ScheduleSend />}
+                tone='red'
+                active={quickFilter === 'overdue'}
+                onClick={() => toggleQuick('overdue')}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <LmsStatCard
+                label='Sin verificar'
+                value={unverifiedCount}
+                icon={<FactCheck />}
+                tone='orange'
+                active={quickFilter === 'unverified'}
+                onClick={() => toggleQuick('unverified')}
+              />
+            </Grid>
+          </Grid>
+        }
       >
-        <Typography variant='h5'>Órdenes de Compra</Typography>
-        <Stack direction='row' spacing={2}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={showOnlyUnsent}
-              onChange={(e) => setShowOnlyUnsent(e.target.checked)}
-              color='primary'
+        <MaterialReactTable
+          {...purchaseTableStyle}
+          columns={columns}
+          data={filteredOrders}
+          state={{ isLoading }}
+          enableRowActions={true}
+          enablePinning
+          initialState={{ columnPinning: { right: ['mrt-row-actions'] } }}
+          muiSearchTextFieldProps={{
+            ...purchaseTableStyle.muiSearchTextFieldProps,
+            placeholder: 'Buscar órdenes...'
+          }}
+          renderRowActions={({ row }) => (
+            <RenderRowActions
+              row={row}
+              openVerificationModal={openVerificationModal}
             />
-          }
-          label='Mostrar solo sin enviar'
-        />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={showOnlyUnverified}
-              onChange={(e) => setShowOnlyUnverified(e.target.checked)}
-              color='primary'
-            />
-          }
-          label='Mostrar solo sin verificar'
-        />
-        </Stack>
-      </Box>
+          )}
+          muiTableBodyRowProps={({ row }) => {
+            const { verified, requestDate, sendOverdue } = row.original
 
-      {overdueCount > 0 && (
-        <Alert severity='error' sx={{ mb: 2 }}>
-          {overdueCount === 1
-            ? '1 orden de compra no se ha enviado al proveedor y ya pasó el plazo de 3 días hábiles desde la cotización.'
-            : `${overdueCount} órdenes de compra no se han enviado al proveedor y ya pasó el plazo de 3 días hábiles desde la cotización.`}
-        </Alert>
-      )}
-
-      <MaterialReactTable
-        columns={columns}
-        data={filteredOrders}
-        state={{ isLoading }}
-        localization={MRT_Localization_ES}
-        enableRowActions={true}
-        renderRowActions={({ row }) => (
-          <RenderRowActions
-            row={row}
-            openVerificationModal={openVerificationModal}
-          />
-        )}
-        muiTableBodyCellProps={{
-          sx: { textAlign: 'left' }
-        }}
-        muiTableBodyRowProps={({ row }) => {
-          const { verified, requestDate, sendOverdue } = row.original
-
-          if (sendOverdue) {
-            return {
-              sx: {
-                backgroundColor: 'rgba(244, 67, 54, 0.10)',
-                '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.18)' }
-              }
-            }
-          }
-
-          // Si ya está verificado, no hacemos nada.
-          if (verified) {
-            return {}
-          }
-
-          // Calculamos los días que han pasado.
-          const daysPast = differenceInDays(new Date(), new Date(requestDate))
-
-          // Si han pasado más de 20 días, aplicamos el estilo.
-          if (daysPast > 20) {
-            return {
-              sx: {
-                // Usamos un color de advertencia con transparencia para que no sea muy agresivo
-                // y funcione bien tanto en tema claro como oscuro.
-                backgroundColor: 'rgba(255, 165, 0, 0.15)',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 165, 0, 0.25)' // Opcional: intensificar en hover
+            if (sendOverdue) {
+              return {
+                sx: {
+                  backgroundColor: 'rgba(244, 67, 54, 0.10)',
+                  '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.18)' }
                 }
               }
             }
-          }
 
-          // Si no cumple la condición, no se aplica ningún estilo especial.
-          return {}
-        }}
-      />
+            if (verified) return {}
+
+            const daysPast = differenceInDays(new Date(), new Date(requestDate))
+            if (daysPast > 20) {
+              return {
+                sx: {
+                  backgroundColor: 'rgba(255, 165, 0, 0.15)',
+                  '&:hover': { backgroundColor: 'rgba(255, 165, 0, 0.25)' }
+                }
+              }
+            }
+            return {}
+          }}
+        />
+      </PurchasesPage>
 
       {selectedPurchaseOrder && (
         <CreatePurchaseVerificationModal

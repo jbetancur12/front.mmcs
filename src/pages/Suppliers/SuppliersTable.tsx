@@ -1,12 +1,10 @@
 import React, { useMemo } from 'react' // useEffect y useState ya no son necesarios para el fetch principal
 import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
-import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import {
   Box,
   Button,
   IconButton,
   Tooltip,
-  Typography,
   Chip,
   CircularProgress
 } from '@mui/material'
@@ -15,9 +13,16 @@ import { useNavigate } from 'react-router-dom'
 import {
   Article,
   Visibility as VisibilityIcon,
+  LocalShipping,
   Refresh as RefreshIcon
 } from '@mui/icons-material' // Añadido RefreshIcon
 import { useQuery } from 'react-query'
+import PurchasesPage from 'src/Components/Purchases/PurchasesPage'
+import {
+  PURCHASE_TEAL,
+  PURCHASE_TEAL_HOVER,
+  purchaseTableStyle
+} from 'src/Components/Purchases/purchaseTableStyle'
 
 // Interfaz para un proveedor, incluyendo los nuevos campos para el estado de evaluación
 interface Supplier {
@@ -232,25 +237,24 @@ const SuppliersTable: React.FC = () => {
   )
 
   return (
-    <>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2
-        }}
-      >
-        <Typography variant='h5'>Lista de Proveedores</Typography>
-        <Box>
+    <PurchasesPage
+      title='Proveedores'
+      subtitle='Consulta, evalúa y mantén al día los documentos de cada proveedor'
+      icon={<LocalShipping />}
+      actions={
+        <>
           <Button
             variant='outlined'
-            onClick={() => refetch()} // Botón para refrescar datos
+            onClick={() => refetch()}
             startIcon={
               isFetching ? <CircularProgress size={20} /> : <RefreshIcon />
             }
             disabled={isFetching}
-            sx={{ mr: 1 }}
+            sx={{
+              color: PURCHASE_TEAL,
+              borderColor: PURCHASE_TEAL,
+              '&:hover': { borderColor: PURCHASE_TEAL_HOVER }
+            }}
           >
             Refrescar
           </Button>
@@ -259,19 +263,17 @@ const SuppliersTable: React.FC = () => {
             onClick={() => navigate('report')}
             startIcon={<VisibilityIcon />}
             sx={{
-              backgroundColor: '#9CF08B',
-              fontWeight: 'bold',
-              color: '#2D4A27',
-              '&:hover': { backgroundColor: '#6DC662' }
+              bgcolor: PURCHASE_TEAL,
+              '&:hover': { bgcolor: PURCHASE_TEAL_HOVER }
             }}
           >
             Ver en PDF
           </Button>
-        </Box>
-      </Box>
-
+        </>
+      }
+    >
       <MaterialReactTable
-        localization={MRT_Localization_ES}
+        {...purchaseTableStyle}
         columns={columns}
         data={suppliersForTable} // Usar la lista extraída
         enableRowActions
@@ -289,7 +291,10 @@ const SuppliersTable: React.FC = () => {
             </Tooltip>
           </Box>
         )}
-        muiTableBodyCellProps={{ sx: { textAlign: 'left' } }}
+        muiSearchTextFieldProps={{
+          ...purchaseTableStyle.muiSearchTextFieldProps,
+          placeholder: 'Buscar proveedores...'
+        }}
         initialState={{
           density: 'compact',
           pagination: { pageSize: 10, pageIndex: 0 }, // Paginación del lado del cliente por defecto
@@ -315,7 +320,7 @@ const SuppliersTable: React.FC = () => {
             : undefined
         }
       />
-    </>
+    </PurchasesPage>
   )
 }
 

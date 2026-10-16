@@ -3,19 +3,14 @@ import MaterialReactTable, {
   MRT_ColumnDef,
   MRT_Row
 } from 'material-react-table'
-import {
-  IconButton,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography
-} from '@mui/material'
+import { IconButton, Stack, TextField, Tooltip, Typography } from '@mui/material'
 import { format } from 'date-fns'
 import { useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Link } from 'react-router-dom'
-import { Edit, Visibility } from '@mui/icons-material'
+import { Edit, FactCheck, Visibility } from '@mui/icons-material'
+import PurchasesPage from 'src/Components/Purchases/PurchasesPage'
+import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 import { PurchaseVerification } from './Types'
 
 /* Interfaces de Tipos */
@@ -161,13 +156,14 @@ const PurchaseVerificationsTable: React.FC = () => {
   if (isLoading) return <Typography variant='h6'>Cargando...</Typography>
 
   return (
-    <>
-      <Typography variant='h5' sx={{ mb: 2 }}>
-        Verificaciones
-      </Typography>
+    <PurchasesPage
+      title='Verificaciones'
+      subtitle='Revisa lo recibido contra cada orden de compra'
+      icon={<FactCheck />}
+    >
       <MaterialReactTable
+        {...purchaseTableStyle}
         enableEditing
-        localization={MRT_Localization_ES}
         columns={columns}
         data={data ?? []}
         state={{ isLoading }}
@@ -180,8 +176,9 @@ const PurchaseVerificationsTable: React.FC = () => {
             items: false
           }
         }}
-        muiTableBodyCellProps={{
-          sx: { textAlign: 'left' }
+        muiSearchTextFieldProps={{
+          ...purchaseTableStyle.muiSearchTextFieldProps,
+          placeholder: 'Buscar verificaciones...'
         }}
         renderRowActions={({ row, table }) => {
           return (
@@ -206,7 +203,7 @@ const PurchaseVerificationsTable: React.FC = () => {
         }}
         onEditingRowSave={handleSave}
       />
-    </>
+    </PurchasesPage>
   )
 }
 
