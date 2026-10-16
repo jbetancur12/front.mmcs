@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react'
-import { Box, Button, IconButton, Stack, Typography } from '@mui/material'
+import { Button, Container, Paper } from '@mui/material'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import { MaintenanceRecord, InterventionType } from './types'
 
@@ -7,7 +7,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from 'react-query'
 import AddMaintenanceRecordModal from './AddMaintenanceRecordModal'
 import { format } from 'date-fns'
-import { ArrowBack, Plumbing } from '@mui/icons-material'
+import { Add, ArrowBack, Build, Plumbing } from '@mui/icons-material'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
@@ -73,43 +75,36 @@ const MaintenanceRecords: React.FC = () => {
   }
 
   return (
-    <Box sx={{ padding: 2 }}>
-      <Stack direction='row' spacing={2} mb={2}>
-        <IconButton onClick={() => navigate('/fleet')} sx={{ mr: 2 }}>
-          <ArrowBack />
-        </IconButton>
-        <Typography variant='h4' gutterBottom>
-          Historial de Mantenimiento
-        </Typography>
-      </Stack>
-
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2,
-          mb: 2,
-          justifyContent: 'space-between'
-        }}
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <Button
+        startIcon={<ArrowBack />}
+        onClick={() => navigate('/fleet')}
+        sx={{ mb: 1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
       >
-{canManage && (
-        <Button
-          variant='contained'
-          color='primary'
-          onClick={() => setIsAddModalOpen(true)}
-        >
-          Agregar Intervencion
-        </Button>
-)}
+        Volver a flota
+      </Button>
 
-        <Button>
-          <IconButton onClick={() => navigate('/fleet/interventions')}>
-            <Plumbing />
-          </IconButton>
-        </Button>
-      </Box>
+      <LmsPageHeader
+        title='Historial de Mantenimiento'
+        subtitle='Intervenciones registradas para este vehículo'
+        icon={<Build />}
+        actions={
+          <>
+            <Button variant='outlined' startIcon={<Plumbing />} onClick={() => navigate('/fleet/interventions')} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+              Tipos de intervención
+            </Button>
+            {canManage && (
+              <Button variant='contained' startIcon={<Add />} onClick={() => setIsAddModalOpen(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+                Agregar intervención
+              </Button>
+            )}
+          </>
+        }
+      />
 
-      <MaterialReactTable columns={columns} data={records || []} />
+      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+        <MaterialReactTable {...purchaseTableStyle} columns={columns} data={records || []} />
+      </Paper>
 
       {isAddModalOpen && interventionTypes && (
         <AddMaintenanceRecordModal
@@ -120,7 +115,7 @@ const MaintenanceRecords: React.FC = () => {
           vehicleId={Number(id)}
         />
       )}
-    </Box>
+    </Container>
   )
 }
 

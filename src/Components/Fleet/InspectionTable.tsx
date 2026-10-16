@@ -3,11 +3,13 @@ import { useEffect, useMemo, useState } from 'react'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import {
   Box,
+  Button,
+  Container,
   IconButton,
+  Paper,
   Tooltip,
   Typography,
-  Modal,
-  Stack
+  Modal
 } from '@mui/material'
 
 import { useNavigate, useParams } from 'react-router-dom'
@@ -17,9 +19,12 @@ import {
   ArrowBack,
   CheckCircle,
   Error,
+  Summarize,
   Visibility,
   Warning
 } from '@mui/icons-material'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 import InspectionSummary from './InspectionSummary'
 import useAxiosPrivate from '@utils/use-axios-private'
 
@@ -140,20 +145,27 @@ const InspectionsTable = () => {
   }
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Stack direction='row' spacing={2} mb={2}>
-        <IconButton onClick={() => navigate('/fleet')} sx={{ mr: 2 }}>
-          <ArrowBack />
-        </IconButton>
-        <Typography variant='h4' gutterBottom>
-          Reportes de Inspección
-        </Typography>
-      </Stack>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <Button
+        startIcon={<ArrowBack />}
+        onClick={() => navigate('/fleet')}
+        sx={{ mb: 1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
+      >
+        Volver a flota
+      </Button>
+
+      <LmsPageHeader
+        title='Reportes de Inspección'
+        subtitle='Inspecciones preoperacionales registradas para este vehículo'
+        icon={<Summarize />}
+      />
       {loading ? (
         <Typography variant='body1'>Cargando...</Typography>
       ) : (
         <>
+          <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
           <MaterialReactTable
+            {...purchaseTableStyle}
             columns={columns}
             data={inspections}
             enableColumnOrdering
@@ -174,6 +186,7 @@ const InspectionsTable = () => {
               </Box>
             )}
           />
+          </Paper>
           <Modal open={openModal} onClose={() => setOpenModal(false)}>
             <Box
               sx={{
@@ -194,7 +207,7 @@ const InspectionsTable = () => {
           </Modal>
         </>
       )}
-    </Box>
+    </Container>
   )
 }
 

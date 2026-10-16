@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useQuery, useMutation } from 'react-query'
 import {
   Button,
+  Container,
   Dialog,
   DialogActions,
   DialogContent,
@@ -24,6 +25,7 @@ import {
   ArrowBack,
   CloudUpload,
   Delete,
+  Description,
   Download,
   Edit,
   Warning
@@ -38,6 +40,7 @@ import { Document, ReminderResponse } from './types'
 import { useNavigate, useParams } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
 import { VisuallyHiddenInput } from '../TableFiles'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { MySwal } from '../ExcelManipulation/Utils'
 import { PERMISSIONS } from 'src/constants/permissions'
@@ -151,15 +154,26 @@ const Documents: React.FC = () => {
   }
 
   return (
-    <div>
-      <IconButton onClick={() => navigate('/fleet')} sx={{ mr: 2 }}>
-        <ArrowBack />
-      </IconButton>
-{canUpload && (
-      <Button variant='contained' onClick={() => handleOpen()}>
-        Agregar Documento
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <Button
+        startIcon={<ArrowBack />}
+        onClick={() => navigate('/fleet')}
+        sx={{ mb: 1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
+      >
+        Volver a flota
       </Button>
-)}
+      <LmsPageHeader
+        title='Documentos del vehículo'
+        subtitle='Hoja de vida, documentos y fechas de vencimiento'
+        icon={<Description />}
+        actions={
+          canUpload ? (
+            <Button variant='contained' startIcon={<CloudUpload />} onClick={() => handleOpen()} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+              Agregar documento
+            </Button>
+          ) : undefined
+        }
+      />
 
       <Box sx={{ p: 2 }}>
         <Typography variant='h5' sx={{ mb: 2 }}>
@@ -420,7 +434,7 @@ const Documents: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </div>
+    </Container>
   )
 }
 

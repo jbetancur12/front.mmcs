@@ -6,12 +6,11 @@ import {
   CardActions,
   Button,
   Typography,
-  Box,
+  Container,
   IconButton,
-  Grid,
-  Stack
+  Grid
 } from '@mui/material'
-import { Edit, Delete, ArrowBack } from '@mui/icons-material'
+import { Add, Build, Edit, Delete, ArrowBack } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { InterventionType } from './types'
 import GenericFormModal, { FieldConfig } from './GenericFormModal'
@@ -24,6 +23,7 @@ import withReactContent from 'sweetalert2-react-content'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 const MySwal = withReactContent(Swal)
 
 const validationSchema = yup.object().shape({
@@ -169,22 +169,28 @@ const InterventionTypes = () => {
   ]
 
   return (
-    <Box sx={{ padding: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Stack direction='row' spacing={2} mb={2}>
-          <IconButton onClick={() => navigate(-1)}>
-            <ArrowBack />
-          </IconButton>
-          <Typography variant='h4'>Tipos de Intervención</Typography>
-        </Stack>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <Button
+        startIcon={<ArrowBack />}
+        onClick={() => navigate(-1)}
+        sx={{ mb: 1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
+      >
+        Volver
+      </Button>
 
-{canManage && (
-        <Button variant='contained' onClick={handleAddNew}>
-          Agregar Nuevo
-        </Button>
-)}
-      </Box>
-      <Grid container spacing={2}>
+      <LmsPageHeader
+        title='Tipos de Intervención'
+        subtitle='Catálogo de intervenciones de mantenimiento de la flota'
+        icon={<Build />}
+        actions={
+          canManage ? (
+            <Button variant='contained' startIcon={<Add />} onClick={handleAddNew} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+              Agregar nuevo
+            </Button>
+          ) : undefined
+        }
+      />
+      <Grid container spacing={3}>
         {interventionTypes.map((type) => (
           <Grid item xs={12} sm={6} md={4} key={type.id}>
             <Card
@@ -229,7 +235,7 @@ const InterventionTypes = () => {
         formik={formik}
         submitButtonText={currentType ? 'Actualizar' : 'Crear'}
       />
-    </Box>
+    </Container>
   )
 }
 

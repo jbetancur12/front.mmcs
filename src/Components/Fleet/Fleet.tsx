@@ -10,7 +10,10 @@ import { bigToast, MySwal } from '../ExcelManipulation/Utils'
 import {
   Box,
   Button,
+  Container,
   Divider,
+  Grid,
+  Paper,
   IconButton,
   TextFieldProps,
   Tooltip
@@ -19,11 +22,15 @@ import {
   BuildCircle,
   Commute,
   Delete,
+  Add,
+  DirectionsCar,
   Edit,
+  Plumbing,
+  Speed,
   Summarize,
-  Visibility
+  Visibility,
+  WarningAmber
 } from '@mui/icons-material'
-import { MRT_Localization_ES } from 'material-react-table/locales/es'
 
 import * as yup from 'yup'
 
@@ -39,6 +46,9 @@ import { userStore } from 'src/store/userStore'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 const validationSchema = yup.object().shape({
   pictureUrl: yup.mixed().required('Imagen es obligatoria'),
   vin: yup.string().required('Número de Identificación es obligatorio'),
@@ -340,91 +350,132 @@ const Fleet = () => {
     }
   })
 
+  const remindersCount = vehicles.filter((v: Vehicle) => v.upcomingReminders?.length > 0).length
+  const avgMileage = vehicles.length
+    ? Math.round(vehicles.reduce((acc: number, v: Vehicle) => acc + (Number(v.currentMileage) || 0), 0) / vehicles.length)
+    : 0
+
   return (
-    <MaterialReactTable
-      columns={columns}
-      data={vehicles}
-      localization={MRT_Localization_ES}
-      enableColumnOrdering
-      editingMode='modal'
-      enableEditing={canManage}
-      onEditingRowSave={handleSaveRowEdits}
-      onEditingRowCancel={() => setValidationErrors({})}
-      initialState={{ columnVisibility: { id: false } }}
-      renderRowActions={({ row, table }) => (
-        <Box sx={{ display: 'flex', gap: '1rem' }}>
-          <Tooltip arrow placement='right' title='Documentos'>
-            <Link to={`${row.original.id}/documents`}>
-              <IconButton>
-                <Visibility
-                  sx={{
-                    color:
-                      row.original.upcomingReminders.length > 0 ? 'red' : ''
-                  }}
-                />
-              </IconButton>
-            </Link>
-          </Tooltip>
-          <Tooltip arrow placement='right' title='Viajes'>
-            <Link to={`${row.original.id}/trip`}>
-              <IconButton onClick={() => handleTrip(row.original)}>
-                <Commute />
-              </IconButton>
-            </Link>
-          </Tooltip>
-          <Tooltip arrow placement='right' title='Inspecciones'>
-            <Link to={`${row.original.id}/inspections`}>
-              <IconButton onClick={() => handleTrip(row.original)}>
-                <Summarize />
-              </IconButton>
-            </Link>
-          </Tooltip>
-          <Tooltip arrow placement='right' title='Intervenciones'>
-            <Link to={`${row.original.id}/interventions`}>
-              <IconButton>
-                <BuildCircle />
-              </IconButton>
-            </Link>
-          </Tooltip>
-{canManage && (
-<>
-          <Divider orientation='vertical' flexItem />
-          <Tooltip arrow placement='right' title='Editar'>
-            <IconButton onClick={() => table.setEditingRow(row)}>
-              <Edit />
-            </IconButton>
-          </Tooltip>
-          <Tooltip arrow placement='right' title='Eliminar'>
-            <IconButton color='error' onClick={() => handleDeleteRow(row)}>
-              <Delete />
-            </IconButton>
-          </Tooltip>
-</>
-)}
-        </Box>
-      )}
-      renderTopToolbarCustomActions={() => canManage ? (
-        <>
-          <Button
-            variant='contained'
-            onClick={() => setCreateModalOpen(true)}
-            sx={{ fontWeight: 'bold', color: '#DCFCE7' }}
-          >
-            Crear Nuevo Vehículo
-          </Button>
-          <GenericFormModal
-            open={createModalOpen}
-            fields={vehicleFields}
-            onClose={() => {
-              setCreateModalOpen(false)
-              formik.resetForm()
-            }}
-            submitButtonText='Crear Vehículo'
-            formik={formik}
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title='Flota'
+        subtitle='Vehículos, documentos, viajes, inspecciones y mantenimiento'
+        icon={<DirectionsCar />}
+        actions={
+          <>
+            <Button variant='outlined' startIcon={<Plumbing />} onClick={() => navigate('/fleet/interventions')} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+              Tipos de intervención
+            </Button>
+            {canManage && (
+              <Button variant='contained' startIcon={<Add />} onClick={() => setCreateModalOpen(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+                Crear vehículo
+              </Button>
+            )}
+          </>
+        }
+      />
+
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Vehículos' value={vehicles.length} icon={<DirectionsCar />} tone='teal' />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard
+            label='Con documentos por vencer'
+            value={remindersCount}
+            icon={<WarningAmber />}
+            tone={remindersCount > 0 ? 'red' : 'green'}
           />
-        </>
-      ) : null}
-    />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard
+            label='Kilometraje promedio'
+            value={`${avgMileage.toLocaleString('es-CO')} km`}
+            icon={<Speed />}
+            tone='blue'
+            compact
+          />
+        </Grid>
+      </Grid>
+
+      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+        <MaterialReactTable
+          {...purchaseTableStyle}
+          columns={columns}
+          data={vehicles}
+          enableColumnOrdering
+          editingMode='modal'
+          enableEditing={canManage}
+          onEditingRowSave={handleSaveRowEdits}
+          onEditingRowCancel={() => setValidationErrors({})}
+          enablePinning
+          initialState={{ columnVisibility: { id: false }, columnPinning: { right: ['mrt-row-actions'] } }}
+        renderRowActions={({ row, table }) => (
+          <Box sx={{ display: 'flex', gap: '1rem' }}>
+            <Tooltip arrow placement='right' title='Documentos'>
+              <Link to={`${row.original.id}/documents`}>
+                <IconButton>
+                  <Visibility
+                    sx={{
+                      color:
+                        row.original.upcomingReminders.length > 0 ? '#ef4444' : '#00BFA5'
+                    }}
+                  />
+                </IconButton>
+              </Link>
+            </Tooltip>
+            <Tooltip arrow placement='right' title='Viajes'>
+              <Link to={`${row.original.id}/trip`}>
+                <IconButton onClick={() => handleTrip(row.original)}>
+                  <Commute />
+                </IconButton>
+              </Link>
+            </Tooltip>
+            <Tooltip arrow placement='right' title='Inspecciones'>
+              <Link to={`${row.original.id}/inspections`}>
+                <IconButton onClick={() => handleTrip(row.original)}>
+                  <Summarize />
+                </IconButton>
+              </Link>
+            </Tooltip>
+            <Tooltip arrow placement='right' title='Intervenciones'>
+              <Link to={`${row.original.id}/interventions`}>
+                <IconButton>
+                  <BuildCircle />
+                </IconButton>
+              </Link>
+            </Tooltip>
+  {canManage && (
+  <>
+            <Divider orientation='vertical' flexItem />
+            <Tooltip arrow placement='right' title='Editar'>
+              <IconButton color='primary' onClick={() => table.setEditingRow(row)}>
+                <Edit />
+              </IconButton>
+            </Tooltip>
+            <Tooltip arrow placement='right' title='Eliminar'>
+              <IconButton color='error' onClick={() => handleDeleteRow(row)}>
+                <Delete />
+              </IconButton>
+            </Tooltip>
+  </>
+  )}
+          </Box>
+        )}
+        />
+      </Paper>
+
+      <GenericFormModal
+        open={createModalOpen}
+        fields={vehicleFields}
+        onClose={() => {
+          setCreateModalOpen(false)
+          formik.resetForm()
+        }}
+        submitButtonText='Crear Vehículo'
+        formik={formik}
+      />
+    </Container>
   )
 }
 
