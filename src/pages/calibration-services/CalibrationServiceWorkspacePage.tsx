@@ -13,12 +13,12 @@ import {
   Checkbox,
   Chip,
   CircularProgress,
+  Container,
   Divider,
   FormControlLabel,
   FormControl,
   Grid,
   InputLabel,
-  LinearProgress,
   List,
   ListItem,
   ListItemText,
@@ -32,6 +32,8 @@ import {
   Typography
 } from '@mui/material'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
+import ArrowForwardOutlinedIcon from '@mui/icons-material/ArrowForwardOutlined'
+import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined'
 import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined'
 import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined'
@@ -102,6 +104,45 @@ const DISCOUNT_TYPE_OPTIONS = [
   { value: 'fixed', label: 'Valor fijo' },
   { value: 'percentage', label: 'Porcentaje' }
 ]
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// Lo que falta para poder guardar (borrador) o enviar la cotización, y en qué paso se corrige
+interface Requirement {
+  key: string
+  label: string
+  section: number
+  forDraft: boolean
+  pending: boolean
+}
+
+const sectionCardSx = {
+  borderRadius: '16px',
+  mb: 3,
+  border: '1px solid #e5e7eb',
+  bgcolor: '#fff',
+  boxShadow: 'none'
+} as const
+
+const tealButtonSx = {
+  borderRadius: '12px',
+  textTransform: 'none',
+  fontWeight: 600,
+  py: 1.1,
+  bgcolor: '#00BFA5',
+  '&:hover': { bgcolor: '#00ACC1' },
+  '&.Mui-disabled': { bgcolor: '#e5e7eb', color: '#9ca3af' }
+} as const
+
+const tealOutlineSx = {
+  borderRadius: '12px',
+  textTransform: 'none',
+  fontWeight: 600,
+  py: 1.1,
+  color: '#00897B',
+  borderColor: '#00BFA5',
+  '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' }
+} as const
 
 const currencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -357,6 +398,8 @@ const CalibrationServiceWorkspacePage = () => {
   const [useDifferentExecutionCustomer, setUseDifferentExecutionCustomer] =
     useState(false)
   const [activeSection, setActiveSection] = useState(0)
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const [actionBarBox, setActionBarBox] = useState<{ left: number; width: number } | null>(null)
   const [validationErrorItemIds, setValidationErrorItemIds] = useState<Set<string>>(new Set())
 
   const createCustomerMutation = useMutation({
@@ -571,43 +614,6 @@ const CalibrationServiceWorkspacePage = () => {
     { key: 'items', label: 'Ítems cotizados', icon: <RequestQuoteOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['items'] as const },
     { key: 'commercial', label: 'Condiciones', icon: <ReceiptLongOutlinedIcon sx={{ fontSize: 18 }} />, fields: ['paymentMethod', 'validityDays', 'instrumentDeliveryTime', 'certificateDeliveryTime'] as const },
   ] as const
-  const sectionCompletion = sections.map((section) => {
-    if (section.key === 'items') {
-      const validItems = formState.items.filter((i) => i.itemName.trim())
-      return Math.min(validItems.length, 1)
-    }
-    if (section.key === 'customer') {
-      const base = section.fields.filter((f) => {
-        const val = formState[f]
-        return val !== null && val !== undefined && val !== '' && val !== 0
-      }).length
-      const hasEvidence = Boolean(requestEvidenceFile || requestEvidenceDocuments.length)
-      const total = section.fields.length + 1
-      return Math.min((base + (hasEvidence ? 1 : 0)) / total, 1)
-    }
-    if (section.key === 'terms') {
-      const hasContent = CALIBRATION_QUOTE_TERM_KEYS.some(
-        (key) => formState.quoteTerms?.[key]?.trim()
-      )
-      return hasContent ? 1 : 0
-    }
-    if (section.key === 'commercial') {
-      const base = section.fields.filter((f) => {
-        const val = formState[f]
-        return val !== null && val !== undefined && val !== '' && val !== 0
-      }).length
-      const discountOk = !formState.hasDiscount || (
-        formState.discountType?.trim() && Number(formState.discountValue) > 0
-      )
-      const extraTotal = 1
-      return Math.min((base + (discountOk ? 1 : 0)) / (section.fields.length + extraTotal), 1)
-    }
-    const filled = section.fields.filter((f) => {
-      const val = formState[f]
-      return val !== null && val !== undefined && val !== ''
-    }).length
-    return Math.min(filled / Math.max(section.fields.length, 1), 1)
-  })
 
   const subtotal = formState.items.reduce((acc, item) => acc + getItemTotals(item).subtotal, 0)
   const taxTotal = formState.items.reduce((acc, item) => acc + getItemTotals(item).taxTotal, 0)
@@ -618,6 +624,44 @@ const CalibrationServiceWorkspacePage = () => {
     : 0
   const grandTotal = subtotal + taxTotal - discountTotal
   const validItemsCount = formState.items.filter((i) => i.itemName.trim()).length
+
+  const filledItems = formState.items.filter((item) => item.itemName.trim() || item.instrumentName?.trim())
+  const itemsNeedingPoints = filledItems.filter(
+    (item) =>
+      item.otherFields?.hasCalibrationPoints !== false &&
+      (!item.otherFields?.calibrationPointCount || !item.otherFields?.measurementRange)
+  )
+  const hasRequestEvidence = Boolean(requestEvidenceFile || requestEvidenceDocuments.length)
+  const contactEmail = formState.contactEmail?.trim() || ''
+  const requirements: Requirement[] = [
+    { key: 'customer', label: 'Elegir el cliente', section: 0, forDraft: true, pending: !formState.customerId },
+    { key: 'site', label: 'Elegir la sede', section: 0, forDraft: true, pending: formState.scopeType === 'site' && !formState.customerSite?.trim() },
+    { key: 'channel', label: 'Indicar la vía de solicitud', section: 0, forDraft: true, pending: !formState.requestChannel?.trim() },
+    { key: 'evidence', label: 'Adjuntar la evidencia de solicitud', section: 0, forDraft: true, pending: !hasRequestEvidence },
+    { key: 'email', label: 'Corregir el email de contacto', section: 1, forDraft: true, pending: Boolean(contactEmail) && !EMAIL_REGEX.test(contactEmail) },
+    {
+      key: 'items',
+      label: filledItems.length ? 'Completar nombre y cantidad de los ítems' : 'Agregar al menos un ítem',
+      section: 3,
+      forDraft: true,
+      pending: !filledItems.length || filledItems.some((item) => !item.itemName.trim() || !(Number(item.quantity) > 0))
+    },
+    { key: 'points', label: 'Completar puntos y rango de medición de los ítems', section: 3, forDraft: false, pending: itemsNeedingPoints.length > 0 },
+    { key: 'payment', label: 'Elegir la forma de pago', section: 4, forDraft: false, pending: !formState.paymentMethod },
+    { key: 'instrument', label: 'Definir el tiempo de entrega de equipos', section: 4, forDraft: false, pending: !formState.instrumentDeliveryTime },
+    { key: 'certificate', label: 'Definir el tiempo de entrega de certificados', section: 4, forDraft: false, pending: !formState.certificateDeliveryTime },
+    { key: 'discount', label: 'Completar el tipo y valor del descuento', section: 4, forDraft: false, pending: Boolean(formState.hasDiscount) && (!formState.discountType || !(Number(formState.discountValue) > 0)) }
+  ]
+  const pendingRequirements = requirements.filter((requirement) => requirement.pending)
+  const pendingForDraft = pendingRequirements.filter((requirement) => requirement.forDraft)
+  const pendingBySection = sections.map((_, index) => pendingRequirements.filter((requirement) => requirement.section === index).length)
+  // Pasos con obligatorios: allí se muestra el avance; los demás (contacto, términos) son opcionales
+  const trackedSections = [0, 3, 4]
+
+  const goToSection = (index: number) => {
+    setActiveSection(Math.min(Math.max(index, 0), sections.length - 1))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   const setField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setFormState((previous) => ({ ...previous, [field]: value }))
@@ -815,16 +859,16 @@ const CalibrationServiceWorkspacePage = () => {
     if (formState.scopeType === 'site' && !formState.customerSite?.trim()) {
       return 'Selecciona la sede del servicio.'
     }
-    if (!formState.requestChannel?.trim()) return 'Define la via de solicitud.'
+    if (!formState.requestChannel?.trim()) return 'Define la vía de solicitud.'
     if (formState.contactEmail?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formState.contactEmail.trim())) {
       return 'El email de contacto no es válido. Ingresa un email con formato correcto (ej: usuario@dominio.com).'
     }
     const validItems = formState.items.filter(
       (item) => item.itemName.trim() || item.instrumentName?.trim()
     )
-    if (!validItems.length) return 'Agrega al menos un item.'
+    if (!validItems.length) return 'Agrega al menos un ítem.'
     if (validItems.some((item) => !item.itemName.trim() || !(Number(item.quantity) > 0))) {
-      return 'Revisa nombre y cantidad de los items.'
+      return 'Revisa nombre y cantidad de los ítems.'
     }
     if (targetStatus === 'pending_approval') {
       if (!formState.paymentMethod) {
@@ -864,6 +908,19 @@ const CalibrationServiceWorkspacePage = () => {
   }
 
   const handleSave = async (targetStatus: 'draft' | 'pending_approval') => {
+    const blocking = targetStatus === 'draft' ? pendingForDraft : pendingRequirements
+    if (blocking.length) {
+      if (blocking.some((requirement) => requirement.key === 'points')) {
+        setValidationErrorItemIds(new Set(itemsNeedingPoints.map((item) => item.localId)))
+      }
+      goToSection(blocking[0].section)
+      toast.error(
+        `Antes de ${targetStatus === 'draft' ? 'guardar' : 'enviar'}, completa: ${blocking
+          .map((requirement) => requirement.label.charAt(0).toLowerCase() + requirement.label.slice(1))
+          .join('; ')}.`
+      )
+      return
+    }
     const validationError = validateForm(targetStatus)
     if (validationError) {
       toast.error(validationError)
@@ -938,7 +995,29 @@ const CalibrationServiceWorkspacePage = () => {
     }
   }
 
-  if (isLoadingService || isLoadingCustomers || isLoadingProducts || isLoadingSequenceConfig) {
+  // La barra de acciones es fija: el layout de la app no permite 'sticky', así que se alinea con el contenido
+  const isPageLoading = isLoadingService || isLoadingCustomers || isLoadingProducts || isLoadingSequenceConfig
+  useEffect(() => {
+    const update = () => {
+      const element = containerRef.current
+      if (!element) return
+      const rect = element.getBoundingClientRect()
+      const styles = window.getComputedStyle(element)
+      const paddingLeft = parseFloat(styles.paddingLeft) || 0
+      const paddingRight = parseFloat(styles.paddingRight) || 0
+      setActionBarBox({ left: rect.left + paddingLeft, width: rect.width - paddingLeft - paddingRight })
+    }
+    update()
+    window.addEventListener('resize', update)
+    const observer = new ResizeObserver(update)
+    if (containerRef.current) observer.observe(containerRef.current)
+    return () => {
+      window.removeEventListener('resize', update)
+      observer.disconnect()
+    }
+  }, [isPageLoading, canAccessWorkspace])
+
+  if (isPageLoading) {
     return (
       <Box display='flex' justifyContent='center' alignItems='center' minHeight='55vh'>
         <CircularProgress />
@@ -958,14 +1037,7 @@ const CalibrationServiceWorkspacePage = () => {
   }
 
   return (
-    <Box
-      sx={{
-        px: { xs: 2, md: 3 },
-        py: { xs: 2, md: 3 },
-        minHeight: '100vh',
-        backgroundColor: '#f8fafb',
-      }}
-    >
+    <Container ref={containerRef} maxWidth='xl' sx={{ py: 3 }}>
       <Toaster position='top-center' />
 
       {/* ── Header banner ── */}
@@ -1025,7 +1097,7 @@ const CalibrationServiceWorkspacePage = () => {
             >
               Volver
             </Button>
-            <Typography variant='h4' fontWeight={800} sx={{ color: '#fff', lineHeight: 1.15, letterSpacing: '-0.025em', fontSize: { xs: '1.6rem', md: '2rem' } }}>
+            <Typography variant='h4' fontWeight={700} sx={{ color: '#fff', lineHeight: 1.15, fontSize: { xs: '1.6rem', md: '2rem' } }}>
               {isEditing ? `Editar ${service?.quoteCode || service?.serviceCode || 'servicio'}` : 'Nuevo servicio de calibración'}
             </Typography>
             <Typography variant='body2' sx={{ mt: 1, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, maxWidth: 700, fontSize: '0.9rem' }}>
@@ -1033,12 +1105,24 @@ const CalibrationServiceWorkspacePage = () => {
               ítems y evidencia de solicitud.
             </Typography>
           </Box>
-          {service ? (
-            <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
-              <Chip color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]} label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]} sx={{ fontWeight: 700, borderRadius: '8px' }} />
-              <Chip variant='outlined' color={CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]} label={CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]} sx={{ fontWeight: 700, borderRadius: '8px' }} />
-            </Stack>
-          ) : null}
+          <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
+            {service ? (
+              <Stack spacing={1} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
+                <Chip color={CALIBRATION_SERVICE_STATUS_COLORS[service.status]} label={CALIBRATION_SERVICE_STATUS_LABELS[service.status]} sx={{ fontWeight: 700, borderRadius: '8px' }} />
+                <Chip variant='outlined' color={CALIBRATION_SERVICE_APPROVAL_COLORS[service.approvalStatus]} label={CALIBRATION_SERVICE_APPROVAL_LABELS[service.approvalStatus]} sx={{ fontWeight: 700, borderRadius: '8px' }} />
+              </Stack>
+            ) : null}
+            {sequenceConfig?.initialized ? (
+              <Button
+                variant='outlined'
+                size='small'
+                onClick={() => setIsSequenceDialogOpen(true)}
+                sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.55)', textTransform: 'none', fontWeight: 600, borderRadius: '10px', '&:hover': { borderColor: '#fff', bgcolor: 'rgba(255,255,255,0.12)' } }}
+              >
+                Configurar consecutivos
+              </Button>
+            ) : null}
+          </Stack>
         </Stack>
       </Box>
 
@@ -1057,9 +1141,9 @@ const CalibrationServiceWorkspacePage = () => {
         </Alert>
       ) : null}
 
-      {canAccessWorkspace && sequenceConfig ? (
+      {canAccessWorkspace && sequenceConfig && !sequenceConfig.initialized ? (
         <Alert
-          severity={sequenceConfig.initialized ? 'info' : 'warning'}
+          severity='warning'
           sx={{ mb: 3 }}
           action={
             <Button color='inherit' size='small' onClick={() => setIsSequenceDialogOpen(true)}>
@@ -1067,9 +1151,7 @@ const CalibrationServiceWorkspacePage = () => {
             </Button>
           }
         >
-          {sequenceConfig.initialized
-            ? 'Puedes ajustar el metrólogo de laboratorio y los consecutivos desde la configuración.'
-            : 'Antes de guardar la primera cotización, define los consecutivos iniciales de oferta y ODS.'}
+          Antes de guardar la primera cotización, define los consecutivos iniciales de oferta y ODS.
         </Alert>
       ) : null}
 
@@ -1091,7 +1173,7 @@ const CalibrationServiceWorkspacePage = () => {
       >
         <Tabs
           value={activeSection}
-          onChange={(_, v) => setActiveSection(v)}
+          onChange={(_, v) => goToSection(v)}
           variant='scrollable'
           scrollButtons={false}
           sx={{
@@ -1102,14 +1184,13 @@ const CalibrationServiceWorkspacePage = () => {
               textTransform: 'none',
               fontWeight: 600,
               fontSize: '0.8rem',
-              letterSpacing: '0.01em',
               px: 2,
               gap: 1,
               color: 'text.secondary',
-              '&.Mui-selected': { color: '#059669' }
+              '&.Mui-selected': { color: '#00897B' }
             },
             '& .MuiTabs-indicator': {
-              backgroundColor: '#059669',
+              backgroundColor: '#00BFA5',
               height: 3,
               borderRadius: '3px 3px 0 0'
             }
@@ -1123,13 +1204,18 @@ const CalibrationServiceWorkspacePage = () => {
               label={
                 <Stack direction='row' alignItems='center' spacing={1}>
                   <span>{section.label}</span>
-                  <Chip
-                    size='small'
-                    label={`${Math.round(sectionCompletion[index] * 100)}%`}
-                    color={sectionCompletion[index] >= 1 ? 'success' : 'default'}
-                    variant='outlined'
-                    sx={{ height: 20, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.8 } }}
-                  />
+                  {pendingBySection[index] > 0 ? (
+                    <Chip
+                      size='small'
+                      color='warning'
+                      variant='outlined'
+                      label={pendingBySection[index]}
+                      aria-label={`${pendingBySection[index]} pendientes`}
+                      sx={{ height: 20, minWidth: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.8, fontWeight: 700 } }}
+                    />
+                  ) : trackedSections.includes(index) ? (
+                    <CheckCircleOutlineOutlinedIcon aria-label='Completo' sx={{ fontSize: 16, color: '#00897B' }} />
+                  ) : null}
                 </Stack>
               }
             />
@@ -1140,22 +1226,13 @@ const CalibrationServiceWorkspacePage = () => {
       <Grid container spacing={2.5}>
         <Grid item xs={12} lg={8}>
           <div style={{ display: activeSection !== 0 ? 'none' : undefined }}>
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #10b981, #34d399)' } }}>
+          <Card elevation={0} sx={sectionCardSx}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
-                <GroupOutlinedIcon sx={{ color: '#059669', fontSize: 22 }} />
-                <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
+                <GroupOutlinedIcon sx={{ color: '#00897B', fontSize: 22 }} />
+                <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
                   Cliente y alcance
                 </Typography>
-                {sectionCompletion[0] >= 1 ? (
-                  <Chip icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />} size='small' label='Completo' color='success' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }} />
-                ) : (
-                  <LinearProgress
-                    variant='determinate'
-                    value={sectionCompletion[0] * 100}
-                    sx={{ width: 60, height: 4, borderRadius: 2, ml: 'auto', backgroundColor: 'rgba(0,0,0,0.06)', '& .MuiLinearProgress-bar': { backgroundColor: '#059669', borderRadius: 2 } }}
-                  />
-                )}
               </Stack>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
@@ -1255,10 +1332,10 @@ const CalibrationServiceWorkspacePage = () => {
                 ) : null}
                 <Grid item xs={12} md={6}>
                   <FormControl fullWidth>
-                    <InputLabel>Via de solicitud</InputLabel>
+                    <InputLabel>Vía de solicitud</InputLabel>
                     <Select
                       value={formState.requestChannel || ''}
-                      label='Via de solicitud'
+                      label='Vía de solicitud'
                       disabled={!canEdit || isBusy}
                       onChange={(event) => setField('requestChannel', event.target.value)}
                     >
@@ -1274,7 +1351,7 @@ const CalibrationServiceWorkspacePage = () => {
 
               <Divider sx={{ my: 2 }} />
               <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2 }}>
-                <UploadFileOutlinedIcon sx={{ color: '#7c3aed', fontSize: 20 }} />
+                <UploadFileOutlinedIcon sx={{ color: '#00897B', fontSize: 20 }} />
                 <Typography variant='subtitle2' fontWeight={700} sx={{ color: '#374151' }}>
                   Evidencia de solicitud *
                 </Typography>
@@ -1285,7 +1362,7 @@ const CalibrationServiceWorkspacePage = () => {
                 )}
               </Stack>
               <Stack spacing={2}>
-                <TextField fullWidth label='Titulo de la evidencia' value={requestEvidenceTitle} disabled={!canEdit || isBusy} onChange={(event) => setRequestEvidenceTitle(event.target.value)} required />
+                <TextField fullWidth label='Título de la evidencia' value={requestEvidenceTitle} disabled={!canEdit || isBusy} onChange={(event) => setRequestEvidenceTitle(event.target.value)} required />
                 <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', md: 'center' }}>
                   <Button component='label' variant='outlined' startIcon={<UploadFileOutlinedIcon />} disabled={!canEdit || isBusy}>
                     Seleccionar archivo
@@ -1315,16 +1392,13 @@ const CalibrationServiceWorkspacePage = () => {
           </div>
 
           <div style={{ display: activeSection !== 1 ? 'none' : undefined }}>
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #f59e0b, #fbbf24)' } }}>
+          <Card elevation={0} sx={sectionCardSx}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
-                <Inventory2OutlinedIcon sx={{ color: '#d97706', fontSize: 22 }} />
-                <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
+                <Inventory2OutlinedIcon sx={{ color: '#00897B', fontSize: 22 }} />
+                <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
                   Contacto y destino del servicio
                 </Typography>
-                {sectionCompletion[1] >= 1 ? (
-                  <Chip icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />} size='small' label='Completo' color='success' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }} />
-                ) : null}
               </Stack>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
@@ -1334,7 +1408,7 @@ const CalibrationServiceWorkspacePage = () => {
                   <TextField fullWidth label='Email' type='email' value={formState.contactEmail || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('contactEmail', event.target.value)} />
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <TextField fullWidth label='Telefono / celular' value={formState.contactPhone || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('contactPhone', event.target.value)} />
+                  <TextField fullWidth label='Teléfono / celular' value={formState.contactPhone || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('contactPhone', event.target.value)} />
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <TextField fullWidth label='Ciudad' value={formState.city || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('city', event.target.value)} />
@@ -1343,7 +1417,7 @@ const CalibrationServiceWorkspacePage = () => {
                   <TextField fullWidth label='Departamento' value={formState.department || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('department', event.target.value)} />
                 </Grid>
                 <Grid item xs={12}>
-                  <TextField fullWidth label='Direccion' value={formState.address || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('address', event.target.value)} />
+                  <TextField fullWidth label='Dirección' value={formState.address || ''} disabled={!canEdit || isBusy} onChange={(event) => setField('address', event.target.value)} />
                 </Grid>
                 <Grid item xs={12}>
                   <Divider sx={{ my: 1 }} />
@@ -1407,11 +1481,11 @@ const CalibrationServiceWorkspacePage = () => {
 
 
           <div style={{ display: activeSection !== 2 ? 'none' : undefined }}>
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #8b5cf6, #a78bfa)' } }}>
+          <Card elevation={0} sx={sectionCardSx}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
-                <UploadFileOutlinedIcon sx={{ color: '#7c3aed', fontSize: 22 }} />
-                <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
+                <UploadFileOutlinedIcon sx={{ color: '#00897B', fontSize: 22 }} />
+                <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
                   Términos
                 </Typography>
               </Stack>
@@ -1463,18 +1537,8 @@ const CalibrationServiceWorkspacePage = () => {
           </div>
 
           <div style={{ display: activeSection !== 3 ? 'none' : undefined }}>
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #ec4899, #f472b6)' } }}>
+          <Card elevation={0} sx={sectionCardSx}>
             <CardContent sx={{ p: { xs: 2, md: 3 }, pBottom: { xs: 2, md: 3 } }}>
-              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
-                <RequestQuoteOutlinedIcon sx={{ color: '#db2777', fontSize: 22 }} />
-                <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
-                  Ítems cotizados
-                </Typography>
-                <Chip size='small' label={`${formState.items.filter((i) => i.itemName.trim()).length} ítems`} variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.8 } }} />
-                {formState.items.filter((i) => i.itemName.trim()).length > 0 ? (
-                  <Chip icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />} size='small' label='Completo' color='success' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }} />
-                ) : null}
-              </Stack>
               <CalibrationServiceItemsEditor
                 items={formState.items}
                 products={productOptions}
@@ -1495,16 +1559,13 @@ const CalibrationServiceWorkspacePage = () => {
           </div>
 
           <div style={{ display: activeSection !== 4 ? 'none' : undefined }}>
-          <Card elevation={0} sx={{ borderRadius: '16px', mb: 3, border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',position: 'relative', overflow: 'visible', '&::before': { content: '""', position: 'absolute', left: 0, top: 16, bottom: 16, width: 3, borderRadius: '2px', background: 'linear-gradient(180deg, #6366f1, #818cf8)' } }}>
+          <Card elevation={0} sx={sectionCardSx}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2.5 }}>
-                <ReceiptLongOutlinedIcon sx={{ color: '#4f46e5', fontSize: 22 }} />
-                <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
+                <ReceiptLongOutlinedIcon sx={{ color: '#00897B', fontSize: 22 }} />
+                <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
                   Condiciones comerciales
                 </Typography>
-                {sectionCompletion[4] >= 1 ? (
-                  <Chip icon={<CheckCircleOutlineOutlinedIcon sx={{ fontSize: 14 }} />} size='small' label='Completo' color='success' variant='outlined' sx={{ height: 22, '& .MuiChip-label': { fontSize: '0.7rem', px: 0.5 }, '& .MuiChip-icon': { fontSize: 14, ml: 0.5 } }} />
-                ) : null}
               </Stack>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={4}>
@@ -1641,15 +1702,39 @@ const CalibrationServiceWorkspacePage = () => {
           </Card>
           </div>
 
-
+          <Stack direction='row' justifyContent='space-between' alignItems='center' spacing={2} sx={{ mb: 3 }}>
+            <Button
+              startIcon={<ArrowBackOutlinedIcon />}
+              onClick={() => goToSection(activeSection - 1)}
+              disabled={activeSection === 0}
+              sx={{ textTransform: 'none', fontWeight: 600, color: '#4b5563' }}
+            >
+              Anterior
+            </Button>
+            {activeSection < sections.length - 1 ? (
+              <Button
+                variant='outlined'
+                endIcon={<ArrowForwardOutlinedIcon />}
+                onClick={() => goToSection(activeSection + 1)}
+                sx={tealOutlineSx}
+              >
+                Siguiente: {sections[activeSection + 1].label}
+              </Button>
+            ) : (
+              <Typography variant='body2' color='text.secondary'>
+                Último paso: revisa el resumen y guarda o envía la cotización.
+              </Typography>
+            )}
+          </Stack>
         </Grid>
 
         <Grid item xs={12} lg={4}>
-          <Card elevation={0} sx={{ borderRadius: '16px', border: '1px solid rgba(0,0,0,0.06)', background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(14px)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)', position: { lg: 'sticky' }, top: { lg: 24 },}}>
-            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+          <Card elevation={0} sx={{ borderRadius: '16px', border: '1px solid #e5e7eb', bgcolor: '#fff', boxShadow: 'none', position: { lg: 'sticky' }, top: { lg: 24 } }}>
+            <CardContent sx={{ p: { xs: 2, md: 3 }, '&:last-child': { pb: { xs: 2, md: 3 } } }}>
+              <Box>
               <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 2 }}>
-                <ReceiptLongOutlinedIcon sx={{ color: '#059669', fontSize: 22 }} />
-                <Typography variant='h6' fontWeight={800} sx={{ color: '#111827', letterSpacing: '-0.01em' }}>
+                <ReceiptLongOutlinedIcon sx={{ color: '#00897B', fontSize: 22 }} />
+                <Typography variant='h6' fontWeight={700} sx={{ color: '#111827' }}>
                   Resumen económico
                 </Typography>
               </Stack>
@@ -1677,80 +1762,137 @@ const CalibrationServiceWorkspacePage = () => {
 
               <Divider sx={{ my: 2.5 }} />
 
-              <Stack spacing={1.5}>
-                <Typography variant='caption' color='text.secondary' fontWeight={700} sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>Resumen del formulario</Typography>
-                {sections.map((section, index) => (
-                  <Stack key={section.key} direction='row' justifyContent='space-between' alignItems='center'>
-                    <Stack direction='row' alignItems='center' spacing={1}>
-                      {section.icon}
-                      <Typography variant='body2' sx={{ color: 'text.secondary', fontWeight: 500 }}>{section.label}</Typography>
+              <Stack spacing={1}>
+                <Typography variant='subtitle2' fontWeight={700} sx={{ color: '#111827' }}>
+                  {pendingRequirements.length ? `Faltan ${pendingRequirements.length} para enviar` : 'Todo listo para enviar'}
+                </Typography>
+                {pendingRequirements.length ? (
+                  <>
+                    {!pendingForDraft.length ? (
+                      <Typography variant='caption' color='text.secondary'>
+                        Ya puedes guardar el borrador. Lo que falta solo se exige al enviar.
+                      </Typography>
+                    ) : null}
+                    <Stack spacing={0.25}>
+                      {pendingRequirements.map((requirement) => (
+                        <Box
+                          key={requirement.key}
+                          component='button'
+                          type='button'
+                          onClick={() => goToSection(requirement.section)}
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            width: '100%',
+                            py: 0.75,
+                            px: 0.75,
+                            border: 0,
+                            bgcolor: 'transparent',
+                            textAlign: 'left',
+                            font: 'inherit',
+                            cursor: 'pointer',
+                            borderRadius: '8px',
+                            '&:hover': { bgcolor: '#f3f4f6' },
+                            '&:focus-visible': { outline: '2px solid #00BFA5' }
+                          }}
+                        >
+                          <ErrorOutlineOutlinedIcon sx={{ fontSize: 18, color: requirement.forDraft ? '#d97706' : '#9ca3af' }} />
+                          <Typography variant='body2' sx={{ color: '#374151', flex: 1 }}>
+                            {requirement.label}
+                          </Typography>
+                          {!requirement.forDraft ? (
+                            <Typography variant='caption' sx={{ color: '#9ca3af', whiteSpace: 'nowrap' }}>
+                              al enviar
+                            </Typography>
+                          ) : null}
+                        </Box>
+                      ))}
                     </Stack>
-                    <Chip
-                      size='small'
-                      label={sectionCompletion[index] >= 1 ? 'Listo' : `${Math.round(sectionCompletion[index] * 100)}%`}
-                      color={sectionCompletion[index] >= 1 ? 'success' : 'default'}
-                      variant='outlined'
-                      sx={{ height: 20, '& .MuiChip-label': { fontSize: '0.65rem', px: 0.6 } }}
-                    />
+                  </>
+                ) : (
+                  <Stack direction='row' spacing={1} alignItems='flex-start'>
+                    <CheckCircleOutlineOutlinedIcon sx={{ color: '#00897B', fontSize: 20, mt: 0.1 }} />
+                    <Typography variant='body2' color='text.secondary'>
+                      Cliente, evidencia, ítems y condiciones están completos.
+                    </Typography>
                   </Stack>
-                ))}
-                <Stack direction='row' justifyContent='space-between' alignItems='center'>
-                  <Typography variant='body2' sx={{ color: 'text.secondary', fontWeight: 500 }}>Ítems</Typography>
-                  <Typography variant='body2' fontWeight={600}>{validItemsCount}</Typography>
-                </Stack>
+                )}
+                <Typography variant='caption' color='text.secondary'>
+                  {validItemsCount} ítem{validItemsCount === 1 ? '' : 's'} en la cotización
+                </Typography>
               </Stack>
-
-              <Divider sx={{ my: 2.5 }} />
-              <Stack spacing={1.5}>
-                <Button
-                  variant='contained'
-                  startIcon={<SaveOutlinedIcon />}
-                  onClick={() => void handleSave('draft')}
-                  disabled={!canEdit || isBusy || !sequenceConfig?.initialized}
-                  sx={{
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    borderRadius: '12px',
-                    textTransform: 'none',
-                    fontWeight: 700,
-                    py: 1.2,
-                    boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.2)',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #10b981 0%, #047857 100%)',
-                      boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)',
-                      transform: 'translateY(-1px)'
-                    }
-                  }}
-                >
-                  Guardar borrador
-                </Button>
-                <Button
-                  variant='outlined'
-                  startIcon={<SendOutlinedIcon />}
-                  onClick={() => void handleSave('pending_approval')}
-                  disabled={!canEdit || isBusy || !sequenceConfig?.initialized}
-                  sx={{
-                    borderColor: '#10b981',
-                    color: '#059669',
-                    borderRadius: '12px',
-                    textTransform: 'none',
-                    fontWeight: 700,
-                    py: 1.2,
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&:hover': {
-                      borderColor: '#059669',
-                      backgroundColor: 'rgba(16, 185, 129, 0.06)',
-                      transform: 'translateY(-1px)'
-                    }
-                  }}
-                >
-                  Guardar y enviar cotización
-                </Button>
-              </Stack>
+              </Box>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
+
+      {/* Acciones siempre visibles: estado de lo que falta y guardar / enviar */}
+      <Box sx={{ height: { xs: 150, sm: 88 } }} aria-hidden />
+      <Paper
+        elevation={0}
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          left: actionBarBox?.left ?? 16,
+          width: actionBarBox?.width ?? 'calc(100vw - 32px)',
+          zIndex: 1100,
+          px: { xs: 1.5, sm: 2.5 },
+          py: 1.5,
+          borderRadius: '16px',
+          border: '1px solid #e5e7eb',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'stretch', sm: 'center' },
+          justifyContent: 'space-between',
+          gap: { xs: 1, sm: 2 }
+        }}
+      >
+        {pendingRequirements.length ? (
+          <Stack direction='row' alignItems='center' spacing={1.25}>
+            <ErrorOutlineOutlinedIcon sx={{ color: pendingForDraft.length ? '#d97706' : '#9ca3af' }} />
+            <Typography variant='body2' sx={{ color: '#374151', flex: 1, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+              {pendingForDraft.length
+                ? `Faltan ${pendingForDraft.length} dato${pendingForDraft.length === 1 ? '' : 's'} para guardar y ${pendingRequirements.length} para enviar`
+                : `Puedes guardar el borrador. Faltan ${pendingRequirements.length} dato${pendingRequirements.length === 1 ? '' : 's'} para enviar`}
+            </Typography>
+            <Button size='small' onClick={() => goToSection(pendingRequirements[0].section)} sx={{ textTransform: 'none', fontWeight: 600, color: '#00897B' }}>
+              Ver qué falta
+            </Button>
+          </Stack>
+        ) : (
+          <Stack direction='row' alignItems='center' spacing={1.25}>
+            <CheckCircleOutlineOutlinedIcon sx={{ color: '#00897B' }} />
+            <Typography variant='body2' sx={{ color: '#374151' }}>
+              Todo listo para enviar la cotización
+            </Typography>
+          </Stack>
+        )}
+        <Stack direction='row' spacing={1} sx={{ '& .MuiButton-root': { flex: { xs: 1, sm: 'initial' }, whiteSpace: 'nowrap', px: { xs: 1, sm: 2 }, fontSize: { xs: '0.82rem', sm: '0.875rem' } }, '& .MuiButton-startIcon': { display: { xs: 'none', sm: 'inherit' } } }}>
+          <Button
+            variant='outlined'
+            startIcon={<SaveOutlinedIcon />}
+            onClick={() => void handleSave('draft')}
+            disabled={!canEdit || isBusy || !sequenceConfig?.initialized}
+            sx={tealOutlineSx}
+          >
+            Guardar borrador
+          </Button>
+          <Button
+            variant='contained'
+            disableElevation
+            startIcon={<SendOutlinedIcon />}
+            onClick={() => void handleSave('pending_approval')}
+            disabled={!canEdit || isBusy || !sequenceConfig?.initialized}
+            sx={tealButtonSx}
+          >
+            Guardar y enviar
+            <Box component='span' sx={{ display: { xs: 'none', sm: 'inline' } }}>&nbsp;cotización</Box>
+          </Button>
+        </Stack>
+      </Paper>
       <CatalogProductPickerDialog
         open={catalogPickerOpen}
         products={productOptions}
@@ -1796,7 +1938,7 @@ const CalibrationServiceWorkspacePage = () => {
           createCustomerMutation.mutate(values)
         }}
       />
-    </Box>
+    </Container>
   )
 }
 
