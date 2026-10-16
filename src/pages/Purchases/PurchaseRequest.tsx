@@ -22,7 +22,6 @@ import {
   ShoppingCartCheckout
 } from '@mui/icons-material'
 import { PurchaseRequest as IPurchaseRequest } from './Types'
-import CreatePurchaseRequestModal from 'src/Components/Purchases/PurchaseRequestModal'
 import { PurchaseRequestStatus } from './Enums'
 import { differenceInDays, format } from 'date-fns'
 
@@ -543,7 +542,7 @@ const PurchaseRequest: React.FC = () => {
         />
       </PurchasesPage>
 
-      <CreatePurchaseRequestModal
+      <PurchaseRequestModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onSuccess={handleSuccess}
