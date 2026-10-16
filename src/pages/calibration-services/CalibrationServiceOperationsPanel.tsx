@@ -33,6 +33,7 @@ import {
   CalibrationServiceOperationsSummary
 } from '../../types/calibrationService'
 
+import { DetailField } from './CalibrationServiceDetailBlocks'
 type CalibrationServiceOperationalItem = NonNullable<
   CalibrationService['items']
 >[number]
@@ -294,64 +295,34 @@ const CalibrationServiceOperationsPanel = ({
 
       <Grid container spacing={2}>
         <Grid item xs={12} md={4}>
-          <Typography variant='caption' color='text.secondary'>
-            Metrólogos asignados
-          </Typography>
-          <Typography variant='body1'>
-            {(() => {
+          <DetailField label='Metrólogos asignados'>{(() => {
               const metrologists: any = operations.assignedMetrologists
               if (Array.isArray(metrologists) && metrologists.length > 0) {
                 return metrologists.map((m: any) => m.name).join(', ')
               }
               return operations.assignedMetrologistName || 'Sin asignar'
-            })()}
-          </Typography>
+            })()}</DetailField>
         </Grid>
         <Grid item xs={12} md={4}>
-          <Typography variant='caption' color='text.secondary'>
-            Fecha compromiso
-          </Typography>
-          <Typography variant='body1'>
-            {operations.commitmentDate
+          <DetailField label='Fecha compromiso'>{operations.commitmentDate
               ? new Date(operations.commitmentDate).toLocaleDateString('es-CO')
-              : 'Sin registrar'}
-          </Typography>
+              : 'Sin registrar'}</DetailField>
         </Grid>
         <Grid item xs={12} md={4}>
-          <Typography variant='caption' color='text.secondary'>
-            Fecha programada
-          </Typography>
-          <Typography variant='body1'>
-            {operations.scheduledDate
+          <DetailField label='Fecha programada'>{operations.scheduledDate
               ? new Date(operations.scheduledDate).toLocaleDateString('es-CO')
-              : 'Sin registrar'}
-          </Typography>
+              : 'Sin registrar'}</DetailField>
         </Grid>
         <Grid item xs={12} md={4}>
-          <Typography variant='caption' color='text.secondary'>
-            Responsable operativo
-          </Typography>
-          <Typography variant='body1'>
-            {operations.operationalResponsibleName || 'Sin registrar'}
-          </Typography>
+          <DetailField label='Responsable operativo'>{operations.operationalResponsibleName || 'Sin registrar'}</DetailField>
         </Grid>
         <Grid item xs={12} md={4}>
-          <Typography variant='caption' color='text.secondary'>
-            Rol del responsable
-          </Typography>
-          <Typography variant='body1'>
-            {operations.operationalResponsibleRole || 'Sin registrar'}
-          </Typography>
+          <DetailField label='Rol del responsable'>{operations.operationalResponsibleRole || 'Sin registrar'}</DetailField>
         </Grid>
         <Grid item xs={12} md={4}>
-          <Typography variant='caption' color='text.secondary'>
-            Inicio de ejecución
-          </Typography>
-          <Typography variant='body1'>
-            {operations.startedAt
+          <DetailField label='Inicio de ejecución'>{operations.startedAt
               ? new Date(operations.startedAt).toLocaleString('es-CO')
-              : 'Pendiente'}
-          </Typography>
+              : 'Pendiente'}</DetailField>
         </Grid>
         <Grid item xs={12} md={4}>
           <Typography variant='caption' color='text.secondary'>
@@ -363,18 +334,12 @@ const CalibrationServiceOperationsPanel = ({
         </Grid>
         {operations.programmingNotes ? (
           <Grid item xs={12}>
-            <Typography variant='caption' color='text.secondary'>
-              Notas de programación
-            </Typography>
-            <Typography variant='body1'>{operations.programmingNotes}</Typography>
+            <DetailField label='Notas de programación'>{operations.programmingNotes}</DetailField>
           </Grid>
         ) : null}
         {operations.executionNotes ? (
           <Grid item xs={12}>
-            <Typography variant='caption' color='text.secondary'>
-              Notas de ejecución
-            </Typography>
-            <Typography variant='body1'>{operations.executionNotes}</Typography>
+            <DetailField label='Notas de ejecución'>{operations.executionNotes}</DetailField>
           </Grid>
         ) : null}
       </Grid>

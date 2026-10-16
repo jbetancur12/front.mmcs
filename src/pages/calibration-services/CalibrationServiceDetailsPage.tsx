@@ -121,6 +121,7 @@ import { ROLE_GROUPS } from 'src/constants/roles'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import CalibrationServiceStageTracker from './CalibrationServiceStageTracker'
+import { ClampedText, DetailCell, DetailField, DetailSection } from './CalibrationServiceDetailBlocks'
 type DetailTab =
   | 'summary'
   | 'items'
@@ -2970,7 +2971,7 @@ const CalibrationServiceDetailsPage = () => {
       />
 
       <Grid container spacing={2}>
-        <Grid item xs={12} lg={8}>
+        <Grid item xs={12} lg={9}>
           <Card sx={{ borderRadius: 3 }}>
             <CardContent>
               <Tabs
@@ -2978,6 +2979,13 @@ const CalibrationServiceDetailsPage = () => {
                 onChange={(_, value: DetailTab) => setActiveTab(value)}
                 variant='scrollable'
                 allowScrollButtonsMobile
+                sx={{
+                  mb: 2,
+                  borderBottom: '1px solid #e5e7eb',
+                  '& .MuiTabs-indicator': { backgroundColor: '#00BFA5', height: 3 },
+                  '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 },
+                  '& .Mui-selected': { color: '#00695C' }
+                }}
               >
                 <Tab label='Resumen' value='summary' />
                 <Tab
@@ -3027,306 +3035,150 @@ const CalibrationServiceDetailsPage = () => {
                     la trazabilidad.
                   </Alert>
                 ) : null}
-                <Grid container spacing={2}>
+                <DetailSection title='Cliente y contacto'>
                   {!isTechnicalOnlyView ? (
                     <>
-                      <Grid item xs={12} md={6}>
-                        <Typography variant='caption' color='text.secondary'>
-                          Cliente de la oferta
-                        </Typography>
-                        <Typography variant='body1'>
-                          {commercialCustomerName}
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <Stack direction='row' alignItems='center' spacing={1}>
-                          <Box>
-                            <Typography
-                              variant='caption'
-                              color='text.secondary'
-                            >
-                              Destino del servicio
-                            </Typography>
-                            <Typography variant='body1'>
-                              {hasDifferentExecutionCustomer
-                                ? 'Cliente diferente a la oferta'
-                                : 'Mismo cliente de la oferta'}
-                            </Typography>
-                          </Box>
+                      <DetailCell>
+                        <DetailField label='Cliente de la oferta'>{commercialCustomerName}</DetailField>
+                      </DetailCell>
+                      <DetailCell>
+                        <Stack direction='row' alignItems='flex-start' spacing={1}>
+                          <DetailField label='Destino del servicio'>
+                            {hasDifferentExecutionCustomer
+                              ? 'Cliente diferente a la oferta'
+                              : 'Mismo cliente de la oferta'}
+                          </DetailField>
                           {canEditExecutionCustomer ? (
                             <IconButton
                               size='small'
+                              aria-label='Cambiar el destino del servicio'
                               onClick={() => {
-                                setExecutionCustomerDraft(
-                                  rawExecutionCustomerName ?? ''
-                                )
-                                setExecutionSiteDraft(
-                                  rawExecutionSiteName ?? ''
-                                )
+                                setExecutionCustomerDraft(rawExecutionCustomerName ?? '')
+                                setExecutionSiteDraft(rawExecutionSiteName ?? '')
                                 setIsExecutionCustomerDialogOpen(true)
                               }}
-                              sx={{ mt: 1.5 }}
+                              sx={{ color: '#00897B' }}
                             >
                               <EditOutlinedIcon fontSize='small' />
                             </IconButton>
                           ) : null}
                         </Stack>
-                      </Grid>
+                      </DetailCell>
                       {hasDifferentExecutionCustomer ? (
                         <>
-                          <Grid item xs={12} md={6}>
-                            <Typography
-                              variant='caption'
-                              color='text.secondary'
-                            >
-                              Cliente de ejecución
-                            </Typography>
-                            <Typography variant='body1'>
-                              {executionCustomerName}
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={12} md={6}>
-                            <Typography
-                              variant='caption'
-                              color='text.secondary'
-                            >
-                              Sede o referencia de ejecución
-                            </Typography>
-                            <Typography variant='body1'>
-                              {executionSiteName}
-                            </Typography>
-                          </Grid>
+                          <DetailCell>
+                            <DetailField label='Cliente de ejecución'>{executionCustomerName}</DetailField>
+                          </DetailCell>
+                          <DetailCell>
+                            <DetailField label='Sede o referencia de ejecución'>{executionSiteName}</DetailField>
+                          </DetailCell>
                         </>
                       ) : null}
                     </>
                   ) : null}
-                  <Grid item xs={12} md={6}>
-                    <Typography variant='caption' color='text.secondary'>
-                      Contacto
-                    </Typography>
-                    <Typography variant='body1'>
-                      {service.contactName || 'Sin contacto'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant='caption' color='text.secondary'>
-                      Sede
-                    </Typography>
-                    <Typography variant='body1'>
-                      {service.customerSite ||
-                        service.executionSiteName ||
-                        'Sin sede definida'}
-                    </Typography>
-                  </Grid>
+                  <DetailCell>
+                    <DetailField label='Contacto'>{service.contactName || 'Sin contacto'}</DetailField>
+                  </DetailCell>
+                  <DetailCell>
+                    <DetailField label='Sede'>
+                      {service.customerSite || service.executionSiteName || 'Sin sede definida'}
+                    </DetailField>
+                  </DetailCell>
+                  <DetailCell>
+                    <DetailField label='Correo'>{service.contactEmail || 'Sin registrar'}</DetailField>
+                  </DetailCell>
+                  <DetailCell>
+                    <DetailField label='Teléfono'>{service.contactPhone || 'Sin registrar'}</DetailField>
+                  </DetailCell>
+                </DetailSection>
+
+                <DetailSection title='Solicitud'>
                   {!isTechnicalOnlyView ? (
-                    <Grid item xs={12} md={6}>
-                      <Typography variant='caption' color='text.secondary'>
-                        Canal de solicitud
-                      </Typography>
-                      <Typography variant='body1'>
-                        {service.requestChannel || 'Sin definir'}
-                      </Typography>
-                    </Grid>
+                    <DetailCell>
+                      <DetailField label='Canal de solicitud'>{service.requestChannel || 'Sin definir'}</DetailField>
+                    </DetailCell>
                   ) : null}
-                  <Grid item xs={12} md={6}>
-                    <Typography variant='caption' color='text.secondary'>
-                      Fecha creación
-                    </Typography>
-                    <Typography variant='body1'>
-                      {formatDateValue(service.createdAt)}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant='caption' color='text.secondary'>
-                      Email de contacto
-                    </Typography>
-                    <Typography variant='body1'>
-                      {service.contactEmail || 'Sin registrar'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant='caption' color='text.secondary'>
-                      Teléfono de contacto
-                    </Typography>
-                    <Typography variant='body1'>
-                      {service.contactPhone || 'Sin registrar'}
-                    </Typography>
-                  </Grid>
+                  <DetailCell>
+                    <DetailField label='Fecha de creación'>{formatDateValue(service.createdAt)}</DetailField>
+                  </DetailCell>
                   {!isTechnicalOnlyView ? (
-                    <Grid item xs={12} md={6}>
-                      <Typography variant='caption' color='text.secondary'>
-                        Forma de pago
-                      </Typography>
-                      <Typography variant='body1'>
-                        {service.paymentMethod || 'Sin definir'}
-                      </Typography>
-                    </Grid>
+                    <DetailCell>
+                      <DetailField label='Forma de pago'>{service.paymentMethod || 'Sin definir'}</DetailField>
+                    </DetailCell>
                   ) : null}
-                  <Grid item xs={12} md={6}>
-                    <Typography variant='caption' color='text.secondary'>
-                      Código ODS
-                    </Typography>
-                    <Typography variant='body1'>
-                      {service.odsCode || 'ODS pendiente'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant='caption' color='text.secondary'>
-                      Fecha emisión ODS
-                    </Typography>
-                    <Typography variant='body1'>
-                      {formatDateValue(service.odsGeneratedAt)}
-                    </Typography>
-                  </Grid>
-                </Grid>
+                  <DetailCell>
+                    <DetailField label='Código ODS'>{service.odsCode || 'ODS pendiente'}</DetailField>
+                  </DetailCell>
+                  <DetailCell>
+                    <DetailField label='Fecha de emisión de la ODS'>{formatDateValue(service.odsGeneratedAt)}</DetailField>
+                  </DetailCell>
+                </DetailSection>
 
                 {!isTechnicalOnlyView &&
                 (service.approvalStatus !== 'pending' ||
                   customerResponseType === 'changes_requested') ? (
-                  <>
-                    <Divider sx={{ my: 2 }} />
-                    <Typography
-                      variant='subtitle2'
-                      fontWeight={700}
-                      gutterBottom
-                    >
-                      Respuesta del cliente
-                    </Typography>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} md={6}>
-                        <Typography variant='caption' color='text.secondary'>
-                          Medio de respuesta
-                        </Typography>
-                        <Typography variant='body1'>
-                          {service.approvalChannel || 'Sin registrar'}
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <Typography variant='caption' color='text.secondary'>
-                          Contacto de referencia
-                        </Typography>
-                        <Typography variant='body1'>
-                          {service.approvalReference || 'Sin registrar'}
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <Typography variant='caption' color='text.secondary'>
-                          Fecha
-                        </Typography>
-                        <Typography variant='body1'>
-                          {formatDateValue(
-                            service.approvedAt || service.rejectedAt
-                          )}
-                        </Typography>
-                      </Grid>
-                      {service.rejectionReason ? (
-                        <Grid item xs={12}>
-                          <Typography variant='caption' color='text.secondary'>
-                            Motivo de rechazo
-                          </Typography>
-                          <Typography variant='body1'>
-                            {service.rejectionReason}
-                          </Typography>
-                        </Grid>
-                      ) : null}
-                      {customerResponseType === 'changes_requested' &&
-                      latestChangeRequestReason ? (
-                        <Grid item xs={12}>
-                          <Typography variant='caption' color='text.secondary'>
-                            Solicitud de modificación
-                          </Typography>
-                          <Typography variant='body1'>
-                            {latestChangeRequestReason}
-                          </Typography>
-                        </Grid>
-                      ) : null}
-                      {approvalNotes ? (
-                        <Grid item xs={12}>
-                          <Typography variant='caption' color='text.secondary'>
-                            Observación de la respuesta
-                          </Typography>
-                          <Typography variant='body1'>
-                            {approvalNotes}
-                          </Typography>
-                        </Grid>
-                      ) : null}
-                    </Grid>
-                  </>
+                  <DetailSection title='Respuesta del cliente'>
+                    <DetailCell>
+                      <DetailField label='Medio de respuesta'>{service.approvalChannel || 'Sin registrar'}</DetailField>
+                    </DetailCell>
+                    <DetailCell>
+                      <DetailField label='Contacto de referencia'>{service.approvalReference || 'Sin registrar'}</DetailField>
+                    </DetailCell>
+                    <DetailCell>
+                      <DetailField label='Fecha'>{formatDateValue(service.approvedAt || service.rejectedAt)}</DetailField>
+                    </DetailCell>
+                    {service.rejectionReason ? (
+                      <DetailCell full>
+                        <DetailField label='Motivo de rechazo'>{service.rejectionReason}</DetailField>
+                      </DetailCell>
+                    ) : null}
+                    {customerResponseType === 'changes_requested' && latestChangeRequestReason ? (
+                      <DetailCell full>
+                        <DetailField label='Solicitud de modificación'>{latestChangeRequestReason}</DetailField>
+                      </DetailCell>
+                    ) : null}
+                    {approvalNotes ? (
+                      <DetailCell full>
+                        <DetailField label='Observación de la respuesta'>{approvalNotes}</DetailField>
+                      </DetailCell>
+                    ) : null}
+                  </DetailSection>
                 ) : null}
 
                 {!isTechnicalOnlyView && service.commercialComments ? (
-                  <>
-                    <Divider sx={{ my: 2 }} />
-                    <Typography variant='caption' color='text.secondary'>
-                      Comentarios comerciales
-                    </Typography>
-                    <Typography variant='body1' sx={{ mt: 0.5 }}>
-                      {service.commercialComments}
-                    </Typography>
-                  </>
+                  <DetailSection title='Comentarios comerciales'>
+                    <DetailCell full>
+                      <ClampedText text={String(service.commercialComments)} />
+                    </DetailCell>
+                  </DetailSection>
                 ) : null}
 
                 {service.odsCode ? (
-                  <>
-                    <Divider sx={{ my: 2 }} />
-                    <Typography
-                      variant='subtitle2'
-                      fontWeight={700}
-                      gutterBottom
-                    >
-                      Datos ODS
-                    </Typography>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} md={6}>
-                        <Typography variant='caption' color='text.secondary'>
-                          Programada para
-                        </Typography>
-                        <Typography variant='body1'>
-                          {formatDateValue(
-                            typeof odsDetails?.scheduledFor === 'string'
-                              ? odsDetails.scheduledFor
-                              : null
-                          )}
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <Typography variant='caption' color='text.secondary'>
-                          Franja
-                        </Typography>
-                        <Typography variant='body1'>
-                          {odsScheduleWindow || 'Sin registrar'}
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <Typography variant='caption' color='text.secondary'>
-                          Firmante
-                        </Typography>
-                        <Typography variant='body1'>
-                          {odsSignerName || 'Sin registrar'}
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <Typography variant='caption' color='text.secondary'>
-                          Referencia externa
-                        </Typography>
-                        <Typography variant='body1'>
-                          {typeof odsDetails?.externalReference === 'string'
-                            ? odsDetails.externalReference
-                            : 'Sin registrar'}
-                        </Typography>
-                      </Grid>
-                      {odsCustomerAgreements ? (
-                        <Grid item xs={12}>
-                          <Typography variant='caption' color='text.secondary'>
-                            Acuerdos con el cliente
-                          </Typography>
-                          <Typography variant='body1'>
-                            {odsCustomerAgreements}
-                          </Typography>
-                        </Grid>
-                      ) : null}
-                    </Grid>
-                  </>
+                  <DetailSection title='Datos de la ODS'>
+                    <DetailCell>
+                      <DetailField label='Programada para'>
+                        {formatDateValue(typeof odsDetails?.scheduledFor === 'string' ? odsDetails.scheduledFor : null)}
+                      </DetailField>
+                    </DetailCell>
+                    <DetailCell>
+                      <DetailField label='Franja'>{odsScheduleWindow || 'Sin registrar'}</DetailField>
+                    </DetailCell>
+                    <DetailCell>
+                      <DetailField label='Firmante'>{odsSignerName || 'Sin registrar'}</DetailField>
+                    </DetailCell>
+                    <DetailCell>
+                      <DetailField label='Referencia externa'>
+                        {typeof odsDetails?.externalReference === 'string' ? odsDetails.externalReference : 'Sin registrar'}
+                      </DetailField>
+                    </DetailCell>
+                    {odsCustomerAgreements ? (
+                      <DetailCell full>
+                        <DetailField label='Acuerdos con el cliente'>
+                          <ClampedText text={String(odsCustomerAgreements)} />
+                        </DetailField>
+                      </DetailCell>
+                    ) : null}
+                  </DetailSection>
                 ) : null}
               </DetailTabPanel>
 
@@ -3778,7 +3630,7 @@ const CalibrationServiceDetailsPage = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} lg={4}>
+        <Grid item xs={12} lg={3}>
           <Card
             sx={{
               borderRadius: 3,
