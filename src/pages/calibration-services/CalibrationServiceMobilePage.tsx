@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Alert, Autocomplete, Box, Button, Card, CardContent,
-  Chip, CircularProgress, Collapse, Dialog, DialogActions, DialogContent, DialogTitle,
-  FormControl, IconButton, InputLabel, MenuItem, Select, Stack, TextField, Typography
+  Alert, Autocomplete, Badge, BottomNavigation, BottomNavigationAction, Box, Button, Card, CardContent,
+  Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle,
+  FormControl, IconButton, InputLabel, LinearProgress, MenuItem, Paper, Select, Stack, TextField, ToggleButton, ToggleButtonGroup, Typography
 } from '@mui/material'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from 'react-query'
@@ -17,7 +17,14 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import PauseIcon from '@mui/icons-material/Pause'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import SearchIcon from '@mui/icons-material/Search'
-import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined'
+import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined'
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
+import EditNoteOutlinedIcon from '@mui/icons-material/EditNoteOutlined'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined'
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
+import BorderColorOutlinedIcon from '@mui/icons-material/BorderColorOutlined'
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined'
 import SignaturePad from '../../Components/Maintenance/SignaturePad'
 import {
@@ -25,7 +32,9 @@ import {
 } from '../../types/calibrationService'
 import {
   CALIBRATION_SERVICE_STATUS_LABELS,
-  CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS
+  CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS,
+  CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS,
+  CALIBRATION_SERVICE_ADJUSTMENT_TYPE_LABELS
 } from '../../constants/calibrationServices'
 
 // Figma design palette
@@ -70,6 +79,14 @@ const getEffectiveQty = (item: any, adjustments: any[] = []) => {
   return Math.max(base + delta, 0)
 }
 
+const sheetSx = {
+  '& .MuiDialog-container': { alignItems: 'flex-end' },
+  '& .MuiDialog-paper': { m: 0, width: '100%', maxWidth: 430, borderRadius: '24px 24px 0 0' },
+  '& .MuiDialogTitle-root': { fontWeight: 700 },
+  '& .MuiDialogActions-root': { p: 2, gap: 1 },
+  '& .MuiDialogActions-root .MuiButton-root': { minHeight: 44, borderRadius: '12px', textTransform: 'none', fontWeight: 600 }
+} as const
+
 const MobilePage = () => {
   const { serviceId } = useParams()
   const navigate = useNavigate()
@@ -91,7 +108,6 @@ const MobilePage = () => {
   const [draftNotes, setDraftNotes] = useState<Record<number, string>>({})
   const [saving, setSaving] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [itemsExpanded, setItemsExpanded] = useState(true)
 
   // Dialog states
   const [showTrace, setShowTrace] = useState(false)
@@ -222,224 +238,332 @@ const MobilePage = () => {
       await apiCall('put', `/calibration-services/${serviceId}/item-progress`, {
         items: items.map(i => ({ itemId: i.id, operationalStatus: draftItems[i.id] || 'pending', technicalNotes: draftNotes[i.id] || '' }))
       })
-      toast.success('Avance guardado')
+      toast.success('Avance guardado'); void refetch()
     } catch { toast.error('Error al guardar') }
     setSaving(false)
   }
 
-return (
-    <Box sx={{ minHeight: '100vh', bgcolor: G.gray50, pb: 12 }}>
+type MobileTab = 'work' | 'intake' | 'issues' | 'close'
+  const [tab, setTab] = useState<MobileTab>('work')
+  const [openNotes, setOpenNotes] = useState<Record<number, boolean>>({})
+
+  const adjustments = (s?.adjustments || []) as any[]
+  const completedCount = items.filter(i => draftItems[i.id] === 'completed').length
+  const pendingCount = items.length - completedCount
+  const dirty = items.some(i => {
+    const savedStatus = (i as any).otherFields?.operationalStatus || 'pending'
+    const savedNotes = (i as any).otherFields?.technicalNotes || ''
+    return (draftItems[i.id] || 'pending') !== savedStatus || (draftNotes[i.id] || '') !== savedNotes
+  })
+  const controlSheet: any = (s?.otherFields as any)?.logistics?.controlSheet || {}
+  const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([s?.address, s?.city].filter(Boolean).join(', '))}`
+  const canCreateCut = ['in_execution', 'technically_completed'].includes(status)
+
+  const sectionTitle = { fontSize: '0.95rem', fontWeight: 700, color: G.dark } as const
+  const cardSx = { borderRadius: '16px', border: `1px solid ${G.gray100}`, boxShadow: 'none' } as const
+  const tileSx = {
+    display: 'flex', alignItems: 'center', gap: 1.5, p: 2, borderRadius: '16px', border: `1px solid ${G.gray100}`,
+    bgcolor: G.white, cursor: 'pointer', textAlign: 'left', width: '100%', font: 'inherit',
+    '&:active': { bgcolor: G.greenLight }
+  } as const
+  const quickSx = {
+    flex: 1, flexDirection: 'column', gap: 0.5, py: 1.25, borderRadius: '14px', textTransform: 'none',
+    fontWeight: 600, fontSize: '0.75rem', color: G.greenDark, bgcolor: G.greenLight,
+    '&:hover': { bgcolor: '#c9efe9' }, '&.Mui-disabled': { color: G.gray300, bgcolor: G.gray50 }
+  } as const
+
+  return (
+    <Box sx={{ minHeight: '100vh', bgcolor: G.gray50, pb: 22 }}>
       <Toaster position='top-center' />
       {isLoading ? <Box sx={{ textAlign: 'center', py: 8 }}><CircularProgress /></Box> :
       !s ? <Box sx={{ p: 2 }}><Alert severity='error'>Servicio no encontrado</Alert></Box> : (
       <Box sx={{ maxWidth: 430, mx: 'auto' }}>
-        {/* Header */}
-      <Box sx={{ background: BANNER_BG, px: 2, py: 2, color: 'white', borderRadius: '0 0 20px 20px' }}>
-        <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 1 }}>
-          <IconButton size='small' aria-label='Volver' onClick={() => navigate(-1)} sx={{ color: 'white', ml: -0.5 }}>
-            <ArrowBackIcon fontSize='small' />
-          </IconButton>
-          <Typography variant='body2' sx={{ opacity: 0.85 }}>MetroMedics</Typography>
-        </Stack>
-        <Typography variant='h6' fontWeight={700}>{s.serviceCode}</Typography>
-        <Typography variant='body2' sx={{ mt: 0.5, opacity: 0.9 }}>{s.customer?.nombre || s.executionCustomerName}</Typography>
-        <Stack direction='row' alignItems='center' spacing={1} useFlexGap sx={{ mt: 1.5, flexWrap: 'wrap' }}>
-          <Box component='span' sx={{ ...chipSx, bgcolor: 'rgba(255,255,255,0.22)' }}>
-            {CALIBRATION_SERVICE_STATUS_LABELS[status as CalibrationServiceStatus]}
-          </Box>
-          {s.odsCode && <Box component='span' sx={chipSx}>{s.odsCode}</Box>}
-          {scheduledDate && <Box component='span' sx={chipSx}>{new Date(scheduledDate).toLocaleDateString('es-CO')}</Box>}
-        </Stack>
-      </Box>
-
-      {/* Customer info card */}
-      <Card sx={{ mx: 2, mt: 2, borderRadius: 3, border: `1px solid ${G.gray100}` }} elevation={0}>
-        <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-          <Stack spacing={1}>
-            <Stack direction='row' spacing={1} alignItems='center'>
-              <BusinessOutlinedIcon sx={{ color: G.gray400, fontSize: 16 }} />
-              <Typography variant='body2' fontWeight={700} sx={{ color: G.dark, fontSize: '0.8rem' }}>
-                {s.executionSiteName || s.customerSite || 'Sede pendiente'}
-              </Typography>
-            </Stack>
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 0.5, pl: 3 }}>
-              {s.contactName ? (
-                <Typography variant='caption' sx={{ color: G.gray600 }}>Contacto: {s.contactName}</Typography>
-              ) : null}
-              {s.contactPhone ? (
-                <Typography variant='caption' sx={{ color: G.gray600 }}>Tel: {s.contactPhone}</Typography>
-              ) : null}
-              {s.city || s.address ? (
-                <Typography variant='caption' sx={{ color: G.gray600, gridColumn: 'span 2' }}>
-                  {[s.address, s.city].filter(Boolean).join(', ')}
-                </Typography>
-              ) : null}
+        {/* Encabezado compacto */}
+        <Box sx={{ background: BANNER_BG, px: 2, pt: 1.5, pb: 2.5, color: 'white', borderRadius: '0 0 24px 24px' }}>
+          <Stack direction='row' alignItems='center' spacing={1}>
+            <IconButton aria-label='Volver' onClick={() => navigate(-1)} sx={{ color: 'white', ml: -1 }}>
+              <ArrowBackIcon />
+            </IconButton>
+            <Typography variant='h6' fontWeight={700} sx={{ flex: 1 }}>{s.serviceCode}</Typography>
+            <Box component='span' sx={{ ...chipSx, bgcolor: 'rgba(255,255,255,0.22)' }}>
+              {ops?.isPaused ? 'En pausa' : CALIBRATION_SERVICE_STATUS_LABELS[status as CalibrationServiceStatus]}
             </Box>
           </Stack>
-        </CardContent>
-      </Card>
-
-      {/* ODS view button */}
-      {s.odsCode ? (
-        <Box sx={{ px: 2, mt: 1.5 }}>
-          <Button fullWidth variant='outlined' startIcon={<VisibilityOutlinedIcon />}
-            onClick={handleViewOds} disabled={odsLoading}
-            sx={outlineSx}>
-            {odsLoading ? 'Cargando...' : `Ver ODS ${s.odsCode}`}
-          </Button>
+          <Typography variant='body1' fontWeight={600} sx={{ mt: 0.5, lineHeight: 1.3 }}>
+            {s.customer?.nombre || s.executionCustomerName || 'Cliente pendiente'}
+          </Typography>
+          <Typography variant='body2' sx={{ mt: 0.5, opacity: 0.9 }}>
+            {[s.odsCode, scheduledDate ? new Date(scheduledDate).toLocaleDateString('es-CO') : ''].filter(Boolean).join('  ·  ')}
+          </Typography>
         </Box>
-      ) : null}
 
-        {/* Execution */}
-        {['scheduled', 'in_execution'].includes(status) && (
-          <Card elevation={0} sx={{ mx: 2, mt: 2, borderRadius: 3, border: `1px solid ${G.gray100}` }}>
-            <CardContent sx={{ p: 2 }}>
-              <Stack spacing={1.5}>
-                {status === 'scheduled' && (
-                  <Button fullWidth variant='contained' disableElevation startIcon={<PlayArrowIcon />}
-                    onClick={() => handleAction('start', () => apiCall('post', `/calibration-services/${serviceId}/start-execution`, { startedAt: new Date().toISOString() }), 'Ejecución iniciada')}
-                    disabled={actionLoading === 'start'}
-                    sx={{ ...primarySx, py: 1.75 }}>
-                    Iniciar ejecución
-                  </Button>
-                )}
-                {status === 'in_execution' && (
-                  <Button fullWidth variant='contained' disableElevation startIcon={<CheckCircleIcon />}
-                    onClick={() => handleAction('complete', () => apiCall('post', `/calibration-services/${serviceId}/complete-execution`, { technicallyCompletedAt: new Date().toISOString() }), 'Ejecución finalizada')}
-                    disabled={!allCompleted || actionLoading === 'complete'}
-                    sx={{ ...primarySx, py: 1.75 }}>
-                    {allCompleted ? 'Finalizar ejecución' : 'Completa todos los ítems primero'}
-                  </Button>
-                )}
-                {status === 'in_execution' && !ops?.isPaused && (
-                  <Button fullWidth variant='text' color='warning' size='small' startIcon={<PauseIcon />}
-                    onClick={() => handleAction('pause', () => apiCall('post', `/calibration-services/${serviceId}/pause`, { pauseReason: 'Pausado desde móvil' }), 'Servicio pausado')}
-                    disabled={actionLoading === 'pause'}
-                    sx={{ textTransform: 'none' }}>
-                    Pausar servicio
-                  </Button>
-          )}
-        </Stack>
-            </CardContent>
-          </Card>
-        )}
+        <Box sx={{ px: 2, mt: 2 }}>
+          {/* ===== TRABAJO ===== */}
+          {tab === 'work' && (
+            <Stack spacing={2}>
+              {/* Paso principal */}
+              {['scheduled', 'in_execution'].includes(status) && (
+                <Card elevation={0} sx={cardSx}>
+                  <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                    <Stack spacing={1.5}>
+                      {status === 'scheduled' && (
+                        <>
+                          <Typography sx={sectionTitle}>Todo listo para empezar</Typography>
+                          <Button fullWidth variant='contained' disableElevation startIcon={<PlayArrowIcon />}
+                            onClick={() => handleAction('start', () => apiCall('post', `/calibration-services/${serviceId}/start-execution`, { startedAt: new Date().toISOString() }), 'Ejecución iniciada')}
+                            disabled={actionLoading === 'start'}
+                            sx={{ ...primarySx, py: 1.75, fontSize: '1rem' }}>
+                            Iniciar ejecución
+                          </Button>
+                        </>
+                      )}
+                      {status === 'in_execution' && (
+                        <>
+                          <Stack direction='row' justifyContent='space-between' alignItems='baseline'>
+                            <Typography sx={sectionTitle}>Avance del servicio</Typography>
+                            <Typography variant='body2' fontWeight={700} sx={{ color: G.greenDark }}>{completedCount} de {items.length}</Typography>
+                          </Stack>
+                          <LinearProgress variant='determinate' value={items.length ? (completedCount / items.length) * 100 : 0}
+                            sx={{ height: 10, borderRadius: 999, bgcolor: G.greenLight, '& .MuiLinearProgress-bar': { borderRadius: 999, bgcolor: G.green } }} />
+                          <Button fullWidth variant='contained' disableElevation startIcon={<CheckCircleIcon />}
+                            onClick={() => handleAction('complete', () => apiCall('post', `/calibration-services/${serviceId}/complete-execution`, { technicallyCompletedAt: new Date().toISOString() }), 'Ejecución finalizada')}
+                            disabled={!allCompleted || dirty || actionLoading === 'complete'}
+                            sx={{ ...primarySx, py: 1.75, fontSize: '1rem' }}>
+                            {!allCompleted ? `Faltan ${pendingCount} ítem${pendingCount === 1 ? '' : 's'}` : dirty ? 'Guarda el avance primero' : 'Finalizar ejecución'}
+                          </Button>
+                          {!ops?.isPaused && (
+                            <Button fullWidth variant='text' color='warning' startIcon={<PauseIcon />}
+                              onClick={() => handleAction('pause', () => apiCall('post', `/calibration-services/${serviceId}/pause`, { pauseReason: 'Pausado desde móvil' }), 'Servicio pausado')}
+                              disabled={actionLoading === 'pause'}
+                              sx={{ textTransform: 'none', fontWeight: 600 }}>
+                              Pausar servicio
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              )}
 
-        {/* Items */}
-        <Box sx={{ px: 2 }}>
-          <Stack direction='row' justifyContent='space-between' alignItems='center' sx={{ mt: 3, mb: 1, cursor: 'pointer' }} onClick={() => setItemsExpanded(v => !v)}>
-            <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, color: G.dark }}>
-              Ítems del servicio ({items.length})
-            </Typography>
-            <Typography variant='caption' sx={{ color: G.green, fontWeight: 600 }}>{itemsExpanded ? 'Ocultar' : 'Mostrar'}</Typography>
-          </Stack>
-        </Box>
-        <Collapse in={itemsExpanded}>
-        <Stack spacing={1} sx={{ px: 2 }}>
-          {items.map(item => (
-            <Card key={item.id} sx={{ borderRadius: '16px', border: `1px solid ${G.gray100}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-              <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                <Stack spacing={1}>
-                  <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
-                    <Typography variant='body2' fontWeight={700} sx={{ flex: 1, fontSize: '0.8rem' }}>{item.itemName}</Typography>
-                    <Typography variant='caption' fontWeight={600} sx={{ color: G.gray400, whiteSpace: 'nowrap', ml: 1 }}>Cant: {getEffectiveQty(item, s?.adjustments)}</Typography>
-                  </Stack>
-                  <Stack direction='row' spacing={1} alignItems='center'>
-                    <FormControl size='small' sx={{ minWidth: 140 }}>
-                      <Select value={draftItems[item.id] || 'pending'}
-                        onChange={e => setDraftItems(p => ({ ...p, [item.id]: e.target.value as any }))}
-                        sx={{ borderRadius: '10px', fontSize: '0.8rem', height: 36 }}>
-                        {STATUS_FLOW.map(s => <MenuItem key={s} value={s} sx={{ fontSize: '0.8rem' }}>{CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS[s]}</MenuItem>)}
-                      </Select>
-                    </FormControl>
-                    <TextField size='small' placeholder='Notas' multiline maxRows={2}
-                      value={draftNotes[item.id] || ''} onChange={e => setDraftNotes(p => ({ ...p, [item.id]: e.target.value }))}
-                      sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '10px', fontSize: '0.8rem' } }} />
-                  </Stack>
-                </Stack>
-              </CardContent>
-            </Card>
-          ))}
-          {items.length > 0 && (
-            <Button fullWidth variant='contained' disableElevation onClick={handleSaveProgress} disabled={saving}
-              sx={primarySx}>
-              {saving ? 'Guardando...' : 'Guardar avance técnico'}
-            </Button>
-          )}
-        </Stack>
-        </Collapse>
-
-        {/* Logistics */}
-        <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.95rem', fontWeight: 700, color: G.dark }}>Logística</Typography>
-        <Stack spacing={1} sx={{ px: 2 }}>
-          <Button fullWidth variant='outlined' startIcon={<InventoryIcon />}
-            onClick={() => setShowLogistics(true)}
-            sx={outlineSx}>
-            Diligenciar control de ingreso
-          </Button>
-          <Button fullWidth variant='outlined' startIcon={<AddCircleOutlineIcon />}
-            onClick={() => setShowTrace(true)}
-            sx={outlineSx}>
-            Registrar movimiento físico
-          </Button>
-        </Stack>
-
-        {/* Adjustments */}
-        <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.95rem', fontWeight: 700, color: G.dark }}>Novedades</Typography>
-        <Stack spacing={1} sx={{ px: 2 }}>
-          <Button fullWidth variant='outlined' color='warning' startIcon={<WarningAmberIcon />}
-            onClick={() => setShowAdjust(true)}
-            sx={{ borderRadius: '12px', py: 1.5, textTransform: 'none', fontWeight: 600, '&:active': { transform: 'scale(0.97)' } }}>
-            Reportar novedad
-          </Button>
-        </Stack>
-
-        {/* Signature */}
-        <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.95rem', fontWeight: 700, color: G.dark }}>Firma de recepción</Typography>
-        <Card sx={{ mx: 2, borderRadius: 3, border: `1px solid ${G.gray100}` }} elevation={0}>
-          <CardContent sx={{ p: 2 }}>
-            <TextField fullWidth size='small' label='Nombre de quien recibe' value={deliveryName} onChange={e => setDeliveryName(e.target.value)} sx={{ mb: 2 }} />
-            <SignaturePad value={deliverySignature} onChange={setDeliverySignature} height={120} />
-            <Button fullWidth variant='contained' onClick={() => handleAction('sig', () => apiCall('put', `/calibration-services/${serviceId}/delivery-signature`, { deliveryName: deliveryName.trim() || null, deliverySignatureData: deliverySignature }), 'Firma guardada')}
-              disabled={!deliverySignature || actionLoading === 'sig'}
-              sx={{ ...primarySx, mt: 2 }} disableElevation>
-              Guardar firma
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Cuts */}
-        <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.95rem', fontWeight: 700, color: G.dark }}>Cortes</Typography>
-        <Stack spacing={1} sx={{ px: 2 }}>
-          {cuts.map((cut: CalibrationServiceCut) => {
-            const cs = CUT_STATUSES[cut.status] || { label: cut.status, color: '#6b7280' }
-            return (
-              <Card key={cut.id} sx={{ borderRadius: '12px', borderColor: G.gray100 }} elevation={0} variant='outlined'>
-                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                  <Stack direction='row' justifyContent='space-between' alignItems='center'>
-                    <Box>
-                      <Typography variant='body2' fontWeight={700}>{cut.cutCode || `Corte #${cut.id}`}</Typography>
-                      <Chip size='small' variant='outlined' label={cs.label} sx={{ borderColor: cs.color, color: cs.color, fontSize: '0.7rem', fontWeight: 600, height: 22, mt: 0.5 }} />
+              {/* Contacto y accesos rápidos */}
+              <Card elevation={0} sx={cardSx}>
+                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                  <Stack direction='row' spacing={1.5} alignItems='flex-start'>
+                    <BusinessOutlinedIcon sx={{ color: G.gray400, mt: 0.25 }} />
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography fontWeight={700} sx={{ color: G.dark }}>{s.executionSiteName || s.customerSite || 'Sede pendiente'}</Typography>
+                      {s.contactName ? <Typography variant='body2' sx={{ color: G.gray600 }}>{s.contactName}</Typography> : null}
+                      {s.city || s.address ? <Typography variant='body2' sx={{ color: G.gray600 }}>{[s.address, s.city].filter(Boolean).join(', ')}</Typography> : null}
                     </Box>
-                    {cut.status === 'draft' && (
-                      <Button size='small' variant='outlined'
-                        onClick={() => handleAction(`ready-${cut.id}`, () => apiCall('post', `/calibration-services/${serviceId}/cuts/${cut.id}/ready-for-invoicing`), 'Marcado listo para facturar')}
-                        disabled={actionLoading === `ready-${cut.id}`}
-                        sx={{ ...outlineSx, py: 0.5, fontSize: '0.8rem' }}>
-                        Listo facturar
-                      </Button>
-                    )}
+                  </Stack>
+                  <Stack direction='row' spacing={1} sx={{ mt: 2 }}>
+                    <Button component='a' href={s.contactPhone ? `tel:${s.contactPhone}` : undefined} disabled={!s.contactPhone} sx={quickSx}>
+                      <PhoneOutlinedIcon /> Llamar
+                    </Button>
+                    <Button component='a' href={mapsHref} target='_blank' rel='noreferrer' disabled={!s.address && !s.city} sx={quickSx}>
+                      <PlaceOutlinedIcon /> Cómo llegar
+                    </Button>
+                    <Button onClick={handleViewOds} disabled={!s.odsCode || odsLoading} sx={quickSx}>
+                      {odsLoading ? <CircularProgress size={24} /> : <DescriptionOutlinedIcon />} {odsLoading ? 'Abriendo' : 'Ver ODS'}
+                    </Button>
                   </Stack>
                 </CardContent>
               </Card>
-            )
-          })}
-          {['in_execution', 'technically_completed'].includes(status) && (
-            <Button fullWidth variant='outlined' onClick={() => setShowCut(true)}
-              sx={outlineSx}>
-              Crear corte
-            </Button>
+
+              {/* Ítems */}
+              <Box>
+                <Stack direction='row' justifyContent='space-between' alignItems='center' sx={{ mb: 1 }}>
+                  <Typography sx={sectionTitle}>Ítems ({items.length})</Typography>
+                  {pendingCount > 0 && items.length > 0 && (
+                    <Button size='small' onClick={() => setDraftItems(p => ({ ...p, ...Object.fromEntries(items.map(i => [i.id, 'completed'])) }))}
+                      sx={{ textTransform: 'none', fontWeight: 600, color: G.greenDark }}>
+                      Marcar todos completados
+                    </Button>
+                  )}
+                </Stack>
+                <Stack spacing={1.25}>
+                  {items.map(item => {
+                    const current = draftItems[item.id] || 'pending'
+                    const noteValue = draftNotes[item.id] || ''
+                    const showNote = openNotes[item.id] || Boolean(noteValue)
+                    return (
+                      <Card key={item.id} elevation={0} sx={{ ...cardSx, borderColor: current === 'completed' ? G.green : G.gray100 }}>
+                        <CardContent sx={{ p: 1.75, '&:last-child': { pb: 1.75 } }}>
+                          <Stack spacing={1.25}>
+                            <Stack direction='row' justifyContent='space-between' alignItems='flex-start' spacing={1}>
+                              <Typography fontWeight={700} sx={{ flex: 1, color: G.dark, lineHeight: 1.35 }}>{item.itemName}</Typography>
+                              <Typography variant='body2' fontWeight={700} sx={{ color: G.gray600, whiteSpace: 'nowrap' }}>x{getEffectiveQty(item, s?.adjustments)}</Typography>
+                            </Stack>
+                            <ToggleButtonGroup exclusive fullWidth size='small' value={current} aria-label={`Estado de ${item.itemName}`}
+                              onChange={(_, v) => { if (v) setDraftItems(p => ({ ...p, [item.id]: v })) }}>
+                              {STATUS_FLOW.map(k => (
+                                <ToggleButton key={k} value={k} sx={{
+                                  minHeight: 44, px: 0.5, textTransform: 'none', fontSize: '0.72rem', fontWeight: 600, color: G.gray600, borderColor: G.gray200,
+                                  '&.Mui-selected': k === 'completed'
+                                    ? { bgcolor: G.green, color: 'white', borderColor: G.green, '&:hover': { bgcolor: G.greenDark } }
+                                    : { bgcolor: G.greenLight, color: G.greenDark, borderColor: G.green, fontWeight: 700 }
+                                }}>
+                                  {CALIBRATION_SERVICE_OPERATIONAL_ITEM_STATUS_LABELS[k]}
+                                </ToggleButton>
+                              ))}
+                            </ToggleButtonGroup>
+                            {showNote ? (
+                              <TextField size='small' multiline minRows={2} placeholder='Observaciones técnicas del ítem' value={noteValue}
+                                onChange={e => setDraftNotes(p => ({ ...p, [item.id]: e.target.value }))}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px', fontSize: '0.9rem' } }} />
+                            ) : (
+                              <Button size='small' startIcon={<EditNoteOutlinedIcon />} onClick={() => setOpenNotes(p => ({ ...p, [item.id]: true }))}
+                                sx={{ alignSelf: 'flex-start', textTransform: 'none', fontWeight: 600, color: G.gray600 }}>
+                                Agregar nota
+                              </Button>
+                            )}
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
+                </Stack>
+              </Box>
+            </Stack>
           )}
-        </Stack>
+
+          {/* ===== INGRESO ===== */}
+          {tab === 'intake' && (
+            <Stack spacing={1.5}>
+              <Typography sx={sectionTitle}>Ingreso y entrega de equipos</Typography>
+              <Box component='button' type='button' onClick={() => setShowLogistics(true)} sx={tileSx}>
+                <Box sx={{ width: 44, height: 44, borderRadius: '12px', bgcolor: G.greenLight, color: G.greenDark, display: 'grid', placeItems: 'center', flexShrink: 0 }}><InventoryIcon /></Box>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography fontWeight={700} sx={{ color: G.dark }}>Control de ingreso y entrega</Typography>
+                  <Typography variant='body2' sx={{ color: G.gray600 }}>
+                    {controlSheet.intakeDate ? `Ingreso: ${controlSheet.intakeDate}` : 'Sin diligenciar'}{controlSheet.deliveryDate ? `  ·  Entrega: ${controlSheet.deliveryDate}` : ''}
+                  </Typography>
+                </Box>
+                <ChevronRightIcon sx={{ color: G.gray300 }} />
+              </Box>
+              <Box component='button' type='button' onClick={() => setShowTrace(true)} sx={tileSx}>
+                <Box sx={{ width: 44, height: 44, borderRadius: '12px', bgcolor: G.greenLight, color: G.greenDark, display: 'grid', placeItems: 'center', flexShrink: 0 }}><AddCircleOutlineIcon /></Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography fontWeight={700} sx={{ color: G.dark }}>Registrar movimiento físico</Typography>
+                  <Typography variant='body2' sx={{ color: G.gray600 }}>Recogida o entrega de equipos</Typography>
+                </Box>
+                <ChevronRightIcon sx={{ color: G.gray300 }} />
+              </Box>
+            </Stack>
+          )}
+
+          {/* ===== NOVEDADES ===== */}
+          {tab === 'issues' && (
+            <Stack spacing={1.5}>
+              <Button fullWidth variant='outlined' color='warning' startIcon={<WarningAmberIcon />} onClick={() => setShowAdjust(true)}
+                sx={{ borderRadius: '14px', py: 1.5, textTransform: 'none', fontWeight: 700, fontSize: '1rem', bgcolor: G.white }}>
+                Reportar novedad
+              </Button>
+              <Typography sx={{ ...sectionTitle, mt: 1 }}>Novedades del servicio ({adjustments.length})</Typography>
+              {adjustments.length === 0 ? (
+                <Typography variant='body2' sx={{ color: G.gray600 }}>Aún no hay novedades. Si algo no coincide con la cotización, repórtalo aquí.</Typography>
+              ) : adjustments.map((adj: any) => (
+                <Card key={adj.id} elevation={0} sx={cardSx}>
+                  <CardContent sx={{ p: 1.75, '&:last-child': { pb: 1.75 } }}>
+                    <Stack spacing={0.75}>
+                      <Stack direction='row' justifyContent='space-between' alignItems='flex-start' spacing={1}>
+                        <Typography fontWeight={700} sx={{ color: G.dark, lineHeight: 1.35 }}>{adj.itemName || 'Ítem'}</Typography>
+                        <Chip size='small' variant='outlined' label={CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS[adj.status as keyof typeof CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS] || adj.status}
+                          sx={{ fontWeight: 600, fontSize: '0.7rem' }} />
+                      </Stack>
+                      <Typography variant='body2' sx={{ color: G.gray600 }}>
+                        {CALIBRATION_SERVICE_ADJUSTMENT_TYPE_LABELS[adj.changeType as keyof typeof CALIBRATION_SERVICE_ADJUSTMENT_TYPE_LABELS] || adj.changeType}
+                        {'  ·  '}Cotizado {adj.quotedQuantity} → Real {adj.actualQuantity}
+                      </Typography>
+                      {adj.description ? <Typography variant='body2' sx={{ color: G.dark }}>{adj.description}</Typography> : null}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              ))}
+            </Stack>
+          )}
+
+          {/* ===== CIERRE ===== */}
+          {tab === 'close' && (
+            <Stack spacing={2.5}>
+              <Box>
+                <Typography sx={{ ...sectionTitle, mb: 1 }}>Firma de recepción</Typography>
+                <Card elevation={0} sx={cardSx}>
+                  <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                    <TextField fullWidth size='small' label='Nombre de quien recibe' value={deliveryName} onChange={e => setDeliveryName(e.target.value)} sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
+                    <SignaturePad value={deliverySignature} onChange={setDeliverySignature} height={140} />
+                    <Button fullWidth variant='contained' disableElevation
+                      onClick={() => handleAction('sig', () => apiCall('put', `/calibration-services/${serviceId}/delivery-signature`, { deliveryName: deliveryName.trim() || null, deliverySignatureData: deliverySignature }), 'Firma guardada')}
+                      disabled={!deliverySignature || actionLoading === 'sig'}
+                      sx={{ ...primarySx, mt: 2 }}>
+                      Guardar firma
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Box>
+
+              <Box>
+                <Typography sx={{ ...sectionTitle, mb: 1 }}>Cortes ({cuts.length})</Typography>
+                <Stack spacing={1.25}>
+                  {cuts.length === 0 && <Typography variant='body2' sx={{ color: G.gray600 }}>Todavía no hay cortes.</Typography>}
+                  {cuts.map((cut: CalibrationServiceCut) => {
+                    const cs = CUT_STATUSES[cut.status] || { label: cut.status, color: '#6b7280' }
+                    return (
+                      <Card key={cut.id} elevation={0} sx={cardSx}>
+                        <CardContent sx={{ p: 1.75, '&:last-child': { pb: 1.75 } }}>
+                          <Stack spacing={1.25}>
+                            <Box>
+                              <Typography fontWeight={700} sx={{ color: G.dark, wordBreak: 'break-all' }}>{cut.cutCode || `Corte #${cut.id}`}</Typography>
+                              <Chip size='small' variant='outlined' label={cs.label} sx={{ borderColor: cs.color, color: cs.color, fontSize: '0.7rem', fontWeight: 600, height: 22, mt: 0.5 }} />
+                            </Box>
+                            {cut.status === 'draft' && (
+                              <Button fullWidth variant='outlined'
+                                onClick={() => handleAction(`ready-${cut.id}`, () => apiCall('post', `/calibration-services/${serviceId}/cuts/${cut.id}/ready-for-invoicing`), 'Marcado listo para facturar')}
+                                disabled={actionLoading === `ready-${cut.id}`}
+                                sx={{ ...outlineSx, py: 0.75 }}>
+                                Listo para facturar
+                              </Button>
+                            )}
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
+                  {canCreateCut && (
+                    <Button fullWidth variant='outlined' startIcon={<AddCircleOutlineIcon />} onClick={() => setShowCut(true)} sx={{ ...outlineSx, bgcolor: G.white }}>
+                      Crear corte
+                    </Button>
+                  )}
+                </Stack>
+              </Box>
+            </Stack>
+          )}
+        </Box>
+
+        {/* Barra de guardado: aparece solo si hay cambios */}
+        {tab === 'work' && dirty && (
+          <Box sx={{ position: 'fixed', left: 0, right: 0, bottom: 64, zIndex: 1250, px: 2 }}>
+            <Box sx={{ maxWidth: 398, mx: 'auto', bgcolor: G.dark, color: 'white', borderRadius: '16px', p: 1, pl: 2, display: 'flex', alignItems: 'center', gap: 1.5, boxShadow: '0 8px 24px rgba(0,0,0,0.25)' }}>
+              <Typography variant='body2' sx={{ flex: 1 }}>Cambios sin guardar</Typography>
+              <Button variant='contained' disableElevation onClick={handleSaveProgress} disabled={saving}
+                sx={{ ...primarySx, py: 1, px: 2.5 }}>
+                {saving ? 'Guardando...' : 'Guardar'}
+              </Button>
+            </Box>
+          </Box>
+        )}
+
+        {/* Navegación inferior */}
+        <Paper elevation={0} sx={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1200, borderTop: `1px solid ${G.gray100}` }}>
+          <BottomNavigation showLabels value={tab} onChange={(_, v) => { setTab(v); window.scrollTo({ top: 0 }) }} sx={{ maxWidth: 430, mx: 'auto', height: 64 }}>
+            <BottomNavigationAction value='work' label='Trabajo' icon={<Badge color='primary' badgeContent={status === 'in_execution' && pendingCount > 0 ? pendingCount : 0}><AssignmentTurnedInOutlinedIcon /></Badge>}
+              sx={{ '&.Mui-selected': { color: G.greenDark } }} />
+            <BottomNavigationAction value='intake' label='Ingreso' icon={<Inventory2OutlinedIcon />} sx={{ '&.Mui-selected': { color: G.greenDark } }} />
+            <BottomNavigationAction value='issues' label='Novedades' icon={<Badge color='warning' badgeContent={adjustments.length}><WarningAmberIcon /></Badge>} sx={{ '&.Mui-selected': { color: G.greenDark } }} />
+            <BottomNavigationAction value='close' label='Cierre' icon={<Badge color='primary' badgeContent={cuts.length}><BorderColorOutlinedIcon /></Badge>} sx={{ '&.Mui-selected': { color: G.greenDark } }} />
+          </BottomNavigation>
+        </Paper>
 
         {/* === DIALOGS === */}
 
@@ -675,7 +799,7 @@ return (
         {/* end Logistics Dialog */}
 
         {/* Trace Dialog */}
-        <Dialog open={showTrace} onClose={() => setShowTrace(false)} fullWidth>
+        <Dialog open={showTrace} onClose={() => setShowTrace(false)} fullWidth sx={sheetSx}>
           <DialogTitle>Registrar movimiento</DialogTitle>
           <DialogContent>
             <Stack spacing={2} sx={{ mt: 1 }}>
@@ -699,7 +823,7 @@ return (
         </Dialog>
 
         {/* Adjustment Dialog */}
-        <Dialog open={showAdjust} onClose={() => setShowAdjust(false)} fullWidth>
+        <Dialog open={showAdjust} onClose={() => setShowAdjust(false)} fullWidth sx={sheetSx}>
           <DialogTitle>Reportar novedad</DialogTitle>
           <DialogContent>
             <Stack spacing={2} sx={{ mt: 1 }}>
@@ -742,7 +866,7 @@ return (
         </Dialog>
 
         {/* Cut Dialog */}
-        <Dialog open={showCut} onClose={() => setShowCut(false)} fullWidth>
+        <Dialog open={showCut} onClose={() => setShowCut(false)} fullWidth sx={sheetSx}>
           <DialogTitle>Crear corte</DialogTitle>
           <DialogContent>
             <FormControl fullWidth size='small' sx={{ mt: 1 }}>
