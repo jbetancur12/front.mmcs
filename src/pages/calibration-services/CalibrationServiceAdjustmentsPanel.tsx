@@ -7,12 +7,9 @@ import {
   Box,
   Button,
   Chip,
+  Grid,
+  Paper,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   Typography
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
@@ -27,6 +24,7 @@ import {
   CalibrationServiceAdjustment
 } from '../../types/calibrationService'
 
+import { DetailField } from './CalibrationServiceDetailBlocks'
 interface CalibrationServiceAdjustmentsPanelProps {
   service: CalibrationService
   canReport: boolean
@@ -211,81 +209,47 @@ const CalibrationServiceAdjustmentsPanel = ({
       </Stack>
 
       {adjustments.length ? (
-        <Box
-          sx={{
-            overflowX: 'auto',
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: 2
-          }}
-        >
-          <Table size='small'>
-            <TableHead>
-              <TableRow>
-                <TableCell>Tipo</TableCell>
-                <TableCell>Ítem</TableCell>
-                <TableCell align='right'>Cotizado</TableCell>
-                <TableCell align='right'>Real</TableCell>
-                <TableCell align='right'>Diferencia</TableCell>
-                <TableCell>Estado</TableCell>
-                <TableCell>Desviación</TableCell>
-                <TableCell>Ajuste comercial</TableCell>
-                {!isTechnicalOnlyView ? (
-                  <TableCell align='right'>Impacto aprobado</TableCell>
-                ) : null}
-                <TableCell>Notas</TableCell>
-                <TableCell align='right'>Acción</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {adjustments.map((adjustment) => {
-                const otherFields = getAdjustmentOtherFields(adjustment)
-                const supportChannel = getTextField(
-                  otherFields,
-                  'supportChannel'
-                )
-                const supportReference = getTextField(
-                  otherFields,
-                  'supportReference'
-                )
-                const hasContractModification =
-                  otherFields.contractModificationRequired !== false
-                const hasTechnicalApproval =
-                  otherFields.technicalDecision === 'approved'
-                const canRunTechnicalReview =
-                  canTechnicalReview &&
-                  [
-                    'reported',
-                    'customer_changes_requested',
-                    'customer_rejected'
-                  ].includes(adjustment.status) &&
-                  !hasTechnicalApproval
-                const canRunCommercialReview =
-                  canCommercialReview &&
-                  adjustment.status === 'reported' &&
-                  hasTechnicalApproval
+        <Stack spacing={2}>
+          {adjustments.map((adjustment) => {
+            const otherFields = getAdjustmentOtherFields(adjustment)
+                            const supportChannel = getTextField(
+                              otherFields,
+                              'supportChannel'
+                            )
+                            const supportReference = getTextField(
+                              otherFields,
+                              'supportReference'
+                            )
+                            const hasContractModification =
+                              otherFields.contractModificationRequired !== false
+                            const hasTechnicalApproval =
+                              otherFields.technicalDecision === 'approved'
+                            const canRunTechnicalReview =
+                              canTechnicalReview &&
+                              [
+                                'reported',
+                                'customer_changes_requested',
+                                'customer_rejected'
+                              ].includes(adjustment.status) &&
+                              !hasTechnicalApproval
+                            const canRunCommercialReview =
+                              canCommercialReview &&
+                              adjustment.status === 'reported' &&
+                              hasTechnicalApproval
 
-                return (
-                  <TableRow key={adjustment.id}>
-                    <TableCell>
-                      {
-                        CALIBRATION_SERVICE_ADJUSTMENT_TYPE_LABELS[
+            return (
+              <Paper key={adjustment.id} variant='outlined' sx={{ p: 2, borderRadius: '12px', borderColor: '#e5e7eb' }}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent='space-between' spacing={1.5} sx={{ mb: 2 }}>
+                  <Box>
+                    <Typography variant='caption' color='text.secondary'>
+                      {CALIBRATION_SERVICE_ADJUSTMENT_TYPE_LABELS[
                           adjustment.changeType
-                        ]
-                      }
-                    </TableCell>
-                    <TableCell>{adjustment.itemName}</TableCell>
-                    <TableCell align='right'>
-                      {adjustment.quotedQuantity}
-                    </TableCell>
-                    <TableCell align='right'>
-                      {adjustment.actualQuantity}
-                    </TableCell>
-                    <TableCell align='right'>
-                      {adjustment.differenceQuantity}
-                    </TableCell>
-                    <TableCell>
-                      <Stack spacing={0.5}>
+                        ]}
+                    </Typography>
+                    <Typography fontWeight={700}>{adjustment.itemName}</Typography>
+                  </Box>
+                  <Box>
+                    <Stack spacing={0.5}>
                         <Box>
                           <Chip
                             size='small'
@@ -311,8 +275,20 @@ const CalibrationServiceAdjustmentsPanel = ({
                           </Typography>
                         ) : null}
                       </Stack>
-                    </TableCell>
-                    <TableCell sx={{ minWidth: 220 }}>
+                  </Box>
+                </Stack>
+                <Grid container spacing={2}>
+                  <Grid item xs={4} md={2}>
+                    <DetailField label='Cotizado'>{adjustment.quotedQuantity}</DetailField>
+                  </Grid>
+                  <Grid item xs={4} md={2}>
+                    <DetailField label='Real'>{adjustment.actualQuantity}</DetailField>
+                  </Grid>
+                  <Grid item xs={4} md={2}>
+                    <DetailField label='Diferencia'>{adjustment.differenceQuantity}</DetailField>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <DetailField label='Desviación'>
                       <Stack spacing={0.5} alignItems='flex-start'>
                         <Chip
                           size='small'
@@ -337,26 +313,30 @@ const CalibrationServiceAdjustmentsPanel = ({
                           </Typography>
                         ) : null}
                       </Stack>
-                    </TableCell>
-                    <TableCell>
-                      {adjustment.requiresCommercialAdjustment ? 'Sí' : 'No'}
-                    </TableCell>
-                    {!isTechnicalOnlyView ? (
-                      <TableCell align='right'>
-                        {adjustment.approvedTotal !== null &&
+                    </DetailField>
+                  </Grid>
+                  <Grid item xs={6} md={3}>
+                    <DetailField label='Ajuste comercial'>{adjustment.requiresCommercialAdjustment ? 'Sí' : 'No'}</DetailField>
+                  </Grid>
+                  {!isTechnicalOnlyView ? (
+                    <Grid item xs={6} md={3}>
+                      <DetailField label='Impacto aprobado'>{adjustment.approvedTotal !== null &&
                         adjustment.approvedTotal !== undefined
                           ? currencyFormatter.format(
                               toNumber(adjustment.approvedTotal)
                             )
-                          : 'Pendiente'}
-                      </TableCell>
-                    ) : null}
-                    <TableCell sx={{ minWidth: 240 }}>
+                          : 'Pendiente'}</DetailField>
+                    </Grid>
+                  ) : null}
+                  <Grid item xs={12} md={6}>
+                    <DetailField label='Notas'>
                       {adjustment.technicalNotes ||
                         adjustment.commercialNotes ||
                         adjustment.description}
-                    </TableCell>
-                    <TableCell align='right'>
+                    </DetailField>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                       <Stack
                         direction='row'
                         spacing={1}
@@ -494,13 +474,13 @@ const CalibrationServiceAdjustmentsPanel = ({
                           ? 'Sin acción'
                           : null}
                       </Stack>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </Box>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Paper>
+            )
+          })}
+        </Stack>
       ) : (
         <Alert severity='info'>
           Aún no se han registrado novedades de ejecución.

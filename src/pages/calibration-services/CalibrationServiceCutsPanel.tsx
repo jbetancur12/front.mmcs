@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Alert, Box, Button, Chip, Dialog, DialogContent, DialogTitle, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
+import { Alert, Box, Button, Chip, Dialog, DialogContent, DialogTitle, Grid, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material'
 import { CalibrationServiceCut } from '../../types/calibrationService'
 import {
   CALIBRATION_SERVICE_CUT_DOCUMENT_STATUS_LABELS,
   CALIBRATION_SERVICE_CUT_STATUS_LABELS
 } from '../../constants/calibrationServices'
 
+import { DetailField } from './CalibrationServiceDetailBlocks'
 interface CalibrationServiceCutsPanelProps {
   cuts: CalibrationServiceCut[]
   canMarkReady?: boolean
@@ -44,38 +45,23 @@ const CalibrationServiceCutsPanel = ({
 
   return (
     <>
-    <Box sx={{ overflowX: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-      <Table size='small'>
-        <TableHead>
-          <TableRow>
-            <TableCell>Código</TableCell>
-            <TableCell>Tipo</TableCell>
-            <TableCell>Estado</TableCell>
-            <TableCell>Semáforo</TableCell>
-            <TableCell>Items</TableCell>
-            <TableCell>Fecha liberación</TableCell>
-            <TableCell>Factura</TableCell>
-            <TableCell>Control documental</TableCell>
-            <TableCell>Notas</TableCell>
-            <TableCell>Acción</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {cuts.map((cut) => {
-            const documentControl = cut.otherFields?.documentControl
-            const invoiceEvidenceCount =
-              cut.invoiceEvidenceDocumentIds?.length ||
-              ((cut.otherFields?.invoiceEvidenceDocumentIds as number[] | undefined)
-                ?.length ?? 0)
+    <Stack spacing={2}>
+      {cuts.map((cut) => {
+        const documentControl = cut.otherFields?.documentControl
+                    const invoiceEvidenceCount =
+                      cut.invoiceEvidenceDocumentIds?.length ||
+                      ((cut.otherFields?.invoiceEvidenceDocumentIds as number[] | undefined)
+                        ?.length ?? 0)
 
-            return (
-            <TableRow key={cut.id}>
-              <TableCell>{cut.cutCode}</TableCell>
-              <TableCell>
-                <Chip size='small' label={cutTypeLabels[cut.cutType]} />
-              </TableCell>
-              <TableCell>{CALIBRATION_SERVICE_CUT_STATUS_LABELS[cut.status]}</TableCell>
-              <TableCell>
+        return (
+          <Paper key={cut.id} variant='outlined' sx={{ p: 2, borderRadius: '12px', borderColor: '#e5e7eb' }}>
+            <Stack direction='row' spacing={1} alignItems='center' flexWrap='wrap' useFlexGap sx={{ mb: 2 }}>
+              <Typography fontWeight={700}>{cut.cutCode}</Typography>
+              <Chip size='small' label={cutTypeLabels[cut.cutType]} />
+              <Typography variant='body2' color='text.secondary'>
+                {CALIBRATION_SERVICE_CUT_STATUS_LABELS[cut.status]}
+              </Typography>
+              <Box sx={{ ml: { sm: 'auto' } }}>
                 <Chip
                   size='small'
                   color={
@@ -91,9 +77,12 @@ const CalibrationServiceCutsPanel = ({
                   }
                   label={cut.slaIndicator?.label || 'Sin iniciar'}
                 />
-              </TableCell>
-              <TableCell>
-                <Chip
+              </Box>
+            </Stack>
+            <Grid container spacing={2}>
+              <Grid item xs={6} md={3}>
+                <DetailField label='Ítems'>
+                  <Chip
                   size='small'
                   color='primary'
                   variant='filled'
@@ -106,14 +95,18 @@ const CalibrationServiceCutsPanel = ({
                     '&:hover': { transform: 'scale(1.06)' }
                   }}
                 />
-              </TableCell>
-              <TableCell>
-                {cut.releasedAt
+                </DetailField>
+              </Grid>
+              <Grid item xs={6} md={3}>
+                <DetailField label='Fecha de liberación'>
+                  {cut.releasedAt
                   ? new Date(cut.releasedAt).toLocaleDateString('es-CO')
                   : 'Sin fecha'}
-              </TableCell>
-              <TableCell>
-                {cut.invoiceReference ? (
+                </DetailField>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <DetailField label='Factura'>
+                  {cut.invoiceReference ? (
                   <Stack spacing={0.5}>
                     <Typography variant='body2'>
                       {`${cut.invoiceReference}${cut.invoicedAt ? ` · ${new Date(cut.invoicedAt).toLocaleDateString('es-CO')}` : ''}`}
@@ -127,9 +120,11 @@ const CalibrationServiceCutsPanel = ({
                 ) : (
                   'Pendiente'
                 )}
-              </TableCell>
-              <TableCell>
-                {documentControl ? (
+                </DetailField>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <DetailField label='Control documental'>
+                  {documentControl ? (
                   <Stack spacing={0.5}>
                     <Chip
                       size='small'
@@ -168,10 +163,16 @@ const CalibrationServiceCutsPanel = ({
                 ) : (
                   'Sin control'
                 )}
-              </TableCell>
-              <TableCell>{cut.notes || 'Sin notas'}</TableCell>
-              <TableCell>
-                {canMarkReady && cut.status === 'draft' ? (
+                </DetailField>
+              </Grid>
+              <Grid item xs={12} md={9}>
+                <DetailField label='Notas'>
+                  {cut.notes || 'Sin notas'}
+                </DetailField>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Box sx={{ display: 'flex', justifyContent: { md: 'flex-end' }, alignItems: 'flex-end', height: '100%' }}>
+                  {canMarkReady && cut.status === 'draft' ? (
                   <Button
                     size='small'
                     variant='outlined'
@@ -215,12 +216,13 @@ const CalibrationServiceCutsPanel = ({
                 ) : (
                   'Sin acción'
                 )}
-              </TableCell>
-            </TableRow>
-          )})}
-        </TableBody>
-      </Table>
-    </Box>
+                </Box>
+              </Grid>
+            </Grid>
+          </Paper>
+        )
+      })}
+    </Stack>
     <Dialog open={!!detailCut} onClose={() => setDetailCut(null)} maxWidth='xs' fullWidth>
       <DialogTitle>Items del corte</DialogTitle>
       <DialogContent>
