@@ -1064,7 +1064,7 @@ const CalibrationServiceWorkspacePage = () => {
             ) : null}
             {sequenceConfig?.initialized ? (
               <Button variant='outlined' onClick={() => setIsSequenceDialogOpen(true)} sx={{ textTransform: 'none', fontWeight: 600 }}>
-                Configurar consecutivos
+                Consecutivos y metrólogo
               </Button>
             ) : null}
             <Button
