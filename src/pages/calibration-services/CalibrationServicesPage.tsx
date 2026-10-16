@@ -2688,20 +2688,30 @@ const CalibrationServicesPage = () => {
           <Typography variant='body2' sx={{ mb: 1 }}>
             Variables que se reemplazan con los datos de cada cotización. Toca una para copiarla.
           </Typography>
-          <Stack direction='row' spacing={1} useFlexGap flexWrap='wrap' sx={{ mb: 2.5 }}>
-            {['validityDays', 'paymentMethod', 'instrumentDeliveryTime', 'certificateDeliveryTime'].map((variable) => (
-              <Tooltip key={variable} title='Copiar variable'>
-                <Chip
-                  label={`{{${variable}}}`}
-                  size='small'
-                  variant='outlined'
-                  onClick={() => {
-                    navigator.clipboard?.writeText(`{{${variable}}}`)
-                    toast.success('Variable copiada')
-                  }}
-                  sx={{ fontFamily: 'monospace', borderColor: '#00BFA5', color: '#00695C', '&:hover': { bgcolor: '#E0F7F4' } }}
-                />
-              </Tooltip>
+          <Stack spacing={1} sx={{ mb: 2.5 }}>
+            {[
+              { variable: 'validityDays', meaning: 'Días de validez de la oferta' },
+              { variable: 'paymentMethod', meaning: 'Forma de pago de la cotización' },
+              { variable: 'instrumentDeliveryTime', meaning: 'Tiempo de entrega de los equipos' },
+              { variable: 'certificateDeliveryTime', meaning: 'Tiempo de entrega de los certificados' }
+            ].map(({ variable, meaning }) => (
+              <Stack key={variable} direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 0.5, sm: 1.5 }} alignItems={{ sm: 'center' }}>
+                <Tooltip title='Copiar variable'>
+                  <Chip
+                    label={`{{${variable}}}`}
+                    size='small'
+                    variant='outlined'
+                    onClick={() => {
+                      navigator.clipboard?.writeText(`{{${variable}}}`)
+                      toast.success('Variable copiada')
+                    }}
+                    sx={{ fontFamily: 'monospace', alignSelf: 'flex-start', borderColor: '#00BFA5', color: '#00695C', '&:hover': { bgcolor: '#E0F7F4' } }}
+                  />
+                </Tooltip>
+                <Typography variant='body2' color='text.secondary'>
+                  {meaning}
+                </Typography>
+              </Stack>
             ))}
           </Stack>
           <Stack spacing={1.5}>
