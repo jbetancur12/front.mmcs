@@ -4,6 +4,7 @@ import {
   Button,
   Chip,
   Divider,
+  Grid,
   Paper,
   Stack,
   Table,
@@ -22,6 +23,7 @@ import {
   CalibrationServicePhysicalTraceabilityEntry
 } from '../../types/calibrationService'
 
+import { DetailField } from './CalibrationServiceDetailBlocks'
 interface Props {
   controlSheet: CalibrationServiceLogisticsControlSheet
   entries: CalibrationServicePhysicalTraceabilityEntry[]
@@ -88,13 +90,14 @@ const CalibrationServiceLogisticsPanel = ({
             entregar equipos.
           </Typography>
         </Box>
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+        <Stack direction='row' spacing={1} useFlexGap flexWrap='wrap'>
           {canGeneratePdf ? (
             <Button
               variant='outlined'
               startIcon={<PictureAsPdfOutlinedIcon />}
               onClick={onGeneratePdf}
               disabled={isBusy}
+              sx={{ color: '#00897B', borderColor: '#00BFA5', textTransform: 'none', fontWeight: 600, whiteSpace: 'nowrap', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
             >
               Generar PDF
             </Button>
@@ -105,6 +108,7 @@ const CalibrationServiceLogisticsPanel = ({
               startIcon={<EmailOutlinedIcon />}
               onClick={onSendEmail}
               disabled={isBusy}
+              sx={{ color: '#00897B', borderColor: '#00BFA5', textTransform: 'none', fontWeight: 600, whiteSpace: 'nowrap', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
             >
               Enviar formato
             </Button>
@@ -115,6 +119,7 @@ const CalibrationServiceLogisticsPanel = ({
               startIcon={<LocalShippingOutlinedIcon />}
               onClick={onRegisterMovement}
               disabled={isBusy}
+              sx={{ color: '#00897B', borderColor: '#00BFA5', textTransform: 'none', fontWeight: 600, whiteSpace: 'nowrap', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}
             >
               Registrar movimiento
             </Button>
@@ -125,6 +130,7 @@ const CalibrationServiceLogisticsPanel = ({
               startIcon={<DescriptionOutlinedIcon />}
               onClick={onEditControl}
               disabled={isBusy}
+              sx={{ bgcolor: '#00BFA5', textTransform: 'none', fontWeight: 600, whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}
             >
               Diligenciar formato
             </Button>
@@ -134,69 +140,58 @@ const CalibrationServiceLogisticsPanel = ({
 
       <Paper variant='outlined' sx={{ p: 2.5, borderRadius: 2.5 }}>
         <Stack spacing={2}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+          <Stack direction='row' spacing={1} useFlexGap flexWrap='wrap'>
             <Chip
+              variant='outlined'
               color={controlSheet.intakeDate ? 'success' : 'default'}
               label={`Ingreso: ${formatDate(controlSheet.intakeDate)}`}
             />
             <Chip
+              variant='outlined'
               color={controlSheet.deliveryDate ? 'info' : 'default'}
               label={`Entrega: ${formatDate(controlSheet.deliveryDate)}`}
             />
             <Chip
-              color={filledRows.length ? 'secondary' : 'default'}
+              variant='outlined'
+              color={filledRows.length ? 'success' : 'default'}
               label={`Equipos diligenciados: ${filledRows.length}`}
             />
           </Stack>
 
           <Divider />
 
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant='subtitle2' fontWeight={700}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={4}>
+              <Typography variant='subtitle2' fontWeight={700} sx={{ mb: 1.5 }}>
                 Solicitante
               </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                {controlSheet.requesterCompanyName || 'Sin registrar'}
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Oferta: {controlSheet.requesterOfferNumber || 'Sin registrar'}
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Contacto: {controlSheet.requesterContactName || 'Sin registrar'}
-              </Typography>
-            </Box>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant='subtitle2' fontWeight={700}>
+              <Stack spacing={1.5}>
+                <DetailField label='Empresa'>{controlSheet.requesterCompanyName || 'Sin registrar'}</DetailField>
+                <DetailField label='Oferta'>{controlSheet.requesterOfferNumber || 'Sin registrar'}</DetailField>
+                <DetailField label='Contacto'>{controlSheet.requesterContactName || 'Sin registrar'}</DetailField>
+              </Stack>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Typography variant='subtitle2' fontWeight={700} sx={{ mb: 1.5 }}>
                 Validaciones
               </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Autoriza codificación: {formatYesNo(controlSheet.noSerialAuthorization)}
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Define puntos de calibración:{' '}
-                {formatYesNo(controlSheet.calibrationPointsRequested)}
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Condición especial: {formatYesNo(controlSheet.specialCondition)}
-              </Typography>
-            </Box>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant='subtitle2' fontWeight={700}>
+              <Stack spacing={1.5}>
+                <DetailField label='Autoriza codificación'>{formatYesNo(controlSheet.noSerialAuthorization)}</DetailField>
+                <DetailField label='Define puntos de calibración'>{formatYesNo(controlSheet.calibrationPointsRequested)}</DetailField>
+                <DetailField label='Condición especial'>{formatYesNo(controlSheet.specialCondition)}</DetailField>
+              </Stack>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Typography variant='subtitle2' fontWeight={700} sx={{ mb: 1.5 }}>
                 Documentos
               </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Certificado: {formatYesNo(controlSheet.calibrationCertificateIncluded)}
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Estampilla: {formatYesNo(controlSheet.stampIncluded)}
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Última actualización:{' '}
-                {formatDateTime(controlSheet.lastUpdatedAt)}
-              </Typography>
-            </Box>
-          </Stack>
+              <Stack spacing={1.5}>
+                <DetailField label='Certificado'>{formatYesNo(controlSheet.calibrationCertificateIncluded)}</DetailField>
+                <DetailField label='Estampilla'>{formatYesNo(controlSheet.stampIncluded)}</DetailField>
+                <DetailField label='Última actualización'>{formatDateTime(controlSheet.lastUpdatedAt)}</DetailField>
+              </Stack>
+            </Grid>
+          </Grid>
 
           {filledRows.length ? (
             <Box sx={{ overflowX: 'auto' }}>

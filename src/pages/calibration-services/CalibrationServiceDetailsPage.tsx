@@ -2587,6 +2587,10 @@ const CalibrationServiceDetailsPage = () => {
     }
   }
 
+  const showInstrumentColumn = (service.items ?? []).some(
+    (item) => item.instrumentName && item.instrumentName !== item.itemName
+  )
+
   const primaryActionSx = {
     borderRadius: 2,
     textTransform: 'none',
@@ -3012,7 +3016,7 @@ const CalibrationServiceDetailsPage = () => {
                   mb: 2,
                   borderBottom: '1px solid #e5e7eb',
                   '& .MuiTabs-indicator': { backgroundColor: '#00BFA5', height: 3 },
-                  '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 },
+                  '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, minWidth: 0, px: 1.1, fontSize: '0.85rem' },
                   '& .Mui-selected': { color: '#00695C' }
                 }}
               >
@@ -3222,10 +3226,10 @@ const CalibrationServiceDetailsPage = () => {
                     }}
                   >
                     <Table size='small'>
-                      <TableHead>
+                      <TableHead sx={{ bgcolor: '#f5f5f5', '& .MuiTableCell-root': { fontWeight: 600 } }}>
                         <TableRow>
                           <TableCell>Ítem</TableCell>
-                          <TableCell>Instrumento</TableCell>
+                          {showInstrumentColumn ? <TableCell>Instrumento</TableCell> : null}
                           <TableCell>Tipo servicio</TableCell>
                           <TableCell align='right'>Cantidad</TableCell>
                           {!hideFinancialInfo ? (
@@ -3303,9 +3307,11 @@ const CalibrationServiceDetailsPage = () => {
                                   ) : null}
                                 </Stack>
                               </TableCell>
-                              <TableCell>
-                                {item.instrumentName || 'N/A'}
-                              </TableCell>
+                              {showInstrumentColumn ? (
+                                <TableCell>
+                                  {item.instrumentName || 'N/A'}
+                                </TableCell>
+                              ) : null}
                               <TableCell>{item.serviceType || 'N/A'}</TableCell>
                               <TableCell align='right'>
                                 <Stack spacing={0.25} alignItems='flex-end'>
