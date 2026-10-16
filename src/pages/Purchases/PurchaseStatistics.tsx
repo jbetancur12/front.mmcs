@@ -3,9 +3,6 @@ import {
   Bar,
   Line,
   ComposedChart,
-  PieChart, 
-  Pie, 
-  Cell, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -13,7 +10,7 @@ import {
   Legend, 
   ResponsiveContainer 
 } from 'recharts'
-import { Container, Grid, Box, CircularProgress, Alert, Button, Select, MenuItem, FormControl, InputLabel, Card, CardContent, CardHeader } from '@mui/material'
+import { Container, Grid, Box, CircularProgress, Alert, Button, Card, CardContent, LinearProgress, Paper, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
 import { BarChart as BarChart, DateRange, ErrorOutline, FactCheck, HourglassEmpty, ListAlt, ReceiptLong, RemoveShoppingCart } from '@mui/icons-material'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
@@ -119,13 +116,13 @@ const PurchaseStatistics = () => {
 
   const getStatusColor = (status: string) => {
     const statusColors: { [key: string]: string } = {
-      'pendiente': '#FF8042',
-      'pre-aprobado': '#FFBB28',
-      'aprobado': '#00C49F',
-      'aceptada': '#00C49F',
-      'rechazado': '#FF4444'
+      'pendiente': '#f59e0b',
+      'pre-aprobado': '#3b82f6',
+      'aprobado': '#00BFA5',
+      'aceptada': '#00BFA5',
+      'rechazado': '#ef4444'
     }
-    return statusColors[status] || '#8884D8'
+    return statusColors[String(status).toLowerCase()] || '#9ca3af'
   }
 
   const formatCurrency = (value: number) => {
@@ -146,17 +143,6 @@ const PurchaseStatistics = () => {
     } catch (error) {
       return dateString;
     }
-  }
-
-  // Helper para formatear valores en tooltips
-  const formatTooltipValue = (value: number, name: string) => {
-    if (name === 'totalAmount' || name.toLowerCase().includes('monto') || name.toLowerCase().includes('total')) {
-      return formatCurrency(value);
-    }
-    if (name === 'orderCount' || name.toLowerCase().includes('orden')) {
-      return `${value} órdenes`;
-    }
-    return value;
   }
 
   if (loading) {
@@ -212,6 +198,29 @@ const PurchaseStatistics = () => {
       date: formattedDate
     };
   })
+
+  const compactCurrency = (value: number) => {
+    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`
+    if (value >= 1000) return `${(value / 1000).toFixed(0)}K`
+    return `${value}`
+  }
+
+  const { totalRequests, totalOrders, totalVerifications, requestsWithoutOrders, ordersWithoutVerification } = statistics.overview
+  const percentOf = (part: number, whole: number) => (whole ? Math.round((part / whole) * 1000) / 10 : 0)
+  const funnel = [
+    { label: 'Solicitudes', value: totalRequests, rate: null as number | null, color: '#3b82f6' },
+    { label: 'Órdenes de compra', value: totalOrders, rate: percentOf(totalOrders, totalRequests), color: '#00BFA5' },
+    { label: 'Verificaciones', value: totalVerifications, rate: percentOf(totalVerifications, totalOrders), color: '#00695C' }
+  ]
+  const funnelMax = Math.max(...funnel.map((step) => step.value), 0)
+  const stuckTotal = requestsWithoutOrders + ordersWithoutVerification
+  const statusTotal = statistics.requestsByStatus.reduce((acc, entry) => acc + entry.count, 0)
+
+  const chartPaperSx = { p: { xs: 2, md: 3 }, borderRadius: 2 }
+  const toggleSx = {
+    '& .MuiToggleButton-root': { textTransform: 'none', fontWeight: 600, px: 2 },
+    '& .Mui-selected': { bgcolor: '#E0F7F4 !important', color: '#00695C' }
+  }
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }} className='space-y-6'>
@@ -284,91 +293,152 @@ const PurchaseStatistics = () => {
         </Grid>
       </Grid>
 
-      {/* Charts Section */}
+      {/* Tendencia y proceso */}
       <Grid container spacing={3}>
-        {/* Time Series Chart */}
-        <Grid item xs={12} lg={9}>
-          <Card>
-            <CardHeader 
-              title="Tendencia de Órdenes y Montos"
-              action={
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                  <InputLabel>Período</InputLabel>
-                  <Select
-                    value={timeRange}
-                    label="Período"
-                    onChange={(e) => setTimeRange(e.target.value as 'daily' | 'monthly' | 'yearly')}
-                  >
-                    <MenuItem value="daily">Diario</MenuItem>
-                    <MenuItem value="monthly">Mensual</MenuItem>
-                    <MenuItem value="yearly">Anual</MenuItem>
-                  </Select>
-                </FormControl>
-              }
-            />
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <ComposedChart data={timeSeriesData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis yAxisId="left" />
-                  <YAxis 
-                    yAxisId="right" 
-                    orientation="right" 
-                    tickFormatter={(value) => {
-                      if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-                      if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
-                      return `$${value}`;
-                    }}
+        <Grid item xs={12} lg={8}>
+          <Paper elevation={2} sx={{ ...chartPaperSx, height: '100%' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2, flexWrap: 'wrap', mb: 2 }}>
+              <Box>
+                <Typography variant='h6' fontWeight={700}>
+                  Órdenes y monto comprado
+                </Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  Las barras son órdenes emitidas; la línea es el monto en pesos.
+                </Typography>
+              </Box>
+              <ToggleButtonGroup
+                size='small'
+                exclusive
+                value={timeRange}
+                onChange={(_, value) => value && setTimeRange(value)}
+                aria-label='Período de la gráfica'
+                sx={toggleSx}
+              >
+                <ToggleButton value='daily'>Diario</ToggleButton>
+                <ToggleButton value='monthly'>Mensual</ToggleButton>
+                <ToggleButton value='yearly'>Anual</ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+            {timeSeriesData.length === 0 ? (
+              <Box sx={{ py: 8, textAlign: 'center', color: 'text.secondary' }}>
+                No hay órdenes en este período. Cambia el rango para ver otras fechas.
+              </Box>
+            ) : (
+              <ResponsiveContainer width='100%' height={320}>
+                <ComposedChart data={timeSeriesData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <CartesianGrid vertical={false} stroke='#e5e7eb' />
+                  <XAxis dataKey='date' tickLine={false} axisLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
+                  <YAxis yAxisId='left' allowDecimals={false} tickLine={false} axisLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} width={32} />
+                  <YAxis
+                    yAxisId='right'
+                    orientation='right'
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    width={56}
+                    tickFormatter={compactCurrency}
                   />
-                  <Tooltip 
+                  <Tooltip
+                    cursor={{ fill: 'rgba(0, 191, 165, 0.06)' }}
+                    contentStyle={{ borderRadius: 12, border: '1px solid #e5e7eb', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
                     formatter={(value: number, name: string) => [
-                      formatTooltipValue(value, name),
-                      name === 'totalAmount' ? 'Monto Total' : 'Número de Órdenes'
+                      name === 'Monto' ? formatCurrency(value) : `${value} órdenes`,
+                      name
                     ]}
-                    labelFormatter={(label) => `Fecha: ${label}`}
                   />
-                  <Legend />
-                  <Bar yAxisId="left" dataKey="orderCount" fill="#8884d8" name="Número de Órdenes" />
-                  <Line yAxisId="right" dataKey="totalAmount" stroke="#82ca9d" name="Monto Total" strokeWidth={2} />
+                  <Legend iconType='circle' wrapperStyle={{ fontSize: 13 }} />
+                  <Bar yAxisId='left' dataKey='orderCount' name='Órdenes' fill='#00BFA5' radius={[6, 6, 0, 0]} maxBarSize={36} />
+                  <Line yAxisId='right' dataKey='totalAmount' name='Monto' stroke='#00695C' strokeWidth={2.5} dot={{ r: 3, fill: '#00695C' }} activeDot={{ r: 5 }} />
                 </ComposedChart>
               </ResponsiveContainer>
-            </CardContent>
-          </Card>
+            )}
+          </Paper>
         </Grid>
 
-        {/* Request Status Pie Chart */}
-        <Grid item xs={12} lg={3}>
-          <Card>
-            <CardHeader title="Estados de Solicitudes" />
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={statistics.requestsByStatus}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    dataKey="count"
-                    nameKey="status"
-                    label={({ status, count, percent }) => 
-                      `${status}: ${count} (${(percent * 100).toFixed(0)}%)`
-                    }
-                  >
-                    {statistics.requestsByStatus.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={getStatusColor(entry.status)} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value: number) => [`${value} solicitudes`, 'Cantidad']}
-                    labelFormatter={(label) => `Estado: ${label}`}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+        <Grid item xs={12} lg={4}>
+          <Paper elevation={2} sx={{ ...chartPaperSx, height: '100%' }}>
+            <Typography variant='h6' fontWeight={700}>
+              Del pedido a la verificación
+            </Typography>
+            <Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
+              Cuántas solicitudes llegan a orden y cuántas órdenes se verifican.
+            </Typography>
+            {funnel.map((step, index) => (
+              <Box key={step.label} sx={{ mb: index === funnel.length - 1 ? 0 : 2.5 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 0.75 }}>
+                  <Typography variant='body2' fontWeight={600}>
+                    {step.label}
+                  </Typography>
+                  <Typography variant='body2' fontWeight={700}>
+                    {step.value}
+                  </Typography>
+                </Box>
+                <LinearProgress
+                  variant='determinate'
+                  value={funnelMax ? (step.value / funnelMax) * 100 : 0}
+                  sx={{ height: 12, borderRadius: 6, bgcolor: '#E0F7F4', '& .MuiLinearProgress-bar': { borderRadius: 6, bgcolor: step.color } }}
+                />
+                {step.rate !== null && (
+                  <Typography variant='caption' color='text.secondary'>
+                    {step.rate}% de la etapa anterior
+                  </Typography>
+                )}
+              </Box>
+            ))}
+            <Box sx={{ mt: 3, p: 2, borderRadius: 2, bgcolor: stuckTotal > 0 ? '#fff7ed' : '#E0F7F4' }}>
+              <Typography variant='body2' fontWeight={600}>
+                {stuckTotal > 0
+                  ? `${stuckTotal} pendientes por atender`
+                  : 'No hay pendientes por atender'}
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                {stuckTotal > 0
+                  ? `${statistics.overview.requestsWithoutOrders} solicitudes sin orden y ${statistics.overview.ordersWithoutVerification} órdenes sin verificar.`
+                  : 'Todas las solicitudes tienen orden y todas las órdenes están verificadas.'}
+              </Typography>
+            </Box>
+          </Paper>
         </Grid>
 
+        <Grid item xs={12}>
+          <Paper elevation={2} sx={chartPaperSx}>
+            <Typography variant='h6' fontWeight={700}>
+              Estado de las solicitudes
+            </Typography>
+            <Typography variant='body2' color='text.secondary' sx={{ mb: 2.5 }}>
+              {statusTotal} solicitudes en total.
+            </Typography>
+            {statusTotal === 0 ? (
+              <Box sx={{ py: 4, textAlign: 'center', color: 'text.secondary' }}>Aún no hay solicitudes registradas.</Box>
+            ) : (
+              <>
+                <Box sx={{ display: 'flex', height: 14, borderRadius: 7, overflow: 'hidden', mb: 2.5 }} role='img' aria-label='Reparto de solicitudes por estado'>
+                  {statistics.requestsByStatus.map((entry) => (
+                    <Box key={entry.status} title={`${entry.status}: ${entry.count}`} sx={{ width: `${(entry.count / statusTotal) * 100}%`, bgcolor: getStatusColor(entry.status) }} />
+                  ))}
+                </Box>
+                <Grid container spacing={2}>
+                  {statistics.requestsByStatus.map((entry) => (
+                    <Grid item xs={12} sm={6} md={4} key={entry.status}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: getStatusColor(entry.status), flexShrink: 0 }} />
+                        <Typography variant='body2' sx={{ textTransform: 'capitalize', flexGrow: 1 }}>
+                          {entry.status}
+                        </Typography>
+                        <Typography variant='body2' fontWeight={700}>
+                          {entry.count}
+                        </Typography>
+                        <Typography variant='body2' color='text.secondary' sx={{ minWidth: 44, textAlign: 'right' }}>
+                          {Math.round((entry.count / statusTotal) * 100)}%
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+              </>
+            )}
+          </Paper>
+        </Grid>
       </Grid>
     </Container>
   )
