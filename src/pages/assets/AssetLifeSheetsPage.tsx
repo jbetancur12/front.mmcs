@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   Add,
+  Archive,
   CalendarMonth,
+  CheckCircle,
+  Computer,
   Close,
   Delete,
   Download,
@@ -16,6 +19,7 @@ import {
   Box,
   Button,
   Chip,
+  Container,
   Divider,
   Dialog,
   DialogActions,
@@ -23,6 +27,7 @@ import {
   DialogTitle,
   Drawer,
   FormControlLabel,
+  Grid,
   IconButton,
   MenuItem,
   Paper,
@@ -33,7 +38,9 @@ import {
   Typography
 } from '@mui/material'
 import MaterialReactTable, { type MRT_ColumnDef } from 'material-react-table'
-import { MRT_Localization_ES } from 'material-react-table/locales/es'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 import { useStore } from '@nanostores/react'
 import { bigToast } from 'src/Components/ExcelManipulation/Utils'
 import {
@@ -505,49 +512,48 @@ const AssetLifeSheetsPage = () => {
     ].sort((left, right) => left.localeCompare(right, 'es'))
   }
 
-  return (
-    <Box sx={{ p: 3 }}>
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        justifyContent='space-between'
-        spacing={2}
-        sx={{ mb: 3 }}
-      >
-        <Box>
-          <Typography variant='h4' fontWeight={700}>
-            Hoja de Vida de Activos
-          </Typography>
-          <Typography color='text.secondary'>
-            Módulo administrativo para PCs, portátiles, TVs y equipos similares.
-          </Typography>
-        </Box>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-          <Button
-            variant='outlined'
-            startIcon={<Download />}
-            onClick={exportAssetsExcel}
-          >
-            Excel
-          </Button>
-          <Button
-            variant='outlined'
-            startIcon={<CalendarMonth />}
-            onClick={downloadSchedulePdf}
-          >
-            Cronograma PDF
-          </Button>
-{canManage && (
-          <Button variant='contained' startIcon={<Add />} onClick={openCreate}>
-            Nuevo activo
-          </Button>
-)}
-        </Stack>
-      </Stack>
+  const activeCount = assets.filter((a) => a.status === 'active').length
 
+  return (
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title='Hoja de Vida de Activos'
+        subtitle='Módulo administrativo para PCs, portátiles, TVs y equipos similares.'
+        icon={<Computer />}
+        actions={
+          <>
+            <Button variant='outlined' startIcon={<Download />} onClick={exportAssetsExcel} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+              Excel
+            </Button>
+            <Button variant='outlined' startIcon={<CalendarMonth />} onClick={downloadSchedulePdf} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+              Cronograma PDF
+            </Button>
+            {canManage && (
+              <Button variant='contained' startIcon={<Add />} onClick={openCreate} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+                Nuevo activo
+              </Button>
+            )}
+          </>
+        }
+      />
+
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Activos' value={assets.length} icon={<Computer />} tone='teal' />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='En uso' value={activeCount} icon={<CheckCircle />} tone='green' />
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Retirados o inactivos' value={assets.length - activeCount} icon={<Archive />} tone='orange' />
+        </Grid>
+      </Grid>
+
+      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
       <MaterialReactTable
+        {...purchaseTableStyle}
         columns={columns}
         data={assets}
-        localization={MRT_Localization_ES}
         enableColumnFilters
         enableColumnOrdering
         enableColumnResizing
@@ -557,41 +563,20 @@ const AssetLifeSheetsPage = () => {
         enablePagination
         enableRowActions
         enableSorting
-        positionActionsColumn='last'
+        enablePinning
         state={{ isLoading: loading }}
         initialState={{
+          columnPinning: { right: ['mrt-row-actions'] },
           density: 'compact',
           sorting: [{ id: 'assetCode', desc: false }]
         }}
-        muiTablePaperProps={{
-          elevation: 0,
-          sx: { border: '1px solid', borderColor: 'divider' }
-        }}
-        renderTopToolbarCustomActions={() => (
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-            <Button
-              variant='outlined'
-              startIcon={<Download />}
-              onClick={exportAssetsExcel}
-            >
-              Descargar Excel
-            </Button>
-            <Button
-              variant='outlined'
-              startIcon={<CalendarMonth />}
-              onClick={downloadSchedulePdf}
-            >
-              Cronograma PDF
-            </Button>
-          </Stack>
-        )}
         renderRowActions={({ row }) => (
           <Stack direction='row' spacing={0.5}>
-            <IconButton onClick={() => setSelectedAsset(row.original)}>
+            <IconButton sx={{ color: '#00BFA5' }} onClick={() => setSelectedAsset(row.original)}>
               <Visibility />
             </IconButton>
 {canManage && (
-            <IconButton onClick={() => openEdit(row.original)}>
+            <IconButton color='primary' onClick={() => openEdit(row.original)}>
               <Edit />
             </IconButton>
 )}
@@ -599,13 +584,14 @@ const AssetLifeSheetsPage = () => {
               <Download />
             </IconButton>
 {canManage && (
-            <IconButton onClick={() => setAssetPendingDelete(row.original)}>
+            <IconButton color='error' onClick={() => setAssetPendingDelete(row.original)}>
               <Delete />
             </IconButton>
 )}
           </Stack>
         )}
       />
+      </Paper>
 
       <Dialog
         open={assetDialogOpen}
@@ -1596,7 +1582,7 @@ const AssetLifeSheetsPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Container>
   )
 }
 

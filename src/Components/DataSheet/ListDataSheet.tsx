@@ -55,9 +55,19 @@ import * as yup from 'yup'
 
 import { Link } from 'react-router-dom'
 
-import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { bigToast } from '../ExcelManipulation/Utils'
 import withReactContent from 'sweetalert2-react-content'
+import { Container, Paper } from '@mui/material'
+import {
+  Add as AddKpi,
+  Build as BuildKpi,
+  CheckCircle as CheckKpi,
+  Inventory as InventoryKpi,
+  WarningAmber as WarnKpi
+} from '@mui/icons-material'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 import Swal from 'sweetalert2'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { DatePicker } from '@mui/x-date-pickers'
@@ -1156,13 +1166,63 @@ const ListDataSheet: React.FC = () => {
     )
   }
 
+  const dueSoonCount = filteredTableData.filter(
+    (d: any) => d.isCalibrationDueSoon || d.isInspectionDueSoon
+  ).length
+
   return (
-    <>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title='Hojas de vida de equipos'
+        subtitle='Inventario de equipos, calibración y mantenimiento'
+        icon={<InventoryKpi />}
+        actions={
+          canCreateDataSheet ? (
+            <Button variant='contained' startIcon={<AddKpi />} onClick={() => setCreateModalOpen(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
+              Crear hoja de vida
+            </Button>
+          ) : undefined
+        }
+      />
+
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={6} md={3}>
+          <LmsStatCard label='Equipos' value={filteredTableData.length} icon={<InventoryKpi />} tone='teal' />
+        </Grid>
+        <Grid item xs={6} md={3}>
+          <LmsStatCard
+            label='Disponibles'
+            value={filteredTableData.filter((d: any) => d.status === 'available').length}
+            icon={<CheckKpi />}
+            tone='green'
+          />
+        </Grid>
+        <Grid item xs={6} md={3}>
+          <LmsStatCard
+            label='Ocupados'
+            value={filteredTableData.filter((d: any) => d.status === 'busy').length}
+            icon={<BuildKpi />}
+            tone='blue'
+          />
+        </Grid>
+        <Grid item xs={6} md={3}>
+          <LmsStatCard
+            label='Por calibrar o inspeccionar'
+            value={dueSoonCount}
+            icon={<WarnKpi />}
+            tone={dueSoonCount > 0 ? 'red' : 'green'}
+          />
+        </Grid>
+      </Grid>
+
+      <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
       <MaterialReactTable
+        {...purchaseTableStyle}
         onColumnFiltersChange={setColumnFilters} //hoist internal columnFilters state to your state
         state={{ columnFilters }}
-        localization={MRT_Localization_ES}
+        enablePinning
         initialState={{
+          columnPinning: { right: ['mrt-row-actions'] },
           columnVisibility: {
             id: false,
             pictureUrl: false,
@@ -1222,24 +1282,6 @@ const ListDataSheet: React.FC = () => {
               alignItems='center'
               sx={{ gap: 2, position: 'relative' }}
             >
-              <Button
-                variant='contained'
-                onClick={() => setCreateModalOpen(true)}
-                sx={{
-                  backgroundColor: '#9CF08B',
-                  fontWeight: 'bold',
-                  color: '#2D4A27',
-                  '&.MuiButtonBase-root': {
-                    marginRight: '30px'
-                  },
-                  '&:hover': {
-                    backgroundColor: '#6DC662' // Azul más oscuro en hover
-                  }
-                }}
-              >
-                Crear Nueva Hoja de Vida
-              </Button>
-              <Divider orientation='vertical' flexItem />
               <Tooltip arrow placement='right' title='Inventario'>
                 <div>
                   <IconButton onClick={handleInventoryClick}>
@@ -1362,6 +1404,7 @@ const ListDataSheet: React.FC = () => {
           )
         }}
       />
+      </Paper>
 
       <CreateNewDataSheetModal
         columns={columns}
@@ -1369,7 +1412,7 @@ const ListDataSheet: React.FC = () => {
         onClose={() => setCreateModalOpen(false)}
         onSubmit={fetchDataSheets} // Update to refetch data
       />
-    </>
+    </Container>
   )
 }
 

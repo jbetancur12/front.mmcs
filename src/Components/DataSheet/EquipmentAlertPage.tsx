@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import {
   Alert,
   Box,
@@ -178,52 +180,30 @@ const EquipmentAlertsPage: React.FC = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>
-      {/* Header Section */}
-      <Box component="header" sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Avatar
-              sx={{ 
-                bgcolor: '#ff5722', 
-                mr: 2,
-                width: 48,
-                height: 48
-              }}
-            >
-              <NotificationsActiveIcon sx={{ fontSize: 28 }} />
-            </Avatar>
-            <Box>
-              <Typography variant="h4" component="h1" fontWeight="bold">
-                Resumen de Alertas
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Monitoreo de calibraciones e inspecciones próximas
-              </Typography>
-            </Box>
-          </Box>
-          
-          <Tooltip title="Actualizar alertas">
-            <IconButton
-              onClick={handleRefresh}
-              disabled={refreshing}
-              sx={{
-                bgcolor: '#f5f5f5',
-                '&:hover': {
-                  bgcolor: '#e0e0e0'
-                }
-              }}
-            >
-              <RefreshIcon sx={{ 
-                animation: refreshing ? 'spin 1s linear infinite' : 'none',
-                '@keyframes spin': {
-                  '0%': { transform: 'rotate(0deg)' },
-                  '100%': { transform: 'rotate(360deg)' }
-                }
-              }} />
-            </IconButton>
+      <LmsPageHeader
+        title='Resumen de Alertas'
+        subtitle='Monitoreo de calibraciones e inspecciones próximas'
+        icon={<NotificationsActiveIcon />}
+        actions={
+          <Tooltip title='Actualizar alertas'>
+            <span>
+              <IconButton onClick={handleRefresh} disabled={refreshing}>
+                <RefreshIcon
+                  sx={{
+                    animation: refreshing ? 'spin 1s linear infinite' : 'none',
+                    '@keyframes spin': {
+                      '0%': { transform: 'rotate(0deg)' },
+                      '100%': { transform: 'rotate(360deg)' }
+                    }
+                  }}
+                />
+              </IconButton>
+            </span>
           </Tooltip>
-        </Box>
+        }
+      />
 
+      <Box component='header' sx={{ mb: 3 }}>
         {/* Search Bar */}
         <TextField
           label="Buscar equipos"
@@ -260,87 +240,13 @@ const EquipmentAlertsPage: React.FC = () => {
       {/* Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} md={4}>
-          <Card 
-            elevation={3}
-            sx={{ 
-              background: 'linear-gradient(135deg, #ff5722 0%, #ff7043 100%)',
-              color: 'white',
-              transition: 'transform 0.2s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-4px)'
-              }
-            }}
-          >
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                    Equipos con Alertas
-                  </Typography>
-                  <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
-                    {totalAlerts}
-                  </Typography>
-                </Box>
-                <NotificationsActiveIcon sx={{ fontSize: 48, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
+          <LmsStatCard label='Equipos con alertas' value={totalAlerts} icon={<NotificationsActiveIcon />} tone='red' />
         </Grid>
-
         <Grid item xs={12} md={4}>
-          <Card 
-            elevation={3}
-            sx={{ 
-              background: 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)',
-              color: 'white',
-              transition: 'transform 0.2s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-4px)'
-              }
-            }}
-          >
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                    Calibraciones
-                  </Typography>
-                  <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
-                    {calibrationDueSoon.length}
-                  </Typography>
-                </Box>
-                <BuildIcon sx={{ fontSize: 48, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
+          <LmsStatCard label='Calibraciones' value={calibrationDueSoon.length} icon={<BuildIcon />} tone='orange' />
         </Grid>
-
         <Grid item xs={12} md={4}>
-          <Card 
-            elevation={3}
-            sx={{ 
-              background: 'linear-gradient(135deg, #2196f3 0%, #42a5f5 100%)',
-              color: 'white',
-              transition: 'transform 0.2s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-4px)'
-              }
-            }}
-          >
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                    Inspecciones
-                  </Typography>
-                  <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
-                    {inspectionDueSoon.length}
-                  </Typography>
-                </Box>
-                <ScheduleIcon sx={{ fontSize: 48, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
+          <LmsStatCard label='Inspecciones' value={inspectionDueSoon.length} icon={<ScheduleIcon />} tone='blue' />
         </Grid>
       </Grid>
 
