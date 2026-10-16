@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { ReactElement, ReactNode } from 'react'
 import {
   Alert,
   Box,
@@ -27,9 +26,7 @@ import ExpandLessOutlinedIcon from '@mui/icons-material/ExpandLessOutlined'
 import ExpandMoreOutlinedIcon from '@mui/icons-material/ExpandMoreOutlined'
 import FilterListOutlinedIcon from '@mui/icons-material/FilterListOutlined'
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined'
-import TimelineOutlinedIcon from '@mui/icons-material/TimelineOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
-import { alpha } from '@mui/material/styles'
 import MaterialReactTable, {
   type MRT_ColumnDef,
   type MRT_PaginationState
@@ -67,7 +64,7 @@ import {
   CalibrationServiceUserSummary
 } from '../../types/calibrationService'
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
-import LmsStatCard, { LmsStatTone } from 'src/Components/lms/admin/LmsStatCard'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 
 const FILTER_ALL = 'all'
 
@@ -241,33 +238,6 @@ interface CalibrationCustomersResponse {
   customers: CalibrationServiceCustomer[]
 }
 
-const toneFor = (color: string): LmsStatTone => {
-  if (color === ui.info) return 'blue'
-  if (color === ui.warning) return 'orange'
-  if (color === ui.error) return 'red'
-  return 'teal'
-}
-
-const KpiCard = ({
-  color = ui.green,
-  icon,
-  label,
-  value
-}: {
-  color?: string
-  icon: ReactNode
-  label: string
-  value: string | number
-}) => (
-  <LmsStatCard
-    label={label}
-    value={value}
-    icon={icon as ReactElement}
-    tone={toneFor(color)}
-    compact
-  />
-)
-
 const YesNoSelect = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
   <TextField fullWidth select label={label} value={value} onChange={(e) => onChange(e.target.value)}>
     {yesNoOptions.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
@@ -362,8 +332,6 @@ const CalibrationServiceAnalyticsPage = () => {
   ])
 
   const totalServices = data?.summary.totalServices ?? 0
-  const warningOrOverdue =
-    (data?.slaCounts.yellow ?? 0) + (data?.slaCounts.red ?? 0)
   const activeFiltersCount = [
     dateFrom,
     dateTo,
@@ -376,6 +344,31 @@ const CalibrationServiceAnalyticsPage = () => {
     hasInvoice !== FILTER_ALL,
     hasPendingDocumentControl !== FILTER_ALL
   ].filter(Boolean).length
+  const percentOfTotal = (count: number) => (totalServices ? Math.round((count / totalServices) * 100) : 0)
+  const isUnassigned = (name: string) => /sin metr/i.test(name)
+  const overdueCount = data?.slaCounts.red ?? 0
+  const unassignedCount = (data?.metrologists ?? [])
+    .filter((item) => isUnassigned(item.metrologistName))
+    .reduce((acc, item) => acc + item.total, 0)
+  const approvedValue = Number(data?.summary.approvedQuotedValue ?? 0)
+  const invoicedShare = approvedValue
+    ? Math.round((Number(data?.summary.invoicedValue ?? 0) / approvedValue) * 100)
+    : 0
+  const SLA_COLORS: Record<string, string> = {
+    green: '#00BFA5',
+    yellow: '#f59e0b',
+    red: '#ef4444',
+    gray: '#9ca3af',
+    blue: '#3b82f6'
+  }
+  const slaSegments = slaOptions
+    .filter((option) => option.value !== FILTER_ALL)
+    .map((option) => ({
+      value: option.value as string,
+      label: option.label,
+      color: SLA_COLORS[option.value as string],
+      count: data?.slaCounts[option.value as CalibrationServiceSlaIndicatorColor] ?? 0
+    }))
   const maxFunnelValue = Math.max(
     1,
     ...(data?.funnel ?? []).map((item) => item.count)
@@ -936,72 +929,85 @@ const CalibrationServiceAnalyticsPage = () => {
       ) : (
         <>
           <Grid container spacing={3} mb={3}>
-            <Grid item xs={12} sm={6} md={3}>
-              <KpiCard
+            <Grid item xs={6} md={3}>
+              <LmsStatCard
                 label='Servicios'
                 value={numberFormatter.format(totalServices)}
+                caption={`${numberFormatter.format(data?.summary.activeServices ?? 0)} activos`}
                 icon={<AnalyticsOutlinedIcon />}
+                tone='teal'
               />
             </Grid>
-            <Grid item xs={12} md={3}>
-              <KpiCard
-                color={ui.info}
-                label='Activos'
-                value={numberFormatter.format(data?.summary.activeServices ?? 0)}
-                icon={<TimelineOutlinedIcon />}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <KpiCard
-                color={warningOrOverdue > 0 ? ui.warning : ui.green}
-                label='Alertas SLA'
-                value={numberFormatter.format(warningOrOverdue)}
+            <Grid item xs={6} md={3}>
+              <LmsStatCard
+                label='SLA vencido'
+                value={numberFormatter.format(overdueCount)}
+                caption={`${percentOfTotal(overdueCount)}% del total`}
                 icon={<WarningAmberOutlinedIcon />}
+                tone={overdueCount > 0 ? 'red' : 'green'}
               />
             </Grid>
-            <Grid item xs={12} md={3}>
-              <KpiCard
-                color={ui.error}
-                label='Novedades'
+            <Grid item xs={6} md={3}>
+              <LmsStatCard
+                label='Sin metrólogo'
+                value={numberFormatter.format(unassignedCount)}
+                caption={`${percentOfTotal(unassignedCount)}% del total`}
+                icon={<EngineeringOutlinedIcon />}
+                tone={unassignedCount > 0 ? 'orange' : 'green'}
+              />
+            </Grid>
+            <Grid item xs={6} md={3}>
+              <LmsStatCard
+                label='Con novedades'
                 value={numberFormatter.format(data?.summary.servicesWithAdjustments ?? 0)}
                 icon={<AssignmentTurnedInOutlinedIcon />}
+                tone='blue'
               />
             </Grid>
           </Grid>
 
-          <Grid container spacing={3} mb={3}>
-            <Grid item xs={12} sm={6} md={3}>
-              <KpiCard
-                label='Valor cotizado total'
-                value={formatCurrency(data?.summary.quotedValue)}
-                icon={<AnalyticsOutlinedIcon />}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <KpiCard
-                color={ui.info}
-                label='Valor cotizado aprobado'
-                value={formatCurrency(data?.summary.approvedQuotedValue)}
-                icon={<AnalyticsOutlinedIcon />}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <KpiCard
-                color={ui.warning}
-                label='Novedades aprobadas'
-                value={formatCurrency(data?.summary.approvedAdjustmentValue)}
-                icon={<AssignmentTurnedInOutlinedIcon />}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <KpiCard
-                color={ui.info}
-                label='Facturado'
-                value={formatCurrency(data?.summary.invoicedValue)}
-                icon={<TimelineOutlinedIcon />}
-              />
-            </Grid>
-          </Grid>
+          <Card elevation={0} sx={{ ...cardSx, mb: 3 }}>
+            <CardContent>
+              <Typography variant='h6' sx={{ fontWeight: 700 }}>
+                Resumen financiero
+              </Typography>
+              <Typography variant='body2' sx={{ color: ui.muted, mb: 2 }}>
+                Lo cotizado, lo aprobado y lo que ya se facturó.
+              </Typography>
+              <Grid container spacing={2}>
+                {[
+                  { label: 'Cotizado', value: data?.summary.quotedValue },
+                  { label: 'Cotizado aprobado', value: data?.summary.approvedQuotedValue },
+                  { label: 'Novedades aprobadas', value: data?.summary.approvedAdjustmentValue },
+                  { label: 'Facturado', value: data?.summary.invoicedValue }
+                ].map((item) => (
+                  <Grid item xs={12} sm={6} md={3} key={item.label}>
+                    <Typography variant='body2' sx={{ color: ui.muted }}>
+                      {item.label}
+                    </Typography>
+                    <Typography variant='h5' sx={{ fontWeight: 700, color: ui.text }}>
+                      {formatCurrency(item.value)}
+                    </Typography>
+                  </Grid>
+                ))}
+              </Grid>
+              <Box sx={{ mt: 2.5 }}>
+                <Stack direction='row' justifyContent='space-between' mb={0.5}>
+                  <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                    Facturado sobre lo aprobado
+                  </Typography>
+                  <Typography variant='body2' sx={{ fontWeight: 700 }}>
+                    {invoicedShare}%
+                  </Typography>
+                </Stack>
+                <LinearProgress
+                  variant='determinate'
+                  value={Math.min(invoicedShare, 100)}
+                  sx={{ height: 10, borderRadius: 999, backgroundColor: '#E0F7F4', '& .MuiLinearProgress-bar': { borderRadius: 999, backgroundColor: '#00BFA5' } }}
+                />
+              </Box>
+            </CardContent>
+          </Card>
 
           <Card elevation={0} sx={{ ...cardSx, mb: 3 }}>
             <CardContent>
@@ -1118,52 +1124,32 @@ const CalibrationServiceAnalyticsPage = () => {
             <Grid item xs={12} md={5}>
               <Card elevation={0} sx={{ ...cardSx, height: '100%' }}>
                 <CardContent>
-                  <Typography variant='h6' sx={{ fontWeight: 800, mb: 2 }}>
+                  <Typography variant='h6' sx={{ fontWeight: 700 }}>
                     Semáforo SLA
                   </Typography>
-                  <Stack spacing={1.5}>
-                    {slaOptions
-                      .filter((option) => option.value !== FILTER_ALL)
-                      .map((option) => {
-                        const count =
-                          data?.slaCounts[
-                            option.value as CalibrationServiceSlaIndicatorColor
-                          ] ?? 0
-                        const percent = totalServices ? (count / totalServices) * 100 : 0
-                        return (
-                          <Box key={option.value}>
-                            <Stack direction='row' justifyContent='space-between' mb={0.5}>
-                              <Typography variant='body2' sx={{ fontWeight: 700 }}>
-                                {option.label}
-                              </Typography>
-                              <Typography variant='body2' sx={{ color: ui.muted }}>
-                                {count}
-                              </Typography>
-                            </Stack>
-                            <LinearProgress
-                              variant='determinate'
-                              value={percent}
-                              sx={{
-                                height: 8,
-                                borderRadius: 999,
-                                backgroundColor: alpha(ui.muted, 0.12),
-                                '& .MuiLinearProgress-bar': {
-                                  backgroundColor:
-                                    option.value === 'red'
-                                      ? ui.error
-                                      : option.value === 'yellow'
-                                        ? ui.warning
-                                        : option.value === 'blue'
-                                          ? ui.info
-                                          : option.value === 'gray'
-                                            ? ui.muted
-                                            : ui.green
-                                }
-                              }}
-                            />
-                          </Box>
-                        )
-                      })}
+                  <Typography variant='body2' sx={{ color: ui.muted, mb: 2 }}>
+                    Cómo va cada servicio frente a su plazo.
+                  </Typography>
+                  <Box sx={{ display: 'flex', height: 16, borderRadius: 999, overflow: 'hidden', mb: 2.5 }} role='img' aria-label='Reparto de servicios por estado del semáforo'>
+                    {slaSegments.map((segment) => (
+                      <Box key={segment.value} title={`${segment.label}: ${segment.count}`} sx={{ width: `${percentOfTotal(segment.count)}%`, backgroundColor: segment.color }} />
+                    ))}
+                  </Box>
+                  <Stack spacing={1.25}>
+                    {slaSegments.map((segment) => (
+                      <Stack key={segment.value} direction='row' alignItems='center' spacing={1.5}>
+                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: segment.color, flexShrink: 0 }} />
+                        <Typography variant='body2' sx={{ flexGrow: 1 }}>
+                          {segment.label}
+                        </Typography>
+                        <Typography variant='body2' sx={{ fontWeight: 700 }}>
+                          {numberFormatter.format(segment.count)}
+                        </Typography>
+                        <Typography variant='body2' sx={{ color: ui.muted, minWidth: 44, textAlign: 'right' }}>
+                          {percentOfTotal(segment.count)}%
+                        </Typography>
+                      </Stack>
+                    ))}
                   </Stack>
                 </CardContent>
               </Card>
@@ -1172,8 +1158,11 @@ const CalibrationServiceAnalyticsPage = () => {
             <Grid item xs={12} md={7}>
               <Card elevation={0} sx={{ ...cardSx, height: '100%' }}>
                 <CardContent>
-                  <Typography variant='h6' sx={{ fontWeight: 800, mb: 2 }}>
+                  <Typography variant='h6' sx={{ fontWeight: 700 }}>
                     Embudo operativo
+                  </Typography>
+                  <Typography variant='body2' sx={{ color: ui.muted, mb: 2 }}>
+                    Cuántos servicios hay en cada etapa.
                   </Typography>
                   <Stack spacing={1.2}>
                     {(data?.funnel ?? []).map((item) => (
@@ -1190,9 +1179,9 @@ const CalibrationServiceAnalyticsPage = () => {
                             sx={{
                               height: 10,
                               borderRadius: 999,
-                              backgroundColor: alpha(ui.green, 0.12),
+                              backgroundColor: '#E0F7F4',
                               '& .MuiLinearProgress-bar': {
-                                backgroundColor: ui.green
+                                backgroundColor: '#00BFA5'
                               }
                             }}
                           />
@@ -1214,40 +1203,42 @@ const CalibrationServiceAnalyticsPage = () => {
             <Grid item xs={12} md={6}>
               <Card elevation={0} sx={{ ...cardSx, height: '100%' }}>
                 <CardContent>
-                  <Typography variant='h6' sx={{ fontWeight: 800, mb: 2 }}>
+                  <Typography variant='h6' sx={{ fontWeight: 700 }}>
                     Carga por metrólogo
                   </Typography>
-                  <Stack spacing={1.5}>
-                    {(data?.metrologists ?? []).slice(0, 8).map((metrologist) => (
-                      <Box key={metrologist.key}>
-                        <Stack direction='row' justifyContent='space-between' mb={0.5}>
-                          <Typography variant='body2' sx={{ fontWeight: 800 }}>
-                            <EngineeringOutlinedIcon sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
-                            {metrologist.metrologistName}
+                  <Typography variant='body2' sx={{ color: ui.muted, mb: 2 }}>
+                    Servicios por persona. En ámbar, los que aún no tienen a quién asignarse.
+                  </Typography>
+                  <Stack spacing={1.75}>
+                    {(data?.metrologists ?? []).slice(0, 8).map((metrologist) => {
+                      const unassigned = isUnassigned(metrologist.metrologistName)
+                      const barColor = unassigned ? '#f59e0b' : '#00BFA5'
+                      return (
+                        <Box key={metrologist.key}>
+                          <Stack direction='row' justifyContent='space-between' mb={0.5}>
+                            <Typography variant='body2' sx={{ fontWeight: 600, color: unassigned ? '#b45309' : ui.text }}>
+                              {metrologist.metrologistName}
+                            </Typography>
+                            <Typography variant='body2' sx={{ fontWeight: 700 }}>
+                              {metrologist.total}
+                            </Typography>
+                          </Stack>
+                          <LinearProgress
+                            variant='determinate'
+                            value={(metrologist.total / maxMetrologistValue) * 100}
+                            sx={{
+                              height: 8,
+                              borderRadius: 999,
+                              backgroundColor: unassigned ? '#fff7ed' : '#E0F7F4',
+                              '& .MuiLinearProgress-bar': { borderRadius: 999, backgroundColor: barColor }
+                            }}
+                          />
+                          <Typography variant='caption' sx={{ color: ui.muted }}>
+                            {metrologist.inExecution} en ejecución, {metrologist.warningOrOverdue} con SLA en alerta o vencido, {metrologist.pendingClosure} por cerrar
                           </Typography>
-                          <Typography variant='body2' sx={{ color: ui.muted }}>
-                            {metrologist.total}
-                          </Typography>
-                        </Stack>
-                        <LinearProgress
-                          variant='determinate'
-                          value={(metrologist.total / maxMetrologistValue) * 100}
-                          sx={{
-                            height: 8,
-                            borderRadius: 999,
-                            backgroundColor: alpha(ui.info, 0.12),
-                            '& .MuiLinearProgress-bar': {
-                              backgroundColor: ui.info
-                            }
-                          }}
-                        />
-                        <Typography variant='caption' sx={{ color: ui.muted }}>
-                          En ejecución: {metrologist.inExecution} · SLA alerta/vencido:{' '}
-                          {metrologist.warningOrOverdue} · Pendiente cierre:{' '}
-                          {metrologist.pendingClosure}
-                        </Typography>
-                      </Box>
-                    ))}
+                        </Box>
+                      )
+                    })}
                   </Stack>
                 </CardContent>
               </Card>
@@ -1256,50 +1247,33 @@ const CalibrationServiceAnalyticsPage = () => {
             <Grid item xs={12} md={6}>
               <Card elevation={0} sx={{ ...cardSx, height: '100%' }}>
                 <CardContent>
-                  <Typography variant='h6' sx={{ fontWeight: 800, mb: 2 }}>
-                    Riesgos administrativos
+                  <Typography variant='h6' sx={{ fontWeight: 700 }}>
+                    Pendientes administrativos
+                  </Typography>
+                  <Typography variant='body2' sx={{ color: ui.muted, mb: 2 }}>
+                    Cortes y documentos que esperan una acción.
                   </Typography>
                   <Grid container spacing={1.5}>
-                    <Grid item xs={6}>
-                      <Paper variant='outlined' sx={{ p: 2, borderRadius: '12px' }}>
-                        <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 800 }}>
-                          CORTES BORRADOR
-                        </Typography>
-                        <Typography variant='h5' sx={{ fontWeight: 800 }}>
-                          {data?.cuts.draft ?? 0}
-                        </Typography>
-                      </Paper>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Paper variant='outlined' sx={{ p: 2, borderRadius: '12px' }}>
-                        <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 800 }}>
-                          LISTOS FACTURA
-                        </Typography>
-                        <Typography variant='h5' sx={{ fontWeight: 800 }}>
-                          {data?.cuts.ready_for_invoicing ?? 0}
-                        </Typography>
-                      </Paper>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Paper variant='outlined' sx={{ p: 2, borderRadius: '12px' }}>
-                        <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 800 }}>
-                          DOC. PENDIENTE
-                        </Typography>
-                        <Typography variant='h5' sx={{ fontWeight: 800 }}>
-                          {data?.cuts.document_pending ?? 0}
-                        </Typography>
-                      </Paper>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Paper variant='outlined' sx={{ p: 2, borderRadius: '12px' }}>
-                        <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 800 }}>
-                          LISTOS CIERRE
-                        </Typography>
-                        <Typography variant='h5' sx={{ fontWeight: 800 }}>
-                          {data?.cuts.final_close_ready ?? 0}
-                        </Typography>
-                      </Paper>
-                    </Grid>
+                    {[
+                      { label: 'Cortes en borrador', value: data?.cuts.draft ?? 0, hint: 'Falta enviarlos' },
+                      { label: 'Listos para facturar', value: data?.cuts.ready_for_invoicing ?? 0, hint: 'Pueden pasar a facturación' },
+                      { label: 'Documentos pendientes', value: data?.cuts.document_pending ?? 0, hint: 'Falta control documental' },
+                      { label: 'Listos para cierre', value: data?.cuts.final_close_ready ?? 0, hint: 'Se pueden cerrar' }
+                    ].map((item) => (
+                      <Grid item xs={6} key={item.label}>
+                        <Paper variant='outlined' sx={{ p: 2, borderRadius: '12px', borderColor: ui.border }}>
+                          <Typography variant='h5' sx={{ fontWeight: 700, color: item.value > 0 ? ui.text : ui.muted }}>
+                            {item.value}
+                          </Typography>
+                          <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                            {item.label}
+                          </Typography>
+                          <Typography variant='caption' sx={{ color: ui.muted }}>
+                            {item.hint}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                    ))}
                   </Grid>
                 </CardContent>
               </Card>
