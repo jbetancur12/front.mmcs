@@ -36,6 +36,8 @@ import ClientDeviceAssignment from './ClientDeviceAssignment'
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 import EmailNotificationSettings from '../emails/EmailNotificationSettings'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 
 const CustomersManagement: React.FC = () => {
   const queryClient = useQueryClient()
@@ -153,33 +155,25 @@ const CustomersManagement: React.FC = () => {
   // Función para cerrar el diálogo de asignación de dispositivo
 
   return (
-    <Container maxWidth='lg' sx={{ py: 4 }}>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 4
-        }}
-      >
-        <Box>
-          <Typography variant='h4' component='h1' gutterBottom>
-            Gestión de Clientes
-          </Typography>
-          <Typography variant='subtitle1' color='text.secondary'>
-            Administra los clientes y sus dispositivos IoT
-          </Typography>
-        </Box>
-      </Box>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <LmsPageHeader
+        title='Gestión de Clientes'
+        subtitle='Administra los clientes y sus dispositivos IoT'
+        icon={<BusinessIcon />}
+        actions={
+          <Link to='/iot/map'>
+            <Button variant='outlined' sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
+              Volver al mapa
+            </Button>
+          </Link>
+        }
+      />
 
-      {/* Navegación de regreso */}
-      <Box sx={{ mb: 3 }}>
-        <Link to='/iot/map'>
-          <Button variant='outlined' color='primary'>
-            Volver al Mapa
-          </Button>
-        </Link>
-      </Box>
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Clientes con IoT' value={clients?.length ?? 0} icon={<BusinessIcon />} tone='teal' />
+        </Grid>
+      </Grid>
 
       {/* Lista de clientes */}
       <Box sx={{ mb: 4 }}>

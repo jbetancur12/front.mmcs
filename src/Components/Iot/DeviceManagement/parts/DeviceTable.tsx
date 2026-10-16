@@ -1,6 +1,7 @@
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import { DeviceIot } from '../../types'
-import { IconButton, Stack } from '@mui/material'
+import { Chip, IconButton, Stack } from '@mui/material'
+import { purchaseTableStyle } from 'src/Components/Purchases/purchaseTableStyle'
 import { Delete, Edit } from '@mui/icons-material'
 
 export const deviceColumns: MRT_ColumnDef<DeviceIot>[] = [
@@ -16,7 +17,11 @@ export const deviceColumns: MRT_ColumnDef<DeviceIot>[] = [
     accessorKey: 'status',
     header: 'Estado',
     Cell: ({ cell }) =>
-      cell.getValue<string>() === 'online' ? 'En línea' : 'Offline'
+      cell.getValue<string>() === 'online' ? (
+        <Chip label='En línea' size='small' color='success' variant='outlined' />
+      ) : (
+        <Chip label='Offline' size='small' variant='outlined' />
+      )
   },
   {
     accessorKey: 'lastSeen',
@@ -40,17 +45,20 @@ export const DeviceTable = ({
   canManage = true
 }: DeviceTableProps) => (
   <MaterialReactTable
+    {...purchaseTableStyle}
     columns={deviceColumns}
     data={data}
     enableColumnFilters={false}
     enablePagination
+    enablePinning
+    initialState={{ columnPinning: { right: ['mrt-row-actions'] } }}
     enableRowActions={canManage}
     renderRowActions={({ row }) => (
       <Stack direction='row' spacing={1}>
         <IconButton color='primary' onClick={() => onEdit(row.original)}>
           <Edit />
         </IconButton>
-        <IconButton color='secondary' onClick={() => onDelete(row.original)}>
+        <IconButton color='error' onClick={() => onDelete(row.original)}>
           <Delete />
         </IconButton>
       </Stack>

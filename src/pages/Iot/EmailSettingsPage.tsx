@@ -1,47 +1,27 @@
-import {
-  Typography,
-  Container,
-  Paper,
-  Breadcrumbs,
-  Link as MuiLink
-} from '@mui/material'
+import { Typography, Container, Paper, Button } from '@mui/material'
 
-import { HomeRounded, Email } from '@mui/icons-material'
-import { Link } from 'react-router-dom'
+import { ArrowBack, Email } from '@mui/icons-material'
+import { useNavigate } from 'react-router-dom'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import EmailNotificationSettings from 'src/Components/Iot/emails/EmailNotificationSettings'
 
 const EmailSettingsPage = () => {
+  const navigate = useNavigate()
   return (
-    <Container maxWidth='lg' sx={{ py: 4 }}>
-      <Breadcrumbs aria-label='breadcrumb' sx={{ mb: 3 }}>
-        <Link to='/iot/map'>
-          <MuiLink
-            component='span'
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              cursor: 'pointer',
-              color: 'text.primary',
-              textDecoration: 'none',
-              '&:hover': { textDecoration: 'underline' }
-            }}
-          >
-            <HomeRounded sx={{ mr: 0.5 }} fontSize='small' />
-            Inicio
-          </MuiLink>
-        </Link>
-        <Typography
-          sx={{ display: 'flex', alignItems: 'center' }}
-          color='text.primary'
-        >
-          <Email sx={{ mr: 0.5 }} fontSize='small' />
-          Configuración de Notificaciones
-        </Typography>
-      </Breadcrumbs>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <Button
+        startIcon={<ArrowBack />}
+        onClick={() => navigate('/iot')}
+        sx={{ mb: 1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
+      >
+        Volver a dispositivos
+      </Button>
 
-      <Typography variant='h4' component='h1' gutterBottom sx={{ mb: 4 }}>
-        Configuración de Notificaciones
-      </Typography>
+      <LmsPageHeader
+        title='Configuración de Notificaciones'
+        subtitle='Correos que reciben las alarmas de los dispositivos IoT'
+        icon={<Email />}
+      />
 
       <EmailNotificationSettings />
 
