@@ -1,12 +1,22 @@
 import {
   AddShoppingCart,
   Edit,
+  MoreVert,
   NextPlanOutlined,
   RequestQuote,
   ThumbUpOutlined,
   Visibility
 } from '@mui/icons-material'
-import { IconButton, Tooltip, Stack, Divider } from '@mui/material'
+import {
+  Button,
+  IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Tooltip,
+  Stack
+} from '@mui/material'
 import { useStore } from '@nanostores/react'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { QueryClient, useMutation } from 'react-query'
@@ -43,6 +53,7 @@ const RenderRowActions = ({
 
   const [orderModalOpen, setOrderModalOpen] = useState(false)
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
 
   const handleOpenOrderModal = () => {
     setOrderModalOpen(true)
@@ -132,23 +143,47 @@ const RenderRowActions = ({
     items.length > 0 && items.every((item) => !item.procesed)
   const mixedState = items.length > 0 && !allProcessed && !allUnprocessed
 
+  const canApprove =
+    allowActions.approval && status !== PurchaseRequestStatus.Rejected
+  const canGenerate = allowActions.creationOrder
+
+  // Por qué no se puede generar la orden (se muestra en el menú)
+  const orderBlockedReason = !isAllowed
+    ? 'Falta la cotización aceptada y la aprobación'
+    : allProcessed
+      ? 'Ya se generó la orden de todos los ítems'
+      : ''
+
+  // Acción principal: lo siguiente que toca hacer con esta solicitud
+  let primary: {
+    label: string
+    icon: JSX.Element
+    onClick: () => void
+  } | null = null
+  if (canApprove && status === PurchaseRequestStatus.Pending) {
+    primary = {
+      label: 'Preaprobar',
+      icon: <NextPlanOutlined />,
+      onClick: () => handleAction(row.original.id, 'pre-approve')
+    }
+  } else if (canApprove && status === PurchaseRequestStatus.PreApproved) {
+    primary = {
+      label: 'Aprobar',
+      icon: <ThumbUpOutlined />,
+      onClick: () => handleAction(row.original.id, 'approve')
+    }
+  } else if (canGenerate && !orderBlockedReason) {
+    primary = {
+      label: mixedState ? 'Completar orden' : 'Generar orden',
+      icon: <AddShoppingCart />,
+      onClick: handleOpenOrderModal
+    }
+  }
+
+  const closeMenu = () => setMenuAnchor(null)
+
   return (
-    <Stack direction='row' spacing={0}>
-      <Tooltip title='Editar Solicitud'>
-        <IconButton
-          size='small'
-          onClick={onEdit}
-          disabled={row.original.status === 'aprobado' && row.original.hasOrder}
-          color='primary'
-          sx={{
-            '&.Mui-disabled': {
-              color: 'rgba(0, 0, 0, 0.26)' // Gris claro cuando está deshabilitado
-            }
-          }}
-        >
-          <Edit />
-        </IconButton>
-      </Tooltip>
+    <Stack direction='row' spacing={0.5} alignItems='center'>
       <Tooltip title='Ver'>
         <Link to={`${row.original.id}`}>
           <IconButton size='small' sx={{ color: '#00BFA5' }}>
@@ -156,16 +191,90 @@ const RenderRowActions = ({
           </IconButton>
         </Link>
       </Tooltip>
-      <Tooltip title='Gestionar Cotizaciones'>
+      <Tooltip
+        title={
+          row.original.status === 'aprobado' && row.original.hasOrder
+            ? 'Ya tiene orden, no se puede editar'
+            : 'Editar solicitud'
+        }
+      >
+        <span>
+          <IconButton
+            size='small'
+            color='primary'
+            onClick={onEdit}
+            disabled={
+              row.original.status === 'aprobado' && row.original.hasOrder
+            }
+          >
+            <Edit />
+          </IconButton>
+        </span>
+      </Tooltip>
+      {primary && (
+        <Button
+          size='small'
+          variant='contained'
+          startIcon={primary.icon}
+          onClick={primary.onClick}
+          sx={{
+            bgcolor: '#00BFA5',
+            whiteSpace: 'nowrap',
+            '&:hover': { bgcolor: '#00ACC1' }
+          }}
+        >
+          {primary.label}
+        </Button>
+      )}
+      <Tooltip title='Más acciones'>
         <IconButton
           size='small'
-          onClick={handleManageQuotations}
-          color={row.original.quotations.length > 0 ? 'primary' : 'default'}
+          aria-label='Más acciones'
+          onClick={(e) => setMenuAnchor(e.currentTarget)}
         >
-          <RequestQuote />
+          <MoreVert />
         </IconButton>
       </Tooltip>
-      <Divider orientation='vertical' flexItem />
+      <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={closeMenu}>
+        <MenuItem
+          onClick={() => {
+            closeMenu()
+            handleManageQuotations()
+          }}
+        >
+          <ListItemIcon>
+            <RequestQuote
+              fontSize='small'
+              color={row.original.quotations.length > 0 ? 'primary' : 'inherit'}
+            />
+          </ListItemIcon>
+          <ListItemText
+            primary='Gestionar cotizaciones'
+            secondary={
+              row.original.quotations.length > 0
+                ? `${row.original.quotations.length} cargada(s)`
+                : 'Sin cotizaciones'
+            }
+          />
+        </MenuItem>
+        {canGenerate && (
+          <MenuItem
+            disabled={!!orderBlockedReason}
+            onClick={() => {
+              closeMenu()
+              handleOpenOrderModal()
+            }}
+          >
+            <ListItemIcon>
+              <AddShoppingCart fontSize='small' />
+            </ListItemIcon>
+            <ListItemText
+              primary='Generar orden'
+              secondary={orderBlockedReason || undefined}
+            />
+          </MenuItem>
+        )}
+      </Menu>
 
       <UploadQuotationModal
         open={uploadModalOpen}
@@ -173,88 +282,12 @@ const RenderRowActions = ({
         purchaseRequest={row.original}
         onSuccess={() => queryClient.invalidateQueries('purchaseRequests')}
       />
-
-      {allowActions.creationOrder && (
-        <IconButton
-          size='small'
-          onClick={handleOpenOrderModal}
-          title='Generar Orden'
-          color={!isAllowed ? 'primary' : mixedState ? 'warning' : 'primary'}
-          disabled={!isAllowed || allProcessed}
-        >
-          <AddShoppingCart />
-        </IconButton>
-      )}
       <GenerateOrderModal
         open={orderModalOpen}
         onClose={() => setOrderModalOpen(false)}
-        purchaseRequest={row.original} // se pasa la solicitud de compra seleccionada
+        purchaseRequest={row.original}
         onSuccess={() => queryClient.invalidateQueries('purchaseRequests')}
       />
-
-      {/* Si la solicitud no está rechazada, se muestran las demás acciones */}
-      {allowActions.approval && status !== PurchaseRequestStatus.Rejected && (
-        <>
-          <Divider orientation='vertical' flexItem />
-          {status === PurchaseRequestStatus.Pending && (
-            <>
-              <Tooltip title='Preaprobar'>
-                <IconButton
-                  size='small'
-                  color='success'
-                  onClick={() => handleAction(row.original.id, 'pre-approve')}
-                >
-                  <NextPlanOutlined />
-                </IconButton>
-              </Tooltip>
-              {/* <Tooltip title='Rechazar'>
-                <IconButton
-                  size='small'
-                  color='error'
-                  onClick={() => handleAction(row.original.id, 'reject')}
-                >
-                  <Cancel />
-                </IconButton>
-              </Tooltip> */}
-            </>
-          )}
-
-          {status === PurchaseRequestStatus.PreApproved && (
-            <>
-              <Tooltip title='Aprobar'>
-                <IconButton
-                  size='small'
-                  color='success'
-                  onClick={() => handleAction(row.original.id, 'approve')}
-                >
-                  <ThumbUpOutlined />
-                </IconButton>
-              </Tooltip>
-              {/* <Tooltip title='Rechazar'>
-                <IconButton
-                  size='small'
-                  color='error'
-                  onClick={() => handleAction(row.original.id, 'reject')}
-                >
-                  <Cancel />
-                </IconButton>
-              </Tooltip> */}
-            </>
-          )}
-
-          {/* {status === PurchaseRequestStatus.Accepted && (
-            <Tooltip title='Rechazar'>
-              <IconButton
-                size='small'
-                color='error'
-                onClick={() => handleAction(row.original.id, 'reject')}
-              >
-                <Cancel />
-              </IconButton>
-            </Tooltip>
-          )} */}
-        </>
-      )}
     </Stack>
   )
 }

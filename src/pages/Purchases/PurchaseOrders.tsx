@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import {
+  Button,
   Checkbox,
   Chip,
-  Divider,
   Grid,
   IconButton,
   Stack,
@@ -11,9 +11,7 @@ import {
   Typography
 } from '@mui/material'
 import {
-  AssignmentTurnedIn,
   FactCheck,
-  HourglassEmpty,
   ListAlt,
   ReceiptLong,
   ScheduleSend,
@@ -344,13 +342,7 @@ const RenderRowActions: React.FC<RenderRowActionsProps> = ({
 }) => {
   const isVerified = row.original.verified
   return (
-    <Stack direction='row' spacing={0} alignItems='center'>
-      {isVerified ? (
-        <AssignmentTurnedIn color='success' />
-      ) : (
-        <HourglassEmpty color='disabled' />
-      )}
-      <Divider orientation='vertical' flexItem />
+    <Stack direction='row' spacing={0.5} alignItems='center'>
       <Tooltip title='Ver'>
         <Link to={`${row.original.id}`}>
           <IconButton size='small' sx={{ color: '#00BFA5' }}>
@@ -358,20 +350,21 @@ const RenderRowActions: React.FC<RenderRowActionsProps> = ({
           </IconButton>
         </Link>
       </Tooltip>
-      <Tooltip
-        title={isVerified ? 'Verificación creada' : 'Crear Verificación'}
-      >
-        {/* El span es necesario para que el tooltip funcione en un botón deshabilitado */}
-        <span>
-          <IconButton
-            size='small'
-            onClick={() => openVerificationModal(row.original)}
-            disabled={isVerified}
-          >
-            <FactCheck color={isVerified ? 'disabled' : 'primary'} />
-          </IconButton>
-        </span>
-      </Tooltip>
+      {!isVerified && (
+        <Button
+          size='small'
+          variant='contained'
+          startIcon={<FactCheck />}
+          onClick={() => openVerificationModal(row.original)}
+          sx={{
+            bgcolor: '#00BFA5',
+            whiteSpace: 'nowrap',
+            '&:hover': { bgcolor: '#00ACC1' }
+          }}
+        >
+          Verificar
+        </Button>
+      )}
     </Stack>
   )
 }

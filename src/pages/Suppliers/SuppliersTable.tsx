@@ -277,11 +277,13 @@ const SuppliersTable: React.FC = () => {
         columns={columns}
         data={suppliersForTable} // Usar la lista extraída
         enableRowActions
+        enablePinning
         renderRowActions={({ row }) => (
           <Box sx={{ display: 'flex', gap: '0.5rem' }}>
             <Tooltip title='Ver Detalles, Documentos y Evaluar'>
               <IconButton
-                color='primary'
+                size='small'
+                sx={{ color: '#00BFA5' }}
                 onClick={() =>
                   navigate(`/purchases/suppliers/details/${row.original.id}`)
                 }
@@ -296,6 +298,7 @@ const SuppliersTable: React.FC = () => {
           placeholder: 'Buscar proveedores...'
         }}
         initialState={{
+          columnPinning: { right: ['mrt-row-actions'] },
           density: 'compact',
           pagination: { pageSize: 10, pageIndex: 0 }, // Paginación del lado del cliente por defecto
           sorting: [{ id: 'name', desc: false }]

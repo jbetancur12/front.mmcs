@@ -156,9 +156,18 @@ const SuppliersSelection: React.FC = () => {
         data={suppliers}
         state={{ isLoading: loading }}
         enableRowActions={true}
+        enablePinning
+        initialState={{ columnPinning: { right: ['mrt-row-actions'] } }}
         renderRowActions={({ row }) => (
-          <Box sx={{ display: 'flex', gap: '1rem' }}>
-            <Tooltip arrow placement='left' title='Editar Evaluación'>
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <Tooltip title='Ver'>
+              <Link to={`${row.original.id}`}>
+                <IconButton size='small' sx={{ color: '#00BFA5' }}>
+                  <Visibility />
+                </IconButton>
+              </Link>
+            </Tooltip>
+            <Tooltip title='Editar evaluación'>
               <IconButton
                 onClick={() => handleOpenEditModal(row.original)}
                 size='small'
@@ -166,13 +175,6 @@ const SuppliersSelection: React.FC = () => {
               >
                 <Edit />
               </IconButton>
-            </Tooltip>
-            <Tooltip arrow placement='right' title='Ver'>
-              <Link to={`${row.original.id}`}>
-                <IconButton>
-                  <Visibility />
-                </IconButton>
-              </Link>
             </Tooltip>
           </Box>
         )}

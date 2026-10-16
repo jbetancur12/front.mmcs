@@ -294,15 +294,6 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
         enableRowActions // Habilitar acciones por fila
         renderRowActions={({ row }) => (
           <Box sx={{ display: 'flex', gap: '0.5rem' }}>
-            <Tooltip title='Editar Evaluación'>
-              <IconButton
-                onClick={() => handleOpenEditModal(row.original)}
-                color='primary'
-                size='small'
-              >
-                <Edit />
-              </IconButton>
-            </Tooltip>
             <Tooltip title='Ver Reporte PDF'>
               <IconButton
                 onClick={() =>
@@ -312,10 +303,19 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
                     // row.original.evaluationDate
                   )
                 }
-                color='secondary'
+                sx={{ color: '#00BFA5' }}
                 size='small'
               >
                 <PictureAsPdf />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title='Editar Evaluación'>
+              <IconButton
+                onClick={() => handleOpenEditModal(row.original)}
+                color='primary'
+                size='small'
+              >
+                <Edit />
               </IconButton>
             </Tooltip>
             {/* <Tooltip title="Eliminar Evaluación"> // La eliminación es una acción destructiva, manejar con cuidado
@@ -351,6 +351,7 @@ const ListAllSupplierEvaluationsPage: React.FC = () => {
         }
         initialState={{
           density: 'compact',
+          columnPinning: { right: ['mrt-row-actions'] },
           pagination: { pageSize: 10, pageIndex: 0 },
           sorting: [{ id: 'evaluationDate', desc: true }], // Ordenar por fecha descendente por defecto
           columnVisibility: {
