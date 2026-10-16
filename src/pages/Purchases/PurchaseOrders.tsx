@@ -1,7 +1,10 @@
 import React, { useState, useMemo } from 'react'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import {
+  Alert,
   Box,
+  Checkbox,
+  Chip,
   Divider,
   FormControlLabel,
   IconButton,
@@ -20,7 +23,8 @@ import useAxiosPrivate from '@utils/use-axios-private'
 import { PurchaseOrderData as IPurchaseOrder } from './Types'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { differenceInDays, format } from 'date-fns'
-import { useQuery, useQueryClient } from 'react-query'
+import { useMutation, useQuery, useQueryClient } from 'react-query'
+import Swal from 'sweetalert2'
 import { Link } from 'react-router-dom'
 import CreatePurchaseVerificationModal from 'src/Components/Purchases/PurchaseVerificationModal'
 
@@ -42,15 +46,30 @@ const PurchaseOrders: React.FC = () => {
   const [selectedPurchaseOrder, setSelectedPurchaseOrder] =
     useState<IPurchaseOrder | null>(null)
   const [showOnlyUnverified, setShowOnlyUnverified] = useState(false)
+  const [showOnlyUnsent, setShowOnlyUnsent] = useState(false)
 
   const purchaseOrders = data ?? []
 
-  const filteredOrders = useMemo(() => {
-    if (showOnlyUnverified) {
-      return purchaseOrders.filter((order) => !order.verified)
+  const overdueCount = purchaseOrders.filter((o) => o.sendOverdue).length
+
+  const markSent = useMutation(
+    ({ id, sent }: { id: number; sent: boolean }) =>
+      axiosPrivate.patch(`/purchaseOrders/${id}/sent`, { sent }),
+    {
+      onSuccess: () => queryClient.invalidateQueries('purchaseOrders'),
+      onError: () => {
+        Swal.fire('Error', 'No se pudo actualizar el envío de la orden', 'error')
+      }
     }
-    return purchaseOrders
-  }, [purchaseOrders, showOnlyUnverified])
+  )
+
+  const filteredOrders = useMemo(() => {
+    return purchaseOrders.filter(
+      (order) =>
+        (!showOnlyUnverified || !order.verified) &&
+        (!showOnlyUnsent || !order.sentAt)
+    )
+  }, [purchaseOrders, showOnlyUnverified, showOnlyUnsent])
 
   // Definir las columnas de la tabla
   const columns: MRT_ColumnDef<IPurchaseOrder>[] = [
@@ -65,6 +84,42 @@ const PurchaseOrders: React.FC = () => {
     },
     { accessorKey: 'supplier.name', header: 'Proveedor' },
     { accessorKey: 'supplier.phone', header: 'Teléfono' },
+    {
+      id: 'sent',
+      header: 'Enviada',
+      enableSorting: false,
+      Cell: ({ row }) => {
+        const order = row.original
+        return (
+          <Stack direction='row' alignItems='center' spacing={0.5}>
+            <Tooltip
+              title={
+                order.sentAt
+                  ? `Enviada el ${format(new Date(order.sentAt), 'dd/MM/yyyy')}. Clic para desmarcar`
+                  : 'Marcar como enviada al proveedor'
+              }
+            >
+              <Checkbox
+                size='small'
+                checked={!!order.sentAt}
+                disabled={markSent.isLoading}
+                onChange={(e) =>
+                  markSent.mutate({ id: order.id, sent: e.target.checked })
+                }
+              />
+            </Tooltip>
+            {order.sendOverdue && (
+              <Chip
+                size='small'
+                color='error'
+                variant='outlined'
+                label={`Sin enviar · venció ${format(new Date(order.sendDeadline as string), 'dd/MM')}`}
+              />
+            )}
+          </Stack>
+        )
+      }
+    },
     {
       accessorKey: 'purchaseRequest.purchaseType',
       header: 'Tipo',
@@ -111,6 +166,17 @@ const PurchaseOrders: React.FC = () => {
         }}
       >
         <Typography variant='h5'>Órdenes de Compra</Typography>
+        <Stack direction='row' spacing={2}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={showOnlyUnsent}
+              onChange={(e) => setShowOnlyUnsent(e.target.checked)}
+              color='primary'
+            />
+          }
+          label='Mostrar solo sin enviar'
+        />
         <FormControlLabel
           control={
             <Switch
@@ -121,7 +187,16 @@ const PurchaseOrders: React.FC = () => {
           }
           label='Mostrar solo sin verificar'
         />
+        </Stack>
       </Box>
+
+      {overdueCount > 0 && (
+        <Alert severity='error' sx={{ mb: 2 }}>
+          {overdueCount === 1
+            ? '1 orden de compra no se ha enviado al proveedor y ya pasó el plazo de 3 días hábiles desde la cotización.'
+            : `${overdueCount} órdenes de compra no se han enviado al proveedor y ya pasó el plazo de 3 días hábiles desde la cotización.`}
+        </Alert>
+      )}
 
       <MaterialReactTable
         columns={columns}
@@ -139,7 +214,16 @@ const PurchaseOrders: React.FC = () => {
           sx: { textAlign: 'left' }
         }}
         muiTableBodyRowProps={({ row }) => {
-          const { verified, requestDate } = row.original
+          const { verified, requestDate, sendOverdue } = row.original
+
+          if (sendOverdue) {
+            return {
+              sx: {
+                backgroundColor: 'rgba(244, 67, 54, 0.10)',
+                '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.18)' }
+              }
+            }
+          }
 
           // Si ya está verificado, no hacemos nada.
           if (verified) {
