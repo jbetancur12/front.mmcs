@@ -8,7 +8,7 @@ interface AppConfig {
 }
 
 export const APP_CONFIG: AppConfig = {
-  VERSION: '1.8.0',
+  VERSION: '1.9.0',
   BUILD_DATE: '2026-10-16',
   ENVIRONMENT:
     typeof import.meta !== 'undefined' && import.meta.env
@@ -27,7 +27,8 @@ export const APP_CONFIG: AppConfig = {
     '1.6.7': 'Calibración: acceso del director técnico y ajustes de chips y documentos',
     '1.6.9': 'Filtro por estado en equipos del cliente',
     '1.6.10': 'Compras: control de envío de la orden de compra',
-    '1.8.0': 'Compras: control de envío de órdenes y rediseño de tablas, acciones y modales'
+    '1.8.0': 'Compras: control de envío de órdenes y rediseño de tablas, acciones y modales',
+    '1.9.0': 'Roles y permisos: permisos editables por rol, vista por rol y comparación de roles'
   } as Record<string, string>,
 
   // Configuración de limpieza
