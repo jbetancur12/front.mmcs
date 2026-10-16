@@ -568,6 +568,8 @@ const CalibrationServiceDetailsPage = () => {
     canCancelServiceRole &&
     service?.status !== 'cancelled' &&
     service?.status !== 'closed' &&
+    // El backend no cancela servicios que ya tienen cortes registrados
+    !(service?.cuts?.length) &&
     [
       'draft',
       'pending_approval',
@@ -825,9 +827,15 @@ const CalibrationServiceDetailsPage = () => {
   if (isError || !service) {
     return (
       <Box p={3}>
-        <Alert severity='error'>
-          No pudimos cargar el detalle del servicio.
-          {error instanceof Error ? ` ${error.message}` : ''}
+        <Alert
+          severity='error'
+          action={
+            <Button color='inherit' size='small' onClick={() => navigate('/calibration-services')}>
+              Volver a la bandeja
+            </Button>
+          }
+        >
+          {getApiErrorMessage(error, 'No pudimos cargar el detalle del servicio.')}
         </Alert>
       </Box>
     )

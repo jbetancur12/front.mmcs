@@ -257,7 +257,7 @@ const MobilePage = () => {
   const handleAction = async (key: string, fn: () => Promise<any>, msg: string, onDone?: () => void) => {
     setActionLoading(key)
     try { await fn(); toast.success(msg); void refetch(); onDone?.() }
-    catch (e: any) { toast.error(e?.response?.data?.error || `Error: ${msg}`) }
+    catch (e: any) { toast.error(e?.response?.data?.details || e?.response?.data?.error || `Error: ${msg}`) }
     setActionLoading(null)
   }
 
