@@ -29,6 +29,7 @@ import {
   Tab,
   Tabs,
   TextField,
+  Tooltip,
   Typography
 } from '@mui/material'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
@@ -40,6 +41,7 @@ import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined'
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
 import RequestQuoteOutlinedIcon from '@mui/icons-material/RequestQuoteOutlined'
+import PersonAddAltOutlinedIcon from '@mui/icons-material/PersonAddAltOutlined'
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined'
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined'
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
@@ -1235,7 +1237,7 @@ const CalibrationServiceWorkspacePage = () => {
                 </Typography>
               </Stack>
               <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12} md>
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                     <Autocomplete
                       fullWidth
@@ -1250,20 +1252,33 @@ const CalibrationServiceWorkspacePage = () => {
                         isBusy ||
                         (hasCustomersError && customerOptions.length === 0)
                       }
-                      renderInput={(params) => <TextField {...params} label='Cliente' required />}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label='Cliente'
+                          required
+                          inputProps={{ ...params.inputProps, title: params.inputProps.value ? String(params.inputProps.value) : undefined }}
+                        />
+                      )}
                     />
-                    <Button
-                      variant='outlined'
-                      sx={{ minWidth: 150 }}
-                      disabled={!canEdit || isBusy}
-                      onClick={() => setCustomerDialogMode('customer')}
-                    >
-                      Nuevo cliente
-                    </Button>
+                    <Tooltip title='Nuevo cliente'>
+                      <span>
+                        <Button
+                          variant='outlined'
+                          aria-label='Nuevo cliente'
+                          startIcon={<PersonAddAltOutlinedIcon />}
+                          sx={{ height: 56, minWidth: { xs: '100%', sm: 56 }, width: { xs: '100%', sm: 56 }, px: { xs: 2, sm: 0 }, '& .MuiButton-startIcon': { mr: { xs: 1, sm: 0 }, ml: { sm: 0 } } }}
+                          disabled={!canEdit || isBusy}
+                          onClick={() => setCustomerDialogMode('customer')}
+                        >
+                          <Box component='span' sx={{ display: { xs: 'inline', sm: 'none' } }}>Nuevo cliente</Box>
+                        </Button>
+                      </span>
+                    </Tooltip>
                   </Stack>
                 </Grid>
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
+                <Grid item xs={12} md='auto'>
+                  <FormControl fullWidth sx={{ width: { md: 190 } }}>
                     <InputLabel>Alcance</InputLabel>
                     <Select
                       value={formState.scopeType || 'general'}
@@ -1272,7 +1287,7 @@ const CalibrationServiceWorkspacePage = () => {
                       onChange={(event) => setField('scopeType', event.target.value as FormState['scopeType'])}
                     >
                       <MenuItem value='general'>Cliente general</MenuItem>
-                      <MenuItem value='site'>Sede especifica</MenuItem>
+                      <MenuItem value='site'>Sede específica</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
