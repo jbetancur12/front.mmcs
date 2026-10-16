@@ -4,11 +4,10 @@ import {
   Alert,
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
   CircularProgress,
   Collapse,
+  Container,
   Divider,
   FormControlLabel,
   Grid,
@@ -44,6 +43,8 @@ import CalibrationServiceCustomerDialog, {
 } from './CalibrationServiceCustomerDialog'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 
 const customerQueryKey = ['calibration-service-customers']
 const DEFAULT_PAGE_SIZE = 10
@@ -222,100 +223,44 @@ const CalibrationServiceCustomersPage = () => {
   }
 
   return (
-    <Box
-      sx={{
-        px: { xs: 2, md: 3 },
-        py: { xs: 2, md: 3 },
-        minHeight: '100vh',
-        backgroundColor: '#f8fafb',
-      }}
-    >
+    <Container maxWidth='xl' sx={{ py: 3 }}>
       <Toaster position='top-center' />
 
-      {/* ── Header ── */}
-      <Box
-        sx={{
-          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #020617 100%)',
-          borderRadius: '20px', p: { xs: 3, md: 4 }, mb: 3,
-          position: 'relative', overflow: 'hidden',
-          '&::before': {
-            content: '""', position: 'absolute', top: 0, right: 0,
-            width: '40%', height: '100%',
-            background: 'radial-gradient(ellipse at 70% 10%, rgba(251,191,36,0.08) 0%, transparent 65%)',
-            pointerEvents: 'none'
-          }
-        }}
+      <Button
+        startIcon={<ArrowBackOutlinedIcon />}
+        onClick={() => navigate('/calibration-services')}
+        sx={{ mb: 1, color: 'text.secondary', textTransform: 'none', fontWeight: 600 }}
       >
-        <Stack direction={{ xs: 'column', md: 'row' }}
-          justifyContent='space-between' alignItems={{ xs: 'flex-start', md: 'center' }} spacing={2}
-        >
-          <Box>
-            <Button startIcon={<ArrowBackOutlinedIcon />}
-              onClick={() => navigate('/calibration-services')}
-              sx={{ mb: 1, color: 'rgba(255,255,255,0.7)', textTransform: 'none', fontWeight: 600, borderRadius: '10px', fontSize: '0.85rem',
-                '&:hover': { backgroundColor: 'rgba(255,255,255,0.08)', color: '#fff' }
-              }}
-            >
-              Volver a servicios
-            </Button>
-            <Typography variant='h4' fontWeight={800} sx={{ color: '#fff', lineHeight: 1.15, letterSpacing: '-0.025em', fontSize: { xs: '1.6rem', md: '2rem' } }}>
-              Clientes de calibración
-            </Typography>
-            <Typography variant='body2' sx={{ mt: 1, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5, maxWidth: 640, fontSize: '0.9rem' }}>
-              Base común de empresas y sedes. Aquí decides cuáles también aparecen en clientes para certificados.
-            </Typography>
-          </Box>
-          {canManageCustomers ? (
-            <Button variant='contained' startIcon={<AddBusinessOutlinedIcon />}
+        Volver a servicios
+      </Button>
+
+      <LmsPageHeader
+        title='Clientes de calibración'
+        subtitle='Base común de empresas y sedes. Aquí decides cuáles también aparecen en clientes para certificados.'
+        icon={<BusinessOutlinedIcon />}
+        actions={
+          canManageCustomers ? (
+            <Button
+              variant='contained'
+              startIcon={<AddBusinessOutlinedIcon />}
               onClick={() => { setIsEditingCustomer(false); setSelectedCustomer(null); setCustomerDialogMode('customer') }}
-              sx={{
-                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', borderRadius: '10px',
-                textTransform: 'none', fontWeight: 700, px: 3, whiteSpace: 'nowrap',
-                boxShadow: '0 4px 6px -1px rgba(245,158,11,0.25)',
-                '&:hover': { background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
-                  boxShadow: '0 6px 12px -2px rgba(245,158,11,0.3)' }
-              }}
+              sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}
             >
               Crear cliente
             </Button>
-          ) : null}
-        </Stack>
-      </Box>
+          ) : undefined
+        }
+      />
 
-      {/* ── Stat cards ── */}
-      <Grid container spacing={2.5} mb={3}>
-        <Grid item xs={12} md={4}>
-          <Card elevation={0} sx={{ borderRadius: '14px', border: '1px solid rgba(0,0,0,0.06)', background: 'linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(5,150,105,0.02) 100%)', overflow: 'visible' }}>
-            <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
-              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 1.5 }}>
-                <GroupsOutlinedIcon sx={{ color: '#059669', fontSize: 20 }} />
-                <Typography variant='caption' fontWeight={700} sx={{ color: '#059669', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total clientes</Typography>
-              </Stack>
-              <Typography variant='h3' fontWeight={900} sx={{ color: '#111827', lineHeight: 1 }}>{totalItems}</Typography>
-            </CardContent>
-          </Card>
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Total clientes' value={totalItems} icon={<GroupsOutlinedIcon />} tone='teal' />
         </Grid>
-        <Grid item xs={12} md={4}>
-          <Card elevation={0} sx={{ borderRadius: '14px', border: '1px solid rgba(0,0,0,0.06)', background: 'linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(79,70,229,0.02) 100%)', overflow: 'visible' }}>
-            <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
-              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 1.5 }}>
-                <VisibilityOutlinedIcon sx={{ color: '#4f46e5', fontSize: 20 }} />
-                <Typography variant='caption' fontWeight={700} sx={{ color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Visibles para certificados</Typography>
-              </Stack>
-              <Typography variant='h3' fontWeight={900} sx={{ color: '#111827', lineHeight: 1 }}>{certificateEnabledCount}</Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Visibles para certificados' value={certificateEnabledCount} icon={<VisibilityOutlinedIcon />} tone='green' />
         </Grid>
-        <Grid item xs={12} md={4}>
-          <Card elevation={0} sx={{ borderRadius: '14px', border: '1px solid rgba(0,0,0,0.06)', background: 'linear-gradient(135deg, rgba(245,158,11,0.06) 0%, rgba(217,119,6,0.02) 100%)', overflow: 'visible' }}>
-            <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
-              <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mb: 1.5 }}>
-                <VisibilityOffOutlinedIcon sx={{ color: '#d97706', fontSize: 20 }} />
-                <Typography variant='caption' fontWeight={700} sx={{ color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Solo comerciales</Typography>
-              </Stack>
-              <Typography variant='h3' fontWeight={900} sx={{ color: '#111827', lineHeight: 1 }}>{commercialOnlyCount}</Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={12} sm={4}>
+          <LmsStatCard label='Solo comerciales' value={commercialOnlyCount} icon={<VisibilityOffOutlinedIcon />} tone='orange' />
         </Grid>
       </Grid>
 
@@ -560,7 +505,7 @@ const CalibrationServiceCustomersPage = () => {
           createCustomerMutation.mutate(values)
         }}
       />
-    </Box>
+    </Container>
   )
 }
 

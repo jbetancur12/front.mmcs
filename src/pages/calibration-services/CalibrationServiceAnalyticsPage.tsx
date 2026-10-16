@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { ReactNode } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import {
   Alert,
   Box,
@@ -9,6 +9,7 @@ import {
   Chip,
   Collapse,
   CircularProgress,
+  Container,
   Grid,
   LinearProgress,
   MenuItem,
@@ -65,6 +66,8 @@ import {
   CalibrationServiceStatus,
   CalibrationServiceUserSummary
 } from '../../types/calibrationService'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard, { LmsStatTone } from 'src/Components/lms/admin/LmsStatCard'
 
 const FILTER_ALL = 'all'
 
@@ -238,6 +241,13 @@ interface CalibrationCustomersResponse {
   customers: CalibrationServiceCustomer[]
 }
 
+const toneFor = (color: string): LmsStatTone => {
+  if (color === ui.info) return 'blue'
+  if (color === ui.warning) return 'orange'
+  if (color === ui.error) return 'red'
+  return 'teal'
+}
+
 const KpiCard = ({
   color = ui.green,
   icon,
@@ -249,36 +259,13 @@ const KpiCard = ({
   label: string
   value: string | number
 }) => (
-  <Card elevation={0} sx={{ ...cardSx, height: '100%' }}>
-    <CardContent sx={{ p: 2.5 }}>
-      <Stack direction='row' justifyContent='space-between' spacing={2}>
-        <Box>
-          <Typography
-            variant='caption'
-            sx={{ color: ui.muted, fontWeight: 800, letterSpacing: '.08em' }}
-          >
-            {label.toUpperCase()}
-          </Typography>
-          <Typography variant='h4' sx={{ mt: 1, color: ui.text, fontWeight: 800 }}>
-            {value}
-          </Typography>
-        </Box>
-        <Box
-          sx={{
-            width: 38,
-            height: 38,
-            borderRadius: '12px',
-            display: 'grid',
-            placeItems: 'center',
-            color,
-            backgroundColor: alpha(color, 0.1)
-          }}
-        >
-          {icon}
-        </Box>
-      </Stack>
-    </CardContent>
-  </Card>
+  <LmsStatCard
+    label={label}
+    value={value}
+    icon={icon as ReactElement}
+    tone={toneFor(color)}
+    compact
+  />
 )
 
 const YesNoSelect = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
@@ -696,63 +683,46 @@ const CalibrationServiceAnalyticsPage = () => {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, backgroundColor: ui.surface, minHeight: '100%' }}>
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        justifyContent='space-between'
-        alignItems={{ xs: 'flex-start', md: 'center' }}
-        spacing={2}
-        mb={3}
+    <Container maxWidth='xl' sx={{ py: 3 }}>
+      <Button
+        variant='text'
+        startIcon={<ArrowBackOutlinedIcon />}
+        onClick={() => navigate('/calibration-services')}
+        sx={{ color: 'text.secondary', textTransform: 'none', fontWeight: 600, mb: 1 }}
       >
-        <Box>
-          <Button
-            variant='text'
-            startIcon={<ArrowBackOutlinedIcon />}
-            onClick={() => navigate('/calibration-services')}
-            sx={{ color: ui.greenDark, textTransform: 'none', fontWeight: 700, mb: 1 }}
-          >
-            Volver a la bandeja
-          </Button>
-          <Typography variant='h4' sx={{ color: ui.text, fontWeight: 800 }}>
-            Analíticas de calibración
-          </Typography>
-          <Typography variant='body2' sx={{ mt: 1, color: ui.muted, maxWidth: 820 }}>
-            Vista gerencial para seguimiento de SLA, embudo operativo,
-            novedades, cortes, facturación y carga por metrólogo.
-          </Typography>
-        </Box>
-        <Button
-          variant='outlined'
-          startIcon={<RefreshOutlinedIcon />}
-          onClick={() => {
-            void refetch()
-          }}
-          disabled={isFetching}
-          sx={secondaryButtonSx}
-        >
-          Actualizar
-        </Button>
-        <Button
-          variant='contained'
-          startIcon={<DownloadOutlinedIcon />}
-          onClick={() => {
-            void exportToExcel()
-          }}
-          disabled={!data || isExporting}
-          sx={{
-            borderRadius: '12px',
-            textTransform: 'none',
-            fontWeight: 800,
-            minHeight: 42,
-            backgroundColor: ui.green,
-            '&:hover': {
-              backgroundColor: ui.greenDark
-            }
-          }}
-        >
-          {isExporting ? 'Generando...' : 'Descargar Excel'}
-        </Button>
-      </Stack>
+        Volver a la bandeja
+      </Button>
+      <LmsPageHeader
+        title='Analíticas de calibración'
+        subtitle='Vista gerencial para seguimiento de SLA, embudo operativo, novedades, cortes, facturación y carga por metrólogo.'
+        icon={<AnalyticsOutlinedIcon />}
+        actions={
+          <>
+            <Button
+              variant='outlined'
+              startIcon={<RefreshOutlinedIcon />}
+              onClick={() => {
+                void refetch()
+              }}
+              disabled={isFetching}
+              sx={secondaryButtonSx}
+            >
+              Actualizar
+            </Button>
+            <Button
+              variant='contained'
+              startIcon={<DownloadOutlinedIcon />}
+              onClick={() => {
+                void exportToExcel()
+              }}
+              disabled={!data || isExporting}
+              sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}
+            >
+              {isExporting ? 'Generando...' : 'Descargar Excel'}
+            </Button>
+          </>
+        }
+      />
 
       {data?.limitedTechnicalView ? (
         <Alert severity='info' sx={{ mb: 3 }}>
@@ -965,8 +935,8 @@ const CalibrationServiceAnalyticsPage = () => {
         </Stack>
       ) : (
         <>
-          <Grid container spacing={2} mb={3}>
-            <Grid item xs={12} md={3}>
+          <Grid container spacing={3} mb={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <KpiCard
                 label='Servicios'
                 value={numberFormatter.format(totalServices)}
@@ -999,8 +969,8 @@ const CalibrationServiceAnalyticsPage = () => {
             </Grid>
           </Grid>
 
-          <Grid container spacing={2} mb={3}>
-            <Grid item xs={12} md={3}>
+          <Grid container spacing={3} mb={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <KpiCard
                 label='Valor cotizado total'
                 value={formatCurrency(data?.summary.quotedValue)}
@@ -1412,7 +1382,7 @@ const CalibrationServiceAnalyticsPage = () => {
           </Card>
         </>
       )}
-    </Box>
+    </Container>
   )
 }
 

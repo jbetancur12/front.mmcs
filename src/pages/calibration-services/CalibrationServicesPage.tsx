@@ -17,6 +17,7 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
+  Container,
   Grid,
   IconButton,
   Tooltip,
@@ -96,6 +97,9 @@ import {
 
 import { ROLE_GROUPS } from 'src/constants/roles'
 import { PERMISSIONS } from 'src/constants/permissions'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined'
 import { useCan } from '@utils/functions'
 const FILTER_ALL = 'all'
 const FILTER_UNASSIGNED = 'unassigned'
@@ -1617,161 +1621,81 @@ const CalibrationServicesPage = () => {
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        backgroundColor: ui.surface,
-        px: { xs: 2, md: 3 },
-        py: { xs: 2, md: 3 },
-        color: ui.text,
-      }}
-    >
+    <Container maxWidth='xl' sx={{ py: 3 }}>
       <Toaster position='top-center' />
 
-      {/* ── Header banner (inspirado en /calibraciones/certificados) ── */}
-      <Box
-        sx={{
-          background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
-          borderRadius: '20px',
-          p: { xs: 3, md: 4 },
-          mb: 3,
-          position: 'relative',
-          overflow: 'hidden',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            width: '40%',
-            height: '100%',
-            background: 'radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.12) 0%, transparent 70%)',
-            pointerEvents: 'none'
-          }
-        }}
-      >
-        <Stack
-          direction={{ xs: 'column', md: 'row' }}
-          justifyContent='space-between'
-          alignItems={{ xs: 'flex-start', md: 'center' }}
-          spacing={2}
-        >
-          <Box>
-            <Stack direction='row' spacing={1} alignItems='center' sx={{ mb: 1 }}>
-              <Typography variant='body2' sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>
-                Metromédica
-              </Typography>
-              <Typography variant='body2' sx={{ color: 'rgba(255,255,255,0.4)' }}>
-                /
-              </Typography>
-              <Typography variant='body2' sx={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>
-                Servicios
-              </Typography>
-            </Stack>
-            <Typography
-              variant='h4'
-              fontWeight={800}
-              sx={{ color: '#fff', lineHeight: 1.2, letterSpacing: '-0.02em' }}
-            >
-              Servicios de calibración
-            </Typography>
-            <Typography
-              variant='body2'
-              sx={{ mt: 1, color: 'rgba(255,255,255,0.8)', lineHeight: 1.5, maxWidth: 780 }}
-            >
-              {isTechnicalOnlyView
-                ? 'Bandeja técnica para ODS, programación y seguimiento operativo del servicio.'
-                : 'Bandeja operativa para cotización, respuesta del cliente, emisión de ODS y seguimiento base del servicio.'}
-            </Typography>
-          </Box>
-
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            spacing={1}
-            flexWrap='wrap'
-            useFlexGap
-            justifyContent={{ md: 'flex-end' }}
-          >
+      <LmsPageHeader
+        title='Servicios de calibración'
+        subtitle={
+          isTechnicalOnlyView
+            ? 'Bandeja técnica para ODS, programación y seguimiento operativo del servicio.'
+            : 'Bandeja operativa para cotización, respuesta del cliente, emisión de ODS y seguimiento base del servicio.'
+        }
+        icon={<ScienceOutlinedIcon />}
+        actions={
+          <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap alignItems='center'>
             {canViewAnalytics ? (
-              <Button
-                variant='outlined'
-                startIcon={<AnalyticsOutlinedIcon />}
-                onClick={() => navigate('/calibration-services/analytics')}
-                sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
-              >
+              <Button variant='outlined' startIcon={<AnalyticsOutlinedIcon />} onClick={() => navigate('/calibration-services/analytics')} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
                 Analíticas
               </Button>
             ) : null}
             {canViewModule ? (
-              <Button
-                variant='outlined'
-                startIcon={<CalendarMonthOutlinedIcon />}
-                onClick={() => navigate('/calibration-services/schedule')}
-                sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
-              >
+              <Button variant='outlined' startIcon={<CalendarMonthOutlinedIcon />} onClick={() => navigate('/calibration-services/schedule')} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
                 Agenda
               </Button>
             ) : null}
             {canCreateServices ? (
-              <Button
-                variant='outlined'
-                startIcon={<AddBusinessOutlinedIcon />}
-                onClick={() => navigate('/calibration-services/customers')}
-                sx={{ ...secondaryButtonSx, borderColor: 'rgba(255,255,255,0.35)', color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', '&:hover': { borderColor: '#fff', color: '#fff', backgroundColor: 'rgba(255,255,255,0.2)' } }}
-              >
+              <Button variant='outlined' startIcon={<AddBusinessOutlinedIcon />} onClick={() => navigate('/calibration-services/customers')} sx={{ color: '#00897B', borderColor: '#00BFA5', '&:hover': { borderColor: '#00897B', bgcolor: '#E0F7F4' } }}>
                 Clientes
               </Button>
             ) : null}
-            <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '10px', px: 0.5, backdropFilter: 'blur(8px)' }}>
-              <CalibrationNotificationBell />
-            </Box>
-            <IconButton
-              onClick={(e) => setMoreAnchorEl(e.currentTarget)}
-              sx={{ color: '#fff', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '10px', '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' } }}
-            >
+            <CalibrationNotificationBell />
+            <IconButton onClick={(e) => setMoreAnchorEl(e.currentTarget)}>
               <MoreVertIcon />
             </IconButton>
-            <Menu
-              anchorEl={moreAnchorEl}
-              open={Boolean(moreAnchorEl)}
-              onClose={() => setMoreAnchorEl(null)}
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-            >
-              {canCreateServices ? (
-                <MenuItem onClick={() => { setMoreAnchorEl(null); navigate('/calibration-services/productos-y-servicios') }}>
-                  <Inventory2OutlinedIcon fontSize='small' sx={{ mr: 1 }} /> Productos
-                </MenuItem>
-              ) : null}
-              {canManageSlaConfig ? (
-                <MenuItem onClick={() => { setMoreAnchorEl(null); setIsSlaConfigDialogOpen(true) }}>
-                  <SettingsOutlinedIcon fontSize='small' sx={{ mr: 1 }} /> Configuración SLA
-                </MenuItem>
-              ) : null}
-              {canManageSequenceConfig ? (
-                <MenuItem onClick={() => { setMoreAnchorEl(null); setIsSequenceDialogOpen(true) }}>
-                  <SettingsOutlinedIcon fontSize='small' sx={{ mr: 1 }} /> Config. secuencia
-                </MenuItem>
-              ) : null}
-              {canCreateServices ? (
-                <MenuItem onClick={() => { setMoreAnchorEl(null); handleOpenTemplate() }}>
-                  <SaveOutlinedIcon fontSize='small' sx={{ mr: 1 }} /> Plantilla términos
-                </MenuItem>
-              ) : null}
-            </Menu>
+        <Menu
+          anchorEl={moreAnchorEl}
+          open={Boolean(moreAnchorEl)}
+          onClose={() => setMoreAnchorEl(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        >
+          {canCreateServices ? (
+            <MenuItem onClick={() => { setMoreAnchorEl(null); navigate('/calibration-services/productos-y-servicios') }}>
+              <Inventory2OutlinedIcon fontSize='small' sx={{ mr: 1 }} /> Productos
+            </MenuItem>
+          ) : null}
+          {canManageSlaConfig ? (
+            <MenuItem onClick={() => { setMoreAnchorEl(null); setIsSlaConfigDialogOpen(true) }}>
+              <SettingsOutlinedIcon fontSize='small' sx={{ mr: 1 }} /> Configuración SLA
+            </MenuItem>
+          ) : null}
+          {canManageSequenceConfig ? (
+            <MenuItem onClick={() => { setMoreAnchorEl(null); setIsSequenceDialogOpen(true) }}>
+              <SettingsOutlinedIcon fontSize='small' sx={{ mr: 1 }} /> Config. secuencia
+            </MenuItem>
+          ) : null}
+          {canCreateServices ? (
+            <MenuItem onClick={() => { setMoreAnchorEl(null); handleOpenTemplate() }}>
+              <SaveOutlinedIcon fontSize='small' sx={{ mr: 1 }} /> Plantilla términos
+            </MenuItem>
+          ) : null}
+        </Menu>
             {canCreateServices ? (
               <Button
                 variant='contained'
                 startIcon={<AddIcon />}
                 onClick={() => navigate('/calibration-services/new')}
                 disabled={canManageSequenceConfig && !sequenceConfig?.initialized}
-                sx={{ ...primaryButtonSx, background: '#fff', color: ui.greenDark, '&:hover': { background: 'rgba(255,255,255,0.9)', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.15)' } }}
+                sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}
               >
                 Nuevo servicio
               </Button>
             ) : null}
           </Stack>
-        </Stack>
-      </Box>
+        }
+      />
+
 
       {canManageSequenceConfig && sequenceConfig ? (
         <Alert
@@ -1789,92 +1713,50 @@ const CalibrationServicesPage = () => {
         </Alert>
       ) : null}
 
-      <Grid container spacing={2} mb={3}>
-        <Grid item xs={12} md={3}>
-          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', cursor: 'pointer', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: `linear-gradient(180deg, ${ui.info}, ${alpha(ui.info, 0.4)})` } }} onClick={clearFilters}>
-            <CardContent sx={{ p: 2 }}>
-              <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
-                <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
-                  Servicios visibles
-                </Typography>
-                <Box sx={{ width: 42, height: 42, borderRadius: '14px', background: `linear-gradient(135deg, ${alpha(ui.info, 0.15)} 0%, ${alpha(ui.info, 0.08)} 100%)`, color: ui.info, display: 'grid', placeItems: 'center', boxShadow: `0 2px 8px ${alpha(ui.info, 0.12)}` }}>
-                  <VisibilityOutlinedIcon fontSize='small' />
-                </Box>
-              </Stack>
-              <Typography variant='h3' fontWeight={700} sx={{ mt: 1.5, mb: 0.5, color: ui.text, lineHeight: 1.2 }}>
-                {visibleServices.length}
-              </Typography>
-              <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500 }}>
-                Total cargados: {data?.totalItems ?? 0}
-              </Typography>
-            </CardContent>
-          </Card>
+      <Grid container spacing={3} mb={3}>
+        <Grid item xs={6} md={3}>
+          <LmsStatCard
+            label='Servicios visibles'
+            value={visibleServices.length}
+            caption={`Total cargados: ${data?.totalItems ?? 0}`}
+            icon={<VisibilityOutlinedIcon />}
+            tone='blue'
+            onClick={clearFilters}
+          />
         </Grid>
-        <Grid item xs={12} md={3}>
-          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', cursor: 'pointer', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: `linear-gradient(180deg, ${ui.warning}, ${alpha(ui.warning, 0.4)})` } }} onClick={() => { setStatusFilter(isTechnicalOnlyView ? 'scheduled' : 'pending_approval'); setAreFiltersOpen(true) }}>
-            <CardContent sx={{ p: 2 }}>
-              <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
-                <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
-                  {isTechnicalOnlyView ? 'Programadas' : 'Pendientes respuesta'}
-                </Typography>
-                <Box sx={{ width: 42, height: 42, borderRadius: '14px', background: `linear-gradient(135deg, ${alpha(ui.warning, 0.15)} 0%, ${alpha(ui.warning, 0.08)} 100%)`, color: ui.warning, display: 'grid', placeItems: 'center', boxShadow: `0 2px 8px ${alpha(ui.warning, 0.12)}` }}>
-                  <WarningAmberOutlinedIcon fontSize='small' />
-                </Box>
-              </Stack>
-              <Typography variant='h3' fontWeight={700} sx={{ mt: 1.5, mb: 0.5, color: ui.text, lineHeight: 1.2 }}>
-                {isTechnicalOnlyView ? scheduledCount : pendingApprovalCount}
-              </Typography>
-              <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500, lineHeight: 1.5, display: 'block' }}>
-                {isTechnicalOnlyView
-                  ? 'Servicios con fecha asignada, listos para ejecutar'
-                  : 'Cotizaciones enviadas esperando respuesta'}
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={6} md={3}>
+          <LmsStatCard
+            label={isTechnicalOnlyView ? 'Programadas' : 'Pendientes respuesta'}
+            value={isTechnicalOnlyView ? scheduledCount : pendingApprovalCount}
+            caption={isTechnicalOnlyView ? 'Servicios con fecha asignada, listos para ejecutar' : 'Cotizaciones enviadas esperando respuesta'}
+            icon={<WarningAmberOutlinedIcon />}
+            tone='orange'
+            onClick={() => { setStatusFilter(isTechnicalOnlyView ? 'scheduled' : 'pending_approval'); setAreFiltersOpen(true) }}
+          />
         </Grid>
-        <Grid item xs={12} md={3}>
-          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', cursor: 'pointer', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: `linear-gradient(180deg, ${ui.greenDark}, ${alpha(ui.green, 0.4)})` } }} onClick={() => { setStatusFilter(isTechnicalOnlyView ? 'ods_issued' : 'approved'); setAreFiltersOpen(true) }}>
-            <CardContent sx={{ p: 2 }}>
-              <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
-                <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
-                  {isTechnicalOnlyView ? 'Requieren agenda' : 'Listos para ODS'}
-                </Typography>
-                <Box sx={{ width: 42, height: 42, borderRadius: '14px', background: `linear-gradient(135deg, ${alpha(ui.green, 0.15)} 0%, ${alpha(ui.green, 0.08)} 100%)`, color: ui.greenDark, display: 'grid', placeItems: 'center', boxShadow: `0 2px 8px ${alpha(ui.green, 0.12)}` }}>
-                  <DescriptionOutlinedIcon fontSize='small' />
-                </Box>
-              </Stack>
-              <Typography variant='h3' fontWeight={700} sx={{ mt: 1.5, mb: 0.5, color: ui.text, lineHeight: 1.2 }}>
-                {isTechnicalOnlyView ? odsIssuedCount : readyForOdsCount}
-              </Typography>
-              <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500, lineHeight: 1.5, display: 'block' }}>
-                {isTechnicalOnlyView
-                  ? 'Servicios que requieren coordinación'
-                  : 'Aprobados y pendientes de emisión ODS'}
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={6} md={3}>
+          <LmsStatCard
+            label={isTechnicalOnlyView ? 'Requieren agenda' : 'Listos para ODS'}
+            value={isTechnicalOnlyView ? odsIssuedCount : readyForOdsCount}
+            caption={isTechnicalOnlyView ? 'Servicios que requieren coordinación' : 'Aprobados y pendientes de emisión ODS'}
+            icon={<DescriptionOutlinedIcon />}
+            tone='green'
+            onClick={() => { setStatusFilter(isTechnicalOnlyView ? 'ods_issued' : 'approved'); setAreFiltersOpen(true) }}
+          />
         </Grid>
-        <Grid item xs={12} md={3}>
-          <Card elevation={0} sx={{ ...softCardSx, height: '100%', position: 'relative', overflow: 'visible', cursor: 'pointer', '&::before': { content: '""', position: 'absolute', left: 0, top: 12, bottom: 12, width: 3, borderRadius: '2px', background: urgentCount > 0 ? `linear-gradient(180deg, ${ui.error}, ${alpha(ui.error, 0.4)})` : `linear-gradient(180deg, ${ui.muted}, ${alpha(ui.muted, 0.3)})` } }} onClick={() => { setSlaFilter('red'); setAreFiltersOpen(true) }}>
-            <CardContent sx={{ p: 2 }}>
-              <Stack direction='row' justifyContent='space-between' alignItems='flex-start'>
-                <Typography variant='overline' sx={{ color: ui.muted, fontWeight: 700, letterSpacing: 0.8 }}>
-                  En riesgo o vencidos
-                </Typography>
-                <Box sx={{ width: 42, height: 42, borderRadius: '14px', background: `linear-gradient(135deg, ${alpha(ui.error, 0.15)} 0%, ${alpha(ui.error, 0.08)} 100%)`, color: ui.error, display: 'grid', placeItems: 'center', boxShadow: `0 2px 8px ${alpha(ui.error, 0.12)}` }}>
-                  <ReportProblemOutlinedIcon fontSize='small' />
-                </Box>
-              </Stack>
-              <Typography variant='h3' fontWeight={700} sx={{ mt: 1.5, mb: 0.5, color: urgentCount > 0 ? ui.error : ui.text, lineHeight: 1.2 }}>
-                {urgentCount}
-              </Typography>
-              <Typography variant='caption' sx={{ color: ui.muted, fontWeight: 500, lineHeight: 1.5, display: 'block' }}>
-                {isTechnicalOnlyView
-                  ? `${scheduledCount} prog · ${inExecutionCount} ejec · ${technicallyCompletedCount} fin · ${closedCount} cerrados`
-                  : `${requestedChangesCount} con cambios · ${pendingDocumentControlCount} documentales`}
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid item xs={6} md={3}>
+          <LmsStatCard
+            label='En riesgo o vencidos'
+            value={urgentCount}
+            caption={
+              isTechnicalOnlyView
+                ? `${scheduledCount} prog · ${inExecutionCount} ejec · ${technicallyCompletedCount} fin · ${closedCount} cerrados`
+                : `${requestedChangesCount} con cambios · ${pendingDocumentControlCount} documentales`
+            }
+            icon={<ReportProblemOutlinedIcon />}
+            tone={urgentCount > 0 ? 'red' : 'teal'}
+            onClick={() => { setSlaFilter('red'); setAreFiltersOpen(true) }}
+          />
         </Grid>
       </Grid>
 
@@ -2838,7 +2720,7 @@ const CalibrationServicesPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Container>
   )
 }
 

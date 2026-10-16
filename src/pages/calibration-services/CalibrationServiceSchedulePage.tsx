@@ -6,6 +6,7 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  Container,
   IconButton,
   Stack,
   Typography
@@ -26,6 +27,7 @@ import {
   subMonths
 } from 'date-fns'
 import { es } from 'date-fns/locale'
+import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import {
   CalibrationService
 } from '../../types/calibrationService'
@@ -89,24 +91,14 @@ const CalibrationServiceSchedulePage = () => {
   const nextMonth = () => setCurrentMonth((d) => addMonths(d, 1))
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#f9fafb', px: { xs: 2, md: 3 }, py: { xs: 2, md: 3 } }}>
+    <Container maxWidth='xl' sx={{ py: 3 }}>
       <Stack spacing={3}>
         {/* Header */}
-        <Box sx={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)', borderRadius: '20px', p: { xs: 3, md: 4 } }}>
-          <Stack direction={{ xs: 'column', md: 'row' }} justifyContent='space-between' alignItems={{ xs: 'flex-start', md: 'center' }} spacing={2}>
-            <Box>
-              <Stack direction='row' spacing={1} alignItems='center' sx={{ mb: 1 }}>
-                <Typography variant='body2' sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>Metromédica</Typography>
-                <Typography variant='body2' sx={{ color: 'rgba(255,255,255,0.4)' }}>/</Typography>
-                <Typography variant='body2' sx={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>Agenda</Typography>
-              </Stack>
-              <Typography variant='h4' fontWeight={800} sx={{ color: '#fff', lineHeight: 1.2 }}>Agenda de servicios</Typography>
-              <Typography variant='body2' sx={{ mt: 1, color: 'rgba(255,255,255,0.8)' }}>
-                Calendario mensual de servicios programados y en ejecución.
-              </Typography>
-            </Box>
-          </Stack>
-        </Box>
+        <LmsPageHeader
+          title='Agenda de servicios'
+          subtitle='Calendario mensual de servicios programados y en ejecución.'
+          icon={<CalendarMonthOutlinedIcon />}
+        />
 
         {/* Month navigation */}
         <Card elevation={0} sx={{ borderRadius: '16px', border: '1px solid #e5e7eb' }}>
@@ -242,7 +234,7 @@ const CalibrationServiceSchedulePage = () => {
           </CardContent>
         </Card>
       </Stack>
-    </Box>
+    </Container>
   )
 }
 
