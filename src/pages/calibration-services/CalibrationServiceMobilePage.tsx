@@ -30,18 +30,33 @@ import {
 
 // Figma design palette
 const G = {
-  green: '#00A651', greenLight: '#e8f7ef', greenDark: '#007a3d',
+  green: '#00BFA5', greenLight: '#E0F7F4', greenDark: '#00897B',
   yellow: '#F5A623', yellowLight: '#fff8ec', red: '#e53e3e',
   gray50: '#f0f2f5', gray100: '#e8eaed', gray200: '#d1d5db',
   gray300: '#b0b7c3', gray400: '#9ca3af', gray600: '#4b5563',
   gray800: '#1f2937', dark: '#1a1a2e', white: '#ffffff'
 }
 
+const BANNER_BG = 'linear-gradient(135deg, #10b981, #059669)'
+const primarySx = {
+  borderRadius: '12px', py: 1.5, textTransform: 'none', fontWeight: 600,
+  bgcolor: G.green, '&:hover': { bgcolor: '#00ACC1' },
+  '&.Mui-disabled': { bgcolor: G.gray100, color: G.gray400 },
+  '&:active': { transform: 'scale(0.97)' }
+} as const
+const outlineSx = {
+  borderRadius: '12px', py: 1.5, textTransform: 'none', fontWeight: 600,
+  color: G.greenDark, borderColor: G.green,
+  '&:hover': { borderColor: G.greenDark, bgcolor: G.greenLight },
+  '&:active': { transform: 'scale(0.97)' }
+} as const
+const chipSx = { fontSize: '0.7rem', fontWeight: 600, px: 1.25, py: 0.3, borderRadius: '999px', border: '1px solid rgba(255,255,255,0.6)', color: 'white' } as const
+
 const STATUS_FLOW: CalibrationServiceOperationalItemStatus[] = ['pending', 'scheduled', 'in_progress', 'completed']
 const CUT_STATUSES: Record<string, { label: string; color: string }> = {
-  draft: { label: 'Borrador', color: G.yellow },
-  ready_for_invoicing: { label: 'Listo facturar', color: G.green },
-  invoiced: { label: 'Facturado', color: G.gray400 }
+  draft: { label: 'Borrador', color: '#b45309' },
+  ready_for_invoicing: { label: 'Listo para facturar', color: G.greenDark },
+  invoiced: { label: 'Facturado', color: G.gray600 }
 }
 
 const getOps = (s: any) => (s?.otherFields?.operations || {})
@@ -219,19 +234,21 @@ return (
       !s ? <Box sx={{ p: 2 }}><Alert severity='error'>Servicio no encontrado</Alert></Box> : (
       <Box sx={{ maxWidth: 430, mx: 'auto' }}>
         {/* Header */}
-      <Box sx={{ bgcolor: G.green, px: 2, py: 2, color: 'white' }}>
+      <Box sx={{ background: BANNER_BG, px: 2, py: 2, color: 'white', borderRadius: '0 0 20px 20px' }}>
         <Stack direction='row' alignItems='center' spacing={1} sx={{ mb: 1 }}>
-          <ArrowBackIcon fontSize='small' onClick={() => navigate(-1)} sx={{ cursor: 'pointer', opacity: 0.8 }} />
-          <Typography variant='body2' sx={{ opacity: 0.75 }}>MetroMedics</Typography>
+          <IconButton size='small' aria-label='Volver' onClick={() => navigate(-1)} sx={{ color: 'white', ml: -0.5 }}>
+            <ArrowBackIcon fontSize='small' />
+          </IconButton>
+          <Typography variant='body2' sx={{ opacity: 0.85 }}>MetroMedics</Typography>
         </Stack>
-        <Typography variant='h6' fontWeight={800}>{s.serviceCode}</Typography>
-        <Stack direction='row' alignItems='center' spacing={1.5} sx={{ mt: 1, flexWrap: 'wrap' }}>
-          <Typography variant='body2' fontWeight={600} sx={{ fontSize: '0.75rem' }}>{s.customer?.nombre || s.executionCustomerName}</Typography>
-          <Box component='span' sx={{ bgcolor: `${G.greenDark}99`, color: 'white', fontSize: '0.65rem', fontWeight: 600, px: 1.5, py: 0.3, borderRadius: '999px' }}>
-                        {CALIBRATION_SERVICE_STATUS_LABELS[status as CalibrationServiceStatus]}
+        <Typography variant='h6' fontWeight={700}>{s.serviceCode}</Typography>
+        <Typography variant='body2' sx={{ mt: 0.5, opacity: 0.9 }}>{s.customer?.nombre || s.executionCustomerName}</Typography>
+        <Stack direction='row' alignItems='center' spacing={1} useFlexGap sx={{ mt: 1.5, flexWrap: 'wrap' }}>
+          <Box component='span' sx={{ ...chipSx, bgcolor: 'rgba(255,255,255,0.22)' }}>
+            {CALIBRATION_SERVICE_STATUS_LABELS[status as CalibrationServiceStatus]}
           </Box>
-          {s.odsCode && <Box component='span' sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', fontSize: '0.65rem', fontWeight: 600, px: 1.5, py: 0.3, borderRadius: '999px' }}>{s.odsCode}</Box>}
-          {scheduledDate && <Box component='span' sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', fontSize: '0.65rem', fontWeight: 600, px: 1.5, py: 0.3, borderRadius: '999px' }}>{new Date(scheduledDate).toLocaleDateString('es-CO')}</Box>}
+          {s.odsCode && <Box component='span' sx={chipSx}>{s.odsCode}</Box>}
+          {scheduledDate && <Box component='span' sx={chipSx}>{new Date(scheduledDate).toLocaleDateString('es-CO')}</Box>}
         </Stack>
       </Box>
 
@@ -242,15 +259,10 @@ return (
             <Stack direction='row' spacing={1} alignItems='center'>
               <BusinessOutlinedIcon sx={{ color: G.gray400, fontSize: 16 }} />
               <Typography variant='body2' fontWeight={700} sx={{ color: G.dark, fontSize: '0.8rem' }}>
-                {s.customer?.nombre || s.executionCustomerName || 'Cliente pendiente'}
+                {s.executionSiteName || s.customerSite || 'Sede pendiente'}
               </Typography>
             </Stack>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0.5, pl: 3 }}>
-              {s.executionSiteName || s.customerSite ? (
-                <Typography variant='caption' sx={{ color: G.gray600, gridColumn: 'span 2' }}>
-                  Sitio: {s.executionSiteName || s.customerSite}
-                </Typography>
-              ) : null}
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 0.5, pl: 3 }}>
               {s.contactName ? (
                 <Typography variant='caption' sx={{ color: G.gray600 }}>Contacto: {s.contactName}</Typography>
               ) : null}
@@ -270,9 +282,9 @@ return (
       {/* ODS view button */}
       {s.odsCode ? (
         <Box sx={{ px: 2, mt: 1.5 }}>
-          <Button fullWidth variant='contained' startIcon={<VisibilityOutlinedIcon />}
+          <Button fullWidth variant='outlined' startIcon={<VisibilityOutlinedIcon />}
             onClick={handleViewOds} disabled={odsLoading}
-            sx={{ borderRadius: '16px', py: 1.5, textTransform: 'none', fontWeight: 700, bgcolor: G.dark, '&:hover': { bgcolor: '#2d2d4a' }, '&:active': { transform: 'scale(0.97)' } }}>
+            sx={outlineSx}>
             {odsLoading ? 'Cargando...' : `Ver ODS ${s.odsCode}`}
           </Button>
         </Box>
@@ -280,22 +292,22 @@ return (
 
         {/* Execution */}
         {['scheduled', 'in_execution'].includes(status) && (
-          <Card sx={{ mx: 2, mt: 2, borderRadius: 3 }}>
+          <Card elevation={0} sx={{ mx: 2, mt: 2, borderRadius: 3, border: `1px solid ${G.gray100}` }}>
             <CardContent sx={{ p: 2 }}>
               <Stack spacing={1.5}>
                 {status === 'scheduled' && (
-                  <Button fullWidth variant='contained' startIcon={<PlayArrowIcon />}
+                  <Button fullWidth variant='contained' disableElevation startIcon={<PlayArrowIcon />}
                     onClick={() => handleAction('start', () => apiCall('post', `/calibration-services/${serviceId}/start-execution`, { startedAt: new Date().toISOString() }), 'Ejecución iniciada')}
                     disabled={actionLoading === 'start'}
-                    sx={{ borderRadius: '16px', py: 2, textTransform: 'none', fontWeight: 700, '&:active': { transform: 'scale(0.97)' } }}>
+                    sx={{ ...primarySx, py: 1.75 }}>
                     Iniciar ejecución
                   </Button>
                 )}
                 {status === 'in_execution' && (
-                  <Button fullWidth variant='contained' color='success' startIcon={<CheckCircleIcon />}
+                  <Button fullWidth variant='contained' disableElevation startIcon={<CheckCircleIcon />}
                     onClick={() => handleAction('complete', () => apiCall('post', `/calibration-services/${serviceId}/complete-execution`, { technicallyCompletedAt: new Date().toISOString() }), 'Ejecución finalizada')}
                     disabled={!allCompleted || actionLoading === 'complete'}
-                    sx={{ borderRadius: '16px', py: 2, textTransform: 'none', fontWeight: 700, '&:active': { transform: 'scale(0.97)' } }}>
+                    sx={{ ...primarySx, py: 1.75 }}>
                     {allCompleted ? 'Finalizar ejecución' : 'Completa todos los ítems primero'}
                   </Button>
                 )}
@@ -315,7 +327,7 @@ return (
         {/* Items */}
         <Box sx={{ px: 2 }}>
           <Stack direction='row' justifyContent='space-between' alignItems='center' sx={{ mt: 3, mb: 1, cursor: 'pointer' }} onClick={() => setItemsExpanded(v => !v)}>
-            <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400 }}>
+            <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, color: G.dark }}>
               Ítems del servicio ({items.length})
             </Typography>
             <Typography variant='caption' sx={{ color: G.green, fontWeight: 600 }}>{itemsExpanded ? 'Ocultar' : 'Mostrar'}</Typography>
@@ -348,8 +360,8 @@ return (
             </Card>
           ))}
           {items.length > 0 && (
-            <Button fullWidth variant='contained' onClick={handleSaveProgress} disabled={saving}
-              sx={{ borderRadius: '16px', py: 1.5, textTransform: 'none', fontWeight: 700, '&:active': { transform: 'scale(0.97)' } }}>
+            <Button fullWidth variant='contained' disableElevation onClick={handleSaveProgress} disabled={saving}
+              sx={primarySx}>
               {saving ? 'Guardando...' : 'Guardar avance técnico'}
             </Button>
           )}
@@ -357,62 +369,62 @@ return (
         </Collapse>
 
         {/* Logistics */}
-        <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400 }}>Logística</Typography>
+        <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.95rem', fontWeight: 700, color: G.dark }}>Logística</Typography>
         <Stack spacing={1} sx={{ px: 2 }}>
           <Button fullWidth variant='outlined' startIcon={<InventoryIcon />}
             onClick={() => setShowLogistics(true)}
-            sx={{ borderRadius: '16px', py: 1.5, textTransform: 'none', fontWeight: 600, '&:active': { transform: 'scale(0.97)' } }}>
+            sx={outlineSx}>
             Diligenciar control de ingreso
           </Button>
           <Button fullWidth variant='outlined' startIcon={<AddCircleOutlineIcon />}
             onClick={() => setShowTrace(true)}
-            sx={{ borderRadius: '16px', py: 1.5, textTransform: 'none', fontWeight: 600, '&:active': { transform: 'scale(0.97)' } }}>
+            sx={outlineSx}>
             Registrar movimiento físico
           </Button>
         </Stack>
 
         {/* Adjustments */}
-        <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400 }}>Novedades</Typography>
+        <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.95rem', fontWeight: 700, color: G.dark }}>Novedades</Typography>
         <Stack spacing={1} sx={{ px: 2 }}>
           <Button fullWidth variant='outlined' color='warning' startIcon={<WarningAmberIcon />}
             onClick={() => setShowAdjust(true)}
-            sx={{ borderRadius: '16px', py: 1.5, textTransform: 'none', fontWeight: 600, '&:active': { transform: 'scale(0.97)' } }}>
+            sx={{ borderRadius: '12px', py: 1.5, textTransform: 'none', fontWeight: 600, '&:active': { transform: 'scale(0.97)' } }}>
             Reportar novedad
           </Button>
         </Stack>
 
         {/* Signature */}
-        <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400 }}>Firma de recepción</Typography>
-        <Card sx={{ mx: 2, borderRadius: 3 }} elevation={1}>
+        <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.95rem', fontWeight: 700, color: G.dark }}>Firma de recepción</Typography>
+        <Card sx={{ mx: 2, borderRadius: 3, border: `1px solid ${G.gray100}` }} elevation={0}>
           <CardContent sx={{ p: 2 }}>
             <TextField fullWidth size='small' label='Nombre de quien recibe' value={deliveryName} onChange={e => setDeliveryName(e.target.value)} sx={{ mb: 2 }} />
             <SignaturePad value={deliverySignature} onChange={setDeliverySignature} height={120} />
             <Button fullWidth variant='contained' onClick={() => handleAction('sig', () => apiCall('put', `/calibration-services/${serviceId}/delivery-signature`, { deliveryName: deliveryName.trim() || null, deliverySignatureData: deliverySignature }), 'Firma guardada')}
               disabled={!deliverySignature || actionLoading === 'sig'}
-              sx={{ mt: 2, borderRadius: 3, py: 1.5, textTransform: 'none', fontWeight: 700 }}>
+              sx={{ ...primarySx, mt: 2 }} disableElevation>
               Guardar firma
             </Button>
           </CardContent>
         </Card>
 
         {/* Cuts */}
-        <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400 }}>Cortes</Typography>
+        <Typography sx={{ px: 2, mt: 3, mb: 1, fontSize: '0.95rem', fontWeight: 700, color: G.dark }}>Cortes</Typography>
         <Stack spacing={1} sx={{ px: 2 }}>
           {cuts.map((cut: CalibrationServiceCut) => {
             const cs = CUT_STATUSES[cut.status] || { label: cut.status, color: '#6b7280' }
             return (
-              <Card key={cut.id} sx={{ borderRadius: 2 }} elevation={0} variant='outlined'>
+              <Card key={cut.id} sx={{ borderRadius: '12px', borderColor: G.gray100 }} elevation={0} variant='outlined'>
                 <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                   <Stack direction='row' justifyContent='space-between' alignItems='center'>
                     <Box>
                       <Typography variant='body2' fontWeight={700}>{cut.cutCode || `Corte #${cut.id}`}</Typography>
-                      <Chip size='small' label={cs.label} sx={{ bgcolor: cs.color, color: '#fff', fontSize: '0.65rem', height: 20, mt: 0.25 }} />
+                      <Chip size='small' variant='outlined' label={cs.label} sx={{ borderColor: cs.color, color: cs.color, fontSize: '0.7rem', fontWeight: 600, height: 22, mt: 0.5 }} />
                     </Box>
                     {cut.status === 'draft' && (
-                      <Button size='small' variant='contained' color='info'
+                      <Button size='small' variant='outlined'
                         onClick={() => handleAction(`ready-${cut.id}`, () => apiCall('post', `/calibration-services/${serviceId}/cuts/${cut.id}/ready-for-invoicing`), 'Marcado listo para facturar')}
                         disabled={actionLoading === `ready-${cut.id}`}
-                        sx={{ borderRadius: 2, textTransform: 'none', fontSize: '0.75rem' }}>
+                        sx={{ ...outlineSx, py: 0.5, fontSize: '0.8rem' }}>
                         Listo facturar
                       </Button>
                     )}
@@ -423,7 +435,7 @@ return (
           })}
           {['in_execution', 'technically_completed'].includes(status) && (
             <Button fullWidth variant='outlined' onClick={() => setShowCut(true)}
-              sx={{ borderRadius: '16px', py: 1.5, textTransform: 'none', fontWeight: 600, '&:active': { transform: 'scale(0.97)' } }}>
+              sx={outlineSx}>
               Crear corte
             </Button>
           )}
@@ -435,20 +447,19 @@ return (
         <Dialog open={showLogistics} onClose={() => setShowLogistics(false)} fullScreen>
           <Box sx={{ minHeight: '100vh', bgcolor: G.gray50, display: 'flex', flexDirection: 'column' }}>
             {/* Header */}
-            <Box sx={{ bgcolor: G.green, px: 2, pt: 2, pb: 1.5 }}>
+            <Box sx={{ background: BANNER_BG, px: 2, pt: 2, pb: 1.5 }}>
               <Stack direction='row' spacing={2} alignItems='center' sx={{ mb: 1 }}>
-                <IconButton size='small' onClick={() => setShowLogistics(false)} sx={{ bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '50%', width: 32, height: 32 }}>
+                <IconButton size='small' aria-label='Volver' onClick={() => setShowLogistics(false)} sx={{ bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '50%', width: 32, height: 32 }}>
                   <ArrowBackIcon sx={{ color: 'white', fontSize: 18 }} />
                 </IconButton>
                 <Box>
-                  <Typography variant='caption' sx={{ color: 'rgba(255,255,255,0.7)' }}>← Servicios</Typography>
                   <Typography variant='body1' fontWeight={700} sx={{ color: 'white', fontSize: '0.9rem' }}>Control de ingreso y entrega</Typography>
                 </Box>
               </Stack>
               <Stack direction='row' spacing={1} alignItems='center' flexWrap='wrap'>
                 <Typography variant='caption' fontWeight={600} sx={{ color: 'white' }}>{s.serviceCode}</Typography>
-                <Typography variant='caption' sx={{ color: 'rgba(255,255,255,0.6)' }}>{s.customer?.nombre || ''}</Typography>
-                <Box component='span' sx={{ bgcolor: G.yellowLight, color: '#b45309', fontSize: '0.6rem', fontWeight: 600, px: 1.5, py: 0.2, borderRadius: '999px' }}>
+                <Typography variant='caption' sx={{ color: 'rgba(255,255,255,0.85)' }}>{s.customer?.nombre || ''}</Typography>
+                <Box component='span' sx={{ ...chipSx, bgcolor: 'rgba(255,255,255,0.22)' }}>
                               {CALIBRATION_SERVICE_STATUS_LABELS[status as CalibrationServiceStatus]}
                 </Box>
               </Stack>
@@ -458,9 +469,9 @@ return (
             <Box sx={{ flex: 1, overflowY: 'auto', px: 2, py: 3, display: 'flex', flexDirection: 'column', gap: 3, pb: 24 }}>
               {/* Fechas */}
               <Box>
-                <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400, mb: 1.5 }}>Fechas</Typography>
+                <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, color: G.dark, mb: 1.5 }}>Fechas</Typography>
                 <Card sx={{ borderRadius: '16px', border: `1px solid ${G.gray100}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                  <CardContent sx={{ p: 2, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                  <CardContent sx={{ p: 2, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 2 }}>
                     <Box>
                       <Typography variant='caption' sx={{ color: G.gray400, fontWeight: 500 }}>Fecha ingreso</Typography>
                       <TextField fullWidth size='small' type='date' value={logIntake} onChange={e => setLogIntake(e.target.value)} InputLabelProps={{ shrink: true }}
@@ -477,12 +488,12 @@ return (
 
               {/* Solicitante */}
               <Box>
-                <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400, mb: 1.5 }}>Solicitante</Typography>
+                <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, color: G.dark, mb: 1.5 }}>Solicitante</Typography>
                 <Card sx={{ borderRadius: '16px', border: `1px solid ${G.gray100}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                   <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <TextField fullWidth size='small' label='Empresa' value={logCompany} onChange={e => setLogCompany(e.target.value)}
                       sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
-                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1.5 }}>
                       <TextField size='small' label='Oferta' value={logOffer} onChange={e => setLogOffer(e.target.value)}
                         sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
                       <TextField size='small' label='Teléfono' value={logPhone} onChange={e => setLogPhone(e.target.value)}
@@ -490,7 +501,7 @@ return (
                     </Box>
                     <TextField fullWidth size='small' label='Contacto' value={logContact} onChange={e => setLogContact(e.target.value)}
                       sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
-                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1.5 }}>
                       <TextField size='small' label='Dirección' value={logAddress} onChange={e => setLogAddress(e.target.value)}
                         sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }} />
                       <TextField size='small' label='Ciudad' value={logCity} onChange={e => setLogCity(e.target.value)}
@@ -503,7 +514,7 @@ return (
               {/* Equipos */}
               <Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                  <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400 }}>Equipos</Typography>
+                  <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, color: G.dark }}>Equipos</Typography>
                   <Typography variant='caption' sx={{ color: G.green, fontWeight: 600 }}>{logEquipment.length} equipo{logEquipment.length !== 1 ? 's' : ''}</Typography>
                 </Box>
                 <DeviceSearch onSelect={(name) => setLogEquipment(p => [...p, {
@@ -523,19 +534,19 @@ return (
                               <DeleteOutlineIcon fontSize='small' />
                             </IconButton>
                           </Stack>
-                          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1 }}>
                             <TextField size='small' label='Marca' value={eq.brand} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], brand: e.target.value }; setLogEquipment(n) }}
                               sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
                             <TextField size='small' label='Modelo' value={eq.model} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], model: e.target.value }; setLogEquipment(n) }}
                               sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
                           </Box>
-                          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1 }}>
                             <TextField size='small' label='Serial' value={eq.serial} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], serial: e.target.value }; setLogEquipment(n) }}
                               sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
                             <TextField size='small' label='Activo fijo' value={eq.asset} onChange={e => { const n = [...logEquipment]; n[i] = { ...n[i], asset: e.target.value }; setLogEquipment(n) }}
                               sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
                           </Box>
-                          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.5 }}>
+                          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 0.5 }}>
                             {(['physIn', 'physOut', 'opIn', 'opOut'] as const).map(f => {
                               const labels: Record<string, string> = { physIn: 'Fís. ing', physOut: 'Fís. sal', opIn: 'Oper. ing', opOut: 'Oper. sal' }
                               return (
@@ -560,14 +571,14 @@ return (
                   equipmentName: '', brand: '', model: '', serial: '', asset: '', location: '',
                   physIn: null, physOut: null, opIn: null, opOut: null
                 }])}
-                  sx={{ mt: 1.5, borderStyle: 'dashed', borderColor: G.green, color: G.green, borderRadius: '16px', textTransform: 'none', fontWeight: 600, '&:active': { transform: 'scale(0.97)' } }}>
+                  sx={{ mt: 1.5, borderStyle: 'dashed', borderColor: G.green, color: G.greenDark, borderRadius: '12px', textTransform: 'none', fontWeight: 600, '&:active': { transform: 'scale(0.97)' } }}>
                   + Agregar equipo
                 </Button>
               </Box>
 
               {/* Validaciones */}
               <Box>
-                <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400, mb: 1.5 }}>Validaciones</Typography>
+                <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, color: G.dark, mb: 1.5 }}>Validaciones</Typography>
                 <Stack spacing={1.5}>
                   {[
                     { label: 'Autoriza codificación', val: logNoSerial, set: setLogNoSerial },
@@ -588,7 +599,7 @@ return (
 
               {/* Firmas */}
               <Box>
-                <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: G.gray400, mb: 1.5 }}>Firmas</Typography>
+                <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, color: G.dark, mb: 1.5 }}>Firmas</Typography>
                 <Card sx={{ borderRadius: '16px', border: `1px solid ${G.gray100}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                   <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
                     <Box>
@@ -630,7 +641,7 @@ return (
             <Box sx={{ position: 'sticky', bottom: 0, left: 0, right: 0, bgcolor: G.white, borderTop: `1px solid ${G.gray100}`, px: 2, py: 1.5 }}>
               <Stack direction='row' spacing={1.5}>
                 <Button fullWidth onClick={() => setShowLogistics(false)}
-                  sx={{ borderRadius: '16px', py: 1.5, border: `1px solid ${G.gray200}`, color: G.gray600, textTransform: 'none', fontWeight: 600, '&:active': { transform: 'scale(0.97)' } }}>
+                  sx={{ borderRadius: '12px', py: 1.5, border: `1px solid ${G.gray200}`, color: G.gray600, textTransform: 'none', fontWeight: 600, '&:active': { transform: 'scale(0.97)' } }}>
                   Cancelar
                 </Button>
                 <Button fullWidth variant='contained' onClick={() => handleAction('log', async () => {
@@ -654,7 +665,7 @@ return (
                 }))
               })
             }, 'Control guardado')} disabled={actionLoading === 'log'}
-            sx={{ borderRadius: '16px', py: 1.5, textTransform: 'none', fontWeight: 700, bgcolor: G.green, '&:hover': { bgcolor: G.greenDark }, '&:active': { transform: 'scale(0.97)' } }}>
+            sx={primarySx} disableElevation>
             Guardar
           </Button>
           </Stack>
@@ -681,7 +692,7 @@ return (
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setShowTrace(false)}>Cancelar</Button>
-            <Button variant='contained' onClick={() => handleAction('trace', () => apiCall('post', `/calibration-services/${serviceId}/physical-traceability`, {
+            <Button variant='contained' disableElevation sx={primarySx} onClick={() => handleAction('trace', () => apiCall('post', `/calibration-services/${serviceId}/physical-traceability`, {
               movementType: traceMovement, occurredAt: new Date().toISOString(), contactName: traceContact, location: traceLocation || null, notes: null
             }), 'Movimiento registrado')} disabled={actionLoading === 'trace'}>Guardar</Button>
           </DialogActions>
@@ -744,7 +755,7 @@ return (
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setShowCut(false)}>Cancelar</Button>
-            <Button variant='contained' onClick={() => handleAction('cut', async () => {
+            <Button variant='contained' disableElevation sx={primarySx} onClick={() => handleAction('cut', async () => {
               if (items.length) await apiCall('put', `/calibration-services/${serviceId}/item-progress`, {
                 items: items.map(i => ({ itemId: i.id, operationalStatus: draftItems[i.id] || 'pending', technicalNotes: draftNotes[i.id] || '' }))
               })
