@@ -19,6 +19,10 @@ interface LmsStatCardProps {
   tone: LmsStatTone
   /** Resalta la tarjeta cuando es el filtro activo. */
   active?: boolean
+  /** Número en tamaño h4, para valores largos como montos. */
+  compact?: boolean
+  /** Frase de apoyo bajo el número. */
+  caption?: string
   onClick?: () => void
 }
 
@@ -26,7 +30,7 @@ interface LmsStatCardProps {
  * Tarjeta de indicador con degradado de color, igual a las del inicio.
  * Si recibe onClick funciona como botón (por ejemplo, para filtrar una tabla).
  */
-const LmsStatCard: React.FC<LmsStatCardProps> = ({ label, value, icon, tone, active = false, onClick }) => (
+const LmsStatCard: React.FC<LmsStatCardProps> = ({ label, value, icon, tone, active = false, compact = false, caption, onClick }) => (
   <Card
     elevation={active ? 6 : 3}
     role={onClick ? 'button' : undefined}
@@ -48,17 +52,22 @@ const LmsStatCard: React.FC<LmsStatCardProps> = ({ label, value, icon, tone, act
       '&:hover': { transform: onClick ? 'translateY(-4px)' : 'none' }
     }}
   >
-    <CardContent>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Box>
-          <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 0.5 }}>
+    <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 0.5, fontSize: { xs: '0.85rem', sm: '1rem' } }}>
             {label}
           </Typography>
-          <Typography variant='h3' sx={{ fontWeight: 'bold' }}>
+          <Typography variant={compact ? 'h4' : 'h3'} sx={{ fontWeight: 'bold', fontSize: { xs: compact ? '1.25rem' : '1.75rem' } }}>
             {value}
           </Typography>
+          {caption && (
+            <Typography variant='caption' sx={{ display: 'block', mt: 0.5, opacity: 0.9, lineHeight: 1.4 }}>
+              {caption}
+            </Typography>
+          )}
         </Box>
-        {React.cloneElement(icon, { sx: { fontSize: 44, opacity: 0.85 } })}
+        {React.cloneElement(icon, { sx: { fontSize: { xs: 30, sm: 44 }, opacity: 0.85, flexShrink: 0 } })}
       </Box>
     </CardContent>
   </Card>
