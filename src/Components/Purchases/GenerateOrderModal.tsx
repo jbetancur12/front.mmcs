@@ -1,7 +1,10 @@
 // src/Components/Purchases/GenerateOrderModal.tsx
 import { useState, useEffect, FC, ChangeEvent } from 'react'
 import {
-  Modal,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Button,
   TextField,
   Table,
@@ -15,8 +18,13 @@ import {
   Grid,
   Box,
   CircularProgress,
-  Alert
+  Alert,
+  IconButton,
+  Tooltip,
+  Divider
 } from '@mui/material'
+import { Close, DeleteOutline } from '@mui/icons-material'
+import { PURCHASE_TEAL, PURCHASE_TEAL_HOVER } from './purchaseTableStyle'
 import useAxiosPrivate from '@utils/use-axios-private'
 import Swal from 'sweetalert2'
 import { useQuery } from 'react-query'
@@ -55,20 +63,6 @@ interface GenerateOrderModalProps {
   onSuccess: () => void
 }
 
-const modalStyle = {
-  position: 'absolute' as 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  bgcolor: 'background.paper',
-  border: '2px solid #000',
-  boxShadow: 24,
-  p: 4,
-  maxHeight: '90vh',
-  overflowY: 'auto',
-  width: '70vw',
-  minWidth: '600px'
-}
 
 const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
   open,
@@ -416,13 +410,76 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
     orderData.discount
   ])
 
-  return (
-    <Modal open={open} onClose={onClose}>
-      <Box sx={modalStyle}>
-        <Typography variant='h6' gutterBottom>
-          Generar Orden de Compra
-        </Typography>
+  const formatCOP = (value: number | string) =>
+    new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(Number(value) || 0)
 
+  const blockedReason = isLoadingFiscalSettings
+    ? 'Cargando configuración fiscal...'
+    : !selectedSupplier
+      ? 'Elige un proveedor para continuar'
+      : assignedItems.length === 0
+        ? 'Este proveedor no tiene ítems pendientes de orden'
+        : ''
+
+  const sectionTitle = (text: string) => (
+    <Typography variant='subtitle1' fontWeight={700} sx={{ mb: 1.5 }}>
+      {text}
+    </Typography>
+  )
+
+  const summaryRow = (label: string, value: number | string, bold = false) => (
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        py: 0.5,
+        fontWeight: bold ? 700 : 400
+      }}
+    >
+      <Typography variant='body2' color='text.secondary'>
+        {label}
+      </Typography>
+      <Typography variant='body2' fontWeight='inherit'>
+        {formatCOP(value)}
+      </Typography>
+    </Box>
+  )
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth='lg' fullWidth>
+      <DialogTitle
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}
+      >
+        <Box>
+          <Typography variant='h6' component='span' fontWeight={700}>
+            Generar orden · {purchaseRequest.purchaseCode}
+          </Typography>
+          <Typography variant='body2' color='text.secondary'>
+            {[
+              purchaseRequest.applicantName,
+              purchaseRequest.purchaseType
+                ? `Tipo ${purchaseRequest.purchaseType}`
+                : null
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </Typography>
+        </Box>
+        <IconButton onClick={onClose} aria-label='Cerrar'>
+          <Close />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent dividers>
         {isLoadingFiscalSettings && (
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <CircularProgress size={20} sx={{ mr: 1 }} />
@@ -438,15 +495,15 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
           </Alert>
         )}
 
-        <Grid container spacing={2}>
+        {sectionTitle('Proveedor')}
+        <Grid container spacing={2} sx={{ mb: 3 }}>
           <Grid item xs={12} md={6}>
             <TextField
               select
-              label='Seleccionar Proveedor'
+              label='Proveedor'
               value={selectedSupplier}
               onChange={handleSupplierChange}
               fullWidth
-              margin='normal'
               required
               disabled={isLoadingFiscalSettings}
             >
@@ -459,35 +516,36 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
-              label='Código Orden (Opcional)'
+              label='Código de la orden (opcional)'
               name='code'
               fullWidth
-              margin='normal'
               value={orderData.code}
               onChange={handleOrderChange}
               disabled={isLoadingFiscalSettings}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+        </Grid>
+
+        {sectionTitle('Entrega y pago')}
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={6} md={3}>
             <TextField
-              label='Fecha de Solicitud'
+              label='Fecha de solicitud'
               name='requestDate'
               type='date'
               fullWidth
-              margin='normal'
               InputLabelProps={{ shrink: true }}
               value={orderData.requestDate}
               onChange={handleOrderChange}
               disabled={isLoadingFiscalSettings}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} sm={6} md={3}>
             <TextField
-              label='Fecha de Entrega'
+              label='Fecha de entrega'
               name='deliveryDate'
               type='date'
               fullWidth
-              margin='normal'
               InputLabelProps={{ shrink: true }}
               value={orderData.deliveryDate}
               onChange={handleOrderChange}
@@ -496,43 +554,39 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
-              label='Lugar de Entrega'
+              label='Lugar de entrega'
               name='deliveryPlace'
               fullWidth
-              margin='normal'
               value={orderData.deliveryPlace}
               onChange={handleOrderChange}
               disabled={isLoadingFiscalSettings}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} sm={4}>
             <TextField
-              label='Método de Pago'
+              label='Método de pago'
               name='paymentMethod'
               fullWidth
-              margin='normal'
               value={orderData.paymentMethod}
               onChange={handleOrderChange}
               disabled={isLoadingFiscalSettings}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} sm={4}>
             <TextField
               label='Cuotas'
               name='installments'
               fullWidth
-              margin='normal'
               value={orderData.installments}
               onChange={handleOrderChange}
               disabled={isLoadingFiscalSettings}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} sm={4}>
             <TextField
               label='Flete'
               name='freight'
               fullWidth
-              margin='normal'
               value={orderData.freight}
               onChange={handleOrderChange}
               disabled={isLoadingFiscalSettings}
@@ -542,269 +596,266 @@ const GenerateOrderModal: FC<GenerateOrderModalProps> = ({
 
         {selectedSupplier && assignedItems.length > 0 && (
           <>
-            <Typography
-              variant='subtitle1'
-              gutterBottom
-              style={{ marginTop: '1rem' }}
-            >
-              Ítems para el proveedor seleccionado:{' '}
-              {selectedSupplierFull?.name || ''}
-            </Typography>
-            <Table size='small'>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Descripción</TableCell>
-                  <TableCell sx={{ minWidth: 120 }}>Tipo Ítem</TableCell>
-                  <TableCell>Cantidad</TableCell>
-                  <TableCell sx={{ minWidth: 140 }}>Valor Unitario</TableCell>
-                  <TableCell sx={{ minWidth: 140 }}>Total Ítem</TableCell>
-                  <TableCell sx={{ minWidth: 100 }}>IVA %</TableCell>
-                  <TableCell>Aplica IVA</TableCell>
-                  <TableCell>Acciones</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {assignedItems.map((item, index) => (
-                  <TableRow key={item.purchaseRequestItemId}>
-                    <TableCell>{item.description}</TableCell>
-                    <TableCell>
-                      <TextField
-                        select
-                        value={item.itemType}
-                        onChange={(e) =>
-                          handleItemChange(
-                            index,
-                            'itemType',
-                            e.target.value as 'service' | 'purchase'
-                          )
-                        }
-                        size='small'
-                        sx={{ minWidth: 100 }}
-                        disabled={isLoadingFiscalSettings}
-                      >
-                        <MenuItem value='purchase'>Compra</MenuItem>
-                        <MenuItem value='service'>Servicio</MenuItem>
-                      </TextField>
+            <Divider sx={{ mb: 2 }} />
+            {sectionTitle(
+              `Ítems de ${selectedSupplierFull?.name || 'el proveedor'}`
+            )}
+            <Box sx={{ overflowX: 'auto', mb: 3 }}>
+              <Table size='small'>
+                <TableHead>
+                  <TableRow sx={{ '& th': { bgcolor: '#f5f5f5', fontWeight: 600 } }}>
+                    <TableCell>Descripción</TableCell>
+                    <TableCell sx={{ minWidth: 120 }}>Tipo</TableCell>
+                    <TableCell>Cant.</TableCell>
+                    <TableCell sx={{ minWidth: 140 }}>Valor unitario</TableCell>
+                    <TableCell align='right' sx={{ minWidth: 120 }}>
+                      Total
                     </TableCell>
-                    <TableCell>{item.quantity}</TableCell>
-                    <TableCell>
-                      <NumericFormat
-                        value={item.unitValue}
-                        thousandSeparator=','
-                        decimalSeparator='.'
-                        prefix={'$ '}
-                        customInput={TextField}
-                        size='small'
-                        onValueChange={(values) =>
-                          handleItemChange(index, 'unitValue', values.value)
-                        }
-                        sx={{ minWidth: 120 }}
-                        disabled={isLoadingFiscalSettings}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <NumericFormat
-                        value={item.total}
-                        thousandSeparator=','
-                        decimalSeparator='.'
-                        prefix={'$ '}
-                        customInput={TextField}
-                        size='small'
-                        disabled
-                        sx={{ minWidth: 120 }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <NumericFormat
-                        value={item.ivaPercentageForItem}
-                        customInput={TextField}
-                        suffix={'%'}
-                        size='small'
-                        onValueChange={(values) =>
-                          handleItemChange(
-                            index,
-                            'ivaPercentageForItem',
-                            values.value
-                          )
-                        }
-                        sx={{ minWidth: 80 }}
-                        disabled={isLoadingFiscalSettings || !item.applyIVA}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Checkbox
-                        checked={item.applyIVA}
-                        onChange={(e) =>
-                          handleItemChange(index, 'applyIVA', e.target.checked)
-                        }
-                        color='primary'
-                        size='small'
-                        disabled={isLoadingFiscalSettings}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant='outlined'
-                        color='secondary'
-                        size='small'
-                        onClick={() =>
-                          handleRemoveItem(item.purchaseRequestItemId)
-                        }
-                        disabled={isLoadingFiscalSettings}
-                      >
-                        Eliminar
-                      </Button>
-                    </TableCell>
+                    <TableCell sx={{ minWidth: 90 }}>IVA %</TableCell>
+                    <TableCell>Aplica IVA</TableCell>
+                    <TableCell />
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {assignedItems.map((item, index) => (
+                    <TableRow key={item.purchaseRequestItemId}>
+                      <TableCell>{item.description}</TableCell>
+                      <TableCell>
+                        <TextField
+                          select
+                          value={item.itemType}
+                          onChange={(e) =>
+                            handleItemChange(
+                              index,
+                              'itemType',
+                              e.target.value as 'service' | 'purchase'
+                            )
+                          }
+                          size='small'
+                          sx={{ minWidth: 100 }}
+                          disabled={isLoadingFiscalSettings}
+                        >
+                          <MenuItem value='purchase'>Compra</MenuItem>
+                          <MenuItem value='service'>Servicio</MenuItem>
+                        </TextField>
+                      </TableCell>
+                      <TableCell>{item.quantity}</TableCell>
+                      <TableCell>
+                        <NumericFormat
+                          value={item.unitValue}
+                          thousandSeparator=','
+                          decimalSeparator='.'
+                          prefix={'$ '}
+                          customInput={TextField}
+                          size='small'
+                          onValueChange={(values) =>
+                            handleItemChange(index, 'unitValue', values.value)
+                          }
+                          sx={{ minWidth: 120 }}
+                          disabled={isLoadingFiscalSettings}
+                        />
+                      </TableCell>
+                      <TableCell align='right'>
+                        <Typography variant='body2' fontWeight={600}>
+                          {formatCOP(item.total)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <NumericFormat
+                          value={item.ivaPercentageForItem}
+                          customInput={TextField}
+                          suffix={'%'}
+                          size='small'
+                          onValueChange={(values) =>
+                            handleItemChange(
+                              index,
+                              'ivaPercentageForItem',
+                              values.value
+                            )
+                          }
+                          sx={{ minWidth: 80 }}
+                          disabled={isLoadingFiscalSettings || !item.applyIVA}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Checkbox
+                          checked={item.applyIVA}
+                          onChange={(e) =>
+                            handleItemChange(
+                              index,
+                              'applyIVA',
+                              e.target.checked
+                            )
+                          }
+                          size='small'
+                          sx={{
+                            color: PURCHASE_TEAL,
+                            '&.Mui-checked': { color: PURCHASE_TEAL }
+                          }}
+                          disabled={isLoadingFiscalSettings}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title='Quitar de la orden'>
+                          <span>
+                            <IconButton
+                              size='small'
+                              color='error'
+                              onClick={() =>
+                                handleRemoveItem(item.purchaseRequestItemId)
+                              }
+                              disabled={isLoadingFiscalSettings}
+                              aria-label='Quitar de la orden'
+                            >
+                              <DeleteOutline />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Box>
           </>
         )}
 
         {selectedSupplier && (
-          <Grid container spacing={2} style={{ marginTop: '1rem' }}>
-            <Grid item xs={12}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={7}>
+              {sectionTitle('Observaciones')}
               <TextField
                 multiline
-                minRows={2}
-                maxRows={4}
+                minRows={4}
+                maxRows={8}
                 label='Observaciones'
                 name='observations'
                 fullWidth
-                margin='normal'
                 value={orderData.observations}
                 onChange={handleOrderChange}
                 disabled={isLoadingFiscalSettings}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              {' '}
-              {/* Ajustado para que quepan 4 por fila */}
-              <NumericFormat
-                label='Total antes de IVA'
-                value={orderData.totalBeforeVAT}
-                thousandSeparator=','
-                decimalSeparator='.'
-                prefix={'$ '}
-                customInput={TextField}
-                fullWidth
-                margin='normal'
-                disabled
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <NumericFormat
-                label='Descuento (%)'
-                value={discountPercentage}
-                suffix={'%'}
-                customInput={TextField}
-                fullWidth
-                margin='normal'
-                onValueChange={(values) => {
-                  setDiscountPercentage(Number(values.value) || 0)
+            <Grid item xs={12} md={5}>
+              {sectionTitle('Resumen')}
+              <Box
+                sx={{
+                  border: '1px solid #e5e7eb',
+                  borderRadius: 2,
+                  p: 2
                 }}
-                decimalScale={2}
-                allowNegative={false}
-                disabled={
-                  isLoadingFiscalSettings || orderData.totalBeforeVAT === 0
-                }
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <NumericFormat
-                label='Descuento (Valor)'
-                value={orderData.discount}
-                thousandSeparator=','
-                decimalSeparator='.'
-                prefix={'$ '}
-                customInput={TextField}
-                fullWidth
-                margin='normal'
-                disabled
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <NumericFormat
-                label='IVA (valor)'
-                name='vat'
-                value={orderData.vat}
-                thousandSeparator=','
-                decimalSeparator='.'
-                prefix={'$ '}
-                customInput={TextField}
-                fullWidth
-                margin='normal'
-                disabled
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <NumericFormat
-                label='ReteFuente'
-                name='retefuente'
-                value={orderData.retefuente}
-                thousandSeparator=','
-                decimalSeparator='.'
-                prefix={'$ '}
-                customInput={TextField}
-                fullWidth
-                margin='normal'
-                disabled
-              />
-            </Grid>
-            <Grid item xs={12} sm={6} md={4}>
-              <NumericFormat
-                label='ReteICA / Otros'
-                name='retecree'
-                value={orderData.retecree}
-                thousandSeparator=','
-                decimalSeparator='.'
-                prefix={'$ '}
-                customInput={TextField}
-                fullWidth
-                margin='normal'
-                onValueChange={(values) => {
-                  setOrderData((prev) => ({
-                    ...prev,
-                    retecree: Number(values.value) || 0
-                  }))
-                }}
-                disabled={isLoadingFiscalSettings}
-              />
-            </Grid>
-            <Grid item xs={12} sx={{ mt: 2 }}>
-              <Typography variant='h6'>
-                Total Final:{' '}
-                {new Intl.NumberFormat('es-CO', {
-                  style: 'currency',
-                  currency: 'COP',
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0
-                }).format(Number(orderData.total) || 0)}
-              </Typography>
+              >
+                {summaryRow('Total antes de IVA', orderData.totalBeforeVAT)}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    py: 0.5,
+                    gap: 1
+                  }}
+                >
+                  <Typography variant='body2' color='text.secondary'>
+                    Descuento
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <NumericFormat
+                      value={discountPercentage}
+                      suffix={'%'}
+                      customInput={TextField}
+                      size='small'
+                      onValueChange={(values) => {
+                        setDiscountPercentage(Number(values.value) || 0)
+                      }}
+                      decimalScale={2}
+                      allowNegative={false}
+                      sx={{ width: 90 }}
+                      inputProps={{ 'aria-label': 'Descuento en porcentaje' }}
+                      disabled={
+                        isLoadingFiscalSettings ||
+                        orderData.totalBeforeVAT === 0
+                      }
+                    />
+                    <Typography variant='body2' sx={{ minWidth: 80 }} align='right'>
+                      {formatCOP(orderData.discount)}
+                    </Typography>
+                  </Box>
+                </Box>
+                {summaryRow('IVA', orderData.vat)}
+                {summaryRow('ReteFuente', orderData.retefuente)}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    py: 0.5,
+                    gap: 1
+                  }}
+                >
+                  <Typography variant='body2' color='text.secondary'>
+                    ReteICA / otros
+                  </Typography>
+                  <NumericFormat
+                    value={orderData.retecree}
+                    thousandSeparator=','
+                    decimalSeparator='.'
+                    prefix={'$ '}
+                    customInput={TextField}
+                    size='small'
+                    onValueChange={(values) => {
+                      setOrderData((prev) => ({
+                        ...prev,
+                        retecree: Number(values.value) || 0
+                      }))
+                    }}
+                    sx={{ width: 150 }}
+                    inputProps={{ 'aria-label': 'ReteICA u otros' }}
+                    disabled={isLoadingFiscalSettings}
+                  />
+                </Box>
+                <Divider sx={{ my: 1 }} />
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'baseline'
+                  }}
+                >
+                  <Typography variant='subtitle1' fontWeight={700}>
+                    Total final
+                  </Typography>
+                  <Typography variant='h6' fontWeight={700}>
+                    {formatCOP(orderData.total)}
+                  </Typography>
+                </Box>
+              </Box>
             </Grid>
           </Grid>
         )}
+      </DialogContent>
 
-        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-          <Button onClick={onClose} color='secondary' sx={{ mr: 1 }}>
-            Cancelar
-          </Button>
-          <Button
-            variant='contained'
-            color='primary'
-            onClick={handleSubmitOrder}
-            disabled={
-              !selectedSupplier ||
-              assignedItems.length === 0 ||
-              isLoadingFiscalSettings
-            }
-          >
-            Generar Orden
-          </Button>
-        </Box>
-      </Box>
-    </Modal>
+      <DialogActions sx={{ px: 3, py: 2 }}>
+        {blockedReason && (
+          <Typography variant='body2' color='text.secondary' sx={{ mr: 'auto' }}>
+            {blockedReason}
+          </Typography>
+        )}
+        <Button onClick={onClose} color='inherit'>
+          Cancelar
+        </Button>
+        <Button
+          variant='contained'
+          onClick={handleSubmitOrder}
+          disabled={!!blockedReason}
+          sx={{
+            bgcolor: PURCHASE_TEAL,
+            '&:hover': { bgcolor: PURCHASE_TEAL_HOVER }
+          }}
+        >
+          Generar orden
+        </Button>
+      </DialogActions>
+    </Dialog>
   )
 }
 

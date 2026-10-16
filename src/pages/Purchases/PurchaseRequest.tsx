@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import {
+  Avatar,
+  Box,
   Button,
   Chip,
   Grid,
@@ -9,10 +11,17 @@ import {
   Typography
 } from '@mui/material'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { AccessTime, Add, Cancel, CheckCircle } from '@mui/icons-material'
+import {
+  AccessTime,
+  Add,
+  Cancel,
+  CheckCircle,
+  ErrorOutline,
+  ListAlt,
+  ShoppingCart,
+  ShoppingCartCheckout
+} from '@mui/icons-material'
 import { PurchaseRequest as IPurchaseRequest } from './Types'
-import { MRT_Localization_ES } from 'material-react-table/locales/es'
-import CreatePurchaseRequestModal from 'src/Components/Purchases/PurchaseRequestModal'
 import { PurchaseRequestStatus } from './Enums'
 import { differenceInDays, format } from 'date-fns'
 
@@ -32,6 +41,15 @@ import {
   getModuleTableConfig
 } from '../../utils/tableStateUtils'
 import ActiveFiltersIndicator from '../../Components/Table/ActiveFiltersIndicator'
+import PurchasesPage from 'src/Components/Purchases/PurchasesPage'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import {
+  PURCHASE_TEAL,
+  PURCHASE_TEAL_HOVER,
+  purchaseTableStyle
+} from 'src/Components/Purchases/purchaseTableStyle'
+
+type QuickFilter = 'all' | 'pending' | 'toOrder' | 'late'
 
 import { PERMISSIONS } from 'src/constants/permissions'
 // Función para obtener las solicitudes de compra
@@ -71,8 +89,46 @@ const PurchaseRequest: React.FC = () => {
     fetchPurchaseRequests(axiosPrivate)
   )
 
-  const purchaseRequests = data?.purchaseRequests ?? []
+  const allRequests = data?.purchaseRequests ?? []
   const totalRecords = data?.count ?? 0
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>('all')
+
+  // Aprobadas (o pre-aprobadas) que todavía no tienen orden de compra
+  const needsOrder = (r: IPurchaseRequest) =>
+    (r.status === PurchaseRequestStatus.PreApproved ||
+      r.status === PurchaseRequestStatus.Accepted) &&
+    !r.hasOrder
+  const isLate = (r: IPurchaseRequest) =>
+    needsOrder(r) && differenceInDays(new Date(), new Date(r.createdAt)) > 7
+
+  const counts = useMemo(
+    () => ({
+      pending: allRequests.filter(
+        (r) => r.status === PurchaseRequestStatus.Pending
+      ).length,
+      toOrder: allRequests.filter(needsOrder).length,
+      late: allRequests.filter(isLate).length
+    }),
+    [allRequests]
+  )
+
+  const purchaseRequests = useMemo(() => {
+    switch (quickFilter) {
+      case 'pending':
+        return allRequests.filter(
+          (r) => r.status === PurchaseRequestStatus.Pending
+        )
+      case 'toOrder':
+        return allRequests.filter(needsOrder)
+      case 'late':
+        return allRequests.filter(isLate)
+      default:
+        return allRequests
+    }
+  }, [allRequests, quickFilter])
+
+  const toggleQuick = (value: QuickFilter) =>
+    setQuickFilter((current) => (current === value ? 'all' : value))
 
   const [modalOpen, setModalOpen] = useState(false)
   const [_, setProviders] = useState<any[]>([])
@@ -159,19 +215,77 @@ const PurchaseRequest: React.FC = () => {
 
   // Definir las columnas de la tabla
   const columns: MRT_ColumnDef<IPurchaseRequest>[] = [
-    { accessorKey: 'purchaseCode', header: 'Código' },
-    { accessorKey: 'elaborationDate', header: 'Fecha de Elaboración' },
-    { accessorKey: 'applicantName', header: 'Nombre del Solicitante' },
+    {
+      accessorKey: 'purchaseCode',
+      header: 'Código',
+      size: 150,
+      Cell: ({ cell }) => (
+        <Typography variant='body2' fontWeight={600} noWrap>
+          {cell.getValue<string>()}
+        </Typography>
+      )
+    },
+    {
+      accessorKey: 'elaborationDate',
+      header: 'Elaborada el',
+      size: 120,
+      Cell: ({ cell }) => {
+        const date = cell.getValue<string>()
+        return date ? format(new Date(date), 'dd/MM/yyyy') : 'N/A'
+      }
+    },
+    {
+      accessorKey: 'applicantName',
+      header: 'Solicitante',
+      size: 230,
+      Cell: ({ cell }) => {
+        const name = cell.getValue<string>() ?? ''
+        const initials = name
+          .split(' ')
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((word) => word[0])
+          .join('')
+          .toUpperCase()
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Avatar
+              sx={{
+                bgcolor: PURCHASE_TEAL,
+                width: 28,
+                height: 28,
+                fontSize: 12
+              }}
+            >
+              {initials}
+            </Avatar>
+            <Typography variant='body2' noWrap>
+              {name}
+            </Typography>
+          </Box>
+        )
+      }
+    },
     {
       accessorKey: 'purchaseType',
       header: 'Tipo',
+      size: 80,
       filterVariant: 'select',
-      filterSelectOptions: ['I', 'II']
-    }, // <-- Solo muestra coincidencias exactas
+      filterSelectOptions: ['I', 'II'],
+      Cell: ({ cell }) => (
+        <Chip
+          label={cell.getValue<string>()}
+          size='small'
+          variant='outlined'
+          sx={{ minWidth: 36, fontWeight: 600 }}
+        />
+      )
+    },
     // En tu archivo de columnas
     {
       accessorKey: 'status',
       header: 'Estado',
+      size: 230,
       Cell: ({ cell }) => {
         const status = cell.getValue() as PurchaseRequestStatus
         let color: 'warning' | 'success' | 'error'
@@ -224,9 +338,10 @@ const PurchaseRequest: React.FC = () => {
 
         const chipElement = (
           <Chip
-            label={status.toUpperCase()}
+            label={status.charAt(0).toUpperCase() + status.slice(1)}
             color={color}
-            sx={estilo}
+            variant='outlined'
+            sx={{ ...estilo, backgroundColor: 'transparent' }}
             size='small'
             icon={
               {
@@ -254,12 +369,29 @@ const PurchaseRequest: React.FC = () => {
           )
         }
 
+        const request = cell.row.original
+        if (isLate(request)) {
+          const days = differenceInDays(new Date(), new Date(request.createdAt))
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {chipElement}
+              <Chip
+                label={`Sin orden · ${days} días`}
+                size='small'
+                color='warning'
+                variant='outlined'
+              />
+            </Box>
+          )
+        }
+
         return chipElement
       }
     },
     {
       accessorKey: 'approvalDate',
-      header: 'Aprobado el',
+      header: 'Aprobada el',
+      size: 120,
       Cell: ({ cell }) => {
         const date = cell.getValue() as string
         return date ? format(new Date(date), 'dd/MM/yyyy') : 'N/A'
@@ -279,117 +411,135 @@ const PurchaseRequest: React.FC = () => {
 
   return (
     <>
-      <Typography variant='h5' sx={{ mb: 2 }}>
-        Solicitudes de Compra
-      </Typography>
-
-      {/* Active Filters Indicator */}
-      <ActiveFiltersIndicator
-        tableState={persistentTableState.tableState}
-        onClearFilters={persistentTableState.clearFilters}
-        showDetails={true}
-      />
-
-      <MaterialReactTable
-        columns={columns}
-        data={purchaseRequests}
-        state={{
-          isLoading,
-          ...tableHandlers.state
-        }}
-        onColumnFiltersChange={tableHandlers.onColumnFiltersChange}
-        onSortingChange={tableHandlers.onSortingChange}
-        onPaginationChange={tableHandlers.onPaginationChange}
-        localization={MRT_Localization_ES}
-        enableRowActions={true}
-        renderRowActions={({ row }) => (
-          <RenderRowActions
-            row={row}
-            queryClient={queryClient}
-            onEdit={() => handleOpenEditModal(row.original)}
-          />
-        )}
-        muiTableBodyRowProps={({ row }) => {
-          const { status, hasOrder, createdAt } = row.original
-
-          // La condición solo se aplica a solicitudes pre-aprobadas o aprobadas
-          const isEligibleForOrder =
-            status === PurchaseRequestStatus.PreApproved ||
-            status === PurchaseRequestStatus.Accepted
-
-          // Si no es elegible o ya tiene una orden, no se hace nada
-          if (!isEligibleForOrder || hasOrder) {
-            return {}
-          }
-
-          // Calculamos los días que han pasado desde la creación
-          const daysPast = differenceInDays(new Date(), new Date(createdAt))
-
-          // Si han pasado más de 7 días, aplicamos el estilo de advertencia
-          if (daysPast > 7) {
-            return {
-              sx: {
-                // Usamos un color ámbar/naranja con transparencia para la advertencia
-                backgroundColor: 'rgba(255, 193, 7, 0.15)',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 193, 7, 0.25)'
-                }
-              }
-            }
-          }
-
-          // Si no cumple la condición de días, no se aplica ningún estilo
-          return {}
-        }}
-        renderTopToolbarCustomActions={() =>
+      <PurchasesPage
+        title='Solicitudes de compra'
+        subtitle='Pide, aprueba y haz seguimiento de lo que necesita cada área'
+        icon={<ShoppingCart />}
+        actions={
           allowCreationRequest && (
-            <Grid container alignItems="center" spacing={1}>
-              <Grid item>
-                <Button
-                  variant='contained'
-                  size='small'
-                  onClick={handleOpenModal}
-                  startIcon={<Add />}
-                  sx={{
-                    backgroundColor: '#9CF08B',
-                    fontWeight: 'bold',
-                    color: '#2D4A27',
-                    '&:hover': {
-                      backgroundColor: '#6DC662'
-                    }
-                  }}
-                >
-                  Nuevo Solicitud de Compra
-                </Button>
-              </Grid>
-              <Grid item>
+            <>
+              <Tooltip title='Crear personal de compras'>
                 <IconButton
                   onClick={() => navigate('/purchases/personnel-management')}
-                  title='Crear nueva solicitud de compra'
-                  size='small'
+                  sx={{ color: PURCHASE_TEAL }}
                 >
-                  <Tooltip title='Crear personal de compras'>
-                    <FaUser />
-                  </Tooltip>
+                  <FaUser />
                 </IconButton>
-              </Grid>
-              <Grid item>
-                {/* Compact filter indicator in toolbar */}
-                <ActiveFiltersIndicator
-                  tableState={persistentTableState.tableState}
-                  onClearFilters={persistentTableState.clearFilters}
-                  compact={true}
-                />
-              </Grid>
-            </Grid>
+              </Tooltip>
+              <Button
+                variant='contained'
+                onClick={handleOpenModal}
+                startIcon={<Add />}
+                sx={{
+                  bgcolor: PURCHASE_TEAL,
+                  '&:hover': { bgcolor: PURCHASE_TEAL_HOVER }
+                }}
+              >
+                Nueva solicitud
+              </Button>
+            </>
           )
         }
-        muiTableBodyCellProps={{
-          sx: { textAlign: 'left' }
-        }}
-      />
+        stats={
+          <Grid container spacing={3} sx={{ mb: 3 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <LmsStatCard
+                label='Todas'
+                value={totalRecords}
+                icon={<ListAlt />}
+                tone='teal'
+                active={quickFilter === 'all'}
+                onClick={() => setQuickFilter('all')}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <LmsStatCard
+                label='Pendientes de aprobar'
+                value={counts.pending}
+                icon={<AccessTime />}
+                tone='orange'
+                active={quickFilter === 'pending'}
+                onClick={() => toggleQuick('pending')}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <LmsStatCard
+                label='Por generar orden'
+                value={counts.toOrder}
+                icon={<ShoppingCartCheckout />}
+                tone='blue'
+                active={quickFilter === 'toOrder'}
+                onClick={() => toggleQuick('toOrder')}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <LmsStatCard
+                label='Sin orden hace más de 7 días'
+                value={counts.late}
+                icon={<ErrorOutline />}
+                tone='red'
+                active={quickFilter === 'late'}
+                onClick={() => toggleQuick('late')}
+              />
+            </Grid>
+          </Grid>
+        }
+      >
+        <ActiveFiltersIndicator
+          tableState={persistentTableState.tableState}
+          onClearFilters={persistentTableState.clearFilters}
+          showDetails={true}
+        />
 
-      <CreatePurchaseRequestModal
+        <MaterialReactTable
+          {...purchaseTableStyle}
+          columns={columns}
+          data={purchaseRequests}
+          state={{
+            isLoading,
+            ...tableHandlers.state
+          }}
+          onColumnFiltersChange={tableHandlers.onColumnFiltersChange}
+          onSortingChange={tableHandlers.onSortingChange}
+          onPaginationChange={tableHandlers.onPaginationChange}
+          enableRowActions={true}
+          enablePinning
+          initialState={{
+            density: 'compact',
+            columnPinning: { right: ['mrt-row-actions'] }
+          }}
+          muiSearchTextFieldProps={{
+            ...purchaseTableStyle.muiSearchTextFieldProps,
+            placeholder: 'Buscar solicitudes...'
+          }}
+          renderRowActions={({ row }) => (
+            <RenderRowActions
+              row={row}
+              queryClient={queryClient}
+              onEdit={() => handleOpenEditModal(row.original)}
+            />
+          )}
+          muiTableBodyRowProps={({ row }) =>
+            isLate(row.original)
+              ? {
+                sx: {
+                  backgroundColor: 'rgba(255, 193, 7, 0.15)',
+                  '&:hover': { backgroundColor: 'rgba(255, 193, 7, 0.25)' }
+                }
+              }
+              : {}
+          }
+          renderTopToolbarCustomActions={() => (
+            <ActiveFiltersIndicator
+              tableState={persistentTableState.tableState}
+              onClearFilters={persistentTableState.clearFilters}
+              compact={true}
+            />
+          )}
+        />
+      </PurchasesPage>
+
+      <PurchaseRequestModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onSuccess={handleSuccess}

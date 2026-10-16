@@ -4,18 +4,33 @@ import MaterialReactTable, {
   MRT_Row
 } from 'material-react-table'
 import {
+  Avatar,
+  Box,
+  Grid,
   IconButton,
   Stack,
   TextField,
   Tooltip,
   Typography
 } from '@mui/material'
-import { format } from 'date-fns'
+import { format, isSameMonth } from 'date-fns'
 import { useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
-import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Link } from 'react-router-dom'
-import { Edit, Visibility } from '@mui/icons-material'
+import {
+  CalendarMonth,
+  Edit,
+  FactCheck,
+  ListAlt,
+  SpeakerNotes,
+  Visibility
+} from '@mui/icons-material'
+import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
+import PurchasesPage from 'src/Components/Purchases/PurchasesPage'
+import {
+  PURCHASE_TEAL,
+  purchaseTableStyle
+} from 'src/Components/Purchases/purchaseTableStyle'
 import { PurchaseVerification } from './Types'
 
 /* Interfaces de Tipos */
@@ -42,7 +57,8 @@ const PurchaseVerificationsTable: React.FC = () => {
     { accessorKey: 'id', header: 'Id', enableEditing: false, Edit: () => null },
     {
       accessorKey: 'receivedDate',
-      header: 'Fecha de Recibido',
+      header: 'Recibido el',
+      size: 120,
       enableEditing: true,
       Cell: ({ cell }) => {
         const dateStr = cell.getValue<string>()
@@ -72,36 +88,96 @@ const PurchaseVerificationsTable: React.FC = () => {
     },
     {
       accessorKey: 'invoiceNumber',
-      header: 'Número de Factura',
+      header: 'Factura',
+      size: 130,
       enableEditing: true
     },
     // Otras columnas de visualización, por ejemplo:
     {
       accessorFn: (row) => row.purchaseOrder.code,
-      header: 'Orden No',
+      header: 'Orden',
+      size: 160,
       enableEditing: false,
+      Cell: ({ cell }) => (
+        <Typography variant='body2' fontWeight={600} noWrap>
+          {cell.getValue<string>()}
+        </Typography>
+      ),
       Edit: () => null
     },
     {
       accessorFn: (row) => row.purchaseOrder.purchaseRequest.purchaseCode,
-      header: 'Solicitud No',
+      header: 'Solicitud',
+      size: 160,
       enableEditing: false,
       Edit: () => null
     },
     {
       accessorFn: (row) => row.observations || 'N/A',
-      header: 'Obervaciones',
+      header: 'Observaciones',
+      size: 300,
       enableEditing: true,
-      enableHiding: true
+      enableHiding: true,
+      Cell: ({ cell }) => {
+        const text = cell.getValue<string>()
+        return (
+          <Tooltip title={text} arrow placement='top-start'>
+            <Typography
+              variant='body2'
+              color={text === 'N/A' ? 'text.secondary' : 'text.primary'}
+              sx={{
+                maxWidth: 300,
+                whiteSpace: 'normal',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden'
+              }}
+            >
+              {text}
+            </Typography>
+          </Tooltip>
+        )
+      }
     },
     {
       accessorFn: (row) => row.verifiedBy || 'N/A',
-      header: 'Veirificado por',
-      enableEditing: true
+      header: 'Verificó',
+      size: 200,
+      enableEditing: true,
+      Cell: ({ cell }) => {
+        const name = cell.getValue<string>()
+        if (name === 'N/A') return name
+        const initials = name
+          .split(' ')
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((word) => word[0])
+          .join('')
+          .toUpperCase()
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Avatar
+              sx={{
+                bgcolor: PURCHASE_TEAL,
+                width: 28,
+                height: 28,
+                fontSize: 12
+              }}
+            >
+              {initials}
+            </Avatar>
+            <Typography variant='body2' noWrap>
+              {name}
+            </Typography>
+          </Box>
+        )
+      }
     },
     {
       accessorKey: 'dateVerified',
-      header: 'Fecha de Verificación',
+      header: 'Verificada el',
+      size: 120,
       enableEditing: true,
       Cell: ({ cell }) => {
         const dateStr = cell.getValue<string>()
@@ -160,28 +236,70 @@ const PurchaseVerificationsTable: React.FC = () => {
 
   if (isLoading) return <Typography variant='h6'>Cargando...</Typography>
 
+  const verifications = data ?? []
+  const now = new Date()
+  const thisMonth = verifications.filter(
+    (v) => v.receivedDate && isSameMonth(new Date(v.receivedDate), now)
+  ).length
+  const withNotes = verifications.filter(
+    (v) => v.observations && v.observations.trim() !== ''
+  ).length
+
   return (
-    <>
-      <Typography variant='h5' sx={{ mb: 2 }}>
-        Verificaciones
-      </Typography>
+    <PurchasesPage
+      title='Verificaciones'
+      subtitle='Revisa lo recibido contra cada orden de compra'
+      icon={<FactCheck />}
+      stats={
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={4}>
+            <LmsStatCard
+              label='Verificaciones'
+              value={verifications.length}
+              icon={<ListAlt />}
+              tone='teal'
+            />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <LmsStatCard
+              label='Recibidas este mes'
+              value={thisMonth}
+              icon={<CalendarMonth />}
+              tone='blue'
+            />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <LmsStatCard
+              label='Con observaciones'
+              value={withNotes}
+              icon={<SpeakerNotes />}
+              tone='orange'
+            />
+          </Grid>
+        </Grid>
+      }
+    >
       <MaterialReactTable
+        {...purchaseTableStyle}
         enableEditing
-        localization={MRT_Localization_ES}
         columns={columns}
         data={data ?? []}
         state={{ isLoading }}
         enablePagination
         enableSorting
         enableRowActions
+        enablePinning
         initialState={{
+          density: 'compact',
+          columnPinning: { right: ['mrt-row-actions'] },
           columnVisibility: {
             id: false,
             items: false
           }
         }}
-        muiTableBodyCellProps={{
-          sx: { textAlign: 'left' }
+        muiSearchTextFieldProps={{
+          ...purchaseTableStyle.muiSearchTextFieldProps,
+          placeholder: 'Buscar verificaciones...'
         }}
         renderRowActions={({ row, table }) => {
           return (
@@ -189,6 +307,7 @@ const PurchaseVerificationsTable: React.FC = () => {
               <Tooltip title='Editar'>
                 <IconButton
                   size='small'
+                  color='primary'
                   onClick={() => table.setEditingRow(row)}
                 >
                   <Edit />
@@ -196,7 +315,7 @@ const PurchaseVerificationsTable: React.FC = () => {
               </Tooltip>
               <Tooltip title='Ver'>
                 <Link to={`${row?.original?.id ?? ''}`}>
-                  <IconButton security='small'>
+                  <IconButton size='small' sx={{ color: PURCHASE_TEAL }}>
                     <Visibility />
                   </IconButton>
                 </Link>
@@ -206,7 +325,7 @@ const PurchaseVerificationsTable: React.FC = () => {
         }}
         onEditingRowSave={handleSave}
       />
-    </>
+    </PurchasesPage>
   )
 }
 

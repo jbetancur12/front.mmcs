@@ -7,9 +7,9 @@ import {
   MenuItem,
   InputAdornment,
   IconButton,
-  Grid
+  Tooltip
 } from '@mui/material'
-import { Add, Edit, Delete } from '@mui/icons-material'
+import { Add, Edit, DeleteOutline } from '@mui/icons-material'
 import {
   calibrationServiceRequirements,
   equipmentPurchaseRequirements,
@@ -100,12 +100,16 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = ({
   }
 
   return (
-    <Box sx={{ border: '1px solid #ddd', p: 2, borderRadius: 1 }}>
-      <Grid item xs={12} md={4} sx={{ mb: 2 }}>
+    <Box>
+      <Typography variant='subtitle1' fontWeight={700} sx={{ mb: 1.5 }}>
+        Requisitos
+      </Typography>
+      <Box sx={{ mb: 2, maxWidth: 360 }}>
         <TextField
           select
           fullWidth
-          label='Tipo de Requerimientos'
+          label='Tipo de requerimientos'
+          helperText='Elige un tipo para cargar los requisitos sugeridos'
           value={
             formData.purchaseType === 'II' && requirementType !== 'equipment'
               ? ''
@@ -129,20 +133,22 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = ({
             </MenuItem>
           ]}
         </TextField>
-      </Grid>
+      </Box>
 
       <TextField
         fullWidth
-        label='Agregar Requisito'
+        label='Agregar requisito'
         value={newRequirement}
         onChange={(e) => setNewRequirement(e.target.value)}
         onKeyPress={(e) => e.key === 'Enter' && addRequirement()}
         InputProps={{
           endAdornment: (
             <InputAdornment position='end'>
-              <IconButton onClick={addRequirement}>
-                <Add />
-              </IconButton>
+              <Tooltip title='Agregar requisito'>
+                <IconButton onClick={addRequirement} aria-label='Agregar requisito'>
+                  <Add />
+                </IconButton>
+              </Tooltip>
             </InputAdornment>
           )
         }}
@@ -181,22 +187,33 @@ const RequirementsSection: React.FC<RequirementsSectionProps> = ({
               </Typography>
             )}
 
-            <IconButton
-              size='small'
-              onClick={() => handleEditRequirement(index)}
-            >
-              <Edit fontSize='small' />
-            </IconButton>
+            <Tooltip title='Editar requisito'>
+              <IconButton
+                size='small'
+                color='primary'
+                onClick={() => handleEditRequirement(index)}
+                aria-label='Editar requisito'
+              >
+                <Edit fontSize='small' />
+              </IconButton>
+            </Tooltip>
 
-            <IconButton size='small' onClick={() => removeRequirement(index)}>
-              <Delete fontSize='small' color='error' />
-            </IconButton>
+            <Tooltip title='Quitar requisito'>
+              <IconButton
+                size='small'
+                color='error'
+                onClick={() => removeRequirement(index)}
+                aria-label='Quitar requisito'
+              >
+                <DeleteOutline fontSize='small' />
+              </IconButton>
+            </Tooltip>
           </Box>
         ))}
 
         {formData.requirements?.length === 0 && (
           <Typography variant='body2' sx={{ pt: 1, color: 'text.secondary' }}>
-            No se han agregado requisitos
+            Aún no hay requisitos
           </Typography>
         )}
       </Box>

@@ -293,7 +293,7 @@ const CalibrationServiceWorkspacePage = () => {
     isLoading: isLoadingSequenceConfig
   } = useCalibrationServiceSequenceConfig(canAccessWorkspace)
   const { data: service, isLoading: isLoadingService } = useCalibrationService(serviceId)
-  const { data: quoteTermsTemplate, isLoading: isLoadingTemplate } =
+  const { data: quoteTermsTemplate, isFetchedAfterMount: isTemplateFresh } =
     useCalibrationServiceQuoteTermsTemplate(canAccessWorkspace && !isEditing)
   const {
     createService,
@@ -500,7 +500,8 @@ const CalibrationServiceWorkspacePage = () => {
   }, [hydrated, service])
 
   useEffect(() => {
-    if (isEditing || templateHydratedRef.current || isLoadingTemplate || !quoteTermsTemplate?.terms) return
+    // Solo la respuesta pedida en este montaje: el caché puede traer una plantilla vieja
+    if (isEditing || templateHydratedRef.current || !isTemplateFresh || !quoteTermsTemplate?.terms) return
 
     templateHydratedRef.current = true
     setFormState((previous) => ({
@@ -510,7 +511,7 @@ const CalibrationServiceWorkspacePage = () => {
         stripHtml(quoteTermsTemplate.terms.commercialComments) ||
         previous.commercialComments
     }))
-  }, [isEditing, isLoadingTemplate, quoteTermsTemplate?.terms])
+  }, [isEditing, isTemplateFresh, quoteTermsTemplate?.terms])
 
   const customerOptions =
     customers.length > 0

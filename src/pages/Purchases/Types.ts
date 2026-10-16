@@ -162,6 +162,9 @@ export interface PurchaseOrderData extends PurchaseOrder {
   supplier: Supplier
   items: PurchaseOrderItem[]
   verified: boolean
+  sentAt?: string | null
+  sendDeadline?: string
+  sendOverdue?: boolean
 }
 
 export interface PurchaseVerification {

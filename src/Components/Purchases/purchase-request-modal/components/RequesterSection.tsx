@@ -53,8 +53,13 @@ const RequesterSection: React.FC<RequesterSectionProps> = ({
           renderInput={(params) => (
             <TextField
               {...params}
-              label='Nombre del Solicitante *'
+              label='Solicitante'
               required={!selectedRequester}
+              helperText={
+                formData.applicantPosition
+                  ? `Cargo: ${formData.applicantPosition}`
+                  : 'El cargo se completa al elegir el solicitante'
+              }
               InputProps={{
                 ...params.InputProps,
                 endAdornment: (
@@ -68,19 +73,6 @@ const RequesterSection: React.FC<RequesterSectionProps> = ({
               }}
             />
           )}
-        />
-      </Grid>
-
-      <Grid item xs={12} md={6}>
-        <TextField
-          fullWidth
-          label='Cargo del Solicitante *'
-          value={formData.applicantPosition || ''}
-          InputProps={{
-            readOnly: true
-          }}
-          InputLabelProps={{ shrink: !!formData.applicantPosition }}
-          required
         />
       </Grid>
     </>
