@@ -365,6 +365,18 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/customers/:id/schedule/pdf", label: "Clientes › Programación › PDF", kind: 'screen' },
     { path: "/customers/certificates-due/:id", label: "Clientes › certificates due", kind: 'screen' }
   ],
+  'customers:indicator:contracted_view': [
+    { path: "/customers/:id", label: "Empresas", kind: 'action' }
+  ],
+  'customers:indicator:goal_manage': [
+    { path: "/customers/:id", label: "Empresas", kind: 'action' }
+  ],
+  'customers:indicator:observations': [
+    { path: "/customers/:id", label: "Empresas", kind: 'action' }
+  ],
+  'customers:indicator:view': [
+    { path: "/customers/:id", label: "Empresas", kind: 'action' }
+  ],
   'customers:lms_course:manage': [
     { path: "/customers/:id", label: "Empresas", kind: 'action' }
   ],
@@ -376,6 +388,9 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   ],
   'customers:module_catalog:view': [
     { path: "/modules", label: "Módulos", kind: 'screen' }
+  ],
+  'customers:service:view_own': [
+    { path: "/customers/:id", label: "Empresas", kind: 'action' }
   ],
   'customers:site:manage': [
     { path: "/customers/:id", label: "Empresas", kind: 'action' },

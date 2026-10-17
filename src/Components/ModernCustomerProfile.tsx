@@ -48,9 +48,10 @@ import {
   Search,
   Clear,
   Edit,
-  HelpOutline,
   Add,
-  School
+  School,
+  Insights,
+  Assignment
 } from '@mui/icons-material'
 import { useStore } from '@nanostores/react'
 import { userStore } from '../store/userStore'
@@ -62,6 +63,9 @@ import TableUsersCustomer from './TableUsersCustomer'
 import Headquarters from './Headquarters'
 import CalibrationTimeline from './CalibrationTimeline'
 import Modules from './Modules'
+import ProfileStatCard from './Common/ProfileStatCard'
+import CustomerIndicatorsTab from './customerIndicators/CustomerIndicatorsTab'
+import CustomerServicesTab from './customerServices/CustomerServicesTab'
 import EquipmentCard from './EquipmentCard'
 import { CreateFileModal } from './TableFiles/CreateFileModal/CreateFileModal'
 
@@ -137,6 +141,8 @@ interface ApiResponse {
 type TabValue =
   | 'overview'
   | 'equipment'
+  | 'indicators'
+  | 'services'
   | 'headquarters'
   | 'schedule'
   | 'users'
@@ -473,6 +479,16 @@ const ModernCustomerProfile: React.FC = () => {
   const canViewModules = useCan(PERMISSIONS.CUSTOMERS_MODULE_VIEW)
   const canListCustomerUsers = useCan(PERMISSIONS.CUSTOMERS_USER_LIST)
   const canCreateFile = useCan(PERMISSIONS.CALIBRATION_FILE_CREATE)
+  const canViewIndicators = useCan(PERMISSIONS.CUSTOMERS_INDICATOR_VIEW)
+  const canViewServices = useCan(PERMISSIONS.CUSTOMERS_SERVICE_VIEW_OWN)
+  // El personal interno (sin empresa) siempre ve las pestañas; el cliente, solo con el módulo activo
+  const hasTecnovigilancia =
+    !$userStore.customer?.id ||
+    $userStore.customer.modules.some(
+      (m) => m.name === 'tecnovigilancia' && m.customerModules.isActive
+    )
+  const showIndicatorsTab = canViewIndicators && hasTecnovigilancia
+  const showServicesTab = canViewServices && hasTecnovigilancia
 
   // State
   const [activeTab, setActiveTab] = useState<TabValue>(() => {
@@ -480,6 +496,8 @@ const ModernCustomerProfile: React.FC = () => {
     const validTabs: TabValue[] = [
       'overview',
       'equipment',
+      'indicators',
+      'services',
       'headquarters',
       'schedule',
       'users',
@@ -788,15 +806,6 @@ const ModernCustomerProfile: React.FC = () => {
     [statusFilter, setSearchParams]
   )
 
-  const statusCardSx = (status: StatusFilter, color: string) => ({
-    borderRadius: '16px',
-    border: statusFilter === status ? `2px solid ${color}` : '1px solid #e5e7eb',
-    cursor: 'pointer',
-    transition: 'box-shadow 0.2s, transform 0.2s',
-    boxShadow: statusFilter === status ? `0 0 0 3px ${color}22` : 'none',
-    '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.1)', transform: 'translateY(-2px)' }
-  })
-
   const clearSearch = useCallback(() => {
     setSearchTerm('')
     setCurrentPage(1)
@@ -915,6 +924,8 @@ const ModernCustomerProfile: React.FC = () => {
   useEffect(() => {
     if (
       (activeTab === 'lmsCourses' && !canManageLmsCourses) ||
+      (activeTab === 'indicators' && !showIndicatorsTab) ||
+      (activeTab === 'services' && !showServicesTab) ||
       (activeTab === 'users' && !canListCustomerUsers) ||
       (activeTab === 'modules' && !canViewModules)
     ) {
@@ -925,6 +936,8 @@ const ModernCustomerProfile: React.FC = () => {
     canManageLmsCourses,
     canListCustomerUsers,
     canViewModules,
+    showIndicatorsTab,
+    showServicesTab,
     handleTabChange
   ])
 
@@ -1245,214 +1258,54 @@ const ModernCustomerProfile: React.FC = () => {
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={6} md={3}>
-          <Card
-            elevation={0}
-            sx={{ borderRadius: '16px', border: '1px solid #e5e7eb' }}
-          >
-            <CardContent sx={{ textAlign: 'center', py: 3 }}>
-              <Box
-                sx={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: '12px',
-                  backgroundColor: '#e3f2fd',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mx: 'auto',
-                  mb: 2
-                }}
-              >
-                <Devices sx={{ color: '#1976d2', fontSize: 24 }} />
-              </Box>
-              <Typography variant='h4' fontWeight='bold' color='primary'>
-                {stats.total}
-              </Typography>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 0.5
-                }}
-              >
-                <Typography variant='body2' color='text.secondary'>
-                  Total Equipos
-                </Typography>
-                <Tooltip
-                  title='Número total de equipos registrados para este cliente'
-                  arrow
-                >
-                  <HelpOutline
-                    sx={{
-                      fontSize: 16,
-                      color: 'text.secondary',
-                      cursor: 'help'
-                    }}
-                  />
-                </Tooltip>
-              </Box>
-            </CardContent>
-          </Card>
+          <ProfileStatCard
+            label='Total Equipos'
+            value={stats.total}
+            icon={<Devices />}
+            color='#1976d2'
+            background='#e3f2fd'
+            valueColor='primary.main'
+            help='Número total de equipos registrados para este cliente'
+          />
         </Grid>
-
         <Grid item xs={6} md={3}>
-          <Card
-            elevation={0}
+          <ProfileStatCard
+            label='Vencidos'
+            value={stats.expired}
+            icon={<Warning />}
+            color='#d32f2f'
+            background='#ffebee'
+            valueColor='error.main'
+            help='Calibraciones que ya han vencido y requieren atención inmediata'
+            selected={statusFilter === 'expired'}
             onClick={() => handleStatusFilter('expired')}
-            sx={statusCardSx('expired', '#d32f2f')}
-          >
-            <CardContent sx={{ textAlign: 'center', py: 3 }}>
-              <Box
-                sx={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: '12px',
-                  backgroundColor: '#ffebee',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mx: 'auto',
-                  mb: 2
-                }}
-              >
-                <Warning sx={{ color: '#d32f2f', fontSize: 24 }} />
-              </Box>
-              <Typography variant='h4' fontWeight='bold' color='error'>
-                {stats.expired}
-              </Typography>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 0.5
-                }}
-              >
-                <Typography variant='body2' color='text.secondary'>
-                  Vencidos
-                </Typography>
-                <Tooltip
-                  title='Calibraciones que ya han vencido y requieren atención inmediata'
-                  arrow
-                >
-                  <HelpOutline
-                    sx={{
-                      fontSize: 16,
-                      color: 'text.secondary',
-                      cursor: 'help'
-                    }}
-                  />
-                </Tooltip>
-              </Box>
-            </CardContent>
-          </Card>
+          />
         </Grid>
-
         <Grid item xs={6} md={3}>
-          <Card
-            elevation={0}
+          <ProfileStatCard
+            label='Próximos'
+            value={stats.upcoming}
+            icon={<Schedule />}
+            color='#f57c00'
+            background='#fff3e0'
+            valueColor='warning.main'
+            help='Calibraciones próximas a vencer (dentro de 30 días) que requieren programación'
+            selected={statusFilter === 'upcoming'}
             onClick={() => handleStatusFilter('upcoming')}
-            sx={statusCardSx('upcoming', '#f57c00')}
-          >
-            <CardContent sx={{ textAlign: 'center', py: 3 }}>
-              <Box
-                sx={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: '12px',
-                  backgroundColor: '#fff3e0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mx: 'auto',
-                  mb: 2
-                }}
-              >
-                <Schedule sx={{ color: '#f57c00', fontSize: 24 }} />
-              </Box>
-              <Typography variant='h4' fontWeight='bold' color='warning.main'>
-                {stats.upcoming}
-              </Typography>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 0.5
-                }}
-              >
-                <Typography variant='body2' color='text.secondary'>
-                  Próximos
-                </Typography>
-                <Tooltip
-                  title='Calibraciones próximas a vencer (dentro de 30 días) que requieren programación'
-                  arrow
-                >
-                  <HelpOutline
-                    sx={{
-                      fontSize: 16,
-                      color: 'text.secondary',
-                      cursor: 'help'
-                    }}
-                  />
-                </Tooltip>
-              </Box>
-            </CardContent>
-          </Card>
+          />
         </Grid>
-
         <Grid item xs={6} md={3}>
-          <Card
-            elevation={0}
+          <ProfileStatCard
+            label='Activos'
+            value={stats.active}
+            icon={<CheckCircle />}
+            color='#2e7d32'
+            background='#e8f5e8'
+            valueColor='success.main'
+            help='Calibraciones vigentes con más de 30 días restantes hasta su vencimiento'
+            selected={statusFilter === 'active'}
             onClick={() => handleStatusFilter('active')}
-            sx={statusCardSx('active', '#2e7d32')}
-          >
-            <CardContent sx={{ textAlign: 'center', py: 3 }}>
-              <Box
-                sx={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: '12px',
-                  backgroundColor: '#e8f5e8',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mx: 'auto',
-                  mb: 2
-                }}
-              >
-                <CheckCircle sx={{ color: '#2e7d32', fontSize: 24 }} />
-              </Box>
-              <Typography variant='h4' fontWeight='bold' color='success.main'>
-                {stats.active}
-              </Typography>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 0.5
-                }}
-              >
-                <Typography variant='body2' color='text.secondary'>
-                  Activos
-                </Typography>
-                <Tooltip
-                  title='Calibraciones vigentes con más de 30 días restantes hasta su vencimiento'
-                  arrow
-                >
-                  <HelpOutline
-                    sx={{
-                      fontSize: 16,
-                      color: 'text.secondary',
-                      cursor: 'help'
-                    }}
-                  />
-                </Tooltip>
-              </Box>
-            </CardContent>
-          </Card>
+          />
         </Grid>
       </Grid>
 
@@ -1506,6 +1359,22 @@ const ModernCustomerProfile: React.FC = () => {
             }
             iconPosition='start'
           />
+          {showIndicatorsTab && (
+            <Tab
+              value='indicators'
+              label='Indicadores'
+              icon={<Insights />}
+              iconPosition='start'
+            />
+          )}
+          {showServicesTab && (
+            <Tab
+              value='services'
+              label='Servicios'
+              icon={<Assignment />}
+              iconPosition='start'
+            />
+          )}
           <Tab
             value='headquarters'
             label='Sedes'
@@ -1985,6 +1854,12 @@ const ModernCustomerProfile: React.FC = () => {
             </Box>
           )}
 
+          {activeTab === 'indicators' && showIndicatorsTab && id && (
+            <CustomerIndicatorsTab customerId={id} />
+          )}
+          {activeTab === 'services' && showServicesTab && id && (
+            <CustomerServicesTab customerId={id} />
+          )}
           {activeTab === 'headquarters' && (
             <Box>
               <Typography variant='h5' fontWeight='bold' gutterBottom>
