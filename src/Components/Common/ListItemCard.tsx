@@ -3,7 +3,7 @@ import { Box, Paper, Stack, Typography } from '@mui/material'
 
 interface ListItemCardProps {
   /** Código o nombre del elemento, en negrita. */
-  title: string
+  title: React.ReactNode
   /** Empresa, cliente u otra referencia principal bajo el título. */
   subtitle?: string
   /** Dato que debe leerse de un vistazo (por ejemplo, un total). */
