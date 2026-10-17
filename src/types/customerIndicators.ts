@@ -1,0 +1,143 @@
+import { CalibrationServiceStatus } from 'src/types/calibrationService'
+
+/** Quién editó y cuándo. `updatedBy` solo llega al personal interno en la meta. */
+export interface IndicatorEditor {
+  id: number
+  name: string
+}
+
+export type IndicatorGoalMode = 'auto' | 'manual'
+
+export interface IndicatorGoal {
+  value: number
+  mode: IndicatorGoalMode
+  contracted: number
+  contractedServices: number
+  reason: string | null
+  updatedBy: IndicatorEditor | null
+  updatedAt: string | null
+}
+
+export interface IndicatorTypeRow {
+  /** Nombre normalizado: es el `sourceName` al crear un alias. */
+  key: string
+  label: string
+  contracted: number
+  calibrated: number
+  /** `null` si el tipo no tiene contratados. */
+  progressPct: number | null
+}
+
+export interface IndicatorObservations {
+  text: string | null
+  updatedBy: IndicatorEditor | null
+  updatedAt: string | null
+}
+
+export interface CustomerIndicators {
+  year: number
+  headquarter: string | null
+  goal: IndicatorGoal
+  calibrated: number
+  pending: number
+  /** `null` si no hay base para calcular ("Sin meta"). */
+  progressPct: number | null
+  lastCalibrationDate: string | null
+  byType: IndicatorTypeRow[]
+  observations: IndicatorObservations
+  availableYears: number[]
+  headquarters: string[]
+  /** Solo con sede filtrada. */
+  scope?: { contracted: number; contractedServices: number }
+}
+
+export interface ContractedServiceRow {
+  id: number
+  odsCode: string
+  quoteCode: string | null
+  odsGeneratedAt: string
+  status: CalibrationServiceStatus
+  scopeType: 'general' | 'site' | string
+  site: string | null
+  quoted: number
+  adjustmentsNet: number
+  pendingAdjustments: number
+  effective: number
+  documents: { ods: boolean; technicalProgress: number; adjustments: number }
+}
+
+export interface ContractedServicesResponse {
+  year: number
+  services: ContractedServiceRow[]
+  totals: {
+    services: number
+    quoted: number
+    adjustmentsNet: number
+    effective: number
+    pendingAdjustments: number
+  }
+}
+
+export interface SaveObservationsPayload {
+  customerId: number | string
+  year: number
+  text: string
+}
+
+export interface SaveObservationsResponse {
+  year: number
+  observations: IndicatorObservations
+}
+
+export type SaveGoalPayload =
+  | { customerId: number | string; year: number; mode: 'auto' }
+  | {
+      customerId: number | string
+      year: number
+      mode: 'manual'
+      manualGoal: number
+      reason: string
+    }
+
+export interface SaveGoalResponse {
+  year: number
+  goal: IndicatorGoal
+}
+
+export interface CreateTypeAliasPayload {
+  sourceName: string
+  targetName: string
+}
+
+export type CustomerServiceDocumentType =
+  | 'ods_pdf'
+  | 'technical_progress_pdf'
+  | 'adjustment_pdf'
+  | 'adjustment_summary_pdf'
+  | 'adjustment_customer_response_pdf'
+
+export interface CustomerServiceDocument {
+  id: number
+  type: CustomerServiceDocumentType
+  title: string
+  version: number
+  uploadedAt: string
+}
+
+export interface CustomerServiceSummary {
+  id: number
+  odsCode: string
+  odsGeneratedAt: string
+  status: CalibrationServiceStatus
+  site: string | null
+  quoted: number
+  adjustmentsNet: number
+  effective: number
+  documents: CustomerServiceDocument[]
+}
+
+export interface CustomerServicesResponse {
+  year: number | null
+  status: CalibrationServiceStatus | null
+  services: CustomerServiceSummary[]
+}

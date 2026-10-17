@@ -174,6 +174,16 @@ export const PERMISSIONS = {
   CUSTOMERS_MODULE_CATALOG_VIEW: 'customers:module_catalog:view',
   /** Crear módulos en el catálogo del sistema */
   CUSTOMERS_MODULE_CATALOG_MANAGE: 'customers:module_catalog:manage',
+  /** Ver los indicadores de calibración de una empresa (equipos contratados, calibrados y avance) y descargar el informe PDF del comité */
+  CUSTOMERS_INDICATOR_VIEW: 'customers:indicator:view',
+  /** Escribir las observaciones del año en los indicadores de calibración de una empresa */
+  CUSTOMERS_INDICATOR_OBSERVATIONS: 'customers:indicator:observations',
+  /** Ver el panel de servicios contratados (ODS, cotización y novedades) que origina la meta de los indicadores. Solo personal interno: incluye la cotización */
+  CUSTOMERS_INDICATOR_CONTRACTED_VIEW: 'customers:indicator:contracted_view',
+  /** Fijar o quitar la meta manual de un año y asociar nombres de ítems de ODS con tipos de equipo de los certificados */
+  CUSTOMERS_INDICATOR_GOAL_MANAGE: 'customers:indicator:goal_manage',
+  /** Ver los servicios de calibración con ODS de una empresa y descargar su ODS, avances técnicos y novedades (nunca precios ni cotización) */
+  CUSTOMERS_SERVICE_VIEW_OWN: 'customers:service:view_own',
   /** Ver los sensores de condiciones del laboratorio y su histórico */
   LABORATORY_DEVICE_VIEW: 'laboratory:device:view',
   /** Crear, editar y eliminar los sensores de condiciones del laboratorio */
