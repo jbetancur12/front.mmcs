@@ -474,6 +474,7 @@ const ModernCustomerProfile: React.FC = () => {
   // Cada elemento se muestra según la capacidad que el backend le pide a su endpoint
   const canManageLmsCourses = useCan(PERMISSIONS.CUSTOMERS_LMS_COURSE_MANAGE)
   const canManageCustomer = useCan(PERMISSIONS.CUSTOMERS_CUSTOMER_MANAGE)
+  const canViewCustomer = useCan(PERMISSIONS.CUSTOMERS_CUSTOMER_VIEW)
   const canUpdateCustomer = useCan(PERMISSIONS.CUSTOMERS_CUSTOMER_UPDATE)
   const canChangeAvatar = useCan(PERMISSIONS.CUSTOMERS_CUSTOMER_AVATAR)
   const canViewModules = useCan(PERMISSIONS.CUSTOMERS_MODULE_VIEW)
@@ -947,6 +948,7 @@ const ModernCustomerProfile: React.FC = () => {
       try {
         if (
           canManageCustomer ||
+          canViewCustomer ||
           id === String($userStore.customer.id)
         ) {
           setHasPermission(true)
@@ -968,7 +970,7 @@ const ModernCustomerProfile: React.FC = () => {
     return () => {
       setLoading(true)
     }
-  }, [id, canManageCustomer, $userStore.customer, navigate])
+  }, [id, canManageCustomer, canViewCustomer, $userStore.customer, navigate])
 
   // Solo para subir archivos (módulo de archivos, aún por rol)
 

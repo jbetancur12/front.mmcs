@@ -120,6 +120,9 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/customers/certificates-due/:id", label: "Clientes › certificates due", kind: 'action' },
     { path: "/fleet/:id/documents", label: "Flota › Documentos", kind: 'action' }
   ],
+  'calibration:file:customer_view': [
+    { path: "/customers/:id", label: "Empresas", kind: 'related' }
+  ],
   'calibration:file:delete': [
     { path: "/", label: "Dashboard", kind: 'action' },
     { path: "/calibraciones/certificados", label: "Calibraciones › Certificados", kind: 'action' },

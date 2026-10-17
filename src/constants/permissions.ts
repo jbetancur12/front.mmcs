@@ -290,6 +290,8 @@ export const PERMISSIONS = {
   CALIBRATION_FILE_CREATE: 'calibration:file:create',
   /** Listar los certificados y ver los próximos a vencer (el usuario de una empresa solo ve los de su empresa: el controlador filtra por customers:customer:manage) */
   CALIBRATION_FILE_LIST: 'calibration:file:list',
+  /** Ver los equipos y certificados de UNA empresa desde su ficha (lista, programación y PDF). El usuario de una empresa solo ve los de la suya; el personal sin empresa los de cualquiera */
+  CALIBRATION_FILE_CUSTOMER_VIEW: 'calibration:file:customer_view',
   /** Editar certificados y archivos de equipos, y cambiar su sede */
   CALIBRATION_FILE_UPDATE: 'calibration:file:update',
   /** Eliminar certificados y archivos de equipos */
