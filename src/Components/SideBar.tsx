@@ -4,10 +4,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { FaHospitalUser, FaUser } from 'react-icons/fa'
 import {
   MdMicrowave,
-  MdDashboard,
-  MdOutlineSettings,
-  MdAdminPanelSettings,
-  MdOutlineExtension
+  MdDashboard
 } from 'react-icons/md'
 import { BiSolidReport } from 'react-icons/bi'
 
@@ -451,33 +448,35 @@ const sidebarItems = ($userStore: UserData) => [
     ]
   },
   {
-    type: 'link',
-    label: 'Ajustes',
-    to: '/settings',
-    permission: PERMISSIONS.USERS_USER_LIST,
-    icon: <MdOutlineSettings className={iconClass} />,
-    roles: [ROLES.ADMIN],
-    moduleName: 'Basic'
-  },
-  {
-    type: 'link',
-    label: 'Roles y permisos',
-    to: '/settings/roles',
-    icon: <MdAdminPanelSettings className={iconClass} />,
-    // Por capacidad: lo ve quien el backend dice que tiene rbac:view
+    type: 'dropdown',
+    buttonText: 'Ajustes',
+    // Se ve si el usuario puede abrir al menos una de sus opciones
     roles: [] as string[],
-    permission: PERMISSIONS.RBAC_VIEW as PermissionKey,
-    moduleName: 'Basic'
-  },
-  {
-    type: 'link',
-    label: 'Módulos',
-    to: '/modules',
-    icon: <MdOutlineExtension className={iconClass} />,
-    // Mismo permiso que la ruta; abre la matriz de módulos por cliente
-    roles: [] as string[],
-    permission: PERMISSIONS.CUSTOMERS_MODULE_CATALOG_VIEW as PermissionKey,
-    moduleName: 'Basic'
+    permission: [
+      PERMISSIONS.USERS_USER_LIST,
+      PERMISSIONS.RBAC_VIEW,
+      PERMISSIONS.CUSTOMERS_MODULE_CATALOG_VIEW
+    ] as PermissionKey[],
+    moduleName: 'Basic',
+    pathData:
+      'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z',
+    menuItems: [
+      {
+        label: 'Usuarios',
+        url: 'settings',
+        permission: PERMISSIONS.USERS_USER_LIST
+      },
+      {
+        label: 'Roles y permisos',
+        url: 'settings/roles',
+        permission: PERMISSIONS.RBAC_VIEW
+      },
+      {
+        label: 'Módulos',
+        url: 'modules',
+        permission: PERMISSIONS.CUSTOMERS_MODULE_CATALOG_VIEW
+      }
+    ]
   }
   // Otros ítems...
 ]

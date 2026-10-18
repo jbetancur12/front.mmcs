@@ -385,14 +385,14 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   ],
   'customers:module:assign': [
     { path: "/customers/:id", label: "Empresas", kind: 'action' },
-    { path: "/modules", label: "Módulos", kind: 'action' }
+    { path: "/modules", label: "Ajustes › Módulos", kind: 'action' }
   ],
   'customers:module:view': [
     { path: "/customers/:id", label: "Empresas", kind: 'action' },
-    { path: "/modules", label: "Módulos", kind: 'action' }
+    { path: "/modules", label: "Ajustes › Módulos", kind: 'action' }
   ],
   'customers:module_catalog:view': [
-    { path: "/modules", label: "Módulos", kind: 'screen' }
+    { path: "/modules", label: "Ajustes › Módulos", kind: 'screen' }
   ],
   'customers:service:view_own': [
     { path: "/customers/:id", label: "Empresas", kind: 'action' }
@@ -764,10 +764,10 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/purchases/verifications", label: "Compras › Verificaciones", kind: 'screen' }
   ],
   'rbac:manage': [
-    { path: "/settings/roles", label: "Roles y permisos", kind: 'action' }
+    { path: "/settings/roles", label: "Ajustes › Roles y permisos", kind: 'action' }
   ],
   'rbac:view': [
-    { path: "/settings/roles", label: "Roles y permisos", kind: 'screen' }
+    { path: "/settings/roles", label: "Ajustes › Roles y permisos", kind: 'screen' }
   ],
   'repositories:repository:manage': [
     { path: "/", label: "Dashboard", kind: 'action' },
@@ -875,24 +875,24 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   ],
   'users:role:list': [
     { path: "/lms/admin/courses/:courseId/assignments", label: "Academia › Administración › Cursos › Asignaciones", kind: 'related' },
-    { path: "/settings", label: "Ajustes", kind: 'related' }
+    { path: "/settings", label: "Ajustes › Usuarios", kind: 'related' }
   ],
   'users:user:activation': [
-    { path: "/settings", label: "Ajustes", kind: 'action' },
+    { path: "/settings", label: "Ajustes › Usuarios", kind: 'action' },
     { path: "/customers/:id", label: "Empresas", kind: 'related' }
   ],
   'users:user:create': [
     { path: "/customers/:id", label: "Empresas", kind: 'action' },
-    { path: "/settings", label: "Ajustes", kind: 'action' },
+    { path: "/settings", label: "Ajustes › Usuarios", kind: 'action' },
     { path: "/users", label: "Usuarios", kind: 'related' }
   ],
   'users:user:delete': [
     { path: "/customers/:id", label: "Empresas", kind: 'action' },
-    { path: "/settings", label: "Ajustes", kind: 'action' },
+    { path: "/settings", label: "Ajustes › Usuarios", kind: 'action' },
     { path: "/users", label: "Usuarios", kind: 'related' }
   ],
   'users:user:list': [
-    { path: "/settings", label: "Ajustes", kind: 'screen' },
+    { path: "/settings", label: "Ajustes › Usuarios", kind: 'screen' },
     { path: "/lms", label: "Academia › Dashboard", kind: 'related' },
     { path: "/lms/admin", label: "Academia › Administración", kind: 'related' },
     { path: "/lms/admin/analytics", label: "Academia › Analíticas", kind: 'related' },
@@ -923,6 +923,6 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/users", label: "Usuarios", kind: 'related' }
   ],
   'users:user:update_internal': [
-    { path: "/settings", label: "Ajustes", kind: 'action' }
+    { path: "/settings", label: "Ajustes › Usuarios", kind: 'action' }
   ],
 }
