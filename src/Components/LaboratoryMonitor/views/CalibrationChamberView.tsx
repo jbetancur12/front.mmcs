@@ -30,6 +30,7 @@ import {
 import { ChamberTabs } from '../ChamberTabs'
 import { ChamberDetails } from '../ChamberDetails'
 import { AddChamberModal } from '../AddChamberModal'
+import { StabilitySimulator } from '../StabilitySimulator'
 
 // Importar funciones de API
 import {
@@ -49,6 +50,7 @@ import Swal from 'sweetalert2'
 import { PatternConfigModal } from '../PatternConfigModal'
 import { useDeviceNotifications } from '@utils/useDeviceNotifications'
 import LaboratoryMqttGuide from 'src/Components/LaboratoryMqttGuide'
+import { useStabilityAlerts } from '@hooks/useStabilityAlerts'
 
 // Función para generar el resumen de sensores
 export const generateSensorSummary = (
@@ -123,6 +125,9 @@ const CalibrationChamberView: React.FC = () => {
   } = useQuery<Chamber[], Error>(chambersQueryKey, () =>
     apiFetchChambers(axiosPrivate)
   )
+
+  // Avisos de estabilidad de todas las cámaras en calibración, se vean o no
+  const stability = useStabilityAlerts(chambers)
 
   useEffect(() => {
     if (selectedChamberId === null && chambers.length > 0) {
@@ -678,6 +683,12 @@ const CalibrationChamberView: React.FC = () => {
           <LaboratoryMqttGuide variant='patterns' />
         </Grid>
 
+        {import.meta.env.DEV && selectedChamber && (
+          <Grid item xs={12}>
+            <StabilitySimulator chamber={selectedChamber} />
+          </Grid>
+        )}
+
         <Grid item xs={12}>
           {chambers.length > 0 ? (
             <ChamberTabs
@@ -744,6 +755,9 @@ const CalibrationChamberView: React.FC = () => {
                 deleteChamberMutation.variables === selectedChamber.id
               }
               onConfigurePattern={handleOpenPatternConfigModal} // <--- NUEVA PROP
+              stabilityAlerts={stability.alerts}
+              onAcknowledgeStability={stability.acknowledge}
+              voice={stability.voice}
             />
           ) : (
             chambers.length > 0 && (

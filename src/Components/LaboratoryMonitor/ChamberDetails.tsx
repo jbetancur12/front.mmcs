@@ -1,5 +1,5 @@
 // src/Components/LaboratoryMonitor/ChamberDetails.tsx
-import React, { useEffect, useRef, useState } from 'react'
+import React from 'react'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 import {
@@ -24,12 +24,8 @@ import {
 import { PatternSection } from './PatternSection'
 import { SensorsSummaryTable } from './SensorsSummaryTable'
 import { Stop, VolumeOff, VolumeUp } from '@mui/icons-material'
-import { useVoiceAnnouncer } from '@hooks/useVoiceAnnouncer'
-import {
-  evaluateStabilityAlerts,
-  isPatternStable,
-  StabilityAlertState
-} from './stability'
+import type { useVoiceAnnouncer } from '@hooks/useVoiceAnnouncer'
+import { isPatternStable, StabilityAlertState } from './stability'
 
 // Se reexporta para no cambiar los imports de PatternItem y PatternSection
 export { isPatternStable }
@@ -63,6 +59,10 @@ interface ChamberDetailsProps {
   onDeleteChamber: (chamberId: string | number) => void // NUEVA PROP
   isDeletingChamber?: boolean
   onConfigurePattern: (pattern: Pattern) => void // <--- NUEVA PROP
+  // Avisos de estabilidad: se calculan para todas las cámaras en la vista
+  stabilityAlerts: Record<string, StabilityAlertState>
+  onAcknowledgeStability: (patternId: string | number) => void
+  voice: ReturnType<typeof useVoiceAnnouncer>
 }
 
 export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
@@ -87,53 +87,14 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
   onEditChamber,
   onDeleteChamber,
   isDeletingChamber = false,
-  onConfigurePattern
+  onConfigurePattern,
+  stabilityAlerts,
+  onAcknowledgeStability,
+  voice
 }) => {
   const canManage = useCan(PERMISSIONS.LABORATORY_CALIBRATION_MANAGE)
-  const {
-    announce,
-    enabled,
-    setEnabled,
-    needsClick,
-    supported,
-    noSpanishVoice,
-    test
-  } = useVoiceAnnouncer()
-  const [stabilityAlerts, setStabilityAlerts] = useState<
-    Record<string, StabilityAlertState>
-  >({})
-  // Fuente de verdad síncrona: evita avisar dos veces el mismo patrón
-  const alertsRef = useRef<Record<string, StabilityAlertState>>({})
-
-  const handleAcknowledgeStability = (patternId: string | number) => {
-    const next = {
-      ...alertsRef.current,
-      [patternId]: { ...alertsRef.current[patternId], acknowledged: true }
-    }
-    alertsRef.current = next
-    setStabilityAlerts(next)
-  }
-
-  useEffect(() => {
-    if (!chamber || chamber.status !== CHAMBER_STATUS.CALIBRATING) {
-      if (Object.keys(alertsRef.current).length > 0) {
-        alertsRef.current = {}
-        setStabilityAlerts({})
-      }
-      return
-    }
-    const result = evaluateStabilityAlerts(
-      chamber.patterns || [],
-      alertsRef.current,
-      chamber.name,
-      Date.now()
-    )
-    if (result.changed) {
-      alertsRef.current = result.alerts
-      setStabilityAlerts(result.alerts)
-    }
-    result.messages.forEach(announce)
-  }, [chamber, announce])
+  const { enabled, setEnabled, needsClick, supported, noSpanishVoice, test } =
+    voice
 
   if (isLoadingChamberData) {
     return (
@@ -324,7 +285,7 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
         isLoadingDeleteSensor={isLoadingDeleteSensor}
         onConfigurePattern={onConfigurePattern}
         stabilityAlerts={stabilityAlerts}
-        onAcknowledgeStability={handleAcknowledgeStability}
+        onAcknowledgeStability={onAcknowledgeStability}
       />
 
       <SensorsSummaryTable
