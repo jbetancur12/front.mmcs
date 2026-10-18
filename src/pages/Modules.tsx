@@ -13,9 +13,9 @@ type ModulesTab = 'catalogo' | 'clientes'
 const Modules = () => {
   const canViewCustomers = useCan(PERMISSIONS.CUSTOMERS_MODULE_VIEW)
   const [searchParams, setSearchParams] = useSearchParams()
-  // La pestaña va en la URL para poder enlazar directo a la matriz (?tab=clientes)
+  // Por defecto abre la matriz por cliente; el catálogo queda en ?tab=catalogo
   const tab: ModulesTab =
-    canViewCustomers && searchParams.get('tab') === 'clientes' ? 'clientes' : 'catalogo'
+    canViewCustomers && searchParams.get('tab') !== 'catalogo' ? 'clientes' : 'catalogo'
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
@@ -34,7 +34,7 @@ const Modules = () => {
           <Tabs
             value={tab}
             onChange={(_, value: ModulesTab) =>
-              setSearchParams(value === 'clientes' ? { tab: 'clientes' } : {}, { replace: true })
+              setSearchParams(value === 'catalogo' ? { tab: 'catalogo' } : {}, { replace: true })
             }
             TabIndicatorProps={{ sx: { bgcolor: '#00BFA5' } }}
             sx={{ '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 } }}

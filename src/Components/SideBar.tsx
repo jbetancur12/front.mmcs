@@ -6,7 +6,8 @@ import {
   MdMicrowave,
   MdDashboard,
   MdOutlineSettings,
-  MdAdminPanelSettings
+  MdAdminPanelSettings,
+  MdOutlineExtension
 } from 'react-icons/md'
 import { BiSolidReport } from 'react-icons/bi'
 
@@ -466,6 +467,16 @@ const sidebarItems = ($userStore: UserData) => [
     // Por capacidad: lo ve quien el backend dice que tiene rbac:view
     roles: [] as string[],
     permission: PERMISSIONS.RBAC_VIEW as PermissionKey,
+    moduleName: 'Basic'
+  },
+  {
+    type: 'link',
+    label: 'Módulos',
+    to: '/modules',
+    icon: <MdOutlineExtension className={iconClass} />,
+    // Mismo permiso que la ruta; abre la matriz de módulos por cliente
+    roles: [] as string[],
+    permission: PERMISSIONS.CUSTOMERS_MODULE_CATALOG_VIEW as PermissionKey,
     moduleName: 'Basic'
   }
   // Otros ítems...
