@@ -758,6 +758,7 @@ const CalibrationChamberView: React.FC = () => {
               stabilityAlerts={stability.alerts}
               onAcknowledgeStability={stability.acknowledge}
               voice={stability.voice}
+              desktop={stability.desktop}
             />
           ) : (
             chambers.length > 0 && (

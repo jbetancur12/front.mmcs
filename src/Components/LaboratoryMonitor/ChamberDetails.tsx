@@ -25,6 +25,8 @@ import { PatternSection } from './PatternSection'
 import { SensorsSummaryTable } from './SensorsSummaryTable'
 import { Stop, VolumeOff, VolumeUp } from '@mui/icons-material'
 import type { useVoiceAnnouncer } from '@hooks/useVoiceAnnouncer'
+import type { useDesktopNotifications } from '@hooks/useDesktopNotifications'
+import { NotificationsActive, NotificationsOff } from '@mui/icons-material'
 import { isPatternStable, StabilityAlertState } from './stability'
 
 // Se reexporta para no cambiar los imports de PatternItem y PatternSection
@@ -63,6 +65,7 @@ interface ChamberDetailsProps {
   stabilityAlerts: Record<string, StabilityAlertState>
   onAcknowledgeStability: (patternId: string | number) => void
   voice: ReturnType<typeof useVoiceAnnouncer>
+  desktop: ReturnType<typeof useDesktopNotifications>
 }
 
 export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
@@ -90,7 +93,8 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
   onConfigurePattern,
   stabilityAlerts,
   onAcknowledgeStability,
-  voice
+  voice,
+  desktop
 }) => {
   const canManage = useCan(PERMISSIONS.LABORATORY_CALIBRATION_MANAGE)
   const { enabled, setEnabled, needsClick, supported, noSpanishVoice, test } =
@@ -195,6 +199,47 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
                         ? 'Avisos de voz activos'
                         : 'Avisos de voz silenciados'}
                   </Button>
+                </Tooltip>
+              )}
+              {isCalibrating && desktop.permission !== 'unsupported' && (
+                <Tooltip
+                  title={
+                    desktop.permission === 'denied'
+                      ? 'El navegador las bloqueó. Habilítalas en la configuración del sitio.'
+                      : desktop.permission === 'granted'
+                        ? 'Avisa con una notificación del sistema cuando la pantalla no está a la vista'
+                        : 'Recibe un aviso del sistema aunque estés en otro programa'
+                  }
+                >
+                  <span>
+                    <Button
+                      size='small'
+                      color={
+                        desktop.permission === 'default' ? 'warning' : 'inherit'
+                      }
+                      startIcon={
+                        desktop.permission === 'granted' ? (
+                          <NotificationsActive />
+                        ) : (
+                          <NotificationsOff />
+                        )
+                      }
+                      onClick={desktop.request}
+                      disabled={desktop.permission !== 'default'}
+                      sx={{
+                        color:
+                          desktop.permission === 'default'
+                            ? undefined
+                            : '#4b5563'
+                      }}
+                    >
+                      {desktop.permission === 'granted'
+                        ? 'Notificaciones activas'
+                        : desktop.permission === 'denied'
+                          ? 'Notificaciones bloqueadas'
+                          : 'Activar notificaciones'}
+                    </Button>
+                  </span>
                 </Tooltip>
               )}
             </Box>

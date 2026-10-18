@@ -68,9 +68,18 @@ export const isPatternStable = (pattern: Pattern): boolean => {
   })
 }
 
+export interface StabilityEvent {
+  kind: 'stable' | 'reminder'
+  patternId: string
+  patternName: string
+  chamberName: string
+  message: string
+}
+
 export interface StabilityEvaluation {
   alerts: Record<string, StabilityAlertState>
   messages: string[]
+  events: StabilityEvent[]
   changed: boolean
 }
 
@@ -89,6 +98,7 @@ export const evaluateStabilityAlerts = (
 ): StabilityEvaluation => {
   const alerts = { ...current }
   const messages: string[] = []
+  const events: StabilityEvent[] = []
   let changed = false
 
   patterns.forEach((pattern) => {
@@ -101,9 +111,15 @@ export const evaluateStabilityAlerts = (
       return
     }
     if (!existing) {
-      messages.push(
-        `Atención. El patrón ${pattern.name} en la cámara ${chamberName} ha alcanzado la estabilidad.`
-      )
+      const message = `Atención. El patrón ${pattern.name} en la cámara ${chamberName} ha alcanzado la estabilidad.`
+      messages.push(message)
+      events.push({
+        kind: 'stable',
+        patternId: pattern.id,
+        patternName: pattern.name,
+        chamberName,
+        message
+      })
       alerts[pattern.id] = { count: 1, timestamp: now, acknowledged: false }
       changed = true
       return
@@ -113,9 +129,15 @@ export const evaluateStabilityAlerts = (
       existing.count < MAX_VOICE_ALERTS &&
       now - existing.timestamp > REMINDER_INTERVAL_MS
     ) {
-      messages.push(
-        `Recordatorio: El patrón ${pattern.name} se mantiene estable.`
-      )
+      const message = `Recordatorio: El patrón ${pattern.name} se mantiene estable.`
+      messages.push(message)
+      events.push({
+        kind: 'reminder',
+        patternId: pattern.id,
+        patternName: pattern.name,
+        chamberName,
+        message
+      })
       alerts[pattern.id] = {
         ...existing,
         count: existing.count + 1,
@@ -125,5 +147,5 @@ export const evaluateStabilityAlerts = (
     }
   })
 
-  return { alerts: changed ? alerts : current, messages, changed }
+  return { alerts: changed ? alerts : current, messages, events, changed }
 }

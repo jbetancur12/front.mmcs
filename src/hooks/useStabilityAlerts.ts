@@ -2,9 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Chamber, CHAMBER_STATUS } from 'src/Components/LaboratoryMonitor/types'
 import {
   evaluateStabilityAlerts,
-  StabilityAlertState
+  StabilityAlertState,
+  StabilityEvent
 } from 'src/Components/LaboratoryMonitor/stability'
 import { useVoiceAnnouncer } from './useVoiceAnnouncer'
+import { useDesktopNotifications } from './useDesktopNotifications'
 
 type Alerts = Record<string, StabilityAlertState>
 
@@ -16,6 +18,8 @@ type Alerts = Record<string, StabilityAlertState>
 export const useStabilityAlerts = (chambers: Chamber[]) => {
   const voice = useVoiceAnnouncer()
   const { announce } = voice
+  const desktop = useDesktopNotifications()
+  const { notify } = desktop
   const [alerts, setAlerts] = useState<Alerts>({})
   // Fuente de verdad síncrona: evita avisar dos veces el mismo patrón
   const alertsRef = useRef<Alerts>({})
@@ -24,6 +28,7 @@ export const useStabilityAlerts = (chambers: Chamber[]) => {
     let next = alertsRef.current
     let changed = false
     const messages: string[] = []
+    const events: StabilityEvent[] = []
 
     chambers.forEach((chamber) => {
       const patterns = chamber.patterns || []
@@ -49,6 +54,7 @@ export const useStabilityAlerts = (chambers: Chamber[]) => {
         changed = true
       }
       messages.push(...result.messages)
+      events.push(...result.events)
     })
 
     if (changed) {
@@ -56,7 +62,31 @@ export const useStabilityAlerts = (chambers: Chamber[]) => {
       setAlerts(next)
     }
     messages.forEach(announce)
-  }, [chambers, announce])
+    events.forEach((event) =>
+      notify(
+        event.kind === 'stable' ? 'Patrón estable' : 'Patrón sigue estable',
+        `${event.patternName} · ${event.chamberName}`,
+        `lab-stable-${event.patternId}`
+      )
+    )
+  }, [chambers, announce, notify])
+
+  // Título de la pestaña: se ve aunque la pestaña esté oculta
+  const originalTitle = useRef<string | null>(null)
+  const pending = Object.values(alerts).filter((a) => !a.acknowledged).length
+  useEffect(() => {
+    if (originalTitle.current === null) originalTitle.current = document.title
+    document.title =
+      pending > 0
+        ? `● ${pending === 1 ? 'Patrón estable' : `${pending} patrones estables`} · ${originalTitle.current}`
+        : originalTitle.current
+  }, [pending])
+  useEffect(
+    () => () => {
+      if (originalTitle.current !== null) document.title = originalTitle.current
+    },
+    []
+  )
 
   const acknowledge = useCallback((patternId: string | number) => {
     const next = {
@@ -67,5 +97,5 @@ export const useStabilityAlerts = (chambers: Chamber[]) => {
     setAlerts(next)
   }, [])
 
-  return { alerts, acknowledge, voice }
+  return { alerts, acknowledge, voice, desktop }
 }
