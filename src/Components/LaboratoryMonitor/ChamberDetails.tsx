@@ -97,8 +97,15 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
   desktop
 }) => {
   const canManage = useCan(PERMISSIONS.LABORATORY_CALIBRATION_MANAGE)
-  const { enabled, setEnabled, needsClick, supported, noSpanishVoice, test } =
-    voice
+  const {
+    enabled,
+    setEnabled,
+    needsClick,
+    supported,
+    noSpanishVoice,
+    naturalVoice,
+    test
+  } = voice
 
   if (isLoadingChamberData) {
     return (
@@ -243,6 +250,20 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
                 </Tooltip>
               )}
             </Box>
+            {/* Solo con la voz activa y si la voz actual no es neuronal */}
+            {isCalibrating &&
+              enabled &&
+              !needsClick &&
+              supported &&
+              naturalVoice === false && (
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{ display: 'block', mt: 0.5 }}
+                >
+                  Tip: en Microsoft Edge los avisos de voz suenan más naturales.
+                </Typography>
+              )}
           </Box>
           {/* Iniciar/Detener exigen permiso de gestión en el backend */}
           {canManage && (

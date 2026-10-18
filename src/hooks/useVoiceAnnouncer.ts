@@ -29,17 +29,24 @@ const loadVoices = (): Promise<SpeechSynthesisVoice[]> =>
     window.setTimeout(done, 1500) // Si nunca carga, se sigue sin voz elegida
   })
 
-const pickSpanishVoice = (voices: SpeechSynthesisVoice[]) => {
-  const spanish = voices.filter((voice) =>
-    voice.lang.toLowerCase().replace('_', '-').startsWith('es')
-  )
-  // Se prefiere español de Colombia o Latinoamérica antes que el de España
-  return (
-    spanish.find((v) => /^es-co/i.test(v.lang)) ??
-    spanish.find((v) => /^es-(mx|us|419|ar|cl|pe)/i.test(v.lang)) ??
-    spanish[0]
-  )
+// Puntaje de una voz en español: mejor país, y mejor aún si es neuronal
+// (Edge ofrece "Microsoft Salome Online (Natural)" para es-CO sin instalar nada)
+const voiceScore = (voice: SpeechSynthesisVoice) => {
+  const lang = voice.lang.toLowerCase().replace('_', '-')
+  let score = 0
+  if (lang.startsWith('es-co')) score += 30
+  else if (/^es-(mx|us|419|ar|cl|pe|ve|ec|uy)/.test(lang)) score += 20
+  else score += 10 // es-ES u otro español
+  if (/natural|neural|online/i.test(voice.name)) score += 100
+  return score
 }
+
+const pickSpanishVoice = (voices: SpeechSynthesisVoice[]) =>
+  voices
+    .filter((voice) =>
+      voice.lang.toLowerCase().replace('_', '-').startsWith('es')
+    )
+    .sort((a, b) => voiceScore(b) - voiceScore(a))[0]
 
 // Dos pitidos cortos: respaldo cuando la voz no está disponible o fue bloqueada
 const beep = () => {
@@ -81,6 +88,8 @@ export const useVoiceAnnouncer = () => {
         false
   )
   const [noSpanishVoice, setNoSpanishVoice] = useState(false)
+  // null = aún no se sabe; true si la voz elegida es neuronal (p. ej. en Edge)
+  const [naturalVoice, setNaturalVoice] = useState<boolean | null>(null)
   const enabledRef = useRef(enabled)
   const queueRef = useRef<string[]>([])
   const speakingRef = useRef(false)
@@ -122,6 +131,16 @@ export const useVoiceAnnouncer = () => {
       window.speechSynthesis.speak(utterance)
     })
   }, [])
+
+  useEffect(() => {
+    if (!supported) return
+    loadVoices().then((voices) => {
+      const chosen = pickSpanishVoice(voices)
+      setNaturalVoice(
+        chosen ? /natural|neural|online/i.test(chosen.name) : null
+      )
+    })
+  }, [supported])
 
   // El primer clic en la página desbloquea la voz y suelta los avisos pendientes
   useEffect(() => {
@@ -177,6 +196,7 @@ export const useVoiceAnnouncer = () => {
     needsClick,
     supported,
     noSpanishVoice,
+    naturalVoice,
     test
   }
 }
