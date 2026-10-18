@@ -46,7 +46,7 @@ export const SensorDataTable: React.FC<SensorDataTableProps> = ({
       variant='outlined'
       sx={{ maxHeight: 300, borderColor: '#e5e7eb', borderRadius: '8px' }}
     >
-      <Table stickyHeader size='small' aria-label='tabla de datos del sensor'>
+      <Table stickyHeader size='small' sx={{ '& td, & th': { whiteSpace: 'nowrap' } }} aria-label='tabla de datos del sensor'>
         <TableHead>
           <TableRow sx={{ '& th': { bgcolor: '#f5f5f5', fontWeight: 600 } }}>
             <TableCell>Hora</TableCell>

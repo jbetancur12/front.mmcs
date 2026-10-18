@@ -24,6 +24,8 @@ import EmptyState from 'src/Components/Common/EmptyState'
 
 // Ajusta ruta a tipos
 import { Sensor, CHAMBER_STATUS, ChamberStatus, Pattern } from './types'
+import { getStaleSensorIds } from './stability'
+import StatusPill from 'src/Components/Common/StatusPill'
 import { SensorDataTable } from './SensorDataTable'
 import { SensorRealtimeChart } from './SensorRealtimeChart'
 
@@ -39,7 +41,8 @@ export const SensorItem: React.FC<SensorItemProps> = ({
   sensor: sensorProp,
   chamberStatus, // <= Recibir estado
   onDeleteSensor,
-  isLoadingDelete = false
+  isLoadingDelete = false,
+  pattern
 }) => {
   const canManage = useCan(PERMISSIONS.LABORATORY_CALIBRATION_MANAGE)
   // Desestructurar el sensor que viene de React Query (actualizado por WS)
@@ -57,6 +60,8 @@ export const SensorItem: React.FC<SensorItemProps> = ({
 
   const isCalibrating = chamberStatus === CHAMBER_STATUS.CALIBRATING
   const hasHumidity = type.includes('humidity')
+  // Solo importa mientras se calibra: fuera de calibración los sensores pueden callar
+  const isStale = isCalibrating && getStaleSensorIds(pattern).has(sensorId)
 
   const handleAccordionChange = (
     _event: React.SyntheticEvent,
@@ -81,7 +86,9 @@ export const SensorItem: React.FC<SensorItemProps> = ({
     >
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}
-        sx={{ '&:focus-visible': { outline: '3px solid #00897B', outlineOffset: -3 } }}
+        sx={{
+          '&:focus-visible': { outline: '3px solid #00897B', outlineOffset: -3 }
+        }}
       >
         {/* La lectura vive en la fila cerrada: se ve sin abrir cada sensor */}
         <Box
@@ -94,10 +101,25 @@ export const SensorItem: React.FC<SensorItemProps> = ({
             pr: 1
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: '1 1 140px', minWidth: 0 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              flex: '1 1 140px',
+              minWidth: 0
+            }}
+          >
             <Typography variant='subtitle2' fontWeight={700} noWrap>
               {name}
             </Typography>
+            {isStale && (
+              <MuiTooltip title='Este sensor lleva más tiempo sin reportar que los demás del patrón. No cuenta para la estabilidad.'>
+                <span>
+                  <StatusPill label='Sin señal' tone='warning' size='small' />
+                </span>
+              </MuiTooltip>
+            )}
             {showGraph && (
               <MuiTooltip title='Gráfica activada'>
                 <ShowChartIcon sx={{ fontSize: 18, color: '#9ca3af' }} />
@@ -144,7 +166,9 @@ export const SensorItem: React.FC<SensorItemProps> = ({
           )}
         </Box>
       </AccordionSummary>
-      <AccordionDetails sx={{ bgcolor: '#fafafa', p: 2, borderTop: '1px solid #e5e7eb' }}>
+      <AccordionDetails
+        sx={{ bgcolor: '#fafafa', p: 2, borderTop: '1px solid #e5e7eb' }}
+      >
         {/* Mostrar sección de gráfica y tabla si showGraph es true */}
         {!showGraph ? (
           <EmptyState

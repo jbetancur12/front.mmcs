@@ -23,21 +23,17 @@ import {
 } from './types'
 import { PatternSection } from './PatternSection'
 import { SensorsSummaryTable } from './SensorsSummaryTable'
-import { Stop } from '@mui/icons-material'
+import { Stop, VolumeOff, VolumeUp } from '@mui/icons-material'
+import { useVoiceAnnouncer } from '@hooks/useVoiceAnnouncer'
+import {
+  evaluateStabilityAlerts,
+  isPatternStable,
+  StabilityAlertState
+} from './stability'
 
-function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T>()
-  useEffect(() => {
-    ref.current = value
-  })
-  return ref.current
-}
-
-export interface StabilityAlertState {
-  count: number // Cuántas veces se ha notificado por voz
-  timestamp: number // Cuándo se hizo la primera notificación
-  acknowledged: boolean // Si el usuario ya la reconoció
-}
+// Se reexporta para no cambiar los imports de PatternItem y PatternSection
+export { isPatternStable }
+export type { StabilityAlertState }
 
 interface ChamberDetailsProps {
   chamber: Chamber | null // Puede ser null si no hay ninguna seleccionada o está cargando
@@ -69,30 +65,6 @@ interface ChamberDetailsProps {
   onConfigurePattern: (pattern: Pattern) => void // <--- NUEVA PROP
 }
 
-export const isPatternStable = (pattern: Pattern): boolean => {
-  if (!pattern || !pattern.sensors || pattern.sensors.length === 0) {
-    return false // No es estable si no tiene sensores
-  }
-  // 'every' se asegura de que TODOS los sensores del patrón cumplan la condición
-  return pattern.sensors.every((sensor) => {
-    const status = sensor.stabilityStatus || {
-      temperatureStable: false,
-      humidityStable: false
-    }
-    // Lógica corregida para evitar el error de tipos
-    if (sensor.type === 'temperature_humidity') {
-      return status.temperatureStable && status.humidityStable
-    }
-    if (sensor.type === 'temperature_only') {
-      return status.temperatureStable
-    }
-    if (sensor.type === 'humidity_only') {
-      return status.humidityStable
-    }
-    return false // Por defecto, si el tipo no es conocido, no es estable
-  })
-}
-
 export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
   chamber,
   patterns,
@@ -118,90 +90,43 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
   onConfigurePattern
 }) => {
   const canManage = useCan(PERMISSIONS.LABORATORY_CALIBRATION_MANAGE)
-  const speak = (message: string) => {
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(message)
-    utterance.lang = 'es-ES '
-    utterance.rate = 0.9
-    window.speechSynthesis.speak(utterance)
-  }
-
-  const prevChamberState = usePrevious(chamber)
+  const { announce, enabled, setEnabled, needsClick, supported, test } =
+    useVoiceAnnouncer()
   const [stabilityAlerts, setStabilityAlerts] = useState<
     Record<string, StabilityAlertState>
   >({})
+  // Fuente de verdad síncrona: evita avisar dos veces el mismo patrón
+  const alertsRef = useRef<Record<string, StabilityAlertState>>({})
 
   const handleAcknowledgeStability = (patternId: string | number) => {
-    setStabilityAlerts((prev) => ({
-      ...prev,
-      [patternId]: {
-        ...prev[patternId], // Mantener count y timestamp por si quieres usarlos
-        acknowledged: true // Marcar como reconocida para silenciar futuras alertas de voz
-      }
-    }))
+    const next = {
+      ...alertsRef.current,
+      [patternId]: { ...alertsRef.current[patternId], acknowledged: true }
+    }
+    alertsRef.current = next
+    setStabilityAlerts(next)
   }
 
   useEffect(() => {
-    if (!prevChamberState || chamber?.status !== CHAMBER_STATUS.CALIBRATING) {
+    if (!chamber || chamber.status !== CHAMBER_STATUS.CALIBRATING) {
+      if (Object.keys(alertsRef.current).length > 0) {
+        alertsRef.current = {}
+        setStabilityAlerts({})
+      }
       return
     }
-
-    const now = Date.now()
-    const oneMinuteInMs = 60 * 1000
-    const MAX_VOICE_ALERTS = 2 // Definir el número máximo de notificaciones de voz
-
-    ;(chamber.patterns || []).forEach((currentPattern) => {
-      const prevPattern = (prevChamberState.patterns || []).find(
-        (p) => p.id === currentPattern.id
-      )
-      if (!prevPattern) return
-
-      const wasStable = isPatternStable(prevPattern)
-      const isNowStable = isPatternStable(currentPattern)
-      const alertStatus = stabilityAlerts[currentPattern.id]
-
-      // --- LÓGICA DE NOTIFICACIÓN ---
-
-      // 1. SI ACABA DE VOLVERSE ESTABLE: Notificar por primera vez
-      if (!wasStable && isNowStable) {
-        speak(
-          `Atención. El patrón ${currentPattern.name} en la cámara ${chamber.name} ha alcanzado la estabilidad.`
-        )
-        setStabilityAlerts((prev) => ({
-          ...prev,
-          [currentPattern.id]: { count: 1, timestamp: now, acknowledged: false }
-        }))
-      }
-      // 2. SI SIGUE ESTABLE: Comprobar si se debe repetir la notificación
-      else if (isNowStable && alertStatus) {
-        // Solo notificar si NO ha sido reconocida Y no hemos alcanzado el límite
-        if (!alertStatus.acknowledged && alertStatus.count < MAX_VOICE_ALERTS) {
-          // Y si ha pasado más de un minuto
-          if (now - alertStatus.timestamp > oneMinuteInMs) {
-            speak(
-              `Recordatorio: El patrón ${currentPattern.name} se mantiene estable.`
-            )
-            setStabilityAlerts((prev) => ({
-              ...prev,
-              [currentPattern.id]: {
-                ...prev[currentPattern.id],
-                count: alertStatus.count + 1,
-                timestamp: now
-              }
-            }))
-          }
-        }
-      }
-      // 3. SI ACABA DE VOLVERSE INESTABLE: Resetear el estado de la alerta
-      else if (wasStable && !isNowStable) {
-        setStabilityAlerts((prev) => {
-          const newState = { ...prev }
-          delete newState[currentPattern.id]
-          return newState
-        })
-      }
-    })
-  }, [chamber, prevChamberState, stabilityAlerts])
+    const result = evaluateStabilityAlerts(
+      chamber.patterns || [],
+      alertsRef.current,
+      chamber.name,
+      Date.now()
+    )
+    if (result.changed) {
+      alertsRef.current = result.alerts
+      setStabilityAlerts(result.alerts)
+    }
+    result.messages.forEach(announce)
+  }, [chamber, announce])
 
   if (isLoadingChamberData) {
     return (
@@ -256,11 +181,51 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
             <Typography variant='h5' component='h2' fontWeight={700}>
               {chamber.name}
             </Typography>
-            <Box sx={{ mt: 0.75 }}>
+            <Box
+              sx={{
+                mt: 0.75,
+                display: 'flex',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 1
+              }}
+            >
               {isCalibrating ? (
                 <StatusPill label='Calibración en curso' tone='live' pulse />
               ) : (
-                <StatusPill label='Esperando inicio de calibración' tone='idle' />
+                <StatusPill
+                  label='Esperando inicio de calibración'
+                  tone='idle'
+                />
+              )}
+              {isCalibrating && (
+                <Tooltip
+                  title={
+                    !supported
+                      ? 'Este navegador no tiene voz: se usa un pitido'
+                      : needsClick
+                        ? 'El navegador bloquea la voz hasta que hagas clic. Actívala aquí.'
+                        : 'Avisa por voz cuando un patrón se estabiliza'
+                  }
+                >
+                  <Button
+                    size='small'
+                    color={needsClick ? 'warning' : 'inherit'}
+                    startIcon={
+                      enabled && !needsClick ? <VolumeUp /> : <VolumeOff />
+                    }
+                    onClick={
+                      needsClick || !enabled ? test : () => setEnabled(false)
+                    }
+                    sx={{ color: needsClick ? undefined : '#4b5563' }}
+                  >
+                    {needsClick
+                      ? 'Activar avisos de voz'
+                      : enabled
+                        ? 'Avisos de voz activos'
+                        : 'Avisos de voz silenciados'}
+                  </Button>
+                </Tooltip>
               )}
             </Box>
           </Box>
@@ -282,7 +247,10 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
                     aria-label='Eliminar cámara'
                     onClick={() => onDeleteChamber(chamber.id)}
                     disabled={isDeletingChamber}
-                    sx={{ color: '#4b5563', '&:hover': { color: 'error.main' } }}
+                    sx={{
+                      color: '#4b5563',
+                      '&:hover': { color: 'error.main' }
+                    }}
                   >
                     {isDeletingChamber ? (
                       <CircularProgress size={22} color='inherit' />

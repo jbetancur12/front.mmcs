@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import {
+  Alert,
   TextField,
   FormControl,
   InputLabel,
@@ -12,6 +13,9 @@ import {
 } from '@mui/material'
 import FormDialog from 'src/Components/Common/FormDialog'
 import { Pattern } from './types' // Ajusta la ruta a tus tipos
+
+// Mismo mínimo que usa la API para calcular la estabilidad
+const MIN_POINTS_FOR_STABILITY = 5
 
 interface PatternConfigModalProps {
   open: boolean
@@ -75,6 +79,18 @@ export const PatternConfigModal: React.FC<PatternConfigModalProps> = ({
   const invalidData = dataValue <= 0
   const invalidSampling = samplingValue <= 0
 
+  // El sistema exige al menos 5 lecturas en la ventana para marcar el patrón estable
+  const samplingSeconds =
+    samplingUnit === 'minutes' ? samplingValue * 60 : samplingValue
+  const pointsInWindow =
+    invalidData || invalidSampling
+      ? null
+      : dataMode === 'LAST_POINTS'
+        ? dataValue
+        : Math.floor((dataValue * 60) / samplingSeconds)
+  const windowTooShort =
+    pointsInWindow !== null && pointsInWindow < MIN_POINTS_FOR_STABILITY
+
   return (
     <FormDialog
       open={open}
@@ -87,6 +103,14 @@ export const PatternConfigModal: React.FC<PatternConfigModalProps> = ({
       submitDisabled={invalidData || invalidSampling}
     >
       <Stack spacing={3}>
+        {windowTooShort && (
+          <Alert severity='warning'>
+            Con esta configuración caben solo {pointsInWindow} lecturas en la
+            ventana y se necesitan al menos {MIN_POINTS_FOR_STABILITY}: el
+            patrón nunca se marcará como estable. Amplía la ventana o acorta el
+            intervalo de muestreo.
+          </Alert>
+        )}
         <Box>
           <Typography variant='subtitle2' fontWeight={700}>
             Qué se ve en la gráfica
