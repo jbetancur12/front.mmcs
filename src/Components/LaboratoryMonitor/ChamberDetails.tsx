@@ -90,8 +90,15 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
   onConfigurePattern
 }) => {
   const canManage = useCan(PERMISSIONS.LABORATORY_CALIBRATION_MANAGE)
-  const { announce, enabled, setEnabled, needsClick, supported, test } =
-    useVoiceAnnouncer()
+  const {
+    announce,
+    enabled,
+    setEnabled,
+    needsClick,
+    supported,
+    noSpanishVoice,
+    test
+  } = useVoiceAnnouncer()
   const [stabilityAlerts, setStabilityAlerts] = useState<
     Record<string, StabilityAlertState>
   >({})
@@ -203,9 +210,11 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
                   title={
                     !supported
                       ? 'Este navegador no tiene voz: se usa un pitido'
-                      : needsClick
-                        ? 'El navegador bloquea la voz hasta que hagas clic. Actívala aquí.'
-                        : 'Avisa por voz cuando un patrón se estabiliza'
+                      : noSpanishVoice
+                        ? 'Este equipo no tiene voz en español: el aviso sonará con otra voz. Instálala en Windows, Configuración > Hora e idioma > Voz.'
+                        : needsClick
+                          ? 'El navegador bloquea la voz hasta que hagas clic. Actívala aquí.'
+                          : 'Avisa por voz cuando un patrón se estabiliza'
                   }
                 >
                   <Button

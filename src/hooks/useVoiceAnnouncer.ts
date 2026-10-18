@@ -14,6 +14,33 @@ type BrowserWithActivation = Navigator & {
   userActivation?: { hasBeenActive: boolean }
 }
 
+// La lista de voces carga tarde: sin esperarla, el aviso sale con la voz
+// por defecto (en inglés) aunque el equipo tenga voces en español
+const loadVoices = (): Promise<SpeechSynthesisVoice[]> =>
+  new Promise((resolve) => {
+    const synth = window.speechSynthesis
+    const ready = synth.getVoices()
+    if (ready.length > 0) return resolve(ready)
+    const done = () => {
+      synth.removeEventListener('voiceschanged', done)
+      resolve(synth.getVoices())
+    }
+    synth.addEventListener('voiceschanged', done)
+    window.setTimeout(done, 1500) // Si nunca carga, se sigue sin voz elegida
+  })
+
+const pickSpanishVoice = (voices: SpeechSynthesisVoice[]) => {
+  const spanish = voices.filter((voice) =>
+    voice.lang.toLowerCase().replace('_', '-').startsWith('es')
+  )
+  // Se prefiere español de Colombia o Latinoamérica antes que el de España
+  return (
+    spanish.find((v) => /^es-co/i.test(v.lang)) ??
+    spanish.find((v) => /^es-(mx|us|419|ar|cl|pe)/i.test(v.lang)) ??
+    spanish[0]
+  )
+}
+
 // Dos pitidos cortos: respaldo cuando la voz no está disponible o fue bloqueada
 const beep = () => {
   try {
@@ -53,6 +80,7 @@ export const useVoiceAnnouncer = () => {
       (navigator as BrowserWithActivation).userActivation?.hasBeenActive ===
         false
   )
+  const [noSpanishVoice, setNoSpanishVoice] = useState(false)
   const enabledRef = useRef(enabled)
   const queueRef = useRef<string[]>([])
   const speakingRef = useRef(false)
@@ -67,31 +95,32 @@ export const useVoiceAnnouncer = () => {
       return
     }
     speakingRef.current = true
-    const utterance = new SpeechSynthesisUtterance(message)
-    utterance.lang = 'es-ES'
-    utterance.rate = 0.9
-    const spanish = window.speechSynthesis
-      .getVoices()
-      .find((voice) => voice.lang.toLowerCase().startsWith('es'))
-    if (spanish) utterance.voice = spanish
     const finish = () => {
       speakingRef.current = false
       run()
     }
-    utterance.onend = finish
-    utterance.onerror = (event) => {
-      if (event.error === 'not-allowed') {
-        // Bloqueado hasta que haya un clic: el mensaje se reintenta después
-        queueRef.current.unshift(message)
-        speakingRef.current = false
-        setNeedsClick(true)
-        beep()
-        return
+    loadVoices().then((voices) => {
+      const utterance = new SpeechSynthesisUtterance(message)
+      const spanish = pickSpanishVoice(voices)
+      utterance.lang = spanish?.lang ?? 'es-ES'
+      utterance.rate = 0.9
+      if (spanish) utterance.voice = spanish
+      setNoSpanishVoice(voices.length > 0 && !spanish)
+      utterance.onend = finish
+      utterance.onerror = (event) => {
+        if (event.error === 'not-allowed') {
+          // Bloqueado hasta que haya un clic: el mensaje se reintenta después
+          queueRef.current.unshift(message)
+          speakingRef.current = false
+          setNeedsClick(true)
+          beep()
+          return
+        }
+        finish()
       }
-      finish()
-    }
-    window.speechSynthesis.resume()
-    window.speechSynthesis.speak(utterance)
+      window.speechSynthesis.resume()
+      window.speechSynthesis.speak(utterance)
+    })
   }, [])
 
   // El primer clic en la página desbloquea la voz y suelta los avisos pendientes
@@ -141,5 +170,13 @@ export const useVoiceAnnouncer = () => {
     announce('Avisos de voz activados.')
   }, [announce])
 
-  return { announce, enabled, setEnabled, needsClick, supported, test }
+  return {
+    announce,
+    enabled,
+    setEnabled,
+    needsClick,
+    supported,
+    noSpanishVoice,
+    test
+  }
 }
