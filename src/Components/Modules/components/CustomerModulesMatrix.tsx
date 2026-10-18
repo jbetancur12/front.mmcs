@@ -23,7 +23,7 @@ import {
   Tooltip,
   Typography
 } from '@mui/material'
-import { Business, CheckCircle, School, ToggleOff, ToggleOn, VerifiedUser } from '@mui/icons-material'
+import { Business, CheckCircle, DomainDisabled, School, ToggleOff, ToggleOn, VerifiedUser } from '@mui/icons-material'
 import LmsStatCard, { LmsStatTone } from 'src/Components/lms/admin/LmsStatCard'
 import ConfirmDialog from 'src/Components/Common/ConfirmDialog'
 import { useCan } from '@utils/functions'
@@ -38,13 +38,15 @@ import { bigToast } from '../../ExcelManipulation/Utils'
 
 type RowProps = { row: MRT_Row<CustomerModulesRow> }
 
-const TONES: LmsStatTone[] = ['blue', 'green', 'orange', 'red']
+const TONES: LmsStatTone[] = ['blue', 'green']
 const MODULE_ICONS: Record<string, React.ReactElement> = {
   lms: <School />,
   tecnovigilancia: <VerifiedUser />
 }
 
 const isOn = (cell: CustomerModuleCell | null | undefined) => Boolean(cell?.isActive)
+// Solo `false` explícito es inactivo: un cliente sin estado se trata como activo
+const isInactive = (customer: CustomerModulesRow) => customer.isActive === false
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -67,6 +69,8 @@ interface PendingChange {
   isActive: boolean
   /** Nombre del cliente cuando es una sola celda. */
   customerName?: string
+  /** Cuántos de los clientes afectados están inactivos. */
+  inactiveCount: number
 }
 
 const CustomerModulesMatrix: React.FC = () => {
@@ -78,6 +82,8 @@ const CustomerModulesMatrix: React.FC = () => {
   const [bulkModuleId, setBulkModuleId] = useState<number | ''>('')
   const [pending, setPending] = useState<PendingChange | null>(null)
   const [showLegacy, setShowLegacy] = useState(false)
+  // Por defecto solo clientes activos: los inactivos no pueden entrar, así que su licencia no da acceso
+  const [showInactive, setShowInactive] = useState(false)
 
   const modules = useMemo(() => data?.modules ?? [], [data])
   const customers = useMemo(() => data?.customers ?? [], [data])
@@ -85,6 +91,16 @@ const CustomerModulesMatrix: React.FC = () => {
     () => new Map(customers.map((c) => [c.id, c.nombre])),
     [customers]
   )
+  const activeCustomers = useMemo(() => customers.filter((c) => !isInactive(c)), [customers])
+  const inactiveCustomers = useMemo(() => customers.filter(isInactive), [customers])
+  const visibleCustomers = showInactive ? inactiveCustomers : activeCustomers
+  const inactiveIds = useMemo(() => new Set(inactiveCustomers.map((c) => c.id)), [inactiveCustomers])
+
+  const changeScope = (inactive: boolean) => {
+    if (inactive === showInactive) return
+    setShowInactive(inactive)
+    setRowSelection({}) // la selección no se arrastra entre activos e inactivos
+  }
   const selectedIds = Object.keys(rowSelection)
     .filter((id) => rowSelection[id])
     .map(Number)
@@ -116,15 +132,21 @@ const CustomerModulesMatrix: React.FC = () => {
 
   // Activar una celda es inmediato; quitar acceso o tocar varios clientes pide confirmación.
   const requestCellChange = (row: CustomerModulesRow, module: LicensableModule, isActive: boolean) => {
-    const change = { customerIds: [row.id], module, isActive, customerName: row.nombre }
-    if (isActive) apply(change)
+    const inactive = isInactive(row)
+    const change = { customerIds: [row.id], module, isActive, customerName: row.nombre, inactiveCount: inactive ? 1 : 0 }
+    if (isActive && !inactive) apply(change)
     else setPending(change)
   }
 
   const requestBulk = (isActive: boolean) => {
     const module = modules.find((m) => m.id === effectiveBulkModuleId)
     if (!module || selectedIds.length === 0) return
-    setPending({ customerIds: selectedIds, module, isActive })
+    setPending({
+      customerIds: selectedIds,
+      module,
+      isActive,
+      inactiveCount: selectedIds.filter((id) => inactiveIds.has(id)).length
+    })
   }
 
   const columns = useMemo<MRT_ColumnDef<CustomerModulesRow>[]>(
@@ -215,7 +237,9 @@ const CustomerModulesMatrix: React.FC = () => {
     [modules, canAssign]
   )
 
-  const activeCount = (moduleId: number) => customers.filter((c) => isOn(c.modules[moduleId])).length
+  // Los totales cuentan solo clientes activos: son los únicos con acceso real
+  const activeCount = (moduleId: number) =>
+    activeCustomers.filter((c) => isOn(c.modules[moduleId])).length
   const legacy = data?.legacyInternal ?? []
 
   const pendingCount = pending?.customerIds.length ?? 0
@@ -223,8 +247,17 @@ const CustomerModulesMatrix: React.FC = () => {
     <>
       {pending.customerName ? (
         <>
-          <strong>{pending.customerName}</strong> {pending.isActive ? 'tendrá' : 'dejará de tener'} acceso a{' '}
-          <strong>{pending.module.label}</strong>.
+          {pending.inactiveCount > 0 ? (
+            <>
+              <strong>{pending.customerName}</strong> quedará con <strong>{pending.module.label}</strong>{' '}
+              {pending.isActive ? 'habilitado' : 'deshabilitado'}.
+            </>
+          ) : (
+            <>
+              <strong>{pending.customerName}</strong> {pending.isActive ? 'tendrá' : 'dejará de tener'} acceso a{' '}
+              <strong>{pending.module.label}</strong>.
+            </>
+          )}
         </>
       ) : (
         <>
@@ -232,7 +265,16 @@ const CustomerModulesMatrix: React.FC = () => {
           <strong>{pendingCount} cliente{pendingCount === 1 ? '' : 's'}</strong>.
         </>
       )}
-      {!pending.isActive && ' Sus usuarios dejan de ver el módulo de inmediato.'}
+      {!pending.isActive && pending.inactiveCount < pendingCount && ' Sus usuarios dejan de ver el módulo de inmediato.'}
+      {pending.inactiveCount > 0 && (
+        <Alert severity='warning' sx={{ mt: 2 }}>
+          {pending.customerName
+            ? 'Este cliente está inactivo: sus usuarios no pueden entrar, así que el cambio aplica cuando se reactive.'
+            : `${pending.inactiveCount} de ${pendingCount === pending.inactiveCount ? 'estos' : 'los'} cliente${
+                pending.inactiveCount === 1 ? ' está inactivo' : 's están inactivos'
+              }: el cambio les aplica cuando se reactiven.`}
+        </Alert>
+      )}
     </>
   )
 
@@ -240,7 +282,26 @@ const CustomerModulesMatrix: React.FC = () => {
     <>
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <LmsStatCard label='Clientes' value={customers.length} icon={<Business />} tone='teal' />
+          <LmsStatCard
+            label='Clientes activos'
+            value={activeCustomers.length}
+            icon={<Business />}
+            tone='teal'
+            active={!showInactive}
+            caption={showInactive ? 'Ver clientes activos' : undefined}
+            onClick={() => changeScope(false)}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <LmsStatCard
+            label='Clientes inactivos'
+            value={inactiveCustomers.length}
+            icon={<DomainDisabled />}
+            tone='orange'
+            active={showInactive}
+            caption={showInactive ? 'Mostrando inactivos' : 'Ver inactivos'}
+            onClick={() => changeScope(true)}
+          />
         </Grid>
         {modules.map((module, index) => (
           <Grid item xs={12} sm={6} md={3} key={module.id}>
@@ -249,7 +310,7 @@ const CustomerModulesMatrix: React.FC = () => {
               value={activeCount(module.id)}
               icon={MODULE_ICONS[module.name] ?? <CheckCircle />}
               tone={TONES[index % TONES.length]}
-              caption={`de ${customers.length} clientes`}
+              caption={`de ${activeCustomers.length} activos`}
             />
           </Grid>
         ))}
@@ -296,10 +357,25 @@ const CustomerModulesMatrix: React.FC = () => {
         </Alert>
       )}
 
+      {showInactive && (
+        <Alert
+          severity='warning'
+          sx={{ mb: 2 }}
+          action={
+            <Button color='inherit' size='small' onClick={() => changeScope(false)}>
+              Ver activos
+            </Button>
+          }
+        >
+          Estás viendo clientes inactivos: sus usuarios no pueden entrar. Puedes dejarles los módulos listos para cuando se
+          reactiven.
+        </Alert>
+      )}
+
       <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
         <MaterialReactTable
           columns={columns}
-          data={customers}
+          data={visibleCustomers}
           localization={MRT_Localization_ES}
           // Mientras carga, MRT pinta filas de relleno sin id: sin clave propia React deja filas fantasma
           getRowId={(row, index) => (row?.id != null ? String(row.id) : `loading-${index}`)}
@@ -311,6 +387,9 @@ const CustomerModulesMatrix: React.FC = () => {
           enableDensityToggle={false}
           enableFullScreenToggle={false}
           enableStickyHeader
+          muiTableBodyRowProps={({ row }) => ({
+            sx: isInactive(row.original) ? { opacity: 0.65 } : undefined
+          })}
           initialState={{
             density: 'comfortable',
             showGlobalFilter: true,
