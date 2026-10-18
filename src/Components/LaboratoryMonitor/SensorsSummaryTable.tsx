@@ -1,5 +1,5 @@
 // src/Components/LaboratoryMonitor/SensorsSummaryTable.tsx
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Table,
   TableBody,
@@ -26,10 +26,35 @@ interface SensorsSummaryTableProps {
 
 const valueSx = { fontVariantNumeric: 'tabular-nums' } as const
 
+const SILENCE_WARNING_MS = 5 * 60 * 1000 // Más de 5 minutos sin reportar se resalta
+
+// "hace 8 s", "hace 3 min", "hace 2 h"; si la hora del equipo va atrasada, "justo ahora"
+const timeAgo = (diffMs: number) => {
+  const seconds = Math.max(0, Math.round(diffMs / 1000))
+  if (seconds < 10) return 'justo ahora'
+  if (seconds < 60) return `hace ${seconds} s`
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `hace ${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `hace ${hours} h`
+  return `hace ${Math.floor(hours / 24)} d`
+}
+
+// Refresca "hace X" sin esperar a que llegue otra lectura
+const useNow = (intervalMs: number) => {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), intervalMs)
+    return () => window.clearInterval(id)
+  }, [intervalMs])
+  return now
+}
+
 export const SensorsSummaryTable: React.FC<SensorsSummaryTableProps> = ({
   summaryData,
   isLoading
 }) => {
+  const now = useNow(15000)
   if (isLoading) {
     return (
       <Typography sx={{ p: 2, textAlign: 'center' }}>
@@ -73,6 +98,7 @@ export const SensorsSummaryTable: React.FC<SensorsSummaryTableProps> = ({
               <TableCell>Mide</TableCell>
               <TableCell align='right'>Temperatura (°C)</TableCell>
               <TableCell align='right'>Humedad (%)</TableCell>
+              <TableCell align='right'>Última lectura</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -115,6 +141,40 @@ export const SensorsSummaryTable: React.FC<SensorsSummaryTableProps> = ({
                 </TableCell>
                 <TableCell align='right' sx={valueSx}>
                   {row.latestHumidity?.toFixed(2) ?? '--'}
+                </TableCell>
+                <TableCell align='right' sx={valueSx}>
+                  {row.lastSeen ? (
+                    <Tooltip
+                      title={new Date(row.lastSeen).toLocaleString('es-CO')}
+                    >
+                      <Typography
+                        component='span'
+                        variant='body2'
+                        sx={{
+                          fontWeight:
+                            now - new Date(row.lastSeen).getTime() >
+                            SILENCE_WARNING_MS
+                              ? 600
+                              : 400,
+                          color:
+                            now - new Date(row.lastSeen).getTime() >
+                            SILENCE_WARNING_MS
+                              ? '#b45309'
+                              : 'text.primary'
+                        }}
+                      >
+                        {timeAgo(now - new Date(row.lastSeen).getTime())}
+                      </Typography>
+                    </Tooltip>
+                  ) : (
+                    <Typography
+                      component='span'
+                      variant='body2'
+                      color='text.secondary'
+                    >
+                      Sin lecturas
+                    </Typography>
+                  )}
                 </TableCell>
               </TableRow>
             ))}

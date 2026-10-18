@@ -68,7 +68,8 @@ export const generateSensorSummary = (
         latestTemperature: sensor.lastTemperature,
         averageTemperature: undefined, // El backend no calcula promedios por defecto
         latestHumidity: sensor.lastHumidity,
-        averageHumidity: undefined
+        averageHumidity: undefined,
+        lastSeen: sensor.lastSeen
       })
     })
   })

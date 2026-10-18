@@ -73,6 +73,7 @@ export interface SensorSummaryViewData {
   averageTemperature?: number
   latestHumidity?: number
   averageHumidity?: number
+  lastSeen?: string // Fecha ISO de la última lectura recibida
 }
 
 export interface CalibrationSensorUpdatePayload {
