@@ -61,8 +61,12 @@ export const PatternSection: React.FC<PatternSectionProps> = ({
   const handleCloseAddPatternModal = () => setIsAddPatternModalOpen(false)
 
   const handleAddPatternSubmit = async (patternName: string) => {
-    await onAddPattern(chamberId, patternName)
-    handleCloseAddPatternModal() // Idealmente controlado por el padre/React Query
+    try {
+      await onAddPattern(chamberId, patternName)
+      handleCloseAddPatternModal()
+    } catch {
+      // El error ya se notifica en la vista; el modal sigue abierto con el nombre
+    }
   }
 
   if (isLoadingPatterns) {

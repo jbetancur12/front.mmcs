@@ -18,8 +18,13 @@ export interface WebSocketMessage {
   data: any
 }
 
+type WebSocketListener = (message: WebSocketMessage) => void
+
 interface WebSocketContextValue {
   lastMessage: WebSocketMessage | null
+  // Recibe cada mensaje; lastMessage solo conserva el último de cada render
+  // y pierde los que llegan seguidos (p. ej. varios sensores a la vez).
+  subscribe: (listener: WebSocketListener) => () => void
   lastDeviceReading: DeviceReadingPayload | null
   deviceReadings: Record<string, DeviceReadingPayload>
   status: 'connecting' | 'connected' | 'error' | 'closed'
@@ -75,6 +80,16 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
 
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>()
+  const listenersRef = useRef(new Set<WebSocketListener>())
+  const unmountedRef = useRef(false)
+  const reconnectDelayRef = useRef(2000)
+
+  const subscribe = useCallback((listener: WebSocketListener) => {
+    listenersRef.current.add(listener)
+    return () => {
+      listenersRef.current.delete(listener)
+    }
+  }, [])
 
   // Create WebSocket connection
   const connectWebSocket = useCallback(() => {
@@ -89,11 +104,11 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
 
       const socket = new WebSocket(wss())
       wsRef.current = socket
-      let shouldReconnect = true
 
       socket.onopen = () => {
         console.log('WebSocket connected')
         setStatus('connected')
+        reconnectDelayRef.current = 2000
         // Clear any reconnect timeout
         if (reconnectTimeoutRef.current) {
           clearTimeout(reconnectTimeoutRef.current)
@@ -103,19 +118,20 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
       socket.onclose = () => {
         console.log('WebSocket closed')
         setStatus('closed')
-        // Attempt to reconnect after 2 seconds
-        if (shouldReconnect) {
+        // Reintenta también tras un error de red, con espera creciente (2 s → 30 s)
+        if (!unmountedRef.current) {
+          const delay = reconnectDelayRef.current
+          reconnectDelayRef.current = Math.min(delay * 2, 30000)
           reconnectTimeoutRef.current = setTimeout(() => {
             console.log('Attempting to reconnect WebSocket...')
             connectWebSocket()
-          }, 2000)
+          }, delay)
         }
       }
 
       socket.onerror = (error) => {
         console.error('WebSocket error:', error)
         setStatus('error')
-        shouldReconnect = false
         socket.close()
       }
 
@@ -123,6 +139,13 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data)
           setLastMessage(message)
+          listenersRef.current.forEach((listener) => {
+            try {
+              listener(message)
+            } catch (listenerError) {
+              console.error('Error in WebSocket listener:', listenerError)
+            }
+          })
 
           switch (message.type) {
             case 'LABORATORY_DATA':
@@ -162,10 +185,12 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
 
   // Initial connection
   useEffect(() => {
+    unmountedRef.current = false
     connectWebSocket()
 
     // Cleanup
     return () => {
+      unmountedRef.current = true
       if (wsRef.current) {
         wsRef.current.close()
       }
@@ -177,6 +202,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
 
   const value: WebSocketContextValue = {
     lastMessage,
+    subscribe,
     deviceReadings,
     lastDeviceReading,
     status

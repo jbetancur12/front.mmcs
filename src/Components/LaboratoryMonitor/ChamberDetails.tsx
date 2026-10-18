@@ -287,7 +287,8 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
                 : 'Estado no definido'}
           </Typography>
         </Box>
-        {isIdle && ( // Mostrar botón "Iniciar" si está inactiva
+        {/* Iniciar/Detener exigen permiso de gestión en el backend */}
+        {canManage && isIdle && (
           <Button
             variant='contained'
             color='primary'
@@ -303,7 +304,7 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
             )}
           </Button>
         )}
-        {isCalibrating && ( // Mostrar botón "Detener" si está calibrando
+        {canManage && isCalibrating && (
           <Button
             variant='contained'
             color='secondary' // O 'error'

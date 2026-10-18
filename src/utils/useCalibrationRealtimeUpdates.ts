@@ -1,34 +1,26 @@
 // src/utils/useCalibrationRealtimeUpdates.ts
-import { useEffect, useRef } from 'react' // Añadir useRef
+import { useEffect } from 'react'
 import { useQueryClient, QueryKey } from 'react-query'
 import {
   CalibrationSensorUpdatePayload,
   Chamber,
   SensorDataPoint
-} from 'src/Components/LaboratoryMonitor/types' // Asegúrate que esta ruta sea correcta
+} from 'src/Components/LaboratoryMonitor/types'
 import useWebSocket, { WebSocketMessage } from './use-websockets'
-// Asegúrate que esta ruta sea correcta
+
+const chambersQueryKey: QueryKey = ['chambers']
 
 export const useCalibrationRealtimeUpdates = () => {
-  const { lastMessage } = useWebSocket()
+  const { subscribe } = useWebSocket()
   const queryClient = useQueryClient()
-  const chambersQueryKey: QueryKey = ['chambers']
 
-  // Usar useRef para guardar una referencia al último mensaje procesado
-  // Podrías guardar el objeto 'lastMessage' completo si su referencia cambia solo con nuevos mensajes,
-  // o un ID/timestamp único del mensaje si lo tienes.
-  const processedMessageRef = useRef<WebSocketMessage | null>(null)
-
+  // Se procesa cada mensaje al llegar (no lastMessage), para no perder
+  // lecturas cuando varios sensores reportan casi al mismo tiempo.
   useEffect(() => {
-    // Si no hay mensaje o es el mismo que ya procesamos, no hacer nada.
-    if (!lastMessage || processedMessageRef.current === lastMessage) {
-      return
-    }
+    const handleMessage = (message: WebSocketMessage) => {
+      if (message.type !== 'CALIBRATION_SENSOR_UPDATE') return
 
-    if (lastMessage.type === 'CALIBRATION_SENSOR_UPDATE') {
-      processedMessageRef.current = lastMessage
-
-      const updatePayload = lastMessage.data as CalibrationSensorUpdatePayload
+      const updatePayload = message.data as CalibrationSensorUpdatePayload
 
       if (!updatePayload || !updatePayload.sensorId) {
         console.warn(
@@ -122,8 +114,6 @@ export const useCalibrationRealtimeUpdates = () => {
       })
     }
 
-    // No es necesario limpiar processedMessageRef.current aquí, ya que queremos
-    // recordar el último mensaje procesado a través de los re-renders.
-    // Solo se actualizará cuando llegue un NUEVO lastMessage.
-  }, [lastMessage, queryClient, chambersQueryKey]) // chambersQueryKey es estable
+    return subscribe(handleMessage)
+  }, [subscribe, queryClient])
 }

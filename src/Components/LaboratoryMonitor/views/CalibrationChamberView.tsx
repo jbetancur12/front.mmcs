@@ -42,6 +42,7 @@ import {
 } from '../services/calibrationApi'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useCalibrationRealtimeUpdates } from '@utils/useCalibrationRealtimeUpdates'
+import { getApiErrorMessage } from '@utils/apiError'
 import Swal from 'sweetalert2'
 import { PatternConfigModal } from '../PatternConfigModal'
 import { useDeviceNotifications } from '@utils/useDeviceNotifications'
@@ -166,7 +167,7 @@ const CalibrationChamberView: React.FC = () => {
       onError: (error: Error) => {
         setSnackbar({
           open: true,
-          message: `Error al guardar configuración: ${error.message}`,
+          message: getApiErrorMessage(error, 'Error al guardar configuración.'),
           severity: 'error'
         })
       }
@@ -190,7 +191,7 @@ const CalibrationChamberView: React.FC = () => {
       onError: (error: Error) => {
         setSnackbar({
           open: true,
-          message: `Error al crear cámara: ${error.message}`,
+          message: getApiErrorMessage(error, 'Error al crear cámara.'),
           severity: 'error'
         })
       }
@@ -212,7 +213,7 @@ const CalibrationChamberView: React.FC = () => {
       onError: (error: Error) => {
         setSnackbar({
           open: true,
-          message: `Error al actualizar estado: ${error.message}`,
+          message: getApiErrorMessage(error, 'Error al actualizar estado.'),
           severity: 'error'
         })
       }
@@ -239,7 +240,7 @@ const CalibrationChamberView: React.FC = () => {
       onError: (error: Error) => {
         setSnackbar({
           open: true,
-          message: `Error al crear patrón: ${error.message}`,
+          message: getApiErrorMessage(error, 'Error al crear patrón.'),
           severity: 'error'
         })
       }
@@ -262,7 +263,7 @@ const CalibrationChamberView: React.FC = () => {
       onError: (error: Error) => {
         setSnackbar({
           open: true,
-          message: `Error al actualizar cámara: ${error.message}`,
+          message: getApiErrorMessage(error, 'Error al actualizar cámara.'),
           severity: 'error'
         })
       }
@@ -284,7 +285,7 @@ const CalibrationChamberView: React.FC = () => {
       onError: (error: Error) => {
         setSnackbar({
           open: true,
-          message: `Error al eliminar cámara: ${error.message}`,
+          message: getApiErrorMessage(error, 'Error al eliminar cámara.'),
           severity: 'error'
         })
       }
@@ -308,7 +309,7 @@ const CalibrationChamberView: React.FC = () => {
       onError: (error: Error) => {
         setSnackbar({
           open: true,
-          message: `Error al eliminar patrón: ${error.message}`,
+          message: getApiErrorMessage(error, 'Error al eliminar patrón.'),
           severity: 'error'
         })
       },
@@ -341,7 +342,7 @@ const CalibrationChamberView: React.FC = () => {
       onError: (error: Error) => {
         setSnackbar({
           open: true,
-          message: `Error al crear sensor: ${error.message}`,
+          message: getApiErrorMessage(error, 'Error al crear sensor.'),
           severity: 'error'
         })
       },
@@ -365,7 +366,7 @@ const CalibrationChamberView: React.FC = () => {
         Swal.fire({
           icon: 'error',
           title: 'Error al eliminar sensor',
-          text: error.message || 'Error desconocido al eliminar el sensor.'
+          text: getApiErrorMessage(error, 'No se pudo eliminar el sensor.')
         })
       },
       onSettled: () => {
@@ -435,26 +436,54 @@ const CalibrationChamberView: React.FC = () => {
   }
 
   const handleStopCalibration = (chamberIdToStop: string | number) => {
-    updateChamberStatusMutation.mutate({
-      chamberId: chamberIdToStop,
-      status: CHAMBER_STATUS.IDLE // <= Usar constante para volver al estado inicial/detenido
+    // Al detener, el backend borra todas las lecturas de calibración de la cámara
+    Swal.fire({
+      title: '¿Detener la calibración?',
+      text: 'Se borrarán las lecturas de calibración registradas en esta cámara. No podrás recuperarlas.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, detener',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        updateChamberStatusMutation.mutate({
+          chamberId: chamberIdToStop,
+          status: CHAMBER_STATUS.IDLE
+        })
+      }
     })
   }
 
-  const handleAddPattern = (
+  // mutateAsync: el modal se cierra solo si el patrón se creó
+  const handleAddPattern = async (
     chamberId: string | number,
     patternName: string
   ) => {
-    createPatternMutation.mutate({ chamberId, patternName })
+    await createPatternMutation.mutateAsync({ chamberId, patternName })
   }
   const handleDeletePattern = (patternId: string | number) => {
-    deletePatternMutation.mutate(patternId)
+    Swal.fire({
+      title: '¿Eliminar este patrón?',
+      text: 'Se eliminarán también todos sus sensores y lecturas. No podrás revertirlo.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, ¡eliminar!',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deletePatternMutation.mutate(patternId)
+      }
+    })
   }
-  const handleAddSensorToPattern = (
+  const handleAddSensorToPattern = async (
     patternId: string | number,
     sensorData: { name: string; type: SensorType; showGraph: boolean }
   ) => {
-    createSensorMutation.mutate({ patternId, sensorData })
+    await createSensorMutation.mutateAsync({ patternId, sensorData })
   }
   const handleDeleteSensorFromPattern = (sensorId: string | number) => {
     Swal.fire({
@@ -591,9 +620,15 @@ const CalibrationChamberView: React.FC = () => {
                   startIcon={<AddCircleOutlineIcon />}
                   onClick={handleOpenCreateModal}
                   disabled={createChamberMutation.isLoading}
-                  sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}
+                  sx={{
+                    bgcolor: '#00BFA5',
+                    whiteSpace: 'nowrap',
+                    '&:hover': { bgcolor: '#00ACC1' }
+                  }}
                 >
-                  {createChamberMutation.isLoading ? 'Agregando...' : 'Agregar cámara'}
+                  {createChamberMutation.isLoading
+                    ? 'Agregando...'
+                    : 'Agregar cámara'}
                 </Button>
               ) : undefined
             }
@@ -603,12 +638,21 @@ const CalibrationChamberView: React.FC = () => {
         <Grid item xs={12}>
           <Grid container spacing={3}>
             <Grid item xs={12} sm={4}>
-              <LmsStatCard label='Cámaras' value={chambers.length} icon={<AcUnit />} tone='teal' />
+              <LmsStatCard
+                label='Cámaras'
+                value={chambers.length}
+                icon={<AcUnit />}
+                tone='teal'
+              />
             </Grid>
             <Grid item xs={12} sm={4}>
               <LmsStatCard
                 label='En calibración'
-                value={chambers.filter((c) => c.status === CHAMBER_STATUS.CALIBRATING).length}
+                value={
+                  chambers.filter(
+                    (c) => c.status === CHAMBER_STATUS.CALIBRATING
+                  ).length
+                }
                 icon={<Speed />}
                 tone='orange'
               />
@@ -616,7 +660,11 @@ const CalibrationChamberView: React.FC = () => {
             <Grid item xs={12} sm={4}>
               <LmsStatCard
                 label='En reposo'
-                value={chambers.filter((c) => c.status !== CHAMBER_STATUS.CALIBRATING).length}
+                value={
+                  chambers.filter(
+                    (c) => c.status !== CHAMBER_STATUS.CALIBRATING
+                  ).length
+                }
                 icon={<PauseCircleOutline />}
                 tone='blue'
               />

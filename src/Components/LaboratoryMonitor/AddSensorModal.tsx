@@ -1,5 +1,5 @@
 // src/Components/LaboratoryMonitor/AddSensorModal.tsx
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Button,
   Dialog,
@@ -50,8 +50,7 @@ export const AddSensorModal: React.FC<AddSensorModalProps> = ({
       return
     }
     setNameError('')
-    await onSubmit({ name: sensorName, type: sensorType, showGraph })
-    // resetState(); // Opcional, si se quiere limpiar al cerrar o tras submit exitoso
+    await onSubmit({ name: sensorName.trim(), type: sensorType, showGraph })
   }
 
   const resetState = () => {
@@ -60,6 +59,16 @@ export const AddSensorModal: React.FC<AddSensorModalProps> = ({
     setShowGraph(true)
     setNameError('')
   }
+
+  // Cada apertura empieza limpia (el modal también se cierra desde el padre)
+  useEffect(() => {
+    if (open) {
+      setSensorName('')
+      setSensorType('temperature_humidity')
+      setShowGraph(true)
+      setNameError('')
+    }
+  }, [open])
 
   const handleClose = () => {
     resetState()
@@ -83,7 +92,10 @@ export const AddSensorModal: React.FC<AddSensorModalProps> = ({
           value={sensorName}
           onChange={(e) => setSensorName(e.target.value)}
           error={!!nameError}
-          helperText={nameError || 'Ej: Sensor 1'}
+          helperText={
+            nameError ||
+            'Igual al que envía el dispositivo; único en todo el laboratorio. Sin /, + ni #.'
+          }
           disabled={isLoading}
           sx={{ mb: 2 }}
         />

@@ -79,9 +79,10 @@ export const SensorRealtimeChart: React.FC<SensorRealtimeChartProps> = ({
           )}
           <Tooltip
             labelFormatter={formatXAxis}
-            formatter={(value: number, name: string) => [
-              `${value.toFixed(2)} ${name === 'temperature' ? '°C' : '%'}`,
-              name === 'Temperatura' ? 'Temperatura' : 'Humedad'
+            // name es el `name` de cada <Line>: 'Temperatura' o 'Humedad'
+            formatter={(value, name: string) => [
+              `${typeof value === 'number' ? value.toFixed(2) : '--'} ${name === 'Temperatura' ? '°C' : '%'}`,
+              name
             ]}
           />
           <Legend />

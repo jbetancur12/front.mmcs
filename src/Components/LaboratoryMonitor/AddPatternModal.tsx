@@ -1,5 +1,5 @@
 // src/Components/LaboratoryMonitor/AddPatternModal.tsx
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Button,
   Dialog,
@@ -28,14 +28,21 @@ export const AddPatternModal: React.FC<AddPatternModalProps> = ({
   const [patternName, setPatternName] = useState('')
   const [error, setError] = useState('')
 
+  // Cada apertura empieza limpia (el modal también se cierra desde el padre)
+  useEffect(() => {
+    if (open) {
+      setPatternName('')
+      setError('')
+    }
+  }, [open])
+
   const handleSubmit = async () => {
     if (!patternName.trim()) {
       setError('El nombre del patrón es requerido.')
       return
     }
     setError('')
-    await onSubmit(patternName)
-    // setPatternName(''); // Opcional
+    await onSubmit(patternName.trim())
   }
 
   const handleClose = () => {
@@ -61,7 +68,10 @@ export const AddPatternModal: React.FC<AddPatternModalProps> = ({
           value={patternName}
           onChange={(e) => setPatternName(e.target.value)}
           error={!!error}
-          helperText={error || 'Ej: Patrón de Referencia'}
+          helperText={
+            error ||
+            'Único en todo el laboratorio (lo usa el dispositivo). Sin /, + ni #.'
+          }
           disabled={isLoading}
         />
       </DialogContent>

@@ -68,8 +68,12 @@ export const PatternItem: React.FC<PatternItemProps> = ({
     type: SensorTypeValue
     showGraph: boolean
   }) => {
-    await onAddSensorToPattern(pattern.id, sensorData)
-    handleCloseAddSensorModal() // Cerrar si el submit es exitoso (controlado por el padre idealmente)
+    try {
+      await onAddSensorToPattern(pattern.id, sensorData)
+      handleCloseAddSensorModal()
+    } catch {
+      // El error ya se notifica en la vista; el modal sigue abierto con los datos
+    }
   }
 
   const handleDeleteSensor = (sensorId: string) => {
@@ -149,7 +153,8 @@ export const PatternItem: React.FC<PatternItemProps> = ({
       )}
       {pattern.sensors && pattern.sensors.length > 0 ? (
         <List disablePadding>
-          {pattern.sensors
+          {/* Copia: ordenar en sitio mutaría el caché de react-query */}
+          {[...pattern.sensors]
             .sort((a, b) => a.name.localeCompare(b.name))
             .map((sensor) => (
               <SensorItem
