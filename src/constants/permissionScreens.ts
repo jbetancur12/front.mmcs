@@ -384,10 +384,12 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/customers/:id", label: "Empresas", kind: 'action' }
   ],
   'customers:module:assign': [
-    { path: "/customers/:id", label: "Empresas", kind: 'action' }
+    { path: "/customers/:id", label: "Empresas", kind: 'action' },
+    { path: "/modules", label: "Módulos", kind: 'action' }
   ],
   'customers:module:view': [
-    { path: "/customers/:id", label: "Empresas", kind: 'action' }
+    { path: "/customers/:id", label: "Empresas", kind: 'action' },
+    { path: "/modules", label: "Módulos", kind: 'action' }
   ],
   'customers:module_catalog:view': [
     { path: "/modules", label: "Módulos", kind: 'screen' }

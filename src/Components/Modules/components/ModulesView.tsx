@@ -1,15 +1,21 @@
 // src/modules/components/ModulesView.tsx
 import { useEffect, useState } from 'react'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
-import { Button, CircularProgress, Box, Container, Grid, Paper, Typography } from '@mui/material'
+import { Button, Chip, CircularProgress, Box, Grid, Paper, Typography } from '@mui/material'
 import { Add, Apps } from '@mui/icons-material'
-import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
 import Swal from 'sweetalert2'
 
 import ModuleForm from './ModuleForm'
 import { IModule } from '../types/moduleTypes'
+import { ModuleAudience } from 'src/types/customerModules'
 import useAxiosPrivate from '@utils/use-axios-private'
+
+const AUDIENCE_LABELS: Record<ModuleAudience, { label: string; color: 'default' | 'primary' | 'success' }> = {
+  internal: { label: 'Interno', color: 'default' },
+  client: { label: 'Clientes', color: 'primary' },
+  both: { label: 'Ambos', color: 'success' }
+}
 
 const ModulesView = () => {
   const axiosPrivate = useAxiosPrivate()
@@ -21,7 +27,16 @@ const ModulesView = () => {
   const columns: GridColDef[] = [
     { field: 'name', headerName: 'Nombre', flex: 1 },
     { field: 'label', headerName: 'Label', flex: 1 },
-    { field: 'description', headerName: 'Descripción', flex: 2 }
+    { field: 'description', headerName: 'Descripción', flex: 2 },
+    {
+      field: 'audience',
+      headerName: 'Para quién',
+      flex: 1,
+      renderCell: ({ value }) => {
+        const audience = AUDIENCE_LABELS[value as ModuleAudience]
+        return audience ? <Chip size='small' variant='outlined' color={audience.color} label={audience.label} /> : '—'
+      }
+    }
   ]
 
   const fetchModules = async () => {
@@ -52,21 +67,15 @@ const ModulesView = () => {
   }
 
   return (
-    <Container maxWidth='xl' sx={{ py: 3 }}>
-      <LmsPageHeader
-        title='Módulos'
-        subtitle='Módulos de la plataforma que se pueden asignar a cada empresa'
-        icon={<Apps />}
-        actions={
-          <Button variant='contained' startIcon={<Add />} onClick={() => setOpenModal(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}>
-            Crear módulo
-          </Button>
-        }
-      />
-
-      <Grid container spacing={3} sx={{ mb: 3 }}>
+    <Box>
+      <Grid container spacing={3} sx={{ mb: 3 }} alignItems='center'>
         <Grid item xs={12} sm={4}>
           <LmsStatCard label='Módulos' value={modules.length} icon={<Apps />} tone='teal' />
+        </Grid>
+        <Grid item xs={12} sm={8} sx={{ display: 'flex', justifyContent: { sm: 'flex-end' } }}>
+          <Button variant='contained' startIcon={<Add />} onClick={() => setOpenModal(true)} sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', textTransform: 'none', '&:hover': { bgcolor: '#00ACC1' } }}>
+            Crear módulo
+          </Button>
         </Grid>
       </Grid>
 
@@ -128,7 +137,7 @@ const ModulesView = () => {
           </Box>
         </Box>
       )}
-    </Container>
+    </Box>
   )
 }
 

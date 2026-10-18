@@ -3,6 +3,7 @@ export interface IModule {
   name: string
   label: string
   description: string
+  audience?: 'internal' | 'client' | 'both'
 }
 
 export interface ModuleFormProps {

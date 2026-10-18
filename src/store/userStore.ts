@@ -7,6 +7,9 @@ export interface Module {
   label: string
   customerModules: {
     isActive: boolean
+    /** Solo en /customers/:id/modules: último cambio y quién lo hizo. */
+    updatedAt?: string
+    updater?: { id: number; nombre: string } | null
   }
 }
 export interface UserData {

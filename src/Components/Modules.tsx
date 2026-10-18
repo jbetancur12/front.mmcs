@@ -29,8 +29,10 @@ import {
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
-import { Module } from 'src/store/userStore'
+import { useStore } from '@nanostores/react'
+import { Module, userStore } from 'src/store/userStore'
 import { bigToast } from './ExcelManipulation/Utils'
+import ConfirmDialog from './Common/ConfirmDialog'
 
 interface CustomerModulesProps {
   customerId?: string | number
@@ -39,10 +41,12 @@ interface CustomerModulesProps {
 const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
   const axiosPrivate = useAxiosPrivate()
   const canAssignModules = useCan(PERMISSIONS.CUSTOMERS_MODULE_ASSIGN)
+  const currentUser = useStore(userStore)
   const [modules, setModules] = useState<Module[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const [updating, setUpdating] = useState<number | null>(null)
+  const [pendingOff, setPendingOff] = useState<Module | null>(null)
 
   useEffect(() => {
     const fetchModules = async () => {
@@ -77,7 +81,12 @@ const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
           module.id === moduleId
             ? {
                 ...module,
-                customerModules: { ...module.customerModules, isActive }
+                customerModules: {
+                  ...module.customerModules,
+                  isActive,
+                  updatedAt: new Date().toISOString(),
+                  updater: currentUser?.nombre ? { id: 0, nombre: currentUser.nombre } : null
+                }
               }
             : module
         )
@@ -92,7 +101,23 @@ const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
       console.error('Error updating module:', error)
     } finally {
       setUpdating(null)
+      setPendingOff(null)
     }
+  }
+
+  // Activar es inmediato; quitar el acceso al cliente pide confirmación.
+  const requestChange = (module: Module, isActive: boolean) => {
+    if (isActive) handleModuleChange(module.id, true)
+    else setPendingOff(module)
+  }
+
+  const changeTooltip = (module: Module) => {
+    const { isActive, updatedAt, updater } = module.customerModules
+    const action = isActive ? 'Desactivar' : 'Activar'
+    if (!updatedAt) return `${action} módulo`
+    const date = new Date(updatedAt).toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    const who = updater?.nombre ? ` por ${updater.nombre}` : ''
+    return `${action} módulo · ${isActive ? 'activado' : 'desactivado'}${who} el ${date}`
   }
 
   const getModuleIcon = (moduleLabel: string) => {
@@ -269,12 +294,12 @@ const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
                       
                       {/* Module Toggle */}
                       <Box display="flex" justifyContent="center" mt={2}>
-                        <Tooltip title={`${module.customerModules.isActive ? 'Desactivar' : 'Activar'} módulo`}>
+                        <Tooltip title={changeTooltip(module)}>
                           <FormControlLabel
                             control={
                               <Switch
                                 checked={module.customerModules.isActive}
-                                onChange={(e) => handleModuleChange(module.id, e.target.checked)}
+                                onChange={(e) => requestChange(module, e.target.checked)}
                                 disabled={isUpdating || !canAssignModules}
                                 sx={{
                                   '& .MuiSwitch-switchBase.Mui-checked': {
@@ -317,6 +342,22 @@ const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
           })}
         </Grid>
       )}
+
+      <ConfirmDialog
+        open={Boolean(pendingOff)}
+        title={`Desactivar ${pendingOff?.label ?? 'módulo'}`}
+        message={
+          <>
+            Este cliente dejará de tener acceso a <strong>{pendingOff?.label}</strong>. Sus usuarios dejan de ver el
+            módulo de inmediato.
+          </>
+        }
+        confirmLabel='Desactivar'
+        tone='danger'
+        loading={updating !== null}
+        onConfirm={() => pendingOff && handleModuleChange(pendingOff.id, false)}
+        onClose={() => setPendingOff(null)}
+      />
     </Box>
   )
 }
