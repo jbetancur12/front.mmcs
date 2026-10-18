@@ -32,6 +32,7 @@ import { PERMISSIONS } from 'src/constants/permissions'
 import { useStore } from '@nanostores/react'
 import { Module, userStore } from 'src/store/userStore'
 import { bigToast } from './ExcelManipulation/Utils'
+import { BASIC_MODULE } from 'src/constants/modules'
 import ConfirmDialog from './Common/ConfirmDialog'
 
 interface CustomerModulesProps {
@@ -53,7 +54,8 @@ const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
       try {
         setLoading(true)
         const response = await axiosPrivate.get(`/customers/${customerId}/modules`)
-        setModules(response.data)
+        // 'Basic' es el marcador de módulos core: siempre visible, su switch no tendría efecto
+        setModules(response.data.filter((m: Module) => m.name !== BASIC_MODULE))
       } catch (error) {
         setError('Error al obtener los módulos')
         bigToast('Error al cargar los módulos', 'error')
@@ -182,28 +184,6 @@ const Modules: React.FC<CustomerModulesProps> = ({ customerId }) => {
 
   return (
     <Box sx={{ py: 2 }}>
-      {/* Header */}
-      <Box display="flex" alignItems="center" mb={4}>
-        <Avatar 
-          sx={{ 
-            backgroundColor: '#10b981',
-            mr: 2,
-            width: 40,
-            height: 40
-          }}
-        >
-          <Extension />
-        </Avatar>
-        <Box>
-          <Typography variant="h6" fontWeight="bold" sx={{ color: '#1f2937' }}>
-            Módulos del Cliente
-          </Typography>
-          <Typography variant="body2" sx={{ color: '#6b7280' }}>
-            {modules.length} {modules.length === 1 ? 'módulo disponible' : 'módulos disponibles'}
-          </Typography>
-        </Box>
-      </Box>
-
       {/* Modules Grid */}
       {modules.length === 0 ? (
         <Alert 
