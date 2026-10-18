@@ -1,14 +1,7 @@
 // src/Components/LaboratoryMonitor/AddPatternModal.tsx
 import React, { useEffect, useState } from 'react'
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField,
-  CircularProgress
-} from '@mui/material'
+import { TextField } from '@mui/material'
+import FormDialog from 'src/Components/Common/FormDialog'
 
 interface AddPatternModalProps {
   open: boolean
@@ -52,46 +45,34 @@ export const AddPatternModal: React.FC<AddPatternModalProps> = ({
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth='sm' fullWidth>
-      <DialogTitle>
-        Agregar Nuevo Patrón {chamberName ? `a ${chamberName}` : ''}
-      </DialogTitle>
-      <DialogContent>
-        <TextField
-          autoFocus
-          margin='dense'
-          id='patternName'
-          label='Nombre del Patrón'
-          type='text'
-          fullWidth
-          variant='outlined'
-          value={patternName}
-          onChange={(e) => setPatternName(e.target.value)}
-          error={!!error}
-          helperText={
-            error ||
-            'Único en todo el laboratorio (lo usa el dispositivo). Sin /, + ni #.'
-          }
-          disabled={isLoading}
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} color='secondary' disabled={isLoading}>
-          Cancelar
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          color='primary'
-          variant='contained'
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <CircularProgress size={24} color='inherit' />
-          ) : (
-            'Agregar'
-          )}
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <FormDialog
+      open={open}
+      onClose={handleClose}
+      title='Agregar patrón'
+      subtitle={chamberName ? `En ${chamberName}` : undefined}
+      submitLabel='Agregar patrón'
+      onSubmit={handleSubmit}
+      loading={isLoading}
+    >
+      <TextField
+        autoFocus
+        label='Nombre del patrón'
+        fullWidth
+        value={patternName}
+        onChange={(e) => {
+          setPatternName(e.target.value)
+          if (error) setError('')
+        }}
+        error={!!error}
+        helperText={
+          error ||
+          'Único en todo el laboratorio; lo usa el dispositivo. Sin /, + ni #.'
+        }
+        disabled={isLoading}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') handleSubmit()
+        }}
+      />
+    </FormDialog>
   )
 }

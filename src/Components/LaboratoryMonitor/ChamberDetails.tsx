@@ -2,7 +2,16 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
-import { Box, Typography, Button, Paper, CircularProgress } from '@mui/material'
+import {
+  Box,
+  Typography,
+  Button,
+  Paper,
+  CircularProgress,
+  IconButton,
+  Tooltip
+} from '@mui/material'
+import StatusPill from 'src/Components/Common/StatusPill'
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import {
@@ -223,104 +232,104 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
   const isIdle = chamber?.status === CHAMBER_STATUS.IDLE // O como sea tu estado "detenido"
 
   return (
-    <Paper elevation={0} sx={{ p: { xs: 2, md: 3 } }}>
-      <Box
+    <Box>
+      <Paper
+        variant='outlined'
         sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2,
-          flexWrap: 'wrap'
+          p: { xs: 2, md: 2.5 },
+          mb: 3,
+          borderRadius: '12px',
+          borderColor: isCalibrating ? '#00BFA5' : '#e5e7eb',
+          bgcolor: isCalibrating ? '#F4FCFA' : 'background.paper'
         }}
       >
-        <Typography variant='h5' component='div'>
-          Detalles de la Cámara: <strong>{chamber.name}</strong>
-        </Typography>
-        {/* <Button onClick={() => speak(chamber.name)}>Click</Button> */}
-        {canManage && (
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              variant='outlined'
-              size='small'
-              onClick={onEditChamber}
-              startIcon={<EditIcon />}
-            >
-              Editar Nombre
-            </Button>
-            <Button
-              variant='outlined'
-              color='error'
-              size='small'
-              onClick={() => onDeleteChamber(chamber.id)}
-              startIcon={
-                isDeletingChamber ? (
-                  <CircularProgress size={16} color='inherit' />
-                ) : (
-                  <DeleteIcon />
-                )
-              }
-              disabled={isDeletingChamber}
-            >
-              {isDeletingChamber ? 'Eliminando...' : 'Eliminar Cámara'}
-            </Button>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 2
+          }}
+        >
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant='h5' component='h2' fontWeight={700}>
+              {chamber.name}
+            </Typography>
+            <Box sx={{ mt: 0.75 }}>
+              {isCalibrating ? (
+                <StatusPill label='Calibración en curso' tone='live' pulse />
+              ) : (
+                <StatusPill label='Esperando inicio de calibración' tone='idle' />
+              )}
+            </Box>
           </Box>
-        )}
-      </Box>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          mb: 2,
-          flexWrap: 'wrap'
-        }}
-      >
-        <Box>
-          <Typography variant='h4' component='h2' gutterBottom>
-            {chamber.name}
-          </Typography>
-          <Typography variant='subtitle1' color='textSecondary' gutterBottom>
-            {chamber.status === CHAMBER_STATUS.IDLE
-              ? 'Esperando Inicio de Calibración'
-              : chamber.status === CHAMBER_STATUS.CALIBRATING
-                ? 'Calibración en curso'
-                : 'Estado no definido'}
-          </Typography>
+          {/* Iniciar/Detener exigen permiso de gestión en el backend */}
+          {canManage && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Tooltip title='Editar nombre'>
+                <IconButton
+                  aria-label='Editar nombre de la cámara'
+                  onClick={onEditChamber}
+                  sx={{ color: '#4b5563' }}
+                >
+                  <EditIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title='Eliminar cámara'>
+                <span>
+                  <IconButton
+                    aria-label='Eliminar cámara'
+                    onClick={() => onDeleteChamber(chamber.id)}
+                    disabled={isDeletingChamber}
+                    sx={{ color: '#4b5563', '&:hover': { color: 'error.main' } }}
+                  >
+                    {isDeletingChamber ? (
+                      <CircularProgress size={22} color='inherit' />
+                    ) : (
+                      <DeleteIcon />
+                    )}
+                  </IconButton>
+                </span>
+              </Tooltip>
+              {isIdle && (
+                <Button
+                  variant='contained'
+                  startIcon={
+                    isStartingCalibration ? (
+                      <CircularProgress size={18} color='inherit' />
+                    ) : (
+                      <PlayArrowIcon />
+                    )
+                  }
+                  onClick={() => onStartCalibration(chamber.id)}
+                  disabled={isStartingCalibration}
+                  sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+                >
+                  Iniciar calibración
+                </Button>
+              )}
+              {isCalibrating && (
+                <Button
+                  variant='outlined'
+                  color='error'
+                  startIcon={
+                    isStoppingCalibration ? (
+                      <CircularProgress size={18} color='inherit' />
+                    ) : (
+                      <Stop />
+                    )
+                  }
+                  onClick={() => onStopCalibration(chamber.id)}
+                  disabled={isStoppingCalibration}
+                >
+                  Detener calibración
+                </Button>
+              )}
+            </Box>
+          )}
         </Box>
-        {/* Iniciar/Detener exigen permiso de gestión en el backend */}
-        {canManage && isIdle && (
-          <Button
-            variant='contained'
-            color='primary'
-            startIcon={<PlayArrowIcon />}
-            onClick={() => onStartCalibration(chamber.id)}
-            disabled={isStartingCalibration}
-            sx={{ mt: { xs: 2, sm: 0 } }}
-          >
-            {isStartingCalibration ? (
-              <CircularProgress size={24} color='inherit' />
-            ) : (
-              'Iniciar Calibración'
-            )}
-          </Button>
-        )}
-        {canManage && isCalibrating && (
-          <Button
-            variant='contained'
-            color='secondary' // O 'error'
-            startIcon={<Stop />}
-            onClick={() => onStopCalibration(chamber.id)}
-            disabled={isStoppingCalibration}
-            sx={{ mt: { xs: 2, sm: 0 } }}
-          >
-            {isStoppingCalibration ? (
-              <CircularProgress size={24} color='inherit' />
-            ) : (
-              'Detener Calibración'
-            )}
-          </Button>
-        )}
-      </Box>
+      </Paper>
 
       <PatternSection
         chamberId={chamber.id}
@@ -345,6 +354,6 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
         summaryData={sensorsSummary}
         isLoading={isLoadingSummary}
       />
-    </Paper>
+    </Box>
   )
 }

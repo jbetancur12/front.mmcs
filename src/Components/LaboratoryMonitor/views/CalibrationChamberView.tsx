@@ -11,8 +11,10 @@ import {
   Grid,
   CircularProgress,
   Alert,
+  Paper,
   Snackbar
 } from '@mui/material'
+import EmptyState from 'src/Components/Common/EmptyState'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import { useQuery, useMutation, useQueryClient, QueryKey } from 'react-query' // Import QueryKey for React Query v3
 import { ReactQueryDevtools } from 'react-query/devtools'
@@ -684,9 +686,28 @@ const CalibrationChamberView: React.FC = () => {
               onChamberSelect={handleSelectChamber}
             />
           ) : (
-            <Alert severity='info' sx={{ mt: 2 }}>
-              No hay cámaras configuradas. Empieza agregando una.
-            </Alert>
+            <Paper
+              variant='outlined'
+              sx={{ borderRadius: '12px', borderColor: '#e5e7eb' }}
+            >
+              <EmptyState
+                icon={<AcUnit />}
+                title='Aún no hay cámaras configuradas'
+                hint='Una cámara agrupa los patrones que se calibran juntos. Agrega la primera para empezar.'
+                action={
+                  canManage ? (
+                    <Button
+                      variant='outlined'
+                      startIcon={<AddCircleOutlineIcon />}
+                      onClick={handleOpenCreateModal}
+                      sx={{ color: '#00897B', borderColor: '#00BFA5' }}
+                    >
+                      Agregar cámara
+                    </Button>
+                  ) : undefined
+                }
+              />
+            </Paper>
           )}
         </Grid>
 

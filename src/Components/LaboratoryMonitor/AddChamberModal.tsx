@@ -1,14 +1,8 @@
 // src/Components/LaboratoryMonitor/AddChamberModal.tsx
 
 import React, { useEffect, useState } from 'react'
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  TextField
-} from '@mui/material'
+import { TextField } from '@mui/material'
+import FormDialog from 'src/Components/Common/FormDialog'
 
 interface AddChamberModalProps {
   open: boolean
@@ -47,7 +41,6 @@ export const AddChamberModal: React.FC<AddChamberModalProps> = ({
     // No cerramos aquí, asumimos que onSubmit lo hará o se invalidará la query
     // y el componente padre controlará el estado 'open'
     // si onSubmit es exitoso.
-    // setChamberName(''); // Opcional: limpiar el campo si el modal permanece abierto
   }
 
   const handleClose = () => {
@@ -57,47 +50,29 @@ export const AddChamberModal: React.FC<AddChamberModalProps> = ({
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth='sm' fullWidth>
-      <DialogTitle>
-        {isEditMode ? 'Editar Nombre de la Cámara' : 'Agregar Nueva Cámara'}
-      </DialogTitle>
-      <DialogContent>
-        <TextField
-          autoFocus
-          margin='dense'
-          label='Nombre de la Cámara'
-          type='text'
-          fullWidth
-          variant='outlined'
-          value={chamberName}
-          onChange={(e) => {
-            setChamberName(e.target.value)
-            if (error) setError('')
-          }}
-          error={!!error}
-          helperText={error}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter') handleSubmit()
-          }}
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} color='secondary' disabled={isLoading}>
-          Cancelar
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          color='primary'
-          variant='contained'
-          disabled={isLoading}
-        >
-          {isLoading
-            ? 'Guardando...'
-            : isEditMode
-              ? 'Guardar Cambios'
-              : 'Agregar'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <FormDialog
+      open={open}
+      onClose={handleClose}
+      title={isEditMode ? 'Editar nombre de la cámara' : 'Agregar cámara'}
+      submitLabel={isEditMode ? 'Guardar cambios' : 'Agregar cámara'}
+      onSubmit={handleSubmit}
+      loading={isLoading}
+    >
+      <TextField
+        autoFocus
+        label='Nombre de la cámara'
+        fullWidth
+        value={chamberName}
+        onChange={(e) => {
+          setChamberName(e.target.value)
+          if (error) setError('')
+        }}
+        error={!!error}
+        helperText={error || 'Cómo la reconoce el equipo de laboratorio.'}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') handleSubmit()
+        }}
+      />
+    </FormDialog>
   )
 }

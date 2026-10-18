@@ -1,21 +1,17 @@
 // src/Components/LaboratoryMonitor/AddSensorModal.tsx
 import React, { useEffect, useState } from 'react'
 import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   TextField,
   FormControl,
   FormControlLabel,
   FormLabel,
+  FormHelperText,
   Radio,
   RadioGroup,
   Checkbox,
-  CircularProgress,
-  Box
+  Stack
 } from '@mui/material'
+import FormDialog from 'src/Components/Common/FormDialog'
 import { SensorType } from './types' // Asegúrate que la ruta sea correcta
 
 interface AddSensorModalProps {
@@ -62,12 +58,7 @@ export const AddSensorModal: React.FC<AddSensorModalProps> = ({
 
   // Cada apertura empieza limpia (el modal también se cierra desde el padre)
   useEffect(() => {
-    if (open) {
-      setSensorName('')
-      setSensorType('temperature_humidity')
-      setShowGraph(true)
-      setNameError('')
-    }
+    if (open) resetState()
   }, [open])
 
   const handleClose = () => {
@@ -76,34 +67,37 @@ export const AddSensorModal: React.FC<AddSensorModalProps> = ({
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth='sm' fullWidth>
-      <DialogTitle>
-        Agregar Nuevo Sensor {patternName ? `a ${patternName}` : ''}
-      </DialogTitle>
-      <DialogContent dividers>
+    <FormDialog
+      open={open}
+      onClose={handleClose}
+      title='Agregar sensor'
+      subtitle={patternName ? `En ${patternName}` : undefined}
+      submitLabel='Agregar sensor'
+      onSubmit={handleSubmit}
+      loading={isLoading}
+    >
+      <Stack spacing={2.5}>
         <TextField
           autoFocus
-          margin='dense'
           id='sensorName'
-          label='Nombre del Sensor'
-          type='text'
+          label='Nombre del sensor'
           fullWidth
-          variant='outlined'
           value={sensorName}
-          onChange={(e) => setSensorName(e.target.value)}
+          onChange={(e) => {
+            setSensorName(e.target.value)
+            if (nameError) setNameError('')
+          }}
           error={!!nameError}
           helperText={
             nameError ||
             'Igual al que envía el dispositivo; único en todo el laboratorio. Sin /, + ni #.'
           }
           disabled={isLoading}
-          sx={{ mb: 2 }}
         />
-        <FormControl component='fieldset' margin='normal' disabled={isLoading}>
-          <FormLabel component='legend'>Tipo de Sensor</FormLabel>
+        <FormControl component='fieldset' disabled={isLoading}>
+          <FormLabel component='legend'>Qué mide</FormLabel>
           <RadioGroup
-            row
-            aria-label='tipo de sensor'
+            aria-label='Qué mide el sensor'
             name='sensorType'
             value={sensorType}
             onChange={(e) => setSensorType(e.target.value as SensorType)}
@@ -111,47 +105,32 @@ export const AddSensorModal: React.FC<AddSensorModalProps> = ({
             <FormControlLabel
               value='temperature_humidity'
               control={<Radio />}
-              label='Temperatura y Humedad'
+              label='Temperatura y humedad'
             />
             <FormControlLabel
               value='temperature_only'
               control={<Radio />}
-              label='Solo Temperatura'
+              label='Solo temperatura'
             />
           </RadioGroup>
         </FormControl>
-        <Box mt={1}>
+        <FormControl disabled={isLoading}>
           <FormControlLabel
             control={
               <Checkbox
                 checked={showGraph}
                 onChange={(e) => setShowGraph(e.target.checked)}
                 name='showGraph'
-                color='primary'
-                disabled={isLoading}
+                sx={{ '&.Mui-checked': { color: '#00897B' } }}
               />
             }
-            label='Mostrar gráfica para este sensor'
+            label='Mostrar gráfica'
           />
-        </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} color='secondary' disabled={isLoading}>
-          Cancelar
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          color='primary'
-          variant='contained'
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <CircularProgress size={24} color='inherit' />
-          ) : (
-            'Agregar'
-          )}
-        </Button>
-      </DialogActions>
-    </Dialog>
+          <FormHelperText sx={{ ml: 4, mt: -0.5 }}>
+            La gráfica y la tabla se ven mientras la cámara calibra.
+          </FormHelperText>
+        </FormControl>
+      </Stack>
+    </FormDialog>
   )
 }
