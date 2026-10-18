@@ -11,8 +11,10 @@ import {
   Grid,
   CircularProgress,
   Alert,
+  Paper,
   Snackbar
 } from '@mui/material'
+import EmptyState from 'src/Components/Common/EmptyState'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import { useQuery, useMutation, useQueryClient, QueryKey } from 'react-query' // Import QueryKey for React Query v3
 import { ReactQueryDevtools } from 'react-query/devtools'
@@ -28,6 +30,7 @@ import {
 import { ChamberTabs } from '../ChamberTabs'
 import { ChamberDetails } from '../ChamberDetails'
 import { AddChamberModal } from '../AddChamberModal'
+import { StabilitySimulator } from '../StabilitySimulator'
 
 // Importar funciones de API
 import {
@@ -42,10 +45,12 @@ import {
 } from '../services/calibrationApi'
 import useAxiosPrivate from '@utils/use-axios-private'
 import { useCalibrationRealtimeUpdates } from '@utils/useCalibrationRealtimeUpdates'
+import { getApiErrorMessage } from '@utils/apiError'
 import Swal from 'sweetalert2'
 import { PatternConfigModal } from '../PatternConfigModal'
 import { useDeviceNotifications } from '@utils/useDeviceNotifications'
 import LaboratoryMqttGuide from 'src/Components/LaboratoryMqttGuide'
+import { useStabilityAlerts } from '@hooks/useStabilityAlerts'
 
 // Función para generar el resumen de sensores
 export const generateSensorSummary = (
@@ -63,7 +68,8 @@ export const generateSensorSummary = (
         latestTemperature: sensor.lastTemperature,
         averageTemperature: undefined, // El backend no calcula promedios por defecto
         latestHumidity: sensor.lastHumidity,
-        averageHumidity: undefined
+        averageHumidity: undefined,
+        lastSeen: sensor.lastSeen
       })
     })
   })
@@ -121,6 +127,9 @@ const CalibrationChamberView: React.FC = () => {
     apiFetchChambers(axiosPrivate)
   )
 
+  // Avisos de estabilidad de todas las cámaras en calibración, se vean o no
+  const stability = useStabilityAlerts(chambers)
+
   useEffect(() => {
     if (selectedChamberId === null && chambers.length > 0) {
       setSelectedChamberId(chambers[0].id)
@@ -166,7 +175,7 @@ const CalibrationChamberView: React.FC = () => {
       onError: (error: Error) => {
         setSnackbar({
           open: true,
-          message: `Error al guardar configuración: ${error.message}`,
+          message: getApiErrorMessage(error, 'Error al guardar configuración.'),
           severity: 'error'
         })
       }
@@ -190,7 +199,7 @@ const CalibrationChamberView: React.FC = () => {
       onError: (error: Error) => {
         setSnackbar({
           open: true,
-          message: `Error al crear cámara: ${error.message}`,
+          message: getApiErrorMessage(error, 'Error al crear cámara.'),
           severity: 'error'
         })
       }
@@ -212,7 +221,7 @@ const CalibrationChamberView: React.FC = () => {
       onError: (error: Error) => {
         setSnackbar({
           open: true,
-          message: `Error al actualizar estado: ${error.message}`,
+          message: getApiErrorMessage(error, 'Error al actualizar estado.'),
           severity: 'error'
         })
       }
@@ -239,7 +248,7 @@ const CalibrationChamberView: React.FC = () => {
       onError: (error: Error) => {
         setSnackbar({
           open: true,
-          message: `Error al crear patrón: ${error.message}`,
+          message: getApiErrorMessage(error, 'Error al crear patrón.'),
           severity: 'error'
         })
       }
@@ -262,7 +271,7 @@ const CalibrationChamberView: React.FC = () => {
       onError: (error: Error) => {
         setSnackbar({
           open: true,
-          message: `Error al actualizar cámara: ${error.message}`,
+          message: getApiErrorMessage(error, 'Error al actualizar cámara.'),
           severity: 'error'
         })
       }
@@ -284,7 +293,7 @@ const CalibrationChamberView: React.FC = () => {
       onError: (error: Error) => {
         setSnackbar({
           open: true,
-          message: `Error al eliminar cámara: ${error.message}`,
+          message: getApiErrorMessage(error, 'Error al eliminar cámara.'),
           severity: 'error'
         })
       }
@@ -308,7 +317,7 @@ const CalibrationChamberView: React.FC = () => {
       onError: (error: Error) => {
         setSnackbar({
           open: true,
-          message: `Error al eliminar patrón: ${error.message}`,
+          message: getApiErrorMessage(error, 'Error al eliminar patrón.'),
           severity: 'error'
         })
       },
@@ -341,7 +350,7 @@ const CalibrationChamberView: React.FC = () => {
       onError: (error: Error) => {
         setSnackbar({
           open: true,
-          message: `Error al crear sensor: ${error.message}`,
+          message: getApiErrorMessage(error, 'Error al crear sensor.'),
           severity: 'error'
         })
       },
@@ -365,7 +374,7 @@ const CalibrationChamberView: React.FC = () => {
         Swal.fire({
           icon: 'error',
           title: 'Error al eliminar sensor',
-          text: error.message || 'Error desconocido al eliminar el sensor.'
+          text: getApiErrorMessage(error, 'No se pudo eliminar el sensor.')
         })
       },
       onSettled: () => {
@@ -435,26 +444,54 @@ const CalibrationChamberView: React.FC = () => {
   }
 
   const handleStopCalibration = (chamberIdToStop: string | number) => {
-    updateChamberStatusMutation.mutate({
-      chamberId: chamberIdToStop,
-      status: CHAMBER_STATUS.IDLE // <= Usar constante para volver al estado inicial/detenido
+    // Al detener, el backend borra todas las lecturas de calibración de la cámara
+    Swal.fire({
+      title: '¿Detener la calibración?',
+      text: 'Se borrarán las lecturas de calibración registradas en esta cámara. No podrás recuperarlas.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, detener',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        updateChamberStatusMutation.mutate({
+          chamberId: chamberIdToStop,
+          status: CHAMBER_STATUS.IDLE
+        })
+      }
     })
   }
 
-  const handleAddPattern = (
+  // mutateAsync: el modal se cierra solo si el patrón se creó
+  const handleAddPattern = async (
     chamberId: string | number,
     patternName: string
   ) => {
-    createPatternMutation.mutate({ chamberId, patternName })
+    await createPatternMutation.mutateAsync({ chamberId, patternName })
   }
   const handleDeletePattern = (patternId: string | number) => {
-    deletePatternMutation.mutate(patternId)
+    Swal.fire({
+      title: '¿Eliminar este patrón?',
+      text: 'Se eliminarán también todos sus sensores y lecturas. No podrás revertirlo.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, ¡eliminar!',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deletePatternMutation.mutate(patternId)
+      }
+    })
   }
-  const handleAddSensorToPattern = (
+  const handleAddSensorToPattern = async (
     patternId: string | number,
     sensorData: { name: string; type: SensorType; showGraph: boolean }
   ) => {
-    createSensorMutation.mutate({ patternId, sensorData })
+    await createSensorMutation.mutateAsync({ patternId, sensorData })
   }
   const handleDeleteSensorFromPattern = (sensorId: string | number) => {
     Swal.fire({
@@ -591,9 +628,15 @@ const CalibrationChamberView: React.FC = () => {
                   startIcon={<AddCircleOutlineIcon />}
                   onClick={handleOpenCreateModal}
                   disabled={createChamberMutation.isLoading}
-                  sx={{ bgcolor: '#00BFA5', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#00ACC1' } }}
+                  sx={{
+                    bgcolor: '#00BFA5',
+                    whiteSpace: 'nowrap',
+                    '&:hover': { bgcolor: '#00ACC1' }
+                  }}
                 >
-                  {createChamberMutation.isLoading ? 'Agregando...' : 'Agregar cámara'}
+                  {createChamberMutation.isLoading
+                    ? 'Agregando...'
+                    : 'Agregar cámara'}
                 </Button>
               ) : undefined
             }
@@ -603,12 +646,21 @@ const CalibrationChamberView: React.FC = () => {
         <Grid item xs={12}>
           <Grid container spacing={3}>
             <Grid item xs={12} sm={4}>
-              <LmsStatCard label='Cámaras' value={chambers.length} icon={<AcUnit />} tone='teal' />
+              <LmsStatCard
+                label='Cámaras'
+                value={chambers.length}
+                icon={<AcUnit />}
+                tone='teal'
+              />
             </Grid>
             <Grid item xs={12} sm={4}>
               <LmsStatCard
                 label='En calibración'
-                value={chambers.filter((c) => c.status === CHAMBER_STATUS.CALIBRATING).length}
+                value={
+                  chambers.filter(
+                    (c) => c.status === CHAMBER_STATUS.CALIBRATING
+                  ).length
+                }
                 icon={<Speed />}
                 tone='orange'
               />
@@ -616,7 +668,11 @@ const CalibrationChamberView: React.FC = () => {
             <Grid item xs={12} sm={4}>
               <LmsStatCard
                 label='En reposo'
-                value={chambers.filter((c) => c.status !== CHAMBER_STATUS.CALIBRATING).length}
+                value={
+                  chambers.filter(
+                    (c) => c.status !== CHAMBER_STATUS.CALIBRATING
+                  ).length
+                }
                 icon={<PauseCircleOutline />}
                 tone='blue'
               />
@@ -628,6 +684,12 @@ const CalibrationChamberView: React.FC = () => {
           <LaboratoryMqttGuide variant='patterns' />
         </Grid>
 
+        {import.meta.env.DEV && selectedChamber && (
+          <Grid item xs={12}>
+            <StabilitySimulator chamber={selectedChamber} />
+          </Grid>
+        )}
+
         <Grid item xs={12}>
           {chambers.length > 0 ? (
             <ChamberTabs
@@ -636,9 +698,28 @@ const CalibrationChamberView: React.FC = () => {
               onChamberSelect={handleSelectChamber}
             />
           ) : (
-            <Alert severity='info' sx={{ mt: 2 }}>
-              No hay cámaras configuradas. Empieza agregando una.
-            </Alert>
+            <Paper
+              variant='outlined'
+              sx={{ borderRadius: '12px', borderColor: '#e5e7eb' }}
+            >
+              <EmptyState
+                icon={<AcUnit />}
+                title='Aún no hay cámaras configuradas'
+                hint='Una cámara agrupa los patrones que se calibran juntos. Agrega la primera para empezar.'
+                action={
+                  canManage ? (
+                    <Button
+                      variant='outlined'
+                      startIcon={<AddCircleOutlineIcon />}
+                      onClick={handleOpenCreateModal}
+                      sx={{ color: '#00897B', borderColor: '#00BFA5' }}
+                    >
+                      Agregar cámara
+                    </Button>
+                  ) : undefined
+                }
+              />
+            </Paper>
           )}
         </Grid>
 
@@ -675,6 +756,10 @@ const CalibrationChamberView: React.FC = () => {
                 deleteChamberMutation.variables === selectedChamber.id
               }
               onConfigurePattern={handleOpenPatternConfigModal} // <--- NUEVA PROP
+              stabilityAlerts={stability.alerts}
+              onAcknowledgeStability={stability.acknowledge}
+              voice={stability.voice}
+              desktop={stability.desktop}
             />
           ) : (
             chambers.length > 0 && (

@@ -1,8 +1,17 @@
 // src/Components/LaboratoryMonitor/ChamberDetails.tsx
-import React, { useEffect, useRef, useState } from 'react'
+import React from 'react'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
-import { Box, Typography, Button, Paper, CircularProgress } from '@mui/material'
+import {
+  Box,
+  Typography,
+  Button,
+  Paper,
+  CircularProgress,
+  IconButton,
+  Tooltip
+} from '@mui/material'
+import StatusPill from 'src/Components/Common/StatusPill'
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import {
@@ -14,21 +23,15 @@ import {
 } from './types'
 import { PatternSection } from './PatternSection'
 import { SensorsSummaryTable } from './SensorsSummaryTable'
-import { Stop } from '@mui/icons-material'
+import { Stop, VolumeOff, VolumeUp } from '@mui/icons-material'
+import type { useVoiceAnnouncer } from '@hooks/useVoiceAnnouncer'
+import type { useDesktopNotifications } from '@hooks/useDesktopNotifications'
+import { NotificationsActive, NotificationsOff } from '@mui/icons-material'
+import { isPatternStable, StabilityAlertState } from './stability'
 
-function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T>()
-  useEffect(() => {
-    ref.current = value
-  })
-  return ref.current
-}
-
-export interface StabilityAlertState {
-  count: number // Cuántas veces se ha notificado por voz
-  timestamp: number // Cuándo se hizo la primera notificación
-  acknowledged: boolean // Si el usuario ya la reconoció
-}
+// Se reexporta para no cambiar los imports de PatternItem y PatternSection
+export { isPatternStable }
+export type { StabilityAlertState }
 
 interface ChamberDetailsProps {
   chamber: Chamber | null // Puede ser null si no hay ninguna seleccionada o está cargando
@@ -58,30 +61,11 @@ interface ChamberDetailsProps {
   onDeleteChamber: (chamberId: string | number) => void // NUEVA PROP
   isDeletingChamber?: boolean
   onConfigurePattern: (pattern: Pattern) => void // <--- NUEVA PROP
-}
-
-export const isPatternStable = (pattern: Pattern): boolean => {
-  if (!pattern || !pattern.sensors || pattern.sensors.length === 0) {
-    return false // No es estable si no tiene sensores
-  }
-  // 'every' se asegura de que TODOS los sensores del patrón cumplan la condición
-  return pattern.sensors.every((sensor) => {
-    const status = sensor.stabilityStatus || {
-      temperatureStable: false,
-      humidityStable: false
-    }
-    // Lógica corregida para evitar el error de tipos
-    if (sensor.type === 'temperature_humidity') {
-      return status.temperatureStable && status.humidityStable
-    }
-    if (sensor.type === 'temperature_only') {
-      return status.temperatureStable
-    }
-    if (sensor.type === 'humidity_only') {
-      return status.humidityStable
-    }
-    return false // Por defecto, si el tipo no es conocido, no es estable
-  })
+  // Avisos de estabilidad: se calculan para todas las cámaras en la vista
+  stabilityAlerts: Record<string, StabilityAlertState>
+  onAcknowledgeStability: (patternId: string | number) => void
+  voice: ReturnType<typeof useVoiceAnnouncer>
+  desktop: ReturnType<typeof useDesktopNotifications>
 }
 
 export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
@@ -106,93 +90,22 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
   onEditChamber,
   onDeleteChamber,
   isDeletingChamber = false,
-  onConfigurePattern
+  onConfigurePattern,
+  stabilityAlerts,
+  onAcknowledgeStability,
+  voice,
+  desktop
 }) => {
   const canManage = useCan(PERMISSIONS.LABORATORY_CALIBRATION_MANAGE)
-  const speak = (message: string) => {
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(message)
-    utterance.lang = 'es-ES '
-    utterance.rate = 0.9
-    window.speechSynthesis.speak(utterance)
-  }
-
-  const prevChamberState = usePrevious(chamber)
-  const [stabilityAlerts, setStabilityAlerts] = useState<
-    Record<string, StabilityAlertState>
-  >({})
-
-  const handleAcknowledgeStability = (patternId: string | number) => {
-    setStabilityAlerts((prev) => ({
-      ...prev,
-      [patternId]: {
-        ...prev[patternId], // Mantener count y timestamp por si quieres usarlos
-        acknowledged: true // Marcar como reconocida para silenciar futuras alertas de voz
-      }
-    }))
-  }
-
-  useEffect(() => {
-    if (!prevChamberState || chamber?.status !== CHAMBER_STATUS.CALIBRATING) {
-      return
-    }
-
-    const now = Date.now()
-    const oneMinuteInMs = 60 * 1000
-    const MAX_VOICE_ALERTS = 2 // Definir el número máximo de notificaciones de voz
-
-    ;(chamber.patterns || []).forEach((currentPattern) => {
-      const prevPattern = (prevChamberState.patterns || []).find(
-        (p) => p.id === currentPattern.id
-      )
-      if (!prevPattern) return
-
-      const wasStable = isPatternStable(prevPattern)
-      const isNowStable = isPatternStable(currentPattern)
-      const alertStatus = stabilityAlerts[currentPattern.id]
-
-      // --- LÓGICA DE NOTIFICACIÓN ---
-
-      // 1. SI ACABA DE VOLVERSE ESTABLE: Notificar por primera vez
-      if (!wasStable && isNowStable) {
-        speak(
-          `Atención. El patrón ${currentPattern.name} en la cámara ${chamber.name} ha alcanzado la estabilidad.`
-        )
-        setStabilityAlerts((prev) => ({
-          ...prev,
-          [currentPattern.id]: { count: 1, timestamp: now, acknowledged: false }
-        }))
-      }
-      // 2. SI SIGUE ESTABLE: Comprobar si se debe repetir la notificación
-      else if (isNowStable && alertStatus) {
-        // Solo notificar si NO ha sido reconocida Y no hemos alcanzado el límite
-        if (!alertStatus.acknowledged && alertStatus.count < MAX_VOICE_ALERTS) {
-          // Y si ha pasado más de un minuto
-          if (now - alertStatus.timestamp > oneMinuteInMs) {
-            speak(
-              `Recordatorio: El patrón ${currentPattern.name} se mantiene estable.`
-            )
-            setStabilityAlerts((prev) => ({
-              ...prev,
-              [currentPattern.id]: {
-                ...prev[currentPattern.id],
-                count: alertStatus.count + 1,
-                timestamp: now
-              }
-            }))
-          }
-        }
-      }
-      // 3. SI ACABA DE VOLVERSE INESTABLE: Resetear el estado de la alerta
-      else if (wasStable && !isNowStable) {
-        setStabilityAlerts((prev) => {
-          const newState = { ...prev }
-          delete newState[currentPattern.id]
-          return newState
-        })
-      }
-    })
-  }, [chamber, prevChamberState, stabilityAlerts])
+  const {
+    enabled,
+    setEnabled,
+    needsClick,
+    supported,
+    noSpanishVoice,
+    naturalVoice,
+    test
+  } = voice
 
   if (isLoadingChamberData) {
     return (
@@ -223,103 +136,204 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
   const isIdle = chamber?.status === CHAMBER_STATUS.IDLE // O como sea tu estado "detenido"
 
   return (
-    <Paper elevation={0} sx={{ p: { xs: 2, md: 3 } }}>
-      <Box
+    <Box>
+      <Paper
+        variant='outlined'
         sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2,
-          flexWrap: 'wrap'
+          p: { xs: 2, md: 2.5 },
+          mb: 3,
+          borderRadius: '12px',
+          borderColor: isCalibrating ? '#00BFA5' : '#e5e7eb',
+          bgcolor: isCalibrating ? '#F4FCFA' : 'background.paper'
         }}
       >
-        <Typography variant='h5' component='div'>
-          Detalles de la Cámara: <strong>{chamber.name}</strong>
-        </Typography>
-        {/* <Button onClick={() => speak(chamber.name)}>Click</Button> */}
-        {canManage && (
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              variant='outlined'
-              size='small'
-              onClick={onEditChamber}
-              startIcon={<EditIcon />}
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 2
+          }}
+        >
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant='h5' component='h2' fontWeight={700}>
+              {chamber.name}
+            </Typography>
+            <Box
+              sx={{
+                mt: 0.75,
+                display: 'flex',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 1
+              }}
             >
-              Editar Nombre
-            </Button>
-            <Button
-              variant='outlined'
-              color='error'
-              size='small'
-              onClick={() => onDeleteChamber(chamber.id)}
-              startIcon={
-                isDeletingChamber ? (
-                  <CircularProgress size={16} color='inherit' />
-                ) : (
-                  <DeleteIcon />
-                )
-              }
-              disabled={isDeletingChamber}
-            >
-              {isDeletingChamber ? 'Eliminando...' : 'Eliminar Cámara'}
-            </Button>
+              {isCalibrating ? (
+                <StatusPill label='Calibración en curso' tone='live' pulse />
+              ) : (
+                <StatusPill
+                  label='Esperando inicio de calibración'
+                  tone='idle'
+                />
+              )}
+              {isCalibrating && (
+                <Tooltip
+                  title={
+                    !supported
+                      ? 'Este navegador no tiene voz: se usa un pitido'
+                      : noSpanishVoice
+                        ? 'Este equipo no tiene voz en español: el aviso sonará con otra voz. Instálala en Windows, Configuración > Hora e idioma > Voz.'
+                        : needsClick
+                          ? 'El navegador bloquea la voz hasta que hagas clic. Actívala aquí.'
+                          : 'Avisa por voz cuando un patrón se estabiliza'
+                  }
+                >
+                  <Button
+                    size='small'
+                    color={needsClick ? 'warning' : 'inherit'}
+                    startIcon={
+                      enabled && !needsClick ? <VolumeUp /> : <VolumeOff />
+                    }
+                    onClick={
+                      needsClick || !enabled ? test : () => setEnabled(false)
+                    }
+                    sx={{ color: needsClick ? undefined : '#4b5563' }}
+                  >
+                    {needsClick
+                      ? 'Activar avisos de voz'
+                      : enabled
+                        ? 'Avisos de voz activos'
+                        : 'Avisos de voz silenciados'}
+                  </Button>
+                </Tooltip>
+              )}
+              {isCalibrating && desktop.permission !== 'unsupported' && (
+                <Tooltip
+                  title={
+                    desktop.permission === 'denied'
+                      ? 'El navegador las bloqueó. Habilítalas en la configuración del sitio.'
+                      : desktop.permission === 'granted'
+                        ? 'Avisa con una notificación del sistema cuando la pantalla no está a la vista'
+                        : 'Recibe un aviso del sistema aunque estés en otro programa'
+                  }
+                >
+                  <span>
+                    <Button
+                      size='small'
+                      color={
+                        desktop.permission === 'default' ? 'warning' : 'inherit'
+                      }
+                      startIcon={
+                        desktop.permission === 'granted' ? (
+                          <NotificationsActive />
+                        ) : (
+                          <NotificationsOff />
+                        )
+                      }
+                      onClick={desktop.request}
+                      disabled={desktop.permission !== 'default'}
+                      sx={{
+                        color:
+                          desktop.permission === 'default'
+                            ? undefined
+                            : '#4b5563'
+                      }}
+                    >
+                      {desktop.permission === 'granted'
+                        ? 'Notificaciones activas'
+                        : desktop.permission === 'denied'
+                          ? 'Notificaciones bloqueadas'
+                          : 'Activar notificaciones'}
+                    </Button>
+                  </span>
+                </Tooltip>
+              )}
+            </Box>
+            {/* Solo con la voz activa y si la voz actual no es neuronal */}
+            {isCalibrating &&
+              enabled &&
+              !needsClick &&
+              supported &&
+              naturalVoice === false && (
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{ display: 'block', mt: 0.5 }}
+                >
+                  Tip: en Microsoft Edge los avisos de voz suenan más naturales.
+                </Typography>
+              )}
           </Box>
-        )}
-      </Box>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          mb: 2,
-          flexWrap: 'wrap'
-        }}
-      >
-        <Box>
-          <Typography variant='h4' component='h2' gutterBottom>
-            {chamber.name}
-          </Typography>
-          <Typography variant='subtitle1' color='textSecondary' gutterBottom>
-            {chamber.status === CHAMBER_STATUS.IDLE
-              ? 'Esperando Inicio de Calibración'
-              : chamber.status === CHAMBER_STATUS.CALIBRATING
-                ? 'Calibración en curso'
-                : 'Estado no definido'}
-          </Typography>
+          {/* Iniciar/Detener exigen permiso de gestión en el backend */}
+          {canManage && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Tooltip title='Editar nombre'>
+                <IconButton
+                  aria-label='Editar nombre de la cámara'
+                  onClick={onEditChamber}
+                  sx={{ color: '#4b5563' }}
+                >
+                  <EditIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title='Eliminar cámara'>
+                <span>
+                  <IconButton
+                    aria-label='Eliminar cámara'
+                    onClick={() => onDeleteChamber(chamber.id)}
+                    disabled={isDeletingChamber}
+                    sx={{
+                      color: '#4b5563',
+                      '&:hover': { color: 'error.main' }
+                    }}
+                  >
+                    {isDeletingChamber ? (
+                      <CircularProgress size={22} color='inherit' />
+                    ) : (
+                      <DeleteIcon />
+                    )}
+                  </IconButton>
+                </span>
+              </Tooltip>
+              {isIdle && (
+                <Button
+                  variant='contained'
+                  startIcon={
+                    isStartingCalibration ? (
+                      <CircularProgress size={18} color='inherit' />
+                    ) : (
+                      <PlayArrowIcon />
+                    )
+                  }
+                  onClick={() => onStartCalibration(chamber.id)}
+                  disabled={isStartingCalibration}
+                  sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+                >
+                  Iniciar calibración
+                </Button>
+              )}
+              {isCalibrating && (
+                <Button
+                  variant='outlined'
+                  color='error'
+                  startIcon={
+                    isStoppingCalibration ? (
+                      <CircularProgress size={18} color='inherit' />
+                    ) : (
+                      <Stop />
+                    )
+                  }
+                  onClick={() => onStopCalibration(chamber.id)}
+                  disabled={isStoppingCalibration}
+                >
+                  Detener calibración
+                </Button>
+              )}
+            </Box>
+          )}
         </Box>
-        {isIdle && ( // Mostrar botón "Iniciar" si está inactiva
-          <Button
-            variant='contained'
-            color='primary'
-            startIcon={<PlayArrowIcon />}
-            onClick={() => onStartCalibration(chamber.id)}
-            disabled={isStartingCalibration}
-            sx={{ mt: { xs: 2, sm: 0 } }}
-          >
-            {isStartingCalibration ? (
-              <CircularProgress size={24} color='inherit' />
-            ) : (
-              'Iniciar Calibración'
-            )}
-          </Button>
-        )}
-        {isCalibrating && ( // Mostrar botón "Detener" si está calibrando
-          <Button
-            variant='contained'
-            color='secondary' // O 'error'
-            startIcon={<Stop />}
-            onClick={() => onStopCalibration(chamber.id)}
-            disabled={isStoppingCalibration}
-            sx={{ mt: { xs: 2, sm: 0 } }}
-          >
-            {isStoppingCalibration ? (
-              <CircularProgress size={24} color='inherit' />
-            ) : (
-              'Detener Calibración'
-            )}
-          </Button>
-        )}
-      </Box>
+      </Paper>
 
       <PatternSection
         chamberId={chamber.id}
@@ -337,13 +351,13 @@ export const ChamberDetails: React.FC<ChamberDetailsProps> = ({
         isLoadingDeleteSensor={isLoadingDeleteSensor}
         onConfigurePattern={onConfigurePattern}
         stabilityAlerts={stabilityAlerts}
-        onAcknowledgeStability={handleAcknowledgeStability}
+        onAcknowledgeStability={onAcknowledgeStability}
       />
 
       <SensorsSummaryTable
         summaryData={sensorsSummary}
         isLoading={isLoadingSummary}
       />
-    </Paper>
+    </Box>
   )
 }

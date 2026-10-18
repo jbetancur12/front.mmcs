@@ -8,9 +8,8 @@ import {
   AccordionDetails,
   Typography,
   Box,
-  IconButton,
   Grid,
-  Chip,
+  IconButton,
   Tooltip as MuiTooltip,
   CircularProgress
 } from '@mui/material'
@@ -19,9 +18,14 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import ThermostatIcon from '@mui/icons-material/Thermostat'
 import OpacityIcon from '@mui/icons-material/Opacity'
 import ShowChartIcon from '@mui/icons-material/ShowChart'
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
+import ReadingValue from 'src/Components/Common/ReadingValue'
+import EmptyState from 'src/Components/Common/EmptyState'
 
 // Ajusta ruta a tipos
 import { Sensor, CHAMBER_STATUS, ChamberStatus, Pattern } from './types'
+import { getStaleSensorIds } from './stability'
+import StatusPill from 'src/Components/Common/StatusPill'
 import { SensorDataTable } from './SensorDataTable'
 import { SensorRealtimeChart } from './SensorRealtimeChart'
 
@@ -37,7 +41,8 @@ export const SensorItem: React.FC<SensorItemProps> = ({
   sensor: sensorProp,
   chamberStatus, // <= Recibir estado
   onDeleteSensor,
-  isLoadingDelete = false
+  isLoadingDelete = false,
+  pattern
 }) => {
   const canManage = useCan(PERMISSIONS.LABORATORY_CALIBRATION_MANAGE)
   // Desestructurar el sensor que viene de React Query (actualizado por WS)
@@ -54,6 +59,9 @@ export const SensorItem: React.FC<SensorItemProps> = ({
   const [isExpanded, setIsExpanded] = useState(showGraph) // Expandir inicialmente si la gráfica está activa
 
   const isCalibrating = chamberStatus === CHAMBER_STATUS.CALIBRATING
+  const hasHumidity = type.includes('humidity')
+  // Solo importa mientras se calibra: fuera de calibración los sensores pueden callar
+  const isStale = isCalibrating && getStaleSensorIds(pattern).has(sensorId)
 
   const handleAccordionChange = (
     _event: React.SyntheticEvent,
@@ -62,62 +70,90 @@ export const SensorItem: React.FC<SensorItemProps> = ({
     setIsExpanded(expanded)
   }
 
-  const getSensorTypeLabel = () => {
-    if (type === 'temperature_humidity') return 'Temp & Hum'
-    return 'Solo Temp'
-  }
-
   return (
     <Accordion
       expanded={isExpanded}
       onChange={handleAccordionChange}
-      sx={{ mb: 1, '&.Mui-expanded': { mb: 1 } }}
+      disableGutters
+      elevation={0}
       TransitionProps={{ unmountOnExit: true }}
+      sx={{
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px !important',
+        '&:before': { display: 'none' },
+        '&.Mui-expanded': { borderColor: '#00BFA5' }
+      }}
     >
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} /* ... aria ... */>
-        {/* ... Contenido del Summary (Iconos, Nombre, Chip, Botón Borrar) ... */}
+      <AccordionSummary
+        expandIcon={<ExpandMoreIcon />}
+        sx={{
+          '&:focus-visible': { outline: '3px solid #00897B', outlineOffset: -3 }
+        }}
+      >
+        {/* La lectura vive en la fila cerrada: se ve sin abrir cada sensor */}
         <Box
-          sx={{ display: 'flex', alignItems: 'center', width: '100%', gap: 1 }}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            width: '100%',
+            gap: { xs: 1.5, sm: 3 },
+            flexWrap: 'wrap',
+            pr: 1
+          }}
         >
-          <Box sx={{ display: 'flex' }}>
-            {type === 'temperature_humidity' ? (
-              <>
-                <MuiTooltip title='Temperatura'>
-                  <ThermostatIcon
-                    sx={{ color: 'error.main' }}
-                    fontSize='small'
-                  />
-                </MuiTooltip>
-                <MuiTooltip title='Humedad'>
-                  <OpacityIcon sx={{ color: 'info.main' }} fontSize='small' />
-                </MuiTooltip>
-              </>
-            ) : (
-              <MuiTooltip title='Temperatura'>
-                <ThermostatIcon sx={{ color: 'error.main' }} fontSize='small' />
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              flex: '1 1 140px',
+              minWidth: 0
+            }}
+          >
+            <Typography variant='subtitle2' fontWeight={700} noWrap>
+              {name}
+            </Typography>
+            {isStale && (
+              <MuiTooltip title='Este sensor lleva más tiempo sin reportar que los demás del patrón. No cuenta para la estabilidad.'>
+                <span>
+                  <StatusPill label='Sin señal' tone='warning' size='small' />
+                </span>
+              </MuiTooltip>
+            )}
+            {showGraph && (
+              <MuiTooltip title='Gráfica activada'>
+                <ShowChartIcon sx={{ fontSize: 18, color: '#9ca3af' }} />
               </MuiTooltip>
             )}
           </Box>
-          <Typography variant='subtitle1' sx={{ flexGrow: 1, mr: 1 }}>
-            {name}
-          </Typography>
-          {showGraph && (
-            <MuiTooltip title='Gráfica Activada'>
-              <ShowChartIcon color='action' fontSize='small' />
-            </MuiTooltip>
+          <ReadingValue
+            label='Temperatura'
+            value={lastTemperature}
+            unit='°C'
+            tone='temperature'
+            icon={<ThermostatIcon />}
+          />
+          {hasHumidity && (
+            <ReadingValue
+              label='Humedad'
+              value={lastHumidity}
+              unit='%'
+              tone='humidity'
+              icon={<OpacityIcon />}
+            />
           )}
-          <Chip label={getSensorTypeLabel()} size='small' variant='outlined' />
           {canManage && (
-            <MuiTooltip title='Eliminar Sensor'>
+            <MuiTooltip title='Eliminar sensor'>
               <span>
                 <IconButton
                   size='small'
+                  aria-label={`Eliminar sensor ${name}`}
                   onClick={(e) => {
                     e.stopPropagation()
                     onDeleteSensor(sensorId)
                   }}
                   disabled={isLoadingDelete}
-                  color='error'
+                  sx={{ color: '#4b5563', '&:hover': { color: 'error.main' } }}
                 >
                   {isLoadingDelete ? (
                     <CircularProgress size={20} color='inherit' />
@@ -130,55 +166,40 @@ export const SensorItem: React.FC<SensorItemProps> = ({
           )}
         </Box>
       </AccordionSummary>
-      <AccordionDetails sx={{ backgroundColor: 'grey.50', p: 2 }}>
-        <Grid container spacing={2} sx={{ mb: showGraph ? 2 : 0 }}>
-          {/* Valores Actuales */}
-          {type.includes('temperature') && (
-            <Grid item xs={12} sm={type === 'temperature_humidity' ? 6 : 12}>
-              <Typography variant='h6' color='textPrimary'>
-                Temp:{' '}
-                {lastTemperature?.toFixed(2) ??
-                  lastTemperature?.toFixed(2) ??
-                  '--'}
-                °C
-              </Typography>
-            </Grid>
-          )}
-          {type.includes('humidity') && (
-            <Grid item xs={12} sm={6}>
-              <Typography variant='h6' color='textPrimary'>
-                Hum:{' '}
-                {lastHumidity?.toFixed(2) ?? lastHumidity?.toFixed(2) ?? '--'}%
-              </Typography>
-            </Grid>
-          )}
-        </Grid>
-
+      <AccordionDetails
+        sx={{ bgcolor: '#fafafa', p: 2, borderTop: '1px solid #e5e7eb' }}
+      >
         {/* Mostrar sección de gráfica y tabla si showGraph es true */}
-        {showGraph ? (
-          // Mostrar contenido SOLO si está calibrando (según "lo otro no lo necesito")
-          isCalibrating ? (
-            <>
-              <SensorDataTable data={historicalData} sensorType={type} />
-              <SensorRealtimeChart data={historicalData} sensorType={type} />
-            </>
-          ) : (
-            <Typography
-              variant='body2'
-              color='textSecondary'
-              sx={{ textAlign: 'center', py: 4 }}
-            >
-              La gráfica y tabla se muestran durante la calibración.
-            </Typography>
-          )
+        {!showGraph ? (
+          <EmptyState
+            compact
+            icon={<ShowChartIcon />}
+            title='La gráfica está desactivada para este sensor'
+            hint='Actívala desde la configuración del patrón.'
+          />
+        ) : !isCalibrating ? (
+          <EmptyState
+            compact
+            icon={<ShowChartIcon />}
+            title='La gráfica y la tabla se muestran durante la calibración'
+            hint='Inicia la calibración de la cámara para ver las lecturas en vivo.'
+          />
+        ) : historicalData.length === 0 ? (
+          <EmptyState
+            compact
+            icon={<HourglassEmptyIcon />}
+            title='Aún no hay lecturas para graficar'
+            hint='La tabla y la gráfica se llenan con las lecturas que el sensor publique desde que inició la calibración.'
+          />
         ) : (
-          <Typography
-            variant='body2'
-            color='textSecondary'
-            sx={{ textAlign: 'center', py: 4 }}
-          >
-            Gráfica desactivada para este sensor.
-          </Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={8}>
+              <SensorRealtimeChart data={historicalData} sensorType={type} />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <SensorDataTable data={historicalData} sensorType={type} />
+            </Grid>
+          </Grid>
         )}
       </AccordionDetails>
     </Accordion>

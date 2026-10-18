@@ -2,7 +2,10 @@
 import React, { useState } from 'react'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
-import { Box, Typography, Button, CircularProgress } from '@mui/material'
+import { Box, Button, CircularProgress, Paper, Stack } from '@mui/material'
+import Inventory2Outlined from '@mui/icons-material/Inventory2Outlined'
+import SectionHeader from 'src/Components/Common/SectionHeader'
+import EmptyState from 'src/Components/Common/EmptyState'
 import AddIcon from '@mui/icons-material/Add'
 import {
   ChamberStatus,
@@ -61,8 +64,12 @@ export const PatternSection: React.FC<PatternSectionProps> = ({
   const handleCloseAddPatternModal = () => setIsAddPatternModalOpen(false)
 
   const handleAddPatternSubmit = async (patternName: string) => {
-    await onAddPattern(chamberId, patternName)
-    handleCloseAddPatternModal() // Idealmente controlado por el padre/React Query
+    try {
+      await onAddPattern(chamberId, patternName)
+      handleCloseAddPatternModal()
+    } catch {
+      // El error ya se notifica en la vista; el modal sigue abierto con el nombre
+    }
   }
 
   if (isLoadingPatterns) {
@@ -74,53 +81,68 @@ export const PatternSection: React.FC<PatternSectionProps> = ({
   }
 
   return (
-    <Box sx={{ my: 3 }}>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2
-        }}
-      >
-        <Typography variant='h5'>Patrones</Typography>
-        {canManage && (
-          <Button
-            variant='contained'
-            startIcon={<AddIcon />}
-            onClick={handleOpenAddPatternModal}
-            disabled={isLoadingAddPattern}
-          >
-            Agregar Patrón
-          </Button>
-        )}
-      </Box>
+    <Box sx={{ mb: 4 }}>
+      <SectionHeader
+        title='Patrones'
+        count={patterns?.length ?? 0}
+        description='Equipos de referencia y los sensores que los miden.'
+        actions={
+          canManage ? (
+            <Button
+              variant='contained'
+              startIcon={<AddIcon />}
+              onClick={handleOpenAddPatternModal}
+              disabled={isLoadingAddPattern}
+              sx={{ bgcolor: '#00BFA5', '&:hover': { bgcolor: '#00897B' } }}
+            >
+              Agregar patrón
+            </Button>
+          ) : undefined
+        }
+      />
 
       {patterns && patterns.length > 0 ? (
-        patterns.map((pattern) => (
-          <PatternItem
-            key={pattern.id}
-            pattern={pattern}
-            chamberStatus={chamberStatus}
-            onDeletePattern={() => onDeletePattern(pattern.id)}
-            onAddSensorToPattern={onAddSensorToPattern}
-            onDeleteSensorFromPattern={onDeleteSensorFromPattern}
-            isLoadingDeletePattern={isLoadingDeletePattern[pattern.id]}
-            isLoadingAddSensor={isLoadingAddSensorToPattern[pattern.id]}
-            isLoadingDeleteSensor={isLoadingDeleteSensor} // Pasa el objeto completo
-            onConfigurePattern={onConfigurePattern}
-            alertStatus={stabilityAlerts[pattern.id]} // <-- Pasar el estado de alerta para este patrón
-            onAcknowledge={() => onAcknowledgeStability(pattern.id)} // <-- Pasar el handler
-          />
-        ))
+        <Stack spacing={2}>
+          {patterns.map((pattern) => (
+            <PatternItem
+              key={pattern.id}
+              pattern={pattern}
+              chamberStatus={chamberStatus}
+              onDeletePattern={() => onDeletePattern(pattern.id)}
+              onAddSensorToPattern={onAddSensorToPattern}
+              onDeleteSensorFromPattern={onDeleteSensorFromPattern}
+              isLoadingDeletePattern={isLoadingDeletePattern[pattern.id]}
+              isLoadingAddSensor={isLoadingAddSensorToPattern[pattern.id]}
+              isLoadingDeleteSensor={isLoadingDeleteSensor} // Pasa el objeto completo
+              onConfigurePattern={onConfigurePattern}
+              alertStatus={stabilityAlerts[pattern.id]} // <-- Pasar el estado de alerta para este patrón
+              onAcknowledge={() => onAcknowledgeStability(pattern.id)} // <-- Pasar el handler
+            />
+          ))}
+        </Stack>
       ) : (
-        <Typography
-          variant='body1'
-          color='textSecondary'
-          sx={{ textAlign: 'center', py: 3 }}
+        <Paper
+          variant='outlined'
+          sx={{ borderRadius: '12px', borderColor: '#e5e7eb' }}
         >
-          No hay patrones configurados para esta cámara. Comience agregando uno.
-        </Typography>
+          <EmptyState
+            icon={<Inventory2Outlined />}
+            title='Esta cámara aún no tiene patrones'
+            hint='Un patrón agrupa los sensores del equipo que se calibra. Agrega el primero para empezar a recibir lecturas.'
+            action={
+              canManage ? (
+                <Button
+                  variant='outlined'
+                  startIcon={<AddIcon />}
+                  onClick={handleOpenAddPatternModal}
+                  sx={{ color: '#00897B', borderColor: '#00BFA5' }}
+                >
+                  Agregar patrón
+                </Button>
+              ) : undefined
+            }
+          />
+        </Paper>
       )}
 
       <AddPatternModal

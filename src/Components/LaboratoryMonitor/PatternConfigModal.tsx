@@ -1,24 +1,21 @@
 import React, { useState, useEffect } from 'react'
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
+  Alert,
   TextField,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   Grid,
-  IconButton,
   Box,
-  Divider,
-  Typography,
-  Chip
+  Stack,
+  Typography
 } from '@mui/material'
-import { Save, Cancel, Close as CloseIcon } from '@mui/icons-material'
+import FormDialog from 'src/Components/Common/FormDialog'
 import { Pattern } from './types' // Ajusta la ruta a tus tipos
+
+// Mismo mínimo que usa la API para calcular la estabilidad
+const MIN_POINTS_FOR_STABILITY = 5
 
 interface PatternConfigModalProps {
   open: boolean
@@ -79,81 +76,106 @@ export const PatternConfigModal: React.FC<PatternConfigModalProps> = ({
     })
   }
 
+  const invalidData = dataValue <= 0
+  const invalidSampling = samplingValue <= 0
+
+  // El sistema exige al menos 5 lecturas en la ventana para marcar el patrón estable
+  const samplingSeconds =
+    samplingUnit === 'minutes' ? samplingValue * 60 : samplingValue
+  const pointsInWindow =
+    invalidData || invalidSampling
+      ? null
+      : dataMode === 'LAST_POINTS'
+        ? dataValue
+        : Math.floor((dataValue * 60) / samplingSeconds)
+  const windowTooShort =
+    pointsInWindow !== null && pointsInWindow < MIN_POINTS_FOR_STABILITY
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth='xs' fullWidth>
-      <DialogTitle
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}
-      >
-        Configurar Patrón: {pattern.name}
-        <IconButton aria-label='close' onClick={onClose}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent dividers>
-        <Box sx={{ mt: 2 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel id='data-mode-label'>
-                  Modo de Visualización
-                </InputLabel>
-                <Select
-                  labelId='data-mode-label'
-                  label='Modo de Visualización'
-                  value={dataMode}
-                  onChange={(e) => setDataMode(e.target.value as any)}
-                >
-                  <MenuItem value='LAST_MINUTES'>Últimos Minutos</MenuItem>
-                  <MenuItem value='LAST_POINTS'>Últimos Puntos</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label={
-                  dataMode === 'LAST_MINUTES'
-                    ? 'Cantidad de Minutos'
-                    : 'Cantidad de Puntos'
+    <FormDialog
+      open={open}
+      onClose={onClose}
+      title='Configurar patrón'
+      subtitle={pattern.name}
+      submitLabel='Guardar'
+      onSubmit={handleSave}
+      loading={isLoading}
+      submitDisabled={invalidData || invalidSampling}
+    >
+      <Stack spacing={3}>
+        {windowTooShort && (
+          <Alert severity='warning'>
+            Con esta configuración caben solo {pointsInWindow} lecturas en la
+            ventana y se necesitan al menos {MIN_POINTS_FOR_STABILITY}: el
+            patrón nunca se marcará como estable. Amplía la ventana o acorta el
+            intervalo de muestreo.
+          </Alert>
+        )}
+        <Box>
+          <Typography variant='subtitle2' fontWeight={700}>
+            Qué se ve en la gráfica
+          </Typography>
+          <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+            Cuántas lecturas recientes se muestran de cada sensor.
+          </Typography>
+          <Stack spacing={2}>
+            <FormControl fullWidth>
+              <InputLabel id='data-mode-label'>Mostrar</InputLabel>
+              <Select
+                labelId='data-mode-label'
+                label='Mostrar'
+                value={dataMode}
+                onChange={(e) =>
+                  setDataMode(e.target.value as Pattern['dataMode'])
                 }
-                type='number'
-                value={dataValue}
-                onChange={(e) => setDataValue(Number(e.target.value))}
-                InputProps={{ inputProps: { min: 1 } }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Divider sx={{ my: 1 }}>
-                <Chip
-                  label='Configuración del Dispositivo (ESP32)'
-                  size='small'
-                />
-              </Divider>
-            </Grid>
-            <Grid item xs={12}>
-              {' '}
-              <Typography variant='subtitle1'>
-                Frecuencia de Muestreo
-              </Typography>{' '}
-            </Grid>
+              >
+                <MenuItem value='LAST_MINUTES'>Los últimos minutos</MenuItem>
+                <MenuItem value='LAST_POINTS'>Los últimos puntos</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              fullWidth
+              label={
+                dataMode === 'LAST_MINUTES'
+                  ? 'Cantidad de minutos'
+                  : 'Cantidad de puntos'
+              }
+              type='number'
+              value={dataValue}
+              onChange={(e) => setDataValue(Number(e.target.value))}
+              error={invalidData}
+              helperText={invalidData ? 'Debe ser mayor que 0' : undefined}
+              InputProps={{ inputProps: { min: 1 } }}
+            />
+          </Stack>
+        </Box>
+        <Box>
+          <Typography variant='subtitle2' fontWeight={700}>
+            Frecuencia de muestreo
+          </Typography>
+          <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+            Cada cuánto envía una lectura el dispositivo (ESP32).
+          </Typography>
+          <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label='Intervalo de Tiempo'
+                label='Cada'
                 type='number'
                 value={samplingValue}
                 onChange={(e) => setSamplingValue(Number(e.target.value))}
+                error={invalidSampling}
+                helperText={
+                  invalidSampling ? 'Debe ser mayor que 0' : undefined
+                }
                 InputProps={{ inputProps: { min: 1 } }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel>Unidad</InputLabel>
+                <InputLabel id='sampling-unit-label'>Unidad</InputLabel>
                 <Select
+                  labelId='sampling-unit-label'
                   label='Unidad'
                   value={samplingUnit}
                   onChange={(e) =>
@@ -167,20 +189,7 @@ export const PatternConfigModal: React.FC<PatternConfigModalProps> = ({
             </Grid>
           </Grid>
         </Box>
-      </DialogContent>
-      <DialogActions sx={{ p: '16px 24px' }}>
-        <Button onClick={onClose} disabled={isLoading} startIcon={<Cancel />}>
-          Cancelar
-        </Button>
-        <Button
-          onClick={handleSave}
-          variant='contained'
-          disabled={isLoading}
-          startIcon={<Save />}
-        >
-          {isLoading ? 'Guardando...' : 'Guardar Configuración'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+      </Stack>
+    </FormDialog>
   )
 }

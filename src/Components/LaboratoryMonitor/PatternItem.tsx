@@ -8,8 +8,7 @@ import {
   Button,
   IconButton,
   Paper,
-  List,
-  Divider,
+  Stack,
   CircularProgress,
   Tooltip,
   Alert,
@@ -24,7 +23,9 @@ import {
 } from './types' // Renombrar SensorType para evitar conflicto
 import { SensorItem } from './SensorItem'
 import { AddSensorModal } from './AddSensorModal' // Para abrir el modal de agregar sensor
-import { CheckCircle, Settings } from '@mui/icons-material'
+import { CheckCircle, Settings, Sensors } from '@mui/icons-material'
+import StatusPill from 'src/Components/Common/StatusPill'
+import EmptyState from 'src/Components/Common/EmptyState'
 import { isPatternStable, StabilityAlertState } from './ChamberDetails'
 
 interface PatternItemProps {
@@ -68,8 +69,12 @@ export const PatternItem: React.FC<PatternItemProps> = ({
     type: SensorTypeValue
     showGraph: boolean
   }) => {
-    await onAddSensorToPattern(pattern.id, sensorData)
-    handleCloseAddSensorModal() // Cerrar si el submit es exitoso (controlado por el padre idealmente)
+    try {
+      await onAddSensorToPattern(pattern.id, sensorData)
+      handleCloseAddSensorModal()
+    } catch {
+      // El error ya se notifica en la vista; el modal sigue abierto con los datos
+    }
   }
 
   const handleDeleteSensor = (sensorId: string) => {
@@ -78,59 +83,88 @@ export const PatternItem: React.FC<PatternItemProps> = ({
 
   const isStable = isPatternStable(pattern)
 
+  const sensorCount = pattern.sensors?.length ?? 0
+
   return (
-    <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
+    <Paper
+      variant='outlined'
+      sx={{
+        p: { xs: 1.5, md: 2 },
+        borderRadius: '12px',
+        borderColor: '#e5e7eb'
+      }}
+    >
       <Box
         sx={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          mb: 2
+          flexWrap: 'wrap',
+          gap: 1,
+          mb: 1.5
         }}
       >
-        <Typography variant='h6' component='div'>
-          {pattern.name}
-        </Typography>
+        <Box
+          sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}
+        >
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant='subtitle1' component='h3' fontWeight={700}>
+              {pattern.name}
+            </Typography>
+            <Typography variant='caption' color='text.secondary'>
+              {sensorCount === 1 ? '1 sensor' : `${sensorCount} sensores`}
+            </Typography>
+          </Box>
+          {isStable && (
+            <StatusPill label='Estable' tone='success' size='small' />
+          )}
+        </Box>
         {canManage && (
-          <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Button
               variant='outlined'
               size='small'
               startIcon={<AddIcon />}
               onClick={handleOpenAddSensorModal}
-              sx={{ mr: 1 }}
               disabled={isLoadingAddSensor}
+              sx={{ color: '#00897B', borderColor: '#00BFA5', mr: 0.5 }}
             >
               Sensor
             </Button>
-            <IconButton
-              aria-label='Eliminar patrón'
-              onClick={() => onDeletePattern(pattern.id)}
-              color='error'
-              disabled={isLoadingDeletePattern}
-            >
-              {isLoadingDeletePattern ? (
-                <CircularProgress size={20} color='inherit' />
-              ) : (
-                <DeleteIcon />
-              )}
-            </IconButton>
-            <Tooltip title='Configurar Visualización de Datos'>
+            <Tooltip title='Configurar visualización de datos'>
               <IconButton
+                aria-label='Configurar visualización de datos'
                 onClick={() => onConfigurePattern(pattern)}
                 size='small'
+                sx={{ color: '#4b5563' }}
               >
                 <Settings />
               </IconButton>
             </Tooltip>
+            <Tooltip title='Eliminar patrón'>
+              <span>
+                <IconButton
+                  aria-label='Eliminar patrón'
+                  onClick={() => onDeletePattern(pattern.id)}
+                  size='small'
+                  disabled={isLoadingDeletePattern}
+                  sx={{ color: '#4b5563', '&:hover': { color: 'error.main' } }}
+                >
+                  {isLoadingDeletePattern ? (
+                    <CircularProgress size={20} color='inherit' />
+                  ) : (
+                    <DeleteIcon />
+                  )}
+                </IconButton>
+              </span>
+            </Tooltip>
           </Box>
         )}
       </Box>
-      <Divider sx={{ mb: 2 }} />
       {isStable && !alertStatus?.acknowledged && (
         <Alert
           severity='success'
-          sx={{ mb: 2 }}
+          sx={{ mb: 1.5, borderRadius: '8px' }}
           action={
             <Button
               color='inherit'
@@ -142,14 +176,15 @@ export const PatternItem: React.FC<PatternItemProps> = ({
             </Button>
           }
         >
-          <AlertTitle>¡Patrón Estable!</AlertTitle>
-          Las condiciones de temperatura y humedad se han estabilizado para este
-          patrón.
+          <AlertTitle>Patrón estable</AlertTitle>
+          La temperatura y la humedad se estabilizaron. Al reconocer, se
+          silencian los avisos de voz.
         </Alert>
       )}
-      {pattern.sensors && pattern.sensors.length > 0 ? (
-        <List disablePadding>
-          {pattern.sensors
+      {sensorCount > 0 ? (
+        <Stack spacing={1}>
+          {/* Copia: ordenar en sitio mutaría el caché de react-query */}
+          {[...pattern.sensors]
             .sort((a, b) => a.name.localeCompare(b.name))
             .map((sensor) => (
               <SensorItem
@@ -161,15 +196,14 @@ export const PatternItem: React.FC<PatternItemProps> = ({
                 isLoadingDelete={isLoadingDeleteSensor[sensor.id]}
               />
             ))}
-        </List>
+        </Stack>
       ) : (
-        <Typography
-          variant='body2'
-          color='textSecondary'
-          sx={{ textAlign: 'center', py: 2 }}
-        >
-          No hay sensores agregados a este patrón.
-        </Typography>
+        <EmptyState
+          compact
+          icon={<Sensors />}
+          title='Este patrón no tiene sensores'
+          hint='Agrega un sensor con el mismo nombre que envía el dispositivo.'
+        />
       )}
 
       <AddSensorModal
