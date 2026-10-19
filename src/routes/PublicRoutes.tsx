@@ -32,6 +32,10 @@ const CalibrationServiceRemoteSignaturePage = lazy(
     import('../pages/calibration-services/CalibrationServiceRemoteSignaturePage')
 )
 
+const PublicEquipmentPage = lazy(
+  () => import('../pages/techManagement/PublicEquipmentPage')
+)
+
 const LoadingFallback = () => (
   <Box
     display='flex'
@@ -95,6 +99,15 @@ const PublicRoutes = (
       element={
         <Suspense fallback={<LoadingFallback />}>
           <MaintenanceTracking />
+        </Suspense>
+      }
+    />
+    {/* Hoja de vida pública del equipo (código QR de Gestión tecnológica) */}
+    <Route
+      path='/equipo/:token'
+      element={
+        <Suspense fallback={<LoadingFallback />}>
+          <PublicEquipmentPage />
         </Suspense>
       }
     />

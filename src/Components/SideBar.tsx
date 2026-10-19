@@ -15,6 +15,7 @@ import { useStore } from '@nanostores/react'
 import { UserData, userStore } from 'src/store/userStore'
 import {
   CarRepair,
+  MedicalServices,
   PrecisionManufacturing,
   ScienceOutlined
 } from '@mui/icons-material'
@@ -411,6 +412,15 @@ const sidebarItems = ($userStore: UserData) => [
     roles: [] as string[],
     permission: PERMISSIONS.FLEET_VEHICLE_VIEW,
     moduleName: 'Fleet'
+  },
+  {
+    type: 'link',
+    label: 'Gestión tecnológica',
+    to: '/tech-management',
+    icon: <MedicalServices className={iconClass} />,
+    roles: [] as string[],
+    permission: PERMISSIONS.TECH_INVENTORY_VIEW,
+    moduleName: 'tech_management'
   },
   {
     type: 'dropdown',

@@ -169,7 +169,8 @@ const SEGMENTS = {
   'fiscal-parameters': 'Parámetros fiscales', requests: 'Solicitudes', orders: 'Órdenes', 'personnel-management': 'Personal', statistics: 'Estadísticas',
   'supplier-selection': 'Selección de proveedores', verifications: 'Verificaciones', 'non-conform-work-reports': 'Trabajo no conforme', repository: 'Repositorio',
   'equipment-sales': 'Venta de equipos', products: 'Productos', 'excel-manipulation': 'Manipulación de Excel', gotemberg: 'Gotemberg', 'pdf-script': 'Script de PDF',
-  profiles: 'Perfiles', settings: 'Ajustes', roles: 'Roles y permisos', modules: 'Módulos', 'asset-life-sheets': 'Hojas de vida de activos de TI', pdf: 'PDF'
+  profiles: 'Perfiles', settings: 'Ajustes', roles: 'Roles y permisos', modules: 'Módulos', 'asset-life-sheets': 'Hojas de vida de activos de TI', pdf: 'PDF',
+  'tech-management': 'Gestión tecnológica', equipment: 'Hoja de vida del equipo'
 };
 const labelFor = (p) => {
   if (menuByUrl.has(p)) return menuByUrl.get(p);

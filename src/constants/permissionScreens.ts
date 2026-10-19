@@ -352,6 +352,9 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
     { path: "/customers", label: "Empresas", kind: 'screen' },
     { path: "/iot/customers-management", label: "IoT › Clientes IoT", kind: 'screen' },
     { path: "/customers/:id", label: "Empresas", kind: 'action' },
+    { path: "/tech-management", label: "Gestión tecnológica", kind: 'action' },
+    { path: "/tech-management/customers/:customerId", label: "Gestión tecnológica › Clientes", kind: 'action' },
+    { path: "/tech-management/customers/:customerId/equipment/:equipmentId", label: "Gestión tecnológica › Clientes › Hoja de vida del equipo", kind: 'action' },
     { path: "/iot/email-settings", label: "IoT › Correos de alerta", kind: 'related' }
   ],
   'customers:customer:update': [
@@ -838,6 +841,32 @@ export const PERMISSION_SCREENS: Record<string, PermissionScreen[]> = {
   ],
   'system:settings:view': [
     { path: "/calibraciones/subir-excel", label: "Calibraciones › Subir Excel", kind: 'related' }
+  ],
+  'tech:alert:manage': [
+    { path: "/tech-management/alerts", label: "Gestión tecnológica › Alertas", kind: 'screen' },
+    { path: "/tech-management", label: "Gestión tecnológica", kind: 'action' },
+    { path: "/tech-management/customers/:customerId", label: "Gestión tecnológica › Clientes", kind: 'action' },
+    { path: "/tech-management/customers/:customerId/equipment/:equipmentId", label: "Gestión tecnológica › Clientes › Hoja de vida del equipo", kind: 'action' }
+  ],
+  'tech:inventory:manage': [
+    { path: "/tech-management", label: "Gestión tecnológica", kind: 'action' },
+    { path: "/tech-management/customers/:customerId", label: "Gestión tecnológica › Clientes", kind: 'action' },
+    { path: "/tech-management/customers/:customerId/equipment/:equipmentId", label: "Gestión tecnológica › Clientes › Hoja de vida del equipo", kind: 'action' }
+  ],
+  'tech:inventory:view': [
+    { path: "/tech-management", label: "Gestión tecnológica", kind: 'screen' },
+    { path: "/tech-management/customers/:customerId", label: "Gestión tecnológica › Clientes", kind: 'screen' },
+    { path: "/tech-management/customers/:customerId/equipment/:equipmentId", label: "Gestión tecnológica › Clientes › Hoja de vida del equipo", kind: 'screen' }
+  ],
+  'tech:surveillance:manage': [
+    { path: "/tech-management", label: "Gestión tecnológica", kind: 'action' },
+    { path: "/tech-management/customers/:customerId", label: "Gestión tecnológica › Clientes", kind: 'action' },
+    { path: "/tech-management/customers/:customerId/equipment/:equipmentId", label: "Gestión tecnológica › Clientes › Hoja de vida del equipo", kind: 'action' }
+  ],
+  'tech:surveillance:view': [
+    { path: "/tech-management", label: "Gestión tecnológica", kind: 'action' },
+    { path: "/tech-management/customers/:customerId", label: "Gestión tecnológica › Clientes", kind: 'action' },
+    { path: "/tech-management/customers/:customerId/equipment/:equipmentId", label: "Gestión tecnológica › Clientes › Hoja de vida del equipo", kind: 'action' }
   ],
   'tools:utility:use': [
     { path: "/excel-manipulation", label: "Manipulación de Excel", kind: 'screen' },

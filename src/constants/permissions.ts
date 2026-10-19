@@ -400,6 +400,16 @@ export const PERMISSIONS = {
   FLEET_REMINDER_VIEW: 'fleet:reminder:view',
   /** Crear, editar y eliminar recordatorios de la flota */
   FLEET_REMINDER_MANAGE: 'fleet:reminder:manage',
+  /** Ver el inventario, la hoja de vida, el cronograma, el indicador de cumplimiento y la carpeta de visita */
+  TECH_INVENTORY_VIEW: 'tech:inventory:view',
+  /** Editar el inventario, importarlo desde Excel, programar y registrar actividades con evidencia y solicitar servicios */
+  TECH_INVENTORY_MANAGE: 'tech:inventory:manage',
+  /** Ver el programa de tecnovigilancia, los reportes, sus análisis, las alertas cruzadas y la bitácora */
+  TECH_SURVEILLANCE_VIEW: 'tech:surveillance:view',
+  /** Escribir el programa, los reportes, análisis, acciones y la gestión de alertas (solo usuarios de la propia institución) */
+  TECH_SURVEILLANCE_MANAGE: 'tech:surveillance:manage',
+  /** Cargar y editar el catálogo de alertas, recalls e informes de seguridad del INVIMA */
+  TECH_ALERT_MANAGE: 'tech:alert:manage',
   /** Ver las hojas de vida de activos de TI (PCs, portátiles, TVs), su imagen, su PDF y el cronograma de mantenimiento */
   ASSETS_LIFE_SHEET_VIEW: 'assets:life_sheet:view',
   /** Crear, editar y eliminar hojas de vida de activos de TI y registrar sus intervenciones */

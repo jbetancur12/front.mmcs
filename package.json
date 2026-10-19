@@ -67,6 +67,7 @@
     "postcss": "^8.4.44",
     "posthog-js": "^1.131.4",
     "prettier": "^3.2.5",
+    "qrcode.react": "^3.1.0",
     "quill": "^2.0.3",
     "react": "^18.2.0",
     "react-cookie": "^7.2.0",
