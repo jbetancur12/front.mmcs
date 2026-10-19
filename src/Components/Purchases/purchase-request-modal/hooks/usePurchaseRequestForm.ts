@@ -1,7 +1,9 @@
 // hooks/usePurchaseRequestForm.ts
 import { useState, useEffect } from 'react'
-import { useQuery } from 'react-query'
-import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  usePurchaseRequesters,
+  useSavePurchaseRequest
+} from 'src/hooks/purchases/usePurchaseRequests'
 import { PurchaseRequest as IPurchaseRequest } from 'src/pages/Purchases/Types'
 import { PurchaseRequestStatus } from 'src/pages/Purchases/Enums'
 import {
@@ -16,8 +18,6 @@ export const usePurchaseRequestForm = (
   existingRequest?: IPurchaseRequest | null,
   onSuccess?: (request: IPurchaseRequest) => void
 ) => {
-  const axiosPrivate = useAxiosPrivate()
-
   const [formData, setFormData] = useState<Partial<IPurchaseRequest>>({})
   const [currentItem, setCurrentItem] = useState<CurrentPurchaseRequestItem>({
     quantity: 1,
@@ -36,43 +36,9 @@ export const usePurchaseRequestForm = (
   const [editingRequirementValue, setEditingRequirementValue] =
     useState<string>('')
 
-  // Query for requester options
   const { data: requesterOptions = [], isLoading: loadingRequesters } =
-    useQuery<RequesterUser[], Error>(
-      'requesterUsersList',
-      async () => {
-        try {
-          const response = await axiosPrivate.get<RequesterUser[]>('/personnel')
-          return response.data || []
-        } catch (err) {
-          console.error('Error cargando solicitantes:', err)
-          throw err
-        }
-      },
-      {
-        enabled: open,
-        staleTime: 1000 * 60 * 15,
-        onSuccess: (data) => {
-          if (open && existingRequest && data) {
-            const preSelected = data.find(
-              (r) =>
-                (existingRequest.applicantName &&
-                  r.name === existingRequest.applicantName) ||
-                r.name === existingRequest.applicantName
-            )
-            if (preSelected) {
-              setSelectedRequester(preSelected)
-              setFormData((prev) => ({
-                ...prev,
-                applicantName: preSelected.name,
-                applicantPosition: preSelected.position,
-                applicantId: preSelected.id
-              }))
-            }
-          }
-        }
-      }
-    )
+    usePurchaseRequesters(open)
+  const savePurchaseRequest = useSavePurchaseRequest()
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -164,12 +130,11 @@ export const usePurchaseRequestForm = (
     }
 
     try {
-      let response
+      const savedRequest = await savePurchaseRequest.mutateAsync({
+        id: existingRequest?.id,
+        payload
+      })
       if (existingRequest?.id) {
-        response = await axiosPrivate.put<IPurchaseRequest>(
-          `/purchaseRequests/${existingRequest.id}`,
-          payload
-        )
         Swal.fire({
           icon: 'success',
           title: '¡Actualizado!',
@@ -178,10 +143,6 @@ export const usePurchaseRequestForm = (
           showConfirmButton: false
         })
       } else {
-        response = await axiosPrivate.post<IPurchaseRequest>(
-          '/purchaseRequests',
-          payload
-        )
         Swal.fire({
           icon: 'success',
           title: '¡Creado!',
@@ -190,7 +151,7 @@ export const usePurchaseRequestForm = (
           showConfirmButton: false
         })
       }
-      onSuccess?.(response.data)
+      onSuccess?.(savedRequest)
       return true
     } catch (err) {
       setError('Error al crear/actualizar la solicitud')

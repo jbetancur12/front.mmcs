@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import {
   Avatar,
@@ -10,7 +10,6 @@ import {
   Tooltip,
   Typography
 } from '@mui/material'
-import useAxiosPrivate from '@utils/use-axios-private'
 import {
   AccessTime,
   Add,
@@ -26,7 +25,12 @@ import { PurchaseRequestStatus } from './Enums'
 import { differenceInDays, format } from 'date-fns'
 
 import RenderRowActions from 'src/Components/Purchases/RenderRowActions'
-import { useQuery, useQueryClient } from 'react-query'
+import { useQueryClient } from 'react-query'
+import {
+  usePurchaseRequests,
+  useSetInitialPurchaseRequestId
+} from 'src/hooks/purchases/usePurchaseRequests'
+import { useSuppliers } from 'src/hooks/purchases/useSuppliers'
 import Swal from 'sweetalert2'
 import { useCan } from '@utils/functions'
 import { PurchaseRequestModal } from 'src/Components/Purchases/purchase-request-modal'
@@ -52,19 +56,8 @@ import {
 type QuickFilter = 'all' | 'pending' | 'toOrder' | 'late'
 
 import { PERMISSIONS } from 'src/constants/permissions'
-// Función para obtener las solicitudes de compra
-const fetchPurchaseRequests = async (
-  axiosPrivate: ReturnType<typeof useAxiosPrivate>
-) => {
-  const { data } = await axiosPrivate.get<{
-    count: number
-    purchaseRequests: IPurchaseRequest[]
-  }>('/purchaseRequests')
-  return data
-}
 
 const PurchaseRequest: React.FC = () => {
-  const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const allowCreationRequest = useCan(PERMISSIONS.PURCHASES_REQUEST_CREATE)
@@ -85,9 +78,10 @@ const PurchaseRequest: React.FC = () => {
   // Create standardized event handlers
   const tableHandlers = createTableStateHandlers(persistentTableState)
   // Uso de react-query para obtener los datos
-  const { data, isLoading } = useQuery('purchaseRequests', () =>
-    fetchPurchaseRequests(axiosPrivate)
-  )
+  const { data, isLoading } = usePurchaseRequests()
+  // Precarga el listado de proveedores (caché compartida con /suppliers)
+  useSuppliers()
+  const setInitialId = useSetInitialPurchaseRequestId()
 
   const allRequests = data?.purchaseRequests ?? []
   const totalRecords = data?.count ?? 0
@@ -131,7 +125,6 @@ const PurchaseRequest: React.FC = () => {
     setQuickFilter((current) => (current === value ? 'all' : value))
 
   const [modalOpen, setModalOpen] = useState(false)
-  const [_, setProviders] = useState<any[]>([])
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [selectedPREdit, setSelectedPREdit] = useState<IPurchaseRequest | null>(
     null
@@ -153,18 +146,6 @@ const PurchaseRequest: React.FC = () => {
     // o si onSuccess en el modal ya lo hace (que es el caso).
   }
 
-  useEffect(() => {
-    const fetchProviders = async () => {
-      try {
-        const response = await axiosPrivate.get('/suppliers')
-        setProviders(response.data)
-      } catch (error) {
-        console.error('Error fetching providers:', error)
-      }
-    }
-    fetchProviders()
-  }, [])
-
   const handleSuccess = () => {
     queryClient.invalidateQueries('purchaseRequests')
   }
@@ -184,16 +165,13 @@ const PurchaseRequest: React.FC = () => {
 
     if (initialId) {
       try {
-        await axiosPrivate.post('/purchaseRequests/set-initial-id', {
-          initialId
-        })
+        await setInitialId.mutateAsync(initialId)
         Swal.fire(
           '¡Configurado!',
           'El número inicial ha sido establecido.',
           'success'
         )
-        // Actualiza la query para refrescar el count si es necesario
-        queryClient.invalidateQueries('purchaseRequests')
+        // La mutación invalida 'purchaseRequests' para refrescar el count
         // Abre el modal para crear la solicitud
         setModalOpen(true)
       } catch (error) {
