@@ -1,36 +1,17 @@
-import { Suspense, lazy, useEffect, useState } from 'react'
+import { Suspense, lazy, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material'
 
 import { DataSheetData } from './ListDataSheet'
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useDataSheet } from '@hooks/dataSheets/useDataSheets'
 
 const DataSheetPDF = lazy(() => import('./DataSheetPDF'))
 
 const DataSheetDetail: React.FC = () => {
-  const axiosPrivate = useAxiosPrivate()
-  const [dataSheet, setDataSheet] = useState<DataSheetData | null>(null)
   const [showPreview, setShowPreview] = useState(false)
   const { id } = useParams<{ id: string }>()
-
-  useEffect(() => {
-    const fetchDataSheet = async () => {
-      try {
-        const response = await axiosPrivate.get<DataSheetData>(
-          `/dataSheet/${id}`,
-          {}
-        )
-
-        if (response.statusText === 'OK') {
-          setDataSheet(response.data)
-        }
-      } catch (error) {
-        console.error('Error fetching dataSheet data:', error)
-      }
-    }
-
-    fetchDataSheet()
-  }, [id])
+  const { data } = useDataSheet<DataSheetData>(id)
+  const dataSheet = data ?? null
 
   if (!dataSheet) return <div>Loading...</div>
 

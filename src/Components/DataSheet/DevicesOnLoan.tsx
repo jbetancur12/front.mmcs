@@ -1,6 +1,6 @@
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useDevicesOnLoan } from '@hooks/dataSheets/useDataSheets'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
-import React, { useEffect, useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 interface Device {
@@ -29,29 +29,24 @@ interface EquipmentInOut {
   service?: { id: number; serviceCode: string } | null
 }
 
-const DevicesOnLoan = () => {
-  const [data, setData] = React.useState<Device[]>([])
-  const axiosPrivate = useAxiosPrivate()
+const DevicesOnLoan: React.FC = () => {
+  const { data: devicesOnLoan } = useDevicesOnLoan<Device>()
   const navigate = useNavigate()
 
-  const getDevicesOnLoan = async () => {
-    const response = await axiosPrivate.get(`/reports/devices-on-loan`)
-    // Extract observationsOut from equipmentInOuts
-    const devicesWithObservations = response.data.map((device: Device) => ({
-      ...device,
-      observationsOut:
-        device.equipmentInOuts.length > 0
-          ? device.equipmentInOuts[0].observationsOut
-          : null,
-      loanCustomer: device.equipmentInOuts[0]?.customer?.nombre ?? null,
-      loanService: device.equipmentInOuts[0]?.service?.serviceCode ?? null
-    }))
-    setData(devicesWithObservations)
-  }
-
-  useEffect(() => {
-    getDevicesOnLoan()
-  }, [])
+  // Extract observationsOut from equipmentInOuts
+  const data = useMemo<Device[]>(
+    () =>
+      (devicesOnLoan ?? []).map((device: Device) => ({
+        ...device,
+        observationsOut:
+          device.equipmentInOuts.length > 0
+            ? device.equipmentInOuts[0].observationsOut
+            : null,
+        loanCustomer: device.equipmentInOuts[0]?.customer?.nombre ?? null,
+        loanService: device.equipmentInOuts[0]?.service?.serviceCode ?? null
+      })),
+    [devicesOnLoan]
+  )
 
   const columns = useMemo<MRT_ColumnDef<Device>[]>(
     () => [

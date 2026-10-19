@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo } from 'react'
 import {
   Box,
   Button,
@@ -18,7 +18,10 @@ import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
 import { MRT_Localization_ES } from 'material-react-table/locales/es'
 import { Visibility } from '@mui/icons-material'
 import { bigToast } from '../ExcelManipulation/Utils'
-import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  useDataSheet,
+  useDeleteDataSheetRecord
+} from '@hooks/dataSheets/useDataSheets'
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 import EditIcon from '@mui/icons-material/Edit'
@@ -42,31 +45,17 @@ export interface InspectionHistoryData {
 }
 
 const InspectionMaintenance: React.FC = () => {
-  const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [tableData, setTableData] = useState<InspectionHistoryData | null>(null)
-
-  const [filteredTableData, setFilteredTableData] = useState<
-    InspectionHistoryData[]
-  >([])
-
-  const fetchReports = async () => {
-    try {
-      const response = await axiosPrivate.get(`/dataSheet/${id}`, {})
-
-      if (response.statusText === 'OK') {
-        setTableData(response.data)
-        setFilteredTableData(response.data.calibrationHistories)
-      }
-    } catch (error) {
-      console.error('Error fetching dataSheet data:', error)
-    }
-  }
-
-  useEffect(() => {
-    fetchReports()
-  }, [])
+  const { data: dataSheetData } = useDataSheet<
+    InspectionHistoryData & { calibrationHistories?: InspectionHistoryData[] }
+  >(id)
+  const tableData = dataSheetData ?? null
+  const filteredTableData = useMemo<InspectionHistoryData[]>(
+    () => dataSheetData?.calibrationHistories ?? [],
+    [dataSheetData]
+  )
+  const deleteRecordMutation = useDeleteDataSheetRecord()
 
   const columns = useMemo<MRT_ColumnDef<InspectionHistoryData>[]>(
     () => [
@@ -191,10 +180,9 @@ const InspectionMaintenance: React.FC = () => {
     })
     if (result.isConfirmed) {
       try {
-        const response = await axiosPrivate.delete(endpoint)
+        const response = await deleteRecordMutation.mutateAsync(endpoint)
         if (response.status === 204 || response.status === 200) {
           bigToast(`${row.activity} eliminada correctamente`, 'success')
-          fetchReports()
         } else {
           bigToast('Error al eliminar', 'error')
         }
