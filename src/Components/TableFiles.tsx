@@ -32,7 +32,8 @@ import {
   type MRT_Row,
   type MaterialReactTableProps
 } from 'material-react-table'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
+import { useQueryClient } from 'react-query'
 import toast, { Toaster } from 'react-hot-toast'
 import { userStore } from '../store/userStore'
 import { certificateTypeStore } from '../store/certificateTypeStore'
@@ -55,6 +56,13 @@ import {
 } from './ExcelManipulation/Utils'
 import { customerStore } from '../store/customerStore'
 import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  FILE_QUERY_KEYS,
+  useCreateFile,
+  useDeleteFile,
+  useFiles,
+  useUpdateFile
+} from '@hooks/files/useFiles'
 
 import { ROLES, ROLE_GROUPS, hasAnyRole } from 'src/constants/roles'
 import { PERMISSIONS } from 'src/constants/permissions'
@@ -129,9 +137,14 @@ const Table: React.FC = () => {
   const canDeleteFile = useCan(PERMISSIONS.CALIBRATION_FILE_DELETE)
   const canCreateFile = useCan(PERMISSIONS.CALIBRATION_FILE_CREATE)
 
+  const queryClient = useQueryClient()
   const [createModalOpen, setCreateModalOpen] = useState(false)
-  const [tableData, setTableData] = useState<FileData[]>([])
-  const [loading, setLoading] = useState(false)
+  const { data: filesData } = useFiles<FileData>()
+  const tableData = useMemo(() => filesData ?? [], [filesData])
+  const createFileMutation = useCreateFile()
+  const updateFileMutation = useUpdateFile()
+  const deleteFileMutation = useDeleteFile()
+  const loading = createFileMutation.isLoading
 
   const [validationErrors, setValidationErrors] = useState<{
     [cellId: string]: string
@@ -139,20 +152,14 @@ const Table: React.FC = () => {
 
   // Create a new file
   const onCreateFile = async (fileData: FileData) => {
-    setLoading(true)
     try {
-      const response = await axiosPrivate.post(`/files`, fileData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      })
+      const response = await createFileMutation.mutateAsync(fileData)
 
       if (response.status === 201) {
         bigToast(
           response.data.message || 'Certificado creado exitosamente!',
           'success'
         )
-        fetchUsers() // Refresh data after creation
       } else {
         // Manejar otros códigos de estado no exitosos
         const errorMessage =
@@ -186,28 +193,8 @@ const Table: React.FC = () => {
 
       bigToast(errorMessage, 'error')
       console.error('Error detallado:', error)
-    } finally {
-      setLoading(false)
     }
   }
-
-  // Fetch files data
-  const fetchUsers = async () => {
-    try {
-      const response = await axiosPrivate.get(`/files`, {})
-
-      if (response.statusText === 'OK') {
-        // @ts-ignore: Ignorar el error en esta línea
-        setTableData(response.data)
-      }
-    } catch (error) {
-      console.error('Error fetching file data:', error)
-    }
-  }
-
-  useEffect(() => {
-    fetchUsers()
-  }, [])
 
   const handleCreateNewRow = (values: FileData) => {
     onCreateFile(values)
@@ -220,19 +207,22 @@ const Table: React.FC = () => {
         const updatedValues = { ...values }
         delete updatedValues.id
         try {
-          const response = await axiosPrivate.put(
-            `/files/${values.id}`,
-            updatedValues,
-            {}
-          )
+          const response = await updateFileMutation.mutateAsync({
+            id: values.id,
+            payload: updatedValues,
+            config: {}
+          })
 
           if (response.status === 201) {
             toast.success('Equipo Modificado Exitosamente!', {
               duration: 4000,
               position: 'top-center'
             })
-            tableData[row.index] = values
-            setTableData([...tableData])
+            queryClient.setQueryData<FileData[]>(
+              FILE_QUERY_KEYS.list(),
+              (prev = []) =>
+                prev.map((item, index) => (index === row.index ? values : item))
+            )
           } else {
             console.error('Error al crear equipo')
           }
@@ -248,17 +238,15 @@ const Table: React.FC = () => {
     setValidationErrors({})
   }
 
-  const deleteUser = async (rowIndex: number, id: number) => {
+  const deleteUser = async (id: number) => {
     try {
-      const response = await axiosPrivate.delete(`/files/${id}`, {})
+      const response = await deleteFileMutation.mutateAsync(id)
 
       if (response.status === 204) {
         toast.success('Archivo Eliminado Exitosamente!', {
           duration: 4000,
           position: 'top-center'
         })
-        tableData.splice(rowIndex, 1)
-        setTableData([...tableData])
       } else {
         console.error('Error al crear equipo')
       }
@@ -272,11 +260,12 @@ const Table: React.FC = () => {
       if (!confirm(`Are you sure you want to delete ${row.getValue(3)}`)) {
         return
       }
-      deleteUser(row.index, row.getValue(1))
-      tableData.splice(row.index, 1)
-      setTableData([...tableData])
+      deleteUser(row.getValue(1))
+      queryClient.setQueryData<FileData[]>(FILE_QUERY_KEYS.list(), (prev = []) =>
+        prev.filter((_item, index) => index !== row.index)
+      )
     },
-    [tableData]
+    [deleteUser, queryClient]
   )
 
   const getCommonEditTextFieldProps = useCallback(
