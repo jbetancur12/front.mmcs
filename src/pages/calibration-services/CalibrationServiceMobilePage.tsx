@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Alert, Autocomplete, Badge, BottomNavigation, BottomNavigationAction, Box, Button, Card, CardContent, Checkbox,
   Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle,
   FormControl, IconButton, InputLabel, LinearProgress, MenuItem, Paper, Select, Stack, TextField, ToggleButton, ToggleButtonGroup, Typography
 } from '@mui/material'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useQuery } from 'react-query'
+import { useMutation, useQueryClient } from 'react-query'
 import { Toaster, toast } from 'react-hot-toast'
 import { axiosPrivate } from '@utils/api'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
@@ -30,7 +30,7 @@ import BorderColorOutlinedIcon from '@mui/icons-material/BorderColorOutlined'
 import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined'
 import SignaturePad from '../../Components/Maintenance/SignaturePad'
 import {
-  CalibrationService, CalibrationServiceCut, CalibrationServiceDocument, CalibrationServiceOperationalItemStatus, CalibrationServiceStatus
+  CalibrationServiceCut, CalibrationServiceDocument, CalibrationServiceOperationalItemStatus, CalibrationServiceStatus
 } from '../../types/calibrationService'
 import {
   CALIBRATION_SERVICE_STATUS_LABELS,
@@ -38,6 +38,11 @@ import {
   CALIBRATION_SERVICE_ADJUSTMENT_STATUS_LABELS,
   CALIBRATION_SERVICE_ADJUSTMENT_TYPE_LABELS
 } from '../../constants/calibrationServices'
+import {
+  CALIBRATION_SERVICE_QUERY_KEYS,
+  useCalibrationService
+} from '../../hooks/useCalibrationServices'
+import { useCalibrationDeviceSearch } from '../../hooks/calibration/useCalibrationDeviceSearch'
 
 // Figma design palette
 const G = {
@@ -106,11 +111,17 @@ const getSavedExecuted = (item: any, adjustments: any[] = []) => {
 const MobilePage = () => {
   const { serviceId } = useParams()
   const navigate = useNavigate()
-  const { data: service, isLoading, refetch } = useQuery(
-    ['calibration-service-mobile', serviceId],
-    async () => (await axiosPrivate.get(`/calibration-services/${serviceId}`)).data as CalibrationService,
-    { enabled: Boolean(serviceId) }
-  )
+  const queryClient = useQueryClient()
+  const { data: service, isLoading } = useCalibrationService(serviceId)
+  const refreshService = () => {
+    void queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.detail, serviceId])
+    void queryClient.invalidateQueries([CALIBRATION_SERVICE_QUERY_KEYS.all])
+  }
+  // Las acciones de la vista móvil no se reintentan: un POST repetido duplicaría la operación
+  const serviceActionMutation = useMutation((action: () => Promise<any>) => action(), {
+    retry: 0,
+    onSuccess: refreshService
+  })
 
   const s = service
   const items = s?.items || []
@@ -213,7 +224,7 @@ const MobilePage = () => {
       let odsDoc = (s.documents || []).find((d: CalibrationServiceDocument) => d.documentType === 'ods_pdf')
       if (!odsDoc) {
         odsDoc = await (await axiosPrivate.post(`/calibration-services/${serviceId}/generate-ods-pdf`)).data as CalibrationServiceDocument
-        void refetch()
+        refreshService()
       }
       const blob = await (await axiosPrivate.get(`/calibration-services/${serviceId}/documents/${odsDoc.id}/download`, { responseType: 'blob' })).data as Blob
       const url = URL.createObjectURL(blob)
@@ -256,7 +267,7 @@ const MobilePage = () => {
 
   const handleAction = async (key: string, fn: () => Promise<any>, msg: string, onDone?: () => void) => {
     setActionLoading(key)
-    try { await fn(); toast.success(msg); void refetch(); onDone?.() }
+    try { await serviceActionMutation.mutateAsync(fn); toast.success(msg); onDone?.() }
     catch (e: any) { toast.error(e?.response?.data?.details || e?.response?.data?.error || `Error: ${msg}`) }
     setActionLoading(null)
   }
@@ -283,8 +294,8 @@ const MobilePage = () => {
   const handleSaveProgress = async () => {
     setSaving(true)
     try {
-      await apiCall('put', `/calibration-services/${serviceId}/item-progress`, progressPayload())
-      toast.success('Avance guardado'); void refetch()
+      await serviceActionMutation.mutateAsync(() => apiCall('put', `/calibration-services/${serviceId}/item-progress`, progressPayload()))
+      toast.success('Avance guardado')
     } catch { toast.error('Error al guardar') }
     setSaving(false)
   }
@@ -1070,20 +1081,7 @@ type MobileTab = 'work' | 'intake' | 'issues' | 'close'
 
 const DeviceSearch = ({ onSelect }: { onSelect: (name: string) => void }) => {
   const [query, setQuery] = useState('')
-  const [options, setOptions] = useState<Array<{ id: number; name: string }>>([])
-  const [loading, setLoading] = useState(false)
-  const timer = useRef<ReturnType<typeof setTimeout>>()
-  useEffect(() => {
-    clearTimeout(timer.current)
-    if (query.trim().length < 2) { setOptions([]); return }
-    timer.current = setTimeout(async () => {
-      setLoading(true)
-      try { const res = await axiosPrivate.get('/devices', { params: { q: query.trim() } }); setOptions((res.data || []).map((d: any) => ({ id: d.id, name: d.name }))) }
-      catch { setOptions([]) }
-      setLoading(false)
-    }, 300)
-    return () => clearTimeout(timer.current)
-  }, [query])
+  const { options, loading } = useCalibrationDeviceSearch(query)
 
   return (
     <Autocomplete size='small' options={options} loading={loading} value={null} blurOnSelect inputValue={query} onInputChange={(_, v) => setQuery(v)}
