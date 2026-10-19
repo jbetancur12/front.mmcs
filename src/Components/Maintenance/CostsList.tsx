@@ -25,7 +25,7 @@ import {
     Receipt, // 👈 Nuevo ícono para facturar
 } from '@mui/icons-material';
 // Asegúrate de que esta importación sea correcta en tu entorno:
-import { formatCurrency } from 'src/pages/maintenance/MaintenanceTicketDetails'; 
+import { formatCurrency } from 'src/pages/maintenance/ticket-details/maintenanceTicketDetailUtils'; 
 
 // --- Interfaces ---
 
