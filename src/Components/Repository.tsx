@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 
 import toast, { Toaster } from 'react-hot-toast'
 import Loader from './Loader2'
@@ -18,7 +18,11 @@ import {
 } from '@mui/material'
 import { CloudUpload, Delete, Download, Visibility } from '@mui/icons-material'
 
-import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  useCreateRepository,
+  useDeleteRepository,
+  useRepositories
+} from '@hooks/repositories/useRepositories'
 import { fetchMinioObjectBlob } from '@utils/minio'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
@@ -38,10 +42,12 @@ export interface RepositoryData extends FileData {
 }
 
 const Repository = () => {
-  const axiosPrivate = useAxiosPrivate()
   const canManage = useCan(PERMISSIONS.REPOSITORIES_REPOSITORY_MANAGE)
-  const [tableData, setTableData] = useState<RepositoryData[]>([])
-  const [loading, setLoading] = useState<boolean>(false)
+  const { data: repositoriesData, isLoading: loading } =
+    useRepositories<RepositoryData>()
+  const tableData = useMemo(() => repositoriesData ?? [], [repositoriesData])
+  const createRepositoryMutation = useCreateRepository()
+  const deleteRepositoryMutation = useDeleteRepository()
   const [createModalOpen, setCreateModalOpen] = useState(false)
 
   const columns = useMemo<MRT_ColumnDef<RepositoryData>[]>(
@@ -87,25 +93,6 @@ const Repository = () => {
     [] // No hay dependencias específicas aquí
   )
 
-  const fetchRepositories = async () => {
-    setLoading(true)
-    try {
-      const response = await axiosPrivate.get(`/repositories`, {})
-
-      if (response.statusText === 'OK') {
-        // @ts-ignore: Ignorar el error en esta línea
-        setTableData(response.data)
-        setLoading(false)
-      }
-    } catch (error) {
-      console.error('Error fetching device data:', error)
-    }
-  }
-
-  useEffect(() => {
-    fetchRepositories()
-  }, [])
-
   const handleCreateNewRow = (values: FileData) => {
     onCreateRepository(values)
     setCreateModalOpen(false)
@@ -113,18 +100,13 @@ const Repository = () => {
 
   const onCreateRepository = async (repostoryData: FileData) => {
     try {
-      const response = await axiosPrivate.post(
-        `/repositories`,
-        repostoryData,
-        {}
-      )
+      const response = await createRepositoryMutation.mutateAsync(repostoryData)
 
       if (response.status >= 200 && response.status < 300) {
         toast.success('Archivo subido Exitosamente!', {
           duration: 4000,
           position: 'top-center'
         })
-        fetchRepositories()
       } else {
         toast.error('Error al subir archivo', {
           duration: 4000,
@@ -187,15 +169,14 @@ const Repository = () => {
       )
 
       if (shouldDelete) {
-        const response = await axiosPrivate.delete(`/repositories/${id}`, {})
+        const response = await deleteRepositoryMutation.mutateAsync(id)
 
         if (response.status >= 200 && response.status < 300) {
           toast.success('Archivo eliminado Exitosamente!', {
             duration: 4000,
             position: 'top-center'
           })
-          fetchRepositories()
-        } else {
+          } else {
           toast.error('Error al eliminar archivo', {
             duration: 4000,
             position: 'top-center'
