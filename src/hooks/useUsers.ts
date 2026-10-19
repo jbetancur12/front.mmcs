@@ -46,6 +46,11 @@ const updateUser = async (userData: UpdateUserData): Promise<UserData> => {
   return data
 }
 
+const fetchRoles = async () => {
+  const { data } = await axiosPrivate.get('/roles')
+  return data
+}
+
 const deleteUser = async (userId: number): Promise<void> => {
   await axiosPrivate.delete(`/users/${userId}`)
 }
@@ -89,6 +94,9 @@ export const useUsers = () => {
     refetchOnReconnect: true,
   })
 }
+
+// Roles disponibles (`GET /roles`)
+export const useRoles = () => useQuery(QUERY_KEYS.ROLES, fetchRoles)
 
 // Custom hook for user mutations
 export const useUserMutations = () => {
