@@ -2,7 +2,7 @@ import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { Modal, Box, TextField, Button, Typography } from '@mui/material'
 
 import { bigToast } from './ExcelManipulation/Utils'
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useCreateCustomer } from 'src/hooks/customers/useCustomers'
 
 interface ModalCustomerProps {
   open: boolean
@@ -28,7 +28,7 @@ const ModalCustomer: React.FC<ModalCustomerProps> = ({
   name,
   dataReturned
 }) => {
-  const axiosPrivate = useAxiosPrivate()
+  const createCustomer = useCreateCustomer<Record<string, string | boolean>>()
   const [formValues, setFormValues] = useState<
     Record<string, string | boolean>
   >(formFields.reduce((obj, field) => ({ ...obj, [field]: '' }), {}))
@@ -71,7 +71,7 @@ const ModalCustomer: React.FC<ModalCustomerProps> = ({
     }
 
     try {
-      const response = await axiosPrivate.post(`/customers`, formValues, {})
+      const response = await createCustomer.mutateAsync(formValues)
 
       if (response.status === 201) {
         bigToast('Cliente Creado Exitosamente!', 'success')

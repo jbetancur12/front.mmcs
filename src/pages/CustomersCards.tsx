@@ -29,12 +29,16 @@ import {
   Delete
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
-import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  useCreateCustomer,
+  useCustomers,
+  useDeleteCustomer,
+  useUpdateCustomer
+} from 'src/hooks/customers/useCustomers'
 import Swal from 'sweetalert2'
 import CreateCustomerModal from '../Components/CreateCustomerModal.tsx'
 import EditCustomerModal from '../Components/EditCustomerModal.tsx'
 
-import { ROLES } from 'src/constants/roles'
 export interface CustomerData {
   id?: number
   nombre: string
@@ -50,10 +54,7 @@ export interface CustomerData {
 }
 
 const CustomersCards: React.FC = () => {
-  const axiosPrivate = useAxiosPrivate()
   const navigate = useNavigate()
-  const [customers, setCustomers] = useState<CustomerData[]>([])
-  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
   const [isSearching, setIsSearching] = useState(false)
@@ -74,33 +75,21 @@ const CustomersCards: React.FC = () => {
     return () => clearTimeout(timer)
   }, [searchTerm])
 
-  const fetchCustomers = async () => {
-    try {
-      setLoading(true)
-      const response = await axiosPrivate.get(`/customers`, {})
-
-      if (response.statusText === 'OK') {
-        const filteredData = response.data.filter(
-          (customer: CustomerData) => customer.rol !== ROLES.ADMIN
-        )
-        setCustomers(filteredData)
+  const { data: customers = [], isLoading: loading } =
+    useCustomers<CustomerData>(undefined, {
+      onError: (error) => {
+        console.error('Error fetching customer data:', error)
+        Swal.fire({
+          title: 'Error',
+          text: 'No se pudieron cargar los clientes',
+          icon: 'error',
+          confirmButtonText: 'Entendido'
+        })
       }
-    } catch (error) {
-      console.error('Error fetching customer data:', error)
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudieron cargar los clientes',
-        icon: 'error',
-        confirmButtonText: 'Entendido'
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchCustomers()
-  }, [])
+    })
+  const createCustomer = useCreateCustomer<CustomerData>()
+  const updateCustomer = useUpdateCustomer<CustomerData>()
+  const deleteCustomer = useDeleteCustomer()
 
   const filteredCustomers = useMemo(() => {
     if (!debouncedSearchTerm) return customers
@@ -153,7 +142,7 @@ const CustomersCards: React.FC = () => {
       const updatedValues = { ...customerData }
       delete updatedValues.id
 
-      const response = await axiosPrivate.post(`/customers`, updatedValues, {})
+      const response = await createCustomer.mutateAsync(updatedValues)
 
       if (response.status >= 200 && response.status < 300) {
         Swal.fire({
@@ -163,7 +152,6 @@ const CustomersCards: React.FC = () => {
           timer: 2000,
           showConfirmButton: false
         })
-        fetchCustomers()
         setCreateModalOpen(false)
       }
     } catch (error) {
@@ -184,11 +172,10 @@ const CustomersCards: React.FC = () => {
 
   const handleUpdateCustomer = async (customerData: CustomerData) => {
     try {
-      const response = await axiosPrivate.put(
-        `/customers/${customerData.id}`,
-        customerData,
-        {}
-      )
+      const response = await updateCustomer.mutateAsync({
+        id: customerData.id as number,
+        values: customerData
+      })
 
       if (response.status >= 200 && response.status < 300) {
         Swal.fire({
@@ -198,7 +185,6 @@ const CustomersCards: React.FC = () => {
           timer: 2000,
           showConfirmButton: false
         })
-        fetchCustomers()
         setEditModalOpen(false)
         setSelectedCustomer(null)
       }
@@ -249,14 +235,9 @@ const CustomersCards: React.FC = () => {
         }
       })
 
-      const response = await axiosPrivate.delete(
-        `/customers/${customer.id}`,
-        {}
-      )
+      const response = await deleteCustomer.mutateAsync(customer.id as number)
 
       if (response.status === 204) {
-        fetchCustomers()
-
         Swal.fire({
           title: '¡Eliminado!',
           text: 'El cliente ha sido eliminado correctamente',
