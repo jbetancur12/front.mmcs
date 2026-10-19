@@ -32,12 +32,18 @@ import {
   Switch
 } from '@mui/material'
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import { useParams } from 'react-router-dom'
 
 import { bigToast } from './ExcelManipulation/Utils'
-import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  useCustomerUsers,
+  useDeleteUserById,
+  useRegisterUser,
+  useResetUserPassword,
+  useUpdateUserById
+} from 'src/hooks/useUsers'
 import ResetPasswordModal from './ResetPasswordModal'
 import { useCan } from '@utils/functions'
 import { PERMISSIONS } from 'src/constants/permissions'
@@ -46,7 +52,6 @@ import { showActivationLinkDialog } from '../utils/sweetAlert'
 import { fetchActivationLink, resendActivationEmail } from '../utils/userActivation'
 import withReactContent from 'sweetalert2-react-content'
 
-import { ROLES } from 'src/constants/roles'
 // Define interfaces
 export interface UserData {
   id: number
@@ -67,19 +72,26 @@ export interface UserData {
 
 // Main component
 const Table: React.FC = () => {
-  const axiosPrivate = useAxiosPrivate()
   // Eliminar usuarios es solo de admin (DELETE /users/:id); el metrólogo ve la pestaña pero no el botón
   const canDeleteUsers = useCan(PERMISSIONS.USERS_USER_DELETE)
   const canCreateUsers = useCan(PERMISSIONS.USERS_USER_CREATE)
   const canUpdateUsers = useCan(PERMISSIONS.USERS_USER_UPDATE)
   const canResetPassword = useCan(PERMISSIONS.USERS_USER_PASSWORD_RESET)
   const [createModalOpen, setCreateModalOpen] = useState(false)
-  const [tableData, setTableData] = useState<UserData[]>([])
   const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null)
   const [editingUser, setEditingUser] = useState<UserData | null>(null)
-  const [loading, setLoading] = useState(true)
   const { id } = useParams()
+  const { data: tableData = [], isLoading: loading } =
+    useCustomerUsers<UserData>(id, {
+      onError: (error) => {
+        console.error('Error fetching user data:', error)
+      }
+    })
+  const registerUser = useRegisterUser<UserData>()
+  const resetUserPassword = useResetUserPassword()
+  const updateUserById = useUpdateUserById()
+  const deleteUserById = useDeleteUserById()
 
   // Initialize SweetAlert with React content
   const MySwal = withReactContent(Swal)
@@ -87,7 +99,7 @@ const Table: React.FC = () => {
   // Create a new user
   const onCreateUser = async (userData: UserData) => {
     try {
-      const response = await axiosPrivate.post(`/auth/register`, userData, {})
+      const response = await registerUser.mutateAsync(userData)
 
       if (response.status >= 200 && response.status < 300) {
         if (response.data?.activationUrl) {
@@ -102,7 +114,6 @@ const Table: React.FC = () => {
         } else {
           bigToast('Usuario creado exitosamente!', 'success')
         }
-        fetchUsers() // Refresh data after creation
       } else {
         bigToast('Error al crear usuario', 'error')
       }
@@ -136,7 +147,8 @@ const Table: React.FC = () => {
 
   const handleResetPassword = async (userId: number, newPassword: string) => {
     try {
-      const response = await axiosPrivate.put(`/auth/${userId}/password`, {
+      const response = await resetUserPassword.mutateAsync({
+        userId,
         newPassword
       })
 
@@ -150,29 +162,6 @@ const Table: React.FC = () => {
       bigToast('Error al actualizar la contraseña', 'error')
     }
   }
-
-  // Fetch users data
-  const fetchUsers = useCallback(async () => {
-    try {
-      setLoading(true)
-      const response = await axiosPrivate.get(`/customers/${id}/users`, {})
-
-      if (response.statusText === 'OK') {
-        const filteredData = response.data.filter(
-          (user: UserData) => user.rol !== ROLES.ADMIN
-        )
-        setTableData(filteredData)
-      }
-    } catch (error) {
-      console.error('Error fetching user data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [id, axiosPrivate])
-
-  useEffect(() => {
-    fetchUsers()
-  }, [fetchUsers])
 
   const handleCreateNewRow = (values: any) => {
     onCreateUser({
@@ -188,15 +177,13 @@ const Table: React.FC = () => {
       const updatedValues: any = { ...userData }
       delete updatedValues.id
 
-      const response = await axiosPrivate.put(
-        `/users/${userData.id}`,
-        updatedValues,
-        {}
-      )
+      const response = await updateUserById.mutateAsync({
+        id: userData.id,
+        values: updatedValues
+      })
 
       if (response.status === 200) {
         bigToast('Usuario modificado exitosamente!', 'success')
-        fetchUsers()
         setEditingUser(null)
       } else {
         bigToast('Error al modificar usuario', 'error')
@@ -209,11 +196,10 @@ const Table: React.FC = () => {
 
   const deleteUser = async (userId: number) => {
     try {
-      const response = await axiosPrivate.delete(`/users/${userId}`, {})
+      const response = await deleteUserById.mutateAsync(userId)
 
       if (response.status === 204) {
         bigToast('Usuario eliminado exitosamente!', 'success')
-        fetchUsers()
       } else {
         bigToast('Error al eliminar usuario', 'error')
       }
@@ -225,14 +211,14 @@ const Table: React.FC = () => {
 
   const handleToggleActive = async (user: UserData) => {
     try {
-      await axiosPrivate.put(`/users/${user.id}`, {
-        active: !user.active
+      await updateUserById.mutateAsync({
+        id: user.id,
+        values: { active: !user.active }
       })
       bigToast(
         `Usuario ${!user.active ? 'activado' : 'desactivado'} con éxito`,
         'success'
       )
-      fetchUsers()
     } catch (error) {
       console.error('Error al cambiar estado del usuario:', error)
       bigToast('Error al actualizar el estado del usuario', 'error')
