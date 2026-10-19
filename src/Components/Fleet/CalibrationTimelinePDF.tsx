@@ -1,39 +1,14 @@
 import { ArrowBack } from '@mui/icons-material'
 import { Box, CircularProgress, IconButton, Typography } from '@mui/material'
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useCalibrationTimelinePdf } from '@hooks/fleet/useFleetQueries'
 
-import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 export const CalibrationTimelinePDF = () => {
-  const axiosPrivate = useAxiosPrivate()
   const { id } = useParams<{ id: string }>()
-  const [pdfData, setPdfData] = useState<string | null>(null)
+  const { data: pdfData } = useCalibrationTimelinePdf(id)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const fetchPDF = async () => {
-      try {
-        // Realiza la solicitud al endpoint para obtener el PDF
-        const response = await axiosPrivate.get(
-          `/files/customer/${id}/generate-pdf`,
-          {
-            responseType: 'arraybuffer' // Especifica que esperamos un archivo binario
-          }
-        )
-
-        // Convierte el archivo binario a una cadena base64
-        const base64PDF = Buffer.from(response.data, 'binary').toString(
-          'base64'
-        )
-        setPdfData(`data:application/pdf;base64,${base64PDF}`)
-      } catch (error) {
-        console.error('Error al obtener el PDF:', error)
-      }
-    }
-
-    fetchPDF()
-  }, [id])
 
   if (!pdfData) {
     return (
