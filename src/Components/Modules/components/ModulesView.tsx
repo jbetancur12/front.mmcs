@@ -1,5 +1,5 @@
 // src/modules/components/ModulesView.tsx
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { Button, CircularProgress, Box, Container, Grid, Paper, Typography } from '@mui/material'
 import { Add, Apps } from '@mui/icons-material'
@@ -9,13 +9,17 @@ import Swal from 'sweetalert2'
 
 import ModuleForm from './ModuleForm'
 import { IModule } from '../types/moduleTypes'
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useQueryClient } from 'react-query'
+import { modulesKeys, useModules } from 'src/hooks/modules/useModules'
 
 const ModulesView = () => {
-  const axiosPrivate = useAxiosPrivate()
-  const [modules, setModules] = useState<IModule[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
+  const {
+    data: modules = [],
+    isLoading: loading,
+    isError
+  } = useModules<IModule>()
+  const error = isError ? 'Error al cargar los módulos' : null
   const [openModal, setOpenModal] = useState(false)
 
   const columns: GridColDef[] = [
@@ -23,22 +27,6 @@ const ModulesView = () => {
     { field: 'label', headerName: 'Label', flex: 1 },
     { field: 'description', headerName: 'Descripción', flex: 2 }
   ]
-
-  const fetchModules = async () => {
-    try {
-      setLoading(true)
-      const response = await axiosPrivate.get('/modules')
-      setModules(response.data)
-    } catch (err) {
-      setError('Error al cargar los módulos')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchModules()
-  }, [])
 
   const handleSuccess = () => {
     setOpenModal(false)
@@ -48,7 +36,7 @@ const ModulesView = () => {
       icon: 'success',
       confirmButtonText: 'Aceptar'
     })
-    fetchModules()
+    queryClient.invalidateQueries(modulesKeys.list())
   }
 
   return (
