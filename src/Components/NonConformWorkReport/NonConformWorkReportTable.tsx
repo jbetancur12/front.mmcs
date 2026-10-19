@@ -19,10 +19,17 @@ import EditIcon from '@mui/icons-material/Edit'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import { Add, CheckCircle, FolderOpen, ListAlt, NotificationsActive, ReportProblemOutlined } from '@mui/icons-material'
 import {
+  NON_CONFORM_EXACT_FILTERS,
+  NON_CONFORM_SORTABLE_FIELDS,
   useDeleteNonConformWorkReport,
   useNonConformWorkReportAlerts,
-  useNonConformWorkReports
+  useNonConformWorkReportCounts,
+  useNonConformWorkReportsPaginated
 } from '@hooks/nonConform/useNonConformWorkReports'
+import {
+  useKeepPageInRange,
+  useServerTableState
+} from 'src/hooks/useServerTable'
 import { NonConformWorkReport } from './NonConformWorkReport.types'
 import { format } from 'date-fns'
 import Swal from 'sweetalert2'
@@ -112,11 +119,37 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
   onCreate
 }) => {
   const canManage = useCan(PERMISSIONS.NONCONFORM_REPORT_MANAGE)
-  const { data: rows = EMPTY_REPORTS, isLoading: loading } =
-    useNonConformWorkReports()
-  const { data: alerts = EMPTY_ALERTS } = useNonConformWorkReportAlerts()
+  const { data: alerts = EMPTY_ALERTS, isLoading: alertsLoading } =
+    useNonConformWorkReportAlerts()
   const deleteReport = useDeleteNonConformWorkReport()
   const [showOnlyAlerts, setShowOnlyAlerts] = useState(false)
+
+  // El listado se pagina, busca, ordena y filtra en el servidor. "Con revisión
+  // pendiente" muestra en el cliente los reportes de `/alerts`, que llegan
+  // completos.
+  const server = useServerTableState({
+    sortableFields: NON_CONFORM_SORTABLE_FIELDS,
+    exactFilters: NON_CONFORM_EXACT_FILTERS
+  })
+  const {
+    data: reportsPage,
+    isLoading: pageLoading,
+    isFetching: pageFetching
+  } = useNonConformWorkReportsPaginated(server.params, {
+    enabled: !showOnlyAlerts
+  })
+  useKeepPageInRange(
+    showOnlyAlerts ? undefined : reportsPage?.totalPages,
+    server.pagination.pageIndex,
+    server.setPagination
+  )
+  const { data: counts } = useNonConformWorkReportCounts()
+  const rows = reportsPage?.items ?? EMPTY_REPORTS
+  const loading = showOnlyAlerts ? alertsLoading : pageLoading
+  const toggleAlerts = (value: boolean) => {
+    setShowOnlyAlerts(value)
+    server.goToFirstPage()
+  }
 
   const handleDelete = async (id: number) => {
     const result = await Swal.fire({
@@ -146,6 +179,7 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
         accessorKey: 'tncCode',
         header: 'Código TNC',
         size: 150,
+        enableColumnFilter: false,
         sortingFn: (rowA, rowB, columnId) => {
           return rowA
             .getValue<string>(columnId)
@@ -159,6 +193,8 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
         accessorKey: 'tncAcceptance',
         header: 'Aceptación',
         size: 150,
+        enableSorting: false,
+        enableColumnFilter: false,
         Cell: ({ cell }) => {
           const value = cell.getValue<string>()
           const acceptance = acceptanceMap[value] || {
@@ -178,12 +214,15 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
       {
         accessorKey: 'iso17025Clause',
         header: 'Numeral ISO/IEC 17025',
-        size: 180
+        size: 180,
+        enableSorting: false,
+        enableColumnFilter: false
       },
       {
         accessorKey: 'registerDate',
         header: 'Fecha de registro',
         size: 150,
+        enableColumnFilter: false,
         Cell: ({ cell }) => {
           const value = cell.getValue<string>()
           return value ? format(new Date(value), 'dd/MM/yyyy') : ''
@@ -192,12 +231,20 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
       {
         accessorKey: 'detectedBy',
         header: 'Detectado por',
-        size: 200
+        size: 200,
+        // La búsqueda global ya busca en "Detectado por".
+        enableSorting: false,
+        enableColumnFilter: false
       },
       {
         accessorKey: 'status',
         header: 'Estatus',
         size: 130,
+        filterVariant: 'select',
+        filterSelectOptions: [
+          { text: 'Abierta', value: 'Open' },
+          { text: 'Cerrada', value: 'Closed' }
+        ],
         Cell: ({ cell }) => {
           const value = cell.getValue<string>()
           const status = statusMap[value] || {
@@ -218,6 +265,8 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
         accessorKey: 'impactWeight',
         header: 'Impacto',
         size: 130,
+        enableSorting: false,
+        enableColumnFilter: false,
         Cell: ({ cell }) => {
           const value = cell.getValue<string>()
           const displayValue = impactMap[value] || value
@@ -235,6 +284,8 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
         accessorKey: 'probability',
         header: 'Probabilidad',
         size: 130,
+        enableSorting: false,
+        enableColumnFilter: false,
         Cell: ({ cell }) => {
           const value = cell.getValue<string>()
           const displayValue = probabilityMap[value] || value
@@ -252,6 +303,10 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
         accessorKey: 'riskLevel',
         header: 'Nivel de riesgo',
         size: 150,
+        filterVariant: 'select',
+        filterSelectOptions: ['Critical', 'High', 'Medium', 'Low', 'Very Low'].map(
+          (value) => ({ text: riskLevelMap[value], value })
+        ),
         Cell: ({ cell }) => {
           const value = cell.getValue<string>()
           const displayValue = riskLevelMap[value] || value
@@ -269,15 +324,10 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
     []
   )
 
-  const filteredRows = useMemo(() => {
-    if (showOnlyAlerts) {
-      return rows.filter((row) => alerts.some((a) => a.id === row.id))
-    }
-    return rows
-  }, [rows, showOnlyAlerts, alerts])
+  const filteredRows = showOnlyAlerts ? alerts : rows
 
-  const openCount = rows.filter((r) => ['Open', 'Abierta'].includes(r.status)).length
-  const closedCount = rows.filter((r) => ['Closed', 'Cerrada'].includes(r.status)).length
+  const openCount = counts?.open ?? 0
+  const closedCount = counts?.closed ?? 0
 
   return (
     <>
@@ -298,11 +348,11 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
         <Grid item xs={6} md={3}>
           <LmsStatCard
             label='Reportes'
-            value={rows.length}
+            value={counts?.total ?? reportsPage?.totalItems ?? 0}
             icon={<ListAlt />}
             tone='teal'
             active={!showOnlyAlerts}
-            onClick={() => setShowOnlyAlerts(false)}
+            onClick={() => toggleAlerts(false)}
           />
         </Grid>
         <Grid item xs={6} md={3}>
@@ -318,7 +368,7 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
             icon={<NotificationsActive />}
             tone={alerts.length > 0 ? 'red' : 'blue'}
             active={showOnlyAlerts}
-            onClick={alerts.length > 0 ? () => setShowOnlyAlerts((v) => !v) : undefined}
+            onClick={alerts.length > 0 ? () => toggleAlerts(!showOnlyAlerts) : undefined}
           />
         </Grid>
       </Grid>
@@ -328,7 +378,19 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
           {...purchaseTableStyle}
           columns={columns}
           data={filteredRows}
-          state={{ isLoading: loading }}
+          {...(showOnlyAlerts
+            ? {
+                onPaginationChange: server.setPagination,
+                onSortingChange: server.setSorting,
+                onColumnFiltersChange: server.setColumnFilters,
+                onGlobalFilterChange: server.setGlobalFilter
+              }
+            : { ...server.tableProps, rowCount: reportsPage?.totalItems ?? 0 })}
+          state={{
+            ...server.tableState,
+            isLoading: loading,
+            showProgressBars: !showOnlyAlerts && pageFetching && !pageLoading
+          }}
           enableRowActions
           enablePinning
           renderRowActions={({ row }) => (
@@ -369,8 +431,6 @@ const NonConformWorkReportTable: React.FC<NonConformWorkReportTableProps> = ({
           )}
           initialState={{
             density: 'compact',
-            pagination: { pageSize: 10, pageIndex: 0 },
-            sorting: [{ id: 'tncCode', desc: true }],
             columnPinning: { right: ['mrt-row-actions'] }
           }}
         />
