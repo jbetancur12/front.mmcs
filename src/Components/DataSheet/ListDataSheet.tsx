@@ -31,7 +31,16 @@ import DataSheetToolbarActions from './list-data-sheet/DataSheetToolbarActions'
 import { DataSheetData } from './list-data-sheet/types'
 import { useDataSheetActions } from './list-data-sheet/useDataSheetActions'
 import { useDataSheetColumns } from './list-data-sheet/useDataSheetColumns'
-import { useDataSheetsQuery } from './list-data-sheet/useDataSheets'
+import {
+  DATASHEET_EXACT_FILTERS,
+  DATASHEET_SORTABLE_FIELDS,
+  useDataSheetCounts,
+  useDataSheetsPaginated
+} from './list-data-sheet/useDataSheets'
+import {
+  useKeepPageInRange,
+  useServerTableState
+} from 'src/hooks/useServerTable'
 
 export type {
   CalibrationHistory,
@@ -45,22 +54,47 @@ const ListDataSheet: React.FC = () => {
   const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>(
     () => {
       // Restaurar los filtros desde el localStorage al inicializar
-      const savedFilters = localStorage.getItem(COLUMN_FILTERS_STORAGE_KEY)
-      return savedFilters ? JSON.parse(savedFilters) : []
+      // (solo los filtros que el backend aplica; los demás ya no existen)
+      try {
+        const savedFilters = localStorage.getItem(COLUMN_FILTERS_STORAGE_KEY)
+        const parsed: MRT_ColumnFiltersState = savedFilters
+          ? JSON.parse(savedFilters)
+          : []
+        return Array.isArray(parsed)
+          ? parsed.filter((filter) =>
+              (DATASHEET_EXACT_FILTERS as readonly string[]).includes(filter.id)
+            )
+          : []
+      } catch {
+        return []
+      }
     }
   )
 
-  const { dataSheets } = useDataSheetsQuery()
+  const server = useServerTableState({
+    sortableFields: DATASHEET_SORTABLE_FIELDS,
+    exactFilters: DATASHEET_EXACT_FILTERS,
+    columnFilters,
+    onColumnFiltersChange: setColumnFilters
+  })
+  const { dataSheets, totalItems, totalPages, isLoading, isFetching } =
+    useDataSheetsPaginated(server.params)
+  useKeepPageInRange(totalPages, server.pagination.pageIndex, server.setPagination)
+  const { data: counts } = useDataSheetCounts()
   const actions = useDataSheetActions()
   const { columns, validationErrors, setValidationErrors } =
     useDataSheetColumns()
 
   useEffect(() => {
     // Guardar los filtros en el localStorage cada vez que cambien
-    localStorage.setItem(
-      COLUMN_FILTERS_STORAGE_KEY,
-      JSON.stringify(columnFilters)
-    )
+    try {
+      localStorage.setItem(
+        COLUMN_FILTERS_STORAGE_KEY,
+        JSON.stringify(columnFilters)
+      )
+    } catch {
+      // Sin almacenamiento disponible: los filtros no se recuerdan.
+    }
   }, [columnFilters])
 
   const handleSaveRowEdits: MaterialReactTableProps<DataSheetData>['onEditingRowSave'] =
@@ -94,9 +128,7 @@ const ListDataSheet: React.FC = () => {
     })
   }
 
-  const dueSoonCount = dataSheets.filter(
-    (d) => d.isCalibrationDueSoon || d.isInspectionDueSoon
-  ).length
+  const dueSoonCount = counts?.dueSoon ?? 0
 
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
@@ -115,12 +147,12 @@ const ListDataSheet: React.FC = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={6} md={3}>
-          <LmsStatCard label='Equipos' value={dataSheets.length} icon={<InventoryKpi />} tone='teal' />
+          <LmsStatCard label='Equipos' value={counts?.total ?? totalItems} icon={<InventoryKpi />} tone='teal' />
         </Grid>
         <Grid item xs={6} md={3}>
           <LmsStatCard
             label='Disponibles'
-            value={dataSheets.filter((d) => d.status === 'available').length}
+            value={counts?.available ?? 0}
             icon={<CheckKpi />}
             tone='green'
           />
@@ -128,7 +160,7 @@ const ListDataSheet: React.FC = () => {
         <Grid item xs={6} md={3}>
           <LmsStatCard
             label='Ocupados'
-            value={dataSheets.filter((d) => d.status === 'busy').length}
+            value={counts?.busy ?? 0}
             icon={<BuildKpi />}
             tone='blue'
           />
@@ -146,8 +178,13 @@ const ListDataSheet: React.FC = () => {
       <Paper elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
       <MaterialReactTable
         {...purchaseTableStyle}
-        onColumnFiltersChange={setColumnFilters} //hoist internal columnFilters state to your state
-        state={{ columnFilters }}
+        {...server.tableProps}
+        rowCount={totalItems}
+        state={{
+          ...server.tableState,
+          isLoading,
+          showProgressBars: isFetching && !isLoading
+        }}
         enablePinning
         initialState={{
           columnPinning: { right: ['mrt-row-actions'] },

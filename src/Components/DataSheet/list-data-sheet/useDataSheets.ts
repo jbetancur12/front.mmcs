@@ -2,37 +2,103 @@ import { AxiosResponse } from 'axios'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 
 import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  fetchPaginated,
+  PaginatedResponse,
+  ServerListParams
+} from 'src/hooks/useServerTable'
 
 import { DataSheetData } from './types'
 
 export const dataSheetKeys = {
   all: ['dataSheets'] as const,
-  list: () => [...dataSheetKeys.all, 'list'] as const
+  paginated: (params: ServerListParams) =>
+    [...dataSheetKeys.all, 'paginated', params] as const,
+  counts: () => [...dataSheetKeys.all, 'counts'] as const
 }
+
+/** Columnas que `GET /dataSheet` acepta en `sortBy`. */
+export const DATASHEET_SORTABLE_FIELDS = [
+  'internalCode',
+  'equipmentName',
+  'brand',
+  'model',
+  'location',
+  'receivedDate',
+  'id'
+] as const
+
+/** Filtros exactos de `GET /dataSheet` (id de columna = parámetro). */
+export const DATASHEET_EXACT_FILTERS = [
+  'status',
+  'equipmentStatus',
+  'serviceType'
+] as const
 
 const EMPTY: DataSheetData[] = []
 
-/** Lista de hojas de vida (`GET /dataSheet`). */
-export const useDataSheetsQuery = () => {
+/** Página de hojas de vida (`GET /dataSheet?page=&limit=...`). */
+export const useDataSheetsPaginated = (params: ServerListParams) => {
   const axiosPrivate = useAxiosPrivate()
 
-  const query = useQuery<DataSheetData[]>(
-    dataSheetKeys.list(),
-    async () => {
-      const response = await axiosPrivate.get(`/dataSheet`)
-      if (response.statusText !== 'OK') {
-        throw new Error('Error fetching dataSheet data')
-      }
-      return response.data
-    },
+  const query = useQuery<PaginatedResponse<DataSheetData>>(
+    dataSheetKeys.paginated(params),
+    () => fetchPaginated<DataSheetData>(axiosPrivate, '/dataSheet', params),
     {
+      keepPreviousData: true,
       onError: (error) => {
         console.error('Error fetching dataSheet data:', error)
       }
     }
   )
 
-  return { ...query, dataSheets: query.data ?? EMPTY }
+  return {
+    ...query,
+    dataSheets: query.data?.items ?? EMPTY,
+    totalItems: query.data?.totalItems ?? 0,
+    totalPages: query.data?.totalPages
+  }
+}
+
+/**
+ * Indicadores de la lista sin bajar todas las hojas de vida: el total y los
+ * conteos por estado salen de `totalItems` con `limit=1`, y los equipos por
+ * calibrar o inspeccionar de `GET /dataSheet/alerts` (la misma alerta del
+ * encabezado).
+ */
+export const useDataSheetCounts = () => {
+  const axiosPrivate = useAxiosPrivate()
+
+  return useQuery(
+    dataSheetKeys.counts(),
+    async () => {
+      const count = async (filters: Record<string, string> = {}) => {
+        const page = await fetchPaginated<DataSheetData>(
+          axiosPrivate,
+          '/dataSheet',
+          { page: 1, limit: 1, ...filters }
+        )
+        return page.totalItems
+      }
+      const [total, available, busy, alerts] = await Promise.all([
+        count(),
+        count({ status: 'available' }),
+        count({ status: 'busy' }),
+        axiosPrivate.get<unknown[]>('/dataSheet/alerts')
+      ])
+      return {
+        total,
+        available,
+        busy,
+        dueSoon: Array.isArray(alerts.data) ? alerts.data.length : 0
+      }
+    },
+    {
+      onError: (error) => {
+        console.error('Error fetching dataSheet counts:', error)
+      }
+    }
+  )
 }
 
 /** Mutaciones de hojas de vida; todas invalidan la lista al terminar bien. */

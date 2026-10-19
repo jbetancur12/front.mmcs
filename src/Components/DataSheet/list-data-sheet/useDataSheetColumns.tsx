@@ -14,7 +14,12 @@ import {
   ServiceTypeEdit,
   StatusCell
 } from './DataSheetCells'
+import { createServiceTypeOptions } from './constants'
 import { DataSheetData } from './types'
+import {
+  DATASHEET_EXACT_FILTERS,
+  DATASHEET_SORTABLE_FIELDS
+} from './useDataSheets'
 import { currencyFormatter, toDateInputValue, validateRequired } from './utils'
 
 interface EditTextFieldArgs {
@@ -78,6 +83,46 @@ const currencyEditTextFieldProps = ({
   }
 }
 
+const SORTABLE = new Set<string>(DATASHEET_SORTABLE_FIELDS)
+const FILTERABLE = new Set<string>(DATASHEET_EXACT_FILTERS)
+
+// Filtros de columna que el backend aplica como igualdad exacta.
+const exactFilterProps: Record<string, Partial<MRT_ColumnDef<DataSheetData>>> =
+  {
+    status: {
+      filterVariant: 'select',
+      filterSelectOptions: [
+        { text: 'Disponible', value: 'available' },
+        { text: 'Ocupado', value: 'busy' }
+      ]
+    },
+    serviceType: {
+      filterVariant: 'select',
+      filterSelectOptions: createServiceTypeOptions
+    },
+    equipmentStatus: {
+      muiTableHeadCellFilterTextFieldProps: {
+        placeholder: 'Valor exacto'
+      }
+    }
+  }
+
+/**
+ * La tabla se pagina en el servidor: solo se ordena por las columnas que
+ * acepta `sortBy` y solo se filtra por los filtros exactos del endpoint.
+ */
+const withServerCapabilities = (
+  column: MRT_ColumnDef<DataSheetData>
+): MRT_ColumnDef<DataSheetData> => {
+  const id = String(column.accessorKey ?? column.id ?? '')
+  return {
+    ...column,
+    enableSorting: SORTABLE.has(id),
+    enableColumnFilter: FILTERABLE.has(id),
+    ...(exactFilterProps[id] ?? {})
+  }
+}
+
 /**
  * Columnas de la tabla de hojas de vida y el estado de validación de la
  * edición en modal.
@@ -120,7 +165,7 @@ export const useDataSheetColumns = () => {
       muiTableBodyCellEditTextFieldProps: getCommonEditTextFieldProps
     })
 
-    return [
+    const base: MRT_ColumnDef<DataSheetData>[] = [
       {
         accessorKey: 'id',
         header: 'ID',
@@ -218,6 +263,7 @@ export const useDataSheetColumns = () => {
       text('calibrationProvider', 'Proveedor de Calibración'),
       text('calibrationCycle', 'Ciclo de Calibración')
     ]
+    return base.map(withServerCapabilities)
   }, [getCommonEditTextFieldProps])
 
   return { columns, validationErrors, setValidationErrors }
