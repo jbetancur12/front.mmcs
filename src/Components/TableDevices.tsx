@@ -1,4 +1,4 @@
-import { Add, Build, Delete, Description, DescriptionOutlined, Edit } from '@mui/icons-material'
+import { Add, Build, Delete, Edit } from '@mui/icons-material'
 import {
   Box,
   Button,
@@ -34,11 +34,18 @@ import { loadOptions, mapOptions } from '../utils/loadOptions'
 import { bigToast, styles } from './ExcelManipulation/Utils'
 import { TemplatesData } from './Templates'
 import {
+  DEVICE_EXACT_FILTERS,
+  DEVICE_SORTABLE_FIELDS,
   useCreateDevice,
   useDeleteDevice,
-  useDevices,
+  useDevicesCount,
+  useDevicesPaginated,
   useUpdateDevice
 } from '@hooks/devices/useDevices'
+import {
+  useKeepPageInRange,
+  useServerTableState
+} from 'src/hooks/useServerTable'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
@@ -63,10 +70,25 @@ export interface DeviceData {
 const Table: React.FC = () => {
   const canManageDevices = useCan(PERMISSIONS.CALIBRATION_DEVICE_MANAGE)
   const [createModalOpen, setCreateModalOpen] = useState(false)
-  const { data: devicesData } = useDevices()
+  // Paginación, búsqueda (por nombre) y orden en el servidor.
+  const server = useServerTableState({
+    sortableFields: DEVICE_SORTABLE_FIELDS,
+    exactFilters: DEVICE_EXACT_FILTERS
+  })
+  const {
+    data: devicesPage,
+    isLoading,
+    isFetching
+  } = useDevicesPaginated(server.params)
+  useKeepPageInRange(
+    devicesPage?.totalPages,
+    server.pagination.pageIndex,
+    server.setPagination
+  )
+  const { data: devicesCount } = useDevicesCount()
   const tableData = useMemo<DeviceData[]>(
-    () => (devicesData ?? []) as DeviceData[],
-    [devicesData]
+    () => (devicesPage?.items ?? []) as unknown as DeviceData[],
+    [devicesPage]
   )
   const createDeviceMutation = useCreateDevice()
   const updateDeviceMutation = useUpdateDevice()
@@ -204,11 +226,14 @@ const Table: React.FC = () => {
         header: 'ID',
         // size: 1,
 
-        enableEditing: false
+        enableEditing: false,
+        enableColumnFilter: false
       },
       {
         accessorKey: 'name', //access nested data with dot notation
         header: 'Nombre',
+        // La búsqueda global ya busca por nombre en el servidor.
+        enableColumnFilter: false,
         // size: 150,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell)
@@ -217,6 +242,8 @@ const Table: React.FC = () => {
       {
         accessorKey: 'magnitude',
         header: 'Magnitud',
+        // Filtro exacto en el servidor (`magnitude`).
+        muiTableHeadCellFilterTextFieldProps: { placeholder: 'Valor exacto' },
         // size: 150,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
           ...getCommonEditTextFieldProps(cell)
@@ -226,6 +253,8 @@ const Table: React.FC = () => {
         id: 'certificateTemplateName',
         accessorFn: (row) => row.certificateTemplate?.name || 'Sin plantilla',
         header: 'Plantilla de Certificado',
+        enableSorting: false,
+        enableColumnFilter: false,
         Cell: ({ row }) => row.original.certificateTemplate?.name || 'Sin plantilla',
 
         Edit: () => (
@@ -269,8 +298,6 @@ const Table: React.FC = () => {
     [getCommonEditTextFieldProps]
   )
 
-  const withTemplate = tableData.filter((d) => d.certificateTemplate?.name).length
-
   return (
     <Container maxWidth='xl' sx={{ py: 3 }}>
       <LmsPageHeader
@@ -288,13 +315,12 @@ const Table: React.FC = () => {
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Total equipos' value={tableData.length} icon={<Build />} tone='teal' />
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Con plantilla' value={withTemplate} icon={<Description />} tone='green' />
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <LmsStatCard label='Sin plantilla' value={tableData.length - withTemplate} icon={<DescriptionOutlined />} tone='orange' />
+          <LmsStatCard
+            label='Total equipos'
+            value={devicesCount ?? devicesPage?.totalItems ?? 0}
+            icon={<Build />}
+            tone='teal'
+          />
         </Grid>
       </Grid>
 
@@ -311,6 +337,13 @@ const Table: React.FC = () => {
             }}
             columns={columns}
             data={tableData}
+            {...server.tableProps}
+            rowCount={devicesPage?.totalItems ?? 0}
+            state={{
+              ...server.tableState,
+              isLoading,
+              showProgressBars: isFetching && !isLoading
+            }}
             editingMode='modal' //default
             enableColumnOrdering
             enableEditing={canManageDevices}

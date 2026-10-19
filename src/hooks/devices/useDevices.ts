@@ -1,6 +1,12 @@
 import { AxiosInstance } from 'axios'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  fetchPaginated,
+  fetchTotal,
+  PaginatedResponse,
+  ServerListParams
+} from 'src/hooks/useServerTable'
 
 /**
  * Catálogo de equipos (`/devices`). La clave base es `device-catalog`
@@ -10,8 +16,17 @@ export const DEVICE_QUERY_KEYS = {
   all: ['device-catalog'] as const,
   lists: () => [...DEVICE_QUERY_KEYS.all, 'list'] as const,
   list: (params: Record<string, unknown> = {}) =>
-    [...DEVICE_QUERY_KEYS.lists(), params] as const
+    [...DEVICE_QUERY_KEYS.lists(), params] as const,
+  paginated: (params: ServerListParams) =>
+    [...DEVICE_QUERY_KEYS.all, 'paginated', params] as const,
+  count: () => [...DEVICE_QUERY_KEYS.all, 'count'] as const
 }
+
+/** Columnas que `GET /devices` acepta en `sortBy`. */
+export const DEVICE_SORTABLE_FIELDS = ['id', 'name', 'magnitude'] as const
+
+/** Filtros exactos de `GET /devices` usados por la tabla. */
+export const DEVICE_EXACT_FILTERS = ['magnitude'] as const
 
 export interface DeviceCatalogItem {
   id: number
@@ -40,6 +55,27 @@ export const useDevices = (
     DEVICE_QUERY_KEYS.list(params),
     () => fetchDevices(axiosPrivate, params),
     { enabled: options.enabled ?? true }
+  )
+}
+
+/**
+ * Página del catálogo de equipos (`GET /devices?page=&limit=...`). Los selects
+ * y flujos que necesitan todo el catálogo siguen usando `useDevices`.
+ */
+export const useDevicesPaginated = (params: ServerListParams) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery<PaginatedResponse<DeviceCatalogItem>>(
+    DEVICE_QUERY_KEYS.paginated(params),
+    () => fetchPaginated<DeviceCatalogItem>(axiosPrivate, '/devices', params),
+    { keepPreviousData: true }
+  )
+}
+
+/** Total del catálogo sin filtros (`totalItems` con `limit=1`). */
+export const useDevicesCount = () => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery(DEVICE_QUERY_KEYS.count(), () =>
+    fetchTotal(axiosPrivate, '/devices')
   )
 }
 
