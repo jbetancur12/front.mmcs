@@ -22,7 +22,7 @@ import {
   type MRT_Row,
   type MaterialReactTableProps
 } from 'material-react-table'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 
 import LmsPageHeader from 'src/Components/lms/admin/LmsPageHeader'
 import LmsStatCard from 'src/Components/lms/admin/LmsStatCard'
@@ -33,7 +33,12 @@ import { loadOptions, mapOptions } from '../utils/loadOptions'
 
 import { bigToast, styles } from './ExcelManipulation/Utils'
 import { TemplatesData } from './Templates'
-import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  useCreateDevice,
+  useDeleteDevice,
+  useDevices,
+  useUpdateDevice
+} from '@hooks/devices/useDevices'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
@@ -57,9 +62,15 @@ export interface DeviceData {
 // Main component
 const Table: React.FC = () => {
   const canManageDevices = useCan(PERMISSIONS.CALIBRATION_DEVICE_MANAGE)
-  const axiosPrivate = useAxiosPrivate()
   const [createModalOpen, setCreateModalOpen] = useState(false)
-  const [tableData, setTableData] = useState<DeviceData[]>([])
+  const { data: devicesData } = useDevices()
+  const tableData = useMemo<DeviceData[]>(
+    () => (devicesData ?? []) as DeviceData[],
+    [devicesData]
+  )
+  const createDeviceMutation = useCreateDevice()
+  const updateDeviceMutation = useUpdateDevice()
+  const deleteDeviceMutation = useDeleteDevice()
   const [format, setFormat] = useState<{ labe: string; value: string } | null>(
     null
   )
@@ -72,20 +83,15 @@ const Table: React.FC = () => {
   // Create a new device
   const onCreateDevice = async (deviceData: DeviceData) => {
     try {
-      const response = await axiosPrivate.post(
-        `/devices`,
-        {
-          name: deviceData.name,
-          repository: deviceData.repository,
-          magnitude: deviceData.magnitude,
-          certificateTemplate: deviceData.certificateTemplate
-        },
-        {}
-      )
+      const response = await createDeviceMutation.mutateAsync({
+        name: deviceData.name,
+        repository: deviceData.repository,
+        magnitude: deviceData.magnitude,
+        certificateTemplate: deviceData.certificateTemplate
+      })
 
       if (response.status === 201) {
         bigToast('Equipo Creado Exitosamente!', 'success')
-        await fetchUsers()
       } else {
         console.error('Error al crear equipo')
       }
@@ -93,24 +99,6 @@ const Table: React.FC = () => {
       console.error('Error de red:', error)
     }
   }
-
-  // Fetch devices data
-  const fetchUsers = async () => {
-    try {
-      const response = await axiosPrivate.get(`/devices`, {})
-
-      if (response.statusText === 'OK') {
-        // @ts-ignore: Ignorar el error en esta línea
-        setTableData(response.data)
-      }
-    } catch (error) {
-      console.error('Error fetching device data:', error)
-    }
-  }
-
-  useEffect(() => {
-    fetchUsers()
-  }, [])
 
   const handleCreateNewRow = (values: DeviceData) => {
     onCreateDevice(values)
@@ -127,15 +115,13 @@ const Table: React.FC = () => {
 
         delete updatedValues.id
         try {
-          const response = await axiosPrivate.put(
-            `/devices/${values.id}`,
-            updatedValues,
-            {}
-          )
+          const response = await updateDeviceMutation.mutateAsync({
+            id: values.id,
+            payload: updatedValues
+          })
 
           if (response.status >= 200 && response.status < 300) {
             bigToast('Equipo Modificado Exitosamente!', 'success')
-            await fetchUsers()
           } else {
             console.error('Error al crear equipo')
           }
@@ -153,11 +139,10 @@ const Table: React.FC = () => {
 
   const deleteUser = async (id: number) => {
     try {
-      const response = await axiosPrivate.delete(`/devices/${id}`, {})
+      const response = await deleteDeviceMutation.mutateAsync(id)
 
       if (response.status === 204) {
         bigToast('Equipo Eliminado Exitosamente!', 'success')
-        await fetchUsers()
       } else {
         console.error('Error al crear equipo')
       }
