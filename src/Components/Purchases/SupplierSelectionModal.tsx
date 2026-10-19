@@ -27,7 +27,7 @@ import {
 
 import { ChangeEvent, useEffect, useState } from 'react'
 import withReactContent from 'sweetalert2-react-content'
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useSaveSupplierSelection } from 'src/hooks/purchases/useSuppliers'
 import {
   FormState,
   Criterion,
@@ -81,8 +81,8 @@ const SupplierSelectionModal = ({
   existingSelectionData
 }: SupplierSelectionModalProps) => {
   const MySwal = withReactContent(Swal)
-  const axiosPrivate = useAxiosPrivate()
-  const [isSubmitting, setIsSubmitting] = useState(false) // Estado faltante
+  const saveSelection = useSaveSupplierSelection()
+  const isSubmitting = saveSelection.isLoading
   const [formState, setFormState] = useState<FormState>(initialFormState)
   const [error, setError] = useState<string>('')
 
@@ -289,7 +289,6 @@ const SupplierSelectionModal = ({
     e.preventDefault()
     if (!validateForm()) return
 
-    setIsSubmitting(true)
     // Preparamos los detalles de evaluación a partir de las selecciones
     const details = Object.values(formState.selections)
       .flat()
@@ -335,12 +334,15 @@ const SupplierSelectionModal = ({
       details
     }
     try {
-      if (existingSelectionData?.id) {
-        // --- MODO EDICIÓN: Llamar a PUT/PATCH ---
-        await axiosPrivate.put(
-          `/suppliers/selection-suppliers/${existingSelectionData.supplierId}`,
-          payload
-        ) // Ajusta el endpoint
+      const isEdit = Boolean(existingSelectionData?.id)
+      // Edición: PUT /suppliers/selection-suppliers/:supplierId
+      // Creación: POST /suppliers (una transacción en el backend)
+      await saveSelection.mutateAsync({
+        isEdit,
+        supplierId: existingSelectionData?.supplierId,
+        payload
+      })
+      if (isEdit) {
         MySwal.fire({
           toast: true,
           position: 'top-end',
@@ -350,9 +352,6 @@ const SupplierSelectionModal = ({
           timer: 3000
         })
       } else {
-        // Llamada al endpoint único que maneja toda la operación dentro de una transacción
-        await axiosPrivate.post('/suppliers', payload)
-
         const finalDecision = payload.evaluationData.finalDecision
         MySwal.fire({
           toast: true,
@@ -381,8 +380,6 @@ const SupplierSelectionModal = ({
         message = error.response.data.message
       }
       setError(message)
-    } finally {
-      setIsSubmitting(false) // Asegurar reset del estado
     }
   }
 

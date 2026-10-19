@@ -17,8 +17,11 @@ import {
   Grid,
   RadioGroup
 } from '@mui/material'
-import { useState, useEffect } from 'react'
-import useAxiosPrivate from '@utils/use-axios-private'
+import { useState } from 'react'
+import {
+  useSaveSupplierSelection,
+  useSupplierSelectionCriteria
+} from 'src/hooks/purchases/useSuppliers'
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 import SuppliersSelection from '../../pages/Purchases/SupplierSelection'
@@ -41,9 +44,6 @@ const initialSupplierData = {
 
 const SupplierSelectionForm = () => {
   const MySwal = withReactContent(Swal)
-  const axiosPrivate = useAxiosPrivate()
-  const [criteria, setCriteria] = useState<Criterion[]>([])
-  const [categories, setCategories] = useState<string[]>([])
   const [formState, setFormState] = useState<FormState>({
     supplierData: initialSupplierData,
     providerType: '',
@@ -54,30 +54,10 @@ const SupplierSelectionForm = () => {
     whichAnswers: {}
   })
   const [error, setError] = useState<string>('')
-
-  useEffect(() => {
-    const loadCriteria = async () => {
-      try {
-        const response = await axiosPrivate.get<Criterion[]>(
-          '/suppliers/selection-supplier-sub-items'
-        ) // Agregar tipo genérico
-
-        const processedCriteria = response.data.map((item) => ({
-          ...item,
-          requiresWhich: item.category === 'CALIDAD'
-        })) as Criterion[] // Type assertion aquí
-
-        setCriteria(processedCriteria)
-        const uniqueCategories = [
-          ...new Set(processedCriteria.map((item) => item.category))
-        ] as string[] // Cast a string[]
-        setCategories(uniqueCategories)
-      } catch (error) {
-        setError('Error cargando criterios de evaluación')
-      }
-    }
-    loadCriteria()
-  }, [])
+  const { criteria, categories } = useSupplierSelectionCriteria({
+    onError: () => setError('Error cargando criterios de evaluación')
+  })
+  const saveSelection = useSaveSupplierSelection()
 
   const groupedCriteria = criteria.reduce(
     (acc, criterion) => {
@@ -262,7 +242,7 @@ const SupplierSelectionForm = () => {
       }
 
       // Llamada al endpoint único que maneja toda la operación dentro de una transacción
-      await axiosPrivate.post('/suppliers', payload)
+      await saveSelection.mutateAsync({ payload })
 
       const finalDecision = payload.evaluationData.finalDecision
       MySwal.fire({
