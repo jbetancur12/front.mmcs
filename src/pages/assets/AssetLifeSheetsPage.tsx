@@ -60,6 +60,10 @@ import type {
   AssetLifeSheetFormValues
 } from 'src/types/assetLifeSheet'
 import useAxiosPrivate from '@utils/use-axios-private'
+import {
+  useAssetLifeSheetMutations,
+  useAssetLifeSheets
+} from '@hooks/assets/useAssetLifeSheets'
 import { PERMISSIONS } from 'src/constants/permissions'
 import { useCan } from '@utils/functions'
 
@@ -113,13 +117,20 @@ const formatDate = (value?: string | null) => {
   return date.toLocaleDateString('es-CO')
 }
 
+const EMPTY_ASSETS: AssetLifeSheet[] = []
+
 const AssetLifeSheetsPage = () => {
   const canManage = useCan(PERMISSIONS.ASSETS_LIFE_SHEET_MANAGE)
   const axiosPrivate = useAxiosPrivate()
   const $userStore = useStore(userStore)
 
-  const [assets, setAssets] = useState<AssetLifeSheet[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: assets = EMPTY_ASSETS, isFetching: loading } =
+    useAssetLifeSheets()
+  const {
+    saveAsset: saveAssetMutation,
+    deleteAsset: deleteAssetMutation,
+    createIntervention
+  } = useAssetLifeSheetMutations()
   const [selectedAsset, setSelectedAsset] = useState<AssetLifeSheet | null>(
     null
   )
@@ -141,24 +152,6 @@ const AssetLifeSheetsPage = () => {
       performedByName: $userStore.nombre || 'Administrador',
       nextActionDate: ''
     })
-
-  const fetchAssets = async () => {
-    try {
-      setLoading(true)
-      const response =
-        await axiosPrivate.get<AssetLifeSheet[]>('/asset-life-sheets')
-      setAssets(response.data)
-    } catch (error) {
-      console.error(error)
-      bigToast('No se pudieron cargar los activos', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchAssets()
-  }, [])
 
   useEffect(() => {
     if (!selectedAsset) return
@@ -254,14 +247,9 @@ const AssetLifeSheetsPage = () => {
       })
       if (selectedImageFile) formData.append('image', selectedImageFile)
 
-      if (editingAssetId) {
-        await axiosPrivate.put(`/asset-life-sheets/${editingAssetId}`, formData)
-      } else {
-        await axiosPrivate.post('/asset-life-sheets', formData)
-      }
+      await saveAssetMutation.mutateAsync({ id: editingAssetId, formData })
 
       closeAssetDialog()
-      fetchAssets()
       bigToast('Activo guardado correctamente', 'success')
     } catch (error) {
       console.error(error)
@@ -271,10 +259,9 @@ const AssetLifeSheetsPage = () => {
 
   const deleteAsset = async (assetId: number) => {
     try {
-      await axiosPrivate.delete(`/asset-life-sheets/${assetId}`)
+      await deleteAssetMutation.mutateAsync(assetId)
       setSelectedAsset((current) => (current?.id === assetId ? null : current))
       setAssetPendingDelete(null)
-      fetchAssets()
       bigToast('Activo eliminado', 'success')
     } catch (error) {
       console.error(error)
@@ -476,10 +463,10 @@ const AssetLifeSheetsPage = () => {
   const saveIntervention = async () => {
     if (!selectedAsset?.id) return
     try {
-      await axiosPrivate.post(
-        `/asset-life-sheets/${selectedAsset.id}/interventions`,
-        interventionForm
-      )
+      await createIntervention.mutateAsync({
+        assetId: selectedAsset.id,
+        values: interventionForm
+      })
       setInterventionDialogOpen(false)
       setInterventionForm((current) => ({
         ...current,
@@ -488,7 +475,6 @@ const AssetLifeSheetsPage = () => {
         observations: '',
         nextActionDate: ''
       }))
-      fetchAssets()
       bigToast('Intervención registrada', 'success')
     } catch (error) {
       bigToast('No fue posible registrar la intervención', 'error')
